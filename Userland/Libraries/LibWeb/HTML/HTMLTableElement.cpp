@@ -153,7 +153,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* 
 {
     // If the new value is neither null nor a thead element, then a "HierarchyRequestError" DOMException must be thrown instead.
     if (thead && thead->local_name() != TagNames::thead)
-        return WebIDL::HierarchyRequestError::create(realm(), "Element is not thead");
+        return WebIDL::HierarchyRequestError::create(realm(), "Element is not thead"_fly_string);
 
     // On setting, if the new value is null or a thead element, the first thead element child of the table element,
     // if any, must be removed,
@@ -251,7 +251,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* 
 {
     // If the new value is neither null nor a tfoot element, then a "HierarchyRequestError" DOMException must be thrown instead.
     if (tfoot && tfoot->local_name() != TagNames::tfoot)
-        return WebIDL::HierarchyRequestError::create(realm(), "Element is not tfoot");
+        return WebIDL::HierarchyRequestError::create(realm(), "Element is not tfoot"_fly_string);
 
     // On setting, if the new value is null or a tfoot element, the first tfoot element child of the table element,
     // if any, must be removed,
@@ -363,7 +363,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::ins
     auto rows_length = rows->length();
 
     if (index < -1 || index > (long)rows_length) {
-        return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than the number of rows");
+        return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than the number of rows"_fly_string);
     }
     auto& tr = static_cast<HTMLTableRowElement&>(*TRY(DOM::create_element(document(), TagNames::tr, Namespace::HTML)));
     if (rows_length == 0 && !has_child_of_type<HTMLTableRowElement>()) {
@@ -390,7 +390,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::delete_row(long index)
 
     // 1. If index is less than −1 or greater than or equal to the number of elements in the rows collection, then throw an "IndexSizeError" DOMException.
     if (index < -1 || index >= (long)rows_length)
-        return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than or equal to the number of rows");
+        return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than or equal to the number of rows"_fly_string);
 
     // 2. If index is −1, then remove the last element in the rows collection from its parent, or do nothing if the rows collection is empty.
     if (index == -1) {

@@ -378,7 +378,7 @@ WebIDL::ExceptionOr<String> DOMMatrixReadOnly::to_string() const
         || !isfinite(m21()) || !isfinite(m22()) || !isfinite(m23()) || !isfinite(m24())
         || !isfinite(m31()) || !isfinite(m32()) || !isfinite(m33()) || !isfinite(m34())
         || !isfinite(m41()) || !isfinite(m42()) || !isfinite(m43()) || !isfinite(m44())) {
-        return WebIDL::InvalidStateError::create(realm(), "Cannot stringify non-finite matrix values");
+        return WebIDL::InvalidStateError::create(realm(), "Cannot stringify non-finite matrix values"_fly_string);
     }
 
     // 2. Let string be the empty string.

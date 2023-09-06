@@ -3567,7 +3567,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
 
     // 11. If element is an already constructed marker, then throw an "InvalidStateError" DOMException.
     if (element.has<HTML::AlreadyConstructedCustomElementMarker>())
-        return JS::throw_completion(WebIDL::InvalidStateError::create(realm, "Custom element has already been constructed"sv));
+        return JS::throw_completion(WebIDL::InvalidStateError::create(realm, "Custom element has already been constructed"_fly_string));
 
     // 12. Perform ? element.[[SetPrototypeOf]](prototype).
     auto actual_element = element.get<JS::Handle<DOM::Element>>();

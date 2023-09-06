@@ -112,7 +112,7 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qual
 
     // 2. If attr is null, then throw a "NotFoundError" DOMException.
     if (!attribute)
-        return WebIDL::NotFoundError::create(realm(), DeprecatedString::formatted("Attribute with name '{}' not found", qualified_name));
+        return WebIDL::NotFoundError::create(realm(), MUST(String::formatted("Attribute with name '{}' not found", qualified_name)));
 
     // 3. Return attr.
     return attribute;
@@ -126,7 +126,7 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(StringView n
 
     // 2. If attr is null, then throw a "NotFoundError" DOMException.
     if (!attribute)
-        return WebIDL::NotFoundError::create(realm(), DeprecatedString::formatted("Attribute with namespace '{}' and local name '{}' not found", namespace_, local_name));
+        return WebIDL::NotFoundError::create(realm(), MUST(String::formatted("Attribute with namespace '{}' and local name '{}' not found", namespace_, local_name)));
 
     // 3. Return attr.
     return attribute;
@@ -197,7 +197,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> NamedNodeMap::set_attribute(Attr& attribute
 {
     // 1. If attr’s element is neither null nor element, throw an "InUseAttributeError" DOMException.
     if ((attribute.owner_element() != nullptr) && (attribute.owner_element() != &associated_element()))
-        return WebIDL::InUseAttributeError::create(realm(), "Attribute must not already be in use"sv);
+        return WebIDL::InUseAttributeError::create(realm(), "Attribute must not already be in use"_fly_string);
 
     // 2. Let oldAttr be the result of getting an attribute given attr’s namespace, attr’s local name, and element.
     size_t old_attribute_index = 0;

@@ -42,7 +42,7 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
     auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data.cell());
     if (data_buffer_or_error.is_error()) {
-        auto error = WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer");
+        auto error = WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer"_fly_string);
         auto promise = JS::Promise::create(realm);
         promise->reject(error.ptr());
         return promise;
@@ -64,7 +64,7 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::
     }
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     else {
-        auto error = WebIDL::NotSupportedError::create(realm, DeprecatedString::formatted("Invalid hash function '{}'", algorithm));
+        auto error = WebIDL::NotSupportedError::create(realm, MUST(String::formatted("Invalid hash function '{}'", algorithm)));
         auto promise = JS::Promise::create(realm);
         promise->reject(error.ptr());
         return promise;
@@ -85,7 +85,7 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::
     auto digest = hash.digest();
     auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
     if (result_buffer.is_error()) {
-        auto error = WebIDL::OperationError::create(realm, "Failed to create result buffer");
+        auto error = WebIDL::OperationError::create(realm, "Failed to create result buffer"_fly_string);
         promise->reject(error.ptr());
         return promise;
     }

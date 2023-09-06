@@ -48,17 +48,17 @@ void CanvasPath::bezier_curve_to(double cp1x, double cp1y, double cp2x, double c
 WebIDL::ExceptionOr<void> CanvasPath::arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise)
 {
     if (radius < 0)
-        return WebIDL::IndexSizeError::create(m_self->realm(), DeprecatedString::formatted("The radius provided ({}) is negative.", radius));
+        return WebIDL::IndexSizeError::create(m_self->realm(), MUST(String::formatted("The radius provided ({}) is negative.", radius)));
     return ellipse(x, y, radius, radius, 0, start_angle, end_angle, counter_clockwise);
 }
 
 WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise)
 {
     if (radius_x < 0)
-        return WebIDL::IndexSizeError::create(m_self->realm(), DeprecatedString::formatted("The major-axis radius provided ({}) is negative.", radius_x));
+        return WebIDL::IndexSizeError::create(m_self->realm(), MUST(String::formatted("The major-axis radius provided ({}) is negative.", radius_x)));
 
     if (radius_y < 0)
-        return WebIDL::IndexSizeError::create(m_self->realm(), DeprecatedString::formatted("The minor-axis radius provided ({}) is negative.", radius_y));
+        return WebIDL::IndexSizeError::create(m_self->realm(), MUST(String::formatted("The minor-axis radius provided ({}) is negative.", radius_y)));
 
     if (constexpr float tau = M_TAU; (!counter_clockwise && (end_angle - start_angle) >= tau)
         || (counter_clockwise && (start_angle - end_angle) >= tau)) {

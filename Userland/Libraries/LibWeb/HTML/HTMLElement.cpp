@@ -119,7 +119,7 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(StringView content_e
         MUST(set_attribute(HTML::AttributeNames::contenteditable, "false"));
         return {};
     }
-    return WebIDL::SyntaxError::create(realm(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
+    return WebIDL::SyntaxError::create(realm(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'"_fly_string);
 }
 
 void HTMLElement::set_inner_text(StringView text)

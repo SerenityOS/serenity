@@ -64,7 +64,7 @@ WebIDL::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView,
 
     // 2. If index is greater than length, then throw an IndexSizeError exception.
     if (index > length)
-        return WebIDL::IndexSizeError::create(realm(), "CSS rule index out of bounds.");
+        return WebIDL::IndexSizeError::create(realm(), "CSS rule index out of bounds."_fly_string);
 
     // 3. Set new rule to the results of performing parse a CSS rule on argument rule.
     // NOTE: The insert-a-css-rule spec expects `rule` to be a string, but the CSSStyleSheet.insertRule()
@@ -81,7 +81,7 @@ WebIDL::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView,
 
     // 4. If new rule is a syntax error, throw a SyntaxError exception.
     if (!new_rule)
-        return WebIDL::SyntaxError::create(realm(), "Unable to parse CSS rule.");
+        return WebIDL::SyntaxError::create(realm(), "Unable to parse CSS rule."_fly_string);
 
     // FIXME: 5. If new rule cannot be inserted into list at the zero-index position index due to constraints specified by CSS, then throw a HierarchyRequestError exception. [CSS21]
 
@@ -104,7 +104,7 @@ WebIDL::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
 
     // 2. If index is greater than or equal to length, then throw an IndexSizeError exception.
     if (index >= length)
-        return WebIDL::IndexSizeError::create(realm(), "CSS rule index out of bounds.");
+        return WebIDL::IndexSizeError::create(realm(), "CSS rule index out of bounds."_fly_string);
 
     // 3. Set old rule to the indexth item in list.
     CSSRule& old_rule = m_rules[index];

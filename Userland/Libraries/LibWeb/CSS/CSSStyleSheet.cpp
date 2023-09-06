@@ -67,7 +67,7 @@ WebIDL::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsign
 
     // 4. If parsed rule is a syntax error, return parsed rule.
     if (!parsed_rule)
-        return WebIDL::SyntaxError::create(realm(), "Unable to parse CSS rule.");
+        return WebIDL::SyntaxError::create(realm(), "Unable to parse CSS rule."_fly_string);
 
     // FIXME: 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
 

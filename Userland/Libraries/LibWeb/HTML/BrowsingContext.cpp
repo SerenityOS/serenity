@@ -1104,7 +1104,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
         // 1. If exceptionsEnabled is given and is true, then throw a "SecurityError" DOMException.
         if (exceptions_enabled) {
             VERIFY(source_browsing_context.active_document());
-            return WebIDL::SecurityError::create(source_browsing_context.active_document()->realm(), "Source browsing context not allowed to navigate"sv);
+            return WebIDL::SecurityError::create(source_browsing_context.active_document()->realm(), "Source browsing context not allowed to navigate"_fly_string);
         }
 
         // FIXME: 2. Otherwise, the user agent may instead offer to open resource in a new top-level browsing context

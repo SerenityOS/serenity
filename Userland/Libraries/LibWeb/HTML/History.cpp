@@ -55,7 +55,7 @@ WebIDL::ExceptionOr<u64> History::length() const
 {
     // 1. If this's associated Document is not fully active, then throw a "SecurityError" DOMException.
     if (!m_associated_document->is_fully_active())
-        return WebIDL::SecurityError::create(realm(), "Cannot perform length on a document that isn't fully active."sv);
+        return WebIDL::SecurityError::create(realm(), "Cannot perform length on a document that isn't fully active."_fly_string);
 
     // 2. Return the number of entries in the top-level browsing context's joint session history.
     auto const* browsing_context = m_associated_document->browsing_context();
@@ -72,7 +72,7 @@ WebIDL::ExceptionOr<void> History::go(long delta = 0)
 
     // 2. If document is not fully active, then throw a "SecurityError" DOMException.
     if (!m_associated_document->is_fully_active())
-        return WebIDL::SecurityError::create(realm(), "Cannot perform go on a document that isn't fully active."sv);
+        return WebIDL::SecurityError::create(realm(), "Cannot perform go on a document that isn't fully active."_fly_string);
 
     // 3. If delta is 0, then act as if the location.reload() method was called, and return.
     auto* browsing_context = m_associated_document->browsing_context();
@@ -157,7 +157,7 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
 
     // 2. If document is not fully active, then throw a "SecurityError" DOMException.
     if (!document->is_fully_active())
-        return WebIDL::SecurityError::create(realm(), "Cannot perform pushState or replaceState on a document that isn't fully active."sv);
+        return WebIDL::SecurityError::create(realm(), "Cannot perform pushState or replaceState on a document that isn't fully active."_fly_string);
 
     // 3. Optionally, return. (For example, the user agent might disallow calls to these methods that are invoked on a timer,
     //    or from event listeners that are not triggered in response to a clear user action, or that are invoked in rapid succession.)
@@ -178,14 +178,14 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
 
         // 2. If that fails, then throw a "SecurityError" DOMException.
         if (!parsed_url.is_valid())
-            return WebIDL::SecurityError::create(realm(), "Cannot pushState or replaceState to incompatible URL"sv);
+            return WebIDL::SecurityError::create(realm(), "Cannot pushState or replaceState to incompatible URL"_fly_string);
 
         // 3. Set newURL to the resulting URL record.
         new_url = parsed_url;
 
         // 4. If document cannot have its URL rewritten to newURL, then throw a "SecurityError" DOMException.
         if (!can_have_its_url_rewritten(document, new_url))
-            return WebIDL::SecurityError::create(realm(), "Cannot pushState or replaceState to incompatible URL"sv);
+            return WebIDL::SecurityError::create(realm(), "Cannot pushState or replaceState to incompatible URL"_fly_string);
     }
 
     // FIXME: 7. Let navigation be history's relevant global object's navigation API.

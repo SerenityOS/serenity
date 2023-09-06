@@ -64,7 +64,7 @@ void FetchController::abort(JS::Realm& realm, Optional<JS::Value> error)
     m_state = State::Aborted;
 
     // 2. Let fallbackError be an "AbortError" DOMException.
-    auto fallback_error = WebIDL::AbortError::create(realm, "Fetch was aborted"sv);
+    auto fallback_error = WebIDL::AbortError::create(realm, "Fetch was aborted"_fly_string);
 
     // 3. Set error to fallbackError if it is not given.
     if (!error.has_value())
