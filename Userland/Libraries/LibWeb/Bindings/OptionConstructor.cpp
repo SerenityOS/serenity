@@ -51,7 +51,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> OptionConstructor::construct
 
     // 3. If text is not the empty string, then append to option a new Text node whose data is text.
     if (vm.argument_count() > 0) {
-        auto text = TRY(vm.argument(0).to_deprecated_string(vm));
+        auto text = TRY(vm.argument(0).to_string(vm));
         if (!text.is_empty()) {
             auto new_text_node = vm.heap().allocate<DOM::Text>(realm, document, text);
             MUST(option_element->append_child(*new_text_node));

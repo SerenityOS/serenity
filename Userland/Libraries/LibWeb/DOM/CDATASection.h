@@ -21,7 +21,7 @@ public:
     virtual DeprecatedFlyString node_name() const override { return "#cdata-section"; }
 
 private:
-    CDATASection(Document&, DeprecatedString const&);
+    CDATASection(Document&, String const&);
 
     virtual void initialize(JS::Realm&) override;
 };

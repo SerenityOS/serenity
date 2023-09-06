@@ -9,7 +9,7 @@
 
 namespace Web::DOM {
 
-CDATASection::CDATASection(Document& document, DeprecatedString const& data)
+CDATASection::CDATASection(Document& document, String const& data)
     : Text(document, NodeType::CDATA_SECTION_NODE, data)
 {
 }

@@ -1422,7 +1422,7 @@ JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
 
 JS::NonnullGCPtr<Text> Document::create_text_node(DeprecatedString const& data)
 {
-    return heap().allocate<Text>(realm(), *this, data);
+    return heap().allocate<Text>(realm(), *this, MUST(String::from_deprecated_string(data)));
 }
 
 JS::NonnullGCPtr<Comment> Document::create_comment(DeprecatedString const& data)

@@ -26,7 +26,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> convert_nodes_to_single_node(Vector<
         if (node.has<JS::Handle<Node>>())
             return *node.get<JS::Handle<Node>>();
 
-        return document.heap().allocate<DOM::Text>(document.realm(), document, node.get<DeprecatedString>());
+        return document.heap().allocate<DOM::Text>(document.realm(), document, MUST(String::from_deprecated_string(node.get<DeprecatedString>())));
     };
 
     if (nodes.size() == 1)

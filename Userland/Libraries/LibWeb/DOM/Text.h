@@ -18,7 +18,7 @@ class Text : public CharacterData {
 public:
     virtual ~Text() override = default;
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> construct_impl(JS::Realm& realm, DeprecatedString const& data);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> construct_impl(JS::Realm& realm, String const& data);
 
     // ^Node
     virtual DeprecatedFlyString node_name() const override { return "#text"; }
@@ -35,8 +35,8 @@ public:
     void set_is_password_input(Badge<HTML::HTMLInputElement>, bool b) { m_is_password_input = b; }
 
 protected:
-    Text(Document&, DeprecatedString const&);
-    Text(Document&, NodeType, DeprecatedString const&);
+    Text(Document&, String const&);
+    Text(Document&, NodeType, String const&);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;

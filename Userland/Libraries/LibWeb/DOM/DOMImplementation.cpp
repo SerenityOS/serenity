@@ -118,7 +118,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(Optional<Stri
         MUST(head_element->append_child(title_element));
 
         // 2. Append a new Text node, with its data set to title (which could be the empty string) and its node document set to doc, to the title element created earlier.
-        auto text_node = heap().allocate<Text>(realm(), html_document, title->to_deprecated_string());
+        auto text_node = heap().allocate<Text>(realm(), html_document, title.value());
         MUST(title_element->append_child(*text_node));
     }
 
