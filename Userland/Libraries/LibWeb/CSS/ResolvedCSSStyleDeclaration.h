@@ -19,10 +19,10 @@ public:
     virtual ~ResolvedCSSStyleDeclaration() override = default;
 
     virtual size_t length() const override;
-    virtual DeprecatedString item(size_t index) const override;
+    virtual String item(size_t index) const override;
     virtual Optional<StyleProperty> property(PropertyID) const override;
     virtual WebIDL::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority) override;
-    virtual WebIDL::ExceptionOr<DeprecatedString> remove_property(PropertyID) override;
+    virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) override;
 
     virtual DeprecatedString serialized() const override;
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;

@@ -1,5 +1,5 @@
 // https://drafts.csswg.org/cssom/#cssstyledeclaration
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface CSSStyleDeclaration {
 
     [CEReactions] attribute CSSOMString cssText;
