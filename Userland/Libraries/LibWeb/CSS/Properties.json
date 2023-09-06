@@ -687,6 +687,16 @@
     ],
     "percentages-resolve-to": "length"
   },
+  "column-count": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "integer [1,∞]"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ]
+  },
   "content": {
     "inherited": false,
     "initial": "normal",
