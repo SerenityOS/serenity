@@ -2001,7 +2001,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
 
     float const font_size_in_pt = font_size_in_px * 0.75f;
 
-    auto find_font = [&](String const& family) -> RefPtr<Gfx::Font const> {
+    auto find_font = [&](FlyString const& family) -> RefPtr<Gfx::Font const> {
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
         FontFaceKey key {
@@ -2060,7 +2060,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         default:
             return {};
         }
-        return find_font(String::from_deprecated_string(Platform::FontPlugin::the().generic_font_name(generic_font)).release_value_but_fixme_should_propagate_errors());
+        return find_font(Platform::FontPlugin::the().generic_font_name(generic_font));
     };
 
     RefPtr<Gfx::Font const> found_font;
