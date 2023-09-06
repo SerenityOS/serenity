@@ -502,7 +502,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     m_placeholder_element = heap().allocate<PlaceholderElement>(realm(), document());
     MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
 
-    m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
+    m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), MUST(String::from_deprecated_string(initial_value)));
     m_placeholder_text_node->set_data(deprecated_attribute(HTML::AttributeNames::placeholder));
     m_placeholder_text_node->set_owner_input_element({}, *this);
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
@@ -511,7 +511,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     m_inner_text_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(m_inner_text_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
 
-    m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
+    m_text_node = heap().allocate<DOM::Text>(realm(), document(), MUST(String::from_deprecated_string(initial_value)));
     if (m_type == TypeAttributeState::FileUpload) {
         // NOTE: file upload state is mutable, but we don't allow the text node to be modifed
         m_text_node->set_always_editable(false);

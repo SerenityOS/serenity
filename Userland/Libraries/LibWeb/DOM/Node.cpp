@@ -805,7 +805,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         auto text = verify_cast<Text>(this);
 
         // Set copy’s data to that of node.
-        auto text_copy = heap().allocate<Text>(realm(), *document, text->data());
+        auto text_copy = heap().allocate<Text>(realm(), *document, MUST(String::from_deprecated_string(text->data())));
         copy = move(text_copy);
     } else if (is<Comment>(this)) {
         // Comment
@@ -1257,7 +1257,7 @@ void Node::string_replace_all(DeprecatedString const& string)
 
     // 2. If string is not the empty string, then set node to a new Text node whose data is string and node document is parent’s node document.
     if (!string.is_empty())
-        node = heap().allocate<Text>(realm(), document(), string);
+        node = heap().allocate<Text>(realm(), document(), MUST(String::from_deprecated_string(string)));
 
     // 3. Replace all with node within parent.
     replace_all(node);

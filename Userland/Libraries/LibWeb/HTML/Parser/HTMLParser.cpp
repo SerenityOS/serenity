@@ -1009,7 +1009,7 @@ DOM::Text* HTMLParser::find_character_insertion_node()
     if (adjusted_insertion_location.insert_before_sibling) {
         if (is_empty_text_node(adjusted_insertion_location.insert_before_sibling->previous_sibling()))
             return static_cast<DOM::Text*>(adjusted_insertion_location.insert_before_sibling->previous_sibling());
-        auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "");
+        auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), String {});
         adjusted_insertion_location.parent->insert_before(*new_text_node, *adjusted_insertion_location.insert_before_sibling);
         return new_text_node;
     }
@@ -1017,7 +1017,7 @@ DOM::Text* HTMLParser::find_character_insertion_node()
         return nullptr;
     if (is_empty_text_node(adjusted_insertion_location.parent->last_child()))
         return static_cast<DOM::Text*>(adjusted_insertion_location.parent->last_child());
-    auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "");
+    auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), String {});
     MUST(adjusted_insertion_location.parent->append_child(*new_text_node));
     return new_text_node;
 }
