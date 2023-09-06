@@ -7,6 +7,7 @@
 
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -15,7 +16,6 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Promise.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWasm/AbstractMachine/Validator.h>
@@ -283,10 +283,10 @@ JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM& vm, Wasm::Module const&
     auto link_result = linker.finish();
     if (link_result.is_error()) {
         // FIXME: Throw a LinkError.
-        JS::ThrowableStringBuilder builder(vm);
-        MUST_OR_THROW_OOM(builder.append("LinkError: Missing "sv));
-        MUST_OR_THROW_OOM(builder.join(' ', link_result.error().missing_imports));
-        return vm.throw_completion<JS::TypeError>(MUST_OR_THROW_OOM(builder.to_string()));
+        StringBuilder builder;
+        builder.append("LinkError: Missing "sv);
+        builder.join(' ', link_result.error().missing_imports);
+        return vm.throw_completion<JS::TypeError>(MUST(builder.to_string()));
     }
 
     auto instance_result = s_abstract_machine.instantiate(module, link_result.release_value());
