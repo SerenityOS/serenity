@@ -27,7 +27,7 @@ public:
     virtual EventTarget* get_parent(Event const&) override;
 
     WebIDL::ExceptionOr<DeprecatedString> inner_html() const;
-    WebIDL::ExceptionOr<void> set_inner_html(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_inner_html(StringView);
 
 private:
     ShadowRoot(Document&, Element& host, Bindings::ShadowRootMode);

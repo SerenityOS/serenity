@@ -32,7 +32,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(Depr
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-WebIDL::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, StringView value)
 {
     // 1. Let context element be the context object's host if the context object is a ShadowRoot object, or the context object otherwise.
     //    (This is handled in Element and ShadowRoot)
