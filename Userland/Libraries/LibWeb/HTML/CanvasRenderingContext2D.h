@@ -73,11 +73,11 @@ public:
     virtual void stroke() override;
     virtual void stroke(Path2D const& path) override;
 
-    virtual void fill_text(DeprecatedString const&, float x, float y, Optional<double> max_width) override;
-    virtual void stroke_text(DeprecatedString const&, float x, float y, Optional<double> max_width) override;
+    virtual void fill_text(StringView, float x, float y, Optional<double> max_width) override;
+    virtual void stroke_text(StringView, float x, float y, Optional<double> max_width) override;
 
-    virtual void fill(DeprecatedString const& fill_rule) override;
-    virtual void fill(Path2D& path, DeprecatedString const& fill_rule) override;
+    virtual void fill(StringView fill_rule) override;
+    virtual void fill(Path2D& path, StringView fill_rule) override;
 
     virtual JS::GCPtr<ImageData> create_image_data(int width, int height) const override;
     virtual WebIDL::ExceptionOr<JS::GCPtr<ImageData>> get_image_data(int x, int y, int width, int height) const override;
@@ -87,10 +87,10 @@ public:
 
     JS::NonnullGCPtr<HTMLCanvasElement> canvas_for_binding() const;
 
-    virtual JS::NonnullGCPtr<TextMetrics> measure_text(DeprecatedString const& text) override;
+    virtual JS::NonnullGCPtr<TextMetrics> measure_text(StringView text) override;
 
-    virtual void clip(DeprecatedString const& fill_rule) override;
-    virtual void clip(Path2D& path, DeprecatedString const& fill_rule) override;
+    virtual void clip(StringView fill_rule) override;
+    virtual void clip(Path2D& path, StringView fill_rule) override;
 
     virtual bool image_smoothing_enabled() const override;
     virtual void set_image_smoothing_enabled(bool) override;

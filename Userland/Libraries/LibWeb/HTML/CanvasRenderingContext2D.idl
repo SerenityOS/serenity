@@ -20,7 +20,7 @@ enum CanvasTextAlign { "start", "end", "left", "right", "center" };
 enum CanvasTextBaseline { "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" };
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface CanvasRenderingContext2D {
     [ImplementedAs=canvas_for_binding] readonly attribute HTMLCanvasElement canvas;
 };
