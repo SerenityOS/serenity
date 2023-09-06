@@ -31,7 +31,7 @@ void TextEncoder::initialize(JS::Realm& realm)
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encode
-JS::Uint8Array* TextEncoder::encode(DeprecatedString const& input) const
+JS::Uint8Array* TextEncoder::encode(String const& input) const
 {
     // NOTE: The AK::DeprecatedString returned from PrimitiveString::string() is always UTF-8, regardless of the internal string type, so most of these steps are no-ops.
 
@@ -43,16 +43,16 @@ JS::Uint8Array* TextEncoder::encode(DeprecatedString const& input) const
     //     3. Assert: result is not an error.
     //     4. If result is finished, then convert output into a byte sequence and return a Uint8Array object wrapping an ArrayBuffer containing output.
 
-    auto byte_buffer = input.to_byte_buffer();
+    auto byte_buffer = MUST(ByteBuffer::copy(input.bytes()));
     auto array_length = byte_buffer.size();
     auto array_buffer = JS::ArrayBuffer::create(realm(), move(byte_buffer));
     return JS::Uint8Array::create(realm(), array_length, *array_buffer);
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encoding
-DeprecatedFlyString const& TextEncoder::encoding()
+FlyString const& TextEncoder::encoding()
 {
-    static DeprecatedFlyString encoding = "utf-8"sv;
+    static const FlyString encoding = "utf-8"_fly_string;
     return encoding;
 }
 
