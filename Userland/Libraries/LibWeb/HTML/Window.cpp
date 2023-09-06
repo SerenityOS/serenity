@@ -920,14 +920,14 @@ JS::GCPtr<WindowProxy const> Window::parent() const
 JS::GCPtr<DOM::Element const> Window::frame_element() const
 {
     // 1. Let current be this's node navigable.
-    auto* current = browsing_context();
+    auto current = navigable();
 
     // 2. If current is null, then return null.
     if (!current)
         return {};
 
     // 3. Let container be current's container.
-    auto* container = current->container();
+    auto container = current->container();
 
     // 4. If container is null, then return null.
     if (!container)
