@@ -88,7 +88,7 @@ ALWAYS_INLINE static bool is_hangul_trailing(u32 code_point)
 }
 
 // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G56669
-static ErrorOr<void> decompose_hangul_code_point(u32 code_point, Vector<u32>& code_points_output)
+static void decompose_hangul_code_point(u32 code_point, Vector<u32>& code_points_output)
 {
     auto const index = code_point - HANGUL_SYLLABLE_BASE;
 
@@ -100,12 +100,10 @@ static ErrorOr<void> decompose_hangul_code_point(u32 code_point, Vector<u32>& co
     auto const vowel_part = HANGUL_VOWEL_BASE + vowel_index;
     auto const trailing_part = HANGUL_TRAILING_BASE + trailing_index;
 
-    TRY(code_points_output.try_append(leading_part));
-    TRY(code_points_output.try_append(vowel_part));
+    code_points_output.append(leading_part);
+    code_points_output.append(vowel_part);
     if (trailing_index != 0)
-        TRY(code_points_output.try_append(trailing_part));
-
-    return {};
+        code_points_output.append(trailing_part);
 }
 
 // L, V and LV, T Hangul Syllable Composition
@@ -152,7 +150,7 @@ enum class UseCompatibility {
     No
 };
 
-static ErrorOr<void> decompose_code_point(u32 code_point, Vector<u32>& code_points_output, [[maybe_unused]] UseCompatibility use_compatibility)
+static void decompose_code_point(u32 code_point, Vector<u32>& code_points_output, [[maybe_unused]] UseCompatibility use_compatibility)
 {
     if (is_hangul_code_point(code_point))
         return decompose_hangul_code_point(code_point, code_points_output);
@@ -161,14 +159,12 @@ static ErrorOr<void> decompose_code_point(u32 code_point, Vector<u32>& code_poin
     auto const mapping = Unicode::code_point_decomposition(code_point);
     if (mapping.has_value() && (mapping->tag == CompatibilityFormattingTag::Canonical || use_compatibility == UseCompatibility::Yes)) {
         for (auto code_point : mapping->decomposition) {
-            TRY(decompose_code_point(code_point, code_points_output, use_compatibility));
+            decompose_code_point(code_point, code_points_output, use_compatibility);
         }
     } else {
-        TRY(code_points_output.try_append(code_point));
+        code_points_output.append(code_point);
     }
 #endif
-
-    return {};
 }
 
 // This can be any sorting algorithm that maintains order (like std::stable_sort),
@@ -251,43 +247,43 @@ static void canonical_composition_algorithm(Vector<u32>& code_points)
     }
 }
 
-static ErrorOr<Vector<u32>> normalize_nfd(Utf8View string)
+static Vector<u32> normalize_nfd(Utf8View string)
 {
     Vector<u32> result;
     for (auto const code_point : string)
-        TRY(decompose_code_point(code_point, result, UseCompatibility::No));
+        decompose_code_point(code_point, result, UseCompatibility::No);
 
     canonical_ordering_algorithm(result);
     return result;
 }
 
-static ErrorOr<Vector<u32>> normalize_nfc(Utf8View string)
+static Vector<u32> normalize_nfc(Utf8View string)
 {
-    auto result = TRY(normalize_nfd(string));
+    auto result = normalize_nfd(string);
     canonical_composition_algorithm(result);
 
     return result;
 }
 
-static ErrorOr<Vector<u32>> normalize_nfkd(Utf8View string)
+static Vector<u32> normalize_nfkd(Utf8View string)
 {
     Vector<u32> result;
     for (auto const code_point : string)
-        TRY(decompose_code_point(code_point, result, UseCompatibility::Yes));
+        decompose_code_point(code_point, result, UseCompatibility::Yes);
 
     canonical_ordering_algorithm(result);
     return result;
 }
 
-static ErrorOr<Vector<u32>> normalize_nfkc(Utf8View string)
+static Vector<u32> normalize_nfkc(Utf8View string)
 {
-    auto result = TRY(normalize_nfkd(string));
+    auto result = normalize_nfkd(string);
     canonical_composition_algorithm(result);
 
     return result;
 }
 
-static ErrorOr<Vector<u32>> normalize_implementation(Utf8View string, NormalizationForm form)
+static Vector<u32> normalize_implementation(Utf8View string, NormalizationForm form)
 {
     switch (form) {
     case NormalizationForm::NFD:
@@ -302,15 +298,15 @@ static ErrorOr<Vector<u32>> normalize_implementation(Utf8View string, Normalizat
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<String> normalize(StringView string, NormalizationForm form)
+String normalize(StringView string, NormalizationForm form)
 {
-    auto const code_points = TRY(normalize_implementation(Utf8View { string }, form));
+    auto const code_points = normalize_implementation(Utf8View { string }, form);
 
     StringBuilder builder;
     for (auto code_point : code_points)
-        TRY(builder.try_append_code_point(code_point));
+        builder.append_code_point(code_point);
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

@@ -666,7 +666,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 
     // 6. Let ns be the String value that is the result of normalizing S into the normalization form named by f as specified in https://unicode.org/reports/tr15/.
     auto unicode_form = Unicode::normalization_form_from_string(form);
-    auto ns = TRY_OR_THROW_OOM(vm, Unicode::normalize(string, unicode_form));
+    auto ns = Unicode::normalize(string, unicode_form);
 
     // 7. Return ns.
     return PrimitiveString::create(vm, move(ns));
