@@ -934,6 +934,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         // 1. Navigate to a fragment given navigable, url, historyHandling, and navigationId.
         TRY(navigate_to_a_fragment(url, to_history_handling_behavior(history_handling), navigation_id));
 
+        traversable_navigable()->process_session_history_traversal_queue();
+
         // 2. Return.
         return {};
     }

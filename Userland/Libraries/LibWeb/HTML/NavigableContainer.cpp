@@ -208,6 +208,9 @@ Optional<AK::URL> NavigableContainer::shared_attribute_processing_steps_for_ifra
     // 4. If url matches about:blank and initialInsertion is true, then perform the URL and history update steps given element's content navigable's active document and url.
     if (url_matches_about_blank(url) && initial_insertion) {
         perform_url_and_history_update_steps(*m_content_navigable->active_document(), url);
+        // NOTE: Not in the spec but we need to make sure that "apply the history step" for initial navigation to about:blank
+        //       is applied before subsequent navigation.
+        navigable()->traversable_navigable()->process_session_history_traversal_queue();
     }
 
     // 5. Return url.
