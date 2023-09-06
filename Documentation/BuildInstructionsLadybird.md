@@ -136,7 +136,7 @@ ninja -C Build/ladybird debug
 To run without ninja rule:
 ```
 export SERENITY_SOURCE_DIR=$(realpath ../)
-./Build/ladybird/ladybird # or, in macOS: open ./Build/ladybird/ladybird.app
+./Build/ladybird/bin/ladybird # or, in macOS: open ./Build/ladybird/bin/ladybird.app
 ```
 
 ### Debugging with CLion
