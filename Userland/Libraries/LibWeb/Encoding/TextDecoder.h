@@ -21,24 +21,24 @@ class TextDecoder : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TextDecoder, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> construct_impl(JS::Realm&, DeprecatedFlyString encoding);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> construct_impl(JS::Realm&, FlyString encoding);
 
     virtual ~TextDecoder() override;
 
-    WebIDL::ExceptionOr<DeprecatedString> decode(Optional<JS::Handle<JS::Object>> const&) const;
+    WebIDL::ExceptionOr<String> decode(Optional<JS::Handle<JS::Object>> const&) const;
 
-    DeprecatedFlyString const& encoding() const { return m_encoding; }
+    FlyString const& encoding() const { return m_encoding; }
     bool fatal() const { return m_fatal; }
     bool ignore_bom() const { return m_ignore_bom; }
 
 private:
     // https://encoding.spec.whatwg.org/#dom-textdecoder
-    TextDecoder(JS::Realm&, TextCodec::Decoder&, DeprecatedFlyString encoding, bool fatal, bool ignore_bom);
+    TextDecoder(JS::Realm&, TextCodec::Decoder&, FlyString encoding, bool fatal, bool ignore_bom);
 
     virtual void initialize(JS::Realm&) override;
 
     TextCodec::Decoder& m_decoder;
-    DeprecatedFlyString m_encoding;
+    FlyString m_encoding;
     bool m_fatal { false };
     bool m_ignore_bom { false };
 };
