@@ -1,6 +1,6 @@
 #import <DOM/Attr.idl>
 
-[Exposed=Window, LegacyUnenumerableNamedProperties, UseDeprecatedAKString]
+[Exposed=Window, LegacyUnenumerableNamedProperties]
 interface NamedNodeMap {
     readonly attribute unsigned long length;
 

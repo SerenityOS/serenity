@@ -87,9 +87,14 @@ Attr const* NamedNodeMap::get_named_item(StringView qualified_name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-getnameditemns
-Attr const* NamedNodeMap::get_named_item_ns(StringView namespace_, StringView local_name) const
+Attr const* NamedNodeMap::get_named_item_ns(Optional<String> const& namespace_, StringView local_name) const
 {
-    return get_attribute_ns(namespace_, local_name);
+    // FIXME: This conversion is quite ugly.
+    StringView namespace_view;
+    if (namespace_.has_value())
+        namespace_view = namespace_->bytes_as_string_view();
+
+    return get_attribute_ns(namespace_view, local_name);
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-setnameditem
@@ -119,10 +124,15 @@ WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qual
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-removenameditemns
-WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(StringView namespace_, StringView local_name)
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item_ns(Optional<String> const& namespace_, StringView local_name)
 {
+    // FIXME: This conversion is quite ugly.
+    StringView namespace_view;
+    if (namespace_.has_value())
+        namespace_view = namespace_->bytes_as_string_view();
+
     // 1. Let attr be the result of removing an attribute given namespace, localName, and element.
-    auto const* attribute = remove_attribute_ns(namespace_, local_name);
+    auto const* attribute = remove_attribute_ns(namespace_view, local_name);
 
     // 2. If attr is null, then throw a "NotFoundError" DOMException.
     if (!attribute)
