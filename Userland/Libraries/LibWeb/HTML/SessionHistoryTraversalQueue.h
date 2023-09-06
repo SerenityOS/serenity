@@ -31,6 +31,14 @@ public:
         }
     }
 
+    void process()
+    {
+        while (m_queue.size() > 0) {
+            auto steps = m_queue.take_first();
+            steps();
+        }
+    }
+
 private:
     Vector<JS::SafeFunction<void()>> m_queue;
     RefPtr<Core::Timer> m_timer;
