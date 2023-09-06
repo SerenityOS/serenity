@@ -22,18 +22,18 @@ public:
     virtual void initialize(JS::Realm&) override;
 
     virtual size_t length() const = 0;
-    virtual DeprecatedString item(size_t index) const = 0;
+    virtual String item(size_t index) const = 0;
 
     virtual Optional<StyleProperty> property(PropertyID) const = 0;
 
     virtual WebIDL::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority = ""sv) = 0;
-    virtual WebIDL::ExceptionOr<DeprecatedString> remove_property(PropertyID) = 0;
+    virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) = 0;
 
     WebIDL::ExceptionOr<void> set_property(StringView property_name, StringView css_text, StringView priority);
-    WebIDL::ExceptionOr<DeprecatedString> remove_property(StringView property_name);
+    WebIDL::ExceptionOr<String> remove_property(StringView property_name);
 
-    DeprecatedString get_property_value(StringView property) const;
-    DeprecatedString get_property_priority(StringView property) const;
+    String get_property_value(StringView property) const;
+    StringView get_property_priority(StringView property) const;
 
     DeprecatedString css_text() const;
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) = 0;
@@ -59,12 +59,12 @@ public:
     virtual ~PropertyOwningCSSStyleDeclaration() override = default;
 
     virtual size_t length() const override;
-    virtual DeprecatedString item(size_t index) const override;
+    virtual String item(size_t index) const override;
 
     virtual Optional<StyleProperty> property(PropertyID) const override;
 
     virtual WebIDL::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority) override;
-    virtual WebIDL::ExceptionOr<DeprecatedString> remove_property(PropertyID) override;
+    virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) override;
 
     Vector<StyleProperty> const& properties() const { return m_properties; }
     HashMap<DeprecatedString, StyleProperty> const& custom_properties() const { return m_custom_properties; }

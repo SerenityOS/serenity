@@ -72,7 +72,7 @@ size_t ResolvedCSSStyleDeclaration::length() const
     return 0;
 }
 
-DeprecatedString ResolvedCSSStyleDeclaration::item(size_t index) const
+String ResolvedCSSStyleDeclaration::item(size_t index) const
 {
     (void)index;
     return {};
@@ -944,7 +944,7 @@ WebIDL::ExceptionOr<void> ResolvedCSSStyleDeclaration::set_property(PropertyID, 
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-removeproperty
-WebIDL::ExceptionOr<DeprecatedString> ResolvedCSSStyleDeclaration::remove_property(PropertyID)
+WebIDL::ExceptionOr<String> ResolvedCSSStyleDeclaration::remove_property(PropertyID)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
     return WebIDL::NoModificationAllowedError::create(realm(), "Cannot remove properties from result of getComputedStyle()"_fly_string);

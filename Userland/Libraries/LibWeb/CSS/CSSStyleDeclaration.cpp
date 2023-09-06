@@ -38,11 +38,11 @@ PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(JS::Realm& 
 {
 }
 
-DeprecatedString PropertyOwningCSSStyleDeclaration::item(size_t index) const
+String PropertyOwningCSSStyleDeclaration::item(size_t index) const
 {
     if (index >= m_properties.size())
         return {};
-    return CSS::string_from_property_id(m_properties[index].property_id);
+    return MUST(String::from_utf8(CSS::string_from_property_id(m_properties[index].property_id)));
 }
 
 JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration> ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
@@ -128,7 +128,7 @@ WebIDL::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_property(Proper
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-removeproperty
-WebIDL::ExceptionOr<DeprecatedString> PropertyOwningCSSStyleDeclaration::remove_property(PropertyID property_id)
+WebIDL::ExceptionOr<String> PropertyOwningCSSStyleDeclaration::remove_property(PropertyID property_id)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
     // NOTE: This is handled by the virtual override in ResolvedCSSStyleDeclaration.
@@ -202,7 +202,7 @@ bool PropertyOwningCSSStyleDeclaration::set_a_css_declaration(PropertyID propert
     return true;
 }
 
-DeprecatedString CSSStyleDeclaration::get_property_value(StringView property_name) const
+String CSSStyleDeclaration::get_property_value(StringView property_name) const
 {
     auto property_id = property_id_from_string(property_name);
     if (!property_id.has_value())
@@ -210,11 +210,11 @@ DeprecatedString CSSStyleDeclaration::get_property_value(StringView property_nam
     auto maybe_property = property(property_id.value());
     if (!maybe_property.has_value())
         return {};
-    return maybe_property->value->to_string().to_deprecated_string();
+    return maybe_property->value->to_string();
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-getpropertypriority
-DeprecatedString CSSStyleDeclaration::get_property_priority(StringView property_name) const
+StringView CSSStyleDeclaration::get_property_priority(StringView property_name) const
 {
     auto property_id = property_id_from_string(property_name);
     if (!property_id.has_value())
@@ -222,7 +222,7 @@ DeprecatedString CSSStyleDeclaration::get_property_priority(StringView property_
     auto maybe_property = property(property_id.value());
     if (!maybe_property.has_value())
         return {};
-    return maybe_property->important == Important::Yes ? "important" : "";
+    return maybe_property->important == Important::Yes ? "important"sv : ""sv;
 }
 
 WebIDL::ExceptionOr<void> CSSStyleDeclaration::set_property(StringView property_name, StringView css_text, StringView priority)
@@ -233,11 +233,11 @@ WebIDL::ExceptionOr<void> CSSStyleDeclaration::set_property(StringView property_
     return set_property(property_id.value(), css_text, priority);
 }
 
-WebIDL::ExceptionOr<DeprecatedString> CSSStyleDeclaration::remove_property(StringView property_name)
+WebIDL::ExceptionOr<String> CSSStyleDeclaration::remove_property(StringView property_name)
 {
     auto property_id = property_id_from_string(property_name);
     if (!property_id.has_value())
-        return DeprecatedString::empty();
+        return String {};
     return remove_property(property_id.value());
 }
 
