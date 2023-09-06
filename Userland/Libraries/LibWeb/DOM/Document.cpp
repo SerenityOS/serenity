@@ -1932,6 +1932,9 @@ bool Document::is_completely_loaded() const
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#completely-finish-loading
 void Document::completely_finish_loading()
 {
+    if (!navigable())
+        return;
+
     // 1. Assert: document's browsing context is non-null.
     VERIFY(browsing_context());
 
@@ -1943,7 +1946,10 @@ void Document::completely_finish_loading()
         m_active_refresh_timer->start();
 
     // 3. Let container be document's browsing context's container.
-    auto container = JS::make_handle(browsing_context()->container());
+    if (!navigable()->container())
+        return;
+
+    auto container = JS::make_handle(navigable()->container());
 
     // 4. If container is an iframe element, then queue an element task on the DOM manipulation task source given container to run the iframe load event steps given container.
     if (container && is<HTML::HTMLIFrameElement>(*container)) {
