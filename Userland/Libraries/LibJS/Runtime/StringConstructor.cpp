@@ -51,7 +51,7 @@ ThrowCompletionOr<Value> StringConstructor::call()
     // 2. Else,
     // a. If NewTarget is undefined and value is a Symbol, return SymbolDescriptiveString(value).
     if (value.is_symbol())
-        return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, value.as_symbol().descriptive_string()));
+        return PrimitiveString::create(vm, MUST(value.as_symbol().descriptive_string()));
 
     // b. Let s be ? ToString(value).
     // 3. If NewTarget is undefined, return s.
@@ -126,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
             return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
 
         // d. Set result to the string-concatenation of result and UTF16EncodeCodePoint(ℝ(nextCP)).
-        TRY_OR_THROW_OOM(vm, code_point_to_utf16(string, static_cast<u32>(code_point)));
+        MUST(code_point_to_utf16(string, static_cast<u32>(code_point)));
     }
 
     // 3. Assert: If codePoints is empty, then result is the empty String.
