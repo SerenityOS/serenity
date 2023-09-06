@@ -238,7 +238,6 @@ set(SOURCES
     Runtime/Temporal/ZonedDateTime.cpp
     Runtime/Temporal/ZonedDateTimeConstructor.cpp
     Runtime/Temporal/ZonedDateTimePrototype.cpp
-    Runtime/ThrowableStringBuilder.cpp
     Runtime/TypedArray.cpp
     Runtime/TypedArrayConstructor.cpp
     Runtime/TypedArrayPrototype.cpp
