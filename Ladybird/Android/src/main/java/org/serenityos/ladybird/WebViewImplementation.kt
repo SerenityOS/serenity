@@ -6,13 +6,18 @@
 
 package org.serenityos.ladybird
 
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
 
 /**
  * Wrapper around WebView::ViewImplementation for use by Kotlin
  */
-class WebViewImplementation {
+class WebViewImplementation(
+    context: Context,
+    private var appContext: Context = context.applicationContext
+) {
     // Instance Pointer to native object, very unsafe :)
     private var nativeInstance = nativeObjectInit()
 
@@ -34,6 +39,20 @@ class WebViewImplementation {
 
     fun setViewportGeometry(w: Int, h: Int) {
         nativeSetViewportGeometry(nativeInstance, w, h)
+    }
+
+    fun bindWebContentService(ipcFd: Int, fdPassingFd: Int) {
+        var connector = WebContentServiceConnection(ipcFd, fdPassingFd)
+        connector.onDisconnect = {
+            // FIXME: Notify impl that service is dead and might need restarted
+            Log.e("WebContentView", "WebContent Died! :(")
+        }
+        // FIXME: Unbind this at some point maybe
+        appContext.bindService(
+            Intent(appContext, WebContentService::class.java),
+            connector,
+            Context.BIND_AUTO_CREATE
+        )
     }
 
     private external fun nativeObjectInit(): Long

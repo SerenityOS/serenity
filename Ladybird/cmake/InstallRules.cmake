@@ -38,7 +38,10 @@ list(REMOVE_ITEM all_required_lagom_libraries ladybird)
 
 # Install webcontent impl library if it exists
 if (TARGET webcontent)
-  list(APPEND all_required_lagom_libraries webcontent)
+  get_target_property(target_type webcontent TYPE)
+  if ("${target_type}" STREQUAL STATIC_LIBRARY)
+      list(APPEND all_required_lagom_libraries webcontent)
+  endif()
 endif()
 
 install(TARGETS ${all_required_lagom_libraries}

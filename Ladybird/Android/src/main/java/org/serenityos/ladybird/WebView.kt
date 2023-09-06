@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2023, Andrew Kaster <akaster@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
 package org.serenityos.ladybird
 
 import android.content.Context
@@ -8,7 +14,7 @@ import android.view.View
 
 // FIXME: This should (eventually) implement NestedScrollingChild3 and ScrollingView
 class WebView(context: Context, attributeSet: AttributeSet) : View(context, attributeSet) {
-    private val viewImpl = WebViewImplementation()
+    private val viewImpl = WebViewImplementation(context)
     private lateinit var contentBitmap: Bitmap
 
     fun dispose() {
