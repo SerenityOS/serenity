@@ -744,7 +744,7 @@ do_dev() {
             git config core.autocrlf false
             git add --all --force
             git commit -a -m 'Initial import'
-            git tag source
+            git tag --no-sign source
         fi
 
         if [ -d "${PORT_META_DIR}/patches" ] && [ -n "$(find -L "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
@@ -770,7 +770,7 @@ do_dev() {
             done
         fi
 
-        git tag patched
+        git tag --no-sign patched
 
         popd
     }
