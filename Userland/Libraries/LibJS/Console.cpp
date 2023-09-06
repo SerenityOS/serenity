@@ -7,13 +7,13 @@
  */
 
 #include <AK/MemoryStream.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/Console.h>
 #include <LibJS/Print.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS {
 
@@ -501,16 +501,16 @@ void Console::report_exception(JS::Error const& exception, bool in_promise) cons
 ThrowCompletionOr<String> Console::value_vector_to_string(MarkedVector<Value> const& values)
 {
     auto& vm = realm().vm();
-    ThrowableStringBuilder builder(vm);
+    StringBuilder builder;
 
     for (auto const& item : values) {
         if (!builder.is_empty())
-            MUST_OR_THROW_OOM(builder.append(' '));
+            builder.append(' ');
 
-        MUST_OR_THROW_OOM(builder.append(TRY(item.to_string(vm))));
+        builder.append(TRY(item.to_string(vm)));
     }
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
@@ -520,27 +520,26 @@ ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
     auto elapsed_ms = timer.elapsed_time().to_milliseconds();
     auto duration = TRY(Temporal::balance_duration(vm, 0, 0, 0, 0, elapsed_ms, 0, "0"_sbigint, "year"sv));
 
-    auto append = [&](ThrowableStringBuilder& builder, auto format, auto number) -> ThrowCompletionOr<void> {
+    auto append = [&](auto& builder, auto format, auto number) {
         if (!builder.is_empty())
-            MUST_OR_THROW_OOM(builder.append(' '));
-        MUST_OR_THROW_OOM(builder.appendff(format, number));
-        return {};
+            builder.append(' ');
+        builder.appendff(format, number);
     };
 
-    ThrowableStringBuilder builder(vm);
+    StringBuilder builder;
 
     if (duration.days > 0)
-        MUST_OR_THROW_OOM(append(builder, "{:.0} day(s)"sv, duration.days));
+        append(builder, "{:.0} day(s)"sv, duration.days);
     if (duration.hours > 0)
-        MUST_OR_THROW_OOM(append(builder, "{:.0} hour(s)"sv, duration.hours));
+        append(builder, "{:.0} hour(s)"sv, duration.hours);
     if (duration.minutes > 0)
-        MUST_OR_THROW_OOM(append(builder, "{:.0} minute(s)"sv, duration.minutes));
+        append(builder, "{:.0} minute(s)"sv, duration.minutes);
     if (duration.seconds > 0 || duration.milliseconds > 0) {
         double combined_seconds = duration.seconds + (0.001 * duration.milliseconds);
-        MUST_OR_THROW_OOM(append(builder, "{:.3} seconds"sv, combined_seconds));
+        append(builder, "{:.3} seconds"sv, combined_seconds);
     }
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 // 2.1. Logger(logLevel, args), https://console.spec.whatwg.org/#logger

@@ -7,6 +7,7 @@
  */
 
 #include <AK/JsonValue.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
@@ -23,7 +24,6 @@
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
@@ -503,12 +503,12 @@ public:
 
         if (log_level == JS::Console::LogLevel::Trace) {
             auto trace = arguments.get<JS::Console::Trace>();
-            JS::ThrowableStringBuilder builder(*g_vm);
+            StringBuilder builder;
             if (!trace.label.is_empty())
-                MUST_OR_THROW_OOM(builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label));
+                builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label);
 
             for (auto& function_name : trace.stack)
-                MUST_OR_THROW_OOM(builder.appendff("{}-> {}\n", indent, function_name));
+                builder.appendff("{}-> {}\n", indent, function_name);
 
             outln("{}", builder.string_view());
             return JS::js_undefined();

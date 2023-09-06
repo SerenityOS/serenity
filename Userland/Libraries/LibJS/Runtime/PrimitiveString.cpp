@@ -7,13 +7,13 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/FlyString.h>
+#include <AK/StringBuilder.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PropertyKey.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 

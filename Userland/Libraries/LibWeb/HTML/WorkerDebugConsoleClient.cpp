@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringBuilder.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Realm.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 
@@ -40,12 +40,12 @@ JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::
 
     if (log_level == JS::Console::LogLevel::Trace) {
         auto trace = arguments.get<JS::Console::Trace>();
-        JS::ThrowableStringBuilder builder(vm);
+        StringBuilder builder;
         if (!trace.label.is_empty())
-            MUST_OR_THROW_OOM(builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label));
+            builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label);
 
         for (auto& function_name : trace.stack)
-            MUST_OR_THROW_OOM(builder.appendff("{}-> {}\n", indent, function_name));
+            builder.appendff("{}-> {}\n", indent, function_name);
 
         dbgln("{}", builder.string_view());
         return JS::js_undefined();
