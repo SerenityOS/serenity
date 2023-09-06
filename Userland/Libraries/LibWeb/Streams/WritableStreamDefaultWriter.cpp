@@ -56,7 +56,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::abort(JS
 
     // 1. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot abort a writer that has no locked stream"sv));
+        auto exception = JS::TypeError::create(realm, "Cannot abort a writer that has no locked stream"sv);
         return WebIDL::create_rejected_promise(realm, exception)->promise();
     }
 
@@ -73,13 +73,13 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::close()
 
     // 2. If stream is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot close a writer that has no locked stream"sv));
+        auto exception = JS::TypeError::create(realm, "Cannot close a writer that has no locked stream"sv);
         return WebIDL::create_rejected_promise(realm, exception)->promise();
     }
 
     // 3. If ! WritableStreamCloseQueuedOrInFlight(stream) is true, return a promise rejected with a TypeError exception.
     if (writable_stream_close_queued_or_in_flight(*m_stream)) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot close a stream that is already closed or errored"sv));
+        auto exception = JS::TypeError::create(realm, "Cannot close a stream that is already closed or errored"sv);
         return WebIDL::create_rejected_promise(realm, exception)->promise();
     }
 
@@ -110,7 +110,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::write(JS
 
     // 1. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot write to a writer that has no locked stream"sv));
+        auto exception = JS::TypeError::create(realm, "Cannot write to a writer that has no locked stream"sv);
         return WebIDL::create_rejected_promise(realm, exception)->promise();
     }
 

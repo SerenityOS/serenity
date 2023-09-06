@@ -26,7 +26,7 @@ class PromiseResolvingFunction final : public NativeFunction {
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    using FunctionType = Function<ThrowCompletionOr<Value>(VM&, Promise&, AlreadyResolved&)>;
+    using FunctionType = Function<Value(VM&, Promise&, AlreadyResolved&)>;
 
     static NonnullGCPtr<PromiseResolvingFunction> create(Realm&, Promise&, AlreadyResolved&, FunctionType);
 

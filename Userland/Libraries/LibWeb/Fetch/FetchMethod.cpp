@@ -105,7 +105,7 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
         // 3. If response is a network error, then reject p with a TypeError and abort these steps.
         if (response->is_network_error()) {
             auto message = response->network_error_message().value_or("Response is a network error"sv);
-            WebIDL::reject_promise(relevant_realm, promise_capability, JS::TypeError::create(relevant_realm, message).release_allocated_value_but_fixme_should_propagate_errors());
+            WebIDL::reject_promise(relevant_realm, promise_capability, JS::TypeError::create(relevant_realm, message));
             return;
         }
 

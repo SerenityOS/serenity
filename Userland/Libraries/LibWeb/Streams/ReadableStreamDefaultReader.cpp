@@ -76,13 +76,7 @@ void ReadLoopReadRequest::on_chunk(JS::Value chunk)
 {
     // 1. If chunk is not a Uint8Array object, call failureSteps with a TypeError and abort these steps.
     if (!chunk.is_object() || !is<JS::Uint8Array>(chunk.as_object())) {
-        auto exception = JS::TypeError::create(m_realm, "Chunk data is not Uint8Array"sv);
-        if (exception.is_error()) {
-            m_failure_steps(*exception.release_error().value());
-            return;
-        }
-
-        m_failure_steps(exception.value());
+        m_failure_steps(JS::TypeError::create(m_realm, "Chunk data is not Uint8Array"sv));
         return;
     }
 
@@ -162,7 +156,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamDefaultReader::
 
     // 1. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot read from an empty stream"sv));
+        auto exception = JS::TypeError::create(realm, "Cannot read from an empty stream"sv);
         auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
         return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
     }

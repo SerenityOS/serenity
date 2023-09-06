@@ -28,11 +28,11 @@ class Error : public Object {
 public:
     static NonnullGCPtr<Error> create(Realm&);
     static NonnullGCPtr<Error> create(Realm&, String message);
-    static ThrowCompletionOr<NonnullGCPtr<Error>> create(Realm&, StringView message);
+    static NonnullGCPtr<Error> create(Realm&, StringView message);
 
     virtual ~Error() override = default;
 
-    [[nodiscard]] ThrowCompletionOr<String> stack_string(VM&) const;
+    [[nodiscard]] String stack_string() const;
 
     ThrowCompletionOr<void> install_error_cause(Value options);
 
@@ -49,17 +49,17 @@ private:
 // NOTE: Making these inherit from Error is not required by the spec but
 //       our way of implementing the [[ErrorData]] internal slot, which is
 //       used in Object.prototype.toString().
-#define DECLARE_NATIVE_ERROR(ClassName, snake_name, PrototypeName, ConstructorName)           \
-    class ClassName final : public Error {                                                    \
-        JS_OBJECT(ClassName, Error);                                                          \
-                                                                                              \
-    public:                                                                                   \
-        static NonnullGCPtr<ClassName> create(Realm&);                                        \
-        static NonnullGCPtr<ClassName> create(Realm&, String message);                        \
-        static ThrowCompletionOr<NonnullGCPtr<ClassName>> create(Realm&, StringView message); \
-                                                                                              \
-        explicit ClassName(Object& prototype);                                                \
-        virtual ~ClassName() override = default;                                              \
+#define DECLARE_NATIVE_ERROR(ClassName, snake_name, PrototypeName, ConstructorName) \
+    class ClassName final : public Error {                                          \
+        JS_OBJECT(ClassName, Error);                                                \
+                                                                                    \
+    public:                                                                         \
+        static NonnullGCPtr<ClassName> create(Realm&);                              \
+        static NonnullGCPtr<ClassName> create(Realm&, String message);              \
+        static NonnullGCPtr<ClassName> create(Realm&, StringView message);          \
+                                                                                    \
+        explicit ClassName(Object& prototype);                                      \
+        virtual ~ClassName() override = default;                                    \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \

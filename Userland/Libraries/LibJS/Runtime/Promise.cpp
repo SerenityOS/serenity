@@ -71,7 +71,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
     // 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
 
     // 27.2.1.3.2 Promise Resolve Functions, https://tc39.es/ecma262/#sec-promise-resolve-functions
-    auto resolve_function = PromiseResolvingFunction::create(realm, *this, *already_resolved, [](auto& vm, auto& promise, auto& already_resolved) -> ThrowCompletionOr<Value> {
+    auto resolve_function = PromiseResolvingFunction::create(realm, *this, *already_resolved, [](auto& vm, auto& promise, auto& already_resolved) {
         dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Resolve function was called", &promise);
 
         auto& realm = *vm.current_realm();
@@ -97,7 +97,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Promise can't be resolved with itself, rejecting with error", &promise);
 
             // a. Let selfResolutionError be a newly created TypeError object.
-            auto self_resolution_error = MUST_OR_THROW_OOM(TypeError::create(realm, "Cannot resolve promise with itself"sv));
+            auto self_resolution_error = TypeError::create(realm, "Cannot resolve promise with itself"sv);
 
             // b. Perform RejectPromise(promise, selfResolutionError).
             promise.reject(self_resolution_error);
