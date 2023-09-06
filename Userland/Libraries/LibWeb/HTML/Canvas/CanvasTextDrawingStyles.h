@@ -36,7 +36,7 @@ public:
             font_style_value.font_families()->to_string());
     }
 
-    void set_font(DeprecatedString const& font)
+    void set_font(StringView font)
     {
         // The font IDL attribute, on setting, must be parsed as a CSS <'font'> value (but without supporting property-independent style sheet syntax like 'inherit'),
         // and the resulting font must be assigned to the context, with the 'line-height' component forced to 'normal', with the 'font-size' component converted to CSS pixels,

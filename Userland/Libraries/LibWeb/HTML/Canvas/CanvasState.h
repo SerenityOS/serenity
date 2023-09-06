@@ -52,13 +52,13 @@ public:
         Optional<Gfx::Color> as_color() const;
         Gfx::Color to_color_but_fixme_should_accept_any_paint_style() const;
 
-        using JsFillOrStrokeStyle = Variant<DeprecatedString, JS::Handle<CanvasGradient>, JS::Handle<CanvasPattern>>;
+        using JsFillOrStrokeStyle = Variant<String, JS::Handle<CanvasGradient>, JS::Handle<CanvasPattern>>;
 
         JsFillOrStrokeStyle to_js_fill_or_stroke_style() const
         {
             return m_fill_or_stroke_style.visit(
                 [&](Gfx::Color color) -> JsFillOrStrokeStyle {
-                    return color.to_deprecated_string();
+                    return MUST(String::from_deprecated_string(color.to_deprecated_string()));
                 },
                 [&](auto handle) -> JsFillOrStrokeStyle {
                     return handle;

@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/HTML/CanvasPattern.h>
@@ -21,12 +21,12 @@ template<typename IncludingClass>
 class CanvasFillStrokeStyles {
 public:
     ~CanvasFillStrokeStyles() = default;
-    using FillOrStrokeStyleVariant = Variant<DeprecatedString, JS::Handle<CanvasGradient>, JS::Handle<CanvasPattern>>;
+    using FillOrStrokeStyleVariant = Variant<String, JS::Handle<CanvasGradient>, JS::Handle<CanvasPattern>>;
 
     static CanvasState::FillOrStrokeStyle to_canvas_state_fill_or_stroke_style(auto const& style)
     {
         return style.visit(
-            [&](DeprecatedString const& string) -> CanvasState::FillOrStrokeStyle {
+            [&](String const& string) -> CanvasState::FillOrStrokeStyle {
                 return Gfx::Color::from_string(string).value_or(Color::Black);
             },
             [&](auto fill_or_stroke_style) -> CanvasState::FillOrStrokeStyle {

@@ -195,7 +195,7 @@ Optional<Gfx::AntiAliasingPainter> CanvasRenderingContext2D::antialiased_painter
     return {};
 }
 
-void CanvasRenderingContext2D::fill_text(DeprecatedString const& text, float x, float y, Optional<double> max_width)
+void CanvasRenderingContext2D::fill_text(StringView text, float x, float y, Optional<double> max_width)
 {
     if (max_width.has_value() && max_width.value() <= 0)
         return;
@@ -239,7 +239,7 @@ void CanvasRenderingContext2D::fill_text(DeprecatedString const& text, float x, 
     });
 }
 
-void CanvasRenderingContext2D::stroke_text(DeprecatedString const& text, float x, float y, Optional<double> max_width)
+void CanvasRenderingContext2D::stroke_text(StringView text, float x, float y, Optional<double> max_width)
 {
     // FIXME: Stroke the text instead of filling it.
     fill_text(text, x, y, max_width);
@@ -299,12 +299,12 @@ void CanvasRenderingContext2D::fill_internal(Gfx::Path const& path, Gfx::Painter
     });
 }
 
-void CanvasRenderingContext2D::fill(DeprecatedString const& fill_rule)
+void CanvasRenderingContext2D::fill(StringView fill_rule)
 {
     return fill_internal(path(), parse_fill_rule(fill_rule));
 }
 
-void CanvasRenderingContext2D::fill(Path2D& path, DeprecatedString const& fill_rule)
+void CanvasRenderingContext2D::fill(Path2D& path, StringView fill_rule)
 {
     auto transformed_path = path.path().copy_transformed(drawing_state().transform);
     return fill_internal(transformed_path, parse_fill_rule(fill_rule));
@@ -386,7 +386,7 @@ void CanvasRenderingContext2D::reset_to_default_state()
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-measuretext
-JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(DeprecatedString const& text)
+JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(StringView text)
 {
     // The measureText(text) method steps are to run the text preparation
     // algorithm, passing it text and the object implementing the CanvasText
@@ -430,7 +430,7 @@ RefPtr<Gfx::Font const> CanvasRenderingContext2D::current_font()
 {
     // When font style value is empty load default font
     if (!drawing_state().font_style_value) {
-        set_font("10px sans-serif");
+        set_font("10px sans-serif"sv);
     }
 
     // Get current loaded font
@@ -533,13 +533,13 @@ void CanvasRenderingContext2D::clip_internal(Gfx::Path& path, Gfx::Painter::Wind
     drawing_state().clip = CanvasClip { path, winding_rule };
 }
 
-void CanvasRenderingContext2D::clip(DeprecatedString const& fill_rule)
+void CanvasRenderingContext2D::clip(StringView fill_rule)
 {
     auto transformed_path = path().copy_transformed(drawing_state().transform);
     return clip_internal(transformed_path, parse_fill_rule(fill_rule));
 }
 
-void CanvasRenderingContext2D::clip(Path2D& path, DeprecatedString const& fill_rule)
+void CanvasRenderingContext2D::clip(Path2D& path, StringView fill_rule)
 {
     auto transformed_path = path.path().copy_transformed(drawing_state().transform);
     return clip_internal(transformed_path, parse_fill_rule(fill_rule));
