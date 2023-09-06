@@ -29,8 +29,11 @@ if (ENABLE_QT)
     target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network Qt::Multimedia)
     target_compile_definitions(WebContent PRIVATE HAVE_QT=1)
 else()
-    # FIXME: Remove when chromes are upstreamed
-    add_library(webcontent STATIC ${WEBCONTENT_SOURCES})
+    set(LIB_TYPE STATIC)
+    if (ANDROID)
+        set(LIB_TYPE SHARED)
+    endif()
+    add_library(webcontent ${LIB_TYPE} ${WEBCONTENT_SOURCES})
     target_include_directories(webcontent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
     target_include_directories(webcontent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
     target_link_libraries(webcontent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibWebView)
@@ -48,6 +51,11 @@ else()
               ${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.h
               ${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.h
     )
+
+    if (ANDROID)
+        target_sources(webcontent PRIVATE ../Android/src/main/cpp/WebContentService.cpp)
+        target_link_libraries(webcontent PRIVATE log)
+    endif()
 
     add_executable(WebContent main.cpp)
     target_link_libraries(WebContent PRIVATE webcontent)

@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Painter.h>
-#include <LibWebView/ViewImplementation.h>
+#include <Userland/Libraries/LibGfx/Bitmap.h>
+#include <Userland/Libraries/LibGfx/Painter.h>
+#include <Userland/Libraries/LibWeb/Crypto/Crypto.h>
+#include <Userland/Libraries/LibWebView/ViewImplementation.h>
 #include <android/bitmap.h>
 #include <android/log.h>
 #include <jni.h>
@@ -23,12 +24,74 @@ Gfx::BitmapFormat to_gfx_bitmap_format(i32 f)
     }
 }
 
+class JavaEnvironment {
+public:
+    JavaEnvironment(JavaVM* vm)
+        : m_vm(vm)
+    {
+        auto ret = m_vm->GetEnv(reinterpret_cast<void**>(&m_env), JNI_VERSION_1_6);
+        if (ret == JNI_EDETACHED) {
+            ret = m_vm->AttachCurrentThread(&m_env, nullptr);
+            VERIFY(ret == JNI_OK);
+            m_did_attach_thread = true;
+        } else if (ret == JNI_EVERSION) {
+            VERIFY_NOT_REACHED();
+        } else {
+            VERIFY(ret == JNI_OK);
+        }
+
+        VERIFY(m_env != nullptr);
+    }
+
+    ~JavaEnvironment()
+    {
+        if (m_did_attach_thread)
+            m_vm->DetachCurrentThread();
+    }
+
+    JNIEnv* get() const { return m_env; }
+
+private:
+    JavaVM* m_vm = nullptr;
+    JNIEnv* m_env = nullptr;
+    bool m_did_attach_thread = false;
+};
+
 class WebViewImplementationNative : public WebView::ViewImplementation {
 public:
+    WebViewImplementationNative(jobject thiz)
+        : m_java_instance(thiz)
+    {
+        // NOTE: m_java_instance's global ref is controlled by the JNI bindings
+        create_client(WebView::EnableCallgrindProfiling::No);
+    }
+
     virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint p) const override { return p; }
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint p) const override { return p; }
     virtual void update_zoom() override { }
+
+    NonnullRefPtr<WebView::WebContentClient> bind_web_content_client();
+
+    virtual void create_client(WebView::EnableCallgrindProfiling) override
+    {
+        m_client_state = {};
+
+        auto new_client = bind_web_content_client();
+
+        m_client_state.client = new_client;
+        m_client_state.client->on_web_content_process_crash = [] {
+            __android_log_print(ANDROID_LOG_ERROR, "Ladybird", "WebContent crashed!");
+            // FIXME: launch a new client
+        };
+
+        m_client_state.client_handle = MUST(Web::Crypto::generate_random_uuid());
+        client().async_set_window_handle(m_client_state.client_handle);
+
+        client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
+
+        // FIXME: update_palette, update system fonts
+    }
 
     void paint_into_bitmap(void* android_bitmap_raw, AndroidBitmapInfo const& info)
     {
@@ -64,40 +127,89 @@ public:
 
     static jclass global_class_reference;
     static jfieldID instance_pointer_field;
+    static jmethodID bind_webcontent_method;
+    static JavaVM* global_vm;
+
+    jobject java_instance() const { return m_java_instance; }
 
 private:
+    jobject m_java_instance = nullptr;
     Gfx::IntRect m_viewport_rect;
 };
 jclass WebViewImplementationNative::global_class_reference;
 jfieldID WebViewImplementationNative::instance_pointer_field;
+jmethodID WebViewImplementationNative::bind_webcontent_method;
+JavaVM* WebViewImplementationNative::global_vm;
+
+NonnullRefPtr<WebView::WebContentClient> WebViewImplementationNative::bind_web_content_client()
+{
+    JavaEnvironment env(WebViewImplementationNative::global_vm);
+
+    int socket_fds[2] {};
+    MUST(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
+
+    int ui_fd = socket_fds[0];
+    int wc_fd = socket_fds[1];
+
+    int fd_passing_socket_fds[2] {};
+    MUST(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds));
+
+    int ui_fd_passing_fd = fd_passing_socket_fds[0];
+    int wc_fd_passing_fd = fd_passing_socket_fds[1];
+
+    // NOTE: The java object takes ownership of the socket fds
+    env.get()->CallVoidMethod(m_java_instance, bind_webcontent_method, wc_fd, wc_fd_passing_fd);
+
+    auto socket = MUST(Core::LocalSocket::adopt_fd(ui_fd));
+    MUST(socket->set_blocking(true));
+
+    auto new_client = make_ref_counted<WebView::WebContentClient>(move(socket), *this);
+    new_client->set_fd_passing_socket(MUST(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
+
+    return new_client;
+}
+
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_org_serenityos_ladybird_WebViewImplementation_00024Companion_nativeClassInit(JNIEnv* env, jobject /* thiz */)
 {
+    auto ret = env->GetJavaVM(&WebViewImplementationNative::global_vm);
+    if (ret != 0)
+        TODO();
+
     auto local_class = env->FindClass("org/serenityos/ladybird/WebViewImplementation");
     if (!local_class)
         TODO();
     WebViewImplementationNative::global_class_reference = reinterpret_cast<jclass>(env->NewGlobalRef(local_class));
+    env->DeleteLocalRef(local_class);
 
     auto field = env->GetFieldID(WebViewImplementationNative::global_class_reference, "nativeInstance", "J");
     if (!field)
         TODO();
     WebViewImplementationNative::instance_pointer_field = field;
+
+    auto method = env->GetMethodID(WebViewImplementationNative::global_class_reference, "bindWebContentService", "(II)V");
+    if (!method)
+        TODO();
+    WebViewImplementationNative::bind_webcontent_method = method;
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_org_serenityos_ladybird_WebViewImplementation_nativeObjectInit(JNIEnv*, jobject /* thiz */)
+Java_org_serenityos_ladybird_WebViewImplementation_nativeObjectInit(JNIEnv* env, jobject thiz)
 {
-    auto instance = reinterpret_cast<jlong>(new WebViewImplementationNative);
+    auto ref = env->NewGlobalRef(thiz);
+    auto instance = reinterpret_cast<jlong>(new WebViewImplementationNative(ref));
     __android_log_print(ANDROID_LOG_DEBUG, "Ladybird", "New WebViewImplementationNative at %p", reinterpret_cast<void*>(instance));
     return instance;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_serenityos_ladybird_WebViewImplementation_nativeObjectDispose(JNIEnv*, jobject /* thiz */, jlong instance)
+Java_org_serenityos_ladybird_WebViewImplementation_nativeObjectDispose(JNIEnv* env, jobject /* thiz */, jlong instance)
 {
-    delete reinterpret_cast<WebViewImplementationNative*>(instance);
+    auto* impl = reinterpret_cast<WebViewImplementationNative*>(instance);
+    env->DeleteGlobalRef(impl->java_instance());
+    delete impl;
     __android_log_print(ANDROID_LOG_DEBUG, "Ladybird", "Destroyed WebViewImplementationNative at %p", reinterpret_cast<void*>(instance));
 }
 
