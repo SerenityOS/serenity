@@ -953,8 +953,8 @@ void Document::update_layout()
 
     // NOTE: If our parent document needs a relayout, we must do that *first*.
     //       This is necessary as the parent layout may cause our viewport to change.
-    if (browsing_context() && browsing_context()->container())
-        browsing_context()->container()->document().update_layout();
+    if (navigable() && navigable()->container())
+        navigable()->container()->document().update_layout();
 
     update_style();
 
