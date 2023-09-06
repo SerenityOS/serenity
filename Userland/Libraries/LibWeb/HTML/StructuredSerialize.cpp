@@ -127,7 +127,7 @@ public:
 
         // 5. If Type(value) is Symbol, then throw a "DataCloneError" DOMException.
         if (value.is_symbol())
-            return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize Symbol"sv);
+            return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize Symbol"_fly_string);
 
         // 6. Let serialized be an uninitialized value.
         //    NOTE: We use the range of the soon-to-be-serialized value in our serialized data buffer
@@ -173,7 +173,7 @@ public:
 
         // 12 - 24: FIXME: Serialize other data types
         else {
-            return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"sv));
+            return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"_fly_string));
         }
 
         // 25. Set memory[value] to serialized.
@@ -302,7 +302,7 @@ public:
                 break;
             }
             default:
-                m_error = "Unsupported type"sv;
+                m_error = "Unsupported type"_fly_string;
                 break;
             }
         }
@@ -311,16 +311,16 @@ public:
 
     WebIDL::ExceptionOr<JS::Value> result()
     {
-        if (m_error.is_null())
+        if (!m_error.has_value())
             return m_memory[0];
-        return WebIDL::DataCloneError::create(*m_vm.current_realm(), m_error);
+        return WebIDL::DataCloneError::create(*m_vm.current_realm(), m_error.value());
     }
 
 private:
     JS::VM& m_vm;
     SerializationRecord const& m_vector;
     JS::MarkedVector<JS::Value> m_memory; // Index -> JS value
-    StringView m_error;
+    Optional<FlyString> m_error;
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::PrimitiveString>> deserialize_string_primitive(JS::VM& vm, Vector<u32> const& vector, u32& position)
     {

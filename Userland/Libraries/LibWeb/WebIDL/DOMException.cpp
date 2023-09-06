@@ -9,17 +9,17 @@
 
 namespace Web::WebIDL {
 
-JS::NonnullGCPtr<DOMException> DOMException::create(JS::Realm& realm, DeprecatedFlyString const& name, DeprecatedFlyString const& message)
+JS::NonnullGCPtr<DOMException> DOMException::create(JS::Realm& realm, FlyString const& name, FlyString const& message)
 {
     return realm.heap().allocate<DOMException>(realm, realm, name, message);
 }
 
-JS::NonnullGCPtr<DOMException> DOMException::construct_impl(JS::Realm& realm, DeprecatedFlyString const& message, DeprecatedFlyString const& name)
+JS::NonnullGCPtr<DOMException> DOMException::construct_impl(JS::Realm& realm, FlyString const& message, FlyString const& name)
 {
     return realm.heap().allocate<DOMException>(realm, realm, name, message);
 }
 
-DOMException::DOMException(JS::Realm& realm, DeprecatedFlyString const& name, DeprecatedFlyString const& message)
+DOMException::DOMException(JS::Realm& realm, FlyString const& name, FlyString const& message)
     : PlatformObject(realm)
     , m_name(name)
     , m_message(message)

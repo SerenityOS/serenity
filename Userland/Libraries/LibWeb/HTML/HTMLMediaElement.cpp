@@ -342,7 +342,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> HTMLMediaElement::play()
     // 2. If the media element's error attribute is not null and its code is MEDIA_ERR_SRC_NOT_SUPPORTED, then return a promise
     //    rejected with a "NotSupportedError" DOMException.
     if (m_error && m_error->code() == MediaError::Code::SrcNotSupported) {
-        auto error = WebIDL::NotSupportedError::create(realm, m_error->message().to_deprecated_string());
+        auto error = WebIDL::NotSupportedError::create(realm, m_error->message());
         auto promise = WebIDL::create_rejected_promise(realm, error);
 
         return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
@@ -396,7 +396,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::set_volume(double volume)
     // set to the new value. If the new value is outside the range 0.0 to 1.0 inclusive, then, on setting, an
     // "IndexSizeError" DOMException must be thrown instead.
     if (volume < 0.0 || volume > 1.0)
-        return WebIDL::IndexSizeError::create(realm(), "Volume must be in the range 0.0 to 1.0, inclusive"sv);
+        return WebIDL::IndexSizeError::create(realm(), "Volume must be in the range 0.0 to 1.0, inclusive"_fly_string);
 
     m_volume = volume;
     volume_or_muted_attribute_changed();

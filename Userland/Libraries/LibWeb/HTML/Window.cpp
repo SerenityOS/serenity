@@ -363,7 +363,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         if (!url.is_empty()) {
             url_record = entry_settings_object().parse_url(url);
             if (!url_record.is_valid())
-                return WebIDL::SyntaxError::create(realm(), "URL is not valid");
+                return WebIDL::SyntaxError::create(realm(), "URL is not valid"_fly_string);
         }
 
         // FIXME: 5. If urlRecord matches about:blank, then perform the URL and history update steps given target browsing context's active document and urlRecord.
@@ -393,7 +393,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
             // 2. Parse url relative to the entry settings object, and set urlRecord to the resulting URL record, if any. If the parse a URL algorithm failed, then throw a "SyntaxError" DOMException.
             url_record = entry_settings_object().parse_url(url);
             if (!url_record.is_valid())
-                return WebIDL::SyntaxError::create(realm(), "URL is not valid");
+                return WebIDL::SyntaxError::create(realm(), "URL is not valid"_fly_string);
 
             // 3. Let request be a new request whose URL is urlRecord.
             auto request = Fetch::Infrastructure::Request::create(vm);

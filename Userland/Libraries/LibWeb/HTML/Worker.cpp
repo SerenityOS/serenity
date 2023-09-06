@@ -51,7 +51,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
 {
     // NOTE: We don't start a worker because they're not properly implemented yet and would likely crash.
     dbgln("FIXME: Implement web workers");
-    return WebIDL::NotSupportedError::create(document.realm(), "Web workers not supported yet");
+    return WebIDL::NotSupportedError::create(document.realm(), "Web workers not supported yet"_fly_string);
 
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 
@@ -75,7 +75,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
     // 4. If this fails, throw a "SyntaxError" DOMException.
     if (!url.is_valid()) {
         dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Invalid URL loaded '{}'.", script_url);
-        return WebIDL::SyntaxError::create(document.realm(), "url is not valid");
+        return WebIDL::SyntaxError::create(document.realm(), "url is not valid"_fly_string);
     }
 
     // 5. Let worker URL be the resulting URL record.

@@ -90,7 +90,7 @@ WebIDL::ExceptionOr<void> Body::fully_read(JS::Realm& realm, Web::Fetch::Infrast
         TRY_OR_THROW_OOM(vm, success_steps(move(byte_buffer)));
     } else {
         // Empty, Blob, FormData
-        error_steps(WebIDL::DOMException::create(realm, "DOMException", "Reading from Blob, FormData or null source is not yet implemented"sv));
+        error_steps(WebIDL::DOMException::create(realm, "DOMException"_fly_string, "Reading from Blob, FormData or null source is not yet implemented"_fly_string));
     }
     return {};
 }

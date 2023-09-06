@@ -1,5 +1,5 @@
 // https://webidl.spec.whatwg.org/#idl-DOMException
-[Exposed=*, Serializable, UseDeprecatedAKString]
+[Exposed=*, Serializable]
 interface DOMException {
 
     constructor(optional DOMString message = "", optional DOMString name = "Error");

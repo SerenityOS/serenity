@@ -51,7 +51,7 @@ WebIDL::ExceptionOr<DeprecatedString> TextDecoder::decode(Optional<JS::Handle<JS
 
     auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*input->cell());
     if (data_buffer_or_error.is_error())
-        return WebIDL::OperationError::create(realm(), "Failed to copy bytes from ArrayBuffer");
+        return WebIDL::OperationError::create(realm(), "Failed to copy bytes from ArrayBuffer"_fly_string);
     auto& data_buffer = data_buffer_or_error.value();
     return TRY_OR_THROW_OOM(vm(), m_decoder.to_utf8({ data_buffer.data(), data_buffer.size() }));
 }

@@ -65,7 +65,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
 
     // 3. If urlRecord is failure, then throw a "SyntaxError" DOMException.
     if (!url_record.is_valid())
-        return WebIDL::SyntaxError::create(realm, "Invalid URL");
+        return WebIDL::SyntaxError::create(realm, "Invalid URL"_fly_string);
 
     // 4. If urlRecord’s scheme is "http", then set urlRecord’s scheme to "ws".
     if (url_record.scheme() == "http"sv)
@@ -76,11 +76,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
 
     // 6. If urlRecord’s scheme is not "ws" or "wss", then throw a "SyntaxError" DOMException.
     if (!url_record.scheme().is_one_of("ws"sv, "wss"sv))
-        return WebIDL::SyntaxError::create(realm, "Invalid protocol"sv);
+        return WebIDL::SyntaxError::create(realm, "Invalid protocol"_fly_string);
 
     // 7. If urlRecord’s fragment is non-null, then throw a "SyntaxError" DOMException.
     if (url_record.fragment().has_value())
-        return WebIDL::SyntaxError::create(realm, "Presence of URL fragment is invalid"sv);
+        return WebIDL::SyntaxError::create(realm, "Presence of URL fragment is invalid"_fly_string);
 
     Vector<String> protocols_sequence;
     // 8. If protocols is a string, set protocols to a sequence consisting of just that string.
@@ -101,10 +101,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
         // separator characters as defined in [RFC2616] and MUST all be unique strings.
         auto protocol = sorted_protocols[i];
         if (i < sorted_protocols.size() - 1 && protocol == sorted_protocols[i + 1])
-            return WebIDL::SyntaxError::create(realm, "Found a duplicate protocol name in the specified list"sv);
+            return WebIDL::SyntaxError::create(realm, "Found a duplicate protocol name in the specified list"_fly_string);
         for (auto code_point : protocol.code_points()) {
             if (code_point < '\x21' || code_point > '\x7E')
-                return WebIDL::SyntaxError::create(realm, "Found invalid character in subprotocol name"sv);
+                return WebIDL::SyntaxError::create(realm, "Found invalid character in subprotocol name"_fly_string);
         }
     }
 
@@ -205,13 +205,13 @@ WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> 
 {
     // 1. If code is present, but is neither an integer equal to 1000 nor an integer in the range 3000 to 4999, inclusive, throw an "InvalidAccessError" DOMException.
     if (code.has_value() && *code != 1000 && (*code < 3000 || *code > 4099))
-        return WebIDL::InvalidAccessError::create(realm(), "The close error code is invalid");
+        return WebIDL::InvalidAccessError::create(realm(), "The close error code is invalid"_fly_string);
     // 2. If reason is present, then run these substeps:
     if (reason.has_value()) {
         // 1. Let reasonBytes be the result of encoding reason.
         // 2. If reasonBytes is longer than 123 bytes, then throw a "SyntaxError" DOMException.
         if (reason->bytes().size() > 123)
-            return WebIDL::SyntaxError::create(realm(), "The close reason is longer than 123 bytes");
+            return WebIDL::SyntaxError::create(realm(), "The close reason is longer than 123 bytes"_fly_string);
     }
     // 3. Run the first matching steps from the following list:
     auto state = ready_state();
@@ -232,7 +232,7 @@ WebIDL::ExceptionOr<void> WebSocket::send(Variant<JS::Handle<JS::Object>, JS::Ha
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)
-        return WebIDL::InvalidStateError::create(realm(), "Websocket is still CONNECTING");
+        return WebIDL::InvalidStateError::create(realm(), "Websocket is still CONNECTING"_fly_string);
     if (state == WebSocket::ReadyState::Open) {
         TRY_OR_THROW_OOM(vm(),
             data.visit(

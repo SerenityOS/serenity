@@ -223,7 +223,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::show_picker()
 
     // 1. If this is not mutable, then throw an "InvalidStateError" DOMException.
     if (!m_is_mutable)
-        return WebIDL::InvalidStateError::create(realm(), "Element is not mutable"sv);
+        return WebIDL::InvalidStateError::create(realm(), "Element is not mutable"_fly_string);
 
     // 2. If this's relevant settings object's origin is not same origin with this's relevant settings object's top-level origin,
     // and this's type attribute is not in the File Upload state or Color state, then throw a "SecurityError" DOMException.
@@ -231,14 +231,14 @@ WebIDL::ExceptionOr<void> HTMLInputElement::show_picker()
     //       and has never been guarded by an origin check.
     if (!relevant_settings_object(*this).origin().is_same_origin(relevant_settings_object(*this).top_level_origin)
         && m_type != TypeAttributeState::FileUpload && m_type != TypeAttributeState::Color) {
-        return WebIDL::SecurityError::create(realm(), "Cross origin pickers are not allowed"sv);
+        return WebIDL::SecurityError::create(realm(), "Cross origin pickers are not allowed"_fly_string);
     }
 
     // 3. If this's relevant global object does not have transient activation, then throw a "NotAllowedError" DOMException.
     // FIXME: The global object we get here should probably not need casted to Window to check for transient activation
     auto& global_object = relevant_global_object(*this);
     if (!is<HTML::Window>(global_object) || !static_cast<HTML::Window&>(global_object).has_transient_activation()) {
-        return WebIDL::NotAllowedError::create(realm(), "Too long since user activation to show picker"sv);
+        return WebIDL::NotAllowedError::create(realm(), "Too long since user activation to show picker"_fly_string);
     }
 
     // 4. Show the picker, if applicable, for this.
@@ -342,7 +342,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
     if (type_state() == TypeAttributeState::FileUpload) {
         // On setting, if the new value is the empty string, empty the list of selected files; otherwise, throw an "InvalidStateError" DOMException.
         if (!value.is_empty())
-            return WebIDL::InvalidStateError::create(realm(), "Setting value of input type file to non-empty string"sv);
+            return WebIDL::InvalidStateError::create(realm(), "Setting value of input type file to non-empty string"_fly_string);
         m_selected_files = nullptr;
         return {};
     }

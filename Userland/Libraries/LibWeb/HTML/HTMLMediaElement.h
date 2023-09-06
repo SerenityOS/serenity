@@ -197,7 +197,7 @@ private:
     {
         auto& realm = this->realm();
 
-        auto error = ErrorType::create(realm, message.to_deprecated_fly_string());
+        auto error = ErrorType::create(realm, message);
         reject_pending_play_promises(promises, error);
     }
 

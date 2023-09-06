@@ -45,11 +45,11 @@ WebIDL::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement
 
     // 1. If element is an ancestor of the select element on which the HTMLOptionsCollection is rooted, then throw a "HierarchyRequestError" DOMException.
     if (resolved_element->is_ancestor_of(root()))
-        return WebIDL::HierarchyRequestError::create(realm(), "The provided element is an ancestor of the root select element.");
+        return WebIDL::HierarchyRequestError::create(realm(), "The provided element is an ancestor of the root select element."_fly_string);
 
     // 2. If before is an element, but that element isn't a descendant of the select element on which the HTMLOptionsCollection is rooted, then throw a "NotFoundError" DOMException.
     if (before_element && !before_element->is_descendant_of(root()))
-        return WebIDL::NotFoundError::create(realm(), "The 'before' element is not a descendant of the root select element.");
+        return WebIDL::NotFoundError::create(realm(), "The 'before' element is not a descendant of the root select element."_fly_string);
 
     // 3. If element and before are the same element, then return.
     if (before_element && (resolved_element.ptr() == before_element.ptr()))
