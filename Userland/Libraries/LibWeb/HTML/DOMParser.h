@@ -23,7 +23,7 @@ public:
 
     virtual ~DOMParser() override;
 
-    JS::NonnullGCPtr<DOM::Document> parse_from_string(DeprecatedString const&, Bindings::DOMParserSupportedType type);
+    JS::NonnullGCPtr<DOM::Document> parse_from_string(StringView, Bindings::DOMParserSupportedType type);
 
 private:
     explicit DOMParser(JS::Realm&);
