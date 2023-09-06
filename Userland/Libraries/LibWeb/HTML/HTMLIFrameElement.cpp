@@ -166,8 +166,8 @@ void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
         return;
     }
 
-    // 2. Let childDocument be the active document of element's nested browsing context.
-    [[maybe_unused]] auto* child_document = element.nested_browsing_context()->active_document();
+    // 2. Let childDocument be element's content navigable's active document.
+    [[maybe_unused]] auto child_document = element.content_navigable()->active_document();
 
     // FIXME: 3. If childDocument has its mute iframe load flag set, then return.
 
