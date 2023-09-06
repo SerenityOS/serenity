@@ -7,6 +7,7 @@
 
 #include <AK/Checked.h>
 #include <AK/Function.h>
+#include <AK/StringBuilder.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -23,7 +24,6 @@
 #include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLocale/Locale.h>
@@ -706,20 +706,20 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, Value max
     // 8. Let fillLen be intMaxLength - stringLength.
     auto fill_length = int_max_length - string_length;
 
-    ThrowableStringBuilder truncated_string_filler_builder(vm);
+    StringBuilder truncated_string_filler_builder;
     auto fill_code_units = filler.length_in_code_units();
     for (size_t i = 0; i < fill_length / fill_code_units; ++i)
-        TRY(truncated_string_filler_builder.append(filler.view()));
+        truncated_string_filler_builder.append(filler.view());
 
     // 9. Let truncatedStringFiller be the String value consisting of repeated concatenations of filler truncated to length fillLen.
-    TRY(truncated_string_filler_builder.append(filler.substring_view(0, fill_length % fill_code_units)));
-    auto truncated_string_filler = TRY(truncated_string_filler_builder.to_string());
+    truncated_string_filler_builder.append(filler.substring_view(0, fill_length % fill_code_units));
+    auto truncated_string_filler = MUST(truncated_string_filler_builder.to_string());
 
     // 10. If placement is start, return the string-concatenation of truncatedStringFiller and S.
     // 11. Else, return the string-concatenation of S and truncatedStringFiller.
     auto formatted = placement == PadPlacement::Start
-        ? TRY_OR_THROW_OOM(vm, String::formatted("{}{}", truncated_string_filler, string.view()))
-        : TRY_OR_THROW_OOM(vm, String::formatted("{}{}", string.view(), truncated_string_filler));
+        ? MUST(String::formatted("{}{}", truncated_string_filler, string.view()))
+        : MUST(String::formatted("{}{}", string.view(), truncated_string_filler));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -774,10 +774,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
         return PrimitiveString::create(vm, String {});
 
     // 6. Return the String value that is made from n copies of S appended together.
-    ThrowableStringBuilder builder(vm);
+    StringBuilder builder;
     for (size_t i = 0; i < n; ++i)
-        TRY(builder.append(string));
-    return PrimitiveString::create(vm, TRY(builder.to_string()));
+        builder.append(string);
+    return PrimitiveString::create(vm, MUST(builder.to_string()));
 }
 
 // 22.1.3.19 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
@@ -851,12 +851,12 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     }
 
     // 14. Return the string-concatenation of preceding, replacement, and following.
-    ThrowableStringBuilder builder(vm);
-    TRY(builder.append(preceding));
-    TRY(builder.append(replacement));
-    TRY(builder.append(following));
+    StringBuilder builder;
+    builder.append(preceding);
+    builder.append(replacement);
+    builder.append(following);
 
-    return PrimitiveString::create(vm, TRY(builder.to_string()));
+    return PrimitiveString::create(vm, MUST(builder.to_string()));
 }
 
 // 22.1.3.20 String.prototype.replaceAll ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replaceall
@@ -925,7 +925,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     // 11. Repeat, while position ≠ -1,
     while (position.has_value()) {
         // a. Append position to matchPositions.
-        TRY_OR_THROW_OOM(vm, match_positions.try_append(*position));
+        match_positions.append(*position);
 
         // b. Set position to StringIndexOf(string, searchString, position + advanceBy).
         position = string_index_of(string.view(), search_string.view(), *position + advance_by);
@@ -935,7 +935,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     size_t end_of_last_match = 0;
 
     // 13. Let result be the empty String.
-    ThrowableStringBuilder result(vm);
+    StringBuilder result;
 
     // 14. For each element p of matchPositions, do
     for (auto position : match_positions) {
@@ -957,8 +957,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
         }
 
         // d. Set result to the string-concatenation of result, preserved, and replacement.
-        TRY(result.append(preserved));
-        TRY(result.append(replacement));
+        result.append(preserved);
+        result.append(replacement);
 
         // e. Set endOfLastMatch to p + searchLength.
         end_of_last_match = position + search_length;
@@ -969,11 +969,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     // 15. If endOfLastMatch < the length of string, then
     if (end_of_last_match < string_length) {
         // a. Set result to the string-concatenation of result and the substring of string from endOfLastMatch.
-        TRY(result.append(string.substring_view(end_of_last_match)));
+        result.append(string.substring_view(end_of_last_match));
     }
 
     // 16. Return result.
-    return PrimitiveString::create(vm, TRY(result.to_string()));
+    return PrimitiveString::create(vm, MUST(result.to_string()));
 }
 
 // 22.1.3.21 String.prototype.search ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.search
@@ -1291,13 +1291,13 @@ static ThrowCompletionOr<String> transform_case(VM& vm, String const& string, Va
     // 9. If targetCase is lower, then
     case TargetCase::Lower:
         // a. Let newCodePoints be a List whose elements are the result of a lowercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
-        new_code_points = TRY_OR_THROW_OOM(vm, string.to_lowercase(*locale));
+        new_code_points = MUST(string.to_lowercase(*locale));
         break;
     // 10. Else,
     case TargetCase::Upper:
         // a. Assert: targetCase is upper.
         // b. Let newCodePoints be a List whose elements are the result of an uppercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
-        new_code_points = TRY_OR_THROW_OOM(vm, string.to_uppercase(*locale));
+        new_code_points = MUST(string.to_uppercase(*locale));
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -1344,7 +1344,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
     auto string = TRY(utf8_string_from(vm));
 
     // 4. Let lowerText be the result of toLowercase(sText), according to the Unicode Default Case Conversion algorithm.
-    auto lowercase = TRY_OR_THROW_OOM(vm, string.to_lowercase());
+    auto lowercase = MUST(string.to_lowercase());
 
     // 5. Let L be CodePointsToString(lowerText).
     // 6. Return L.
@@ -1364,7 +1364,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
     // This method interprets a String value as a sequence of UTF-16 encoded code points, as described in 6.1.4.
     // It behaves in exactly the same way as String.prototype.toLowerCase, except that the String is mapped using the toUppercase algorithm of the Unicode Default Case Conversion.
     auto string = TRY(utf8_string_from(vm));
-    auto uppercase = TRY_OR_THROW_OOM(vm, string.to_uppercase());
+    auto uppercase = MUST(string.to_uppercase());
     return PrimitiveString::create(vm, move(uppercase));
 }
 
@@ -1382,7 +1382,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
     size_t k = 0;
 
     // 5. Let result be the empty String.
-    ThrowableStringBuilder result(vm);
+    StringBuilder result;
 
     // 6. Repeat, while k < strLen,
     while (k < length) {
@@ -1392,12 +1392,12 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
         // b. If cp.[[IsUnpairedSurrogate]] is true, then
         if (code_point.is_unpaired_surrogate) {
             // i. Set result to the string-concatenation of result and 0xFFFD (REPLACEMENT CHARACTER).
-            TRY(result.append_code_point(0xfffd));
+            result.append_code_point(0xfffd);
         }
         // c. Else,
         else {
             // i. Set result to the string-concatenation of result and UTF16EncodeCodePoint(cp.[[CodePoint]]).
-            TRY(result.append_code_point(code_point.code_point));
+            result.append_code_point(code_point.code_point);
         }
 
         // d. Set k to k + cp.[[CodeUnitCount]].
@@ -1405,7 +1405,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
     }
 
     // 7. Return result.
-    return PrimitiveString::create(vm, TRY(result.to_string()));
+    return PrimitiveString::create(vm, MUST(result.to_string()));
 }
 
 // 22.1.3.32.1 TrimString ( string, where ), https://tc39.es/ecma262/#sec-trimstring
@@ -1425,7 +1425,7 @@ ThrowCompletionOr<String> trim_string(VM& vm, Value input_value, TrimMode where)
     auto trimmed_string = Utf8View(string).trim(whitespace_characters, where).as_string();
 
     // 6. Return T.
-    return TRY_OR_THROW_OOM(vm, String::from_utf8(trimmed_string));
+    return MUST(String::from_utf8(trimmed_string));
 }
 
 // 22.1.3.32 String.prototype.trim ( ), https://tc39.es/ecma262/#sec-string.prototype.trim
@@ -1525,9 +1525,9 @@ static ThrowCompletionOr<Value> create_html(VM& vm, Value string, StringView tag
     auto str = TRY(string.to_string(vm));
 
     // 3. Let p1 be the string-concatenation of "<" and tag.
-    ThrowableStringBuilder builder(vm);
-    TRY(builder.append('<'));
-    TRY(builder.append(tag));
+    StringBuilder builder;
+    builder.append('<');
+    builder.append(tag);
 
     // 4. If attribute is not the empty String, then
     if (!attribute.is_empty()) {
@@ -1535,36 +1535,36 @@ static ThrowCompletionOr<Value> create_html(VM& vm, Value string, StringView tag
         auto value_string = TRY(value.to_string(vm));
 
         // b. Let escapedV be the String value that is the same as V except that each occurrence of the code unit 0x0022 (QUOTATION MARK) in V has been replaced with the six code unit sequence "&quot;".
-        auto escaped_value_string = TRY_OR_THROW_OOM(vm, value_string.replace("\""sv, "&quot;"sv, ReplaceMode::All));
+        auto escaped_value_string = MUST(value_string.replace("\""sv, "&quot;"sv, ReplaceMode::All));
 
         // c. Set p1 to the string-concatenation of:
         // - p1
         // - the code unit 0x0020 (SPACE)
-        TRY(builder.append(' '));
+        builder.append(' ');
         // - attribute
-        TRY(builder.append(attribute));
+        builder.append(attribute);
         // - the code unit 0x003D (EQUALS SIGN)
         // - the code unit 0x0022 (QUOTATION MARK)
-        TRY(builder.append("=\""sv));
+        builder.append("=\""sv);
         // - escapedV
-        TRY(builder.append(escaped_value_string));
+        builder.append(escaped_value_string);
         // - the code unit 0x0022 (QUOTATION MARK)
-        TRY(builder.append('"'));
+        builder.append('"');
     }
 
     // 5. Let p2 be the string-concatenation of p1 and ">".
-    TRY(builder.append('>'));
+    builder.append('>');
 
     // 6. Let p3 be the string-concatenation of p2 and S.
-    TRY(builder.append(str));
+    builder.append(str);
 
     // 7. Let p4 be the string-concatenation of p3, "</", tag, and ">".
-    TRY(builder.append("</"sv));
-    TRY(builder.append(tag));
-    TRY(builder.append('>'));
+    builder.append("</"sv);
+    builder.append(tag);
+    builder.append('>');
 
     // 8. Return p4.
-    return PrimitiveString::create(vm, TRY(builder.to_string()));
+    return PrimitiveString::create(vm, MUST(builder.to_string()));
 }
 
 // B.2.2.2 String.prototype.anchor ( name ), https://tc39.es/ecma262/#sec-string.prototype.anchor

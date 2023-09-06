@@ -9,7 +9,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/StringIteratorPrototype.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS {
 
@@ -42,11 +41,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
         return create_iterator_result_object(vm, js_undefined(), true);
     }
 
-    ThrowableStringBuilder builder(vm);
-    TRY(builder.append_code_point(*utf8_iterator));
+    auto code_point = String::from_code_point(*utf8_iterator);
     ++utf8_iterator;
 
-    return create_iterator_result_object(vm, PrimitiveString::create(vm, TRY(builder.to_string())), false);
+    return create_iterator_result_object(vm, PrimitiveString::create(vm, move(code_point)), false);
 }
 
 }
