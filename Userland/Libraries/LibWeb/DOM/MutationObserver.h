@@ -23,7 +23,7 @@ struct MutationObserverInit {
     bool subtree { false };
     Optional<bool> attribute_old_value;
     Optional<bool> character_data_old_value;
-    Optional<Vector<DeprecatedString>> attribute_filter;
+    Optional<Vector<String>> attribute_filter;
 };
 
 // https://dom.spec.whatwg.org/#mutationobserver
