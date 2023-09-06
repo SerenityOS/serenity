@@ -347,17 +347,17 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
-#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                             \
-    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                            \
-    {                                                                                                                                         \
-        auto& vm = interpreter.vm();                                                                                                          \
-        auto& realm = *vm.current_realm();                                                                                                    \
-        interpreter.accumulator() = MUST_OR_THROW_OOM(ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string))); \
-        return {};                                                                                                                            \
-    }                                                                                                                                         \
-    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                                  \
-    {                                                                                                                                         \
-        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string));    \
+#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                          \
+    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                         \
+    {                                                                                                                                      \
+        auto& vm = interpreter.vm();                                                                                                       \
+        auto& realm = *vm.current_realm();                                                                                                 \
+        interpreter.accumulator() = ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string));                 \
+        return {};                                                                                                                         \
+    }                                                                                                                                      \
+    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                               \
+    {                                                                                                                                      \
+        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string)); \
     }
 
 JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DEFINE_NEW_BUILTIN_ERROR_OP)

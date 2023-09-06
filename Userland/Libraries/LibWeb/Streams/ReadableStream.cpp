@@ -84,7 +84,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> ReadableStream::cancel(JS::Value reas
 
     // 1. If ! IsReadableStreamLocked(this) is true, return a promise rejected with a TypeError exception.
     if (is_readable_stream_locked(*this)) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot cancel a locked stream"sv));
+        auto exception = JS::TypeError::create(realm, "Cannot cancel a locked stream"sv);
         return WebIDL::create_rejected_promise(realm, JS::Value { exception })->promise();
     }
 

@@ -106,7 +106,7 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
         // If you are here because you want to enable dynamic module importing make sure it won't be a security problem
         // by checking the default implementation of HostImportModuleDynamically and creating your own hook or calling
         // vm.enable_default_host_import_module_dynamically_hook().
-        promise->reject(MUST_OR_THROW_OOM(Error::create(realm, ErrorType::DynamicImportNotAllowed.message())));
+        promise->reject(Error::create(realm, ErrorType::DynamicImportNotAllowed.message()));
 
         promise->perform_then(
             NativeFunction::create(realm, "", [](auto&) -> ThrowCompletionOr<Value> {

@@ -397,7 +397,7 @@ WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamG
     auto& realm = stream->realm();
 
     // 4. If stream.[[state]] is "readable", reject reader.[[closedPromise]] with a TypeError exception.
-    auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Released readable stream"sv));
+    auto exception = JS::TypeError::create(realm, "Released readable stream"sv);
     if (stream->is_readable()) {
         WebIDL::reject_promise(realm, *reader.closed_promise_capability(), exception);
     }
@@ -497,7 +497,7 @@ WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamD
     TRY(readable_stream_reader_generic_release(reader));
 
     // 2. Let e be a new TypeError exception.
-    auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Reader has been released"sv));
+    auto exception = JS::TypeError::create(realm, "Reader has been released"sv);
 
     // 3. Perform ! ReadableStreamDefaultReaderErrorReadRequests(reader, e).
     readable_stream_default_reader_error_read_requests(reader, exception);
@@ -514,7 +514,7 @@ void readable_stream_byob_reader_release(ReadableStreamBYOBReader& reader)
     MUST(readable_stream_reader_generic_release(reader));
 
     // 2. Let e be a new TypeError exception.
-    auto exception = MUST(JS::TypeError::create(realm, "Reader has been released"sv));
+    auto exception = JS::TypeError::create(realm, "Reader has been released"sv);
 
     // 3. Perform ! ReadableStreamBYOBReaderErrorReadIntoRequests(reader, e).
     readable_stream_byob_reader_error_read_into_requests(reader, exception);
@@ -1023,7 +1023,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_close(ReadableByteStre
         // 2. If firstPendingPullInto’s bytes filled > 0,
         if (first_pending_pull_into.bytes_filled > 0) {
             // 1. Let e be a new TypeError exception.
-            auto error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot close controller in the middle of processing a write request"sv));
+            auto error = JS::TypeError::create(realm, "Cannot close controller in the middle of processing a write request"sv);
 
             // 2. Perform ! ReadableByteStreamControllerError(controller, e).
             readable_byte_stream_controller_error(controller, error);
@@ -1525,7 +1525,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
 
     // 6. If ! IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached()) {
-        auto error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Buffer is detached"sv));
+        auto error = JS::TypeError::create(realm, "Buffer is detached"sv);
         return JS::throw_completion(error);
     }
 
@@ -1539,7 +1539,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
 
         // 2. If ! IsDetachedBuffer(firstPendingPullInto’s buffer) is true, throw a TypeError exception.
         if (first_pending_pull_into.buffer->is_detached()) {
-            auto error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Buffer is detached"sv));
+            auto error = JS::TypeError::create(realm, "Buffer is detached"sv);
             return JS::throw_completion(error);
         }
 
@@ -1836,7 +1836,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_close(Wri
     // 2. If state is "closed" or "errored", return a promise rejected with a TypeError exception.
     if (state == WritableStream::State::Closed || state == WritableStream::State::Errored) {
         auto message = state == WritableStream::State::Closed ? "Cannot close a closed stream"sv : "Cannot close an errored stream"sv;
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, message));
+        auto exception = JS::TypeError::create(realm, message);
         return WebIDL::create_rejected_promise(realm, exception);
     }
 
@@ -2362,7 +2362,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamD
     VERIFY(stream->writer().ptr() == &writer);
 
     // 4. Let releasedError be a new TypeError.
-    auto released_error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Writer's stream lock has been released"sv));
+    auto released_error = JS::TypeError::create(realm, "Writer's stream lock has been released"sv);
 
     // 5. Perform ! WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, releasedError).
     writable_stream_default_writer_ensure_ready_promise_rejected(writer, released_error);
@@ -2398,7 +2398,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_w
 
     // 5. If stream is not equal to writer.[[stream]], return a promise rejected with a TypeError exception.
     if (stream.ptr() != writer.stream().ptr()) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Writer's locked stream changed during write"sv));
+        auto exception = JS::TypeError::create(realm, "Writer's locked stream changed during write"sv);
         return WebIDL::create_rejected_promise(realm, exception);
     }
 
@@ -2411,7 +2411,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_w
 
     // 8. If ! WritableStreamCloseQueuedOrInFlight(stream) is true or state is "closed", return a promise rejected with a TypeError exception indicating that the stream is closing or closed.
     if (writable_stream_close_queued_or_in_flight(*stream) || state == WritableStream::State::Closed) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot write to a writer whose stream is closing or already closed"sv));
+        auto exception = JS::TypeError::create(realm, "Cannot write to a writer whose stream is closing or already closed"sv);
         return WebIDL::create_rejected_promise(realm, exception);
     }
 
@@ -3085,7 +3085,7 @@ WebIDL::ExceptionOr<void> transform_stream_default_controller_terminate(Transfor
     readable_stream_default_controller_close(readable_controller);
 
     // 4. Let error be a TypeError exception indicating that the stream has been terminated.
-    auto error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Stream has been terminated."sv));
+    auto error = JS::TypeError::create(realm, "Stream has been terminated."sv);
 
     // 5. Perform ! TransformStreamErrorWritableAndUnblockWrite(stream, error).
     TRY(transform_stream_error_writable_and_unblock_write(*stream, error));

@@ -65,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
         return PrimitiveString::create(vm, move(name));
 
     // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
-    return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::formatted("{}: {}", name, message)));
+    return PrimitiveString::create(vm, MUST(String::formatted("{}: {}", name, message)));
 }
 
 // B.1.1 get Error.prototype.stack ( ), https://tc39.es/proposal-error-stacks/#sec-get-error.prototype-stack
@@ -96,9 +96,9 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
 
     auto header = message.is_empty()
         ? move(name)
-        : TRY_OR_THROW_OOM(vm, String::formatted("{}: {}", name, message));
+        : MUST(String::formatted("{}: {}", name, message));
 
-    return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::formatted("{}\n{}", header, MUST_OR_THROW_OOM(error.stack_string(vm)))));
+    return PrimitiveString::create(vm, MUST(String::formatted("{}\n{}", header, error.stack_string())));
 }
 
 // B.1.2 set Error.prototype.stack ( value ), https://tc39.es/proposal-error-stacks/#sec-set-error.prototype-stack

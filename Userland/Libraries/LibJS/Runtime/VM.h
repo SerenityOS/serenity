@@ -178,10 +178,7 @@ public:
         auto& realm = *current_realm();
         auto completion = T::create(realm, forward<Args>(args)...);
 
-        if constexpr (IsSame<decltype(completion), ThrowCompletionOr<NonnullGCPtr<T>>>)
-            return JS::throw_completion(MUST_OR_THROW_OOM(completion));
-        else
-            return JS::throw_completion(completion);
+        return JS::throw_completion(completion);
     }
 
     template<typename T, typename... Args>

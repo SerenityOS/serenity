@@ -458,7 +458,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
             if (is<JS::Error>(error_object)) {
                 auto& error_as_error = static_cast<JS::Error&>(error_object);
                 detail_builder.append('\n');
-                detail_builder.append(error_as_error.stack_string(*g_vm).release_allocated_value_but_fixme_should_propagate_errors());
+                detail_builder.append(error_as_error.stack_string());
             }
 
             test_case.details = detail_builder.to_deprecated_string();

@@ -5,12 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/SourceRange.h>
 
 namespace JS {
@@ -44,9 +44,9 @@ NonnullGCPtr<Error> Error::create(Realm& realm, String message)
     return error;
 }
 
-ThrowCompletionOr<NonnullGCPtr<Error>> Error::create(Realm& realm, StringView message)
+NonnullGCPtr<Error> Error::create(Realm& realm, StringView message)
 {
-    return create(realm, TRY_OR_THROW_OOM(realm.vm(), String::from_utf8(message)));
+    return create(realm, MUST(String::from_utf8(message)));
 }
 
 Error::Error(Object& prototype)
@@ -95,9 +95,9 @@ void Error::populate_stack()
     }
 }
 
-ThrowCompletionOr<String> Error::stack_string(VM& vm) const
+String Error::stack_string() const
 {
-    ThrowableStringBuilder stack_string_builder(vm);
+    StringBuilder stack_string_builder;
 
     // Note: We roughly follow V8's formatting
     // Note: The error's name and message get prepended by ErrorPrototype::stack
@@ -111,15 +111,15 @@ ThrowCompletionOr<String> Error::stack_string(VM& vm) const
         if (!source_range.filename().is_empty() || source_range.start.offset != 0 || source_range.end.offset != 0) {
 
             if (function_name == "<unknown>"sv)
-                MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {}:{}:{}\n", source_range.filename(), source_range.start.line, source_range.start.column));
+                stack_string_builder.appendff("    at {}:{}:{}\n", source_range.filename(), source_range.start.line, source_range.start.column);
             else
-                MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {} ({}:{}:{})\n", function_name, source_range.filename(), source_range.start.line, source_range.start.column));
+                stack_string_builder.appendff("    at {} ({}:{}:{})\n", function_name, source_range.filename(), source_range.start.line, source_range.start.column);
         } else {
-            MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {}\n", function_name.is_empty() ? "<unknown>"sv : function_name.view()));
+            stack_string_builder.appendff("    at {}\n", function_name.is_empty() ? "<unknown>"sv : function_name.view());
         }
     }
 
-    return stack_string_builder.to_string();
+    return MUST(stack_string_builder.to_string());
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                   \
@@ -137,9 +137,9 @@ ThrowCompletionOr<String> Error::stack_string(VM& vm) const
         return error;                                                                                      \
     }                                                                                                      \
                                                                                                            \
-    ThrowCompletionOr<NonnullGCPtr<ClassName>> ClassName::create(Realm& realm, StringView message)         \
+    NonnullGCPtr<ClassName> ClassName::create(Realm& realm, StringView message)                            \
     {                                                                                                      \
-        return create(realm, TRY_OR_THROW_OOM(realm.vm(), String::from_utf8(message)));                    \
+        return create(realm, MUST(String::from_utf8(message)));                                            \
     }                                                                                                      \
                                                                                                            \
     ClassName::ClassName(Object& prototype)                                                                \
