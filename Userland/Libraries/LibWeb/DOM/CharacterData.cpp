@@ -33,7 +33,7 @@ void CharacterData::set_data(DeprecatedString data)
     // NOTE: Since the offset is 0, it can never be above data's length, so this can never throw.
     // NOTE: Setting the data to the same value as the current data still causes a mutation observer callback.
     // FIXME: Figure out a way to make this a no-op again if the passed in data is the same as the current data.
-    MUST(replace_data(0, m_data.length(), data));
+    MUST(replace_data(0, this->length(), data));
 }
 
 // https://dom.spec.whatwg.org/#concept-cd-substring
@@ -124,7 +124,7 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
 WebIDL::ExceptionOr<void> CharacterData::append_data(DeprecatedString const& data)
 {
     // The appendData(data) method steps are to replace data with node this, offset this’s length, count 0, and data data.
-    return replace_data(m_data.length(), 0, data);
+    return replace_data(this->length(), 0, data);
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-insertdata
