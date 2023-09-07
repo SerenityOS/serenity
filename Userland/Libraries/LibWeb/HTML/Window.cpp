@@ -818,11 +818,11 @@ JS::NonnullGCPtr<DOM::Document const> Window::document() const
 String Window::name() const
 {
     // 1. If this's navigable is null, then return the empty string.
-    if (!browsing_context())
+    if (!navigable())
         return String {};
 
     // 2. Return this's navigable's target name.
-    return browsing_context()->name();
+    return navigable()->target_name();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#apis-for-creating-and-navigating-browsing-contexts-by-name:dom-name
