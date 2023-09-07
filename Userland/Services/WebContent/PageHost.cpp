@@ -281,9 +281,9 @@ void PageHost::page_did_start_loading(const URL& url, bool is_redirect)
     m_client.async_did_start_loading(url, is_redirect);
 }
 
-void PageHost::page_did_create_main_document()
+void PageHost::page_did_create_new_document(Web::DOM::Document& document)
 {
-    m_client.initialize_js_console({});
+    m_client.initialize_js_console({}, document);
 }
 
 void PageHost::page_did_finish_loading(const URL& url)

@@ -93,7 +93,7 @@ private:
     virtual void page_did_request_image_context_menu(Web::CSSPixelPoint, const URL&, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const*) override;
     virtual void page_did_request_media_context_menu(Web::CSSPixelPoint, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu) override;
     virtual void page_did_start_loading(const URL&, bool) override;
-    virtual void page_did_create_main_document() override;
+    virtual void page_did_create_new_document(Web::DOM::Document&) override;
     virtual void page_did_finish_loading(const URL&) override;
     virtual void page_did_request_alert(String const&) override;
     virtual void page_did_request_confirm(String const&) override;
