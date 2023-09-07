@@ -51,6 +51,7 @@
 #include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
+#include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
@@ -2314,6 +2315,7 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
 NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
 {
     auto style = StyleProperties::create();
+    compute_math_depth(style, nullptr, {});
     compute_font(style, nullptr, {});
     compute_defaulted_values(style, nullptr, {});
     absolutize_values(style, nullptr, {});
@@ -2346,16 +2348,19 @@ ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element&
     if (mode == ComputeStyleMode::CreatePseudoElementStyleIfNeeded && !did_match_any_pseudo_element_rules)
         return nullptr;
 
-    // 2. Compute the font, since that may be needed for font-relative CSS units
+    // 2. Compute the math-depth property, since that might affect the font-size
+    compute_math_depth(style, &element, pseudo_element);
+
+    // 3. Compute the font, since that may be needed for font-relative CSS units
     compute_font(style, &element, pseudo_element);
 
-    // 3. Absolutize values, turning font/viewport relative lengths into absolute lengths
+    // 4. Absolutize values, turning font/viewport relative lengths into absolute lengths
     absolutize_values(style, &element, pseudo_element);
 
-    // 4. Default the values, applying inheritance and 'initial' as needed
+    // 5. Default the values, applying inheritance and 'initial' as needed
     compute_defaulted_values(style, &element, pseudo_element);
 
-    // 5. Run automatic box type transformations
+    // 6. Run automatic box type transformations
     transform_box_type_if_needed(style, element, pseudo_element);
 
     return style;
@@ -2603,6 +2608,59 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
         auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(urls));
         const_cast<StyleComputer&>(*this).m_loaded_fonts.set(key, move(loader));
     }
+}
+
+void StyleComputer::compute_math_depth(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+{
+    // https://w3c.github.io/mathml-core/#propdef-math-depth
+
+    // First, ensure that the relevant CSS properties have been defaulted.
+    // FIXME: This should be more sophisticated.
+    compute_defaulted_property_value(style, element, CSS::PropertyID::MathDepth, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::MathStyle, pseudo_element);
+
+    auto inherited_math_depth = [&]() {
+        if (!element || !element->parent_element())
+            return InitialValues::math_depth();
+        return element->parent_element()->computed_css_values()->math_depth();
+    };
+
+    auto value = style.property(CSS::PropertyID::MathDepth);
+    if (!value->is_math_depth()) {
+        style.set_math_depth(inherited_math_depth());
+        return;
+    }
+    auto& math_depth = value->as_math_depth();
+
+    auto resolve_integer = [&](StyleValue const& integer_value) {
+        if (integer_value.is_integer())
+            return integer_value.as_integer().integer();
+        if (integer_value.is_calculated())
+            return integer_value.as_calculated().resolve_integer().value();
+        VERIFY_NOT_REACHED();
+    };
+
+    // The computed value of the math-depth value is determined as follows:
+    // - If the specified value of math-depth is auto-add and the inherited value of math-style is compact
+    //   then the computed value of math-depth of the element is its inherited value plus one.
+    if (math_depth.is_auto_add() && style.property(CSS::PropertyID::MathStyle)->to_identifier() == CSS::ValueID::Compact) {
+        style.set_math_depth(inherited_math_depth() + 1);
+        return;
+    }
+    // - If the specified value of math-depth is of the form add(<integer>) then the computed value of
+    //   math-depth of the element is its inherited value plus the specified integer.
+    if (math_depth.is_add()) {
+        style.set_math_depth(inherited_math_depth() + resolve_integer(*math_depth.integer_value()));
+        return;
+    }
+    // - If the specified value of math-depth is of the form <integer> then the computed value of math-depth
+    //   of the element is the specified integer.
+    if (math_depth.is_integer()) {
+        style.set_math_depth(resolve_integer(*math_depth.integer_value()));
+        return;
+    }
+    // - Otherwise, the computed value of math-depth of the element is the inherited one.
+    style.set_math_depth(inherited_math_depth());
 }
 
 }

@@ -143,6 +143,9 @@ public:
     Optional<CSS::Position> position() const;
     Optional<int> z_index() const;
 
+    void set_math_depth(int math_depth);
+    int math_depth() const { return m_math_depth; }
+
     static NonnullRefPtr<Gfx::Font const> font_fallback(bool monospace, bool bold);
 
 private:
@@ -152,6 +155,7 @@ private:
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
     Vector<CSS::ShadowData> shadow(CSS::PropertyID, Layout::Node const&) const;
 
+    int m_math_depth { InitialValues::math_depth() };
     mutable RefPtr<Gfx::Font const> m_font;
 };
 

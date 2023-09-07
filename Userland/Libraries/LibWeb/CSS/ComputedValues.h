@@ -123,6 +123,7 @@ public:
 
     static CSS::MathShift math_shift() { return CSS::MathShift::Normal; }
     static CSS::MathStyle math_style() { return CSS::MathStyle::Normal; }
+    static int math_depth() { return 0; }
 };
 
 enum class BackgroundSize {
@@ -351,6 +352,7 @@ public:
 
     CSS::MathShift math_shift() const { return m_inherited.math_shift; }
     CSS::MathStyle math_style() const { return m_inherited.math_style; }
+    int math_depth() const { return m_inherited.math_depth; }
 
     ComputedValues clone_inherited_values() const
     {
@@ -394,6 +396,7 @@ protected:
 
         CSS::MathShift math_shift { InitialValues::math_shift() };
         CSS::MathStyle math_style { InitialValues::math_style() };
+        int math_depth { InitialValues::math_depth() };
     } m_inherited;
 
     struct {
@@ -591,6 +594,7 @@ public:
 
     void set_math_shift(CSS::MathShift value) { m_inherited.math_shift = value; }
     void set_math_style(CSS::MathStyle value) { m_inherited.math_style = value; }
+    void set_math_depth(int value) { m_inherited.math_depth = value; }
 };
 
 }

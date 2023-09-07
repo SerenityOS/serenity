@@ -19,6 +19,7 @@
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
+#include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
@@ -980,6 +981,13 @@ Color StyleProperties::stop_color() const
         return value->to_color({});
     }
     return Color::Black;
+}
+
+void StyleProperties::set_math_depth(int math_depth)
+{
+    m_math_depth = math_depth;
+    // Make our children inherit our computed value, not our specified value.
+    set_property(PropertyID::MathDepth, MathDepthStyleValue::create_integer(IntegerStyleValue::create(math_depth)));
 }
 
 }
