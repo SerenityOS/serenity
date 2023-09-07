@@ -772,7 +772,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         }
         if (key == KeyCode::Key_End) {
             auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(m_browsing_context->cursor_position().node()));
-            m_browsing_context->set_cursor_position(DOM::Position { node, (unsigned)node.data().length() });
+            m_browsing_context->set_cursor_position(DOM::Position { node, (unsigned)node.data().bytes().size() });
             return true;
         }
         if (!should_ignore_keydown_event(code_point)) {

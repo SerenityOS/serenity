@@ -447,11 +447,11 @@ static DeprecatedString visible_text_in_range(DOM::Range const& range)
     if (range.start_container() == range.end_container() && is<DOM::Text>(*range.start_container())) {
         if (!range.start_container()->layout_node())
             return ""sv;
-        return static_cast<DOM::Text const&>(*range.start_container()).data().substring(range.start_offset(), range.end_offset() - range.start_offset());
+        return MUST(static_cast<DOM::Text const&>(*range.start_container()).data().substring_from_byte_offset(range.start_offset(), range.end_offset() - range.start_offset())).to_deprecated_string();
     }
 
     if (is<DOM::Text>(*range.start_container()) && range.start_container()->layout_node())
-        builder.append(static_cast<DOM::Text const&>(*range.start_container()).data().substring_view(range.start_offset()));
+        builder.append(static_cast<DOM::Text const&>(*range.start_container()).data().bytes_as_string_view().substring_view(range.start_offset()));
 
     for (DOM::Node const* node = range.start_container(); node != range.end_container()->next_sibling(); node = node->next_in_pre_order()) {
         if (is<DOM::Text>(*node) && range.contains_node(*node) && node->layout_node())
@@ -459,7 +459,7 @@ static DeprecatedString visible_text_in_range(DOM::Range const& range)
     }
 
     if (is<DOM::Text>(*range.end_container()) && range.end_container()->layout_node())
-        builder.append(static_cast<DOM::Text const&>(*range.end_container()).data().substring_view(0, range.end_offset()));
+        builder.append(static_cast<DOM::Text const&>(*range.end_container()).data().bytes_as_string_view().substring_view(0, range.end_offset()));
 
     return builder.to_deprecated_string();
 }

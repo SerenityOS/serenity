@@ -328,7 +328,7 @@ void TextNode::compute_text_for_rendering()
     if (dom_node().is_editable() && !dom_node().is_uninteresting_whitespace_node())
         collapse = false;
 
-    auto data = apply_text_transform(dom_node().data(), computed_values().text_transform()).release_value_but_fixme_should_propagate_errors();
+    auto data = apply_text_transform(dom_node().data().to_deprecated_string(), computed_values().text_transform()).release_value_but_fixme_should_propagate_errors();
 
     if (dom_node().is_password_input()) {
         m_text_for_rendering = DeprecatedString::repeated('*', data.length());

@@ -559,11 +559,11 @@ String Range::to_string() const
     // 2. If this’s start node is this’s end node and it is a Text node,
     //    then return the substring of that Text node’s data beginning at this’s start offset and ending at this’s end offset.
     if (start_container() == end_container() && is<Text>(*start_container()))
-        return String::from_deprecated_string(static_cast<Text const&>(*start_container()).data().substring(start_offset(), end_offset() - start_offset())).release_value();
+        return MUST(static_cast<Text const&>(*start_container()).data().substring_from_byte_offset(start_offset(), end_offset() - start_offset()));
 
     // 3. If this’s start node is a Text node, then append the substring of that node’s data from this’s start offset until the end to s.
     if (is<Text>(*start_container()))
-        builder.append(static_cast<Text const&>(*start_container()).data().substring_view(start_offset()));
+        builder.append(static_cast<Text const&>(*start_container()).data().bytes_as_string_view().substring_view(start_offset()));
 
     // 4. Append the concatenation of the data of all Text nodes that are contained in this, in tree order, to s.
     for (Node const* node = start_container(); node != end_container()->next_sibling(); node = node->next_in_pre_order()) {
@@ -573,7 +573,7 @@ String Range::to_string() const
 
     // 5. If this’s end node is a Text node, then append the substring of that node’s data from its start until this’s end offset to s.
     if (is<Text>(*end_container()))
-        builder.append(static_cast<Text const&>(*end_container()).data().substring_view(0, end_offset()));
+        builder.append(static_cast<Text const&>(*end_container()).data().bytes_as_string_view().substring_view(0, end_offset()));
 
     // 6. Return s.
     return MUST(builder.to_string());
@@ -616,7 +616,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         TRY(fragment->append_child(clone));
 
         // 4. Replace data with node original start node, offset original start offset, count original end offset minus original start offset, and data the empty string.
-        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_end_offset - original_start_offset, ""));
+        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_end_offset - original_start_offset, String {}));
 
         // 5. Return fragment.
         return fragment;
@@ -706,7 +706,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         TRY(fragment->append_child(clone));
 
         // 4. Replace data with node original start node, offset original start offset, count original start node’s length minus original start offset, and data the empty string.
-        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_start_node->length() - original_start_offset, ""));
+        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_start_node->length() - original_start_offset, String {}));
     }
     // 16. Otherwise, if first partially contained child is not null:
     else if (first_partially_contained_child) {
@@ -744,7 +744,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         TRY(fragment->append_child(clone));
 
         // 4. Replace data with node original end node, offset 0, count original end offset, and data the empty string.
-        TRY(verify_cast<CharacterData>(*original_end_node).replace_data(0, original_end_offset, ""));
+        TRY(verify_cast<CharacterData>(*original_end_node).replace_data(0, original_end_offset, String {}));
     }
     // 19. Otherwise, if last partially contained child is not null:
     else if (last_partially_contained_child) {
@@ -1086,7 +1086,7 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
     // 3. If original start node is original end node and it is a CharacterData node, then replace data with node original start node, offset original start offset,
     //    count original end offset minus original start offset, and data the empty string, and then return.
     if (original_start_node.ptr() == original_end_node.ptr() && is<CharacterData>(*original_start_node)) {
-        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_end_offset - original_start_offset, ""));
+        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_end_offset - original_start_offset, String {}));
         return {};
     }
 
@@ -1121,7 +1121,7 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
 
     // 7. If original start node is a CharacterData node, then replace data with node original start node, offset original start offset, count original start node’s length minus original start offset, data the empty string.
     if (is<CharacterData>(*original_start_node))
-        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_start_node->length() - original_start_offset, ""));
+        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_start_node->length() - original_start_offset, String {}));
 
     // 8. For each node in nodes to remove, in tree order, remove node.
     for (auto& node : nodes_to_remove)
@@ -1129,7 +1129,7 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
 
     // 9. If original end node is a CharacterData node, then replace data with node original end node, offset 0, count original end offset and data the empty string.
     if (is<CharacterData>(*original_end_node))
-        TRY(static_cast<CharacterData&>(*original_end_node).replace_data(0, original_end_offset, ""));
+        TRY(static_cast<CharacterData&>(*original_end_node).replace_data(0, original_end_offset, String {}));
 
     // 10. Set start and end to (new node, new offset).
     TRY(set_start(*new_node, new_offset));

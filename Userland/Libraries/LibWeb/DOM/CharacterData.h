@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
@@ -22,24 +22,25 @@ class CharacterData
 public:
     virtual ~CharacterData() override = default;
 
-    DeprecatedString const& data() const { return m_data; }
-    void set_data(DeprecatedString);
+    String const& data() const { return m_data; }
+    void set_data(String const&);
 
-    unsigned length() const { return m_data.length(); }
+    // FIXME: This should be in UTF-16 code units, not byte size.
+    unsigned length() const { return m_data.bytes().size(); }
 
-    WebIDL::ExceptionOr<DeprecatedString> substring_data(size_t offset, size_t count) const;
-    WebIDL::ExceptionOr<void> append_data(DeprecatedString const&);
-    WebIDL::ExceptionOr<void> insert_data(size_t offset, DeprecatedString const&);
+    WebIDL::ExceptionOr<String> substring_data(size_t offset, size_t count) const;
+    WebIDL::ExceptionOr<void> append_data(String const&);
+    WebIDL::ExceptionOr<void> insert_data(size_t offset, String const&);
     WebIDL::ExceptionOr<void> delete_data(size_t offset, size_t count);
-    WebIDL::ExceptionOr<void> replace_data(size_t offset, size_t count, DeprecatedString const&);
+    WebIDL::ExceptionOr<void> replace_data(size_t offset, size_t count, String const&);
 
 protected:
-    CharacterData(Document&, NodeType, DeprecatedString const&);
+    CharacterData(Document&, NodeType, String const&);
 
     virtual void initialize(JS::Realm&) override;
 
 private:
-    DeprecatedString m_data;
+    String m_data;
 };
 
 }
