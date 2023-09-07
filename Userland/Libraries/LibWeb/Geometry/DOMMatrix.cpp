@@ -326,6 +326,51 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrix::translate_self(Optional<double> tx, Optio
     return *this;
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-scaleself
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::scale_self(Optional<double> scale_x, Optional<double> scale_y, Optional<double> scale_z, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z)
+{
+    // 1. Perform a translateSelf() transformation on the current matrix with the arguments originX, originY, originZ.
+    translate_self(origin_x, origin_y, origin_z);
+
+    // 2. If scaleY is missing, set scaleY to the value of scaleX.
+    if (!scale_y.has_value())
+        scale_y = scale_x.value_or(1);
+
+    // 3. Post-multiply a non-uniform scale transformation on the current matrix. The 3D scale matrix is described in CSS Transforms with sx = scaleX, sy = scaleY and sz = scaleZ. [CSS3-TRANSFORMS]
+    m_matrix = m_matrix * Gfx::scale_matrix(Vector3<double> { scale_x.value_or(1), scale_y.value(), scale_z.value_or(1) });
+
+    // 4. Negate originX, originY and originZ.
+    // 5. Perform a translateSelf() transformation on the current matrix with the arguments originX, originY, originZ.
+    translate_self(-origin_x.value_or(0), -origin_y.value_or(0), -origin_z.value_or(0));
+
+    // 6. If scaleZ is not 1, set is 2D of the current matrix to false.
+    if (scale_z != 1)
+        m_is_2d = false;
+
+    // 7. Return the current matrix.
+    return *this;
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-scale3dself
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::scale3d_self(Optional<double> scale, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z)
+{
+    // 1. Apply a translateSelf() transformation to the current matrix with the arguments originX, originY, originZ.
+    translate_self(origin_x, origin_y, origin_z);
+
+    // 2. Post-multiply a uniform 3D scale transformation (m11 = m22 = m33 = scale) on the current matrix. The 3D scale matrix is described in CSS Transforms with sx = sy = sz = scale. [CSS3-TRANSFORMS]
+    m_matrix = m_matrix * Gfx::scale_matrix(Vector3<double> { scale.value_or(1), scale.value_or(1), scale.value_or(1) });
+
+    // 3. Apply a translateSelf() transformation to the current matrix with the arguments -originX, -originY, -originZ.
+    translate_self(-origin_x.value_or(0), -origin_y.value_or(0), -origin_z.value_or(0));
+
+    // 4. If scale is not 1, set is 2D of the current matrix to false.
+    if (scale != 1)
+        m_is_2d = false;
+
+    // 5. Return the current matrix.
+    return *this;
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrix-skewxself
 JS::NonnullGCPtr<DOMMatrix> DOMMatrix::skew_x_self(double sx)
 {

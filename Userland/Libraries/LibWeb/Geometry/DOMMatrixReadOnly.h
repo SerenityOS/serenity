@@ -86,6 +86,9 @@ public:
     bool is_identity() const;
 
     JS::NonnullGCPtr<DOMMatrix> translate(Optional<double> const& tx, Optional<double> const& ty, Optional<double> const& tz) const;
+    JS::NonnullGCPtr<DOMMatrix> scale(Optional<double> scale_x, Optional<double> scale_y, Optional<double> scale_z, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z);
+    JS::NonnullGCPtr<DOMMatrix> scale_non_uniform(Optional<double> scale_x, Optional<double> scale_y);
+    JS::NonnullGCPtr<DOMMatrix> scale3d(Optional<double> scale, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z);
     JS::NonnullGCPtr<DOMMatrix> skew_x(double sx = 0) const;
     JS::NonnullGCPtr<DOMMatrix> skew_y(double sy = 0) const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> multiply(DOMMatrixInit other = {});
