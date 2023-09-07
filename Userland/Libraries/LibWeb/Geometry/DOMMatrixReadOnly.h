@@ -89,6 +89,9 @@ public:
     JS::NonnullGCPtr<DOMMatrix> scale(Optional<double> scale_x, Optional<double> scale_y, Optional<double> scale_z, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z);
     JS::NonnullGCPtr<DOMMatrix> scale_non_uniform(Optional<double> scale_x, Optional<double> scale_y);
     JS::NonnullGCPtr<DOMMatrix> scale3d(Optional<double> scale, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z);
+    JS::NonnullGCPtr<DOMMatrix> rotate(Optional<double> rot_x, Optional<double> rot_y, Optional<double> rot_z);
+    JS::NonnullGCPtr<DOMMatrix> rotate_from_vector(Optional<double> x, Optional<double> y);
+    JS::NonnullGCPtr<DOMMatrix> rotate_axis_angle(Optional<double> x, Optional<double> y, Optional<double> z, Optional<double> angle);
     JS::NonnullGCPtr<DOMMatrix> skew_x(double sx = 0) const;
     JS::NonnullGCPtr<DOMMatrix> skew_y(double sy = 0) const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> multiply(DOMMatrixInit other = {});

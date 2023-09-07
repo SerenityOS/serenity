@@ -371,6 +371,67 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrix::scale3d_self(Optional<double> scale, Opti
     return *this;
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-rotateself
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::rotate_self(Optional<double> rot_x, Optional<double> rot_y, Optional<double> rot_z)
+{
+    // 1. If rotY and rotZ are both missing, set rotZ to the value of rotX and set rotX and rotY to 0.
+    if (!rot_y.has_value() && !rot_z.has_value()) {
+        rot_z = rot_x;
+        rot_x = 0;
+        rot_y = 0;
+    }
+
+    // 2. If rotY is still missing, set rotY to 0.
+    if (!rot_y.has_value())
+        rot_y = 0;
+
+    // 3. If rotZ is still missing, set rotZ to 0.
+    if (!rot_z.has_value())
+        rot_z = 0;
+
+    // 4. If rotX or rotY are not 0 or -0, set is 2D of the current matrix to false.
+    if (rot_x != 0 || rot_x != -0 || rot_y != 0 || rot_y != -0)
+        m_is_2d = false;
+
+    // 5. Post-multiply a rotation transformation on the current matrix around the vector 0, 0, 1 by the specified rotation rotZ in degrees. The 3D rotation matrix is described in CSS Transforms with alpha = rotZ in degrees. [CSS3-TRANSFORMS]
+    m_matrix = m_matrix * Gfx::rotation_matrix<double>(Vector3<double> { 0.0, 0.0, 1.0 }, AK::to_radians(rot_z.value()));
+
+    // 6. Post-multiply a rotation transformation on the current matrix around the vector 0, 1, 0 by the specified rotation rotY in degrees. The 3D rotation matrix is described in CSS Transforms with alpha = rotY in degrees. [CSS3-TRANSFORMS]
+    m_matrix = m_matrix * Gfx::rotation_matrix<double>(Vector3<double> { 0.0, 1.0, 0.0 }, AK::to_radians(rot_y.value()));
+
+    // 7. Post-multiply a rotation transformation on the current matrix around the vector 1, 0, 0 by the specified rotation rotX in degrees. The 3D rotation matrix is described in CSS Transforms with alpha = rotX in degrees. [CSS3-TRANSFORMS]
+    m_matrix = m_matrix * Gfx::rotation_matrix<double>(Vector3<double> { 1.0, 0.0, 0.0 }, AK::to_radians(rot_x.value()));
+
+    // 8. Return the current matrix.
+    return *this;
+}
+
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::rotate_from_vector_self(Optional<double> x, Optional<double> y)
+{
+    // 1. Post-multiply a rotation transformation on the current matrix.
+    //    The rotation angle is determined by the angle between the vector (1,0)T and (x,y)T in the clockwise direction. If x and y should both be 0 or -0, the angle is specified as 0.
+    double angle = (x == 0 || x == -0) && (y == 0 || y == -0) ? 0.0 : atan2(y.value_or(0), x.value_or(0));
+
+    // The 2D rotation matrix is described in CSS Transforms where alpha is the angle between the vector (1,0)T and (x,y)T in degrees. [CSS3-TRANSFORMS]
+    m_matrix = m_matrix * Gfx::rotation_matrix<double>(Vector3<double> { 0.0, 0.0, 1.0 }, angle);
+
+    // 2. Return the current matrix.
+    return *this;
+}
+
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::rotate_axis_angle_self(Optional<double> x, Optional<double> y, Optional<double> z, Optional<double> angle)
+{
+    // 1. Post-multiply a rotation transformation on the current matrix around the specified vector x, y, z by the specified rotation angle in degrees. The 3D rotation matrix is described in CSS Transforms with alpha = angle in degrees. [CSS3-TRANSFORMS]
+    m_matrix = m_matrix * Gfx::rotation_matrix<double>(Vector3<double> { x.value_or(0), y.value_or(0), z.value_or(0) }.normalized(), AK::to_radians(angle.value()));
+
+    // 2. If x or y are not 0 or -0, set is 2D of the current matrix to false.
+    if (x != 0 || x != -0 || y != 0 || y != -0)
+        m_is_2d = false;
+
+    // 3. Return the current matrix.
+    return *this;
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrix-skewxself
 JS::NonnullGCPtr<DOMMatrix> DOMMatrix::skew_x_self(double sx)
 {

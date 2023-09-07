@@ -43,9 +43,9 @@ interface DOMMatrixReadOnly {
     [NewObject] DOMMatrix scale(optional unrestricted double scaleX = 1, optional unrestricted double scaleY, optional unrestricted double scaleZ = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
     [NewObject] DOMMatrix scaleNonUniform(optional unrestricted double scaleX = 1, optional unrestricted double scaleY = 1);
     [NewObject] DOMMatrix scale3d(optional unrestricted double scale = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
-    // FIXME: [NewObject] DOMMatrix rotate(optional unrestricted double rotX = 0, optional unrestricted double rotY, optional unrestricted double rotZ);
-    // FIXME: [NewObject] DOMMatrix rotateFromVector(optional unrestricted double x = 0, optional unrestricted double y = 0);
-    // FIXME: [NewObject] DOMMatrix rotateAxisAngle(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double angle = 0);
+    [NewObject] DOMMatrix rotate(optional unrestricted double rotX = 0, optional unrestricted double rotY, optional unrestricted double rotZ);
+    [NewObject] DOMMatrix rotateFromVector(optional unrestricted double x = 0, optional unrestricted double y = 0);
+    [NewObject] DOMMatrix rotateAxisAngle(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double angle = 0);
     [NewObject] DOMMatrix skewX(optional unrestricted double sx = 0);
     [NewObject] DOMMatrix skewY(optional unrestricted double sy = 0);
     [NewObject] DOMMatrix multiply(optional DOMMatrixInit other = {});
