@@ -46,6 +46,25 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::create_from_dom_matr
     return realm.heap().allocate<DOMMatrix>(realm, realm, init.m11.value(), init.m12.value(), init.m21.value(), init.m22.value(), init.m41.value(), init.m42.value());
 }
 
+// https://drafts.fxtf.org/geometry/#create-a-dommatrix-from-the-dictionary
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::create_from_dom_matrix_init(JS::Realm& realm, DOMMatrixInit& init)
+{
+    // 1. Validate and fixup other.
+    TRY(validate_and_fixup_dom_matrix_init(init));
+
+    // 2. If the is2D dictionary member of other is true.
+    if (init.is2d.has_value() && init.is2d.value()) {
+        // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the 6 elements m11, m12, m21, m22, m41 and m42 of other in the given order.
+        return realm.heap().allocate<DOMMatrix>(realm, realm, init.m11.value(), init.m12.value(), init.m21.value(), init.m22.value(), init.m41.value(), init.m42.value());
+    }
+
+    // Otherwise, Return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the 16 elements m11, m12, m13, ..., m44 of other in the given order.
+    return realm.heap().allocate<DOMMatrix>(realm, realm, init.m11.value(), init.m12.value(), init.m13, init.m14,
+        init.m21.value(), init.m22.value(), init.m23, init.m24,
+        init.m31, init.m32, init.m33, init.m34,
+        init.m41.value(), init.m42.value(), init.m43, init.m44);
+}
+
 JS::NonnullGCPtr<DOMMatrix> DOMMatrix::create_from_dom_matrix_read_only(JS::Realm& realm, DOMMatrixReadOnly const& read_only_matrix)
 {
     return realm.heap().allocate<DOMMatrix>(realm, realm, read_only_matrix);
@@ -53,6 +72,11 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrix::create_from_dom_matrix_read_only(JS::Real
 
 DOMMatrix::DOMMatrix(JS::Realm& realm, double m11, double m12, double m21, double m22, double m41, double m42)
     : DOMMatrixReadOnly(realm, m11, m12, m21, m22, m41, m42)
+{
+}
+
+DOMMatrix::DOMMatrix(JS::Realm& realm, double m11, double m12, double m13, double m14, double m21, double m22, double m23, double m24, double m31, double m32, double m33, double m34, double m41, double m42, double m43, double m44)
+    : DOMMatrixReadOnly(realm, m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44)
 {
 }
 
@@ -77,7 +101,7 @@ void DOMMatrix::initialize(JS::Realm& realm)
 // https://drafts.fxtf.org/geometry/#dom-dommatrix-frommatrix
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::from_matrix(JS::VM& vm, DOMMatrixInit other)
 {
-    return create_from_dom_matrix_2d_init(*vm.current_realm(), other);
+    return create_from_dom_matrix_init(*vm.current_realm(), other);
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-m11
@@ -258,7 +282,7 @@ void DOMMatrix::set_f(double value)
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::multiply_self(DOMMatrixInit other)
 {
     // 1. Let otherObject be the result of invoking create a DOMMatrix from the dictionary other.
-    auto other_object = TRY(DOMMatrix::create_from_dom_matrix_2d_init(realm(), other));
+    auto other_object = TRY(DOMMatrix::create_from_dom_matrix_init(realm(), other));
 
     // 2. The otherObject matrix gets post-multiplied to the current matrix.
     m_matrix = m_matrix * other_object->m_matrix;
@@ -275,7 +299,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::multiply_self(DOMMat
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::pre_multiply_self(DOMMatrixInit other)
 {
     // 1. Let otherObject be the result of invoking create a DOMMatrix from the dictionary other.
-    auto other_object = TRY(DOMMatrix::create_from_dom_matrix_2d_init(realm(), other));
+    auto other_object = TRY(DOMMatrix::create_from_dom_matrix_init(realm(), other));
 
     // 2. The otherObject matrix gets pre-multiplied to the current matrix.
     m_matrix = other_object->m_matrix * m_matrix;

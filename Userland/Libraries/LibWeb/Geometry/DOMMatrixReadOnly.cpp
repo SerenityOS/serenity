@@ -48,6 +48,25 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::crea
     return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init.m11.value(), init.m12.value(), init.m21.value(), init.m22.value(), init.m41.value(), init.m42.value());
 }
 
+// https://drafts.fxtf.org/geometry/#create-a-dommatrixreadonly-from-the-dictionary
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::create_from_dom_matrix_init(JS::Realm& realm, DOMMatrixInit& init)
+{
+    // 1. Validate and fixup other.
+    TRY(validate_and_fixup_dom_matrix_init(init));
+
+    // 2. If the is2D dictionary member of other is true.
+    if (init.is2d.has_value() && init.is2d.value()) {
+        // Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the 6 elements m11, m12, m21, m22, m41 and m42 of other in the given order.
+        return realm.heap().allocate<DOMMatrix>(realm, realm, init.m11.value(), init.m12.value(), init.m21.value(), init.m22.value(), init.m41.value(), init.m42.value());
+    }
+
+    // Otherwise, Return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers, the values being the 16 elements m11, m12, m13, ..., m44 of other in the given order.
+    return realm.heap().allocate<DOMMatrix>(realm, realm, init.m11.value(), init.m12.value(), init.m13, init.m14,
+        init.m21.value(), init.m22.value(), init.m23, init.m24,
+        init.m31, init.m32, init.m33, init.m34,
+        init.m41.value(), init.m42.value(), init.m43, init.m44);
+}
+
 DOMMatrixReadOnly::DOMMatrixReadOnly(JS::Realm& realm, double m11, double m12, double m21, double m22, double m41, double m42)
     : Bindings::PlatformObject(realm)
 {
@@ -184,7 +203,7 @@ void DOMMatrixReadOnly::initialize_from_create_3d_matrix(double m11, double m12,
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-frommatrix
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::from_matrix(JS::VM& vm, DOMMatrixInit& other)
 {
-    return create_from_dom_matrix_2d_init(*vm.current_realm(), other);
+    return create_from_dom_matrix_init(*vm.current_realm(), other);
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-isidentity
