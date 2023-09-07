@@ -262,27 +262,28 @@ private:
     i32 m_value { 0 };
 };
 
-constexpr bool operator==(CSSPixels left, int right) { return left == CSSPixels(right); }
+template<Integral T>
+constexpr bool operator==(CSSPixels left, T right) { return left == CSSPixels(right); }
 inline bool operator==(CSSPixels left, float right) { return left.to_float() == right; }
 inline bool operator==(CSSPixels left, double right) { return left.to_double() == right; }
 
-constexpr bool operator>(CSSPixels left, int right) { return left > CSSPixels(right); }
+template<Integral T>
+constexpr bool operator>(CSSPixels left, T right) { return left > CSSPixels(right); }
 inline bool operator>(CSSPixels left, float right) { return left.to_float() > right; }
 inline bool operator>(CSSPixels left, double right) { return left.to_double() > right; }
 
-constexpr bool operator<(CSSPixels left, int right) { return left < CSSPixels(right); }
+template<Integral T>
+constexpr bool operator<(CSSPixels left, T right) { return left < CSSPixels(right); }
 inline bool operator<(CSSPixels left, float right) { return left.to_float() < right; }
 inline bool operator<(CSSPixels left, double right) { return left.to_double() < right; }
 
-constexpr CSSPixels operator*(CSSPixels left, int right) { return left * CSSPixels(right); }
-constexpr CSSPixels operator*(CSSPixels left, unsigned int right) { return left * CSSPixels(right); }
-constexpr CSSPixels operator*(CSSPixels left, unsigned long right) { return left * CSSPixels(right); }
+template<Integral T>
+constexpr CSSPixels operator*(CSSPixels left, T right) { return left * CSSPixels(right); }
 inline float operator*(CSSPixels left, float right) { return left.to_float() * right; }
 inline double operator*(CSSPixels left, double right) { return left.to_double() * right; }
 
-constexpr CSSPixels operator*(int left, CSSPixels right) { return right * CSSPixels(left); }
-constexpr CSSPixels operator*(unsigned int left, CSSPixels right) { return right * CSSPixels(left); }
-constexpr CSSPixels operator*(unsigned long left, CSSPixels right) { return right * CSSPixels(left); }
+template<Integral T>
+constexpr CSSPixels operator*(T left, CSSPixels right) { return CSSPixels(left) * right; }
 inline float operator*(float left, CSSPixels right) { return right.to_float() * left; }
 inline double operator*(double left, CSSPixels right) { return right.to_double() * left; }
 
@@ -373,9 +374,8 @@ constexpr CSSPixels CSSPixels::operator/(CSSPixelFraction const& other) const
     return CSSPixels::from_raw(AK::clamp_to_int(wide_value));
 }
 
-constexpr CSSPixels operator/(CSSPixels left, int right) { return left / CSSPixels(right); }
-constexpr CSSPixels operator/(CSSPixels left, unsigned int right) { return left / CSSPixels(right); }
-constexpr CSSPixels operator/(CSSPixels left, unsigned long right) { return left / CSSPixels(right); }
+template<Integral T>
+constexpr CSSPixels operator/(CSSPixels left, T right) { return left / CSSPixels(right); }
 inline float operator/(CSSPixels left, float right) { return left.to_float() / right; }
 inline double operator/(CSSPixels left, double right) { return left.to_double() / right; }
 
