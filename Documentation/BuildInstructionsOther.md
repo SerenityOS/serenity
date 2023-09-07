@@ -33,7 +33,7 @@ You can use the `nix-shell` script [`Toolchain/serenity.nix`](../Toolchain/seren
 nix-shell Toolchain/serenity.nix
 ```
 
-or you can use the nix flake [`Toolchain/flake.nix`](../Toolchain/serenity.nix) instead:
+or you can use the nix flake [`Toolchain/flake.nix`](../Toolchain/flake.nix) instead:
 
 ```console
 nix develop Toolchain
