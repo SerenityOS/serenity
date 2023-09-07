@@ -3574,6 +3574,8 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
                     return Display::from_short(Display::Short::Grid);
                 case DisplayInside::Ruby:
                     return Display::from_short(Display::Short::Ruby);
+                case DisplayInside::Math:
+                    return Display::from_short(Display::Short::Math);
                 }
             }
 

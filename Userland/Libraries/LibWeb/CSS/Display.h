@@ -100,6 +100,7 @@ public:
     bool is_flex_inside() const { return is_outside_and_inside() && inside() == DisplayInside::Flex; }
     bool is_grid_inside() const { return is_outside_and_inside() && inside() == DisplayInside::Grid; }
     bool is_ruby_inside() const { return is_outside_and_inside() && inside() == DisplayInside::Ruby; }
+    bool is_math_inside() const { return is_outside_and_inside() && inside() == DisplayInside::Math; }
 
     enum class Short {
         None,
@@ -119,6 +120,7 @@ public:
         Ruby,
         Table,
         InlineTable,
+        Math,
     };
 
     static Display from_short(Short short_)
@@ -158,6 +160,11 @@ public:
             return Display { DisplayOutside::Block, DisplayInside::Table };
         case Short::InlineTable:
             return Display { DisplayOutside::Inline, DisplayInside::Table };
+        case Short::Math:
+            // NOTE: The spec ( https://w3c.github.io/mathml-core/#new-display-math-value ) does not
+            //       mention what the outside value for `display: math` should be.
+            //       The UA stylesheet does `* { display: block math; }` so let's go with that.
+            return Display { DisplayOutside::Block, DisplayInside::Math };
         }
         VERIFY_NOT_REACHED();
     }
