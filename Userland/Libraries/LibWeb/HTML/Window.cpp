@@ -902,7 +902,7 @@ JS::GCPtr<WindowProxy const> Window::top() const
 JS::GCPtr<WindowProxy const> Window::parent() const
 {
     // 1. Let navigable be this's navigable.
-    auto* navigable = browsing_context();
+    auto navigable = this->navigable();
 
     // 2. If navigable is null, then return null.
     if (!navigable)
@@ -913,7 +913,7 @@ JS::GCPtr<WindowProxy const> Window::parent() const
         navigable = parent;
 
     // 4. Return navigable's active WindowProxy.
-    return navigable->window_proxy();
+    return navigable->active_window_proxy();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-frameelement
