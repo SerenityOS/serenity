@@ -307,6 +307,36 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::scale3d(Optional<double> scale, O
     return result->scale3d_self(scale, origin_x, origin_y, origin_z);
 }
 
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::rotate(Optional<double> rot_x, Optional<double> rot_y, Optional<double> rot_z)
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a rotateSelf() transformation on result with the arguments rotX, rotY, rotZ.
+    // 3. Return result.
+    return result->rotate_self(rot_x, rot_y, rot_z);
+}
+
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::rotate_from_vector(Optional<double> x, Optional<double> y)
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a rotateFromVectorSelf() transformation on result with the arguments x, y.
+    // 3. Return result.
+    return result->rotate_from_vector_self(x, y);
+}
+
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::rotate_axis_angle(Optional<double> x, Optional<double> y, Optional<double> z, Optional<double> angle)
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a rotateAxisAngleSelf() transformation on result with the arguments x, y, z, angle.
+    // 3. Return result.
+    return result->rotate_axis_angle_self(x, y, z, angle);
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-skewx
 JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::skew_x(double sx) const
 {

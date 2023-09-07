@@ -54,6 +54,9 @@ public:
     JS::NonnullGCPtr<DOMMatrix> translate_self(Optional<double> tx, Optional<double> ty, Optional<double> tz);
     JS::NonnullGCPtr<DOMMatrix> scale_self(Optional<double> scale_x, Optional<double> scale_y, Optional<double> scale_z, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z);
     JS::NonnullGCPtr<DOMMatrix> scale3d_self(Optional<double> scale, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z);
+    JS::NonnullGCPtr<DOMMatrix> rotate_self(Optional<double> rot_x, Optional<double> rot_y, Optional<double> rot_z);
+    JS::NonnullGCPtr<DOMMatrix> rotate_from_vector_self(Optional<double> x, Optional<double> y);
+    JS::NonnullGCPtr<DOMMatrix> rotate_axis_angle_self(Optional<double> x, Optional<double> y, Optional<double> z, Optional<double> angle);
     JS::NonnullGCPtr<DOMMatrix> skew_x_self(double sx = 0);
     JS::NonnullGCPtr<DOMMatrix> skew_y_self(double sy = 0);
     JS::NonnullGCPtr<DOMMatrix> invert_self();
