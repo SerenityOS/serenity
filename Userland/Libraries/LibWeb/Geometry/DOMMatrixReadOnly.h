@@ -51,6 +51,7 @@ class DOMMatrixReadOnly : public Bindings::PlatformObject {
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> construct_impl(JS::Realm&, Optional<Variant<String, Vector<double>>> const& init);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> create_from_dom_matrix_2d_init(JS::Realm&, DOMMatrix2DInit& init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> create_from_dom_matrix_init(JS::Realm&, DOMMatrixInit& init);
 
     virtual ~DOMMatrixReadOnly() override;
 
