@@ -7,12 +7,13 @@ plugins {
 
 var cacheDir = System.getenv("SERENITY_CACHE_DIR") ?: "$buildDir/caches"
 
-// FIXME: Move this somewhere nicer, with better behavior (like controlling host compiler)
 task<Exec>("buildLagomTools") {
-    commandLine = listOf("sh", "-c", "cmake -S ../../Meta/Lagom -B $buildDir/lagom-tools " +
-        " -Dpackage=LagomTools -DCMAKE_INSTALL_PREFIX=$buildDir/lagom-tools-install -GNinja" +
-        " -DSERENITY_CACHE_DIR=$cacheDir;" +
-        " ninja -C $buildDir/lagom-tools install")
+    commandLine = listOf("./BuildLagomTools.sh")
+    environment = mapOf(
+        "BUILD_DIR" to "$buildDir",
+        "CACHE_DIR" to "$cacheDir",
+        "PATH" to System.getenv("PATH")!!
+    )
 }
 tasks.named("preBuild").dependsOn("buildLagomTools")
 
@@ -47,7 +48,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
