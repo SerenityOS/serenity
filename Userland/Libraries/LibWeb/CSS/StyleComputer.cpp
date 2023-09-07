@@ -1907,7 +1907,7 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
     return {};
 }
 
-RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleValue const& font_family, StyleValue const& font_size, StyleValue const& font_style, StyleValue const& font_weight, StyleValue const& font_stretch) const
+RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleValue const& font_family, StyleValue const& font_size, StyleValue const& font_style, StyleValue const& font_weight, StyleValue const& font_stretch, int math_depth) const
 {
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
@@ -1972,16 +1972,58 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
 
         auto const identifier = static_cast<IdentifierStyleValue const&>(font_size).id();
 
-        // https://w3c.github.io/csswg-drafts/css-fonts/#valdef-font-size-relative-size
-        // TODO: If the parent element has a keyword font size in the absolute size keyword mapping table,
-        //       larger may compute the font size to the next entry in the table,
-        //       and smaller may compute the font size to the previous entry in the table.
-        if (identifier == CSS::ValueID::Smaller || identifier == CSS::ValueID::Larger) {
-            if (parent_element && parent_element->computed_css_values()) {
-                font_size_in_px = CSSPixels::nearest_value_for(parent_element->computed_css_values()->computed_font().pixel_metrics().size);
+        if (identifier == ValueID::Math) {
+            auto math_scaling_factor = [&]() {
+                // https://w3c.github.io/mathml-core/#the-math-script-level-property
+                // If the specified value font-size is math then the computed value of font-size is obtained by multiplying
+                // the inherited value of font-size by a nonzero scale factor calculated by the following procedure:
+                // 1. Let A be the inherited math-depth value, B the computed math-depth value, C be 0.71 and S be 1.0
+                int inherited_math_depth = parent_element && parent_element->computed_css_values()
+                    ? parent_element->computed_css_values()->math_depth()
+                    : InitialValues::math_depth();
+                int computed_math_depth = math_depth;
+                auto size_ratio = 0.71;
+                auto scale = 1.0;
+                // 2. If A = B then return S.
+                bool invert_scale_factor = false;
+                if (inherited_math_depth == computed_math_depth) {
+                    return scale;
+                }
+                //    If B < A, swap A and B and set InvertScaleFactor to true.
+                else if (computed_math_depth < inherited_math_depth) {
+                    AK::swap(inherited_math_depth, computed_math_depth);
+                    invert_scale_factor = true;
+                }
+                //    Otherwise B > A and set InvertScaleFactor to false.
+                else {
+                    invert_scale_factor = false;
+                }
+                // 3. Let E be B - A > 0.
+                double e = (computed_math_depth - inherited_math_depth) > 0;
+                // FIXME: 4. If the inherited first available font has an OpenType MATH table:
+                //    - If A ≤ 0 and B ≥ 2 then multiply S by scriptScriptPercentScaleDown and decrement E by 2.
+                //    - Otherwise if A = 1 then multiply S by scriptScriptPercentScaleDown / scriptPercentScaleDown and decrement E by 1.
+                //    - Otherwise if B = 1 then multiply S by scriptPercentScaleDown and decrement E by 1.
+                // 5. Multiply S by C^E.
+                scale *= AK::pow(size_ratio, e);
+                // 6. Return S if InvertScaleFactor is false and 1/S otherwise.
+                if (!invert_scale_factor)
+                    return scale;
+                return 1.0 / scale;
+            };
+            font_size_in_px = parent_font_size().scale_by(math_scaling_factor());
+        } else {
+            // https://w3c.github.io/csswg-drafts/css-fonts/#valdef-font-size-relative-size
+            // TODO: If the parent element has a keyword font size in the absolute size keyword mapping table,
+            //       larger may compute the font size to the next entry in the table,
+            //       and smaller may compute the font size to the previous entry in the table.
+            if (identifier == CSS::ValueID::Smaller || identifier == CSS::ValueID::Larger) {
+                if (parent_element && parent_element->computed_css_values()) {
+                    font_size_in_px = CSSPixels::nearest_value_for(parent_element->computed_css_values()->computed_font().pixel_metrics().size);
+                }
             }
+            font_size_in_px *= get_absolute_size_mapping(identifier);
         }
-        font_size_in_px *= get_absolute_size_mapping(identifier);
     } else {
         Length::ResolutionContext const length_resolution_context {
             .viewport_rect = viewport_rect(),
@@ -2126,7 +2168,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     auto font_weight = style.property(CSS::PropertyID::FontWeight);
     auto font_stretch = style.property(CSS::PropertyID::FontStretch);
 
-    auto found_font = compute_font_for_style_values(element, pseudo_element, font_family, font_size, font_style, font_weight, font_stretch);
+    auto found_font = compute_font_for_style_values(element, pseudo_element, font_family, font_size, font_style, font_weight, font_stretch, style.math_depth());
 
     style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(CSSPixels::nearest_value_for(found_font->pixel_size()))), nullptr);
     style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create(font_weight->to_font_weight()));

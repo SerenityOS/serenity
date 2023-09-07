@@ -1,0 +1,39 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x78.609375 children: inline
+      line 0 width: 78.9375, height: 78.609375, bottom: 78.609375, baseline: 60.90625
+        frag 0 from TextNode start: 0, length: 1, rect: [8,25 39.09375x55.8125]
+          "H"
+        frag 1 from TextNode start: 0, length: 1, rect: [47,38 19.78125x39.625]
+          "e"
+        frag 2 from TextNode start: 0, length: 1, rect: [67,47 6.8125x28.125]
+          "l"
+        frag 3 from TextNode start: 0, length: 1, rect: [74,53 4.84375x19.96875]
+          "l"
+        frag 4 from TextNode start: 0, length: 1, rect: [79,57 8.40625x14.171875]
+          "o"
+      InlineNode <span>
+        TextNode <#text>
+        InlineNode <span>
+          TextNode <#text>
+          InlineNode <span>
+            TextNode <#text>
+            InlineNode <span>
+              TextNode <#text>
+              InlineNode <span>
+                TextNode <#text>
+      TextNode <#text>
+
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x78.609375]
+      InlinePaintable (InlineNode<SPAN>)
+        TextPaintable (TextNode<#text>)
+        InlinePaintable (InlineNode<SPAN>)
+          TextPaintable (TextNode<#text>)
+          InlinePaintable (InlineNode<SPAN>)
+            TextPaintable (TextNode<#text>)
+            InlinePaintable (InlineNode<SPAN>)
+              TextPaintable (TextNode<#text>)
+              InlinePaintable (InlineNode<SPAN>)
+                TextPaintable (TextNode<#text>)
