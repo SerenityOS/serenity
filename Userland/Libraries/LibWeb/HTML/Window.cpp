@@ -32,6 +32,7 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
+#include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Focus.h>
@@ -828,11 +829,11 @@ String Window::name() const
 void Window::set_name(String const& name)
 {
     // 1. If this's navigable is null, then return.
-    if (!browsing_context())
+    if (!navigable())
         return;
 
     // 2. Set this's navigable's active session history entry's document state's navigable target name to the given value.
-    browsing_context()->set_name(name);
+    navigable()->active_session_history_entry()->document_state->set_navigable_target_name(name);
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location
