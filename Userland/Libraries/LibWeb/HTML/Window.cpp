@@ -890,12 +890,12 @@ u32 Window::length()
 JS::GCPtr<WindowProxy const> Window::top() const
 {
     // 1. If this's navigable is null, then return null.
-    auto const* browsing_context = this->browsing_context();
-    if (!browsing_context)
+    auto navigable = this->navigable();
+    if (!navigable)
         return {};
 
     // 2. Return this's navigable's top-level traversable's active WindowProxy.
-    return browsing_context->top_level_browsing_context()->window_proxy();
+    return navigable->top_level_traversable()->active_window_proxy();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-parent
