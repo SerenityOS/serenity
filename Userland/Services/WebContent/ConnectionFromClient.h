@@ -33,7 +33,7 @@ public:
 
     virtual void die() override;
 
-    void initialize_js_console(Badge<PageHost>);
+    void initialize_js_console(Badge<PageHost>, Web::DOM::Document& document);
 
     void request_file(Web::FileRequest);
 

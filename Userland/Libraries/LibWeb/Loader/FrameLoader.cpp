@@ -325,7 +325,7 @@ void FrameLoader::resource_did_load()
 
     browsing_context().set_active_document(document);
     if (auto* page = browsing_context().page())
-        page->client().page_did_create_main_document();
+        page->client().page_did_create_new_document(*document);
 
     if (!parse_document(*document, resource()->encoded_data())) {
         load_error_page(url, "Failed to parse content.");

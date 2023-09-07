@@ -601,16 +601,16 @@ Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_h
     return (i32)0;
 }
 
-void ConnectionFromClient::initialize_js_console(Badge<PageHost>)
+void ConnectionFromClient::initialize_js_console(Badge<PageHost>, Web::DOM::Document& document)
 {
-    auto* document = page().top_level_browsing_context().active_document();
-    auto realm = document->realm().make_weak_ptr();
+    auto realm = document.realm().make_weak_ptr();
     if (m_realm.ptr() == realm.ptr())
         return;
 
     auto console_object = realm->intrinsics().console_object();
     m_realm = realm;
-    m_console_client = make<WebContentConsoleClient>(console_object->console(), *m_realm, *this);
+    if (!m_console_client)
+        m_console_client = make<WebContentConsoleClient>(console_object->console(), *m_realm, *this);
     console_object->console().set_client(*m_console_client.ptr());
 }
 
