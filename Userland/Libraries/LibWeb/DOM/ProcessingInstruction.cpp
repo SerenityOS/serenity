@@ -12,7 +12,7 @@
 namespace Web::DOM {
 
 ProcessingInstruction::ProcessingInstruction(Document& document, DeprecatedString const& data, DeprecatedString const& target)
-    : CharacterData(document, NodeType::PROCESSING_INSTRUCTION_NODE, data)
+    : CharacterData(document, NodeType::PROCESSING_INSTRUCTION_NODE, MUST(String::from_deprecated_string(data)))
     , m_target(target)
 {
 }

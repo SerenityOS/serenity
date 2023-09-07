@@ -12,7 +12,7 @@
 namespace Web::DOM {
 
 Comment::Comment(Document& document, String const& data)
-    : CharacterData(document, NodeType::COMMENT_NODE, data.to_deprecated_string())
+    : CharacterData(document, NodeType::COMMENT_NODE, data)
 {
 }
 

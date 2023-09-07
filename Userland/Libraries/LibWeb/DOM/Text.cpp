@@ -14,12 +14,12 @@
 namespace Web::DOM {
 
 Text::Text(Document& document, String const& data)
-    : CharacterData(document, NodeType::TEXT_NODE, data.to_deprecated_string())
+    : CharacterData(document, NodeType::TEXT_NODE, data)
 {
 }
 
 Text::Text(Document& document, NodeType type, String const& data)
-    : CharacterData(document, type, data.to_deprecated_string())
+    : CharacterData(document, type, data)
 {
 }
 
@@ -63,7 +63,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> Text::split_text(size_t offset)
     auto new_data = TRY(substring_data(offset, count));
 
     // 5. Let new node be a new Text node, with the same node document as node. Set new node’s data to new data.
-    auto new_node = heap().allocate<Text>(realm(), document(), MUST(String::from_deprecated_string(new_data)));
+    auto new_node = heap().allocate<Text>(realm(), document(), new_data);
 
     // 6. Let parent be node’s parent.
     JS::GCPtr<Node> parent = this->parent();
@@ -100,7 +100,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> Text::split_text(size_t offset)
     }
 
     // 8. Replace data with node node, offset offset, count count, and data the empty string.
-    TRY(replace_data(offset, count, ""));
+    TRY(replace_data(offset, count, String {}));
 
     // 9. Return new node.
     return new_node;

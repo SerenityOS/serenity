@@ -14,7 +14,7 @@
 
 namespace Web::DOM {
 
-CharacterData::CharacterData(Document& document, NodeType type, DeprecatedString const& data)
+CharacterData::CharacterData(Document& document, NodeType type, String const& data)
     : Node(document, type)
     , m_data(data)
 {
@@ -27,7 +27,7 @@ void CharacterData::initialize(JS::Realm& realm)
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-data
-void CharacterData::set_data(DeprecatedString data)
+void CharacterData::set_data(String const& data)
 {
     // [The data] setter must replace data with node this, offset 0, count this’s length, and data new value.
     // NOTE: Since the offset is 0, it can never be above data's length, so this can never throw.
@@ -37,7 +37,7 @@ void CharacterData::set_data(DeprecatedString data)
 }
 
 // https://dom.spec.whatwg.org/#concept-cd-substring
-WebIDL::ExceptionOr<DeprecatedString> CharacterData::substring_data(size_t offset, size_t count) const
+WebIDL::ExceptionOr<String> CharacterData::substring_data(size_t offset, size_t count) const
 {
     // 1. Let length be node’s length.
     auto length = this->length();
@@ -46,18 +46,22 @@ WebIDL::ExceptionOr<DeprecatedString> CharacterData::substring_data(size_t offse
     if (offset > length)
         return WebIDL::IndexSizeError::create(realm(), "Substring offset out of range."_fly_string);
 
+    // FIXME: The offset and count we are given here is in UTF-16 code units, but we are incorrectly assuming it is a byte offset.
+
     // 3. If offset plus count is greater than length, return a string whose value is the code units from the offsetth code unit
     //    to the end of node’s data, and then return.
     if (offset + count > length)
-        return m_data.substring(offset);
+        return MUST(m_data.substring_from_byte_offset(offset));
 
     // 4. Return a string whose value is the code units from the offsetth code unit to the offset+countth code unit in node’s data.
-    return m_data.substring(offset, count);
+    return MUST(m_data.substring_from_byte_offset(offset, count));
 }
 
 // https://dom.spec.whatwg.org/#concept-cd-replace
-WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, DeprecatedString const& data)
+WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, String const& data)
 {
+    // FIXME: The offset and count we are given here is in UTF-16 code units, but we are incorrectly assuming it is a byte offset.
+
     // 1. Let length be node’s length.
     auto length = this->length();
 
@@ -70,16 +74,16 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
         count = length - offset;
 
     // 4. Queue a mutation record of "characterData" for node with null, null, node’s data, « », « », null, and null.
-    queue_mutation_record(MutationType::characterData, {}, {}, m_data, {}, {}, nullptr, nullptr);
+    queue_mutation_record(MutationType::characterData, {}, {}, m_data.to_deprecated_string(), {}, {}, nullptr, nullptr);
 
     // 5. Insert data into node’s data after offset code units.
     // 6. Let delete offset be offset + data’s length.
     // 7. Starting from delete offset code units, remove count code units from node’s data.
     StringBuilder builder;
-    builder.append(this->data().substring_view(0, offset));
+    builder.append(this->data().bytes_as_string_view().substring_view(0, offset));
     builder.append(data);
-    builder.append(this->data().substring_view(offset + count));
-    m_data = builder.to_deprecated_string();
+    builder.append(this->data().bytes_as_string_view().substring_view(offset + count));
+    m_data = MUST(builder.to_string());
 
     // 8. For each live range whose start node is node and start offset is greater than offset but less than or equal to offset plus count, set its start offset to offset.
     for (auto& range : Range::live_ranges()) {
@@ -96,13 +100,13 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
     // 10. For each live range whose start node is node and start offset is greater than offset plus count, increase its start offset by data’s length and decrease it by count.
     for (auto& range : Range::live_ranges()) {
         if (range->start_container() == this && range->start_offset() > (offset + count))
-            TRY(range->set_start(*range->start_container(), range->start_offset() + data.length() - count));
+            TRY(range->set_start(*range->start_container(), range->start_offset() + data.bytes().size() - count));
     }
 
     // 11. For each live range whose end node is node and end offset is greater than offset plus count, increase its end offset by data’s length and decrease it by count.
     for (auto& range : Range::live_ranges()) {
         if (range->end_container() == this && range->end_offset() > (offset + count))
-            TRY(range->set_end(*range->end_container(), range->end_offset() + data.length() - count));
+            TRY(range->set_end(*range->end_container(), range->end_offset() + data.bytes().size() - count));
     }
 
     // 12. If node’s parent is non-null, then run the children changed steps for node’s parent.
@@ -121,14 +125,14 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-appenddata
-WebIDL::ExceptionOr<void> CharacterData::append_data(DeprecatedString const& data)
+WebIDL::ExceptionOr<void> CharacterData::append_data(String const& data)
 {
     // The appendData(data) method steps are to replace data with node this, offset this’s length, count 0, and data data.
     return replace_data(this->length(), 0, data);
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-insertdata
-WebIDL::ExceptionOr<void> CharacterData::insert_data(size_t offset, DeprecatedString const& data)
+WebIDL::ExceptionOr<void> CharacterData::insert_data(size_t offset, String const& data)
 {
     // The insertData(offset, data) method steps are to replace data with node this, offset offset, count 0, and data data.
     return replace_data(offset, 0, data);
@@ -138,7 +142,7 @@ WebIDL::ExceptionOr<void> CharacterData::insert_data(size_t offset, DeprecatedSt
 WebIDL::ExceptionOr<void> CharacterData::delete_data(size_t offset, size_t count)
 {
     // The deleteData(offset, count) method steps are to replace data with node this, offset offset, count count, and data the empty string.
-    return replace_data(offset, count, DeprecatedString::empty());
+    return replace_data(offset, count, String {});
 }
 
 }

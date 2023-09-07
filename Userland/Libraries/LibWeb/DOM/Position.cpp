@@ -67,7 +67,7 @@ bool Position::offset_is_at_end_of_node() const
 
     auto& node = verify_cast<DOM::Text>(*m_node);
     auto text = node.data();
-    return m_offset == text.length();
+    return m_offset == text.bytes_as_string_view().length();
 }
 
 }

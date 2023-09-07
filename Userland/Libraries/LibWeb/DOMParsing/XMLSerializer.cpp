@@ -755,16 +755,16 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_text(DOM::Text const& tex
     //           then throw an exception; the serialization of this node's data would not be well-formed.
 
     // 2. Let markup be the value of node's data.
-    DeprecatedString markup = text.data();
+    auto markup = text.data();
 
     // 3. Replace any occurrences of "&" in markup by "&amp;".
-    markup = markup.replace("&"sv, "&amp;"sv, ReplaceMode::All);
+    markup = MUST(markup.replace("&"sv, "&amp;"sv, ReplaceMode::All));
 
     // 4. Replace any occurrences of "<" in markup by "&lt;".
-    markup = markup.replace("<"sv, "&lt;"sv, ReplaceMode::All);
+    markup = MUST(markup.replace("<"sv, "&lt;"sv, ReplaceMode::All));
 
     // 5. Replace any occurrences of ">" in markup by "&gt;".
-    markup = markup.replace(">"sv, "&gt;"sv, ReplaceMode::All);
+    markup = MUST(markup.replace(">"sv, "&gt;"sv, ReplaceMode::All));
 
     // 6. Return the value of markup.
     return markup;

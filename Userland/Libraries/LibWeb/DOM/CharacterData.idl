@@ -3,7 +3,7 @@
 #import <DOM/Node.idl>
 
 // https://dom.spec.whatwg.org/#characterdata
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface CharacterData : Node {
     [LegacyNullToEmptyString] attribute DOMString data;
     readonly attribute unsigned long length;

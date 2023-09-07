@@ -287,7 +287,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
 void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
 {
     // An input element's dirty value flag must be set to true whenever the user interacts with the control in a way that changes the value.
-    m_value = value_sanitization_algorithm(m_text_node->data());
+    m_value = value_sanitization_algorithm(m_text_node->data().to_deprecated_string());
     m_dirty_value = true;
 
     update_placeholder_visibility();
@@ -363,7 +363,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
     //    and the element has a text entry cursor position, move the text entry cursor position to the end of the
     //    text control, unselecting any selected text and resetting the selection direction to "none".
     if (m_text_node && (m_value != old_value)) {
-        m_text_node->set_data(m_value);
+        m_text_node->set_data(MUST(String::from_deprecated_string(m_value)));
         update_placeholder_visibility();
     }
 
@@ -502,7 +502,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
 
     m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), MUST(String::from_deprecated_string(initial_value)));
-    m_placeholder_text_node->set_data(deprecated_attribute(HTML::AttributeNames::placeholder));
+    m_placeholder_text_node->set_data(attribute(HTML::AttributeNames::placeholder).value_or(String {}));
     m_placeholder_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
     MUST(element->append_child(*m_placeholder_element));
@@ -581,7 +581,7 @@ void HTMLInputElement::attribute_changed(DeprecatedFlyString const& name, Deprec
         }
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
-            m_placeholder_text_node->set_data(value);
+            m_placeholder_text_node->set_data(MUST(String::from_deprecated_string(value)));
     } else if (name == HTML::AttributeNames::readonly) {
         handle_readonly_attribute(value);
     }
@@ -909,7 +909,7 @@ void HTMLInputElement::reset_algorithm()
     // and then invoke the value sanitization algorithm, if the type attribute's current state defines one.
     m_value = value_sanitization_algorithm(m_value);
     if (m_text_node) {
-        m_text_node->set_data(m_value);
+        m_text_node->set_data(MUST(String::from_deprecated_string(m_value)));
         update_placeholder_visibility();
     }
 }
