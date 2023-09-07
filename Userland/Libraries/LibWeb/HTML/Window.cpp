@@ -857,7 +857,7 @@ JS::NonnullGCPtr<History> Window::history() const
 void Window::focus()
 {
     // 1. Let current be this Window object's navigable.
-    auto* current = browsing_context();
+    auto current = navigable();
 
     // 2. If current is null, then return.
     if (!current)
