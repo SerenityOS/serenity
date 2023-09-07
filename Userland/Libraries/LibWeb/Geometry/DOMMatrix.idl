@@ -39,8 +39,8 @@ interface DOMMatrix : DOMMatrixReadOnly {
     DOMMatrix multiplySelf(optional DOMMatrixInit other = {});
     DOMMatrix preMultiplySelf(optional DOMMatrixInit other = {});
     DOMMatrix translateSelf(optional unrestricted double tx = 0, optional unrestricted double ty = 0, optional unrestricted double tz = 0);
-    // FIXME: DOMMatrix scaleSelf(optional unrestricted double scaleX = 1, optional unrestricted double scaleY, optional unrestricted double scaleZ = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
-    // FIXME: DOMMatrix scale3dSelf(optional unrestricted double scale = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
+    DOMMatrix scaleSelf(optional unrestricted double scaleX = 1, optional unrestricted double scaleY, optional unrestricted double scaleZ = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
+    DOMMatrix scale3dSelf(optional unrestricted double scale = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
     // FIXME: DOMMatrix rotateSelf(optional unrestricted double rotX = 0, optional unrestricted double rotY, optional unrestricted double rotZ);
     // FIXME: DOMMatrix rotateFromVectorSelf(optional unrestricted double x = 0, optional unrestricted double y = 0);
     // FIXME: DOMMatrix rotateAxisAngleSelf(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double angle = 0);

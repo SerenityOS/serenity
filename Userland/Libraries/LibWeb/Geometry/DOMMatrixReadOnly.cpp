@@ -270,6 +270,43 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::translate(Optional<double> const&
     return result->translate_self(tx, ty, tz);
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-scale
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::scale(Optional<double> scale_x, Optional<double> scale_y, Optional<double> scale_z, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z)
+{
+    // 1. If scaleY is missing, set scaleY to the value of scaleX.
+    if (!scale_y.has_value())
+        scale_y = scale_x;
+
+    // 2. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 3. Perform a scaleSelf() transformation on result with the arguments scaleX, scaleY, scaleZ, originX, originY, originZ.
+    // 4. Return result.
+    return result->scale_self(scale_x, scale_y, scale_z, origin_x, origin_y, origin_z);
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-scalenonuniform
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::scale_non_uniform(Optional<double> scale_x, Optional<double> scale_y)
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a scaleSelf() transformation on result with the arguments scaleX, scaleY, 1, 0, 0, 0.
+    // 3. Return result.
+    return result->scale_self(scale_x, scale_y, 1, 0, 0, 0);
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-scale3d
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::scale3d(Optional<double> scale, Optional<double> origin_x, Optional<double> origin_y, Optional<double> origin_z)
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a scale3dSelf() transformation on result with the arguments scale, originX, originY, originZ.
+    // 3. Return result.
+    return result->scale3d_self(scale, origin_x, origin_y, origin_z);
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-skewx
 JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::skew_x(double sx) const
 {
