@@ -34,11 +34,19 @@ static bool is_all_whitespace(StringView string)
 
 static ErrorOr<DeprecatedString> apply_text_transform(DeprecatedString const& string, CSS::TextTransform text_transform)
 {
-    if (text_transform == CSS::TextTransform::Uppercase)
+    switch (text_transform) {
+    case CSS::TextTransform::Uppercase:
         return Unicode::to_unicode_uppercase_full(string);
-    if (text_transform == CSS::TextTransform::Lowercase)
+    case CSS::TextTransform::Lowercase:
         return Unicode::to_unicode_lowercase_full(string);
-    return string;
+    case CSS::TextTransform::None:
+        return string;
+    case CSS::TextTransform::Capitalize:
+    case CSS::TextTransform::FullSizeKana:
+    case CSS::TextTransform::FullWidth:
+        // FIXME: Implement these!
+        return string;
+    }
 }
 
 void TextNode::invalidate_text_for_rendering()
