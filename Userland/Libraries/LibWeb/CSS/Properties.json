@@ -864,7 +864,8 @@
       "x-small",
       "xx-large",
       "xx-small",
-      "xxx-large"
+      "xxx-large",
+      "math"
     ],
     "percentages-resolve-to": "length",
     "quirks": [
