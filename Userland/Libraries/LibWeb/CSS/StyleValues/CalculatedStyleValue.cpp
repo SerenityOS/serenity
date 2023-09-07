@@ -2392,7 +2392,7 @@ Optional<double> CalculatedStyleValue::resolve_number() const
     return {};
 }
 
-Optional<i64> CalculatedStyleValue::resolve_integer()
+Optional<i64> CalculatedStyleValue::resolve_integer() const
 {
     auto result = m_calculation->resolve({}, {});
     if (result.value().has<Number>())

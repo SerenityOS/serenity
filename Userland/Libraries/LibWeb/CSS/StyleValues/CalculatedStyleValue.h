@@ -102,7 +102,7 @@ public:
     bool resolves_to_number() const { return m_resolved_type.matches_number(); }
     bool resolves_to_number_percentage() const { return m_resolved_type.matches_number_percentage(); }
     Optional<double> resolve_number() const;
-    Optional<i64> resolve_integer();
+    Optional<i64> resolve_integer() const;
 
     bool contains_percentage() const;
 
