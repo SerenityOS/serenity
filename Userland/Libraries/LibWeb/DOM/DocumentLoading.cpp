@@ -235,6 +235,10 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
 
     if (navigation_params->response->body()) {
         auto process_body = [navigation_params, document](ByteBuffer bytes) {
+            auto extracted_mime_type = navigation_params->response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+            auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
+            document->set_content_type(mime_type);
+
             if (!parse_document(*document, bytes)) {
                 // FIXME: Load html page with an error if parsing failed.
                 TODO();
