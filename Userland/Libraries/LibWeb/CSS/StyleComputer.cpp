@@ -72,6 +72,7 @@
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/Platform/FontPlugin.h>
 #include <LibWeb/ReferrerPolicy/AbstractOperations.h>
 #include <stdio.h>
@@ -2242,6 +2243,23 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
         return;
 
     auto new_display = display;
+
+    if (display.is_math_inside()) {
+        // https://w3c.github.io/mathml-core/#new-display-math-value
+        // For elements that are not MathML elements, if the specified value of display is inline math or block math
+        // then the computed value is block flow and inline flow respectively.
+        if (element.namespace_() != Namespace::MathML)
+            new_display = CSS::Display { display.outside(), CSS::DisplayInside::Flow };
+        // For the mtable element the computed value is block table and inline table respectively.
+        else if (element.tag_name().equals_ignoring_ascii_case("mtable"sv))
+            new_display = CSS::Display { display.outside(), CSS::DisplayInside::Table };
+        // For the mtr element, the computed value is table-row.
+        else if (element.tag_name().equals_ignoring_ascii_case("mtr"sv))
+            new_display = CSS::Display { CSS::DisplayInternal::TableRow };
+        // For the mtd element, the computed value is table-cell.
+        else if (element.tag_name().equals_ignoring_ascii_case("mtd"sv))
+            new_display = CSS::Display { CSS::DisplayInternal::TableCell };
+    }
 
     switch (required_box_type_transformation(style, element, pseudo_element)) {
     case BoxTypeTransformation::None:
