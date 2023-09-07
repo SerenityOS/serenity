@@ -14,6 +14,7 @@
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
+#include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
@@ -796,6 +797,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     auto math_style_value = computed_style.property(CSS::PropertyID::MathStyle);
     if (auto math_style = value_id_to_math_style(math_style_value->to_identifier()); math_style.has_value())
         computed_values.set_math_style(math_style.value());
+
+    computed_values.set_math_depth(computed_style.math_depth());
 
     // Update any anonymous children that inherit from this node.
     // FIXME: This is pretty hackish. It would be nicer if they shared the inherited style

@@ -119,6 +119,7 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(Length, length)                                              \
     __ENUMERATE_STYLE_VALUE_TYPE(LinearGradient, linear_gradient)                             \
     __ENUMERATE_STYLE_VALUE_TYPE(ListStyle, list_style)                                       \
+    __ENUMERATE_STYLE_VALUE_TYPE(MathDepth, math_depth)                                       \
     __ENUMERATE_STYLE_VALUE_TYPE(Number, number)                                              \
     __ENUMERATE_STYLE_VALUE_TYPE(Overflow, overflow)                                          \
     __ENUMERATE_STYLE_VALUE_TYPE(Percentage, percentage)                                      \

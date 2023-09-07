@@ -67,6 +67,7 @@
 #include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
+#include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
@@ -4455,6 +4456,51 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
 
+RefPtr<StyleValue> Parser::parse_math_depth_value(Vector<ComponentValue> const& component_values)
+{
+    // https://w3c.github.io/mathml-core/#propdef-math-depth
+    // auto-add | add(<integer>) | <integer>
+    auto tokens = TokenStream { component_values };
+
+    tokens.skip_whitespace();
+    auto token = tokens.next_token();
+    tokens.skip_whitespace();
+    if (tokens.has_next_token())
+        return nullptr;
+
+    // auto-add
+    if (token.is_ident("auto-add"sv))
+        return MathDepthStyleValue::create_auto_add();
+
+    // FIXME: Make it easier to parse "thing that might be <bar> or literally anything that resolves to it" and get rid of this
+    auto parse_something_that_resolves_to_integer = [this](ComponentValue& token) -> RefPtr<StyleValue> {
+        if (token.is(Token::Type::Number) && token.token().number().is_integer())
+            return IntegerStyleValue::create(token.token().to_integer());
+        if (auto value = parse_calculated_value(token); value && value->resolves_to_number())
+            return value;
+        return nullptr;
+    };
+
+    // add(<integer>)
+    if (token.is_function("add"sv)) {
+        auto add_tokens = TokenStream { token.function().values() };
+        add_tokens.skip_whitespace();
+        auto integer_token = add_tokens.next_token();
+        add_tokens.skip_whitespace();
+        if (add_tokens.has_next_token())
+            return nullptr;
+        if (auto integer_value = parse_something_that_resolves_to_integer(integer_token))
+            return MathDepthStyleValue::create_add(integer_value.release_nonnull());
+        return nullptr;
+    }
+
+    // <integer>
+    if (auto integer_value = parse_something_that_resolves_to_integer(token))
+        return MathDepthStyleValue::create_integer(integer_value.release_nonnull());
+
+    return nullptr;
+}
+
 RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& component_values)
 {
     auto tokens = TokenStream { component_values };
@@ -5797,6 +5843,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::ListStyle:
         if (auto parsed_value = parse_list_style_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::MathDepth:
+        if (auto parsed_value = parse_math_depth_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Overflow:
