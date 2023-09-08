@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPlugin);
 
     Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
-#if defined(HAVE_PULSEAUDIO)
+#if defined(AK_OS_MACOS) || defined(HAVE_PULSEAUDIO)
         return Web::Platform::AudioCodecPluginAgnostic::create(move(loader));
 #elif defined(HAVE_QT)
         return Ladybird::AudioCodecPluginQt::create(move(loader));
