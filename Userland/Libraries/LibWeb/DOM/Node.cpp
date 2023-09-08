@@ -467,6 +467,8 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
         // 6. Run assign slottables for a tree with node’s root.
         assign_slottables_for_a_tree(node->root());
 
+        node_to_insert->invalidate_style();
+
         // 7. For each shadow-including inclusive descendant inclusiveDescendant of node, in shadow-including tree order:
         node_to_insert->for_each_shadow_including_inclusive_descendant([&](Node& inclusive_descendant) {
             // 1. Run the insertion steps with inclusiveDescendant.
