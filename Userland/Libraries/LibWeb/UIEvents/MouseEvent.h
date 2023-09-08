@@ -28,8 +28,8 @@ class MouseEvent : public UIEvent {
     WEB_PLATFORM_OBJECT(MouseEvent, UIEvent);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<MouseEvent> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& = {}, double page_x = 0, double page_y = 0, double offset_x = 0, double offset_y = 0);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons);
+    [[nodiscard]] static JS::NonnullGCPtr<MouseEvent> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& = {}, double page_x = 0, double page_y = 0, double offset_x = 0, double offset_y = 0, unsigned modifiers = 0);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons, unsigned modifiers);
 
     virtual ~MouseEvent() override;
 
@@ -48,6 +48,11 @@ public:
     double offset_x() const { return m_offset_x; }
     double offset_y() const { return m_offset_y; }
 
+    bool ctrl_key() const { return m_ctrl_key; }
+    bool shift_key() const { return m_shift_key; }
+    bool alt_key() const { return m_alt_key; }
+    bool meta_key() const { return m_meta_key; }
+
     double movement_x() const { return m_movement_x; }
     double movement_y() const { return m_movement_y; }
 
@@ -57,7 +62,7 @@ public:
     virtual u32 which() const override { return m_button + 1; }
 
 protected:
-    MouseEvent(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y);
+    MouseEvent(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y, unsigned modifiers);
 
     virtual void initialize(JS::Realm&) override;
 
@@ -72,6 +77,10 @@ private:
     double m_client_y { 0 };
     double m_offset_x { 0 };
     double m_offset_y { 0 };
+    bool m_ctrl_key { false };
+    bool m_shift_key { false };
+    bool m_alt_key { false };
+    bool m_meta_key { false };
     double m_movement_x { 0 };
     double m_movement_y { 0 };
     i16 m_button { 0 };

@@ -10,7 +10,7 @@
 <script>
 function handle(e) {
     var out = document.getElementById('out');
-    out.innerHTML = `${e.type} | client: ${e.clientX}x${e.y} | screen: ${e.screenX}x${e.screenY}\n${out.innerHTML}`;
+    out.innerHTML = `${e.type} | client: ${e.clientX}x${e.y} | screen: ${e.screenX}x${e.screenY} | ${e.ctrlKey ? 'CTRL' : ''} ${e.shiftKey ? 'Shift' : ''} ${e.altKey ? 'Alt' : ''}\n${out.innerHTML}`;
 }
 
 var rect = document.getElementById('rect');
