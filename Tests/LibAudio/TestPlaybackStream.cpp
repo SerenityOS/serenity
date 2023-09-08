@@ -32,7 +32,7 @@ STREAM_TEST(create_and_destroy_playback_stream)
     Core::EventLoop event_loop;
 
     bool has_implementation = false;
-#if defined(AK_OS_SERENITY) || defined(HAVE_PULSEAUDIO)
+#if defined(AK_OS_SERENITY) || defined(HAVE_PULSEAUDIO) || defined(AK_OS_MACOS)
     has_implementation = true;
 #endif
 
