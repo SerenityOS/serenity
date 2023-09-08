@@ -191,6 +191,7 @@ bool property_accepts_percentage(PropertyID, Percentage const&);
 bool property_accepts_resolution(PropertyID, Resolution const&);
 bool property_accepts_time(PropertyID, Time const&);
 
+bool property_is_shorthand(PropertyID);
 Vector<PropertyID> longhands_for_shorthand(PropertyID);
 
 size_t property_maximum_value_count(PropertyID);
@@ -770,6 +771,29 @@ size_t property_maximum_value_count(PropertyID property_id)
     generate_bounds_checking_function(properties, generator, "percentage"sv, "Percentage"sv, {}, "value.value()"sv);
     generate_bounds_checking_function(properties, generator, "resolution"sv, "Resolution"sv, "Dpi"sv);
     generate_bounds_checking_function(properties, generator, "time"sv, "Time"sv, "S"sv);
+
+    generator.append(R"~~~(
+bool property_is_shorthand(PropertyID property_id)
+{
+    switch (property_id) {
+)~~~");
+    properties.for_each_member([&](auto& name, auto& value) {
+        if (value.as_object().has("longhands"sv)) {
+            auto property_generator = generator.fork();
+            property_generator.set("name:titlecase", title_casify(name));
+            property_generator.append(R"~~~(
+        case PropertyID::@name:titlecase@:
+)~~~");
+        }
+    });
+
+    generator.append(R"~~~(
+            return true;
+        default:
+            return false;
+        }
+}
+)~~~");
 
     generator.append(R"~~~(
 Vector<PropertyID> longhands_for_shorthand(PropertyID property_id)
