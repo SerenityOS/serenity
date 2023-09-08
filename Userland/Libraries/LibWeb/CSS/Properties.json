@@ -308,24 +308,6 @@
       "border-color"
     ]
   },
-  "border-top": {
-    "inherited": false,
-    "initial": "medium currentcolor none",
-    "longhands": [
-      "border-top-width",
-      "border-top-style",
-      "border-top-color"
-    ]
-  },
-  "border-right": {
-    "inherited": false,
-    "initial": "medium currentcolor none",
-    "longhands": [
-      "border-right-width",
-      "border-right-style",
-      "border-right-color"
-    ]
-  },
   "border-bottom": {
     "inherited": false,
     "initial": "medium currentcolor none",
@@ -333,15 +315,6 @@
       "border-bottom-width",
       "border-bottom-style",
       "border-bottom-color"
-    ]
-  },
-  "border-left": {
-    "inherited": false,
-    "initial": "medium currentcolor none",
-    "longhands": [
-      "border-left-width",
-      "border-left-style",
-      "border-left-color"
     ]
   },
   "border-bottom-color": {
@@ -399,6 +372,13 @@
       "unitless-length"
     ]
   },
+  "border-collapse": {
+    "inherited": true,
+    "initial": "separate",
+    "valid-types": [
+      "border-collapse"
+    ]
+  },
   "border-color": {
     "affects-layout": false,
     "initial": "currentcolor",
@@ -416,11 +396,13 @@
       "hashless-hex-color"
     ]
   },
-  "border-collapse": {
-    "inherited": true,
-    "initial": "separate",
-    "valid-types": [
-      "border-collapse"
+  "border-left": {
+    "inherited": false,
+    "initial": "medium currentcolor none",
+    "longhands": [
+      "border-left-width",
+      "border-left-style",
+      "border-left-color"
     ]
   },
   "border-left-color": {
@@ -465,6 +447,15 @@
       "border-top-right-radius",
       "border-bottom-left-radius",
       "border-bottom-right-radius"
+    ]
+  },
+  "border-right": {
+    "inherited": false,
+    "initial": "medium currentcolor none",
+    "longhands": [
+      "border-right-width",
+      "border-right-style",
+      "border-right-color"
     ]
   },
   "border-right-color": {
@@ -522,6 +513,15 @@
     "max-values": 4,
     "valid-types": [
       "line-style"
+    ]
+  },
+  "border-top": {
+    "inherited": false,
+    "initial": "medium currentcolor none",
+    "longhands": [
+      "border-top-width",
+      "border-top-style",
+      "border-top-color"
     ]
   },
   "border-top-color": {
@@ -637,13 +637,6 @@
       "caption-side"
     ]
   },
-  "table-layout": {
-    "inherited": false,
-    "initial": "auto",
-    "valid-types": [
-      "table-layout"
-    ]
-  },
   "clear": {
     "inherited": false,
     "initial": "none",
@@ -675,6 +668,16 @@
       "hashless-hex-color"
     ]
   },
+  "column-count": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "integer [1,∞]"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ]
+  },
   "column-gap": {
     "inherited": false,
     "initial": "auto",
@@ -686,16 +689,6 @@
       "auto"
     ],
     "percentages-resolve-to": "length"
-  },
-  "column-count": {
-    "inherited": false,
-    "initial": "auto",
-    "valid-types": [
-      "integer [1,∞]"
-    ],
-    "valid-identifiers": [
-      "auto"
-    ]
   },
   "content": {
     "inherited": false,
@@ -957,6 +950,22 @@
       "column-gap"
     ]
   },
+  "grid": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ],
+    "percentages-resolve-to": "length",
+    "longhands": [
+      "grid-template"
+    ]
+  },
   "grid-area": {
     "inherited": false,
     "initial": "auto",
@@ -972,6 +981,36 @@
       "grid-row-end",
       "grid-row-start"
     ]
+  },
+  "grid-auto-columns": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ],
+    "percentages-resolve-to": "length"
+  },
+  "grid-auto-flow": {
+    "inherited": false,
+    "initial": "row"
+  },
+  "grid-auto-rows": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ],
+    "percentages-resolve-to": "length"
   },
   "grid-column": {
     "inherited": false,
@@ -1082,22 +1121,6 @@
       "string"
     ]
   },
-  "grid": {
-    "inherited": false,
-    "initial": "auto",
-    "valid-identifiers": [
-      "auto"
-    ],
-    "valid-types": [
-      "length",
-      "percentage",
-      "string"
-    ],
-    "percentages-resolve-to": "length",
-    "longhands": [
-      "grid-template"
-    ]
-  },
   "grid-template": {
     "inherited": false,
     "initial": "auto",
@@ -1125,36 +1148,6 @@
     "valid-types": [
       "string"
     ]
-  },
-  "grid-auto-columns": {
-    "inherited": false,
-    "initial": "auto",
-    "valid-identifiers": [
-      "auto"
-    ],
-    "valid-types": [
-      "length",
-      "percentage",
-      "string"
-    ],
-    "percentages-resolve-to": "length"
-  },
-  "grid-auto-flow": {
-    "inherited": false,
-    "initial": "row"
-  },
-  "grid-auto-rows": {
-    "inherited": false,
-    "initial": "auto",
-    "valid-identifiers": [
-      "auto"
-    ],
-    "valid-types": [
-      "length",
-      "percentage",
-      "string"
-    ],
-    "percentages-resolve-to": "length"
   },
   "grid-template-columns": {
     "inherited": false,
@@ -1403,7 +1396,7 @@
     ],
     "max-values": 2
   },
-  "margin-block-start": {
+  "margin-block-end": {
     "logical-alias-for": [
       "margin-top",
       "margin-right",
@@ -1411,7 +1404,7 @@
       "margin-left"
     ]
   },
-  "margin-block-end": {
+  "margin-block-start": {
     "logical-alias-for": [
       "margin-top",
       "margin-right",
@@ -1440,7 +1433,7 @@
     ],
     "max-values": 2
   },
-  "margin-inline-start": {
+  "margin-inline-end": {
     "logical-alias-for": [
       "margin-top",
       "margin-right",
@@ -1448,7 +1441,7 @@
       "margin-left"
     ]
   },
-  "margin-inline-end": {
+  "margin-inline-start": {
     "logical-alias-for": [
       "margin-top",
       "margin-right",
@@ -1707,7 +1700,7 @@
     ],
     "max-values": 2
   },
-  "padding-block-start": {
+  "padding-block-end": {
     "logical-alias-for": [
       "padding-top",
       "padding-right",
@@ -1715,7 +1708,7 @@
       "padding-left"
     ]
   },
-  "padding-block-end": {
+  "padding-block-start": {
     "logical-alias-for": [
       "padding-top",
       "padding-right",
@@ -1741,7 +1734,7 @@
     ],
     "max-values": 2
   },
-  "padding-inline-start": {
+  "padding-inline-end": {
     "logical-alias-for": [
       "padding-top",
       "padding-right",
@@ -1749,7 +1742,7 @@
       "padding-left"
     ]
   },
-  "padding-inline-end": {
+  "padding-inline-start": {
     "logical-alias-for": [
       "padding-top",
       "padding-right",
@@ -1859,24 +1852,6 @@
     ],
     "percentages-resolve-to": "length"
   },
-  "stroke": {
-    "affects-layout": false,
-    "inherited": true,
-    "initial": "none",
-    "valid-types": [
-      "paint"
-    ]
-  },
-  "stroke-opacity": {
-    "affects-layout": false,
-    "inherited": true,
-    "initial": "1",
-    "valid-types": [
-      "number [-∞,∞]",
-      "percentage [-∞,∞]"
-    ],
-    "percentages-resolve-to": "number"
-  },
   "stop-color": {
     "affects-layout": false,
     "inherited": false,
@@ -1895,6 +1870,24 @@
     ],
     "percentages-resolve-to": "number"
   },
+  "stroke": {
+    "affects-layout": false,
+    "inherited": true,
+    "initial": "none",
+    "valid-types": [
+      "paint"
+    ]
+  },
+  "stroke-opacity": {
+    "affects-layout": false,
+    "inherited": true,
+    "initial": "1",
+    "valid-types": [
+      "number [-∞,∞]",
+      "percentage [-∞,∞]"
+    ],
+    "percentages-resolve-to": "number"
+  },
   "stroke-width": {
     "affects-layout": false,
     "inherited": true,
@@ -1906,11 +1899,11 @@
     ],
     "percentages-resolve-to": "length"
   },
-  "text-anchor": {
-    "inherited": true,
-    "initial": "start",
+  "table-layout": {
+    "inherited": false,
+    "initial": "auto",
     "valid-types": [
-      "text-anchor"
+      "table-layout"
     ]
   },
   "text-align": {
@@ -1918,6 +1911,13 @@
     "initial": "left",
     "valid-types": [
       "text-align"
+    ]
+  },
+  "text-anchor": {
+    "inherited": true,
+    "initial": "start",
+    "valid-types": [
+      "text-anchor"
     ]
   },
   "text-decoration": {
@@ -2082,6 +2082,13 @@
       "visibility"
     ]
   },
+  "white-space": {
+    "inherited": true,
+    "initial": "normal",
+    "valid-types": [
+      "white-space"
+    ]
+  },
   "width": {
     "inherited": false,
     "initial": "auto",
@@ -2098,13 +2105,6 @@
     "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
-    ]
-  },
-  "white-space": {
-    "inherited": true,
-    "initial": "normal",
-    "valid-types": [
-      "white-space"
     ]
   },
   "word-spacing": {
