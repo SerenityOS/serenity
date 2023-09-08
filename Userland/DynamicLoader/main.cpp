@@ -4,10 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
+#include <Kernel/API/POSIX/sys/stat.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/Relocation.h>
+#include <fcntl.h>
 #include <sys/internals.h>
+#include <syscall.h>
 #include <unistd.h>
 
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
@@ -49,8 +53,8 @@ kernel to load this program.
 
 This helper program loads the shared libraries needed by the program,
 prepares the program to run, and runs it. You do not need to invoke
-this helper program directly.
-)";
+this helper program directly. If you still want to run a program with the loader,
+run: /usr/lib/Loader.so [ELF_BINARY])";
     fprintf(stderr, "%s", message);
 }
 
@@ -74,6 +78,30 @@ NAKED void _start(int, char**, char**)
         "push $0\n"
         "jmp _entry@plt\n");
 #endif
+}
+
+static ErrorOr<int> open_executable(char const* path)
+{
+    int rc = open(path, O_RDONLY | O_EXEC);
+    if (rc < 0)
+        return Error::from_errno(errno);
+    int checked_fd = rc;
+    ArmedScopeGuard close_on_failure([checked_fd] {
+        close(checked_fd);
+    });
+
+    struct stat executable_stat = {};
+    rc = fstat(checked_fd, &executable_stat);
+    if (rc < 0)
+        return Error::from_errno(errno);
+    if (!S_ISREG(executable_stat.st_mode)) {
+        if (S_ISDIR(executable_stat.st_mode))
+            return Error::from_errno(EISDIR);
+        return Error::from_errno(EINVAL);
+    }
+
+    close_on_failure.disarm();
+    return checked_fd;
 }
 
 void _entry(int argc, char** argv, char** envp)
@@ -103,11 +131,23 @@ void _entry(int argc, char** argv, char** envp)
 
     if (main_program_path == "/usr/lib/Loader.so"sv) {
         // We've been invoked directly as an executable rather than as the
-        // ELF interpreter for some other binary. In the future we may want
-        // to support launching a program directly from the dynamic loader
-        // like ld.so on Linux.
-        display_help();
-        _exit(1);
+        // ELF interpreter for some other binary. The second argv string should
+        // be the path to the ELF executable, and if we don't have enough strings in argv
+        // (argc < 2), just fail with message to stderr about this.
+
+        if (argc < 2) {
+            display_help();
+            _exit(1);
+        }
+        auto error_or_fd = open_executable(argv[1]);
+        if (error_or_fd.is_error()) {
+            warnln("Loader.so: Loading {} failed: {}", argv[1], strerror(error_or_fd.error().code()));
+            _exit(1);
+        }
+        main_program_fd = error_or_fd.release_value();
+        main_program_path = argv[1];
+        argv++;
+        argc--;
     }
 
     VERIFY(main_program_fd >= 0);
