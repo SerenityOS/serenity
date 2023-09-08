@@ -516,7 +516,7 @@ JS::NonnullGCPtr<KeyboardEvent> KeyboardEvent::create_from_platform_event(JS::Re
     event_init.ctrl_key = modifiers & Mod_Ctrl;
     event_init.shift_key = modifiers & Mod_Shift;
     event_init.alt_key = modifiers & Mod_Alt;
-    event_init.meta_key = false;
+    event_init.meta_key = false; // FIXME: Implement meta key
     event_init.repeat = false;
     event_init.is_composing = false;
     event_init.key_code = key_code;

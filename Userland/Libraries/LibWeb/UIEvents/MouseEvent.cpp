@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/KeyCode.h>
 #include <LibGUI/Event.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -13,7 +14,7 @@
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y)
+MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y, unsigned modifiers)
     : UIEvent(realm, event_name, event_init)
     , m_screen_x(event_init.screen_x)
     , m_screen_y(event_init.screen_y)
@@ -23,6 +24,10 @@ MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEvent
     , m_client_y(event_init.client_y)
     , m_offset_x(offset_x)
     , m_offset_y(offset_y)
+    , m_ctrl_key(modifiers & Mod_Ctrl)
+    , m_shift_key(modifiers & Mod_Shift)
+    , m_alt_key(modifiers & Mod_Alt)
+    , m_meta_key(false) // FIXME: Implement meta key
     , m_movement_x(event_init.movement_x)
     , m_movement_y(event_init.movement_y)
     , m_button(event_init.button)
@@ -58,12 +63,12 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-JS::NonnullGCPtr<MouseEvent> MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y)
+JS::NonnullGCPtr<MouseEvent> MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y, unsigned modifiers)
 {
-    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init, page_x, page_y, offset_x, offset_y);
+    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init, page_x, page_y, offset_x, offset_y, modifiers);
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons, unsigned modifiers)
 {
     MouseEventInit event_init {};
     event_init.screen_x = screen.x().to_double();
@@ -76,7 +81,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platfo
     }
     event_init.button = determine_button(button);
     event_init.buttons = buttons;
-    return MouseEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double());
+    return MouseEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double(), modifiers);
 }
 
 void MouseEvent::set_event_characteristics()
