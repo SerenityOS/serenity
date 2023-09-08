@@ -6,35 +6,39 @@
  */
 
 #include "ImageCodecPlugin.h"
+#include "HelperProcess.h"
+#include "Utilities.h"
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibImageDecoderClient/Client.h>
 
 namespace Ladybird {
 
 ImageCodecPlugin::~ImageCodecPlugin() = default;
 
-Optional<Web::Platform::DecodedImage> ImageCodecPlugin::decode_image(ReadonlyBytes data)
+Optional<Web::Platform::DecodedImage> ImageCodecPlugin::decode_image(ReadonlyBytes bytes)
 {
-    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(data);
+    if (!m_client) {
+        auto candidate_image_decoder_paths = get_paths_for_helper_process("ImageDecoder"sv).release_value_but_fixme_should_propagate_errors();
+        m_client = launch_image_decoder_process(candidate_image_decoder_paths).release_value_but_fixme_should_propagate_errors();
+        m_client->on_death = [&] {
+            m_client = nullptr;
+        };
+    }
 
-    if (!decoder || !decoder->frame_count()) {
+    auto result_or_empty = m_client->decode_image(bytes);
+    if (!result_or_empty.has_value())
         return {};
+    auto result = result_or_empty.release_value();
+
+    Web::Platform::DecodedImage decoded_image;
+    decoded_image.is_animated = result.is_animated;
+    decoded_image.loop_count = result.loop_count;
+    for (auto const& frame : result.frames) {
+        decoded_image.frames.empend(move(frame.bitmap), frame.duration);
     }
 
-    Vector<Web::Platform::Frame> frames;
-    for (size_t i = 0; i < decoder->frame_count(); ++i) {
-        auto frame_or_error = decoder->frame(i);
-        if (frame_or_error.is_error())
-            return {};
-        auto frame = frame_or_error.release_value();
-        frames.append({ move(frame.image), static_cast<size_t>(frame.duration) });
-    }
-
-    return Web::Platform::DecodedImage {
-        decoder->is_animated(),
-        static_cast<u32>(decoder->loop_count()),
-        move(frames),
-    };
+    return decoded_image;
 }
 
 }
