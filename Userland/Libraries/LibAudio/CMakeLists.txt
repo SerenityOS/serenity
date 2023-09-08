@@ -42,3 +42,10 @@ if (HAVE_PULSEAUDIO)
     target_link_libraries(LibAudio PRIVATE pulse)
     target_compile_definitions(LibAudio PRIVATE HAVE_PULSEAUDIO=1)
 endif()
+
+if (APPLE)
+    target_sources(LibAudio PRIVATE PlaybackStreamAudioUnit.cpp)
+
+    find_library(AUDIO_UNIT AudioUnit REQUIRED)
+    target_link_libraries(LibAudio PRIVATE ${AUDIO_UNIT})
+endif()
