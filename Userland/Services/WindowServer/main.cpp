@@ -9,7 +9,6 @@
 #include "EventLoop.h"
 #include "Screen.h"
 #include "WindowManager.h"
-#include <Kernel/API/Graphics.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
@@ -18,6 +17,7 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
 #include <signal.h>
+#include <sys/devices/gpu.h>
 
 namespace WindowServer {
 RefPtr<Core::ConfigFile> g_config;

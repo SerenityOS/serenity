@@ -14,8 +14,8 @@
 #    include <Kernel/Library/StdLib.h>
 #else
 #    include <AK/ScopeGuard.h>
-#    include <Kernel/API/Graphics.h>
 #    include <fcntl.h>
+#    include <sys/devices/gpu.h>
 #    include <unistd.h>
 
 #    if ENABLE_PNP_IDS_DATA
