@@ -42,6 +42,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(json.is_object());
     auto properties = json.as_object();
 
+    // Check we're in alphabetical order
+    DeprecatedString most_recent_name = "";
+    properties.for_each_member([&](auto& name, auto&) {
+        if (name < most_recent_name) {
+            warnln("`{}` is in the wrong position in `{}`. Please keep this list alphabetical!", name, properties_json_path);
+            VERIFY_NOT_REACHED();
+        }
+        most_recent_name = name;
+    });
+
     replace_logical_aliases(properties);
 
     auto generated_header_file = TRY(Core::File::open(generated_header_path, Core::File::OpenMode::Write));
