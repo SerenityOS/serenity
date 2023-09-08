@@ -13,14 +13,16 @@
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
+MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y)
     : UIEvent(realm, event_name, event_init)
-    , m_offset_x(event_init.offset_x)
-    , m_offset_y(event_init.offset_y)
+    , m_screen_x(event_init.screen_x)
+    , m_screen_y(event_init.screen_y)
+    , m_page_x(page_x)
+    , m_page_y(page_y)
     , m_client_x(event_init.client_x)
     , m_client_y(event_init.client_y)
-    , m_page_x(event_init.page_x)
-    , m_page_y(event_init.page_y)
+    , m_offset_x(offset_x)
+    , m_offset_y(offset_y)
     , m_movement_x(event_init.movement_x)
     , m_movement_y(event_init.movement_y)
     , m_button(event_init.button)
@@ -56,27 +58,23 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-JS::NonnullGCPtr<MouseEvent> MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
+JS::NonnullGCPtr<MouseEvent> MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y)
 {
-    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init, page_x, page_y, offset_x, offset_y);
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, Optional<CSSPixelPoint> movement, unsigned buttons, unsigned mouse_button)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, Optional<CSSPixelPoint> movement, unsigned button, unsigned buttons)
 {
     MouseEventInit event_init {};
-    event_init.offset_x = offset.x().to_double();
-    event_init.offset_y = offset.y().to_double();
-    event_init.client_x = client_offset.x().to_double();
-    event_init.client_y = client_offset.y().to_double();
-    event_init.page_x = page_offset.x().to_double();
-    event_init.page_y = page_offset.y().to_double();
+    event_init.client_x = client.x().to_double();
+    event_init.client_y = client.y().to_double();
     if (movement.has_value()) {
         event_init.movement_x = movement.value().x().to_double();
         event_init.movement_y = movement.value().y().to_double();
     }
-    event_init.button = determine_button(mouse_button);
+    event_init.button = determine_button(button);
     event_init.buttons = buttons;
-    return MouseEvent::create(realm, event_name, event_init);
+    return MouseEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double());
 }
 
 void MouseEvent::set_event_characteristics()

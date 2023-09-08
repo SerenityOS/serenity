@@ -187,7 +187,9 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
                 return false;
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
-            if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, offset.x(), offset.y(), position.x(), position.y(), wheel_delta_x, wheel_delta_y, buttons, button).release_value_but_fixme_should_propagate_errors())) {
+            auto client_offset = compute_mouse_event_client_offset(position);
+            auto page_offset = compute_mouse_event_page_offset(client_offset);
+            if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, page_offset, client_offset, offset, wheel_delta_x, wheel_delta_y, button, buttons).release_value_but_fixme_should_propagate_errors())) {
                 if (auto* page = m_browsing_context->page()) {
                     if (m_browsing_context == &page->top_level_browsing_context())
                         page->client().page_did_request_scroll(wheel_delta_x, wheel_delta_y);
@@ -248,15 +250,15 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset, client_offset, page_offset, {}, buttons, button).release_value_but_fixme_should_propagate_errors());
+            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
             handled_event = true;
 
             bool run_activation_behavior = false;
             if (node.ptr() == m_mousedown_target) {
                 if (button == GUI::MouseButton::Primary)
-                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, page_offset, {}, button).release_value_but_fixme_should_propagate_errors());
+                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, page_offset, client_offset, offset, {}, 1, button).release_value_but_fixme_should_propagate_errors());
                 else if (button == GUI::MouseButton::Secondary && !(modifiers & Mod_Shift)) // Allow the user to bypass custom context menus by holding shift, like Firefox.
-                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::contextmenu, offset, client_offset, page_offset, {}, button).release_value_but_fixme_should_propagate_errors());
+                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::contextmenu, page_offset, client_offset, offset, {}, 1, button).release_value_but_fixme_should_propagate_errors());
             }
 
             if (run_activation_behavior) {
@@ -384,7 +386,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
         auto offset = compute_mouse_event_offset(position, *layout_node);
         auto client_offset = compute_mouse_event_client_offset(position);
         auto page_offset = compute_mouse_event_page_offset(client_offset);
-        node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, offset, client_offset, page_offset, {}, buttons, button).release_value_but_fixme_should_propagate_errors());
+        node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -498,7 +500,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
             auto movement = compute_mouse_event_movement(client_offset);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset, client_offset, page_offset, movement, buttons).release_value_but_fixme_should_propagate_errors());
+            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, page_offset, client_offset, offset, movement, 1, buttons).release_value_but_fixme_should_propagate_errors());
             m_mousemove_previous_client_offset = client_offset;
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paintable_box())
@@ -584,7 +586,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
     auto offset = compute_mouse_event_offset(position, *layout_node);
     auto client_offset = compute_mouse_event_client_offset(position);
     auto page_offset = compute_mouse_event_page_offset(client_offset);
-    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset, client_offset, page_offset, {}, buttons, button).release_value_but_fixme_should_propagate_errors());
+    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
 
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paintable_box())
