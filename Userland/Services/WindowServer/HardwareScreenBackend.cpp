@@ -8,10 +8,10 @@
 #include "HardwareScreenBackend.h"
 #include "ScreenBackend.h"
 #include <AK/Try.h>
-#include <Kernel/API/Graphics.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/devices/gpu.h>
 #include <sys/mman.h>
 #include <unistd.h>
 

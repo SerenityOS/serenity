@@ -5,7 +5,7 @@
  */
 
 #include <AK/ScopeGuard.h>
-#include <Kernel/API/Graphics.h>
+#include <sys/devices/gpu.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 #include <Services/WindowServer/ScreenLayout.h>
