@@ -34,9 +34,11 @@ JS::NonnullGCPtr<WheelEvent> WheelEvent::create(JS::Realm& realm, FlyString cons
     return realm.heap().allocate<WheelEvent>(realm, realm, event_name, event_init, page_x, page_y, offset_x, offset_y);
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, double delta_x, double delta_y, unsigned button, unsigned buttons)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, double delta_x, double delta_y, unsigned button, unsigned buttons)
 {
     WheelEventInit event_init {};
+    event_init.screen_x = screen.x().to_double();
+    event_init.screen_y = screen.y().to_double();
     event_init.client_x = client.x().to_double();
     event_init.client_y = client.y().to_double();
     event_init.button = button;

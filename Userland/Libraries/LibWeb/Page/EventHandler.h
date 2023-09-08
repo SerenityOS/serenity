@@ -24,11 +24,11 @@ public:
     explicit EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
     ~EventHandler();
 
-    bool handle_mouseup(CSSPixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousedown(CSSPixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousemove(CSSPixelPoint, unsigned buttons, unsigned modifiers);
-    bool handle_mousewheel(CSSPixelPoint, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
-    bool handle_doubleclick(CSSPixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mouseup(CSSPixelPoint, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousedown(CSSPixelPoint, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousemove(CSSPixelPoint, CSSPixelPoint screen_position, unsigned buttons, unsigned modifiers);
+    bool handle_mousewheel(CSSPixelPoint, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    bool handle_doubleclick(CSSPixelPoint, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
@@ -65,7 +65,7 @@ private:
 
     WeakPtr<DOM::EventTarget> m_mousedown_target;
 
-    Optional<CSSPixelPoint> m_mousemove_previous_client_offset;
+    Optional<CSSPixelPoint> m_mousemove_previous_screen_position;
 };
 
 }

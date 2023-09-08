@@ -144,7 +144,7 @@ Painting::PaintableBox const* EventHandler::paint_root() const
     return m_browsing_context->active_document()->paintable_box();
 }
 
-bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
+bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
 {
     if (m_browsing_context->active_document())
         m_browsing_context->active_document()->update_layout();
@@ -189,7 +189,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
-            if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, page_offset, client_offset, offset, wheel_delta_x, wheel_delta_y, button, buttons).release_value_but_fixme_should_propagate_errors())) {
+            if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, screen_position, page_offset, client_offset, offset, wheel_delta_x, wheel_delta_y, button, buttons).release_value_but_fixme_should_propagate_errors())) {
                 if (auto* page = m_browsing_context->page()) {
                     if (m_browsing_context == &page->top_level_browsing_context())
                         page->client().page_did_request_scroll(wheel_delta_x, wheel_delta_y);
@@ -203,7 +203,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
     return handled_event;
 }
 
-bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context->active_document())
         m_browsing_context->active_document()->update_layout();
@@ -234,7 +234,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
         if (node) {
             if (is<HTML::HTMLIFrameElement>(*node)) {
                 if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
-                    return nested_browsing_context->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), button, buttons, modifiers);
+                    return nested_browsing_context->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), screen_position, button, buttons, modifiers);
                 return false;
             }
 
@@ -250,15 +250,15 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
+            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, screen_position, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
             handled_event = true;
 
             bool run_activation_behavior = false;
             if (node.ptr() == m_mousedown_target) {
                 if (button == GUI::MouseButton::Primary)
-                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, page_offset, client_offset, offset, {}, 1, button).release_value_but_fixme_should_propagate_errors());
+                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, screen_position, page_offset, client_offset, offset, {}, 1, button).release_value_but_fixme_should_propagate_errors());
                 else if (button == GUI::MouseButton::Secondary && !(modifiers & Mod_Shift)) // Allow the user to bypass custom context menus by holding shift, like Firefox.
-                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::contextmenu, page_offset, client_offset, offset, {}, 1, button).release_value_but_fixme_should_propagate_errors());
+                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::contextmenu, screen_position, page_offset, client_offset, offset, {}, 1, button).release_value_but_fixme_should_propagate_errors());
             }
 
             if (run_activation_behavior) {
@@ -333,7 +333,7 @@ after_node_use:
     return handled_event;
 }
 
-bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context->active_document())
         m_browsing_context->active_document()->update_layout();
@@ -368,7 +368,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
 
         if (is<HTML::HTMLIFrameElement>(*node)) {
             if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
-                return nested_browsing_context->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), button, buttons, modifiers);
+                return nested_browsing_context->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), screen_position, button, buttons, modifiers);
             return false;
         }
 
@@ -386,7 +386,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
         auto offset = compute_mouse_event_offset(position, *layout_node);
         auto client_offset = compute_mouse_event_client_offset(position);
         auto page_offset = compute_mouse_event_page_offset(client_offset);
-        node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
+        node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, screen_position, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -424,7 +424,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
     return true;
 }
 
-bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context->active_document())
         m_browsing_context->active_document()->update_layout();
@@ -462,7 +462,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
 
         if (node && is<HTML::HTMLIFrameElement>(*node)) {
             if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
-                return nested_browsing_context->event_handler().handle_mousemove(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), buttons, modifiers);
+                return nested_browsing_context->event_handler().handle_mousemove(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), screen_position, buttons, modifiers);
             return false;
         }
 
@@ -499,9 +499,9 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
-            auto movement = compute_mouse_event_movement(client_offset);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, page_offset, client_offset, offset, movement, 1, buttons).release_value_but_fixme_should_propagate_errors());
-            m_mousemove_previous_client_offset = client_offset;
+            auto movement = compute_mouse_event_movement(screen_position);
+            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, screen_position, page_offset, client_offset, offset, movement, 1, buttons).release_value_but_fixme_should_propagate_errors());
+            m_mousemove_previous_screen_position = screen_position;
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paintable_box())
                 return true;
@@ -543,7 +543,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
     return true;
 }
 
-bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context->active_document())
         m_browsing_context->active_document()->update_layout();
@@ -573,7 +573,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
 
     if (is<HTML::HTMLIFrameElement>(*node)) {
         if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
-            return nested_browsing_context->event_handler().handle_doubleclick(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), button, buttons, modifiers);
+            return nested_browsing_context->event_handler().handle_doubleclick(position.translated(compute_mouse_event_offset({}, paintable->layout_node())), screen_position, button, buttons, modifiers);
         return false;
     }
 
@@ -586,7 +586,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
     auto offset = compute_mouse_event_offset(position, *layout_node);
     auto client_offset = compute_mouse_event_client_offset(position);
     auto page_offset = compute_mouse_event_page_offset(client_offset);
-    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
+    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, screen_position, page_offset, client_offset, offset, {}, button, buttons).release_value_but_fixme_should_propagate_errors());
 
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paintable_box())
@@ -838,21 +838,20 @@ CSSPixelPoint EventHandler::compute_mouse_event_page_offset(CSSPixelPoint event_
     return event_client_offset.translated(scroll_offset);
 }
 
-CSSPixelPoint EventHandler::compute_mouse_event_movement(CSSPixelPoint event_client_offset) const
+CSSPixelPoint EventHandler::compute_mouse_event_movement(CSSPixelPoint screen_position) const
 {
     // https://w3c.github.io/pointerlock/#dom-mouseevent-movementx
     // The attributes movementX movementY must provide the change in position of the pointer,
     // as if the values of screenX, screenY, were stored between two subsequent mousemove events eNow and ePrevious and the difference taken movementX = eNow.screenX-ePrevious.screenX.
-    // FIXME: Using client_offset as screenX and screenY is currently equal to clientX and clientY
 
-    if (!m_mousemove_previous_client_offset.has_value())
+    if (!m_mousemove_previous_screen_position.has_value())
         // When unlocked, the system cursor can exit and re-enter the user agent window.
         // If it does so and the user agent was not the target of operating system mouse move events
         // then the most recent pointer position will be unknown to the user agent and movementX/movementY can not be computed and must be set to zero.
         // FIXME: For this to actually work, m_mousemove_previous_client_offset needs to be cleared when the mouse leaves the window
         return { 0, 0 };
 
-    return { event_client_offset.x() - m_mousemove_previous_client_offset.value().x(), event_client_offset.y() - m_mousemove_previous_client_offset.value().y() };
+    return { screen_position.x() - m_mousemove_previous_screen_position.value().x(), screen_position.y() - m_mousemove_previous_screen_position.value().y() };
 }
 
 Optional<EventHandler::Target> EventHandler::target_for_mouse_position(CSSPixelPoint position)

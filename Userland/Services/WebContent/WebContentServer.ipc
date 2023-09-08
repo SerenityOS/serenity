@@ -27,11 +27,11 @@ endpoint WebContentServer
     paint(Gfx::IntRect content_rect, i32 backing_store_id) =|
     set_viewport_rect(Gfx::IntRect rect) =|
 
-    mouse_down(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
-    mouse_move(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
-    mouse_up(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
-    mouse_wheel(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers, i32 wheel_delta_x, i32 wheel_delta_y) =|
-    doubleclick(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    mouse_down(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    mouse_move(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    mouse_up(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    mouse_wheel(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers, i32 wheel_delta_x, i32 wheel_delta_y) =|
+    doubleclick(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers) =|
 
     key_down(i32 key, unsigned modifiers, u32 code_point) =|
     key_up(i32 key, unsigned modifiers, u32 code_point) =|

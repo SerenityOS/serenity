@@ -328,24 +328,25 @@ void OutOfProcessWebView::process_next_input_event()
             }
         },
         [this](GUI::MouseEvent const& event) {
+            auto screen_position = event.position() + (window()->position() + relative_position());
             switch (event.type()) {
             case GUI::Event::Type::MouseDown:
-                client().async_mouse_down(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+                client().async_mouse_down(to_content_position(event.position()), screen_position, event.button(), event.buttons(), event.modifiers());
                 break;
             case GUI::Event::Type::MouseUp:
-                client().async_mouse_up(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+                client().async_mouse_up(to_content_position(event.position()), screen_position, event.button(), event.buttons(), event.modifiers());
                 break;
             case GUI::Event::Type::MouseMove:
-                client().async_mouse_move(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+                client().async_mouse_move(to_content_position(event.position()), screen_position, event.button(), event.buttons(), event.modifiers());
                 break;
             case GUI::Event::Type::MouseWheel: {
                 // FIXME: This wheel delta step size multiplier is used to remain the old scroll behaviour, in future use system step size.
                 constexpr int scroll_step_size = 24;
-                client().async_mouse_wheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x() * scroll_step_size, event.wheel_delta_y() * scroll_step_size);
+                client().async_mouse_wheel(to_content_position(event.position()), screen_position, event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x() * scroll_step_size, event.wheel_delta_y() * scroll_step_size);
                 break;
             }
             case GUI::Event::Type::MouseDoubleClick:
-                client().async_doubleclick(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+                client().async_doubleclick(to_content_position(event.position()), screen_position, event.button(), event.buttons(), event.modifiers());
                 break;
             default:
                 dbgln("Unrecognized mouse event type in OOPWV input event queue: {}", event.type());

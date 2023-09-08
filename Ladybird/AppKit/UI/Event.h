@@ -16,6 +16,7 @@ namespace Ladybird {
 
 struct MouseEvent {
     Gfx::IntPoint position {};
+    Gfx::IntPoint screen_position {};
     GUI::MouseButton button { GUI::MouseButton::Primary };
     KeyModifier modifiers { KeyModifier::Mod_None };
 };

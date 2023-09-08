@@ -182,11 +182,13 @@ void ConnectionFromClient::process_next_input_event()
             case QueuedMouseEvent::Type::MouseDown:
                 report_finished_handling_input_event(page().handle_mousedown(
                     event.position.to_type<Web::DevicePixels>(),
+                    event.screen_position.to_type<Web::DevicePixels>(),
                     event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseUp:
                 report_finished_handling_input_event(page().handle_mouseup(
                     event.position.to_type<Web::DevicePixels>(),
+                    event.screen_position.to_type<Web::DevicePixels>(),
                     event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseMove:
@@ -197,11 +199,13 @@ void ConnectionFromClient::process_next_input_event()
                 }
                 report_finished_handling_input_event(page().handle_mousemove(
                     event.position.to_type<Web::DevicePixels>(),
+                    event.screen_position.to_type<Web::DevicePixels>(),
                     event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::DoubleClick:
                 report_finished_handling_input_event(page().handle_doubleclick(
                     event.position.to_type<Web::DevicePixels>(),
+                    event.screen_position.to_type<Web::DevicePixels>(),
                     event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseWheel:
@@ -210,6 +214,7 @@ void ConnectionFromClient::process_next_input_event()
                 }
                 report_finished_handling_input_event(page().handle_mousewheel(
                     event.position.to_type<Web::DevicePixels>(),
+                    event.screen_position.to_type<Web::DevicePixels>(),
                     event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y));
                 break;
             }
@@ -229,23 +234,25 @@ void ConnectionFromClient::process_next_input_event()
         m_input_event_queue_timer->start();
 }
 
-void ConnectionFromClient::mouse_down(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_down(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
             .type = QueuedMouseEvent::Type::MouseDown,
             .position = position,
+            .screen_position = screen_position,
             .button = button,
             .buttons = buttons,
             .modifiers = modifiers,
         });
 }
 
-void ConnectionFromClient::mouse_move(Gfx::IntPoint position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_move(Gfx::IntPoint position, Gfx::IntPoint screen_position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     auto event = QueuedMouseEvent {
         .type = QueuedMouseEvent::Type::MouseMove,
         .position = position,
+        .screen_position = screen_position,
         .button = button,
         .buttons = buttons,
         .modifiers = modifiers,
@@ -263,23 +270,25 @@ void ConnectionFromClient::mouse_move(Gfx::IntPoint position, [[maybe_unused]] u
     enqueue_input_event(move(event));
 }
 
-void ConnectionFromClient::mouse_up(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_up(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
             .type = QueuedMouseEvent::Type::MouseUp,
             .position = position,
+            .screen_position = screen_position,
             .button = button,
             .buttons = buttons,
             .modifiers = modifiers,
         });
 }
 
-void ConnectionFromClient::mouse_wheel(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
+void ConnectionFromClient::mouse_wheel(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
 {
     auto event = QueuedMouseEvent {
         .type = QueuedMouseEvent::Type::MouseWheel,
         .position = position,
+        .screen_position = screen_position,
         .button = button,
         .buttons = buttons,
         .modifiers = modifiers,
@@ -302,12 +311,13 @@ void ConnectionFromClient::mouse_wheel(Gfx::IntPoint position, unsigned int butt
     enqueue_input_event(move(event));
 }
 
-void ConnectionFromClient::doubleclick(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::doubleclick(Gfx::IntPoint position, Gfx::IntPoint screen_position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
     enqueue_input_event(
         QueuedMouseEvent {
             .type = QueuedMouseEvent::Type::DoubleClick,
             .position = position,
+            .screen_position = screen_position,
             .button = button,
             .buttons = buttons,
             .modifiers = modifiers,

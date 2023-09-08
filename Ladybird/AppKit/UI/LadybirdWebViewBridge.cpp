@@ -100,24 +100,24 @@ void WebViewBridge::set_preferred_color_scheme(Web::CSS::PreferredColorScheme co
     client().async_set_preferred_color_scheme(color_scheme);
 }
 
-void WebViewBridge::mouse_down_event(Gfx::IntPoint position, GUI::MouseButton button, KeyModifier modifiers)
+void WebViewBridge::mouse_down_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
 {
-    client().async_mouse_down(to_content_position(position), to_underlying(button), to_underlying(button), modifiers);
+    client().async_mouse_down(to_content_position(position), screen_position, to_underlying(button), to_underlying(button), modifiers);
 }
 
-void WebViewBridge::mouse_up_event(Gfx::IntPoint position, GUI::MouseButton button, KeyModifier modifiers)
+void WebViewBridge::mouse_up_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
 {
-    client().async_mouse_up(to_content_position(position), to_underlying(button), to_underlying(button), modifiers);
+    client().async_mouse_up(to_content_position(position), screen_position, to_underlying(button), to_underlying(button), modifiers);
 }
 
-void WebViewBridge::mouse_move_event(Gfx::IntPoint position, GUI::MouseButton button, KeyModifier modifiers)
+void WebViewBridge::mouse_move_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
 {
-    client().async_mouse_move(to_content_position(position), 0, to_underlying(button), modifiers);
+    client().async_mouse_move(to_content_position(position), screen_position, 0, to_underlying(button), modifiers);
 }
 
-void WebViewBridge::mouse_double_click_event(Gfx::IntPoint position, GUI::MouseButton button, KeyModifier modifiers)
+void WebViewBridge::mouse_double_click_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
 {
-    client().async_doubleclick(to_content_position(position), button, to_underlying(button), modifiers);
+    client().async_doubleclick(to_content_position(position), screen_position, button, to_underlying(button), modifiers);
 }
 
 void WebViewBridge::key_down_event(KeyCode key_code, KeyModifier modifiers, u32 code_point)
