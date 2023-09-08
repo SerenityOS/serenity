@@ -178,7 +178,7 @@ target_sources(ladybird PUBLIC FILE_SET ladybird TYPE HEADERS
     BASE_DIRS ${SERENITY_SOURCE_DIR}
     FILES ${LADYBIRD_HEADERS}
 )
-target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibProtocol)
+target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibGUI LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebView LibProtocol)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
@@ -192,7 +192,7 @@ add_executable(headless-browser
     Utilities.cpp)
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(headless-browser PRIVATE LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
+target_link_libraries(headless-browser PRIVATE LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibImageDecoderClient LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
 
 if (ANDROID)
     include(cmake/AndroidExtras.cmake)
@@ -209,12 +209,13 @@ add_custom_target(debug${LADYBIRD_CUSTOM_TARGET_SUFFIX}
     USES_TERMINAL
 )
 
+add_subdirectory(ImageDecoder)
+add_subdirectory(RequestServer)
 add_subdirectory(SQLServer)
 add_subdirectory(WebContent)
 add_subdirectory(WebDriver)
 add_subdirectory(WebSocket)
-add_subdirectory(RequestServer)
-add_dependencies(ladybird SQLServer WebContent WebDriver WebSocketServer RequestServer headless-browser)
+add_dependencies(ladybird ImageDecoder RequestServer SQLServer WebContent WebDriver WebSocketServer headless-browser)
 
 function(create_ladybird_bundle target_name)
     set_target_properties(${target_name} PROPERTIES

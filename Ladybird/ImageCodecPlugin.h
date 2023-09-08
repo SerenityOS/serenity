@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibImageDecoderClient/Client.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
 
 namespace Ladybird {
@@ -17,6 +18,9 @@ public:
     virtual ~ImageCodecPlugin() override;
 
     virtual Optional<Web::Platform::DecodedImage> decode_image(ReadonlyBytes data) override;
+
+private:
+    RefPtr<ImageDecoderClient::Client> m_client;
 };
 
 }
