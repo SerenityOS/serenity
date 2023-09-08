@@ -956,58 +956,58 @@ static void copy_text_to_clipboard(StringView text)
 
 - (void)mouseMoved:(NSEvent*)event
 {
-    auto [position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::None);
-    m_web_view_bridge->mouse_move_event(position, button, modifiers);
+    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::None);
+    m_web_view_bridge->mouse_move_event(position, screen_position, button, modifiers);
 }
 
 - (void)mouseDown:(NSEvent*)event
 {
     [[self window] makeFirstResponder:self];
 
-    auto [position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
+    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
 
     if (event.clickCount % 2 == 0) {
-        m_web_view_bridge->mouse_double_click_event(position, button, modifiers);
+        m_web_view_bridge->mouse_double_click_event(position, screen_position, button, modifiers);
     } else {
-        m_web_view_bridge->mouse_down_event(position, button, modifiers);
+        m_web_view_bridge->mouse_down_event(position, screen_position, button, modifiers);
     }
 }
 
 - (void)mouseUp:(NSEvent*)event
 {
-    auto [position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
-    m_web_view_bridge->mouse_up_event(position, button, modifiers);
+    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
+    m_web_view_bridge->mouse_up_event(position, screen_position, button, modifiers);
 }
 
 - (void)mouseDragged:(NSEvent*)event
 {
-    auto [position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
-    m_web_view_bridge->mouse_move_event(position, button, modifiers);
+    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Primary);
+    m_web_view_bridge->mouse_move_event(position, screen_position, button, modifiers);
 }
 
 - (void)rightMouseDown:(NSEvent*)event
 {
     [[self window] makeFirstResponder:self];
 
-    auto [position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
+    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
 
     if (event.clickCount % 2 == 0) {
-        m_web_view_bridge->mouse_double_click_event(position, button, modifiers);
+        m_web_view_bridge->mouse_double_click_event(position, screen_position, button, modifiers);
     } else {
-        m_web_view_bridge->mouse_down_event(position, button, modifiers);
+        m_web_view_bridge->mouse_down_event(position, screen_position, button, modifiers);
     }
 }
 
 - (void)rightMouseUp:(NSEvent*)event
 {
-    auto [position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
-    m_web_view_bridge->mouse_up_event(position, button, modifiers);
+    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
+    m_web_view_bridge->mouse_up_event(position, screen_position, button, modifiers);
 }
 
 - (void)rightMouseDragged:(NSEvent*)event
 {
-    auto [position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
-    m_web_view_bridge->mouse_move_event(position, button, modifiers);
+    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Secondary);
+    m_web_view_bridge->mouse_move_event(position, screen_position, button, modifiers);
 }
 
 - (void)keyDown:(NSEvent*)event

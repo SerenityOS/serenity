@@ -69,11 +69,11 @@ public:
     DevicePixelRect enclosing_device_rect(CSSPixelRect) const;
     DevicePixelRect rounded_device_rect(CSSPixelRect) const;
 
-    bool handle_mouseup(DevicePixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousedown(DevicePixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousemove(DevicePixelPoint, unsigned buttons, unsigned modifiers);
-    bool handle_mousewheel(DevicePixelPoint, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
-    bool handle_doubleclick(DevicePixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mouseup(DevicePixelPoint, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousedown(DevicePixelPoint, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousemove(DevicePixelPoint, DevicePixelPoint screen_position, unsigned buttons, unsigned modifiers);
+    bool handle_mousewheel(DevicePixelPoint, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    bool handle_doubleclick(DevicePixelPoint, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);

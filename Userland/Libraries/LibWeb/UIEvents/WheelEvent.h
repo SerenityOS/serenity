@@ -30,7 +30,7 @@ class WheelEvent final : public MouseEvent {
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<WheelEvent> create(JS::Realm&, FlyString const& event_name, WheelEventInit const& event_init = {}, double page_x = 0, double page_y = 0, double offset_x = 0, double offset_y = 0);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, double delta_x, double delta_y, unsigned button, unsigned buttons);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint screen, CSSPixelPoint page, CSSPixelPoint client, CSSPixelPoint offset, double delta_x, double delta_y, unsigned button, unsigned buttons);
 
     virtual ~WheelEvent() override;
 

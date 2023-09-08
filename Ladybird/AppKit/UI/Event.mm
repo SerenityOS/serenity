@@ -39,9 +39,10 @@ static KeyModifier ns_modifiers_to_key_modifiers(NSEventModifierFlags modifier_f
 MouseEvent ns_event_to_mouse_event(NSEvent* event, NSView* view, GUI::MouseButton button)
 {
     auto position = [view convertPoint:event.locationInWindow fromView:nil];
+    auto screen_position = [NSEvent mouseLocation];
     auto modifiers = ns_modifiers_to_key_modifiers(event.modifierFlags, button);
 
-    return { ns_point_to_gfx_point(position), button, modifiers };
+    return { ns_point_to_gfx_point(position), ns_point_to_gfx_point(screen_position), button, modifiers };
 }
 
 NSEvent* create_context_menu_mouse_event(NSView* view, Gfx::IntPoint position)
