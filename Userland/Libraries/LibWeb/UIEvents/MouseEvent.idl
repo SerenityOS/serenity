@@ -1,17 +1,24 @@
 // https://w3c.github.io/uievents/#mouseevent
 [Exposed=Window]
 interface MouseEvent : UIEvent {
+    // FIXME: constructor(DOMString type, optional MouseEventInit eventInitDict = {});
 
-    readonly attribute double offsetX;
-    readonly attribute double offsetY;
-    readonly attribute double clientX;
-    readonly attribute double clientY;
+    // https://drafts.csswg.org/cssom-view/#extensions-to-the-mouseevent-interface
     readonly attribute double screenX;
     readonly attribute double screenY;
-    readonly attribute double x;
-    readonly attribute double y;
     readonly attribute double pageX;
     readonly attribute double pageY;
+    readonly attribute double clientX;
+    readonly attribute double clientY;
+    readonly attribute double x;
+    readonly attribute double y;
+    readonly attribute double offsetX;
+    readonly attribute double offsetY;
+
+    // FIXME: readonly attribute boolean ctrlKey;
+    // FIXME: readonly attribute boolean shiftKey;
+    // FIXME: readonly attribute boolean altKey;
+    // FIXME: readonly attribute boolean metaKey;
 
     // https://w3c.github.io/pointerlock/#extensions-to-the-mouseevent-interface
     readonly attribute double movementX;
@@ -19,13 +26,17 @@ interface MouseEvent : UIEvent {
 
     readonly attribute short button;
     readonly attribute unsigned short buttons;
+
+    // FIXME: readonly attribute EventTarget? relatedTarget;
+
+    // FIXME: boolean getModifierState(DOMString keyArg);
 };
 
+// https://w3c.github.io/uievents/#idl-mouseeventinit
 dictionary MouseEventInit : EventModifierInit {
-
-    // FIXME: offsetX and offsetY shouldn't be here.
-    double offsetX = 0;
-    double offsetY = 0;
+    // https://drafts.csswg.org/cssom-view/#extensions-to-the-mouseevent-interface
+    double screenX = 0;
+    double screenY = 0;
     double clientX = 0;
     double clientY = 0;
 
@@ -34,5 +45,6 @@ dictionary MouseEventInit : EventModifierInit {
     double movementY = 0;
 
     short button = 0;
-
+    unsigned short buttons = 0;
+    // FIXME: EventTarget? relatedTarget = null;
 };
