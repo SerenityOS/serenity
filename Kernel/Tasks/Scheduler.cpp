@@ -513,7 +513,7 @@ void dump_thread_list(bool with_stack_traces)
         return thread.get_register_dump_from_stack().ip();
     };
 
-    Thread::for_each([&](Thread& thread) {
+    Thread::for_each_ignoring_jails([&](Thread& thread) {
         auto color = thread.process().is_kernel_process() ? "\x1b[34;1m"sv : "\x1b[33;1m"sv;
         switch (thread.state()) {
         case Thread::State::Dying:
