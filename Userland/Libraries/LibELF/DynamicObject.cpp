@@ -202,6 +202,19 @@ void DynamicObject::parse()
         m_size_of_relocation_entry = sizeof(ElfW(Rel));
     }
 
+    // Whether or not RELASZ (stored in m_size_of_relocation_table) only refers to non-PLT entries is not clearly specified.
+    // So check if [JMPREL, JMPREL+PLTRELSZ) is in [RELA, RELA+RELASZ).
+    // If so, change the size of the non-PLT relocation table.
+    if (m_plt_relocation_offset_location >= m_relocation_table_offset                                     // JMPREL >= RELA
+        && m_plt_relocation_offset_location < (m_relocation_table_offset + m_size_of_relocation_table)) { // JMPREL < (RELA + RELASZ)
+        // [JMPREL, JMPREL+PLTRELSZ) is in [RELA, RELA+RELASZ)
+
+        // Verify that the ends of the tables match up
+        VERIFY(m_plt_relocation_offset_location + m_size_of_plt_relocation_entry_list == m_relocation_table_offset + m_size_of_relocation_table);
+
+        m_size_of_relocation_table -= m_size_of_plt_relocation_entry_list;
+    }
+
     auto hash_section_address = hash_section().address().as_ptr();
     // TODO: consider base address - it might not be zero
     auto num_hash_chains = ((u32*)hash_section_address)[1];
