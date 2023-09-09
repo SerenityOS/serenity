@@ -29,6 +29,7 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, CSSPi
         m_fragments.append(LineBoxFragment { layout_node, start, length, CSSPixelPoint(x_offset, y_offset), CSSPixelSize(content_width, content_height), border_box_top, border_box_bottom });
     }
     m_width += leading_margin + leading_size + content_width + trailing_size + trailing_margin;
+    m_height = max(m_height, content_height + border_box_top + border_box_bottom);
 }
 
 void LineBox::trim_trailing_whitespace()

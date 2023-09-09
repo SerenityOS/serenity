@@ -111,11 +111,11 @@ CSSPixels LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
 
     CSSPixels candidate_y = m_current_y;
 
-    CSSPixels current_line_width = ensure_last_line_box().width();
+    auto const& current_line = ensure_last_line_box();
     // If there's already inline content on the current line, check if the new float can fit
     // alongside the content. If not, place it on the next line.
-    if (current_line_width > 0 && (current_line_width + width) > m_available_width_for_current_line)
-        candidate_y += m_context.containing_block().line_height();
+    if (current_line.width() > 0 && (current_line.width() + width) > m_available_width_for_current_line)
+        candidate_y += current_line.height();
 
     // Then, look for the next Y position where we can fit the new float.
     // FIXME: This is super dumb, we move 1px downwards per iteration and stop
