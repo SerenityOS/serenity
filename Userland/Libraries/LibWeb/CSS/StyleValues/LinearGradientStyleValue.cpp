@@ -66,7 +66,7 @@ bool LinearGradientStyleValue::equals(StyleValue const& other_) const
 float LinearGradientStyleValue::angle_degrees(CSSPixelSize gradient_size) const
 {
     auto corner_angle_degrees = [&] {
-        return atan2(gradient_size.height().to_double(), gradient_size.width().to_double()) * 180 / AK::Pi<double>;
+        return AK::to_degrees(atan2(gradient_size.height().to_double(), gradient_size.width().to_double()));
     };
     return m_properties.direction.visit(
         [&](SideOrCorner side_or_corner) {

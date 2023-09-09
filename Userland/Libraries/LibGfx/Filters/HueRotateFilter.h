@@ -27,7 +27,7 @@ public:
 private:
     static FloatMatrix3x3 calculate_hue_rotate_matrix(float angle_degrees)
     {
-        float angle_rads = angle_degrees * (AK::Pi<float> / 180);
+        float angle_rads = AK::to_radians(angle_degrees);
         float cos_angle = 0;
         float sin_angle = 0;
         AK::sincos(angle_rads, sin_angle, cos_angle);

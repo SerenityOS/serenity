@@ -904,7 +904,7 @@ void Device::calculate_vertex_lighting(GPU::Vertex& vertex) const
         float spotlight_factor = 1.0f;
         if (light.spotlight_cutoff_angle != 180.0f) {
             auto const vertex_to_light_dot_spotlight_direction = sgi_dot_operator(vertex_to_light, light.spotlight_direction.normalized());
-            auto const cos_spotlight_cutoff = AK::cos<float>(light.spotlight_cutoff_angle * AK::Pi<float> / 180.f);
+            auto const cos_spotlight_cutoff = AK::cos<float>(AK::to_radians(light.spotlight_cutoff_angle));
 
             if (vertex_to_light_dot_spotlight_direction >= cos_spotlight_cutoff)
                 spotlight_factor = AK::pow<float>(vertex_to_light_dot_spotlight_direction, light.spotlight_exponent);

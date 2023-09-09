@@ -354,7 +354,7 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, co
     int height = m_editor->active_layer()->rect().height() * scale;
 
     float rotation_radians = atan2f(t_gradient_begin_line.a().y() - t_gradient_end_line.a().y(), t_gradient_begin_line.a().x() - t_gradient_end_line.a().x());
-    float rotation_degrees = (rotation_radians * 180) / AK::Pi<float>;
+    float rotation_degrees = AK::to_degrees(rotation_radians);
 
     auto determine_required_side_length = [&](int center, int side_length) {
         if (center < 0)
