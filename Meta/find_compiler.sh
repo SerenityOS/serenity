@@ -9,7 +9,7 @@ is_supported_compiler() {
     fi
 
     local VERSION=""
-    VERSION="$($COMPILER -dumpversion)" || return 1
+    VERSION="$($COMPILER -dumpversion 2> /dev/null)" || return 1
     local MAJOR_VERSION=""
     MAJOR_VERSION="${VERSION%%.*}"
     if $COMPILER --version 2>&1 | grep "Apple clang" >/dev/null; then
