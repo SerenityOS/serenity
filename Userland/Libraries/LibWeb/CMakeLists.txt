@@ -221,6 +221,7 @@ set(SOURCES
     FileAPI/BlobURLStore.cpp
     FileAPI/File.cpp
     FileAPI/FileList.cpp
+    FileAPI/FileReader.cpp
     FontCache.cpp
     Geometry/DOMMatrix.cpp
     Geometry/DOMMatrixReadOnly.cpp
