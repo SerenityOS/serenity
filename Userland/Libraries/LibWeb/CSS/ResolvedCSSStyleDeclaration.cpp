@@ -92,109 +92,6 @@ static NonnullRefPtr<StyleValue const> style_value_for_background_property(Layou
     return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
 }
 
-static RefPtr<StyleValue> style_value_for_display(Display display)
-{
-    if (display.is_none())
-        return IdentifierStyleValue::create(ValueID::None);
-
-    if (display.is_outside_and_inside()) {
-        // NOTE: Following the precedence rules of “most backwards-compatible, then shortest”,
-        //       serialization of equivalent display values uses the “Short display” column.
-        if (display == Display::from_short(Display::Short::Block))
-            return IdentifierStyleValue::create(ValueID::Block);
-        if (display == Display::from_short(Display::Short::FlowRoot))
-            return IdentifierStyleValue::create(ValueID::FlowRoot);
-        if (display == Display::from_short(Display::Short::Inline))
-            return IdentifierStyleValue::create(ValueID::Inline);
-        if (display == Display::from_short(Display::Short::InlineBlock))
-            return IdentifierStyleValue::create(ValueID::InlineBlock);
-        if (display == Display::from_short(Display::Short::RunIn))
-            return IdentifierStyleValue::create(ValueID::RunIn);
-        if (display == Display::from_short(Display::Short::ListItem))
-            return IdentifierStyleValue::create(ValueID::ListItem);
-        if (display == Display::from_short(Display::Short::Flex))
-            return IdentifierStyleValue::create(ValueID::Flex);
-        if (display == Display::from_short(Display::Short::InlineFlex))
-            return IdentifierStyleValue::create(ValueID::InlineFlex);
-        if (display == Display::from_short(Display::Short::Grid))
-            return IdentifierStyleValue::create(ValueID::Grid);
-        if (display == Display::from_short(Display::Short::InlineGrid))
-            return IdentifierStyleValue::create(ValueID::InlineGrid);
-        if (display == Display::from_short(Display::Short::Ruby))
-            return IdentifierStyleValue::create(ValueID::Ruby);
-        if (display == Display::from_short(Display::Short::Table))
-            return IdentifierStyleValue::create(ValueID::Table);
-        if (display == Display::from_short(Display::Short::InlineTable))
-            return IdentifierStyleValue::create(ValueID::InlineTable);
-
-        StyleValueVector values;
-        switch (display.outside()) {
-        case Display::Outside::Inline:
-            values.append(IdentifierStyleValue::create(ValueID::Inline));
-            break;
-        case Display::Outside::Block:
-            values.append(IdentifierStyleValue::create(ValueID::Block));
-            break;
-        case Display::Outside::RunIn:
-            values.append(IdentifierStyleValue::create(ValueID::RunIn));
-            break;
-        }
-        switch (display.inside()) {
-        case Display::Inside::Flow:
-            values.append(IdentifierStyleValue::create(ValueID::Flow));
-            break;
-        case Display::Inside::FlowRoot:
-            values.append(IdentifierStyleValue::create(ValueID::FlowRoot));
-            break;
-        case Display::Inside::Table:
-            values.append(IdentifierStyleValue::create(ValueID::Table));
-            break;
-        case Display::Inside::Flex:
-            values.append(IdentifierStyleValue::create(ValueID::Flex));
-            break;
-        case Display::Inside::Grid:
-            values.append(IdentifierStyleValue::create(ValueID::Grid));
-            break;
-        case Display::Inside::Ruby:
-            values.append(IdentifierStyleValue::create(ValueID::Ruby));
-            break;
-        }
-
-        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
-    }
-
-    if (display.is_internal()) {
-        switch (display.internal()) {
-        case Display::Internal::TableRowGroup:
-            return IdentifierStyleValue::create(ValueID::TableRowGroup);
-        case Display::Internal::TableHeaderGroup:
-            return IdentifierStyleValue::create(ValueID::TableHeaderGroup);
-        case Display::Internal::TableFooterGroup:
-            return IdentifierStyleValue::create(ValueID::TableFooterGroup);
-        case Display::Internal::TableRow:
-            return IdentifierStyleValue::create(ValueID::TableRow);
-        case Display::Internal::TableCell:
-            return IdentifierStyleValue::create(ValueID::TableCell);
-        case Display::Internal::TableColumnGroup:
-            return IdentifierStyleValue::create(ValueID::TableColumnGroup);
-        case Display::Internal::TableColumn:
-            return IdentifierStyleValue::create(ValueID::TableColumn);
-        case Display::Internal::TableCaption:
-            return IdentifierStyleValue::create(ValueID::TableCaption);
-        case Display::Internal::RubyBase:
-            return IdentifierStyleValue::create(ValueID::RubyBase);
-        case Display::Internal::RubyText:
-            return IdentifierStyleValue::create(ValueID::RubyText);
-        case Display::Internal::RubyBaseContainer:
-            return IdentifierStyleValue::create(ValueID::RubyBaseContainer);
-        case Display::Internal::RubyTextContainer:
-            return IdentifierStyleValue::create(ValueID::RubyTextContainer);
-        }
-    }
-
-    TODO();
-}
-
 static NonnullRefPtr<StyleValue const> value_or_default(Optional<StyleProperty> property, NonnullRefPtr<StyleValue> default_style)
 {
     if (property.has_value())
@@ -252,50 +149,13 @@ static NonnullRefPtr<StyleValue const> style_value_for_sided_shorthand(ValueComp
     return StyleValueList::create(StyleValueVector { move(top), move(right), move(bottom), move(left) }, StyleValueList::Separator::Space);
 }
 
-static NonnullRefPtr<StyleValue const> style_value_for_svg_paint(Optional<SVGPaint> const& maybe_paint)
-{
-    if (!maybe_paint.has_value())
-        return IdentifierStyleValue::create(ValueID::None);
-    auto& paint = maybe_paint.value();
-
-    if (paint.is_color())
-        return ColorStyleValue::create(paint.as_color());
-    if (paint.is_url())
-        return URLStyleValue::create(paint.as_url());
-
-    VERIFY_NOT_REACHED();
-}
-
 RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
+    // A limited number of properties have special rules for producing their "resolved value".
+    // We also have to manually construct shorthands from their longhands here.
+    // Everything else uses the computed value.
+    // https://www.w3.org/TR/cssom-1/#resolved-values
     switch (property_id) {
-    case PropertyID::AccentColor: {
-        auto accent_color = layout_node.computed_values().accent_color();
-        if (accent_color.has_value())
-            return ColorStyleValue::create(accent_color.value());
-        return IdentifierStyleValue::create(ValueID::Auto);
-    }
-    case PropertyID::AlignContent:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_content()));
-    case PropertyID::AlignItems:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_items()));
-    case PropertyID::AlignSelf:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_self()));
-    case PropertyID::Appearance:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().appearance()));
-    case PropertyID::AspectRatio: {
-        auto aspect_ratio = layout_node.computed_values().aspect_ratio();
-        if (aspect_ratio.use_natural_aspect_ratio_if_available && aspect_ratio.preferred_ratio.has_value()) {
-            return StyleValueList::create(
-                StyleValueVector {
-                    IdentifierStyleValue::create(ValueID::Auto),
-                    RatioStyleValue::create(aspect_ratio.preferred_ratio.value()) },
-                StyleValueList::Separator::Space);
-        }
-        if (aspect_ratio.preferred_ratio.has_value())
-            return RatioStyleValue::create(aspect_ratio.preferred_ratio.value());
-        return IdentifierStyleValue::create(ValueID::Auto);
-    }
     case PropertyID::Background: {
         auto maybe_background_color = property(PropertyID::BackgroundColor);
         auto maybe_background_image = property(PropertyID::BackgroundImage);
@@ -316,32 +176,8 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
             value_or_default(maybe_background_origin, IdentifierStyleValue::create(ValueID::PaddingBox)),
             value_or_default(maybe_background_clip, IdentifierStyleValue::create(ValueID::BorderBox)));
     }
-    case PropertyID::BackgroundAttachment:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) { return IdentifierStyleValue::create(to_value_id(layer.attachment)); },
-            [] { return IdentifierStyleValue::create(ValueID::Scroll); });
-    case PropertyID::BackgroundClip:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) { return IdentifierStyleValue::create(to_value_id(layer.clip)); },
-            [] { return IdentifierStyleValue::create(ValueID::BorderBox); });
     case PropertyID::BackgroundColor:
         return ColorStyleValue::create(layout_node.computed_values().background_color());
-    case PropertyID::BackgroundImage:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) -> NonnullRefPtr<StyleValue const> {
-                if (layer.background_image)
-                    return *layer.background_image;
-                return IdentifierStyleValue::create(ValueID::None);
-            },
-            [] { return IdentifierStyleValue::create(ValueID::None); });
-    case PropertyID::BackgroundOrigin:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) { return IdentifierStyleValue::create(to_value_id(layer.origin)); },
-            [] { return IdentifierStyleValue::create(ValueID::PaddingBox); });
     case PropertyID::BackgroundPosition:
         return style_value_for_background_property(
             layout_node,
@@ -355,42 +191,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
                     EdgeStyleValue::create(PositionEdge::Left, Percentage(0)),
                     EdgeStyleValue::create(PositionEdge::Top, Percentage(0)));
             });
-    case PropertyID::BackgroundPositionX:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) { return EdgeStyleValue::create(layer.position_edge_x, layer.position_offset_x); },
-            [] { return EdgeStyleValue::create(PositionEdge::Left, Percentage(0)); });
-    case PropertyID::BackgroundPositionY:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) { return EdgeStyleValue::create(layer.position_edge_y, layer.position_offset_y); },
-            [] { return EdgeStyleValue::create(PositionEdge::Top, Percentage(0)); });
-    case PropertyID::BackgroundRepeat:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) -> NonnullRefPtr<StyleValue const> {
-                StyleValueVector repeat {
-                    IdentifierStyleValue::create(to_value_id(layer.repeat_x)),
-                    IdentifierStyleValue::create(to_value_id(layer.repeat_y)),
-                };
-                return StyleValueList::create(move(repeat), StyleValueList::Separator::Space);
-            },
-            [] { return BackgroundRepeatStyleValue::create(Repeat::Repeat, Repeat::Repeat); });
-    case PropertyID::BackgroundSize:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) -> NonnullRefPtr<StyleValue> {
-                switch (layer.size_type) {
-                case BackgroundSize::Contain:
-                    return IdentifierStyleValue::create(ValueID::Contain);
-                case BackgroundSize::Cover:
-                    return IdentifierStyleValue::create(ValueID::Cover);
-                case BackgroundSize::LengthPercentage:
-                    return BackgroundSizeStyleValue::create(layer.size_x, layer.size_y);
-                }
-                VERIFY_NOT_REACHED();
-            },
-            [] { return IdentifierStyleValue::create(ValueID::Auto); });
     case PropertyID::Border: {
         auto top = layout_node.computed_values().border_top();
         auto right = layout_node.computed_values().border_right();
@@ -413,18 +213,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     }
     case PropertyID::BorderBottomColor:
         return ColorStyleValue::create(layout_node.computed_values().border_bottom().color);
-    case PropertyID::BorderBottomLeftRadius: {
-        auto const& border_radius = layout_node.computed_values().border_bottom_left_radius();
-        return BorderRadiusStyleValue::create(border_radius.horizontal_radius, border_radius.vertical_radius);
-    }
-    case PropertyID::BorderBottomRightRadius: {
-        auto const& border_radius = layout_node.computed_values().border_bottom_right_radius();
-        return BorderRadiusStyleValue::create(border_radius.horizontal_radius, border_radius.vertical_radius);
-    }
-    case PropertyID::BorderBottomStyle:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_bottom().line_style));
-    case PropertyID::BorderBottomWidth:
-        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_bottom().width));
     case PropertyID::BorderColor: {
         auto top = ColorStyleValue::create(layout_node.computed_values().border_top().color);
         auto right = ColorStyleValue::create(layout_node.computed_values().border_right().color);
@@ -432,8 +220,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto left = ColorStyleValue::create(layout_node.computed_values().border_left().color);
         return style_value_for_sided_shorthand(top, right, bottom, left);
     }
-    case PropertyID::BorderCollapse:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_collapse()));
     case PropertyID::BorderLeft: {
         auto border = layout_node.computed_values().border_left();
         auto width = LengthStyleValue::create(Length::make_px(border.width));
@@ -443,10 +229,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     }
     case PropertyID::BorderLeftColor:
         return ColorStyleValue::create(layout_node.computed_values().border_left().color);
-    case PropertyID::BorderLeftStyle:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_left().line_style));
-    case PropertyID::BorderLeftWidth:
-        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_left().width));
     case PropertyID::BorderRadius: {
         auto maybe_top_left_radius = property(PropertyID::BorderTopLeftRadius);
         auto maybe_top_right_radius = property(PropertyID::BorderTopRightRadius);
@@ -481,22 +263,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     }
     case PropertyID::BorderRightColor:
         return ColorStyleValue::create(layout_node.computed_values().border_right().color);
-    case PropertyID::BorderRightStyle:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style));
-    case PropertyID::BorderRightWidth:
-        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_right().width));
-    case PropertyID::BorderSpacing: {
-        auto horizontal = layout_node.computed_values().border_spacing_horizontal();
-        auto vertical = layout_node.computed_values().border_spacing_vertical();
-        if (horizontal == vertical)
-            return LengthStyleValue::create(horizontal);
-        return StyleValueList::create(
-            {
-                LengthStyleValue::create(horizontal),
-                LengthStyleValue::create(vertical),
-            },
-            StyleValueList::Separator::Space);
-    }
     case PropertyID::BorderStyle: {
         auto top = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style));
         auto right = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style));
@@ -513,18 +279,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     }
     case PropertyID::BorderTopColor:
         return ColorStyleValue::create(layout_node.computed_values().border_top().color);
-    case PropertyID::BorderTopLeftRadius: {
-        auto const& border_radius = layout_node.computed_values().border_top_left_radius();
-        return BorderRadiusStyleValue::create(border_radius.horizontal_radius, border_radius.vertical_radius);
-    }
-    case PropertyID::BorderTopRightRadius: {
-        auto const& border_radius = layout_node.computed_values().border_top_right_radius();
-        return BorderRadiusStyleValue::create(border_radius.horizontal_radius, border_radius.vertical_radius);
-    }
-    case PropertyID::BorderTopStyle:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style));
-    case PropertyID::BorderTopWidth:
-        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
     case PropertyID::BorderWidth: {
         auto top = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
         auto right = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_right().width));
@@ -534,83 +288,8 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     }
     case PropertyID::Bottom:
         return style_value_for_length_percentage(layout_node.computed_values().inset().bottom());
-    case PropertyID::BoxShadow: {
-        auto box_shadow_layers = layout_node.computed_values().box_shadow();
-        if (box_shadow_layers.is_empty())
-            return nullptr;
-
-        auto make_box_shadow_style_value = [](ShadowData const& data) -> NonnullRefPtr<ShadowStyleValue> {
-            auto offset_x = LengthStyleValue::create(data.offset_x);
-            auto offset_y = LengthStyleValue::create(data.offset_y);
-            auto blur_radius = LengthStyleValue::create(data.blur_radius);
-            auto spread_distance = LengthStyleValue::create(data.spread_distance);
-            return ShadowStyleValue::create(data.color, offset_x, offset_y, blur_radius, spread_distance, data.placement);
-        };
-
-        if (box_shadow_layers.size() == 1)
-            return make_box_shadow_style_value(box_shadow_layers.first());
-
-        StyleValueVector box_shadow;
-        box_shadow.ensure_capacity(box_shadow_layers.size());
-        for (auto const& layer : box_shadow_layers)
-            box_shadow.unchecked_append(make_box_shadow_style_value(layer));
-        return StyleValueList::create(move(box_shadow), StyleValueList::Separator::Comma);
-    }
-    case PropertyID::BoxSizing:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().box_sizing()));
-    case PropertyID::CaptionSide: {
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().caption_side()));
-    }
-    case PropertyID::Clear:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().clear()));
-    case PropertyID::Clip:
-        return RectStyleValue::create(layout_node.computed_values().clip().to_rect());
     case PropertyID::Color:
         return ColorStyleValue::create(layout_node.computed_values().color());
-    case PropertyID::ColumnGap:
-        return style_value_for_size(layout_node.computed_values().column_gap());
-    case PropertyID::Cursor:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().cursor()));
-    case PropertyID::Display:
-        return style_value_for_display(layout_node.display());
-    case PropertyID::Fill:
-        return style_value_for_svg_paint(layout_node.computed_values().fill());
-    case PropertyID::FillOpacity:
-        return NumberStyleValue::create(layout_node.computed_values().fill_opacity());
-    case PropertyID::FillRule:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().fill_rule()));
-    case PropertyID::FlexBasis:
-        return layout_node.computed_values().flex_basis().visit(
-            [](CSS::FlexBasisContent const&) -> RefPtr<StyleValue const> {
-                return IdentifierStyleValue::create(ValueID::Content);
-            },
-            [&](CSS::Size const& size) -> RefPtr<StyleValue const> {
-                return style_value_for_size(size);
-            });
-    case PropertyID::FlexDirection:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_direction()));
-    case PropertyID::FlexGrow:
-        return NumberStyleValue::create(layout_node.computed_values().flex_grow());
-    case PropertyID::FlexShrink:
-        return NumberStyleValue::create(layout_node.computed_values().flex_shrink());
-    case PropertyID::FlexWrap:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_wrap()));
-    case PropertyID::Float:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().float_()));
-    case PropertyID::FontSize:
-        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().font_size()));
-    case PropertyID::FontVariant: {
-        auto font_variant = layout_node.computed_values().font_variant();
-        switch (font_variant) {
-        case FontVariant::Normal:
-            return IdentifierStyleValue::create(ValueID::Normal);
-        case FontVariant::SmallCaps:
-            return IdentifierStyleValue::create(ValueID::SmallCaps);
-        }
-        VERIFY_NOT_REACHED();
-    }
-    case PropertyID::FontWeight:
-        return NumberStyleValue::create(layout_node.computed_values().font_weight());
     case PropertyID::GridArea: {
         auto maybe_grid_row_start = property(PropertyID::GridRowStart);
         auto maybe_grid_column_start = property(PropertyID::GridColumnStart);
@@ -653,10 +332,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         }
         return GridTrackPlacementShorthandStyleValue::create(grid_column_end.release_nonnull(), grid_column_start.release_nonnull());
     }
-    case PropertyID::GridColumnEnd:
-        return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_column_end());
-    case PropertyID::GridColumnStart:
-        return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_column_start());
     case PropertyID::GridRow: {
         auto maybe_grid_row_end = property(PropertyID::GridRowEnd);
         auto maybe_grid_row_start = property(PropertyID::GridRowStart);
@@ -671,10 +346,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         }
         return GridTrackPlacementShorthandStyleValue::create(grid_row_end.release_nonnull(), grid_row_start.release_nonnull());
     }
-    case PropertyID::GridRowEnd:
-        return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_row_end());
-    case PropertyID::GridRowStart:
-        return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_row_start());
     case PropertyID::GridTemplate: {
         auto maybe_grid_template_areas = property(PropertyID::GridTemplateAreas);
         auto maybe_grid_template_rows = property(PropertyID::GridTemplateRows);
@@ -695,28 +366,10 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         }
         return GridTrackSizeListShorthandStyleValue::create(grid_template_areas.release_nonnull(), grid_template_rows.release_nonnull(), grid_template_columns.release_nonnull());
     }
-    case PropertyID::GridTemplateColumns:
-        return GridTrackSizeListStyleValue::create(layout_node.computed_values().grid_template_columns());
-    case PropertyID::GridTemplateRows:
-        return GridTrackSizeListStyleValue::create(layout_node.computed_values().grid_template_rows());
-    case PropertyID::GridTemplateAreas:
-        return GridTemplateAreaStyleValue::create(layout_node.computed_values().grid_template_areas());
     case PropertyID::Height:
         return style_value_for_size(layout_node.computed_values().height());
-    case PropertyID::ImageRendering:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().image_rendering()));
-    case PropertyID::JustifyContent:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_content()));
-    case PropertyID::JustifyItems:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_items()));
-    case PropertyID::JustifySelf:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_self()));
     case PropertyID::Left:
         return style_value_for_length_percentage(layout_node.computed_values().inset().left());
-    case PropertyID::LineHeight:
-        return LengthStyleValue::create(Length::make_px(layout_node.line_height()));
-    case PropertyID::ListStyleType:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().list_style_type()));
     case PropertyID::Margin: {
         auto margin = layout_node.computed_values().margin();
         auto top = style_value_for_length_percentage(margin.top());
@@ -733,18 +386,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return style_value_for_length_percentage(layout_node.computed_values().margin().right());
     case PropertyID::MarginTop:
         return style_value_for_length_percentage(layout_node.computed_values().margin().top());
-    case PropertyID::MaxHeight:
-        return style_value_for_size(layout_node.computed_values().max_height());
-    case PropertyID::MaxWidth:
-        return style_value_for_size(layout_node.computed_values().max_width());
-    case PropertyID::MinHeight:
-        return style_value_for_size(layout_node.computed_values().min_height());
-    case PropertyID::MinWidth:
-        return style_value_for_size(layout_node.computed_values().min_width());
-    case PropertyID::Opacity:
-        return NumberStyleValue::create(layout_node.computed_values().opacity());
-    case PropertyID::Order:
-        return IntegerStyleValue::create(layout_node.computed_values().order());
     case PropertyID::Outline: {
         return StyleValueList::create(
             { style_value_for_property(layout_node, PropertyID::OutlineColor).release_nonnull(),
@@ -754,16 +395,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     }
     case PropertyID::OutlineColor:
         return ColorStyleValue::create(layout_node.computed_values().outline_color());
-    case PropertyID::OutlineOffset:
-        return LengthStyleValue::create(layout_node.computed_values().outline_offset());
-    case PropertyID::OutlineStyle:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().outline_style()));
-    case PropertyID::OutlineWidth:
-        return LengthStyleValue::create(layout_node.computed_values().outline_width());
-    case PropertyID::OverflowX:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().overflow_x()));
-    case PropertyID::OverflowY:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().overflow_y()));
     case PropertyID::Padding: {
         auto padding = layout_node.computed_values().padding();
         auto top = style_value_for_length_percentage(padding.top());
@@ -780,22 +411,8 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return style_value_for_length_percentage(layout_node.computed_values().padding().right());
     case PropertyID::PaddingTop:
         return style_value_for_length_percentage(layout_node.computed_values().padding().top());
-    case PropertyID::Position:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().position()));
     case PropertyID::Right:
         return style_value_for_length_percentage(layout_node.computed_values().inset().right());
-    case PropertyID::RowGap:
-        return style_value_for_size(layout_node.computed_values().row_gap());
-    case PropertyID::Stroke:
-        return style_value_for_svg_paint(layout_node.computed_values().stroke());
-    case PropertyID::StrokeOpacity:
-        return NumberStyleValue::create(layout_node.computed_values().stroke_opacity());
-    case PropertyID::StrokeWidth:
-        return style_value_for_length_percentage(layout_node.computed_values().stroke_width());
-    case PropertyID::TableLayout:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().table_layout()));
-    case PropertyID::TextAlign:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_align()));
     case PropertyID::TextDecoration: {
         auto line = style_value_for_property(layout_node, PropertyID::TextDecorationLine);
         auto thickness = style_value_for_property(layout_node, PropertyID::TextDecorationThickness);
@@ -805,33 +422,13 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     }
     case PropertyID::TextDecorationColor:
         return ColorStyleValue::create(layout_node.computed_values().text_decoration_color());
-    case PropertyID::TextDecorationLine: {
-        auto text_decoration_lines = layout_node.computed_values().text_decoration_line();
-        if (text_decoration_lines.is_empty())
-            return IdentifierStyleValue::create(ValueID::None);
-        StyleValueVector style_values;
-        style_values.ensure_capacity(text_decoration_lines.size());
-        for (auto const& line : text_decoration_lines) {
-            style_values.unchecked_append(IdentifierStyleValue::create(to_value_id(line)));
-        }
-        return StyleValueList::create(move(style_values), StyleValueList::Separator::Space);
-    }
-    case PropertyID::TextDecorationStyle:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_decoration_style()));
-    case PropertyID::TextDecorationThickness:
-        return style_value_for_length_percentage(layout_node.computed_values().text_decoration_thickness());
-    case PropertyID::TextIndent:
-        return style_value_for_length_percentage(layout_node.computed_values().text_indent());
-    case PropertyID::TextJustify:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_justify()));
-    case PropertyID::TextTransform:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_transform()));
     case PropertyID::Top:
         return style_value_for_length_percentage(layout_node.computed_values().inset().top());
     case PropertyID::Transform: {
         // NOTE: The computed value for `transform` serializes as a single `matrix(...)` value, instead of
         //       the original list of transform functions. So, we produce a StyleValue for that.
         //       https://www.w3.org/TR/css-transforms-1/#serialization-of-the-computed-value
+        // FIXME: Computing values should happen in the StyleComputer!
         auto transformations = layout_node.computed_values().transformations();
         if (transformations.is_empty())
             return IdentifierStyleValue::create(ValueID::None);
@@ -864,30 +461,17 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         StyleValueVector matrix_functions { matrix_function };
         return StyleValueList::create(move(matrix_functions), StyleValueList::Separator::Space);
     }
-    case CSS::PropertyID::TransitionDelay:
-        return TimeStyleValue::create(layout_node.computed_values().transition_delay());
-    case CSS::PropertyID::VerticalAlign:
-        if (auto const* length_percentage = layout_node.computed_values().vertical_align().get_pointer<CSS::LengthPercentage>()) {
-            return style_value_for_length_percentage(*length_percentage);
-        }
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().vertical_align().get<VerticalAlign>()));
-    case PropertyID::WhiteSpace:
-        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().white_space()));
     case PropertyID::Width:
         return style_value_for_size(layout_node.computed_values().width());
-    case PropertyID::ZIndex: {
-        auto maybe_z_index = layout_node.computed_values().z_index();
-        if (!maybe_z_index.has_value())
-            return nullptr;
-        return IntegerStyleValue::create(maybe_z_index.release_value());
-    }
     case PropertyID::Invalid:
         return IdentifierStyleValue::create(ValueID::Invalid);
     case PropertyID::Custom:
         dbgln_if(LIBWEB_CSS_DEBUG, "Computed style for custom properties was requested (?)");
         return nullptr;
     default:
-        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
+        if (!property_is_shorthand(property_id))
+            return static_cast<DOM::Element const&>(*layout_node.dom_node()).computed_css_values()->property(property_id);
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Computed style for the '{}' shorthand property was requested", string_from_property_id(property_id));
         return nullptr;
     }
 }
