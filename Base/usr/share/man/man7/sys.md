@@ -34,7 +34,7 @@ A file called `power_state` is responsible for power state switching.
 
 ### `kernel` directory
 
-This directory includes two subdirectories - `net` and `variables`.
+This directory includes two subdirectories - `net` and `conf`.
 All other files in the directory are global data nodes which provide statistics
 and other kernel-related data to userspace.
 
@@ -67,7 +67,7 @@ in system reboot. A written value of `2` results in system shutdown.
 * **`tcp`** - This node exports information on TCP sockets.
 * **`udp`** - This node exports information on UDP sockets.
 
-#### `variables` directory
+#### `conf` directory
 
 This subdirectory includes global settings of the kernel.
 
