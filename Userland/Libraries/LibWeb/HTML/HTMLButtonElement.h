@@ -68,10 +68,17 @@ public:
     virtual DeprecatedString value() const override;
 
 private:
+    virtual bool is_html_button_element() const override { return true; }
+
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);
 
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLButtonElement>() const { return is_html_button_element(); }
 }
