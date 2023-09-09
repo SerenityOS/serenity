@@ -312,7 +312,7 @@ void ColorWheelWidget::paint_event(GUI::PaintEvent&)
 
     auto wedge_edge = Gfx::FloatPoint(0, -height() / 2);
 
-    float deg_as_radians = 10.0f * (AK::Pi<float> / 180);
+    float deg_as_radians = AK::to_radians(10.0f);
     Gfx::AffineTransform transform;
     transform.rotate_radians(deg_as_radians);
 
@@ -339,12 +339,12 @@ void ColorWheelWidget::paint_event(GUI::PaintEvent&)
     }
 
     transform.rotate_radians(-deg_as_radians);
-    deg_as_radians = static_cast<float>(hue()) * (AK::Pi<float> / 180);
+    deg_as_radians = AK::to_radians(static_cast<float>(hue()));
     transform.rotate_radians(deg_as_radians);
     auto selected_color = Gfx::FloatPoint(0, -height() / 2);
     selected_color.transform_by(transform);
 
-    deg_as_radians = static_cast<float>(color_range()) * (AK::Pi<float> / 180);
+    deg_as_radians = AK::to_radians(static_cast<float>(color_range()));
 
     auto selected_color_edge_1 = Gfx::FloatPoint(0, -height() / 2);
     transform.rotate_radians(deg_as_radians);
@@ -356,7 +356,7 @@ void ColorWheelWidget::paint_event(GUI::PaintEvent&)
     selected_color_edge_2.transform_by(transform);
 
     transform.rotate_radians(deg_as_radians);
-    deg_as_radians = static_cast<float>(color_range() * static_cast<double>(hardness()) / 100.0) * (AK::Pi<float> / 180);
+    deg_as_radians = AK::to_radians(static_cast<float>(color_range() * static_cast<double>(hardness()) / 100.0));
 
     auto hardness_edge_1 = Gfx::FloatPoint(0, -height() / 2);
     transform.rotate_radians(deg_as_radians);
@@ -438,7 +438,7 @@ void ColorWheelWidget::calc_hue(Gfx::IntPoint const& position)
 {
     auto center = Gfx::IntPoint(width() / 2, height() / 2);
 
-    auto angle = AK::atan2(static_cast<float>(position.y() - center.y()), static_cast<float>(position.x() - center.x())) * 180 / AK::Pi<float>;
+    auto angle = AK::atan2(static_cast<float>(position.y() - center.y()), AK::to_degrees(static_cast<float>(position.x() - center.x())));
     set_hue(angle + 90);
 }
 

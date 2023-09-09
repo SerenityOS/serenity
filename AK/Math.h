@@ -53,6 +53,18 @@ template<size_t value>
 constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
 }
 
+template<FloatingPoint T>
+constexpr T to_radians(T degrees)
+{
+    return degrees * AK::Pi<T> / 180;
+}
+
+template<FloatingPoint T>
+constexpr T to_degrees(T radians)
+{
+    return radians * 180 / AK::Pi<T>;
+}
+
 #define CONSTEXPR_STATE(function, args...)        \
     if (is_constant_evaluated()) {                \
         if (IsSame<T, long double>)               \

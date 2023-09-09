@@ -313,7 +313,7 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrix::skew_x_self(double sx)
 {
     // 1. Post-multiply a skewX transformation on the current matrix by the specified angle sx in degrees. The 2D skewX matrix is described in CSS Transforms with alpha = sx in degrees. [CSS3-TRANSFORMS]
     // clang-format off
-    Gfx::DoubleMatrix4x4 skew_matrix = { 1, tan(sx * M_PI / 180.0), 0, 0,
+    Gfx::DoubleMatrix4x4 skew_matrix = { 1, tan(AK::to_radians(sx)), 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
         0, 0, 0, 1 };
@@ -330,7 +330,7 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrix::skew_y_self(double sy)
     // 1. Post-multiply a skewX transformation on the current matrix by the specified angle sy in degrees. The 2D skewY matrix is described in CSS Transforms with beta = sy in degrees. [CSS3-TRANSFORMS]
     // clang-format off
     Gfx::DoubleMatrix4x4 skew_matrix = { 1, 0, 0, 0,
-        tan(sy * M_PI / 180.0), 1, 0, 0,
+        tan(AK::to_radians(sy)), 1, 0, 0,
         0, 0, 1, 0,
         0, 0, 0, 1 };
     // clang-format on

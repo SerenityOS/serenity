@@ -145,7 +145,7 @@ void GLContext::gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
     FloatVector3 axis = { x, y, z };
     if (axis.length() > 0.f)
         axis.normalize();
-    auto rotation_mat = Gfx::rotation_matrix(axis, angle * static_cast<float>(M_PI * 2 / 360));
+    auto rotation_mat = Gfx::rotation_matrix(axis, AK::to_radians(angle));
     update_current_matrix(*m_current_matrix * rotation_mat);
 }
 

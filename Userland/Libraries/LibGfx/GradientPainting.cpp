@@ -241,7 +241,7 @@ static auto create_conic_gradient(ReadonlySpan<ColorStop> color_stops, FloatPoin
         [=](int x, int y) {
             auto point = FloatPoint { x, y } - center_point;
             // FIXME: We could probably get away with some approximation here:
-            auto loc = fmod((AK::atan2(point.y(), point.x()) * 180.0f / AK::Pi<float> + 360.0f + normalized_start_angle), 360.0f);
+            auto loc = fmod((AK::to_degrees(AK::atan2(point.y(), point.x())) + 360.0f + normalized_start_angle), 360.0f);
             return should_floor_angles ? floor(loc) : loc;
         }
     };
@@ -256,7 +256,7 @@ static auto create_radial_gradient(IntRect const& physical_rect, ReadonlySpan<Co
     auto center_point = FloatPoint { center }.translated(0.5, 0.5);
     AffineTransform rotation_transform;
     if (rotation_angle.has_value()) {
-        auto angle_as_radians = rotation_angle.value() * (AK::Pi<float> / 180);
+        auto angle_as_radians = AK::to_radians(rotation_angle.value());
         rotation_transform.rotate_radians(angle_as_radians);
     }
 

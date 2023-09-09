@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/Math.h>
 #include <LibGfx/DeltaE.h>
 #include <math.h>
 
@@ -39,7 +40,7 @@ float DeltaE(CIELAB const& c1, CIELAB const& c2)
         float h_prime = atan2(b, a_prime);
         if (h_prime < 0)
             h_prime += 2 * static_cast<float>(M_PI);
-        return h_prime * 180 / static_cast<float>(M_PI);
+        return AK::to_degrees(h_prime);
     };
     float h1_prime = h_prime(c1.b, a1_prime);
     float h2_prime = h_prime(c2.b, a2_prime);
@@ -54,8 +55,8 @@ float DeltaE(CIELAB const& c1, CIELAB const& c2)
     else
         delta_h_prime = h2_prime - h1_prime - 360;
 
-    auto sin_degrees = [](float x) { return sinf(x * static_cast<float>(M_PI) / 180); };
-    auto cos_degrees = [](float x) { return cosf(x * static_cast<float>(M_PI) / 180); };
+    auto sin_degrees = [](float x) { return sinf(AK::to_radians(x)); };
+    auto cos_degrees = [](float x) { return cosf(AK::to_radians(x)); };
 
     float delta_H_prime = 2 * sqrtf(C1_prime * C2_prime) * sin_degrees(delta_h_prime / 2);
 

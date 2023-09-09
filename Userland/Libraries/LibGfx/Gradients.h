@@ -24,7 +24,7 @@ inline float normalized_gradient_angle_radians(float gradient_angle)
 {
     // Adjust angle so 0 degrees is bottom
     float real_angle = 90 - gradient_angle;
-    return real_angle * (AK::Pi<float> / 180);
+    return AK::to_radians(real_angle);
 }
 
 template<typename T>

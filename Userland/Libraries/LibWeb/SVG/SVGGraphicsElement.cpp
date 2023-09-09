@@ -74,9 +74,6 @@ Optional<Gfx::PaintStyle const&> SVGGraphicsElement::stroke_paint_style(SVGPaint
 Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> transform_list)
 {
     Gfx::AffineTransform affine_transform;
-    auto to_radians = [](float degrees) {
-        return degrees * (AK::Pi<float> / 180.0f);
-    };
     for (auto& transform : transform_list) {
         transform.operation.visit(
             [&](Transform::Translate const& translate) {
@@ -90,14 +87,14 @@ Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> trans
                 affine_transform.multiply(
                     Gfx::AffineTransform {}
                         .translate({ rotate.x, rotate.y })
-                        .rotate_radians(to_radians(rotate.a))
+                        .rotate_radians(AK::to_radians(rotate.a))
                         .translate({ -rotate.x, -rotate.y }));
             },
             [&](Transform::SkewX const& skew_x) {
-                affine_transform.multiply(Gfx::AffineTransform {}.skew_radians(to_radians(skew_x.a), 0));
+                affine_transform.multiply(Gfx::AffineTransform {}.skew_radians(AK::to_radians(skew_x.a), 0));
             },
             [&](Transform::SkewY const& skew_y) {
-                affine_transform.multiply(Gfx::AffineTransform {}.skew_radians(0, to_radians(skew_y.a)));
+                affine_transform.multiply(Gfx::AffineTransform {}.skew_radians(0, AK::to_radians(skew_y.a)));
             },
             [&](Transform::Matrix const& matrix) {
                 affine_transform.multiply(Gfx::AffineTransform {

@@ -39,7 +39,7 @@ double Angle::to_degrees() const
     case Type::Grad:
         return m_value * (360.0 / 400.0);
     case Type::Rad:
-        return m_value * (180.0 / AK::Pi<double>);
+        return AK::to_degrees(m_value);
     case Type::Turn:
         return m_value * 360.0;
     }
@@ -48,7 +48,7 @@ double Angle::to_degrees() const
 
 double Angle::to_radians() const
 {
-    return to_degrees() * (AK::Pi<double> / 180.0);
+    return AK::to_radians(to_degrees());
 }
 
 StringView Angle::unit_name() const

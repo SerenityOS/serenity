@@ -11,16 +11,6 @@
 #include <LibProtocol/Request.h>
 
 // Math helpers
-static double radians(double degrees)
-{
-    return degrees * M_PI / 180.0;
-}
-
-static double degrees(double radians)
-{
-    return radians * 180.0 / M_PI;
-}
-
 // https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Pseudo-code
 static double longitude_to_tile_x(double longitude, int zoom)
 {
@@ -29,7 +19,7 @@ static double longitude_to_tile_x(double longitude, int zoom)
 
 static double latitude_to_tile_y(double latitude, int zoom)
 {
-    return pow(2, zoom) * (1.0 - (log(tan(radians(latitude)) + (1.0 / cos(radians(latitude)))) / M_PI)) / 2.0;
+    return pow(2, zoom) * (1.0 - (log(tan(AK::to_radians(latitude)) + (1.0 / cos(AK::to_radians(latitude)))) / M_PI)) / 2.0;
 }
 
 static double tile_x_to_longitude(double x, int zoom)
@@ -39,7 +29,7 @@ static double tile_x_to_longitude(double x, int zoom)
 
 static double tile_y_to_latitude(double y, int zoom)
 {
-    return degrees(atan(sinh(M_PI * (1.0 - 2.0 * y / pow(2, zoom)))));
+    return AK::to_degrees(atan(sinh(M_PI * (1.0 - 2.0 * y / pow(2, zoom)))));
 }
 
 static double nice_round_number(double number)
@@ -52,7 +42,7 @@ static double nice_round_number(double number)
 double MapWidget::LatLng::distance_to(LatLng const& other) const
 {
     double const earth_radius = 6371000.0;
-    return earth_radius * 2.0 * asin(sqrt(pow(sin((radians(other.latitude) - radians(latitude)) / 2.0), 2.0) + cos(radians(latitude)) * cos(radians(other.latitude)) * pow(sin((radians(other.longitude) - radians(longitude)) / 2.0), 2.0)));
+    return earth_radius * 2.0 * asin(sqrt(pow(sin((AK::to_radians(other.latitude) - AK::to_radians(latitude)) / 2.0), 2.0) + cos(AK::to_radians(latitude)) * cos(AK::to_radians(other.latitude)) * pow(sin((AK::to_radians(other.longitude) - AK::to_radians(longitude)) / 2.0), 2.0)));
 }
 
 // MapWidget class
