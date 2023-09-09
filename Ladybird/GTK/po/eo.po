@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-05 15:41+0300\n"
+"POT-Creation-Date: 2023-09-24 14:58+0300\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -37,12 +37,16 @@ msgstr ""
 msgid "Close _Other Tabs"
 msgstr "Fermi _aliajn langetojn"
 
-#: shortcuts-dialog.blp:61
+#: shortcuts-dialog.blp:63
 msgid "Close current tab"
 msgstr "Fermi aktualan langeton"
 
 #: Tab.cpp:216
 msgid "Confirm"
+msgstr ""
+
+#: shortcuts-dialog.blp:97 shortcuts-dialog.blp:99
+msgid "Developer Tools"
 msgstr ""
 
 #: Tab.cpp:240
@@ -57,15 +61,15 @@ msgstr "Entajpi Ĝavoskriptan esprimon por plenumi"
 msgid "Failed to pick file"
 msgstr "Malsukcesis elekti dosieron"
 
-#: shortcuts-dialog.blp:48
+#: shortcuts-dialog.blp:50
 msgid "Focus location entry"
 msgstr "Enfokusigi lokan enskribigon"
 
-#: shortcuts-dialog.blp:8
+#: shortcuts-dialog.blp:10
 msgid "General"
 msgstr "Ĝenerala"
 
-#: Tab.cpp:48 window.blp:16
+#: Tab.cpp:48 shortcuts-dialog.blp:102 window.blp:16
 msgid "JavaScript Console"
 msgstr "Ĝavoskripta konzolo"
 
@@ -91,15 +95,15 @@ msgstr "Navigi malantaŭ"
 msgid "Navigate Forward"
 msgstr "Navigi antaŭ"
 
-#: shortcuts-dialog.blp:36
+#: shortcuts-dialog.blp:38
 msgid "Navigate back"
 msgstr "Navigi malantaŭ"
 
-#: shortcuts-dialog.blp:40
+#: shortcuts-dialog.blp:42
 msgid "Navigate forward"
 msgstr "Navigi antaŭ"
 
-#: shortcuts-dialog.blp:33
+#: shortcuts-dialog.blp:35
 msgid "Navigation"
 msgstr "Navigado"
 
@@ -111,19 +115,19 @@ msgstr "Nova langeto"
 msgid "New _Incognito Window"
 msgstr "Nova _inkognita fenestro"
 
-#: shortcuts-dialog.blp:15
+#: shortcuts-dialog.blp:17
 msgid "New incognito window"
 msgstr "Nova inkognita fenestro"
 
-#: Window.cpp:82 shortcuts-dialog.blp:57
+#: Window.cpp:82 shortcuts-dialog.blp:59
 msgid "New tab"
 msgstr "Nova langeto"
 
-#: shortcuts-dialog.blp:11
+#: shortcuts-dialog.blp:13
 msgid "New window"
 msgstr "Nova fenestro"
 
-#: shortcuts-dialog.blp:65
+#: shortcuts-dialog.blp:67
 msgid "Next tab"
 msgstr "Sekva langeto"
 
@@ -131,7 +135,7 @@ msgstr "Sekva langeto"
 msgid "OK"
 msgstr "Bone"
 
-#: shortcuts-dialog.blp:19
+#: shortcuts-dialog.blp:21
 msgid "Open file"
 msgstr "Malfermi dosieron"
 
@@ -140,11 +144,11 @@ msgstr "Malfermi dosieron"
 msgid "P_in"
 msgstr "Al_pingli"
 
-#: shortcuts-dialog.blp:69
+#: shortcuts-dialog.blp:71
 msgid "Previous tab"
 msgstr "Antaŭa langeto"
 
-#: shortcuts-dialog.blp:27
+#: shortcuts-dialog.blp:29
 msgid "Quit"
 msgstr "Ĉesi"
 
@@ -152,11 +156,11 @@ msgstr "Ĉesi"
 msgid "Reload Page"
 msgstr "Reŝargi paĝon"
 
-#: shortcuts-dialog.blp:44
+#: shortcuts-dialog.blp:46
 msgid "Reload current page"
 msgstr "Reŝargi aktualan paĝon"
 
-#: shortcuts-dialog.blp:87
+#: shortcuts-dialog.blp:89
 msgid "Reset zoom"
 msgstr "Reagordi zomon"
 
@@ -186,7 +190,11 @@ msgstr "La retejo de SerenityOS"
 msgid "Sergey Bugaev"
 msgstr "Sergey Bugaev"
 
-#: shortcuts-dialog.blp:23
+#: shortcuts-dialog.blp:8
+msgid "Shortcuts"
+msgstr "Klavkombinoj"
+
+#: shortcuts-dialog.blp:25
 msgid "Show shortcuts"
 msgstr "Montri klavkombinoj"
 
@@ -194,7 +202,7 @@ msgstr "Montri klavkombinoj"
 msgid "Tab Overview"
 msgstr "Langeta superrigardo"
 
-#: shortcuts-dialog.blp:54
+#: shortcuts-dialog.blp:56
 msgid "Tabs"
 msgstr "Langetoj"
 
@@ -215,7 +223,7 @@ msgstr ""
 msgid "Web page asks you to confirm:"
 msgstr ""
 
-#: shortcuts-dialog.blp:75
+#: shortcuts-dialog.blp:77
 msgid "Zoom"
 msgstr "Zomi"
 
@@ -227,11 +235,11 @@ msgstr "Zomi"
 msgid "Zoom Out"
 msgstr "Malzomi"
 
-#: shortcuts-dialog.blp:78
+#: shortcuts-dialog.blp:80
 msgid "Zoom in"
 msgstr "Zomi"
 
-#: shortcuts-dialog.blp:83
+#: shortcuts-dialog.blp:85
 msgid "Zoom out"
 msgstr "Malzomi"
 

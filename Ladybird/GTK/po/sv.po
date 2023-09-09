@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-05 15:41+0300\n"
+"POT-Creation-Date: 2023-09-24 14:58+0300\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,14 +19,13 @@ msgstr ""
 
 #: Window.cpp:365
 msgid "A script closed the web page"
-msgstr ""
+msgstr "Ett skript stängde webbsidan"
 
 #: window.blp:148 window.blp:249
 msgid "Bookmarks"
 msgstr "Bokmärken"
 
 #: window.blp:51
-#, fuzzy
 msgid "Bookmarks & History"
 msgstr "Bokmärken och historik"
 
@@ -38,13 +37,18 @@ msgstr "Avbryt"
 msgid "Close _Other Tabs"
 msgstr "Stäng _övriga flikar"
 
-#: shortcuts-dialog.blp:61
+#: shortcuts-dialog.blp:63
 msgid "Close current tab"
 msgstr "Stäng flik"
 
 #: Tab.cpp:216
 msgid "Confirm"
 msgstr "Bekräfta"
+
+#: shortcuts-dialog.blp:97 shortcuts-dialog.blp:99
+#, fuzzy
+msgid "Developer Tools"
+msgstr "Verktyg för webbutvecklare"
 
 #: Tab.cpp:240
 msgid "Enter"
@@ -58,15 +62,15 @@ msgstr "Ange ett JavaScript-uttryck att utvärdera"
 msgid "Failed to pick file"
 msgstr "Misslyckades med att öppna filen"
 
-#: shortcuts-dialog.blp:48
+#: shortcuts-dialog.blp:50
 msgid "Focus location entry"
 msgstr "Fokusera adressfältet"
 
-#: shortcuts-dialog.blp:8
+#: shortcuts-dialog.blp:10
 msgid "General"
 msgstr "Allmänt"
 
-#: Tab.cpp:48 window.blp:16
+#: Tab.cpp:48 shortcuts-dialog.blp:102 window.blp:16
 msgid "JavaScript Console"
 msgstr "JavaScript-konsol"
 
@@ -91,15 +95,15 @@ msgstr "Navigera bakåt"
 msgid "Navigate Forward"
 msgstr "Navigera framåt"
 
-#: shortcuts-dialog.blp:36
+#: shortcuts-dialog.blp:38
 msgid "Navigate back"
 msgstr "Navigera bakåt"
 
-#: shortcuts-dialog.blp:40
+#: shortcuts-dialog.blp:42
 msgid "Navigate forward"
 msgstr "Navigera framåt"
 
-#: shortcuts-dialog.blp:33
+#: shortcuts-dialog.blp:35
 msgid "Navigation"
 msgstr "Navigation"
 
@@ -111,19 +115,19 @@ msgstr "Ny flik"
 msgid "New _Incognito Window"
 msgstr "Nytt _privat fönster"
 
-#: shortcuts-dialog.blp:15
+#: shortcuts-dialog.blp:17
 msgid "New incognito window"
 msgstr "Nytt privat fönster"
 
-#: Window.cpp:82 shortcuts-dialog.blp:57
+#: Window.cpp:82 shortcuts-dialog.blp:59
 msgid "New tab"
 msgstr "Ny flik"
 
-#: shortcuts-dialog.blp:11
+#: shortcuts-dialog.blp:13
 msgid "New window"
 msgstr "Nytt fönster"
 
-#: shortcuts-dialog.blp:65
+#: shortcuts-dialog.blp:67
 msgid "Next tab"
 msgstr "Nästa flik"
 
@@ -131,7 +135,7 @@ msgstr "Nästa flik"
 msgid "OK"
 msgstr "Ok"
 
-#: shortcuts-dialog.blp:19
+#: shortcuts-dialog.blp:21
 msgid "Open file"
 msgstr "Öppna fil"
 
@@ -140,11 +144,11 @@ msgstr "Öppna fil"
 msgid "P_in"
 msgstr "_Nåla"
 
-#: shortcuts-dialog.blp:69
+#: shortcuts-dialog.blp:71
 msgid "Previous tab"
 msgstr "Föregående flik"
 
-#: shortcuts-dialog.blp:27
+#: shortcuts-dialog.blp:29
 msgid "Quit"
 msgstr "Avsluta"
 
@@ -152,11 +156,11 @@ msgstr "Avsluta"
 msgid "Reload Page"
 msgstr "Ladda om sidan"
 
-#: shortcuts-dialog.blp:44
+#: shortcuts-dialog.blp:46
 msgid "Reload current page"
 msgstr "Ladda om aktuell sida"
 
-#: shortcuts-dialog.blp:87
+#: shortcuts-dialog.blp:89
 msgid "Reset zoom"
 msgstr "Återställ zoom"
 
@@ -170,7 +174,6 @@ msgstr "Sam Atkins"
 
 #. Translators: this is the placeholder text for the main location entry.
 #: window.blp:131
-#, fuzzy
 msgid "Search or enter a URL to open…"
 msgstr "Sök eller ange en URL…"
 
@@ -187,7 +190,11 @@ msgstr "SerenityOS webbsida"
 msgid "Sergey Bugaev"
 msgstr "Sergey Bugaev"
 
-#: shortcuts-dialog.blp:23
+#: shortcuts-dialog.blp:8
+msgid "Shortcuts"
+msgstr "Genvägar"
+
+#: shortcuts-dialog.blp:25
 msgid "Show shortcuts"
 msgstr "Visa genvägar"
 
@@ -195,7 +202,7 @@ msgstr "Visa genvägar"
 msgid "Tab Overview"
 msgstr "Flikar översikt"
 
-#: shortcuts-dialog.blp:54
+#: shortcuts-dialog.blp:56
 msgid "Tabs"
 msgstr "Flikar"
 
@@ -216,7 +223,7 @@ msgstr "Webbsidan frågar om indata:"
 msgid "Web page asks you to confirm:"
 msgstr "Webbsidan ber dig bekräfta:"
 
-#: shortcuts-dialog.blp:75
+#: shortcuts-dialog.blp:77
 msgid "Zoom"
 msgstr "Zoom"
 
@@ -228,11 +235,11 @@ msgstr "Zooma in"
 msgid "Zoom Out"
 msgstr "Zooma ut"
 
-#: shortcuts-dialog.blp:78
+#: shortcuts-dialog.blp:80
 msgid "Zoom in"
 msgstr "Zooma in"
 
-#: shortcuts-dialog.blp:83
+#: shortcuts-dialog.blp:85
 msgid "Zoom out"
 msgstr "Zooma ut"
 
@@ -275,7 +282,7 @@ msgstr "_Verktyg"
 #. Translators: credit yourself here :^)
 #: Application.cpp:65
 msgid "translator_credits"
-msgstr "Xexxa"
+msgstr "Xexxa <xexxa@serenityos.org>"
 
 #: Application.cpp:60
 msgid "© 2023 SerenityOS developers"
