@@ -952,7 +952,7 @@ ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
 {
     VERIFY(is_user_process());
     // Try to send it to the "obvious" main thread:
-    auto receiver_thread = Thread::from_tid(pid().value());
+    auto receiver_thread = Thread::from_tid_in_same_jail(pid().value());
     // If the main thread has died, there may still be other threads:
     if (!receiver_thread) {
         // The first one should be good enough.

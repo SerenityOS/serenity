@@ -34,7 +34,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
     if (params.tid == caller.pid().value())
         return EINVAL;
 
-    auto peer = Thread::from_tid(params.tid);
+    auto peer = Thread::from_tid_in_same_jail(params.tid);
     if (!peer)
         return ESRCH;
 

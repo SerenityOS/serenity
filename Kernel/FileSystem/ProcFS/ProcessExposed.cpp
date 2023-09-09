@@ -41,7 +41,7 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_as_directory(ProcFS& procfs, Strin
 ErrorOr<void> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const
 {
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
-    auto thread = Thread::from_tid(thread_id);
+    auto thread = Thread::from_tid_in_same_jail(thread_id);
     if (!thread)
         return ESRCH;
     auto current_process_credentials = Process::current().credentials();

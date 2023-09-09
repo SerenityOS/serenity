@@ -589,7 +589,7 @@ void Thread::finalize_dying_threads()
     Vector<Thread*, 32> dying_threads;
     {
         SpinlockLocker lock(g_scheduler_lock);
-        for_each_in_state(Thread::State::Dying, [&](Thread& thread) {
+        for_each_in_state_ignoring_jails(Thread::State::Dying, [&](Thread& thread) {
             if (!thread.is_finalizable())
                 return;
             auto result = dying_threads.try_append(&thread);
@@ -1398,7 +1398,25 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     });
 }
 
-RefPtr<Thread> Thread::from_tid(ThreadID tid)
+RefPtr<Thread> Thread::from_tid_in_same_jail(ThreadID tid)
+{
+    return Thread::all_instances().with([&](auto& list) -> RefPtr<Thread> {
+        for (Thread& thread : list) {
+            if (thread.tid() == tid) {
+                return Process::current().jail().with([&thread](auto const& my_jail) -> RefPtr<Thread> {
+                    return thread.process().jail().with([&thread, my_jail](auto const& other_thread_process_jail) -> RefPtr<Thread> {
+                        if (my_jail && my_jail.ptr() != other_thread_process_jail.ptr())
+                            return nullptr;
+                        return thread;
+                    });
+                });
+            }
+        }
+        return nullptr;
+    });
+}
+
+RefPtr<Thread> Thread::from_tid_ignoring_jails(ThreadID tid)
 {
     return Thread::all_instances().with([&](auto& list) -> RefPtr<Thread> {
         for (Thread& thread : list) {
