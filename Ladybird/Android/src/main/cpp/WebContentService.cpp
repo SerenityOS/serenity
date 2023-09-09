@@ -14,4 +14,7 @@ Java_org_serenityos_ladybird_WebContentService_nativeHandleTransferSockets(JNIEn
     __android_log_print(ANDROID_LOG_INFO, "WebContent", "New binding received, sockets %d and %d", ipc_socket, fd_passing_socket);
     ::close(ipc_socket);
     ::close(fd_passing_socket);
+
+    // FIXME: Create a new thread to start WebContent processing
+    //        Make sure to create IPC sockets *in that thread*!
 }
