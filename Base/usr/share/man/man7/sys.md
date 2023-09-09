@@ -58,6 +58,7 @@ in system reboot. A written value of `2` results in system shutdown.
 * **`load_base`** - This node reveals the loading address of the kernel.
 * **`system_mode`** - This node exports the chosen system mode as it was decided based on the kernel commandline or a default value.
 * **`cmdline`** - This node exports the kernel boot commandline that was passed from the bootloader.
+* **`request_panic`** - This node allows userspace to trigger (an artificial) kernel panic by writing/truncating it.
 
 #### `net` directory
 

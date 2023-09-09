@@ -23,6 +23,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Processes.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Profile.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/RequestPanic.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Uptime.h>
 
@@ -44,6 +45,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalKernelStatsDirectory> SysFSGlobalKerne
         list.append(SysFSProfile::must_create(*global_kernel_stats_directory));
         list.append(SysFSPowerStateSwitchNode::must_create(*global_kernel_stats_directory));
         list.append(SysFSJails::must_create(*global_kernel_stats_directory));
+        list.append(SysFSSystemRequestPanic::must_create(*global_kernel_stats_directory));
 
         list.append(SysFSGlobalNetworkStatsDirectory::must_create(*global_kernel_stats_directory));
         list.append(SysFSKernelConfigurationDirectory::must_create(*global_kernel_stats_directory));
