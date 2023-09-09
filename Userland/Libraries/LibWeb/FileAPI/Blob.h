@@ -49,6 +49,8 @@ public:
 
     ReadonlyBytes bytes() const { return m_byte_buffer.bytes(); }
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> get_stream();
+
 protected:
     Blob(JS::Realm&, ByteBuffer, String type);
     Blob(JS::Realm&, ByteBuffer);
@@ -56,8 +58,6 @@ protected:
     virtual void initialize(JS::Realm&) override;
 
 private:
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> get_stream();
-
     explicit Blob(JS::Realm&);
 
     ByteBuffer m_byte_buffer {};
