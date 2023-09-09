@@ -24,6 +24,12 @@ specified commands, a `-print` command is implicitly appended.
 
 ## Commands
 
+* `-maxdepth n`: Do not descend more than `n` levels below each path given on
+  the command line. Specifying `-maxdepth 0` has the effect of only evaluating
+  each command line argument.
+* `-mindepth n`: Descend `n` levels below each path given on the command line
+  before executing any commands. Specifying `-mindepth 1` has the effect of
+  processing all files except the command line arguments.
 * `-type t`: Checks if the file is of the specified type, which must be one of
   `b` (for block device), `c` (character device), `d` (directory), `l` (symbolic
   link), `p` (FIFO), `f` (regular file), and `s` (socket).
