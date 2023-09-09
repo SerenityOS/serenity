@@ -33,6 +33,8 @@ bool g_follow_symlinks = false;
 bool g_there_was_an_error = false;
 bool g_have_seen_action_command = false;
 bool g_print_hyperlinks = false;
+Optional<u32> g_max_depth = {};
+Optional<u32> g_min_depth = {};
 
 template<typename... Parameters>
 [[noreturn]] static void fatal_error(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
@@ -164,6 +166,42 @@ private:
         if (!stat)
             return false;
         return evaluate(*stat);
+    }
+};
+
+class MaxDepthCommand : public Command {
+public:
+    MaxDepthCommand(char const* arg)
+    {
+        auto max_depth_string = StringView { arg, strlen(arg) };
+        auto maybe_max_depth = max_depth_string.to_uint<u32>();
+        if (!maybe_max_depth.has_value())
+            fatal_error("-maxdepth: '{}' is not a valid non-negative integer", arg);
+
+        g_max_depth = maybe_max_depth.value();
+    }
+
+    virtual bool evaluate(FileData&) const override
+    {
+        return true;
+    }
+};
+
+class MinDepthCommand : public Command {
+public:
+    MinDepthCommand(char const* arg)
+    {
+        auto min_depth_string = StringView { arg, strlen(arg) };
+        auto maybe_min_depth = min_depth_string.to_uint<u32>();
+        if (!maybe_min_depth.has_value())
+            fatal_error("-mindepth: '{}' is not a valid non-negative integer", arg);
+
+        g_min_depth = maybe_min_depth.value();
+    }
+
+    virtual bool evaluate(FileData&) const override
+    {
+        return true;
     }
 };
 
@@ -605,6 +643,14 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
 
         auto command = parse_simple_command(args).release_nonnull();
         return make<NotCommand>(move(command));
+    } else if (arg == "-maxdepth"sv) {
+        if (args.is_empty())
+            fatal_error("-maxdepth: requires additional arguments");
+        return make<MaxDepthCommand>(args.take_first());
+    } else if (arg == "-mindepth"sv) {
+        if (args.is_empty())
+            fatal_error("-mindepth: requires additional arguments");
+        return make<MinDepthCommand>(args.take_first());
     } else if (arg == "-type") {
         if (args.is_empty())
             fatal_error("-type: requires additional arguments");
@@ -746,9 +792,10 @@ static NonnullOwnPtr<Command> parse_all_commands(Vector<char*>& args)
     return make<AndCommand>(command.release_nonnull(), make<PrintCommand>());
 }
 
-static void walk_tree(FileData& root_data, Command& command)
+static void walk_tree(FileData& root_data, Command& command, u32 depth = 0)
 {
-    command.evaluate(root_data);
+    if (!g_min_depth.has_value() || g_min_depth.value() <= depth)
+        command.evaluate(root_data);
 
     // We should try to read directory entries if either:
     // * This is a directory.
@@ -798,7 +845,20 @@ static void walk_tree(FileData& root_data, Command& command)
             false,
             dirent->d_type,
         };
-        walk_tree(file_data, command);
+
+        bool should_increase_depth = false;
+        if (g_max_depth.has_value() || g_min_depth.has_value()) {
+            if (g_max_depth.has_value() && depth >= g_max_depth.value())
+                return;
+
+            if (file_data.d_type == DT_UNKNOWN)
+                file_data.ensure_stat();
+
+            if (file_data.d_type == DT_DIR)
+                should_increase_depth = true;
+        }
+
+        walk_tree(file_data, command, should_increase_depth ? depth + 1 : depth);
     }
 
     if (errno != 0) {
