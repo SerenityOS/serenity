@@ -494,6 +494,26 @@ private:
     TimestampType m_timestamp_type { TimestampType::LastModification };
 };
 
+class GidCommand final : public StatCommand {
+public:
+    GidCommand(char const* arg)
+    {
+        auto gid_or_error = NumericRange<gid_t>::parse({ arg, strlen(arg) });
+        if (gid_or_error.is_error())
+            fatal_error("find: Invalid argument '{}' to '-gid'", arg);
+
+        m_gid_range = gid_or_error.release_value();
+    }
+
+private:
+    virtual bool evaluate(struct stat const& stat) const override
+    {
+        return m_gid_range.contains(stat.st_gid);
+    }
+
+    NumericRange<gid_t> m_gid_range;
+};
+
 class PrintCommand final : public Command {
 public:
     PrintCommand(char terminator = '\n')
@@ -713,6 +733,10 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         if (args.is_empty())
             fatal_error("-cnewer: requires additional arguments");
         return make<NewerCommand>(args.take_first(), NewerCommand::TimestampType::Creation);
+    } else if (arg == "-gid") {
+        if (args.is_empty())
+            fatal_error("-gid: requires additional arguments");
+        return make<GidCommand>(args.take_first());
     } else if (arg == "-print") {
         g_have_seen_action_command = true;
         return make<PrintCommand>();

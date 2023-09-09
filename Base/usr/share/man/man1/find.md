@@ -76,6 +76,8 @@ by the current user.
   the specified reference file. If `file` is a symbolic link and the `-L`
   option is in use, then the creation time of the file pointed to by the
   symbolic link is used.
+* `-gid [-|+]number`: Checks if the file is owned by a group with an ID less
+  than, greater than or exactly `number`.
 * `-print`: Outputs the file path, followed by a newline. Always evaluates to
   true.
 * `-print0`: Outputs the file path, followed by a zero byte. Always evaluates to
