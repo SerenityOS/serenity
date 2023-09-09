@@ -367,10 +367,17 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
     }
 
     // https://html.spec.whatwg.org/multipage/rendering.html#button-layout
+    // If the computed value of 'inline-size' is 'auto', then the used value is the fit-content inline size.
+    if (dom_node.is_html_button_element() && dom_node.layout_node()->computed_values().width().is_auto()) {
+        auto& computed_values = verify_cast<NodeWithStyle>(*dom_node.layout_node()).mutable_computed_values();
+        computed_values.set_width(CSS::Size::make_fit_content());
+    }
+
+    // https://html.spec.whatwg.org/multipage/rendering.html#button-layout
     // If the element is an input element, or if it is a button element and its computed value for
     // 'display' is not 'inline-grid', 'grid', 'inline-flex', or 'flex', then the element's box has
     // a child anonymous button content box with the following behaviors:
-    if (is<HTML::HTMLButtonElement>(dom_node) && !display.is_grid_inside() && !display.is_flex_inside()) {
+    if (dom_node.is_html_button_element() && !display.is_grid_inside() && !display.is_flex_inside()) {
         auto& parent = *dom_node.layout_node();
 
         // If the box does not overflow in the vertical axis, then it is centered vertically.
