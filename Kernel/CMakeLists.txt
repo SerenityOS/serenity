@@ -203,6 +203,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/DiskUsage.cpp
     FileSystem/SysFS/Subsystems/Kernel/Log.cpp
+    FileSystem/SysFS/Subsystems/Kernel/RequestPanic.cpp
     FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.cpp
     FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.cpp
     FileSystem/SysFS/Subsystems/Kernel/MemoryStatus.cpp

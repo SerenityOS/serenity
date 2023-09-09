@@ -657,6 +657,7 @@ executable("Kernel_bin") {
     "FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/Processes.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/Profile.cpp",
+    "FileSystem/SysFS/Subsystems/Kernel/RequestPanic.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/Uptime.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.cpp",
