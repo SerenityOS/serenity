@@ -101,11 +101,12 @@ void HTMLTextAreaElement::create_shadow_tree_if_needed()
 
     m_inner_text_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
 
-    // NOTE: The text content of the <textarea> element is not available to us yet.
-    //       It gets filled in by `children_changed()`.
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), String {});
     m_text_node->set_always_editable(true);
     m_text_node->set_editable_text_node_owner(Badge<HTMLTextAreaElement> {}, *this);
+    // NOTE: If `children_changed()` was called before now, `m_raw_value` will hold the text content.
+    //       Otherwise, it will get filled in whenever that does get called.
+    m_text_node->set_text_content(m_raw_value);
 
     MUST(m_inner_text_element->append_child(*m_text_node));
     MUST(element->append_child(*m_inner_text_element));
@@ -120,7 +121,8 @@ void HTMLTextAreaElement::children_changed()
     // set the element's raw value to its child text content.
     if (!m_dirty) {
         m_raw_value = child_text_content();
-        m_text_node->set_text_content(m_raw_value);
+        if (m_text_node)
+            m_text_node->set_text_content(m_raw_value);
     }
 }
 
