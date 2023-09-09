@@ -57,6 +57,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(languagechange)           \
     __ENUMERATE_HTML_EVENT(load)                     \
     __ENUMERATE_HTML_EVENT(loaded)                   \
+    __ENUMERATE_HTML_EVENT(loadend)                  \
     __ENUMERATE_HTML_EVENT(loadeddata)               \
     __ENUMERATE_HTML_EVENT(loadedmetadata)           \
     __ENUMERATE_HTML_EVENT(loadstart)                \
