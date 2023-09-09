@@ -78,6 +78,8 @@ by the current user.
   symbolic link is used.
 * `-gid [-|+]number`: Checks if the file is owned by a group with an ID less
   than, greater than or exactly `number`.
+* `-uid [-|+]number`: Checks if the file is owned by a user with an ID less
+  than, greater than or exactly `number`.
 * `-print`: Outputs the file path, followed by a newline. Always evaluates to
   true.
 * `-print0`: Outputs the file path, followed by a zero byte. Always evaluates to

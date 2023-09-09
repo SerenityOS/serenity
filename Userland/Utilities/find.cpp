@@ -511,7 +511,27 @@ private:
         return m_gid_range.contains(stat.st_gid);
     }
 
-    NumericRange<gid_t> m_gid_range;
+    NumericRange<gid_t> m_gid_range {};
+};
+
+class UidCommand final : public StatCommand {
+public:
+    UidCommand(char const* arg)
+    {
+        auto uid_or_error = NumericRange<uid_t>::parse({ arg, strlen(arg) });
+        if (uid_or_error.is_error())
+            fatal_error("find: Invalid argument '{}' to '-uid'", arg);
+
+        m_uid_range = uid_or_error.release_value();
+    }
+
+private:
+    virtual bool evaluate(struct stat const& stat) const override
+    {
+        return m_uid_range.contains(stat.st_uid);
+    }
+
+    NumericRange<uid_t> m_uid_range {};
 };
 
 class PrintCommand final : public Command {
@@ -737,6 +757,10 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         if (args.is_empty())
             fatal_error("-gid: requires additional arguments");
         return make<GidCommand>(args.take_first());
+    } else if (arg == "-uid") {
+        if (args.is_empty())
+            fatal_error("-uid: requires additional arguments");
+        return make<UidCommand>(args.take_first());
     } else if (arg == "-print") {
         g_have_seen_action_command = true;
         return make<PrintCommand>();
