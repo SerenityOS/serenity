@@ -1052,6 +1052,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
                     // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
                     return;
                 }
+                if (this->ongoing_navigation() != navigation_id) {
+                    // NOTE: This check is not in the spec but we should not continue navigation if ongoing navigation id has changed.
+                    return;
+                }
                 finalize_a_cross_document_navigation(*this, to_history_handling_behavior(history_handling), history_entry);
             });
         }).release_value_but_fixme_should_propagate_errors();
@@ -1113,7 +1117,12 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     auto traversable = traversable_navigable();
 
     // 17. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_traversal_steps([this, traversable, history_entry, entry_to_replace] {
+    traversable->append_session_history_traversal_steps([this, traversable, history_entry, entry_to_replace, navigation_id] {
+        if (this->ongoing_navigation() != navigation_id) {
+            // NOTE: This check is not in the spec but we should not continue navigation if ongoing navigation id has changed.
+            return;
+        }
+
         // 1. Finalize a same-document navigation given traversable, navigable, historyEntry, and entryToReplace.
         finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace);
 
