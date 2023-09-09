@@ -1,0 +1,28 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x250.03125 [BFC] children: not-inline
+    BlockContainer <body> at (10,10) content-size 780x21.46875 children: not-inline
+      BlockContainer <div.Layout-sidebar> at (11,11) content-size 220x19.46875 children: inline
+        line 0 width: 102, height: 19.46875, bottom: 19.46875, baseline: 14.53125
+          frag 0 from BlockContainer start: 0, length: 0, rect: [12,12 100x17.46875]
+        BlockContainer <div.d-inline-block> at (12,12) content-size 100x17.46875 inline-block [BFC] children: inline
+          line 0 width: 69.734375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 12, rect: [12,12 69.734375x17.46875]
+              "floats!!!!!!"
+          TextNode <#text>
+        BlockContainer <div.float-left> at (12,31.46875) content-size 232.71875x218.5625 floating [BFC] children: inline
+          line 0 width: 232.71875, height: 109.1875, bottom: 109.1875, baseline: 84.578125
+            frag 0 from TextNode start: 0, length: 5, rect: [12,31.46875 232.71875x109.1875]
+              "float"
+          line 1 width: 164.0625, height: 109.375, bottom: 218.5625, baseline: 84.578125
+            frag 0 from TextNode start: 6, length: 4, rect: [12,140.46875 164.0625x109.1875]
+              "left"
+          TextNode <#text>
+
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x252.03125]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x23.46875]
+      PaintableWithLines (BlockContainer<DIV>.Layout-sidebar) [10,10 222x21.46875]
+        PaintableWithLines (BlockContainer<DIV>.d-inline-block) [11,11 102x19.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.float-left) [11,30.46875 234.71875x220.5625]
+          TextPaintable (TextNode<#text>)
