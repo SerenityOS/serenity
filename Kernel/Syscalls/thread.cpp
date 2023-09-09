@@ -125,10 +125,7 @@ ErrorOr<FlatPtr> Process::sys$detach_thread(pid_t tid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::thread));
-    auto thread = Thread::from_tid(tid);
-    if (!thread || thread->pid() != pid())
-        return ESRCH;
-
+    auto thread = TRY(get_thread_from_thread_list(tid));
     if (!thread->is_joinable())
         return EINVAL;
 
@@ -141,10 +138,7 @@ ErrorOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_valu
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::thread));
 
-    auto thread = Thread::from_tid(tid);
-    if (!thread || thread->pid() != pid())
-        return ESRCH;
-
+    auto thread = TRY(get_thread_from_thread_list(tid));
     auto* current_thread = Thread::current();
     if (thread == current_thread)
         return EDEADLK;
@@ -179,10 +173,7 @@ ErrorOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
     if (signal < 0 || signal >= NSIG)
         return EINVAL;
 
-    auto thread = Thread::from_tid(tid);
-    if (!thread || thread->pid() != pid())
-        return ESRCH;
-
+    auto thread = TRY(get_thread_from_thread_list(tid));
     if (signal != 0)
         thread->send_signal(signal, &Process::current());
 
