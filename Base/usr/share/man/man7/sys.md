@@ -55,6 +55,9 @@ them.
 * **`jails`** - This node exports information about existing jails (only if the current process is not in jail).
 * **`power_state`** - This node only responds to write requests on it. A written value of `1` results
 in system reboot. A written value of `2` results in system shutdown.
+* **`load_base`** - This node reveals the loading address of the kernel.
+* **`system_mode`** - This node exports the chosen system mode as it was decided based on the kernel commandline or a default value.
+* **`cmdline`** - This node exports the kernel boot commandline that was passed from the bootloader.
 
 #### `net` directory
 
@@ -72,16 +75,6 @@ This subdirectory includes global settings of the kernel.
 * **`kmalloc_stacks`** - This node controls whether to send information about kmalloc to debug log.
 * **`ubsan_is_deadly`** - This node controls the deadliness of the kernel undefined behavior
 sanitizer errors.
-
-#### `constants` directory
-
-This subdirectory includes global constants of the kernel.
-Those nodes are generated during the boot sequence and are completely static,
-therefore making them very fast to read (no kmalloc or locking is needed).
-
-* **`load_base`** - This node reveals the loading address of the kernel.
-* **`system_mode`** - This node exports the chosen system mode as it was decided based on the kernel commandline or a default value.
-* **`cmdline`** - This node exports the kernel boot commandline that was passed from the bootloader.
 
 ### Consistency and stability of data across multiple read operations
 
