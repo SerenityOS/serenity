@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/Debug.h>
+#include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
 
 namespace Web::HTML {
@@ -52,6 +53,15 @@ public:
         my_drawing_state().transform.multiply({ static_cast<float>(a), static_cast<float>(b), static_cast<float>(c), static_cast<float>(d), static_cast<float>(e), static_cast<float>(f) });
     }
 
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-gettransform
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Geometry::DOMMatrix>> get_transform()
+    {
+        auto& realm = static_cast<IncludingClass&>(*this).realm();
+        auto transform = my_drawing_state().transform;
+        Geometry::DOMMatrix2DInit init = { transform.a(), transform.b(), transform.c(), transform.d(), transform.e(), transform.f(), {}, {}, {}, {}, {}, {} };
+        return Geometry::DOMMatrix::create_from_dom_matrix_2d_init(realm, init);
+    }
+
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-settransform
     void set_transform(double a, double b, double c, double d, double e, double f)
     {
@@ -64,6 +74,22 @@ public:
 
         // 3. Invoke the transform(a, b, c, d, e, f) method with the same arguments.
         transform(a, b, c, d, e, f);
+    }
+
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-settransform-matrix
+    WebIDL::ExceptionOr<void> set_transform(Geometry::DOMMatrix2DInit& init)
+    {
+        // 1. Let matrix be the result of creating a DOMMatrix from the 2D dictionary transform.
+        auto& realm = static_cast<IncludingClass&>(*this).realm();
+        auto matrix = TRY(Geometry::DOMMatrix::create_from_dom_matrix_2d_init(realm, init));
+
+        // 2. If one or more of matrix's m11 element, m12 element, m21 element, m22 element, m41 element, or m42 element are infinite or NaN, then return.
+        if (!isfinite(matrix->m11()) || !isfinite(matrix->m12()) || !isfinite(matrix->m21()) || !isfinite(matrix->m22()) || !isfinite(matrix->m41()) || !isfinite(matrix->m42()))
+            return {};
+
+        // 3. Reset the current transformation matrix to matrix.
+        my_drawing_state().transform = { static_cast<float>(matrix->a()), static_cast<float>(matrix->b()), static_cast<float>(matrix->c()), static_cast<float>(matrix->d()), static_cast<float>(matrix->e()), static_cast<float>(matrix->f()) };
+        return {};
     }
 
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-resettransform
