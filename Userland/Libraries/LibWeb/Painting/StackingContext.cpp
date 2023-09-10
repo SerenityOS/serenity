@@ -74,7 +74,7 @@ static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phas
     }
 }
 
-void StackingContext::paint_node_as_stacking_context(Paintable const& paintable, PaintContext& context) const
+void StackingContext::paint_node_as_stacking_context(Paintable const& paintable, PaintContext& context)
 {
     paint_node(paintable, context, PaintPhase::Background);
     paint_node(paintable, context, PaintPhase::Border);
@@ -88,12 +88,12 @@ void StackingContext::paint_node_as_stacking_context(Paintable const& paintable,
     paint_descendants(context, paintable, StackingContextPaintPhase::FocusAndOverlay);
 }
 
-void StackingContext::paint_descendants(PaintContext& context, Paintable const& paintable, StackingContextPaintPhase phase) const
+void StackingContext::paint_descendants(PaintContext& context, Paintable const& paintable, StackingContextPaintPhase phase)
 {
     paintable.before_children_paint(context, to_paint_phase(phase));
     paintable.apply_clip_overflow_rect(context, to_paint_phase(phase));
 
-    paintable.for_each_child([this, &context, phase](auto& child) {
+    paintable.for_each_child([&context, phase](auto& child) {
         auto* stacking_context = child.stacking_context_rooted_here();
 
         if (child.is_positioned()) {
@@ -176,7 +176,7 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
     paintable.after_children_paint(context, to_paint_phase(phase));
 }
 
-void StackingContext::paint_child(PaintContext& context, StackingContext const& child) const
+void StackingContext::paint_child(PaintContext& context, StackingContext const& child)
 {
     auto parent_paintable = child.paintable_box().parent();
     if (parent_paintable)
@@ -221,7 +221,7 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
     // FIXME: There's more to this step that we have yet to understand and implement.
-    paintable_box().for_each_in_subtree([this, &context](Paintable const& paintable) {
+    paintable_box().for_each_in_subtree([&context](Paintable const& paintable) {
         auto const& z_index = paintable.computed_values().z_index();
 
         if (!paintable.is_positioned() || (z_index.has_value() && z_index.value() != 0)) {
