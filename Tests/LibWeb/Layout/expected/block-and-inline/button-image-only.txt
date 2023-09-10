@@ -1,11 +1,9 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x419.203125 children: inline
-      line 0 width: 430, height: 419.203125, bottom: 419.203125, baseline: 422
-        frag 0 from BlockContainer start: 0, length: 0, rect: [13,10 420x415.203125]
-      BlockContainer <button> at (13,10) content-size 420x415.203125 inline-block [BFC] children: inline
-        line 0 width: 420, height: 415.203125, bottom: 415.203125, baseline: 420
-          frag 0 from BlockContainer start: 0, length: 0, rect: [13,10 420x420]
+    BlockContainer <body> at (8,8) content-size 784x424 children: inline
+      line 0 width: 430, height: 424, bottom: 424, baseline: 420
+        frag 0 from BlockContainer start: 0, length: 0, rect: [13,10 420x420]
+      BlockContainer <button> at (13,10) content-size 420x420 inline-block [BFC] children: not-inline
         BlockContainer <(anonymous)> at (13,10) content-size 420x420 flex-container(column) [FFC] children: not-inline
           BlockContainer <(anonymous)> at (13,10) content-size 420x420 flex-item [BFC] children: inline
             line 0 width: 420, height: 420, bottom: 420, baseline: 420
@@ -17,8 +15,8 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x419.203125]
-      PaintableWithLines (BlockContainer<BUTTON>) [8,8 430x419.203125] overflow: [9,9 428x421]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x424]
+      PaintableWithLines (BlockContainer<BUTTON>) [8,8 430x424]
         PaintableWithLines (BlockContainer(anonymous)) [13,10 420x420]
           PaintableWithLines (BlockContainer(anonymous)) [13,10 420x420]
             ImagePaintable (ImageBox<IMG>) [13,10 420x420]
