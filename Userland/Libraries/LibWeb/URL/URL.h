@@ -55,6 +55,15 @@ public:
     WebIDL::ExceptionOr<String> pathname() const;
     void set_pathname(String const&);
 
+    Optional<String> const& fragment() const { return m_url.fragment(); }
+
+    DeprecatedString path_segment_at_index(size_t index) const { return m_url.path_segment_at_index(index); }
+
+    void set_paths(Vector<DeprecatedString> const& paths) { return m_url.set_paths(paths); }
+
+    // FIXME: Reimplement this to meet the definition in https://url.spec.whatwg.org/#url-opaque-path once we modernize URL to meet the spec.
+    bool cannot_be_a_base_url() const { return m_url.cannot_be_a_base_url(); }
+
     WebIDL::ExceptionOr<String> search() const;
     WebIDL::ExceptionOr<void> set_search(String const&);
 
@@ -65,6 +74,7 @@ public:
 
     WebIDL::ExceptionOr<String> to_json() const;
 
+    Optional<String> const& query() const { return m_url.query(); }
     void set_query(Badge<URLSearchParams>, Optional<String> query) { m_url.set_query(move(query)); }
 
 private:
@@ -79,6 +89,9 @@ private:
 
 HTML::Origin url_origin(AK::URL const&);
 bool host_is_domain(AK::URL::Host const&);
+
+// https://url.spec.whatwg.org/#potentially-strip-trailing-spaces-from-an-opaque-path
+void strip_trailing_spaces_from_an_opaque_path(URL& url);
 
 // https://url.spec.whatwg.org/#concept-url-parser
 AK::URL parse(StringView input, Optional<AK::URL> const& base_url = {});
