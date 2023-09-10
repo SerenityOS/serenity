@@ -90,7 +90,7 @@ ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text, size_t
 
         for (size_t offset = 0; offset < available_context; ++offset) {
             size_t context_line = i + offset - available_context;
-            TRY(hunk.lines.try_append(Line { Line::Operation::Context, TRY(String::from_utf8(new_lines[context_line])) }));
+            TRY(hunk.lines.try_append(Line { Line::Operation::Context, TRY(String::from_utf8(old_lines[context_line])) }));
         }
 
         return {};
