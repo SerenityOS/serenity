@@ -88,10 +88,14 @@ struct PreserveAspectRatio {
     MeetOrSlice meet_or_slice { MeetOrSlice::Meet };
 };
 
-enum class GradientUnits {
+enum class SVGUnits {
     ObjectBoundingBox,
     UserSpaceOnUse
 };
+
+using GradientUnits = SVGUnits;
+using MaskUnits = SVGUnits;
+using MaskContentUnits = SVGUnits;
 
 enum class SpreadMethod {
     Pad,
@@ -149,7 +153,7 @@ public:
     static Vector<PathInstruction> parse_path_data(StringView input);
     static Optional<Vector<Transform>> parse_transform(StringView input);
     static Optional<PreserveAspectRatio> parse_preserve_aspect_ratio(StringView input);
-    static Optional<GradientUnits> parse_gradient_units(StringView input);
+    static Optional<SVGUnits> parse_units(StringView input);
     static Optional<SpreadMethod> parse_spread_method(StringView input);
 
 private:
