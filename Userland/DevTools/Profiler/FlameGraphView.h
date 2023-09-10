@@ -46,7 +46,7 @@ private:
         bool selected;
     };
 
-    DeprecatedString bar_label(StackBar const&) const;
+    String bar_label(StackBar const&) const;
     void layout_bars();
     void layout_children(GUI::ModelIndex& parent, int depth, int left, int right, Vector<GUI::ModelIndex>& selected);
 

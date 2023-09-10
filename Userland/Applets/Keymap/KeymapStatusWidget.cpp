@@ -66,7 +66,7 @@ ErrorOr<void> KeymapStatusWidget::refresh_menu()
 void KeymapStatusWidget::set_current_keymap(DeprecatedString const& keymap)
 {
     m_current_keymap = keymap;
-    set_tooltip_deprecated(keymap);
+    set_tooltip(MUST(String::from_deprecated_string(keymap)));
     update();
 }
 

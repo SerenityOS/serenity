@@ -89,11 +89,11 @@ void FlameGraphView::mousemove_event(GUI::MouseEvent& event)
     if (on_hover_change)
         on_hover_change();
 
-    DeprecatedString label = "";
+    String label;
     if (m_hovered_bar != nullptr && m_hovered_bar->index.is_valid()) {
         label = bar_label(*m_hovered_bar);
     }
-    set_tooltip_deprecated(label);
+    set_tooltip(label);
     show_or_hide_tooltip();
 
     update();
@@ -175,12 +175,12 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
     }
 }
 
-DeprecatedString FlameGraphView::bar_label(StackBar const& bar) const
+String FlameGraphView::bar_label(StackBar const& bar) const
 {
     auto label_index = bar.index.sibling_at_column(m_text_column);
-    DeprecatedString label = "All";
+    String label = "All"_string;
     if (label_index.is_valid()) {
-        label = m_model.data(label_index).to_deprecated_string();
+        label = MUST(String::from_deprecated_string(m_model.data(label_index).to_deprecated_string()));
     }
     return label;
 }
