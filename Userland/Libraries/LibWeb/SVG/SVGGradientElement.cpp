@@ -21,7 +21,7 @@ void SVGGradientElement::attribute_changed(DeprecatedFlyString const& name, Depr
 {
     SVGElement::attribute_changed(name, value);
     if (name == AttributeNames::gradientUnits) {
-        m_gradient_units = AttributeParser::parse_gradient_units(value);
+        m_gradient_units = AttributeParser::parse_units(value);
     } else if (name == AttributeNames::spreadMethod) {
         m_spread_method = AttributeParser::parse_spread_method(value);
     } else if (name == AttributeNames::gradientTransform) {
