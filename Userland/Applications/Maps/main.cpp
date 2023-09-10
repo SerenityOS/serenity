@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Main menu actions
     auto file_menu = window->add_menu("&File"_string);
-    auto open_settings_action = GUI::Action::create("Maps &Settings", { Mod_Ctrl, Key_Comma }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [window](GUI::Action const&) {
+    auto open_settings_action = GUI::Action::create("Maps &Settings"_string, { Mod_Ctrl, Key_Comma }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [window](GUI::Action const&) {
         GUI::Process::spawn_or_show_error(window, "/bin/MapsSettings"sv);
     });
     file_menu->add_action(open_settings_action);

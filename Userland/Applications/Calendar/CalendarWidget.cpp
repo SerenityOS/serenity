@@ -174,7 +174,7 @@ NonnullRefPtr<GUI::Action> CalendarWidget::create_save_as_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_new_calendar_action()
 {
-    return GUI::Action::create("&New Calendar", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"sv)), [&](const GUI::Action&) {
+    return GUI::Action::create("&New Calendar"_string, {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"sv)), [&](const GUI::Action&) {
         auto response = FileSystemAccessClient::Client::the().save_file(window(), "calendar", "cal", Core::File::OpenMode::Write);
 
         if (response.is_error())
@@ -230,14 +230,14 @@ void CalendarWidget::update_window_title()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_add_event_action()
 {
-    return GUI::Action::create("&Add Event", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"sv)), [&](const GUI::Action&) {
+    return GUI::Action::create("&Add Event"_string, {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"sv)), [&](const GUI::Action&) {
         AddEventDialog::show(m_event_calendar->selected_date(), m_event_calendar->event_manager(), window());
     });
 }
 
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_jump_to_action()
 {
-    return GUI::Action::create("Jump to &Today", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv)), [&](const GUI::Action&) {
+    return GUI::Action::create("Jump to &Today"_string, {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv)), [&](const GUI::Action&) {
         m_event_calendar->set_selected_date(Core::DateTime::now());
         m_event_calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
     });
@@ -261,7 +261,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_view_year_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_open_settings_action()
 {
-    return GUI::Action::create("Calendar &Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](GUI::Action const&) {
+    return GUI::Action::create("Calendar &Settings"_string, {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](GUI::Action const&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/CalendarSettings"sv);
     });
 }

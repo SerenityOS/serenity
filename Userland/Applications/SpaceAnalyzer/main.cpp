@@ -69,7 +69,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     tree_map_widget.set_focus(true);
 
     auto file_menu = window->add_menu("&File"_string);
-    file_menu->add_action(GUI::Action::create("&Analyze", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    file_menu->add_action(GUI::Action::create("&Analyze"_string, { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         // FIXME: Just modify the tree in memory instead of traversing the entire file system
         if (auto result = tree_map_widget.analyze(statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
@@ -86,7 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto open_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     // Configure the node's context menu.
-    auto open_action = GUI::Action::create("Open in File Manager", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
+    auto open_action = GUI::Action::create("Open in File Manager"_string, { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
         auto path_string = get_absolute_path_to_selected_node(tree_map_widget);
         if (path_string.is_empty())
             return;
@@ -100,7 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     auto copy_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv));
-    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, copy_icon, [&](auto&) {
+    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard"_string, { Mod_Ctrl, Key_C }, copy_icon, [&](auto&) {
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(tree_map_widget));
     });
     auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {

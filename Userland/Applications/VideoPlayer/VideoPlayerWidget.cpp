@@ -68,12 +68,12 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
     m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
     m_pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
 
-    m_play_pause_action = GUI::Action::create("Play", { Key_Space }, m_play_icon, [&](auto&) {
+    m_play_pause_action = GUI::Action::create("Play"_string, { Key_Space }, m_play_icon, [&](auto&) {
         toggle_pause();
     });
 
     m_cycle_sizing_modes_action = GUI::Action::create(
-        "Sizing", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
+        "Sizing"_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
             cycle_sizing_modes();
         });
 

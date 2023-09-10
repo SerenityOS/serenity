@@ -239,21 +239,21 @@ void BrowserWindow::build_menus()
     });
 
     m_view_source_action = GUI::Action::create(
-        "View &Source", { Mod_Ctrl, Key_U }, g_icon_bag.code, [this](auto&) {
+        "View &Source"_string, { Mod_Ctrl, Key_U }, g_icon_bag.code, [this](auto&) {
             active_tab().view().get_source();
         },
         this);
     m_view_source_action->set_status_tip("View source code of the current page"_string);
 
     m_inspect_dom_tree_action = GUI::Action::create(
-        "Inspect &DOM Tree", { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
+        "Inspect &DOM Tree"_string, { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
     m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page"_string);
 
     m_inspect_dom_node_action = GUI::Action::create(
-        "&Inspect Element", g_icon_bag.inspect, [this](auto&) {
+        "&Inspect Element"_string, g_icon_bag.inspect, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
         },
         this);
@@ -264,7 +264,7 @@ void BrowserWindow::build_menus()
     inspect_menu->add_action(*m_inspect_dom_tree_action);
 
     auto js_console_action = GUI::Action::create(
-        "Open &JS Console", { Mod_Ctrl, Key_I }, g_icon_bag.filetype_javascript, [this](auto&) {
+        "Open &JS Console"_string, { Mod_Ctrl, Key_I }, g_icon_bag.filetype_javascript, [this](auto&) {
             active_tab().show_console_window();
         },
         this);
@@ -272,7 +272,7 @@ void BrowserWindow::build_menus()
     inspect_menu->add_action(js_console_action);
 
     auto storage_window_action = GUI::Action::create(
-        "Open S&torage Inspector", g_icon_bag.cookie, [this](auto&) {
+        "Open S&torage Inspector"_string, g_icon_bag.cookie, [this](auto&) {
             active_tab().show_storage_inspector();
         },
         this);
@@ -280,7 +280,7 @@ void BrowserWindow::build_menus()
     inspect_menu->add_action(storage_window_action);
 
     auto history_window_action = GUI::Action::create(
-        "Open &History Window", g_icon_bag.history, [this](auto&) {
+        "Open &History Window"_string, g_icon_bag.history, [this](auto&) {
             active_tab().show_history_inspector();
         },
         this);
@@ -290,7 +290,7 @@ void BrowserWindow::build_menus()
     auto settings_menu = add_menu("&Settings"_string);
 
     m_change_homepage_action = GUI::Action::create(
-        "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
+        "Set Homepage URL..."_string, g_icon_bag.go_home, [this](auto&) {
             String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url)).release_value_but_fixme_should_propagate_errors();
             if (GUI::InputBox::show(this, homepage_url, "Enter a URL:"sv, "Change Homepage"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
@@ -335,7 +335,7 @@ void BrowserWindow::build_menus()
     }
 
     settings_menu->add_separator();
-    auto open_settings_action = GUI::Action::create("Browser &Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
+    auto open_settings_action = GUI::Action::create("Browser &Settings"_string, Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
             GUI::Process::spawn_or_show_error(this, "/bin/BrowserSettings"sv);
         });
@@ -343,44 +343,44 @@ void BrowserWindow::build_menus()
 
     auto debug_menu = add_menu("&Debug"_string);
     debug_menu->add_action(GUI::Action::create(
-        "Dump &DOM Tree", g_icon_bag.dom_tree, [this](auto&) {
+        "Dump &DOM Tree"_string, g_icon_bag.dom_tree, [this](auto&) {
             active_tab().view().debug_request("dump-dom-tree");
         },
         this));
     debug_menu->add_action(GUI::Action::create(
-        "Dump &Layout Tree", g_icon_bag.layout, [this](auto&) {
+        "Dump &Layout Tree"_string, g_icon_bag.layout, [this](auto&) {
             active_tab().view().debug_request("dump-layout-tree");
         },
         this));
     debug_menu->add_action(GUI::Action::create(
-        "Dump &Paint Tree", g_icon_bag.layout, [this](auto&) {
+        "Dump &Paint Tree"_string, g_icon_bag.layout, [this](auto&) {
             active_tab().view().debug_request("dump-paint-tree");
         },
         this));
     debug_menu->add_action(GUI::Action::create(
-        "Dump S&tacking Context Tree", g_icon_bag.layers, [this](auto&) {
+        "Dump S&tacking Context Tree"_string, g_icon_bag.layers, [this](auto&) {
             active_tab().view().debug_request("dump-stacking-context-tree");
         },
         this));
     debug_menu->add_action(GUI::Action::create(
-        "Dump &Style Sheets", g_icon_bag.filetype_css, [this](auto&) {
+        "Dump &Style Sheets"_string, g_icon_bag.filetype_css, [this](auto&) {
             active_tab().view().debug_request("dump-style-sheets");
         },
         this));
     debug_menu->add_action(GUI::Action::create(
-        "Dump &All Resolved Styles", g_icon_bag.filetype_css, [this](auto&) {
+        "Dump &All Resolved Styles"_string, g_icon_bag.filetype_css, [this](auto&) {
             active_tab().view().debug_request("dump-all-resolved-styles");
         },
         this));
-    debug_menu->add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
+    debug_menu->add_action(GUI::Action::create("Dump &History"_string, { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
         active_tab().m_history.dump();
     }));
-    debug_menu->add_action(GUI::Action::create("Dump C&ookies", g_icon_bag.cookie, [this](auto&) {
+    debug_menu->add_action(GUI::Action::create("Dump C&ookies"_string, g_icon_bag.cookie, [this](auto&) {
         auto& tab = active_tab();
         if (tab.on_dump_cookies)
             tab.on_dump_cookies();
     }));
-    debug_menu->add_action(GUI::Action::create("Dump Loc&al Storage", g_icon_bag.local_storage, [this](auto&) {
+    debug_menu->add_action(GUI::Action::create("Dump Loc&al Storage"_string, g_icon_bag.local_storage, [this](auto&) {
         active_tab().view().debug_request("dump-local-storage");
     }));
     debug_menu->add_separator();
@@ -393,10 +393,10 @@ void BrowserWindow::build_menus()
     debug_menu->add_action(line_box_borders_action);
 
     debug_menu->add_separator();
-    debug_menu->add_action(GUI::Action::create("Collect &Garbage", { Mod_Ctrl | Mod_Shift, Key_G }, g_icon_bag.trash_can, [this](auto&) {
+    debug_menu->add_action(GUI::Action::create("Collect &Garbage"_string, { Mod_Ctrl | Mod_Shift, Key_G }, g_icon_bag.trash_can, [this](auto&) {
         active_tab().view().debug_request("collect-garbage");
     }));
-    debug_menu->add_action(GUI::Action::create("Clear &Cache", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.clear_cache, [this](auto&) {
+    debug_menu->add_action(GUI::Action::create("Clear &Cache"_string, { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.clear_cache, [this](auto&) {
         active_tab().view().debug_request("clear-cache");
     }));
 

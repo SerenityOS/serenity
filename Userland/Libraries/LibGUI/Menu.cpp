@@ -231,10 +231,10 @@ void Menu::add_recent_files_list(Function<void(Action&)> callback)
     Vector<NonnullRefPtr<GUI::Action>> recent_file_actions;
 
     for (size_t i = 0; i < GUI::Application::max_recently_open_files(); ++i) {
-        recent_file_actions.append(GUI::Action::create("", [&](auto& action) { m_recent_files_callback(action); }));
+        recent_file_actions.append(GUI::Action::create(""_string, [&](auto& action) { m_recent_files_callback(action); }));
     }
 
-    recent_file_actions.append(GUI::Action::create("(No recently open files)", nullptr));
+    recent_file_actions.append(GUI::Action::create("(No recently open files)"_string, nullptr));
     recent_file_actions.last()->set_enabled(false);
 
     auto* app = GUI::Application::the();

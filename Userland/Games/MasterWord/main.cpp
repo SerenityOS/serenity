@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = window->add_menu("&Game"_string);
 
-    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game"_string, { Mod_None, Key_F2 }, [&](auto&) {
         game.reset();
     }));
 
@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto settings_menu = window->add_menu("&Settings"_string);
 
-    settings_menu->add_action(GUI::Action::create("Set &Word Length...", [&](auto&) {
+    settings_menu->add_action(GUI::Action::create("Set &Word Length..."_string, [&](auto&) {
         auto word_length = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);
         auto result = GUI::InputBox::show_numeric(window, word_length, shortest_word, longest_word, "Word Length"sv);
         if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             game.set_word_length(word_length);
         }
     }));
-    settings_menu->add_action(GUI::Action::create("Set &Number of Guesses...", [&](auto&) {
+    settings_menu->add_action(GUI::Action::create("Set &Number of Guesses..."_string, [&](auto&) {
         auto max_guesses = Config::read_i32("MasterWord"sv, ""sv, "max_guesses"sv, 5);
         auto result = GUI::InputBox::show_numeric(window, max_guesses, 1, 20, "Number of Guesses"sv);
         if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
@@ -105,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     settings_menu->add_action(toggle_check_guesses);
 
     auto theme_menu = window->add_menu("&Theme"_string);
-    auto system_theme_action = GUI::Action::create("&System", [&](auto&) {
+    auto system_theme_action = GUI::Action::create("&System"_string, [&](auto&) {
         game.set_use_system_theme(true);
         Config::write_bool("MasterWord"sv, ""sv, "use_system_theme"sv, true);
     });
@@ -113,7 +113,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     system_theme_action->set_checked(use_system_theme);
     theme_menu->add_action(system_theme_action);
 
-    auto wordle_theme_action = GUI::Action::create("&Wordle", [&](auto&) {
+    auto wordle_theme_action = GUI::Action::create("&Wordle"_string, [&](auto&) {
         game.set_use_system_theme(false);
         Config::write_bool("MasterWord"sv, ""sv, "use_system_theme"sv, false);
     });

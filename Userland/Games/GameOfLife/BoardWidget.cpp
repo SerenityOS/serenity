@@ -422,18 +422,18 @@ void BoardWidget::setup_patterns()
         "OO..OOO"_string
     };
 
-    add_pattern("Blinker", make<Pattern>(move(blinker)));
-    add_pattern("Toad", make<Pattern>(move(toad)));
-    add_pattern("Glider", make<Pattern>(move(glider)));
-    add_pattern("Lightweight Spaceship", make<Pattern>(move(lightweight_spaceship)));
-    add_pattern("Middleweight Spaceship", make<Pattern>(move(middleweight_spaceship)));
-    add_pattern("Heavyweight Spaceship", make<Pattern>(move(heavyweight_spaceship)));
-    add_pattern("Infinite 1", make<Pattern>(move(infinite_1)));
-    add_pattern("Infinite 2", make<Pattern>(move(infinite_2)));
-    add_pattern("Infinite 3", make<Pattern>(move(infinite_3)));
-    add_pattern("R-Pentomino", make<Pattern>(move(r_pentomino)));
-    add_pattern("Diehard", make<Pattern>(move(diehard)));
-    add_pattern("Acorn", make<Pattern>(move(acorn)));
-    add_pattern("Simkin's Glider Gun", make<Pattern>(move(simkin_glider_gun)));
-    add_pattern("Gosper's Glider Gun", make<Pattern>(move(gosper_glider_gun)));
+    add_pattern("Blinker"_string, make<Pattern>(move(blinker)));
+    add_pattern("Toad"_string, make<Pattern>(move(toad)));
+    add_pattern("Glider"_string, make<Pattern>(move(glider)));
+    add_pattern("Lightweight Spaceship"_string, make<Pattern>(move(lightweight_spaceship)));
+    add_pattern("Middleweight Spaceship"_string, make<Pattern>(move(middleweight_spaceship)));
+    add_pattern("Heavyweight Spaceship"_string, make<Pattern>(move(heavyweight_spaceship)));
+    add_pattern("Infinite 1"_string, make<Pattern>(move(infinite_1)));
+    add_pattern("Infinite 2"_string, make<Pattern>(move(infinite_2)));
+    add_pattern("Infinite 3"_string, make<Pattern>(move(infinite_3)));
+    add_pattern("R-Pentomino"_string, make<Pattern>(move(r_pentomino)));
+    add_pattern("Diehard"_string, make<Pattern>(move(diehard)));
+    add_pattern("Acorn"_string, make<Pattern>(move(acorn)));
+    add_pattern("Simkin's Glider Gun"_string, make<Pattern>(move(simkin_glider_gun)));
+    add_pattern("Gosper's Glider Gun"_string, make<Pattern>(move(gosper_glider_gun)));
 }

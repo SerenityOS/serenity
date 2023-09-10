@@ -66,12 +66,12 @@ public:
         WindowLocal,
         ApplicationGlobal,
     };
-    static NonnullRefPtr<Action> create(DeprecatedString text, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(String text, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(String text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(String text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(String text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(String text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(String text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
     static NonnullRefPtr<Action> create_checkable(DeprecatedString text, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
     static NonnullRefPtr<Action> create_checkable(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
     static NonnullRefPtr<Action> create_checkable(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);

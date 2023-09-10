@@ -119,7 +119,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     Vector<DeprecatedString> const sorted_app_categories = TRY(discover_apps_and_categories());
     auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"_string); // HIGH VOLTAGE SIGN
 
-    system_menu->add_action(GUI::Action::create("&About SerenityOS", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("&About SerenityOS"_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/About"sv);
     }));
 
@@ -175,7 +175,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         }
 
         auto parent_menu = app_category_menus.get(app.category).value_or(system_menu.ptr());
-        parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier, &window](auto&) {
+        parent_menu->add_action(GUI::Action::create(TRY(String::from_deprecated_string(app.name)), icon, [app_identifier, &window](auto&) {
             dbgln("Activated app with ID {}", app_identifier);
             auto& app = g_apps[app_identifier];
             StringView executable;
@@ -241,19 +241,19 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         }
     };
 
-    system_menu->add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("&Settings"_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/Settings"sv);
     }));
 
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("&Help", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("&Help"_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/Help"sv);
     }));
-    system_menu->add_action(GUI::Action::create("&Run...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-run.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("&Run..."_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-run.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/Run"sv, ReadonlySpan<StringView> {}, Core::StandardPaths::home_directory());
     }));
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("E&xit...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("E&xit..."_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv)), [&](auto&) {
         if (auto command = ShutdownDialog::show(); command.has_value())
             GUI::Process::spawn_or_show_error(&window, command->executable, command->arguments);
     }));

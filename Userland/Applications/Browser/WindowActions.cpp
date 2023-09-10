@@ -26,7 +26,7 @@ WindowActions::WindowActions(GUI::Window& window)
     VERIFY(!s_the);
     s_the = this;
     m_create_new_tab_action = GUI::Action::create(
-        "&New Tab", { Mod_Ctrl, Key_T }, g_icon_bag.new_tab, [this](auto&) {
+        "&New Tab"_string, { Mod_Ctrl, Key_T }, g_icon_bag.new_tab, [this](auto&) {
             if (on_create_new_tab)
                 on_create_new_tab();
         },
@@ -34,7 +34,7 @@ WindowActions::WindowActions(GUI::Window& window)
     m_create_new_tab_action->set_status_tip("Open a new tab"_string);
 
     m_create_new_window_action = GUI::Action::create(
-        "&New Window", { Mod_Ctrl, Key_N }, g_icon_bag.new_window, [this](auto&) {
+        "&New Window"_string, { Mod_Ctrl, Key_N }, g_icon_bag.new_window, [this](auto&) {
             if (on_create_new_window) {
                 on_create_new_window();
             }
@@ -43,7 +43,7 @@ WindowActions::WindowActions(GUI::Window& window)
     m_create_new_window_action->set_status_tip("Open a new browser window"_string);
 
     m_next_tab_action = GUI::Action::create(
-        "&Next Tab", { Mod_Ctrl, Key_PageDown }, [this](auto&) {
+        "&Next Tab"_string, { Mod_Ctrl, Key_PageDown }, [this](auto&) {
             if (on_next_tab)
                 on_next_tab();
         },
@@ -51,7 +51,7 @@ WindowActions::WindowActions(GUI::Window& window)
     m_next_tab_action->set_status_tip("Switch to the next tab"_string);
 
     m_previous_tab_action = GUI::Action::create(
-        "&Previous Tab", { Mod_Ctrl, Key_PageUp }, [this](auto&) {
+        "&Previous Tab"_string, { Mod_Ctrl, Key_PageUp }, [this](auto&) {
             if (on_previous_tab)
                 on_previous_tab();
         },
@@ -60,7 +60,7 @@ WindowActions::WindowActions(GUI::Window& window)
 
     for (auto i = 0; i <= 7; ++i) {
         m_tab_actions.append(GUI::Action::create(
-            DeprecatedString::formatted("Tab {}", i + 1), { Mod_Ctrl, static_cast<KeyCode>(Key_1 + i) }, [this, i](auto&) {
+            String::formatted("Tab {}", i + 1).release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, static_cast<KeyCode>(Key_1 + i) }, [this, i](auto&) {
                 if (on_tabs[i])
                     on_tabs[i]();
             },
@@ -68,7 +68,7 @@ WindowActions::WindowActions(GUI::Window& window)
         m_tab_actions.last()->set_status_tip(String::formatted("Switch to tab {}", i + 1).release_value_but_fixme_should_propagate_errors());
     }
     m_tab_actions.append(GUI::Action::create(
-        "Last tab", { Mod_Ctrl, Key_9 }, [this](auto&) {
+        "Last tab"_string, { Mod_Ctrl, Key_9 }, [this](auto&) {
             if (on_tabs[8])
                 on_tabs[8]();
         },
