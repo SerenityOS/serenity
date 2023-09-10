@@ -58,16 +58,18 @@ void SVGTextPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto child_text_content = dom_node.child_text_content();
 
-    auto transform = layout_box().layout_transform();
-    if (!transform.has_value())
+    auto maybe_transform = layout_box().layout_transform();
+    if (!maybe_transform.has_value())
         return;
+
+    auto transform = Gfx::AffineTransform(context.svg_transform()).multiply(*maybe_transform);
 
     // FIXME: Support arbitrary path transforms for fonts.
     // FIMXE: This assumes transform->x_scale() == transform->y_scale().
-    auto& scaled_font = layout_node().scaled_font(static_cast<float>(context.device_pixels_per_css_pixel()) * transform->x_scale());
+    auto& scaled_font = layout_node().scaled_font(static_cast<float>(context.device_pixels_per_css_pixel()) * transform.x_scale());
 
     Utf8View text_content { child_text_content };
-    auto text_offset = context.floored_device_point(dom_node.get_offset().transformed(*transform).to_type<CSSPixels>());
+    auto text_offset = context.floored_device_point(dom_node.get_offset().transformed(transform).to_type<CSSPixels>());
 
     // FIXME: Once SVGFormattingContext does text layout this logic should move there.
     // https://svgwg.org/svg2-draft/text.html#TextAnchoringProperties

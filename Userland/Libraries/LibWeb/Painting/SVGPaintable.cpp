@@ -7,6 +7,7 @@
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/Painting/SVGPaintable.h>
+#include <LibWeb/SVG/SVGMaskElement.h>
 
 namespace Web::Painting {
 

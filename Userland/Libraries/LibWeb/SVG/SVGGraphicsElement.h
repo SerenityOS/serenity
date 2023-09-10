@@ -46,6 +46,8 @@ public:
     Optional<Gfx::PaintStyle const&> fill_paint_style(SVGPaintContext const&) const;
     Optional<Gfx::PaintStyle const&> stroke_paint_style(SVGPaintContext const&) const;
 
+    JS::GCPtr<SVG::SVGMaskElement const> mask() const;
+
     Optional<ViewBox> view_box() const;
 
 protected:
@@ -61,6 +63,19 @@ protected:
     Optional<Gfx::PaintStyle const&> svg_paint_computed_value_to_gfx_paint_style(SVGPaintContext const& paint_context, Optional<CSS::SVGPaint> const& paint_value) const;
 
     Gfx::AffineTransform m_transform = {};
+
+    template<typename T>
+    JS::GCPtr<T> try_resolve_url_to(AK::URL const& url) const
+    {
+        if (!url.fragment().has_value())
+            return {};
+        auto node = document().get_element_by_id(*url.fragment());
+        if (!node)
+            return {};
+        if (is<T>(*node))
+            return static_cast<T&>(*node);
+        return {};
+    }
 
 private:
     virtual bool is_svg_graphics_element() const final { return true; }

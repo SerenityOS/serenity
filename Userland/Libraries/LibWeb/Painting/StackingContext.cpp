@@ -19,8 +19,10 @@
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/SVGPaintable.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/Painting/TableBordersPainting.h>
+#include <LibWeb/SVG/SVGMaskElement.h>
 
 namespace Web::Painting {
 
@@ -434,6 +436,27 @@ void StackingContext::paint(PaintContext& context) const
     auto opacity = paintable_box().computed_values().opacity();
     if (opacity == 0.0f)
         return;
+
+    if (auto masking_area = paintable_box().get_masking_area(); masking_area.has_value()) {
+        // TODO: Support masks and CSS transforms at the same time.
+        // Note: Currently only SVG masking is implemented (which does not use CSS transforms anyway).
+        if (masking_area->is_empty())
+            return;
+        auto paint_rect = context.enclosing_device_rect(*masking_area);
+        auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, paint_rect.size().to_type<int>());
+        if (bitmap_or_error.is_error())
+            return;
+        auto bitmap = bitmap_or_error.release_value();
+        {
+            Gfx::Painter painter(bitmap);
+            painter.translate(-paint_rect.location().to_type<int>());
+            auto paint_context = context.clone(painter);
+            paint_internal(paint_context);
+        }
+        paintable_box().apply_mask(context, bitmap, *masking_area);
+        context.painter().blit(paint_rect.location().to_type<int>(), *bitmap, bitmap->rect(), opacity);
+        return;
+    }
 
     auto affine_transform = affine_transform_matrix();
     auto translation = context.rounded_device_point(affine_transform.translation().to_type<CSSPixels>()).to_type<int>().to_type<float>();
