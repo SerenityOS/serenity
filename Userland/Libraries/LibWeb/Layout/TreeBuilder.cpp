@@ -411,6 +411,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         flex_wrapper->append_child(*content_box_wrapper);
 
         parent.append_child(*flex_wrapper);
+        parent.set_children_are_inline(false);
     }
 
     return {};
