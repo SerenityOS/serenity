@@ -51,6 +51,8 @@
 
 - (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme;
 
+- (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument;
+
 - (void)viewSource;
 
 @end

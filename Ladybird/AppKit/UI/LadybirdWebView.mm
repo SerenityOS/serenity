@@ -146,6 +146,11 @@ struct HideCursor {
     m_web_view_bridge->set_preferred_color_scheme(color_scheme);
 }
 
+- (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument
+{
+    m_web_view_bridge->debug_request(request, argument);
+}
+
 - (void)viewSource
 {
     m_web_view_bridge->get_source();

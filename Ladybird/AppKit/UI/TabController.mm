@@ -7,6 +7,8 @@
 #include <LibWebView/History.h>
 
 #import <Application/ApplicationDelegate.h>
+#import <LibWebView/UserAgent.h>
+#import <LibWeb/Loader/ResourceLoader.h>
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
@@ -36,6 +38,8 @@ enum class IsHistoryNavigation {
 
     WebView::History m_history;
     IsHistoryNavigation m_is_history_navigation;
+
+    TabSettings m_settings;
 }
 
 @property (nonatomic, strong) NSToolbar* toolbar;
@@ -72,6 +76,7 @@ enum class IsHistoryNavigation {
         [self.toolbar setSizeMode:NSToolbarSizeModeRegular];
 
         m_is_history_navigation = IsHistoryNavigation::No;
+        m_settings = {};
     }
 
     return self;
@@ -158,6 +163,15 @@ enum class IsHistoryNavigation {
     [self updateNavigationButtonStates];
 }
 
+- (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument
+{
+    if (request == "dump-history") {
+        m_history.dump();
+    } else {
+        [[[self tab] web_view] debugRequest:request argument:argument];
+    }
+}
+
 - (void)viewSource:(id)sender
 {
     [[[self tab] web_view] viewSource];
@@ -199,6 +213,100 @@ enum class IsHistoryNavigation {
 - (void)showTabOverview:(id)sender
 {
     [self.window toggleTabOverview:sender];
+}
+
+- (void)dumpDOMTree:(id)sender
+{
+    [self debugRequest:"dump-dom-tree" argument:""];
+}
+
+- (void)dumpLayoutTree:(id)sender
+{
+    [self debugRequest:"dump-layout-tree" argument:""];
+}
+
+- (void)dumpPaintTree:(id)sender
+{
+    [self debugRequest:"dump-paint-tree" argument:""];
+}
+
+- (void)dumpStackingContextTree:(id)sender
+{
+    [self debugRequest:"dump-stacking-context-tree" argument:""];
+}
+
+- (void)dumpStyleSheets:(id)sender
+{
+    [self debugRequest:"dump-style-sheets" argument:""];
+}
+
+- (void)dumpAllResolvedStyles:(id)sender
+{
+    [self debugRequest:"dump-all-resolved-styles" argument:""];
+}
+
+- (void)dumpHistory:(id)sender
+{
+    [self debugRequest:"dump-history" argument:""];
+}
+
+- (void)dumpLocalStorage:(id)sender
+{
+    [self debugRequest:"dump-local-storage" argument:""];
+}
+
+- (void)toggleLineBoxBorders:(id)sender
+{
+    m_settings.should_show_line_box_borders = !m_settings.should_show_line_box_borders;
+    [self debugRequest:"set-line-box-borders" argument:m_settings.should_show_line_box_borders ? "on" : "off"];
+}
+
+- (void)collectGarbage:(id)sender
+{
+    [self debugRequest:"collect-garbage" argument:""];
+}
+
+- (void)dumpGCGraph:(id)sender
+{
+    [self debugRequest:"dump-gc-graph" argument:""];
+}
+
+- (void)clearCache:(id)sender
+{
+    [self debugRequest:"clear-cache" argument:""];
+}
+
+- (void)toggleScripting:(id)sender
+{
+    m_settings.scripting_enabled = !m_settings.scripting_enabled;
+    [self debugRequest:"scripting" argument:m_settings.scripting_enabled ? "on" : "off"];
+}
+
+- (void)togglePopupBlocking:(id)sender
+{
+    m_settings.block_popups = !m_settings.block_popups;
+    [self debugRequest:"block-pop-ups" argument:m_settings.block_popups ? "on" : "off"];
+}
+
+- (void)toggleSameOriginPolicy:(id)sender
+{
+    m_settings.same_origin_policy_enabled = !m_settings.same_origin_policy_enabled;
+    [self debugRequest:"same-origin-policy" argument:m_settings.same_origin_policy_enabled ? "on" : "off"];
+}
+
+- (void)setUserAgentSpoof:(NSMenuItem*)sender
+{
+    DeprecatedString const user_agent_name = [[sender title] UTF8String];
+    DeprecatedString user_agent = "";
+    if (user_agent_name == "Disabled"sv) {
+        user_agent = Web::default_user_agent;
+    } else {
+        user_agent = WebView::user_agents.get(user_agent_name).value();
+    }
+    m_settings.user_agent_name = user_agent_name;
+
+    [self debugRequest:"spoof-user-agent" argument:user_agent];
+    [self debugRequest:"clear-cache" argument:""]; // clear the cache to ensure requests are re-done with the new user agent
 }
 
 #pragma mark - Properties
@@ -354,6 +462,24 @@ enum class IsHistoryNavigation {
         [[[self tab] web_view] handleResize];
     }
 }
+
+- (BOOL)validateMenuItem:(NSMenuItem*)item
+{
+    if ([item action] == @selector(toggleLineBoxBorders:)) {
+        [item setState:m_settings.should_show_line_box_borders ? NSControlStateValueOn : NSControlStateValueOff];
+    } else if ([item action] == @selector(toggleScripting:)) {
+        [item setState:m_settings.scripting_enabled ? NSControlStateValueOn : NSControlStateValueOff];
+    } else if ([item action] == @selector(togglePopupBlocking:)) {
+        [item setState:m_settings.block_popups ? NSControlStateValueOn : NSControlStateValueOff];
+    } else if ([item action] == @selector(toggleSameOriginPolicy:)) {
+        [item setState:m_settings.same_origin_policy_enabled ? NSControlStateValueOn : NSControlStateValueOff];
+    } else if ([item action] == @selector(setUserAgentSpoof:)) {
+        [item setState:(m_settings.user_agent_name == [[item title] UTF8String]) ? NSControlStateValueOn : NSControlStateValueOff];
+    }
+
+    return YES;
+}
+
 
 #pragma mark - NSToolbarDelegate
 
