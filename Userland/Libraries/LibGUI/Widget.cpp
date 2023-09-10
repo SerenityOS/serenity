@@ -1107,11 +1107,6 @@ Gfx::IntRect Widget::relative_non_grabbable_rect() const
     return rect;
 }
 
-void Widget::set_tooltip_deprecated(DeprecatedString tooltip)
-{
-    set_tooltip(String::from_deprecated_string(move(tooltip)).release_value_but_fixme_should_propagate_errors());
-}
-
 void Widget::set_tooltip(String tooltip)
 {
     m_tooltip = move(tooltip);

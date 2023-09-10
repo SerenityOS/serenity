@@ -163,8 +163,6 @@ public:
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }
     void set_tooltip(String tooltip);
-    DeprecatedString tooltip_deprecated() const { return tooltip().to_deprecated_string(); }
-    void set_tooltip_deprecated(DeprecatedString);
 
     bool is_auto_focusable() const { return m_auto_focusable; }
     void set_auto_focusable(bool auto_focusable) { m_auto_focusable = auto_focusable; }
