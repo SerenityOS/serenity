@@ -236,25 +236,28 @@ static Optional<DeprecatedString> record_namespace_information(DOM::Element cons
 
         // 1. Let attribute namespace be the value of attr's namespaceURI value.
         auto const& attribute_namespace = attribute->namespace_uri();
+        DeprecatedFlyString deprecated_attribute_namespace;
+        if (attribute_namespace.has_value())
+            deprecated_attribute_namespace = attribute_namespace->to_deprecated_fly_string();
 
         // 2. Let attribute prefix be the value of attr's prefix.
         auto const& attribute_prefix = attribute->prefix();
 
         // 3. If the attribute namespace is the XMLNS namespace, then:
-        if (attribute_namespace == Namespace::XMLNS) {
+        if (deprecated_attribute_namespace == Namespace::XMLNS) {
             // 1. If attribute prefix is null, then attr is a default namespace declaration. Set the default namespace attr value to attr's value and stop running these steps,
             //    returning to Main to visit the next attribute.
-            if (attribute_prefix.is_null()) {
-                default_namespace_attribute_value = attribute->value();
+            if (!attribute_prefix.has_value()) {
+                default_namespace_attribute_value = attribute->value().to_deprecated_string();
                 continue;
             }
 
             // 2. Otherwise, the attribute prefix is not null and attr is a namespace prefix definition. Run the following steps:
             // 1. Let prefix definition be the value of attr's localName.
-            auto const& prefix_definition = attribute->local_name();
+            auto const& prefix_definition = attribute->local_name().to_deprecated_fly_string();
 
             // 2. Let namespace definition be the value of attr's value.
-            auto namespace_definition = attribute->value();
+            auto namespace_definition = attribute->value().to_deprecated_string();
 
             // 3. If namespace definition is the XML namespace, then stop running these steps, and return to Main to visit the next attribute.
             if (namespace_definition == Namespace::XML)
@@ -272,7 +275,7 @@ static Optional<DeprecatedString> record_namespace_information(DOM::Element cons
             add_prefix_to_namespace_prefix_map(namespace_prefix_map, prefix_definition, namespace_definition);
 
             // 7. Add the value of prefix definition as a new key to the local prefixes map, with the namespace definition as the key's value replacing the value of null with the empty string if applicable.
-            local_prefix_map.set(prefix_definition, namespace_definition.is_null() ? DeprecatedString::empty() : namespace_definition);
+            local_prefix_map.set(prefix_definition, namespace_definition.is_null() ? DeprecatedString::empty() : DeprecatedString { namespace_definition });
         }
     }
 
@@ -331,11 +334,15 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element_attributes(DOM::E
         auto const* attribute = element.attributes()->item(attribute_index);
         VERIFY(attribute);
 
+        DeprecatedFlyString deprecated_attribute_namespace;
+        if (attribute->namespace_uri().has_value())
+            deprecated_attribute_namespace = attribute->namespace_uri()->to_deprecated_fly_string();
+
         // 1. If the require well-formed flag is set (its value is true), and the localname set contains a tuple whose values match those of a new tuple consisting of attr's namespaceURI attribute and localName attribute,
         //      then throw an exception; the serialization of this attr would fail to produce a well-formed element serialization.
         if (require_well_formed == RequireWellFormed::Yes) {
-            auto local_name_set_iterator = local_name_set.find_if([&attribute](LocalNameSetEntry const& entry) {
-                return entry.namespace_uri == attribute->namespace_uri() && entry.local_name == attribute->local_name();
+            auto local_name_set_iterator = local_name_set.find_if([&attribute, &deprecated_attribute_namespace](LocalNameSetEntry const& entry) {
+                return entry.namespace_uri == deprecated_attribute_namespace && entry.local_name == attribute->local_name().to_deprecated_fly_string();
             });
 
             if (local_name_set_iterator != local_name_set.end())
@@ -344,8 +351,8 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element_attributes(DOM::E
 
         // 2. Create a new tuple consisting of attr's namespaceURI attribute and localName attribute, and add it to the localname set.
         LocalNameSetEntry new_local_name_set_entry {
-            .namespace_uri = attribute->namespace_uri(),
-            .local_name = attribute->local_name(),
+            .namespace_uri = deprecated_attribute_namespace,
+            .local_name = attribute->local_name().to_deprecated_fly_string(),
         };
 
         local_name_set.append(move(new_local_name_set_entry));
@@ -357,41 +364,45 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element_attributes(DOM::E
         Optional<DeprecatedString> candidate_prefix;
 
         // 5. If attribute namespace is not null, then run these sub-steps:
-        if (!attribute_namespace.is_null()) {
+        if (attribute_namespace.has_value()) {
             // 1. Let candidate prefix be the result of retrieving a preferred prefix string from map given namespace attribute namespace with preferred prefix being attr's prefix value.
-            candidate_prefix = retrieve_a_preferred_prefix_string(attribute->prefix(), namespace_prefix_map, attribute_namespace);
+            DeprecatedString deprecated_prefix;
+            if (attribute->prefix().has_value())
+                deprecated_prefix = attribute->prefix()->to_deprecated_fly_string();
+
+            candidate_prefix = retrieve_a_preferred_prefix_string(deprecated_prefix, namespace_prefix_map, deprecated_attribute_namespace);
 
             // 2. If the value of attribute namespace is the XMLNS namespace, then run these steps:
-            if (attribute_namespace == Namespace::XMLNS) {
+            if (deprecated_attribute_namespace == Namespace::XMLNS) {
                 // 1. If any of the following are true, then stop running these steps and goto Loop to visit the next attribute:
                 // - the attr's value is the XML namespace;
-                if (attribute->value() == Namespace::XML)
+                if (attribute->value().to_deprecated_string() == Namespace::XML)
                     continue;
 
                 // - the attr's prefix is null and the ignore namespace definition attribute flag is true (the Element's default namespace attribute should be skipped);
-                if (attribute->prefix().is_null() && ignore_namespace_definition_attribute)
+                if (!attribute->prefix().has_value() && ignore_namespace_definition_attribute)
                     continue;
 
                 // - the attr's prefix is not null and either
-                if (!attribute->prefix().is_null()) {
+                if (attribute->prefix().has_value()) {
                     // - the attr's localName is not a key contained in the local prefixes map, or
-                    auto name_in_local_prefix_map_iterator = local_prefixes_map.find(attribute->local_name());
+                    auto name_in_local_prefix_map_iterator = local_prefixes_map.find(attribute->local_name().to_deprecated_fly_string());
                     if (name_in_local_prefix_map_iterator == local_prefixes_map.end())
                         continue;
 
                     // - the attr's localName is present in the local prefixes map but the value of the key does not match attr's value
-                    if (name_in_local_prefix_map_iterator->value != attribute->value())
+                    if (name_in_local_prefix_map_iterator->value != attribute->value().to_deprecated_string())
                         continue;
                 }
 
                 // and furthermore that the attr's localName (as the prefix to find) is found in the namespace prefix map given the namespace consisting of the attr's value
                 // (the current namespace prefix definition was exactly defined previously--on an ancestor element not the current element whose attributes are being processed).
-                if (prefix_is_in_prefix_map(attribute->local_name(), namespace_prefix_map, attribute->value()))
+                if (prefix_is_in_prefix_map(attribute->local_name().to_deprecated_fly_string(), namespace_prefix_map, attribute->value().to_deprecated_string()))
                     continue;
 
                 // 2. If the require well-formed flag is set (its value is true), and the value of attr's value attribute matches the XMLNS namespace,
                 //    then throw an exception; the serialization of this attribute would produce invalid XML because the XMLNS namespace is reserved and cannot be applied as an element's namespace via XML parsing.
-                if (require_well_formed == RequireWellFormed::Yes && attribute->value() == Namespace::XMLNS)
+                if (require_well_formed == RequireWellFormed::Yes && attribute->value().to_deprecated_string() == Namespace::XMLNS)
                     return WebIDL::InvalidStateError::create(realm, "The XMLNS namespace cannot be used as an element's namespace"_fly_string);
 
                 // 3. If the require well-formed flag is set (its value is true), and the value of attr's value attribute is the empty string,
@@ -407,7 +418,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element_attributes(DOM::E
             // 3. Otherwise, the attribute namespace in not the XMLNS namespace. Run these steps:
             else {
                 // 1. Let candidate prefix be the result of generating a prefix providing map, attribute namespace, and prefix index as input.
-                candidate_prefix = generate_a_prefix(namespace_prefix_map, attribute_namespace, prefix_index);
+                candidate_prefix = generate_a_prefix(namespace_prefix_map, deprecated_attribute_namespace, prefix_index);
 
                 // 2. Append the following to result, in the order listed:
                 // 1. " " (U+0020 SPACE);
@@ -422,7 +433,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element_attributes(DOM::E
                 result.append("=\""sv);
 
                 // 5. The result of serializing an attribute value given attribute namespace and the require well-formed flag as input
-                result.append(TRY(serialize_an_attribute_value(attribute_namespace, require_well_formed)));
+                result.append(TRY(serialize_an_attribute_value(deprecated_attribute_namespace, require_well_formed)));
 
                 // 6. """ (U+0022 QUOTATION MARK).
                 result.append('"');
@@ -439,12 +450,12 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element_attributes(DOM::E
         // 8. If the require well-formed flag is set (its value is true), and this attr's localName attribute contains the character ":" (U+003A COLON)
         //    or does not match the XML Name production or equals "xmlns" and attribute namespace is null, then throw an exception; the serialization of this attr would not be a well-formed attribute.
         if (require_well_formed == RequireWellFormed::Yes) {
-            if (attribute->local_name().view().contains(':'))
+            if (attribute->local_name().bytes_as_string_view().contains(':'))
                 return WebIDL::InvalidStateError::create(realm, "Attribute's local name contains a colon"_fly_string);
 
             // FIXME: Check attribute's local name against the XML Name production.
 
-            if (attribute->local_name() == "xmlns"sv && attribute_namespace.is_null())
+            if (attribute->local_name() == "xmlns"sv && deprecated_attribute_namespace.is_null())
                 return WebIDL::InvalidStateError::create(realm, "Attribute's local name is 'xmlns' and the attribute has no namespace"_fly_string);
         }
 
@@ -456,7 +467,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element_attributes(DOM::E
         result.append("=\""sv);
 
         // 3. The result of serializing an attribute value given attr's value attribute and the require well-formed flag as input;
-        result.append(TRY(serialize_an_attribute_value(attribute->value(), require_well_formed)));
+        result.append(TRY(serialize_an_attribute_value(attribute->value().to_deprecated_string(), require_well_formed)));
 
         // 4. """ (U+0022 QUOTATION MARK).
         result.append('"');

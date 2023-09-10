@@ -109,7 +109,7 @@ JS::GCPtr<DOM::Attr> prescan_get_attribute(DOM::Document& document, ByteBuffer c
         } else if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ')
             goto spaces;
         else if (input[position] == '/' || input[position] == '>')
-            return *DOM::Attr::create(document, attribute_name.to_deprecated_string(), "");
+            return *DOM::Attr::create(document, MUST(attribute_name.to_string()), String {});
         else
             attribute_name.append_as_lowercase(input[position]);
         ++position;
@@ -121,7 +121,7 @@ spaces:
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
     if (input[position] != '=')
-        return DOM::Attr::create(document, attribute_name.to_deprecated_string(), "");
+        return DOM::Attr::create(document, MUST(attribute_name.to_string()), String {});
     ++position;
 
 value:
@@ -134,13 +134,13 @@ value:
         ++position;
         for (; !prescan_should_abort(input, position); ++position) {
             if (input[position] == quote_character)
-                return DOM::Attr::create(document, attribute_name.to_deprecated_string(), attribute_value.to_deprecated_string());
+                return DOM::Attr::create(document, MUST(attribute_name.to_string()), MUST(attribute_value.to_string()));
             else
                 attribute_value.append_as_lowercase(input[position]);
         }
         return {};
     } else if (input[position] == '>')
-        return DOM::Attr::create(document, attribute_name.to_deprecated_string(), "");
+        return DOM::Attr::create(document, MUST(attribute_name.to_string()), String {});
     else
         attribute_value.append_as_lowercase(input[position]);
 
@@ -150,7 +150,7 @@ value:
 
     for (; !prescan_should_abort(input, position); ++position) {
         if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ' || input[position] == '>')
-            return DOM::Attr::create(document, attribute_name.to_deprecated_string(), attribute_value.to_deprecated_string());
+            return DOM::Attr::create(document, MUST(attribute_name.to_string()), MUST(attribute_value.to_string()));
         else
             attribute_value.append_as_lowercase(input[position]);
     }
@@ -188,7 +188,7 @@ Optional<DeprecatedString> run_prescan_byte_stream_algorithm(DOM::Document& docu
             && (input[position + 4] == 'A' || input[position + 4] == 'a')
             && prescan_is_whitespace_or_slash(input[position + 5])) {
             position += 6;
-            Vector<DeprecatedString> attribute_list {};
+            Vector<FlyString> attribute_list {};
             bool got_pragma = false;
             Optional<bool> need_pragma {};
             Optional<DeprecatedString> charset {};
@@ -199,13 +199,13 @@ Optional<DeprecatedString> run_prescan_byte_stream_algorithm(DOM::Document& docu
                     break;
                 if (attribute_list.contains_slow(attribute->name()))
                     continue;
-                auto& attribute_name = attribute->name();
+                auto const& attribute_name = attribute->name();
                 attribute_list.append(attribute->name());
 
                 if (attribute_name == "http-equiv") {
                     got_pragma = attribute->value() == "content-type";
                 } else if (attribute_name == "content") {
-                    auto encoding = extract_character_encoding_from_meta_element(attribute->value());
+                    auto encoding = extract_character_encoding_from_meta_element(attribute->value().to_deprecated_string());
                     if (encoding.has_value() && !charset.has_value()) {
                         charset = encoding.value();
                         need_pragma = true;

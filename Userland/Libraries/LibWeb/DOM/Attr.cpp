@@ -15,12 +15,12 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<Attr> Attr::create(Document& document, DeprecatedFlyString local_name, DeprecatedString value, Element* owner_element)
+JS::NonnullGCPtr<Attr> Attr::create(Document& document, FlyString local_name, String value, Element* owner_element)
 {
-    return document.heap().allocate<Attr>(document.realm(), document, QualifiedName(move(local_name), {}, {}), move(value), owner_element);
+    return document.heap().allocate<Attr>(document.realm(), document, QualifiedName(move(local_name), Optional<FlyString> {}, Optional<FlyString> {}), move(value), owner_element);
 }
 
-JS::NonnullGCPtr<Attr> Attr::create(Document& document, QualifiedName qualified_name, DeprecatedString value, Element* owner_element)
+JS::NonnullGCPtr<Attr> Attr::create(Document& document, QualifiedName qualified_name, String value, Element* owner_element)
 {
     return document.heap().allocate<Attr>(document.realm(), document, move(qualified_name), move(value), owner_element);
 }
@@ -30,7 +30,7 @@ JS::NonnullGCPtr<Attr> Attr::clone(Document& document)
     return *heap().allocate<Attr>(realm(), document, m_qualified_name, m_value, nullptr);
 }
 
-Attr::Attr(Document& document, QualifiedName qualified_name, DeprecatedString value, Element* owner_element)
+Attr::Attr(Document& document, QualifiedName qualified_name, String value, Element* owner_element)
     : Node(document, NodeType::ATTRIBUTE_NODE)
     , m_qualified_name(move(qualified_name))
     , m_value(move(value))
@@ -66,7 +66,7 @@ void Attr::set_owner_element(Element* owner_element)
 }
 
 // https://dom.spec.whatwg.org/#set-an-existing-attribute-value
-void Attr::set_value(DeprecatedString value)
+void Attr::set_value(String value)
 {
     // 1. If attribute’s element is null, then set attribute’s value to value.
     if (!owner_element()) {
@@ -79,7 +79,7 @@ void Attr::set_value(DeprecatedString value)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-change
-void Attr::change_attribute(DeprecatedString value)
+void Attr::change_attribute(String value)
 {
     // 1. Let oldValue be attribute’s value.
     auto old_value = move(m_value);
@@ -88,14 +88,18 @@ void Attr::change_attribute(DeprecatedString value)
     m_value = move(value);
 
     // 3. Handle attribute changes for attribute with attribute’s element, oldValue, and value.
-    handle_attribute_changes(*owner_element(), old_value, m_value);
+    handle_attribute_changes(*owner_element(), old_value.to_deprecated_string(), m_value.to_deprecated_string());
 }
 
 // https://dom.spec.whatwg.org/#handle-attribute-changes
 void Attr::handle_attribute_changes(Element& element, DeprecatedString const& old_value, DeprecatedString const& new_value)
 {
+    DeprecatedString deprecated_namespace_uri;
+    if (namespace_uri().has_value())
+        deprecated_namespace_uri = namespace_uri().value().to_deprecated_fly_string();
+
     // 1. Queue a mutation record of "attributes" for element with attribute’s local name, attribute’s namespace, oldValue, « », « », null, and null.
-    element.queue_mutation_record(MutationType::attributes, local_name(), namespace_uri(), old_value, {}, {}, nullptr, nullptr);
+    element.queue_mutation_record(MutationType::attributes, local_name().to_deprecated_fly_string(), deprecated_namespace_uri, old_value, {}, {}, nullptr, nullptr);
 
     // 2. If element is custom, then enqueue a custom element callback reaction with element, callback name "attributeChangedCallback", and an argument list containing attribute’s local name, oldValue, newValue, and attribute’s namespace.
     if (element.is_custom()) {
@@ -105,13 +109,13 @@ void Attr::handle_attribute_changes(Element& element, DeprecatedString const& ol
         arguments.append(JS::PrimitiveString::create(vm, local_name()));
         arguments.append(old_value.is_null() ? JS::js_null() : JS::PrimitiveString::create(vm, old_value));
         arguments.append(new_value.is_null() ? JS::js_null() : JS::PrimitiveString::create(vm, new_value));
-        arguments.append(namespace_uri().is_null() ? JS::js_null() : JS::PrimitiveString::create(vm, namespace_uri()));
+        arguments.append(!namespace_uri().has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, namespace_uri().value()));
 
         element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::attributeChangedCallback, move(arguments));
     }
 
     // 3. Run the attribute change steps with element, attribute’s local name, oldValue, newValue, and attribute’s namespace.
-    element.run_attribute_change_steps(local_name(), old_value, new_value, namespace_uri());
+    element.run_attribute_change_steps(local_name().to_deprecated_fly_string(), old_value, new_value, deprecated_namespace_uri);
 }
 
 }

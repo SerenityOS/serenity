@@ -461,7 +461,7 @@ class PlaceholderElement final : public HTMLDivElement {
 
 public:
     PlaceholderElement(DOM::Document& document)
-        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""sv, Namespace::HTML })
+        : HTMLDivElement(document, DOM::QualifiedName { MUST(FlyString::from_deprecated_fly_string(HTML::TagNames::div)), ""sv, Namespace::HTML })
     {
     }
     virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::Placeholder; }

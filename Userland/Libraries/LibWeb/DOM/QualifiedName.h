@@ -8,31 +8,48 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
+#include <AK/Optional.h>
 
 namespace Web::DOM {
 
 class QualifiedName {
 public:
-    QualifiedName(DeprecatedFlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_);
+    QualifiedName(FlyString const& local_name, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_);
+    QualifiedName(FlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_);
 
-    DeprecatedFlyString const& local_name() const { return m_impl->local_name; }
-    DeprecatedFlyString const& prefix() const { return m_impl->prefix; }
-    DeprecatedFlyString const& namespace_() const { return m_impl->namespace_; }
+    FlyString const& local_name() const { return m_impl->local_name; }
+    Optional<FlyString> const& prefix() const { return m_impl->prefix; }
+    Optional<FlyString> const& namespace_() const { return m_impl->namespace_; }
 
-    DeprecatedFlyString const& as_string() const { return m_impl->as_string; }
+    DeprecatedFlyString deprecated_prefix() const
+    {
+        if (!m_impl->prefix.has_value())
+            return {};
+        return m_impl->prefix->to_deprecated_fly_string();
+    }
+
+    DeprecatedFlyString deprecated_namespace_() const
+    {
+        if (!m_impl->namespace_.has_value())
+            return {};
+        return m_impl->namespace_->to_deprecated_fly_string();
+    }
+
+    FlyString const& as_string() const { return m_impl->as_string; }
 
     struct Impl : public RefCounted<Impl> {
-        Impl(DeprecatedFlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_);
+        Impl(FlyString const& local_name, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_);
         ~Impl();
 
         void make_internal_string();
-        DeprecatedFlyString local_name;
-        DeprecatedFlyString prefix;
-        DeprecatedFlyString namespace_;
-        DeprecatedFlyString as_string;
+        FlyString local_name;
+        Optional<FlyString> prefix;
+        Optional<FlyString> namespace_;
+        FlyString as_string;
     };
 
-    void set_prefix(DeprecatedFlyString const& value);
+    void set_prefix(Optional<FlyString> value);
 
 private:
     NonnullRefPtr<Impl> m_impl;
