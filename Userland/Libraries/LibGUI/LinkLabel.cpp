@@ -118,9 +118,9 @@ void LinkLabel::did_change_text()
 void LinkLabel::update_tooltip_if_needed()
 {
     if (width() < font().width(text())) {
-        set_tooltip_deprecated(text().to_deprecated_string());
+        set_tooltip(text());
     } else {
-        set_tooltip_deprecated({});
+        set_tooltip({});
     }
 }
 
