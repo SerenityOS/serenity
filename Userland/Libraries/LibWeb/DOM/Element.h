@@ -74,21 +74,22 @@ class Element
 public:
     virtual ~Element() override;
 
-    DeprecatedFlyString const& qualified_name() const { return m_qualified_name.as_string(); }
+    DeprecatedFlyString qualified_name() const { return m_qualified_name.as_string().to_deprecated_fly_string(); }
     DeprecatedString const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
+
     virtual FlyString node_name() const final { return MUST(FlyString::from_deprecated_fly_string(html_uppercased_qualified_name())); }
-    DeprecatedFlyString const& local_name() const { return m_qualified_name.local_name(); }
+    DeprecatedFlyString local_name() const { return m_qualified_name.local_name().to_deprecated_fly_string(); }
 
     // NOTE: This is for the JS bindings
     DeprecatedString const& tag_name() const { return html_uppercased_qualified_name(); }
 
-    DeprecatedFlyString const& prefix() const { return m_qualified_name.prefix(); }
+    DeprecatedFlyString prefix() const { return m_qualified_name.deprecated_prefix(); }
     void set_prefix(DeprecatedFlyString const& value);
 
-    DeprecatedFlyString const& namespace_() const { return m_qualified_name.namespace_(); }
+    DeprecatedFlyString namespace_() const { return m_qualified_name.deprecated_namespace_(); }
 
     // NOTE: This is for the JS bindings
-    DeprecatedFlyString const& namespace_uri() const { return namespace_(); }
+    DeprecatedFlyString namespace_uri() const { return namespace_(); }
 
     bool has_attribute(DeprecatedFlyString const& name) const;
     bool has_attribute_ns(DeprecatedFlyString namespace_, DeprecatedFlyString const& name) const;

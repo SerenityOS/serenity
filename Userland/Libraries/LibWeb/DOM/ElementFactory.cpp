@@ -272,7 +272,7 @@ bool is_unknown_html_element(DeprecatedFlyString const& tag_name)
 // https://html.spec.whatwg.org/#elements-in-the-dom:element-interface
 static JS::NonnullGCPtr<Element> create_html_element(JS::Realm& realm, Document& document, QualifiedName qualified_name)
 {
-    auto lowercase_tag_name = qualified_name.local_name().to_lowercase();
+    auto lowercase_tag_name = qualified_name.local_name().to_deprecated_fly_string().to_lowercase();
 
     if (lowercase_tag_name == HTML::TagNames::a)
         return realm.heap().allocate<HTML::HTMLAnchorElement>(realm, document, move(qualified_name));
@@ -426,7 +426,7 @@ static JS::NonnullGCPtr<Element> create_html_element(JS::Realm& realm, Document&
 
 static JS::GCPtr<SVG::SVGElement> create_svg_element(JS::Realm& realm, Document& document, QualifiedName qualified_name)
 {
-    auto const& local_name = qualified_name.local_name();
+    auto const& local_name = qualified_name.local_name().to_deprecated_fly_string();
 
     if (local_name == SVG::TagNames::svg)
         return realm.heap().allocate<SVG::SVGSVGElement>(realm, document, move(qualified_name));
@@ -481,7 +481,7 @@ static JS::GCPtr<SVG::SVGElement> create_svg_element(JS::Realm& realm, Document&
 
 static JS::GCPtr<MathML::MathMLElement> create_mathml_element(JS::Realm& realm, Document& document, QualifiedName qualified_name)
 {
-    auto const& local_name = MUST(FlyString::from_deprecated_fly_string(qualified_name.local_name()));
+    auto const& local_name = qualified_name.local_name();
 
     if (local_name.is_one_of(MathML::TagNames::annotation, MathML::TagNames::annotation_xml, MathML::TagNames::maction, MathML::TagNames::math, MathML::TagNames::merror, MathML::TagNames::mfrac, MathML::TagNames::mi, MathML::TagNames::mmultiscripts, MathML::TagNames::mn, MathML::TagNames::mo, MathML::TagNames::mover, MathML::TagNames::mpadded, MathML::TagNames::mphantom, MathML::TagNames::mprescripts, MathML::TagNames::mroot, MathML::TagNames::mrow, MathML::TagNames::ms, MathML::TagNames::mspace, MathML::TagNames::msqrt, MathML::TagNames::mstyle, MathML::TagNames::msub, MathML::TagNames::msubsup, MathML::TagNames::msup, MathML::TagNames::mtable, MathML::TagNames::mtd, MathML::TagNames::mtext, MathML::TagNames::mtr, MathML::TagNames::munder, MathML::TagNames::munderover, MathML::TagNames::semantics))
         return realm.heap().allocate<MathML::MathMLElement>(realm, document, move(qualified_name));
@@ -511,7 +511,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
         // 2. Set result to a new element that implements interface, with no attributes, namespace set to the HTML namespace,
         //    namespace prefix set to prefix, local name set to localName, custom element state set to "undefined", custom element definition set to null,
         //    is value set to is, and node document set to document.
-        auto element = create_html_element(realm, document, QualifiedName { local_name, prefix, Namespace::HTML });
+        auto element = create_html_element(realm, document, QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, Namespace::HTML });
 
         // 3. If the synchronous custom elements flag is set, then run this step while catching any exceptions:
         if (synchronous_custom_elements_flag) {
@@ -596,7 +596,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
 
                 // 2. Set result to a new element that implements the HTMLUnknownElement interface, with no attributes, namespace set to the HTML namespace, namespace prefix set to prefix,
                 //    local name set to localName, custom element state set to "failed", custom element definition set to null, is value set to null, and node document set to document.
-                JS::NonnullGCPtr<Element> element = realm.heap().allocate<HTML::HTMLUnknownElement>(realm, document, QualifiedName { local_name, prefix, Namespace::HTML });
+                JS::NonnullGCPtr<Element> element = realm.heap().allocate<HTML::HTMLUnknownElement>(realm, document, QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, Namespace::HTML });
                 element->set_custom_element_state(CustomElementState::Failed);
                 return element;
             }
@@ -607,7 +607,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
         // 2. Otherwise:
         // 1. Set result to a new element that implements the HTMLElement interface, with no attributes, namespace set to the HTML namespace, namespace prefix set to prefix,
         //    local name set to localName, custom element state set to "undefined", custom element definition set to null, is value set to null, and node document set to document.
-        auto element = realm.heap().allocate<HTML::HTMLElement>(realm, document, QualifiedName { local_name, prefix, Namespace::HTML });
+        auto element = realm.heap().allocate<HTML::HTMLElement>(realm, document, QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, Namespace::HTML });
         element->set_custom_element_state(CustomElementState::Undefined);
 
         // 2. Enqueue a custom element upgrade reaction given result and definition.
@@ -621,7 +621,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
     //       local name set to localName, custom element state set to "uncustomized", custom element definition set to null, is value set to is,
     //       and node document set to document.
 
-    auto qualified_name = QualifiedName { local_name, prefix, namespace_ };
+    auto qualified_name = QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, namespace_ };
 
     if (namespace_ == Namespace::HTML) {
         auto element = create_html_element(realm, document, move(qualified_name));

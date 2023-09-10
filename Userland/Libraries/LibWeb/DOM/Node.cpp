@@ -166,7 +166,7 @@ Optional<String> Node::text_content() const
 
     // If Attr node, return this's value.
     if (is<Attr>(*this))
-        return MUST(String::from_deprecated_string(static_cast<Attr const&>(*this).value()));
+        return static_cast<Attr const&>(*this).value();
 
     // Otherwise, return null
     return {};
@@ -196,7 +196,7 @@ void Node::set_text_content(Optional<String> const& maybe_content)
 
     // If Attr, set an existing attribute value with this and the given value.
     if (is<Attr>(*this)) {
-        static_cast<Attr&>(*this).set_value(content);
+        static_cast<Attr&>(*this).set_value(MUST(String::from_deprecated_string(content)));
     }
 
     // Otherwise, do nothing.
@@ -212,7 +212,7 @@ Optional<String> Node::node_value() const
 
     // If Attr, return this’s value.
     if (is<Attr>(this)) {
-        return MUST(String::from_deprecated_string(verify_cast<Attr>(this)->value()));
+        return verify_cast<Attr>(this)->value();
     }
 
     // If CharacterData, return this’s data.
@@ -233,7 +233,7 @@ void Node::set_node_value(Optional<String> const& maybe_value)
 
     // If Attr, set an existing attribute value with this and the given value.
     if (is<Attr>(this)) {
-        verify_cast<Attr>(this)->set_value(value.to_deprecated_string());
+        verify_cast<Attr>(this)->set_value(move(value));
     } else if (is<CharacterData>(this)) {
         // If CharacterData, replace data with node this, offset 0, count this’s length, and data the given value.
         verify_cast<CharacterData>(this)->set_data(value);

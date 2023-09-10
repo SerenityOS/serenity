@@ -9,10 +9,20 @@
 
 namespace Web::DOM {
 
+static unsigned hash_impl(FlyString const& local_name, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_)
+{
+    unsigned hash = local_name.hash();
+    if (prefix.has_value())
+        hash = pair_int_hash(hash, prefix->hash());
+    if (namespace_.has_value())
+        hash = pair_int_hash(hash, namespace_->hash());
+    return hash;
+}
+
 struct ImplTraits : public Traits<QualifiedName::Impl*> {
     static unsigned hash(QualifiedName::Impl* impl)
     {
-        return pair_int_hash(impl->local_name.hash(), pair_int_hash(impl->prefix.hash(), impl->namespace_.hash()));
+        return hash_impl(impl->local_name, impl->prefix, impl->namespace_);
     }
 
     static bool equals(QualifiedName::Impl* a, QualifiedName::Impl* b)
@@ -25,9 +35,10 @@ struct ImplTraits : public Traits<QualifiedName::Impl*> {
 
 static HashTable<QualifiedName::Impl*, ImplTraits> impls;
 
-static NonnullRefPtr<QualifiedName::Impl> ensure_impl(DeprecatedFlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
+static NonnullRefPtr<QualifiedName::Impl> ensure_impl(FlyString const& local_name, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_)
 {
-    auto hash = pair_int_hash(local_name.hash(), pair_int_hash(prefix.hash(), namespace_.hash()));
+    unsigned hash = hash_impl(local_name, prefix, namespace_);
+
     auto it = impls.find(hash, [&](QualifiedName::Impl* entry) {
         return entry->local_name == local_name
             && entry->prefix == prefix
@@ -38,12 +49,17 @@ static NonnullRefPtr<QualifiedName::Impl> ensure_impl(DeprecatedFlyString const&
     return adopt_ref(*new QualifiedName::Impl(local_name, prefix, namespace_));
 }
 
-QualifiedName::QualifiedName(DeprecatedFlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
+QualifiedName::QualifiedName(FlyString const& local_name, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_)
     : m_impl(ensure_impl(local_name, prefix, namespace_))
 {
 }
 
-QualifiedName::Impl::Impl(DeprecatedFlyString const& a_local_name, DeprecatedFlyString const& a_prefix, DeprecatedFlyString const& a_namespace)
+QualifiedName::QualifiedName(FlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
+    : QualifiedName(local_name, prefix.is_null() ? Optional<FlyString> {} : MUST(FlyString::from_deprecated_fly_string(prefix)), namespace_.is_null() ? Optional<FlyString> {} : MUST(FlyString::from_deprecated_fly_string(namespace_)))
+{
+}
+
+QualifiedName::Impl::Impl(FlyString const& a_local_name, Optional<FlyString> const& a_prefix, Optional<FlyString> const& a_namespace)
     : local_name(a_local_name)
     , prefix(a_prefix)
     , namespace_(a_namespace)
@@ -62,17 +78,17 @@ QualifiedName::Impl::~Impl()
 void QualifiedName::Impl::make_internal_string()
 {
     // This is possible to do according to the spec: "User agents could have this as an internal slot as an optimization."
-    if (prefix.is_null()) {
+    if (!prefix.has_value()) {
         as_string = local_name;
         return;
     }
 
-    as_string = DeprecatedString::formatted("{}:{}", prefix, local_name);
+    as_string = MUST(String::formatted("{}:{}", prefix.value(), local_name));
 }
 
-void QualifiedName::set_prefix(DeprecatedFlyString const& value)
+void QualifiedName::set_prefix(Optional<FlyString> value)
 {
-    m_impl->prefix = value;
+    m_impl->prefix = move(value);
 }
 
 }

@@ -1387,7 +1387,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optio
     }
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
-    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix(), move(is_value), true));
+    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name().to_deprecated_fly_string(), extracted_qualified_name.deprecated_namespace_(), extracted_qualified_name.deprecated_prefix(), move(is_value), true));
 }
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
@@ -2963,7 +2963,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(String co
     // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
     // 3. Return a new attribute whose local name is localName and node document is this.
     auto deprecated_local_name = local_name.to_deprecated_string();
-    return Attr::create(*this, is_html_document() ? deprecated_local_name.to_lowercase() : deprecated_local_name);
+    return Attr::create(*this, MUST(FlyString::from_deprecated_fly_string(is_html_document() ? deprecated_local_name.to_lowercase() : deprecated_local_name)));
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createattributens

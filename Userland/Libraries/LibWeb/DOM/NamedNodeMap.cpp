@@ -53,8 +53,9 @@ Vector<DeprecatedString> NamedNodeMap::supported_property_names() const
     names.ensure_capacity(m_attributes.size());
 
     for (auto const& attribute : m_attributes) {
-        if (!names.contains_slow(attribute->name()))
-            names.append(attribute->name());
+        auto const attribute_name = attribute->name().to_deprecated_fly_string();
+        if (!names.contains_slow(attribute_name))
+            names.append(attribute_name);
     }
 
     // 2. If this NamedNodeMap object’s element is in the HTML namespace and its node document is an HTML document, then for each name in names:
@@ -193,7 +194,8 @@ Attr const* NamedNodeMap::get_attribute_ns(StringView namespace_, StringView loc
 
     // 2. Return the attribute in element’s attribute list whose namespace is namespace and local name is localName, if any; otherwise null.
     for (auto const& attribute : m_attributes) {
-        if (attribute->namespace_uri() == namespace_ && attribute->local_name() == local_name)
+        // FIXME: This is quite awkard. We should probably be taking an Optional<FlyString> for namespace here.
+        if ((!attribute->namespace_uri().has_value() == namespace_.is_null() || attribute->namespace_uri() == namespace_) && attribute->local_name() == local_name)
             return attribute.ptr();
         if (item_index)
             ++(*item_index);
@@ -211,7 +213,11 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> NamedNodeMap::set_attribute(Attr& attribute
 
     // 2. Let oldAttr be the result of getting an attribute given attr’s namespace, attr’s local name, and element.
     size_t old_attribute_index = 0;
-    auto* old_attribute = get_attribute_ns(attribute.namespace_uri(), attribute.local_name(), &old_attribute_index);
+    DeprecatedString deprecated_namespace_uri;
+    if (attribute.namespace_uri().has_value())
+        deprecated_namespace_uri = attribute.namespace_uri().value().to_deprecated_fly_string();
+
+    auto* old_attribute = get_attribute_ns(deprecated_namespace_uri, attribute.local_name(), &old_attribute_index);
 
     // 3. If oldAttr is attr, return attr.
     if (old_attribute == &attribute)
@@ -246,7 +252,7 @@ void NamedNodeMap::replace_attribute(Attr& old_attribute, Attr& new_attribute, s
     old_attribute.set_owner_element(nullptr);
 
     // 4. Handle attribute changes for oldAttr with newAttr’s element, oldAttr’s value, and newAttr’s value.
-    old_attribute.handle_attribute_changes(*new_attribute.owner_element(), old_attribute.value(), new_attribute.value());
+    old_attribute.handle_attribute_changes(*new_attribute.owner_element(), old_attribute.value().to_deprecated_string(), new_attribute.value().to_deprecated_string());
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-append
@@ -259,7 +265,7 @@ void NamedNodeMap::append_attribute(Attr& attribute)
     attribute.set_owner_element(&associated_element());
 
     // 3. Handle attribute changes for attribute with element, null, and attribute’s value.
-    attribute.handle_attribute_changes(associated_element(), {}, attribute.value());
+    attribute.handle_attribute_changes(associated_element(), {}, attribute.value().to_deprecated_string());
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove
@@ -278,7 +284,7 @@ void NamedNodeMap::remove_attribute_at_index(size_t attribute_index)
     attribute->set_owner_element(nullptr);
 
     // 4. Handle attribute changes for attribute with element, attribute’s value, and null.
-    attribute->handle_attribute_changes(*element, attribute->value(), {});
+    attribute->handle_attribute_changes(*element, attribute->value().to_deprecated_string(), {});
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-name

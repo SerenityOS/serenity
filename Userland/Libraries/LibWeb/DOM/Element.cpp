@@ -141,7 +141,7 @@ DeprecatedString Element::get_attribute(DeprecatedFlyString const& name) const
         return {};
 
     // 3. Return attr’s value.
-    return attribute->value();
+    return attribute->value().to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-value
@@ -155,7 +155,7 @@ DeprecatedString Element::get_attribute_value(DeprecatedFlyString const& local_n
         return DeprecatedString::empty();
 
     // 3. Return attr’s value.
-    return attribute->value();
+    return attribute->value().to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattributenode
@@ -183,14 +183,14 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document
     //    is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
-        auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
+        auto new_attribute = Attr::create(document(), MUST(String::from_deprecated_string(insert_as_lowercase ? name.to_lowercase() : name)), MUST(String::from_deprecated_string(value)));
         m_attributes->append_attribute(new_attribute);
 
         return {};
     }
 
     // 5. Change attribute to value.
-    attribute->change_attribute(value);
+    attribute->change_attribute(MUST(String::from_deprecated_string(value)));
 
     return {};
 }
@@ -243,7 +243,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Deprec
         return WebIDL::NamespaceError::create(realm, "Namespace is the XMLNS namespace and neither qualifiedName nor prefix is 'xmlns'."_fly_string);
 
     // 10. Return namespace, prefix, and localName.
-    return QualifiedName { local_name, prefix, namespace_ };
+    return QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, namespace_ };
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributens
@@ -253,7 +253,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(DeprecatedFlyString const& n
     auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
-    set_attribute_value(extracted_qualified_name.local_name(), value, extracted_qualified_name.prefix(), extracted_qualified_name.namespace_());
+    set_attribute_value(extracted_qualified_name.local_name().to_deprecated_fly_string(), value, extracted_qualified_name.deprecated_prefix(), extracted_qualified_name.deprecated_namespace_());
 
     return {};
 }
@@ -268,16 +268,16 @@ void Element::set_attribute_value(DeprecatedFlyString const& local_name, Depreca
     //    is localName, value is value, and node document is element’s node document, then append this attribute to element,
     //    and then return.
     if (!attribute) {
-        QualifiedName name { local_name, prefix, namespace_ };
+        QualifiedName name { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, namespace_ };
 
-        auto new_attribute = Attr::create(document(), move(name), value);
+        auto new_attribute = Attr::create(document(), move(name), MUST(String::from_deprecated_string(value)));
         m_attributes->append_attribute(new_attribute);
 
         return;
     }
 
     // 3. Change attribute to value.
-    attribute->change_attribute(value);
+    attribute->change_attribute(MUST(String::from_deprecated_string(value)));
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributenode
@@ -338,7 +338,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
         // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty
         //    string, and node document is this’s node document, then append this attribute to this, and then return true.
         if (!force.has_value() || force.value()) {
-            auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
+            auto new_attribute = Attr::create(document(), MUST(String::from_deprecated_string(insert_as_lowercase ? name.to_lowercase() : name)), String {});
             m_attributes->append_attribute(new_attribute);
 
             return true;
@@ -365,7 +365,7 @@ Vector<DeprecatedString> Element::get_attribute_names() const
     Vector<DeprecatedString> names;
     for (size_t i = 0; i < m_attributes->length(); ++i) {
         auto const* attribute = m_attributes->item(i);
-        names.append(attribute->name());
+        names.append(attribute->name().to_deprecated_fly_string());
     }
     return names;
 }
@@ -1744,7 +1744,7 @@ JS::ThrowCompletionOr<void> Element::upgrade_element(JS::NonnullGCPtr<HTML::Cust
         arguments.append(JS::PrimitiveString::create(vm, attribute->local_name()));
         arguments.append(JS::js_null());
         arguments.append(JS::PrimitiveString::create(vm, attribute->value()));
-        arguments.append(JS::PrimitiveString::create(vm, attribute->namespace_uri()));
+        arguments.append(attribute->namespace_uri().has_value() ? JS::PrimitiveString::create(vm, attribute->namespace_uri().value()) : JS::js_null());
 
         enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::attributeChangedCallback, move(arguments));
     }
@@ -1850,14 +1850,14 @@ void Element::setup_custom_element_from_constructor(HTML::CustomElementDefinitio
 
 void Element::set_prefix(DeprecatedFlyString const& value)
 {
-    m_qualified_name.set_prefix(value);
+    m_qualified_name.set_prefix(MUST(FlyString::from_deprecated_fly_string(value)));
 }
 
 void Element::for_each_attribute(Function<void(DeprecatedFlyString const&, DeprecatedString const&)> callback) const
 {
     for (size_t i = 0; i < m_attributes->length(); ++i) {
         auto const* attribute = m_attributes->item(i);
-        callback(attribute->name(), attribute->value());
+        callback(attribute->name().to_deprecated_fly_string(), attribute->value().to_deprecated_string());
     }
 }
 
