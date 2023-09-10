@@ -65,7 +65,7 @@ OutOfProcessWebView::OutOfProcessWebView()
     };
 
     on_enter_tooltip_area = [](auto, auto tooltip) {
-        GUI::Application::the()->show_tooltip(tooltip, nullptr);
+        GUI::Application::the()->show_tooltip(MUST(String::from_deprecated_string(tooltip)), nullptr);
     };
 
     on_leave_tooltip_area = []() {

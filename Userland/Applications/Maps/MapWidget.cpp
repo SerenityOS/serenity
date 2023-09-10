@@ -187,7 +187,7 @@ void MapWidget::mousemove_event(GUI::MouseEvent& event)
             marker_image->height()
         };
         if (marker_rect.contains(event.x(), event.y())) {
-            GUI::Application::the()->show_tooltip(marker.tooltip.value().to_deprecated_string(), this);
+            GUI::Application::the()->show_tooltip(marker.tooltip.value(), this);
             return;
         }
     }

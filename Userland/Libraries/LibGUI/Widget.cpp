@@ -1122,7 +1122,7 @@ void Widget::set_tooltip(String tooltip)
 void Widget::show_or_hide_tooltip()
 {
     if (has_tooltip())
-        Application::the()->show_tooltip(m_tooltip.to_deprecated_string(), this);
+        Application::the()->show_tooltip(m_tooltip, this);
     else
         Application::the()->hide_tooltip();
 }
