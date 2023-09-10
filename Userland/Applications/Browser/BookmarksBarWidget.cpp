@@ -216,7 +216,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
         button.set_fixed_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
         button.set_focus_policy(GUI::FocusPolicy::TabFocus);
-        button.set_tooltip_deprecated(url);
+        button.set_tooltip(MUST(String::from_deprecated_string(url)));
         button.set_allowed_mouse_buttons_for_pressing(GUI::MouseButton::Primary | GUI::MouseButton::Middle);
 
         button.on_click = [title, url, this](auto) {

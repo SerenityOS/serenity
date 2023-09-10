@@ -80,10 +80,10 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
         if (!is_dragging()) {
             auto tooltip = model->data(index, static_cast<GUI::ModelRole>(SheetModel::Role::Tooltip));
             if (tooltip.is_string()) {
-                set_tooltip_deprecated(tooltip.as_string());
+                set_tooltip(MUST(String::from_deprecated_string(tooltip.as_string())));
                 show_or_hide_tooltip();
             } else {
-                set_tooltip_deprecated({});
+                set_tooltip({});
             }
         }
 
