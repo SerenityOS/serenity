@@ -198,18 +198,19 @@ void LayoutState::resolve_relative_positions(Vector<Painting::PaintableWithLines
 
 static void build_paint_tree(Node& node, Painting::Paintable* parent_paintable = nullptr)
 {
-    if (!node.paintable())
-        return;
-    auto& paintable = const_cast<Painting::Paintable&>(*node.paintable());
-    if (parent_paintable) {
-        VERIFY(!paintable.parent());
-        parent_paintable->append_child(paintable);
+    Painting::Paintable* paintable = nullptr;
+    if (node.paintable()) {
+        paintable = const_cast<Painting::Paintable*>(node.paintable());
+        if (parent_paintable) {
+            VERIFY(!paintable->parent());
+            parent_paintable->append_child(*paintable);
+        }
+        paintable->set_dom_node(node.dom_node());
+        if (node.dom_node())
+            node.dom_node()->set_paintable(paintable);
     }
-    paintable.set_dom_node(node.dom_node());
-    if (node.dom_node())
-        node.dom_node()->set_paintable(&paintable);
     for (auto* child = node.first_child(); child; child = child->next_sibling()) {
-        build_paint_tree(*child, &paintable);
+        build_paint_tree(*child, paintable);
     }
 }
 
