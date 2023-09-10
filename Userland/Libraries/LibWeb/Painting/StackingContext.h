@@ -29,8 +29,8 @@ public:
         FocusAndOverlay,
     };
 
-    void paint_node_as_stacking_context(Paintable const&, PaintContext&) const;
-    void paint_descendants(PaintContext&, Paintable const&, StackingContextPaintPhase) const;
+    static void paint_node_as_stacking_context(Paintable const&, PaintContext&);
+    static void paint_descendants(PaintContext&, Paintable const&, StackingContextPaintPhase);
     void paint(PaintContext&) const;
     Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const;
 
@@ -49,7 +49,7 @@ private:
     Vector<StackingContext*> m_children;
     size_t m_index_in_tree_order { 0 };
 
-    void paint_child(PaintContext&, StackingContext const&) const;
+    static void paint_child(PaintContext&, StackingContext const&);
     void paint_internal(PaintContext&) const;
     Gfx::FloatMatrix4x4 get_transformation_matrix(CSS::Transformation const& transformation) const;
     Gfx::FloatMatrix4x4 combine_transformations(Vector<CSS::Transformation> const& transformations) const;
