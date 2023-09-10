@@ -41,8 +41,8 @@ public:
     void register_global_shortcut_action(Badge<Action>, Action&);
     void unregister_global_shortcut_action(Badge<Action>, Action&);
 
-    void show_tooltip(DeprecatedString, Widget const* tooltip_source_widget);
-    void show_tooltip_immediately(DeprecatedString, Widget const* tooltip_source_widget);
+    void show_tooltip(String, Widget const* tooltip_source_widget);
+    void show_tooltip_immediately(String, Widget const* tooltip_source_widget);
     void hide_tooltip();
     Widget const* tooltip_source_widget() { return m_tooltip_source_widget; }
 

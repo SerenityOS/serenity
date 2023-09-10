@@ -25,9 +25,9 @@ class Application::TooltipWindow final : public Window {
     C_OBJECT(TooltipWindow);
 
 public:
-    void set_tooltip(DeprecatedString const& tooltip)
+    void set_tooltip(String tooltip)
     {
-        m_label->set_text(String::from_deprecated_string(tooltip).release_value_but_fixme_should_propagate_errors());
+        m_label->set_text(move(tooltip));
         int tooltip_width = m_label->effective_min_size().width().as_int() + 10;
         int line_count = m_label->text().count("\n"sv);
         int font_size = m_label->font().pixel_size_rounded_up();
@@ -152,7 +152,7 @@ Action* Application::action_for_shortcut(Shortcut const& shortcut) const
     return (*it).value;
 }
 
-void Application::show_tooltip(DeprecatedString tooltip, Widget const* tooltip_source_widget)
+void Application::show_tooltip(String tooltip, Widget const* tooltip_source_widget)
 {
     if (!Desktop::the().system_effects().tooltips())
         return;
@@ -173,7 +173,7 @@ void Application::show_tooltip(DeprecatedString tooltip, Widget const* tooltip_s
     }
 }
 
-void Application::show_tooltip_immediately(DeprecatedString tooltip, Widget const* tooltip_source_widget)
+void Application::show_tooltip_immediately(String tooltip, Widget const* tooltip_source_widget)
 {
     if (!Desktop::the().system_effects().tooltips())
         return;
