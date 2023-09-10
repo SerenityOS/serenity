@@ -25,7 +25,7 @@ CSSPixelPoint SVGGeometryBox::viewbox_origin() const
     return { svg_box->view_box().value().min_x, svg_box->view_box().value().min_y };
 }
 
-Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
+Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform(Gfx::AffineTransform additional_svg_transform) const
 {
     auto& geometry_element = dom_node();
     auto transform = geometry_element.get_transform();
@@ -49,7 +49,9 @@ Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
         auto scaled_bounding_box = original_bounding_box.scaled(scaling, scaling);
         paint_offset = (paintable_box()->absolute_rect().location() - svg_box->paintable_box()->absolute_rect().location()).to_type<float>() - scaled_bounding_box.location();
     }
-    return Gfx::AffineTransform {}.translate(paint_offset).scale(scaling, scaling).translate(-origin).multiply(transform);
+    // Note: The "additional_svg_transform" is applied during mask painting to transform the mask element to match its target.
+    // It has to be applied while still in the SVG coordinate space.
+    return Gfx::AffineTransform {}.translate(paint_offset).scale(scaling, scaling).translate(-origin).multiply(additional_svg_transform).multiply(transform);
 }
 
 JS::GCPtr<Painting::Paintable> SVGGeometryBox::create_paintable() const

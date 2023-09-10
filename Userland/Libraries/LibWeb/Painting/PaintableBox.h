@@ -27,6 +27,9 @@ public:
 
     [[nodiscard]] bool is_visible() const;
 
+    virtual Optional<CSSPixelRect> get_masking_area() const { return {}; }
+    virtual void apply_mask(PaintContext&, Gfx::Bitmap&, CSSPixelRect const&) const {};
+
     Layout::Box& layout_box() { return static_cast<Layout::Box&>(Paintable::layout_node()); }
     Layout::Box const& layout_box() const { return static_cast<Layout::Box const&>(Paintable::layout_node()); }
 

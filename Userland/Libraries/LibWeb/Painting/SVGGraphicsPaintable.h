@@ -21,6 +21,9 @@ public:
 
     virtual bool forms_unconnected_subtree() const override;
 
+    virtual Optional<CSSPixelRect> get_masking_area() const override;
+    virtual void apply_mask(PaintContext&, Gfx::Bitmap& target, CSSPixelRect const& masking_area) const override;
+
 protected:
     SVGGraphicsPaintable(Layout::SVGGraphicsBox const&);
 };

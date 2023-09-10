@@ -15,6 +15,7 @@
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGGradientElement.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
+#include <LibWeb/SVG/SVGMaskElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 #include <LibWeb/SVG/SVGSymbolElement.h>
 
@@ -46,14 +47,8 @@ Optional<Gfx::PaintStyle const&> SVGGraphicsElement::svg_paint_computed_value_to
     // FIXME: This entire function is an ad-hoc hack:
     if (!paint_value.has_value() || !paint_value->is_url())
         return {};
-    auto const& url = paint_value->as_url();
-    if (!url.fragment().has_value())
-        return {};
-    auto gradient = document().get_element_by_id(url.fragment().value());
-    if (!gradient)
-        return {};
-    if (is<SVG::SVGGradientElement>(*gradient))
-        return static_cast<SVG::SVGGradientElement const&>(*gradient).to_gfx_paint_style(paint_context);
+    if (auto gradient = try_resolve_url_to<SVG::SVGGradientElement const>(paint_value->as_url()))
+        return gradient->to_gfx_paint_style(paint_context);
     return {};
 }
 
@@ -69,6 +64,14 @@ Optional<Gfx::PaintStyle const&> SVGGraphicsElement::stroke_paint_style(SVGPaint
     if (!layout_node())
         return {};
     return svg_paint_computed_value_to_gfx_paint_style(paint_context, layout_node()->computed_values().stroke());
+}
+
+JS::GCPtr<SVG::SVGMaskElement const> SVGGraphicsElement::mask() const
+{
+    auto const& mask_reference = layout_node()->computed_values().mask();
+    if (!mask_reference.has_value())
+        return {};
+    return try_resolve_url_to<SVG::SVGMaskElement const>(mask_reference->url());
 }
 
 Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> transform_list)
@@ -149,6 +152,9 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         } else if (name.equals_ignoring_ascii_case("font-size"sv)) {
             if (auto font_size_value = parse_css_value(parsing_context, value, CSS::PropertyID::FontSize))
                 style.set_property(CSS::PropertyID::FontSize, font_size_value.release_nonnull());
+        } else if (name.equals_ignoring_ascii_case("mask"sv)) {
+            if (auto mask_value = parse_css_value(parsing_context, value, CSS::PropertyID::Mask))
+                style.set_property(CSS::PropertyID::Mask, mask_value.release_nonnull());
         }
     });
 }
