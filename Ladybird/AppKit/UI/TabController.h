@@ -11,6 +11,14 @@
 
 #import <System/Cocoa.h>
 
+struct TabSettings {
+    BOOL should_show_line_box_borders { NO };
+    BOOL scripting_enabled { YES };
+    BOOL block_popups { YES };
+    BOOL same_origin_policy_enabled { NO };
+    DeprecatedString user_agent_name { "Disabled"sv };
+};
+
 @interface TabController : NSWindowController <NSWindowDelegate>
 
 - (instancetype)init;
@@ -25,6 +33,8 @@
 - (void)navigateForward:(id)sender;
 - (void)reload:(id)sender;
 - (void)clearHistory;
+
+- (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument;
 
 - (void)focusLocationToolbarItem;
 

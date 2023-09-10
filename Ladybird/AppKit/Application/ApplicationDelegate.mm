@@ -7,9 +7,11 @@
 #include <BrowserSettings/Defaults.h>
 
 #import <Application/ApplicationDelegate.h>
+#import <LibWebView/UserAgent.h>
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
+#import <Utilities/Conversions.h>
 #import <Utilities/URL.h>
 
 #if !__has_feature(objc_arc)
@@ -355,8 +357,78 @@
     auto* menu = [[NSMenuItem alloc] init];
     auto* submenu = [[NSMenu alloc] initWithTitle:@"Debug"];
 
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump DOM Tree"
+                                                action:@selector(dumpDOMTree:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump Layout Tree"
+                                                action:@selector(dumpLayoutTree:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump Paint Tree"
+                                                action:@selector(dumpPaintTree:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump Stacking Context Tree"
+                                                action:@selector(dumpStackingContextTree:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump Style Sheets"
+                                                action:@selector(dumpStyleSheets:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump All Resolved Styles"
+                                                action:@selector(dumpAllResolvedStyles:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump History"
+                                                action:@selector(dumpHistory:)
+                                         keyEquivalent:@""]];
     [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump Cookies"
                                                 action:@selector(dumpCookies:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump Local Storage"
+                                                action:@selector(dumpLocalStorage:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[NSMenuItem separatorItem]];
+
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Show Line Box Borders"
+                                                action:@selector(toggleLineBoxBorders:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[NSMenuItem separatorItem]];
+
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Collect Garbage"
+                                                action:@selector(collectGarbage:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Dump GC Graph"
+                                                action:@selector(dumpGCGraph:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Clear Cache"
+                                                action:@selector(clearCache:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[NSMenuItem separatorItem]];
+
+    auto* spoof_user_agent_menu = [[NSMenu alloc] init];
+    auto add_user_agent = [spoof_user_agent_menu](DeprecatedString name) {
+        [spoof_user_agent_menu addItem:[[NSMenuItem alloc] initWithTitle:Ladybird::string_to_ns_string(name)
+                                                                  action:@selector(setUserAgentSpoof:)
+                                                           keyEquivalent:@""]];
+    };
+
+    add_user_agent("Disabled");
+    for (auto const& userAgent : WebView::user_agents)
+        add_user_agent(userAgent.key);
+
+    auto* spoof_user_agent_menu_item = [[NSMenuItem alloc] initWithTitle:@"Spoof User Agent"
+                                                                  action:nil
+                                                           keyEquivalent:@""];
+    [spoof_user_agent_menu_item setSubmenu:spoof_user_agent_menu];
+
+    [submenu addItem:spoof_user_agent_menu_item];
+    [submenu addItem:[NSMenuItem separatorItem]];
+
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Enable Scripting"
+                                                action:@selector(toggleScripting:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Block Pop-ups"
+                                                action:@selector(togglePopupBlocking:)
+                                         keyEquivalent:@""]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Enable Same-Origin Policy"
+                                                action:@selector(toggleSameOriginPolicy:)
                                          keyEquivalent:@""]];
 
     [menu setSubmenu:submenu];
@@ -409,11 +481,9 @@
 
     if ([item action] == @selector(setAutoPreferredColorScheme:)) {
         [item setState:(m_preferred_color_scheme == Auto) ? NSControlStateValueOn : NSControlStateValueOff];
-    }
-    if ([item action] == @selector(setDarkPreferredColorScheme:)) {
+    } else if ([item action] == @selector(setDarkPreferredColorScheme:)) {
         [item setState:(m_preferred_color_scheme == Dark) ? NSControlStateValueOn : NSControlStateValueOff];
-    }
-    if ([item action] == @selector(setLightPreferredColorScheme:)) {
+    } else if ([item action] == @selector(setLightPreferredColorScheme:)) {
         [item setState:(m_preferred_color_scheme == Light) ? NSControlStateValueOn : NSControlStateValueOff];
     }
 
