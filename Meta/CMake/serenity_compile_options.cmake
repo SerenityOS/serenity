@@ -29,6 +29,8 @@ add_compile_options(-g1)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+add_link_options(LINKER:-Bsymbolic-non-weak-functions)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-maybe-uninitialized)
     add_compile_options(-Wcast-align)
