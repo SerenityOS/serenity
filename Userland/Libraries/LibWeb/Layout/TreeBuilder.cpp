@@ -332,15 +332,6 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         pop_parent();
     }
 
-    // Add nodes for the ::before and ::after pseudo-elements.
-    if (is<DOM::Element>(dom_node)) {
-        auto& element = static_cast<DOM::Element&>(dom_node);
-        push_parent(verify_cast<NodeWithStyle>(*layout_node));
-        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Before, AppendOrPrepend::Prepend));
-        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::After, AppendOrPrepend::Append));
-        pop_parent();
-    }
-
     if (is<ListItemBox>(*layout_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
         int child_index = layout_node->parent()->index_of_child<ListItemBox>(*layout_node).value();
@@ -412,6 +403,15 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
         parent.append_child(*flex_wrapper);
         parent.set_children_are_inline(false);
+    }
+
+    // Add nodes for the ::before and ::after pseudo-elements.
+    if (is<DOM::Element>(dom_node)) {
+        auto& element = static_cast<DOM::Element&>(dom_node);
+        push_parent(verify_cast<NodeWithStyle>(*layout_node));
+        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Before, AppendOrPrepend::Prepend));
+        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::After, AppendOrPrepend::Append));
+        pop_parent();
     }
 
     return {};
