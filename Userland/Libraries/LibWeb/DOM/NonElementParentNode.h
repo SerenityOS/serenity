@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
@@ -17,6 +18,11 @@ namespace Web::DOM {
 template<typename NodeType>
 class NonElementParentNode {
 public:
+    JS::GCPtr<Element const> get_element_by_id(FlyString const& id) const
+    {
+        return get_element_by_id(id.to_deprecated_fly_string());
+    }
+
     JS::GCPtr<Element const> get_element_by_id(DeprecatedFlyString const& id) const
     {
         JS::GCPtr<Element const> found_element;
@@ -28,6 +34,11 @@ public:
             return IterationDecision::Continue;
         });
         return found_element;
+    }
+
+    JS::GCPtr<Element> get_element_by_id(FlyString const& id)
+    {
+        return get_element_by_id(id.to_deprecated_fly_string());
     }
 
     JS::GCPtr<Element> get_element_by_id(DeprecatedFlyString const& id)

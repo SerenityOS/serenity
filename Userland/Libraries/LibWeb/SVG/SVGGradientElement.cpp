@@ -100,7 +100,7 @@ JS::GCPtr<SVGGradientElement const> SVGGradientElement::linked_gradient() const
         auto id = url.fragment();
         if (!id.has_value() || id->is_empty())
             return {};
-        auto element = document().get_element_by_id(id->to_deprecated_string());
+        auto element = document().get_element_by_id(id.value());
         if (!element)
             return {};
         if (!is<SVGGradientElement>(*element))
