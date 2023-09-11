@@ -19,16 +19,16 @@ jobs:
           rm -rf "${{ github.workspace }}/*"
 
       - name: Checkout SerenityOS/serenity
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout SerenityOS/libjs-test262
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: SerenityOS/libjs-test262
           path: libjs-test262
 
       - name: Checkout SerenityOS/libjs-test262-data
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: SerenityOS/libjs-test262-data
           path: libjs-test262-data
@@ -39,13 +39,13 @@ jobs:
         run: git lfs checkout
 
       - name: Checkout tc39/test262
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tc39/test262
           path: test262
 
       - name: Checkout tc39/test262-parser-tests
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tc39/test262-parser-tests
           path: test262-parser-tests

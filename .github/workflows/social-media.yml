@@ -8,7 +8,7 @@ jobs:
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: '14'
@@ -28,7 +28,7 @@ jobs:
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: '14'

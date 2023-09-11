@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout SerenityOS/serenity
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies Ubuntu
         run: |
