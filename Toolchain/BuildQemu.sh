@@ -37,19 +37,12 @@ pushd "$DIR/Tarballs"
         exit 1
     fi
 
-    # If the source directory exists, re-extract it again in case the patches have changed.
     if [ -d "qemu-$QEMU_VERSION" ]; then
         rm -rf "qemu-$QEMU_VERSION"
     fi
 
     echo "Extracting qemu..."
     tar -xf "${QEMU_ARCHIVE}"
-
-    pushd "qemu-$QEMU_VERSION"
-        for patch in "${DIR}"/Patches/qemu/*.patch; do
-            patch -p1 < "${patch}" > /dev/null
-        done
-    popd
 popd
 
 mkdir -p "$PREFIX"
