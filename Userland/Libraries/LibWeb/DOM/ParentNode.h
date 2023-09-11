@@ -31,6 +31,10 @@ public:
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name(DeprecatedFlyString const&);
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name_ns(DeprecatedFlyString const&, DeprecatedFlyString const&);
 
+    WebIDL::ExceptionOr<void> prepend(Vector<Variant<JS::Handle<Node>, String>> const& nodes);
+    WebIDL::ExceptionOr<void> append(Vector<Variant<JS::Handle<Node>, String>> const& nodes);
+    WebIDL::ExceptionOr<void> replace_children(Vector<Variant<JS::Handle<Node>, String>> const& nodes);
+
     WebIDL::ExceptionOr<void> prepend(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes);
     WebIDL::ExceptionOr<void> append(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes);
     WebIDL::ExceptionOr<void> replace_children(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes);
