@@ -88,6 +88,11 @@ by the current user.
   substituting the file path for any arguments specified as `{}`. The list of
   arguments must be terminated by a semicolon. Checks if the command exits
   successfully.
+* `-ok command... ;`: Behaves identically to the `-exec` command, but will
+  prompt the user for confirmation before executing the given command. An
+  affirmative response is any response that begins with the 'y' character.
+  Any non-affirmative response will cause the command to not be executed and
+  the value returned by `-ok` to be false.
 
 The commands can be combined to form complex expressions using the following
 operators:

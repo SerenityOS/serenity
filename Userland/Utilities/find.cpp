@@ -566,30 +566,65 @@ private:
 
 class ExecCommand final : public Command {
 public:
-    ExecCommand(Vector<char*>&& argv)
+    enum class AwaitConfirmation {
+        Yes,
+        No
+    };
+
+    ExecCommand(Vector<char*>&& argv, AwaitConfirmation await_confirmation = AwaitConfirmation::No)
         : m_argv(move(argv))
+        , m_await_confirmation(await_confirmation)
     {
     }
 
 private:
     virtual bool evaluate(FileData& file_data) const override
     {
+        // Replace any occurrences of "{}" with the path.
+        // Since we know that the array isn't modified before we
+        // fork the process, let's just const_cast away the constness.
+        auto argv = const_cast<Vector<char*>&>(m_argv);
+        for (auto& arg : argv) {
+            if (StringView { arg, strlen(arg) } == "{}")
+                arg = const_cast<char*>(file_data.full_path.string().characters());
+        }
+
+        if (m_await_confirmation == AwaitConfirmation::Yes) {
+            out(stderr, "\"");
+            bool first = true;
+            for (auto& arg : argv) {
+                if (!first)
+                    out(stderr, " ");
+
+                out(stderr, "{}", arg);
+                first = false;
+            }
+            out(stderr, "\"? ");
+            fflush(stderr);
+
+            Array<u8, BUFSIZ> buffer;
+            auto nread_or_error = Core::System::read(STDIN_FILENO, buffer);
+            if (nread_or_error.is_error()) {
+                warn("Failed to read from stdin: {}", strerror(nread_or_error.error().code()));
+                return false;
+            }
+
+            auto nread = nread_or_error.release_value();
+            if (nread <= 0 || (buffer[0] != 'y' && buffer[0] != 'Y'))
+                return false;
+        }
+
         pid_t pid = fork();
 
         if (pid < 0) {
             perror("fork");
             g_there_was_an_error = true;
             return false;
-        } else if (pid == 0) {
-            // Replace any occurrences of "{}" with the path. Since we're in the
-            // child and going to exec real soon, let's just const_cast away the
-            // constness.
-            auto argv = const_cast<Vector<char*>&>(m_argv);
-            for (auto& arg : argv) {
-                if (StringView { arg, strlen(arg) } == "{}")
-                    arg = const_cast<char*>(file_data.full_path.string().characters());
-            }
-            argv.append(nullptr);
+        }
+
+        argv.ensure_capacity(argv.size() + 1);
+        argv.append(nullptr);
+        if (pid == 0) {
             execvp(m_argv[0], argv.data());
             perror("execvp");
             exit(1);
@@ -606,6 +641,7 @@ private:
     }
 
     Vector<char*> m_argv;
+    AwaitConfirmation m_await_confirmation { AwaitConfirmation::No };
 };
 
 class AndCommand final : public Command {
@@ -767,9 +803,9 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
     } else if (arg == "-print0") {
         g_have_seen_action_command = true;
         return make<PrintCommand>(0);
-    } else if (arg == "-exec") {
+    } else if (arg == "-exec" || arg == "-ok") {
         if (args.is_empty())
-            fatal_error("-exec: requires additional arguments");
+            fatal_error("{}: requires additional arguments", arg);
         g_have_seen_action_command = true;
         Vector<char*> command_argv;
         while (!args.is_empty()) {
@@ -778,7 +814,8 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
                 break;
             command_argv.append(next);
         }
-        return make<ExecCommand>(move(command_argv));
+        auto await_confirmation = (arg == "-ok") ? ExecCommand::AwaitConfirmation::Yes : ExecCommand::AwaitConfirmation::No;
+        return make<ExecCommand>(move(command_argv), await_confirmation);
     } else {
         fatal_error("Unsupported command \033[1m{}", arg);
     }
