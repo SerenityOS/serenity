@@ -49,7 +49,7 @@ Optional<Gfx::PaintStyle const&> SVGGraphicsElement::svg_paint_computed_value_to
     auto const& url = paint_value->as_url();
     if (!url.fragment().has_value())
         return {};
-    auto gradient = document().get_element_by_id(url.fragment()->to_deprecated_string());
+    auto gradient = document().get_element_by_id(url.fragment().value());
     if (!gradient)
         return {};
     if (is<SVG::SVGGradientElement>(*gradient))
