@@ -9,6 +9,7 @@ set(SOURCES
     RequestServerAdapter.cpp
     SourceHighlighter.cpp
     StylePropertiesModel.cpp
+    UserAgent.cpp
     ViewImplementation.cpp
     WebContentClient.cpp
     WebSocketClientAdapter.cpp

@@ -36,6 +36,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/OutOfProcessWebView.h>
+#include <LibWebView/UserAgent.h>
 #include <LibWebView/WebContentClient.h>
 
 namespace Browser {
@@ -416,12 +417,8 @@ void BrowserWindow::build_menus()
         spoof_user_agent_menu->add_action(action);
         m_user_agent_spoof_actions.add_action(action);
     };
-    add_user_agent("Chrome Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36"sv);
-    add_user_agent("Firefox Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0"sv);
-    add_user_agent("Safari macOS Desktop", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15"sv);
-    add_user_agent("Chrome Android Mobile", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.66 Mobile Safari/537.36"sv);
-    add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0"sv);
-    add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"sv);
+    for (auto const& user_agent : WebView::user_agents)
+        add_user_agent(user_agent.key, user_agent.value);
 
     auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
         String user_agent;

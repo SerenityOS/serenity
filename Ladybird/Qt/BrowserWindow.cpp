@@ -18,6 +18,7 @@
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWebView/CookieJar.h>
+#include <LibWebView/UserAgent.h>
 #include <QAction>
 #include <QActionGroup>
 #include <QClipboard>
@@ -297,8 +298,8 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* user_agent_group = new QActionGroup(this);
 
-    auto add_user_agent = [this, &user_agent_group, &spoof_user_agent_menu](auto& name, auto& user_agent) {
-        auto* action = new QAction(name, this);
+    auto add_user_agent = [this, &user_agent_group, &spoof_user_agent_menu](auto const& name, auto const& user_agent) {
+        auto* action = new QAction(qstring_from_ak_deprecated_string(name), this);
         action->setCheckable(true);
         user_agent_group->addAction(action);
         spoof_user_agent_menu->addAction(action);
@@ -311,12 +312,8 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* disable_spoofing = add_user_agent("Disabled", Web::default_user_agent);
     disable_spoofing->setChecked(true);
-    add_user_agent("Chrome Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
-    add_user_agent("Firefox Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0");
-    add_user_agent("Safari macOS Desktop", "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15");
-    add_user_agent("Chrome Android Mobile", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.114 Mobile Safari/537.36");
-    add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 13; Mobile; rv:109.0) Gecko/116.0 Firefox/116.0");
-    add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1");
+    for (auto const& user_agent : WebView::user_agents)
+        add_user_agent(user_agent.key.to_deprecated_string(), user_agent.value.to_deprecated_string());
 
     auto* custom_user_agent_action = new QAction("Custom...", this);
     custom_user_agent_action->setCheckable(true);
