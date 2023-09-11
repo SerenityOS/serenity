@@ -120,7 +120,7 @@ jobs:
         if: ${{ matrix.arch == 'aarch64' }}
         with:
           path: ${{ github.workspace }}/Toolchain/Local/qemu
-          key: ${{ runner.os }}-qemu-${{ hashFiles('Ports/qemu/version.sh', 'Toolchain/BuildQemu.sh', 'Toolchain/Patches/qemu/*.patch') }}
+          key: ${{ runner.os }}-qemu-${{ hashFiles('Ports/qemu/version.sh', 'Toolchain/BuildQemu.sh') }}
 
       - name: Build AArch64 Qemu
         if: ${{ matrix.arch == 'aarch64' && !steps.qemu-cache.outputs.cache-hit }}
