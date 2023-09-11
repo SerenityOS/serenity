@@ -70,7 +70,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
         DeprecatedString tooltip = name;
 
         auto set_filter_action = Action::create_checkable(
-            category.representative_emoji,
+            String::from_utf8(category.representative_emoji).release_value_but_fixme_should_propagate_errors(),
             [this, group = category.group](auto& action) {
                 if (action.is_checked())
                     m_selected_category = group;

@@ -66,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     game_menu->add_separator();
 
-    auto chord_toggler_action = GUI::Action::create_checkable("&Single-click Chording", [&](auto& action) {
+    auto chord_toggler_action = GUI::Action::create_checkable("&Single-click Chording"_string, [&](auto& action) {
         field->set_single_chording(action.is_checked());
     });
     chord_toggler_action->set_checked(field->is_single_chording());
@@ -82,28 +82,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup difficulty_actions;
     difficulty_actions.set_exclusive(true);
 
-    auto action = GUI::Action::create_checkable("&Beginner", { Mod_Ctrl, Key_B }, [&](auto&) {
+    auto action = GUI::Action::create_checkable("&Beginner"_string, { Mod_Ctrl, Key_B }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Beginner);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Beginner);
     difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Intermediate"_string, { Mod_Ctrl, Key_I }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Intermediate);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Intermediate);
     difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Expert"_string, { Mod_Ctrl, Key_E }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Expert);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Expert);
     difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Madwoman"_string, { Mod_Ctrl, Key_M }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Madwoman);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Madwoman);
@@ -111,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     difficulty_actions.add_action(action);
 
     difficulty_menu->add_separator();
-    action = GUI::Action::create_checkable("&Custom Game...", { Mod_Ctrl, Key_C }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Custom Game..."_string, { Mod_Ctrl, Key_C }, [&](auto&) {
         CustomGameDialog::show(window, field);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Custom);

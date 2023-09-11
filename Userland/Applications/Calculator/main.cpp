@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Optional<unsigned> last_rounding_mode = 1;
     for (unsigned i {}; i < rounding_modes.size(); ++i) {
-        auto round_action = GUI::Action::create_checkable(DeprecatedString::formatted("To &{} Digits", rounding_modes[i]),
+        auto round_action = GUI::Action::create_checkable(TRY(String::formatted("To &{} Digits", rounding_modes[i])),
             [&widget, rounding_mode = rounding_modes[i], &last_rounding_mode, i](auto&) {
                 widget->set_rounding_length(rounding_mode);
                 last_rounding_mode = i;
@@ -89,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     constexpr auto format { "&Custom - {}..."sv };
-    auto round_custom = GUI::Action::create_checkable(DeprecatedString::formatted(format, 0), [&](auto& action) {
+    auto round_custom = GUI::Action::create_checkable(TRY(String::formatted(format, 0)), [&](auto& action) {
         int custom_rounding_length = widget->rounding_length();
         auto result = GUI::InputBox::show_numeric(window, custom_rounding_length, 0, 100, "Digits to Round"sv);
         if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {

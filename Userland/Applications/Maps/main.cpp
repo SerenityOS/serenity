@@ -91,7 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto view_menu = window->add_menu("&View"_string);
     auto show_search_panel_action = GUI::Action::create_checkable(
-        "Show search panel", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)), [&main_widget, search_panel, &map_widget](auto& action) {
+        "Show search panel"_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)), [&main_widget, search_panel, &map_widget](auto& action) {
             if (action.is_checked()) {
                 main_widget.insert_child_before(search_panel, map_widget);
             } else {
@@ -103,7 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window);
     show_search_panel_action->set_checked(Config::read_bool("Maps"sv, "SearchPanel"sv, "Show"sv, false));
     auto show_users_action = GUI::Action::create_checkable(
-        "Show SerenityOS users", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&map_widget](auto& action) { map_widget.set_show_users(action.is_checked()); }, window);
+        "Show SerenityOS users"_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&map_widget](auto& action) { map_widget.set_show_users(action.is_checked()); }, window);
     show_users_action->set_checked(map_widget.show_users());
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action([&map_widget](auto&) { map_widget.set_zoom(map_widget.zoom() + 1); }, window);
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action([&map_widget](auto&) { map_widget.set_zoom(map_widget.zoom() - 1); }, window);

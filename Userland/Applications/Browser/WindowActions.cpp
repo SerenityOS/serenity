@@ -78,7 +78,7 @@ WindowActions::WindowActions(GUI::Window& window)
     m_about_action = GUI::CommonActions::make_about_action("Ladybird"_string, GUI::Icon::default_icon("app-browser"sv), &window);
 
     m_show_bookmarks_bar_action = GUI::Action::create_checkable(
-        "&Bookmarks Bar", { Mod_Ctrl, Key_B },
+        "&Bookmarks Bar"_string, { Mod_Ctrl, Key_B },
         [this](auto& action) {
             if (on_show_bookmarks_bar)
                 on_show_bookmarks_bar(action);
@@ -87,7 +87,7 @@ WindowActions::WindowActions(GUI::Window& window)
     m_show_bookmarks_bar_action->set_status_tip("Show/hide the bookmarks bar"_string);
 
     m_vertical_tabs_action = GUI::Action::create_checkable(
-        "&Vertical Tabs", { Mod_Ctrl, Key_Comma },
+        "&Vertical Tabs"_string, { Mod_Ctrl, Key_Comma },
         [this](auto& action) {
             if (on_vertical_tabs)
                 on_vertical_tabs(action);

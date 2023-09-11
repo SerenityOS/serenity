@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }));
 
-    auto toggle_check_guesses = GUI::Action::create_checkable("Check &Guesses in Dictionary", [&](auto& action) {
+    auto toggle_check_guesses = GUI::Action::create_checkable("Check &Guesses in Dictionary"_string, [&](auto& action) {
         auto checked = action.is_checked();
         game.set_check_guesses_in_dictionary(checked);
         Config::write_bool("MasterWord"sv, ""sv, "check_guesses_in_dictionary"sv, checked);

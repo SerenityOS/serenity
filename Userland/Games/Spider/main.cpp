@@ -211,7 +211,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup suit_actions;
     suit_actions.set_exclusive(true);
 
-    auto single_suit_action = GUI::Action::create_checkable("&Single Suit", [&](auto&) {
+    auto single_suit_action = GUI::Action::create_checkable("&Single Suit"_string, [&](auto&) {
         update_mode(Spider::Mode::SingleSuit);
 
         if (!confirm_end_current_game())
@@ -223,7 +223,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     single_suit_action->set_checked(mode == Spider::Mode::SingleSuit);
     suit_actions.add_action(single_suit_action);
 
-    auto two_suit_action = GUI::Action::create_checkable("&Two Suit", [&](auto&) {
+    auto two_suit_action = GUI::Action::create_checkable("&Two Suit"_string, [&](auto&) {
         update_mode(Spider::Mode::TwoSuit);
 
         if (!confirm_end_current_game())
@@ -260,14 +260,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup statistic_display_actions;
     statistic_display_actions.set_exclusive(true);
 
-    auto high_score_action = GUI::Action::create_checkable("&High Score", [&](auto&) {
+    auto high_score_action = GUI::Action::create_checkable("&High Score"_string, [&](auto&) {
         update_statistic_display(StatisticDisplay::HighScore);
         reset_statistic_status();
     });
     high_score_action->set_checked(statistic_display == StatisticDisplay::HighScore);
     statistic_display_actions.add_action(high_score_action);
 
-    auto best_time_actions = GUI::Action::create_checkable("&Best Time", [&](auto&) {
+    auto best_time_actions = GUI::Action::create_checkable("&Best Time"_string, [&](auto&) {
         update_statistic_display(StatisticDisplay::BestTime);
         reset_statistic_status();
     });

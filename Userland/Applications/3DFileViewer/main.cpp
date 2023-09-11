@@ -396,13 +396,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
 
     auto rotation_axis_menu = view_menu->add_submenu("Rotation &Axis"_string);
-    auto rotation_x_action = GUI::Action::create_checkable("&X", [&widget](auto&) {
+    auto rotation_x_action = GUI::Action::create_checkable("&X"_string, [&widget](auto&) {
         widget->toggle_rotate_x();
     });
-    auto rotation_y_action = GUI::Action::create_checkable("&Y", [&widget](auto&) {
+    auto rotation_y_action = GUI::Action::create_checkable("&Y"_string, [&widget](auto&) {
         widget->toggle_rotate_y();
     });
-    auto rotation_z_action = GUI::Action::create_checkable("&Z", [&widget](auto&) {
+    auto rotation_z_action = GUI::Action::create_checkable("&Z"_string, [&widget](auto&) {
         widget->toggle_rotate_z();
     });
 
@@ -417,16 +417,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup rotation_speed_actions;
     rotation_speed_actions.set_exclusive(true);
 
-    auto no_rotation_action = GUI::Action::create_checkable("N&o Rotation", [&widget](auto&) {
+    auto no_rotation_action = GUI::Action::create_checkable("N&o Rotation"_string, [&widget](auto&) {
         widget->set_rotation_speed(0.f);
     });
-    auto slow_rotation_action = GUI::Action::create_checkable("&Slow", [&widget](auto&) {
+    auto slow_rotation_action = GUI::Action::create_checkable("&Slow"_string, [&widget](auto&) {
         widget->set_rotation_speed(30.f);
     });
-    auto normal_rotation_action = GUI::Action::create_checkable("&Normal", [&widget](auto&) {
+    auto normal_rotation_action = GUI::Action::create_checkable("&Normal"_string, [&widget](auto&) {
         widget->set_rotation_speed(60.f);
     });
-    auto fast_rotation_action = GUI::Action::create_checkable("&Fast", [&widget](auto&) {
+    auto fast_rotation_action = GUI::Action::create_checkable("&Fast"_string, [&widget](auto&) {
         widget->set_rotation_speed(90.f);
     });
 
@@ -442,7 +442,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     normal_rotation_action->set_checked(true);
 
-    auto show_frame_rate_action = GUI::Action::create_checkable("Show Frame &Rate", [&widget](auto&) {
+    auto show_frame_rate_action = GUI::Action::create_checkable("Show Frame &Rate"_string, [&widget](auto&) {
         widget->toggle_show_frame_rate();
     });
 
@@ -450,7 +450,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto texture_menu = window->add_menu("&Texture"_string);
 
-    auto texture_enabled_action = GUI::Action::create_checkable("&Enable Texture", [&widget](auto& action) {
+    auto texture_enabled_action = GUI::Action::create_checkable("&Enable Texture"_string, [&widget](auto& action) {
         widget->set_texture_enabled(action.is_checked());
     });
     texture_enabled_action->set_checked(true);
@@ -460,13 +460,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup wrap_s_actions;
     wrap_s_actions.set_exclusive(true);
 
-    auto wrap_u_repeat_action = GUI::Action::create_checkable("&Repeat", [&widget](auto&) {
+    auto wrap_u_repeat_action = GUI::Action::create_checkable("&Repeat"_string, [&widget](auto&) {
         widget->set_wrap_s_mode(GL_REPEAT);
     });
-    auto wrap_u_mirrored_repeat_action = GUI::Action::create_checkable("&Mirrored Repeat", [&widget](auto&) {
+    auto wrap_u_mirrored_repeat_action = GUI::Action::create_checkable("&Mirrored Repeat"_string, [&widget](auto&) {
         widget->set_wrap_s_mode(GL_MIRRORED_REPEAT);
     });
-    auto wrap_u_clamp_action = GUI::Action::create_checkable("&Clamp", [&widget](auto&) {
+    auto wrap_u_clamp_action = GUI::Action::create_checkable("&Clamp"_string, [&widget](auto&) {
         widget->set_wrap_s_mode(GL_CLAMP);
     });
 
@@ -484,13 +484,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup wrap_t_actions;
     wrap_t_actions.set_exclusive(true);
 
-    auto wrap_t_repeat_action = GUI::Action::create_checkable("&Repeat", [&widget](auto&) {
+    auto wrap_t_repeat_action = GUI::Action::create_checkable("&Repeat"_string, [&widget](auto&) {
         widget->set_wrap_t_mode(GL_REPEAT);
     });
-    auto wrap_t_mirrored_repeat_action = GUI::Action::create_checkable("&Mirrored Repeat", [&widget](auto&) {
+    auto wrap_t_mirrored_repeat_action = GUI::Action::create_checkable("&Mirrored Repeat"_string, [&widget](auto&) {
         widget->set_wrap_t_mode(GL_MIRRORED_REPEAT);
     });
-    auto wrap_t_clamp_action = GUI::Action::create_checkable("&Clamp", [&widget](auto&) {
+    auto wrap_t_clamp_action = GUI::Action::create_checkable("&Clamp"_string, [&widget](auto&) {
         widget->set_wrap_t_mode(GL_CLAMP);
     });
 
@@ -508,23 +508,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup texture_scale_actions;
     texture_scale_actions.set_exclusive(true);
 
-    auto texture_scale_025_action = GUI::Action::create_checkable("0.25x", [&widget](auto&) {
+    auto texture_scale_025_action = GUI::Action::create_checkable("0.25x"_string, [&widget](auto&) {
         widget->set_texture_scale(0.25f);
     });
 
-    auto texture_scale_05_action = GUI::Action::create_checkable("0.5x", [&widget](auto&) {
+    auto texture_scale_05_action = GUI::Action::create_checkable("0.5x"_string, [&widget](auto&) {
         widget->set_texture_scale(0.5f);
     });
 
-    auto texture_scale_1_action = GUI::Action::create_checkable("1x", [&widget](auto&) {
+    auto texture_scale_1_action = GUI::Action::create_checkable("1x"_string, [&widget](auto&) {
         widget->set_texture_scale(1);
     });
 
-    auto texture_scale_2_action = GUI::Action::create_checkable("2x", [&widget](auto&) {
+    auto texture_scale_2_action = GUI::Action::create_checkable("2x"_string, [&widget](auto&) {
         widget->set_texture_scale(2);
     });
 
-    auto texture_scale_4_action = GUI::Action::create_checkable("4x", [&widget](auto&) {
+    auto texture_scale_4_action = GUI::Action::create_checkable("4x"_string, [&widget](auto&) {
         widget->set_texture_scale(4);
     });
 
@@ -546,11 +546,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup texture_mag_filter_actions;
     texture_mag_filter_actions.set_exclusive(true);
 
-    auto texture_mag_filter_nearest_action = GUI::Action::create_checkable("&Nearest", [&widget](auto&) {
+    auto texture_mag_filter_nearest_action = GUI::Action::create_checkable("&Nearest"_string, [&widget](auto&) {
         widget->set_mag_filter(GL_NEAREST);
     });
 
-    auto texture_mag_filter_linear_action = GUI::Action::create_checkable("&Linear", [&widget](auto&) {
+    auto texture_mag_filter_linear_action = GUI::Action::create_checkable("&Linear"_string, [&widget](auto&) {
         widget->set_mag_filter(GL_LINEAR);
     });
 

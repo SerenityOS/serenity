@@ -869,7 +869,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_edit
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_toggle_open_file_in_single_click_action()
 {
-    return GUI::Action::create_checkable("&Open File with Single Click", [this](auto&) {
+    return GUI::Action::create_checkable("&Open File with Single Click"_string, [this](auto&) {
         m_project_tree_view->set_activates_on_selection(!m_project_tree_view->activates_on_selection());
     });
 }
@@ -1458,7 +1458,7 @@ ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 
     edit_menu->add_separator();
 
-    auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [this](auto& action) {
+    auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation"_string, { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [this](auto& action) {
         if (action.is_checked()) {
             for (auto& editor_wrapper : m_all_editor_wrappers)
                 editor_wrapper->editor().set_editing_engine(make<GUI::VimEditingEngine>());
@@ -1494,7 +1494,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     auto open_locator_action = GUI::Action::create("Open &Locator"_string, { Mod_Ctrl, Key_K }, [this](auto&) {
         m_locator->open();
     });
-    auto show_dotfiles_action = GUI::Action::create_checkable("S&how Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& checked) {
+    auto show_dotfiles_action = GUI::Action::create_checkable("S&how Dotfiles"_string, { Mod_Ctrl, Key_H }, [&](auto& checked) {
         project().model().set_should_show_dotfiles(checked.is_checked());
         Config::write_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, checked.is_checked());
     });
@@ -1512,17 +1512,17 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
 
     m_wrapping_mode_actions.set_exclusive(true);
     auto wrapping_mode_menu = view_menu->add_submenu("&Wrapping Mode"_string);
-    m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
+    m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping"_string, [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::NoWrap;
         for (auto& wrapper : m_all_editor_wrappers)
             wrapper->editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     });
-    m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap &Anywhere", [&](auto&) {
+    m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap &Anywhere"_string, [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::WrapAnywhere;
         for (auto& wrapper : m_all_editor_wrappers)
             wrapper->editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
     });
-    m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at &Words", [&](auto&) {
+    m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at &Words"_string, [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::WrapAtWords;
         for (auto& wrapper : m_all_editor_wrappers)
             wrapper->editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
@@ -1916,7 +1916,7 @@ void HackStudioWidget::for_each_open_file(Function<void(ProjectFile const&)> fun
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_toggle_syntax_highlighting_mode_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"sv));
-    auto action = GUI::Action::create_checkable("&Semantic Highlighting", icon, [this](auto& action) {
+    auto action = GUI::Action::create_checkable("&Semantic Highlighting"_string, icon, [this](auto& action) {
         for (auto& editor_wrapper : m_all_editor_wrappers)
             editor_wrapper->editor().set_semantic_syntax_highlighting(action.is_checked());
     });

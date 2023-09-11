@@ -162,7 +162,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup draw_setting_actions;
     draw_setting_actions.set_exclusive(true);
 
-    auto single_card_draw_action = GUI::Action::create_checkable("&Single Card Draw", [&](auto&) {
+    auto single_card_draw_action = GUI::Action::create_checkable("&Single Card Draw"_string, [&](auto&) {
         update_mode(Solitaire::Mode::SingleCardDraw);
 
         if (!confirm_end_current_game())
@@ -175,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     single_card_draw_action->set_status_tip("Draw one card at a time"_string);
     draw_setting_actions.add_action(single_card_draw_action);
 
-    auto three_card_draw_action = GUI::Action::create_checkable("&Three Card Draw", [&](auto&) {
+    auto three_card_draw_action = GUI::Action::create_checkable("&Three Card Draw"_string, [&](auto&) {
         update_mode(Solitaire::Mode::ThreeCardDraw);
 
         if (!confirm_end_current_game())
@@ -189,7 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     draw_setting_actions.add_action(three_card_draw_action);
 
     game.set_auto_collect(Config::read_bool("Solitaire"sv, "Settings"sv, "AutoCollect"sv, false));
-    auto toggle_auto_collect_action = GUI::Action::create_checkable("Auto-&Collect", [&](auto& action) {
+    auto toggle_auto_collect_action = GUI::Action::create_checkable("Auto-&Collect"_string, [&](auto& action) {
         auto checked = action.is_checked();
         game.set_auto_collect(checked);
         Config::write_bool("Solitaire"sv, "Settings"sv, "AutoCollect"sv, checked);

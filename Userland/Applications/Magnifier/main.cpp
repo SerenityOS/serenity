@@ -91,32 +91,32 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto size_action_group = make<GUI::ActionGroup>();
 
     auto two_x_action = GUI::Action::create_checkable(
-        "&2x", { Key_2 }, [&](auto&) {
+        "&2x"_string, { Key_2 }, [&](auto&) {
             magnifier->set_scale_factor(2);
         });
 
     auto four_x_action = GUI::Action::create_checkable(
-        "&4x", { Key_4 }, [&](auto&) {
+        "&4x"_string, { Key_4 }, [&](auto&) {
             magnifier->set_scale_factor(4);
         });
 
     auto eight_x_action = GUI::Action::create_checkable(
-        "&8x", { Key_8 }, [&](auto&) {
+        "&8x"_string, { Key_8 }, [&](auto&) {
             magnifier->set_scale_factor(8);
         });
 
     auto pause_action = GUI::Action::create_checkable(
-        "&Pause Capture", { Key_Space }, [&](auto& action) {
+        "&Pause Capture"_string, { Key_Space }, [&](auto& action) {
             magnifier->pause_capture(action.is_checked());
         });
 
     auto lock_location_action = GUI::Action::create_checkable(
-        "&Lock Location", { Key_L }, [&](auto& action) {
+        "&Lock Location"_string, { Key_L }, [&](auto& action) {
             magnifier->lock_location(action.is_checked());
         });
 
     auto show_grid_action = GUI::Action::create_checkable(
-        "Show &Grid", { Key_G }, [&](auto& action) {
+        "Show &Grid"_string, { Key_G }, [&](auto& action) {
             magnifier->show_grid(action.is_checked());
         });
 

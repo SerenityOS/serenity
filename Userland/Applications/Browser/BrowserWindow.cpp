@@ -316,9 +316,9 @@ void BrowserWindow::build_menus()
         auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
         m_color_scheme_actions.set_exclusive(true);
 
-        auto add_color_scheme_action = [&](auto& name, Web::CSS::PreferredColorScheme preference_value) {
+        auto add_color_scheme_action = [&](String name, Web::CSS::PreferredColorScheme preference_value) {
             auto action = GUI::Action::create_checkable(
-                name, [=, this](auto&) {
+                move(name), [=, this](auto&) {
                     Config::write_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Web::CSS::preferred_color_scheme_to_string(preference_value));
                     active_tab().view().set_preferred_color_scheme(preference_value);
                 },
@@ -329,9 +329,9 @@ void BrowserWindow::build_menus()
             m_color_scheme_actions.add_action(action);
         };
 
-        add_color_scheme_action("Follow System Theme", Web::CSS::PreferredColorScheme::Auto);
-        add_color_scheme_action("Light", Web::CSS::PreferredColorScheme::Light);
-        add_color_scheme_action("Dark", Web::CSS::PreferredColorScheme::Dark);
+        add_color_scheme_action("Follow System Theme"_string, Web::CSS::PreferredColorScheme::Auto);
+        add_color_scheme_action("Light"_string, Web::CSS::PreferredColorScheme::Light);
+        add_color_scheme_action("Dark"_string, Web::CSS::PreferredColorScheme::Dark);
     }
 
     settings_menu->add_separator();
@@ -385,7 +385,7 @@ void BrowserWindow::build_menus()
     }));
     debug_menu->add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable(
-        "Line &Box Borders", [this](auto& action) {
+        "Line &Box Borders"_string, [this](auto& action) {
             active_tab().view().debug_request("set-line-box-borders", action.is_checked() ? "on" : "off");
         },
         this);
@@ -402,7 +402,7 @@ void BrowserWindow::build_menus()
 
     m_user_agent_spoof_actions.set_exclusive(true);
     auto spoof_user_agent_menu = debug_menu->add_submenu("Spoof &User Agent"_string);
-    m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled", [this](auto&) {
+    m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled"_string, [this](auto&) {
         active_tab().view().debug_request("spoof-user-agent", Web::default_user_agent);
     });
     m_disable_user_agent_spoofing->set_status_tip(String::from_utf8(Web::default_user_agent).release_value_but_fixme_should_propagate_errors());
@@ -412,7 +412,7 @@ void BrowserWindow::build_menus()
     m_disable_user_agent_spoofing->set_checked(true);
 
     auto add_user_agent = [this, &spoof_user_agent_menu](auto& name, auto user_agent) {
-        auto action = GUI::Action::create_checkable(name, [this, user_agent](auto&) {
+        auto action = GUI::Action::create_checkable(String::from_utf8(name).release_value_but_fixme_should_propagate_errors(), [this, user_agent](auto&) {
             active_tab().view().debug_request("spoof-user-agent", user_agent);
         });
         action->set_status_tip(String::from_utf8(user_agent).release_value_but_fixme_should_propagate_errors());
@@ -422,7 +422,7 @@ void BrowserWindow::build_menus()
     for (auto const& user_agent : WebView::user_agents)
         add_user_agent(user_agent.key, user_agent.value);
 
-    auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
+    auto custom_user_agent = GUI::Action::create_checkable("Custom..."_string, [this](auto& action) {
         String user_agent;
         if (GUI::InputBox::show(this, user_agent, "Enter User Agent:"sv, "Custom User Agent"sv, GUI::InputType::NonemptyText) != GUI::InputBox::ExecResult::OK) {
             m_disable_user_agent_spoofing->activate();
@@ -436,7 +436,7 @@ void BrowserWindow::build_menus()
 
     debug_menu->add_separator();
     auto scripting_enabled_action = GUI::Action::create_checkable(
-        "Enable Scripting", [this](auto& action) {
+        "Enable Scripting"_string, [this](auto& action) {
             active_tab().view().debug_request("scripting", action.is_checked() ? "on" : "off");
         },
         this);
@@ -444,7 +444,7 @@ void BrowserWindow::build_menus()
     debug_menu->add_action(scripting_enabled_action);
 
     auto block_pop_ups_action = GUI::Action::create_checkable(
-        "Block Pop-ups", [this](auto& action) {
+        "Block Pop-ups"_string, [this](auto& action) {
             active_tab().view().debug_request("block-pop-ups", action.is_checked() ? "on" : "off");
         },
         this);
@@ -452,7 +452,7 @@ void BrowserWindow::build_menus()
     debug_menu->add_action(block_pop_ups_action);
 
     auto same_origin_policy_action = GUI::Action::create_checkable(
-        "Enable Same-Origin &Policy", [this](auto& action) {
+        "Enable Same-Origin &Policy"_string, [this](auto& action) {
             active_tab().view().debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
         },
         this);
@@ -472,7 +472,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     bool search_engine_set = false;
 
     m_disable_search_engine_action = GUI::Action::create_checkable(
-        "Disable", [](auto&) {
+        "Disable"_string, [](auto&) {
             g_search_engine = {};
             Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
         },
@@ -492,7 +492,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
                 if (!json_item.is_object())
                     continue;
                 auto search_engine = json_item.as_object();
-                auto name = search_engine.get_deprecated_string("title"sv).value();
+                auto name = TRY(String::from_deprecated_string(search_engine.get_deprecated_string("title"sv).value()));
                 auto url_format = search_engine.get_deprecated_string("url_format"sv).value();
 
                 auto action = GUI::Action::create_checkable(
@@ -513,7 +513,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
         }
     }
 
-    auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
+    auto custom_search_engine_action = GUI::Action::create_checkable("Custom..."_string, [&](auto& action) {
         String search_engine;
         if (GUI::InputBox::show(this, search_engine, "Enter URL template:"sv, "Custom Search Engine"sv, GUI::InputType::NonemptyText, "https://host/search?q={}"sv) != GUI::InputBox::ExecResult::OK) {
             m_disable_search_engine_action->activate();

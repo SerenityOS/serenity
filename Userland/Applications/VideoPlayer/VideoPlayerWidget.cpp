@@ -87,19 +87,19 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
     find_descendant_of_type_named<GUI::Button>("sizing")->set_action(*m_cycle_sizing_modes_action);
     find_descendant_of_type_named<GUI::Button>("fullscreen")->set_action(*m_toggle_fullscreen_action);
 
-    m_size_fit_action = GUI::Action::create_checkable("&Fit", [&](auto&) {
+    m_size_fit_action = GUI::Action::create_checkable("&Fit"_string, [&](auto&) {
         set_sizing_mode(VideoSizingMode::Fit);
     });
 
-    m_size_fill_action = GUI::Action::create_checkable("Fi&ll", [&](auto&) {
+    m_size_fill_action = GUI::Action::create_checkable("Fi&ll"_string, [&](auto&) {
         set_sizing_mode(VideoSizingMode::Fill);
     });
 
-    m_size_stretch_action = GUI::Action::create_checkable("&Stretch", [&](auto&) {
+    m_size_stretch_action = GUI::Action::create_checkable("&Stretch"_string, [&](auto&) {
         set_sizing_mode(VideoSizingMode::Stretch);
     });
 
-    m_size_fullsize_action = GUI::Action::create_checkable("F&ull Size", [&](auto&) {
+    m_size_fullsize_action = GUI::Action::create_checkable("F&ull Size"_string, [&](auto&) {
         set_sizing_mode(VideoSizingMode::FullSize);
     });
 
@@ -403,7 +403,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 
     // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
     //        For now, leave it here for convenience.
-    m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {});
+    m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking"_string, [&](auto&) {});
     playback_menu->add_action(*m_use_fast_seeking);
     set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
 

@@ -525,7 +525,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     // Save this so other methods can use it
     m_show_guides_action = GUI::Action::create_checkable(
-        "Show &Guides", [&](auto& action) {
+        "Show &Guides"_string, [&](auto& action) {
             Config::write_bool("PixelPaint"sv, "Guides"sv, "Show"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -555,7 +555,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_separator();
 
     auto show_pixel_grid_action = GUI::Action::create_checkable(
-        "Show &Pixel Grid", [&](auto& action) {
+        "Show &Pixel Grid"_string, [&](auto& action) {
             Config::write_bool("PixelPaint"sv, "PixelGrid"sv, "Show"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -565,7 +565,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*show_pixel_grid_action);
 
     m_show_rulers_action = GUI::Action::create_checkable(
-        "Show R&ulers", { Mod_Ctrl, Key_R }, [&](auto& action) {
+        "Show R&ulers"_string, { Mod_Ctrl, Key_R }, [&](auto& action) {
             Config::write_bool("PixelPaint"sv, "Rulers"sv, "Show"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -575,7 +575,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*m_show_rulers_action);
 
     m_show_active_layer_boundary_action = GUI::Action::create_checkable(
-        "Show Active Layer &Boundary", [&](auto& action) {
+        "Show Active Layer &Boundary"_string, [&](auto& action) {
             Config::write_bool("PixelPaint"sv, "ImageEditor"sv, "ShowActiveLayerBoundary"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -586,13 +586,13 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_view_menu->add_separator();
 
-    auto histogram_action = GUI::Action::create_checkable("&Histogram", [&](auto& action) {
+    auto histogram_action = GUI::Action::create_checkable("&Histogram"_string, [&](auto& action) {
         m_histogram_widget->set_scope_visibility(action.is_checked());
     });
     histogram_action->set_checked(m_histogram_widget->read_visibility_from_configuration());
     m_histogram_widget->set_scope_visibility(histogram_action->is_checked());
 
-    auto vectorscope_action = GUI::Action::create_checkable("&Vectorscope", [&](auto& action) {
+    auto vectorscope_action = GUI::Action::create_checkable("&Vectorscope"_string, [&](auto& action) {
         m_vectorscope_widget->set_scope_visibility(action.is_checked());
     });
     vectorscope_action->set_checked(m_vectorscope_widget->read_visibility_from_configuration());
@@ -855,7 +855,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     mask_submenu->add_action(*m_clear_mask_action);
 
     m_toggle_mask_visibility_action = GUI::Action::create_checkable(
-        "Show Mask", [&](auto&) {
+        "Show Mask"_string, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             if (!editor->active_layer())

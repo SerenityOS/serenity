@@ -320,12 +320,12 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_rotate_counterclockwise_action->set_enabled(false);
     m_rotate_clockwise_action->set_enabled(false);
 
-    m_page_view_mode_single = GUI::Action::create_checkable("Single", [&](auto&) {
+    m_page_view_mode_single = GUI::Action::create_checkable("Single"_string, [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Single);
     });
     m_page_view_mode_single->set_status_tip("Show single page at a time"_string);
 
-    m_page_view_mode_multiple = GUI::Action::create_checkable("Multiple", [&](auto&) {
+    m_page_view_mode_multiple = GUI::Action::create_checkable("Multiple"_string, [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Multiple);
     });
     m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time"_string);

@@ -242,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         window);
 
-    auto hide_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", { Mod_Ctrl, Key_T },
+    auto hide_show_toolbar_action = GUI::Action::create_checkable("&Toolbar"_string, { Mod_Ctrl, Key_T },
         [&](auto& action) {
             toolbar_container.set_visible(action.is_checked());
         });
@@ -253,20 +253,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::Clipboard::the().set_bitmap(*widget.image()->bitmap({}).release_value_but_fixme_should_propagate_errors());
     });
 
-    auto nearest_neighbor_action = GUI::Action::create_checkable("&Nearest Neighbor", [&](auto&) {
+    auto nearest_neighbor_action = GUI::Action::create_checkable("&Nearest Neighbor"_string, [&](auto&) {
         widget.set_scaling_mode(Gfx::Painter::ScalingMode::NearestNeighbor);
     });
     nearest_neighbor_action->set_checked(true);
 
-    auto smooth_pixels_action = GUI::Action::create_checkable("&Smooth Pixels", [&](auto&) {
+    auto smooth_pixels_action = GUI::Action::create_checkable("&Smooth Pixels"_string, [&](auto&) {
         widget.set_scaling_mode(Gfx::Painter::ScalingMode::SmoothPixels);
     });
 
-    auto bilinear_action = GUI::Action::create_checkable("&Bilinear", [&](auto&) {
+    auto bilinear_action = GUI::Action::create_checkable("&Bilinear"_string, [&](auto&) {
         widget.set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
     });
 
-    auto box_sampling_action = GUI::Action::create_checkable("B&ox Sampling", [&](auto&) {
+    auto box_sampling_action = GUI::Action::create_checkable("B&ox Sampling"_string, [&](auto&) {
         widget.set_scaling_mode(Gfx::Painter::ScalingMode::BoxSampling);
     });
 

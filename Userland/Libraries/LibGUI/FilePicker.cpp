@@ -217,7 +217,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     m_context_menu->add_separator();
 
     auto show_dotfiles = GUI::Action::create_checkable(
-        "Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+        "Show Dotfiles"_string, { Mod_Ctrl, Key_H }, [&](auto& action) {
             m_model->set_should_show_dotfiles(action.is_checked());
             m_model->invalidate();
         },

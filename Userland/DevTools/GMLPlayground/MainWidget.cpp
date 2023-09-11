@@ -232,7 +232,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
     edit_menu->add_action(format_gml_action);
 
-    auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
+    auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation"_string, { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
         if (action.is_checked())
             m_editor->set_editing_engine(make<GUI::VimEditingEngine>());
         else
@@ -245,7 +245,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_views_group.set_exclusive(true);
     m_views_group.set_unchecking_allowed(false);
 
-    m_view_frame_action = GUI::Action::create_checkable("&Frame", [&](auto&) {
+    m_view_frame_action = GUI::Action::create_checkable("&Frame"_string, [&](auto&) {
         dbgln("View switched to frame");
         m_preview = m_preview_frame_widget;
         m_editor->on_change();
@@ -257,7 +257,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_views_group.add_action(*m_view_frame_action);
     m_view_frame_action->set_checked(true);
 
-    m_view_window_action = GUI::Action::create_checkable("&Window", [&](auto&) {
+    m_view_window_action = GUI::Action::create_checkable("&Window"_string, [&](auto&) {
         dbgln("View switched to window");
         m_preview = m_preview_window_widget;
         m_editor->on_change();

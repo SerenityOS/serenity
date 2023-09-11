@@ -217,12 +217,12 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
-    m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
+    m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar"_string, [&](auto& action) {
         m_toolbar_container->set_visible(action.is_checked());
         Config::write_bool("HexEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
 
-    m_layout_search_results_action = GUI::Action::create_checkable("&Search Results", [&](auto& action) {
+    m_layout_search_results_action = GUI::Action::create_checkable("&Search Results"_string, [&](auto& action) {
         set_search_results_visible(action.is_checked());
         Config::write_bool("HexEditor"sv, "Layout"sv, "ShowSearchResults"sv, action.is_checked());
     });
@@ -253,7 +253,7 @@ HexEditorWidget::HexEditorWidget()
     });
     m_fill_selection_action->set_enabled(false);
 
-    m_layout_value_inspector_action = GUI::Action::create_checkable("&Value Inspector", [&](auto& action) {
+    m_layout_value_inspector_action = GUI::Action::create_checkable("&Value Inspector"_string, [&](auto& action) {
         set_value_inspector_visible(action.is_checked());
         Config::write_bool("HexEditor"sv, "Layout"sv, "ShowValueInspector"sv, action.is_checked());
     });
@@ -506,7 +506,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     m_bytes_per_row_actions.set_exclusive(true);
     auto bytes_per_row_menu = view_menu->add_submenu("Bytes per &Row"_string);
     for (int i = 8; i <= 32; i += 8) {
-        auto action = GUI::Action::create_checkable(DeprecatedString::number(i), [this, i](auto&) {
+        auto action = GUI::Action::create_checkable(TRY(String::number(i)), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
             m_editor->update();
             Config::write_i32("HexEditor"sv, "Layout"sv, "BytesPerRow"sv, i);
@@ -519,7 +519,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
 
     m_value_inspector_mode_actions.set_exclusive(true);
     auto inspector_mode_menu = view_menu->add_submenu("Value Inspector &Mode"_string);
-    auto little_endian_mode = GUI::Action::create_checkable("&Little Endian", [&](auto& action) {
+    auto little_endian_mode = GUI::Action::create_checkable("&Little Endian"_string, [&](auto& action) {
         m_value_inspector_little_endian = action.is_checked();
         update_inspector_values(m_editor->selection_start_offset());
 
@@ -528,7 +528,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     m_value_inspector_mode_actions.add_action(little_endian_mode);
     inspector_mode_menu->add_action(little_endian_mode);
 
-    auto big_endian_mode = GUI::Action::create_checkable("&Big Endian", [this](auto& action) {
+    auto big_endian_mode = GUI::Action::create_checkable("&Big Endian"_string, [this](auto& action) {
         m_value_inspector_little_endian = !action.is_checked();
         update_inspector_values(m_editor->selection_start_offset());
 

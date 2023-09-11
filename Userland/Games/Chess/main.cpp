@@ -149,7 +149,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     settings_action->set_status_tip("Open the Game Settings for Chess"_string);
     game_menu->add_action(settings_action);
 
-    auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves", [&](auto& action) {
+    auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves"_string, [&](auto& action) {
         widget->set_show_available_moves(action.is_checked());
         widget->update();
         Config::write_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, action.is_checked());
@@ -167,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup engines_action_group;
     engines_action_group.set_exclusive(true);
     auto engine_submenu = engine_menu->add_submenu("&Engine"_string);
-    auto human_engine_checkbox = GUI::Action::create_checkable("Human", [&](auto&) {
+    auto human_engine_checkbox = GUI::Action::create_checkable("Human"_string, [&](auto&) {
         widget->set_engine(nullptr);
     });
     human_engine_checkbox->set_checked(true);
@@ -175,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     engine_submenu->add_action(human_engine_checkbox);
 
     for (auto const& engine : engines) {
-        auto action = GUI::Action::create_checkable(engine.name, [&](auto&) {
+        auto action = GUI::Action::create_checkable(TRY(String::from_utf8(engine.name)), [&](auto&) {
             auto new_engine = Engine::construct(engine.path);
             new_engine->on_connection_lost = [&]() {
                 if (!widget->want_engine_move())

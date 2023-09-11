@@ -45,24 +45,24 @@ NonnullRefPtr<Action> Action::create(String text, Shortcut const& shortcut, Shor
     return adopt_ref(*new Action(text.to_deprecated_string(), shortcut, alternate_shortcut, move(icon), move(callback), parent));
 }
 
-NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, Function<void(Action&)> callback, Core::EventReceiver* parent)
+NonnullRefPtr<Action> Action::create_checkable(String text, Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
-    return adopt_ref(*new Action(move(text), move(callback), parent, true));
+    return adopt_ref(*new Action(text.to_deprecated_string(), move(callback), parent, true));
 }
 
-NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent)
+NonnullRefPtr<Action> Action::create_checkable(String text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
-    return adopt_ref(*new Action(move(text), move(icon), move(callback), parent, true));
+    return adopt_ref(*new Action(text.to_deprecated_string(), move(icon), move(callback), parent, true));
 }
 
-NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent)
+NonnullRefPtr<Action> Action::create_checkable(String text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
-    return adopt_ref(*new Action(move(text), shortcut, move(callback), parent, true));
+    return adopt_ref(*new Action(text.to_deprecated_string(), shortcut, move(callback), parent, true));
 }
 
-NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent)
+NonnullRefPtr<Action> Action::create_checkable(String text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
-    return adopt_ref(*new Action(move(text), shortcut, Shortcut {}, move(icon), move(callback), parent, true));
+    return adopt_ref(*new Action(text.to_deprecated_string(), shortcut, Shortcut {}, move(icon), move(callback), parent, true));
 }
 
 RefPtr<Action> Action::find_action_for_shortcut(Core::EventReceiver& object, Shortcut const& shortcut)

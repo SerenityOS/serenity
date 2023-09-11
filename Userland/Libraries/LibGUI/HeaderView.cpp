@@ -359,7 +359,7 @@ Menu& HeaderView::ensure_context_menu()
         for (int section = 0; section < section_count; ++section) {
             auto& column_data = this->section_data(section);
             auto name = model()->column_name(section).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
-            column_data.visibility_action = Action::create_checkable(name, [this, section](auto& action) {
+            column_data.visibility_action = Action::create_checkable(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors(), [this, section](auto& action) {
                 set_section_visible(section, action.is_checked());
             });
             column_data.visibility_action->set_checked(column_data.visibility);

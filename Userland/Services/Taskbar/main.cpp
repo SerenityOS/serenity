@@ -214,7 +214,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     {
         int theme_identifier = 0;
         for (auto& theme : g_themes) {
-            auto action = GUI::Action::create_checkable(theme.name, [theme_identifier, &window](auto&) {
+            auto action = GUI::Action::create_checkable(TRY(String::from_deprecated_string(theme.name)), [theme_identifier, &window](auto&) {
                 auto& theme = g_themes[theme_identifier];
                 dbgln("Theme switched to {} at path {}", theme.name, theme.path);
                 if (window.main_widget()->palette().color_scheme_path() != ""sv)

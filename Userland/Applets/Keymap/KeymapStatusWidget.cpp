@@ -38,7 +38,7 @@ ErrorOr<void> KeymapStatusWidget::refresh_menu()
     auto keymaps = keymaps_string.split(',');
 
     for (auto& keymap : keymaps) {
-        auto action = GUI::Action::create_checkable(keymap, [=](auto&) {
+        auto action = GUI::Action::create_checkable(TRY(String::from_deprecated_string(keymap)), [=](auto&) {
             GUI::ConnectionToWindowManagerServer::the().async_set_keymap(keymap);
         });
 

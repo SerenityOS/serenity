@@ -225,7 +225,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_metadata = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, true);
     m_font_metadata_groupbox->set_visible(show_metadata);
-    m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [this](auto& action) {
+    m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata"_string, { Mod_Ctrl, Key_M }, [this](auto& action) {
         m_font_metadata_groupbox->set_visible(action.is_checked());
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, action.is_checked());
     });
@@ -234,7 +234,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_unicode_blocks = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, true);
     m_unicode_block_container->set_visible(show_unicode_blocks);
-    m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [this](auto& action) {
+    m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks"_string, { Mod_Ctrl, Key_U }, [this](auto& action) {
         m_unicode_block_container->set_visible(action.is_checked());
         if (action.is_checked())
             m_search_textbox->set_focus(m_initialized);
@@ -247,7 +247,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_toolbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
     m_toolbar_container->set_visible(show_toolbar);
-    m_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", [this](auto& action) {
+    m_show_toolbar_action = GUI::Action::create_checkable("&Toolbar"_string, [this](auto& action) {
         m_toolbar_container->set_visible(action.is_checked());
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
@@ -256,7 +256,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_statusbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, true);
     m_statusbar->set_visible(show_statusbar);
-    m_show_statusbar_action = GUI::Action::create_checkable("&Status Bar", [this](auto& action) {
+    m_show_statusbar_action = GUI::Action::create_checkable("&Status Bar"_string, [this](auto& action) {
         m_statusbar->set_visible(action.is_checked());
         update_statusbar();
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
@@ -266,7 +266,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool highlight_modifications = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, true);
     m_glyph_map_widget->set_highlight_modifications(highlight_modifications);
-    m_highlight_modifications_action = GUI::Action::create_checkable("&Highlight Modifications", { Mod_Ctrl, Key_H }, [this](auto& action) {
+    m_highlight_modifications_action = GUI::Action::create_checkable("&Highlight Modifications"_string, { Mod_Ctrl, Key_H }, [this](auto& action) {
         m_glyph_map_widget->set_highlight_modifications(action.is_checked());
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, action.is_checked());
     });
@@ -275,7 +275,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_system_emoji = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, true);
     m_glyph_map_widget->set_show_system_emoji(show_system_emoji);
-    m_show_system_emoji_action = GUI::Action::create_checkable("System &Emoji", { Mod_Ctrl, Key_E }, [this](auto& action) {
+    m_show_system_emoji_action = GUI::Action::create_checkable("System &Emoji"_string, { Mod_Ctrl, Key_E }, [this](auto& action) {
         m_glyph_map_widget->set_show_system_emoji(action.is_checked());
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, action.is_checked());
     });
@@ -310,17 +310,17 @@ ErrorOr<void> MainWidget::create_actions()
 
     i32 scale = Config::read_i32("FontEditor"sv, "GlyphEditor"sv, "Scale"sv, 10);
     m_glyph_editor_widget->set_scale(scale);
-    m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [this](auto&) {
+    m_scale_five_action = GUI::Action::create_checkable("500%"_string, { Mod_Ctrl, Key_1 }, [this](auto&) {
         set_scale_and_save(5);
     });
     m_scale_five_action->set_checked(scale == 5);
     m_scale_five_action->set_status_tip("Scale the editor in proportion to the current font"_string);
-    m_scale_ten_action = GUI::Action::create_checkable("1000%", { Mod_Ctrl, Key_2 }, [this](auto&) {
+    m_scale_ten_action = GUI::Action::create_checkable("1000%"_string, { Mod_Ctrl, Key_2 }, [this](auto&) {
         set_scale_and_save(10);
     });
     m_scale_ten_action->set_checked(scale == 10);
     m_scale_ten_action->set_status_tip("Scale the editor in proportion to the current font"_string);
-    m_scale_fifteen_action = GUI::Action::create_checkable("1500%", { Mod_Ctrl, Key_3 }, [this](auto&) {
+    m_scale_fifteen_action = GUI::Action::create_checkable("1500%"_string, { Mod_Ctrl, Key_3 }, [this](auto&) {
         set_scale_and_save(15);
     });
     m_scale_fifteen_action->set_checked(scale == 15);
@@ -331,12 +331,12 @@ ErrorOr<void> MainWidget::create_actions()
     m_glyph_editor_scale_actions.add_action(*m_scale_fifteen_action);
     m_glyph_editor_scale_actions.set_exclusive(true);
 
-    m_paint_glyph_action = GUI::Action::create_checkable("Paint Glyph", { Mod_Ctrl, KeyCode::Key_J }, g_resources.paint_glyph, [this](auto&) {
+    m_paint_glyph_action = GUI::Action::create_checkable("Paint Glyph"_string, { Mod_Ctrl, KeyCode::Key_J }, g_resources.paint_glyph, [this](auto&) {
         m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
     });
     m_paint_glyph_action->set_checked(true);
 
-    m_move_glyph_action = GUI::Action::create_checkable("Move Glyph", { Mod_Ctrl, KeyCode::Key_K }, g_resources.move_glyph, [this](auto&) {
+    m_move_glyph_action = GUI::Action::create_checkable("Move Glyph"_string, { Mod_Ctrl, KeyCode::Key_K }, g_resources.move_glyph, [this](auto&) {
         m_glyph_editor_widget->set_mode(GlyphEditorWidget::Move);
     });
 

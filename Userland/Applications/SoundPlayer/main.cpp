@@ -76,32 +76,32 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto playback_menu = window->add_menu("&Playback"_string);
     GUI::ActionGroup loop_actions;
     loop_actions.set_exclusive(true);
-    auto loop_none = GUI::Action::create_checkable("&No Loop", { Mod_Ctrl, Key_N }, [&](auto&) {
+    auto loop_none = GUI::Action::create_checkable("&No Loop"_string, { Mod_Ctrl, Key_N }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::None);
     });
     loop_actions.add_action(loop_none);
     playback_menu->add_action(loop_none);
 
-    auto loop_file = GUI::Action::create_checkable("Loop &File", { Mod_Ctrl, Key_F }, [&](auto&) {
+    auto loop_file = GUI::Action::create_checkable("Loop &File"_string, { Mod_Ctrl, Key_F }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::File);
     });
     loop_actions.add_action(loop_file);
     playback_menu->add_action(loop_file);
 
-    auto loop_playlist = GUI::Action::create_checkable("Loop &Playlist", { Mod_Ctrl, Key_P }, [&](auto&) {
+    auto loop_playlist = GUI::Action::create_checkable("Loop &Playlist"_string, { Mod_Ctrl, Key_P }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::Playlist);
     });
     loop_actions.add_action(loop_playlist);
     playback_menu->add_action(loop_playlist);
 
-    auto linear_volume_slider = GUI::Action::create_checkable("&Nonlinear Volume Slider", [&](auto& action) {
+    auto linear_volume_slider = GUI::Action::create_checkable("&Nonlinear Volume Slider"_string, [&](auto& action) {
         static_cast<SoundPlayerWidget*>(player)->set_nonlinear_volume_slider(action.is_checked());
     });
     playback_menu->add_separator();
     playback_menu->add_action(linear_volume_slider);
     playback_menu->add_separator();
 
-    auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist", [&](auto& action) {
+    auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist"_string, [&](auto& action) {
         static_cast<SoundPlayerWidget*>(player)->set_playlist_visible(action.is_checked());
     });
     if (player->loop_mode() == Player::LoopMode::Playlist) {
@@ -112,7 +112,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     playback_menu->add_action(playlist_toggle);
 
-    auto shuffle_mode = GUI::Action::create_checkable("S&huffle Playlist", [&](auto& action) {
+    auto shuffle_mode = GUI::Action::create_checkable("S&huffle Playlist"_string, [&](auto& action) {
         if (action.is_checked())
             player->set_shuffle_mode(Player::ShuffleMode::Shuffling);
         else
@@ -128,21 +128,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Config::write_string("SoundPlayer"sv, "Preferences"sv, "Visualization"sv, name);
     };
 
-    auto bars = GUI::Action::create_checkable("&Bars", [&](auto&) {
+    auto bars = GUI::Action::create_checkable("&Bars"_string, [&](auto&) {
         static_cast<SoundPlayerWidget*>(player)->set_visualization<BarsVisualizationWidget>();
         set_selected_visualization_in_config("bars"sv);
     });
     visualization_menu->add_action(bars);
     visualization_actions.add_action(bars);
 
-    auto samples = GUI::Action::create_checkable("&Samples", [&](auto&) {
+    auto samples = GUI::Action::create_checkable("&Samples"_string, [&](auto&) {
         static_cast<SoundPlayerWidget*>(player)->set_visualization<SampleWidget>();
         set_selected_visualization_in_config("samples"sv);
     });
     visualization_menu->add_action(samples);
     visualization_actions.add_action(samples);
 
-    auto album_cover_visualization = GUI::Action::create_checkable("&Album Cover", [&](auto&) {
+    auto album_cover_visualization = GUI::Action::create_checkable("&Album Cover"_string, [&](auto&) {
         auto* view = static_cast<SoundPlayerWidget*>(player);
         view->set_visualization<AlbumCoverVisualizationWidget>([&view]() {
             return view->get_image_from_music_file();

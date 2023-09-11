@@ -697,7 +697,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     RefPtr<GUI::Action> layout_folderpane_action;
 
     auto show_toolbar = Config::read_bool("FileManager"sv, "Layout"sv, "ShowToolbar"sv, true);
-    layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
+    layout_toolbar_action = GUI::Action::create_checkable("&Toolbar"_string, [&](auto& action) {
         if (action.is_checked()) {
             main_toolbar.set_visible(true);
             toolbar_container.set_visible(true);
@@ -713,7 +713,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     main_toolbar.set_visible(show_toolbar);
 
     auto show_location = Config::read_bool("FileManager"sv, "Layout"sv, "ShowLocationBar"sv, true);
-    layout_location_action = GUI::Action::create_checkable("&Location Bar", [&](auto& action) {
+    layout_location_action = GUI::Action::create_checkable("&Location Bar"_string, [&](auto& action) {
         if (action.is_checked()) {
             breadcrumb_toolbar.set_visible(true);
             toolbar_container.set_visible(true);
@@ -730,7 +730,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
     toolbar_container.set_visible(show_location || show_toolbar);
 
-    layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
+    layout_statusbar_action = GUI::Action::create_checkable("&Status Bar"_string, [&](auto& action) {
         action.is_checked() ? statusbar.set_visible(true) : statusbar.set_visible(false);
         Config::write_bool("FileManager"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
     });
@@ -739,7 +739,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     layout_statusbar_action->set_checked(show_statusbar);
     statusbar.set_visible(show_statusbar);
 
-    layout_folderpane_action = GUI::Action::create_checkable("&Folder Pane", { Mod_Ctrl, Key_P }, [&](auto& action) {
+    layout_folderpane_action = GUI::Action::create_checkable("&Folder Pane"_string, { Mod_Ctrl, Key_P }, [&](auto& action) {
         action.is_checked() ? tree_view.set_visible(true) : tree_view.set_visible(false);
         Config::write_bool("FileManager"sv, "Layout"sv, "ShowFolderPane"sv, action.is_checked());
     });
@@ -1027,7 +1027,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         directories_model->set_should_show_dotfiles(show_dotfiles);
     };
 
-    auto show_dotfiles_action = GUI::Action::create_checkable("&Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+    auto show_dotfiles_action = GUI::Action::create_checkable("&Show Dotfiles"_string, { Mod_Ctrl, Key_H }, [&](auto& action) {
         show_dotfiles_in_view(action.is_checked());
         refresh_tree_view();
         Config::write_bool("FileManager"sv, "DirectoryView"sv, "ShowDotFiles"sv, action.is_checked());

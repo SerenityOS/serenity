@@ -367,10 +367,10 @@ Tab::Tab(BrowserWindow& window)
     m_media_context_menu_mute_unmute_action = GUI::Action::create("&Mute"_string, g_icon_bag.mute, [this](auto&) {
         view().toggle_media_mute_state();
     });
-    m_media_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls", [this](auto&) {
+    m_media_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls"_string, [this](auto&) {
         view().toggle_media_controls_state();
     });
-    m_media_context_menu_loop_action = GUI::Action::create_checkable("&Loop", [this](auto&) {
+    m_media_context_menu_loop_action = GUI::Action::create_checkable("&Loop"_string, [this](auto&) {
         view().toggle_media_loop_state();
     });
 

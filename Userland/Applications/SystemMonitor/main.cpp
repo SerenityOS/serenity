@@ -452,7 +452,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     frequency_action_group.set_exclusive(true);
 
     auto make_frequency_action = [&](int seconds) -> ErrorOr<void> {
-        auto action = GUI::Action::create_checkable(DeprecatedString::formatted("&{} Sec", seconds), [&refresh_timer, seconds](auto&) {
+        auto action = GUI::Action::create_checkable(TRY(String::formatted("&{} Sec", seconds)), [&refresh_timer, seconds](auto&) {
             Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, seconds);
             refresh_timer.restart(seconds * 1000);
         });

@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_alpha_hit_threshold(window_frame_enabled ? 0 : 1);
     };
 
-    auto show_window_frame_action = GUI::Action::create_checkable("Show Window &Frame", [&](auto& action) {
+    auto show_window_frame_action = GUI::Action::create_checkable("Show Window &Frame"_string, [&](auto& action) {
         set_window_frame_enabled(action.is_checked());
     });
     set_window_frame_enabled(!hide_window_frame);
