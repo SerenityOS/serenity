@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
-    StringView raw_url;
+    Vector<StringView> raw_urls;
     StringView webdriver_content_ipc_path;
     bool enable_callgrind_profiling = false;
     bool enable_sql_database = false;
@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
-    args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(raw_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
     args_parser.add_option(enable_callgrind_profiling, "Enable Callgrind profiling", "enable-callgrind-profiling", 'P');
     args_parser.add_option(enable_sql_database, "Enable SQL database", "enable-sql-database", 0);
@@ -103,11 +103,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto cookie_jar = database ? TRY(WebView::CookieJar::create(*database)) : WebView::CookieJar::create();
 
-    Optional<URL> initial_url;
-    if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid())
-        initial_url = move(url);
+    Vector<URL> initial_urls;
 
-    Ladybird::BrowserWindow window(initial_url, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
+    for (auto const& raw_url : raw_urls) {
+        if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid())
+            initial_urls.append(move(url));
+    }
+
+    Ladybird::BrowserWindow window(initial_urls, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
     window.setWindowTitle("Ladybird");
 
     if (Ladybird::Settings::the()->is_maximized()) {
