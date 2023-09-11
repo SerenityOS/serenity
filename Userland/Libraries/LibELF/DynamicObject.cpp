@@ -22,8 +22,21 @@ DynamicObject::DynamicObject(DeprecatedString const& filepath, VirtualAddress ba
     , m_dynamic_address(dynamic_section_address)
 {
     auto* header = (ElfW(Ehdr)*)base_address.as_ptr();
-    auto* pheader = (ElfW(Phdr)*)(base_address.as_ptr() + header->e_phoff);
-    m_elf_base_address = VirtualAddress(pheader->p_vaddr - pheader->p_offset);
+    auto* const phdrs = program_headers();
+
+    // Calculate the base address using the PT_LOAD element with the lowest `p_vaddr` (which is the first element)
+    for (size_t i = 0; i < program_header_count(); ++i) {
+        auto pheader = phdrs[i];
+        if (pheader.p_type == PT_LOAD) {
+            m_elf_base_address = VirtualAddress { pheader.p_vaddr - pheader.p_offset };
+            break;
+        }
+
+        if (i == program_header_count() - 1) {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
     if (header->e_type == ET_DYN)
         m_is_elf_dynamic = true;
     else
