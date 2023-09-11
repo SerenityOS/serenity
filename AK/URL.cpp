@@ -126,8 +126,7 @@ void URL::append_path(StringView path)
 bool URL::cannot_have_a_username_or_password_or_port() const
 {
     // A URL cannot have a username/password/port if its host is null or the empty string, or its scheme is "file".
-    // FIXME: The spec does not mention anything to do with 'cannot be a base URL'.
-    return m_host.has<Empty>() || m_host == String {} || m_cannot_be_a_base_url || m_scheme == "file"sv;
+    return m_host.has<Empty>() || m_host == String {} || m_scheme == "file"sv;
 }
 
 // FIXME: This is by no means complete.
