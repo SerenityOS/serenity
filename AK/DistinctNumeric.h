@@ -322,6 +322,9 @@ struct Formatter<DistinctNumeric<T, X, Opts...>> : Formatter<T> {
 #define AK_TYPEDEF_DISTINCT_ORDERED_ID(T, NAME) AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, NAME, Comparison, CastToBool)
 // TODO: Further type aliases?
 
+#define AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(DN, E) \
+    constexpr bool operator==(DN n, E e) { return n.value() == to_underlying(e); }
+
 template<typename T, typename X, typename... Opts>
 struct Traits<AK::DistinctNumeric<T, X, Opts...>> : public GenericTraits<AK::DistinctNumeric<T, X, Opts...>> {
     static constexpr bool is_trivial() { return true; }
