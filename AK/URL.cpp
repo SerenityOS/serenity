@@ -62,14 +62,6 @@ DeprecatedString URL::basename() const
     return percent_decode(last_segment);
 }
 
-// NOTE: This only exists for compatibility with the existing URL tests which check for both .is_null() and .is_empty().
-static DeprecatedString deprecated_string_percent_encode(DeprecatedString const& input, URL::PercentEncodeSet set = URL::PercentEncodeSet::Userinfo, URL::SpaceAsPlus space_as_plus = URL::SpaceAsPlus::No)
-{
-    if (input.is_null() || input.is_empty())
-        return input;
-    return URL::percent_encode(input.view(), set, space_as_plus);
-}
-
 void URL::set_scheme(String scheme)
 {
     m_scheme = move(scheme);
@@ -80,7 +72,7 @@ void URL::set_scheme(String scheme)
 ErrorOr<void> URL::set_username(StringView username)
 {
     // To set the username given a url and username, set url’s username to the result of running UTF-8 percent-encode on username using the userinfo percent-encode set.
-    m_username = TRY(String::from_deprecated_string(deprecated_string_percent_encode(username, PercentEncodeSet::Userinfo)));
+    m_username = TRY(String::from_deprecated_string(percent_encode(username, PercentEncodeSet::Userinfo)));
     m_valid = compute_validity();
     return {};
 }
@@ -89,7 +81,7 @@ ErrorOr<void> URL::set_username(StringView username)
 ErrorOr<void> URL::set_password(StringView password)
 {
     // To set the password given a url and password, set url’s password to the result of running UTF-8 percent-encode on password using the userinfo percent-encode set.
-    m_password = TRY(String::from_deprecated_string(deprecated_string_percent_encode(password, PercentEncodeSet::Userinfo)));
+    m_password = TRY(String::from_deprecated_string(percent_encode(password, PercentEncodeSet::Userinfo)));
     m_valid = compute_validity();
     return {};
 }
@@ -121,13 +113,13 @@ void URL::set_paths(Vector<DeprecatedString> const& paths)
     m_paths.clear_with_capacity();
     m_paths.ensure_capacity(paths.size());
     for (auto const& segment : paths)
-        m_paths.unchecked_append(deprecated_string_percent_encode(segment, PercentEncodeSet::Path));
+        m_paths.unchecked_append(percent_encode(segment, PercentEncodeSet::Path));
     m_valid = compute_validity();
 }
 
 void URL::append_path(StringView path)
 {
-    m_paths.append(deprecated_string_percent_encode(path, PercentEncodeSet::Path));
+    m_paths.append(percent_encode(path, PercentEncodeSet::Path));
 }
 
 // https://url.spec.whatwg.org/#cannot-have-a-username-password-port
