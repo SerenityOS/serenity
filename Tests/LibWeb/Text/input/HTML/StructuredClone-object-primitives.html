@@ -8,6 +8,7 @@
         println(structuredClone(new String("This is a String object")));
         println(structuredClone(BigInt("0x1fffffffffffff")));
         println(structuredClone(Date.UTC(2023, 7, 23)));
+        println(structuredClone(/abc/gimsuy));
 
         try {
             structuredClone(Symbol("foo"));
