@@ -962,7 +962,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
                 CSSPixels tentative_offset_from_edge = 0;
                 bool fits_next_to_preceding_float = false;
                 if (side == FloatSide::Left) {
-                    tentative_offset_from_edge = preceding_float.offset_from_edge + preceding_float_state.content_width() + preceding_float_state.margin_box_right() + box_state.margin_box_left();
+                    tentative_offset_from_edge = max(preceding_float.offset_from_edge + preceding_float_state.content_width() + preceding_float_state.margin_box_right(), 0) + box_state.margin_box_left();
                     if (available_space.width.is_definite()) {
                         fits_next_to_preceding_float = (tentative_offset_from_edge + box_state.content_width() + box_state.margin_box_right()) <= available_space.width.to_px_or_zero();
                     } else if (available_space.width.is_max_content() || available_space.width.is_indefinite()) {
