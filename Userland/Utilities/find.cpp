@@ -808,12 +808,19 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
             fatal_error("{}: requires additional arguments", arg);
         g_have_seen_action_command = true;
         Vector<char*> command_argv;
+        bool terminator_found = false;
         while (!args.is_empty()) {
             char* next = args.take_first();
-            if (next[0] == ';')
+            if (next[0] == ';' && next[1] == '\0') {
+                terminator_found = true;
                 break;
+            }
             command_argv.append(next);
         }
+
+        if (!terminator_found)
+            fatal_error("{}: Terminating ';' not found", arg);
+
         auto await_confirmation = (arg == "-ok") ? ExecCommand::AwaitConfirmation::Yes : ExecCommand::AwaitConfirmation::No;
         return make<ExecCommand>(move(command_argv), await_confirmation);
     } else {
