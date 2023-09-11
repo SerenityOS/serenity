@@ -904,6 +904,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     VERIFY(box.is_floating());
 
     auto& box_state = m_state.get_mutable(box);
+    auto const& computed_values = box.computed_values();
 
     resolve_vertical_box_model_metrics(box);
 
@@ -979,10 +980,18 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
                 break;
             }
 
-            if (!did_touch_preceding_float || !did_place_next_to_preceding_float) {
-                // One of two things happened:
+            auto has_clearance = false;
+            if (side == FloatSide::Left) {
+                has_clearance = computed_values.clear() == CSS::Clear::Left || computed_values.clear() == CSS::Clear::Both;
+            } else if (side == FloatSide::Right) {
+                has_clearance = computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both;
+            }
+
+            if (!did_touch_preceding_float || !did_place_next_to_preceding_float || has_clearance) {
+                // One of three things happened:
                 // - This box does not touch another floating box.
                 // - We ran out of horizontal space on this "float line", and need to break.
+                // - This box has clearance.
                 // Either way, we float this box all the way to the edge.
                 float_to_edge();
                 CSSPixels lowest_margin_edge = 0;
