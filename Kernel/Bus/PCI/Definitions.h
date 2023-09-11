@@ -93,21 +93,69 @@ static constexpr u16 msix_control_enable = 0x8000;
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
 enum class ClassID {
-    MassStorage = 0x1,
-    Multimedia = 0x4,
-    Bridge = 0x6,
-    Base = 0x8,
+    MassStorage = 0x01,
+    Network = 0x02,
+    Display = 0x03,
+    Multimedia = 0x04,
+    Memory = 0x05,
+    Bridge = 0x06,
+    SimpleCommunication = 0x07,
+    Base = 0x08,
+    Input = 0x09,
+    DockingStation = 0x0A,
+    Processor = 0x0B,
+    SerialBus = 0x0C,
+    Wireless = 0x0D,
+    IntelligentIO = 0x0E,
+    SatelliteCommunication = 0x0F,
+    EncryptionDecryption = 0x10,
+    DataAcquisitionAndSignalProcessing = 0x11,
+    ProcessingAccelerator = 0x12,
+    NonEssentialInstrumentation = 0x13,
 };
 
 namespace MassStorage {
 
 enum class SubclassID {
-    IDEController = 0x1,
-    SATAController = 0x6,
-    NVMeController = 0x8,
+    SCSIController = 0x00,
+    IDEController = 0x01,
+    FloppyController = 0x02,
+    IPIController = 0x03,
+    RAIDController = 0x04,
+    ATAController = 0x05,
+    SATAController = 0x06,
+    SASController = 0x06,
+    NVMeController = 0x08 // Technically other non-volatile memory subsystems as well
 };
+
 enum class SATAProgIF {
     AHCI = 0x1,
+};
+
+}
+
+namespace Network {
+
+enum class SubclassID {
+    Ethernet = 0x00,
+    TokenRing = 0x01,
+    FDD = 0x02,
+    ATM = 0x03,
+    ISDN = 0x04,
+    WorldFlip = 0x05,
+    PICMG_2_14_MultiComputing = 0x06,
+    InfiniBand = 0x07,
+    HostFabric = 0x08,
+};
+
+}
+
+namespace Display {
+
+enum class SubclassID {
+    VGA = 0x00,
+    XGA = 0x01,
+    ThreeD = 0x02,
 };
 
 }
@@ -115,8 +163,10 @@ enum class SATAProgIF {
 namespace Multimedia {
 
 enum class SubclassID {
-    AudioController = 0x1,
-    HDACompatibleController = 0x3,
+    Video = 0x00,
+    Audio = 0x01,
+    ComputerTelephony = 0x01,
+    HDACompatible = 0x3,
 };
 
 }
@@ -132,7 +182,21 @@ enum class SubclassID {
 namespace Base {
 
 enum class SubclassID {
+    PIC = 0x00,
+    DMAController = 0x01,
+    Timer = 0x02,
+    RTCController = 0x03,
+    PCIHotplugController = 0x04,
     SDHostController = 0x5,
+    IOMMU = 0x06
+};
+
+}
+
+namespace SerialBus {
+
+enum class SubclassID {
+    USB = 0x03,
 };
 
 }
@@ -264,9 +328,12 @@ AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(ClassCode, ClassID)
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, SubclassCode);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, MassStorage::SubclassID);
+AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Network::SubclassID);
+AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Display::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Multimedia::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Bridge::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Base::SubclassID);
+AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, SerialBus::SubclassID);
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, ProgrammingInterface);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, RevisionID);
