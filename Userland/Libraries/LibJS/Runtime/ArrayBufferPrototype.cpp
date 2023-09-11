@@ -139,7 +139,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
     auto array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-    // FIXME: Check for shared buffer
+    if (array_buffer_object->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
 
     // NOTE: These steps are done in byte_length()
     // 4. If IsDetachedBuffer(O) is true, return +0𝔽.

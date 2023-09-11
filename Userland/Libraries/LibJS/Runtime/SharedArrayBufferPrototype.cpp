@@ -37,7 +37,7 @@ JS_DEFINE_NATIVE_FUNCTION(SharedArrayBufferPrototype::byte_length_getter)
     // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
     auto array_buffer_object = TRY(typed_this_value(vm));
 
-    // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
+    // 3. If IsSharedArrayBuffer(O) is false, throw a TypeError exception.
     // FIXME: Check for shared buffer
 
     // 4. Let length be O.[[ArrayBufferByteLength]].

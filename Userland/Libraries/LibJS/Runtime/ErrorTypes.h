@@ -293,6 +293,7 @@
     M(TemporalUnknownCriticalAnnotation, "Unknown annotation key in critical annotation: '{}'")                                         \
     M(TemporalZonedDateTimeRoundZeroOrNegativeLengthDay, "Cannot round a ZonedDateTime in a calendar or time zone that has zero or "    \
                                                          "negative length days")                                                        \
+    M(ThisCannotBeSharedArrayBuffer, "|this| cannot be a SharedArrayBuffer")                                                            \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \
     M(ToObjectNullOrUndefined, "ToObject on null or undefined")                                                                         \
