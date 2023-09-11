@@ -39,7 +39,7 @@ static QIcon const& app_icon()
     return icon;
 }
 
-BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, WebView::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, UseLagomNetworking use_lagom_networking)
+BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, UseLagomNetworking use_lagom_networking)
     : m_cookie_jar(cookie_jar)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
     , m_enable_callgrind_profiling(enable_callgrind_profiling)
@@ -403,9 +403,13 @@ BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, WebView::CookieJa
     m_go_forward_action->setEnabled(false);
     m_reload_action->setEnabled(false);
 
-    if (initial_url.has_value()) {
-        auto initial_url_string = qstring_from_ak_deprecated_string(initial_url->serialize());
-        new_tab(initial_url_string, Web::HTML::ActivateTab::Yes);
+    if (!initial_urls.is_empty()) {
+        bool is_first_tab = true;
+        for (auto const& url : initial_urls) {
+            auto initial_url_string = qstring_from_ak_deprecated_string(url.serialize());
+            new_tab(initial_url_string, is_first_tab ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
+            is_first_tab = false;
+        }
     } else {
         new_tab(Settings::the()->new_tab_page(), Web::HTML::ActivateTab::Yes);
     }
