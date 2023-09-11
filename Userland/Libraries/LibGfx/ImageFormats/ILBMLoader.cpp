@@ -193,16 +193,16 @@ static ErrorOr<void> decode_body_chunk(Chunk body_chunk, ILBMLoadingContext& con
 {
     dbgln_if(ILBM_DEBUG, "decode_body_chunk {}", body_chunk.data.size());
 
-    if (context.bm_header.compression == CompressionType::ByteRun) {
-        // these are the uncompressed interleaved bitmap planes
-        auto plane_data = TRY(uncompress_byte_run(body_chunk.data, context));
-        // that we need to convert to chunky pixel data
-        auto pixel_data = TRY(planar_to_chunky(plane_data, context));
+    ByteBuffer pixel_data;
 
-        context.bitmap = TRY(chunky_to_bitmap(context, pixel_data));
+    if (context.bm_header.compression == CompressionType::ByteRun) {
+        auto plane_data = TRY(uncompress_byte_run(body_chunk.data, context));
+        pixel_data = TRY(planar_to_chunky(plane_data, context));
     } else {
-        return Error::from_string_literal("Uncompress body not supported yet");
+        pixel_data = TRY(planar_to_chunky(body_chunk.data, context));
     }
+
+    context.bitmap = TRY(chunky_to_bitmap(context, pixel_data));
 
     return {};
 }
