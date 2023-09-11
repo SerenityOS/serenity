@@ -199,6 +199,15 @@ enum class SubclassID {
     USB = 0x03,
 };
 
+enum class USBProgIf {
+    UHCI = 0x00,
+    OHCI = 0x10,
+    EHCI = 0x20,
+    xHCI = 0x30,
+    None = 0x80,
+    Device = 0xFE
+};
+
 }
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, CapabilityID);
@@ -336,6 +345,8 @@ AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Base::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, SerialBus::SubclassID);
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, ProgrammingInterface);
+AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(ProgrammingInterface, SerialBus::USBProgIf);
+
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, RevisionID);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemID);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, SubsystemVendorID);

@@ -8,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
@@ -29,9 +30,13 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
         return;
 
     MUST(PCI::enumerate([this](PCI::DeviceIdentifier const& device_identifier) {
-        if (!(device_identifier.class_code().value() == 0xc && device_identifier.subclass_code().value() == 0x3))
+        if (device_identifier.class_code() != PCI::ClassID::SerialBus
+            || device_identifier.subclass_code() != PCI::SerialBus::SubclassID::USB)
             return;
-        if (device_identifier.prog_if().value() == 0x0) {
+        auto progif = static_cast<PCI::SerialBus::USBProgIf>(device_identifier.prog_if().value());
+        using enum PCI::SerialBus::USBProgIf;
+        switch (progif) {
+        case UHCI:
             if (kernel_command_line().disable_uhci_controller())
                 return;
 
@@ -39,23 +44,22 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
                 m_controllers.append(uhci_controller_or_error.release_value());
 
             return;
-        }
-
-        if (device_identifier.prog_if().value() == 0x10) {
+        case OHCI:
             dmesgln("USBManagement: OHCI controller found at {} is not currently supported.", device_identifier.address());
             return;
-        }
-
-        if (device_identifier.prog_if().value() == 0x20) {
+        case EHCI:
             dmesgln("USBManagement: EHCI controller found at {} is not currently supported.", device_identifier.address());
             return;
-        }
-
-        if (device_identifier.prog_if().value() == 0x30) {
+        case xHCI:
             dmesgln("USBManagement: xHCI controller found at {} is not currently supported.", device_identifier.address());
             return;
+        case None:
+            dmesgln("USBManagement: Non interface-able controller found at {} is not currently supported.", device_identifier.address());
+            return;
+        case Device:
+            dmesgln("USBManagement: Direct attached device at {} is not currently supported.", device_identifier.address());
+            return;
         }
-
         dmesgln("USBManagement: Unknown/unsupported controller at {} with programming interface 0x{:02x}", device_identifier.address(), device_identifier.prog_if().value());
     }));
 }
