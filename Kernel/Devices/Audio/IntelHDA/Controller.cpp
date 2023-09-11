@@ -19,8 +19,8 @@ namespace Kernel::Audio::IntelHDA {
 
 UNMAP_AFTER_INIT ErrorOr<bool> Controller::probe(PCI::DeviceIdentifier const& device_identifier)
 {
-    VERIFY(device_identifier.class_code().value() == to_underlying(PCI::ClassID::Multimedia));
-    return device_identifier.subclass_code().value() == to_underlying(PCI::Multimedia::SubclassID::HDACompatibleController);
+    VERIFY(device_identifier.class_code() == PCI::ClassID::Multimedia);
+    return device_identifier.subclass_code() == PCI::Multimedia::SubclassID::HDACompatibleController;
 }
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> Controller::create(PCI::DeviceIdentifier const& pci_device_identifier)

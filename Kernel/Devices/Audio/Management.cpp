@@ -71,7 +71,7 @@ UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_controllers()
         return;
     MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
         // Only consider PCI multimedia devices
-        if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::Multimedia))
+        if (device_identifier.class_code() != PCI::ClassID::Multimedia)
             return;
 
         auto result = determine_audio_device(device_identifier);

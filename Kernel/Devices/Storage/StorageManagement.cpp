@@ -152,10 +152,10 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
         };
 
         MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) -> void {
-            auto class_code = device_identifier.class_code().value();
-            if (class_code == to_underlying(PCI::ClassID::MassStorage)) {
+            auto class_code = device_identifier.class_code();
+            if (class_code == PCI::ClassID::MassStorage) {
                 handle_mass_storage_device(device_identifier);
-            } else if (class_code == to_underlying(PCI::ClassID::Base)) {
+            } else if (class_code == PCI::ClassID::Base) {
                 handle_base_device(device_identifier);
             }
         }));

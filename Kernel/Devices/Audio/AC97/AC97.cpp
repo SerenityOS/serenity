@@ -34,8 +34,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> AC97::create(PCI::Devic
 
 UNMAP_AFTER_INIT ErrorOr<bool> AC97::probe(PCI::DeviceIdentifier const& device_identifier)
 {
-    VERIFY(device_identifier.class_code().value() == to_underlying(PCI::ClassID::Multimedia));
-    return device_identifier.subclass_code().value() == to_underlying(PCI::Multimedia::SubclassID::AudioController);
+    VERIFY(device_identifier.class_code() == PCI::ClassID::Multimedia);
+    return device_identifier.subclass_code() == PCI::Multimedia::SubclassID::AudioController;
 }
 
 UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<AC97Channel> pcm_out_channel, NonnullOwnPtr<IOWindow> mixer_io_window, NonnullOwnPtr<IOWindow> bus_io_window)
