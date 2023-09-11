@@ -36,7 +36,6 @@ elif [ "$SYSTEM_NAME" = "Darwin" ]; then
     MD5SUM="md5 -q"
     REALPATH="grealpath"  # GNU coreutils
     INSTALL="ginstall"    # GNU coreutils
-    SED="gsed"            # GNU sed
 fi
 
 NPROC=$(get_number_of_processing_units)
