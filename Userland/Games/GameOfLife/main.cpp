@@ -165,12 +165,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (board_widget.is_running()) {
             statusbar.segment(0).set_text("Running..."_string);
             play_pause_action->set_icon(paused_icon);
-            play_pause_action->set_text("&Pause");
+            play_pause_action->set_text("&Pause"_string);
             main_widget->set_override_cursor(Gfx::StandardCursor::None);
         } else {
             statusbar.segment(0).set_text("Paused"_string);
             play_pause_action->set_icon(play_icon);
-            play_pause_action->set_text("&Play");
+            play_pause_action->set_text("&Play"_string);
             main_widget->set_override_cursor(Gfx::StandardCursor::Drag);
         }
 

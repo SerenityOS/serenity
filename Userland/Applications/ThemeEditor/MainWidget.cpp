@@ -290,7 +290,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     file_menu->add_recent_files_list([&](auto& action) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text().to_deprecated_string());
         if (response.is_error())
             return;
         auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());

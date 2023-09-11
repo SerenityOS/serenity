@@ -313,7 +313,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
-        auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path);
+        auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path.to_deprecated_string());
         if (result.is_error())
             return;
 

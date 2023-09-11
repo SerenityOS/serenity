@@ -177,9 +177,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         delete_action->set_enabled(FileSystem::can_delete_or_move(selected_node_path));
         if (FileSystem::is_directory(selected_node_path))
-            open_action->set_text("Open in File Manager");
+            open_action->set_text("Open in File Manager"_string);
         else
-            open_action->set_text("Reveal in File Manager");
+            open_action->set_text("Reveal in File Manager"_string);
 
         context_menu->popup(event.screen_position());
     };

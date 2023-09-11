@@ -477,9 +477,9 @@ void MainWidget::update_action_text()
     };
 
     if (auto maybe_text = text_or_error("&Undo"sv, m_undo_stack->undo_action_text()); !maybe_text.is_error())
-        m_undo_action->set_text(maybe_text.release_value().to_deprecated_string());
+        m_undo_action->set_text(maybe_text.release_value());
     if (auto maybe_text = text_or_error("&Redo"sv, m_undo_stack->redo_action_text()); !maybe_text.is_error())
-        m_redo_action->set_text(maybe_text.release_value().to_deprecated_string());
+        m_redo_action->set_text(maybe_text.release_value());
 }
 
 ErrorOr<void> MainWidget::create_widgets()
@@ -742,7 +742,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     file_menu->add_recent_files_list([this](auto& action) {
         if (!request_close())
             return;
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(this->window(), action.text());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(this->window(), action.text().to_deprecated_string());
         if (response.is_error())
             return;
         auto file = response.release_value();

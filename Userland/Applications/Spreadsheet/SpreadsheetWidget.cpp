@@ -730,7 +730,7 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text().to_deprecated_string());
         if (response.is_error())
             return;
         load_file(response.value().filename(), response.value().stream());

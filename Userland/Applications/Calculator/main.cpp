@@ -93,7 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         int custom_rounding_length = widget->rounding_length();
         auto result = GUI::InputBox::show_numeric(window, custom_rounding_length, 0, 100, "Digits to Round"sv);
         if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {
-            action.set_text(DeprecatedString::formatted(format, custom_rounding_length));
+            action.set_text(String::formatted(format, custom_rounding_length).release_value_but_fixme_should_propagate_errors());
             widget->set_rounding_length(custom_rounding_length);
             last_rounding_mode.clear();
         } else if (last_rounding_mode.has_value())
@@ -108,7 +108,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto result = GUI::InputBox::show_numeric(window, shrink_length, 0, 100, "Digits to Shrink"sv);
         if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {
             round_custom->set_checked(true);
-            round_custom->set_text(DeprecatedString::formatted(format, shrink_length));
+            round_custom->set_text(String::formatted(format, shrink_length).release_value_but_fixme_should_propagate_errors());
             widget->set_rounding_length(shrink_length);
             widget->shrink(shrink_length);
         }

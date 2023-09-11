@@ -81,7 +81,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
                 update_displayed_emoji();
             },
             this);
-        set_filter_action->set_tooltip(move(tooltip));
+        set_filter_action->set_tooltip(String::from_deprecated_string(tooltip).release_value_but_fixme_should_propagate_errors());
 
         m_category_action_group->add_action(*set_filter_action);
         m_toolbar->add_action(*set_filter_action);

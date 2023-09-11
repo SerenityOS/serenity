@@ -359,7 +359,7 @@ void Application::update_recent_file_actions()
         } else {
             action->set_visible(true);
             action->set_enabled(true);
-            action->set_text(path);
+            action->set_text(String::from_deprecated_string(path).release_value_but_fixme_should_propagate_errors());
             action->set_status_tip(String::formatted("Open {}", path).release_value_but_fixme_should_propagate_errors());
             ++number_of_recently_open_files;
         }

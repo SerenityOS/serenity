@@ -2292,7 +2292,7 @@ void TextEditor::document_did_update_undo_stack()
             builder.append(' ');
             builder.append(suffix.value());
         }
-        return builder.to_deprecated_string();
+        return builder.to_string().release_value_but_fixme_should_propagate_errors();
     };
 
     m_undo_action->set_enabled(can_undo() && !text_is_secret());

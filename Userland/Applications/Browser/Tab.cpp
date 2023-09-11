@@ -425,18 +425,18 @@ Tab::Tab(BrowserWindow& window)
 
         if (menu.is_playing) {
             m_media_context_menu_play_pause_action->set_icon(g_icon_bag.pause);
-            m_media_context_menu_play_pause_action->set_text("&Pause"sv);
+            m_media_context_menu_play_pause_action->set_text("&Pause"_string);
         } else {
             m_media_context_menu_play_pause_action->set_icon(g_icon_bag.play);
-            m_media_context_menu_play_pause_action->set_text("&Play"sv);
+            m_media_context_menu_play_pause_action->set_text("&Play"_string);
         }
 
         if (menu.is_muted) {
             m_media_context_menu_mute_unmute_action->set_icon(g_icon_bag.unmute);
-            m_media_context_menu_mute_unmute_action->set_text("Un&mute"sv);
+            m_media_context_menu_mute_unmute_action->set_text("Un&mute"_string);
         } else {
             m_media_context_menu_mute_unmute_action->set_icon(g_icon_bag.mute);
-            m_media_context_menu_mute_unmute_action->set_text("&Mute"sv);
+            m_media_context_menu_mute_unmute_action->set_text("&Mute"_string);
         }
 
         m_media_context_menu_controls_action->set_checked(menu.has_user_agent_controls);

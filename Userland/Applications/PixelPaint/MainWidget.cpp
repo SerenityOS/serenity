@@ -129,7 +129,7 @@ void MainWidget::image_editor_did_update_undo_stack()
             builder.append(' ');
             builder.append(suffix.value());
         }
-        return builder.to_deprecated_string();
+        return builder.to_string().release_value_but_fixme_should_propagate_errors();
     };
 
     auto& undo_stack = image_editor->undo_stack();
@@ -273,7 +273,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path.to_deprecated_string());
         if (response.is_error())
             return;
         open_image(response.release_value());

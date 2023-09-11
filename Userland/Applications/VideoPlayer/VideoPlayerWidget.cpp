@@ -174,7 +174,7 @@ void VideoPlayerWidget::update_play_pause_icon()
     if (!m_playback_manager) {
         m_play_pause_action->set_enabled(false);
         m_play_pause_action->set_icon(m_play_icon);
-        m_play_pause_action->set_text("Play"sv);
+        m_play_pause_action->set_text("Play"_string);
         return;
     }
 
@@ -182,10 +182,10 @@ void VideoPlayerWidget::update_play_pause_icon()
 
     if (m_playback_manager->is_playing() || m_was_playing_before_seek) {
         m_play_pause_action->set_icon(m_pause_icon);
-        m_play_pause_action->set_text("Pause"sv);
+        m_play_pause_action->set_text("Pause"_string);
     } else {
         m_play_pause_action->set_icon(m_play_icon);
-        m_play_pause_action->set_text("Play"sv);
+        m_play_pause_action->set_text("Play"_string);
     }
 }
 

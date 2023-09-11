@@ -383,7 +383,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text().to_deprecated_string());
         if (response.is_error())
             return;
 

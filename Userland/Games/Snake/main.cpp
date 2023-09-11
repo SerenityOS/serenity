@@ -95,11 +95,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game_menu->add_action(GUI::Action::create(pause_text, { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
         if (game.has_timer()) {
             game.pause();
-            action.set_text(continue_text.to_deprecated_string());
+            action.set_text(continue_text);
             action.set_icon(continue_icon);
         } else {
             game.start();
-            action.set_text(pause_text.to_deprecated_string());
+            action.set_text(pause_text);
             action.set_icon(pause_icon);
         }
     }));
@@ -129,7 +129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto add_skin_action = [&](StringView name, bool enable_color) -> ErrorOr<void> {
         auto action = GUI::Action::create_checkable(TRY(String::from_utf8(name)), GUI::Shortcut {}, [&, enable_color](auto& action) {
             Config::write_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, action.text());
-            game.set_skin_name(String::from_deprecated_string(action.text()).release_value_but_fixme_should_propagate_errors());
+            game.set_skin_name(action.text());
             change_snake_color->set_enabled(enable_color);
         });
 

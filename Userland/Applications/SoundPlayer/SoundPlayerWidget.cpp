@@ -209,7 +209,7 @@ void SoundPlayerWidget::play_state_changed(Player::PlayState state)
 
     m_play_action->set_enabled(state != PlayState::NoFileLoaded);
     m_play_action->set_icon(state == PlayState::Playing ? m_pause_icon : m_play_icon);
-    m_play_action->set_text(state == PlayState::Playing ? "Pause"sv : "Play"sv);
+    m_play_action->set_text(state == PlayState::Playing ? "Pause"_string : "Play"_string);
 
     m_stop_action->set_enabled(state != PlayState::Stopped && state != PlayState::NoFileLoaded);
 
@@ -226,7 +226,7 @@ void SoundPlayerWidget::loop_mode_changed(Player::LoopMode)
 
 void SoundPlayerWidget::mute_changed(bool muted)
 {
-    m_mute_action->set_text(muted ? "Unmute"sv : "Mute"sv);
+    m_mute_action->set_text(muted ? "Unmute"_string : "Mute"_string);
     m_mute_action->set_icon(muted ? m_muted_icon : m_volume_icon);
     m_volume_slider->set_enabled(!muted);
 }

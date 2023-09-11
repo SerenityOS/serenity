@@ -422,7 +422,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     file_menu->add_separator();
     file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path.to_deprecated_string());
         if (response.is_error())
             return;
 

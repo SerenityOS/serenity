@@ -237,7 +237,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
         for (size_t index = 0; index < g_themes.size(); ++index) {
             auto* action = g_themes_menu->action_at(index);
-            action->set_checked(!theme_overridden && action->text() == current_theme_name);
+            action->set_checked(!theme_overridden && action->text().to_deprecated_string() == current_theme_name);
         }
     };
 

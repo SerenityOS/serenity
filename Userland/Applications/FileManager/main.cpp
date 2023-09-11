@@ -348,9 +348,9 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
             directory_view.launch(URL::create_with_file_scheme(full_path), launcher_handler);
         });
         if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
-            file_open_action->set_text(DeprecatedString::formatted("Run {}", file_open_action->text()));
+            file_open_action->set_text(String::formatted("Run {}", file_open_action->text()).release_value_but_fixme_should_propagate_errors());
         else
-            file_open_action->set_text(DeprecatedString::formatted("Open in {}", file_open_action->text()));
+            file_open_action->set_text(String::formatted("Open in {}", file_open_action->text()).release_value_but_fixme_should_propagate_errors());
 
         default_action = file_open_action;
 
@@ -1159,7 +1159,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         auto& selection = view.selection();
         cut_action->set_enabled(!selection.is_empty() && access(directory_view->path().characters(), W_OK) == 0);
         copy_action->set_enabled(!selection.is_empty());
-        copy_path_action->set_text(selection.size() > 1 ? "Copy Paths" : "Copy Path");
+        copy_path_action->set_text(selection.size() > 1 ? "Copy Paths"_string : "Copy Path"_string);
         focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
             || (!directory_view->current_view().selection().is_empty() && access(directory_view->path().characters(), W_OK) == 0));
     };

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtr.h>
@@ -81,11 +80,11 @@ public:
 
     virtual ~Action() override;
 
-    DeprecatedString text() const { return m_text; }
-    void set_text(DeprecatedString);
+    String text() const { return m_text; }
+    void set_text(String);
 
-    DeprecatedString tooltip() const;
-    void set_tooltip(DeprecatedString);
+    String tooltip() const;
+    void set_tooltip(String);
 
     Optional<String> status_tip() const;
     void set_status_tip(String status_tip) { m_status_tip = move(status_tip); }
@@ -136,19 +135,19 @@ public:
     HashTable<MenuItem*> const& menu_items() const { return m_menu_items; }
 
 private:
-    Action(DeprecatedString, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
-    Action(DeprecatedString, Shortcut const&, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
-    Action(DeprecatedString, Shortcut const&, Shortcut const&, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
-    Action(DeprecatedString, Shortcut const&, Shortcut const&, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
-    Action(DeprecatedString, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(String, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(String, Shortcut const&, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(String, Shortcut const&, Shortcut const&, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(String, Shortcut const&, Shortcut const&, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(String, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
 
     template<typename Callback>
     void for_each_toolbar_button(Callback);
     template<typename Callback>
     void for_each_menu_item(Callback);
 
-    DeprecatedString m_text;
-    Optional<DeprecatedString> m_tooltip;
+    String m_text;
+    Optional<String> m_tooltip;
     String m_status_tip;
     RefPtr<Gfx::Bitmap const> m_icon;
     Shortcut m_shortcut;

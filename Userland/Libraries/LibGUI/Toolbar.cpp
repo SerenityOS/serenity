@@ -54,7 +54,7 @@ private:
         if (action.icon())
             set_icon(action.icon());
         else
-            set_text(String::from_deprecated_string(action.text()).release_value_but_fixme_should_propagate_errors());
+            set_text(action.text());
         set_button_style(Gfx::ButtonStyle::Coolbar);
     }
 
