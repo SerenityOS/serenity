@@ -31,7 +31,7 @@ public:
         auto viable_previous_sibling = viable_previous_sibling_for_insertion(nodes);
 
         // 4. Let node be the result of converting nodes into a node, given nodes and this’s node document.
-        auto node_to_insert = TRY(convert_nodes_to_single_node(nodes, node->document()));
+        auto node_to_insert = TRY(convert_nodes_to_single_node(from_deprecated_nodes(nodes), node->document()));
 
         // 5. If viablePreviousSibling is null, then set it to parent’s first child; otherwise to viablePreviousSibling’s next sibling.
         if (!viable_previous_sibling)
@@ -61,7 +61,7 @@ public:
         auto viable_next_sibling = viable_nest_sibling_for_insertion(nodes);
 
         // 4. Let node be the result of converting nodes into a node, given nodes and this’s node document.
-        auto node_to_insert = TRY(convert_nodes_to_single_node(nodes, node->document()));
+        auto node_to_insert = TRY(convert_nodes_to_single_node(from_deprecated_nodes(nodes), node->document()));
 
         // 5. Pre-insert node into parent before viableNextSibling.
         (void)TRY(parent->pre_insert(node_to_insert, viable_next_sibling));
@@ -85,7 +85,7 @@ public:
         auto viable_next_sibling = viable_nest_sibling_for_insertion(nodes);
 
         // 4. Let node be the result of converting nodes into a node, given nodes and this’s node document.
-        auto node_to_insert = TRY(convert_nodes_to_single_node(nodes, node->document()));
+        auto node_to_insert = TRY(convert_nodes_to_single_node(from_deprecated_nodes(nodes), node->document()));
 
         // 5. If this’s parent is parent, replace this with node within parent.
         // Note: This could have been inserted into node.
