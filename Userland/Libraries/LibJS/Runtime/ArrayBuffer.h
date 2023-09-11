@@ -27,6 +27,25 @@ enum class PreserveResizability {
     PreserveResizability
 };
 
+// 6.2.9 Data Blocks, https://tc39.es/ecma262/#sec-data-blocks
+struct DataBlock {
+    enum class Shared {
+        No,
+        Yes,
+    };
+
+    ByteBuffer& buffer()
+    {
+        ByteBuffer* ptr { nullptr };
+        byte_buffer.visit([&](Empty) { VERIFY_NOT_REACHED(); }, [&](auto* pointer) { ptr = pointer; }, [&](auto& value) { ptr = &value; });
+        return *ptr;
+    }
+    ByteBuffer const& buffer() const { return const_cast<DataBlock*>(this)->buffer(); }
+
+    Variant<Empty, ByteBuffer, ByteBuffer*> byte_buffer;
+    Shared is_shared = { Shared::No };
+};
+
 class ArrayBuffer : public Object {
     JS_OBJECT(ArrayBuffer, Object);
 
@@ -42,29 +61,45 @@ public:
         if (is_detached())
             return 0;
 
-        return buffer_impl().size();
+        return m_data_block.buffer().size();
     }
 
     // [[ArrayBufferData]]
-    ByteBuffer& buffer() { return buffer_impl(); }
-    ByteBuffer const& buffer() const { return buffer_impl(); }
+    ByteBuffer& buffer() { return m_data_block.buffer(); }
+    ByteBuffer const& buffer() const { return m_data_block.buffer(); }
 
     // Used by allocate_array_buffer() to attach the data block after construction
-    void set_buffer(ByteBuffer buffer) { m_buffer = move(buffer); }
+    void set_data_block(DataBlock block) { m_data_block = move(block); }
 
     Value detach_key() const { return m_detach_key; }
     void set_detach_key(Value detach_key) { m_detach_key = detach_key; }
 
-    void detach_buffer() { m_buffer = Empty {}; }
+    void detach_buffer() { m_data_block.byte_buffer = Empty {}; }
 
     // 25.1.2.2 IsDetachedBuffer ( arrayBuffer ), https://tc39.es/ecma262/#sec-isdetachedbuffer
     bool is_detached() const
     {
         // 1. If arrayBuffer.[[ArrayBufferData]] is null, return true.
-        if (m_buffer.has<Empty>())
+        if (m_data_block.byte_buffer.has<Empty>())
             return true;
         // 2. Return false.
         return false;
+    }
+
+    // 25.2.1.2 IsSharedArrayBuffer ( obj ), https://tc39.es/ecma262/#sec-issharedarraybuffer
+    bool is_shared_array_buffer() const
+    {
+        // 1. Let bufferData be obj.[[ArrayBufferData]].
+        // 2. If bufferData is null, return false.
+        if (m_data_block.byte_buffer.has<Empty>())
+            return false;
+        // 3. If bufferData is a Data Block, return false.
+        if (m_data_block.is_shared == DataBlock::Shared::No)
+            return false;
+        // 4. Assert: bufferData is a Shared Data Block.
+        VERIFY(m_data_block.is_shared == DataBlock::Shared::Yes);
+        // 5. Return true.
+        return true;
     }
 
     enum Order {
@@ -84,22 +119,13 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    ByteBuffer& buffer_impl()
-    {
-        ByteBuffer* ptr { nullptr };
-        m_buffer.visit([&](Empty) { VERIFY_NOT_REACHED(); }, [&](auto* pointer) { ptr = pointer; }, [&](auto& value) { ptr = &value; });
-        return *ptr;
-    }
-
-    ByteBuffer const& buffer_impl() const { return const_cast<ArrayBuffer*>(this)->buffer_impl(); }
-
-    Variant<Empty, ByteBuffer, ByteBuffer*> m_buffer;
+    DataBlock m_data_block;
     // The various detach related members of ArrayBuffer are not used by any ECMA262 functionality,
     // but are required to be available for the use of various harnesses like the Test262 test runner.
     Value m_detach_key;
 };
 
-ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size);
+ThrowCompletionOr<DataBlock> create_byte_data_block(VM& vm, size_t size);
 void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer const& from_block, u64 from_index, u64 count);
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
 ThrowCompletionOr<void> detach_array_buffer(VM&, ArrayBuffer& array_buffer, Optional<Value> key = {});
@@ -188,10 +214,10 @@ ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unuse
     VERIFY(!is_detached());
 
     // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
-    VERIFY(buffer().bytes().slice(byte_index).size() >= sizeof(T));
+    VERIFY(m_data_block.buffer().bytes().slice(byte_index).size() >= sizeof(T));
 
     // 3. Let block be arrayBuffer.[[ArrayBufferData]].
-    auto& block = buffer();
+    auto& block = m_data_block.buffer();
 
     // 4. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
     auto element_size = sizeof(T);
@@ -300,7 +326,7 @@ ThrowCompletionOr<void> ArrayBuffer::set_value(size_t byte_index, Value value, [
     VERIFY(!is_detached());
 
     // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
-    VERIFY(buffer().bytes().slice(byte_index).size() >= sizeof(T));
+    VERIFY(m_data_block.buffer().bytes().slice(byte_index).size() >= sizeof(T));
 
     // 3. Assert: value is a BigInt if IsBigIntElementType(type) is true; otherwise, value is a Number.
     if constexpr (IsIntegral<T> && sizeof(T) == 8)
@@ -309,7 +335,7 @@ ThrowCompletionOr<void> ArrayBuffer::set_value(size_t byte_index, Value value, [
         VERIFY(value.is_number());
 
     // 4. Let block be arrayBuffer.[[ArrayBufferData]].
-    auto& block = buffer();
+    auto& block = m_data_block.buffer();
 
     // FIXME: 5. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
 
@@ -346,9 +372,9 @@ ThrowCompletionOr<Value> ArrayBuffer::get_modify_set_value(size_t byte_index, Va
 
     // FIXME: Check for shared buffer
 
-    auto raw_bytes_read = TRY_OR_THROW_OOM(vm, buffer_impl().slice(byte_index, sizeof(T)));
+    auto raw_bytes_read = TRY_OR_THROW_OOM(vm, m_data_block.buffer().slice(byte_index, sizeof(T)));
     auto raw_bytes_modified = operation(raw_bytes_read, raw_bytes);
-    raw_bytes_modified.span().copy_to(buffer_impl().span().slice(byte_index));
+    raw_bytes_modified.span().copy_to(m_data_block.buffer().span().slice(byte_index));
 
     return raw_bytes_to_numeric<T>(vm, raw_bytes_read, is_little_endian);
 }

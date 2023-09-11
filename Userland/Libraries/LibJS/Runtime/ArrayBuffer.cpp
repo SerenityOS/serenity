@@ -32,14 +32,14 @@ NonnullGCPtr<ArrayBuffer> ArrayBuffer::create(Realm& realm, ByteBuffer* buffer)
 
 ArrayBuffer::ArrayBuffer(ByteBuffer buffer, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
-    , m_buffer(move(buffer))
+    , m_data_block(DataBlock { move(buffer), DataBlock::Shared::No })
     , m_detach_key(js_undefined())
 {
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer* buffer, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
-    , m_buffer(buffer)
+    , m_data_block(DataBlock { buffer, DataBlock::Shared::No })
     , m_detach_key(js_undefined())
 {
 }
@@ -51,7 +51,7 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 }
 
 // 6.2.9.1 CreateByteDataBlock ( size ), https://tc39.es/ecma262/#sec-createbytedatablock
-ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
+ThrowCompletionOr<DataBlock> create_byte_data_block(VM& vm, size_t size)
 {
     // 1. If size > 2^53 - 1, throw a RangeError exception.
     if (size > MAX_ARRAY_LIKE_INDEX)
@@ -64,7 +64,25 @@ ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
         return vm.throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, size);
 
     // 4. Return db.
-    return data_block.release_value();
+    return DataBlock { data_block.release_value(), DataBlock::Shared::No };
+}
+
+// FIXME: The returned DataBlock is not shared in the sense that the standard specifies it.
+// 6.2.9.2 CreateSharedByteDataBlock ( size ), https://tc39.es/ecma262/#sec-createsharedbytedatablock
+static ThrowCompletionOr<DataBlock> create_shared_byte_data_block(VM& vm, size_t size)
+{
+    // 1. Let db be a new Shared Data Block value consisting of size bytes. If it is impossible to create such a Shared Data Block, throw a RangeError exception.
+    auto data_block = ByteBuffer::create_zeroed(size);
+    if (data_block.is_error())
+        return vm.throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, size);
+
+    // 2. Let execution be the [[CandidateExecution]] field of the surrounding agent's Agent Record.
+    // 3. Let eventsRecord be the Agent Events Record of execution.[[EventsRecords]] whose [[AgentSignifier]] is AgentSignifier().
+    // 4. Let zero be « 0 ».
+    // 5. For each index i of db, do
+    // a. Append WriteSharedMemory { [[Order]]: init, [[NoTear]]: true, [[Block]]: db, [[ByteIndex]]: i, [[ElementSize]]: 1, [[Payload]]: zero } to eventsRecord.[[EventList]].
+    // 6. Return db.
+    return DataBlock { data_block.release_value(), DataBlock::Shared::Yes };
 }
 
 // 6.2.9.3 CopyDataBlockBytes ( toBlock, toIndex, fromBlock, fromIndex, count ), https://tc39.es/ecma262/#sec-copydatablockbytes
@@ -128,7 +146,7 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& co
     auto block = TRY(create_byte_data_block(vm, byte_length));
 
     // 3. Set obj.[[ArrayBufferData]] to block.
-    obj->set_buffer(move(block));
+    obj->set_data_block(move(block));
 
     // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
@@ -235,12 +253,12 @@ ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM& vm
     // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%SharedArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]] »).
     auto obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::shared_array_buffer_prototype, nullptr));
 
-    // FIXME: 2. Let block be ? CreateSharedByteDataBlock(byteLength).
-    auto block = TRY(create_byte_data_block(vm, byte_length));
+    // 2. Let block be ? CreateSharedByteDataBlock(byteLength).
+    auto block = TRY(create_shared_byte_data_block(vm, byte_length));
 
     // 3. Set obj.[[ArrayBufferData]] to block.
     // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
-    obj->set_buffer(move(block));
+    obj->set_data_block(move(block));
 
     // 5. Return obj.
     return obj;

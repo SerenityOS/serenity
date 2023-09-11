@@ -309,7 +309,7 @@ private:
             auto data_copy = TRY(JS::create_byte_data_block(m_vm, size));
 
             // 4. Perform CopyDataBlockBytes(dataCopy, 0, value.[[ArrayBufferData]], 0, size).
-            JS::copy_data_block_bytes(data_copy, 0, array_buffer.buffer(), 0, size);
+            JS::copy_data_block_bytes(data_copy.buffer(), 0, array_buffer.buffer(), 0, size);
 
             // FIXME: 5. If value has an [[ArrayBufferMaxByteLength]] internal slot, then set serialized to { [[Type]]: "ResizableArrayBuffer",
             //    [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size, [[ArrayBufferMaxByteLength]]: value.[[ArrayBufferMaxByteLength]] }.
@@ -318,7 +318,7 @@ private:
             // 6. Otherwise, set serialized to { [[Type]]: "ArrayBuffer", [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size }.
             else {
                 vector.append(ValueTag::ArrayBuffer);
-                TRY(serialize_bytes(vector, data_copy.bytes()));
+                TRY(serialize_bytes(vector, data_copy.buffer().bytes()));
             }
         }
         return {};
