@@ -95,7 +95,20 @@ TEST_CASE(test_ilbm)
     EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
 
-    expect_single_frame_of_size(*plugin_decoder, { 320, 200 });
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 320, 200 });
+
+    EXPECT_EQ(frame.image->get_pixel(8, 0), Gfx::Color(0xee, 0xbb, 0, 255));
+}
+
+TEST_CASE(test_ilbm_uncompressed)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("ilbm/gradient-uncompressed.iff"sv)));
+    EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 320, 200 });
+
+    EXPECT_EQ(frame.image->get_pixel(8, 0), Gfx::Color(0xee, 0xbb, 0, 255));
 }
 
 TEST_CASE(test_jpeg_sof0_one_scan)
