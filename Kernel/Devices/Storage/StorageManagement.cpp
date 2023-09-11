@@ -120,7 +120,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
 #endif
 
             if (subclass_code == SubclassID::SATAController
-                && device_identifier.prog_if().value() == to_underlying(PCI::MassStorage::SATAProgIF::AHCI)) {
+                && device_identifier.prog_if() == PCI::MassStorage::SATAProgIF::AHCI) {
                 if (auto ahci_controller_or_error = AHCIController::initialize(device_identifier); !ahci_controller_or_error.is_error())
                     m_controllers.append(ahci_controller_or_error.value());
                 else
