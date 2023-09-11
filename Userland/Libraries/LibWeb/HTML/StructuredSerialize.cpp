@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
@@ -66,6 +67,8 @@ enum ValueTag {
     StringObject,
 
     DateObject,
+
+    RegExpObject,
 
     // TODO: Define many more types
 
@@ -171,7 +174,20 @@ public:
             m_serialized.append(bit_cast<u32*>(&date_value), 2);
         }
 
-        // 12 - 24: FIXME: Serialize other data types
+        // 12. Otherwise, if value has a [[RegExpMatcher]] internal slot, then set serialized to
+        //     { [[Type]]: "RegExp", [[RegExpMatcher]]: value.[[RegExpMatcher]], [[OriginalSource]]: value.[[OriginalSource]],
+        //       [[OriginalFlags]]: value.[[OriginalFlags]] }.
+        else if (value.is_object() && is<JS::RegExpObject>(value.as_object())) {
+            m_serialized.append(ValueTag::RegExpObject);
+            auto& regexp_object = static_cast<JS::RegExpObject&>(value.as_object());
+            // Note: A Regex<ECMA262> object is perfectly happy to be reconstructed with just the source+flags
+            //       In the future, we could optimize the work being done on the deserialize step by serializing
+            //       more of the internal state (the [[RegExpMatcher]] internal slot)
+            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_deprecated_string(regexp_object.pattern()))));
+            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_deprecated_string(regexp_object.flags()))));
+        }
+
+        // 13 - 24: FIXME: Serialize other data types
         else {
             return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"_fly_string));
         }
@@ -299,6 +315,12 @@ public:
                 bits[1] = m_vector[position++];
                 double const value = *bit_cast<double*>(&bits);
                 m_memory.append(JS::Date::create(*realm, value));
+                break;
+            }
+            case ValueTag::RegExpObject: {
+                auto pattern = TRY(deserialize_string_primitive(m_vm, m_vector, position));
+                auto flags = TRY(deserialize_string_primitive(m_vm, m_vector, position));
+                m_memory.append(TRY(JS::regexp_create(m_vm, move(pattern), move(flags))));
                 break;
             }
             default:
