@@ -332,7 +332,7 @@ private:
         Vector<u8> bytes;
         TRY_OR_THROW_OOM(vm, bytes.try_ensure_capacity(size));
         u64 byte_position = 0;
-        while (position < vector.size()) {
+        while (position < vector.size() && byte_position < size) {
             for (u8 i = 0; i < 4; ++i) {
                 bytes.append(vector[position] >> (i * 8) & 0xFF);
                 byte_position++;
