@@ -110,14 +110,14 @@ static inline bool is_vga_compatible_pci_device(PCI::DeviceIdentifier const& dev
 {
     // Note: Check for Display Controller, VGA Compatible Controller or
     // Unclassified, VGA-Compatible Unclassified Device
-    auto is_display_controller_vga_compatible = device_identifier.class_code().value() == 0x3 && device_identifier.subclass_code().value() == 0x0;
-    auto is_general_pci_vga_compatible = device_identifier.class_code().value() == 0x0 && device_identifier.subclass_code().value() == 0x1;
+    auto is_display_controller_vga_compatible = device_identifier.class_code() == PCI::ClassID::Display && device_identifier.subclass_code() == PCI::Display::SubclassID::VGA;
+    auto is_general_pci_vga_compatible = device_identifier.class_code() == PCI::ClassID::Legacy && device_identifier.subclass_code() == PCI::Legacy::SubclassID::VGACompatible;
     return is_display_controller_vga_compatible || is_general_pci_vga_compatible;
 }
 
 static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const& device_identifier)
 {
-    return device_identifier.class_code().value() == 0x3;
+    return device_identifier.class_code() == PCI::ClassID::Display;
 }
 
 struct PCIGraphicsDriverInitializer {

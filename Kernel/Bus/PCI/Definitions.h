@@ -93,6 +93,7 @@ static constexpr u16 msix_control_enable = 0x8000;
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
 enum class ClassID {
+    Legacy = 0x00,
     MassStorage = 0x01,
     Network = 0x02,
     Display = 0x03,
@@ -114,6 +115,14 @@ enum class ClassID {
     NonEssentialInstrumentation = 0x13,
 };
 
+namespace Legacy {
+
+enum class SubclassID {
+    Any = 0x00,
+    VGACompatible = 0x01
+};
+
+}
 namespace MassStorage {
 
 enum class SubclassID {
@@ -336,6 +345,7 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, ClassCode);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(ClassCode, ClassID)
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, SubclassCode);
+AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Legacy::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, MassStorage::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Network::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Display::SubclassID);
