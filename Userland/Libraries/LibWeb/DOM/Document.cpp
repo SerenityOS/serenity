@@ -464,7 +464,7 @@ WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(DeprecatedStrin
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open
-WebIDL::ExceptionOr<Document*> Document::open(DeprecatedString const&, DeprecatedString const&)
+WebIDL::ExceptionOr<Document*> Document::open(StringView, StringView)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
@@ -535,7 +535,7 @@ WebIDL::ExceptionOr<Document*> Document::open(DeprecatedString const&, Deprecate
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open-window
-WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Document::open(DeprecatedString const& url, DeprecatedString const& name, DeprecatedString const& features)
+WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Document::open(StringView url, StringView name, StringView features)
 {
     // 1. If this is not fully active, then throw an "InvalidAccessError" DOMException exception.
     if (!is_fully_active())
