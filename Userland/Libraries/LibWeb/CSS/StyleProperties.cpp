@@ -649,6 +649,25 @@ Optional<CSS::Clear> StyleProperties::clear() const
 CSS::ContentData StyleProperties::content() const
 {
     auto value = property(CSS::PropertyID::Content);
+    auto quotes_data = quotes();
+
+    auto get_quote_string = [&](bool open, auto depth) {
+        switch (quotes_data.type) {
+        case QuotesData::Type::None:
+            return String {};
+        case QuotesData::Type::Auto:
+            // FIXME: "A typographically appropriate used value for quotes is automatically chosen by the UA
+            //        based on the content language of the element and/or its parent."
+            if (open)
+                return depth % 2 ? "“"_string : "‘"_string;
+            return depth % 2 ? "”"_string : "’"_string;
+        case QuotesData::Type::Specified:
+            auto& level = quotes_data.strings[depth % quotes_data.strings.size()];
+            return open ? level[0] : level[1];
+        }
+        VERIFY_NOT_REACHED();
+    };
+
     if (value->is_content()) {
         auto& content_style_value = value->as_content();
 
@@ -661,12 +680,33 @@ CSS::ContentData StyleProperties::content() const
         for (auto const& item : content_style_value.content().values()) {
             if (item->is_string()) {
                 builder.append(item->as_string().string_value());
+            } else if (item->is_identifier()) {
+                switch (item->to_identifier()) {
+                case ValueID::OpenQuote:
+                    // FIXME: Track nesting level and increment it here.
+                    builder.append(get_quote_string(true, 1));
+                    break;
+                case ValueID::CloseQuote:
+                    // FIXME: Track nesting level and decrement it here.
+                    builder.append(get_quote_string(false, 1));
+                    break;
+                case ValueID::NoOpenQuote:
+                    // FIXME: Track nesting level and increment it here.
+                    break;
+                case ValueID::NoCloseQuote:
+                    // FIXME: Track nesting level and decrement it here.
+                    break;
+                default:
+                    dbgln("`{}` is not supported in `content` (yet?)", item->to_string());
+                    break;
+                }
             } else {
-                // TODO: Implement quotes, counters, images, and other things.
+                // TODO: Implement counters, images, and other things.
+                dbgln("`{}` is not supported in `content` (yet?)", item->to_string());
             }
         }
         content_data.type = ContentData::Type::String;
-        content_data.data = builder.to_string().release_value_but_fixme_should_propagate_errors();
+        content_data.data = MUST(builder.to_string());
 
         if (content_style_value.has_alt_text()) {
             StringBuilder alt_text_builder;
@@ -677,7 +717,7 @@ CSS::ContentData StyleProperties::content() const
                     // TODO: Implement counters
                 }
             }
-            content_data.alt_text = alt_text_builder.to_string().release_value_but_fixme_should_propagate_errors();
+            content_data.alt_text = MUST(alt_text_builder.to_string());
         }
 
         return content_data;

@@ -699,7 +699,11 @@
     ],
     "valid-identifiers": [
       "normal",
-      "none"
+      "none",
+      "open-quote",
+      "close-quote",
+      "no-open-quote",
+      "no-close-quote"
     ]
   },
   "cursor": {
