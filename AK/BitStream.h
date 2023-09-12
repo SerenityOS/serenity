@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Endian.h>
 #include <AK/MaybeOwned.h>
 #include <AK/NumericLimits.h>
 #include <AK/OwnPtr.h>
@@ -43,7 +44,7 @@ public:
         align_to_byte_boundary();
     }
 
-    ErrorOr<bool> read_bit()
+    ALWAYS_INLINE ErrorOr<bool> read_bit()
     {
         return read_bits<bool>(1);
     }
@@ -52,7 +53,7 @@ public:
     /// This avoids a bunch of static_cast<>'s for the user.
     // TODO: Support u128, u256 etc. as well: The concepts would be quite complex.
     template<Unsigned T = u64>
-    ErrorOr<T> read_bits(size_t count)
+    ALWAYS_INLINE ErrorOr<T> read_bits(size_t count)
     {
         if constexpr (IsSame<bool, T>) {
             VERIFY(count == 1);
@@ -92,8 +93,36 @@ public:
                         m_current_byte.clear();
                 }
             } else {
-                m_current_byte = TRY(m_stream->read_value<u8>());
+                if constexpr (!IsSame<bool, T> && !IsSame<u8, T>) {
+                    // Read full words of maximum possible size.
+                    auto bytes_to_read = (count - nread) / 8;
+                    u64 word = 0;
+                    switch (bytes_to_read) {
+                    case 1:
+                        word = TRY(m_stream->read_value<u8>());
+                        break;
+                    case 2:
+                        word = TRY(m_stream->read_value<BigEndian<u16>>());
+                        break;
+                    case 4:
+                        word = TRY(m_stream->read_value<BigEndian<u32>>());
+                        break;
+                    case 8:
+                        word = TRY(m_stream->read_value<BigEndian<u64>>());
+                        break;
+                    default:
+                        // Disable the general code below.
+                        bytes_to_read = 0;
+                        break;
+                    }
+                    result <<= 8 * bytes_to_read;
+                    result |= word;
+                    nread += 8 * bytes_to_read;
+                }
+
                 m_bit_offset = 0;
+                if (nread < count)
+                    m_current_byte = TRY(m_stream->read_value<u8>());
             }
         }
 
