@@ -3169,6 +3169,8 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
             return LengthPercentage { style_value.as_percentage().percentage() };
         if (style_value.is_length())
             return LengthPercentage { style_value.as_length().length() };
+        if (style_value.is_calculated())
+            return LengthPercentage { style_value.as_calculated() };
         return {};
     };
 
