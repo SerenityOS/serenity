@@ -31,7 +31,7 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(String
     return create(move(demuxer));
 }
 
-DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_mapped_file(NonnullRefPtr<Core::MappedFile> mapped_file)
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_mapped_file(NonnullOwnPtr<Core::MappedFile> mapped_file)
 {
     auto demuxer = TRY(Matroska::MatroskaDemuxer::from_mapped_file(move(mapped_file)));
     return create(move(demuxer));

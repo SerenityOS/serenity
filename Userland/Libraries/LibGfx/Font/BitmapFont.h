@@ -32,7 +32,7 @@ public:
 
     static RefPtr<BitmapFont> load_from_file(DeprecatedString const& path);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(DeprecatedString const& path);
-    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_mapped_file(RefPtr<Core::MappedFile> const&);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_mapped_file(OwnPtr<Core::MappedFile>);
 
     ErrorOr<void> write_to_file(DeprecatedString const& path);
     ErrorOr<void> write_to_file(NonnullOwnPtr<Core::File> file);
@@ -156,7 +156,7 @@ private:
 
     u8* m_rows { nullptr };
     u8* m_glyph_widths { nullptr };
-    RefPtr<Core::MappedFile> m_mapped_file;
+    OwnPtr<Core::MappedFile> m_mapped_file;
 
     u8 m_glyph_width { 0 };
     u8 m_glyph_height { 0 };

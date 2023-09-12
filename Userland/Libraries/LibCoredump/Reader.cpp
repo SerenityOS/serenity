@@ -43,7 +43,7 @@ Reader::Reader(ByteBuffer buffer)
     m_coredump_buffer = move(buffer);
 }
 
-Reader::Reader(NonnullRefPtr<Core::MappedFile> file)
+Reader::Reader(NonnullOwnPtr<Core::MappedFile> file)
     : Reader(file->bytes())
 {
     m_mapped_file = move(file);

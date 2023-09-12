@@ -19,7 +19,7 @@
 namespace Symbolication {
 
 struct CachedELF {
-    NonnullRefPtr<Core::MappedFile> mapped_file;
+    NonnullOwnPtr<Core::MappedFile> mapped_file;
     NonnullOwnPtr<Debug::DebugInfo> debug_info;
     NonnullOwnPtr<ELF::Image> image;
 };

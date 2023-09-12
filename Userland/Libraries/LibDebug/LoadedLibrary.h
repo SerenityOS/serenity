@@ -14,12 +14,12 @@
 namespace Debug {
 struct LoadedLibrary {
     DeprecatedString name;
-    NonnullRefPtr<Core::MappedFile> file;
+    NonnullOwnPtr<Core::MappedFile> file;
     NonnullOwnPtr<ELF::Image> image;
     NonnullOwnPtr<DebugInfo> debug_info;
     FlatPtr base_address {};
 
-    LoadedLibrary(DeprecatedString const& name, NonnullRefPtr<Core::MappedFile> file, NonnullOwnPtr<ELF::Image> image, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
+    LoadedLibrary(DeprecatedString const& name, NonnullOwnPtr<Core::MappedFile> file, NonnullOwnPtr<ELF::Image> image, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
         : name(name)
         , file(move(file))
         , image(move(image))

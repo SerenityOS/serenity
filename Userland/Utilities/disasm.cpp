@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
     args_parser.parse(args);
 
-    RefPtr<Core::MappedFile> file;
+    OwnPtr<Core::MappedFile const> file;
     u8 const* asm_data = nullptr;
     size_t asm_size = 0;
     if ((TRY(Core::System::stat(path))).st_size > 0) {

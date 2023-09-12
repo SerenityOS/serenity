@@ -286,7 +286,7 @@ private:
     Optional<size_t> m_loader_text_size;
 
     struct CachedELF {
-        NonnullRefPtr<Core::MappedFile> mapped_file;
+        NonnullOwnPtr<Core::MappedFile> mapped_file;
         NonnullOwnPtr<Debug::DebugInfo> debug_info;
         NonnullOwnPtr<ELF::Image> image;
     };
