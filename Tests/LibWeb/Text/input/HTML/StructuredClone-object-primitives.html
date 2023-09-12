@@ -10,6 +10,21 @@
         println(structuredClone(Date.UTC(2023, 7, 23)));
         println(structuredClone(/abc/gimsuy));
 
+        {
+            let arrayBuffer = new ArrayBuffer(6);
+            for (let i = 0; i < arrayBuffer.byteLength; ++i) {
+                arrayBuffer[i] = i;
+            }
+            let arrayClone = structuredClone(arrayBuffer);
+            for (let i = 0; i < arrayBuffer.byteLength; ++i) {
+                if (arrayBuffer[i] !== arrayBuffer[i]) {
+                    println("FAILED");
+                }
+            }
+            // FIXME: This should print something like ArrayBuffer { byteLength: 6 }
+            println(arrayClone);
+        }
+
         try {
             structuredClone(Symbol("foo"));
             println("FAILED")

@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BooleanObject.h>
@@ -70,6 +71,14 @@ enum ValueTag {
 
     RegExpObject,
 
+    GrowableSharedArrayBuffer,
+
+    SharedArrayBuffer,
+
+    ResizeableArrayBuffer,
+
+    ArrayBuffer,
+
     // TODO: Define many more types
 
     // This tag or higher are understood to be errors
@@ -82,9 +91,10 @@ enum ValueTag {
 
 class Serializer {
 public:
-    Serializer(JS::VM& vm, SerializationMemory& memory)
+    Serializer(JS::VM& vm, SerializationMemory& memory, bool for_storage)
         : m_vm(vm)
         , m_memory(memory)
+        , m_for_storage(for_storage)
     {
     }
 
@@ -187,7 +197,12 @@ public:
             TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, String::from_deprecated_string(regexp_object.flags()))));
         }
 
-        // 13 - 24: FIXME: Serialize other data types
+        // 13. Otherwise, if value has an [[ArrayBufferData]] internal slot, then:
+        else if (value.is_object() && is<JS::ArrayBuffer>(value.as_object())) {
+            TRY(serialize_array_buffer(m_serialized, static_cast<JS::ArrayBuffer&>(value.as_object())));
+        }
+
+        // 14 - 24: FIXME: Serialize other data types
         else {
             return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"_fly_string));
         }
@@ -205,6 +220,7 @@ private:
     JS::VM& m_vm;
     SerializationMemory& m_memory; // JS value -> index
     SerializationRecord m_serialized;
+    bool m_for_storage { false };
 
     WebIDL::ExceptionOr<void> serialize_bytes(Vector<u32>& vector, ReadonlyBytes bytes)
     {
@@ -236,6 +252,57 @@ private:
     {
         auto string = primitive_string.utf8_string();
         TRY(serialize_string(vector, string));
+        return {};
+    }
+
+    WebIDL::ExceptionOr<void> serialize_array_buffer(Vector<u32>& vector, JS::ArrayBuffer const& array_buffer)
+    {
+        // 13. Otherwise, if value has an [[ArrayBufferData]] internal slot, then:
+
+        // FIXME: 1.  If IsSharedArrayBuffer(value) is true, then:
+        if (false) {
+            // 1. If the current settings object's cross-origin isolated capability is false, then throw a "DataCloneError" DOMException.
+            // NOTE: This check is only needed when serializing (and not when deserializing) as the cross-origin isolated capability cannot change
+            //       over time and a SharedArrayBuffer cannot leave an agent cluster.
+            if (current_settings_object().cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::No)
+                return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize SharedArrayBuffer when cross-origin isolated"_fly_string);
+
+            // 2. If forStorage is true, then throw a "DataCloneError" DOMException.
+            if (m_for_storage)
+                return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize SharedArrayBuffer for storage"_fly_string);
+
+            // FIXME: 3. If value has an [[ArrayBufferMaxByteLength]] internal slot, then set serialized to { [[Type]]: "GrowableSharedArrayBuffer",
+            //           [[ArrayBufferData]]: value.[[ArrayBufferData]], [[ArrayBufferByteLengthData]]: value.[[ArrayBufferByteLengthData]],
+            //           [[ArrayBufferMaxByteLength]]: value.[[ArrayBufferMaxByteLength]], [[AgentCluster]]: the surrounding agent's agent cluster }.
+            // FIXME: 4. Otherwise, set serialized to { [[Type]]: "SharedArrayBuffer", [[ArrayBufferData]]: value.[[ArrayBufferData]],
+            //           [[ArrayBufferByteLength]]: value.[[ArrayBufferByteLength]], [[AgentCluster]]: the surrounding agent's agent cluster }.
+        }
+        // 2. Otherwise:
+        else {
+            // 1. If IsDetachedBuffer(value) is true, then throw a "DataCloneError" DOMException.
+            if (array_buffer.is_detached())
+                return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize detached ArrayBuffer"_fly_string);
+
+            // 2. Let size be value.[[ArrayBufferByteLength]].
+            auto size = array_buffer.byte_length();
+
+            // 3. Let dataCopy be ? CreateByteDataBlock(size).
+            //    NOTE: This can throw a RangeError exception upon allocation failure.
+            auto data_copy = TRY(JS::create_byte_data_block(m_vm, size));
+
+            // 4. Perform CopyDataBlockBytes(dataCopy, 0, value.[[ArrayBufferData]], 0, size).
+            JS::copy_data_block_bytes(data_copy, 0, array_buffer.buffer(), 0, size);
+
+            // FIXME: 5. If value has an [[ArrayBufferMaxByteLength]] internal slot, then set serialized to { [[Type]]: "ResizableArrayBuffer",
+            //    [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size, [[ArrayBufferMaxByteLength]]: value.[[ArrayBufferMaxByteLength]] }.
+            if (false) {
+            }
+            // 6. Otherwise, set serialized to { [[Type]]: "ArrayBuffer", [[ArrayBufferData]]: dataCopy, [[ArrayBufferByteLength]]: size }.
+            else {
+                vector.append(ValueTag::ArrayBuffer);
+                TRY(serialize_bytes(vector, data_copy.bytes()));
+            }
+        }
         return {};
     }
 };
@@ -327,6 +394,12 @@ public:
                 m_memory.append(TRY(JS::regexp_create(m_vm, move(pattern), move(flags))));
                 break;
             }
+            case ValueTag::ArrayBuffer: {
+                auto* realm = m_vm.current_realm();
+                auto bytes = TRY(deserialize_bytes(m_vm, m_vector, position));
+                m_memory.append(JS::ArrayBuffer::create(*realm, move(bytes)));
+                break;
+            }
             default:
                 m_error = "Unsupported type"_fly_string;
                 break;
@@ -404,13 +477,11 @@ WebIDL::ExceptionOr<SerializationRecord> structured_serialize_for_storage(JS::VM
 // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeinternal
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& vm, JS::Value value, bool for_storage, Optional<SerializationMemory> memory)
 {
-    (void)for_storage;
-
     // 1. If memory was not supplied, let memory be an empty map.
     if (!memory.has_value())
         memory = SerializationMemory {};
 
-    Serializer serializer(vm, *memory);
+    Serializer serializer(vm, *memory, for_storage);
     return serializer.serialize(value);
 }
 
