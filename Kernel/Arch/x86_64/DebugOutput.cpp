@@ -7,6 +7,7 @@
 #include <Kernel/Arch/DebugOutput.h>
 #include <Kernel/Arch/x86_64/BochsDebugOutput.h>
 #include <Kernel/Arch/x86_64/IO.h>
+#include <Kernel/Arch/x86_64/Processor.h>
 
 namespace Kernel {
 
@@ -35,7 +36,7 @@ void debug_output(char ch)
     }
 
     while ((IO::in8(serial_com1_io_port + 5) & 0x20) == 0)
-        ;
+        Processor::wait_check();
 
     if (ch == '\n' && !was_cr)
         IO::out8(serial_com1_io_port, '\r');

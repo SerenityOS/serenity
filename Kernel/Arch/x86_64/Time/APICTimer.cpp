@@ -91,7 +91,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
     sti();
     // Loop for about 100 ms
     while (state.calibration_ticks.load() <= state.ticks_in_100ms)
-        ;
+        Processor::wait_check();
     cli();
 
     // Restore timer callbacks

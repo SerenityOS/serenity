@@ -255,15 +255,9 @@ UNMAP_AFTER_INIT u32 E1000ENetworkAdapter::read_eeprom(u8 address)
     VERIFY(m_has_eeprom);
     u16 data = 0;
     u32 tmp = 0;
-    if (m_has_eeprom) {
-        out32(REG_EEPROM, ((u32)address << 2) | 1);
-        while (!((tmp = in32(REG_EEPROM)) & (1 << 1)))
-            ;
-    } else {
-        out32(REG_EEPROM, ((u32)address << 2) | 1);
-        while (!((tmp = in32(REG_EEPROM)) & (1 << 1)))
-            ;
-    }
+    out32(REG_EEPROM, ((u32)address << 2) | 1);
+    while (!((tmp = in32(REG_EEPROM)) & (1 << 1)))
+        Processor::wait_check();
     data = (tmp >> 16) & 0xffff;
     return data;
 }
