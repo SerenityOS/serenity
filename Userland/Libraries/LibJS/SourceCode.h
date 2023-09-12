@@ -9,6 +9,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Position.h>
 
 namespace JS {
 
@@ -24,12 +25,14 @@ public:
 private:
     SourceCode(String filename, String code);
 
-    void compute_line_break_offsets() const;
-
     String m_filename;
     String m_code;
 
-    Optional<Vector<size_t>> mutable m_line_break_offsets;
+    // For fast mapping of offsets to line/column numbers, we build a list of
+    // starting points (with byte offsets into the source string) and which
+    // line:column they map to. This can then be binary-searched.
+    void fill_position_cache() const;
+    Vector<Position> mutable m_cached_positions;
 };
 
 }
