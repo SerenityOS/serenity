@@ -352,6 +352,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     if (request == "dump-dom-tree") {
         if (auto* doc = page().top_level_browsing_context().active_document())
             Web::dump_tree(*doc);
+        return;
     }
 
     if (request == "dump-layout-tree") {
@@ -359,6 +360,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
             if (auto* viewport = doc->layout_node())
                 Web::dump_tree(*viewport);
         }
+        return;
     }
 
     if (request == "dump-paint-tree") {
@@ -366,6 +368,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
             if (auto* paintable = doc->paintable())
                 Web::dump_tree(*paintable);
         }
+        return;
     }
 
     if (request == "dump-stacking-context-tree") {
@@ -375,6 +378,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
                     stacking_context->dump();
             }
         }
+        return;
     }
 
     if (request == "dump-style-sheets") {
@@ -384,6 +388,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
                     dbgln("Failed to dump style sheets: {}", result.error());
             }
         }
+        return;
     }
 
     if (request == "dump-all-resolved-styles") {
@@ -404,45 +409,55 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
                 }
             }
         }
+        return;
     }
 
     if (request == "collect-garbage") {
         Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
+        return;
     }
 
     if (request == "dump-gc-graph") {
         Web::Bindings::main_thread_vm().heap().dump_graph();
+        return;
     }
 
     if (request == "set-line-box-borders") {
         bool state = argument == "on";
         m_page_host->set_should_show_line_box_borders(state);
         page().top_level_browsing_context().set_needs_display(page().top_level_browsing_context().viewport_rect());
+        return;
     }
 
     if (request == "clear-cache") {
         Web::ResourceLoader::the().clear_cache();
+        return;
     }
 
     if (request == "spoof-user-agent") {
         Web::ResourceLoader::the().set_user_agent(argument);
+        return;
     }
 
     if (request == "same-origin-policy") {
         m_page_host->page().set_same_origin_policy_enabled(argument == "on");
+        return;
     }
 
     if (request == "scripting") {
         m_page_host->page().set_is_scripting_enabled(argument == "on");
+        return;
     }
 
     if (request == "block-pop-ups") {
         m_page_host->page().set_should_block_pop_ups(argument == "on");
+        return;
     }
 
     if (request == "dump-local-storage") {
         if (auto* document = page().top_level_browsing_context().active_document())
             document->window().local_storage().release_value_but_fixme_should_propagate_errors()->dump();
+        return;
     }
 }
 
