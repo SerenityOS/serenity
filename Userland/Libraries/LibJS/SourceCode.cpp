@@ -33,22 +33,38 @@ String const& SourceCode::code() const
     return m_code;
 }
 
-void SourceCode::compute_line_break_offsets() const
+void SourceCode::fill_position_cache() const
 {
-    m_line_break_offsets = Vector<size_t> {};
+    constexpr size_t minimum_distance_between_cached_positions = 10000;
 
     if (m_code.is_empty())
         return;
 
     bool previous_code_point_was_carriage_return = false;
-    Utf8View view(m_code);
+    size_t line = 1;
+    size_t column = 1;
+    size_t offset_of_last_starting_point = 0;
+    m_cached_positions.ensure_capacity(m_code.bytes().size() / minimum_distance_between_cached_positions);
+    m_cached_positions.append({ .line = 1, .column = 1, .offset = 0 });
+
+    Utf8View const view(m_code);
     for (auto it = view.begin(); it != view.end(); ++it) {
         u32 code_point = *it;
         bool is_line_terminator = code_point == '\r' || (code_point == '\n' && !previous_code_point_was_carriage_return) || code_point == LINE_SEPARATOR || code_point == PARAGRAPH_SEPARATOR;
         previous_code_point_was_carriage_return = code_point == '\r';
 
-        if (is_line_terminator)
-            m_line_break_offsets->append(view.byte_offset_of(it));
+        auto byte_offset = view.byte_offset_of(it);
+        if ((byte_offset - offset_of_last_starting_point) >= minimum_distance_between_cached_positions) {
+            m_cached_positions.append({ .line = line, .column = column, .offset = byte_offset });
+            offset_of_last_starting_point = byte_offset;
+        }
+
+        if (is_line_terminator) {
+            line += 1;
+            column = 1;
+        } else {
+            column += 1;
+        }
     }
 }
 
@@ -58,34 +74,35 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
     if (m_code.is_empty())
         return { *this, { .line = 1, .column = 1, .offset = 0 }, { .line = 1, .column = 1, .offset = 0 } };
 
-    if (!m_line_break_offsets.has_value())
-        compute_line_break_offsets();
+    if (m_cached_positions.is_empty())
+        fill_position_cache();
 
-    size_t line = 1;
-    size_t nearest_line_break_index = 0;
-    size_t nearest_preceding_line_break_offset = 0;
+    Position current { .line = 1, .column = 1, .offset = 0 };
 
-    if (!m_line_break_offsets->is_empty()) {
-        binary_search(*m_line_break_offsets, start_offset, &nearest_line_break_index);
-        line = 1 + nearest_line_break_index;
-        nearest_preceding_line_break_offset = (*m_line_break_offsets)[nearest_line_break_index];
+    if (!m_cached_positions.is_empty()) {
+        Position const dummy;
+        size_t nearest_index = 0;
+        binary_search(m_cached_positions, dummy, &nearest_index,
+            [&](auto&, auto& starting_point) {
+                return start_offset - starting_point.offset;
+            });
+
+        current = m_cached_positions[nearest_index];
     }
 
     Optional<Position> start;
     Optional<Position> end;
 
-    size_t column = 1;
-
     bool previous_code_point_was_carriage_return = false;
 
-    Utf8View view(m_code);
-    for (auto it = view.iterator_at_byte_offset_without_validation(nearest_preceding_line_break_offset); it != view.end(); ++it) {
+    Utf8View const view(m_code);
+    for (auto it = view.iterator_at_byte_offset_without_validation(current.offset); it != view.end(); ++it) {
 
         // If we're on or after the start offset, this is the start position.
         if (!start.has_value() && view.byte_offset_of(it) >= start_offset) {
             start = Position {
-                .line = line,
-                .column = column,
+                .line = current.line,
+                .column = current.column,
                 .offset = start_offset,
             };
         }
@@ -93,8 +110,8 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
         // If we're on or after the end offset, this is the end position.
         if (!end.has_value() && view.byte_offset_of(it) >= end_offset) {
             end = Position {
-                .line = line,
-                .column = column,
+                .line = current.line,
+                .column = current.column,
                 .offset = end_offset,
             };
             break;
@@ -102,15 +119,15 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
 
         u32 code_point = *it;
 
-        bool is_line_terminator = code_point == '\r' || (code_point == '\n' && !previous_code_point_was_carriage_return) || code_point == LINE_SEPARATOR || code_point == PARAGRAPH_SEPARATOR;
+        bool const is_line_terminator = code_point == '\r' || (code_point == '\n' && !previous_code_point_was_carriage_return) || code_point == LINE_SEPARATOR || code_point == PARAGRAPH_SEPARATOR;
         previous_code_point_was_carriage_return = code_point == '\r';
 
         if (is_line_terminator) {
-            ++line;
-            column = 1;
+            current.line += 1;
+            current.column = 1;
             continue;
         }
-        ++column;
+        current.column += 1;
     }
 
     // If we didn't find both a start and end position, just return 1,1-1,1.
