@@ -34,6 +34,8 @@ public:
     size_t offset() const;
     size_t remaining() const;
 
+    bool is_writing_enabled() const { return m_writing_enabled; }
+
 private:
     Bytes m_bytes;
     size_t m_offset { 0 };
