@@ -98,7 +98,7 @@ public:
     JS::GCPtr<Selection::Selection> get_selection() const;
 
     DeprecatedString cookie(Cookie::Source = Cookie::Source::NonHttp);
-    void set_cookie(DeprecatedString const&, Cookie::Source = Cookie::Source::NonHttp);
+    void set_cookie(StringView, Cookie::Source = Cookie::Source::NonHttp);
 
     DeprecatedString referrer() const;
     void set_referrer(DeprecatedString);

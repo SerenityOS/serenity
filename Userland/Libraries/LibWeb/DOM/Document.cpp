@@ -1967,7 +1967,7 @@ DeprecatedString Document::cookie(Cookie::Source source)
     return {};
 }
 
-void Document::set_cookie(DeprecatedString const& cookie_string, Cookie::Source source)
+void Document::set_cookie(StringView cookie_string, Cookie::Source source)
 {
     auto cookie = Cookie::parse_cookie(cookie_string);
     if (!cookie.has_value())

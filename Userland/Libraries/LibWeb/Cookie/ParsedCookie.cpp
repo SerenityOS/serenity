@@ -29,7 +29,7 @@ static void on_http_only_attribute(ParsedCookie& parsed_cookie);
 static void on_same_site_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
 static Optional<UnixDateTime> parse_date_time(StringView date_string);
 
-Optional<ParsedCookie> parse_cookie(DeprecatedString const& cookie_string)
+Optional<ParsedCookie> parse_cookie(StringView cookie_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
 
