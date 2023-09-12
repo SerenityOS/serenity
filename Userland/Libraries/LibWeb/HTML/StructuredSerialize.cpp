@@ -14,11 +14,13 @@
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
@@ -80,6 +82,8 @@ enum ValueTag {
     ResizeableArrayBuffer,
 
     ArrayBuffer,
+
+    ArrayBufferView,
 
     // TODO: Define many more types
 
@@ -204,7 +208,14 @@ public:
             TRY(serialize_array_buffer(m_serialized, static_cast<JS::ArrayBuffer&>(value.as_object())));
         }
 
-        // 14 - 24: FIXME: Serialize other data types
+        // 14. Otherwise, if value has a [[ViewedArrayBuffer]] internal slot, then:
+        else if (value.is_object() && is<JS::TypedArrayBase>(value.as_object())) {
+            TRY(serialize_viewed_array_buffer(m_serialized, static_cast<JS::TypedArrayBase&>(value.as_object())));
+        } else if (value.is_object() && is<JS::DataView>(value.as_object())) {
+            TRY(serialize_viewed_array_buffer(m_serialized, static_cast<JS::DataView&>(value.as_object())));
+        }
+
+        // 15 - 24: FIXME: Serialize other data types
         else {
             return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"_fly_string));
         }
@@ -243,6 +254,11 @@ private:
             TRY_OR_THROW_OOM(m_vm, vector.try_append(combined_value));
         }
         return {};
+    }
+
+    WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, DeprecatedFlyString const& string)
+    {
+        return serialize_bytes(vector, string.view().bytes());
     }
 
     WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, String const& string)
@@ -304,6 +320,54 @@ private:
                 vector.append(ValueTag::ArrayBuffer);
                 TRY(serialize_bytes(vector, data_copy.bytes()));
             }
+        }
+        return {};
+    }
+
+    template<OneOf<JS::TypedArrayBase, JS::DataView> ViewType>
+    WebIDL::ExceptionOr<void> serialize_viewed_array_buffer(Vector<u32>& vector, ViewType const& view)
+    {
+        // 14. Otherwise, if value has a [[ViewedArrayBuffer]] internal slot, then:
+
+        // FIXME: 1. If IsArrayBufferViewOutOfBounds(value) is true, then throw a "DataCloneError" DOMException.
+
+        // 2. Let buffer be the value of value's [[ViewedArrayBuffer]] internal slot.
+        auto* buffer = view.viewed_array_buffer();
+
+        // 3. Let bufferSerialized be ? StructuredSerializeInternal(buffer, forStorage, memory).
+        auto buffer_serialized = TRY(structured_serialize_internal(m_vm, JS::Value(buffer), m_for_storage, m_memory));
+
+        // 4. Assert: bufferSerialized.[[Type]] is "ArrayBuffer", "ResizableArrayBuffer", "SharedArrayBuffer", or "GrowableSharedArrayBuffer".
+        // NOTE: We currently only implement this for ArrayBuffer
+        VERIFY(buffer_serialized[0] == ValueTag::ArrayBuffer);
+
+        // 5. If value has a [[DataView]] internal slot, then set serialized to { [[Type]]: "ArrayBufferView", [[Constructor]]: "DataView",
+        //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]], [[ByteOffset]]: value.[[ByteOffset]] }.
+        if constexpr (IsSame<ViewType, JS::DataView>) {
+            vector.append(ValueTag::ArrayBufferView);
+            u64 const serialized_buffer_size = buffer_serialized.size();
+            vector.append(bit_cast<u32*>(&serialized_buffer_size), 2);
+            vector.extend(move(buffer_serialized));           // [[ArrayBufferSerialized]]
+            TRY(serialize_string(vector, "DataView"_string)); // [[Constructor]]
+            vector.append(view.byte_length());
+            vector.append(view.byte_offset());
+        }
+
+        // 6. Otherwise:
+        else {
+            // 1. Assert: value has a [[TypedArrayName]] internal slot.
+            //    NOTE: Handled by constexpr check and template constraints
+            // 2. Set serialized to { [[Type]]: "ArrayBufferView", [[Constructor]]: value.[[TypedArrayName]],
+            //    [[ArrayBufferSerialized]]: bufferSerialized, [[ByteLength]]: value.[[ByteLength]],
+            //    [[ByteOffset]]: value.[[ByteOffset]], [[ArrayLength]]: value.[[ArrayLength]] }.
+            vector.append(ValueTag::ArrayBufferView);
+            u64 const serialized_buffer_size = buffer_serialized.size();
+            vector.append(bit_cast<u32*>(&serialized_buffer_size), 2);
+            vector.extend(move(buffer_serialized));             // [[ArrayBufferSerialized]]
+            TRY(serialize_string(vector, view.element_name())); // [[Constructor]]
+            vector.append(view.byte_length());
+            vector.append(view.byte_offset());
+            vector.append(view.array_length());
         }
         return {};
     }
@@ -402,6 +466,39 @@ public:
                 auto* realm = m_vm.current_realm();
                 auto bytes = TRY(deserialize_bytes(m_vm, m_vector, position));
                 m_memory.append(JS::ArrayBuffer::create(*realm, move(bytes)));
+                break;
+            }
+            case ValueTag::ArrayBufferView: {
+                auto* realm = m_vm.current_realm();
+                u32 size_bits[2];
+                size_bits[0] = m_vector[position++];
+                size_bits[1] = m_vector[position++];
+                u64 const array_buffer_size = *bit_cast<u64*>(&size_bits);
+                auto array_buffer_value = TRY(structured_deserialize_impl(m_vm, m_vector.slice(position, array_buffer_size), *realm, m_serialization_memory));
+                auto& array_buffer = verify_cast<JS::ArrayBuffer>(array_buffer_value.as_object());
+                position += array_buffer_size;
+                auto constructor_name = TRY(deserialize_string(m_vm, m_vector, position));
+                u32 byte_length = m_vector[position++];
+                u32 byte_offset = m_vector[position++];
+
+                if (constructor_name == "DataView"sv) {
+                    m_memory.append(JS::DataView::create(*realm, &array_buffer, byte_length, byte_offset));
+                } else {
+                    u32 array_length = m_vector[position++];
+                    JS::GCPtr<JS::TypedArrayBase> typed_array_ptr;
+#define CREATE_TYPED_ARRAY(ClassName)       \
+    if (constructor_name == #ClassName##sv) \
+        typed_array_ptr = JS::ClassName::create(*realm, array_length, array_buffer);
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    CREATE_TYPED_ARRAY(ClassName)
+                    JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+#undef CREATE_TYPED_ARRAY
+                    VERIFY(typed_array_ptr != nullptr); // FIXME: Handle errors better here? Can a fuzzer put weird stuff in the buffer?
+                    typed_array_ptr->set_byte_length(byte_length);
+                    typed_array_ptr->set_byte_offset(byte_offset);
+                    m_memory.append(typed_array_ptr);
+                }
                 break;
             }
             default:
