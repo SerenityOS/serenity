@@ -26,6 +26,8 @@
 
 namespace Web::HTML {
 
+static WebIDL::ExceptionOr<JS::Value> structured_deserialize_impl(JS::VM& vm, ReadonlySpan<u32> serialized, JS::Realm& target_realm, SerializationMemory& memory);
+
 // Binary format:
 // A list of adjacent shallow values, which may contain references to other
 // values (noted by their position in the list, one value following another).
@@ -309,11 +311,13 @@ private:
 
 class Deserializer {
 public:
-    Deserializer(JS::VM& vm, JS::Realm& target_realm, SerializationRecord const& v)
+    Deserializer(JS::VM& vm, JS::Realm& target_realm, ReadonlySpan<u32> v, SerializationMemory& serialization_memory)
         : m_vm(vm)
         , m_vector(v)
         , m_memory(target_realm.heap())
+        , m_serialization_memory(serialization_memory)
     {
+        VERIFY(vm.current_realm() == &target_realm);
     }
 
     WebIDL::ExceptionOr<void> deserialize()
@@ -417,11 +421,12 @@ public:
 
 private:
     JS::VM& m_vm;
-    SerializationRecord const& m_vector;
+    ReadonlySpan<u32> m_vector;
     JS::MarkedVector<JS::Value> m_memory; // Index -> JS value
     Optional<FlyString> m_error;
+    SerializationMemory& m_serialization_memory;
 
-    static WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, Vector<u32> const& vector, u32& position)
+    static WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, ReadonlySpan<u32> vector, u32& position)
     {
         u32 size_bits[2];
         size_bits[0] = vector[position++];
@@ -441,7 +446,13 @@ private:
         return bytes;
     }
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::PrimitiveString>> deserialize_string_primitive(JS::VM& vm, Vector<u32> const& vector, u32& position)
+    static WebIDL::ExceptionOr<String> deserialize_string(JS::VM& vm, ReadonlySpan<u32> vector, u32& position)
+    {
+        auto bytes = TRY(deserialize_bytes(vm, vector, position));
+        return TRY_OR_THROW_OOM(vm, String::from_utf8(StringView { bytes }));
+    }
+
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::PrimitiveString>> deserialize_string_primitive(JS::VM& vm, ReadonlySpan<u32> vector, u32& position)
     {
         auto bytes = TRY(deserialize_bytes(vm, vector, position));
 
@@ -450,7 +461,7 @@ private:
         }));
     }
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::BigInt>> deserialize_big_int_primitive(JS::VM& vm, Vector<u32> const& vector, u32& position)
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::BigInt>> deserialize_big_int_primitive(JS::VM& vm, ReadonlySpan<u32> vector, u32& position)
     {
         auto string = TRY(deserialize_string_primitive(vm, vector, position));
         auto string_view = TRY(Bindings::throw_dom_exception_if_needed(vm, [&string]() {
@@ -464,36 +475,43 @@ private:
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize(JS::VM& vm, JS::Value value)
 {
     // 1. Return ? StructuredSerializeInternal(value, false).
-    return structured_serialize_internal(vm, value, false, {});
+    SerializationMemory memory = {};
+    return structured_serialize_internal(vm, value, false, memory);
 }
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeforstorage
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize_for_storage(JS::VM& vm, JS::Value value)
 {
     // 1. Return ? StructuredSerializeInternal(value, true).
-    return structured_serialize_internal(vm, value, true, {});
+    SerializationMemory memory = {};
+    return structured_serialize_internal(vm, value, true, memory);
 }
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeinternal
-WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& vm, JS::Value value, bool for_storage, Optional<SerializationMemory> memory)
+WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& vm, JS::Value value, bool for_storage, SerializationMemory& memory)
 {
     // 1. If memory was not supplied, let memory be an empty map.
-    if (!memory.has_value())
-        memory = SerializationMemory {};
+    // IMPLEMENTATION DEFINED: We move this requirement up to the callers to make recursion easier
 
-    Serializer serializer(vm, *memory, for_storage);
+    Serializer serializer(vm, memory, for_storage);
     return serializer.serialize(value);
+}
+
+WebIDL::ExceptionOr<JS::Value> structured_deserialize_impl(JS::VM& vm, ReadonlySpan<u32> serialized, JS::Realm& target_realm, SerializationMemory& memory)
+{
+    // FIXME: Do the spec steps
+    Deserializer deserializer(vm, target_realm, serialized, memory);
+    TRY(deserializer.deserialize());
+    return deserializer.result();
 }
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#structureddeserialize
 WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationRecord const& serialized, JS::Realm& target_realm, Optional<SerializationMemory> memory)
 {
-    // FIXME: Do the spec steps
-    (void)memory;
+    if (!memory.has_value())
+        memory = SerializationMemory {};
 
-    Deserializer deserializer(vm, target_realm, serialized);
-    TRY(deserializer.deserialize());
-    return deserializer.result();
+    return structured_deserialize_impl(vm, serialized.span(), target_realm, *memory);
 }
 
 }
