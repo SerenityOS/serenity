@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Figure out how to do this sanely from stdin
     auto file = TRY(Core::MappedFile::map(filename));
 
-    if (file->size() < sizeof(DeviceTree::FlattenedDeviceTreeHeader)) {
+    if (TRY(file->size()) < sizeof(DeviceTree::FlattenedDeviceTreeHeader)) {
         warnln("Not enough data in {} to contain a device tree header!", filename);
         return 1;
     }

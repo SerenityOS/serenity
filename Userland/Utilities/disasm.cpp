@@ -29,13 +29,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
     args_parser.parse(args);
 
-    OwnPtr<Core::MappedFile const> file;
+    OwnPtr<Core::MappedFile> file;
     u8 const* asm_data = nullptr;
     size_t asm_size = 0;
     if ((TRY(Core::System::stat(path))).st_size > 0) {
         file = TRY(Core::MappedFile::map(path));
         asm_data = static_cast<u8 const*>(file->data());
-        asm_size = file->size();
+        asm_size = MUST(file->size());
     }
 
     struct Symbol {

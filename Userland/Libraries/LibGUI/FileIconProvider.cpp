@@ -174,7 +174,7 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
 
     auto& mapped_file = file_or_error.value();
 
-    if (mapped_file->size() < SELFMAG) {
+    if (mapped_file->size().release_value() < SELFMAG) {
         app_icon_cache.set(path, s_executable_icon);
         return s_executable_icon;
     }
@@ -184,7 +184,7 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
         return s_executable_icon;
     }
 
-    auto image = ELF::Image((u8 const*)mapped_file->data(), mapped_file->size());
+    auto image = ELF::Image((u8 const*)mapped_file->data(), mapped_file->size().release_value());
     if (!image.is_valid()) {
         app_icon_cache.set(path, s_executable_icon);
         return s_executable_icon;
