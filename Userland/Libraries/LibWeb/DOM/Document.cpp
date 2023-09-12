@@ -1856,7 +1856,7 @@ void Document::scroll_to_the_beginning_of_the_document()
         browsing_context->scroll_to({ 0, 0 });
 }
 
-DeprecatedString Document::ready_state() const
+StringView Document::ready_state() const
 {
     switch (m_readiness) {
     case HTML::DocumentReadyState::Loading:
@@ -2052,11 +2052,11 @@ JS::GCPtr<HTML::Location> Document::location()
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden
 bool Document::hidden() const
 {
-    return visibility_state() == "hidden";
+    return m_visibility_state == HTML::VisibilityState::Hidden;
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-visibilitystate
-DeprecatedString Document::visibility_state() const
+StringView Document::visibility_state() const
 {
     switch (m_visibility_state) {
     case HTML::VisibilityState::Hidden:

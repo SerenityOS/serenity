@@ -308,7 +308,7 @@ public:
 
     JS::NonnullGCPtr<Document> appropriate_template_contents_owner_document();
 
-    DeprecatedString ready_state() const;
+    StringView ready_state() const;
     HTML::DocumentReadyState readiness() const { return m_readiness; }
     void update_readiness(HTML::DocumentReadyState);
 
@@ -375,7 +375,7 @@ public:
     void set_page_showing(bool value) { m_page_showing = value; }
 
     bool hidden() const;
-    DeprecatedString visibility_state() const;
+    StringView visibility_state() const;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
     void update_the_visibility_state(HTML::VisibilityState);
