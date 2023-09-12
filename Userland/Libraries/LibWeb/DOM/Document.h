@@ -319,8 +319,8 @@ public:
     WebIDL::ExceptionOr<void> write(Vector<DeprecatedString> const& strings);
     WebIDL::ExceptionOr<void> writeln(Vector<DeprecatedString> const& strings);
 
-    WebIDL::ExceptionOr<Document*> open(DeprecatedString const& = "", DeprecatedString const& = "");
-    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(DeprecatedString const& url, DeprecatedString const& name, DeprecatedString const& features);
+    WebIDL::ExceptionOr<Document*> open(StringView = ""sv, StringView = ""sv);
+    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(StringView url, StringView name, StringView features);
     WebIDL::ExceptionOr<void> close();
 
     HTML::Window* default_view() { return m_window.ptr(); }
