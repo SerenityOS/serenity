@@ -660,7 +660,7 @@ CSS::ContentData StyleProperties::content() const
         StringBuilder builder;
         for (auto const& item : content_style_value.content().values()) {
             if (item->is_string()) {
-                builder.append(item->to_string());
+                builder.append(item->as_string().string_value());
             } else {
                 // TODO: Implement quotes, counters, images, and other things.
             }
@@ -672,7 +672,7 @@ CSS::ContentData StyleProperties::content() const
             StringBuilder alt_text_builder;
             for (auto const& item : content_style_value.alt_text()->values()) {
                 if (item->is_string()) {
-                    alt_text_builder.append(item->to_string());
+                    alt_text_builder.append(item->as_string().string_value());
                 } else {
                     // TODO: Implement counters
                 }
@@ -951,7 +951,7 @@ Vector<Vector<String>> StyleProperties::grid_template_areas() const
 String StyleProperties::grid_area() const
 {
     auto value = property(CSS::PropertyID::GridArea);
-    return value->as_string().to_string();
+    return value->as_string().string_value();
 }
 
 Optional<CSS::ObjectFit> StyleProperties::object_fit() const

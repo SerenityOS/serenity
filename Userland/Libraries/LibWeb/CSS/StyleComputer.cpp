@@ -60,6 +60,7 @@
 #include <LibWeb/CSS/StyleValues/PlaceSelfStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
+#include <LibWeb/CSS/StyleValues/StringStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
@@ -1543,7 +1544,15 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
 
     // Animation declarations [css-animations-2]
-    if (auto animation_name = style.maybe_null_property(PropertyID::AnimationName)) {
+    auto get_animation_name = [&]() -> Optional<String> {
+        auto animation_name = style.maybe_null_property(PropertyID::AnimationName);
+        if (animation_name.is_null())
+            return OptionalNone {};
+        if (animation_name->is_string())
+            return animation_name->as_string().string_value();
+        return animation_name->to_string();
+    };
+    if (auto animation_name = get_animation_name(); animation_name.has_value()) {
         if (auto source_declaration = style.property_source_declaration(PropertyID::AnimationName)) {
             AnimationKey animation_key {
                 .source_declaration = source_declaration,
@@ -1561,7 +1570,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                             style.set_property(static_cast<PropertyID>(property_id_value), *property_value);
                     }
                 }
-            } else if (auto name = animation_name->to_string(); !name.is_empty()) {
+            } else if (!animation_name->is_empty()) {
                 auto active_animation = m_active_animations.get(animation_key);
                 if (!active_animation.has_value()) {
                     // New animation!
@@ -1682,7 +1691,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                     }
 
                     auto animation = make<Animation>(Animation {
-                        .name = move(name),
+                        .name = animation_name.release_value(),
                         .duration = duration,
                         .delay = delay,
                         .iteration_count = iteration_count,
@@ -2127,7 +2136,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
             if (family->is_identifier()) {
                 found_font = find_generic_font(family->to_identifier());
             } else if (family->is_string()) {
-                found_font = find_font(family->to_string());
+                found_font = find_font(family->as_string().string_value());
             }
             if (found_font)
                 break;
@@ -2135,7 +2144,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
     } else if (font_family.is_identifier()) {
         found_font = find_generic_font(font_family.to_identifier());
     } else if (font_family.is_string()) {
-        found_font = find_font(font_family.to_string());
+        found_font = find_font(font_family.as_string().string_value());
     }
 
     if (!found_font) {

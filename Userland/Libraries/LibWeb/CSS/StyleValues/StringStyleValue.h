@@ -19,7 +19,8 @@ public:
     }
     virtual ~StringStyleValue() override = default;
 
-    String to_string() const override { return m_string; }
+    String string_value() const { return m_string; }
+    String to_string() const override { return serialize_a_string(m_string); }
 
     bool properties_equal(StringStyleValue const& other) const { return m_string == other.m_string; }
 
