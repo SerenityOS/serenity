@@ -209,6 +209,7 @@ public:
     virtual ~NodeWithStyle() override = default;
 
     const CSS::ImmutableComputedValues& computed_values() const { return static_cast<const CSS::ImmutableComputedValues&>(m_computed_values); }
+    CSS::MutableComputedValues& mutable_computed_values() { return static_cast<CSS::MutableComputedValues&>(m_computed_values); }
 
     void apply_style(const CSS::StyleProperties&);
 

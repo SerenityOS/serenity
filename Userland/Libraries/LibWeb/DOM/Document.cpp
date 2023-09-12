@@ -927,7 +927,7 @@ static void propagate_overflow_to_viewport(Element& root_element, Layout::Viewpo
     // UAs must apply the overflow-* values set on the root element to the viewport
     // when the root element’s display value is not none.
     auto* overflow_origin_node = root_element.layout_node();
-    auto& viewport_computed_values = const_cast<CSS::MutableComputedValues&>(static_cast<CSS::MutableComputedValues const&>(static_cast<CSS::ComputedValues const&>(viewport.computed_values())));
+    auto& viewport_computed_values = viewport.mutable_computed_values();
 
     // However, when the root element is an [HTML] html element (including XML syntax for HTML)
     // whose overflow value is visible (in both axes), and that element has as a child
@@ -935,7 +935,7 @@ static void propagate_overflow_to_viewport(Element& root_element, Layout::Viewpo
     // user agents must instead apply the overflow-* values of the first such child element to the viewport.
     if (root_element.is_html_html_element()) {
         auto* root_element_layout_node = root_element.layout_node();
-        auto& root_element_computed_values = const_cast<CSS::MutableComputedValues&>(static_cast<CSS::MutableComputedValues const&>(static_cast<CSS::ComputedValues const&>(root_element_layout_node->computed_values())));
+        auto& root_element_computed_values = root_element_layout_node->mutable_computed_values();
         if (root_element_computed_values.overflow_x() == CSS::Overflow::Visible && root_element_computed_values.overflow_y() == CSS::Overflow::Visible) {
             auto* body_element = root_element.first_child_of_type<HTML::HTMLBodyElement>();
             if (body_element && body_element->layout_node())
@@ -944,7 +944,7 @@ static void propagate_overflow_to_viewport(Element& root_element, Layout::Viewpo
     }
 
     // NOTE: This is where we assign the chosen overflow values to the viewport.
-    auto& overflow_origin_computed_values = const_cast<CSS::MutableComputedValues&>(static_cast<CSS::MutableComputedValues const&>(static_cast<CSS::ComputedValues const&>(overflow_origin_node->computed_values())));
+    auto& overflow_origin_computed_values = overflow_origin_node->mutable_computed_values();
     viewport_computed_values.set_overflow_x(overflow_origin_computed_values.overflow_x());
     viewport_computed_values.set_overflow_y(overflow_origin_computed_values.overflow_y());
 
