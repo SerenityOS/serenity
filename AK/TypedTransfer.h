@@ -37,10 +37,19 @@ public:
             return 0;
 
         if constexpr (Traits<T>::is_trivial()) {
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic push
+//   Workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109727
+#    pragma GCC diagnostic ignored "-Warray-bounds"
+#    pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
             if (count == 1)
                 *destination = *source;
             else
                 __builtin_memmove(destination, source, count * sizeof(T));
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic pop
+#endif
             return count;
         }
 

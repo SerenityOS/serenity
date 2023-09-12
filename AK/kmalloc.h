@@ -19,6 +19,8 @@
 #    define kcalloc calloc
 #    define kmalloc malloc
 #    define kmalloc_good_size malloc_good_size
+// FIXME: SHENANIGANS: Both functions should have the same argument order, fix the Kernel!
+#    define kmalloc_aligned(size, alignment) aligned_alloc(alignment, size)
 
 inline void kfree_sized(void* ptr, size_t)
 {
@@ -45,6 +47,13 @@ inline void* kmalloc_array(AK::Checked<size_t> a, AK::Checked<size_t> b)
     auto size = a * b;
     VERIFY(!size.has_overflow());
     return kmalloc(size.value());
+}
+
+inline void* kmalloc_array_aligned(AK::Checked<size_t> a, AK::Checked<size_t> b, size_t alignment)
+{
+    auto size = a * b;
+    VERIFY(!size.has_overflow());
+    return kmalloc_aligned(size.value(), alignment);
 }
 
 inline void* kmalloc_array(AK::Checked<size_t> a, AK::Checked<size_t> b, AK::Checked<size_t> c)
