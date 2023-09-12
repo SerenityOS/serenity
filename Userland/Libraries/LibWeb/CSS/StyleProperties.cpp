@@ -990,4 +990,32 @@ void StyleProperties::set_math_depth(int math_depth)
     set_property(PropertyID::MathDepth, MathDepthStyleValue::create_integer(IntegerStyleValue::create(math_depth)));
 }
 
+QuotesData StyleProperties::quotes() const
+{
+    auto value = property(CSS::PropertyID::Quotes);
+    if (value->is_identifier()) {
+        switch (value->to_identifier()) {
+        case ValueID::Auto:
+            return QuotesData { .type = QuotesData::Type::Auto };
+        case ValueID::None:
+            return QuotesData { .type = QuotesData::Type::None };
+        default:
+            break;
+        }
+    }
+    if (value->is_value_list()) {
+        auto& value_list = value->as_value_list();
+        QuotesData quotes_data { .type = QuotesData::Type::Specified };
+        VERIFY(value_list.size() % 2 == 0);
+        for (auto i = 0u; i < value_list.size(); i += 2) {
+            quotes_data.strings.empend(
+                value_list.value_at(i, false)->as_string().string_value(),
+                value_list.value_at(i + 1, false)->as_string().string_value());
+        }
+        return quotes_data;
+    }
+
+    return InitialValues::quotes();
+}
+
 }

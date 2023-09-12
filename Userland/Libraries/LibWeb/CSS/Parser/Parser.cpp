@@ -4586,6 +4586,35 @@ RefPtr<StyleValue> Parser::parse_place_self_value(Vector<ComponentValue> const& 
     return PlaceItemsStyleValue::create(*maybe_align_self_value, *maybe_justify_self_value);
 }
 
+RefPtr<StyleValue> Parser::parse_quotes_value(Vector<ComponentValue> const& component_values)
+{
+    // https://www.w3.org/TR/css-content-3/#quotes-property
+    // auto | none | [ <string> <string> ]+
+
+    if (component_values.size() == 1) {
+        auto identifier = parse_identifier_value(component_values.first());
+        if (identifier && property_accepts_identifier(PropertyID::Quotes, identifier->to_identifier()))
+            return identifier;
+        return nullptr;
+    }
+
+    // Parse an even number of <string> values.
+    if (component_values.size() % 2 != 0)
+        return nullptr;
+
+    auto tokens = TokenStream { component_values };
+    StyleValueVector string_values;
+    while (tokens.has_next_token()) {
+        auto maybe_string = parse_string_value(tokens.next_token());
+        if (!maybe_string)
+            return nullptr;
+
+        string_values.append(maybe_string.release_nonnull());
+    }
+
+    return StyleValueList::create(move(string_values), StyleValueList::Separator::Space);
+}
+
 RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> const& component_values)
 {
     RefPtr<StyleValue> decoration_line;
@@ -5867,6 +5896,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::PlaceSelf:
         if (auto parsed_value = parse_place_self_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::Quotes:
+        if (auto parsed_value = parse_quotes_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecoration:

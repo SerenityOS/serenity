@@ -806,6 +806,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         computed_values.set_math_style(math_style.value());
 
     computed_values.set_math_depth(computed_style.math_depth());
+    computed_values.set_quotes(computed_style.quotes());
 
     // Update any anonymous children that inherit from this node.
     // FIXME: This is pretty hackish. It would be nicer if they shared the inherited style

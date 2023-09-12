@@ -38,6 +38,15 @@ struct GridAutoFlow {
     bool dense { false };
 };
 
+struct QuotesData {
+    enum class Type {
+        None,
+        Auto,
+        Specified,
+    } type;
+    Vector<Array<String, 2>> strings {};
+};
+
 class InitialValues {
 public:
     static AspectRatio aspect_ratio() { return AspectRatio { true, {} }; }
@@ -120,6 +129,7 @@ public:
     static CSS::OutlineStyle outline_style() { return CSS::OutlineStyle::None; }
     static CSS::Length outline_width() { return CSS::Length::make_px(3); }
     static CSS::TableLayout table_layout() { return CSS::TableLayout::Auto; }
+    static QuotesData quotes() { return QuotesData { .type = QuotesData::Type::Auto }; }
 
     static CSS::MathShift math_shift() { return CSS::MathShift::Normal; }
     static CSS::MathStyle math_style() { return CSS::MathStyle::Normal; }
@@ -350,6 +360,8 @@ public:
 
     CSS::TableLayout table_layout() const { return m_noninherited.table_layout; }
 
+    CSS::QuotesData quotes() const { return m_inherited.quotes; }
+
     CSS::MathShift math_shift() const { return m_inherited.math_shift; }
     CSS::MathStyle math_style() const { return m_inherited.math_style; }
     int math_depth() const { return m_inherited.math_depth; }
@@ -383,6 +395,7 @@ protected:
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
         CSS::ListStylePosition list_style_position { InitialValues::list_style_position() };
         CSS::Visibility visibility { InitialValues::visibility() };
+        CSS::QuotesData quotes { InitialValues::quotes() };
 
         Optional<SVGPaint> fill;
         CSS::FillRule fill_rule { InitialValues::fill_rule() };
@@ -577,6 +590,7 @@ public:
     void set_grid_auto_flow(CSS::GridAutoFlow grid_auto_flow) { m_noninherited.grid_auto_flow = grid_auto_flow; }
     void set_transition_delay(CSS::Time const& transition_delay) { m_noninherited.transition_delay = transition_delay; }
     void set_table_layout(CSS::TableLayout value) { m_noninherited.table_layout = value; }
+    void set_quotes(CSS::QuotesData value) { m_inherited.quotes = value; }
 
     void set_fill(SVGPaint value) { m_inherited.fill = value; }
     void set_stroke(SVGPaint value) { m_inherited.stroke = value; }
