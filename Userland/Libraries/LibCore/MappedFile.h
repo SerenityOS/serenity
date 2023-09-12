@@ -7,7 +7,9 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/Error.h>
+#include <AK/MemoryStream.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
@@ -15,25 +17,29 @@
 
 namespace Core {
 
-class MappedFile {
+class MappedFile : public FixedMemoryStream {
     AK_MAKE_NONCOPYABLE(MappedFile);
     AK_MAKE_NONMOVABLE(MappedFile);
 
 public:
-    static ErrorOr<NonnullOwnPtr<MappedFile>> map(StringView path);
-    static ErrorOr<NonnullOwnPtr<MappedFile>> map_from_file(NonnullOwnPtr<Core::File>, StringView path);
-    static ErrorOr<NonnullOwnPtr<MappedFile>> map_from_fd_and_close(int fd, StringView path);
-    ~MappedFile();
+    // Reflects a simplified version of mmap protection and flags.
+    enum class OpenMode {
+        ReadOnly,
+        ReadWrite,
+    };
 
+    static ErrorOr<NonnullOwnPtr<MappedFile>> map(StringView path, OpenMode mode = OpenMode::ReadOnly);
+    static ErrorOr<NonnullOwnPtr<MappedFile>> map_from_file(NonnullOwnPtr<Core::File>, StringView path);
+    static ErrorOr<NonnullOwnPtr<MappedFile>> map_from_fd_and_close(int fd, StringView path, OpenMode mode = OpenMode::ReadOnly);
+    virtual ~MappedFile();
+
+    // Non-stream APIs for using MappedFile as a simple POSIX API wrapper.
     void* data() { return m_data; }
     void const* data() const { return m_data; }
-
-    size_t size() const { return m_size; }
-
     ReadonlyBytes bytes() const { return { m_data, m_size }; }
 
 private:
-    explicit MappedFile(void*, size_t);
+    explicit MappedFile(void*, size_t, OpenMode);
 
     void* m_data { nullptr };
     size_t m_size { 0 };
