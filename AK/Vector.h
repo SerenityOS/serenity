@@ -646,7 +646,7 @@ public:
         if (m_capacity >= needed_capacity)
             return {};
         size_t new_capacity = kmalloc_good_size(needed_capacity * sizeof(StorageType)) / sizeof(StorageType);
-        auto* new_buffer = static_cast<StorageType*>(kmalloc_array(new_capacity, sizeof(StorageType)));
+        auto* new_buffer = static_cast<StorageType*>(kmalloc_array_aligned(new_capacity, sizeof(StorageType), alignof(StorageType)));
         if (new_buffer == nullptr)
             return Error::from_errno(ENOMEM);
 
@@ -654,7 +654,15 @@ public:
             TypedTransfer<StorageType>::copy(new_buffer, data(), m_size);
         } else {
             for (size_t i = 0; i < m_size; ++i) {
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic push
+//   Workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109727
+#    pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
                 new (&new_buffer[i]) StorageType(move(at(i)));
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic pop
+#endif
                 at(i).~StorageType();
             }
         }
