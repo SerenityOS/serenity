@@ -26,7 +26,7 @@ struct ScriptFetchOptions {
     String integrity_metadata {};
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-parser
-    Optional<Fetch::Infrastructure::Request::ParserMetadata> parser_metadata;
+    Fetch::Infrastructure::Request::ParserMetadata parser_metadata { Fetch::Infrastructure::Request::ParserMetadata::NotParserInserted };
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-credentials
     Fetch::Infrastructure::Request::CredentialsMode credentials_mode { Fetch::Infrastructure::Request::CredentialsMode::SameOrigin };
