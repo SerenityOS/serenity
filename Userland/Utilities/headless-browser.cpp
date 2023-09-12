@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +20,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
@@ -241,7 +243,7 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     return TestResult::Fail;
 }
 
-static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, int timeout_in_milliseconds = 15000)
+static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, int timeout_in_milliseconds = 15000)
 {
     Core::EventLoop loop;
     bool did_timeout = false;
@@ -252,7 +254,6 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
     }));
 
     view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_deprecated_string()));
-    auto expectation_real_path = TRY(FileSystem::real_path(expectation_path)).to_deprecated_string();
 
     RefPtr<Gfx::Bitmap> actual_screenshot, expectation_screenshot;
     view.on_load_finish = [&](auto const&) {
@@ -261,7 +262,7 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
             loop.quit(0);
         } else {
             actual_screenshot = view.take_screenshot();
-            view.load(URL::create_with_file_scheme(expectation_real_path));
+            view.debug_request("load-reference-page");
         }
     };
 
@@ -287,7 +288,7 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     case TestMode::Layout:
         return run_dump_test(view, input_path, expectation_path, mode);
     case TestMode::Ref:
-        return run_ref_test(view, input_path, expectation_path);
+        return run_ref_test(view, input_path);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -322,22 +323,12 @@ static ErrorOr<void> collect_dump_tests(Vector<Test>& tests, StringView path, St
 
 static ErrorOr<void> collect_ref_tests(Vector<Test>& tests, StringView path)
 {
-    auto manifest_path = TRY(String::formatted("{}/manifest.json", path));
-    auto manifest_file_or_error = Core::File::open(manifest_path, Core::File::OpenMode::Read);
-    if (manifest_file_or_error.is_error()) {
-        warnln("Failed opening '{}': {}", manifest_path, manifest_file_or_error.error());
-        return manifest_file_or_error.release_error();
-    }
-
-    auto manifest_file = manifest_file_or_error.release_value();
-    auto manifest = TRY(String::from_utf8(StringView(TRY(manifest_file->read_until_eof()).bytes())));
-    auto manifest_json = TRY(JsonParser(manifest).parse());
-    TRY(manifest_json.as_object().try_for_each_member([&](DeprecatedString const& key, AK::JsonValue const& value) -> ErrorOr<void> {
-        TRY(String::from_deprecated_string(key));
-        auto input_path = TRY(String::formatted("{}/{}", path, key));
-        auto expectation_path = TRY(String::formatted("{}/{}", path, value.to_deprecated_string()));
-        tests.append({ input_path, expectation_path, TestMode::Ref, {} });
-        return {};
+    TRY(Core::Directory::for_each_entry(path, Core::DirIterator::SkipDots, [&](Core::DirectoryEntry const& entry, Core::Directory const&) -> ErrorOr<IterationDecision> {
+        if (entry.type == Core::DirectoryEntry::Type::Directory)
+            return IterationDecision::Continue;
+        auto input_path = TRY(FileSystem::real_path(TRY(String::formatted("{}/{}", path, entry.name))));
+        tests.append({ move(input_path), {}, TestMode::Ref, {} });
+        return IterationDecision::Continue;
     }));
 
     return {};
