@@ -57,6 +57,18 @@ void current_test_case_did_pass()
     TestSuite::the().m_current_test_case_passed = true;
 }
 
+// Declared in Macros.h
+void set_rand_source(RandSource source)
+{
+    TestSuite::the().set_rand_source(source);
+}
+
+// Declared in Macros.h
+RandSource rand_source()
+{
+    return TestSuite::the().rand_source();
+}
+
 // Declared in TestCase.h
 void add_test_case_to_suite(NonnullRefPtr<TestCase> const& test_case)
 {

@@ -38,7 +38,7 @@ public:
         }
         return *this;
     }
-    bool is_empty() { return m_data.is_empty(); }
+    bool is_empty() const { return m_data.is_empty(); }
     bool is_full() { return m_data.size() >= MAX_RANDOMRUN_LENGTH; }
     bool has_a_chance(Chunk const& c) const
     {
@@ -60,7 +60,8 @@ public:
         }
         return Optional<u32> {};
     }
-    u32& operator[](size_t index) { return m_data[index]; }
+    u32& operator[] (size_t index) { return m_data[index]; }
+    u32 operator[] (size_t index) const { return m_data[index]; }
     u32 at(size_t index) const { return m_data[index]; }
     bool operator==(RandomRun const& rhs) const { return m_data == rhs.m_data; }
     bool operator!=(RandomRun const& rhs) const { return m_data != rhs.m_data; }
@@ -89,7 +90,7 @@ public:
             c.index + c.size,
             [](auto& a, auto& b) { return a < b; });
     }
-    RandomRun with_deleted(Chunk c)
+    RandomRun with_deleted(Chunk c) const
     {
         Vector<u32> new_data(m_data);
         new_data.remove(c.index, c.size);

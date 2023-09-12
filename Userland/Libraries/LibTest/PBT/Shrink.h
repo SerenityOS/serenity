@@ -8,86 +8,77 @@
 
 #include <AK/String.h>
 
-template<typename T>
 struct ShrinkResult {
     bool was_improvement;
-    Generated<T> generated;
+    RandomRun run;
 };
 
 // Shrinker
 
-template<typename T>
-ShrinkResult<T> no_improvement(Generated<T> current_best)
+inline ShrinkResult no_improvement(RandomRun run)
 {
-    return ShrinkResult<T> { false, current_best };
+    return ShrinkResult { false, run };
 }
 
-template<typename T, typename FN>
-ShrinkResult<T> keep_if_better(RandomRun const& new_run, Generated<T> current_best, Generator<T> const& generator, FN const& test_function)
+template<typename FN>
+ShrinkResult keep_if_better(RandomRun const& new_run, RandomRun const& current_best, FN const& test_function)
 {
-    if (current_best.run < new_run) {
+    if (current_best < new_run) {
         // The new run is worse than the current best. Let's not even try!
         return no_improvement(current_best);
     }
 
     RandSource source = RandSource::recorded(new_run);
-    GenResult<T> gen_result = generator(source);
-
-    return gen_result.visit(
-        [&](Generated<T> new_generated) {
-            Test::current_test_case_did_pass();
-            test_function(new_generated.value);
-            if (Test::did_current_test_case_pass()) {
-                Test::current_test_case_did_fail();
-                return no_improvement(current_best);
-            }
-            return ShrinkResult<T> { true, new_generated };
-        },
-        [&](Rejected) {
-            return no_improvement(current_best);
-        });
+    Test::current_test_case_did_pass();
+    test_function();
+    if (Test::did_current_test_case_pass()) {
+        Test::current_test_case_did_fail();
+        return no_improvement(current_best);
+    }
+    return ShrinkResult { true, new_run };
 }
 
-template<typename T, typename FN, typename SET_FN>
-ShrinkResult<T> binary_shrink(u32 low, u32 high, SET_FN update_run, Generated<T> orig, Generator<T> const& generator, FN const& test_function)
+template<typename FN, typename SET_FN>
+ShrinkResult binary_shrink(u32 low, u32 high, SET_FN update_run, RandomRun const& orig, FN const& test_function)
 {
-    Generated<T> current_best = orig;
+    RandomRun current_best = orig;
 
     // Let's try with the best case (low = most shrunk) first
-    RandomRun run_with_low = update_run(low, current_best.run);
-    ShrinkResult<T> after_low = keep_if_better(run_with_low, current_best, generator, test_function);
+    RandomRun run_with_low = update_run(low, current_best);
+    ShrinkResult after_low = keep_if_better(run_with_low, current_best, test_function);
     if (after_low.was_improvement) {
         // We can't do any better
         return after_low;
     }
+
     // Gotta do the loop!
-    ShrinkResult<T> result = after_low;
+    ShrinkResult result = after_low;
     while (low + 1 < high) {
         // TODO: do the average in a safer way?
         // https://stackoverflow.com/questions/24920503/what-is-the-right-way-to-find-the-average-of-two-values
         u32 mid = low + (high - low) / 2;
-        RandomRun run_with_mid = update_run(mid, current_best.run);
-        ShrinkResult<T> after_mid = keep_if_better(run_with_mid, current_best, generator, test_function);
+        RandomRun run_with_mid = update_run(mid, current_best);
+        ShrinkResult after_mid = keep_if_better(run_with_mid, current_best, test_function);
         if (after_mid.was_improvement) {
             high = mid;
         } else {
             low = mid;
         }
         result = after_mid;
-        current_best = after_mid.generated;
+        current_best = after_mid.run;
     }
 
-    if (current_best.run < orig.run) {
+    if (current_best < orig) {
         result.was_improvement = true;
     }
     return result;
 }
 
-template<typename T, typename FN>
-ShrinkResult<T> shrink_zero(ZeroChunk c, Generated<T> current_best, Generator<T> const& generator, FN const& test_function)
+template<typename FN>
+ShrinkResult shrink_zero(ZeroChunk c, RandomRun const& run, FN const& test_function)
 {
     // TODO do we need to copy? or is it done automatically
-    RandomRun new_run = current_best.run;
+    RandomRun new_run = run;
     warnln("Run before zeroing: {}", new_run);
     warnln("TODO: figure out if we need to copy here");
     size_t end = c.chunk.index + c.chunk.size;
@@ -96,28 +87,28 @@ ShrinkResult<T> shrink_zero(ZeroChunk c, Generated<T> current_best, Generator<T>
     }
     warnln("Run after zeroing: {}", new_run);
     warnln("TODO: is it any different from the following, original state.run?");
-    warnln("current_best.run: {}", current_best.run);
-    return keep_if_better(new_run, current_best, generator, test_function);
+    warnln("current_best.run: {}", run);
+    return keep_if_better(new_run, run, test_function);
 }
 
-template<typename T, typename FN>
-ShrinkResult<T> shrink_sort(SortChunk c, Generated<T> current_best, Generator<T> const& generator, FN const& test_function)
+template<typename FN>
+ShrinkResult shrink_sort(SortChunk c, RandomRun const& run, FN const& test_function)
 {
     // TODO do we need to copy? or is it done automatically
-    RandomRun new_run = current_best.run;
+    RandomRun new_run = run;
     warnln("Run before sorting: {}", new_run);
     warnln("TODO: figure out if we need to copy here");
     new_run.sort_chunk(c.chunk);
     warnln("Run after sorting: {}", new_run);
     warnln("TODO: is it any different from the following, original state.run?");
-    warnln("current_best.run: {}", current_best.run);
-    return keep_if_better(new_run, current_best, generator, test_function);
+    warnln("current_best.run: {}", run);
+    return keep_if_better(new_run, run, test_function);
 }
 
-template<typename T, typename FN>
-ShrinkResult<T> shrink_delete(DeleteChunkAndMaybeDecPrevious c, Generated<T> current_best, Generator<T> const& generator, FN const& test_function)
+template<typename FN>
+ShrinkResult shrink_delete(DeleteChunkAndMaybeDecPrevious c, RandomRun const& run, FN const& test_function)
 {
-    RandomRun run_deleted = current_best.run.with_deleted(c.chunk);
+    RandomRun run_deleted = run.with_deleted(c.chunk);
     /* Optional: decrement the previous value. This deals with a non-optimal but
        relatively common generation pattern: run length encoding.
 
@@ -144,51 +135,51 @@ ShrinkResult<T> shrink_delete(DeleteChunkAndMaybeDecPrevious c, Generated<T> cur
     if (run_deleted.size() > c.chunk.index - 1) {
         RandomRun run_decremented = run_deleted;
         run_decremented[c.chunk.index - 1]--;
-        return keep_if_better(run_decremented, current_best, generator, test_function);
+        return keep_if_better(run_decremented, run, test_function);
     }
 
     // Decrementing didn't work; let's try with just the deletion.
-    return keep_if_better(run_deleted, current_best, generator, test_function);
+    return keep_if_better(run_deleted, run, test_function);
 }
 
-template<typename T, typename FN>
-ShrinkResult<T> shrink_minimize(MinimizeChoice c, Generated<T> current_best, Generator<T> const& generator, FN const& test_function)
+template<typename FN>
+ShrinkResult shrink_minimize(MinimizeChoice c, RandomRun const& run, FN const& test_function)
 {
-    RandomRun new_run = current_best.run;
-    u32 value = current_best.run[c.index];
+    u32 value = run[c.index];
 
     // We can't minimize 0! Already the best possible case.
     if (value == 0) {
-        return no_improvement(current_best);
+        return no_improvement(run);
     }
 
     return binary_shrink(
         0,
         value,
-        [c](u32 new_value, RandomRun const& run) {
+        [&](u32 new_value, RandomRun const& run) {
             RandomRun copied_run = run;
             copied_run[c.index] = new_value;
             return copied_run;
         },
-        current_best,
-        generator,
+        run,
         test_function);
 }
 
-template<typename T, typename FN>
-ShrinkResult<T> shrink_with_cmd(ShrinkCmd cmd, Generated<T> current_best, Generator<T> const& generator, FN const& test_function)
+template<typename FN>
+ShrinkResult shrink_with_cmd(ShrinkCmd cmd, RandomRun const& run, FN const& test_function)
 {
     return cmd.visit(
-        [&](ZeroChunk c) { return shrink_zero(c, current_best, generator, test_function); },
-        [&](SortChunk c) { return shrink_sort(c, current_best, generator, test_function); },
-        [&](DeleteChunkAndMaybeDecPrevious c) { return shrink_delete(c, current_best, generator, test_function); },
-        [&](MinimizeChoice c) { return shrink_minimize(c, current_best, generator, test_function); });
+        [&](ZeroChunk c) { return shrink_zero(c, run, test_function); },
+        [&](SortChunk c) { return shrink_sort(c, run, test_function); },
+        [&](DeleteChunkAndMaybeDecPrevious c) { return shrink_delete(c, run, test_function); },
+        [&](MinimizeChoice c) { return shrink_minimize(c, run, test_function); });
 }
 
-template<typename T, typename FN>
-Generated<T> shrink_once(Generated<T> current_best, Generator<T> const& generator, FN const& test_function)
+template<typename FN>
+RandomRun shrink_once(RandomRun const& run, FN const& test_function)
 {
-    auto cmds = ShrinkCmd::for_run(current_best.run);
+    RandomRun current = run;
+
+    auto cmds = ShrinkCmd::for_run(run);
     for (ShrinkCmd cmd : cmds) {
         /* We're keeping the list of ShrinkCmds we generated from the initial
            RandomRun, as we try to shrink our current best RandomRun.
@@ -200,31 +191,31 @@ Generated<T> shrink_once(Generated<T> current_best, Generator<T> const& generato
            In the next `shrink -> shrink_once` loop we'll generate a better set
            of Cmds, more tailored to the current best RandomRun.
         */
-        if (!cmd.has_a_chance(current_best.run)) {
+        if (!cmd.has_a_chance(current)) {
             continue;
         }
-        ShrinkResult<T> result = shrink_with_cmd(cmd, current_best, generator, test_function);
+        ShrinkResult result = shrink_with_cmd(cmd, current, test_function);
         if (result.was_improvement) {
-            current_best = result.generated;
+            current = result.run;
         }
     }
-    return current_best;
+    return current;
 }
 
-template<typename T, typename FN>
-Generated<T> shrink(Generated<T> generated, Generator<T> const& generator, FN const& test_function)
+template<typename FN>
+RandomRun shrink(RandomRun const& first_failure, FN const& test_function)
 {
-    if (generated.run.is_empty()) {
+    if (first_failure.is_empty()) {
         // We can't do any better
-        return generated;
+        return first_failure;
     }
 
-    Generated<T> next = generated;
-    Generated<T> current;
+    RandomRun next = first_failure;
+    RandomRun current;
     do {
         current = next;
-        next = shrink_once(current, generator, test_function);
-    } while (next.run != current.run);
+        next = shrink_once(current, test_function);
+    } while (next != current);
 
     return next;
 }

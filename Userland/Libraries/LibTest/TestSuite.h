@@ -42,6 +42,14 @@ public:
 
     void set_suite_setup(Function<void()> setup) { m_setup = move(setup); }
 
+    void set_rand_source(RandSource source) { m_rand_source = source; }
+
+    RandSource rand_source() { 
+        warnln("Getting RandSource - is it initialized?");
+        warnln("Live: {}, run: {}", m_rand_source.is_live(), m_rand_source.run());
+        return m_rand_source; 
+    }
+
     bool m_current_test_case_passed = true;
 
 private:
@@ -52,6 +60,7 @@ private:
     DeprecatedString m_suite_name;
     u64 m_benchmark_repetitions = 1;
     Function<void()> m_setup;
+    RandSource m_rand_source = RandSource::live();
 };
 
 }

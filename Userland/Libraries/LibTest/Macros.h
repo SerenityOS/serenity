@@ -11,6 +11,7 @@
 #include <AK/CheckedFormatString.h>
 #include <AK/Math.h>
 #include <LibTest/CrashTest.h>
+#include <LibTest/PBT/RandSource.h>
 
 namespace AK {
 template<typename... Parameters>
@@ -22,6 +23,9 @@ namespace Test {
 bool did_current_test_case_pass();
 void current_test_case_did_fail();
 void current_test_case_did_pass();
+
+RandSource rand_source();
+void set_rand_source(RandSource);
 }
 
 #undef VERIFY
@@ -114,6 +118,13 @@ void current_test_case_did_pass();
     } while (false)
 
 #define EXPECT_APPROXIMATE(a, b) EXPECT_APPROXIMATE_WITH_ERROR(a, b, 0.0000005)
+
+#define ASSUME(x)                                     \
+    do {                                              \
+        if (!(x)) {                                   \
+            ::AK::warnln("TODO reject or something"); \
+        }                                             \
+    } while (false)
 
 #define FAIL(message)                                                                  \
     do {                                                                               \
