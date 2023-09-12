@@ -10,7 +10,7 @@
 #include <LibAudio/MP3Loader.h>
 #include <LibAudio/QOALoader.h>
 #include <LibAudio/WavLoader.h>
-#include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 
 namespace Audio {
 
@@ -44,7 +44,7 @@ static constexpr LoaderPluginInitializer s_initializers[] = {
 
 ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(StringView path)
 {
-    auto stream = TRY(Core::InputBufferedFile::create(TRY(Core::File::open(path, Core::File::OpenMode::Read))));
+    auto stream = TRY(Core::MappedFile::map(path, Core::MappedFile::OpenMode::ReadOnly));
     return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
 }
 
