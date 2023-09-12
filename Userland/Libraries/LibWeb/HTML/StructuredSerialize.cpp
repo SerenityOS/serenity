@@ -206,14 +206,13 @@ private:
     SerializationMemory& m_memory; // JS value -> index
     SerializationRecord m_serialized;
 
-    WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, String const& string)
+    WebIDL::ExceptionOr<void> serialize_bytes(Vector<u32>& vector, ReadonlyBytes bytes)
     {
-        u64 const size = string.code_points().byte_length();
-        // Append size of the string to the serialized structure.
+        // Append size of the buffer to the serialized structure.
+        u64 const size = bytes.size();
         TRY_OR_THROW_OOM(m_vm, vector.try_append(bit_cast<u32*>(&size), 2));
-        // Append the bytes of the string to the serialized structure.
+        // Append the bytes of the buffer to the serialized structure.
         u64 byte_position = 0;
-        ReadonlyBytes const bytes = { string.code_points().bytes(), string.code_points().byte_length() };
         while (byte_position < size) {
             u32 combined_value = 0;
             for (u8 i = 0; i < 4; ++i) {
@@ -226,6 +225,11 @@ private:
             TRY_OR_THROW_OOM(m_vm, vector.try_append(combined_value));
         }
         return {};
+    }
+
+    WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, String const& string)
+    {
+        return serialize_bytes(vector, { string.code_points().bytes(), string.code_points().byte_length() });
     }
 
     WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, JS::PrimitiveString const& primitive_string)
@@ -344,25 +348,29 @@ private:
     JS::MarkedVector<JS::Value> m_memory; // Index -> JS value
     Optional<FlyString> m_error;
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::PrimitiveString>> deserialize_string_primitive(JS::VM& vm, Vector<u32> const& vector, u32& position)
+    static WebIDL::ExceptionOr<ByteBuffer> deserialize_bytes(JS::VM& vm, Vector<u32> const& vector, u32& position)
     {
         u32 size_bits[2];
         size_bits[0] = vector[position++];
         size_bits[1] = vector[position++];
         u64 const size = *bit_cast<u64*>(&size_bits);
 
-        Vector<u8> bytes;
-        TRY_OR_THROW_OOM(vm, bytes.try_ensure_capacity(size));
+        auto bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(size));
         u64 byte_position = 0;
         while (position < vector.size() && byte_position < size) {
             for (u8 i = 0; i < 4; ++i) {
-                bytes.append(vector[position] >> (i * 8) & 0xFF);
-                byte_position++;
+                bytes[byte_position++] = (vector[position] >> (i * 8) & 0xFF);
                 if (byte_position == size)
                     break;
             }
             position++;
         }
+        return bytes;
+    }
+
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::PrimitiveString>> deserialize_string_primitive(JS::VM& vm, Vector<u32> const& vector, u32& position)
+    {
+        auto bytes = TRY(deserialize_bytes(vm, vector, position));
 
         return TRY(Bindings::throw_dom_exception_if_needed(vm, [&vm, &bytes]() {
             return JS::PrimitiveString::create(vm, StringView { bytes });
