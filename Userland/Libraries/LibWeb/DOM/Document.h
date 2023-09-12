@@ -546,7 +546,7 @@ private:
 
     void evaluate_media_rules();
 
-    WebIDL::ExceptionOr<void> run_the_document_write_steps(DeprecatedString);
+    WebIDL::ExceptionOr<void> run_the_document_write_steps(StringView);
 
     void queue_intersection_observer_task();
     void queue_an_intersection_observer_entry(IntersectionObserver::IntersectionObserver&, HighResolutionTime::DOMHighResTimeStamp time, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> root_bounds, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> bounding_client_rect, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> intersection_rect, bool is_intersecting, double intersection_ratio, JS::NonnullGCPtr<Element> target);
