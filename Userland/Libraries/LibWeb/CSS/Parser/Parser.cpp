@@ -4146,7 +4146,8 @@ RefPtr<StyleValue> Parser::parse_font_family_value(TokenStream<ComponentValue>& 
             if (current_name_parts.is_empty())
                 return nullptr;
             (void)tokens.next_token(); // Comma
-            font_families.append(StringStyleValue::create(MUST(String::join(' ', current_name_parts))));
+            // This is really a series of custom-idents, not just one. But for the sake of simplicity we'll make it one.
+            font_families.append(CustomIdentStyleValue::create(MUST(String::join(' ', current_name_parts))));
             current_name_parts.clear();
             // Can't have a trailing comma
             if (!tokens.has_next_token())
@@ -4158,7 +4159,8 @@ RefPtr<StyleValue> Parser::parse_font_family_value(TokenStream<ComponentValue>& 
     }
 
     if (!current_name_parts.is_empty()) {
-        font_families.append(StringStyleValue::create(MUST(String::join(' ', current_name_parts))));
+        // This is really a series of custom-idents, not just one. But for the sake of simplicity we'll make it one.
+        font_families.append(CustomIdentStyleValue::create(MUST(String::join(' ', current_name_parts))));
         current_name_parts.clear();
     }
 
