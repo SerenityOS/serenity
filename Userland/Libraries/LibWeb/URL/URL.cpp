@@ -353,7 +353,7 @@ WebIDL::ExceptionOr<String> URL::pathname() const
     auto& vm = realm().vm();
 
     // The pathname getter steps are to return the result of URL path serializing this’s URL.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize_path()));
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize_path(AK::URL::ApplyPercentDecoding::No)));
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-pathname%E2%91%A0
