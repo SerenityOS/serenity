@@ -260,16 +260,25 @@ bool URL::is_special_scheme(StringView scheme)
     return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
 }
 
-DeprecatedString URL::serialize_path() const
+// https://url.spec.whatwg.org/#url-path-serializer
+DeprecatedString URL::serialize_path(ApplyPercentDecoding apply_percent_decoding) const
 {
+    // If url has an opaque path, then return url’s path.
+    // FIXME: Reimplement this step once we modernize the URL implementation to meet the spec.
     if (cannot_be_a_base_url())
         return m_paths[0];
-    StringBuilder builder;
-    for (auto& path : m_paths) {
-        builder.append('/');
-        builder.append(percent_decode(path));
+
+    // Let output be the empty string.
+    StringBuilder output;
+
+    // For each segment of url’s path: append U+002F (/) followed by segment to output.
+    for (auto const& segment : m_paths) {
+        output.append('/');
+        output.append(apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(segment) : segment);
     }
-    return builder.to_deprecated_string();
+
+    // Return output.
+    return output.to_deprecated_string();
 }
 
 // https://url.spec.whatwg.org/#concept-url-serializer
