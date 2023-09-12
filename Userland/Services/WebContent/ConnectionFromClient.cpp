@@ -459,6 +459,21 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
             document->window().local_storage().release_value_but_fixme_should_propagate_errors()->dump();
         return;
     }
+
+    if (request == "load-reference-page") {
+        if (auto* document = page().top_level_browsing_context().active_document()) {
+            auto maybe_link = document->query_selector("link[rel=match]"sv);
+            if (maybe_link.is_error() || !maybe_link.value()) {
+                // To make sure that we fail the ref-test if the link is missing, load the error page.
+                load_html("<h1>Failed to find &lt;link rel=&quot;match&quot; /&gt; in ref test page!</h1> Make sure you added it.", "about:blank"sv);
+            } else {
+                auto link = maybe_link.release_value();
+                auto url = document->parse_url(link->get_attribute(Web::HTML::AttributeNames::href));
+                load_url(url);
+            }
+        }
+        return;
+    }
 }
 
 void ConnectionFromClient::get_source()
