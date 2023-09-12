@@ -1189,10 +1189,10 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(DeprecatedString
     });
 }
 
-JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(DeprecatedFlyString const& class_names)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(StringView class_names)
 {
     Vector<FlyString> list_of_class_names;
-    for (auto& name : class_names.view().split_view(' ')) {
+    for (auto& name : class_names.split_view(' ')) {
         list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
     }
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {

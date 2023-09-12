@@ -217,7 +217,7 @@ public:
     void schedule_layout_update();
 
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(DeprecatedString const&);
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(DeprecatedFlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(StringView);
 
     JS::NonnullGCPtr<HTMLCollection> applets();
     JS::NonnullGCPtr<HTMLCollection> anchors();
