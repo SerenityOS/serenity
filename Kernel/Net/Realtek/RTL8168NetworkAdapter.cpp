@@ -287,7 +287,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         out8(REG_IBCR2, in8(REG_IBCR2) & ~1);
 
         while ((in32(REG_IBISR0) & 0x2) != 0)
-            ;
+            Processor::wait_check();
 
         out8(REG_IBISR0, in8(REG_IBISR0) | 0x20);
         out8(REG_IBCR0, in8(REG_IBCR0) & ~1);
@@ -299,10 +299,10 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         out32(REG_MISC, in32(REG_MISC) | MISC_RXDV_GATE_ENABLE);
 
         while ((in32(REG_TXCFG) & TXCFG_EMPTY) == 0)
-            ;
+            Processor::wait_check();
 
         while ((in32(REG_MCU) & (MCU_RX_EMPTY | MCU_TX_EMPTY)) == 0)
-            ;
+            Processor::wait_check();
 
         out8(REG_COMMAND, in8(REG_COMMAND) & ~(COMMAND_RX_ENABLE | COMMAND_TX_ENABLE));
         out8(REG_MCU, in8(REG_MCU) & ~MCU_NOW_IS_OOB);
@@ -313,7 +313,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         ocp_out(0xe8de, data);
 
         while ((in32(REG_MCU) & MCU_LINK_LIST_READY) == 0)
-            ;
+            Processor::wait_check();
 
         // vendor magic values ???
         data = ocp_in(0xe8de);
@@ -321,7 +321,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         ocp_out(0xe8de, data);
 
         while ((in32(REG_MCU) & MCU_LINK_LIST_READY) == 0)
-            ;
+            Processor::wait_check();
     }
 
     // software reset
@@ -365,7 +365,7 @@ void RTL8168NetworkAdapter::startup()
     // software reset phy
     phy_out(PHY_REG_BMCR, phy_in(PHY_REG_BMCR) | BMCR_RESET);
     while ((phy_in(PHY_REG_BMCR) & BMCR_RESET) != 0)
-        ;
+        Processor::wait_check();
 
     set_phy_speed();
 
@@ -1181,7 +1181,7 @@ void RTL8168NetworkAdapter::reset()
 {
     out8(REG_COMMAND, COMMAND_RESET);
     while ((in8(REG_COMMAND) & COMMAND_RESET) != 0)
-        ;
+        Processor::wait_check();
 }
 
 UNMAP_AFTER_INIT void RTL8168NetworkAdapter::read_mac_address()
@@ -1315,7 +1315,7 @@ void RTL8168NetworkAdapter::phy_out(u8 address, u16 data)
         VERIFY((address & 0xE0) == 0); // register address is only 5 bit
         out32(REG_PHYACCESS, PHY_FLAG | (address & 0x1F) << 16 | (data & 0xFFFF));
         while ((in32(REG_PHYACCESS) & PHY_FLAG) != 0)
-            ;
+            Processor::wait_check();
     }
 }
 
@@ -1334,7 +1334,7 @@ u16 RTL8168NetworkAdapter::phy_in(u8 address)
         VERIFY((address & 0xE0) == 0); // register address is only 5 bit
         out32(REG_PHYACCESS, (address & 0x1F) << 16);
         while ((in32(REG_PHYACCESS) & PHY_FLAG) == 0)
-            ;
+            Processor::wait_check();
         return in32(REG_PHYACCESS) & 0xFFFF;
     }
 }
@@ -1357,7 +1357,7 @@ void RTL8168NetworkAdapter::extended_phy_out(u8 address, u16 data)
     VERIFY((address & 0xE0) == 0); // register address is only 5 bit
     out32(REG_EPHYACCESS, EPHY_FLAG | (address & 0x1F) << 16 | (data & 0xFFFF));
     while ((in32(REG_EPHYACCESS) & EPHY_FLAG) != 0)
-        ;
+        Processor::wait_check();
 }
 
 u16 RTL8168NetworkAdapter::extended_phy_in(u8 address)
@@ -1365,7 +1365,7 @@ u16 RTL8168NetworkAdapter::extended_phy_in(u8 address)
     VERIFY((address & 0xE0) == 0); // register address is only 5 bit
     out32(REG_EPHYACCESS, (address & 0x1F) << 16);
     while ((in32(REG_EPHYACCESS) & EPHY_FLAG) == 0)
-        ;
+        Processor::wait_check();
     return in32(REG_EPHYACCESS) & 0xFFFF;
 }
 
@@ -1382,14 +1382,14 @@ void RTL8168NetworkAdapter::eri_out(u32 address, u32 mask, u32 data, u32 type)
     out32(REG_ERI_DATA, data);
     out32(REG_ERI_ADDR, ERI_FLAG | type | mask | address);
     while ((in32(REG_ERI_ADDR) & ERI_FLAG) != 0)
-        ;
+        Processor::wait_check();
 }
 
 u32 RTL8168NetworkAdapter::eri_in(u32 address, u32 type)
 {
     out32(REG_ERI_ADDR, type | ERI_MASK_1111 | address);
     while ((in32(REG_ERI_ADDR) & ERI_FLAG) == 0)
-        ;
+        Processor::wait_check();
     return in32(REG_ERI_DATA);
 }
 
@@ -1418,7 +1418,7 @@ void RTL8168NetworkAdapter::csi_out(u32 address, u32 data)
     }
     out32(REG_CSI_ADDR, CSI_FLAG | (address & 0xFFF) | modifier);
     while ((in32(REG_CSI_ADDR) & CSI_FLAG) != 0)
-        ;
+        Processor::wait_check();
 }
 
 u32 RTL8168NetworkAdapter::csi_in(u32 address)
@@ -1432,7 +1432,7 @@ u32 RTL8168NetworkAdapter::csi_in(u32 address)
     }
     out32(REG_CSI_ADDR, (address & 0xFFF) | modifier);
     while ((in32(REG_CSI_ADDR) & CSI_FLAG) == 0)
-        ;
+        Processor::wait_check();
     return in32(REG_CSI_DATA) & 0xFFFF;
 }
 
@@ -1460,7 +1460,7 @@ void RTL8168NetworkAdapter::ocp_phy_out(u32 address, u32 data)
     VERIFY((address & 0xFFFF0001) == 0);
     out32(REG_GPHY_OCP, OCP_FLAG | (address << 15) | data);
     while ((in32(REG_GPHY_OCP) & OCP_FLAG) != 0)
-        ;
+        Processor::wait_check();
 }
 
 u16 RTL8168NetworkAdapter::ocp_phy_in(u32 address)
@@ -1468,7 +1468,7 @@ u16 RTL8168NetworkAdapter::ocp_phy_in(u32 address)
     VERIFY((address & 0xFFFF0001) == 0);
     out32(REG_GPHY_OCP, address << 15);
     while ((in32(REG_GPHY_OCP) & OCP_FLAG) == 0)
-        ;
+        Processor::wait_check();
     return in32(REG_GPHY_OCP) & 0xFFFF;
 }
 

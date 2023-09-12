@@ -294,11 +294,11 @@ UNMAP_AFTER_INIT u32 E1000NetworkAdapter::read_eeprom(u8 address)
     if (m_has_eeprom) {
         out32(REG_EEPROM, ((u32)address << 8) | 1);
         while (!((tmp = in32(REG_EEPROM)) & (1 << 4)))
-            ;
+            Processor::wait_check();
     } else {
         out32(REG_EEPROM, ((u32)address << 2) | 1);
         while (!((tmp = in32(REG_EEPROM)) & (1 << 1)))
-            ;
+            Processor::wait_check();
     }
     data = (tmp >> 16) & 0xffff;
     return data;

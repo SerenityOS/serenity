@@ -66,7 +66,7 @@ ErrorOr<size_t> SerialDevice::write(OpenFileDescription& description, u64, UserO
 void SerialDevice::put_char(char ch)
 {
     while ((get_line_status() & EmptyTransmitterHoldingRegister) == 0)
-        ;
+        Processor::wait_check();
 
     if (ch == '\n' && !m_last_put_char_was_carriage_return)
         m_registers_io_window->write8(0, '\r');

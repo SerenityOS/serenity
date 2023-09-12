@@ -160,13 +160,13 @@ void UART::set_baud_rate(int baud_rate, int uart_frequency_in_hz)
 void UART::wait_until_we_can_send()
 {
     while (m_registers->flag & TransmitFifoFull)
-        ;
+        Processor::wait_check();
 }
 
 void UART::wait_until_we_can_receive()
 {
     while (m_registers->flag & ReceiveFifoEmpty)
-        ;
+        Processor::wait_check();
 }
 
 }

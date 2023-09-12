@@ -64,13 +64,13 @@ static void wait_until_we_can_write(MMIO& mmio)
     // Since nothing else writes to the mailbox, this wait is mostly cargo-culted.
     // Most baremetal tutorials on the internet query MBOX_READ_STATUS here, which I think is incorrect and only works because this wait really isn't needed.
     while (mmio.read(MBOX_WRITE_STATUS) & MBOX_FULL)
-        ;
+        Processor::wait_check();
 }
 
 static void wait_for_reply(MMIO& mmio)
 {
     while (mmio.read(MBOX_READ_STATUS) & MBOX_EMPTY)
-        ;
+        Processor::wait_check();
 }
 
 bool Mailbox::send_queue(void* queue, u32 queue_size) const

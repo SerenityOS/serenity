@@ -114,7 +114,7 @@ ErrorOr<size_t> MiniUART::write(Kernel::OpenFileDescription& description, u64, K
 void MiniUART::put_char(u8 ch)
 {
     while ((m_registers->line_status & TransmitterEmpty) == 0)
-        ;
+        Processor::wait_check();
 
     if (ch == '\n' && !m_last_put_char_was_carriage_return)
         m_registers->io_data = '\r';
