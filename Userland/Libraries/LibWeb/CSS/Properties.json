@@ -1836,6 +1836,17 @@
       "position"
     ]
   },
+  "quotes": {
+    "inherited": true,
+    "initial": "auto",
+    "valid-types": [
+      "string"
+    ],
+    "valid-identifiers": [
+      "auto",
+      "none"
+    ]
+  },
   "right": {
     "inherited": false,
     "initial": "auto",

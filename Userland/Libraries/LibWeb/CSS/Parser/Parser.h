@@ -243,6 +243,7 @@ private:
     RefPtr<StyleValue> parse_place_content_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_place_items_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_place_self_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_quotes_value(Vector<ComponentValue> const&);
     enum class AllowInsetKeyword {
         No,
         Yes,
