@@ -6,6 +6,7 @@ set(TEST_SOURCES
     TestLibCorePromise.cpp
     TestLibCoreSharedSingleProducerCircularQueue.cpp
     TestLibCoreStream.cpp
+    TestLibCoreMappedFile.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
