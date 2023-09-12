@@ -26,7 +26,7 @@ struct ParsedCookie {
     bool http_only_attribute_present { false };
 };
 
-Optional<ParsedCookie> parse_cookie(DeprecatedString const& cookie_string);
+Optional<ParsedCookie> parse_cookie(StringView cookie_string);
 
 }
 
