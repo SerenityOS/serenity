@@ -20,6 +20,9 @@ static Atomic<bool> g_resized { false };
 
 static Atomic<bool> g_restore_buffer_on_close { false };
 
+constexpr size_t line_number_column_padding = 7;
+static constexpr StringView line_number_column_separator = " "sv;
+
 static ErrorOr<void> setup_tty(bool switch_buffer)
 {
     // Save previous tty settings.
@@ -68,11 +71,12 @@ static Vector<StringView> wrap_line(DeprecatedString const& string, size_t width
 
 class Pager {
 public:
-    Pager(StringView filename, FILE* file, FILE* tty, StringView prompt)
+    Pager(StringView filename, FILE* file, FILE* tty, StringView prompt, bool show_line_numbers)
         : m_file(file)
         , m_tty(tty)
         , m_filename(filename)
         , m_prompt(prompt)
+        , m_show_line_numbers(show_line_numbers)
     {
     }
 
@@ -216,10 +220,20 @@ public:
         }
     }
 
+    static size_t count_digits_in_number(size_t line_numbers)
+    {
+        return line_numbers > 0 ? static_cast<size_t>(log10(static_cast<double>(line_numbers))) + 1 : 1;
+    }
+
     size_t write_range(size_t line, size_t subline, size_t length)
     {
         size_t lines = 0;
         for (size_t i = line; i < m_lines.size(); ++i) {
+            auto digits_count_for_max_line_number = count_digits_in_number(i + 1);
+            auto column_width = 0;
+            if (m_width > line_number_column_padding + line_number_column_separator.length())
+                column_width = max(line_number_column_padding, digits_count_for_max_line_number);
+
             for (auto string : sublines(i)) {
                 if (subline > 0) {
                     --subline;
@@ -227,6 +241,9 @@ public:
                 }
                 if (lines >= length)
                     return lines;
+
+                if (m_show_line_numbers)
+                    out(m_tty, "\e[1m{:>{}}\e[22m{}", i + 1, column_width, line_number_column_separator);
 
                 outln(m_tty, "{}", string);
                 ++lines;
@@ -350,7 +367,13 @@ private:
     Vector<StringView> const& sublines(size_t line)
     {
         return m_subline_cache.ensure(line, [&]() {
-            return wrap_line(m_lines[line], m_width);
+            auto width = m_width;
+            if (m_show_line_numbers) {
+                auto line_number_column_width = max(line_number_column_padding, count_digits_in_number(line)) + line_number_column_separator.length();
+                if (width > line_number_column_width)
+                    width -= line_number_column_width;
+            }
+            return wrap_line(m_lines[line], width);
         });
     }
 
@@ -453,6 +476,8 @@ private:
 
     DeprecatedString m_filename;
     DeprecatedString m_prompt;
+
+    bool m_show_line_numbers { false };
 };
 
 /// Return the next key sequence, or nothing if a signal is received while waiting
@@ -498,6 +523,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dont_switch_buffer = false;
     bool quit_at_eof = false;
     bool emulate_more = false;
+    bool show_line_numbers = false;
 
     if (LexicalPath::basename(arguments.strings[0]) == "more"sv)
         emulate_more = true;
@@ -506,6 +532,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(filename, "The paged file", "file", Core::ArgsParser::Required::No);
     args_parser.add_option(prompt, "Prompt line", "prompt", 'P', "Prompt");
     args_parser.add_option(dont_switch_buffer, "Don't use xterm alternate buffer", "no-init", 'X');
+    args_parser.add_option(show_line_numbers, "Show line numbers", "line-numbers", 'N');
     args_parser.add_option(quit_at_eof, "Exit when the end of the file is reached", "quit-at-eof", 'e');
     args_parser.add_option(emulate_more, "Pretend that we are more(1)", "emulate-more", 'm');
     args_parser.parse(arguments);
@@ -558,7 +585,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ignore_action.sa_handler = { SIG_IGN };
     TRY(Core::System::sigaction(SIGINT, &ignore_action, nullptr));
 
-    Pager pager(filename, file, stdout, prompt);
+    Pager pager(filename, file, stdout, prompt, show_line_numbers);
     pager.init();
 
     StringBuilder modifier_buffer = StringBuilder(10);

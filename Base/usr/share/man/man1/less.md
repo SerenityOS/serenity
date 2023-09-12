@@ -5,8 +5,8 @@
 ## Synopsis
 
 ```**sh
-$ cat file | less [-PXem]
-$ less [-PXem] [file]
+$ cat file | less [-PXNem]
+$ less [-PXNem] [file]
 $ cat file | more
 $ more [file]
 ```
@@ -21,6 +21,7 @@ but largely incompatible with
 
 * `-P`, `--prompt`: Set the prompt format string. See [Prompts](#prompts) for more details.
 * `-X`, `--no-init`: Don't switch to the xterm alternate buffer on startup.
+* `-N`, `--line-numbers`: Show line numbers before printed lines.
 * `-e`, `--quit-at-eof`: Immediately exit less when the last line of the document is reached.
 * `-m`, `--emulate-more`: Apply `-Xe`, set the prompt to `--More--`, and disable
   scrollback. This option is automatically applied when `less` is executed as `more`
