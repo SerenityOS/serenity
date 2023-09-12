@@ -51,7 +51,7 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 }
 
 // 6.2.9.1 CreateByteDataBlock ( size ), https://tc39.es/ecma262/#sec-createbytedatablock
-static ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
+ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
 {
     // 1. If size > 2^53 - 1, throw a RangeError exception.
     if (size > MAX_ARRAY_LIKE_INDEX)
@@ -68,7 +68,7 @@ static ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
 }
 
 // 6.2.9.3 CopyDataBlockBytes ( toBlock, toIndex, fromBlock, fromIndex, count ), https://tc39.es/ecma262/#sec-copydatablockbytes
-void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer& from_block, u64 from_index, u64 count)
+void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer const& from_block, u64 from_index, u64 count)
 {
     // 1. Assert: fromBlock and toBlock are distinct values.
     VERIFY(&to_block != &from_block);
