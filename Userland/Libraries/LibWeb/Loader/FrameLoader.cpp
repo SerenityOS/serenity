@@ -146,6 +146,9 @@ bool FrameLoader::load(const AK::URL& url, Type type)
 
 void FrameLoader::load_html(StringView html, const AK::URL& url)
 {
+    if (auto* page = browsing_context().page())
+        page->client().page_did_start_loading(url, false);
+
     auto& vm = Bindings::main_thread_vm();
     auto response = Fetch::Infrastructure::Response::create(vm);
     response->url_list().append(url);
@@ -167,6 +170,9 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
 
     auto parser = HTML::HTMLParser::create(document, html, "utf-8");
     parser->run(url);
+
+    if (auto* page = browsing_context().page())
+        page->client().page_did_finish_loading(url);
 }
 
 static DeprecatedString s_resource_directory_url = "file:///res";
