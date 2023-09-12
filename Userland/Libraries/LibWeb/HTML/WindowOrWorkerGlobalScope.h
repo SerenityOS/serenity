@@ -69,7 +69,7 @@ private:
         Yes,
         No,
     };
-    i32 run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id = {}, Optional<AK::URL> base_url = {});
+    i32 run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id = {});
 
     IDAllocator m_timer_id_allocator;
     HashMap<int, JS::NonnullGCPtr<Timer>> m_timers;

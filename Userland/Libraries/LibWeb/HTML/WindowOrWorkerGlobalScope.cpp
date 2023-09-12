@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
@@ -192,7 +193,8 @@ void WindowOrWorkerGlobalScopeMixin::clear_interval(i32 id)
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
-i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id, Optional<AK::URL> base_url)
+// With no active script fix from https://github.com/whatwg/html/pull/9712
+i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id)
 {
     // 1. Let thisArg be global if that is a WorkerGlobalScope object; otherwise let thisArg be the WindowProxy that corresponds to global.
 
@@ -210,22 +212,11 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
     // 6. Let callerRealm be the current Realm Record, and calleeRealm be global's relevant Realm.
     // FIXME: Implement this when step 9.3.2 is implemented.
 
-    // FIXME: The active script becomes null on repeated setInterval callbacks. In JS::VM::get_active_script_or_module,
-    //        the execution context stack is empty on the repeated invocations, thus it returns null. We will need
-    //        to figure out why it becomes empty. But all we need from the active script is the base URL, so we
-    //        grab it on the first invocation an reuse it on repeated invocations.
-    if (!base_url.has_value()) {
-        // 7. Let initiating script be the active script.
-        auto const* initiating_script = Web::Bindings::active_script();
+    // 7. Let initiating script be the active script.
+    auto const* initiating_script = Web::Bindings::active_script();
 
-        // 8. Assert: initiating script is not null, since this algorithm is always called from some script.
-        VERIFY(initiating_script);
-
-        base_url = initiating_script->base_url();
-    }
-
-    // 9. Let task be a task that runs the following substeps:
-    JS::SafeFunction<void()> task = [this, handler = move(handler), timeout, arguments = move(arguments), repeat, id, base_url = move(base_url)]() mutable {
+    // 8. Let task be a task that runs the following substeps:
+    JS::SafeFunction<void()> task = [this, handler = move(handler), timeout, arguments = move(arguments), repeat, id, initiating_script]() mutable {
         // 1. If id does not exist in global's map of active timers, then abort these steps.
         if (!m_timers.contains(id))
             return;
@@ -244,13 +235,28 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
                 // 3. Let settings object be global's relevant settings object.
                 auto& settings_object = relevant_settings_object(this_impl());
 
-                // 4. Let base URL be initiating script's base URL.
-                // 5. Assert: base URL is not null, as initiating script is a classic script or a JavaScript module script.
-                VERIFY(base_url.has_value());
+                // 4. Let fetch options be the default classic script fetch options.
+                ScriptFetchOptions options {};
 
-                // 6. Let fetch options be a script fetch options whose cryptographic nonce is initiating script's fetch options's cryptographic nonce, integrity metadata is the empty string, parser metadata is "not-parser-inserted", credentials mode is initiating script's fetch options's credentials mode, and referrer policy is initiating script's fetch options's referrer policy.
+                // 5. Let base URL be settings object's API base URL.
+                auto base_url = settings_object.api_base_url();
+
+                // 6. If initiating script is not null, then:
+                if (initiating_script) {
+                    // FIXME: 1. Set fetch options to a script fetch options whose cryptographic nonce is initiating script's fetch options's cryptographic nonce,
+                    //           integrity metadata is the empty string, parser metadata is "not-parser-inserted", credentials mode is initiating script's fetch
+                    //           options's credentials mode, referrer policy is initiating script's fetch options's referrer policy, and fetch priority is "auto".
+
+                    // 2. Set base URL to initiating script's base URL.
+                    base_url = initiating_script->base_url();
+
+                    // Spec Note: The effect of these steps ensures that the string compilation done by setTimeout() and setInterval() behaves equivalently to that
+                    //            done by eval(). That is, module script fetches via import() will behave the same in both contexts.
+                }
+
                 // 7. Let script be the result of creating a classic script given handler, settings object, base URL, and fetch options.
-                auto script = ClassicScript::create(base_url->basename(), source, settings_object, *base_url);
+                // FIXME: Pass fetch options.
+                auto script = ClassicScript::create(base_url.basename(), source, settings_object, move(base_url));
 
                 // 8. Run the classic script script.
                 (void)script->run();
@@ -263,7 +269,7 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
         switch (repeat) {
         // 5. If repeat is true, then perform the timer initialization steps again, given global, handler, timeout, arguments, true, and id.
         case Repeat::Yes:
-            run_timer_initialization_steps(handler, timeout, move(arguments), repeat, id, move(base_url));
+            run_timer_initialization_steps(handler, timeout, move(arguments), repeat, id);
             break;
 
         // 6. Otherwise, remove global's map of active timers[id].
@@ -273,20 +279,20 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
         }
     };
 
-    // FIXME: 10. Increment nesting level by one.
-    // FIXME: 11. Set task's timer nesting level to nesting level.
+    // FIXME: 9. Increment nesting level by one.
+    // FIXME: 10. Set task's timer nesting level to nesting level.
 
-    // 12. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
+    // 11. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
     JS::SafeFunction<void()> completion_step = [this, task = move(task)]() mutable {
         queue_global_task(Task::Source::TimerTask, this_impl(), move(task));
     };
 
-    // 13. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
+    // 12. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
     auto timer = Timer::create(this_impl(), timeout, move(completion_step), id);
     m_timers.set(id, timer);
     timer->start();
 
-    // 14. Return id.
+    // 13. Return id.
     return id;
 }
 
