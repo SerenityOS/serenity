@@ -415,7 +415,7 @@ WebIDL::ExceptionOr<void> Document::write(Vector<DeprecatedString> const& string
     StringBuilder builder;
     builder.join(""sv, strings);
 
-    return run_the_document_write_steps(builder.to_deprecated_string());
+    return run_the_document_write_steps(builder.string_view());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
@@ -425,11 +425,11 @@ WebIDL::ExceptionOr<void> Document::writeln(Vector<DeprecatedString> const& stri
     builder.join(""sv, strings);
     builder.append("\n"sv);
 
-    return run_the_document_write_steps(builder.to_deprecated_string());
+    return run_the_document_write_steps(builder.string_view());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-write-steps
-WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(DeprecatedString input)
+WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(StringView input)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException.
     if (m_type == Type::XML)

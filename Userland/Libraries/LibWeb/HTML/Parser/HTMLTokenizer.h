@@ -126,7 +126,7 @@ public:
 
     DeprecatedString source() const { return m_decoded_input; }
 
-    void insert_input_at_insertion_point(DeprecatedString const& input);
+    void insert_input_at_insertion_point(StringView input);
     void insert_eof();
     bool is_eof_inserted();
 

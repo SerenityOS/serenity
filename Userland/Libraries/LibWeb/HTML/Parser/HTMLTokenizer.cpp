@@ -2799,7 +2799,7 @@ HTMLTokenizer::HTMLTokenizer(StringView input, DeprecatedString const& encoding)
     m_source_positions.empend(0u, 0u);
 }
 
-void HTMLTokenizer::insert_input_at_insertion_point(DeprecatedString const& input)
+void HTMLTokenizer::insert_input_at_insertion_point(StringView input)
 {
     auto utf8_iterator_byte_offset = m_utf8_view.byte_offset_of(m_utf8_iterator);
 
