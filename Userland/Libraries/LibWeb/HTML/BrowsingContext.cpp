@@ -1339,7 +1339,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
     // FIXME: 6. If newDocument has any form controls whose autofill field name is "off", invoke the reset algorithm of each of those elements.
 
     // 7. If newDocument's current document readiness "complete",
-    if (new_document->ready_state() == "complete"sv) {
+    if (new_document->readiness() == HTML::DocumentReadyState::Complete) {
         // then queue a global task on the DOM manipulation task source given newDocument's relevant global object to run the following steps:
 
         queue_global_task(Task::Source::DOMManipulation, relevant_global_object(*new_document), [new_document] {
