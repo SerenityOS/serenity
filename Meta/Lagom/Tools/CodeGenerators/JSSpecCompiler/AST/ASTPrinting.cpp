@@ -23,10 +23,9 @@ void Node::format_tree(StringBuilder& builder)
 template<typename... Parameters>
 void Node::dump_node(StringBuilder& builder, AK::CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
-    builder.append("<"sv);
     AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
     MUST(AK::vformat(builder, fmtstr.view(), variadic_format_params));
-    builder.append(">\n"sv);
+    builder.append("\n"sv);
 }
 
 void ErrorNode::dump_tree(StringBuilder& builder)
