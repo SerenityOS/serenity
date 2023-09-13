@@ -20,6 +20,23 @@ NSString* string_to_ns_string(StringView string)
     return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 }
 
+NSDictionary* deserialize_json_to_dictionary(StringView json)
+{
+    auto* ns_json = string_to_ns_string(json);
+    auto* json_data = [ns_json dataUsingEncoding:NSUTF8StringEncoding];
+
+    NSError* error = nil;
+    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:json_data
+                                                               options:0
+                                                                 error:&error];
+
+    if (!dictionary) {
+        NSLog(@"Error deserializing DOM tree: %@", error);
+    }
+
+    return dictionary;
+}
+
 Gfx::IntRect ns_rect_to_gfx_rect(NSRect rect)
 {
     return {
