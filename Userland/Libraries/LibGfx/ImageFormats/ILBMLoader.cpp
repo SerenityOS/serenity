@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
@@ -35,6 +36,13 @@ enum class MaskType : u8 {
     HasTransparentColor = 2,
     HasLasso = 3
 };
+
+enum class ViewportMode : u32 {
+    EHB = 0x80,
+    HAM = 0x800
+};
+
+AK_ENUM_BITWISE_OPERATORS(ViewportMode);
 
 struct ChunkHeader {
     FourCC chunk_type;
@@ -74,7 +82,9 @@ struct ILBMLoadingContext {
     // max number of bytes per plane row
     u16 pitch;
 
-    FixedArray<Color> color_table;
+    ViewportMode viewport_mode;
+
+    Vector<Color> color_table;
 
     RefPtr<Gfx::Bitmap> bitmap;
 
@@ -96,13 +106,14 @@ static ErrorOr<void> decode_iff_ilbm_header(ILBMLoadingContext& context)
     return {};
 }
 
-static ErrorOr<FixedArray<Color>> decode_cmap_chunk(Chunk cmap_chunk)
+static ErrorOr<Vector<Color>> decode_cmap_chunk(Chunk cmap_chunk)
 {
     size_t const size = cmap_chunk.data.size() / 3;
-    FixedArray<Color> color_table = TRY(FixedArray<Color>::create(size));
+    Vector<Color> color_table;
+    TRY(color_table.try_ensure_capacity(size));
 
     for (size_t i = 0; i < size; ++i) {
-        color_table[i] = Color(cmap_chunk.data[i * 3], cmap_chunk.data[(i * 3) + 1], cmap_chunk.data[(i * 3) + 2]);
+        color_table.unchecked_append(Color(cmap_chunk.data[i * 3], cmap_chunk.data[(i * 3) + 1], cmap_chunk.data[(i * 3) + 2]));
     }
 
     return color_table;
@@ -189,6 +200,17 @@ static ErrorOr<ByteBuffer> uncompress_byte_run(ReadonlyBytes data, ILBMLoadingCo
     return plane_data;
 }
 
+static ErrorOr<void> extend_ehb_palette(ILBMLoadingContext& context)
+{
+    dbgln_if(ILBM_DEBUG, "need to extend palette");
+    for (size_t i = 0; i < 32; ++i) {
+        auto const color = context.color_table[i];
+        TRY(context.color_table.try_append(color.darkened()));
+    }
+
+    return {};
+}
+
 static ErrorOr<void> decode_body_chunk(Chunk body_chunk, ILBMLoadingContext& context)
 {
     dbgln_if(ILBM_DEBUG, "decode_body_chunk {}", body_chunk.data.size());
@@ -200,6 +222,14 @@ static ErrorOr<void> decode_body_chunk(Chunk body_chunk, ILBMLoadingContext& con
         pixel_data = TRY(planar_to_chunky(plane_data, context));
     } else {
         pixel_data = TRY(planar_to_chunky(body_chunk.data, context));
+    }
+
+    // Some files already have 64 colours defined in the palette,
+    // maybe for upward compatibility with 256 colours software/hardware.
+    // DPaint 4 & previous files only have 32 colours so the
+    // palette needs to be extended only for these files.
+    if (has_flag(context.viewport_mode, ViewportMode::EHB) && context.color_table.size() < 64) {
+        TRY(extend_ehb_palette(context));
     }
 
     context.bitmap = TRY(chunky_to_bitmap(context, pixel_data));
@@ -253,6 +283,9 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
             context.state = ILBMLoadingContext::State::BitmapDecoded;
         } else if (chunk.type == FourCC("CRNG")) {
             dbgln_if(ILBM_DEBUG, "Chunk:CRNG");
+        } else if (chunk.type == FourCC("CAMG")) {
+            context.viewport_mode = static_cast<ViewportMode>(AK::convert_between_host_and_big_endian(ByteReader::load32(chunk.data.data())));
+            dbgln_if(ILBM_DEBUG, "Chunk:CAMG, Viewport={}, EHB={}, HAM={}", (u32)context.viewport_mode, has_flag(context.viewport_mode, ViewportMode::EHB), has_flag(context.viewport_mode, ViewportMode::HAM));
         }
     }
 
