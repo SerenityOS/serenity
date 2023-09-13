@@ -138,6 +138,17 @@ TEST_CASE(test_ilbm_uncompressed)
     EXPECT_EQ(frame.image->get_pixel(8, 0), Gfx::Color(0xee, 0xbb, 0, 255));
 }
 
+TEST_CASE(test_ilbm_ham6)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("ilbm/ham6.iff"sv)));
+    EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 256, 256 });
+
+    EXPECT_EQ(frame.image->get_pixel(77, 107), Gfx::Color(0xf0, 0x40, 0x40, 0xff));
+}
+
 TEST_CASE(test_ilbm_malformed_header)
 {
     Array test_inputs = {
