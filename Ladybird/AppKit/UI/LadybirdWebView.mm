@@ -227,6 +227,10 @@ struct HideCursor {
         }
     };
 
+    m_web_view_bridge->on_load_finish = [self](auto const& url) {
+        [self.observer onLoadFinish:url];
+    };
+
     m_web_view_bridge->on_title_change = [self](auto const& title) {
         [self.observer onTitleChange:title];
     };

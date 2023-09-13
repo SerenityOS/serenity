@@ -347,6 +347,9 @@
     [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Open Console"
                                                 action:@selector(openConsole:)
                                          keyEquivalent:@"J"]];
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Open Inspector"
+                                                action:@selector(openInspector:)
+                                         keyEquivalent:@"I"]];
 
     [menu setSubmenu:submenu];
     return menu;

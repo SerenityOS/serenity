@@ -136,6 +136,8 @@ elseif (APPLE)
         AppKit/UI/Console.mm
         AppKit/UI/ConsoleController.mm
         AppKit/UI/Event.mm
+        AppKit/UI/Inspector.mm
+        AppKit/UI/InspectorController.mm
         AppKit/UI/LadybirdWebView.mm
         AppKit/UI/LadybirdWebViewBridge.cpp
         AppKit/UI/Palette.mm

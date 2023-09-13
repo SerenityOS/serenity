@@ -17,6 +17,9 @@
 - (void)openConsole:(id)sender;
 - (void)onConsoleClosed;
 
+- (void)openInspector:(id)sender;
+- (void)onInspectorClosed;
+
 @property (nonatomic, strong) LadybirdWebView* web_view;
 
 @end

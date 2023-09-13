@@ -14,6 +14,8 @@
 #import <Application/ApplicationDelegate.h>
 #import <UI/Console.h>
 #import <UI/ConsoleController.h>
+#import <UI/Inspector.h>
+#import <UI/InspectorController.h>
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
@@ -32,6 +34,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 @property (nonatomic, strong) NSImage* favicon;
 
 @property (nonatomic, strong) ConsoleController* console_controller;
+@property (nonatomic, strong) InspectorController* inspector_controller;
 
 @end
 
@@ -109,6 +112,9 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     if (self.console_controller != nil) {
         [self.console_controller.window close];
     }
+    if (self.inspector_controller != nil) {
+        [self.inspector_controller.window close];
+    }
 }
 
 - (void)openConsole:(id)sender
@@ -125,6 +131,22 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 - (void)onConsoleClosed
 {
     self.console_controller = nil;
+}
+
+- (void)openInspector:(id)sender
+{
+    if (self.inspector_controller != nil) {
+        [self.inspector_controller.window makeKeyAndOrderFront:sender];
+        return;
+    }
+
+    self.inspector_controller = [[InspectorController alloc] init:self];
+    [self.inspector_controller showWindow:nil];
+}
+
+- (void)onInspectorClosed
+{
+    self.inspector_controller = nil;
 }
 
 #pragma mark - Private methods
@@ -221,6 +243,18 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     if (self.console_controller != nil) {
         auto* console = (Console*)[self.console_controller window];
         [console reset];
+    }
+    if (self.inspector_controller != nil) {
+        auto* inspector = (Inspector*)[self.inspector_controller window];
+        [inspector reset];
+    }
+}
+
+- (void)onLoadFinish:(URL const&)url
+{
+    if (self.inspector_controller != nil) {
+        auto* inspector = (Inspector*)[self.inspector_controller window];
+        [inspector inspect];
     }
 }
 
