@@ -33,6 +33,9 @@ public:
     int selected_index() const;
     void set_selected_index(int);
 
+    bool is_open() const { return m_is_open; }
+    void set_is_open(bool);
+
     Vector<JS::Handle<HTMLOptionElement>> list_of_options() const;
 
     // ^EventTarget
@@ -72,6 +75,7 @@ private:
     virtual i32 default_tab_index_value() const override;
 
     JS::GCPtr<HTMLOptionsCollection> m_options;
+    bool m_is_open { false };
 };
 
 }

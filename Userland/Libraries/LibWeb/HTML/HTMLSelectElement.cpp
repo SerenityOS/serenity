@@ -175,4 +175,13 @@ Optional<ARIA::Role> HTMLSelectElement::default_role() const
     return ARIA::Role::combobox;
 }
 
+void HTMLSelectElement::set_is_open(bool open)
+{
+    if (open == m_is_open)
+        return;
+
+    m_is_open = open;
+    invalidate_style();
+}
+
 }
