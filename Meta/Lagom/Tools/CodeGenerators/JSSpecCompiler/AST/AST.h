@@ -59,7 +59,7 @@ public:
     // For expressions, order must be the same as the evaluation order.
     virtual Vector<NodeSubtreePointer> subtrees() { return {}; }
 
-    virtual bool is_type() { return false; }
+    virtual bool is_list() const { return false; }
 
 protected:
     template<typename... Parameters>
@@ -372,14 +372,13 @@ protected:
 
 class TreeList : public Statement {
 public:
-    TreeList(Vector<Tree>&& expressions_)
-        : m_expressions(move(expressions_))
-    {
-    }
+    TreeList(Vector<Tree>&& trees);
 
     Vector<NodeSubtreePointer> subtrees() override;
 
-    Vector<Tree> m_expressions;
+    bool is_list() const override { return true; }
+
+    Vector<Tree> m_trees;
 
 protected:
     void dump_tree(StringBuilder& builder) override;

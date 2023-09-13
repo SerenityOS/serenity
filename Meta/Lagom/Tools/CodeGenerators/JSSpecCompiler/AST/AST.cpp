@@ -83,10 +83,22 @@ Vector<NodeSubtreePointer> IfElseIfChain::subtrees()
     return result;
 }
 
+TreeList::TreeList(Vector<Tree>&& trees)
+{
+    for (auto const& tree : trees) {
+        if (tree->is_list()) {
+            for (auto const& nested_tree : as<TreeList>(tree)->m_trees)
+                m_trees.append(nested_tree);
+        } else {
+            m_trees.append(tree);
+        }
+    }
+}
+
 Vector<NodeSubtreePointer> TreeList::subtrees()
 {
     Vector<NodeSubtreePointer> result;
-    for (auto& expression : m_expressions)
+    for (auto& expression : m_trees)
         result.append({ &expression });
     return result;
 }
