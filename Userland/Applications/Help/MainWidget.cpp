@@ -221,7 +221,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     help_menu->add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [this, help_page_path = move(help_page_path)](auto&) {
         open_page(help_page_path);
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Help", TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Help"_string, TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window));
 
     m_context_menu = TRY(GUI::Menu::try_create());
     m_context_menu->add_action(*m_go_back_action);

@@ -222,7 +222,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Solitaire"_string, app_icon, window));
 
     help_menu->add_action(GUI::CommonActions::make_help_action([&man_file](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme(man_file), "/bin/Help");

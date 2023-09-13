@@ -99,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Settings", app_icon, window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Settings"_string, app_icon, window));
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);

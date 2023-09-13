@@ -1164,7 +1164,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Pixel Paint", GUI::Icon::default_icon("app-pixel-paint"sv), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Pixel Paint"_string, GUI::Icon::default_icon("app-pixel-paint"sv), &window));
 
     m_levels_dialog_action = GUI::Action::create(
         "Change &Levels...", { Mod_Ctrl, Key_L }, g_icon_bag.levels, [&](auto&) {

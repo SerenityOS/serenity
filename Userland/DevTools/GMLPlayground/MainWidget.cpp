@@ -277,7 +277,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/GMLPlayground.md"), "/bin/Help");
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("GML Playground", m_icon, &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("GML Playground"_string, m_icon, &window));
 
     m_toolbar->add_action(open_action);
     m_toolbar->add_action(*m_save_action);

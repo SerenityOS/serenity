@@ -19,7 +19,7 @@
 
 namespace GUI {
 
-NonnullRefPtr<AboutDialog> AboutDialog::create(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
+NonnullRefPtr<AboutDialog> AboutDialog::create(String const& name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
 {
     auto dialog = adopt_ref(*new AboutDialog(name, version, icon, parent_window));
     dialog->set_title(DeprecatedString::formatted("About {}", name));
@@ -49,9 +49,9 @@ NonnullRefPtr<AboutDialog> AboutDialog::create(String name, String version, RefP
     return dialog;
 }
 
-AboutDialog::AboutDialog(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
+AboutDialog::AboutDialog(String const& name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
     : Dialog(parent_window)
-    , m_name(move(name))
+    , m_name(name)
     , m_version_string(move(version))
     , m_icon(move(icon))
 {

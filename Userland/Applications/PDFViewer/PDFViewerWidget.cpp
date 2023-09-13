@@ -243,7 +243,7 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
 
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"sv), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("PDF Viewer"_string, GUI::Icon::default_icon("app-pdf-viewer"sv), &window));
     return {};
 }
 

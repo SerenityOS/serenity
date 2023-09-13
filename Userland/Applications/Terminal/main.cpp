@@ -423,7 +423,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Terminal.md"), "/bin/Help");
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Terminal", app_icon, window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Terminal"_string, app_icon, window));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)

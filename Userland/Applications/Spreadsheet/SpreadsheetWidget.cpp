@@ -293,7 +293,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
 
     m_search_action = GUI::CommonActions::make_command_palette_action(&parent_window);
 
-    m_about_action = GUI::CommonActions::make_about_action("Spreadsheet", GUI::Icon::default_icon("app-spreadsheet"sv), &parent_window);
+    m_about_action = GUI::CommonActions::make_about_action("Spreadsheet"_string, GUI::Icon::default_icon("app-spreadsheet"sv), &parent_window);
 
     toolbar.add_action(*m_new_action);
     toolbar.add_action(*m_open_action);

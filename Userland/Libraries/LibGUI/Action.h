@@ -24,7 +24,7 @@
 namespace GUI {
 
 namespace CommonActions {
-NonnullRefPtr<Action> make_about_action(DeprecatedString const& app_name, Icon const& app_icon, Window* parent = nullptr);
+NonnullRefPtr<Action> make_about_action(String const& app_name, Icon const& app_icon, Window* parent = nullptr);
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_save_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);

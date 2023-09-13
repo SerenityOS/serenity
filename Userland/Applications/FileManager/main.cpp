@@ -1071,7 +1071,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("File Manager"sv, GUI::Icon::default_icon("app-file-manager"sv), window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("File Manager"_string, GUI::Icon::default_icon("app-file-manager"sv), window));
 
     main_toolbar.add_action(go_back_action);
     main_toolbar.add_action(go_forward_action);

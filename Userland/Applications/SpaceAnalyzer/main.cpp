@@ -26,7 +26,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
 
-static constexpr auto APP_NAME = "Space Analyzer"sv;
+static auto const APP_NAME = "Space Analyzer"_string;
 
 static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& tree_map_widget, bool include_last_node = true)
 {
@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Configure application window.
     auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);
     auto window = TRY(GUI::Window::try_create());
-    window->set_title(APP_NAME);
+    window->set_title(APP_NAME.bytes_as_string_view());
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
