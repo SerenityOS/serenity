@@ -93,6 +93,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<Game> undo_stack;
     Vector<Game> redo_stack;
 
+    RefPtr<GUI::Action> undo_action;
+    RefPtr<GUI::Action> redo_action;
+
+    undo_action = GUI::CommonActions::make_undo_action([&](auto& action) {
+        redo_stack.append(game);
+        redo_action->set_enabled(true);
+        game = undo_stack.take_last();
+        if (undo_stack.is_empty())
+            action.set_enabled(false);
+
+        update();
+    });
+    undo_action->set_enabled(false);
+
+    redo_action = GUI::CommonActions::make_redo_action([&](auto& action) {
+        undo_stack.append(game);
+        undo_action->set_enabled(true);
+        game = redo_stack.take_last();
+        if (redo_stack.is_empty())
+            action.set_enabled(false);
+
+        update();
+    });
+    redo_action->set_enabled(false);
+
     auto change_settings = [&] {
         auto size_dialog = GameSizeDialog::construct(window, board_size, target_tile, evil_ai);
         if (size_dialog->exec() != GUI::Dialog::ExecResult::OK)
@@ -118,6 +143,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         // Do not leak game states between games.
         undo_stack.clear();
         redo_stack.clear();
+        undo_action->set_enabled(false);
+        redo_action->set_enabled(false);
 
         game = Game(board_size, target_tile, evil_ai);
 
@@ -131,6 +158,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     board_view->on_move = [&](Game::Direction direction) {
         undo_stack.append(game);
+        undo_action->set_enabled(true);
+
+        redo_stack.clear();
+        redo_action->set_enabled(false);
+
         auto outcome = game.attempt_move(direction);
         switch (outcome) {
         case Game::MoveOutcome::OK:
@@ -171,21 +203,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         start_a_new_game();
     }));
 
-    game_menu->add_action(GUI::CommonActions::make_undo_action([&](auto&) {
-        if (undo_stack.is_empty())
-            return;
-        redo_stack.append(game);
-        game = undo_stack.take_last();
-        update();
-    }));
-
-    game_menu->add_action(GUI::CommonActions::make_redo_action([&](auto&) {
-        if (redo_stack.is_empty())
-            return;
-        undo_stack.append(game);
-        game = redo_stack.take_last();
-        update();
-    }));
+    game_menu->add_action(*undo_action);
+    game_menu->add_action(*redo_action);
 
     game_menu->add_separator();
     game_menu->add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
