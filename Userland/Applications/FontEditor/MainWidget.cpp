@@ -798,7 +798,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/FontEditor.md"), "/bin/Help");
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Font Editor", TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv)), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Font Editor"_string, TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv)), &window));
 
     return {};
 }

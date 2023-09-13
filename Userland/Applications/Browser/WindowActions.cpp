@@ -75,7 +75,7 @@ WindowActions::WindowActions(GUI::Window& window)
         &window));
     m_tab_actions.last()->set_status_tip("Switch to last tab"_string);
 
-    m_about_action = GUI::CommonActions::make_about_action("Ladybird", GUI::Icon::default_icon("app-browser"sv), &window);
+    m_about_action = GUI::CommonActions::make_about_action("Ladybird"_string, GUI::Icon::default_icon("app-browser"sv), &window);
 
     m_show_bookmarks_bar_action = GUI::Action::create_checkable(
         "&Bookmarks Bar", { Mod_Ctrl, Key_B },

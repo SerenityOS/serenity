@@ -1583,7 +1583,7 @@ void HackStudioWidget::create_help_menu(GUI::Window& window)
 {
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"sv), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Hack Studio"_string, GUI::Icon::default_icon("app-hack-studio"sv), &window));
 }
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_stop_action()

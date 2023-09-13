@@ -118,7 +118,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     update_slides_actions();
 
     auto help_menu = window->add_menu("&Help"_string);
-    help_menu->add_action(GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-presenter"sv)));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Presenter"_string, GUI::Icon::default_icon("app-presenter"sv)));
 
     return {};
 }

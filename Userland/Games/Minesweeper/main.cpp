@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Minesweeper.md"), "/bin/Help");
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Minesweeper", app_icon, window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Minesweeper"_string, app_icon, window));
 
     window->show();
 

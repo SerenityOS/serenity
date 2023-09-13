@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     catdog_widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
 
     auto context_menu = TRY(GUI::Menu::try_create());
-    context_menu->add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window));
+    context_menu->add_action(GUI::CommonActions::make_about_action("CatDog Demo"_string, app_icon, window));
     context_menu->add_separator();
     context_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 

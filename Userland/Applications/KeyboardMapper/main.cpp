@@ -95,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Keyboard Mapper", app_icon, window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Keyboard Mapper"_string, app_icon, window));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (keyboard_mapper_widget->request_close())

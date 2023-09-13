@@ -192,7 +192,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Flood.md"), "/bin/Help");
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Flood", app_icon, window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Flood"_string, app_icon, window));
 
     window->show();
 

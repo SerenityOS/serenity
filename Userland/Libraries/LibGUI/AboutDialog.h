@@ -16,13 +16,13 @@ namespace GUI {
 class AboutDialog final : public Dialog {
     C_OBJECT_ABSTRACT(AboutDialog)
 public:
-    [[nodiscard]] static NonnullRefPtr<AboutDialog> create(String name, String version, RefPtr<Gfx::Bitmap const> icon = nullptr, Window* parent_window = nullptr);
+    [[nodiscard]] static NonnullRefPtr<AboutDialog> create(String const& name, String version, RefPtr<Gfx::Bitmap const> icon = nullptr, Window* parent_window = nullptr);
     virtual ~AboutDialog() override = default;
 
     static void show(String name, String version, RefPtr<Gfx::Bitmap const> icon = nullptr, Window* parent_window = nullptr, RefPtr<Gfx::Bitmap const> window_icon = nullptr);
 
 private:
-    AboutDialog(String name, String version, RefPtr<Gfx::Bitmap const> icon = nullptr, Window* parent_window = nullptr);
+    AboutDialog(String const& name, String version, RefPtr<Gfx::Bitmap const> icon = nullptr, Window* parent_window = nullptr);
 
     String m_name;
     String m_version_string;

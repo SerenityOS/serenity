@@ -169,7 +169,7 @@ ErrorOr<void> CharacterMapWidget::initialize_menubar(GUI::Window& window)
     help_menu->add_action(GUI::CommonActions::make_help_action([&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/CharacterMap.md"), "/bin/Help");
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Character Map", GUI::Icon::default_icon("app-character-map"sv), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Character Map"_string, GUI::Icon::default_icon("app-character-map"sv), &window));
     return {};
 }
 

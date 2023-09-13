@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     auto const app_name = "BrickGame"sv;
-    auto const title = "Brick Game"sv;
+    auto const title = "Brick Game"_string;
     auto const man_file = "/usr/share/man/man6/BrickGame.md"sv;
 
     Config::pledge_domain(app_name);
@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
 
     window->set_double_buffering_enabled(false);
-    window->set_title(title);
+    window->set_title(title.bytes_as_string_view());
     window->resize(360, 462);
     window->set_resizable(false);
 

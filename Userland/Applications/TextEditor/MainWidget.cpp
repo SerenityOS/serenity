@@ -694,7 +694,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/TextEditor.md"), "/bin/Help");
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"sv), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Text Editor"_string, GUI::Icon::default_icon("app-text-editor"sv), &window));
 
     auto wrapping_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Wrapping Mode"_string);
     wrapping_statusbar_menu->add_action(*m_no_wrapping_action);

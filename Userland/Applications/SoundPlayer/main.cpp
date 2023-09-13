@@ -165,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Sound Player", app_icon, window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Sound Player"_string, app_icon, window));
 
     window->show();
     return app->exec();

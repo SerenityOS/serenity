@@ -548,7 +548,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/HexEditor.md"), "/bin/Help");
     }));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"sv), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Hex Editor"_string, GUI::Icon::default_icon("app-hex-editor"sv), &window));
 
     return {};
 }

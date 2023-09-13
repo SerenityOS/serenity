@@ -17,12 +17,12 @@ namespace GUI {
 
 namespace CommonActions {
 
-NonnullRefPtr<Action> make_about_action(DeprecatedString const& app_name, Icon const& app_icon, Window* parent)
+NonnullRefPtr<Action> make_about_action(String const& app_name, Icon const& app_icon, Window* parent)
 {
     auto weak_parent = AK::make_weak_ptr_if_nonnull<Window>(parent);
     auto action = Action::create(DeprecatedString::formatted("&About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {
         AboutDialog::show(
-            String::from_deprecated_string(app_name).release_value_but_fixme_should_propagate_errors(),
+            app_name,
             Core::Version::read_long_version_string().release_value_but_fixme_should_propagate_errors(),
             app_icon.bitmap_for_size(32),
             weak_parent);
