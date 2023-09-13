@@ -63,6 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     board_widget_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
     auto board_widget = TRY(board_widget_container.try_add<BoardWidget>(board_rows, board_columns));
     board_widget->randomize_cells();
+    board_widget->set_min_size(board_columns, board_rows);
 
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(click_tip);

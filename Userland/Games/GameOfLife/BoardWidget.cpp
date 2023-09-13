@@ -52,6 +52,7 @@ void BoardWidget::resize_board(size_t rows, size_t columns)
         return;
     m_board->resize(rows, columns);
     m_last_cell_toggled = { rows, columns };
+    set_min_size(columns, rows);
 }
 
 void BoardWidget::set_running_timer_interval(int interval)
