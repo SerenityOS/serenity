@@ -383,18 +383,19 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
     response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, document_resource.get<String>().bytes())));
 
-    // FIXME: 3. Let responseOrigin be the result of determining the origin given response's URL, targetSnapshotParams's sandboxing flags, null, and entry's document state's origin.
+    // 3. Let responseOrigin be the result of determining the origin given response's URL, targetSnapshotParams's sandboxing flags, null, and entry's document state's origin.
+    auto response_origin = determine_the_origin(*response->url(), SandboxingFlagSet {}, {}, entry->document_state->origin());
 
     // 4. Let coop be a new cross-origin opener policy.
     CrossOriginOpenerPolicy coop;
 
     // 5. Let coopEnforcementResult be a new cross-origin opener policy enforcement result with
     //    url: response's URL
-    //    FIXME: origin: responseOrigin
+    //    origin: responseOrigin
     //    cross-origin opener policy: coop
     CrossOriginOpenerPolicyEnforcementResult coop_enforcement_result {
         .url = *response->url(),
-        .origin = Origin {},
+        .origin = response_origin,
         .cross_origin_opener_policy = coop
     };
 
@@ -404,7 +405,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     //    id: navigationId
     //    request: null
     //    response: response
-    //    FIXME: origin: responseOrigin
+    //    origin: responseOrigin
     //    FIXME: policy container: policyContainer
     //    FIXME: final sandboxing flag set: targetSnapshotParams's sandboxing flags
     //    cross-origin opener policy: coop
@@ -418,7 +419,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
         .id = navigation_id,
         .request = {},
         .response = *response,
-        .origin = Origin {},
+        .origin = move(response_origin),
         .policy_container = PolicyContainer {},
         .final_sandboxing_flag_set = SandboxingFlagSet {},
         .cross_origin_opener_policy = move(coop),
