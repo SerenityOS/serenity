@@ -1321,41 +1321,6 @@ HTML::EnvironmentSettingsObject& Document::relevant_settings_object() const
     return Bindings::host_defined_environment_settings_object(realm());
 }
 
-// https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-to-a-javascript:-url
-void Document::navigate_to_javascript_url(StringView url)
-{
-    // FIXME: Implement the rest of steps from the spec
-
-    // 6. Let newDocument be the result of evaluating a javascript: URL given targetNavigable, url, and initiatorOrigin.
-    evaluate_javascript_url(url);
-}
-
-// https://html.spec.whatwg.org/multipage/browsing-the-web.html#evaluate-a-javascript:-url
-void Document::evaluate_javascript_url(StringView url)
-{
-    // NOTE: This is done by EventHandler::handle_mouseup
-    // 1. Let urlString be the result of running the URL serializer on url.
-
-    // 2. Let encodedScriptSource be the result of removing the leading "javascript:" from urlString.
-    auto encoded_script_source = url.substring_view(11, url.length() - 11);
-
-    // FIXME: 3. Let scriptSource be the UTF-8 decoding of the percent-decoding of encodedScriptSource.
-
-    // 4. Let settings be targetNavigable's active document's relevant settings object.
-    auto& settings = relevant_settings_object();
-
-    // 5. Let baseURL be settings's API base URL.
-    auto base_url = settings.api_base_url();
-
-    // 6. Let script be the result of creating a classic script given scriptSource, settings, baseURL, and the default classic script fetch options.
-    auto script = HTML::ClassicScript::create("(javascript url)", encoded_script_source, settings, base_url);
-
-    // 7. Let evaluationStatus be the result of running the classic script script.
-    static_cast<void>(script->run());
-
-    // FIXME: Implement the rest of the steps from the spec
-}
-
 // https://dom.spec.whatwg.org/#dom-document-createelement
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String const& a_local_name, Variant<String, ElementCreationOptions> const& options)
 {
