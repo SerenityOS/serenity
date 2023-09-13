@@ -5,6 +5,8 @@
  */
 
 #include <AK/DeprecatedString.h>
+#include <AK/HashMap.h>
+#include <AK/Traits.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWebView/ViewImplementation.h>
 
@@ -24,6 +26,14 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 static NSString* const CSS_PROPERTY_COLUMN = @"Property";
 static NSString* const CSS_VALUE_COLUMN = @"Value";
 
+template<>
+struct AK::Traits<NSDictionary*> : public GenericTraits<NSDictionary*> {
+    static unsigned hash(NSDictionary* dictionary)
+    {
+        return [dictionary hash];
+    }
+};
+
 struct Selection {
     bool operator==(Selection const& other) const = default;
 
@@ -34,6 +44,9 @@ struct Selection {
 @interface Inspector () <NSOutlineViewDataSource, NSOutlineViewDelegate, NSTableViewDataSource>
 {
     Selection m_selection;
+
+    HashMap<NSDictionary*, NSDictionary*> m_dom_node_to_parent_map;
+    HashMap<i32, NSDictionary*> m_node_id_to_dom_node_map;
 }
 
 @property (nonatomic, strong) Tab* tab;
@@ -103,6 +116,8 @@ struct Selection {
             if (strong_self.dom_tree) {
                 [strong_self.dom_tree_outline_view reloadItem:nil reloadChildren:YES];
                 [strong_self.dom_tree_outline_view sizeToFit];
+
+                [strong_self prepareDOMNodeMaps:strong_self.dom_tree parentNode:nil];
             } else {
                 strong_self.dom_tree = @{};
             }
@@ -137,6 +152,9 @@ struct Selection {
 - (void)reset
 {
     m_selection = {};
+
+    m_dom_node_to_parent_map = {};
+    m_node_id_to_dom_node_map = {};
 
     self.dom_tree = @{};
     [self.dom_tree_outline_view reloadItem:nil reloadChildren:YES];
@@ -226,6 +244,20 @@ struct Selection {
         [outline_view collapseItem:item];
     } else {
         [outline_view expandItem:item];
+    }
+}
+
+- (void)prepareDOMNodeMaps:(NSDictionary*)dom_node
+                parentNode:(NSDictionary*)parent_node
+{
+    m_dom_node_to_parent_map.set(dom_node, parent_node);
+
+    if (id dom_node_id = [dom_node objectForKey:@"id"]) {
+        m_node_id_to_dom_node_map.set([dom_node_id intValue], dom_node);
+    }
+
+    for (NSDictionary* child in [dom_node objectForKey:@"children"]) {
+        [self prepareDOMNodeMaps:child parentNode:dom_node];
     }
 }
 
