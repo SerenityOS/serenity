@@ -1320,10 +1320,6 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const&
 
     // 13. Append session history traversal steps to targetNavigable's traversable to finalize a cross-document navigation with targetNavigable, historyHandling, and historyEntry.
     traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
-        if (this->ongoing_navigation() != navigation_id) {
-            // NOTE: This check is not in the spec but we should not continue navigation if ongoing navigation id has changed.
-            return;
-        }
         finalize_a_cross_document_navigation(*this, history_handling, history_entry);
     });
 
