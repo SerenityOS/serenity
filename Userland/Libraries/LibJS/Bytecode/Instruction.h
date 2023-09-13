@@ -134,7 +134,7 @@ public:
 
     bool is_terminator() const;
     Type type() const { return m_type; }
-    size_t length() const;
+    size_t length() const { return m_length; }
     DeprecatedString to_deprecated_string(Bytecode::Executable const&) const;
     ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
     static void destroy(Instruction&);
@@ -144,14 +144,16 @@ public:
     SourceRecord source_record() const { return m_source_record; }
 
 protected:
-    explicit Instruction(Type type)
+    Instruction(Type type, size_t length)
         : m_type(type)
+        , m_length(length)
     {
     }
 
 private:
     SourceRecord m_source_record {};
     Type m_type {};
+    size_t m_length {};
 };
 
 class InstructionStreamIterator {
