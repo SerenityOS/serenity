@@ -5,6 +5,7 @@ set(SOURCES
     Compiler/GenericASTPass.cpp
     Compiler/IfBranchMergingPass.cpp
     Compiler/ReferenceResolvingPass.cpp
+    Parser/CppASTConverter.cpp
     Parser/Lexer.cpp
     Parser/ParseError.cpp
     Parser/SpecParser.cpp
@@ -14,6 +15,6 @@ set(SOURCES
     main.cpp
 )
 
-lagom_tool(JSSpecCompiler LIBS LibMain LibXML)
+lagom_tool(JSSpecCompiler LIBS LibCpp LibMain LibXML)
 target_include_directories(JSSpecCompiler PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(JSSpecCompiler PRIVATE -Wno-missing-field-initializers)
