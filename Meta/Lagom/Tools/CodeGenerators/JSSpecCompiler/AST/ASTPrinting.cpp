@@ -129,7 +129,7 @@ void IfElseIfChain::dump_tree(StringBuilder& builder)
 void TreeList::dump_tree(StringBuilder& builder)
 {
     dump_node(builder, "TreeList");
-    for (auto const& expression : m_expressions)
+    for (auto const& expression : m_trees)
         expression->format_tree(builder);
 }
 

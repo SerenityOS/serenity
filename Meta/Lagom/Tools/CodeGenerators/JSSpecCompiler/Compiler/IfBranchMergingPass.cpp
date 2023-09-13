@@ -24,7 +24,7 @@ RecursionDecision IfBranchMergingPass::on_entry(Tree tree)
             }
         };
 
-        for (auto const& node : list->m_expressions) {
+        for (auto const& node : list->m_trees) {
             if (is<IfBranch>(node.ptr())) {
                 merge_if_needed();
                 unmerged_branches.append(node);
@@ -37,7 +37,7 @@ RecursionDecision IfBranchMergingPass::on_entry(Tree tree)
         }
         merge_if_needed();
 
-        list->m_expressions = move(result);
+        list->m_trees = move(result);
     }
     return RecursionDecision::Recurse;
 }
@@ -75,8 +75,8 @@ Tree IfBranchMergingPass::merge_branches(Vector<Tree> const& unmerged_branches)
             //   3. Else,
             //      ...
             auto substep_list = as<TreeList>(branch->m_branch);
-            if (substep_list && substep_list->m_expressions.size() == 1) {
-                if (auto nested_if = as<IfBranch>(substep_list->m_expressions[0]); nested_if)
+            if (substep_list && substep_list->m_trees.size() == 1) {
+                if (auto nested_if = as<IfBranch>(substep_list->m_trees[0]); nested_if)
                     branch = make_ref_counted<ElseIfBranch>(nested_if->m_condition, nested_if->m_branch);
             }
         }
