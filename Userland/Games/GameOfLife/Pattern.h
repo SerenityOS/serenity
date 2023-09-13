@@ -14,13 +14,13 @@
 
 class Pattern final {
 public:
-    Pattern(Vector<DeprecatedString>);
-    Vector<DeprecatedString> pattern() { return m_pattern; }
+    Pattern(Vector<String>&&);
+    Vector<String> pattern() const { return m_pattern; }
     GUI::Action* action() { return m_action; }
     void set_action(GUI::Action*);
     void rotate_clockwise();
 
 private:
     RefPtr<GUI::Action> m_action;
-    Vector<DeprecatedString> m_pattern;
+    Vector<String> m_pattern;
 };

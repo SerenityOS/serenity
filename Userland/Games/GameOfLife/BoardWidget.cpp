@@ -167,9 +167,9 @@ void BoardWidget::paint_event(GUI::PaintEvent& event)
 
             if (m_selected_pattern != nullptr) {
                 int y_offset = 0;
-                for (auto line : m_selected_pattern->pattern()) {
+                for (auto const& line : m_selected_pattern->pattern()) {
                     int x_offset = 0;
-                    for (auto c : line) {
+                    for (auto c : line.bytes_as_string_view()) {
                         if (c == 'O' && (m_last_cell_hovered.row + y_offset) < m_board->rows()
                             && (m_last_cell_hovered.column + x_offset) < m_board->columns() && row == (m_last_cell_hovered.row + y_offset) && column == (m_last_cell_hovered.column + x_offset))
                             fill_color = Color::Green;
@@ -258,9 +258,9 @@ Optional<Board::RowAndColumn> BoardWidget::get_row_and_column_for_point(int x, i
 void BoardWidget::place_pattern(size_t row, size_t column)
 {
     int y_offset = 0;
-    for (auto line : m_selected_pattern->pattern()) {
+    for (auto const& line : m_selected_pattern->pattern()) {
         int x_offset = 0;
-        for (auto c : line) {
+        for (auto c : line.bytes_as_string_view()) {
             if (c == 'O' && (row + y_offset) < m_board->rows() && (column + x_offset) < m_board->columns())
                 toggle_cell(row + y_offset, column + x_offset);
             x_offset++;
@@ -276,122 +276,122 @@ void BoardWidget::place_pattern(size_t row, size_t column)
 
 void BoardWidget::setup_patterns()
 {
-    auto add_pattern = [&](DeprecatedString name, NonnullOwnPtr<Pattern> pattern) {
-        auto action = GUI::Action::create(move(name), [this, pattern = pattern.ptr()](const GUI::Action&) {
+    auto add_pattern = [&](auto name, NonnullOwnPtr<Pattern> pattern) {
+        auto action = GUI::Action::create(name, [this, pattern = pattern.ptr()](const GUI::Action&) {
             on_pattern_selection(pattern);
         });
         pattern->set_action(action);
         m_patterns.append(move(pattern));
     };
 
-    Vector<DeprecatedString> blinker = {
-        "OOO"
+    Vector<String> blinker = {
+        "OOO"_string
     };
 
-    Vector<DeprecatedString> toad = {
-        ".OOO",
-        "OOO."
+    Vector<String> toad = {
+        ".OOO"_string,
+        "OOO."_string
     };
 
-    Vector<DeprecatedString> glider = {
-        ".O.",
-        "..O",
-        "OOO",
+    Vector<String> glider = {
+        ".O."_string,
+        "..O"_string,
+        "OOO"_string,
     };
 
-    Vector<DeprecatedString> lightweight_spaceship = {
-        ".OO..",
-        "OOOO.",
-        "OO.OO",
-        "..OO."
+    Vector<String> lightweight_spaceship = {
+        ".OO.."_string,
+        "OOOO."_string,
+        "OO.OO"_string,
+        "..OO."_string
     };
 
-    Vector<DeprecatedString> middleweight_spaceship = {
-        ".OOOOO",
-        "O....O",
-        ".....O",
-        "O...O.",
-        "..O..."
+    Vector<String> middleweight_spaceship = {
+        ".OOOOO"_string,
+        "O....O"_string,
+        ".....O"_string,
+        "O...O."_string,
+        "..O..."_string
     };
 
-    Vector<DeprecatedString> heavyweight_spaceship = {
-        "..OO...",
-        "O....O.",
-        "......O",
-        "O.....O",
-        ".OOOOOO"
+    Vector<String> heavyweight_spaceship = {
+        "..OO..."_string,
+        "O....O."_string,
+        "......O"_string,
+        "O.....O"_string,
+        ".OOOOOO"_string
     };
 
-    Vector<DeprecatedString> infinite_1 = { "OOOOOOOO.OOOOO...OOO......OOOOOOO.OOOOO" };
+    Vector<String> infinite_1 = { "OOOOOOOO.OOOOO...OOO......OOOOOOO.OOOOO"_string };
 
-    Vector<DeprecatedString> infinite_2 = {
-        "......O.",
-        "....O.OO",
-        "....O.O.",
-        "....O...",
-        "..O.....",
-        "O.O....."
+    Vector<String> infinite_2 = {
+        "......O."_string,
+        "....O.OO"_string,
+        "....O.O."_string,
+        "....O..."_string,
+        "..O....."_string,
+        "O.O....."_string
     };
 
-    Vector<DeprecatedString> infinite_3 = {
-        "OOO.O",
-        "O....",
-        "...OO",
-        ".OO.O",
-        "O.O.O"
+    Vector<String> infinite_3 = {
+        "OOO.O"_string,
+        "O...."_string,
+        "...OO"_string,
+        ".OO.O"_string,
+        "O.O.O"_string
     };
 
-    Vector<DeprecatedString> simkin_glider_gun = {
-        "OO.....OO........................",
-        "OO.....OO........................",
-        ".................................",
-        "....OO...........................",
-        "....OO...........................",
-        ".................................",
-        ".................................",
-        ".................................",
-        ".................................",
-        "......................OO.OO......",
-        ".....................O.....O.....",
-        ".....................O......O..OO",
-        ".....................OOO...O...OO",
-        "..........................O......",
-        ".................................",
-        ".................................",
-        ".................................",
-        "....................OO...........",
-        "....................O............",
-        ".....................OOO.........",
-        ".......................O........."
+    Vector<String> simkin_glider_gun = {
+        "OO.....OO........................"_string,
+        "OO.....OO........................"_string,
+        "................................."_string,
+        "....OO..........................."_string,
+        "....OO..........................."_string,
+        "................................."_string,
+        "................................."_string,
+        "................................."_string,
+        "................................."_string,
+        "......................OO.OO......"_string,
+        ".....................O.....O....."_string,
+        ".....................O......O..OO"_string,
+        ".....................OOO...O...OO"_string,
+        "..........................O......"_string,
+        "................................."_string,
+        "................................."_string,
+        "................................."_string,
+        "....................OO..........."_string,
+        "....................O............"_string,
+        ".....................OOO........."_string,
+        ".......................O........."_string
     };
-    Vector<DeprecatedString> gosper_glider_gun = {
-        "........................O...........",
-        "......................O.O...........",
-        "............OO......OO............OO",
-        "...........O...O....OO............OO",
-        "OO........O.....O...OO..............",
-        "OO........O...O.OO....O.O...........",
-        "..........O.....O.......O...........",
-        "...........O...O....................",
-        "............OO......................"
-    };
-
-    Vector<DeprecatedString> r_pentomino = {
-        ".OO",
-        "OO.",
-        ".O."
+    Vector<String> gosper_glider_gun = {
+        "........................O..........."_string,
+        "......................O.O..........."_string,
+        "............OO......OO............OO"_string,
+        "...........O...O....OO............OO"_string,
+        "OO........O.....O...OO.............."_string,
+        "OO........O...O.OO....O.O..........."_string,
+        "..........O.....O.......O..........."_string,
+        "...........O...O...................."_string,
+        "............OO......................"_string
     };
 
-    Vector<DeprecatedString> diehard = {
-        "......O.",
-        "OO......",
-        ".O...OOO"
+    Vector<String> r_pentomino = {
+        ".OO"_string,
+        "OO."_string,
+        ".O."_string
     };
 
-    Vector<DeprecatedString> acorn = {
-        ".O.....",
-        "...O...",
-        "OO..OOO"
+    Vector<String> diehard = {
+        "......O."_string,
+        "OO......"_string,
+        ".O...OOO"_string
+    };
+
+    Vector<String> acorn = {
+        ".O....."_string,
+        "...O..."_string,
+        "OO..OOO"_string
     };
 
     add_pattern("Blinker", make<Pattern>(move(blinker)));
