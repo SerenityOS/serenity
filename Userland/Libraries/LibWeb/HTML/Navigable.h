@@ -123,7 +123,8 @@ public:
 
     WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
 
-    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type);
+    WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> evaluate_javascript_url(AK::URL const&, Origin const& new_document_origin, String navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id);
 
     void reload();
 

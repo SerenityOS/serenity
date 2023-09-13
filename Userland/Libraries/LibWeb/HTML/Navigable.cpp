@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/POSTResource.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
+#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
@@ -937,8 +938,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     // 18. If url's scheme is "javascript", then:
     if (url.scheme() == "javascript"sv) {
         // 1. Queue a global task on the navigation and traversal task source given navigable's active window to navigate to a javascript: URL given navigable, url, historyHandling, initiatorOriginSnapshot, and cspNavigationType.
-        queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, url, history_handling, initiator_origin_snapshot, csp_navigation_type] {
-            (void)navigate_to_a_javascript_url(url, to_history_handling_behavior(history_handling), initiator_origin_snapshot, csp_navigation_type);
+        queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, url, history_handling, initiator_origin_snapshot, csp_navigation_type, navigation_id] {
+            (void)navigate_to_a_javascript_url(url, to_history_handling_behavior(history_handling), initiator_origin_snapshot, csp_navigation_type, navigation_id);
         });
 
         // 2. Return.
@@ -1105,11 +1106,178 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     return {};
 }
 
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type)
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#evaluate-a-javascript:-url
+WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url(AK::URL const& url, Origin const& new_document_origin, String navigation_id)
 {
-    (void)initiator_origin;
+    auto& vm = this->vm();
+    auto& realm = active_window()->realm();
+
+    // 1. Let urlString be the result of running the URL serializer on url.
+    auto url_string = url.serialize();
+
+    // 2. Let encodedScriptSource be the result of removing the leading "javascript:" from urlString.
+    auto encoded_script_source = url_string.substring_view(11, url_string.length() - 11);
+
+    // FIXME: 3. Let scriptSource be the UTF-8 decoding of the percent-decoding of encodedScriptSource.
+
+    // 4. Let settings be targetNavigable's active document's relevant settings object.
+    auto& settings = active_document()->relevant_settings_object();
+
+    // 5. Let baseURL be settings's API base URL.
+    auto base_url = settings.api_base_url();
+
+    // 6. Let script be the result of creating a classic script given scriptSource, settings, baseURL, and the default classic script fetch options.
+    auto script = HTML::ClassicScript::create("(javascript url)", encoded_script_source, settings, base_url);
+
+    // 7. Let evaluationStatus be the result of running the classic script script.
+    auto evaluation_status = script->run();
+
+    // 8. Let result be null.
+    String result;
+
+    // 9. If evaluationStatus is a normal completion, and evaluationStatus.[[Value]] is a String, then set result to evaluationStatus.[[Value]].
+    if (evaluation_status.type() == JS::Completion::Type::Normal && evaluation_status.value()->is_string()) {
+        result = evaluation_status.value()->as_string().utf8_string();
+    } else {
+        // 10. Otherwise, return null.
+        return nullptr;
+    }
+
+    // 11. Let response be a new response with
+    //     URL: targetNavigable's active document's URL
+    //     header list: «(`Content-Type`, `text/html;charset=utf-8`)»
+    //     body: the UTF-8 encoding of result, as a body
+    auto response = Fetch::Infrastructure::Response::create(vm);
+    response->url_list().append(active_document()->url());
+    auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html"sv));
+    TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
+    response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, result.bytes())));
+
+    // 12. Let policyContainer be targetNavigable's active document's policy container.
+    auto const& policy_container = active_document()->policy_container();
+
+    // FIXME: 13. Let finalSandboxFlags be policyContainer's CSP list's CSP-derived sandboxing flags.
+
+    // FIXME: 14. Let coop be targetNavigable's active document's cross-origin opener policy.
+    auto const& coop = active_document()->cross_origin_opener_policy();
+
+    // 15. Let coopEnforcementResult be a new cross-origin opener policy enforcement result with
+    //     url: url
+    //     origin: newDocumentOrigin
+    //     cross-origin opener policy: coop
+    CrossOriginOpenerPolicyEnforcementResult coop_enforcement_result {
+        .url = url,
+        .origin = new_document_origin,
+        .cross_origin_opener_policy = coop,
+    };
+
+    // 16. Let navigationParams be a new navigation params, with
+    //     id: navigationId
+    //     navigable: targetNavigable
+    //     request: null
+    //     response: response
+    //     fetch controller: null
+    //     commit early hints: null
+    //     COOP enforcement result: coopEnforcementResult
+    //     reserved environment: null
+    //     origin: newDocumentOrigin
+    //     policy container: policyContainer
+    //     final sandboxing flag set: finalSandboxFlags
+    //     cross-origin opener policy: coop
+    //     navigation timing type: "navigate"
+    //     about base URL: targetNavigable's active document's about base URL
+    NavigationParams navigation_params {
+        .id = navigation_id,
+        .request = {},
+        .response = response,
+        .origin = new_document_origin,
+        .policy_container = policy_container,
+        .cross_origin_opener_policy = coop,
+        .coop_enforcement_result = move(coop_enforcement_result),
+        .reserved_environment = {},
+        .browsing_context = active_browsing_context(),
+        .navigable = this,
+        .fetch_controller = nullptr,
+    };
+
+    // 17. Return the result of loading an HTML document given navigationParams.
+    return load_document(navigation_params);
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-to-a-javascript:-url
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const& url, HistoryHandlingBehavior history_handling, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id)
+{
+    // 1. Assert: historyHandling is "replace".
+    VERIFY(history_handling == HistoryHandlingBehavior::Replace);
+
+    // 2. Set the ongoing navigation for targetNavigable to null.
+    set_ongoing_navigation({});
+
+    // 3. If initiatorOrigin is not same origin-domain with targetNavigable's active document's origin, then return.
+    if (!initiator_origin.is_same_origin_domain(active_document()->origin()))
+        return {};
+
+    // FIXME: 4. Let request be a new request whose URL is url.
+
+    // FIXME: 5. If the result of should navigation request of type be blocked by Content Security Policy? given request and cspNavigationType is "Blocked", then return.
     (void)csp_navigation_type;
-    TODO();
+
+    // 6. Let newDocument be the result of evaluating a javascript: URL given targetNavigable, url, and initiatorOrigin.
+    auto new_document = TRY(evaluate_javascript_url(url, initiator_origin, navigation_id));
+
+    // 7. If newDocument is null, then return.
+    if (!new_document) {
+        // NOTE: In this case, some JavaScript code was executed, but no new Document was created, so we will not perform a navigation.
+        return {};
+    }
+
+    // 8. Assert: initiatorOrigin is newDocument's origin.
+    VERIFY(initiator_origin == new_document->origin());
+
+    // 9. Let entryToReplace be targetNavigable's active session history entry.
+    auto entry_to_replace = active_session_history_entry();
+
+    // 10. Let oldDocState be entryToReplace's document state.
+    auto old_doc_state = entry_to_replace->document_state;
+
+    // 11. Let documentState be a new document state with
+    //     document: newDocument
+    //     history policy container: a clone of the oldDocState's history policy container if it is non-null; null otherwise
+    //     request referrer: oldDocState's request referrer
+    //     request referrer policy: oldDocState's request referrer policy
+    //     initiator origin: initiatorOrigin
+    //     origin: initiatorOrigin
+    //     about base URL: oldDocState's about base URL
+    //     resource: null
+    //     ever populated: true
+    //     navigable target name: oldDocState's navigable target name
+    JS::NonnullGCPtr<DocumentState> document_state = *heap().allocate_without_realm<DocumentState>();
+    document_state->set_document(new_document);
+    document_state->set_history_policy_container(old_doc_state->history_policy_container());
+    document_state->set_request_referrer(old_doc_state->request_referrer());
+    document_state->set_request_referrer_policy(old_doc_state->request_referrer_policy());
+    document_state->set_initiator_origin(initiator_origin);
+    document_state->set_origin(initiator_origin);
+    document_state->set_ever_populated(true);
+    document_state->set_navigable_target_name(old_doc_state->navigable_target_name());
+
+    // 12. Let historyEntry be a new session history entry, with
+    //     URL: entryToReplace's URL
+    //     document state: documentState
+    JS::NonnullGCPtr<SessionHistoryEntry> history_entry = *heap().allocate_without_realm<SessionHistoryEntry>();
+    history_entry->url = entry_to_replace->url;
+    history_entry->document_state = document_state;
+
+    // 13. Append session history traversal steps to targetNavigable's traversable to finalize a cross-document navigation with targetNavigable, historyHandling, and historyEntry.
+    traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
+        if (this->ongoing_navigation() != navigation_id) {
+            // NOTE: This check is not in the spec but we should not continue navigation if ongoing navigation id has changed.
+            return;
+        }
+        finalize_a_cross_document_navigation(*this, history_handling, history_entry);
+    });
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#reload
