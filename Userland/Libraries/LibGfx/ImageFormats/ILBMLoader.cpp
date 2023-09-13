@@ -8,6 +8,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
+#include <AK/IntegralMath.h>
 #include <LibGfx/FourCC.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
 
@@ -89,6 +90,9 @@ struct ILBMLoadingContext {
 
     Vector<Color> color_table;
 
+    // number of bits needed to describe current palette
+    u8 cmap_bits;
+
     RefPtr<Gfx::Bitmap> bitmap;
 
     BMHDHeader bm_header;
@@ -132,9 +136,32 @@ static ErrorOr<RefPtr<Gfx::Bitmap>> chunky_to_bitmap(ILBMLoadingContext& context
     dbgln_if(ILBM_DEBUG, "created Bitmap {}x{}", width, height);
 
     for (int row = 0; row < height; ++row) {
+        // Keep color: in HAM mode, current color
+        // may be based on previous color instead of coming from
+        // the palette.
+        Color color = Color::Black;
         for (int col = 0; col < width; ++col) {
             u8 index = chunky[(width * row) + col];
-            bitmap->set_pixel(col, row, context.color_table[index]);
+            if (index < context.color_table.size()) {
+                color = context.color_table[index];
+            } else if (has_flag(context.viewport_mode, ViewportMode::HAM)) {
+                // Get the control bit which will tell use how current pixel should be calculated
+                u8 control = (index >> context.cmap_bits) & 0x3;
+                // Since we only have (cmap_bits - 2) bits to define the component,
+                // we need to pad it to 8 bits.
+                u8 component = (index % context.color_table.size()) << (8 - context.cmap_bits);
+
+                if (control == 1) {
+                    color.set_blue(component);
+                } else if (control == 2) {
+                    color.set_red(component);
+                } else {
+                    color.set_green(component);
+                }
+            } else {
+                return Error::from_string_literal("Color map index out of bounds but HAM bit not set");
+            }
+            bitmap->set_pixel(col, row, color);
         }
     }
 
@@ -237,6 +264,26 @@ static ErrorOr<void> extend_ehb_palette(ILBMLoadingContext& context)
     return {};
 }
 
+static ErrorOr<void> reduce_ham_palette(ILBMLoadingContext& context)
+{
+    u8 bits = context.cmap_bits;
+
+    dbgln_if(ILBM_DEBUG, "reduce palette planes={} bits={}", context.bm_header.planes, context.cmap_bits);
+
+    if (bits > context.bm_header.planes) {
+        dbgln_if(ILBM_DEBUG, "need to reduce palette");
+        bits -= (bits - context.bm_header.planes) + 2;
+        // bits shouldn't theorically be less than 4 bits in HAM mode.
+        if (bits < 4)
+            return Error::from_string_literal("Error while reducing CMAP for HAM: bits too small");
+
+        context.color_table.resize((context.color_table.size() >> bits));
+        context.cmap_bits = bits;
+    }
+
+    return {};
+}
+
 static ErrorOr<void> decode_body_chunk(Chunk body_chunk, ILBMLoadingContext& context)
 {
     dbgln_if(ILBM_DEBUG, "decode_body_chunk {}", body_chunk.data.size());
@@ -250,12 +297,14 @@ static ErrorOr<void> decode_body_chunk(Chunk body_chunk, ILBMLoadingContext& con
         pixel_data = TRY(planar_to_chunky(body_chunk.data, context));
     }
 
-    // Some files already have 64 colours defined in the palette,
-    // maybe for upward compatibility with 256 colours software/hardware.
-    // DPaint 4 & previous files only have 32 colours so the
+    // Some files already have 64 colors defined in the palette,
+    // maybe for upward compatibility with 256 colors software/hardware.
+    // DPaint 4 & previous files only have 32 colors so the
     // palette needs to be extended only for these files.
     if (has_flag(context.viewport_mode, ViewportMode::EHB) && context.color_table.size() < 64) {
         TRY(extend_ehb_palette(context));
+    } else if (has_flag(context.viewport_mode, ViewportMode::HAM)) {
+        TRY(reduce_ham_palette(context));
     }
 
     context.bitmap = TRY(chunky_to_bitmap(context, pixel_data));
@@ -303,10 +352,11 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
     while (!chunks.is_empty()) {
         auto chunk = TRY(decode_iff_advance_chunk(chunks));
         if (chunk.type == FourCC("CMAP")) {
-            if (chunk.data.size() != (1ul << context.bm_header.planes) * 3)
-                return Error::from_string_literal("Invalid CMAP chunk size");
+            // Some files (HAM mainly) have CMAP chunks larger than the planes they advertise: I'm not sure
+            // why but we should not return an error in this case.
 
             context.color_table = TRY(decode_cmap_chunk(chunk));
+            context.cmap_bits = AK::ceil_log2(context.color_table.size());
         } else if (chunk.type == FourCC("BODY")) {
             if (context.color_table.is_empty())
                 return Error::from_string_literal("Decoding BODY chunk without a color map is not currently supported");
