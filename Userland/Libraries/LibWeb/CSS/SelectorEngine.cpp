@@ -16,6 +16,8 @@
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
+#include <LibWeb/HTML/HTMLDetailsElement.h>
+#include <LibWeb/HTML/HTMLDialogElement.h>
 #include <LibWeb/HTML/HTMLFieldSetElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
@@ -236,6 +238,24 @@ static bool matches_read_write_pseudo_class(DOM::Element const& element)
     }
     // - elements that are editing hosts or editable and are neither input elements nor textarea elements
     return element.is_editable();
+}
+
+// https://www.w3.org/TR/selectors-4/#open-state
+static bool matches_open_state_pseudo_class(DOM::Element const& element, bool open)
+{
+    // The :open pseudo-class represents an element that has both “open” and “closed” states,
+    // and which is currently in the “open” state.
+    // The :closed pseudo-class represents an element that has both “open” and “closed” states,
+    // and which is currently in the closed state.
+
+    // NOTE: Spec specifically suggests supporting <details>, <dialog>, and <select>.
+    //       There may be others we want to treat as open or closed.
+    if (is<HTML::HTMLDetailsElement>(element) || is<HTML::HTMLDialogElement>(element))
+        return open == element.has_attribute(HTML::AttributeNames::open);
+    if (is<HTML::HTMLSelectElement>(element))
+        return open == static_cast<HTML::HTMLSelectElement const&>(element).is_open();
+
+    return false;
 }
 
 static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClassSelector const& pseudo_class, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element, JS::GCPtr<DOM::ParentNode const> scope)
@@ -509,6 +529,9 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         // - FIXME: textarea elements that have a placeholder attribute whose value is currently being presented to the user.
         return false;
     }
+    case CSS::PseudoClass::Open:
+    case CSS::PseudoClass::Closed:
+        return matches_open_state_pseudo_class(element, pseudo_class.type == CSS::PseudoClass::Open);
     }
 
     return false;
