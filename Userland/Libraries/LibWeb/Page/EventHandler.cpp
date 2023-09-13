@@ -262,36 +262,22 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
             }
 
             if (run_activation_behavior) {
-                // FIXME: This is ad-hoc and incorrect. The reason this exists is
-                //        because we are missing browsing context navigation:
-                //
-                //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-                //
-                //        Additionally, we currently cannot spawn a new top-level
+                // FIXME: Currently cannot spawn a new top-level
                 //        browsing context for new tab operations, because the new
                 //        top-level browsing context would be in another process. To
                 //        fix this, there needs to be some way to be able to
                 //        communicate with browsing contexts in remote WebContent
                 //        processes, and then step 8 of this algorithm needs to be
-                //        implemented in BrowsingContext::choose_a_browsing_context:
+                //        implemented in Navigable::choose_a_navigable:
                 //
-                //        https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
+                //        https://html.spec.whatwg.org/multipage/document-sequences.html#the-rules-for-choosing-a-navigable
                 if (JS::GCPtr<HTML::HTMLAnchorElement const> link = node->enclosing_link_element()) {
                     JS::NonnullGCPtr<DOM::Document> document = *m_browsing_context->active_document();
                     auto href = link->href();
                     auto url = document->parse_url(href);
                     dbgln("Web::EventHandler: Clicking on a link to {}", url);
                     if (button == GUI::MouseButton::Primary) {
-                        if (href.starts_with("javascript:"sv)) {
-                            document->navigate_to_javascript_url(href);
-                        } else if (url.fragment().has_value() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
-                            m_browsing_context->scroll_to_anchor(url.fragment()->to_deprecated_string());
-                        } else {
-                            if (m_browsing_context->is_top_level()) {
-                                if (auto* page = m_browsing_context->page())
-                                    page->client().page_did_click_link(url, link->target(), modifiers);
-                            }
-                        }
+                        MUST(document->navigable()->navigate(url, document));
                     } else if (button == GUI::MouseButton::Middle) {
                         if (auto* page = m_browsing_context->page())
                             page->client().page_did_middle_click_link(url, link->target(), modifiers);
