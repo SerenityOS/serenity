@@ -142,10 +142,11 @@ elseif (APPLE)
         AppKit/UI/Tab.mm
         AppKit/UI/TabController.mm
         AppKit/Utilities/Conversions.mm
+        AppKit/Utilities/NSString+Ladybird.mm
         AppKit/Utilities/URL.mm
     )
     target_include_directories(ladybird PRIVATE AppKit)
-    target_link_libraries(ladybird PRIVATE ${COCOA_LIBRARY})
+    target_link_libraries(ladybird PRIVATE ${COCOA_LIBRARY} LibUnicode)
     target_compile_options(ladybird PRIVATE
         -fobjc-arc
         -Wno-deprecated-anon-enum-enum-conversion # Required for CGImageCreate
