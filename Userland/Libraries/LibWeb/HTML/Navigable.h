@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Bindings/NavigationPrototype.h>
+#include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
@@ -56,8 +57,7 @@ public:
     bool is_closing() const { return m_closing; }
     void set_closing(bool value) { m_closing = value; }
 
-    bool is_delaying_load_events() const { return m_delaying_load_events; }
-    void set_delaying_load_events(bool value) { m_delaying_load_events = value; }
+    void set_delaying_load_events(bool value);
 
     JS::GCPtr<SessionHistoryEntry> active_session_history_entry() const { return m_active_session_history_entry; }
     void set_active_session_history_entry(JS::GCPtr<SessionHistoryEntry> entry) { m_active_session_history_entry = entry; }
@@ -160,7 +160,7 @@ private:
     bool m_closing { false };
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#delaying-load-events-mode
-    bool m_delaying_load_events { false };
+    Optional<DOM::DocumentLoadEventDelayer> m_delaying_the_load_event;
 
     // Implied link between navigable and its container.
     JS::GCPtr<NavigableContainer> m_container;

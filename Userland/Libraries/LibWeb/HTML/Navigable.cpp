@@ -90,6 +90,17 @@ void Navigable::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_container);
 }
 
+void Navigable::set_delaying_load_events(bool value)
+{
+    if (value) {
+        auto document = container_document();
+        VERIFY(document);
+        m_delaying_the_load_event.emplace(*document);
+    } else {
+        m_delaying_the_load_event.clear();
+    }
+}
+
 JS::GCPtr<Navigable> Navigable::navigable_with_active_document(JS::NonnullGCPtr<DOM::Document> document)
 {
     for (auto* navigable : all_navigables()) {
