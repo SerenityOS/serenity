@@ -10,11 +10,19 @@
 #include <AK/FixedArray.h>
 #include <AK/String.h>
 #include <LibCore/File.h>
-#include <stdlib.h>
 
 static inline GLuint get_index_value(StringView& representation)
 {
     return representation.to_uint().value_or(1) - 1;
+}
+
+static ErrorOr<GLfloat> parse_float(StringView string)
+{
+    auto maybe_float = string.to_float(TrimWhitespace::No);
+    if (!maybe_float.has_value())
+        return Error::from_string_literal("Wavefront: Expected floating point value when parsing TexCoord line");
+
+    return maybe_float.release_value();
 }
 
 ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(String const& filename, NonnullOwnPtr<Core::File> file)
@@ -43,8 +51,8 @@ ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(String const& filename, No
                 return Error::from_string_literal("Wavefront: Malformed TexCoord line.");
             }
 
-            tex_coords.append({ static_cast<GLfloat>(atof(DeprecatedString(tex_coord_line.at(1)).characters())),
-                static_cast<GLfloat>(atof(DeprecatedString(tex_coord_line.at(2)).characters())) });
+            tex_coords.append({ TRY(parse_float(tex_coord_line.at(1))),
+                TRY(parse_float(tex_coord_line.at(2))) });
 
             continue;
         }
@@ -55,9 +63,9 @@ ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(String const& filename, No
                 return Error::from_string_literal("Wavefront: Malformed vertex normal line.");
             }
 
-            normals.append({ static_cast<GLfloat>(atof(DeprecatedString(normal_line.at(1)).characters())),
-                static_cast<GLfloat>(atof(DeprecatedString(normal_line.at(2)).characters())),
-                static_cast<GLfloat>(atof(DeprecatedString(normal_line.at(3)).characters())) });
+            normals.append({ TRY(parse_float(normal_line.at(1))),
+                TRY(parse_float(normal_line.at(2))),
+                TRY(parse_float(normal_line.at(3))) });
 
             continue;
         }
@@ -69,9 +77,9 @@ ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(String const& filename, No
                 return Error::from_string_literal("Wavefront: Malformed vertex line.");
             }
 
-            vertices.append({ static_cast<GLfloat>(atof(DeprecatedString(vertex_line.at(1)).characters())),
-                static_cast<GLfloat>(atof(DeprecatedString(vertex_line.at(2)).characters())),
-                static_cast<GLfloat>(atof(DeprecatedString(vertex_line.at(3)).characters())) });
+            vertices.append({ TRY(parse_float((vertex_line.at(1)))),
+                TRY(parse_float((vertex_line.at(2)))),
+                TRY(parse_float((vertex_line.at(3)))) });
 
             continue;
         }
