@@ -343,7 +343,7 @@ public:
     }
 
     virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override;
-    Vector<NonnullRefPtr<Statement const>> const& statements() { return m_statements; }
+    Vector<NonnullRefPtr<Statement const>> const& statements() const { return m_statements; }
     void add_statement(NonnullRefPtr<Statement const>&& statement) { m_statements.append(move(statement)); }
 
 private:
@@ -503,6 +503,8 @@ public:
         , m_value(value)
     {
     }
+
+    StringView value() const { return m_value; }
 
 private:
     StringView m_value;
@@ -825,6 +827,8 @@ public:
 
     void add_statement(NonnullRefPtr<Statement const>&& statement) { m_statements.append(move(statement)); }
 
+    Vector<NonnullRefPtr<Statement const>> const& statements() const { return m_statements; }
+
 private:
     Vector<NonnullRefPtr<Statement const>> m_statements;
 };
@@ -856,6 +860,7 @@ public:
     void set_then_statement(RefPtr<Statement const>&& then) { m_then = move(then); }
     void set_else_statement(RefPtr<Statement const>&& _else) { m_else = move(_else); }
 
+    Expression const* predicate() const { return m_predicate.ptr(); }
     Statement const* then_statement() const { return m_then.ptr(); }
     Statement const* else_statement() const { return m_else.ptr(); }
 
