@@ -83,7 +83,7 @@ jobs:
 
       - task: Gradle@2
         inputs:
-          workingDirectory: ''
+          workingDirectory: 'Ladybird/Android'
           gradleWrapperFile: 'gradlew'
           gradleOptions: '-Xmx3072m'
           jdkVersionOption: '17'

@@ -1,8 +1,8 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    id("com.android.application") version "8.1.1"
+    id("org.jetbrains.kotlin.android") version "1.9.0"
 }
 
 var cacheDir = System.getenv("SERENITY_CACHE_DIR") ?: "$buildDir/caches"
@@ -11,11 +11,12 @@ task<Exec>("buildLagomTools") {
     commandLine = listOf("./BuildLagomTools.sh")
     environment = mapOf(
         "BUILD_DIR" to "$buildDir",
-        "CACHE_DIR" to "$cacheDir",
+        "CACHE_DIR" to cacheDir,
         "PATH" to System.getenv("PATH")!!
     )
 }
 tasks.named("preBuild").dependsOn("buildLagomTools")
+tasks.named("prepareKotlinBuildScriptModel").dependsOn("buildLagomTools")
 
 android {
     namespace = "org.serenityos.ladybird"
