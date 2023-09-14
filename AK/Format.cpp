@@ -8,6 +8,7 @@
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
 #include <AK/IntegralMath.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/kstdio.h>
 
@@ -23,6 +24,10 @@
 #    include <math.h>
 #    include <stdio.h>
 #    include <string.h>
+#endif
+
+#if defined(AK_OS_ANDROID)
+#    include <android/log.h>
 #endif
 
 namespace AK {
@@ -895,6 +900,45 @@ void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams& params, bool ne
 }
 #endif
 
+#ifdef AK_OS_ANDROID
+static char const* s_log_tag_name = "Serenity";
+void set_log_tag_name(char const* tag_name)
+{
+    static String s_log_tag_storage;
+    // NOTE: Make sure to copy the null terminator
+    s_log_tag_storage = MUST(String::from_utf8({ tag_name, strlen(tag_name) + 1 }));
+    s_log_tag_name = s_log_tag_storage.bytes_as_string_view().characters_without_null_termination();
+}
+
+void vout(LogLevel log_level, StringView fmtstr, TypeErasedFormatParams& params, bool newline)
+{
+    StringBuilder builder;
+    MUST(vformat(builder, fmtstr, params));
+
+    if (newline)
+        builder.append('\n');
+    builder.append('\0');
+
+    auto const string = builder.string_view();
+
+    auto ndk_log_level = ANDROID_LOG_UNKNOWN;
+    switch (log_level) {
+    case LogLevel ::Debug:
+        ndk_log_level = ANDROID_LOG_DEBUG;
+        break;
+    case LogLevel ::Info:
+        ndk_log_level = ANDROID_LOG_INFO;
+        break;
+    case LogLevel::Warning:
+        ndk_log_level = ANDROID_LOG_WARN;
+        break;
+    }
+
+    __android_log_write(ndk_log_level, s_log_tag_name, string.characters_without_null_termination());
+}
+
+#endif
+
 static bool is_debug_enabled = true;
 
 void set_debug_enabled(bool value)
@@ -944,7 +988,9 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
     MUST(vformat(builder, fmtstr, params));
     if (newline)
         builder.append('\n');
-
+#ifdef AK_OS_ANDROID
+    builder.append('\0');
+#endif
     auto const string = builder.string_view();
 
 #ifdef AK_OS_SERENITY
@@ -955,7 +1001,11 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
     }
 #    endif
 #endif
+#ifdef AK_OS_ANDROID
+    __android_log_write(ANDROID_LOG_DEBUG, s_log_tag_name, string.characters_without_null_termination());
+#else
     dbgputstr(string.characters_without_null_termination(), string.length());
+#endif
 }
 
 #ifdef KERNEL

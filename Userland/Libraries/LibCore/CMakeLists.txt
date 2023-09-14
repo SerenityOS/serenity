@@ -65,3 +65,7 @@ if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreServices")
     target_link_libraries(LibCore PUBLIC "-framework Foundation")
 endif()
+
+if (ANDROID)
+    target_link_libraries(LibCore PRIVATE log)
+endif()
