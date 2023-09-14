@@ -132,9 +132,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto tab_widget = TRY(main_splitter->try_add<GUI::TabWidget>());
 
-    auto tree_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Call Tree"_string));
-    tree_tab->set_layout<GUI::VerticalBoxLayout>(4);
-    auto bottom_splitter = TRY(tree_tab->try_add<GUI::VerticalSplitter>());
+    auto& tree_tab = tab_widget->add_tab<GUI::Widget>("Call Tree"_string);
+    tree_tab.set_layout<GUI::VerticalBoxLayout>(4);
+    auto bottom_splitter = TRY(tree_tab.try_add<GUI::VerticalSplitter>());
 
     auto tree_view = TRY(bottom_splitter->try_add<GUI::TreeView>());
     tree_view->set_should_fill_selected_rows(true);
@@ -181,10 +181,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_source_model();
     });
 
-    auto samples_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Samples"_string));
-    samples_tab->set_layout<GUI::VerticalBoxLayout>(4);
+    auto& samples_tab = tab_widget->add_tab<GUI::Widget>("Samples"_string);
+    samples_tab.set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto samples_splitter = TRY(samples_tab->try_add<GUI::HorizontalSplitter>());
+    auto samples_splitter = TRY(samples_tab.try_add<GUI::HorizontalSplitter>());
     auto samples_table_view = TRY(samples_splitter->try_add<GUI::TableView>());
     samples_table_view->set_model(profile->samples_model());
 
@@ -195,10 +195,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         individual_sample_view->set_model(move(model));
     };
 
-    auto signposts_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Signposts"_string));
-    signposts_tab->set_layout<GUI::VerticalBoxLayout>(4);
+    auto& signposts_tab = tab_widget->add_tab<GUI::Widget>("Signposts"_string);
+    signposts_tab.set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto signposts_splitter = TRY(signposts_tab->try_add<GUI::HorizontalSplitter>());
+    auto signposts_splitter = TRY(signposts_tab.try_add<GUI::HorizontalSplitter>());
     auto signposts_table_view = TRY(signposts_splitter->try_add<GUI::TableView>());
     signposts_table_view->set_model(profile->signposts_model());
 
@@ -209,10 +209,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         individual_signpost_view->set_model(move(model));
     };
 
-    auto flamegraph_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Flame Graph"_string));
-    flamegraph_tab->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 4, 4, 4 });
+    auto& flamegraph_tab = tab_widget->add_tab<GUI::Widget>("Flame Graph"_string);
+    flamegraph_tab.set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 4, 4, 4 });
 
-    auto flamegraph_view = TRY(flamegraph_tab->try_add<FlameGraphView>(profile->model(), ProfileModel::Column::StackFrame, ProfileModel::Column::SampleCount));
+    auto flamegraph_view = TRY(flamegraph_tab.try_add<FlameGraphView>(profile->model(), ProfileModel::Column::StackFrame, ProfileModel::Column::SampleCount));
 
     u64 const start_of_trace = profile->first_timestamp();
     u64 const end_of_trace = start_of_trace + profile->length_in_ms();
@@ -257,10 +257,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     timeline_view->on_selection_change = [&] { statusbar_update(); };
     flamegraph_view->on_hover_change = [&] { statusbar_update(); };
 
-    auto filesystem_events_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Filesystem events"_string));
-    filesystem_events_tab->set_layout<GUI::VerticalBoxLayout>(4);
+    auto& filesystem_events_tab = tab_widget->add_tab<GUI::Widget>("Filesystem events"_string);
+    filesystem_events_tab.set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto filesystem_events_tree_view = TRY(filesystem_events_tab->try_add<GUI::TreeView>());
+    auto filesystem_events_tree_view = TRY(filesystem_events_tab.try_add<GUI::TreeView>());
     filesystem_events_tree_view->set_should_fill_selected_rows(true);
     filesystem_events_tree_view->set_column_headers_visible(true);
     filesystem_events_tree_view->set_selection_behavior(GUI::TreeView::SelectionBehavior::SelectRows);

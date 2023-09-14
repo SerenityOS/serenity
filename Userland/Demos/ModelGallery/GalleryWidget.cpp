@@ -24,11 +24,11 @@ GalleryWidget::GalleryWidget()
 
 ErrorOr<void> GalleryWidget::load_basic_model_tab()
 {
-    auto tab = TRY(m_tab_widget->try_add_tab<GUI::Widget>("Basic Model"_string));
-    TRY(tab->load_from_gml(basic_model_tab_gml));
+    auto& tab = m_tab_widget->add_tab<GUI::Widget>("Basic Model"_string);
+    TRY(tab.load_from_gml(basic_model_tab_gml));
 
     m_basic_model = BasicModel::create();
-    m_basic_model_table = *tab->find_descendant_of_type_named<GUI::TableView>("model_table");
+    m_basic_model_table = *tab.find_descendant_of_type_named<GUI::TableView>("model_table");
     m_basic_model_table->set_model(m_basic_model);
 
     m_basic_model->on_invalidate = [&] {
@@ -42,9 +42,9 @@ ErrorOr<void> GalleryWidget::load_basic_model_tab()
     m_basic_model->add_item("...hello...");
     m_basic_model->add_item("...friends! :^)");
 
-    m_new_item_name = *tab->find_descendant_of_type_named<GUI::TextBox>("new_item_name");
-    m_add_new_item = *tab->find_descendant_of_type_named<GUI::Button>("add_new_item");
-    m_remove_selected_item = *tab->find_descendant_of_type_named<GUI::Button>("remove_selected_item");
+    m_new_item_name = *tab.find_descendant_of_type_named<GUI::TextBox>("new_item_name");
+    m_add_new_item = *tab.find_descendant_of_type_named<GUI::Button>("add_new_item");
+    m_remove_selected_item = *tab.find_descendant_of_type_named<GUI::Button>("remove_selected_item");
 
     m_add_new_item->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv).release_value_but_fixme_should_propagate_errors());
     m_remove_selected_item->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/minus.png"sv).release_value_but_fixme_should_propagate_errors());

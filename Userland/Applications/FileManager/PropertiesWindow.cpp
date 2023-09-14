@@ -120,12 +120,12 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 
 ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, bool disable_rename)
 {
-    auto general_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("General"_string));
-    TRY(general_tab->load_from_gml(properties_window_general_tab_gml));
+    auto& general_tab = tab_widget.add_tab<GUI::Widget>("General"_string);
+    TRY(general_tab.load_from_gml(properties_window_general_tab_gml));
 
-    m_icon = general_tab->find_descendant_of_type_named<GUI::ImageWidget>("icon");
+    m_icon = general_tab.find_descendant_of_type_named<GUI::ImageWidget>("icon");
 
-    m_name_box = general_tab->find_descendant_of_type_named<GUI::TextBox>("name");
+    m_name_box = general_tab.find_descendant_of_type_named<GUI::TextBox>("name");
     m_name_box->set_text(m_name);
     m_name_box->set_mode(disable_rename ? GUI::TextBox::Mode::DisplayOnly : GUI::TextBox::Mode::Editable);
     m_name_box->on_change = [&]() {
@@ -133,7 +133,7 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
         m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
     };
 
-    auto* location = general_tab->find_descendant_of_type_named<GUI::LinkLabel>("location");
+    auto* location = general_tab.find_descendant_of_type_named<GUI::LinkLabel>("location");
     location->set_text(TRY(String::from_deprecated_string(m_path)));
     location->on_click = [this] {
         Desktop::Launcher::open(URL::create_with_file_scheme(m_parent_path, m_name));
@@ -159,7 +159,7 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
     m_mode = st.st_mode;
     m_old_mode = st.st_mode;
 
-    auto* type = general_tab->find_descendant_of_type_named<GUI::Label>("type");
+    auto* type = general_tab.find_descendant_of_type_named<GUI::Label>("type");
     type->set_text(TRY(String::from_utf8(get_description(m_mode))));
 
     if (S_ISLNK(m_mode)) {
@@ -168,7 +168,7 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
             perror("readlink");
         } else {
             auto link_destination = link_destination_or_error.release_value();
-            auto* link_location = general_tab->find_descendant_of_type_named<GUI::LinkLabel>("link_location");
+            auto* link_location = general_tab.find_descendant_of_type_named<GUI::LinkLabel>("link_location");
             link_location->set_text(link_destination);
             link_location->on_click = [link_destination] {
                 auto link_directory = LexicalPath(link_destination.to_deprecated_string());
@@ -176,40 +176,40 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
             };
         }
     } else {
-        auto* link_location_widget = general_tab->find_descendant_of_type_named<GUI::Widget>("link_location_widget");
-        general_tab->remove_child(*link_location_widget);
+        auto* link_location_widget = general_tab.find_descendant_of_type_named<GUI::Widget>("link_location_widget");
+        general_tab.remove_child(*link_location_widget);
     }
 
-    m_size_label = general_tab->find_descendant_of_type_named<GUI::Label>("size");
+    m_size_label = general_tab.find_descendant_of_type_named<GUI::Label>("size");
     m_size_label->set_text(S_ISDIR(st.st_mode)
             ? "Calculating..."_string
             : TRY(String::from_deprecated_string(human_readable_size_long(st.st_size, UseThousandsSeparator::Yes))));
 
-    auto* owner = general_tab->find_descendant_of_type_named<GUI::Label>("owner");
+    auto* owner = general_tab.find_descendant_of_type_named<GUI::Label>("owner");
     owner->set_text(String::formatted("{} ({})", owner_name, st.st_uid).release_value_but_fixme_should_propagate_errors());
 
-    auto* group = general_tab->find_descendant_of_type_named<GUI::Label>("group");
+    auto* group = general_tab.find_descendant_of_type_named<GUI::Label>("group");
     group->set_text(String::formatted("{} ({})", group_name, st.st_gid).release_value_but_fixme_should_propagate_errors());
 
-    auto* created_at = general_tab->find_descendant_of_type_named<GUI::Label>("created_at");
+    auto* created_at = general_tab.find_descendant_of_type_named<GUI::Label>("created_at");
     created_at->set_text(String::from_deprecated_string(GUI::FileSystemModel::timestamp_string(st.st_ctime)).release_value_but_fixme_should_propagate_errors());
 
-    auto* last_modified = general_tab->find_descendant_of_type_named<GUI::Label>("last_modified");
+    auto* last_modified = general_tab.find_descendant_of_type_named<GUI::Label>("last_modified");
     last_modified->set_text(String::from_deprecated_string(GUI::FileSystemModel::timestamp_string(st.st_mtime)).release_value_but_fixme_should_propagate_errors());
 
-    auto* owner_read = general_tab->find_descendant_of_type_named<GUI::CheckBox>("owner_read");
-    auto* owner_write = general_tab->find_descendant_of_type_named<GUI::CheckBox>("owner_write");
-    auto* owner_execute = general_tab->find_descendant_of_type_named<GUI::CheckBox>("owner_execute");
+    auto* owner_read = general_tab.find_descendant_of_type_named<GUI::CheckBox>("owner_read");
+    auto* owner_write = general_tab.find_descendant_of_type_named<GUI::CheckBox>("owner_write");
+    auto* owner_execute = general_tab.find_descendant_of_type_named<GUI::CheckBox>("owner_execute");
     TRY(setup_permission_checkboxes(*owner_read, *owner_write, *owner_execute, { S_IRUSR, S_IWUSR, S_IXUSR }, m_mode));
 
-    auto* group_read = general_tab->find_descendant_of_type_named<GUI::CheckBox>("group_read");
-    auto* group_write = general_tab->find_descendant_of_type_named<GUI::CheckBox>("group_write");
-    auto* group_execute = general_tab->find_descendant_of_type_named<GUI::CheckBox>("group_execute");
+    auto* group_read = general_tab.find_descendant_of_type_named<GUI::CheckBox>("group_read");
+    auto* group_write = general_tab.find_descendant_of_type_named<GUI::CheckBox>("group_write");
+    auto* group_execute = general_tab.find_descendant_of_type_named<GUI::CheckBox>("group_execute");
     TRY(setup_permission_checkboxes(*group_read, *group_write, *group_execute, { S_IRGRP, S_IWGRP, S_IXGRP }, m_mode));
 
-    auto* others_read = general_tab->find_descendant_of_type_named<GUI::CheckBox>("others_read");
-    auto* others_write = general_tab->find_descendant_of_type_named<GUI::CheckBox>("others_write");
-    auto* others_execute = general_tab->find_descendant_of_type_named<GUI::CheckBox>("others_execute");
+    auto* others_read = general_tab.find_descendant_of_type_named<GUI::CheckBox>("others_read");
+    auto* others_write = general_tab.find_descendant_of_type_named<GUI::CheckBox>("others_write");
+    auto* others_execute = general_tab.find_descendant_of_type_named<GUI::CheckBox>("others_execute");
     TRY(setup_permission_checkboxes(*others_read, *others_write, *others_execute, { S_IROTH, S_IWOTH, S_IXOTH }, m_mode));
 
     return {};
@@ -255,15 +255,15 @@ ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, N
     }
     auto zip = maybe_zip.release_value();
 
-    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Archive"_string));
-    TRY(tab->load_from_gml(properties_window_archive_tab_gml));
+    auto& tab = tab_widget.add_tab<GUI::Widget>("Archive"_string);
+    TRY(tab.load_from_gml(properties_window_archive_tab_gml));
 
     auto statistics = TRY(zip.calculate_statistics());
 
-    tab->find_descendant_of_type_named<GUI::Label>("archive_format")->set_text("ZIP"_string);
-    tab->find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(TRY(String::number(statistics.file_count())));
-    tab->find_descendant_of_type_named<GUI::Label>("archive_directory_count")->set_text(TRY(String::number(statistics.directory_count())));
-    tab->find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(TRY(String::from_deprecated_string(AK::human_readable_size(statistics.total_uncompressed_bytes()))));
+    tab.find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(TRY(String::number(statistics.file_count())));
+    tab.find_descendant_of_type_named<GUI::Label>("archive_format")->set_text("ZIP"_string);
+    tab.find_descendant_of_type_named<GUI::Label>("archive_directory_count")->set_text(TRY(String::number(statistics.directory_count())));
+    tab.find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(TRY(String::from_deprecated_string(AK::human_readable_size(statistics.total_uncompressed_bytes()))));
 
     return {};
 }
@@ -277,14 +277,14 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
     }
     auto loader = loader_or_error.release_value();
 
-    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Audio"_string));
-    TRY(tab->load_from_gml(properties_window_audio_tab_gml));
+    auto& tab = tab_widget.add_tab<GUI::Widget>("Audio"_string);
+    TRY(tab.load_from_gml(properties_window_audio_tab_gml));
 
-    tab->find_descendant_of_type_named<GUI::Label>("audio_type")->set_text(TRY(String::from_deprecated_string(loader->format_name())));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_type")->set_text(TRY(String::from_deprecated_string(loader->format_name())));
     auto duration_seconds = loader->total_samples() / loader->sample_rate();
-    tab->find_descendant_of_type_named<GUI::Label>("audio_duration")->set_text(TRY(String::from_deprecated_string(human_readable_digital_time(duration_seconds))));
-    tab->find_descendant_of_type_named<GUI::Label>("audio_sample_rate")->set_text(TRY(String::formatted("{} Hz", loader->sample_rate())));
-    tab->find_descendant_of_type_named<GUI::Label>("audio_format")->set_text(TRY(String::formatted("{}-bit", loader->bits_per_sample())));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_duration")->set_text(TRY(String::from_deprecated_string(human_readable_digital_time(duration_seconds))));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_sample_rate")->set_text(TRY(String::formatted("{} Hz", loader->sample_rate())));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_format")->set_text(TRY(String::formatted("{}-bit", loader->bits_per_sample())));
 
     auto channel_count = loader->num_channels();
     String channels_string;
@@ -293,15 +293,15 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
     } else {
         channels_string = TRY(String::number(channel_count));
     }
-    tab->find_descendant_of_type_named<GUI::Label>("audio_channels")->set_text(channels_string);
+    tab.find_descendant_of_type_named<GUI::Label>("audio_channels")->set_text(channels_string);
 
-    tab->find_descendant_of_type_named<GUI::Label>("audio_title")->set_text(loader->metadata().title.value_or({}));
-    tab->find_descendant_of_type_named<GUI::Label>("audio_artists")->set_text(TRY(loader->metadata().all_artists()).value_or({}));
-    tab->find_descendant_of_type_named<GUI::Label>("audio_album")->set_text(loader->metadata().album.value_or({}));
-    tab->find_descendant_of_type_named<GUI::Label>("audio_track_number")
+    tab.find_descendant_of_type_named<GUI::Label>("audio_title")->set_text(loader->metadata().title.value_or({}));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_artists")->set_text(TRY(loader->metadata().all_artists()).value_or({}));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_album")->set_text(loader->metadata().album.value_or({}));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_track_number")
         ->set_text(TRY(loader->metadata().track_number.map([](auto number) { return String::number(number); })).value_or({}));
-    tab->find_descendant_of_type_named<GUI::Label>("audio_genre")->set_text(loader->metadata().genre.value_or({}));
-    tab->find_descendant_of_type_named<GUI::Label>("audio_comment")->set_text(loader->metadata().comment.value_or({}));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_genre")->set_text(loader->metadata().genre.value_or({}));
+    tab.find_descendant_of_type_named<GUI::Label>("audio_comment")->set_text(loader->metadata().comment.value_or({}));
 
     return {};
 }
@@ -359,8 +359,8 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
     auto font_info = font_info_or_error.release_value();
     auto& typeface = font_info.typeface;
 
-    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Font"_string));
-    TRY(tab->load_from_gml(properties_window_font_tab_gml));
+    auto& tab = tab_widget.add_tab<GUI::Widget>("Font"_string);
+    TRY(tab.load_from_gml(properties_window_font_tab_gml));
 
     String format_name;
     switch (font_info.format) {
@@ -380,10 +380,10 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
         format_name = "WOFF2"_string;
         break;
     }
-    tab->find_descendant_of_type_named<GUI::Label>("font_format")->set_text(format_name);
-    tab->find_descendant_of_type_named<GUI::Label>("font_family")->set_text(typeface->family().to_string());
-    tab->find_descendant_of_type_named<GUI::Label>("font_fixed_width")->set_text(typeface->is_fixed_width() ? "Yes"_string : "No"_string);
-    tab->find_descendant_of_type_named<GUI::Label>("font_width")->set_text(TRY(String::from_utf8(Gfx::width_to_name(static_cast<Gfx::FontWidth>(typeface->width())))));
+    tab.find_descendant_of_type_named<GUI::Label>("font_family")->set_text(typeface->family().to_string());
+    tab.find_descendant_of_type_named<GUI::Label>("font_fixed_width")->set_text(typeface->is_fixed_width() ? "Yes"_string : "No"_string);
+    tab.find_descendant_of_type_named<GUI::Label>("font_format")->set_text(format_name);
+    tab.find_descendant_of_type_named<GUI::Label>("font_width")->set_text(TRY(String::from_utf8(Gfx::width_to_name(static_cast<Gfx::FontWidth>(typeface->width())))));
 
     auto nearest_weight_class_name = [](unsigned weight) {
         if (weight > 925)
@@ -392,8 +392,8 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
         return Gfx::weight_to_name(weight_class);
     };
     auto weight = typeface->weight();
-    tab->find_descendant_of_type_named<GUI::Label>("font_weight")->set_text(TRY(String::formatted("{} ({})", weight, nearest_weight_class_name(weight))));
-    tab->find_descendant_of_type_named<GUI::Label>("font_slope")->set_text(TRY(String::from_utf8(Gfx::slope_to_name(typeface->slope()))));
+    tab.find_descendant_of_type_named<GUI::Label>("font_weight")->set_text(TRY(String::formatted("{} ({})", weight, nearest_weight_class_name(weight))));
+    tab.find_descendant_of_type_named<GUI::Label>("font_slope")->set_text(TRY(String::from_utf8(Gfx::slope_to_name(typeface->slope()))));
 
     return {};
 }
@@ -404,11 +404,11 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
     if (!image_decoder)
         return {};
 
-    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Image"_string));
-    TRY(tab->load_from_gml(properties_window_image_tab_gml));
+    auto& tab = tab_widget.add_tab<GUI::Widget>("Image"_string);
+    TRY(tab.load_from_gml(properties_window_image_tab_gml));
 
-    tab->find_descendant_of_type_named<GUI::Label>("image_type")->set_text(TRY(String::from_utf8(mime_type)));
-    tab->find_descendant_of_type_named<GUI::Label>("image_size")->set_text(TRY(String::formatted("{} x {}", image_decoder->width(), image_decoder->height())));
+    tab.find_descendant_of_type_named<GUI::Label>("image_type")->set_text(TRY(String::from_utf8(mime_type)));
+    tab.find_descendant_of_type_named<GUI::Label>("image_size")->set_text(TRY(String::formatted("{} x {}", image_decoder->width(), image_decoder->height())));
 
     String animation_text;
     if (image_decoder->is_animated()) {
@@ -428,11 +428,11 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
     } else {
         animation_text = "None"_string;
     }
-    tab->find_descendant_of_type_named<GUI::Label>("image_animation")->set_text(move(animation_text));
+    tab.find_descendant_of_type_named<GUI::Label>("image_animation")->set_text(move(animation_text));
 
     auto hide_icc_group = [&tab](String profile_text) {
-        tab->find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text(profile_text);
-        tab->find_descendant_of_type_named<GUI::Widget>("image_icc_group")->set_visible(false);
+        tab.find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text(profile_text);
+        tab.find_descendant_of_type_named<GUI::Widget>("image_icc_group")->set_visible(false);
     };
 
     if (auto embedded_icc_bytes = TRY(image_decoder->icc_data()); embedded_icc_bytes.has_value()) {
@@ -442,11 +442,11 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
         } else {
             auto icc_profile = icc_profile_or_error.release_value();
 
-            tab->find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text("See below"_string);
-            tab->find_descendant_of_type_named<GUI::Label>("image_icc_profile")->set_text(icc_profile->tag_string_data(Gfx::ICC::profileDescriptionTag).value_or({}));
-            tab->find_descendant_of_type_named<GUI::Label>("image_icc_copyright")->set_text(icc_profile->tag_string_data(Gfx::ICC::copyrightTag).value_or({}));
-            tab->find_descendant_of_type_named<GUI::Label>("image_icc_color_space")->set_text(TRY(String::from_utf8(data_color_space_name(icc_profile->data_color_space()))));
-            tab->find_descendant_of_type_named<GUI::Label>("image_icc_device_class")->set_text(TRY(String::from_utf8((device_class_name(icc_profile->device_class())))));
+            tab.find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text("See below"_string);
+            tab.find_descendant_of_type_named<GUI::Label>("image_icc_profile")->set_text(icc_profile->tag_string_data(Gfx::ICC::profileDescriptionTag).value_or({}));
+            tab.find_descendant_of_type_named<GUI::Label>("image_icc_copyright")->set_text(icc_profile->tag_string_data(Gfx::ICC::copyrightTag).value_or({}));
+            tab.find_descendant_of_type_named<GUI::Label>("image_icc_color_space")->set_text(TRY(String::from_utf8(data_color_space_name(icc_profile->data_color_space()))));
+            tab.find_descendant_of_type_named<GUI::Label>("image_icc_device_class")->set_text(TRY(String::from_utf8((device_class_name(icc_profile->device_class())))));
         }
 
     } else {
@@ -467,8 +467,8 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
 
     if (auto handler = document->security_handler(); handler && !handler->has_user_password()) {
         // FIXME: Show a password dialog, once we've switched to lazy-loading
-        auto tab = TRY(tab_widget.try_add_tab<GUI::Label>("PDF"_string));
-        tab->set_text("PDF is password-protected."_string);
+        auto& tab = tab_widget.add_tab<GUI::Label>("PDF"_string);
+        tab.set_text("PDF is password-protected."_string);
         return {};
     }
 
@@ -477,11 +477,11 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
         return {};
     }
 
-    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("PDF"_string));
-    TRY(tab->load_from_gml(properties_window_pdf_tab_gml));
+    auto& tab = tab_widget.add_tab<GUI::Widget>("PDF"_string);
+    TRY(tab.load_from_gml(properties_window_pdf_tab_gml));
 
-    tab->find_descendant_of_type_named<GUI::Label>("pdf_version")->set_text(TRY(String::formatted("{}.{}", document->version().major, document->version().minor)));
-    tab->find_descendant_of_type_named<GUI::Label>("pdf_page_count")->set_text(TRY(String::number(document->get_page_count())));
+    tab.find_descendant_of_type_named<GUI::Label>("pdf_version")->set_text(TRY(String::formatted("{}.{}", document->version().major, document->version().minor)));
+    tab.find_descendant_of_type_named<GUI::Label>("pdf_page_count")->set_text(TRY(String::number(document->get_page_count())));
 
     auto maybe_info_dict = document->info_dict();
     if (maybe_info_dict.is_error()) {
@@ -496,14 +496,14 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
         };
 
         auto info_dict = maybe_info_dict.release_value().release_value();
-        tab->find_descendant_of_type_named<GUI::Label>("pdf_title")->set_text(TRY(get_info_string(info_dict.title())));
-        tab->find_descendant_of_type_named<GUI::Label>("pdf_author")->set_text(TRY(get_info_string(info_dict.author())));
-        tab->find_descendant_of_type_named<GUI::Label>("pdf_subject")->set_text(TRY(get_info_string(info_dict.subject())));
-        tab->find_descendant_of_type_named<GUI::Label>("pdf_keywords")->set_text(TRY(get_info_string(info_dict.keywords())));
-        tab->find_descendant_of_type_named<GUI::Label>("pdf_creator")->set_text(TRY(get_info_string(info_dict.creator())));
-        tab->find_descendant_of_type_named<GUI::Label>("pdf_producer")->set_text(TRY(get_info_string(info_dict.producer())));
-        tab->find_descendant_of_type_named<GUI::Label>("pdf_creation_date")->set_text(TRY(get_info_string(info_dict.creation_date())));
-        tab->find_descendant_of_type_named<GUI::Label>("pdf_modification_date")->set_text(TRY(get_info_string(info_dict.modification_date())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_title")->set_text(TRY(get_info_string(info_dict.title())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_author")->set_text(TRY(get_info_string(info_dict.author())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_subject")->set_text(TRY(get_info_string(info_dict.subject())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_keywords")->set_text(TRY(get_info_string(info_dict.keywords())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_creator")->set_text(TRY(get_info_string(info_dict.creator())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_producer")->set_text(TRY(get_info_string(info_dict.producer())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_creation_date")->set_text(TRY(get_info_string(info_dict.creation_date())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_modification_date")->set_text(TRY(get_info_string(info_dict.modification_date())));
     }
 
     return {};
