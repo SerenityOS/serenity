@@ -64,11 +64,10 @@ public:
         return *t;
     }
 
-    ErrorOr<void> add_tab(NonnullRefPtr<Widget> const& tab, String title)
+    void add_tab(NonnullRefPtr<Widget> const& tab, String title)
     {
         tab->set_title(move(title));
-        TRY(try_add_widget(*tab));
-        return {};
+        add_widget(*tab);
     }
 
     void remove_tab(Widget& tab) { remove_widget(tab); }
