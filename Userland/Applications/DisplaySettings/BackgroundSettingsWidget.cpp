@@ -35,9 +35,9 @@ ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_c
 {
     auto background_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BackgroundSettingsWidget(background_settings_changed)));
 
-    TRY(background_settings_widget->m_modes.try_append(TRY(String::from_utf8("Tile"sv))));
-    TRY(background_settings_widget->m_modes.try_append(TRY(String::from_utf8("Center"sv))));
-    TRY(background_settings_widget->m_modes.try_append(TRY(String::from_utf8("Stretch"sv))));
+    TRY(background_settings_widget->m_modes.try_append("Tile"_string));
+    TRY(background_settings_widget->m_modes.try_append("Center"_string));
+    TRY(background_settings_widget->m_modes.try_append("Stretch"_string));
 
     TRY(background_settings_widget->create_frame());
     TRY(background_settings_widget->load_current_settings());
@@ -154,7 +154,7 @@ ErrorOr<void> BackgroundSettingsWidget::load_current_settings()
     auto mode = TRY(String::from_deprecated_string(ws_config->read_entry("Background", "Mode", "Center")));
     if (!m_modes.contains_slow(mode)) {
         warnln("Invalid background mode '{}' in WindowServer config, falling back to 'Center'", mode);
-        mode = TRY(String::from_utf8("Center"sv));
+        mode = "Center"_string;
     }
     m_monitor_widget->set_wallpaper_mode(mode);
     m_mode_combo->set_selected_index(m_modes.find_first_index(mode).value_or(0), GUI::AllowCallback::No);

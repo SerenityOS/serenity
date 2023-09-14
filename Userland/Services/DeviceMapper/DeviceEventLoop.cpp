@@ -87,7 +87,7 @@ ErrorOr<NonnullRefPtr<DeviceNodeFamily>> DeviceEventLoop::find_or_register_new_d
 
 static ErrorOr<String> build_suffix_with_letters(size_t allocation_index)
 {
-    auto base_string = TRY(String::from_utf8(""sv));
+    String base_string {};
     while (true) {
         base_string = TRY(String::formatted("{:c}{}", 'a' + (allocation_index % 26), base_string));
         allocation_index = (allocation_index / 26);

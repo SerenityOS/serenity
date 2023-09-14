@@ -156,13 +156,13 @@ public:
         if (is_int())
             value_source = TRY(String::number(m_value));
         else if (is_shrink())
-            value_source = TRY(String::from_utf8("GUI::SpecialDimension::Shrink"sv));
+            value_source = "GUI::SpecialDimension::Shrink"_string;
         else if (is_grow())
-            value_source = TRY(String::from_utf8("GUI::SpecialDimension::Grow"sv));
+            value_source = "GUI::SpecialDimension::Grow"_string;
         else if (is_opportunistic_grow())
-            value_source = TRY(String::from_utf8("GUI::SpecialDimension::OpportunisticGrow"sv));
+            value_source = "GUI::SpecialDimension::OpportunisticGrow"_string;
         else if (is_fit())
-            value_source = TRY(String::from_utf8("GUI::SpecialDimension::Fit"sv));
+            value_source = "GUI::SpecialDimension::Fit"_string;
         return String::formatted("GUI::UIDimension {{ {} }}", value_source);
     }
 
