@@ -1346,7 +1346,7 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
     m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO"_string);
     m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console"_string, false);
     auto debug_info_widget = TRY(DebugInfoWidget::create());
-    TRY(m_action_tab_widget->add_tab(debug_info_widget, "Debug"_string));
+    m_action_tab_widget->add_tab(debug_info_widget, "Debug"_string);
     m_debug_info_widget = debug_info_widget;
 
     m_debug_info_widget->on_backtrace_frame_selection = [this](Debug::DebugInfo::SourcePosition const& source_position) {
