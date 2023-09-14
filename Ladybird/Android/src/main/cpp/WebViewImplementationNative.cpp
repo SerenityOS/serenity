@@ -10,7 +10,6 @@
 #include <Userland/Libraries/LibWeb/Crypto/Crypto.h>
 #include <Userland/Libraries/LibWebView/ViewImplementation.h>
 #include <android/bitmap.h>
-#include <android/log.h>
 #include <jni.h>
 
 namespace {
@@ -32,6 +31,11 @@ public:
     {
         // NOTE: m_java_instance's global ref is controlled by the JNI bindings
         create_client(WebView::EnableCallgrindProfiling::No);
+
+        on_ready_to_paint = [this]() {
+            JavaEnvironment env(global_vm);
+            env.get()->CallVoidMethod(m_java_instance, invalidate_layout_method);
+        };
     }
 
     virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
@@ -49,7 +53,7 @@ public:
 
         m_client_state.client = new_client;
         m_client_state.client->on_web_content_process_crash = [] {
-            __android_log_print(ANDROID_LOG_ERROR, "Ladybird", "WebContent crashed!");
+            warnln("WebContent crashed!");
             // FIXME: launch a new client
         };
 
@@ -91,11 +95,21 @@ public:
     void set_viewport_geometry(int w, int h)
     {
         m_viewport_rect = { { 0, 0 }, { w, h } };
+        client().async_set_viewport_rect(m_viewport_rect);
+        request_repaint();
+        handle_resize();
+    }
+
+    void set_device_pixel_ratio(float f)
+    {
+        m_device_pixel_ratio = f;
+        client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
     }
 
     static jclass global_class_reference;
     static jfieldID instance_pointer_field;
     static jmethodID bind_webcontent_method;
+    static jmethodID invalidate_layout_method;
     static JavaVM* global_vm;
 
     jobject java_instance() const { return m_java_instance; }
@@ -107,6 +121,7 @@ private:
 jclass WebViewImplementationNative::global_class_reference;
 jfieldID WebViewImplementationNative::instance_pointer_field;
 jmethodID WebViewImplementationNative::bind_webcontent_method;
+jmethodID WebViewImplementationNative::invalidate_layout_method;
 JavaVM* WebViewImplementationNative::global_vm;
 
 NonnullRefPtr<WebView::WebContentClient> WebViewImplementationNative::bind_web_content_client()
@@ -161,6 +176,11 @@ Java_org_serenityos_ladybird_WebViewImplementation_00024Companion_nativeClassIni
     if (!method)
         TODO();
     WebViewImplementationNative::bind_webcontent_method = method;
+
+    method = env->GetMethodID(WebViewImplementationNative::global_class_reference, "invalidateLayout", "()V");
+    if (!method)
+        TODO();
+    WebViewImplementationNative::invalidate_layout_method = method;
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -168,7 +188,6 @@ Java_org_serenityos_ladybird_WebViewImplementation_nativeObjectInit(JNIEnv* env,
 {
     auto ref = env->NewGlobalRef(thiz);
     auto instance = reinterpret_cast<jlong>(new WebViewImplementationNative(ref));
-    __android_log_print(ANDROID_LOG_DEBUG, "Ladybird", "New WebViewImplementationNative at %p", reinterpret_cast<void*>(instance));
     return instance;
 }
 
@@ -178,7 +197,6 @@ Java_org_serenityos_ladybird_WebViewImplementation_nativeObjectDispose(JNIEnv* e
     auto* impl = reinterpret_cast<WebViewImplementationNative*>(instance);
     env->DeleteGlobalRef(impl->java_instance());
     delete impl;
-    __android_log_print(ANDROID_LOG_DEBUG, "Ladybird", "Destroyed WebViewImplementationNative at %p", reinterpret_cast<void*>(instance));
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -201,4 +219,21 @@ Java_org_serenityos_ladybird_WebViewImplementation_nativeSetViewportGeometry(JNI
 {
     auto* impl = reinterpret_cast<WebViewImplementationNative*>(instance);
     impl->set_viewport_geometry(w, h);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_org_serenityos_ladybird_WebViewImplementation_nativeLoadURL(JNIEnv* env, jobject /* thiz */, jlong instance, jstring url)
+{
+    auto* impl = reinterpret_cast<WebViewImplementationNative*>(instance);
+    char const* raw_url = env->GetStringUTFChars(url, nullptr);
+    auto ak_url = AK::URL::create_with_url_or_path(StringView { raw_url, strlen(raw_url) });
+    env->ReleaseStringUTFChars(url, raw_url);
+    impl->load(ak_url);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_org_serenityos_ladybird_WebViewImplementation_nativeSetDevicePixelRatio(JNIEnv*, jobject /* thiz */, jlong instance, jfloat ratio)
+{
+    auto* impl = reinterpret_cast<WebViewImplementationNative*>(instance);
+    impl->set_device_pixel_ratio(ratio);
 }
