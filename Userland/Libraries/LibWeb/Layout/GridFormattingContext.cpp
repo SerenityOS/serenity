@@ -120,7 +120,7 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
             sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), available_space), resolve_definite_track_size(track_sizing_function.grid_size(), available_space));
         }
     }
-    return max(1, static_cast<int>((get_free_space(available_space, GridDimension::Column).to_px_or_zero() / sum_of_grid_track_sizes).to_double()));
+    return max(1, (get_free_space(available_space, GridDimension::Column).to_px_or_zero() / sum_of_grid_track_sizes).to_int());
 
     // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
     // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
@@ -1168,8 +1168,8 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
     auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
-
-    auto find_the_size_of_an_fr = [&](Vector<GridTrack&> tracks, CSSPixels space_to_fill) -> CSSPixels {
+    // FIXME: This should idealy take a Span, as that is more idomatic, but Span does not yet support holding references
+    auto find_the_size_of_an_fr = [&](Vector<GridTrack&> const& tracks, CSSPixels space_to_fill) -> CSSPixelFraction {
         // https://www.w3.org/TR/css-grid-2/#algo-find-fr-size
 
         // 1. Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
@@ -1182,10 +1182,10 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
 
         // 2. Let flex factor sum be the sum of the flex factors of the flexible tracks.
         //    If this value is less than 1, set it to 1 instead.
-        auto flex_factor_sum = 0;
+        CSSPixels flex_factor_sum = 0;
         for (auto& track : tracks) {
             if (track.max_track_sizing_function.is_flexible_length())
-                flex_factor_sum += track.max_track_sizing_function.flex_factor();
+                flex_factor_sum += CSSPixels::nearest_value_for(track.max_track_sizing_function.flex_factor());
         }
         if (flex_factor_sum < 1)
             flex_factor_sum = 1;
@@ -1201,12 +1201,12 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     };
 
     // First, find the grid’s used flex fraction:
-    auto flex_fraction = [&]() {
+    auto flex_fraction = [&]() -> CSSPixelFraction {
         auto free_space = get_free_space(available_space, dimension);
         // If the free space is zero or if sizing the grid container under a min-content constraint:
         if ((free_space.is_definite() && free_space.to_px_or_zero() == 0) || available_size.is_min_content()) {
             // The used flex fraction is zero.
-            return CSSPixels(0);
+            return 0;
             // Otherwise, if the free space is a definite length:
         } else if (free_space.is_definite()) {
             // The used flex fraction is the result of finding the size of an fr using all of the grid tracks and a space
@@ -1215,15 +1215,15 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
         } else {
             // Otherwise, if the free space is an indefinite length:
             // The used flex fraction is the maximum of:
-            CSSPixels result = 0;
+            CSSPixelFraction result = 0;
             // For each flexible track, if the flexible track’s flex factor is greater than one, the result of dividing
             // the track’s base size by its flex factor; otherwise, the track’s base size.
             for (auto& track : tracks) {
                 if (track.max_track_sizing_function.is_flexible_length()) {
                     if (track.max_track_sizing_function.flex_factor() > 1) {
-                        result = max(result, CSSPixels::nearest_value_for(track.base_size / track.max_track_sizing_function.flex_factor()));
+                        result = max(result, track.base_size / CSSPixels::nearest_value_for(track.max_track_sizing_function.flex_factor()));
                     } else {
-                        result = max(result, track.base_size);
+                        result = max(result, track.base_size / 1);
                     }
                 }
             }
@@ -1249,8 +1249,9 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater than
     // the track’s base size, set its base size to that product.
     for (auto& track : tracks_and_gaps) {
-        if (flex_fraction.scaled(track.max_track_sizing_function.flex_factor()) > track.base_size) {
-            track.base_size = flex_fraction.scaled(track.max_track_sizing_function.flex_factor());
+        auto scaled_fraction = CSSPixels::nearest_value_for(track.max_track_sizing_function.flex_factor()) * flex_fraction;
+        if (scaled_fraction > track.base_size) {
+            track.base_size = scaled_fraction;
         }
     }
 }
