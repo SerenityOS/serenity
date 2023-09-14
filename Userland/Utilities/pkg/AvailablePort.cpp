@@ -155,11 +155,11 @@ ErrorOr<HashMap<String, AvailablePort>> AvailablePort::read_available_ports_list
         auto name = TRY(extract_port_name_from_column(port_name_column, port_index));
         auto website = TRY(String::from_deprecated_string(port_website_column.rows[port_index].render_for_terminal()));
         if (website.is_empty())
-            website = TRY(String::from_utf8("n/a"sv));
+            website = "n/a"_string;
 
         auto version = TRY(String::from_deprecated_string(port_version_column.rows[port_index].render_for_terminal()));
         if (version.is_empty())
-            version = TRY(String::from_utf8("n/a"sv));
+            version = "n/a"_string;
 
         TRY(available_ports.try_set(name, AvailablePort { name, version, website }));
     }

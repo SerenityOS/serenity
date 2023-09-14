@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
     Config::pledge_domain("PixelPaint");
-    app->set_config_domain(TRY(String::from_utf8("PixelPaint"sv)));
+    app->set_config_domain("PixelPaint"_string);
 
     StringView image_file;
     Core::ArgsParser args_parser;

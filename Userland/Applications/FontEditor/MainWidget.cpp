@@ -423,7 +423,7 @@ ErrorOr<void> MainWidget::create_models()
 
     auto unicode_blocks = Unicode::block_display_names();
     TRY(m_unicode_block_list.try_ensure_capacity(unicode_blocks.size() + 1));
-    m_unicode_block_list.unchecked_append(TRY(String::from_utf8("Show All"sv)));
+    m_unicode_block_list.unchecked_append("Show All"_string);
     for (auto& block : unicode_blocks)
         m_unicode_block_list.unchecked_append(TRY(String::from_utf8(block.display_name)));
 

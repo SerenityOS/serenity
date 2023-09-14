@@ -26,7 +26,7 @@ ErrorOr<HashMap<String, InstalledPort>> InstalledPort::read_ports_database()
             auto type = InstalledPort::Type::Dependency;
             // FIXME: Add versioning when printing these ports!
             auto name = TRY(String::from_utf8(parts[2]));
-            TRY(ports.try_set(name, InstalledPort { TRY(String::from_utf8(parts[2])), type, TRY(String::from_utf8(""sv)) }));
+            TRY(ports.try_set(name, InstalledPort { TRY(String::from_utf8(parts[2])), type, {} }));
         } else if (line.starts_with("auto"sv)) {
             auto parts = line.split_view(' ');
             VERIFY(parts.size() == 3);

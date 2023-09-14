@@ -111,7 +111,7 @@ static ErrorOr<Vector<String>> month_lines_to_print(Header header_mode, int star
     int day = 1;
     for (int i = 1; day <= days_in_month; ++i) {
         if (i - 1 < first_day_of_week_for_month) {
-            TRY(days_in_row.try_append(TRY(String::from_utf8("  "sv))));
+            TRY(days_in_row.try_append("  "_string));
         } else {
             if (year == current_year && month == current_month && day == current_day) {
                 TRY(days_in_row.try_append(TRY(String::formatted(ANSI_INVERT_OUTPUT "{:2}" ANSI_RESET_OUTPUT, day))));
