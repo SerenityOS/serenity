@@ -1,0 +1,8 @@
+<script src="../include.js"></script>
+<script>
+    if (window.self !== window.top) {
+        parent.postMessage("message from test iframe (2)", "*");
+    } else {
+        test(() => {});
+    }
+</script>

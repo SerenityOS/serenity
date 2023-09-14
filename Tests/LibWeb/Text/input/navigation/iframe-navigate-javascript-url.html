@@ -1,0 +1,12 @@
+<script src="../include.js"></script>
+<script>
+    asyncTest((done) => {
+        const iframe = document.querySelector("iframe");
+        iframe.addEventListener("load", () => {
+            println(iframe.contentWindow.document.body.innerText);
+            done();
+        });
+        iframe.src = "javascript:'<body>Hello from iframe navigated using javascript url</body>'";
+    });
+</script>
+<iframe src="about:blank"></iframe>
