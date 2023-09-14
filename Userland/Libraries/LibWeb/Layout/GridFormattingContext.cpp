@@ -935,7 +935,7 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
     auto extra_space = max(CSSPixels(0), item_size_contribution - spanned_tracks_sizes_sum);
 
     // 2. Distribute space up to limits:
-    while (true) {
+    while (extra_space > 0) {
         auto all_frozen = all_of(affected_tracks, [](auto const& track) { return track.growth_limit_frozen; });
         if (all_frozen)
             break;
@@ -943,23 +943,24 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
         // Find the item-incurred increase for each spanned track with an affected size by: distributing the space
         // equally among such tracks, freezing a track’s item-incurred increase as its affected size + item-incurred
         // increase reaches its limit
-        CSSPixels increase_per_track = extra_space / affected_tracks.size();
-        if (increase_per_track == 0)
-            break;
+        CSSPixels increase_per_track = max(CSSPixels::smallest_positive_value(), extra_space / affected_tracks.size());
         for (auto& track : affected_tracks) {
             if (track.growth_limit_frozen)
                 continue;
 
+            auto increase = min(increase_per_track, extra_space);
+
             // For growth limits, the limit is infinity if it is marked as infinitely growable, and equal to the
             // growth limit otherwise.
-            if (track.infinitely_growable || !track.growth_limit.has_value()) {
-                track.item_incurred_increase += increase_per_track;
-                extra_space -= increase_per_track;
-            } else if (track.growth_limit.has_value() && increase_per_track >= track.growth_limit.value()) {
-                track.growth_limit_frozen = true;
-                track.item_incurred_increase = track.growth_limit.value();
-                extra_space -= track.growth_limit.value();
+            if (!track.infinitely_growable && track.growth_limit.has_value()) {
+                auto maximum_increase = track.growth_limit.value() - track.base_size;
+                if (track.item_incurred_increase + increase >= maximum_increase) {
+                    track.growth_limit_frozen = true;
+                    increase = maximum_increase - track.item_incurred_increase;
+                }
             }
+            track.item_incurred_increase += increase;
+            extra_space -= increase;
         }
     }
 
