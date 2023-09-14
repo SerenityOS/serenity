@@ -238,6 +238,18 @@ ErrorOr<void> MimeType::set_parameter(String name, String value)
     return {};
 }
 
+// https://mimesniff.spec.whatwg.org/#xml-mime-type
+bool MimeType::is_xml() const
+{
+    return m_subtype.ends_with_bytes("+xml"sv) || essence().is_one_of("text/xml"sv, "application/xml"sv);
+}
+
+// https://mimesniff.spec.whatwg.org/#html-mime-type
+bool MimeType::is_html() const
+{
+    return essence().is_one_of("text/html"sv);
+}
+
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type
 bool MimeType::is_javascript() const
 {

@@ -48,6 +48,7 @@ public:
     Fetch::Infrastructure::Status status() const;
     WebIDL::ExceptionOr<String> status_text() const;
     WebIDL::ExceptionOr<String> response_text() const;
+    WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> response_xml();
     WebIDL::ExceptionOr<JS::Value> response();
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
 
@@ -86,6 +87,7 @@ private:
     ErrorOr<MimeSniff::MimeType> get_final_mime_type() const;
 
     String get_text_response() const;
+    void set_document_response();
 
     WebIDL::ExceptionOr<void> handle_response_end_of_body();
     WebIDL::ExceptionOr<void> handle_errors();
