@@ -284,13 +284,11 @@ private:
 #ifndef KERNEL
     // Empirically determined to fit most lambdas and functions.
     static constexpr size_t inline_capacity = 4 * sizeof(void*);
-    alignas(__BIGGEST_ALIGNMENT__) u8 m_storage[inline_capacity];
 #else
     // FIXME: Try to decrease this.
     static constexpr size_t inline_capacity = 6 * sizeof(void*);
-    // In the Kernel nothing has an alignment > alignof(void*).
-    alignas(alignof(void*)) u8 m_storage[inline_capacity];
 #endif
+    alignas(max(alignof(CallableWrapperBase), alignof(CallableWrapperBase*))) u8 m_storage[inline_capacity];
 };
 
 }
