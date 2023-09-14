@@ -1,17 +1,19 @@
 <style>
-body {
-    background: green;
-}
+    body {
+        background: green;
+    }
 </style>
 <script src="include.js"></script>
 <script>
-    let link = document.createElement("link");
-    link.setAttribute("rel", "stylesheet");
-    link.setAttribute("href", "body-background-color-red.css");
-    link.setAttribute("media", "print")
-    document.head.appendChild(link)
+    test(() => {
+        let link = document.createElement("link");
+        link.setAttribute("rel", "stylesheet");
+        link.setAttribute("href", "body-background-color-red.css");
+        link.setAttribute("media", "print");
+        document.head.appendChild(link);
 
-    window.onload = function() {
-        println("document background: " + getComputedStyle(document.body).backgroundColor)
-    }
+        window.onload = function () {
+            println("document background: " + getComputedStyle(document.body).backgroundColor);
+        };
+    });
 </script>

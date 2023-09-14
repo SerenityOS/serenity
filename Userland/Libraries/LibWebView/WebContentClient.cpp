@@ -44,6 +44,12 @@ void WebContentClient::did_finish_loading(AK::URL const& url)
         m_view.on_load_finish(url);
 }
 
+void WebContentClient::did_finish_text_test()
+{
+    if (m_view.on_text_test_finish)
+        m_view.on_text_test_finish();
+}
+
 void WebContentClient::did_request_navigate_back()
 {
     if (m_view.on_navigate_back)

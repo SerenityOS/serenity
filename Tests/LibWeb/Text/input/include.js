@@ -12,4 +12,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function test(f) {
     document.addEventListener("DOMContentLoaded", f);
+    window.addEventListener("load", () => {
+        internals.signalTextTestIsDone();
+    });
+}
+
+function asyncTest(f) {
+    const done = () => internals.signalTextTestIsDone();
+    document.addEventListener("DOMContentLoaded", () => {
+        f(done);
+    });
 }

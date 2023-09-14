@@ -241,6 +241,8 @@ public:
     // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
     virtual void page_did_request_file_picker(WeakPtr<DOM::EventTarget>, [[maybe_unused]] bool multiple) {};
 
+    virtual void page_did_finish_text_test() {};
+
 protected:
     virtual ~PageClient() = default;
 };

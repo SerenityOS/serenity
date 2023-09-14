@@ -64,4 +64,6 @@ endpoint WebContentClient
     did_output_js_console_message(i32 message_index) =|
     did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages) =|
 
+    did_finish_text_test() =|
+
 }
