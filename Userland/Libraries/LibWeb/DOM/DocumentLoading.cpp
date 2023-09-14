@@ -146,7 +146,7 @@ static bool build_gemini_document(DOM::Document& document, ByteBuffer const& dat
     return true;
 }
 
-static bool build_xml_document(DOM::Document& document, ByteBuffer const& data)
+bool build_xml_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto encoding = HTML::run_encoding_sniffing_algorithm(document, data);
     auto decoder = TextCodec::decoder_for(encoding);

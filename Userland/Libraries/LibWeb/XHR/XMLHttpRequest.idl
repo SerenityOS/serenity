@@ -29,6 +29,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     readonly attribute unsigned short status;
     readonly attribute ByteString statusText;
     readonly attribute DOMString responseText;
+    readonly attribute Document? responseXML;
     readonly attribute any response;
     attribute XMLHttpRequestResponseType responseType;
     attribute unsigned long timeout;

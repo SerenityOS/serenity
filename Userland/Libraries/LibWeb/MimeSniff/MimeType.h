@@ -25,6 +25,8 @@ public:
     String const& subtype() const { return m_subtype; }
     OrderedHashMap<String, String> const& parameters() const { return m_parameters; }
 
+    bool is_xml() const;
+    bool is_html() const;
     bool is_javascript() const;
 
     ErrorOr<void> set_parameter(String name, String value);

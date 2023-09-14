@@ -18,6 +18,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentLoading.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/IDLEventListener.h>
@@ -33,6 +34,8 @@
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/ByteSequences.h>
 #include <LibWeb/Infra/JSON.h>
@@ -115,7 +118,33 @@ WebIDL::ExceptionOr<String> XMLHttpRequest::response_text() const
     if (m_state != State::Loading && m_state != State::Done)
         return String {};
 
+    // 3. Return the result of getting a text response for this.
     return get_text_response();
+}
+
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsexml
+WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> XMLHttpRequest::response_xml()
+{
+    // 1. If this’s response type is not the empty string or "document", then throw an "InvalidStateError" DOMException.
+    if (m_response_type != Bindings::XMLHttpRequestResponseType::Empty && m_response_type != Bindings::XMLHttpRequestResponseType::Document)
+        return WebIDL::InvalidStateError::create(realm(), "XHR responseXML can only be used for responseXML \"\" or \"document\""_fly_string);
+
+    // 2. If this’s state is not done, then return null.
+    if (m_state != State::Done)
+        return nullptr;
+
+    // 3. Assert: this’s response object is not failure.
+    VERIFY(!m_response_object.has<Failure>());
+
+    // 4. If this’s response object is non-null, then return it.
+    if (!m_response_object.has<Empty>())
+        return &verify_cast<DOM::Document>(m_response_object.get<JS::Value>().as_object());
+
+    // 5. Set a document response for this.
+    set_document_response();
+
+    // 6. Return this’s response object.
+    return &verify_cast<DOM::Document>(m_response_object.get<JS::Value>().as_object());
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetype
@@ -186,8 +215,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
-        // FIXME: Implement this.
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "XHR Document type not implemented"sv };
+        set_document_response();
     }
     // 8. Otherwise:
     else {
@@ -221,16 +249,8 @@ String XMLHttpRequest::get_text_response() const
     // 2. Let charset be the result of get a final encoding for xhr.
     auto charset = get_final_encoding().release_value_but_fixme_should_propagate_errors();
 
-    auto is_xml_mime_type = [](MimeSniff::MimeType const& mime_type) {
-        // An XML MIME type is any MIME type whose subtype ends in "+xml" or whose essence is "text/xml" or "application/xml". [RFC7303]
-        if (mime_type.essence().is_one_of("text/xml"sv, "application/xml"sv))
-            return true;
-
-        return mime_type.subtype().ends_with_bytes("+xml"sv);
-    };
-
     // 3. If xhr’s response type is the empty string, charset is null, and the result of get a final MIME type for xhr is an XML MIME type,
-    if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty && !charset.has_value() && is_xml_mime_type(get_final_mime_type().release_value_but_fixme_should_propagate_errors())) {
+    if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty && !charset.has_value() && get_final_mime_type().release_value_but_fixme_should_propagate_errors().is_xml()) {
         // FIXME: then use the rules set forth in the XML specifications to determine the encoding. Let charset be the determined encoding. [XML] [XML-NAMES]
     }
 
@@ -245,6 +265,78 @@ String XMLHttpRequest::get_text_response() const
     VERIFY(decoder.has_value());
 
     return TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, m_received_bytes).release_value_but_fixme_should_propagate_errors();
+}
+
+// https://xhr.spec.whatwg.org/#document-response
+void XMLHttpRequest::set_document_response()
+{
+    // 1. If xhr’s response’s body is null, then return.
+    if (!m_response->body())
+        return;
+
+    // 2. Let finalMIME be the result of get a final MIME type for xhr.
+    auto final_mine = MUST(get_final_mime_type());
+
+    // 3. If finalMIME is not an HTML MIME type or an XML MIME type, then return.
+    if (!final_mine.is_html() && !final_mine.is_xml())
+        return;
+
+    // 4. If xhr’s response type is the empty string and finalMIME is an HTML MIME type, then return.
+    if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty && final_mine.is_html())
+        return;
+
+    // 5. If finalMIME is an HTML MIME type, then:
+    Optional<StringView> charset;
+    JS::GCPtr<DOM::Document> document;
+    if (final_mine.is_html()) {
+        // 5.1. Let charset be the result of get a final encoding for xhr.
+        charset = MUST(get_final_encoding());
+
+        // 5.2. If charset is null, prescan the first 1024 bytes of xhr’s received bytes and if that does not terminate unsuccessfully then let charset be the return value.
+        document = DOM::Document::create(realm());
+        if (!charset.has_value())
+            if (auto found_charset = HTML::run_prescan_byte_stream_algorithm(*document, m_received_bytes); found_charset.has_value())
+                charset = MUST(String::from_deprecated_string(found_charset.value())).bytes_as_string_view();
+
+        // 5.3. If charset is null, then set charset to UTF-8.
+        if (!charset.has_value())
+            charset = "UTF-8"sv;
+
+        // 5.4. Let document be a document that represents the result parsing xhr’s received bytes following the rules set forth in the HTML Standard for an HTML parser with scripting disabled and a known definite encoding charset.
+        auto parser = HTML::HTMLParser::create(*document, m_received_bytes, charset.value());
+        parser->run(document->url());
+
+        // 5.5. Flag document as an HTML document.
+        document->set_document_type(DOM::Document::Type::HTML);
+    }
+
+    // 6. Otherwise, let document be a document that represents the result of running the XML parser with XML scripting support disabled on xhr’s received bytes. If that fails (unsupported character encoding, namespace well-formedness error, etc.), then return null.
+    else {
+        document = DOM::Document::create(realm());
+        if (!Web::build_xml_document(*document, m_received_bytes)) {
+            m_response_object = JS::js_null();
+            return;
+        }
+    }
+
+    // 7. If charset is null, then set charset to UTF-8.
+    if (!charset.has_value())
+        charset = "UTF-8"sv;
+
+    // 8. Set document’s encoding to charset.
+    document->set_encoding(charset->to_deprecated_string());
+
+    // 9. Set document’s content type to finalMIME.
+    document->set_content_type(MUST(final_mine.serialized()).to_deprecated_string());
+
+    // 10. Set document’s URL to xhr’s response’s URL.
+    document->set_url(m_response->url().value_or({}));
+
+    // 11. Set document’s origin to xhr’s relevant settings object’s origin.
+    document->set_origin(HTML::relevant_settings_object(*this).origin());
+
+    // 12. Set xhr’s response object to document.
+    m_response_object = JS::Value(document);
 }
 
 // https://xhr.spec.whatwg.org/#final-mime-type
