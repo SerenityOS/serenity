@@ -427,7 +427,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
     }
 
     // Add nodes for the ::before and ::after pseudo-elements.
-    if (is<DOM::Element>(dom_node)) {
+    if (is<DOM::Element>(dom_node) && layout_node->can_have_children()) {
         auto& element = static_cast<DOM::Element&>(dom_node);
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
         TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Before, AppendOrPrepend::Prepend));
