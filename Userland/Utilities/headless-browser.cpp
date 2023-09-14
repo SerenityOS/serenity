@@ -196,8 +196,10 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
             result = builder.to_string().release_value_but_fixme_should_propagate_errors();
             loop.quit(0);
         };
+        view.on_text_test_finish = {};
     } else if (mode == TestMode::Text) {
-        view.on_load_finish = [&](auto const&) {
+        view.on_load_finish = {};
+        view.on_text_test_finish = [&]() {
             result = view.dump_text().release_value_but_fixme_should_propagate_errors();
             loop.quit(0);
         };

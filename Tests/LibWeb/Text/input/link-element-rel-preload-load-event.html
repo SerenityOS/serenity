@@ -1,20 +1,22 @@
 <script src="include.js"></script>
 <script>
-    let goodLink = document.createElement("link");
-    goodLink.setAttribute("rel", "preload");
-    goodLink.setAttribute("href", "valid.css");
-    goodLink.setAttribute("as", "style");
-    goodLink.addEventListener("load", function() {
-        println("Got load event");
-    });
-    document.head.appendChild(goodLink);
+    test(() => {
+        let goodLink = document.createElement("link");
+        goodLink.setAttribute("rel", "preload");
+        goodLink.setAttribute("href", "valid.css");
+        goodLink.setAttribute("as", "style");
+        goodLink.addEventListener("load", function () {
+            println("Got load event");
+        });
+        document.head.appendChild(goodLink);
 
-    let badLink = document.createElement("link");
-    badLink.setAttribute("rel", "preload");
-    badLink.setAttribute("href", "this-file-does-not-exist-and-so-is-invalid.css");
-    badLink.setAttribute("as", "style");
-    badLink.addEventListener("error", function() {
-        println("Got error event");
+        let badLink = document.createElement("link");
+        badLink.setAttribute("rel", "preload");
+        badLink.setAttribute("href", "this-file-does-not-exist-and-so-is-invalid.css");
+        badLink.setAttribute("as", "style");
+        badLink.addEventListener("error", function () {
+            println("Got error event");
+        });
+        document.head.appendChild(badLink);
     });
-    document.head.appendChild(badLink);
 </script>

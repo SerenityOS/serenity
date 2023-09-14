@@ -151,6 +151,7 @@ public:
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
     Function<void(bool)> on_finish_handling_input_event;
+    Function<void()> on_text_test_finish;
 
     virtual Gfx::IntRect viewport_rect() const = 0;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const = 0;

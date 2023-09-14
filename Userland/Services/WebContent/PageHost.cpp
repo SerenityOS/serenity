@@ -291,6 +291,11 @@ void PageHost::page_did_finish_loading(const URL& url)
     m_client.async_did_finish_loading(url);
 }
 
+void PageHost::page_did_finish_text_test()
+{
+    m_client.async_did_finish_text_test();
+}
+
 void PageHost::page_did_request_context_menu(Web::CSSPixelPoint content_position)
 {
     m_client.async_did_request_context_menu(page().css_to_device_point(content_position).to_type<int>());

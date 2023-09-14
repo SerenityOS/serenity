@@ -83,6 +83,7 @@ private:
     virtual Messages::WebContentClient::DidRequestFullscreenWindowResponse did_request_fullscreen_window() override;
     virtual void did_request_file(DeprecatedString const& path, i32) override;
     virtual void did_finish_handling_input_event(bool event_was_accepted) override;
+    virtual void did_finish_text_test() override;
 
     ViewImplementation& m_view;
 };

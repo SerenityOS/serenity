@@ -28,6 +28,13 @@ void Internals::initialize(JS::Realm& realm)
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::InternalsPrototype>(realm, "Internals"));
 }
 
+void Internals::signal_text_test_is_done()
+{
+    if (auto* page = global_object().browsing_context()->page()) {
+        page->client().page_did_finish_text_test();
+    }
+}
+
 void Internals::gc()
 {
     vm().heap().collect_garbage();

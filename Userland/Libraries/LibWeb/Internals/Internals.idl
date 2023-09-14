@@ -1,5 +1,6 @@
 [Exposed=Nobody] interface Internals {
 
+    undefined signalTextTestIsDone();
     undefined gc();
     object hitTest(double x, double y);
 
