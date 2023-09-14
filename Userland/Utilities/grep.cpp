@@ -26,6 +26,12 @@ enum class BinaryFileMode {
     Skip,
 };
 
+enum class ExitStatus {
+    SomethingMatched = 0,
+    NoLinesMatched = 1,
+    ErrorOccurred = 2, // NOTE: `-q` flag also silences errors.
+};
+
 template<typename... Ts>
 void fail(StringView format, Ts... args)
 {
@@ -172,7 +178,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         for (auto& re : regular_expressions) {
             if (re.parser_result.error != regex::Error::NoError) {
                 warnln("regex parse error: {}", regex::get_error_string(re.parser_result.error));
-                return 1;
+                return ExitStatus::ErrorOccurred;
             }
         }
 
@@ -219,10 +225,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return false;
         };
 
-        bool did_match_something = false;
+        auto exit_status = ExitStatus::NoLinesMatched;
 
         auto handle_file = [&matches, binary_mode, count_lines, quiet_mode,
-                               user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> ErrorOr<void> {
+                               user_specified_multiple_files, &matched_line_count, &exit_status](StringView filename, bool print_filename) -> ErrorOr<void> {
             auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
             auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
             if (filename == '-')
@@ -235,9 +241,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 auto is_binary = line.contains('\0');
 
                 auto matched = matches(line, filename, line_number, print_filename, is_binary);
-                did_match_something = did_match_something || matched;
-                if (matched && is_binary && binary_mode == BinaryFileMode::Binary)
-                    break;
+                if (matched) {
+                    if (exit_status == ExitStatus::NoLinesMatched)
+                        exit_status = ExitStatus::SomethingMatched;
+                    if (is_binary && binary_mode == BinaryFileMode::Binary)
+                        break;
+                }
             }
 
             if (count_lines && !quiet_mode) {
@@ -251,15 +260,17 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return {};
         };
 
-        auto add_directory = [&handle_file, user_has_specified_files, suppress_errors](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
+        auto add_directory = [&handle_file, &exit_status, user_has_specified_files, suppress_errors](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
             Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
                 auto path = it.next_full_path();
                 if (!FileSystem::is_directory(path)) {
                     // Remove leading './' when `grep -r` was run without any specified paths.
                     auto key = user_has_specified_files ? path.view() : path.substring_view(base.length() + 1);
-                    if (auto result = handle_file(key, true); result.is_error() && !suppress_errors)
+                    if (auto result = handle_file(key, true); result.is_error() && !suppress_errors) {
                         warnln("Failed with file {}: {}", key, result.release_error());
+                        exit_status = ExitStatus::ErrorOccurred;
+                    }
 
                 } else {
                     handle_directory(base, path, handle_directory);
@@ -283,11 +294,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 auto result = handle_file(filename, print_filename);
                 if (result.is_error() && !suppress_errors) {
                     warnln("Failed with file {}: {}", filename, result.release_error());
+                    exit_status = ExitStatus::ErrorOccurred;
                 }
             }
         }
 
-        return did_match_something ? 0 : 1;
+        return exit_status;
     };
 
     if (use_ere) {
@@ -296,7 +308,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             auto escaped_pattern = (fixed_strings) ? escape_characters(pattern, ere_special_characters) : pattern;
             regular_expressions.append(Regex<PosixExtended>(escaped_pattern, options));
         }
-        return grep_logic(regular_expressions);
+        return to_underlying(grep_logic(regular_expressions));
     }
 
     Vector<Regex<PosixBasic>> regular_expressions;
@@ -304,5 +316,5 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         auto escaped_pattern = (fixed_strings) ? escape_characters(pattern, basic_special_characters) : pattern;
         regular_expressions.append(Regex<PosixBasic>(escaped_pattern, options));
     }
-    return grep_logic(regular_expressions);
+    return to_underlying(grep_logic(regular_expressions));
 }
