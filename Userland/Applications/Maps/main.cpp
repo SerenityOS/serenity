@@ -8,6 +8,7 @@
 #include "UsersMapWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -125,6 +126,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Maps.md"), "/bin/Help");
+    }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Maps"_string, app_icon, window));
 
     // Main toolbar actions

@@ -32,6 +32,7 @@ Note that many applications can be disabled at SerenityOS build time if desired.
 - [Image Viewer](help://man/1/Applications/ImageViewer)
 - [Magnifier](help://man/1/Applications/Magnifier)
 - [Mail](help://man/1/Applications/Mail)
+- [Maps](help://man/1/Applications/Maps)
 - [Mouse Settings](help://man/1/Applications/MouseSettings)
 - [Presenter](help://man/1/Applications/Presenter)
 - [Profiler](help://man/1/Applications/Profiler)
