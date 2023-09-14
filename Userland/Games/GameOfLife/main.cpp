@@ -100,12 +100,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto paused_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
     auto play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
 
-    auto toggle_running_action = GUI::Action::create("&Toggle Running", { Mod_None, Key_Return }, *play_icon, [&](GUI::Action&) {
+    auto play_pause_action = GUI::Action::create("&Play", { Mod_None, Key_Return }, *play_icon, [&](GUI::Action&) {
         board_widget->set_running(!board_widget->is_running());
     });
 
-    toggle_running_action->set_checkable(true);
-    auto& toggle_running_toolbar_button = main_toolbar.add_action(toggle_running_action);
+    main_toolbar.add_action(play_pause_action);
 
     auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](const GUI::Action&) {
         statusbar.set_text(click_tip);
@@ -138,7 +137,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game_menu->add_action(clear_board_action);
     game_menu->add_action(randomize_cells_action);
     game_menu->add_separator();
-    game_menu->add_action(toggle_running_action);
+    game_menu->add_action(play_pause_action);
     game_menu->add_action(run_one_generation_action);
     game_menu->add_separator();
     game_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -155,11 +154,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     board_widget->on_running_state_change = [&]() {
         if (board_widget->is_running()) {
             statusbar.set_text("Running..."_string);
-            toggle_running_toolbar_button.set_icon(*paused_icon);
+            play_pause_action->set_icon(paused_icon);
+            play_pause_action->set_text("&Pause");
             main_widget->set_override_cursor(Gfx::StandardCursor::None);
         } else {
             statusbar.set_text(click_tip);
-            toggle_running_toolbar_button.set_icon(*play_icon);
+            play_pause_action->set_icon(play_icon);
+            play_pause_action->set_text("&Play");
             main_widget->set_override_cursor(Gfx::StandardCursor::Drag);
         }
 
@@ -177,7 +178,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     board_widget->on_stall = [&] {
-        toggle_running_action->activate();
+        play_pause_action->activate();
         statusbar.set_text("Stalled..."_string);
     };
 
