@@ -49,9 +49,8 @@ public:
     template<class T, class... Args>
     ErrorOr<NonnullRefPtr<T>> add_tab(String title, StringView id, Args&&... args)
     {
-        auto tab = TRY(m_tab_widget->try_add_tab<T>(move(title), forward<Args>(args)...));
-        TRY(m_tabs.try_set(id, tab));
-        tab->set_settings_window(*this);
+        auto tab = TRY(T::try_create(forward<Args>(args)...));
+        TRY(add_tab(tab, title, id));
         return tab;
     }
 
