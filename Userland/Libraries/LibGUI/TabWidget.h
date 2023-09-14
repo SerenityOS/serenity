@@ -56,15 +56,6 @@ public:
     void remove_widget(Widget&);
 
     template<class T, class... Args>
-    ErrorOr<NonnullRefPtr<T>> try_add_tab(String title, Args&&... args)
-    {
-        auto t = TRY(T::try_create(forward<Args>(args)...));
-        t->set_title(move(title));
-        TRY(try_add_widget(*t));
-        return *t;
-    }
-
-    template<class T, class... Args>
     T& add_tab(String title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
