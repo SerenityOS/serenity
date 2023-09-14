@@ -63,6 +63,11 @@ On Windows:
 WSL2/WSLg are preferred, as they provide a linux environment that matches one of the above distributions.
 MinGW/MSYS2 are not supported, but may work with sufficient elbow grease. Native Windows builds are not supported with either clang-cl or MSVC.
 
+For Android:
+
+On a Unix-like platform, install the prerequisites for that platform and then see the [Android Studio guide](AndroidStudioConfiguration.md).
+Or, download a version of Gradle >= 8.0.0, and run the ``gradlew`` program in ``Ladybird/Android`` 
+
 ## Build steps
 
 ### Using serenity.sh

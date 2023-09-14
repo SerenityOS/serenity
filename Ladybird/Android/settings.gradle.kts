@@ -14,5 +14,3 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Ladybird"
-include("Ladybird")
-project(":Ladybird").projectDir = file("Ladybird/Android")
