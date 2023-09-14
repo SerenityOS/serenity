@@ -461,11 +461,11 @@ void MainWidget::build_override_controls()
 
 ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
 {
-    auto scrollable_container = TRY(m_property_tabs->try_add_tab<GUI::ScrollableContainerWidget>(TRY(String::from_utf8(property_tab.title))));
-    scrollable_container->set_should_hide_unnecessary_scrollbars(true);
+    auto& scrollable_container = m_property_tabs->add_tab<GUI::ScrollableContainerWidget>(TRY(String::from_utf8(property_tab.title)));
+    scrollable_container.set_should_hide_unnecessary_scrollbars(true);
 
     auto properties_list = TRY(GUI::Widget::try_create());
-    scrollable_container->set_widget(properties_list);
+    scrollable_container.set_widget(properties_list);
     properties_list->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8 }, 12);
 
     for (auto const& group : property_tab.property_groups) {

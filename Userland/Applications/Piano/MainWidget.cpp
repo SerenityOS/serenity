@@ -44,11 +44,11 @@ ErrorOr<void> MainWidget::initialize()
     TRY(m_wave_widget->set_sample_size(sample_count));
 
     m_tab_widget = TRY(try_add<GUI::TabWidget>());
-    m_roll_widget = TRY(m_tab_widget->try_add_tab<RollWidget>("Piano Roll"_string, m_track_manager));
+    m_roll_widget = m_tab_widget->add_tab<RollWidget>("Piano Roll"_string, m_track_manager);
 
     m_roll_widget->set_fixed_height(300);
 
-    (void)TRY(m_tab_widget->try_add_tab<SamplerWidget>("Sampler"_string, m_track_manager));
+    m_tab_widget->add_tab<SamplerWidget>("Sampler"_string, m_track_manager);
     m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, *this, m_audio_loop));
 
     m_keys_and_knobs_container = TRY(try_add<GUI::Widget>());
