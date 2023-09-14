@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
+ * Copyright (c) 2023, Karol Kosek <krkk@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
@@ -56,6 +58,61 @@ static DeprecatedString escape_characters(StringView string, StringView characte
     return builder.to_deprecated_string();
 }
 
+static DeprecatedString& hostname()
+{
+    static DeprecatedString s_hostname;
+    if (s_hostname.is_empty()) {
+        auto result = Core::System::gethostname();
+        if (result.is_error())
+            s_hostname = "localhost";
+        else
+            s_hostname = result.release_value();
+    }
+    return s_hostname;
+}
+
+enum class PrintType {
+    Path = 1 << 0,
+    LineNumbers = 1 << 1,
+};
+AK_ENUM_BITWISE_OPERATORS(PrintType)
+
+static void append_formatted_path(StringBuilder& builder, StringView path, Optional<size_t> line_number, PrintType print_type, bool with_hyperlinks, bool with_color)
+{
+    if (path == '-') {
+        path = "(standard input)"sv;
+        with_hyperlinks = false;
+    }
+
+    if (with_hyperlinks) {
+        auto full_path_or_error = FileSystem::real_path(path);
+        if (!full_path_or_error.is_error()) {
+            auto fullpath = full_path_or_error.release_value();
+            auto url = URL::create_with_file_scheme(fullpath.to_deprecated_string(), {}, hostname());
+            if (has_flag(print_type, PrintType::LineNumbers) && line_number.has_value())
+                url.set_query(MUST(String::formatted("line_number={}", *line_number)));
+            builder.appendff("\033]8;;{}\033\\", url.serialize());
+        }
+    }
+    if (has_flag(print_type, PrintType::Path)) {
+        if (with_color)
+            builder.appendff("\033[34m{}\033[39m", path);
+        else
+            builder.append(path);
+    }
+    if (has_flag(print_type, PrintType::LineNumbers) && line_number.has_value()) {
+        if (has_flag(print_type, PrintType::Path))
+            builder.append(':');
+
+        if (with_color)
+            builder.appendff("\033[35m{}\033[39m", *line_number);
+        else
+            builder.appendff("{}", *line_number);
+    }
+    if (with_hyperlinks)
+        builder.append("\033]8;;\033\\"sv);
+}
+
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath"));
@@ -75,7 +132,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool invert_match = false;
     bool quiet_mode = false;
     bool suppress_errors = false;
-    bool colored_output = isatty(STDOUT_FILENO);
+    bool is_a_tty = isatty(STDOUT_FILENO) == 1;
+    bool colored_output = is_a_tty;
+    bool disable_hyperlinks = !is_a_tty;
     bool count_lines = false;
 
     size_t matched_line_count = 0;
@@ -145,6 +204,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return true;
         },
     });
+    args_parser.add_option(disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 0);
     args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c');
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(args);
@@ -200,12 +260,21 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 }
 
                 if (is_binary && binary_mode == BinaryFileMode::Binary) {
-                    outln(colored_output ? "binary file \x1B[34m{}\x1B[0m matches"sv : "binary file {} matches"sv, filename);
+                    StringBuilder filename_builder;
+                    append_formatted_path(filename_builder, filename, {}, PrintType::Path, !disable_hyperlinks, colored_output);
+                    outln("binary file {} matches"sv, filename_builder.string_view());
                 } else {
-                    if ((result.matches.size() || invert_match) && print_filename)
-                        out(colored_output ? "\x1B[34m{}:\x1B[0m"sv : "{}:"sv, filename);
-                    if ((result.matches.size() || invert_match) && line_numbers)
-                        out(colored_output ? "\x1B[35m{}:\x1B[0m"sv : "{}:"sv, line_number);
+                    PrintType print_type { 0 };
+                    if (print_filename)
+                        print_type |= PrintType::Path;
+                    if (line_numbers)
+                        print_type |= PrintType::LineNumbers;
+
+                    if ((result.matches.size() || invert_match) && has_any_flag(print_type, PrintType::Path | PrintType::LineNumbers)) {
+                        StringBuilder filename_builder;
+                        append_formatted_path(filename_builder, filename, line_number, print_type, !disable_hyperlinks, colored_output);
+                        out("{}:"sv, filename_builder.string_view());
+                    }
 
                     for (auto& match : result.matches) {
                         auto pre_match_length = match.global_offset - last_printed_char_pos;
@@ -226,12 +295,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
         auto exit_status = ExitStatus::NoLinesMatched;
 
-        auto handle_file = [&matches, binary_mode, count_lines, quiet_mode,
+        auto handle_file = [&matches, binary_mode, count_lines, quiet_mode, disable_hyperlinks, colored_output,
                                &matched_line_count, &exit_status](StringView filename, bool print_filename) -> ErrorOr<void> {
             auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
             auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
-            if (filename == '-')
-                filename = "stdin"sv;
 
             for (size_t line_number = 1; TRY(buffered_file->can_read_line()); ++line_number) {
                 Array<u8, PAGE_SIZE> buffer;
@@ -249,10 +316,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             }
 
             if (count_lines && !quiet_mode) {
-                if (print_filename)
-                    outln("{}:{}", filename, matched_line_count);
-                else
-                    outln("{}", matched_line_count);
+                if (print_filename) {
+                    StringBuilder filename_builder;
+                    append_formatted_path(filename_builder, filename, {}, PrintType::Path, !disable_hyperlinks, colored_output);
+                    out("{}:", filename_builder.string_view());
+                }
+                outln("{}", matched_line_count);
                 matched_line_count = 0;
             }
 

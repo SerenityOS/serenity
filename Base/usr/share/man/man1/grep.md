@@ -5,7 +5,7 @@ grep
 ## Synopsis
 
 ```sh
-$ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [--file File] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [file...]
+$ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [--file File] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--no-hyperlinks] [--count] [file...]
 ```
 
 ## Options
@@ -24,6 +24,7 @@ $ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-
 * `-a`, `--text`: Treat binary files as text (same as --binary-mode text)
 * `-I`: Ignore binary files (same as --binary-mode skip)
 * `--color WHEN`: When to use colored output for the matching text ([auto], never, always)
+* `--no-hyperlinks`: Disable hyperlinks
 * `-c`, `--count`: Output line count instead of line contents
 
 ## Arguments
