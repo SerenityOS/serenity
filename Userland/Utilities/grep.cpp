@@ -281,10 +281,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             bool print_filename { files.size() > 1 };
             for (auto& filename : files) {
                 auto result = handle_file(filename, print_filename);
-                if (result.is_error()) {
-                    if (!suppress_errors)
-                        warnln("Failed with file {}: {}", filename, result.release_error());
-                    return 1;
+                if (result.is_error() && !suppress_errors) {
+                    warnln("Failed with file {}: {}", filename, result.release_error());
                 }
             }
         }
