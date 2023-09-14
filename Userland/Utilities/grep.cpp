@@ -223,8 +223,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
         auto handle_file = [&matches, binary_mode, count_lines, quiet_mode,
                                user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> ErrorOr<void> {
-            auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
+            auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
             auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
+            if (filename == '-')
+                filename = "stdin"sv;
 
             for (size_t line_number = 1; TRY(buffered_file->can_read_line()); ++line_number) {
                 Array<u8, PAGE_SIZE> buffer;
@@ -265,51 +267,24 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             }
         };
 
-        if (!files.size() && !recursive) {
-            char* line = nullptr;
-            size_t line_len = 0;
-            ssize_t nread = 0;
-            ScopeGuard free_line = [line] { free(line); };
-            size_t line_number = 0;
-            while ((nread = getline(&line, &line_len, stdin)) != -1) {
-                VERIFY(nread > 0);
-                if (line[nread - 1] == '\n')
-                    --nread;
-                // Human-readable indexes start at 1, so it's fine to increment already.
-                line_number += 1;
-                StringView line_view(line, nread);
-                bool is_binary = line_view.contains('\0');
+        if (recursive) {
+            if (!user_has_specified_files)
+                files.append("."sv);
 
-                if (is_binary && binary_mode == BinaryFileMode::Skip)
-                    return 1;
-
-                auto matched = matches(line_view, "stdin"sv, line_number, false, is_binary);
-                did_match_something = did_match_something || matched;
-                if (matched && is_binary && binary_mode == BinaryFileMode::Binary)
-                    break;
+            for (auto& filename : files) {
+                add_directory(filename, {}, add_directory);
             }
-
-            if (count_lines && !quiet_mode)
-                outln("{}", matched_line_count);
         } else {
-            if (recursive) {
-                if (user_has_specified_files) {
-                    for (auto& filename : files) {
-                        add_directory(filename, {}, add_directory);
-                    }
-                } else {
-                    add_directory(".", {}, add_directory);
-                }
+            if (!user_has_specified_files)
+                files.append("-"sv);
 
-            } else {
-                bool print_filename { files.size() > 1 };
-                for (auto& filename : files) {
-                    auto result = handle_file(filename, print_filename);
-                    if (result.is_error()) {
-                        if (!suppress_errors)
-                            warnln("Failed with file {}: {}", filename, result.release_error());
-                        return 1;
-                    }
+            bool print_filename { files.size() > 1 };
+            for (auto& filename : files) {
+                auto result = handle_file(filename, print_filename);
+                if (result.is_error()) {
+                    if (!suppress_errors)
+                        warnln("Failed with file {}: {}", filename, result.release_error());
+                    return 1;
                 }
             }
         }
