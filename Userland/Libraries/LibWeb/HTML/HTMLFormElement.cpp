@@ -545,7 +545,7 @@ ErrorOr<String> HTMLFormElement::pick_an_encoding() const
     }
 
     // 3. Return the result of getting an output encoding from encoding.
-    return String::from_utf8(encoding.view());
+    return MUST(String::from_utf8(TextCodec::get_output_encoding(encoding)));
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#convert-to-a-list-of-name-value-pairs
