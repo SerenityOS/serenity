@@ -1053,6 +1053,8 @@ TEST_CASE(optimizer_alternation)
         Tuple { "\\bDroid\\b.*Build|XT912|XT928|XT926|XT915|XT919|XT925|XT1021|\\bMoto E\\b|XT1068|XT1092|XT1052"sv, "XT1068"sv, 6u },
         // Backwards jumps to IP 0 are normal jumps too.
         Tuple { "^(\\d+|x)"sv, "42"sv, 2u },
+        // `Repeat' does not add its insn size to the jump target.
+        Tuple { "[0-9]{2}|[0-9]"sv, "92"sv, 2u },
     };
 
     for (auto& test : tests) {

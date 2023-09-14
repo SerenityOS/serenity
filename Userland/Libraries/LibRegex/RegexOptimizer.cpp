@@ -907,7 +907,7 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
                 has_any_backwards_jump |= static_cast<OpCode_ForkReplaceStay const&>(opcode).offset() < 0;
                 break;
             case OpCodeId::Repeat:
-                incoming_jump_edges.ensure(static_cast<OpCode_Repeat const&>(opcode).offset() + state.instruction_position).append({ opcode_bytes });
+                incoming_jump_edges.ensure(state.instruction_position - static_cast<OpCode_Repeat const&>(opcode).offset()).append({ opcode_bytes });
                 has_any_backwards_jump = true;
                 break;
             default:
@@ -1139,7 +1139,7 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
                     jump_offset = static_cast<OpCode_ForkReplaceStay const&>(opcode).offset();
                     break;
                 case OpCodeId::Repeat:
-                    jump_offset = static_cast<ssize_t>(0) - static_cast<ssize_t>(static_cast<OpCode_Repeat const&>(opcode).offset());
+                    jump_offset = static_cast<ssize_t>(0) - static_cast<ssize_t>(static_cast<OpCode_Repeat const&>(opcode).offset()) - static_cast<ssize_t>(opcode.size());
                     break;
                 default:
                     is_jump = false;
