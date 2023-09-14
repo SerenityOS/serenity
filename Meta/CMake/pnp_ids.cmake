@@ -1,7 +1,7 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
 set(PNP_IDS_URL http://www.uefi.org/uefi-pnp-export)
-set(PNP_IDS_EXPORT_PATH ${CMAKE_BINARY_DIR}/pnp_ids.html)
+set(PNP_IDS_EXPORT_PATH ${SERENITY_CACHE_DIR}/pnp_ids.html)
 
 if (ENABLE_PNP_IDS_DOWNLOAD)
     download_file("${PNP_IDS_URL}" "${PNP_IDS_EXPORT_PATH}")
