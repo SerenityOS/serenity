@@ -168,7 +168,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         patterns.append(files.take_first());
 
     auto user_has_specified_files = !files.is_empty();
-    auto user_specified_multiple_files = files.size() >= 2;
 
     PosixOptions options {};
     if (case_insensitive)
@@ -228,7 +227,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         auto exit_status = ExitStatus::NoLinesMatched;
 
         auto handle_file = [&matches, binary_mode, count_lines, quiet_mode,
-                               user_specified_multiple_files, &matched_line_count, &exit_status](StringView filename, bool print_filename) -> ErrorOr<void> {
+                               &matched_line_count, &exit_status](StringView filename, bool print_filename) -> ErrorOr<void> {
             auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
             auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
             if (filename == '-')
@@ -250,7 +249,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             }
 
             if (count_lines && !quiet_mode) {
-                if (user_specified_multiple_files)
+                if (print_filename)
                     outln("{}:{}", filename, matched_line_count);
                 else
                     outln("{}", matched_line_count);
