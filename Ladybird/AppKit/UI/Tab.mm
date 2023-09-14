@@ -149,6 +149,14 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     self.inspector_controller = nil;
 }
 
+- (void)inspectElement:(id)sender
+{
+    [self openInspector:sender];
+
+    auto* inspector = (Inspector*)[self.inspector_controller window];
+    [inspector inspectHoveredElement];
+}
+
 #pragma mark - Private methods
 
 - (TabController*)tabController

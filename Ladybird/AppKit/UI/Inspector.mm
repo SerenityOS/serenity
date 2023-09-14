@@ -6,6 +6,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
+#include <AK/Optional.h>
 #include <AK/Traits.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWebView/ViewImplementation.h>
@@ -43,7 +44,10 @@ struct Selection {
 
 @interface Inspector () <NSOutlineViewDataSource, NSOutlineViewDelegate, NSTableViewDataSource>
 {
+    BOOL m_dom_tree_loaded;
+
     Selection m_selection;
+    Optional<i32> m_pending_selection;
 
     HashMap<NSDictionary*, NSDictionary*> m_dom_node_to_parent_map;
     HashMap<i32, NSDictionary*> m_node_id_to_dom_node_map;
@@ -118,6 +122,11 @@ struct Selection {
                 [strong_self.dom_tree_outline_view sizeToFit];
 
                 [strong_self prepareDOMNodeMaps:strong_self.dom_tree parentNode:nil];
+                strong_self->m_dom_tree_loaded = YES;
+
+                if (strong_self->m_pending_selection.has_value()) {
+                    [strong_self inspectDOMNodeID:strong_self->m_pending_selection.release_value()];
+                }
             } else {
                 strong_self.dom_tree = @{};
             }
@@ -149,9 +158,25 @@ struct Selection {
     web_view.inspect_dom_tree();
 }
 
+- (void)inspectHoveredElement
+{
+    auto& web_view = [[self.tab web_view] view];
+    auto node_id = web_view.get_hovered_node_id();
+
+    if (!m_dom_tree_loaded) {
+        m_pending_selection = node_id;
+        return;
+    }
+
+    [self inspectDOMNodeID:node_id];
+}
+
 - (void)reset
 {
+    m_dom_tree_loaded = NO;
+
     m_selection = {};
+    m_pending_selection = {};
 
     m_dom_node_to_parent_map = {};
     m_node_id_to_dom_node_map = {};
@@ -259,6 +284,34 @@ struct Selection {
     for (NSDictionary* child in [dom_node objectForKey:@"children"]) {
         [self prepareDOMNodeMaps:child parentNode:dom_node];
     }
+}
+
+- (void)inspectDOMNodeID:(i32)node_id
+{
+    auto dom_node = m_node_id_to_dom_node_map.get(node_id);
+    if (!dom_node.has_value()) {
+        return;
+    }
+
+    [self expandDOMNode:*dom_node];
+
+    if (auto row = [self.dom_tree_outline_view rowForItem:*dom_node]; row != -1) {
+        auto index = [NSIndexSet indexSetWithIndex:row];
+        [self.dom_tree_outline_view selectRowIndexes:index byExtendingSelection:NO];
+    }
+
+    [self setSelection: { node_id }];
+}
+
+- (void)expandDOMNode:(NSDictionary*)dom_node
+{
+    // We can't expand an item unless its parent is also already expanded, so walk up the tree to
+    // expand all ancestors.
+    if (auto parent_node = m_dom_node_to_parent_map.get(dom_node); parent_node.has_value()) {
+        [self expandDOMNode:*parent_node];
+    }
+
+    [self.dom_tree_outline_view expandItem:dom_node];
 }
 
 - (void)setSelection:(Selection)selection

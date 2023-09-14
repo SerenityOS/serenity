@@ -16,6 +16,7 @@
 - (instancetype)init:(Tab*)tab;
 
 - (void)inspect;
+- (void)inspectHoveredElement;
 - (void)reset;
 
 @end
