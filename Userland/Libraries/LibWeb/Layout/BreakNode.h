@@ -22,6 +22,7 @@ public:
 
 private:
     virtual bool is_break_node() const final { return true; }
+    virtual bool can_have_children() const override { return false; }
 };
 
 template<>
