@@ -14,11 +14,16 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
+import java.util.concurrent.Executors
 
-const val MSG_TRANSFER_SOCKETS = 1
+const val MSG_SET_RESOURCE_ROOT = 1
+const val MSG_TRANSFER_SOCKETS = 2
 
 class WebContentService : Service() {
     private val TAG = "WebContentService"
+
+    private val threadPool = Executors.newCachedThreadPool()
+    private lateinit var resourceDir: String
 
     override fun onCreate() {
         super.onCreate()
@@ -40,10 +45,15 @@ class WebContentService : Service() {
         // FIXME: Handle garbage messages from wierd clients
         val ipcSocket = bundle.getParcelable<ParcelFileDescriptor>("IPC_SOCKET")!!
         val fdSocket = bundle.getParcelable<ParcelFileDescriptor>("FD_PASSING_SOCKET")!!
-        nativeHandleTransferSockets(ipcSocket.detachFd(), fdSocket.detachFd())
+        createThread(ipcSocket, fdSocket)
     }
 
-    private external fun nativeHandleTransferSockets(ipcSocket: Int, fdPassingSocket: Int)
+    private fun handleSetResourceRoot(msg: Message) {
+        // FIXME: Handle this being already set, not being present, etc
+        resourceDir = msg.data.getString("PATH")!!
+
+        initNativeCode(resourceDir, TAG)
+    }
 
     internal class IncomingHandler(
         context: WebContentService,
@@ -52,6 +62,7 @@ class WebContentService : Service() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 MSG_TRANSFER_SOCKETS -> this.owner.handleTransferSockets(msg)
+                MSG_SET_RESOURCE_ROOT -> this.owner.handleSetResourceRoot(msg)
                 else -> super.handleMessage(msg)
             }
         }
@@ -61,6 +72,16 @@ class WebContentService : Service() {
         // FIXME: Check the intent to make sure it's legit
         return Messenger(IncomingHandler(this)).binder
     }
+
+    private external fun nativeThreadLoop(ipcSocket: Int, fdPassingSocket: Int)
+
+    private fun createThread(ipcSocket: ParcelFileDescriptor, fdSocket: ParcelFileDescriptor) {
+        threadPool.execute {
+            nativeThreadLoop(ipcSocket.detachFd(), fdSocket.detachFd())
+        }
+    }
+
+    private external fun initNativeCode(resourceDir: String, tagName: String);
 
     companion object {
         init {

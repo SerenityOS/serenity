@@ -9,6 +9,7 @@ package org.serenityos.ladybird
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import org.serenityos.ladybird.databinding.ActivityMainBinding
+import kotlin.io.path.Path
 
 class LadybirdActivity : AppCompatActivity() {
 
@@ -19,16 +20,25 @@ class LadybirdActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         resourceDir = TransferAssets.transferAssets(this)
-        initNativeCode(resourceDir, timerService)
+        initNativeCode(resourceDir, "Ladybird", timerService)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         view = binding.webView
+        view.initialize(resourceDir)
 
         mainExecutor.execute {
             callNativeEventLoopForever()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // FIXME: This is not the right place to load the homepage :^)
+        val initialURL = Path(resourceDir, "res/html/misc/welcome.html").toUri().toURL()
+        view.loadURL(initialURL)
     }
 
     override fun onDestroy() {
@@ -43,7 +53,11 @@ class LadybirdActivity : AppCompatActivity() {
      * A native method that is implemented by the 'ladybird' native library,
      * which is packaged with this application.
      */
-    private external fun initNativeCode(resourceDir: String, timerService: TimerExecutorService)
+    private external fun initNativeCode(
+        resourceDir: String,
+        tag: String,
+        timerService: TimerExecutorService
+    )
 
     // FIXME: Instead of doing this, can we push a message to the message queue of the java Looper
     //        when an event is pushed to the main thread, and use that to clear out the

@@ -8,29 +8,33 @@ package org.serenityos.ladybird
 
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.graphics.Bitmap
 import android.util.Log
+import android.view.View
+import java.net.URL
 
 /**
  * Wrapper around WebView::ViewImplementation for use by Kotlin
  */
-class WebViewImplementation(
-    context: Context,
-    private var appContext: Context = context.applicationContext
-) {
+class WebViewImplementation(private val view: WebView) {
     // Instance Pointer to native object, very unsafe :)
-    private var nativeInstance = nativeObjectInit()
+    private var nativeInstance: Long = 0
+    private lateinit var resourceDir: String
+    private lateinit var connection: ServiceConnection
 
-    init {
-        Log.d(
-            "Ladybird",
-            "New WebViewImplementation (Kotlin) with nativeInstance ${this.nativeInstance}"
-        )
+    fun initialize(resourceDir: String) {
+        this.resourceDir = resourceDir
+        nativeInstance = nativeObjectInit()
     }
 
     fun dispose() {
         nativeObjectDispose(nativeInstance)
         nativeInstance = 0
+    }
+
+    fun loadURL(url: URL) {
+        nativeLoadURL(nativeInstance, url.toString())
     }
 
     fun drawIntoBitmap(bitmap: Bitmap) {
@@ -41,25 +45,39 @@ class WebViewImplementation(
         nativeSetViewportGeometry(nativeInstance, w, h)
     }
 
+    fun setDevicePixelRatio(ratio: Float) {
+        nativeSetDevicePixelRatio(nativeInstance, ratio)
+    }
+
+    // Functions called from native code
     fun bindWebContentService(ipcFd: Int, fdPassingFd: Int) {
-        var connector = WebContentServiceConnection(ipcFd, fdPassingFd)
+        val connector = WebContentServiceConnection(ipcFd, fdPassingFd, resourceDir)
         connector.onDisconnect = {
             // FIXME: Notify impl that service is dead and might need restarted
             Log.e("WebContentView", "WebContent Died! :(")
         }
         // FIXME: Unbind this at some point maybe
-        appContext.bindService(
-            Intent(appContext, WebContentService::class.java),
+        view.context.bindService(
+            Intent(view.context, WebContentService::class.java),
             connector,
             Context.BIND_AUTO_CREATE
         )
+        connection = connector
     }
 
+    fun invalidateLayout() {
+        view.requestLayout()
+        view.invalidate()
+    }
+
+    // Functions implemented in native code
     private external fun nativeObjectInit(): Long
     private external fun nativeObjectDispose(instance: Long)
 
     private external fun nativeDrawIntoBitmap(instance: Long, bitmap: Bitmap)
     private external fun nativeSetViewportGeometry(instance: Long, w: Int, h: Int)
+    private external fun nativeSetDevicePixelRatio(instance: Long, ratio: Float)
+    private external fun nativeLoadURL(instance: Long, url: String)
 
     companion object {
         /*

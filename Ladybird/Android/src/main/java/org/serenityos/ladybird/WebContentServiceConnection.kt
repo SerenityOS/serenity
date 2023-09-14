@@ -13,7 +13,11 @@ import android.os.Message
 import android.os.Messenger
 import android.os.ParcelFileDescriptor
 
-class WebContentServiceConnection(private var ipcFd: Int, private var fdPassingFd: Int) :
+class WebContentServiceConnection(
+    private var ipcFd: Int,
+    private var fdPassingFd: Int,
+    private var resourceDir: String
+) :
     ServiceConnection {
     var boundToWebContent: Boolean = false
     var onDisconnect: () -> Unit = {}
@@ -28,7 +32,11 @@ class WebContentServiceConnection(private var ipcFd: Int, private var fdPassingF
         webContentService = Messenger(svc)
         boundToWebContent = true
 
-        var msg = Message.obtain(null, MSG_TRANSFER_SOCKETS)
+        val init = Message.obtain(null, MSG_SET_RESOURCE_ROOT)
+        init.data.putString("PATH", resourceDir)
+        webContentService!!.send(init)
+
+        val msg = Message.obtain(null, MSG_TRANSFER_SOCKETS)
         msg.data.putParcelable("IPC_SOCKET", ParcelFileDescriptor.adoptFd(ipcFd))
         msg.data.putParcelable("FD_PASSING_SOCKET", ParcelFileDescriptor.adoptFd(fdPassingFd))
         webContentService!!.send(msg)
