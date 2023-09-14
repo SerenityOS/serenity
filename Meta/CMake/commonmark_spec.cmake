@@ -1,6 +1,6 @@
 option(ENABLE_COMMONMARK_SPEC_DOWNLOAD "Enable download of commonmark test suite at build time" ON)
 
-set(MARKDOWN_TEST_PATH ${CMAKE_BINARY_DIR}/commonmark.spec.json)
+set(MARKDOWN_TEST_PATH ${SERENITY_CACHE_DIR}/commonmark.spec.json)
 set(MARKDOWN_TEST_URL https://spec.commonmark.org/0.30/spec.json)
 
 if(ENABLE_COMMONMARK_SPEC_DOWNLOAD)
