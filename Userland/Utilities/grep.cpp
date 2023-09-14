@@ -254,7 +254,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             while (it.has_next()) {
                 auto path = it.next_full_path();
                 if (!FileSystem::is_directory(path)) {
-                    auto key = user_has_specified_files ? path.view() : path.substring_view(base.length() + 1, path.length() - base.length() - 1);
+                    // Remove leading './' when `grep -r` was run without any specified paths.
+                    auto key = user_has_specified_files ? path.view() : path.substring_view(base.length() + 1);
                     if (auto result = handle_file(key, true); result.is_error() && !suppress_errors)
                         warnln("Failed with file {}: {}", key, result.release_error());
 
