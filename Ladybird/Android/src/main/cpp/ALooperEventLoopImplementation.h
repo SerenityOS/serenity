@@ -44,6 +44,19 @@ private:
     jmethodID m_timer_constructor { nullptr };
 };
 
+struct TimerData {
+    WeakPtr<Core::EventReceiver> receiver;
+    Core::TimerShouldFireWhenNotVisible visibility;
+};
+
+struct EventLoopThreadData {
+    static EventLoopThreadData& the();
+
+    HashMap<long, TimerData> timers;
+    HashTable<Core::Notifier*> notifiers;
+    Core::ThreadEventQueue* thread_queue = nullptr;
+};
+
 class ALooperEventLoopImplementation : public Core::EventLoopImplementation {
 public:
     static NonnullOwnPtr<ALooperEventLoopImplementation> create() { return adopt_own(*new ALooperEventLoopImplementation); }
@@ -63,6 +76,8 @@ public:
 
     void poke();
 
+    EventLoopThreadData& thread_data();
+
 private:
     friend class ALooperEventLoopManager;
 
@@ -77,18 +92,7 @@ private:
     int m_pipe[2] {};
     int m_exit_code { 0 };
     Atomic<bool> m_exit_requested { false };
-};
-
-struct TimerData {
-    WeakPtr<Core::EventReceiver> receiver;
-    Core::TimerShouldFireWhenNotVisible visibility;
-};
-
-struct EventLoopThreadData {
-    static EventLoopThreadData& the();
-
-    HashMap<long, TimerData> timers;
-    HashTable<Core::Notifier*> notifiers;
+    EventLoopThreadData* m_thread_data { nullptr };
 };
 
 }

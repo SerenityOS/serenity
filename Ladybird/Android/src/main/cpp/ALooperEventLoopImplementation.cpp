@@ -18,7 +18,7 @@ namespace Ladybird {
 
 EventLoopThreadData& EventLoopThreadData::the()
 {
-    static thread_local EventLoopThreadData s_thread_data;
+    static thread_local EventLoopThreadData s_thread_data { {}, {}, &Core::ThreadEventQueue::current() };
     return s_thread_data;
 }
 
@@ -73,7 +73,7 @@ int ALooperEventLoopManager::register_timer(Core::EventReceiver& receiver, int m
     JavaEnvironment env(m_vm);
     auto& thread_data = EventLoopThreadData::the();
 
-    auto timer = env.get()->NewObject(m_timer_class, m_timer_constructor, reinterpret_cast<long>(&thread_data));
+    auto timer = env.get()->NewObject(m_timer_class, m_timer_constructor, reinterpret_cast<long>(&current_impl()));
 
     long millis = milliseconds;
     long timer_id = env.get()->CallLongMethod(m_timer_service, m_register_timer, timer, !should_reload, millis);
@@ -112,6 +112,7 @@ void ALooperEventLoopManager::did_post_event()
 
 ALooperEventLoopImplementation::ALooperEventLoopImplementation()
     : m_event_loop(ALooper_prepare(0))
+    , m_thread_data(&EventLoopThreadData::the())
 {
     auto ret = pipe2(m_pipe, O_CLOEXEC | O_NONBLOCK);
     VERIFY(ret == 0);
@@ -129,6 +130,11 @@ ALooperEventLoopImplementation::~ALooperEventLoopImplementation()
 
     ::close(m_pipe[0]);
     ::close(m_pipe[1]);
+}
+
+EventLoopThreadData& ALooperEventLoopImplementation::thread_data()
+{
+    return *m_thread_data;
 }
 
 int ALooperEventLoopImplementation::exec()
