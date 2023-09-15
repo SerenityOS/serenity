@@ -19,7 +19,7 @@ ToolPropertiesWidget::ToolPropertiesWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
 
-    m_group_box = add<GUI::GroupBox>("Tool properties"sv);
+    m_group_box = add<GUI::GroupBox>();
     m_group_box->set_layout<GUI::VerticalBoxLayout>(8);
     m_tool_widget_stack = m_group_box->add<GUI::StackWidget>();
     m_error_label = m_tool_widget_stack->add<GUI::Label>();
