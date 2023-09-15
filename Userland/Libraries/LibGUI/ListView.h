@@ -15,7 +15,6 @@ class ListView : public AbstractView {
 public:
     virtual ~ListView() override;
 
-    int item_height() const { return font().preferred_line_height() + vertical_padding(); }
     int item_count() const;
 
     bool alternating_row_colors() const { return m_alternating_row_colors; }
@@ -24,8 +23,12 @@ public:
     bool hover_highlighting() const { return m_hover_highlighting; }
     void set_hover_highlighting(bool b) { m_hover_highlighting = b; }
 
+    int item_height() const { return m_item_height.value_or(font().preferred_line_height() + vertical_padding()); }
+    void set_item_height(int item_height) { m_item_height = item_height; }
     int horizontal_padding() const { return m_horizontal_padding; }
+    void set_horizontal_padding(int horizontal_padding) { m_horizontal_padding = horizontal_padding; }
     int vertical_padding() const { return m_vertical_padding; }
+    void set_vertical_padding(int vertical_padding) { m_vertical_padding = vertical_padding; }
 
     virtual void scroll_into_view(ModelIndex const& index, bool scroll_horizontally, bool scroll_vertically) override;
 
@@ -59,6 +62,7 @@ private:
     Gfx::IntRect content_rect(int row) const;
     void update_content_size();
 
+    Optional<int> m_item_height {};
     int m_horizontal_padding { 2 };
     int m_vertical_padding { 2 };
     int m_model_column { 0 };
