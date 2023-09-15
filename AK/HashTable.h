@@ -458,9 +458,10 @@ private:
         auto old_buckets_size = size_in_bytes(m_capacity);
         Iterator old_iter = begin();
 
-        auto* new_buckets = kcalloc(1, size_in_bytes(new_capacity));
+        auto* new_buckets = kmalloc_aligned(size_in_bytes(new_capacity), alignof(BucketType));
         if (!new_buckets)
             return Error::from_errno(ENOMEM);
+        __builtin_memset(new_buckets, 0, size_in_bytes(new_capacity));
 
         m_buckets = static_cast<BucketType*>(new_buckets);
         m_capacity = new_capacity;
