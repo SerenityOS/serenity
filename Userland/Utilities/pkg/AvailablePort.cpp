@@ -123,6 +123,10 @@ static ErrorOr<String> extract_port_name_from_column(Markdown::Table::Column con
 
 ErrorOr<HashMap<String, AvailablePort>> AvailablePort::read_available_ports_list()
 {
+    if (Core::System::access("/usr/Ports/AvailablePorts.md"sv, R_OK).is_error()) {
+        warnln("pkg: /usr/Ports/AvailablePorts.md doesn't exist, did you run pkg -u first?");
+        return Error::from_errno(ENOENT);
+    }
     auto available_ports_file = TRY(Core::File::open("/usr/Ports/AvailablePorts.md"sv, Core::File::OpenMode::Read, 0600));
     auto content_buffer = TRY(available_ports_file->read_until_eof());
     auto content = StringView(content_buffer);
