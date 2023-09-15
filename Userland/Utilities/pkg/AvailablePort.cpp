@@ -74,6 +74,10 @@ static Optional<Markdown::Table::Column const&> get_column_in_table(Markdown::Ta
 
 ErrorOr<int> AvailablePort::update_available_ports_list_file()
 {
+    if (auto error_or_void = Core::System::mkdir("/usr/Ports/"sv, 0655); error_or_void.is_error()) {
+        if (error_or_void.error().code() != EEXIST)
+            return error_or_void.release_error();
+    }
     if (!Core::System::access("/usr/Ports/AvailablePorts.md"sv, R_OK).is_error() && FileSystem::remove("/usr/Ports/AvailablePorts.md"sv, FileSystem::RecursionMode::Disallowed).is_error()) {
         outln("pkg: /usr/Ports/AvailablePorts.md exists, but can't delete it before updating it!");
         return 0;

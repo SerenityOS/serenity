@@ -26,8 +26,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd thread unix rpath cpath wpath"));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
-    TRY(Core::System::unveil("/usr/Ports/installed.db"sv, "rwc"sv));
-    TRY(Core::System::unveil("/usr/Ports/AvailablePorts.md"sv, "rwc"sv));
+    TRY(Core::System::unveil("/usr"sv, "c"sv));
+    TRY(Core::System::unveil("/usr/Ports"sv, "rwc"sv));
     TRY(Core::System::unveil("/res"sv, "r"sv));
     TRY(Core::System::unveil("/usr/lib"sv, "r"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -54,6 +54,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     HashMap<String, InstalledPort> installed_ports;
     HashMap<String, AvailablePort> available_ports;
     if (show_all_installed_ports || show_all_dependency_ports || !query_package.is_null()) {
+        if (Core::System::access("/usr/Ports/installed.md"sv, R_OK).is_error()) {
+            warnln("pkg: /usr/Ports/installed.md isn't accessible, did you install a package in the past?");
+            return 1;
+        }
         installed_ports = TRY(InstalledPort::read_ports_database());
     }
 
