@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WebContentService.h"
+#include "LadybirdServiceBase.h"
 #include <AK/LexicalPath.h>
 #include <Ladybird/FontPlugin.h>
 #include <Ladybird/HelperProcess.h>
@@ -38,7 +38,7 @@ class NullResourceConnector : public Web::ResourceLoaderConnector {
     }
 };
 
-ErrorOr<int> web_content_main(int ipc_socket, int fd_passing_socket)
+ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 {
     Core::EventLoop event_loop;
 

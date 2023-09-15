@@ -8,4 +8,4 @@
 
 #include <AK/Error.h>
 
-ErrorOr<int> web_content_main(int ipc_socket, int fd_passing_socket);
+ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket);

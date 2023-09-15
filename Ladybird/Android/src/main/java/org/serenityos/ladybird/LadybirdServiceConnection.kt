@@ -13,15 +13,15 @@ import android.os.Message
 import android.os.Messenger
 import android.os.ParcelFileDescriptor
 
-class WebContentServiceConnection(
+class LadybirdServiceConnection(
     private var ipcFd: Int,
     private var fdPassingFd: Int,
     private var resourceDir: String
 ) :
     ServiceConnection {
-    var boundToWebContent: Boolean = false
+    var boundToService: Boolean = false
     var onDisconnect: () -> Unit = {}
-    private var webContentService: Messenger? = null
+    private var service: Messenger? = null
 
     override fun onServiceConnected(className: ComponentName, svc: IBinder) {
         // This is called when the connection with the service has been
@@ -29,24 +29,24 @@ class WebContentServiceConnection(
         // interact with the service.  We are communicating with the
         // service using a Messenger, so here we get a client-side
         // representation of that from the raw IBinder object.
-        webContentService = Messenger(svc)
-        boundToWebContent = true
+        service = Messenger(svc)
+        boundToService = true
 
         val init = Message.obtain(null, MSG_SET_RESOURCE_ROOT)
         init.data.putString("PATH", resourceDir)
-        webContentService!!.send(init)
+        service!!.send(init)
 
         val msg = Message.obtain(null, MSG_TRANSFER_SOCKETS)
         msg.data.putParcelable("IPC_SOCKET", ParcelFileDescriptor.adoptFd(ipcFd))
         msg.data.putParcelable("FD_PASSING_SOCKET", ParcelFileDescriptor.adoptFd(fdPassingFd))
-        webContentService!!.send(msg)
+        service!!.send(msg)
     }
 
     override fun onServiceDisconnected(className: ComponentName) {
         // This is called when the connection with the service has been
         // unexpectedly disconnected; that is, its process crashed.
-        webContentService = null
-        boundToWebContent = false
+        service = null
+        boundToService = false
 
         // Notify owner that the service is dead
         onDisconnect()

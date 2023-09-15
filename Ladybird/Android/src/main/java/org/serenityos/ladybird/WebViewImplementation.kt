@@ -51,7 +51,7 @@ class WebViewImplementation(private val view: WebView) {
 
     // Functions called from native code
     fun bindWebContentService(ipcFd: Int, fdPassingFd: Int) {
-        val connector = WebContentServiceConnection(ipcFd, fdPassingFd, resourceDir)
+        val connector = LadybirdServiceConnection(ipcFd, fdPassingFd, resourceDir)
         connector.onDisconnect = {
             // FIXME: Notify impl that service is dead and might need restarted
             Log.e("WebContentView", "WebContent Died! :(")

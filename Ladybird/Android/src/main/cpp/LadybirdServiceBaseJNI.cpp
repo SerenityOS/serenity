@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WebContentService.h"
+#include "LadybirdServiceBase.h"
 #include <AK/Atomic.h>
 #include <AK/Format.h>
 #include <Ladybird/Utilities.h>
 #include <jni.h>
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_serenityos_ladybird_WebContentService_nativeThreadLoop(JNIEnv*, jobject /* thiz */, jint ipc_socket, jint fd_passing_socket)
+Java_org_serenityos_ladybird_LadybirdServiceBase_nativeThreadLoop(JNIEnv*, jobject /* thiz */, jint ipc_socket, jint fd_passing_socket)
 {
     dbgln("New binding received, sockets {} and {}", ipc_socket, fd_passing_socket);
-    auto ret = web_content_main(ipc_socket, fd_passing_socket);
+    auto ret = service_main(ipc_socket, fd_passing_socket);
     if (ret.is_error()) {
         warnln("Runtime Error: {}", ret.release_error());
     } else {
@@ -23,7 +23,7 @@ Java_org_serenityos_ladybird_WebContentService_nativeThreadLoop(JNIEnv*, jobject
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_serenityos_ladybird_WebContentService_initNativeCode(JNIEnv* env, jobject /* thiz */, jstring resource_dir, jstring tag_name)
+Java_org_serenityos_ladybird_LadybirdServiceBase_initNativeCode(JNIEnv* env, jobject /* thiz */, jstring resource_dir, jstring tag_name)
 {
     static Atomic<bool> s_initialized_flag { false };
     if (s_initialized_flag.exchange(true) == true) {
