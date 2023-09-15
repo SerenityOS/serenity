@@ -5,7 +5,6 @@
 #include <LibGUI/Frame.h>
 #include <LibGUI/MessageBox.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -23,9 +22,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
 
-    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(16));
+    main_widget->set_layout<GUI::VerticalBoxLayout>(16);
 
-    auto button = TRY(main_widget->try_add<GUI::Button>("Click me!"));
+    auto button = TRY(main_widget->try_add<GUI::Button>("Click me!"_string));
     button->on_click = [&](auto) {
         GUI::MessageBox::show(window, "Hello friends!"sv, ":^)"sv);
     };
