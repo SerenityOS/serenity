@@ -120,6 +120,19 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::children()
     return *m_children;
 }
 
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString const& qualified_name)
+{
+    return get_elements_by_tag_name(qualified_name.to_deprecated_fly_string());
+}
+
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(Optional<String> const& nullable_namespace, FlyString const& local_name)
+{
+    DeprecatedFlyString deprecated_nullable_namespace;
+    if (nullable_namespace.has_value())
+        deprecated_nullable_namespace = nullable_namespace->to_deprecated_string();
+    return get_elements_by_tag_name_ns(deprecated_nullable_namespace, local_name.to_deprecated_fly_string());
+}
+
 // https://dom.spec.whatwg.org/#concept-getelementsbytagname
 // NOTE: This method is only exposed on Document and Element, but is in ParentNode to prevent code duplication.
 JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(DeprecatedFlyString const& qualified_name)
