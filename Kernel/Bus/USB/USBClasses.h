@@ -11,6 +11,7 @@
 namespace Kernel::USB {
 
 // https://www.usb.org/defined-class-codes
+static constexpr u8 USB_CLASS_DEVICE = 0x00;
 static constexpr u8 USB_CLASS_AUDIO = 0x01;
 static constexpr u8 USB_CLASS_COMMUNICATIONS_AND_CDC_CONTROL = 0x02;
 static constexpr u8 USB_CLASS_HID = 0x03;
