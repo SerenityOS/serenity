@@ -28,6 +28,9 @@ public:
 
     JS::NonnullGCPtr<HTMLCollection> children();
 
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name_ns(Optional<String> const&, FlyString const&);
+
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name(DeprecatedFlyString const&);
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name_ns(DeprecatedFlyString const&, DeprecatedFlyString const&);
 
