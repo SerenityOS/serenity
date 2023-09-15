@@ -114,7 +114,7 @@ static void add_possible_value(HashMap<FlatPtr, HeapRootTypeOrLocation>& possibl
 }
 
 template<typename Callback>
-static void for_each_cell_among_possible_pointers(HashTable<HeapBlock*> all_live_heap_blocks, HashMap<FlatPtr, HeapRootTypeOrLocation>& possible_pointers, Callback callback)
+static void for_each_cell_among_possible_pointers(HashTable<HeapBlock*> const& all_live_heap_blocks, HashMap<FlatPtr, HeapRootTypeOrLocation>& possible_pointers, Callback callback)
 {
     for (auto possible_pointer : possible_pointers.keys()) {
         if (!possible_pointer)
