@@ -513,24 +513,46 @@ clean_all() {
 }
 addtodb() {
     buildstep_intro "Adding $port $version to database of installed ports..."
-    if [ -n "$(package_install_state $port $version)" ]; then
+    if [ -n "$(package_install_state "$port" "$version")" ]; then
         echo "Note: Skipped because $port $version is already installed."
         return
     fi
     if [ "${1:-}" = "--auto" ]; then
-        echo "auto $port $version" >> "$installedpackagesdb"
+        sqlite3 "$installedpackagesdb" "INSERT INTO packages (name, version, install_type) VALUES ('$port', '$version', 'auto')"
     else
-        echo "manual $port $version" >> "$installedpackagesdb"
+        sqlite3 "$installedpackagesdb" "INSERT INTO packages (name, version, install_type) VALUES ('$port', '$version', 'manual')"
     fi
     if [ "${#depends[@]}" -gt 0 ]; then
-        echo "dependency $port ${depends[@]}" >> "$installedpackagesdb"
+        for depend in "${depends[@]}"; do
+            sqlite3 "$installedpackagesdb" "INSERT INTO package_dependencies VALUES ('$port', '$depend')"
+        done
     fi
     echo "Successfully installed $port $version."
 }
 ensure_installedpackagesdb() {
     if [ ! -f "$installedpackagesdb" ]; then
-        mkdir -p "$(dirname $installedpackagesdb)"
-        touch "$installedpackagesdb"
+        mkdir -p "$(dirname "$installedpackagesdb")"
+        
+        sql_file=$(mktemp --suffix=.sql)
+        cat <<EOF > "$sql_file"
+-- Create the 'packages' table
+CREATE TABLE IF NOT EXISTS packages (
+    name TEXT PRIMARY KEY,
+    version TEXT NOT NULL,
+    install_type TEXT CHECK (install_type IN ('auto', 'manual')),
+    installed_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the 'package_dependencies' table
+CREATE TABLE IF NOT EXISTS package_dependencies (
+    package TEXT,
+    dependency TEXT,
+    FOREIGN KEY (package) REFERENCES packages(name),
+    FOREIGN KEY (dependency) REFERENCES packages(name)
+);
+EOF
+        sqlite3 "$installedpackagesdb" < "$sql_file"
+        rm "$sql_file"
     fi
 }
 package_install_state() {
@@ -538,7 +560,11 @@ package_install_state() {
     local version=${2:-}
 
     ensure_installedpackagesdb
-    grep -E "^(auto|manual) $port $version" "$installedpackagesdb" | cut -d' ' -f1
+    if [[ -n "$version" ]]; then
+        sqlite3 "$installedpackagesdb" "SELECT install_type FROM packages WHERE name='$port' AND version='$version'"
+    else
+        sqlite3 "$installedpackagesdb" "SELECT install_type FROM packages WHERE name='$port'"
+    fi
 }
 installdepends() {
     for depend in "${depends[@]}"; do
