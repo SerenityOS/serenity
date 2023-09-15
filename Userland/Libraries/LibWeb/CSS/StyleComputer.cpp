@@ -2051,8 +2051,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
             maybe_length = font_size.as_calculated().resolve_length(length_resolution_context);
         }
         if (maybe_length.has_value()) {
-            auto px = maybe_length.value().to_px(length_resolution_context).to_int();
-            font_size_in_px = px;
+            font_size_in_px = maybe_length.value().to_px(length_resolution_context);
         }
     }
 
