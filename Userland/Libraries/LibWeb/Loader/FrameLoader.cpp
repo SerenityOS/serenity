@@ -326,8 +326,13 @@ void FrameLoader::resource_did_load()
     };
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", move(navigation_params)).release_value_but_fixme_should_propagate_errors();
     document->set_url(url);
-    document->set_encoding(resource()->encoding());
-    document->set_content_type(resource()->mime_type());
+
+    if (resource()->encoding().has_value())
+        document->set_encoding(MUST(String::from_deprecated_string(resource()->encoding().value())));
+    else
+        document->set_encoding({});
+
+    document->set_content_type(MUST(String::from_deprecated_string(resource()->mime_type())));
 
     browsing_context().set_active_document(document);
     if (auto* page = browsing_context().page())

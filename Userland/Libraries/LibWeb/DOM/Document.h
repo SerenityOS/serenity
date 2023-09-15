@@ -70,7 +70,7 @@ struct DocumentUnloadTimingInfo {
 };
 
 struct ElementCreationOptions {
-    DeprecatedString is;
+    Optional<String> is;
 };
 
 enum class PolicyControlledFeature {
@@ -173,7 +173,7 @@ public:
     WebIDL::ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
     DeprecatedString title() const;
-    WebIDL::ExceptionOr<void> set_title(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_title(String const&);
 
     HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
     HTML::BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }
@@ -216,7 +216,7 @@ public:
     void schedule_style_update();
     void schedule_layout_update();
 
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(DeprecatedString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(String const&);
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(StringView);
 
     JS::NonnullGCPtr<HTMLCollection> applets();
@@ -237,17 +237,17 @@ public:
     void navigate_to_javascript_url(StringView url);
     void evaluate_javascript_url(StringView url);
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(DeprecatedString const& local_name, Variant<DeprecatedString, ElementCreationOptions> const& options);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, Variant<DeprecatedString, ElementCreationOptions> const& options);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(String const& local_name, Variant<String, ElementCreationOptions> const& options);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(Optional<String> const& namespace_, String const& qualified_name, Variant<String, ElementCreationOptions> const& options);
     JS::NonnullGCPtr<DocumentFragment> create_document_fragment();
-    JS::NonnullGCPtr<Text> create_text_node(DeprecatedString const& data);
-    JS::NonnullGCPtr<Comment> create_comment(DeprecatedString const& data);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> create_processing_instruction(DeprecatedString const& target, DeprecatedString const& data);
+    JS::NonnullGCPtr<Text> create_text_node(String const& data);
+    JS::NonnullGCPtr<Comment> create_comment(String const& data);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> create_processing_instruction(String const& target, String const& data);
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create_attribute(DeprecatedString const& local_name);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create_attribute_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create_attribute(String const& local_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create_attribute_ns(Optional<String> const& namespace_, String const& qualified_name);
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create_event(DeprecatedString const& interface);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create_event(StringView interface);
     JS::NonnullGCPtr<Range> create_range();
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
@@ -316,28 +316,28 @@ public:
 
     void set_window(HTML::Window&);
 
-    WebIDL::ExceptionOr<void> write(Vector<DeprecatedString> const& strings);
-    WebIDL::ExceptionOr<void> writeln(Vector<DeprecatedString> const& strings);
+    WebIDL::ExceptionOr<void> write(Vector<String> const& strings);
+    WebIDL::ExceptionOr<void> writeln(Vector<String> const& strings);
 
-    WebIDL::ExceptionOr<Document*> open(StringView = ""sv, StringView = ""sv);
+    WebIDL::ExceptionOr<Document*> open(Optional<String> const& = {}, Optional<String> const& = {});
     WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(StringView url, StringView name, StringView features);
     WebIDL::ExceptionOr<void> close();
 
     HTML::Window* default_view() { return m_window.ptr(); }
     HTML::Window const* default_view() const { return m_window.ptr(); }
 
-    DeprecatedString const& content_type() const { return m_content_type; }
-    void set_content_type(DeprecatedString const& content_type) { m_content_type = content_type; }
+    String const& content_type() const { return m_content_type; }
+    void set_content_type(String content_type) { m_content_type = move(content_type); }
 
     bool has_encoding() const { return m_encoding.has_value(); }
-    Optional<DeprecatedString> const& encoding() const { return m_encoding; }
-    DeprecatedString encoding_or_default() const { return m_encoding.value_or("UTF-8"); }
-    void set_encoding(Optional<DeprecatedString> const& encoding) { m_encoding = encoding; }
+    Optional<String> const& encoding() const { return m_encoding; }
+    String encoding_or_default() const { return m_encoding.value_or("UTF-8"_string); }
+    void set_encoding(Optional<String> encoding) { m_encoding = move(encoding); }
 
     // NOTE: These are intended for the JS bindings
-    DeprecatedString character_set() const { return encoding_or_default(); }
-    DeprecatedString charset() const { return encoding_or_default(); }
-    DeprecatedString input_encoding() const { return encoding_or_default(); }
+    String character_set() const { return encoding_or_default(); }
+    String charset() const { return encoding_or_default(); }
+    String input_encoding() const { return encoding_or_default(); }
 
     bool ready_for_post_load_tasks() const { return m_ready_for_post_load_tasks; }
     void set_ready_for_post_load_tasks(bool ready) { m_ready_for_post_load_tasks = ready; }
@@ -409,7 +409,7 @@ public:
     void set_is_temporary_document_for_fragment_parsing(Badge<HTML::HTMLParser>) { m_temporary_document_for_fragment_parsing = true; }
     [[nodiscard]] bool is_temporary_document_for_fragment_parsing() const { return m_temporary_document_for_fragment_parsing; }
 
-    static bool is_valid_name(DeprecatedString const&);
+    static bool is_valid_name(String const&);
 
     struct PrefixAndTagName {
         DeprecatedFlyString prefix;
@@ -449,7 +449,7 @@ public:
     void set_is_initial_about_blank(bool b) { m_is_initial_about_blank = b; }
 
     DeprecatedString domain() const;
-    void set_domain(DeprecatedString const& domain);
+    void set_domain(String const&);
 
     auto& pending_scroll_event_targets() { return m_pending_scroll_event_targets; }
     auto& pending_scrollend_event_targets() { return m_pending_scrollend_event_targets; }
@@ -504,7 +504,7 @@ public:
 
     void did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>);
 
-    bool query_command_supported(DeprecatedString const&) const;
+    bool query_command_supported(String const&) const;
 
     DeprecatedString dump_accessibility_tree_as_json();
 
@@ -604,8 +604,8 @@ private:
     JS::GCPtr<Document> m_appropriate_template_contents_owner_document;
 
     HTML::DocumentReadyState m_readiness { HTML::DocumentReadyState::Loading };
-    DeprecatedString m_content_type { "application/xml" };
-    Optional<DeprecatedString> m_encoding;
+    String m_content_type { "application/xml"_string };
+    Optional<String> m_encoding;
 
     bool m_ready_for_post_load_tasks { false };
 

@@ -257,7 +257,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     //    and navigation id is navigationParams's id.
     auto document = HTML::HTMLDocument::create(window->realm());
     document->m_type = type;
-    document->m_content_type = move(content_type);
+    document->m_content_type = MUST(String::from_deprecated_string(content_type));
     document->set_origin(navigation_params.origin);
     document->m_policy_container = navigation_params.policy_container;
     document->m_active_sandboxing_flag_set = navigation_params.final_sandboxing_flag_set;
@@ -410,7 +410,7 @@ JS::GCPtr<Selection::Selection> Document::get_selection() const
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
-WebIDL::ExceptionOr<void> Document::write(Vector<DeprecatedString> const& strings)
+WebIDL::ExceptionOr<void> Document::write(Vector<String> const& strings)
 {
     StringBuilder builder;
     builder.join(""sv, strings);
@@ -419,7 +419,7 @@ WebIDL::ExceptionOr<void> Document::write(Vector<DeprecatedString> const& string
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
-WebIDL::ExceptionOr<void> Document::writeln(Vector<DeprecatedString> const& strings)
+WebIDL::ExceptionOr<void> Document::writeln(Vector<String> const& strings)
 {
     StringBuilder builder;
     builder.join(""sv, strings);
@@ -464,7 +464,7 @@ WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(StringView inpu
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open
-WebIDL::ExceptionOr<Document*> Document::open(StringView, StringView)
+WebIDL::ExceptionOr<Document*> Document::open(Optional<String> const&, Optional<String> const&)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
@@ -720,7 +720,7 @@ DeprecatedString Document::title() const
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#document.title
-WebIDL::ExceptionOr<void> Document::set_title(DeprecatedString const& title)
+WebIDL::ExceptionOr<void> Document::set_title(String const& title)
 {
     auto* document_element = this->document_element();
 
@@ -744,7 +744,7 @@ WebIDL::ExceptionOr<void> Document::set_title(DeprecatedString const& title)
         }
 
         // 3. String replace all with the given value within element.
-        element->string_replace_all(title);
+        element->string_replace_all(title.to_deprecated_string());
     }
 
     // -> If the document element is in the HTML namespace
@@ -773,7 +773,7 @@ WebIDL::ExceptionOr<void> Document::set_title(DeprecatedString const& title)
         }
 
         // 4. String replace all with the given value within element.
-        element->string_replace_all(title);
+        element->string_replace_all(title.to_deprecated_string());
     }
 
     // -> Otherwise
@@ -784,7 +784,7 @@ WebIDL::ExceptionOr<void> Document::set_title(DeprecatedString const& title)
 
     if (auto* page = this->page()) {
         if (browsing_context() == &page->top_level_browsing_context())
-            page->client().page_did_change_title(title);
+            page->client().page_did_change_title(title.to_deprecated_string());
     }
 
     return {};
@@ -1182,10 +1182,11 @@ void Document::set_hovered_node(Node* node)
     }
 }
 
-JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(DeprecatedString const& name)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
 {
-    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [name](Element const& element) {
-        return element.name() == name;
+    auto deprecated_name = name.to_deprecated_string();
+    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [deprecated_name](Element const& element) {
+        return element.name() == deprecated_name;
     });
 }
 
@@ -1359,14 +1360,12 @@ void Document::evaluate_javascript_url(StringView url)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(DeprecatedString const& a_local_name, Variant<DeprecatedString, ElementCreationOptions> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String const& a_local_name, Variant<String, ElementCreationOptions> const& options)
 {
-    auto& vm = this->vm();
-
-    auto local_name = a_local_name;
+    auto local_name = a_local_name.to_deprecated_string();
 
     // 1. If localName does not match the Name production, then throw an "InvalidCharacterError" DOMException.
-    if (!is_valid_name(local_name))
+    if (!is_valid_name(a_local_name))
         return WebIDL::InvalidCharacterError::create(realm(), "Invalid character in tag name."_fly_string);
 
     // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
@@ -1379,8 +1378,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(Deprecat
     // 4. If options is a dictionary and options["is"] exists, then set is to it.
     if (options.has<ElementCreationOptions>()) {
         auto const& element_creation_options = options.get<ElementCreationOptions>();
-        if (!element_creation_options.is.is_null())
-            is_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(element_creation_options.is));
+        if (element_creation_options.is.has_value())
+            is_value = element_creation_options.is.value();
     }
 
     // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
@@ -1394,12 +1393,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(Deprecat
 
 // https://dom.spec.whatwg.org/#dom-document-createelementns
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, Variant<DeprecatedString, ElementCreationOptions> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optional<String> const& namespace_, String const& qualified_name, Variant<String, ElementCreationOptions> const& options)
 {
-    auto& vm = this->vm();
+    // FIXME: This conversion is ugly
+    StringView namespace_view;
+    if (namespace_.has_value())
+        namespace_view = namespace_->bytes_as_string_view();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_view, qualified_name.to_deprecated_string()));
 
     // 2. Let is be null.
     Optional<String> is_value;
@@ -1407,8 +1409,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Depre
     // 3. If options is a dictionary and options["is"] exists, then set is to it.
     if (options.has<ElementCreationOptions>()) {
         auto const& element_creation_options = options.get<ElementCreationOptions>();
-        if (!element_creation_options.is.is_null())
-            is_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(element_creation_options.is));
+        if (element_creation_options.is.has_value())
+            is_value = element_creation_options.is.value();
     }
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
@@ -1420,25 +1422,25 @@ JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
     return heap().allocate<DocumentFragment>(realm(), *this);
 }
 
-JS::NonnullGCPtr<Text> Document::create_text_node(DeprecatedString const& data)
+JS::NonnullGCPtr<Text> Document::create_text_node(String const& data)
 {
-    return heap().allocate<Text>(realm(), *this, MUST(String::from_deprecated_string(data)));
+    return heap().allocate<Text>(realm(), *this, data);
 }
 
-JS::NonnullGCPtr<Comment> Document::create_comment(DeprecatedString const& data)
+JS::NonnullGCPtr<Comment> Document::create_comment(String const& data)
 {
-    return heap().allocate<Comment>(realm(), *this, MUST(String::from_deprecated_string(data)));
+    return heap().allocate<Comment>(realm(), *this, data);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createprocessinginstruction
-WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_processing_instruction(DeprecatedString const& target, DeprecatedString const& data)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_processing_instruction(String const& target, String const& data)
 {
     // FIXME: 1. If target does not match the Name production, then throw an "InvalidCharacterError" DOMException.
 
     // FIXME: 2. If data contains the string "?>", then throw an "InvalidCharacterError" DOMException.
 
     // 3. Return a new ProcessingInstruction node, with target set to target, data set to data, and node document set to this.
-    return heap().allocate<ProcessingInstruction>(realm(), *this, data, target);
+    return heap().allocate<ProcessingInstruction>(realm(), *this, data.to_deprecated_string(), target.to_deprecated_string());
 }
 
 JS::NonnullGCPtr<Range> Document::create_range()
@@ -1447,7 +1449,7 @@ JS::NonnullGCPtr<Range> Document::create_range()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedString const& interface)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(StringView interface)
 {
     auto& realm = this->realm();
 
@@ -2242,7 +2244,7 @@ static inline bool is_valid_name_character(u32 code_point)
         || (code_point >= 0x203f && code_point <= 0x2040);
 }
 
-bool Document::is_valid_name(DeprecatedString const& name)
+bool Document::is_valid_name(String const& name)
 {
     auto code_points = Utf8View { name };
     auto it = code_points.begin();
@@ -2491,7 +2493,7 @@ DeprecatedString Document::domain() const
     return URLParser::serialize_host(effective_domain.release_value()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
-void Document::set_domain(DeprecatedString const& domain)
+void Document::set_domain(String const& domain)
 {
     dbgln("(STUBBED) Document::set_domain(domain='{}')", domain);
 }
@@ -2919,7 +2921,7 @@ void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::Br
 }
 
 // https://w3c.github.io/editing/docs/execCommand/#querycommandsupported()
-bool Document::query_command_supported(DeprecatedString const& command) const
+bool Document::query_command_supported(String const& command) const
 {
     dbgln("(STUBBED) Document::query_command_supported(command='{}')", command);
     return false;
@@ -2981,7 +2983,7 @@ DeprecatedString Document::dump_accessibility_tree_as_json()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createattribute
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(DeprecatedString const& local_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(String const& local_name)
 {
     // 1. If localName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     if (!is_valid_name(local_name))
@@ -2989,14 +2991,20 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(Deprecate
 
     // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
     // 3. Return a new attribute whose local name is localName and node document is this.
-    return Attr::create(*this, is_html_document() ? local_name.to_lowercase() : local_name);
+    auto deprecated_local_name = local_name.to_deprecated_string();
+    return Attr::create(*this, is_html_document() ? deprecated_local_name.to_lowercase() : deprecated_local_name);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createattributens
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(Optional<String> const& namespace_, String const& qualified_name)
 {
+    // FIXME: This conversion is ugly
+    StringView namespace_view;
+    if (namespace_.has_value())
+        namespace_view = namespace_->bytes_as_string_view();
+
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_view, qualified_name.to_deprecated_string()));
 
     // 2. Return a new attribute whose namespace is namespace, namespace prefix is prefix, local name is localName, and node document is this.
 

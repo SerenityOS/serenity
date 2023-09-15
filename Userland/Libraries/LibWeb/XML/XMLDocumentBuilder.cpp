@@ -146,7 +146,7 @@ void XMLDocumentBuilder::text(StringView data)
         auto string = DeprecatedString::empty();
         if (!data.is_null())
             string = data.to_deprecated_string();
-        auto node = m_document->create_text_node(string);
+        auto node = m_document->create_text_node(MUST(String::from_deprecated_string(string)));
         MUST(m_current_node->append_child(node));
     }
 }
@@ -158,7 +158,7 @@ void XMLDocumentBuilder::comment(StringView data)
     auto string = DeprecatedString::empty();
     if (!data.is_null())
         string = data.to_deprecated_string();
-    MUST(m_document->append_child(m_document->create_comment(string)));
+    MUST(m_document->append_child(m_document->create_comment(MUST(String::from_deprecated_string(string)))));
 }
 
 void XMLDocumentBuilder::document_end()

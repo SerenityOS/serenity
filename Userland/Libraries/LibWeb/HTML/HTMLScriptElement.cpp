@@ -290,8 +290,7 @@ void HTMLScriptElement::prepare_script()
     }
 
     if (!encoding.has_value()) {
-        auto document_encoding = document().encoding_or_default();
-        encoding = String::from_deprecated_string(document_encoding).release_value_but_fixme_should_propagate_errors();
+        encoding = document().encoding_or_default();
     }
 
     VERIFY(encoding.has_value());

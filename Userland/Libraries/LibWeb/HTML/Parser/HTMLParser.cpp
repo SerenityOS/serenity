@@ -136,7 +136,7 @@ HTMLParser::HTMLParser(DOM::Document& document, StringView input, DeprecatedStri
     m_document->set_parser({}, *this);
     auto standardized_encoding = TextCodec::get_standardized_encoding(encoding);
     VERIFY(standardized_encoding.has_value());
-    m_document->set_encoding(standardized_encoding.value());
+    m_document->set_encoding(MUST(String::from_utf8(standardized_encoding.value())));
 }
 
 HTMLParser::HTMLParser(DOM::Document& document)
@@ -3774,7 +3774,7 @@ JS::NonnullGCPtr<HTMLParser> HTMLParser::create_for_scripting(DOM::Document& doc
 JS::NonnullGCPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, ByteBuffer const& input)
 {
     if (document.has_encoding())
-        return document.heap().allocate_without_realm<HTMLParser>(document, input, document.encoding().value());
+        return document.heap().allocate_without_realm<HTMLParser>(document, input, document.encoding().value().to_deprecated_string());
     auto encoding = run_encoding_sniffing_algorithm(document, input);
     dbgln_if(HTML_PARSER_DEBUG, "The encoding sniffing algorithm returned encoding '{}'", encoding);
     return document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);

@@ -346,7 +346,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
         if (auto charset = deprecated_attribute(HTML::AttributeNames::charset); !charset.is_null())
             encoding = charset;
         else
-            encoding = document().encoding_or_default();
+            encoding = document().encoding_or_default().to_deprecated_string();
 
         auto decoder = TextCodec::decoder_for(encoding);
 

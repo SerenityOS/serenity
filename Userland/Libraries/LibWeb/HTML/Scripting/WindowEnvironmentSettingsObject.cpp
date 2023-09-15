@@ -91,7 +91,7 @@ JS::GCPtr<DOM::Document> WindowEnvironmentSettingsObject::responsible_document()
 DeprecatedString WindowEnvironmentSettingsObject::api_url_character_encoding()
 {
     // Return the current character encoding of window's associated Document.
-    return m_window->associated_document().encoding_or_default();
+    return m_window->associated_document().encoding_or_default().to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:api-base-url

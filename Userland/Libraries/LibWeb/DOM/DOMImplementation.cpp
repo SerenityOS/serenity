@@ -56,7 +56,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 
     // 3. If qualifiedName is not the empty string, then set element to the result of running the internal createElementNS steps, given document, namespace, qualifiedName, and an empty dictionary.
     if (!qualified_name.is_empty())
-        element = TRY(xml_document->create_element_ns(namespace_.value().to_deprecated_string(), qualified_name.to_deprecated_string(), ElementCreationOptions {}));
+        element = TRY(xml_document->create_element_ns(namespace_.value(), qualified_name, ElementCreationOptions {}));
 
     // 4. If doctype is non-null, append doctype to document.
     if (doctype)
@@ -74,13 +74,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 
     if (deprecated_namespace == Namespace::HTML) {
         // -> HTML namespace
-        xml_document->set_content_type("application/xhtml+xml");
+        xml_document->set_content_type("application/xhtml+xml"_string);
     } else if (deprecated_namespace == Namespace::SVG) {
         // -> SVG namespace
-        xml_document->set_content_type("image/svg+xml");
+        xml_document->set_content_type("image/svg+xml"_string);
     } else {
         // -> Any other namespace
-        xml_document->set_content_type("application/xml");
+        xml_document->set_content_type("application/xml"_string);
     }
 
     // 8. Return document.
@@ -94,7 +94,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(Optional<Stri
     auto html_document = Document::create(realm());
 
     // 2. Set doc’s content type to "text/html".
-    html_document->set_content_type("text/html");
+    html_document->set_content_type("text/html"_string);
 
     html_document->set_ready_for_post_load_tasks(true);
 
