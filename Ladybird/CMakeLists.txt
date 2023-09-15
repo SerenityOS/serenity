@@ -155,10 +155,11 @@ elseif(ANDROID)
         ${SOURCES}
         Android/src/main/cpp/LadybirdActivity.cpp
         Android/src/main/cpp/WebViewImplementationNative.cpp
+        Android/src/main/cpp/WebViewImplementationNativeJNI.cpp
         Android/src/main/cpp/ALooperEventLoopImplementation.cpp
         Android/src/main/cpp/TimerExecutorService.cpp
     )
-    target_link_libraries(ladybird PRIVATE LibArchive log jnigraphics android)
+    target_link_libraries(ladybird PRIVATE LibArchive jnigraphics android)
 else()
     # TODO: Check for other GUI frameworks here when we move them in-tree
     #       For now, we can export a static library of common files for chromes to link to
