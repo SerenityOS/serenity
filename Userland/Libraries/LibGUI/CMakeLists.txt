@@ -1,3 +1,5 @@
+compile_gml(DynamicWidgetContainerControls.gml DynamicWidgetContainerControls.cpp)
+
 stringify_gml(AboutDialog.gml AboutDialogGML.h about_dialog_gml)
 stringify_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
 stringify_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
@@ -38,6 +40,8 @@ set(SOURCES
     Dialog.cpp
     DisplayLink.cpp
     DragOperation.cpp
+    DynamicWidgetContainer.cpp
+    DynamicWidgetContainerControls.cpp
     EditingEngine.cpp
     EmojiInputDialog.cpp
     Event.cpp
@@ -65,6 +69,7 @@ set(SOURCES
     InputBox.cpp
     JsonArrayModel.cpp
     Label.cpp
+    LabelWithEventDispatcher.cpp
     Layout.cpp
     LazyWidget.cpp
     LinkLabel.cpp

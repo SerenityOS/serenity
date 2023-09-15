@@ -41,6 +41,7 @@ Or right clicking on a folder in the TreeView and using
         -   [CheckBox](help://man/5/GML/Widget/CheckBox)
         -   [ColorInput](help://man/5/GML/Widget/ColorInput)
         -   [ComboBox](help://man/5/GML/Widget/ComboBox)
+        -   [DynamicWidgetContainer](help://man/5/GML/Widget/DynamicWidgetContainer)
         -   [Frame](help://man/5/GML/Widget/Frame)
         -   [GroupBox](help://man/5/GML/Widget/GroupBox)
         -   [HorizontalProgressbar](help://man/5/GML/Widget/HorizontalProgressbar)
