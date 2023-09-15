@@ -1,0 +1,101 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?kleines=20Filmr=C3=B6llchen?= <filmroellchen@serenityos.org>
+Date: Sat, 16 Sep 2023 00:00:04 +0200
+Subject: [PATCH] Update Serenity APIs
+
+---
+ serenity/qserenitybackingstore.cpp |  2 +-
+ serenity/qserenityintegration.cpp  |  3 ++-
+ serenity/qserenitystring.cpp       | 14 ++++++++++----
+ serenity/qserenitywindow.cpp       |  8 +++-----
+ 4 files changed, 16 insertions(+), 11 deletions(-)
+
+diff --git a/serenity/qserenitybackingstore.cpp b/serenity/qserenitybackingstore.cpp
+index 377e30849f9379604490de942fe42dae6b06b1e4..ba96f301cb053edf5e0d8316cd4f4ceb7c168330 100644
+--- a/serenity/qserenitybackingstore.cpp
++++ b/serenity/qserenitybackingstore.cpp
+@@ -61,7 +61,7 @@ void QSerenityBackingStore::resize(const QSize &size, const QRegion &)
+     QImage::Format format = QGuiApplication::primaryScreen()->handle()->format();
+     if (mImage.size() != size) {
+         mImage = QImage(size, format);
+-        proxyWidget->m_buffer = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(window()->width(), window()->height())).value();
++        proxyWidget->m_buffer = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(window()->width(), window()->height())).value();
+         proxyWidget->m_buffer->set_volatile();
+         proxyWidget->resize(Gfx::IntSize(size.width(), size.height()));
+         proxyWidget->update();
+diff --git a/serenity/qserenityintegration.cpp b/serenity/qserenityintegration.cpp
+index 4ce256a1519c77a1dbb472ca69ad08b08c9a2b31..3b9af25a5ff8a59eee8c8056cb31206c56a72fc9 100644
+--- a/serenity/qserenityintegration.cpp
++++ b/serenity/qserenityintegration.cpp
+@@ -36,7 +36,8 @@ QSerenityIntegration::QSerenityIntegration(const QStringList &parameters)
+     else {
+         perror("pledge");
+     }
+-    app = GUI::Application::construct(0, nullptr);
++    // FIXME: Pass Qt's parameters to GUI::Application.
++    app = GUI::Application::create({}).release_value();
+ 
+     m_primaryScreen = new QSerenityScreen();
+ 
+diff --git a/serenity/qserenitystring.cpp b/serenity/qserenitystring.cpp
+index 2cc5425547d3651800c30d7ed53fd69c65ba3dcd..4c8520e34955771b98eef6097d53edf27794e0c6 100644
+--- a/serenity/qserenitystring.cpp
++++ b/serenity/qserenitystring.cpp
+@@ -8,10 +8,16 @@
+ 
+ #include <AK/StdLibExtraDetails.h>
+ 
+-AK::String QSerenityString::fromQString(const QString &str) {
+-    return AK::String(str.toStdString().c_str());
++AK::String QSerenityString::fromQString(QString const& str)
++{
++    // Use toStdString to retrieve guaranteed UTF-8 data (QString is UTF-16).
++    auto const& std_string = str.toStdString();
++    return AK::String::from_utf8({ std_string.data(), std_string.size() }).release_value();
+ }
+ 
+-QString QSerenityString::toQString(const AK::String &v) {
+-    return QString(v.characters());
++QString QSerenityString::toQString(const AK::String& v)
++{
++    auto const utf8_bytes = v.bytes();
++    // For some reason we can't safely cast fom u8 const* to char8_t const*...
++    return QString::fromUtf8(AK::bit_cast<char8_t const*>(utf8_bytes.data()), utf8_bytes.size());
+ }
+diff --git a/serenity/qserenitywindow.cpp b/serenity/qserenitywindow.cpp
+index 3bc01752e711cf4de8c1f62931883790747695cd..02fe7ec3d315daa76061cc915fe1c7bf6753cfa3 100644
+--- a/serenity/qserenitywindow.cpp
++++ b/serenity/qserenitywindow.cpp
+@@ -134,7 +134,7 @@ QSerenityWindow::QSerenityWindow(QWindow *window)
+     m_window->set_double_buffering_enabled(false);
+ 
+     m_window->set_main_widget(m_proxyWidget);
+-    m_window->set_title(QSerenityString::fromQString(window->title()));
++    m_window->set_title(QSerenityString::fromQString(window->title()).to_deprecated_string());
+     m_window->show();
+ 
+     std::cerr << "Native window set up\n";
+@@ -142,7 +142,7 @@ QSerenityWindow::QSerenityWindow(QWindow *window)
+ 
+ void QSerenityWindow::setWindowTitle(const QString &text)
+ {
+-    m_window->set_title(QSerenityString::fromQString(text));
++    m_window->set_title(QSerenityString::fromQString(text).to_deprecated_string());
+ }
+ 
+ QRect QSerenityWindow::geometry() const {
+@@ -153,7 +153,7 @@ SerenityProxyWidget::SerenityProxyWidget(QSerenityWindow *window)
+     : m_qtWindow(window)
+ {
+     std::cerr << __FUNCTION__ << std::endl;
+-    m_buffer = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(window->window()->width(), window->window()->height())).value();
++    m_buffer = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(window->window()->width(), window->window()->height())).value();
+     update();
+ }
+ 
+@@ -265,5 +265,3 @@ void SerenityProxyWidget::leave_event(Core::Event &event) {
+     QWindow *qtWindow = m_qtWindow->window();
+     QWindowSystemInterface::handleLeaveEvent<QWindowSystemInterface::SynchronousDelivery>(qtWindow);
+ }
+-
+-
