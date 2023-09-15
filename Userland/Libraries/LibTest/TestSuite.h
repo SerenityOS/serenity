@@ -44,11 +44,7 @@ public:
 
     void set_rand_source(RandSource source) { m_rand_source = source; }
 
-    RandSource rand_source() { 
-        warnln("Getting RandSource - is it initialized?");
-        warnln("Live: {}, run: {}", m_rand_source.is_live(), m_rand_source.run());
-        return m_rand_source; 
-    }
+    RandSource& rand_source() { return m_rand_source; }
 
     bool m_current_test_case_passed = true;
 

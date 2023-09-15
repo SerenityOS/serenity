@@ -42,12 +42,12 @@ namespace Gen {
 inline u32 unsigned_int(u32 max)
 {
     RandSource rand = Test::rand_source();
-    RandomRun run = rand.run();
-    if (run.is_full()) {
-        FAIL("Generators have hit maximum RandomRun length (generating too much data).");
-        // TODO do we need a different FAIL that doesn't get shushed during shrinking?
-    }
+    RandomRun& run = rand.run();
     if (rand.is_live()) {
+        if (run.is_full()) {
+            FAIL("Generators have hit maximum RandomRun length (generating too much data).");
+            // TODO do we need a different FAIL that doesn't get shushed during shrinking?
+        }
         u32 value = AK::get_random_uniform(max);
         run.append(value);
         return value;
