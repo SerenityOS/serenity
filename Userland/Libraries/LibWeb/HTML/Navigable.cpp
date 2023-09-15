@@ -813,8 +813,6 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
 
             // 2. If document is null, then run completionSteps and return.
             if (!document) {
-                VERIFY_NOT_REACHED();
-
                 completion_steps();
                 return;
             }

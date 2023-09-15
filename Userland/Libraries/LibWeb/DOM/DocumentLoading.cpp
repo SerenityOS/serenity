@@ -224,30 +224,53 @@ bool parse_document(DOM::Document& document, ByteBuffer const& data)
     return false;
 }
 
+static bool is_supported_document_mime_type(StringView mime_type)
+{
+    if (mime_type == "text/html")
+        return true;
+    if (mime_type.ends_with("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
+        return true;
+    if (mime_type.starts_with("image/"sv))
+        return true;
+    if (mime_type.starts_with("video/"sv))
+        return true;
+    if (mime_type.starts_with("audio/"sv))
+        return true;
+    if (mime_type == "text/plain" || mime_type == "application/json")
+        return true;
+    if (mime_type == "text/markdown")
+        return true;
+    if (mime_type == "text/gemini")
+        return true;
+    return false;
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
 JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigation_params)
 {
     VERIFY(navigation_params.has_value());
 
+    auto extracted_mime_type = navigation_params->response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+    auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
+
+    if (!is_supported_document_mime_type(mime_type)) {
+        return nullptr;
+    }
+
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", *navigation_params).release_value_but_fixme_should_propagate_errors();
+    document->set_content_type(String::from_utf8(mime_type).release_value_but_fixme_should_propagate_errors());
 
     auto& realm = document->realm();
 
     if (navigation_params->response->body()) {
         auto process_body = [navigation_params, document](ByteBuffer bytes) {
-            auto extracted_mime_type = navigation_params->response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
-            auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence() : String {};
-            document->set_content_type(move(mime_type));
-
             if (!parse_document(*document, bytes)) {
-                // FIXME: Load html page with an error if parsing failed.
-                TODO();
+                dbgln("FIXME: Load html page with an error if parsing failed.");
             }
         };
 
         auto process_body_error = [](auto) {
-            // FIXME: Load html page with an error if read of body failed.
-            TODO();
+            dbgln("FIXME: Load html page with an error if read of body failed.");
         };
 
         navigation_params->response->body()->fully_read(
