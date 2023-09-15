@@ -138,6 +138,12 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
 
         auto index_html_path = TRY(String::formatted("{}/index.html", real_path));
         if (!FileSystem::exists(index_html_path)) {
+            auto is_searchable_or_error = Core::System::access(real_path.bytes_as_string_view(), X_OK);
+            if (is_searchable_or_error.is_error()) {
+                TRY(send_error_response(403, request));
+                return false;
+            }
+
             TRY(handle_directory_listing(requested_path, real_path, request));
             return true;
         }
@@ -146,6 +152,12 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
 
     if (!FileSystem::exists(real_path.bytes_as_string_view())) {
         TRY(send_error_response(404, request));
+        return false;
+    }
+
+    auto is_readable_or_error = Core::System::access(real_path.bytes_as_string_view(), R_OK);
+    if (is_readable_or_error.is_error()) {
+        TRY(send_error_response(403, request));
         return false;
     }
 
