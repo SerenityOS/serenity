@@ -43,7 +43,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(StringView string, 
         // -> "text/html"
         // 1. Set document's type to "html".
         document = HTML::HTMLDocument::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
-        document->set_content_type(Bindings::idl_enum_to_string(type).to_deprecated_string());
+        document->set_content_type(Bindings::idl_enum_to_string(type));
         document->set_document_type(DOM::Document::Type::HTML);
 
         // 2. Create an HTML parser parser, associated with document.
@@ -57,7 +57,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(StringView string, 
     } else {
         // -> Otherwise
         document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
-        document->set_content_type(Bindings::idl_enum_to_string(type).to_deprecated_string());
+        document->set_content_type(Bindings::idl_enum_to_string(type));
 
         // 1. Create an XML parser parse, associated with document, and with XML scripting support disabled.
         XML::Parser parser(string, { .resolve_external_resource = resolve_xml_resource });

@@ -125,7 +125,7 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(StringView content_e
 void HTMLElement::set_inner_text(StringView text)
 {
     remove_all_children();
-    MUST(append_child(document().create_text_node(text)));
+    MUST(append_child(document().create_text_node(MUST(String::from_utf8(text)))));
 
     set_needs_style_update(true);
 }

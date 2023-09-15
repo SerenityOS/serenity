@@ -87,7 +87,7 @@ static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
     auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(head_element->append_child(title_element));
 
-    auto title_text = document.create_text_node(document.url().basename());
+    auto title_text = document.create_text_node(MUST(String::from_deprecated_string(document.url().basename())));
     MUST(title_element->append_child(title_text));
 
     auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
@@ -96,7 +96,7 @@ static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
     auto pre_element = DOM::create_element(document, HTML::TagNames::pre, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(body_element->append_child(pre_element));
 
-    MUST(pre_element->append_child(document.create_text_node(DeprecatedString::copy(data))));
+    MUST(pre_element->append_child(document.create_text_node(String::from_utf8(StringView { data }).release_value_but_fixme_should_propagate_errors())));
     return true;
 }
 
@@ -206,13 +206,13 @@ bool parse_document(DOM::Document& document, ByteBuffer const& data)
         parser->run(document.url());
         return true;
     }
-    if (mime_type.ends_with("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
+    if (mime_type.ends_with_bytes("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
         return build_xml_document(document, data);
-    if (mime_type.starts_with("image/"sv))
+    if (mime_type.starts_with_bytes("image/"sv))
         return build_image_document(document, data);
-    if (mime_type.starts_with("video/"sv))
+    if (mime_type.starts_with_bytes("video/"sv))
         return build_video_document(document);
-    if (mime_type.starts_with("audio/"sv))
+    if (mime_type.starts_with_bytes("audio/"sv))
         return build_audio_document(document);
     if (mime_type == "text/plain" || mime_type == "application/json")
         return build_text_document(document, data);
@@ -236,8 +236,8 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
     if (navigation_params->response->body()) {
         auto process_body = [navigation_params, document](ByteBuffer bytes) {
             auto extracted_mime_type = navigation_params->response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
-            auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
-            document->set_content_type(mime_type);
+            auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence() : String {};
+            document->set_content_type(move(mime_type));
 
             if (!parse_document(*document, bytes)) {
                 // FIXME: Load html page with an error if parsing failed.

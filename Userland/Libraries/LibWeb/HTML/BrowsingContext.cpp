@@ -210,7 +210,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     window->set_associated_document(*document);
 
     document->set_quirks_mode(DOM::QuirksMode::Yes);
-    document->set_content_type("text/html");
+    document->set_content_type("text/html"_string);
     document->set_origin(origin);
     document->set_url(AK::URL("about:blank"));
     document->set_cross_origin_opener_policy(coop);
@@ -370,7 +370,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     document->set_document_type(DOM::Document::Type::HTML);
 
     // content type: "text/html"
-    document->set_content_type("text/html");
+    document->set_content_type("text/html"_string);
 
     // mode: "quirks"
     document->set_quirks_mode(DOM::QuirksMode::Yes);
@@ -626,7 +626,7 @@ void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
 
     auto element = document->get_element_by_id(fragment);
     if (!element) {
-        auto candidates = document->get_elements_by_name(fragment);
+        auto candidates = document->get_elements_by_name(MUST(String::from_deprecated_string(fragment)));
         for (auto& candidate : candidates->collect_matching_elements()) {
             if (is<HTML::HTMLAnchorElement>(*candidate)) {
                 element = &verify_cast<HTML::HTMLAnchorElement>(*candidate);

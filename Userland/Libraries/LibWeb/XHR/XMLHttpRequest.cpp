@@ -324,10 +324,10 @@ void XMLHttpRequest::set_document_response()
         charset = "UTF-8"sv;
 
     // 8. Set document’s encoding to charset.
-    document->set_encoding(charset->to_deprecated_string());
+    document->set_encoding(MUST(String::from_utf8(charset.value())));
 
     // 9. Set document’s content type to finalMIME.
-    document->set_content_type(MUST(final_mine.serialized()).to_deprecated_string());
+    document->set_content_type(MUST(final_mine.serialized()));
 
     // 10. Set document’s URL to xhr’s response’s URL.
     document->set_url(m_response->url().value_or({}));
