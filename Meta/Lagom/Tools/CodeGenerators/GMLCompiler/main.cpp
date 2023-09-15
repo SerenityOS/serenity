@@ -145,10 +145,10 @@ static ErrorOr<String> escape_string(JsonValue to_escape)
     // All C++ simple escape sequences; see https://en.cppreference.com/w/cpp/language/escape
     // Other commonly-escaped characters are hard-to-type Unicode and therefore fine to include verbatim in UTF-8 coded strings.
     static HashMap<StringView, StringView> escape_sequences = {
+        { "\\"sv, "\\\\"sv }, // This needs to be the first because otherwise the the backslashes of other items will be double escaped
         { "\0"sv, "\\0"sv },
         { "\'"sv, "\\'"sv },
         { "\""sv, "\\\""sv },
-        { "\\"sv, "\\\\"sv },
         { "\a"sv, "\\a"sv },
         { "\b"sv, "\\b"sv },
         { "\f"sv, "\\f"sv },
