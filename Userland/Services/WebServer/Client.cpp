@@ -19,13 +19,13 @@
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
 #include <WebServer/Client.h>
 #include <WebServer/Configuration.h>
 #include <stdio.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 namespace WebServer {
@@ -290,12 +290,13 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
         else
             TRY(path_builder.try_append(name));
 
-        struct stat st;
-        memset(&st, 0, sizeof(st));
-        int rc = stat(path_builder.to_deprecated_string().characters(), &st);
-        if (rc < 0) {
-            perror("stat");
+        auto st_or_error = Core::System::stat(path_builder.string_view());
+        if (st_or_error.is_error()) {
+            warnln("Skipping file: '{}'. {}", path_builder.string_view(), strerror(st_or_error.error().code()));
+            continue;
         }
+
+        auto st = st_or_error.release_value();
 
         bool is_directory = S_ISDIR(st.st_mode);
 
