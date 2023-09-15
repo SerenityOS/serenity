@@ -295,6 +295,9 @@ void Hub::check_for_port_updates()
                         auto* hub_child = static_cast<Hub*>(device_to_remove.ptr());
                         hub_child->remove_children_from_sysfs();
                     }
+
+                    device_to_remove->detach();
+
                     m_children.remove(*device_to_remove);
                 } else {
                     dbgln_if(USB_DEBUG, "USB Hub: No child set up on port {}, ignoring detachment.", port_number);

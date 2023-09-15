@@ -10,6 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/Bus/USB/Drivers/USBDriver.h>
 #include <Kernel/Bus/USB/USBConfiguration.h>
 #include <Kernel/Bus/USB/USBPipe.h>
 #include <Kernel/Locking/SpinlockProtected.h>
@@ -58,6 +59,14 @@ public:
 
     Vector<USBConfiguration> const& configurations() const { return m_configurations; }
 
+    void set_driver(Driver& driver) { m_driver = driver; }
+    void detach()
+    {
+        if (m_driver)
+            m_driver->detach(*this);
+        m_driver = nullptr;
+    }
+
     SpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None>& sysfs_device_info_node(Badge<USB::Hub>) { return m_sysfs_device_info_node; }
 
 protected:
@@ -75,6 +84,8 @@ protected:
 
     NonnullLockRefPtr<USBController> m_controller;
     NonnullOwnPtr<ControlPipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
+
+    LockRefPtr<Driver> m_driver;
 
 private:
     IntrusiveListNode<Device, NonnullLockRefPtr<Device>> m_hub_child_node;
