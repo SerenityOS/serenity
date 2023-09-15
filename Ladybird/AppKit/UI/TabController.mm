@@ -313,10 +313,14 @@ enum class IsHistoryNavigation {
 
 - (NSButton*)create_button:(NSImageName)image
                with_action:(nonnull SEL)action
+              with_tooltip:(NSString*)tooltip
 {
     auto* button = [NSButton buttonWithImage:[NSImage imageNamed:image]
                                       target:self
                                       action:action];
+    if (tooltip) {
+        [button setToolTip:tooltip];
+    }
     [button setBordered:NO];
 
     return button;
@@ -326,7 +330,8 @@ enum class IsHistoryNavigation {
 {
     if (!_navigate_back_toolbar_item) {
         auto* button = [self create_button:NSImageNameGoBackTemplate
-                               with_action:@selector(navigateBack:)];
+                               with_action:@selector(navigateBack:)
+                              with_tooltip:@"Navigate back"];
         [button setEnabled:NO];
 
         _navigate_back_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_NAVIGATE_BACK_IDENTIFIER];
@@ -340,7 +345,8 @@ enum class IsHistoryNavigation {
 {
     if (!_navigate_forward_toolbar_item) {
         auto* button = [self create_button:NSImageNameGoForwardTemplate
-                               with_action:@selector(navigateForward:)];
+                               with_action:@selector(navigateForward:)
+                              with_tooltip:@"Navigate forward"];
         [button setEnabled:NO];
 
         _navigate_forward_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_NAVIGATE_FORWARD_IDENTIFIER];
@@ -354,7 +360,8 @@ enum class IsHistoryNavigation {
 {
     if (!_reload_toolbar_item) {
         auto* button = [self create_button:NSImageNameRefreshTemplate
-                               with_action:@selector(reload:)];
+                               with_action:@selector(reload:)
+                              with_tooltip:@"Reload page"];
         [button setEnabled:NO];
 
         _reload_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_RELOAD_IDENTIFIER];
@@ -383,7 +390,8 @@ enum class IsHistoryNavigation {
 {
     if (!_new_tab_toolbar_item) {
         auto* button = [self create_button:NSImageNameAddTemplate
-                               with_action:@selector(createNewTab:)];
+                               with_action:@selector(createNewTab:)
+                              with_tooltip:@"New tab"];
 
         _new_tab_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_NEW_TAB_IDENTIFIER];
         [_new_tab_toolbar_item setView:button];
@@ -396,7 +404,8 @@ enum class IsHistoryNavigation {
 {
     if (!_tab_overview_toolbar_item) {
         auto* button = [self create_button:NSImageNameIconViewTemplate
-                               with_action:@selector(showTabOverview:)];
+                               with_action:@selector(showTabOverview:)
+                              with_tooltip:@"Show all tabs"];
 
         _tab_overview_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_TAB_OVERVIEW_IDENTIFIER];
         [_tab_overview_toolbar_item setView:button];
