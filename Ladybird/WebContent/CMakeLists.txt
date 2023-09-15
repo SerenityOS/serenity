@@ -55,7 +55,7 @@ else()
     if (ANDROID)
         target_sources(webcontent PRIVATE
           ../Android/src/main/cpp/WebContentService.cpp
-          ../Android/src/main/cpp/WebContentServiceJNI.cpp
+          ../Android/src/main/cpp/LadybirdServiceBaseJNI.cpp
         )
         target_link_libraries(webcontent PRIVATE android)
     endif()
