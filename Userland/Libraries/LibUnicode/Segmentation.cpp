@@ -57,6 +57,22 @@ static void for_each_grapheme_segmentation_boundary_impl([[maybe_unused]] ViewTy
         return (code_point_has_grapheme_break_property(code_point, properties) || ...);
     };
 
+    auto skip_incb_extend_linker_sequence = [&](auto& it) {
+        while (true) {
+            if (it == view.end() || !code_point_has_property(*it, Property::InCB_Extend))
+                return;
+
+            auto next_it = it;
+            ++next_it;
+
+            if (next_it == view.end() || !code_point_has_property(*next_it, Property::InCB_Linker))
+                return;
+
+            it = next_it;
+            ++it;
+        }
+    };
+
     // GB1
     if (callback(0) == IterationDecision::Break)
         return;
@@ -69,6 +85,23 @@ static void for_each_grapheme_segmentation_boundary_impl([[maybe_unused]] ViewTy
 
         for (++it; it != view.end(); ++it, code_point = next_code_point) {
             next_code_point = *it;
+
+            // GB9c
+            if (code_point_has_property(code_point, Property::InCB_Consonant)) {
+                auto it_copy = it;
+                skip_incb_extend_linker_sequence(it_copy);
+
+                if (it_copy != view.end() && code_point_has_property(*it_copy, Property::InCB_Linker)) {
+                    ++it_copy;
+                    skip_incb_extend_linker_sequence(it_copy);
+
+                    if (it_copy != view.end() && code_point_has_property(*it_copy, Property::InCB_Consonant)) {
+                        next_code_point = *it_copy;
+                        it = it_copy;
+                        continue;
+                    }
+                }
+            }
 
             // GB11
             if (code_point_has_property(code_point, Property::Extended_Pictographic) && has_any_gbp(next_code_point, GBP::Extend, GBP::ZWJ)) {
