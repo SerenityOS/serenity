@@ -74,6 +74,7 @@ static bool takes_deprecated_string(StringView property)
 {
     static HashTable<StringView> deprecated_string_properties;
     if (deprecated_string_properties.is_empty()) {
+        deprecated_string_properties.set("icon_from_path"sv);
         deprecated_string_properties.set("name"sv);
     }
     return deprecated_string_properties.contains(property);
@@ -173,6 +174,7 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
         { "text_alignment"sv, "Gfx::TextAlignment"sv },
         { "focus_policy"sv, "GUI::FocusPolicy"sv },
         { "foreground_role"sv, "Gfx::ColorRole"sv },
+        { "frame_style"sv, "Gfx::FrameStyle"sv },
         { "text_wrapping"sv, "Gfx::TextWrapping"sv },
     };
 
