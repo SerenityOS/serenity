@@ -51,6 +51,27 @@ TEST_CASE(grapheme_segmentation)
     test_grapheme_segmentation("a👩🏼‍❤️‍👨🏻b"sv, { 0u, 1u, 29u, 30u });
 }
 
+TEST_CASE(grapheme_segmentation_indic_conjunct_break)
+{
+    test_grapheme_segmentation("\u0915"sv, { 0u, 3u });
+    test_grapheme_segmentation("\u0915a"sv, { 0u, 3u, 4u });
+    test_grapheme_segmentation("\u0915\u0916"sv, { 0u, 3u, 6u });
+
+    test_grapheme_segmentation("\u0915\u094D\u0916"sv, { 0u, 9u });
+
+    test_grapheme_segmentation("\u0915\u09BC\u09CD\u094D\u0916"sv, { 0u, 15u });
+    test_grapheme_segmentation("\u0915\u094D\u09BC\u09CD\u0916"sv, { 0u, 15u });
+
+    test_grapheme_segmentation("\u0915\u09BC\u09CD\u094D\u09BC\u09CD\u0916"sv, { 0u, 21u });
+    test_grapheme_segmentation("\u0915\u09BC\u09CD\u09BC\u09CD\u094D\u0916"sv, { 0u, 21u });
+    test_grapheme_segmentation("\u0915\u094D\u09BC\u09CD\u09BC\u09CD\u0916"sv, { 0u, 21u });
+
+    test_grapheme_segmentation("\u0915\u09BC\u09CD\u09BC\u09CD\u094D\u09BC\u09CD\u0916"sv, { 0u, 27u });
+    test_grapheme_segmentation("\u0915\u09BC\u09CD\u094D\u09BC\u09CD\u09BC\u09CD\u0916"sv, { 0u, 27u });
+
+    test_grapheme_segmentation("\u0915\u09BC\u09CD\u09BC\u09CD\u094D\u09BC\u09CD\u09BC\u09CD\u0916"sv, { 0u, 33u });
+}
+
 template<size_t N>
 static void test_word_segmentation(StringView string, size_t const (&expected_boundaries)[N])
 {

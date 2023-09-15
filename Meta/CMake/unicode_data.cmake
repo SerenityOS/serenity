@@ -1,6 +1,6 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
-set(UCD_VERSION 15.0.0)
+set(UCD_VERSION 15.1.0)
 set(UCD_PATH "${SERENITY_CACHE_DIR}/UCD" CACHE PATH "Download location for UCD files")
 set(UCD_VERSION_FILE "${UCD_PATH}/version.txt")
 

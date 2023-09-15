@@ -375,7 +375,21 @@ static ErrorOr<void> parse_prop_list(Core::InputBufferedFile& file, PropList& pr
             line = line.substring_view(0, *index);
 
         auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
-        VERIFY(segments.size() == 2);
+        VERIFY(segments.size() == 2 || segments.size() == 3);
+
+        String combined_segment_buffer;
+
+        if (segments.size() == 3) {
+            // For example, in DerivedCoreProperties.txt, there are lines such as:
+            //
+            //     094D          ; InCB; Linker # Mn       DEVANAGARI SIGN VIRAMA
+            //
+            // These are used in text segmentation to prevent breaking within some extended grapheme clusters.
+            // So here, we combine the segments into a single property, which allows us to simply do code point
+            // property lookups at runtime for specific Indic Conjunct Break sequences.
+            combined_segment_buffer = MUST(String::join('_', Array { segments[1].trim_whitespace(), segments[2].trim_whitespace() }));
+            segments[1] = combined_segment_buffer;
+        }
 
         auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
         Vector<StringView> properties;
