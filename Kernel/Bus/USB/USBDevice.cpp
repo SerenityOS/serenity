@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021-2023, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/Bus/USB/USBDevice.h>
+#include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.h>
 #include <Kernel/Library/StdLib.h>
@@ -25,6 +26,22 @@ ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController const& contr
         node = move(sysfs_node);
     });
     TRY(device->enumerate_device());
+
+    // Attempt to find a driver for this device. If one is found, we call the driver's
+    // "probe" function, which initialises the local state for the device driver.
+    // It is currently the driver's responsibility to search the configuration/interface
+    // and take the appropriate action.
+    for (auto& driver : USBManagement::the().available_drivers()) {
+        // FIXME: Some devices have multiple configurations, for which we may have a better driver,
+        //        than the first we find, or we have a vendor specific driver for the device,
+        //        so we want a prioritization mechanism here
+        auto result = driver->probe(device);
+        if (result.is_error())
+            continue;
+        dbgln_if(USB_DEBUG, "Found driver {} for device {:04x}:{:04x}!", driver->name(), device->m_vendor_id, device->m_product_id);
+        break;
+    }
+
     return device;
 }
 
