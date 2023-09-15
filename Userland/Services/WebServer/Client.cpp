@@ -10,6 +10,7 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
+#include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
@@ -310,7 +311,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
         TRY(builder.try_append(escape_html_entities(name)));
         TRY(builder.try_append("</a></td><td>&nbsp;</td>"sv));
 
-        TRY(builder.try_appendff("<td>{:10}</td><td>&nbsp;</td>", st.st_size));
+        TRY(builder.try_appendff("<td>{:10}</td><td>&nbsp;</td>", is_directory ? "-" : human_readable_size(st.st_size)));
         TRY(builder.try_append("<td>"sv));
         TRY(builder.try_append(TRY(Core::DateTime::from_timestamp(st.st_mtime).to_string())));
         TRY(builder.try_append("</td>"sv));
