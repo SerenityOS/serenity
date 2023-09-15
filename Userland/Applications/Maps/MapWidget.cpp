@@ -170,8 +170,8 @@ void MapWidget::mousemove_event(GUI::MouseEvent& event)
     set_override_cursor(Gfx::StandardCursor::Arrow);
 
     // Handle marker tooltip hover
-    double center_tile_x = floor(longitude_to_tile_x(m_center.longitude, m_zoom));
-    double center_tile_y = floor(latitude_to_tile_y(m_center.latitude, m_zoom));
+    int center_tile_x = longitude_to_tile_x(m_center.longitude, m_zoom);
+    int center_tile_y = latitude_to_tile_y(m_center.latitude, m_zoom);
     double offset_x = (longitude_to_tile_x(m_center.longitude, m_zoom) - center_tile_x) * TILE_SIZE;
     double offset_y = (latitude_to_tile_y(m_center.latitude, m_zoom) - center_tile_y) * TILE_SIZE;
     for (auto const& marker : m_markers) {
@@ -361,16 +361,16 @@ void MapWidget::clear_tile_queue()
 
 void MapWidget::paint_map(GUI::Painter& painter)
 {
-    int center_tile_x = floor(longitude_to_tile_x(m_center.longitude, m_zoom));
-    int center_tile_y = floor(latitude_to_tile_y(m_center.latitude, m_zoom));
+    int center_tile_x = longitude_to_tile_x(m_center.longitude, m_zoom);
+    int center_tile_y = latitude_to_tile_y(m_center.latitude, m_zoom);
     double offset_x = (longitude_to_tile_x(m_center.longitude, m_zoom) - center_tile_x) * TILE_SIZE;
     double offset_y = (latitude_to_tile_y(m_center.latitude, m_zoom) - center_tile_y) * TILE_SIZE;
 
     // Draw grid around center tile
-    int grid_width = ceil(static_cast<double>(width()) / TILE_SIZE);
-    int grid_height = ceil(static_cast<double>(height()) / TILE_SIZE);
-    for (int dy = -(grid_height / 2) - 1; dy < (grid_height / 2) + 2; dy++) {
-        for (int dx = -(grid_width / 2) - 1; dx < (grid_width / 2) + 2; dx++) {
+    int grid_width = (width() + TILE_SIZE - 1) / TILE_SIZE;
+    int grid_height = (height() + TILE_SIZE - 1) / TILE_SIZE;
+    for (int dy = -(grid_height / 2) - 1; dy < ((grid_height + 2 - 1) / 2) + 1; ++dy) {
+        for (int dx = -(grid_width / 2) - 1; dx < ((grid_width + 2 - 1) / 2) + 1; ++dx) {
             int tile_x = center_tile_x + dx;
             int tile_y = center_tile_y + dy;
 
@@ -384,7 +384,7 @@ void MapWidget::paint_map(GUI::Painter& painter)
                 TILE_SIZE,
                 TILE_SIZE,
             };
-            if (!painter.clip_rect().intersects(tile_rect))
+            if (!tile_rect.intersects(frame_inner_rect()))
                 continue;
 
             // Get tile, when it has a loaded image draw it at the right position
