@@ -29,6 +29,7 @@ ErrorOr<void> USBConfiguration::enumerate_interfaces()
     u8* interface_descriptors_base = descriptor_hierarchy_buffer.data() + sizeof(USBConfigurationDescriptor);
     USBInterfaceDescriptor* interface_descriptor = reinterpret_cast<USBInterfaceDescriptor*>(interface_descriptors_base);
     Vector<USBEndpointDescriptor> endpoint_descriptors;
+    TRY(m_interfaces.try_ensure_capacity(m_descriptor.number_of_interfaces));
     for (auto interface = 0u; interface < m_descriptor.number_of_interfaces; interface++) {
         endpoint_descriptors.ensure_capacity(interface_descriptor->number_of_endpoints);
 
@@ -64,11 +65,11 @@ ErrorOr<void> USBConfiguration::enumerate_interfaces()
                 dbgln("Endpoint Poll Interval (in frames): {}", endpoint_descriptor.poll_interval_in_frames);
             }
 
-            endpoint_descriptors.append(endpoint_descriptor);
+            endpoint_descriptors.unchecked_append(endpoint_descriptor);
         }
 
-        USBInterface device_interface(*this, *interface_descriptor, endpoint_descriptors);
-        m_interfaces.append(device_interface);
+        USBInterface device_interface(*this, *interface_descriptor, move(endpoint_descriptors));
+        m_interfaces.unchecked_append(move(device_interface));
         interface_descriptor += interface_descriptor->number_of_endpoints * sizeof(USBEndpointDescriptor);
     }
 
