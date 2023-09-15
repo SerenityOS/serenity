@@ -260,6 +260,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 - (void)onLoadFinish:(URL const&)url
 {
+    [self.tabController onLoadFinish:url];
     if (self.inspector_controller != nil) {
         auto* inspector = (Inspector*)[self.inspector_controller window];
         [inspector inspect];

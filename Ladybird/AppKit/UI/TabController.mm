@@ -22,7 +22,7 @@
 static NSString* const TOOLBAR_IDENTIFIER = @"Toolbar";
 static NSString* const TOOLBAR_NAVIGATE_BACK_IDENTIFIER = @"ToolbarNavigateBackIdentifier";
 static NSString* const TOOLBAR_NAVIGATE_FORWARD_IDENTIFIER = @"ToolbarNavigateForwardIdentifier";
-static NSString* const TOOLBAR_RELOAD_IDENTIFIER = @"ToolbarReloadIdentifier";
+static NSString* const TOOLBAR_RELOAD_OR_CANCEL_IDENTIFIER = @"ToolbarReloadOrCancelIdentifier";
 static NSString* const TOOLBAR_LOCATION_IDENTIFIER = @"ToolbarLocationIdentifier";
 static NSString* const TOOLBAR_NEW_TAB_IDENTIFIER = @"ToolbarNewTabIdentifier";
 static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIdentifer";
@@ -40,6 +40,8 @@ enum class IsHistoryNavigation {
     IsHistoryNavigation m_is_history_navigation;
 
     TabSettings m_settings;
+
+    BOOL m_is_loading;
 }
 
 @property (nonatomic, strong) NSToolbar* toolbar;
@@ -47,7 +49,9 @@ enum class IsHistoryNavigation {
 
 @property (nonatomic, strong) NSToolbarItem* navigate_back_toolbar_item;
 @property (nonatomic, strong) NSToolbarItem* navigate_forward_toolbar_item;
-@property (nonatomic, strong) NSToolbarItem* reload_toolbar_item;
+@property (nonatomic, strong) NSToolbarItem* reload_or_cancel_toolbar_item;
+@property (nonatomic, strong) NSButton* reload_button_view;
+@property (nonatomic, strong) NSButton* cancel_button_view;
 @property (nonatomic, strong) NSToolbarItem* location_toolbar_item;
 @property (nonatomic, strong) NSToolbarItem* new_tab_toolbar_item;
 @property (nonatomic, strong) NSToolbarItem* tab_overview_toolbar_item;
@@ -61,7 +65,9 @@ enum class IsHistoryNavigation {
 @synthesize toolbar_identifiers = _toolbar_identifiers;
 @synthesize navigate_back_toolbar_item = _navigate_back_toolbar_item;
 @synthesize navigate_forward_toolbar_item = _navigate_forward_toolbar_item;
-@synthesize reload_toolbar_item = _reload_toolbar_item;
+@synthesize reload_or_cancel_toolbar_item = _reload_or_cancel_toolbar_item;
+@synthesize reload_button_view = _reload_button_view;
+@synthesize cancel_button_view = _cancel_button_view;
 @synthesize location_toolbar_item = _location_toolbar_item;
 @synthesize new_tab_toolbar_item = _new_tab_toolbar_item;
 @synthesize tab_overview_toolbar_item = _tab_overview_toolbar_item;
@@ -77,6 +83,7 @@ enum class IsHistoryNavigation {
 
         m_is_history_navigation = IsHistoryNavigation::No;
         m_settings = {};
+        m_is_loading = NO;
     }
 
     return self;
@@ -96,6 +103,8 @@ enum class IsHistoryNavigation {
 
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)isRedirect
 {
+    m_is_loading = YES;
+
     if (isRedirect) {
         m_history.replace_current(url, m_title);
     }
@@ -110,6 +119,12 @@ enum class IsHistoryNavigation {
         m_history.push(url, m_title);
     }
 
+    [self updateNavigationButtonStates];
+}
+
+- (void)onLoadFinish:(URL const&)url
+{
+    m_is_loading = NO;
     [self updateNavigationButtonStates];
 }
 
@@ -157,6 +172,11 @@ enum class IsHistoryNavigation {
     [self loadURL:url];
 }
 
+- (void)cancelLoad:(id)sender
+{
+    dbgln("FIXME: implement cancelLoad()"sv);
+}
+
 - (void)clearHistory
 {
     m_history.clear();
@@ -200,14 +220,20 @@ enum class IsHistoryNavigation {
 
 - (void)updateNavigationButtonStates
 {
-    auto* navigate_back_button = (NSButton*)[[self navigate_back_toolbar_item] view];
-    [navigate_back_button setEnabled:m_history.can_go_back()];
+    auto* navigate_back_button = (NSButton*)self.navigate_back_toolbar_item.view;
+    navigate_back_button.enabled = m_history.can_go_back();
 
-    auto* navigate_forward_button = (NSButton*)[[self navigate_forward_toolbar_item] view];
-    [navigate_forward_button setEnabled:m_history.can_go_forward()];
+    auto* navigate_forward_button = (NSButton*)self.navigate_forward_toolbar_item.view;
+    navigate_forward_button.enabled = m_history.can_go_forward();
 
-    auto* reload_button = (NSButton*)[[self reload_toolbar_item] view];
-    [reload_button setEnabled:!m_history.is_empty()];
+    auto* reload_button = self.reload_button_view;
+    reload_button.enabled = !m_history.is_empty();
+
+    if (m_is_loading) {
+        self.reload_or_cancel_toolbar_item.view = self.cancel_button_view;
+    } else {
+        self.reload_or_cancel_toolbar_item.view = self.reload_button_view;
+    }
 }
 
 - (void)showTabOverview:(id)sender
@@ -326,6 +352,22 @@ enum class IsHistoryNavigation {
     return button;
 }
 
+- (NSButton*)create_button_with_system_symbol:(NSString*)symbol
+                                  with_action:(nonnull SEL)action
+                                 with_tooltip:(NSString*)tooltip
+{
+    auto* image = [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:tooltip];
+    auto* button = [NSButton buttonWithImage:image
+                                      target:self
+                                      action:action];
+    if (tooltip) {
+        [button setToolTip:tooltip];
+    }
+    [button setBordered:NO];
+
+    return button;
+}
+
 - (NSToolbarItem*)navigate_back_toolbar_item
 {
     if (!_navigate_back_toolbar_item) {
@@ -356,19 +398,39 @@ enum class IsHistoryNavigation {
     return _navigate_forward_toolbar_item;
 }
 
-- (NSToolbarItem*)reload_toolbar_item
+- (NSButton*)reload_button_view
 {
-    if (!_reload_toolbar_item) {
-        auto* button = [self create_button:NSImageNameRefreshTemplate
+    if (!_reload_button_view) {
+        _reload_button_view = [self create_button:NSImageNameRefreshTemplate
                                with_action:@selector(reload:)
                               with_tooltip:@"Reload page"];
-        [button setEnabled:NO];
-
-        _reload_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_RELOAD_IDENTIFIER];
-        [_reload_toolbar_item setView:button];
+        [_reload_button_view setEnabled:NO];
     }
+    return _reload_button_view;
+}
 
-    return _reload_toolbar_item;
+- (NSButton*)cancel_button_view
+{
+    if (!_cancel_button_view) {
+        _cancel_button_view = [self create_button_with_system_symbol:@"xmark"
+                               with_action:@selector(cancelLoad:)
+                              with_tooltip:@"Cancel load"];
+        [_cancel_button_view setEnabled:YES];
+    }
+    return _cancel_button_view;
+}
+
+- (NSToolbarItem*)reload_or_cancel_toolbar_item
+{
+    if (!_reload_or_cancel_toolbar_item) {
+        _reload_or_cancel_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_RELOAD_OR_CANCEL_IDENTIFIER];
+        if (m_is_loading) {
+            _reload_or_cancel_toolbar_item.view = self.cancel_button_view;
+        } else {
+            _reload_or_cancel_toolbar_item.view = self.reload_button_view;
+        }
+    }
+    return _reload_or_cancel_toolbar_item;
 }
 
 - (NSToolbarItem*)location_toolbar_item
@@ -421,7 +483,7 @@ enum class IsHistoryNavigation {
             TOOLBAR_NAVIGATE_BACK_IDENTIFIER,
             TOOLBAR_NAVIGATE_FORWARD_IDENTIFIER,
             NSToolbarFlexibleSpaceItemIdentifier,
-            TOOLBAR_RELOAD_IDENTIFIER,
+            TOOLBAR_RELOAD_OR_CANCEL_IDENTIFIER,
             TOOLBAR_LOCATION_IDENTIFIER,
             NSToolbarFlexibleSpaceItemIdentifier,
             TOOLBAR_NEW_TAB_IDENTIFIER,
@@ -502,8 +564,8 @@ enum class IsHistoryNavigation {
     if ([identifier isEqual:TOOLBAR_NAVIGATE_FORWARD_IDENTIFIER]) {
         return self.navigate_forward_toolbar_item;
     }
-    if ([identifier isEqual:TOOLBAR_RELOAD_IDENTIFIER]) {
-        return self.reload_toolbar_item;
+    if ([identifier isEqual:TOOLBAR_RELOAD_OR_CANCEL_IDENTIFIER]) {
+        return self.reload_or_cancel_toolbar_item;
     }
     if ([identifier isEqual:TOOLBAR_LOCATION_IDENTIFIER]) {
         return self.location_toolbar_item;

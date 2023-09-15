@@ -27,6 +27,7 @@ struct TabSettings {
 - (void)loadHTML:(StringView)html url:(URL const&)url;
 
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)isRedirect;
+- (void)onLoadFinish:(URL const&)url;
 - (void)onTitleChange:(DeprecatedString const&)title;
 
 - (void)navigateBack:(id)sender;
