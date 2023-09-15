@@ -55,10 +55,9 @@ else()
     if (ANDROID)
         target_sources(webcontent PRIVATE
           ../Android/src/main/cpp/WebContentService.cpp
-          ../Android/src/main/cpp/ALooperEventLoopImplementation.cpp
-          ../Android/src/main/cpp/TimerExecutorService.cpp
+          ../Android/src/main/cpp/WebContentServiceJNI.cpp
         )
-        target_link_libraries(webcontent PRIVATE log android)
+        target_link_libraries(webcontent PRIVATE android)
     endif()
 
     add_executable(WebContent main.cpp)
