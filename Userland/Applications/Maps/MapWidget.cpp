@@ -47,8 +47,16 @@ static double nice_round_number(double number)
 
 double MapWidget::LatLng::distance_to(LatLng const& other) const
 {
-    double const earth_radius = 6371000.0;
-    return earth_radius * 2.0 * asin(sqrt(pow(sin((AK::to_radians(other.latitude) - AK::to_radians(latitude)) / 2.0), 2.0) + cos(AK::to_radians(latitude)) * cos(AK::to_radians(other.latitude)) * pow(sin((AK::to_radians(other.longitude) - AK::to_radians(longitude)) / 2.0), 2.0)));
+    return EARTH_RADIUS * 2.0 * asin(sqrt(pow(sin((AK::to_radians(other.latitude) - AK::to_radians(latitude)) / 2.0), 2.0) + cos(AK::to_radians(latitude)) * cos(AK::to_radians(other.latitude)) * pow(sin((AK::to_radians(other.longitude) - AK::to_radians(longitude)) / 2.0), 2.0)));
+}
+
+int MapWidget::LatLngBounds::get_zoom() const
+{
+    double distance_meters = north_west.distance_to(south_east);
+    int zoom = ZOOM_MIN;
+    while (distance_meters < EARTH_RADIUS / pow(2, zoom - 1) && zoom != ZOOM_MAX)
+        ++zoom;
+    return min(zoom + 1, ZOOM_MAX);
 }
 
 // MapWidget class

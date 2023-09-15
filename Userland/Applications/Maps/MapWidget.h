@@ -27,6 +27,13 @@ public:
         double distance_to(LatLng const& other) const;
     };
 
+    struct LatLngBounds {
+        LatLng north_west;
+        LatLng south_east;
+
+        int get_zoom() const;
+    };
+
     struct Options {
         Optional<String> tile_provider {};
         LatLng center;
@@ -141,6 +148,7 @@ private:
 
     static int constexpr TILE_SIZE = 256;
     static double constexpr LATITUDE_MAX = 85.0511287798066;
+    static int constexpr EARTH_RADIUS = 6371000.0;
     static size_t constexpr TILES_CACHE_MAX = 256;
     static constexpr size_t TILES_DOWNLOAD_PARALLEL_MAX = 8;
     static int constexpr ZOOM_MIN = 2;
