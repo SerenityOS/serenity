@@ -12,6 +12,7 @@
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/DynamicWidgetContainer.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
@@ -53,8 +54,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(main_widget->initialize_menubar(*window));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (main_widget->request_close())
+        if (main_widget->request_close()) {
+            GUI::DynamicWidgetContainer::close_all_detached_windows();
             return GUI::Window::CloseRequestDecision::Close;
+        }
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 

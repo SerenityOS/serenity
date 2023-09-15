@@ -43,58 +43,79 @@
             }
         }
 
-        @GUI::Widget {
-            fill_with_background_color: true
+        @GUI::DynamicWidgetContainer {
+            section_label: "Editor Panels"
+            config_domain: "PixelPaint"
+            with_individual_order: true
             fixed_width: 200
-            layout: @GUI::VerticalBoxLayout {}
+            preferred_height: "grow"
+            detached_size: [200, 640]
 
-            @GUI::GroupBox {
-                title: "Layers"
-                layout: @GUI::VerticalBoxLayout {
-                    margins: [6]
+            @GUI::DynamicWidgetContainer {
+                section_label: "Layers"
+                config_domain: "PixelPaint"
+                preferred_height: "grow"
+                detached_size: [250, 600]
+
+                @GUI::GroupBox {
+                    layout: @GUI::VerticalBoxLayout {
+                        margins: [6]
+                    }
+
+                    @PixelPaint::LayerListWidget {
+                        name: "layer_list_widget"
+                    }
                 }
 
-                @PixelPaint::LayerListWidget {
-                    name: "layer_list_widget"
-                }
-            }
-
-            @PixelPaint::LayerPropertiesWidget {
-                name: "layer_properties_widget"
-                max_height: 94
-            }
-
-            @GUI::GroupBox {
-                title: "Histogram"
-                preferred_height: "shrink"
-                visible: false
-                layout: @GUI::VerticalBoxLayout {
-                    margins: [6]
-                }
-
-                @PixelPaint::HistogramWidget {
-                    name: "histogram_widget"
-                    min_height: 65
+                @PixelPaint::LayerPropertiesWidget {
+                    name: "layer_properties_widget"
+                    max_height: 94
                 }
             }
 
-            @GUI::GroupBox {
-                title: "Vectorscope"
-                min_height: 80
-                visible: false
-                layout: @GUI::VerticalBoxLayout {
-                    margins: [6]
-                }
+            @GUI::DynamicWidgetContainer {
+                section_label: "Color Visualizations"
+                config_domain: "PixelPaint"
 
-                @PixelPaint::VectorscopeWidget {
-                    name: "vectorscope_widget"
-                    preferred_height: "fit"
+                @GUI::Widget {
+                    layout: @GUI::VerticalBoxLayout {}
+
+                    @GUI::GroupBox {
+                        visible: false
+                        layout: @GUI::VerticalBoxLayout {
+                            margins: [6]
+                        }
+
+                        @PixelPaint::HistogramWidget {
+                            name: "histogram_widget"
+                            min_height: 65
+                        }
+                    }
+
+                    @GUI::GroupBox {
+                        min_height: 80
+                        visible: false
+                        layout: @GUI::VerticalBoxLayout {
+                            margins: [6]
+                        }
+
+                        @PixelPaint::VectorscopeWidget {
+                            name: "vectorscope_widget"
+                            preferred_height: "fit"
+                        }
+                    }
                 }
             }
 
-            @PixelPaint::ToolPropertiesWidget {
-                name: "tool_properties_widget"
-                max_height: 144
+            @GUI::DynamicWidgetContainer {
+                section_label: "Tool Properties"
+                config_domain: "PixelPaint"
+                detached_size: [200, 200]
+
+                @PixelPaint::ToolPropertiesWidget {
+                    name: "tool_properties_widget"
+                    max_height: 144
+                }
             }
         }
     }
