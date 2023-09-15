@@ -134,6 +134,7 @@ public:
     {
         if (m_parent)
             m_parent->remove_child(*this);
+        m_parent = nullptr;
     }
 
     template<class T, class... Args>
