@@ -46,6 +46,9 @@ TEST_CASE(should_construct_by_move)
 
 NO_SANITIZE_ADDRESS static void should_not_destroy()
 {
+#pragma GCC diagnostic push
+// valid use-after-free, see below
+#pragma GCC diagnostic ignored "-Wdangling-pointer"
     Counter* c = nullptr;
     {
         AK::NeverDestroyed<Counter> n {};
@@ -53,6 +56,7 @@ NO_SANITIZE_ADDRESS static void should_not_destroy()
         c = &n.get();
     }
     EXPECT_EQ(0, c->num_destroys);
+#pragma GCC diagnostic pop
 }
 
 TEST_CASE(should_not_destroy)
