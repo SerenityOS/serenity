@@ -16,7 +16,7 @@ template<typename NodeType>
 class ChildNode {
 public:
     // https://dom.spec.whatwg.org/#dom-childnode-before
-    WebIDL::ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
+    WebIDL::ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -31,7 +31,7 @@ public:
         auto viable_previous_sibling = viable_previous_sibling_for_insertion(nodes);
 
         // 4. Let node be the result of converting nodes into a node, given nodes and this’s node document.
-        auto node_to_insert = TRY(convert_nodes_to_single_node(from_deprecated_nodes(nodes), node->document()));
+        auto node_to_insert = TRY(convert_nodes_to_single_node(nodes, node->document()));
 
         // 5. If viablePreviousSibling is null, then set it to parent’s first child; otherwise to viablePreviousSibling’s next sibling.
         if (!viable_previous_sibling)
@@ -46,7 +46,7 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-childnode-after
-    WebIDL::ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
+    WebIDL::ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -61,7 +61,7 @@ public:
         auto viable_next_sibling = viable_nest_sibling_for_insertion(nodes);
 
         // 4. Let node be the result of converting nodes into a node, given nodes and this’s node document.
-        auto node_to_insert = TRY(convert_nodes_to_single_node(from_deprecated_nodes(nodes), node->document()));
+        auto node_to_insert = TRY(convert_nodes_to_single_node(nodes, node->document()));
 
         // 5. Pre-insert node into parent before viableNextSibling.
         (void)TRY(parent->pre_insert(node_to_insert, viable_next_sibling));
@@ -70,7 +70,7 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-childnode-replacewith
-    WebIDL::ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
+    WebIDL::ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -85,7 +85,7 @@ public:
         auto viable_next_sibling = viable_nest_sibling_for_insertion(nodes);
 
         // 4. Let node be the result of converting nodes into a node, given nodes and this’s node document.
-        auto node_to_insert = TRY(convert_nodes_to_single_node(from_deprecated_nodes(nodes), node->document()));
+        auto node_to_insert = TRY(convert_nodes_to_single_node(nodes, node->document()));
 
         // 5. If this’s parent is parent, replace this with node within parent.
         // Note: This could have been inserted into node.
@@ -113,11 +113,26 @@ public:
         node->remove();
     }
 
+    WebIDL::ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
+    {
+        return before(from_deprecated_nodes(nodes));
+    }
+
+    WebIDL::ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
+    {
+        return after(from_deprecated_nodes(nodes));
+    }
+
+    WebIDL::ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
+    {
+        return replace_with(from_deprecated_nodes(nodes));
+    }
+
 protected:
     ChildNode() = default;
 
 private:
-    JS::GCPtr<Node> viable_previous_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
+    JS::GCPtr<Node> viable_previous_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -142,7 +157,7 @@ private:
         return nullptr;
     }
 
-    JS::GCPtr<Node> viable_nest_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
+    JS::GCPtr<Node> viable_nest_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
