@@ -60,3 +60,9 @@ test("regexp literals are re-useable", () => {
         expect(re.test("test")).toBeTrue();
     }
 });
+
+test("Incorrectly escaped code units not converted to invalid patterns", () => {
+    const re = /[\⪾-\⫀]/;
+    expect(re.test("⫀")).toBeTrue();
+    expect(re.test("\\u2abe")).toBeFalse(); // ⫀ is \u2abe
+});
