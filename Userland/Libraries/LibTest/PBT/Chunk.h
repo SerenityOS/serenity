@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Martin Janiczek <martin@janiczek.cz>.
+ * Copyright (c) 2023, Martin Janiczek <martin@janiczek.cz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */

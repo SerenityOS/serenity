@@ -13,6 +13,7 @@
 #include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibTest/TestCase.h>
+#include <LibTest/TestResult.h>
 
 namespace Test {
 
@@ -46,7 +47,7 @@ public:
 
     RandSource& rand_source() { return m_rand_source; }
 
-    bool m_current_test_case_passed = true;
+    TestResult m_current_test_result = TestResult::NotRun;
 
 private:
     static TestSuite* s_global;

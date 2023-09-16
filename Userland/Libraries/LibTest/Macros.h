@@ -12,6 +12,7 @@
 #include <AK/Math.h>
 #include <LibTest/CrashTest.h>
 #include <LibTest/PBT/RandSource.h>
+#include <LibTest/TestResult.h>
 
 namespace AK {
 template<typename... Parameters>
@@ -20,9 +21,8 @@ void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&...);
 
 namespace Test {
 // Declare helpers so that we can call them from VERIFY in included headers
-bool did_current_test_case_pass();
-void current_test_case_did_fail();
-void current_test_case_did_pass();
+TestResult current_test_result();
+void set_current_test_result(TestResult);
 
 RandSource rand_source();
 void set_rand_source(RandSource);
@@ -33,7 +33,7 @@ void set_rand_source(RandSource);
     do {                                                                                             \
         if (!(x)) {                                                                                  \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: VERIFY({}) failed", __FILE__, __LINE__, #x); \
-            ::Test::current_test_case_did_fail();                                                    \
+            ::Test::set_current_test_result(TestResult::Failed);                                     \
         }                                                                                            \
     } while (false)
 
@@ -57,7 +57,7 @@ void set_rand_source(RandSource);
         auto rhs = (b);                                                                                                                                                                      \
         if (lhs != rhs) {                                                                                                                                                                    \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
-            ::Test::current_test_case_did_fail();                                                                                                                                            \
+            ::Test::set_current_test_result(TestResult::Failed);                                                                                                                             \
         }                                                                                                                                                                                    \
     } while (false)
 
@@ -70,7 +70,7 @@ void set_rand_source(RandSource);
         if (ltruth != rtruth) {                                                                                           \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ_TRUTH({}, {}) failed with lhs={} ({}) and rhs={} ({})", \
                 __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, ltruth, FormatIfSupported { rhs }, rtruth);        \
-            ::Test::current_test_case_did_fail();                                                                         \
+            ::Test::set_current_test_result(TestResult::Failed);                                                          \
         }                                                                                                                 \
     } while (false)
 
@@ -82,7 +82,7 @@ void set_rand_source(RandSource);
         auto rhs = (b);                                                                                                                          \
         if (lhs != rhs) {                                                                                                                        \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, lhs, rhs); \
-            ::Test::current_test_case_did_fail();                                                                                                \
+            ::Test::set_current_test_result(TestResult::Failed);                                                                                 \
         }                                                                                                                                        \
     } while (false)
 
@@ -92,7 +92,7 @@ void set_rand_source(RandSource);
         auto rhs = (b);                                                                                                                                                                      \
         if (lhs == rhs) {                                                                                                                                                                    \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_NE({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
-            ::Test::current_test_case_did_fail();                                                                                                                                            \
+            ::Test::set_current_test_result(TestResult::Failed);                                                                                                                             \
         }                                                                                                                                                                                    \
     } while (false)
 
@@ -100,7 +100,7 @@ void set_rand_source(RandSource);
     do {                                                                                             \
         if (!(x)) {                                                                                  \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT({}) failed", __FILE__, __LINE__, #x); \
-            ::Test::current_test_case_did_fail();                                                    \
+            ::Test::set_current_test_result(TestResult::Failed);                                     \
         }                                                                                            \
     } while (false)
 
@@ -113,48 +113,49 @@ void set_rand_source(RandSource);
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_APPROXIMATE({}, {})"                             \
                          " failed with lhs={}, rhs={}, (lhs-rhs)={}",                                           \
                 __FILE__, __LINE__, #a, #b, expect_close_lhs, expect_close_rhs, expect_close_diff);             \
-            ::Test::current_test_case_did_fail();                                                               \
+            ::Test::set_current_test_result(TestResult::Failed);                                                \
         }                                                                                                       \
     } while (false)
 
 #define EXPECT_APPROXIMATE(a, b) EXPECT_APPROXIMATE_WITH_ERROR(a, b, 0.0000005)
 
-#define ASSUME(x)                                     \
-    do {                                              \
-        if (!(x)) {                                   \
-            ::AK::warnln("TODO reject or something"); \
-        }                                             \
+#define ASSUME(x)                                                                                                                           \
+    do {                                                                                                                                    \
+        if (!(x)) {                                                                                                                         \
+            ::Test::set_current_test_result(TestResult::Rejected);                                                                          \
+            ::AK::warnln("\033[31;1mREJECTED\033[0m: {}:{}: Couldn't generate random value satisfying ASSUME({})", __FILE__, __LINE__, #x); \
+        }                                                                                                                                   \
     } while (false)
 
 #define FAIL(message)                                                                  \
     do {                                                                               \
         ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: {}", __FILE__, __LINE__, message); \
-        ::Test::current_test_case_did_fail();                                          \
+        ::Test::set_current_test_result(TestResult::Failed);                           \
     } while (false)
 
 // To use, specify the lambda to execute in a sub process and verify it exits:
 //  EXPECT_CRASH("This should fail", []{
 //      return Test::Crash::Failure::DidNotCrash;
 //  });
-#define EXPECT_CRASH(test_message, test_func)       \
-    do {                                            \
-        Test::Crash crash(test_message, test_func); \
-        if (!crash.run())                           \
-            ::Test::current_test_case_did_fail();   \
+#define EXPECT_CRASH(test_message, test_func)                    \
+    do {                                                         \
+        Test::Crash crash(test_message, test_func);              \
+        if (!crash.run())                                        \
+            ::Test::set_current_test_result(TestResult::Failed); \
     } while (false)
 
 #define EXPECT_CRASH_WITH_SIGNAL(test_message, signal, test_func) \
     do {                                                          \
         Test::Crash crash(test_message, test_func, (signal));     \
         if (!crash.run())                                         \
-            ::Test::current_test_case_did_fail();                 \
+            ::Test::set_current_test_result(TestResult::Failed);  \
     } while (false)
 
-#define EXPECT_NO_CRASH(test_message, test_func)       \
-    do {                                               \
-        Test::Crash crash(test_message, test_func, 0); \
-        if (!crash.run())                              \
-            ::Test::current_test_case_did_fail();      \
+#define EXPECT_NO_CRASH(test_message, test_func)                 \
+    do {                                                         \
+        Test::Crash crash(test_message, test_func, 0);           \
+        if (!crash.run())                                        \
+            ::Test::set_current_test_result(TestResult::Failed); \
     } while (false)
 
 #define TRY_OR_FAIL(expression)                                                                      \

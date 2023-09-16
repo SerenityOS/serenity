@@ -67,7 +67,7 @@ public:
                 RandSource live_source = RandSource::live();
                 // TODO disable user-visible failure printlns
                 run_with_rand_source(live_source, test_fn);
-                if (!did_current_test_case_pass()) {
+                if (current_test_result() == TestResult::Failed) {
                     RandomRun first_failure = live_source.run();
                     RandomRun best_failure = shrink(first_failure, test_fn);
                     // Run one last time, so that the user can see the minimal failure
@@ -75,6 +75,8 @@ public:
                     // TODO enable user-visible failure printlns
                     run_with_rand_source(RandSource::recorded(best_failure), test_fn);
                 }
+                // TODO should we do something about rejected() or should that be left for the ASSUME macro?
+                // Maybe at least keep an assert about "either passed or failed" here?
             }
             // MAX_GENERATED_VALUES_PER_TEST values generated, all passed the test.
         };

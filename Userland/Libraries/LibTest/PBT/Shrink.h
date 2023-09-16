@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2023, Martin Janiczek <martin@janiczek.cz>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
 #pragma once
 
 #include <LibTest/PBT/GenResult.h>
@@ -5,6 +11,7 @@
 #include <LibTest/PBT/RandSource.h>
 #include <LibTest/PBT/RandomRun.h>
 #include <LibTest/PBT/ShrinkCmd.h>
+#include <LibTest/TestResult.h>
 
 #include <AK/String.h>
 
@@ -29,10 +36,10 @@ ShrinkResult keep_if_better(RandomRun const& new_run, RandomRun const& current_b
     }
 
     RandSource source = RandSource::recorded(new_run);
-    Test::current_test_case_did_pass();
+    Test::set_current_test_result(TestResult::NotRun);
     test_function();
-    if (Test::did_current_test_case_pass()) {
-        Test::current_test_case_did_fail();
+    if (Test::current_test_result() == TestResult::Passed) {
+        Test::set_current_test_result(TestResult::Failed);
         return no_improvement(current_best);
     }
     return ShrinkResult { true, new_run };

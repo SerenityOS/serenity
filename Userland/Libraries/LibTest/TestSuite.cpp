@@ -40,27 +40,21 @@ private:
 };
 
 // Declared in Macros.h
-bool did_current_test_case_pass()
+TestResult current_test_result()
 {
-    return TestSuite::the().m_current_test_case_passed;
+    return TestSuite::the().m_current_test_result;
 }
 
 // Declared in Macros.h
-void current_test_case_did_fail()
+void set_current_test_result(TestResult result)
 {
-    TestSuite::the().m_current_test_case_passed = false;
-}
-
-// Declared in Macros.h
-void current_test_case_did_pass()
-{
-    TestSuite::the().m_current_test_case_passed = true;
+    TestSuite::the().m_current_test_result = result;
 }
 
 // Declared in Macros.h
 void set_rand_source(RandSource source)
 {
-    TestSuite::the().set_rand_source(source);
+    TestSuite::the().set_rand_source(move(source));
 }
 
 // Declared in Macros.h
@@ -137,10 +131,28 @@ Vector<NonnullRefPtr<TestCase>> TestSuite::find_cases(DeprecatedString const& se
     return matches;
 }
 
+static DeprecatedString test_result_to_string(TestResult result)
+{
+    switch (result) {
+    case TestResult::NotRun:
+        return "Not run";
+    case TestResult::Passed:
+        return "Completed";
+    case TestResult::Failed:
+        return "Failed";
+    case TestResult::Rejected:
+        return "Rejected";
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
 {
     size_t test_count = 0;
+    size_t test_passed_count = 0;
     size_t test_failed_count = 0;
+    size_t test_rejected_count = 0;
     size_t benchmark_count = 0;
     TestElapsedTimer global_timer;
 
@@ -149,7 +161,7 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         auto const repetitions = t->is_benchmark() ? m_benchmark_repetitions : 1;
 
         warnln("Running {} '{}'.", test_type, t->name());
-        m_current_test_case_passed = true;
+        m_current_test_result = TestResult::NotRun;
 
         u64 total_time = 0;
         u64 sum_of_squared_times = 0;
@@ -164,6 +176,10 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             sum_of_squared_times += iteration_time * iteration_time;
             min_time = min(min_time, iteration_time);
             max_time = max(max_time, iteration_time);
+
+            if (m_current_test_result == TestResult::NotRun) {
+                m_current_test_result = TestResult::Passed;
+            }
         }
 
         if (repetitions != 1) {
@@ -172,10 +188,10 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             double standard_deviation = sqrt((sum_of_squared_times + repetitions * average_squared - 2 * total_time * average) / (repetitions - 1));
 
             dbgln("{} {} '{}' on average in {:.1f}±{:.1f}ms (min={}ms, max={}ms, total={}ms)",
-                m_current_test_case_passed ? "Completed" : "Failed", test_type, t->name(),
+                test_result_to_string(m_current_test_result), test_type, t->name(),
                 average, standard_deviation, min_time, max_time, total_time);
         } else {
-            dbgln("{} {} '{}' in {}ms", m_current_test_case_passed ? "Completed" : "Failed", test_type, t->name(), total_time);
+            dbgln("{} {} '{}' in {}ms", test_result_to_string(m_current_test_result), test_type, t->name(), total_time);
         }
 
         if (t->is_benchmark()) {
@@ -186,8 +202,20 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             test_count++;
         }
 
-        if (!m_current_test_case_passed) {
+        switch (m_current_test_result) {
+        case TestResult::NotRun:
+            VERIFY_NOT_REACHED();
+        case TestResult::Passed:
+            test_passed_count++;
+            break;
+        case TestResult::Failed:
             test_failed_count++;
+            break;
+        case TestResult::Rejected:
+            test_rejected_count++;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -199,8 +227,18 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         m_benchtime,
         global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime));
 
-    if (test_count != 0)
-        dbgln("Out of {} tests, {} passed and {} failed.", test_count, test_count - test_failed_count, test_failed_count);
+    if (test_count != 0) {
+        if (test_failed_count == 0 && test_rejected_count == 0) {
+            dbgln("All {} tests passed.", test_count);
+        } else if (test_failed_count == 0) {
+            dbgln("Out of {} tests, {} passed and {} couldn't generate the needed random values.", test_count, test_passed_count, test_rejected_count);
+        } else if (test_rejected_count == 0) {
+            dbgln("Out of {} tests, {} passed and {} failed.", test_count, test_passed_count, test_failed_count);
+        } else {
+            // failed > 0, rejected > 0
+            dbgln("Out of {} tests, {} passed, {} failed and {} couldn't generate the needed random values.", test_count, test_passed_count, test_failed_count, test_rejected_count);
+        }
+    }
 
     return (int)test_failed_count;
 }
