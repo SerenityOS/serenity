@@ -381,6 +381,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_first_base_element_with_href_in_tree_order);
     visitor.visit(m_parser);
     visitor.visit(m_lazy_load_intersection_observer);
+    visitor.visit(m_visual_viewport);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script);
