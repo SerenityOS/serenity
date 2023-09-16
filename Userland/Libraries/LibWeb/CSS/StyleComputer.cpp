@@ -36,6 +36,7 @@
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CompositeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
@@ -2136,6 +2137,8 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
                 found_font = find_generic_font(family->to_identifier());
             } else if (family->is_string()) {
                 found_font = find_font(family->as_string().string_value());
+            } else if (family->is_custom_ident()) {
+                found_font = find_font(family->as_custom_ident().custom_ident());
             }
             if (found_font)
                 break;
@@ -2144,6 +2147,8 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         found_font = find_generic_font(font_family.to_identifier());
     } else if (font_family.is_string()) {
         found_font = find_font(font_family.as_string().string_value());
+    } else if (font_family.is_custom_ident()) {
+        found_font = find_font(font_family.as_custom_ident().custom_ident());
     }
 
     if (!found_font) {
