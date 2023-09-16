@@ -57,11 +57,13 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
 
     bool flag_dry_run { false };
     Vector<StringView> command;
+    StringView argv0;
     Core::ArgsParser args_parser;
 
     args_parser.set_general_help("Run dynamically-linked ELF executables");
     args_parser.set_stop_on_first_non_option(true);
     args_parser.add_option(flag_dry_run, "Run in dry-run mode", "dry-run", 'd');
+    args_parser.add_option(argv0, "Run with custom argv0", "argv0", 'E', "custom argv0");
     args_parser.add_positional_argument(command, "Command to execute", "command");
     // NOTE: Don't use regular PrintUsageAndExit policy for ArgsParser, as it will simply
     // fail with a nullptr-dereference as the LibC exit function is not suitable for usage
@@ -90,6 +92,9 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
     auto command_with_args = command.span();
     for (size_t index = 0; index < command.size(); index++)
         argv[index] = const_cast<char*>(command_with_args[index].characters_without_null_termination());
+
+    if (!argv0.is_empty())
+        argv[0] = const_cast<char*>(argv0.characters_without_null_termination());
 
     auto entry_point = ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, is_secure, envp);
     if (flag_dry_run)
