@@ -8,12 +8,14 @@
 #pragma once
 
 #include <AK/Queue.h>
+#include <LibConfig/Listener.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 
-class MapWidget : public GUI::Frame {
+class MapWidget : public GUI::Frame
+    , public Config::Listener {
     C_OBJECT(MapWidget);
 
 public:
@@ -25,14 +27,14 @@ public:
     };
 
     struct Options {
-        String tile_layer_url { "https://tile.openstreetmap.org/{}/{}/{}.png"_string };
+        Optional<String> tile_provider {};
         LatLng center;
         int zoom;
         bool scale_enabled { true };
         int scale_max_width { 100 };
         bool attribution_enabled { true };
-        String attribution_text { "© OpenStreetMap contributors"_string };
-        URL attribution_url { "https://www.openstreetmap.org/copyright"sv };
+        Optional<String> attribution_text {};
+        Optional<URL> attribution_url {};
     };
 
     LatLng center() const { return m_center; }
@@ -74,7 +76,7 @@ public:
         String text;
         Position position;
         Optional<URL> url {};
-        bool persistent { false };
+        Optional<String> name {};
         Gfx::IntRect rect { 0, 0, 0, 0 };
     };
     void add_panel(Panel const& panel)
@@ -82,9 +84,9 @@ public:
         m_panels.append(panel);
         update();
     }
-    void clear_panels()
+    void remove_panels_with_name(StringView name)
     {
-        m_panels.remove_all_matching([](auto const& panel) { return !panel.persistent; });
+        m_panels.remove_all_matching([name](auto const& panel) { return panel.name == name; });
         update();
     }
 
@@ -115,6 +117,7 @@ protected:
     RefPtr<Protocol::RequestClient> request_client() const { return m_request_client; }
 
 private:
+    virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -151,7 +154,8 @@ private:
     Vector<RefPtr<Protocol::Request>, TILES_DOWNLOAD_PARALLEL_MAX> m_active_requests;
     Queue<TileKey, 32> m_tile_queue;
     RefPtr<Gfx::Bitmap> m_marker_image;
-    String m_tile_layer_url;
+    Optional<String> m_tile_provider;
+    String m_default_tile_provider;
     LatLng m_center;
     int m_zoom {};
     bool m_scale_enabled {};
