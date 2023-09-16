@@ -17,6 +17,13 @@ set(SOURCES
 serenity_lib(LibCoreMinimal coreminimal)
 target_link_libraries(LibCoreMinimal PRIVATE LibSystem)
 
+if (SERENITYOS)
+    add_library(DynamicLoader_LibCoreArgsParser 
+        ArgsParser.cpp
+        Version.cpp)
+    target_link_libraries(DynamicLoader_LibCoreArgsParser PUBLIC DynamicLoader_CompileOptions)
+endif()
+
 set(SOURCES
     AnonymousBuffer.cpp
     Command.cpp
