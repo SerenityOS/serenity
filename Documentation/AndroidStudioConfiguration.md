@@ -2,6 +2,16 @@
 
 The Android port of Ladybird has straightforward integration with the Android Studio IDE.
 
+## Prerequisites
+
+Ensure that your system has the following tools available:
+
+- Android Studio Giraffe 2022.3.1 Patch 1 or later
+- CMake 3.23 or higher as the default CMake executable
+- 20G or more storage space for SDKs + Emulator images + Gradle dependencies + build artifacts
+
+## Opening the project
+
 After opening the ``serenity`` directory in Android Studio (NOT the Ladybird/Android directory!)
 there should be a pop-up in the bottom left indicating that an Android Gradle project was detected
 in ``Ladybird/Android``.
