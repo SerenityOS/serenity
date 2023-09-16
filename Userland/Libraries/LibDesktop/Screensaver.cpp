@@ -14,7 +14,7 @@ static constexpr int mouse_tracking_delay_milliseconds = 750;
 
 ErrorOr<NonnullRefPtr<GUI::Window>> Screensaver::create_window(StringView title, StringView icon)
 {
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(false);
     window->set_frameless(true);
     window->set_fullscreen(true);

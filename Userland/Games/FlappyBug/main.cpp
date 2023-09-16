@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     u32 high_score = Config::read_i32("FlappyBug"sv, "Game"sv, "HighScore"sv, 0);
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->resize(FlappyBug::Game::game_width, FlappyBug::Game::game_height);
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-flappybug"sv));
     window->set_icon(app_icon.bitmap_for_size(16));

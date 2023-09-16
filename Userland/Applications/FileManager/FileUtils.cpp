@@ -81,7 +81,7 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
         TRY(Core::System::close(pipe_fds[1]));
     }
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     TRY(file_operation_windows.try_set(window));
 
     switch (operation) {

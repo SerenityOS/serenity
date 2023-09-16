@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/GamesSettings", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("Spider");
 
     auto mode = static_cast<Spider::Mode>(Config::read_u32("Spider"sv, "Settings"sv, "Mode"sv, to_underlying(Spider::Mode::SingleSuit)));

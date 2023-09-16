@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-sql-studio"sv);
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("SQL Studio");

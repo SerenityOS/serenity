@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-minesweeper"sv));
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_resizable(false);
     window->set_title("Minesweeper");
     window->set_auto_shrink(true);

@@ -278,7 +278,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-system-monitor"sv));
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("System Monitor");
     window->resize(560, 430);
 
@@ -523,7 +523,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
 {
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->resize(480, 360);
     window->set_title(DeprecatedString::formatted("PID {} - System Monitor", pid));
 
