@@ -90,8 +90,8 @@ std::vector<clang::QualType> get_all_qualified_types(clang::QualType const& type
         if (specialization_name == "JS::GCPtr" || specialization_name == "JS::NonnullGCPtr") {
             qualified_types.push_back(type);
         } else {
-            for (size_t i = 0; i < template_specialization->getNumArgs(); i++) {
-                auto const& template_arg = template_specialization->getArg(i);
+            for (size_t i = 0; i < template_specialization->template_arguments().size(); i++) {
+                auto const& template_arg = template_specialization->template_arguments()[i];
                 if (template_arg.getKind() == clang::TemplateArgument::Type) {
                     auto template_qualified_types = get_all_qualified_types(template_arg.getAsType());
                     std::move(template_qualified_types.begin(), template_qualified_types.end(), std::back_inserter(qualified_types));
@@ -143,10 +143,10 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
             if (template_type_name != "GCPtr" && template_type_name != "NonnullGCPtr")
                 return result;
 
-            if (specialization->getNumArgs() != 1)
+            if (specialization->template_arguments().size() != 1)
                 return result; // Not really valid, but will produce a compilation error anyway
 
-            auto const& type_arg = specialization->getArg(0);
+            auto const& type_arg = specialization->template_arguments()[0];
             auto const* record_type = type_arg.getAsType()->getAs<clang::RecordType>();
             if (!record_type)
                 return result;
