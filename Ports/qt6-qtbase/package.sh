@@ -14,6 +14,7 @@ configopts=(
     '-DQT_FEATURE_cxx20=ON'
     '-DQT_FEATURE_ssl=ON'
     '-DQT_FEATURE_zstd=ON'
+    '-DQT_FEATURE_sql=ON'
     '-DINPUT_opengl=no'
 )
 depends=(
@@ -21,9 +22,10 @@ depends=(
     'md4c'
     'openssl'
     'zstd'
+    'sqlite'
 )
 
-QT_DISABLED_FEATURES='sql opengl dbus systemsemaphore sharedmemory dnslookup'
+QT_DISABLED_FEATURES='opengl dbus systemsemaphore sharedmemory dnslookup'
 
 configure() {
 
