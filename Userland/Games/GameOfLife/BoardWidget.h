@@ -36,8 +36,8 @@ public:
     }
 
     void toggle_cell(size_t row, size_t column);
-    void clear_cells() { m_board->clear(); }
-    void randomize_cells() { m_board->randomize(); }
+    void clear_cells();
+    void randomize_cells();
 
     int get_cell_size() const;
     Gfx::IntSize get_board_offset() const;
@@ -64,6 +64,7 @@ public:
     int running_timer_interval() const { return m_running_timer_interval; }
     void set_running_timer_interval(int interval);
 
+    Function<void(u64)> on_tick;
     Function<void()> on_running_state_change;
     Function<void()> on_stall;
     Function<void()> on_pattern_selection_state_change;
@@ -86,6 +87,8 @@ private:
 
     int m_running_timer_interval { 500 };
     int m_running_pattern_preview_timer_interval { 100 };
+
+    u64 m_ticks { 0 };
 
     RefPtr<GUI::Menu> m_context_menu;
 
