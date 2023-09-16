@@ -119,12 +119,13 @@ void set_rand_source(RandSource);
 
 #define EXPECT_APPROXIMATE(a, b) EXPECT_APPROXIMATE_WITH_ERROR(a, b, 0.0000005)
 
-#define ASSUME(x)                                                                                                                           \
-    do {                                                                                                                                    \
-        if (!(x)) {                                                                                                                         \
-            ::Test::set_current_test_result(TestResult::Rejected);                                                                          \
-            ::AK::warnln("\033[31;1mREJECTED\033[0m: {}:{}: Couldn't generate random value satisfying ASSUME({})", __FILE__, __LINE__, #x); \
-        }                                                                                                                                   \
+#define ASSUME(x)                                                                                                  \
+    do {                                                                                                           \
+        if (!(x)) {                                                                                                \
+            ::Test::set_current_test_result(TestResult::Rejected);                                                 \
+            ::AK::warnln("\033[31;1mREJECTED\033[0m: {}:{}: Couldn't generate random value satisfying ASSUME({})", \
+                __FILE__, __LINE__, #x);                                                                           \
+        }                                                                                                          \
     } while (false)
 
 #define FAIL(message)                                                                  \
