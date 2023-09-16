@@ -13,6 +13,7 @@
 // TODO: Look into generating this from the authoritative list of fuzzing targets in fuzzer.cmake.
 #define ENUMERATE_TARGETS(T) \
     T(ASN1)                  \
+    T(BLAKE2b)               \
     T(BMPLoader)             \
     T(Brotli)                \
     T(CSSParser)             \
