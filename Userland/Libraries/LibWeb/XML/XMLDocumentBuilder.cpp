@@ -81,7 +81,7 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
         script_element.set_parser_document(Badge<XMLDocumentBuilder> {}, m_document);
         script_element.set_force_async(Badge<XMLDocumentBuilder> {}, false);
     }
-    if (HTML::TagNames::template_ == m_current_node->node_name()) {
+    if (HTML::TagNames::template_ == m_current_node->node_name().to_deprecated_fly_string()) {
         // When an XML parser would append a node to a template element, it must instead append it to the template element's template contents (a DocumentFragment node).
         MUST(static_cast<HTML::HTMLTemplateElement&>(*m_current_node).content()->append_child(node));
     } else {

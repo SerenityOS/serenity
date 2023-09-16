@@ -23,7 +23,7 @@ public:
 
     virtual ~DocumentFragment() override = default;
 
-    virtual DeprecatedFlyString node_name() const override { return "#document-fragment"; }
+    virtual FlyString node_name() const override { return "#document-fragment"_fly_string; }
 
     Element* host() { return m_host.ptr(); }
     Element const* host() const { return m_host.ptr(); }

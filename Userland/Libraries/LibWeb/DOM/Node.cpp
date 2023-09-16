@@ -108,10 +108,10 @@ void Node::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-node-baseuri
-DeprecatedString Node::base_uri() const
+String Node::base_uri() const
 {
     // Return this’s node document’s document base URL, serialized.
-    return document().base_url().to_deprecated_string();
+    return MUST(document().base_url().to_string());
 }
 
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
@@ -141,18 +141,18 @@ const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(DeprecatedF
 }
 
 // https://dom.spec.whatwg.org/#concept-descendant-text-content
-DeprecatedString Node::descendant_text_content() const
+String Node::descendant_text_content() const
 {
     StringBuilder builder;
     for_each_in_subtree_of_type<Text>([&](auto& text_node) {
         builder.append(text_node.data());
         return IterationDecision::Continue;
     });
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://dom.spec.whatwg.org/#dom-node-textcontent
-DeprecatedString Node::text_content() const
+Optional<String> Node::text_content() const
 {
     // The textContent getter steps are to return the following, switching on the interface this implements:
 
@@ -162,21 +162,22 @@ DeprecatedString Node::text_content() const
 
     // If CharacterData, return this’s data.
     if (is<CharacterData>(this))
-        return static_cast<CharacterData const&>(*this).data();
+        return MUST(String::from_deprecated_string(static_cast<CharacterData const&>(*this).data()));
 
     // If Attr node, return this's value.
     if (is<Attr>(*this))
-        return static_cast<Attr const&>(*this).value();
+        return MUST(String::from_deprecated_string(static_cast<Attr const&>(*this).value()));
 
     // Otherwise, return null
     return {};
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-textcontent%E2%91%A0
-void Node::set_text_content(DeprecatedString const& content)
+void Node::set_text_content(Optional<String> const& maybe_content)
 {
     // The textContent setter steps are to, if the given value is null, act as if it was the empty string instead,
     // and then do as described below, switching on the interface this implements:
+    auto content = maybe_content.value_or(String {}).to_deprecated_string();
 
     // If DocumentFragment or Element, string replace all with the given value within this.
     if (is<DocumentFragment>(this) || is<Element>(this)) {
@@ -205,18 +206,18 @@ void Node::set_text_content(DeprecatedString const& content)
 }
 
 // https://dom.spec.whatwg.org/#dom-node-nodevalue
-DeprecatedString Node::node_value() const
+Optional<String> Node::node_value() const
 {
     // The nodeValue getter steps are to return the following, switching on the interface this implements:
 
     // If Attr, return this’s value.
     if (is<Attr>(this)) {
-        return verify_cast<Attr>(this)->value();
+        return MUST(String::from_deprecated_string(verify_cast<Attr>(this)->value()));
     }
 
     // If CharacterData, return this’s data.
     if (is<CharacterData>(this)) {
-        return verify_cast<CharacterData>(this)->data();
+        return MUST(String::from_deprecated_string(verify_cast<CharacterData>(this)->data()));
     }
 
     // Otherwise, return null.
@@ -224,17 +225,18 @@ DeprecatedString Node::node_value() const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-nodevalue%E2%91%A0
-void Node::set_node_value(DeprecatedString const& value)
+void Node::set_node_value(Optional<String> const& maybe_value)
 {
     // The nodeValue setter steps are to, if the given value is null, act as if it was the empty string instead,
     // and then do as described below, switching on the interface this implements:
+    auto value = maybe_value.value_or(String {});
 
     // If Attr, set an existing attribute value with this and the given value.
     if (is<Attr>(this)) {
-        verify_cast<Attr>(this)->set_value(value);
+        verify_cast<Attr>(this)->set_value(value.to_deprecated_string());
     } else if (is<CharacterData>(this)) {
         // If CharacterData, replace data with node this, offset 0, count this’s length, and data the given value.
-        verify_cast<CharacterData>(this)->set_data(value);
+        verify_cast<CharacterData>(this)->set_data(value.to_deprecated_string());
     }
 
     // Otherwise, do nothing.
@@ -281,8 +283,11 @@ DeprecatedString Node::child_text_content() const
 
     StringBuilder builder;
     verify_cast<ParentNode>(*this).for_each_child([&](auto& child) {
-        if (is<Text>(child))
-            builder.append(verify_cast<Text>(child).text_content());
+        if (is<Text>(child)) {
+            auto maybe_content = verify_cast<Text>(child).text_content();
+            if (maybe_content.has_value())
+                builder.append(maybe_content.value());
+        }
     });
     return builder.to_deprecated_string();
 }
@@ -1149,7 +1154,7 @@ bool Node::is_uninteresting_whitespace_node() const
 
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
-    MUST(object.add("name"sv, node_name().view()));
+    MUST(object.add("name"sv, node_name()));
     MUST(object.add("id"sv, id()));
     if (is_document()) {
         MUST(object.add("type"sv, "document"));
@@ -1465,7 +1470,7 @@ JS::NonnullGCPtr<Node> Node::get_root_node(GetRootNodeOptions const& options)
 DeprecatedString Node::debug_description() const
 {
     StringBuilder builder;
-    builder.append(node_name().to_lowercase());
+    builder.append(node_name().to_deprecated_fly_string().to_lowercase());
     if (is_element()) {
         auto& element = static_cast<DOM::Element const&>(*this);
         if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null())

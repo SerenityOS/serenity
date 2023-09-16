@@ -137,7 +137,7 @@ String HTMLElement::inner_text()
     // innerText for element being rendered takes visibility into account, so force a layout and then walk the layout tree.
     document().update_layout();
     if (!layout_node())
-        return MUST(String::from_deprecated_string(text_content()));
+        return text_content().value_or(String {});
 
     Function<void(Layout::Node const&)> recurse = [&](auto& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {

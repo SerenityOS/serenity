@@ -31,7 +31,7 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> construct_impl(JS::Realm& realm, String const& data);
 
     // ^Node
-    virtual DeprecatedFlyString node_name() const override { return "#text"; }
+    virtual FlyString node_name() const override { return "#text"_fly_string; }
     virtual bool is_editable() const override { return m_always_editable || CharacterData::is_editable(); }
 
     void set_always_editable(bool b) { m_always_editable = b; }

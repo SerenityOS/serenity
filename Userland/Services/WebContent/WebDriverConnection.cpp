@@ -1164,7 +1164,7 @@ Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_eleme
     auto rendered_text = element->text_content();
 
     // 5. Return success with data rendered text.
-    return rendered_text;
+    return rendered_text.value_or(String {}).to_deprecated_string();
 }
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name

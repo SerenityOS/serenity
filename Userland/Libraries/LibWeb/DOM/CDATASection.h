@@ -18,7 +18,7 @@ public:
     virtual ~CDATASection() override;
 
     // ^Node
-    virtual DeprecatedFlyString node_name() const override { return "#cdata-section"; }
+    virtual FlyString node_name() const override { return "#cdata-section"_fly_string; }
 
 private:
     CDATASection(Document&, String const&);

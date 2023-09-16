@@ -76,7 +76,7 @@ public:
 
     DeprecatedFlyString const& qualified_name() const { return m_qualified_name.as_string(); }
     DeprecatedString const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
-    virtual DeprecatedFlyString node_name() const final { return html_uppercased_qualified_name(); }
+    virtual FlyString node_name() const final { return MUST(FlyString::from_deprecated_fly_string(html_uppercased_qualified_name())); }
     DeprecatedFlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
