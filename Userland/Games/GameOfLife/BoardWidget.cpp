@@ -38,6 +38,12 @@ BoardWidget::BoardWidget(size_t rows, size_t columns)
 void BoardWidget::run_generation()
 {
     m_board->run_generation();
+    if (!m_board->is_stalled())
+        m_ticks++;
+
+    if (on_tick)
+        on_tick(m_ticks);
+
     update();
     if (m_board->is_stalled()) {
         if (on_stall)
@@ -91,6 +97,8 @@ void BoardWidget::toggle_cell(size_t row, size_t column)
     if (m_running || !m_toggling_cells || (m_last_cell_toggled.row == row && m_last_cell_toggled.column == column))
         return;
 
+    m_ticks = 0;
+
     m_last_cell_toggled = { row, column };
     m_board->toggle_cell(row, column);
 
@@ -98,6 +106,18 @@ void BoardWidget::toggle_cell(size_t row, size_t column)
         on_cell_toggled(m_board, row, column);
 
     update();
+}
+
+void BoardWidget::clear_cells()
+{
+    m_ticks = 0;
+    m_board->clear();
+}
+
+void BoardWidget::randomize_cells()
+{
+    m_ticks = 0;
+    m_board->randomize();
 }
 
 int BoardWidget::get_cell_size() const

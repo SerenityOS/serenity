@@ -66,13 +66,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     board_widget->set_min_size(board_columns, board_rows);
 
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
-    statusbar.set_text(click_tip);
-    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
-        statusbar.set_override_text(action.status_tip());
-    };
-    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
-        statusbar.set_override_text({});
-    };
+    auto width = board_widget->font().width("Ticks: 000,000,000"sv) + board_widget->font().max_glyph_width();
+    statusbar.segment(1).set_fixed_width(ceil(width));
+    statusbar.segment(0).set_text(click_tip);
 
     auto& columns_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");
     auto& rows_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("rows_spinbox");
@@ -81,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     rows_spinbox.set_value(board_rows);
 
     auto size_changed_function = [&] {
-        statusbar.set_text(click_tip);
+        statusbar.segment(0).set_text(click_tip);
         board_widget->resize_board(rows_spinbox.value(), columns_spinbox.value());
         board_widget->update();
     };
@@ -107,20 +103,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_toolbar.add_action(play_pause_action);
 
     auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](const GUI::Action&) {
-        statusbar.set_text(click_tip);
+        statusbar.segment(0).set_text(click_tip);
         board_widget->run_generation();
     });
     main_toolbar.add_action(run_one_generation_action);
 
     auto clear_board_action = GUI::Action::create("&Clear board", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv)), [&](auto&) {
-        statusbar.set_text(click_tip);
+        statusbar.segment(0).set_text(click_tip);
+        statusbar.segment(1).set_text({});
         board_widget->clear_cells();
         board_widget->update();
     });
     main_toolbar.add_action(clear_board_action);
 
     auto randomize_cells_action = GUI::Action::create("&Randomize board", { Mod_Ctrl, Key_R }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
-        statusbar.set_text(click_tip);
+        statusbar.segment(0).set_text(click_tip);
+        statusbar.segment(1).set_text({});
         board_widget->randomize_cells();
         board_widget->update();
     });
@@ -151,14 +149,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Game of Life"_string, app_icon, window));
 
+    board_widget->on_tick = [&](u64 ticks) {
+        statusbar.segment(1).set_text(String::formatted("Ticks: {:'}", ticks).release_value_but_fixme_should_propagate_errors());
+    };
+
     board_widget->on_running_state_change = [&]() {
         if (board_widget->is_running()) {
-            statusbar.set_text("Running..."_string);
+            statusbar.segment(0).set_text("Running..."_string);
             play_pause_action->set_icon(paused_icon);
             play_pause_action->set_text("&Pause");
             main_widget->set_override_cursor(Gfx::StandardCursor::None);
         } else {
-            statusbar.set_text(click_tip);
+            statusbar.segment(0).set_text("Paused"_string);
             play_pause_action->set_icon(play_icon);
             play_pause_action->set_text("&Play");
             main_widget->set_override_cursor(Gfx::StandardCursor::Drag);
@@ -179,18 +181,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     board_widget->on_stall = [&] {
         play_pause_action->activate();
-        statusbar.set_text("Stalled..."_string);
+        statusbar.segment(0).set_text("Stalled"_string);
     };
 
     board_widget->on_cell_toggled = [&](auto, auto, auto) {
-        statusbar.set_text(click_tip);
+        statusbar.segment(0).set_text(click_tip);
+        statusbar.segment(1).set_text({});
     };
 
     board_widget->on_pattern_selection_state_change = [&] {
         rotate_pattern_action->set_enabled(board_widget->selected_pattern() != nullptr);
     };
 
-    window->resize(500, 420);
+    window->resize(600, 500);
     window->show();
 
     return app->exec();
