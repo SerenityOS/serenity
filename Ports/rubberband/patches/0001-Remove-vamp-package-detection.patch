@@ -1,0 +1,115 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?kleines=20Filmr=C3=B6llchen?= <filmroellchen@serenityos.org>
+Date: Sat, 16 Sep 2023 14:20:20 +0200
+Subject: [PATCH] Remove vamp package detection
+
+We don't build this anyways, since no upstream needs it.
+---
+ configure | 94 -------------------------------------------------------
+ 1 file changed, 94 deletions(-)
+
+diff --git a/configure b/configure
+index 737a1820e6ea2087fdd7ac0f238b8091596ef74d..3a223abbce7d83bddcccb10e2fe3457acb5b3d62 100755
+--- a/configure
++++ b/configure
+@@ -4151,100 +4151,6 @@ fi
+ done
+ 
+ 
+-
+-pkg_failed=no
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Vamp" >&5
+-$as_echo_n "checking for Vamp... " >&6; }
+-
+-if test -n "$Vamp_CFLAGS"; then
+-    pkg_cv_Vamp_CFLAGS="$Vamp_CFLAGS"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"vamp-sdk\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "vamp-sdk") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_Vamp_CFLAGS=`$PKG_CONFIG --cflags "vamp-sdk" 2>/dev/null`
+-		      test "x$?" != "x0" && pkg_failed=yes
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-if test -n "$Vamp_LIBS"; then
+-    pkg_cv_Vamp_LIBS="$Vamp_LIBS"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"vamp-sdk\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "vamp-sdk") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_Vamp_LIBS=`$PKG_CONFIG --libs "vamp-sdk" 2>/dev/null`
+-		      test "x$?" != "x0" && pkg_failed=yes
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-
+-
+-
+-if test $pkg_failed = yes; then
+-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-
+-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+-        _pkg_short_errors_supported=yes
+-else
+-        _pkg_short_errors_supported=no
+-fi
+-        if test $_pkg_short_errors_supported = yes; then
+-	        Vamp_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "vamp-sdk" 2>&1`
+-        else
+-	        Vamp_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "vamp-sdk" 2>&1`
+-        fi
+-	# Put the nasty error message in config.log where it belongs
+-	echo "$Vamp_PKG_ERRORS" >&5
+-
+-	as_fn_error $? "Package requirements (vamp-sdk) were not met:
+-
+-$Vamp_PKG_ERRORS
+-
+-Consider adjusting the PKG_CONFIG_PATH environment variable if you
+-installed software in a non-standard prefix.
+-
+-Alternatively, you may set the environment variables Vamp_CFLAGS
+-and Vamp_LIBS to avoid the need to call pkg-config.
+-See the pkg-config man page for more details." "$LINENO" 5
+-elif test $pkg_failed = untried; then
+-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+-is in your PATH or set the PKG_CONFIG environment variable to the full
+-path to pkg-config.
+-
+-Alternatively, you may set the environment variables Vamp_CFLAGS
+-and Vamp_LIBS to avoid the need to call pkg-config.
+-See the pkg-config man page for more details.
+-
+-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+-See \`config.log' for more details" "$LINENO" 5; }
+-else
+-	Vamp_CFLAGS=$pkg_cv_Vamp_CFLAGS
+-	Vamp_LIBS=$pkg_cv_Vamp_LIBS
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-
+-fi
+-
+-
+-
+ if test "x$GCC" = "xyes"; then
+   case " $CFLAGS " in
+     *[\ \	]-fPIC\ -Wall[\ \	]*) ;;
