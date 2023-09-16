@@ -12,6 +12,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 
@@ -19,15 +20,18 @@ static int constexpr MAP_ZOOM_DEFAULT = 3;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec"));
 
     auto app = TRY(GUI::Application::create(arguments));
 
+    TRY(Core::System::unveil("/bin/MapsSettings", "x"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/config", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    Config::monitor_domain("Maps");
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-maps"sv));
     auto window = GUI::Window::construct();
@@ -56,6 +60,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Main menu actions
     auto file_menu = window->add_menu("&File"_string);
+    auto open_settings_action = GUI::Action::create("Maps &Settings", { Mod_Ctrl, Key_Comma }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [window](GUI::Action const&) {
+        GUI::Process::spawn_or_show_error(window, "/bin/MapsSettings"sv);
+    });
+    file_menu->add_action(open_settings_action);
+    file_menu->add_separator();
     file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) { GUI::Application::the()->quit(); }));
 
     auto view_menu = window->add_menu("&View"_string);
@@ -89,6 +98,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     toolbar->add_action(zoom_in_action);
     toolbar->add_action(zoom_out_action);
     toolbar->add_action(reset_zoom_action);
+    toolbar->add_separator();
+    toolbar->add_action(open_settings_action);
 
     window->show();
 

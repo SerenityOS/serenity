@@ -24,7 +24,7 @@ public:
             }
         } else {
             clear_markers();
-            clear_panels();
+            remove_panels_with_name("users"sv);
         }
     }
 

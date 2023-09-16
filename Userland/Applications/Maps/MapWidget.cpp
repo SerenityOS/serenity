@@ -7,6 +7,8 @@
 
 #include "MapWidget.h"
 #include <AK/URL.h>
+#include <Applications/MapsSettings/Defaults.h>
+#include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -51,7 +53,7 @@ double MapWidget::LatLng::distance_to(LatLng const& other) const
 
 // MapWidget class
 MapWidget::MapWidget(Options const& options)
-    : m_tile_layer_url(options.tile_layer_url)
+    : m_tile_provider(options.tile_provider)
     , m_center(options.center)
     , m_zoom(options.zoom)
     , m_context_menu_enabled(options.context_menu_enabled)
@@ -60,9 +62,13 @@ MapWidget::MapWidget(Options const& options)
     , m_attribution_enabled(options.attribution_enabled)
 {
     m_request_client = Protocol::RequestClient::try_create().release_value_but_fixme_should_propagate_errors();
-    if (options.attribution_enabled)
-        add_panel({ options.attribution_text, Panel::Position::BottomRight, options.attribution_url, true });
+    if (options.attribution_enabled) {
+        auto attribution_text = options.attribution_text.value_or(MUST(String::from_deprecated_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionText"sv, Maps::default_tile_provider_attribution_text))));
+        URL attribution_url = options.attribution_url.value_or(URL(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionUrl"sv, Maps::default_tile_provider_attribution_url)));
+        add_panel({ attribution_text, Panel::Position::BottomRight, attribution_url, "attribution"_string });
+    }
     m_marker_image = Gfx::Bitmap::load_from_file("/res/graphics/maps/marker-blue.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_default_tile_provider = MUST(String::from_deprecated_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderUrlFormat"sv, Maps::default_tile_provider_url_format)));
 }
 
 void MapWidget::set_zoom(int zoom)
@@ -70,6 +76,42 @@ void MapWidget::set_zoom(int zoom)
     m_zoom = min(max(zoom, ZOOM_MIN), ZOOM_MAX);
     clear_tile_queue();
     update();
+}
+
+void MapWidget::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
+{
+    if (domain != "Maps" || group != "MapWidget")
+        return;
+
+    if (key == "TileProviderUrlFormat") {
+        // When config tile provider changes clear all active requests and loaded tiles
+        m_default_tile_provider = MUST(String::from_utf8(value));
+        m_first_image_loaded = false;
+        m_active_requests.clear();
+        m_tiles.clear();
+        update();
+    }
+
+    if (key == "TileProviderAttributionText") {
+        // Update attribution panel text when it exists
+        for (auto& panel : m_panels) {
+            if (panel.name == "attribution") {
+                panel.text = MUST(String::from_utf8(value));
+                return;
+            }
+        }
+        update();
+    }
+
+    if (key == "TileProviderAttributionUrl") {
+        // Update attribution panel url when it exists
+        for (auto& panel : m_panels) {
+            if (panel.name == "attribution") {
+                panel.url = URL(value);
+                return;
+            }
+        }
+    }
 }
 
 void MapWidget::doubleclick_event(GUI::MouseEvent& event)
@@ -261,7 +303,7 @@ void MapWidget::process_tile_queue()
     HashMap<DeprecatedString, DeprecatedString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "image/png");
-    URL url(MUST(String::formatted(m_tile_layer_url, tile_key.zoom, tile_key.x, tile_key.y)));
+    URL url(MUST(String::formatted(m_tile_provider.value_or(m_default_tile_provider), tile_key.zoom, tile_key.x, tile_key.y)));
     auto request = m_request_client->start_request("GET", url, headers, {});
     VERIFY(!request.is_null());
 

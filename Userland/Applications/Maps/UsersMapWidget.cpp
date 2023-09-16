@@ -73,5 +73,6 @@ void UsersMapWidget::add_users_to_map()
 
     add_panel({ MUST(String::formatted("{} users are already registered", m_users.value().size())),
         Panel::Position::TopRight,
-        { { "https://github.com/SerenityOS/user-map" } } });
+        { { "https://github.com/SerenityOS/user-map" } },
+        "users"_string });
 }
