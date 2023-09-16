@@ -15,6 +15,8 @@
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 
+namespace Maps {
+
 class MapWidget : public GUI::Frame
     , public Config::Listener {
     C_OBJECT(MapWidget);
@@ -63,15 +65,16 @@ public:
         LatLng latlng;
         Optional<String> tooltip {};
         RefPtr<Gfx::Bitmap> image { nullptr };
+        Optional<String> name {};
     };
     void add_marker(Marker const& marker)
     {
         m_markers.append(marker);
         update();
     }
-    void clear_markers()
+    void remove_markers_with_name(StringView name)
     {
-        m_markers.clear();
+        m_markers.remove_all_matching([name](auto const& marker) { return marker.name == name; });
         update();
     }
 
@@ -185,7 +188,9 @@ private:
     Vector<Panel> m_panels;
 };
 
+}
+
 template<>
-struct AK::Traits<MapWidget::TileKey> : public GenericTraits<MapWidget::TileKey> {
-    static unsigned hash(MapWidget::TileKey const& t) { return t.hash(); }
+struct AK::Traits<Maps::MapWidget::TileKey> : public GenericTraits<Maps::MapWidget::TileKey> {
+    static unsigned hash(Maps::MapWidget::TileKey const& t) { return t.hash(); }
 };

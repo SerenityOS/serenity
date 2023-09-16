@@ -8,6 +8,8 @@
 
 #include "MapWidget.h"
 
+namespace Maps {
+
 class UsersMapWidget final : public MapWidget {
     C_OBJECT(UsersMapWidget);
 
@@ -23,7 +25,7 @@ public:
                 add_users_to_map();
             }
         } else {
-            clear_markers();
+            remove_markers_with_name("users"sv);
             remove_panels_with_name("users"sv);
         }
     }
@@ -46,3 +48,5 @@ private:
     };
     Optional<Vector<User>> m_users;
 };
+
+}
