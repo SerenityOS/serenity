@@ -10,6 +10,7 @@
 #include <Userland/Shell/Shell.h>
 
 #define ENUMERATE_UTILITIES(E, ALIAS) \
+    ALIAS(b2sum, checksum)            \
     E(cat)                            \
     E(checksum)                       \
     E(chmod)                          \

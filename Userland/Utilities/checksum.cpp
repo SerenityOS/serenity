@@ -19,7 +19,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto program_name = LexicalPath::basename(arguments.strings[0]);
     auto hash_kind = Crypto::Hash::HashKind::None;
 
-    if (program_name == "md5sum")
+    if (program_name == "b2sum")
+        hash_kind = Crypto::Hash::HashKind::BLAKE2b;
+    else if (program_name == "md5sum")
         hash_kind = Crypto::Hash::HashKind::MD5;
     else if (program_name == "sha1sum")
         hash_kind = Crypto::Hash::HashKind::SHA1;
@@ -29,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         hash_kind = Crypto::Hash::HashKind::SHA512;
 
     if (hash_kind == Crypto::Hash::HashKind::None) {
-        warnln("Error: program must be executed as 'md5sum', 'sha1sum', 'sha256sum' or 'sha512sum'; got '{}'", program_name);
+        warnln("Error: program must be executed as 'b2sum', 'md5sum', 'sha1sum', 'sha256sum' or 'sha512sum'; got '{}'", program_name);
         exit(1);
     }
 

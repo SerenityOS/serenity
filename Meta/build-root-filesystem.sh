@@ -200,6 +200,7 @@ ln -sf /bin/env mnt/usr/bin/env
 echo "done"
 
 printf "installing 'checksum' variants... "
+ln -sf checksum mnt/bin/b2sum
 ln -sf checksum mnt/bin/md5sum
 ln -sf checksum mnt/bin/sha1sum
 ln -sf checksum mnt/bin/sha256sum
