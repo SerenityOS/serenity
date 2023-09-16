@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <LibCore/DateTime.h>
@@ -31,10 +32,12 @@ ErrorOr<DeprecatedString> load_file_directory_page(LoadRequest const& request)
         auto maybe_st = Core::System::stat(path.string());
         if (!maybe_st.is_error()) {
             auto st = maybe_st.release_value();
+            auto is_directory = S_ISDIR(st.st_mode);
+
             contents.append("<tr>"sv);
-            contents.appendff("<td><span class=\"{}\"></span></td>", S_ISDIR(st.st_mode) ? "folder" : "file");
+            contents.appendff("<td><span class=\"{}\"></span></td>", is_directory ? "folder" : "file");
             contents.appendff("<td><a href=\"file://{}\">{}</a></td><td>&nbsp;</td>"sv, path, name);
-            contents.appendff("<td>{:10}</td><td>&nbsp;</td>", st.st_size);
+            contents.appendff("<td>{:10}</td><td>&nbsp;</td>", is_directory ? "-" : human_readable_size(st.st_size));
             contents.appendff("<td>{}</td>"sv, Core::DateTime::from_timestamp(st.st_mtime).to_deprecated_string());
             contents.append("</tr>\n"sv);
         }
