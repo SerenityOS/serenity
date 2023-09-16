@@ -391,6 +391,9 @@ void Document::visit_edges(Cell::Visitor& visitor)
         visitor.visit(target);
     for (auto& target : m_pending_scrollend_event_targets)
         visitor.visit(target);
+
+    for (auto& observer : m_intersection_observers)
+        visitor.visit(observer);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
