@@ -60,6 +60,10 @@ endif()
 serenity_lib(LibCore core)
 target_link_libraries(LibCore PRIVATE LibCrypt LibSystem)
 
+# NOTE: We add a preprocessor definition to ensure that standalone applications
+# can use LibCore/ArgsParser.cpp file as a standalone snippet of code.
+add_compile_definitions(USE_LIBCORE_VERSION)
+
 if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")
     target_link_libraries(LibCore PUBLIC "-framework CoreServices")

@@ -10,7 +10,9 @@
 #include <AK/OptionParser.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Version.h>
+#ifdef USE_LIBCORE_VERSION
+#    include <LibCore/Version.h>
+#endif
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -385,7 +387,11 @@ void ArgsParser::print_version(FILE* file)
 {
     // FIXME: Allow applications to override version string for --version.
     //        Especially useful for Lagom applications
+#ifdef USE_LIBCORE_VERSION
     outln(file, Core::Version::read_long_version_string().release_value_but_fixme_should_propagate_errors());
+#else
+    outln(file, "Version 1.0");
+#endif
 }
 
 void ArgsParser::add_option(Option&& option)
