@@ -1,0 +1,197 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?kleines=20Filmr=C3=B6llchen?= <filmroellchen@serenityos.org>
+Date: Sat, 16 Sep 2023 13:44:45 +0200
+Subject: [PATCH] Remove a bunch of unnecessary libraries
+
+---
+ CMakeLists.txt | 104 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 52 insertions(+), 52 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f4b14dee7528da4399421f96965873914c85261b..2caf012cff32139153128744f5a2dd64bbd9efba 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1986,8 +1986,8 @@ target_include_directories(MP3GuessEnc SYSTEM PUBLIC lib/mp3guessenc-0.27.4)
+ target_link_libraries(mixxx-lib PRIVATE MP3GuessEnc)
+ 
+ # OpenGL
+-set(OpenGL_GL_PREFERENCE "GLVND")
+-find_package(OpenGL REQUIRED)
++set(OpenGL_GL_PREFERENCE "LEGACY")
++find_package(OpenGL)
+ target_link_libraries(mixxx-lib PRIVATE OpenGL::GL)
+ 
+ # Ogg
+@@ -2049,7 +2049,7 @@ target_include_directories(mixxx-lib SYSTEM PUBLIC lib/portaudio)
+ target_link_libraries(mixxx-lib PRIVATE PortAudioRingBuffer)
+ 
+ # PortMidi
+-find_package(PortMidi REQUIRED)
++find_package(PortMidi)
+ target_include_directories(mixxx-lib SYSTEM PUBLIC ${PortMidi_INCLUDE_DIRS})
+ target_link_libraries(mixxx-lib PRIVATE ${PortMidi_LIBRARIES})
+ 
+@@ -2066,15 +2066,15 @@ target_link_libraries(mixxx-lib PUBLIC mixxx-proto)
+ target_include_directories(mixxx-lib SYSTEM PUBLIC lib/rigtorp/SPSCQueue/include)
+ 
+ # Qt
+-find_package(Qt5
++find_package(Qt6
+   COMPONENTS
+     Concurrent
+     Core
+     Gui
+     Network
+-    OpenGL
+-    Script
+-    ScriptTools
++    # OpenGL
++    # Script
++    # ScriptTools
+     Sql
+     Svg
+     Test
+@@ -2083,30 +2083,30 @@ find_package(Qt5
+   REQUIRED
+ )
+ target_link_libraries(mixxx-lib PUBLIC
+-  Qt5::Concurrent
+-  Qt5::Core
+-  Qt5::Gui
+-  Qt5::Network
+-  Qt5::OpenGL
+-  Qt5::Script
+-  Qt5::ScriptTools
+-  Qt5::Sql
+-  Qt5::Svg
+-  Qt5::Test
+-  Qt5::Widgets
+-  Qt5::Xml)
++  Qt6::Concurrent
++  Qt6::Core
++  Qt6::Gui
++  Qt6::Network
++  # Qt6::OpenGL
++  # Qt6::Script
++  # Qt6::ScriptTools
++  Qt6::Sql
++  Qt6::Svg
++  Qt6::Test
++  Qt6::Widgets
++  Qt6::Xml)
+ target_compile_definitions(mixxx-lib PUBLIC QT_TABLET_SUPPORT QT_USE_QSTRINGBUILDER)
+ if(UNIX AND NOT APPLE)
+-  find_package(X11 REQUIRED)
+-  find_package(Qt5 COMPONENTS X11Extras DBus REQUIRED)
+-  target_include_directories(mixxx-lib SYSTEM PUBLIC "${X11_INCLUDE_DIR}")
+-  target_link_libraries(mixxx-lib PRIVATE
+-    "${X11_LIBRARIES}"
+-    Qt5::X11Extras
+-    Qt5::DBus
+-  )
++  # find_package(X11 REQUIRED)
++  # find_package(Qt6 COMPONENTS X11Extras DBus REQUIRED)
++  # target_include_directories(mixxx-lib SYSTEM PUBLIC "${X11_INCLUDE_DIR}")
++  # target_link_libraries(mixxx-lib PRIVATE
++  #   "${X11_LIBRARIES}"
++  #   Qt6::X11Extras
++  #   Qt6::DBus
++  # )
+ elseif(WIN32)
+-  get_target_property(QT5_TYPE Qt5::Core TYPE)
++  get_target_property(QT5_TYPE Qt6::Core TYPE)
+   if(QT5_TYPE STREQUAL "STATIC_LIBRARY")
+     target_compile_definitions(mixxx-lib PUBLIC QT_NODLL)
+     target_link_libraries(mixxx-lib PRIVATE
+@@ -2127,13 +2127,13 @@ elseif(WIN32)
+       winmm
+       winspool
+       # QtOpenGL
+-      glu32
+-      opengl32
++      # glu32
++      # opengl32
+ 
+       # QtNetwork openssl-linked
+       crypt32
+ 
+-      # New libraries required by Qt5.
++      # New libraries required by Qt6.
+       dwmapi      # qtwindows
+       iphlpapi    # qt5network
+       mpr         # qt5core
+@@ -2151,23 +2151,23 @@ elseif(WIN32)
+       # into Qt .libs by default.
+ 
+       # iconengines plugins
+-      Qt5::QSvgIconPlugin
++      Qt6::QSvgIconPlugin
+ 
+       # imageformats plugins
+-      Qt5::QGifPlugin
+-      Qt5::QICOPlugin
+-      Qt5::QJpegPlugin
+-      Qt5::QSvgPlugin
+-      Qt5::QTgaPlugin
++      Qt6::QGifPlugin
++      Qt6::QICOPlugin
++      Qt6::QJpegPlugin
++      Qt6::QSvgPlugin
++      Qt6::QTgaPlugin
+ 
+-      # platform plugins (new in Qt5 for Windows)
+-      Qt5::QWindowsIntegrationPlugin
++      # platform plugins (new in Qt6 for Windows)
++      Qt6::QWindowsIntegrationPlugin
+ 
+-      # styles (new in Qt5 for Windows)
+-      Qt5::QWindowsVistaStylePlugin
++      # styles (new in Qt6 for Windows)
++      Qt6::QWindowsVistaStylePlugin
+ 
+-      # sqldrivers (new in Qt5? or did we just start enabling them)
+-      Qt5::QSQLiteDriverPlugin
++      # sqldrivers (new in Qt6? or did we just start enabling them)
++      Qt6::QSQLiteDriverPlugin
+     )
+ 
+     find_library(QT5FONTDATABASESUPPORT_LIBRARY Qt5FontDatabaseSupport)
+@@ -2217,7 +2217,7 @@ add_library(QtScriptByteArray STATIC EXCLUDE_FROM_ALL
+   lib/qtscript-bytearray/bytearrayprototype.cpp
+ )
+ set_target_properties(QtScriptByteArray PROPERTIES AUTOMOC ON)
+-target_link_libraries(QtScriptByteArray Qt5::Core)
++target_link_libraries(QtScriptByteArray Qt6::Core)
+ target_include_directories(mixxx-lib SYSTEM PUBLIC lib/qtscript-bytearray)
+ target_link_libraries(mixxx-lib PRIVATE QtScriptByteArray)
+ 
+@@ -2289,7 +2289,7 @@ if(MSVC)
+   target_compile_definitions(Reverb PRIVATE _USE_MATH_DEFINES)
+ endif()
+ target_include_directories(Reverb PRIVATE src)
+-target_link_libraries(Reverb PRIVATE Qt5::Core)
++target_link_libraries(Reverb PRIVATE Qt6::Core)
+ target_include_directories(mixxx-lib SYSTEM PRIVATE lib/reverb)
+ target_link_libraries(mixxx-lib PRIVATE Reverb)
+ 
+@@ -2919,13 +2919,13 @@ if(APPLE AND MACOS_BUNDLE)
+     endmacro()
+ 
+ 
+-    install_qt5_plugin(Qt5::QCocoaIntegrationPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
+-    install_qt5_plugin(Qt5::QSQLiteDriverPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
+-    install_qt5_plugin(Qt5::QMacStylePlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
+-    install_qt5_plugin(Qt5::QSvgPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
+-    install_qt5_plugin(Qt5::QSvgIconPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
+-    install_qt5_plugin(Qt5::QJpegPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
+-    install_qt5_plugin(Qt5::QGifPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
++    install_qt5_plugin(Qt6::QCocoaIntegrationPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
++    install_qt5_plugin(Qt6::QSQLiteDriverPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
++    install_qt5_plugin(Qt6::QMacStylePlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
++    install_qt5_plugin(Qt6::QSvgPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
++    install_qt5_plugin(Qt6::QSvgIconPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
++    install_qt5_plugin(Qt6::QJpegPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
++    install_qt5_plugin(Qt6::QGifPlugin BUNDLE_LIBS "${MIXXX_INSTALL_PREFIX}")
+ 
+     set(BUNDLE_NAME "${MIXXX_INSTALL_PREFIX}")
+     set(BUNDLE_DIRS "${CMAKE_PREFIX_PATH}/lib;${Qt5Widgets_DIR}/../..")
