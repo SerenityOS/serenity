@@ -619,7 +619,7 @@ static void read_environment_variables()
     }
 }
 
-void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int main_program_fd, bool is_secure, int argc, char** argv, char** envp)
+void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int main_program_fd, bool is_secure, bool dry_run, int argc, char** argv, char** envp)
 {
     VERIFY(main_program_path.starts_with('/'));
 
@@ -677,9 +677,12 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
 
     s_loaders.clear();
 
-    int rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 1, 0, nullptr);
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
+    // FIXME: Allow calling _exit from a non-syscall region for this binary.
+    if (!dry_run) {
+        int rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 1, 0, nullptr);
+        if (rc < 0) {
+            VERIFY_NOT_REACHED();
+        }
     }
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Jumping to entry point: {:p}", entry_point_function);
@@ -690,6 +693,9 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
         asm("int3");
 #endif
     }
+
+    if (dry_run)
+        _exit(0);
 
     _invoke_entry(argc, argv, envp, entry_point_function);
     VERIFY_NOT_REACHED();

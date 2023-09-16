@@ -80,12 +80,14 @@ int main(int argc, char** argv, char** envp)
         arguments.unchecked_append({ argv[i], strlen(argv[i]) });
 
     bool flag_secure { false };
+    bool flag_dry_run { false };
     Core::ArgsParser args_parser;
     Vector<StringView> command;
 
     args_parser.set_general_help("Run dynamically-linked ELF executables");
     args_parser.set_stop_on_first_non_option(true);
     args_parser.add_option(flag_secure, "Run in secure-mode", "secure", 's');
+    args_parser.add_option(flag_dry_run, "Run in dry-run mode", "dry-run", 'd');
     args_parser.add_positional_argument(command, "Command to execute", "command");
     args_parser.parse(arguments.span());
 
@@ -111,7 +113,7 @@ int main(int argc, char** argv, char** envp)
     for (size_t index = 0; index < command.size(); index++)
         argv[index] = const_cast<char*>(command_with_args[index].characters_without_null_termination());
 
-    ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, flag_secure, command.size(), argv, envp);
+    ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, flag_secure, flag_dry_run, command.size(), argv, envp);
     VERIFY_NOT_REACHED();
 }
 
@@ -172,7 +174,7 @@ void _entry(int argc, char** argv, char** envp)
     VERIFY(main_program_fd >= 0);
     VERIFY(!main_program_path.is_empty());
 
-    ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, is_secure, argc, argv, envp);
+    ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, is_secure, false, argc, argv, envp);
     VERIFY_NOT_REACHED();
 }
 }
