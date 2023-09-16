@@ -11,7 +11,7 @@
 RANDOMIZED_TEST_CASE(unsigned_int_max_bounds)
 {
     u32 n = Gen::unsigned_int(10);
-    EXPECT(n >= 0 && n <= 10);
+    EXPECT(/* n >= 0 && */ n <= 10); // It's an unsigned int, of course it's >= 0
 }
 
 RANDOMIZED_TEST_CASE(unsigned_int_min_max_bounds)
@@ -72,5 +72,5 @@ RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
     for (u32 n : vec) {
         sum += n;
     }
-    EXPECT(sum >= 0 && sum <= max_item * vec.size());
+    EXPECT(sum <= max_item * vec.size());
 }
