@@ -24,7 +24,7 @@
 namespace Web::WebDriver {
 
 // https://w3c.github.io/webdriver/#dfn-encoding-a-canvas-as-base64
-static Response encode_canvas_element(HTML::HTMLCanvasElement const& canvas)
+static Response encode_canvas_element(HTML::HTMLCanvasElement& canvas)
 {
     // FIXME: 1. If the canvas element’s bitmap’s origin-clean flag is set to false, return error with error code unable to capture screen.
 

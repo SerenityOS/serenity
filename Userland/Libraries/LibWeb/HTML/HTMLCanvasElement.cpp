@@ -246,8 +246,12 @@ static ErrorOr<SerializeBitmapResult> serialize_bitmap(Gfx::Bitmap const& bitmap
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-todataurl
-String HTMLCanvasElement::to_data_url(StringView type, Optional<double> quality) const
+String HTMLCanvasElement::to_data_url(StringView type, Optional<double> quality)
 {
+    // It is possible the the canvas doesn't have a associated bitmap so create one
+    if (!bitmap())
+        create_bitmap();
+
     // FIXME: 1. If this canvas element's bitmap's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
 
     // 2. If this canvas element's bitmap has no pixels (i.e. either its horizontal dimension or its vertical dimension is zero)
@@ -275,6 +279,10 @@ String HTMLCanvasElement::to_data_url(StringView type, Optional<double> quality)
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-toblob
 WebIDL::ExceptionOr<void> HTMLCanvasElement::to_blob(JS::NonnullGCPtr<WebIDL::CallbackType> callback, StringView type, Optional<double> quality)
 {
+    // It is possible the the canvas doesn't have a associated bitmap so create one
+    if (!bitmap())
+        create_bitmap();
+
     // FIXME: 1. If this canvas element's bitmap's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
 
     // 2. Let result be null.
