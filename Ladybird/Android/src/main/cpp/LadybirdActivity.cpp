@@ -5,6 +5,7 @@
  */
 
 #include "ALooperEventLoopImplementation.h"
+#include "JNIHelpers.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
@@ -22,10 +23,13 @@
 
 static ErrorOr<void> extract_tar_archive(String archive_file, DeprecatedString output_directory);
 
+JavaVM* global_vm;
 static OwnPtr<Core::EventLoop> s_main_event_loop;
+static jobject s_java_instance;
+static jmethodID s_schedule_event_loop_method;
 
 extern "C" JNIEXPORT void JNICALL
-Java_org_serenityos_ladybird_LadybirdActivity_initNativeCode(JNIEnv* env, jobject /* thiz */, jstring resource_dir, jstring tag_name, jobject timer_service)
+Java_org_serenityos_ladybird_LadybirdActivity_initNativeCode(JNIEnv* env, jobject thiz, jstring resource_dir, jstring tag_name, jobject timer_service)
 {
     char const* raw_resource_dir = env->GetStringUTFChars(resource_dir, nullptr);
     s_serenity_resource_root = raw_resource_dir;
@@ -46,18 +50,43 @@ Java_org_serenityos_ladybird_LadybirdActivity_initNativeCode(JNIEnv* env, jobjec
         dbgln("Hopefully no developer changed the asset files and expected them to be re-extracted!");
     }
 
+    env->GetJavaVM(&global_vm);
+    VERIFY(global_vm);
+
+    s_java_instance = env->NewGlobalRef(thiz);
+    jclass clazz = env->GetObjectClass(s_java_instance);
+    VERIFY(clazz);
+    s_schedule_event_loop_method = env->GetMethodID(clazz, "scheduleEventLoop", "()V");
+    VERIFY(s_schedule_event_loop_method);
+    env->DeleteLocalRef(clazz);
+
     jobject timer_service_ref = env->NewGlobalRef(timer_service);
-    JavaVM* vm = nullptr;
-    jint ret = env->GetJavaVM(&vm);
-    VERIFY(ret == 0);
-    Core::EventLoopManager::install(*new Ladybird::ALooperEventLoopManager(vm, timer_service_ref));
+
+    auto* event_loop_manager = new Ladybird::ALooperEventLoopManager(timer_service_ref);
+    event_loop_manager->on_did_post_event = [] {
+        JavaEnvironment env(global_vm);
+        env.get()->CallVoidMethod(s_java_instance, s_schedule_event_loop_method);
+    };
+    Core::EventLoopManager::install(*event_loop_manager);
     s_main_event_loop = make<Core::EventLoop>();
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_org_serenityos_ladybird_LadybirdActivity_execMainEventLoop(JNIEnv*, jobject /* thiz */)
 {
-    s_main_event_loop->pump(Core::EventLoop::WaitMode::PollForEvents);
+    if (s_main_event_loop) {
+        s_main_event_loop->pump(Core::EventLoop::WaitMode::PollForEvents);
+    }
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_org_serenityos_ladybird_LadybirdActivity_disposeNativeCode(JNIEnv* env, jobject /* thiz */)
+{
+    s_main_event_loop = nullptr;
+    s_schedule_event_loop_method = nullptr;
+    env->DeleteGlobalRef(s_java_instance);
+
+    delete &Core::EventLoopManager::the();
 }
 
 ErrorOr<void> extract_tar_archive(String archive_file, DeprecatedString output_directory)

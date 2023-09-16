@@ -16,6 +16,8 @@ class LadybirdActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var resourceDir: String
+    private lateinit var view: WebView
+    private var timerService = TimerExecutorService()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,10 +30,6 @@ class LadybirdActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         view = binding.webView
         view.initialize(resourceDir)
-
-        mainExecutor.execute {
-            callNativeEventLoopForever()
-        }
     }
 
     override fun onStart() {
@@ -44,31 +42,19 @@ class LadybirdActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         view.dispose()
+        disposeNativeCode()
         super.onDestroy()
     }
 
-    private lateinit var view: WebView
-    private var timerService = TimerExecutorService()
-
-    /**
-     * A native method that is implemented by the 'ladybird' native library,
-     * which is packaged with this application.
-     */
-    private external fun initNativeCode(
-        resourceDir: String,
-        tag: String,
-        timerService: TimerExecutorService
-    )
-
-    // FIXME: Instead of doing this, can we push a message to the message queue of the java Looper
-    //        when an event is pushed to the main thread, and use that to clear out the
-    //        Core::ThreadEventQueues?
-    private fun callNativeEventLoopForever() {
-        execMainEventLoop()
-        mainExecutor.execute { callNativeEventLoopForever() }
+    private fun scheduleEventLoop() {
+        mainExecutor.execute {
+            execMainEventLoop()
+        }
     }
 
-    private external fun execMainEventLoop();
+    private external fun initNativeCode(resourceDir: String, tag: String, timerService: TimerExecutorService)
+    private external fun disposeNativeCode()
+    private external fun execMainEventLoop()
 
     companion object {
         // Used to load the 'ladybird' library on application startup.
