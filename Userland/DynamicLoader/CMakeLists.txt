@@ -3,6 +3,8 @@ set(LOADER_SOURCES
     misc.cpp
 )
 
+set(LIBCORE_SOURCES "../Libraries/LibCore/ArgsParser.cpp")
+
 file(GLOB ELF_SOURCES "../Libraries/LibELF/*.cpp")
 file(GLOB LIBC_SOURCES1 "../Libraries/LibC/*.cpp")
 file(GLOB LIBC_SOURCES2 "../Libraries/LibC/*/*.cpp")
@@ -28,7 +30,7 @@ list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/(pthread|semaphore)\\.cpp")
 
 add_definitions(-D_DYNAMIC_LOADER)
 
-set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
+set(SOURCES ${LIBCORE_SOURCES} ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpic -DNO_TLS")
 
@@ -38,6 +40,7 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
 endif()
 
 set_source_files_properties(../Libraries/LibC/ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
+set_source_files_properties(../Libraries/LibCore/ArgsParser.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
 set_source_files_properties(../Libraries/LibC/ssp_nonshared.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
 set_source_files_properties(../Libraries/LibC/stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")
