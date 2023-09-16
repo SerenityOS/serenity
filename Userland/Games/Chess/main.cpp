@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-chess"sv));
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     auto widget = TRY(window->set_main_widget<ChessWidget>());
 
     auto engines = TRY(available_engines());

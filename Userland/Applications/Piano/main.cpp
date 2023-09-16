@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_percent_written, wav_writer);
 
     auto app_icon = GUI::Icon::default_icon("app-piano"sv);
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     auto main_widget = TRY(window->set_main_widget<MainWidget>(track_manager, audio_loop));
     window->set_title("Piano");
     window->resize(840, 600);

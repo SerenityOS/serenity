@@ -182,7 +182,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (name.is_empty())
         name = "Network"sv;
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title(name);
     window->set_window_type(GUI::WindowType::Applet);
     window->set_has_alpha_channel(true);

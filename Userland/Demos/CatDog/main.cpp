@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("CatDog Demo");
     window->resize(32, 32);
     window->set_frameless(true);
@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_always_on_top();
     catdog_widget->start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
 
-    auto advice_window = TRY(GUI::Window::try_create());
+    auto advice_window = GUI::Window::construct();
     advice_window->set_title("CatDog Advice");
     advice_window->resize(225, 50);
     advice_window->set_frameless(true);

@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domain("PDFViewer");
     app->set_config_domain("PDFViewer"_string);
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("PDF Viewer");
     window->resize(640, 400);
 

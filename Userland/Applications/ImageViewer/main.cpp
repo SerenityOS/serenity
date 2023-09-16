@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "The image file to be displayed.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
     window->resize(300, 200);
     window->set_icon(app_icon.bitmap_for_size(16));

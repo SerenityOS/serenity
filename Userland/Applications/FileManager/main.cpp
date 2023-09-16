@@ -379,7 +379,7 @@ ErrorOr<int> run_in_desktop_mode()
 {
     (void)Core::Process::set_name("FileManager (Desktop)"sv, Core::Process::SetThreadName::Yes);
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("Desktop Manager");
     window->set_window_type(GUI::WindowType::Desktop);
     window->set_has_alpha_channel(true);
@@ -606,7 +606,7 @@ ErrorOr<int> run_in_desktop_mode()
 
 ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, DeprecatedString const& entry_focused_on_init)
 {
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("File Manager");
 
     auto widget = TRY(window->set_main_widget<GUI::Widget>());

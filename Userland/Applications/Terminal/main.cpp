@@ -158,7 +158,7 @@ static ErrorOr<void> run_command(StringView command, bool keep_open)
 
 static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget& terminal)
 {
-    auto window = TRY(GUI::Window::try_create(&terminal));
+    auto window = GUI::Window::construct(&terminal);
     window->set_window_mode(GUI::WindowMode::RenderAbove);
     window->set_title("Find in Terminal");
     window->set_resizable(false);
@@ -279,7 +279,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-terminal"sv);
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("Terminal");
     window->set_obey_widget_min_size(false);
 

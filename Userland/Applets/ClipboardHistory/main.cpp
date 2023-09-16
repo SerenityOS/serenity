@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("edit-copy"sv));
 
-    auto main_window = TRY(GUI::Window::try_create());
+    auto main_window = GUI::Window::construct();
     main_window->set_title("Clipboard History");
     main_window->set_rect(670, 65, 325, 500);
     main_window->set_icon(app_icon.bitmap_for_size(16));
@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         entry_context_menu->popup(event.screen_position());
     };
 
-    auto applet_window = TRY(GUI::Window::try_create());
+    auto applet_window = GUI::Window::construct();
     applet_window->set_title("ClipboardHistory");
     applet_window->set_window_type(GUI::WindowType::Applet);
     applet_window->set_has_alpha_channel(true);

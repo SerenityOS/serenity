@@ -405,7 +405,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(unveil(nullptr, nullptr));
 #endif
 
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(false);
     window->set_title("Mandelbrot");
     window->set_obey_widget_min_size(false);

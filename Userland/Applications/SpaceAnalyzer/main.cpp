@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Configure application window.
     auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title(APP_NAME.bytes_as_string_view());
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));

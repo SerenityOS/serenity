@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-calendar"sv));
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("Calendar");
     window->resize(600, 480);
     window->set_icon(app_icon.bitmap_for_size(16));

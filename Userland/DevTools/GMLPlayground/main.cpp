@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-gml-playground"sv));
-    auto window = TRY(GUI::Window::try_create());
+    auto window = GUI::Window::construct();
     window->set_title("GML Playground");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);

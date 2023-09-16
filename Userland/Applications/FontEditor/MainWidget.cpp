@@ -76,7 +76,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
 
 ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 {
-    auto window = TRY(GUI::Window::try_create(this));
+    auto window = GUI::Window::construct(this);
     window->set_window_mode(GUI::WindowMode::RenderAbove);
     window->set_title("Preview");
     window->resize(400, 150);
