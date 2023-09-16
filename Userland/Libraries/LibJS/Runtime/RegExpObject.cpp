@@ -100,6 +100,7 @@ ErrorOr<DeprecatedString, ParseRegexPatternError> parse_regex_pattern(StringView
 
     // If the Unicode flag is set, append each code point to the pattern. Otherwise, append each
     // code unit. But unlike the spec, multi-byte code units must be escaped for LibRegex to parse.
+    auto previous_code_unit_was_backslash = false;
     for (size_t i = 0; i < utf16_pattern_view.length_in_code_units();) {
         if (unicode || unicode_sets) {
             auto code_point = code_point_at(utf16_pattern_view, i);
@@ -111,10 +112,22 @@ ErrorOr<DeprecatedString, ParseRegexPatternError> parse_regex_pattern(StringView
         u16 code_unit = utf16_pattern_view.code_unit_at(i);
         ++i;
 
-        if (code_unit > 0x7f)
-            builder.appendff("\\u{:04x}", code_unit);
-        else
+        if (code_unit > 0x7f) {
+            // Incorrectly escaping this code unit will result in a wildly different regex than intended
+            // as we're converting <c> to <\uhhhh>, which would turn into <\\uhhhh> if (incorrectly) escaped again,
+            // leading to a matcher for the literal string "\uhhhh" instead of the intended code unit <c>.
+            // As such, we're going to remove the (invalid) backslash and pretend it never existed.
+            if (!previous_code_unit_was_backslash)
+                builder.append('\\');
+            builder.appendff("u{:04x}", code_unit);
+        } else {
             builder.append_code_point(code_unit);
+        }
+
+        if (code_unit == '\\')
+            previous_code_unit_was_backslash = !previous_code_unit_was_backslash;
+        else
+            previous_code_unit_was_backslash = false;
     }
 
     return builder.to_deprecated_string();
