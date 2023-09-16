@@ -14,8 +14,26 @@ test("exponentiation with negatives", () => {
     expect(2 ** -3).toBe(0.125);
     expect((-2) ** 3).toBe(-8);
 
-    // FIXME: This should fail :)
-    // expect("-2 ** 3").not.toEval();
+    expect("-2 ** 3").not.toEval();
+});
+
+test("exponentiation with PlusPlus and MinusMinus", () => {
+    let value = 5;
+    // prettier-ignore
+    expect(++value ** 2).toBe(36);
+
+    value = 5;
+    expect((++value) ** 2).toBe(36);
+
+    value = 5;
+    // prettier-ignore
+    expect(--value ** 2).toBe(16);
+
+    value = 5;
+    expect((--value) ** 2).toBe(16);
+
+    expect("++5 ** 2").not.toEval();
+    expect("--5 ** 2").not.toEval();
 });
 
 test("exponentiation with non-numeric primitives", () => {
@@ -49,4 +67,11 @@ test("exponentiation with infinities", () => {
     expect((-Infinity) ** -1).toBe(-0);
     expect((-Infinity) ** 0).toBe(1);
     expect((-Infinity) ** 1).toBe(-Infinity);
+});
+
+test("unary expression before exponentiation with brackets", () => {
+    expect((!1) ** 2).toBe(0);
+    expect((~5) ** 2).toBe(36);
+    expect((+5) ** 2).toBe(25);
+    expect((-5) ** 2).toBe(25);
 });
