@@ -12,6 +12,8 @@
         android:smallScreens="true" />
 
     <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
         android:allowBackup="true"
@@ -28,27 +30,32 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ladybird"
         tools:targetApi="33">
-
         <activity
             android:name=".LadybirdActivity"
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
             android:exported="true"
-            android:label="@string/app_name"
             android:launchMode="singleTop"
             android:screenOrientation="unspecified">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
             <meta-data
                 android:name="android.app.extract_android_style"
                 android:value="minimal" />
         </activity>
-
         <service
             android:name=".WebContentService"
+            android:enabled="true"
             android:exported="false"
-            android:process=":WebContent"/>
+            android:process=":WebContent" />
+        <service
+            android:name=".RequestServerService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":RequestServer" />
     </application>
 
 </manifest>

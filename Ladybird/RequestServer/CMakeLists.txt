@@ -1,5 +1,9 @@
 set(REQUESTSERVER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Services/RequestServer)
 
+set(CMAKE_AUTOMOC OFF)
+set(CMAKE_AUTORCC OFF)
+set(CMAKE_AUTOUIC OFF)
+
 set(REQUESTSERVER_SOURCES
     ${REQUESTSERVER_SOURCE_DIR}/ConnectionFromClient.cpp
     ${REQUESTSERVER_SOURCE_DIR}/ConnectionCache.cpp
@@ -11,17 +15,28 @@ set(REQUESTSERVER_SOURCES
     ${REQUESTSERVER_SOURCE_DIR}/HttpsRequest.cpp
     ${REQUESTSERVER_SOURCE_DIR}/HttpsProtocol.cpp
     ${REQUESTSERVER_SOURCE_DIR}/Protocol.cpp
-    main.cpp
 )
 
-add_executable(RequestServer ${REQUESTSERVER_SOURCES})
+if (ANDROID)
+    add_library(requestserver SHARED
+        ${REQUESTSERVER_SOURCES}
+        ../Android/src/main/cpp/RequestServerService.cpp
+        ../Android/src/main/cpp/LadybirdServiceBaseJNI.cpp
+        ../Utilities.cpp
+    )
+else()
+    add_library(requestserver STATIC ${REQUESTSERVER_SOURCES})
+endif()
 
-target_include_directories(RequestServer PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
-target_include_directories(RequestServer PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(RequestServer PRIVATE LibCore LibMain LibCrypto LibFileSystem LibGemini LibHTTP LibIPC LibMain LibTLS LibWebView)
+add_executable(RequestServer main.cpp)
+target_link_libraries(RequestServer PRIVATE requestserver)
+
+target_include_directories(requestserver PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
+target_include_directories(requestserver PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
+target_link_libraries(requestserver PUBLIC LibCore LibMain LibCrypto LibFileSystem LibGemini LibHTTP LibIPC LibMain LibTLS LibWebView)
 if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
     # Solaris has socket and networking related functions in two extra libraries
-    target_link_libraries(RequestServer PRIVATE nsl socket)
+    target_link_libraries(requestserver PUBLIC nsl socket)
 endif()
 if (HAIKU)
     # Haiku has networking related functions in the network library

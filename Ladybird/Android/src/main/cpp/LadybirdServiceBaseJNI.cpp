@@ -10,6 +10,8 @@
 #include <Ladybird/Utilities.h>
 #include <jni.h>
 
+JavaVM* global_vm;
+
 extern "C" JNIEXPORT void JNICALL
 Java_org_serenityos_ladybird_LadybirdServiceBase_nativeThreadLoop(JNIEnv*, jobject /* thiz */, jint ipc_socket, jint fd_passing_socket)
 {
@@ -30,6 +32,8 @@ Java_org_serenityos_ladybird_LadybirdServiceBase_initNativeCode(JNIEnv* env, job
         // Skip initializing if someone else already started the process at some point in the past
         return;
     }
+
+    env->GetJavaVM(&global_vm);
 
     char const* raw_resource_dir = env->GetStringUTFChars(resource_dir, nullptr);
     s_serenity_resource_root = raw_resource_dir;

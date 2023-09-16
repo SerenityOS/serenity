@@ -9,6 +9,7 @@ package org.serenityos.ladybird
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import org.serenityos.ladybird.databinding.ActivityMainBinding
+import java.net.URL
 import kotlin.io.path.Path
 
 class LadybirdActivity : AppCompatActivity() {
@@ -37,7 +38,7 @@ class LadybirdActivity : AppCompatActivity() {
         super.onStart()
 
         // FIXME: This is not the right place to load the homepage :^)
-        val initialURL = Path(resourceDir, "res/html/misc/welcome.html").toUri().toURL()
+        val initialURL = URL("https://ladybird.dev")
         view.loadURL(initialURL)
     }
 
