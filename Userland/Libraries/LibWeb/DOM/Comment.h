@@ -18,7 +18,7 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Comment>> construct_impl(JS::Realm&, String const& data);
     virtual ~Comment() override = default;
 
-    virtual DeprecatedFlyString node_name() const override { return "#comment"; }
+    virtual FlyString node_name() const override { return "#comment"_fly_string; }
 
 private:
     Comment(Document&, String const&);

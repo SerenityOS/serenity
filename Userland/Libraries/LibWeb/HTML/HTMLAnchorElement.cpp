@@ -108,7 +108,7 @@ Optional<ARIA::Role> HTMLAnchorElement::default_role() const
 String HTMLAnchorElement::text() const
 {
     // The text attribute's getter must return this element's descendant text content.
-    return MUST(String::from_deprecated_string(descendant_text_content()));
+    return descendant_text_content();
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-text

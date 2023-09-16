@@ -706,7 +706,7 @@ DeprecatedString Document::title() const
     // 2. Otherwise, let value be the child text content of the title element, or the empty string if the title element
     //    is null.
     else if (auto title_element = this->title_element()) {
-        value = title_element->text_content();
+        value = title_element->text_content().value_or(String {}).to_deprecated_string();
     }
 
     // 3. Strip and collapse ASCII whitespace in value.

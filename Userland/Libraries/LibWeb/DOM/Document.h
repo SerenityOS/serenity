@@ -130,7 +130,7 @@ public:
 
     CSS::StyleSheetList* style_sheets_for_bindings() { return &style_sheets(); }
 
-    virtual DeprecatedFlyString node_name() const override { return "#document"; }
+    virtual FlyString node_name() const override { return "#document"_fly_string; }
 
     void set_hovered_node(Node*);
     Node* hovered_node() { return m_hovered_node.ptr(); }

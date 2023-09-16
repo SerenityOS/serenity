@@ -136,16 +136,16 @@ public:
     JS::NonnullGCPtr<NodeList> child_nodes();
     Vector<JS::Handle<Node>> children_as_vector() const;
 
-    virtual DeprecatedFlyString node_name() const = 0;
+    virtual FlyString node_name() const = 0;
 
-    DeprecatedString base_uri() const;
+    String base_uri() const;
 
-    DeprecatedString descendant_text_content() const;
-    DeprecatedString text_content() const;
-    void set_text_content(DeprecatedString const&);
+    String descendant_text_content() const;
+    Optional<String> text_content() const;
+    void set_text_content(Optional<String> const&);
 
-    DeprecatedString node_value() const;
-    void set_node_value(DeprecatedString const&);
+    Optional<String> node_value() const;
+    void set_node_value(Optional<String> const&);
 
     JS::GCPtr<HTML::Navigable> navigable() const;
 

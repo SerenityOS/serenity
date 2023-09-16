@@ -144,7 +144,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     else if (is<DOM::Element>(layout_node.dom_node()))
         tag_name = verify_cast<DOM::Element>(*layout_node.dom_node()).local_name();
     else
-        tag_name = layout_node.dom_node()->node_name();
+        tag_name = layout_node.dom_node()->node_name().to_deprecated_fly_string();
 
     DeprecatedString identifier = "";
     if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
