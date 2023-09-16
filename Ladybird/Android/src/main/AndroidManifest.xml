@@ -56,6 +56,11 @@
             android:enabled="true"
             android:exported="false"
             android:process=":RequestServer" />
+        <service
+            android:name=".WebSocketService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":WebSocket" />
     </application>
 
 </manifest>

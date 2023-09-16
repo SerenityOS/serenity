@@ -35,6 +35,21 @@ class WebContentService : LadybirdServiceBase("WebContentService") {
         )
     }
 
+    private fun bindWebSocket(ipcFd: Int, fdPassingFd: Int)
+    {
+        val connector = LadybirdServiceConnection(ipcFd, fdPassingFd, resourceDir)
+        connector.onDisconnect = {
+            // FIXME: Notify impl that service is dead and might need restarted
+            Log.e(TAG, "RequestServer Died! :(")
+        }
+        // FIXME: Unbind this at some point maybe
+        bindService(
+            Intent(this, WebSocketService::class.java),
+            connector,
+            Context.BIND_AUTO_CREATE
+        )
+    }
+
     external fun nativeInit()
 
     companion object {

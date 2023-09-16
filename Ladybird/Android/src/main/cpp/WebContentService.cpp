@@ -29,7 +29,18 @@
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 
-static ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_service();
+template<typename Client>
+static ErrorOr<NonnullRefPtr<Client>> bind_service(void (*bind_method)(int, int));
+
+static ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_service()
+{
+    return bind_service<Protocol::RequestClient>(&bind_request_server_java);
+}
+
+static ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> bind_web_socket_service()
+{
+    return bind_service<Protocol::WebSocketClient>(&bind_web_socket_java);
+}
 
 ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 {
@@ -47,6 +58,9 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 
     auto request_server_client = TRY(bind_request_server_service());
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
+
+    auto web_socket_client = TRY(bind_web_socket_service());
+    Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
 
     bool is_layout_test_mode = false;
 
@@ -66,7 +80,8 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
     return event_loop.exec();
 }
 
-ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_service()
+template<typename Client>
+static ErrorOr<NonnullRefPtr<Client>> bind_service(void (*bind_method)(int, int))
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -81,12 +96,12 @@ ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_service()
     int server_fd_passing_fd = fd_passing_socket_fds[1];
 
     // NOTE: The java object takes ownership of the socket fds
-    bind_request_server_java(server_fd, server_fd_passing_fd);
+    (*bind_method)(server_fd, server_fd_passing_fd);
 
     auto socket = TRY(Core::LocalSocket::adopt_fd(ui_fd));
     TRY(socket->set_blocking(true));
 
-    auto new_client = TRY(try_make_ref_counted<Protocol::RequestClient>(move(socket)));
+    auto new_client = TRY(try_make_ref_counted<Client>(move(socket)));
     new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
     return new_client;
