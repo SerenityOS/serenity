@@ -7,6 +7,7 @@
 #include <AK/ScopeGuard.h>
 #include <Kernel/API/POSIX/sys/stat.h>
 #include <Kernel/API/VirtualMemoryAnnotations.h>
+#include <LibCore/ArgsParser.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/Relocation.h>
@@ -19,21 +20,79 @@ char* __static_environ[] = { nullptr }; // We don't get the environment without 
 char** environ = __static_environ;
 uintptr_t __stack_chk_guard = 0;
 
-static void display_help()
-{
-    char const message[] =
-        R"(You have invoked `Loader.so'. This is the helper program for programs that
-use shared libraries. Special directives embedded in executables tell the
-kernel to load this program.
+extern "C" {
 
-This helper program loads the shared libraries needed by the program,
-prepares the program to run, and runs it. You do not need to invoke
-this helper program directly. If you still want to run a program with the loader,
-run: /usr/lib/Loader.so [ELF_BINARY])";
-    fprintf(stderr, "%s", message);
+[[noreturn]] void _invoke_entry(int argc, char** argv, char** envp, ELF::EntryPointFunction entry);
+
+static ErrorOr<int> open_executable(StringView path)
+{
+    int rc = open(path.characters_without_null_termination(), O_RDONLY | O_EXEC);
+    if (rc < 0)
+        return Error::from_errno(errno);
+    int checked_fd = rc;
+    ArmedScopeGuard close_on_failure([checked_fd] {
+        close(checked_fd);
+    });
+
+    struct stat executable_stat = {};
+    rc = fstat(checked_fd, &executable_stat);
+    if (rc < 0)
+        return Error::from_errno(errno);
+    if (!S_ISREG(executable_stat.st_mode)) {
+        if (S_ISDIR(executable_stat.st_mode))
+            return Error::from_errno(EISDIR);
+        return Error::from_errno(EINVAL);
+    }
+
+    close_on_failure.disarm();
+    return checked_fd;
 }
 
-extern "C" {
+static int _main(int argc, char** argv, char** envp, bool is_secure)
+{
+    Vector<StringView> arguments;
+    arguments.ensure_capacity(argc);
+    for (int i = 0; i < argc; ++i)
+        arguments.unchecked_append({ argv[i], strlen(argv[i]) });
+
+    Vector<StringView> command;
+    Core::ArgsParser args_parser;
+
+    args_parser.set_general_help("Run dynamically-linked ELF executables");
+    args_parser.set_stop_on_first_non_option(true);
+    args_parser.add_positional_argument(command, "Command to execute", "command");
+    // NOTE: Don't use regular PrintUsageAndExit policy for ArgsParser, as it will simply
+    // fail with a nullptr-dereference as the LibC exit function is not suitable for usage
+    // in this piece of code.
+    if (!args_parser.parse(arguments.span(), Core::ArgsParser::FailureBehavior::PrintUsage))
+        return 1;
+
+    if (command.is_empty()) {
+        args_parser.print_usage(stderr, arguments[0]);
+        return 1;
+    }
+
+    auto error_or_fd = open_executable(command[0]);
+    if (error_or_fd.is_error()) {
+        warnln("Loader.so: Loading {} failed: {}", command[0], strerror(error_or_fd.error().code()));
+        return 1;
+    }
+
+    int main_program_fd = error_or_fd.release_value();
+    ByteString main_program_path = command[0];
+
+    // NOTE: We need to extract the command with its arguments to be able
+    // to run the actual requested executable with the requested parameters
+    // from argv.
+    VERIFY(command.size() <= static_cast<size_t>(argc));
+    auto command_with_args = command.span();
+    for (size_t index = 0; index < command.size(); index++)
+        argv[index] = const_cast<char*>(command_with_args[index].characters_without_null_termination());
+
+    auto entry_point = ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, is_secure, envp);
+    _invoke_entry(command.size(), argv, envp, entry_point);
+    VERIFY_NOT_REACHED();
+}
 
 // The compiler expects a previous declaration
 void _start(int, char**, char**) __attribute__((used));
@@ -62,36 +121,10 @@ NAKED void _start(int, char**, char**)
 #endif
 }
 
-static ErrorOr<int> open_executable(char const* path)
-{
-    int rc = open(path, O_RDONLY | O_EXEC);
-    if (rc < 0)
-        return Error::from_errno(errno);
-    int checked_fd = rc;
-    ArmedScopeGuard close_on_failure([checked_fd] {
-        close(checked_fd);
-    });
-
-    struct stat executable_stat = {};
-    rc = fstat(checked_fd, &executable_stat);
-    if (rc < 0)
-        return Error::from_errno(errno);
-    if (!S_ISREG(executable_stat.st_mode)) {
-        if (S_ISDIR(executable_stat.st_mode))
-            return Error::from_errno(EISDIR);
-        return Error::from_errno(EINVAL);
-    }
-
-    close_on_failure.disarm();
-    return checked_fd;
-}
-
 ALWAYS_INLINE static void optimizer_fence()
 {
     asm("" ::: "memory");
 }
-
-[[noreturn]] void _invoke_entry(int argc, char** argv, char** envp, ELF::EntryPointFunction entry);
 
 [[gnu::no_stack_protector]] void _entry(int argc, char** argv, char** envp)
 {
@@ -150,25 +183,6 @@ ALWAYS_INLINE static void optimizer_fence()
     }
 
     if (main_program_fd == -1) {
-        // We've been invoked directly as an executable rather than as the
-        // ELF interpreter for some other binary. The second argv string should
-        // be the path to the ELF executable, and if we don't have enough strings in argv
-        // (argc < 2), just fail with message to stderr about this.
-
-        if (argc < 2) {
-            display_help();
-            _exit(1);
-        }
-        auto error_or_fd = open_executable(argv[1]);
-        if (error_or_fd.is_error()) {
-            warnln("Loader.so: Loading {} failed: {}", argv[1], strerror(error_or_fd.error().code()));
-            _exit(1);
-        }
-        main_program_fd = error_or_fd.release_value();
-        main_program_path = argv[1];
-        argv++;
-        argc--;
-
         // Allow syscalls from our code since the kernel won't do that automatically for us if we
         // were invoked directly.
         Elf_Ehdr* header = reinterpret_cast<Elf_Ehdr*>(base_address);
@@ -182,6 +196,11 @@ ALWAYS_INLINE static void optimizer_fence()
                 VERIFY(rc == 0);
             }
         }
+
+        // We've been invoked directly as an executable rather than as the
+        // ELF interpreter for some other binary.
+        int exit_status = _main(argc, argv, envp, is_secure);
+        _exit(exit_status);
     }
 
     VERIFY(main_program_fd >= 0);

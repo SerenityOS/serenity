@@ -12,7 +12,7 @@ add_dependencies(DynamicLoader_CompileOptions install_libc_headers)
 
 add_executable(Loader.so ${SOURCES})
 
-target_link_libraries(Loader.so PRIVATE DynamicLoader_CompileOptions DynamicLoader_LibELF)
+target_link_libraries(Loader.so PRIVATE DynamicLoader_CompileOptions DynamicLoader_LibELF DynamicLoader_LibCoreArgsParser)
 if (ENABLE_UNDEFINED_SANITIZER)
     target_link_libraries(Loader.so PRIVATE DynamicLoader_LibUBSanitizer)
 endif()
