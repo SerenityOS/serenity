@@ -83,11 +83,13 @@ int main(int argc, char** argv, char** envp)
     bool flag_dry_run { false };
     Core::ArgsParser args_parser;
     Vector<StringView> command;
+    StringView argv0;
 
     args_parser.set_general_help("Run dynamically-linked ELF executables");
     args_parser.set_stop_on_first_non_option(true);
     args_parser.add_option(flag_secure, "Run in secure-mode", "secure", 's');
     args_parser.add_option(flag_dry_run, "Run in dry-run mode", "dry-run", 'd');
+    args_parser.add_option(argv0, "Run with custom argv0", "argv0", 'E', "custom argv0");
     args_parser.add_positional_argument(command, "Command to execute", "command");
     args_parser.parse(arguments.span());
 
@@ -112,6 +114,9 @@ int main(int argc, char** argv, char** envp)
     auto command_with_args = command.span();
     for (size_t index = 0; index < command.size(); index++)
         argv[index] = const_cast<char*>(command_with_args[index].characters_without_null_termination());
+
+    if (!argv0.is_empty())
+        argv[0] = const_cast<char*>(argv0.characters_without_null_termination());
 
     ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, flag_secure, flag_dry_run, command.size(), argv, envp);
     VERIFY_NOT_REACHED();
