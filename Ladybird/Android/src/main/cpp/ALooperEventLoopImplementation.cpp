@@ -27,11 +27,12 @@ static ALooperEventLoopImplementation& current_impl()
     return verify_cast<ALooperEventLoopImplementation>(Core::EventLoop::current().impl());
 }
 
-ALooperEventLoopManager::ALooperEventLoopManager(JavaVM* vm, jobject timer_service)
-    : m_vm(vm)
-    , m_timer_service(timer_service)
+static int looper_callback(int fd, int events, void* data);
+
+ALooperEventLoopManager::ALooperEventLoopManager(jobject timer_service)
+    : m_timer_service(timer_service)
 {
-    JavaEnvironment env(m_vm);
+    JavaEnvironment env(global_vm);
 
     jclass timer_class = env.get()->FindClass("org/serenityos/ladybird/TimerExecutorService$Timer");
     if (!timer_class)
@@ -53,14 +54,30 @@ ALooperEventLoopManager::ALooperEventLoopManager(JavaVM* vm, jobject timer_servi
     if (!m_unregister_timer)
         TODO();
     env.get()->DeleteLocalRef(timer_service_class);
+
+    auto ret = pipe2(m_pipe, O_CLOEXEC | O_NONBLOCK);
+    VERIFY(ret == 0);
+
+    m_main_looper = ALooper_forThread();
+    VERIFY(m_main_looper);
+    ALooper_acquire(m_main_looper);
+
+    ret = ALooper_addFd(m_main_looper, m_pipe[0], ALOOPER_POLL_CALLBACK, ALOOPER_EVENT_INPUT, &looper_callback, this);
+    VERIFY(ret == 1);
 }
 
 ALooperEventLoopManager::~ALooperEventLoopManager()
 {
-    JavaEnvironment env(m_vm);
+    JavaEnvironment env(global_vm);
 
     env.get()->DeleteGlobalRef(m_timer_service);
     env.get()->DeleteGlobalRef(m_timer_class);
+
+    ALooper_removeFd(m_main_looper, m_pipe[0]);
+    ALooper_release(m_main_looper);
+
+    ::close(m_pipe[0]);
+    ::close(m_pipe[1]);
 }
 
 NonnullOwnPtr<Core::EventLoopImplementation> ALooperEventLoopManager::make_implementation()
@@ -70,7 +87,7 @@ NonnullOwnPtr<Core::EventLoopImplementation> ALooperEventLoopManager::make_imple
 
 int ALooperEventLoopManager::register_timer(Core::EventReceiver& receiver, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible visibility)
 {
-    JavaEnvironment env(m_vm);
+    JavaEnvironment env(global_vm);
     auto& thread_data = EventLoopThreadData::the();
 
     auto timer = env.get()->NewObject(m_timer_class, m_timer_constructor, reinterpret_cast<long>(&current_impl()));
@@ -87,7 +104,7 @@ int ALooperEventLoopManager::register_timer(Core::EventReceiver& receiver, int m
 bool ALooperEventLoopManager::unregister_timer(int timer_id)
 {
     if (auto timer = EventLoopThreadData::the().timers.take(timer_id); timer.has_value()) {
-        JavaEnvironment env(m_vm);
+        JavaEnvironment env(global_vm);
         return env.get()->CallBooleanMethod(m_timer_service, m_unregister_timer, timer_id);
     }
     return false;
@@ -107,29 +124,34 @@ void ALooperEventLoopManager::unregister_notifier(Core::Notifier& notifier)
 
 void ALooperEventLoopManager::did_post_event()
 {
-    current_impl().poke();
+    int msg = 0xCAFEBABE;
+    (void)write(m_pipe[1], &msg, sizeof(msg));
+}
+
+int looper_callback(int fd, int events, void* data)
+{
+    auto& manager = *static_cast<ALooperEventLoopManager*>(data);
+
+    if (events & ALOOPER_EVENT_INPUT) {
+        int msg = 0;
+        while (read(fd, &msg, sizeof(msg)) == sizeof(msg)) {
+            // Do nothing, we don't actually care what the message was, just that it was posted
+        }
+        manager.on_did_post_event();
+    }
+    return 1;
 }
 
 ALooperEventLoopImplementation::ALooperEventLoopImplementation()
     : m_event_loop(ALooper_prepare(0))
     , m_thread_data(&EventLoopThreadData::the())
 {
-    auto ret = pipe2(m_pipe, O_CLOEXEC | O_NONBLOCK);
-    VERIFY(ret == 0);
-
     ALooper_acquire(m_event_loop);
-
-    ret = ALooper_addFd(m_event_loop, m_pipe[0], ALOOPER_POLL_CALLBACK, ALOOPER_EVENT_INPUT, &ALooperEventLoopImplementation::looper_callback, this);
-    VERIFY(ret == 1);
 }
 
 ALooperEventLoopImplementation::~ALooperEventLoopImplementation()
 {
-    ALooper_removeFd(m_event_loop, m_pipe[0]);
     ALooper_release(m_event_loop);
-
-    ::close(m_pipe[0]);
-    ::close(m_pipe[1]);
 }
 
 EventLoopThreadData& ALooperEventLoopImplementation::thread_data()
@@ -181,26 +203,6 @@ void ALooperEventLoopImplementation::post_event(Core::EventReceiver& receiver, N
         wake();
 }
 
-int ALooperEventLoopImplementation::looper_callback(int fd, int events, void* data)
-{
-    auto& impl = *static_cast<ALooperEventLoopImplementation*>(data);
-    (void)impl; // FIXME: Do we need to do anything with the instance here?
-
-    if (events & ALOOPER_EVENT_INPUT) {
-        int msg = 0;
-        while (read(fd, &msg, sizeof(msg)) == sizeof(msg)) {
-            // Do nothing, we don't actually care what the message was, just that it was posted
-        }
-    }
-    return 1;
-}
-
-void ALooperEventLoopImplementation::poke()
-{
-    int msg = 0xCAFEBABE;
-    (void)write(m_pipe[1], &msg, sizeof(msg));
-}
-
 static int notifier_callback(int fd, int, void* data)
 {
     auto& notifier = *static_cast<Core::Notifier*>(data);
@@ -211,7 +213,7 @@ static int notifier_callback(int fd, int, void* data)
     notifier.dispatch_event(event);
 
     // Wake up from ALooper_pollAll, and service this event on the event queue
-    current_impl().poke();
+    current_impl().wake();
 
     return 1;
 }

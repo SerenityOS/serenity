@@ -10,5 +10,3 @@
 #include <jni.h>
 
 ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket);
-
-extern JavaVM* global_vm;

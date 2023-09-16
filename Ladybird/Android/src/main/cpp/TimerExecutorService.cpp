@@ -29,5 +29,7 @@ Java_org_serenityos_ladybird_TimerExecutorService_00024Timer_nativeRun(JNIEnv*, 
         event_loop_impl.post_event(*receiver, make<Core::TimerEvent>(id));
     }
     // Flush the event loop on this thread to keep any garbage from building up
-    s_event_loop.pump(Core::EventLoop::WaitMode::PollForEvents);
+    if (auto num_events = s_event_loop.pump(Core::EventLoop::WaitMode::PollForEvents); num_events != 0) {
+        dbgln("BUG: Processed {} events on Timer thread!", num_events);
+    }
 }

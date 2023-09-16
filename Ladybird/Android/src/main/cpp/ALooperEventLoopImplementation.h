@@ -19,7 +19,7 @@ namespace Ladybird {
 
 class ALooperEventLoopManager : public Core::EventLoopManager {
 public:
-    ALooperEventLoopManager(JavaVM*, jobject timer_service);
+    ALooperEventLoopManager(jobject timer_service);
     virtual ~ALooperEventLoopManager() override;
     virtual NonnullOwnPtr<Core::EventLoopImplementation> make_implementation() override;
 
@@ -31,12 +31,15 @@ public:
 
     virtual void did_post_event() override;
 
+    Function<void()> on_did_post_event;
+
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual int register_signal(int, Function<void(int)>) override { return 0; }
     virtual void unregister_signal(int) override { }
 
 private:
-    JavaVM* m_vm { nullptr };
+    int m_pipe[2] = {};
+    ALooper* m_main_looper { nullptr };
     jobject m_timer_service { nullptr };
     jmethodID m_register_timer { nullptr };
     jmethodID m_unregister_timer { nullptr };
@@ -74,8 +77,6 @@ public:
     virtual bool was_exit_requested() const override { return false; }
     virtual void notify_forked_and_in_child() override { }
 
-    void poke();
-
     EventLoopThreadData& thread_data();
 
 private:
@@ -83,13 +84,10 @@ private:
 
     ALooperEventLoopImplementation();
 
-    static int looper_callback(int fd, int events, void* data);
-
     void register_notifier(Core::Notifier&);
     void unregister_notifier(Core::Notifier&);
 
     ALooper* m_event_loop { nullptr };
-    int m_pipe[2] {};
     int m_exit_code { 0 };
     Atomic<bool> m_exit_requested { false };
     EventLoopThreadData* m_thread_data { nullptr };

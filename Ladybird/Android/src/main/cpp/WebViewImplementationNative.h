@@ -32,7 +32,6 @@ public:
     static jclass global_class_reference;
     static jmethodID bind_webcontent_method;
     static jmethodID invalidate_layout_method;
-    static JavaVM* global_vm;
 
     jobject java_instance() const { return m_java_instance; }
 

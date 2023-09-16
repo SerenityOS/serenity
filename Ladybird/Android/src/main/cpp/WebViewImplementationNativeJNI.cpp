@@ -12,15 +12,10 @@ using namespace Ladybird;
 jclass WebViewImplementationNative::global_class_reference;
 jmethodID WebViewImplementationNative::bind_webcontent_method;
 jmethodID WebViewImplementationNative::invalidate_layout_method;
-JavaVM* WebViewImplementationNative::global_vm;
 
 extern "C" JNIEXPORT void JNICALL
 Java_org_serenityos_ladybird_WebViewImplementation_00024Companion_nativeClassInit(JNIEnv* env, jobject /* thiz */)
 {
-    auto ret = env->GetJavaVM(&WebViewImplementationNative::global_vm);
-    if (ret != 0)
-        TODO();
-
     auto local_class = env->FindClass("org/serenityos/ladybird/WebViewImplementation");
     if (!local_class)
         TODO();
