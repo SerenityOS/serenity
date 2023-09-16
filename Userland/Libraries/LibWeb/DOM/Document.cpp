@@ -352,6 +352,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_active_favicon);
     visitor.visit(m_focused_element);
     visitor.visit(m_active_element);
+    visitor.visit(m_target_element);
     visitor.visit(m_implementation);
     visitor.visit(m_current_script);
     visitor.visit(m_associated_inert_template_document);
