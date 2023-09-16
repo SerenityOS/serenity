@@ -1,5 +1,6 @@
 set(FUZZER_TARGETS
     ASN1
+    BLAKE2b
     BMPLoader
     Brotli
     CyrillicDecoder
@@ -70,6 +71,7 @@ if (TARGET LibWeb)
 endif()
 
 set(FUZZER_DEPENDENCIES_ASN1 LibCrypto LibTLS)
+set(FUZZER_DEPENDENCIES_BLAKE2b LibCrypto)
 set(FUZZER_DEPENDENCIES_BMPLoader LibGfx)
 set(FUZZER_DEPENDENCIES_Brotli LibCompress)
 set(FUZZER_DEPENDENCIES_CSSParser LibWeb)

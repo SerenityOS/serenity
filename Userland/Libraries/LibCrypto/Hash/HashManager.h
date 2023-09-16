@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/Variant.h>
+#include <LibCrypto/Hash/BLAKE2b.h>
 #include <LibCrypto/Hash/HashFunction.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA1.h>
@@ -19,11 +20,12 @@ namespace Crypto::Hash {
 enum class HashKind {
     Unknown,
     None,
+    BLAKE2b,
+    MD5,
     SHA1,
     SHA256,
     SHA384,
     SHA512,
-    MD5,
 };
 
 struct MultiHashDigestVariant {
@@ -132,6 +134,9 @@ public:
 
         m_kind = kind;
         switch (kind) {
+        case HashKind::BLAKE2b:
+            m_algorithm = BLAKE2b();
+            break;
         case HashKind::MD5:
             m_algorithm = MD5();
             break;
@@ -211,7 +216,7 @@ public:
     }
 
 private:
-    using AlgorithmVariant = Variant<Empty, MD5, SHA1, SHA256, SHA384, SHA512>;
+    using AlgorithmVariant = Variant<Empty, BLAKE2b, MD5, SHA1, SHA256, SHA384, SHA512>;
     AlgorithmVariant m_algorithm {};
     HashKind m_kind { HashKind::None };
     ByteBuffer m_pre_init_buffer;
