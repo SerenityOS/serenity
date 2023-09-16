@@ -33,7 +33,12 @@ add_custom_target(copy-content-filters
         "${SERENITY_SOURCE_DIR}/Base/home/anon/.config/BrowserContentFilters.txt"
         "asset-bundle/res/ladybird/BrowserContentFilters.txt"
 )
-add_dependencies(archive-assets copy-autoplay-allowlist copy-content-filters)
+add_custom_target(copy-certs
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${Lagom_BINARY_DIR}/cacert.pem"
+        "asset-bundle/res/ladybird/cacert.pem"
+)
+add_dependencies(archive-assets copy-autoplay-allowlist copy-content-filters copy-certs)
 add_custom_target(copy-assets COMMAND ${CMAKE_COMMAND} -E copy_if_different ladybird-assets.tar.gz "${CMAKE_SOURCE_DIR}/Android/src/main/assets/")
 add_dependencies(copy-assets archive-assets)
 add_dependencies(ladybird copy-assets)

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "WebContentService.h"
 #include "LadybirdServiceBase.h"
 #include <AK/LexicalPath.h>
 #include <Ladybird/FontPlugin.h>
@@ -28,15 +29,7 @@
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 
-class NullResourceConnector : public Web::ResourceLoaderConnector {
-    virtual void prefetch_dns(AK::URL const&) override { }
-    virtual void preconnect(AK::URL const&) override { }
-
-    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(DeprecatedString const&, AK::URL const&, HashMap<DeprecatedString, DeprecatedString> const&, ReadonlyBytes, Core::ProxyData const&) override
-    {
-        return nullptr;
-    }
-};
+static ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_service();
 
 ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 {
@@ -52,7 +45,8 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 
     Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
-    Web::ResourceLoader::initialize(make_ref_counted<NullResourceConnector>());
+    auto request_server_client = TRY(bind_request_server_service());
+    Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
 
     bool is_layout_test_mode = false;
 
@@ -70,4 +64,30 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
     webcontent_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(fd_passing_socket)));
 
     return event_loop.exec();
+}
+
+ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_service()
+{
+    int socket_fds[2] {};
+    TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
+
+    int ui_fd = socket_fds[0];
+    int server_fd = socket_fds[1];
+
+    int fd_passing_socket_fds[2] {};
+    TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds));
+
+    int ui_fd_passing_fd = fd_passing_socket_fds[0];
+    int server_fd_passing_fd = fd_passing_socket_fds[1];
+
+    // NOTE: The java object takes ownership of the socket fds
+    bind_request_server_java(server_fd, server_fd_passing_fd);
+
+    auto socket = TRY(Core::LocalSocket::adopt_fd(ui_fd));
+    TRY(socket->set_blocking(true));
+
+    auto new_client = TRY(try_make_ref_counted<Protocol::RequestClient>(move(socket)));
+    new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
+
+    return new_client;
 }

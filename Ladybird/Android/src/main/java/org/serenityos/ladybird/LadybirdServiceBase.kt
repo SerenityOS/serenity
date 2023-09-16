@@ -23,7 +23,7 @@ const val MSG_TRANSFER_SOCKETS = 2
 
 abstract class LadybirdServiceBase(protected val TAG: String) : Service() {
     private val threadPool = Executors.newCachedThreadPool()
-    private lateinit var resourceDir: String
+    protected lateinit var resourceDir: String
 
     override fun onCreate() {
         super.onCreate()
