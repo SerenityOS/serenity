@@ -8,6 +8,8 @@
 #include <AK/JsonParser.h>
 #include <LibDesktop/Launcher.h>
 
+namespace Maps {
+
 UsersMapWidget::UsersMapWidget(Options const& options)
     : MapWidget::MapWidget(options)
 {
@@ -65,7 +67,7 @@ void UsersMapWidget::add_users_to_map()
         return;
 
     for (auto const& user : m_users.value()) {
-        MapWidget::Marker marker = { user.coordinates, user.nick };
+        MapWidget::Marker marker = { user.coordinates, user.nick, {}, "users"_string };
         if (!user.contributor)
             marker.image = m_marker_gray_image;
         add_marker(marker);
@@ -75,4 +77,6 @@ void UsersMapWidget::add_users_to_map()
         Panel::Position::TopRight,
         { { "https://github.com/SerenityOS/user-map" } },
         "users"_string });
+}
+
 }

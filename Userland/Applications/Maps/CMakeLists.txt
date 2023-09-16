@@ -4,9 +4,13 @@ serenity_component(
     TARGETS Maps
 )
 
+compile_gml(SearchPanel.gml SearchPanelGML.cpp)
+
 set(SOURCES
     main.cpp
     MapWidget.cpp
+    SearchPanelGML.cpp
+    SearchPanel.cpp
     UsersMapWidget.cpp
 )
 

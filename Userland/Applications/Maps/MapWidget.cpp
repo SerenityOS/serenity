@@ -16,6 +16,8 @@
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibProtocol/Request.h>
 
+namespace Maps {
+
 // Math helpers
 // https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Pseudo-code
 static double longitude_to_tile_x(double longitude, int zoom)
@@ -530,4 +532,6 @@ void MapWidget::paint_event(GUI::PaintEvent& event)
     if (m_scale_enabled)
         paint_scale(painter);
     paint_panels(painter);
+}
+
 }
