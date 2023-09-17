@@ -124,6 +124,8 @@ public:
 
     virtual bool wants_mouse_events() const { return false; }
 
+    virtual bool forms_unconnected_subtree() const { return false; }
+
     enum class DispatchEventOfSameName {
         Yes,
         No,

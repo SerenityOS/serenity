@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/SVGMaskElementPrototype.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Layout/SVGGraphicsBox.h>
 #include <LibWeb/SVG/SVGMaskElement.h>
 
 namespace Web::SVG {
@@ -23,9 +24,9 @@ void SVGMaskElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGMaskElementPrototype>(realm, "SVGMaskElement"));
 }
 
-JS::GCPtr<Layout::Node> SVGMaskElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties>)
+JS::GCPtr<Layout::Node> SVGMaskElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return nullptr;
+    return heap().allocate_without_realm<Layout::SVGGraphicsBox>(document(), *this, move(style));
 }
 
 }
