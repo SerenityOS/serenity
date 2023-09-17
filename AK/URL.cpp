@@ -113,13 +113,13 @@ void URL::set_paths(Vector<DeprecatedString> const& paths)
     m_paths.clear_with_capacity();
     m_paths.ensure_capacity(paths.size());
     for (auto const& segment : paths)
-        m_paths.unchecked_append(percent_encode(segment, PercentEncodeSet::Path));
+        m_paths.unchecked_append(String::from_deprecated_string(percent_encode(segment, PercentEncodeSet::Path)).release_value_but_fixme_should_propagate_errors());
     m_valid = compute_validity();
 }
 
 void URL::append_path(StringView path)
 {
-    m_paths.append(percent_encode(path, PercentEncodeSet::Path));
+    m_paths.append(String::from_deprecated_string(percent_encode(path, PercentEncodeSet::Path)).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://url.spec.whatwg.org/#cannot-have-a-username-password-port
@@ -253,7 +253,7 @@ DeprecatedString URL::serialize_path(ApplyPercentDecoding apply_percent_decoding
     // 1. If url has an opaque path, then return url’s path.
     // FIXME: Reimplement this step once we modernize the URL implementation to meet the spec.
     if (cannot_be_a_base_url())
-        return m_paths[0];
+        return m_paths[0].to_deprecated_string();
 
     // 2. Let output be the empty string.
     StringBuilder output;
@@ -261,7 +261,7 @@ DeprecatedString URL::serialize_path(ApplyPercentDecoding apply_percent_decoding
     // 3. For each segment of url’s path: append U+002F (/) followed by segment to output.
     for (auto const& segment : m_paths) {
         output.append('/');
-        output.append(apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(segment) : segment);
+        output.append(apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(segment) : segment.to_deprecated_string());
     }
 
     // 4. Return output.
