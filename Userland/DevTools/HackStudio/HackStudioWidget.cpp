@@ -132,6 +132,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     widget->m_add_editor_action = TRY(widget->create_add_editor_action());
     widget->m_add_terminal_action = TRY(widget->create_add_terminal_action());
     widget->m_remove_current_terminal_action = TRY(widget->create_remove_current_terminal_action());
+    widget->m_toggle_terminal_action = TRY(widget->create_toggle_terminal_action());
 
     widget->m_locator = widget->add<Locator>();
 
@@ -942,6 +943,53 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
     });
 }
 
+ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_toggle_terminal_action()
+{
+    return GUI::Action::create_checkable("Toggle &Terminal", { Mod_Alt | Mod_Shift, Key_Escape }, [this](auto&) {
+        auto widget = m_action_tab_widget->active_widget();
+        if (!widget)
+            return;
+
+        if (is<TerminalWrapper>(widget) && widget->has_focus_within()) {
+            m_current_editor_wrapper->editor().set_focus(true);
+            m_terminal_wrapper->terminal().set_focus(false);
+            hide_action_tabs();
+        } else {
+            bool terminalAlreadyPresent = false;
+            m_action_tab_widget->for_each_child_widget([&](auto& widget) -> IterationDecision {
+                if (widget.title() == "Terminal")
+                    terminalAlreadyPresent = true;
+
+                return IterationDecision::Continue;
+            });
+
+            if (terminalAlreadyPresent) {
+                m_action_tab_widget->for_each_child_widget([&](auto& widget) -> IterationDecision {
+                    if (widget.title() == "Terminal") {
+                        auto& terminal = static_cast<TerminalWrapper&>(widget);
+                        reveal_action_tab(terminal);
+                        terminal.terminal().set_focus(true);
+                        terminal.set_preferred_height(200);
+                        terminalAlreadyPresent = true;
+                        m_current_editor_wrapper->editor().set_focus(false);
+                    }
+                    return IterationDecision::Continue;
+                });
+            } else {
+                auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal"_string);
+                terminal_wrapper.on_command_exit = [&]() {
+                    deferred_invoke([this]() {
+                        m_action_tab_widget->remove_tab(*m_action_tab_widget->active_widget());
+                    });
+                };
+                reveal_action_tab(terminal_wrapper);
+                terminal_wrapper.terminal().set_focus(true);
+            }
+        }
+        update_actions();
+    });
+}
+
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_terminal_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/remove-terminal.png"sv));
@@ -1564,6 +1612,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu->add_action(*m_remove_current_editor_action);
     view_menu->add_action(*m_add_terminal_action);
     view_menu->add_action(*m_remove_current_terminal_action);
+    view_menu->add_action(*m_toggle_terminal_action);
 
     view_menu->add_separator();
 

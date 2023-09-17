@@ -123,6 +123,7 @@ private:
     ErrorOr<NonnullRefPtr<GUI::Action>> create_add_editor_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_add_terminal_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_remove_current_terminal_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_toggle_terminal_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_debug_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_build_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_run_action();
@@ -241,6 +242,7 @@ private:
     RefPtr<GUI::Action> m_add_editor_tab_widget_action;
     RefPtr<GUI::Action> m_add_terminal_action;
     RefPtr<GUI::Action> m_remove_current_terminal_action;
+    RefPtr<GUI::Action> m_toggle_terminal_action;
     RefPtr<GUI::Action> m_stop_action;
     RefPtr<GUI::Action> m_debug_action;
     RefPtr<GUI::Action> m_build_action;
