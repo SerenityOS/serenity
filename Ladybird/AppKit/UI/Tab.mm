@@ -68,6 +68,9 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
                               backing:NSBackingStoreBuffered
                                 defer:NO];
 
+    // Remember last window position
+    self.frameAutosaveName = @"window";
+
     if (self) {
         self.web_view = [[LadybirdWebView alloc] init:self];
         [self.web_view setPostsBoundsChangedNotifications:YES];
