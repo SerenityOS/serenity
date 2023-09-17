@@ -92,14 +92,6 @@ There is also documentation for installing the build prerequisites for some less
 
 ## Build
 
-In order to build SerenityOS you will first need to build the toolchain by running the following command:
-
-```console
-Meta/serenity.sh rebuild-toolchain
-```
-
-Later on, when you use `git pull` to get the latest changes, there's (usually) no need to rebuild the toolchain.
-
 Run the following command to build and run SerenityOS:
 
 ```console
@@ -108,6 +100,11 @@ Meta/serenity.sh run
 
 This will compile all of SerenityOS and install the built files into the `Build/x86_64/Root` directory inside your Git
 repository. It will also build a disk image and start SerenityOS using QEMU.
+
+The first time this command is executed, it will also download some required database files from the internet and build
+the SerenityOS cross-compiler toolchain. These steps only have to be done once, so the next build will go much faster.
+When we update to a newer compiler, you might be prompted to re-build the toolchain; see the [troubleshooting guide](Troubleshooting.md#the-toolchain-is-outdated)
+for what to do when this happens.
 
 If, during build, an error like `fusermount: failed to open /etc/mtab: No such file or directory` appears, you have installed `fuse2fs` but your system does not provide the mtab symlink for various reasons. Simply create this symlink with `ln -sv /proc/self/mounts /etc/mtab`.
 

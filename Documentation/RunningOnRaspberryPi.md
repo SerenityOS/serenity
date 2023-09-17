@@ -14,17 +14,9 @@ Currently only UART output is supported, no display.
 
 Please follow [build instructions](BuildInstructions.md) to download and build Serenity. Make sure everything builds successfully for x86.
 
-### Step 2: Build Aarch64 toolchain
+### Step 2: Build and run in emulator
 
-Use following the command to build the toolchain for Aarch64:
-
-```console
-Meta/serenity.sh rebuild-toolchain aarch64
-```
-
-### Step 3: Build and run in emulator
-
-Use the following command to build and run the Aarch64 kernel:
+Use the following command to build and run the AArch64 version of the system:
 
 ```console
 Meta/serenity.sh run aarch64

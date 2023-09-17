@@ -4,8 +4,7 @@ NVim can be configured to use the [COC-clangd](https://github.com/clangd/coc-cla
 plugin to provide code-completion as well as inline
 [git blame](https://github.com/f-person/git-blame.nvim) using [vim-plug](https://github.com/junegunn/vim-plug).
 
-Make sure you ran `./Meta/serenity.sh rebuild-toolchain` as well as
-`./Meta/serenity.sh run`.
+Make sure you ran `Meta/serenity.sh run` at least once already.
 
 # Install vim-plug
 
