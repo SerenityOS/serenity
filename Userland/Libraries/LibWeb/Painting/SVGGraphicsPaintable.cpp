@@ -6,6 +6,7 @@
 
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Painting/SVGGraphicsPaintable.h>
+#include <LibWeb/SVG/SVGMaskElement.h>
 
 namespace Web::Painting {
 
@@ -17,6 +18,12 @@ JS::NonnullGCPtr<SVGGraphicsPaintable> SVGGraphicsPaintable::create(Layout::SVGG
 SVGGraphicsPaintable::SVGGraphicsPaintable(Layout::SVGGraphicsBox const& layout_box)
     : SVGPaintable(layout_box)
 {
+}
+
+bool SVGGraphicsPaintable::forms_unconnected_subtree() const
+{
+    // Masks should not be painted (i.e. reachable) unless referenced by another element.
+    return is<SVG::SVGMaskElement>(dom_node());
 }
 
 Layout::SVGGraphicsBox const& SVGGraphicsPaintable::layout_box() const

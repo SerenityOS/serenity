@@ -201,7 +201,7 @@ static void build_paint_tree(Node& node, Painting::Paintable* parent_paintable =
     Painting::Paintable* paintable = nullptr;
     if (node.paintable()) {
         paintable = const_cast<Painting::Paintable*>(node.paintable());
-        if (parent_paintable) {
+        if (parent_paintable && !paintable->forms_unconnected_subtree()) {
             VERIFY(!paintable->parent());
             parent_paintable->append_child(*paintable);
         }

@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/SVG/SVGDefsElement.h>
 
 namespace Web::SVG {
@@ -24,9 +25,10 @@ void SVGDefsElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGDefsElementPrototype>(realm, "SVGDefsElement"));
 }
 
-JS::GCPtr<Layout::Node> SVGDefsElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties>)
+JS::GCPtr<Layout::Node> SVGDefsElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return nullptr;
+    // FIXME: We need this layout node so any <mask>s inside this element get layout computed.
+    return heap().allocate_without_realm<Layout::SVGBox>(document(), *this, move(style));
 }
 
 }

@@ -19,6 +19,8 @@ public:
 
     Layout::SVGGraphicsBox const& layout_box() const;
 
+    virtual bool forms_unconnected_subtree() const override;
+
 protected:
     SVGGraphicsPaintable(Layout::SVGGraphicsBox const&);
 };
