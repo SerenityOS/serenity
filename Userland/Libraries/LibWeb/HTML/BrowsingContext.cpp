@@ -49,7 +49,7 @@ bool url_matches_about_blank(AK::URL const& url)
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#determining-the-origin
-HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin, Optional<HTML::Origin> container_origin)
+HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin)
 {
     // 1. If sandboxFlags has its sandboxed origin browsing context flag set, then return a new opaque origin.
     if (has_flag(sandbox_flags, SandboxingFlagSet::SandboxedOrigin)) {
@@ -61,11 +61,11 @@ HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_
 
     // 3. If url is about:srcdoc, then:
     if (url == "about:srcdoc"sv) {
-        // 1. Assert: containerOrigin is non-null.
-        VERIFY(container_origin.has_value());
+        // 1. Assert: sourceOrigin is non-null.
+        VERIFY(source_origin.has_value());
 
-        // 2. Return containerOrigin.
-        return container_origin.release_value();
+        // 2. Return sourceOrigin.
+        return source_origin.release_value();
     }
 
     // 4. If url matches about:blank and sourceOrigin is non-null, then return sourceOrigin.
@@ -134,8 +134,8 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     // FIXME: 5. Let sandboxFlags be the result of determining the creation sandboxing flags given browsingContext and embedder.
     SandboxingFlagSet sandbox_flags = {};
 
-    // 6. Let origin be the result of determining the origin given about:blank, sandboxFlags, creatorOrigin, and null.
-    auto origin = determine_the_origin(AK::URL("about:blank"sv), sandbox_flags, creator_origin, {});
+    // 6. Let origin be the result of determining the origin given about:blank, sandboxFlags, and creatorOrigin.
+    auto origin = determine_the_origin(AK::URL("about:blank"sv), sandbox_flags, creator_origin);
 
     // FIXME: 7. Let permissionsPolicy be the result of creating a permissions policy given browsingContext and origin. [PERMISSIONSPOLICY]
 
