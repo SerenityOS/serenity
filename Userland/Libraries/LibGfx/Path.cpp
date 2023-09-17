@@ -72,11 +72,7 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rot
     double x_axis_rotation_s;
     double x_axis_rotation_c;
     AK::sincos(static_cast<double>(x_axis_rotation), x_axis_rotation_s, x_axis_rotation_c);
-
-    // Find the last point
-    FloatPoint last_point { 0, 0 };
-    if (!m_segments.is_empty())
-        last_point = m_segments.last()->point();
+    FloatPoint last_point = this->last_point();
 
     // Step 1 of out-of-range radii correction
     if (rx == 0.0 || ry == 0.0) {
@@ -159,6 +155,13 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rot
         x_axis_rotation,
         theta_1,
         theta_delta);
+}
+FloatPoint Path::last_point()
+{
+    FloatPoint last_point { 0, 0 };
+    if (!m_segments.is_empty())
+        last_point = m_segments.last()->point();
+    return last_point;
 }
 
 void Path::close()
@@ -381,6 +384,14 @@ void Path::add_path(Path const& other)
 {
     m_segments.extend(other.m_segments);
     invalidate_split_lines();
+}
+
+void Path::ensure_subpath(FloatPoint point)
+{
+    if (m_need_new_subpath && m_segments.is_empty()) {
+        move_to(point);
+        m_need_new_subpath = false;
+    }
 }
 
 template<typename T>

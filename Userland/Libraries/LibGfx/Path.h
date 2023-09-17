@@ -153,6 +153,8 @@ public:
         elliptical_arc_to(point, { radius, radius }, 0, large_arc, sweep);
     }
 
+    FloatPoint last_point();
+
     void close();
     void close_all_subpaths();
 
@@ -192,7 +194,7 @@ public:
 
     Path copy_transformed(AffineTransform const&) const;
     void add_path(Path const&);
-
+    void ensure_subpath(FloatPoint point);
     DeprecatedString to_deprecated_string() const;
 
     Path stroke_to_fill(float thickness) const;
@@ -217,6 +219,7 @@ private:
 
     Optional<Vector<FloatLine>> m_split_lines {};
     Optional<Gfx::FloatRect> m_bounding_box;
+    bool m_need_new_subpath = { true };
 };
 
 }
