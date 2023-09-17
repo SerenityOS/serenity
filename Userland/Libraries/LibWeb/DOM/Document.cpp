@@ -2652,6 +2652,8 @@ Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
 void Document::destroy()
 {
+    page()->client().page_did_destroy_document(*this);
+
     // NOTE: Abort needs to happen before destory. There is currently bug in the spec: https://github.com/whatwg/html/issues/9148
     // 4. Abort document.
     abort();

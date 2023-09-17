@@ -34,6 +34,7 @@ public:
     virtual void die() override;
 
     void initialize_js_console(Badge<PageHost>, Web::DOM::Document& document);
+    void destroy_js_console(Badge<PageHost>, Web::DOM::Document& document);
 
     void request_file(Web::FileRequest);
 
@@ -127,8 +128,9 @@ private:
 
     HashMap<i32, NonnullRefPtr<Gfx::Bitmap>> m_backing_stores;
 
-    WeakPtr<JS::Realm> m_realm;
-    OwnPtr<WebContentConsoleClient> m_console_client;
+    HashMap<Web::DOM::Document*, NonnullOwnPtr<WebContentConsoleClient>> m_console_clients;
+    WeakPtr<WebContentConsoleClient> m_top_level_document_console_client;
+
     JS::Handle<JS::GlobalObject> m_console_global_object;
 
     HashMap<int, Web::FileRequest> m_requested_files {};

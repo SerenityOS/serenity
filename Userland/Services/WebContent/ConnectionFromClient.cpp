@@ -649,21 +649,28 @@ Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_h
 
 void ConnectionFromClient::initialize_js_console(Badge<PageHost>, Web::DOM::Document& document)
 {
-    auto realm = document.realm().make_weak_ptr();
-    if (m_realm.ptr() == realm.ptr())
-        return;
+    auto& realm = document.realm();
+    auto console_object = realm.intrinsics().console_object();
+    auto console_client = make<WebContentConsoleClient>(console_object->console(), document.realm(), *this);
+    console_object->console().set_client(*console_client);
 
-    auto console_object = realm->intrinsics().console_object();
-    m_realm = realm;
-    if (!m_console_client)
-        m_console_client = make<WebContentConsoleClient>(console_object->console(), *m_realm, *this);
-    console_object->console().set_client(*m_console_client.ptr());
+    VERIFY(document.browsing_context());
+    if (document.browsing_context()->is_top_level()) {
+        m_top_level_document_console_client = console_client->make_weak_ptr();
+    }
+
+    m_console_clients.set(&document, move(console_client));
+}
+
+void ConnectionFromClient::destroy_js_console(Badge<PageHost>, Web::DOM::Document& document)
+{
+    m_console_clients.remove(&document);
 }
 
 void ConnectionFromClient::js_console_input(DeprecatedString const& js_source)
 {
-    if (m_console_client)
-        m_console_client->handle_input(js_source);
+    if (m_top_level_document_console_client)
+        m_top_level_document_console_client->handle_input(js_source);
 }
 
 void ConnectionFromClient::run_javascript(DeprecatedString const& js_source)
@@ -695,8 +702,8 @@ void ConnectionFromClient::run_javascript(DeprecatedString const& js_source)
 
 void ConnectionFromClient::js_console_request_messages(i32 start_index)
 {
-    if (m_console_client)
-        m_console_client->send_messages(start_index);
+    if (m_top_level_document_console_client)
+        m_top_level_document_console_client->send_messages(start_index);
 }
 
 Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient::take_document_screenshot()

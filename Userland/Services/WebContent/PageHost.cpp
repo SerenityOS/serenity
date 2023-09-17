@@ -287,6 +287,11 @@ void PageHost::page_did_create_new_document(Web::DOM::Document& document)
     m_client.initialize_js_console({}, document);
 }
 
+void PageHost::page_did_destroy_document(Web::DOM::Document& document)
+{
+    m_client.destroy_js_console({}, document);
+}
+
 void PageHost::page_did_finish_loading(const URL& url)
 {
     m_client.async_did_finish_loading(url);
