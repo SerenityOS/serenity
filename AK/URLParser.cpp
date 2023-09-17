@@ -1377,6 +1377,9 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // 1. If base is non-null and base’s scheme is "file", then:
                 if (base_url.has_value() && base_url->m_scheme == "file") {
                     // 1. Set url’s host to base’s host.
+                    url->m_host = base_url->m_host;
+
+                    // FIXME: The spec does not seem to mention these steps.
                     url->m_paths = base_url->m_paths;
                     url->m_paths.remove(url->m_paths.size() - 1);
 
