@@ -1,4 +1,4 @@
-ftp://serenityos.org:21
+new URL('ftp://serenityos.org:21', undefined)
 protocol => 'ftp:'
 username => ''
 password => ''
@@ -8,7 +8,7 @@ port => ''
 pathname => '/'
 search => ''
 hash => ''
-http://[0:1:0:1:0:1:0:1]
+new URL('http://[0:1:0:1:0:1:0:1]', undefined)
 protocol => 'http:'
 username => ''
 password => ''
@@ -18,7 +18,7 @@ port => ''
 pathname => '/'
 search => ''
 hash => ''
-http://[1:0:1:0:1:0:1:0]
+new URL('http://[1:0:1:0:1:0:1:0]', undefined)
 protocol => 'http:'
 username => ''
 password => ''
@@ -28,7 +28,7 @@ port => ''
 pathname => '/'
 search => ''
 hash => ''
-http://[1:1:0:0:1:0:0:0]/
+new URL('http://[1:1:0:0:1:0:0:0]/', undefined)
 protocol => 'http:'
 username => ''
 password => ''
@@ -38,7 +38,7 @@ port => ''
 pathname => '/'
 search => ''
 hash => ''
-unknown://serenityos.org:0
+new URL('unknown://serenityos.org:0', undefined)
 protocol => 'unknown:'
 username => ''
 password => ''
@@ -48,7 +48,7 @@ port => '0'
 pathname => ''
 search => ''
 hash => ''
-http://serenityos.org/cat?dog#meow"woof
+new URL('http://serenityos.org/cat?dog#meow"woof', undefined)
 protocol => 'http:'
 username => ''
 password => ''
