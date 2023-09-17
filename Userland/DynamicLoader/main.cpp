@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/API/POSIX/sys/stat.h>
 #include <Kernel/API/VirtualMemoryAnnotations.h>
@@ -48,6 +49,12 @@ static ErrorOr<int> open_executable(StringView path)
     return checked_fd;
 }
 
+static int print_loaded_libraries_callback(struct dl_phdr_info* info, size_t, void*)
+{
+    outln("{}", info->dlpi_name);
+    return 0;
+}
+
 static int _main(int argc, char** argv, char** envp, bool is_secure)
 {
     Vector<StringView> arguments;
@@ -56,14 +63,22 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
         arguments.unchecked_append({ argv[i], strlen(argv[i]) });
 
     bool flag_dry_run { false };
+    bool flag_list_loaded_dependencies { false };
     Vector<StringView> command;
     StringView argv0;
     Core::ArgsParser args_parser;
 
     args_parser.set_general_help("Run dynamically-linked ELF executables");
     args_parser.set_stop_on_first_non_option(true);
-    args_parser.add_option(flag_dry_run, "Run in dry-run mode", "dry-run", 'd');
-    args_parser.add_option(argv0, "Run with custom argv0", "argv0", 'E', "custom argv0");
+
+    if (LexicalPath::basename(arguments[0]) == "ldd"sv) {
+        flag_list_loaded_dependencies = true;
+        flag_dry_run = true;
+    } else {
+        args_parser.add_option(flag_dry_run, "Run in dry-run mode", "dry-run", 'd');
+        args_parser.add_option(flag_list_loaded_dependencies, "List all loaded dependencies", "list", 'l');
+        args_parser.add_option(argv0, "Run with custom argv0", "argv0", 'E', "custom argv0");
+    }
     args_parser.add_positional_argument(command, "Command to execute", "command");
     // NOTE: Don't use regular PrintUsageAndExit policy for ArgsParser, as it will simply
     // fail with a nullptr-dereference as the LibC exit function is not suitable for usage
@@ -97,6 +112,8 @@ static int _main(int argc, char** argv, char** envp, bool is_secure)
         argv[0] = const_cast<char*>(argv0.characters_without_null_termination());
 
     auto entry_point = ELF::DynamicLinker::linker_main(move(main_program_path), main_program_fd, is_secure, envp);
+    if (flag_list_loaded_dependencies)
+        ELF::DynamicLinker::iterate_over_loaded_shared_objects(print_loaded_libraries_callback, nullptr);
     if (flag_dry_run)
         return 0;
     _invoke_entry(command.size(), argv, envp, entry_point);

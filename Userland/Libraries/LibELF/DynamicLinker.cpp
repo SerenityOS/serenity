@@ -336,6 +336,11 @@ static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
     return 0;
 }
 
+int DynamicLinker::iterate_over_loaded_shared_objects(int (*callback)(struct dl_phdr_info* info, size_t size, void* data), void* data)
+{
+    return __dl_iterate_phdr(callback, data);
+}
+
 static void initialize_libc(DynamicObject& libc)
 {
     auto res = libc.lookup_symbol("__libc_init"sv);
