@@ -143,7 +143,7 @@ describe("special left hand sides", () => {
         }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
     });
 
-    test.xfail("Cannot change constant declaration in body", () => {
+    test("Cannot change constant declaration in body", () => {
         const vals = [];
         for (const v of [1, 2]) {
             expect(() => v++).toThrowWithMessage(TypeError, "Invalid assignment to const variable");

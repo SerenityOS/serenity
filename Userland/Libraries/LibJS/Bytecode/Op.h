@@ -382,12 +382,13 @@ public:
 
 class CreateVariable final : public Instruction {
 public:
-    explicit CreateVariable(IdentifierTableIndex identifier, EnvironmentMode mode, bool is_immutable, bool is_global = false)
+    explicit CreateVariable(IdentifierTableIndex identifier, EnvironmentMode mode, bool is_immutable, bool is_global = false, bool is_strict = false)
         : Instruction(Type::CreateVariable, sizeof(*this))
         , m_identifier(identifier)
         , m_mode(mode)
         , m_is_immutable(is_immutable)
         , m_is_global(is_global)
+        , m_is_strict(is_strict)
     {
     }
 
@@ -399,6 +400,7 @@ private:
     EnvironmentMode m_mode;
     bool m_is_immutable : 4 { false };
     bool m_is_global : 4 { false };
+    bool m_is_strict { false };
 };
 
 class SetVariable final : public Instruction {

@@ -2877,7 +2877,7 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
             // a. If IsConstantDeclaration of LetOrConst is true, then
             if (variable_declaration.is_constant_declaration()) {
                 // i. Perform ! environment.CreateImmutableBinding(name, true).
-                generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
+                generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, true, false, true);
             }
             // b. Else,
             else {
