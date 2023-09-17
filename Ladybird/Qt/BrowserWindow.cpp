@@ -442,10 +442,10 @@ Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_
     return tab;
 }
 
-Tab& BrowserWindow::new_tab(StringView html, URL const& url, Web::HTML::ActivateTab activate_tab)
+Tab& BrowserWindow::new_tab(StringView html, Web::HTML::ActivateTab activate_tab)
 {
     auto& tab = create_new_tab(activate_tab);
-    tab.load_html(html, url);
+    tab.load_html(html);
     return tab;
 }
 

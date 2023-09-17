@@ -909,7 +909,7 @@ void MainWidget::update_markdown_preview()
     if (document) {
         auto html = document->render_to_html();
         auto current_scroll_pos = m_page_view->visible_content_rect();
-        m_page_view->load_html(html, URL::create_with_file_scheme(m_path));
+        m_page_view->load_html(html);
         m_page_view->scroll_into_view(current_scroll_pos, true, true);
     }
 }
@@ -917,7 +917,7 @@ void MainWidget::update_markdown_preview()
 void MainWidget::update_html_preview()
 {
     auto current_scroll_pos = m_page_view->visible_content_rect();
-    m_page_view->load_html(m_editor->text(), URL::create_with_file_scheme(m_path));
+    m_page_view->load_html(m_editor->text());
     m_page_view->scroll_into_view(current_scroll_pos, true, true);
 }
 

@@ -91,7 +91,7 @@ enum class IsHistoryNavigation {
 
 - (void)loadHTML:(StringView)html url:(URL const&)url
 {
-    [[self tab].web_view loadHTML:html url:url];
+    [[self tab].web_view loadHTML:html];
 }
 
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)isRedirect

@@ -19,7 +19,7 @@ endpoint WebContentServer
     update_screen_rects(Vector<Gfx::IntRect> rects, u32 main_screen_index) =|
 
     load_url(URL url) =|
-    load_html(DeprecatedString html, URL url) =|
+    load_html(DeprecatedString html) =|
 
     add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap bitmap) =|
     remove_backing_store(i32 backing_store_id) =|

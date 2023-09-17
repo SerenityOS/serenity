@@ -40,7 +40,7 @@
 - (instancetype)init:(id<LadybirdWebViewObserver>)observer;
 
 - (void)loadURL:(URL const&)url;
-- (void)loadHTML:(StringView)html url:(URL const&)url;
+- (void)loadHTML:(StringView)html;
 
 - (WebView::ViewImplementation&)view;
 - (String const&)handle;

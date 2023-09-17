@@ -119,10 +119,10 @@ void ConnectionFromClient::load_url(const URL& url)
     page().load(url);
 }
 
-void ConnectionFromClient::load_html(DeprecatedString const& html, const URL& url)
+void ConnectionFromClient::load_html(DeprecatedString const& html)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}, url={}", html, url);
-    page().load_html(html, url);
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}", html);
+    page().load_html(html);
 }
 
 void ConnectionFromClient::set_viewport_rect(Gfx::IntRect const& rect)
@@ -481,7 +481,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
             auto maybe_link = document->query_selector("link[rel=match]"sv);
             if (maybe_link.is_error() || !maybe_link.value()) {
                 // To make sure that we fail the ref-test if the link is missing, load the error page.
-                load_html("<h1>Failed to find &lt;link rel=&quot;match&quot; /&gt; in ref test page!</h1> Make sure you added it.", "about:blank"sv);
+                load_html("<h1>Failed to find &lt;link rel=&quot;match&quot; /&gt; in ref test page!</h1> Make sure you added it.");
             } else {
                 auto link = maybe_link.release_value();
                 auto url = document->parse_url(link->get_attribute(Web::HTML::AttributeNames::href));

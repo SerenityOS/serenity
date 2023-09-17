@@ -217,7 +217,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     view().on_received_source = [this](auto const& url, auto const& source) {
         auto html = WebView::highlight_source(url, source);
-        m_window->new_tab(html, url, Web::HTML::ActivateTab::Yes);
+        m_window->new_tab(html, Web::HTML::ActivateTab::Yes);
     };
 
     view().on_navigate_back = [this]() {
@@ -550,9 +550,9 @@ void Tab::navigate(QString url_qstring)
     view().load(url_string);
 }
 
-void Tab::load_html(StringView html, URL const& url)
+void Tab::load_html(StringView html)
 {
-    view().load_html(html, url);
+    view().load_html(html);
 }
 
 void Tab::back()

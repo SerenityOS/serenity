@@ -56,7 +56,7 @@ private:
     virtual void update_system_fonts(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
     virtual void update_screen_rects(Vector<Gfx::IntRect> const&, u32) override;
     virtual void load_url(URL const&) override;
-    virtual void load_html(DeprecatedString const&, URL const&) override;
+    virtual void load_html(DeprecatedString const&) override;
     virtual void paint(Gfx::IntRect const&, i32) override;
     virtual void set_viewport_rect(Gfx::IntRect const&) override;
     virtual void mouse_down(Gfx::IntPoint, Gfx::IntPoint, unsigned, unsigned, unsigned) override;
