@@ -88,16 +88,23 @@ public:
     DeprecatedString as_string_or(DeprecatedString const& alternative) const
     {
         if (is_string())
-            return as_string();
+            return as_deprecated_sting();
         return alternative;
     }
 
     DeprecatedString to_deprecated_string() const
     {
         if (is_string())
-            return as_string();
+            return as_deprecated_sting();
         return serialized<StringBuilder>();
     }
+
+    String to_string() const
+     {
+         auto deprecated_string = to_deprecated_string();
+         return String::from_deprecated_string();
+     }
+
 #endif
 
     int to_int(int default_value = 0) const
@@ -165,7 +172,7 @@ public:
     }
 
 #ifndef KERNEL
-    DeprecatedString as_string() const
+    DeprecatedString as_deprecated_sting() const
     {
         VERIFY(is_string());
         return *m_value.as_string;

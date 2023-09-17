@@ -57,7 +57,7 @@ enum class ValueID {
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
+        member_generator.set("name:titlecase", title_casify(name.to_string()));
 
         member_generator.append(R"~~~(
     @name:titlecase@,
@@ -73,9 +73,9 @@ StringView string_from_value_id(ValueID);
 // https://www.w3.org/TR/css-values-4/#common-keywords
 inline bool is_css_wide_keyword(StringView name)
 {
-    return name.equals_ignoring_ascii_case("inherit"sv)
-        || name.equals_ignoring_ascii_case("initial"sv)
-        || name.equals_ignoring_ascii_case("unset"sv);
+    return name.equals_ignoring_ascii_case("inherit"_short_string)
+        || name.equals_ignoring_ascii_case("initial"_short_string)
+        || name.equals_ignoring_ascii_case("unset"_short_string);
 }
 
 }
@@ -103,8 +103,8 @@ HashMap<StringView, ValueID, AK::CaseInsensitiveASCIIStringViewTraits> g_stringv
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name", name.to_deprecated_string());
-        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
+        member_generator.set("name", name.to_string());
+        member_generator.set("name:titlecase", title_casify(name.to_string()));
         member_generator.append(R"~~~(
     {"@name@"sv, ValueID::@name:titlecase@},
 )~~~");
@@ -124,8 +124,8 @@ StringView string_from_value_id(ValueID value_id) {
 
     identifier_data.for_each([&](auto& name) {
         auto member_generator = generator.fork();
-        member_generator.set("name", name.to_deprecated_string());
-        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
+        member_generator.set("name", name.to_string());
+        member_generator.set("name:titlecase", title_casify(name.to_string()));
         member_generator.append(R"~~~(
     case ValueID::@name:titlecase@:
         return "@name@"sv;
