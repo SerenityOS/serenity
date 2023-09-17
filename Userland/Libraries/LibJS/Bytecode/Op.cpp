@@ -568,15 +568,15 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
             return vm.throw_completion<InternalError>(TRY_OR_THROW_OOM(vm, String::formatted("Lexical environment already has binding '{}'", name)));
 
         if (m_is_immutable)
-            return vm.lexical_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
+            return vm.lexical_environment()->create_immutable_binding(vm, name, m_is_strict);
         else
-            return vm.lexical_environment()->create_mutable_binding(vm, name, vm.in_strict_mode());
+            return vm.lexical_environment()->create_mutable_binding(vm, name, m_is_strict);
     } else {
         if (!m_is_global) {
             if (m_is_immutable)
-                return vm.variable_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
+                return vm.variable_environment()->create_immutable_binding(vm, name, m_is_strict);
             else
-                return vm.variable_environment()->create_mutable_binding(vm, name, vm.in_strict_mode());
+                return vm.variable_environment()->create_mutable_binding(vm, name, m_is_strict);
         } else {
             // NOTE: CreateVariable with m_is_global set to true is expected to only be used in GlobalDeclarationInstantiation currently, which only uses "false" for "can_be_deleted".
             //       The only area that sets "can_be_deleted" to true is EvalDeclarationInstantiation, which is currently fully implemented in C++ and not in Bytecode.
