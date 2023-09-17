@@ -174,7 +174,7 @@ static Vector<DeprecatedString> get_dependencies(DeprecatedString const& path)
     return dependencies;
 }
 
-static Result<void, DlErrorMessage> map_dependencies(DeprecatedString const& path)
+static Result<void, DlErrorMessage> map_dependencies(size_t iteration, DeprecatedString const& path, bool print_library_names)
 {
     VERIFY(path.starts_with('/'));
 
@@ -186,13 +186,19 @@ static Result<void, DlErrorMessage> map_dependencies(DeprecatedString const& pat
         dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name.characters());
 
         auto dependency_path = DynamicLinker::resolve_library(needed_name, parent_object);
+        if (print_library_names) {
+            for (size_t index = 0; index < iteration; index++)
+                out("  ");
+            outln("{} => {}", needed_name, dependency_path);
+        }
+            
 
         if (!dependency_path.has_value())
             return DlErrorMessage { DeprecatedString::formatted("Could not find required shared library: {}", needed_name) };
 
         if (!s_loaders.contains(dependency_path.value()) && !s_global_objects.contains(dependency_path.value())) {
             auto loader = TRY(map_library(dependency_path.value()));
-            TRY(map_dependencies(loader->filepath()));
+            TRY(map_dependencies(iteration + 1, loader->filepath(), print_library_names));
         }
     }
     dbgln_if(DYNAMIC_LOAD_DEBUG, "mapped dependencies for {}", path);
@@ -510,7 +516,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
     if (auto error = verify_tls_for_dlopen(loader); error.has_value())
         return error.value();
 
-    TRY(map_dependencies(loader->filepath()));
+    TRY(map_dependencies(0, loader->filepath(), false));
 
     TRY(link_main_library(loader->filepath(), flags));
 
@@ -619,7 +625,7 @@ static void read_environment_variables()
     }
 }
 
-void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int main_program_fd, bool is_secure, bool dry_run, int argc, char** argv, char** envp)
+void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int main_program_fd, bool is_secure, bool dry_run, bool list_loaded_dependencies, int argc, char** argv, char** envp)
 {
     VERIFY(main_program_path.starts_with('/'));
 
@@ -645,7 +651,7 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
     }
     (void)result1.release_value();
 
-    auto result2 = map_dependencies(main_program_path);
+    auto result2 = map_dependencies(0, main_program_path, list_loaded_dependencies);
     if (result2.is_error()) {
         warnln("{}", result2.error().text);
         fflush(stderr);
