@@ -1619,13 +1619,20 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
     auto& realm = *vm.current_realm();
 
     VERIFY(environment);
+
+    // 1. Let declarations be the LexicallyScopedDeclarations of code.
+
+    // 2. Let privateEnv be the running execution context's PrivateEnvironment.
     auto private_environment = vm.running_execution_context().private_environment;
+
     // Note: All the calls here are ! and thus we do not need to TRY this callback.
     //       We use MUST to ensure it does not throw and to avoid discarding the returned ThrowCompletionOr<void>.
+    // 3. For each element d of declarations, do
     MUST(for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         auto is_constant_declaration = declaration.is_constant_declaration();
         // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
         //       an exception should not result from `for_each_bound_name`.
+        // a. For each element dn of the BoundNames of d, do
         MUST(declaration.for_each_bound_identifier([&](auto const& identifier) {
             if (identifier.is_local()) {
                 // NOTE: No need to create bindings for local variables as their values are not stored in an environment.
@@ -1633,17 +1640,28 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
             }
 
             auto const& name = identifier.string();
+            // i. If IsConstantDeclaration of d is true, then
             if (is_constant_declaration) {
+                // 1. Perform ! env.CreateImmutableBinding(dn, true).
                 MUST(environment->create_immutable_binding(vm, name, true));
-            } else {
+            }
+            // ii. Else,
+            else {
+                // 1. Perform ! env.CreateMutableBinding(dn, false). NOTE: This step is replaced in section B.3.2.6.
                 if (!MUST(environment->has_binding(name)))
                     MUST(environment->create_mutable_binding(vm, name, false));
             }
         }));
 
+        // b. If d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
         if (is<FunctionDeclaration>(declaration)) {
+            // i. Let fn be the sole element of the BoundNames of d.
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
+
+            // ii. Let fo be InstantiateFunctionObject of d with arguments env and privateEnv.
             auto function = ECMAScriptFunctionObject::create(realm, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), function_declaration.local_variables_names(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
+
+            // iii. Perform ! env.InitializeBinding(fn, fo). NOTE: This step is replaced in section B.3.2.6.
             if (function_declaration.name_identifier()->is_local()) {
                 vm.running_execution_context().local_variables[function_declaration.name_identifier()->local_variable_index()] = function;
             } else {
