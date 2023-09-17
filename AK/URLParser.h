@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,6 +64,9 @@ public:
 
     // https://url.spec.whatwg.org/#concept-host-serializer
     static ErrorOr<String> serialize_host(URL::Host const&);
+
+    // https://url.spec.whatwg.org/#shorten-a-urls-path
+    static void shorten_urls_path(URL&);
 };
 
 #undef ENUMERATE_STATES
