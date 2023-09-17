@@ -400,13 +400,13 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> LegacyPlatformObject::interna
     }
 
     // 4. For each P of O’s own property keys that is a String, in ascending chronological order of property creation, append P to keys.
-    for (auto& it : shape().property_table_ordered()) {
+    for (auto& it : shape().property_table()) {
         if (it.key.is_string())
             keys.append(it.key.to_value(vm));
     }
 
     // 5. For each P of O’s own property keys that is a Symbol, in ascending chronological order of property creation, append P to keys.
-    for (auto& it : shape().property_table_ordered()) {
+    for (auto& it : shape().property_table()) {
         if (it.key.is_symbol())
             keys.append(it.key.to_value(vm));
     }

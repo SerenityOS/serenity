@@ -123,7 +123,7 @@ ErrorOr<void> MarkupGenerator::object_to_html(Object const& object, StringBuilde
         TRY(html_output.try_append(TRY(wrap_string_in_style(", "sv, StyleType::Punctuation))));
 
     size_t index = 0;
-    for (auto& it : object.shape().property_table_ordered()) {
+    for (auto& it : object.shape().property_table()) {
         TRY(html_output.try_append(TRY(wrap_string_in_style(TRY(String::formatted("\"{}\"", escape_html_entities(it.key.to_display_string()))), StyleType::String))));
         TRY(html_output.try_append(TRY(wrap_string_in_style(": "sv, StyleType::Punctuation))));
         TRY(value_to_html(object.get_direct(it.value.offset), html_output, seen_objects));
