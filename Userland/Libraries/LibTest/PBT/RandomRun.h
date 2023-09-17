@@ -82,13 +82,19 @@ public:
         }
         return false;
     }
-    void sort_chunk(Chunk c)
+    bool operator<=(RandomRun const& rhs) const
     {
+        return (*this < rhs) || (*this == rhs);
+    }
+    RandomRun with_sorted(Chunk c) const
+    {
+        Vector<u32> new_data = m_data;
         AK::dual_pivot_quick_sort(
-            m_data,
+            new_data,
             c.index,
-            c.index + c.size,
+            c.index + c.size - 1,
             [](auto& a, auto& b) { return a < b; });
+        return RandomRun(new_data);
     }
     RandomRun with_deleted(Chunk c) const
     {
@@ -98,7 +104,7 @@ public:
     }
     ErrorOr<String> to_string()
     {
-        return String::join(',', m_data, "[{}]"sv);
+        return String::formatted("[{}]", TRY(String::join(',', m_data, "{}"sv)));
     }
 
 private:

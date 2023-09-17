@@ -43,7 +43,7 @@ public:
 
     void set_suite_setup(Function<void()> setup) { m_setup = move(setup); }
 
-    void set_rand_source(RandSource source) { m_rand_source = source; }
+    void set_rand_source(RandSource source) { m_rand_source = move(source); }
 
     RandSource& rand_source() { return m_rand_source; }
 

@@ -30,19 +30,43 @@ inline ShrinkResult no_improvement(RandomRun run)
 template<typename FN>
 ShrinkResult keep_if_better(RandomRun const& new_run, RandomRun const& current_best, FN const& test_function)
 {
-    if (current_best < new_run) {
-        // The new run is worse than the current best. Let's not even try!
+    if (current_best <= new_run) {
+        // The new run is worse or equal to the current best. Let's not even try!
         return no_improvement(current_best);
     }
 
-    RandSource source = RandSource::recorded(new_run);
+    Test::set_rand_source(RandSource::recorded(new_run));
     Test::set_current_test_result(TestResult::NotRun);
     test_function();
-    if (Test::current_test_result() == TestResult::Passed) {
-        Test::set_current_test_result(TestResult::Failed);
-        return no_improvement(current_best);
+    if (Test::current_test_result() == TestResult::NotRun) {
+        Test::set_current_test_result(TestResult::Passed);
     }
-    return ShrinkResult { true, new_run };
+
+    switch (Test::current_test_result()) {
+        case TestResult::NotRun:
+        case TestResult::HitLimit:
+            // Neither of the above cases should happen.
+            // NotRun:   We've literally just set it to Passed if it was NotRun!
+            // HitLimit: This should have happened earlier; no ShrinkCmd _adds_
+            //           integers to a RandomRun, right?
+            VERIFY_NOT_REACHED();
+        case TestResult::Failed:
+            // Our smaller RandomRun resulted in a simpler failing value!
+            // Let's keep it.
+            return ShrinkResult { true, new_run };
+        case TestResult::Passed:
+        case TestResult::Rejected:
+        case TestResult::Overrun: 
+            // Passing:  We shrank from a failing value to a passing value.
+            // Rejected: We shrank to value that doesn't get past the ASSUME(...)
+            //           macro.
+            // Overrun:  Generators can't draw enough random bits to generate all
+            //           needed values.
+            // In all cases: Let's try something else.
+            warnln("Shrink: skipping passed/rejected/overrun: {}", static_cast<int>(Test::current_test_result()));
+            Test::set_current_test_result(TestResult::Failed);
+            return no_improvement(current_best);
+    }
 }
 
 template<typename FN, typename SET_FN>
@@ -86,29 +110,17 @@ ShrinkResult shrink_zero(ZeroChunk c, RandomRun const& run, FN const& test_funct
 {
     // TODO do we need to copy? or is it done automatically
     RandomRun new_run = run;
-    warnln("Run before zeroing: {}", new_run);
-    warnln("TODO: figure out if we need to copy here");
     size_t end = c.chunk.index + c.chunk.size;
     for (size_t i = c.chunk.index; i < end; i++) {
         new_run[i] = 0;
     }
-    warnln("Run after zeroing: {}", new_run);
-    warnln("TODO: is it any different from the following, original state.run?");
-    warnln("current_best.run: {}", run);
     return keep_if_better(new_run, run, test_function);
 }
 
 template<typename FN>
 ShrinkResult shrink_sort(SortChunk c, RandomRun const& run, FN const& test_function)
 {
-    // TODO do we need to copy? or is it done automatically
-    RandomRun new_run = run;
-    warnln("Run before sorting: {}", new_run);
-    warnln("TODO: figure out if we need to copy here");
-    new_run.sort_chunk(c.chunk);
-    warnln("Run after sorting: {}", new_run);
-    warnln("TODO: is it any different from the following, original state.run?");
-    warnln("current_best.run: {}", run);
+    RandomRun new_run = run.with_sorted(c.chunk);
     return keep_if_better(new_run, run, test_function);
 }
 
@@ -139,7 +151,7 @@ ShrinkResult shrink_delete(DeleteChunkAndMaybeDecPrevious c, RandomRun const& ru
        a certain probability) to see whether to generate another item. This makes
        items "local" instead of entangled with the non-local length.
     */
-    if (run_deleted.size() > c.chunk.index - 1) {
+    if (run_deleted.size() > c.chunk.index - 1 && run_deleted[c.chunk.index - 1] > 0) {
         RandomRun run_decremented = run_deleted;
         run_decremented[c.chunk.index - 1]--;
         return keep_if_better(run_decremented, run, test_function);
@@ -202,7 +214,9 @@ RandomRun shrink_once(RandomRun const& run, FN const& test_function)
             continue;
         }
         ShrinkResult result = shrink_with_cmd(cmd, current, test_function);
+        warnln("Trying {}", cmd);
         if (result.was_improvement) {
+            warnln("Shrunk from {} to {}", current, result.run);
             current = result.run;
         }
     }
@@ -212,6 +226,7 @@ RandomRun shrink_once(RandomRun const& run, FN const& test_function)
 template<typename FN>
 RandomRun shrink(RandomRun const& first_failure, FN const& test_function)
 {
+    warnln("Starting with {}", first_failure);
     if (first_failure.is_empty()) {
         // We can't do any better
         return first_failure;
@@ -223,6 +238,8 @@ RandomRun shrink(RandomRun const& first_failure, FN const& test_function)
         current = next;
         next = shrink_once(current, test_function);
     } while (next != current);
+
+    warnln("Ending with {}", next);
 
     return next;
 }

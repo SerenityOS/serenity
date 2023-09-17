@@ -36,10 +36,9 @@ using TestFunction = Function<void()>;
 
 inline void run_with_rand_source(RandSource source, TestFunction const& test_fn)
 {
-    set_rand_source(source);
+    set_rand_source(move(source));
     test_fn();
     if (current_test_result() == TestResult::NotRun) {
-        // Meaning no EXPECT() macro set the test as TestResult::Failed
         set_current_test_result(TestResult::Passed);
     }
 }
@@ -68,16 +67,12 @@ public:
     {
         TestFunction test_case_fn = [test_fn = move(test_fn)]() {
             for (u32 i = 0; i < MAX_GENERATED_VALUES_PER_TEST; ++i) {
-                warnln("Value {}", i);
                 bool generated_successfully = false;
                 u8 gen_attempt;
                 for (gen_attempt = 0; gen_attempt < MAX_GEN_ATTEMPTS_PER_VALUE && !generated_successfully; ++gen_attempt) {
-                    warnln("Gen attempt {}",gen_attempt);
-                    RandSource live_source = RandSource::live();
                     // TODO disable user-visible failure printlns
                     set_current_test_result(TestResult::NotRun);
-                    run_with_rand_source(live_source, test_fn);
-                    warnln("current test result {}", static_cast<int>(current_test_result()));
+                    run_with_rand_source(RandSource::live(), test_fn);
                     switch (current_test_result()) {
                         case TestResult::NotRun: VERIFY_NOT_REACHED();
                         case TestResult::Passed: {
@@ -86,7 +81,7 @@ public:
                         }
                         case TestResult::Failed: {
                             generated_successfully = true;
-                            RandomRun first_failure = live_source.run();
+                            RandomRun first_failure = rand_source().run();
                             RandomRun best_failure = shrink(first_failure, test_fn);
                             // Run one last time, so that the user can see the minimal failure
                             // TODO show the values generated during this failure
@@ -95,6 +90,8 @@ public:
                             return;
                         }
                         case TestResult::Rejected: break;
+                        case TestResult::HitLimit: break;
+                        case TestResult::Overrun: break;
                         default: VERIFY_NOT_REACHED();
                     }
                 }

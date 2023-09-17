@@ -142,6 +142,10 @@ static DeprecatedString test_result_to_string(TestResult result)
         return "Failed";
     case TestResult::Rejected:
         return "Rejected";
+    case TestResult::HitLimit:
+        return "Hit random data size limit in";
+    case TestResult::Overrun: // This should never get to the user; Shrink.h should do something about it.
+        VERIFY_NOT_REACHED();
     default:
         VERIFY_NOT_REACHED();
     }
@@ -152,7 +156,6 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
     size_t test_count = 0;
     size_t test_passed_count = 0;
     size_t test_failed_count = 0;
-    size_t test_rejected_count = 0;
     size_t benchmark_count = 0;
     TestElapsedTimer global_timer;
 
@@ -211,9 +214,6 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         case TestResult::Failed:
             test_failed_count++;
             break;
-        case TestResult::Rejected:
-            test_rejected_count++;
-            break;
         default:
             VERIFY_NOT_REACHED();
         }
@@ -228,15 +228,12 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime));
 
     if (test_count != 0) {
-        if (test_failed_count == 0 && test_rejected_count == 0) {
+        if (test_passed_count == test_count) {
             dbgln("All {} tests passed.", test_count);
-        } else if (test_failed_count == 0) {
-            dbgln("Out of {} tests, {} passed and {} couldn't generate the needed random values.", test_count, test_passed_count, test_rejected_count);
-        } else if (test_rejected_count == 0) {
+        } else if (test_passed_count + test_failed_count == test_count) {
             dbgln("Out of {} tests, {} passed and {} failed.", test_count, test_passed_count, test_failed_count);
         } else {
-            // failed > 0, rejected > 0
-            dbgln("Out of {} tests, {} passed, {} failed and {} couldn't generate the needed random values.", test_count, test_passed_count, test_failed_count, test_rejected_count);
+            dbgln("Out of {} tests, {} passed, {} failed and {} didn't finish for other reasons.", test_count, test_passed_count, test_failed_count, test_count - test_passed_count - test_failed_count);
         }
     }
 

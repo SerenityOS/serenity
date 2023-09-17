@@ -41,12 +41,11 @@ namespace Gen {
  */
 inline u32 unsigned_int(u32 max)
 {
-    RandSource rand = Test::rand_source();
+    RandSource& rand = Test::rand_source();
     RandomRun& run = rand.run();
     if (rand.is_live()) {
         if (run.is_full()) {
-            FAIL("Generators have hit maximum RandomRun length (generating too much data).");
-            // TODO do we need a different FAIL that doesn't get shushed during shrinking?
+            Test::set_current_test_result(TestResult::HitLimit);
         }
         u32 value = AK::get_random_uniform(max);
         run.append(value);
@@ -57,8 +56,8 @@ inline u32 unsigned_int(u32 max)
     if (next.has_value()) {
         return next.value();
     }
-    FAIL("Ran out of recorded bits");
-    VERIFY_NOT_REACHED();
+    Test::set_current_test_result(TestResult::Overrun);
+    return 0; // The value returned doesn't matter at this point but we need to return _something_
 }
 
 /* An unsigned integer generator in a particular range.

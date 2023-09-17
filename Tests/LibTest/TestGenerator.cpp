@@ -42,7 +42,9 @@ RANDOMIZED_TEST_CASE(bind_like)
     EXPECT(n2 >= 10 && n2 <= 900);
 }
 
-/* For why this is a suboptimal way to generate collections, see the comment in
+/* An example of an user-defined generator (for the test bind_vector_suboptimal).
+  
+   For why this is a suboptimal way to generate collections, see the comment in
    Shrink::shrink_delete().
 
    TL;DR: this makes the length non-local to the items we're trying to delete
@@ -72,5 +74,9 @@ RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
     for (u32 n : vec) {
         sum += n;
     }
-    EXPECT(sum <= max_item * vec.size());
+    warnln("vec {}, sum {}", vec, sum);
+    // TODO make this test shrink more consistently
+    // Can be gleaned with a variant on:
+    // while true; do ./Build/lagom/bin/TestGenerator; done
+    EXPECT(sum <= 10);
 }
