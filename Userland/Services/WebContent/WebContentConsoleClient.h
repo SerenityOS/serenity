@@ -16,7 +16,8 @@
 
 namespace WebContent {
 
-class WebContentConsoleClient final : public JS::ConsoleClient {
+class WebContentConsoleClient final : public JS::ConsoleClient
+    , public Weakable<WebContentConsoleClient> {
 public:
     WebContentConsoleClient(JS::Console&, JS::Realm&, ConnectionFromClient&);
 
