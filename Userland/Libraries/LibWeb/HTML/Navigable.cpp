@@ -399,7 +399,7 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, document_resource.get<String>().bytes())));
 
     // 3. Let responseOrigin be the result of determining the origin given response's URL, targetSnapshotParams's sandboxing flags, null, and entry's document state's origin.
-    auto response_origin = determine_the_origin(*response->url(), SandboxingFlagSet {}, {}, entry->document_state->origin());
+    auto response_origin = determine_the_origin(*response->url(), SandboxingFlagSet {}, entry->document_state->origin());
 
     // 4. Let coop be a new cross-origin opener policy.
     CrossOriginOpenerPolicy coop;
@@ -598,9 +598,8 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
             entry->document_state->set_resource(Empty {});
         }
 
-        // 11. Set responseOrigin to the result of determining the origin given response's URL, finalSandboxFlags,
-        //     entry's document state's initiator origin, and null.
-        response_origin = determine_the_origin(*response_holder->response()->url(), final_sandbox_flags, entry->document_state->initiator_origin(), {});
+        // 11. Set responseOrigin to the result of determining the origin given response's URL, finalSandboxFlags, and entry's document state's initiator origin.
+        response_origin = determine_the_origin(*response_holder->response()->url(), final_sandbox_flags, entry->document_state->initiator_origin());
 
         // 14. Set locationURL to response's location URL given currentURL's fragment.
         auto location_url = response_holder->response()->location_url(current_url.fragment());
