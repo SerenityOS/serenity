@@ -604,7 +604,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (sequence.to_uint().has_value()) {
             modifier_buffer.append(sequence);
         } else {
-            if (sequence == "" || sequence == "q") {
+            if (sequence == "" || sequence == "q" || sequence == "Q") {
                 break;
             } else if (sequence == "j" || sequence == "\e[B" || sequence == "\n") {
                 if (!emulate_more) {
