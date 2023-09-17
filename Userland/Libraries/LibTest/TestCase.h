@@ -38,6 +38,10 @@ inline void run_with_rand_source(RandSource source, TestFunction const& test_fn)
 {
     set_rand_source(source);
     test_fn();
+    if (current_test_result() == TestResult::NotRun) {
+        // Meaning no EXPECT() macro set the test as TestResult::Failed
+        set_current_test_result(TestResult::Passed);
+    }
 }
 
 class TestCase : public RefCounted<TestCase> {
@@ -64,21 +68,48 @@ public:
     {
         TestFunction test_case_fn = [test_fn = move(test_fn)]() {
             for (u32 i = 0; i < MAX_GENERATED_VALUES_PER_TEST; ++i) {
-                RandSource live_source = RandSource::live();
-                // TODO disable user-visible failure printlns
-                run_with_rand_source(live_source, test_fn);
-                if (current_test_result() == TestResult::Failed) {
-                    RandomRun first_failure = live_source.run();
-                    RandomRun best_failure = shrink(first_failure, test_fn);
-                    // Run one last time, so that the user can see the minimal failure
-                    // TODO show the values generated during this failure
-                    // TODO enable user-visible failure printlns
-                    run_with_rand_source(RandSource::recorded(best_failure), test_fn);
+                warnln("Value {}", i);
+                bool generated_successfully = false;
+                u8 gen_attempt;
+                for (gen_attempt = 0; gen_attempt < MAX_GEN_ATTEMPTS_PER_VALUE && !generated_successfully; ++gen_attempt) {
+                    warnln("Gen attempt {}",gen_attempt);
+                    RandSource live_source = RandSource::live();
+                    // TODO disable user-visible failure printlns
+                    set_current_test_result(TestResult::NotRun);
+                    run_with_rand_source(live_source, test_fn);
+                    warnln("current test result {}", static_cast<int>(current_test_result()));
+                    switch (current_test_result()) {
+                        case TestResult::NotRun: VERIFY_NOT_REACHED();
+                        case TestResult::Passed: {
+                            generated_successfully = true;
+                            break;
+                        }
+                        case TestResult::Failed: {
+                            generated_successfully = true;
+                            RandomRun first_failure = live_source.run();
+                            RandomRun best_failure = shrink(first_failure, test_fn);
+                            // Run one last time, so that the user can see the minimal failure
+                            // TODO show the values generated during this failure
+                            // TODO enable user-visible failure printlns
+                            run_with_rand_source(RandSource::recorded(best_failure), test_fn);
+                            return;
+                        }
+                        case TestResult::Rejected: break;
+                        default: VERIFY_NOT_REACHED();
+                    }
                 }
-                // TODO should we do something about rejected() or should that be left for the ASSUME macro?
-                // Maybe at least keep an assert about "either passed or failed" here?
+                if (!generated_successfully) {
+                    VERIFY(gen_attempt == MAX_GEN_ATTEMPTS_PER_VALUE);
+                    // Meaning the loop above got to the full MAX_GEN_ATTEMPTS_PER_VALUE and gave up
+                    // Run one last time with warnings on, so that the user gets the REJECTED message.
+                    // TODO enable the warnings
+                    RandomRun last_failure = rand_source().run();
+                    run_with_rand_source(RandSource::recorded(last_failure), test_fn);
+                    return;
+                }
             }
             // MAX_GENERATED_VALUES_PER_TEST values generated, all passed the test.
+            VERIFY(current_test_result() == TestResult::Passed);
         };
         return make_ref_counted<TestCase>(name, test_case_fn, false);
     }

@@ -58,7 +58,7 @@ void set_rand_source(RandSource source)
 }
 
 // Declared in Macros.h
-RandSource rand_source()
+RandSource& rand_source()
 {
     return TestSuite::the().rand_source();
 }

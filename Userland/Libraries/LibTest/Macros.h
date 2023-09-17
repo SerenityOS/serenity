@@ -24,7 +24,7 @@ namespace Test {
 TestResult current_test_result();
 void set_current_test_result(TestResult);
 
-RandSource rand_source();
+RandSource& rand_source();
 void set_rand_source(RandSource);
 }
 
@@ -125,6 +125,7 @@ void set_rand_source(RandSource);
             ::Test::set_current_test_result(TestResult::Rejected);                                                 \
             ::AK::warnln("\033[31;1mREJECTED\033[0m: {}:{}: Couldn't generate random value satisfying ASSUME({})", \
                 __FILE__, __LINE__, #x);                                                                           \
+            return;                                                                                                \
         }                                                                                                          \
     } while (false)
 
