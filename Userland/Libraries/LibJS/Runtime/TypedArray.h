@@ -395,7 +395,7 @@ public:
         }
 
         // 3. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
-        for (auto& it : shape().property_table_ordered()) {
+        for (auto& it : shape().property_table()) {
             if (it.key.is_string()) {
                 // a. Add P as the last element of keys.
                 keys.append(it.key.to_value(vm));
@@ -403,7 +403,7 @@ public:
         }
 
         // 4. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
-        for (auto& it : shape().property_table_ordered()) {
+        for (auto& it : shape().property_table()) {
             if (it.key.is_symbol()) {
                 // a. Add P as the last element of keys.
                 keys.append(it.key.to_value(vm));

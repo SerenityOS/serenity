@@ -136,29 +136,17 @@ Optional<PropertyMetadata> Shape::lookup(StringOrSymbol const& property_key) con
     return property;
 }
 
-FLATTEN HashMap<StringOrSymbol, PropertyMetadata> const& Shape::property_table() const
+FLATTEN OrderedHashMap<StringOrSymbol, PropertyMetadata> const& Shape::property_table() const
 {
     ensure_property_table();
     return *m_property_table;
-}
-
-Vector<Shape::Property> Shape::property_table_ordered() const
-{
-    auto vec = Vector<Shape::Property>();
-    vec.resize(property_count());
-
-    for (auto& it : property_table()) {
-        vec[it.value.offset] = { it.key, it.value };
-    }
-
-    return vec;
 }
 
 void Shape::ensure_property_table() const
 {
     if (m_property_table)
         return;
-    m_property_table = make<HashMap<StringOrSymbol, PropertyMetadata>>();
+    m_property_table = make<OrderedHashMap<StringOrSymbol, PropertyMetadata>>();
 
     u32 next_offset = 0;
 

@@ -65,15 +65,13 @@ public:
     Object const* prototype() const { return m_prototype; }
 
     Optional<PropertyMetadata> lookup(StringOrSymbol const&) const;
-    HashMap<StringOrSymbol, PropertyMetadata> const& property_table() const;
+    OrderedHashMap<StringOrSymbol, PropertyMetadata> const& property_table() const;
     u32 property_count() const { return m_property_count; }
 
     struct Property {
         StringOrSymbol key;
         PropertyMetadata value;
     };
-
-    Vector<Property> property_table_ordered() const;
 
     void set_prototype_without_transition(Object* new_prototype) { m_prototype = new_prototype; }
 
@@ -97,7 +95,7 @@ private:
 
     NonnullGCPtr<Realm> m_realm;
 
-    mutable OwnPtr<HashMap<StringOrSymbol, PropertyMetadata>> m_property_table;
+    mutable OwnPtr<OrderedHashMap<StringOrSymbol, PropertyMetadata>> m_property_table;
 
     OwnPtr<HashMap<TransitionKey, WeakPtr<Shape>>> m_forward_transitions;
     OwnPtr<HashMap<GCPtr<Object>, WeakPtr<Shape>>> m_prototype_transitions;
