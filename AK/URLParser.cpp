@@ -683,6 +683,24 @@ constexpr bool is_double_dot_path_segment(StringView input)
     return input == ".."sv || input.equals_ignoring_ascii_case(".%2e"sv) || input.equals_ignoring_ascii_case("%2e."sv) || input.equals_ignoring_ascii_case("%2e%2e"sv);
 }
 
+// https://url.spec.whatwg.org/#shorten-a-urls-path
+void URLParser::shorten_urls_path(URL& url)
+{
+    // 1. Assert: url does not have an opaque path.
+    VERIFY(!url.cannot_be_a_base_url());
+
+    // 2. Let path be url’s path.
+    auto& path = url.m_paths;
+
+    // 3. If url’s scheme is "file", path’s size is 1, and path[0] is a normalized Windows drive letter, then return.
+    if (url.scheme() == "file" && path.size() == 1 && is_normalized_windows_drive_letter(path[0]))
+        return;
+
+    // 4. Remove path’s last item, if any.
+    if (!path.is_empty())
+        path.take_last();
+}
+
 // https://url.spec.whatwg.org/#string-percent-encode-after-encoding
 ErrorOr<String> URLParser::percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus)
 {
@@ -1025,8 +1043,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     url->m_query = {};
 
                     // 2. Shorten url’s path.
-                    if (url->m_paths.size())
-                        url->m_paths.remove(url->m_paths.size() - 1);
+                    shorten_urls_path(*url);
 
                     // 3. Set state to path state and decrease pointer by 1.
                     state = State::Path;
@@ -1337,8 +1354,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     // 2. If the code point substring from pointer to the end of input does not start with a Windows drive letter, then shorten url’s path.
                     auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
                     if (!starts_with_windows_drive_letter(substring_from_pointer)) {
-                        if (!url->m_paths.is_empty() && !(url->scheme() == "file" && url->m_paths.size() == 1 && is_normalized_windows_drive_letter(url->m_paths[0])))
-                            url->m_paths.remove(url->m_paths.size() - 1);
+                        shorten_urls_path(*url);
                     }
                     // 3. Otherwise:
                     else {
@@ -1505,8 +1521,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // 2. If buffer is a double-dot URL path segment, then:
                 if (is_double_dot_path_segment(buffer.string_view())) {
                     // 1. Shorten url’s path.
-                    if (!url->m_paths.is_empty())
-                        url->m_paths.remove(url->m_paths.size() - 1);
+                    shorten_urls_path(*url);
 
                     // 2. If neither c is U+002F (/), nor url is special and c is U+005C (\), append the empty string to url’s path.
                     if (code_point != '/' && !(url->is_special() && code_point == '\\'))
