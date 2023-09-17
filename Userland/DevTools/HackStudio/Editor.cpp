@@ -229,7 +229,7 @@ void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hov
         return;
     }
 
-    s_tooltip_page_view->load_html(man_document->render_to_html("<style>body { background-color: #dac7b5; }</style>"sv), {});
+    s_tooltip_page_view->load_html(man_document->render_to_html("<style>body { background-color: #dac7b5; }</style>"sv));
 
     s_tooltip_window->set_rect(0, 0, 500, 400);
     s_tooltip_window->move_to(screen_location.translated(4, 4));
@@ -722,7 +722,7 @@ void Editor::handle_function_parameters_hint_request()
         }
         html.append("<style>body { background-color: #dac7b5; }</style>"sv);
 
-        s_tooltip_page_view->load_html(html.to_deprecated_string(), {});
+        s_tooltip_page_view->load_html(html.to_deprecated_string());
 
         auto cursor_rect = current_editor().cursor_content_rect().location().translated(screen_relative_rect().location());
 

@@ -152,7 +152,7 @@ void PresenterWidget::set_file(StringView file_name)
         m_current_presentation = presentation.release_value();
         window()->set_title(DeprecatedString::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
         set_min_size(m_current_presentation->normative_size());
-        m_web_view->load_html(MUST(m_current_presentation->render()), "presenter://slide.html"sv);
+        m_web_view->load_html(MUST(m_current_presentation->render()));
         update_slides_actions();
     }
 }

@@ -52,7 +52,7 @@ public:
     void server_did_change_selection(Badge<WebContentClient>);
 
     void load(AK::URL const&);
-    void load_html(StringView, AK::URL const&);
+    void load_html(StringView);
     void load_empty_document();
 
     void zoom_in();

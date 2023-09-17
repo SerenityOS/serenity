@@ -86,15 +86,14 @@ void ViewImplementation::load(AK::URL const& url)
     client().async_load_url(url);
 }
 
-void ViewImplementation::load_html(StringView html, AK::URL const& url)
+void ViewImplementation::load_html(StringView html)
 {
-    m_url = url;
-    client().async_load_html(html, url);
+    client().async_load_html(html);
 }
 
 void ViewImplementation::load_empty_document()
 {
-    load_html(""sv, {});
+    load_html(""sv);
 }
 
 void ViewImplementation::zoom_in()
@@ -328,7 +327,7 @@ void ViewImplementation::handle_web_content_process_crash()
     auto escaped_url = escape_html_entities(m_url.to_deprecated_string());
     builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escaped_url, escaped_url);
     builder.append("</body></html>"sv);
-    load_html(builder.to_deprecated_string(), m_url);
+    load_html(builder.to_deprecated_string());
 }
 
 ErrorOr<void> ViewImplementation::take_screenshot(ScreenshotType type)

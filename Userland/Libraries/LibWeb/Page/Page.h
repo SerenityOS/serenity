@@ -60,7 +60,7 @@ public:
 
     void load(const AK::URL&);
 
-    void load_html(StringView, const AK::URL&);
+    void load_html(StringView);
 
     bool has_ongoing_navigation() const;
 

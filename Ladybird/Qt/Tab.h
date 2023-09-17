@@ -34,7 +34,7 @@ public:
     WebContentView& view() { return *m_view; }
 
     void navigate(QString);
-    void load_html(StringView, URL const&);
+    void load_html(StringView);
 
     void back();
     void forward();

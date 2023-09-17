@@ -47,9 +47,9 @@ void Page::load(const AK::URL& url)
     (void)top_level_traversable()->navigate(url, *top_level_traversable()->active_document());
 }
 
-void Page::load_html(StringView html, const AK::URL& url)
+void Page::load_html(StringView html)
 {
-    (void)top_level_traversable()->navigate(url, *top_level_traversable()->active_document(), String::from_utf8(html).release_value_but_fixme_should_propagate_errors());
+    (void)top_level_traversable()->navigate("about:srcdoc"sv, *top_level_traversable()->active_document(), String::from_utf8(html).release_value_but_fixme_should_propagate_errors());
 }
 
 bool Page::has_ongoing_navigation() const

@@ -505,5 +505,5 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
     // FIXME: I'm not sure what the URL should be. Just use the default URL "about:blank".
     // FIXME: It would be nice if we could pass over the charset.
     // FIXME: Add ability to cancel the load when we switch to another email. Feels very sluggish on heavy emails otherwise
-    m_web_view->load_html(decoded_data, "about:blank"sv);
+    m_web_view->load_html(decoded_data);
 }
