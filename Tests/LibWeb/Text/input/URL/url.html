@@ -1,9 +1,13 @@
 <script src="../include.js"></script>
 <script>
     test(() => {
-        function printURL(input) {
-            println(input);
-            const url = new URL(input);
+        function printURL(input, base) {
+            if (base === undefined)
+                println(`new URL('${input}', ${base})`);
+            else
+                println(`new URL('${input}', '${base}')`);
+
+            const url = new URL(input, base);
             println(`protocol => '${url.protocol}'`);
             println(`username => '${url.username}'`);
             println(`password => '${url.password}'`);
@@ -16,14 +20,14 @@
         }
 
         for (url of [
-            'ftp://serenityos.org:21',
-            'http://[0:1:0:1:0:1:0:1]',
-            'http://[1:0:1:0:1:0:1:0]',
-            'http://[1:1:0:0:1:0:0:0]/',
-            'unknown://serenityos.org:0',
-            'http://serenityos.org/cat?dog#meow"woof',
+            { input: 'ftp://serenityos.org:21' },
+            { input: 'http://[0:1:0:1:0:1:0:1]' },
+            { input: 'http://[1:0:1:0:1:0:1:0]' },
+            { input: 'http://[1:1:0:0:1:0:0:0]/' },
+            { input: 'unknown://serenityos.org:0' },
+            { input: 'http://serenityos.org/cat?dog#meow"woof' },
         ]) {
-            printURL(url);
+            printURL(url.input, url.base);
         }
     });
 </script>
