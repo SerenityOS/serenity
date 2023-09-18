@@ -154,6 +154,7 @@ public:
     Function<void(Color current_color)> on_request_color_picker;
     Function<void(bool)> on_finish_handling_input_event;
     Function<void()> on_text_test_finish;
+    Function<void(Gfx::Color)> on_theme_color_change;
 
     virtual Gfx::IntRect viewport_rect() const = 0;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const = 0;

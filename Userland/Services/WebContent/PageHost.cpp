@@ -463,4 +463,9 @@ void PageHost::page_did_request_color_picker(Color current_color)
     m_client.async_did_request_color_picker(current_color);
 }
 
+void PageHost::page_did_change_theme_color(Gfx::Color color)
+{
+    m_client.async_did_change_theme_color(color);
+}
+
 }
