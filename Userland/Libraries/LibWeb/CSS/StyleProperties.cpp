@@ -659,10 +659,11 @@ CSS::ContentData StyleProperties::content() const
             // FIXME: "A typographically appropriate used value for quotes is automatically chosen by the UA
             //        based on the content language of the element and/or its parent."
             if (open)
-                return depth % 2 ? "“"_string : "‘"_string;
-            return depth % 2 ? "”"_string : "’"_string;
+                return depth == 0 ? "“"_string : "‘"_string;
+            return depth == 0 ? "”"_string : "’"_string;
         case QuotesData::Type::Specified:
-            auto& level = quotes_data.strings[depth % quotes_data.strings.size()];
+            // If the depth is greater than the number of pairs, the last pair is repeated.
+            auto& level = quotes_data.strings[min(depth, quotes_data.strings.size() - 1)];
             return open ? level[0] : level[1];
         }
         VERIFY_NOT_REACHED();
