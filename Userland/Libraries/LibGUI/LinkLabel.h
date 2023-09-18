@@ -22,7 +22,7 @@ private:
     explicit LinkLabel(String text = {});
 
     ErrorOr<void> create_actions();
-    ErrorOr<void> create_menus();
+    void create_menus();
 
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;

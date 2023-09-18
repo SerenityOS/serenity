@@ -109,7 +109,7 @@ ErrorOr<void> NetworkSettingsWidget::setup()
         ::exit(1);
     }
 
-    m_adapters_combobox->set_model(TRY(GUI::ItemListModel<DeprecatedString>::try_create(m_adapter_names)));
+    m_adapters_combobox->set_model(GUI::ItemListModel<DeprecatedString>::create(m_adapter_names));
     m_adapters_combobox->on_change = [this](DeprecatedString const& text, GUI::ModelIndex const&) {
         on_switch_adapter(text);
     };

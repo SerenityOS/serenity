@@ -564,13 +564,13 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     show_pixel_grid_action->set_checked(Config::read_bool("PixelPaint"sv, "PixelGrid"sv, "Show"sv, true));
     m_view_menu->add_action(*show_pixel_grid_action);
 
-    m_show_rulers_action = TRY(GUI::Action::try_create_checkable(
+    m_show_rulers_action = GUI::Action::create_checkable(
         "Show R&ulers", { Mod_Ctrl, Key_R }, [&](auto& action) {
             Config::write_bool("PixelPaint"sv, "Rulers"sv, "Show"sv, action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->set_ruler_visibility(action.is_checked());
-        }));
+        });
     m_show_rulers_action->set_checked(Config::read_bool("PixelPaint"sv, "Rulers"sv, "Show"sv, true));
     m_view_menu->add_action(*m_show_rulers_action);
 

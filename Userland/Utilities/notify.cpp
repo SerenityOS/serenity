@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(icon_path, "Path of icon to display in the notification", "icon-path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto notification = TRY(GUI::Notification::try_create());
+    auto notification = GUI::Notification::construct();
     notification->set_text(message);
     notification->set_title(title);
     if (!icon_path.is_empty()) {

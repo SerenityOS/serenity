@@ -71,7 +71,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_adapters_fields.empend("bytes_out", "Bytes Out"_string, Gfx::TextAlignment::CenterRight);
         m_adapter_model = GUI::JsonArrayModel::create("/sys/kernel/net/adapters", move(net_adapters_fields));
         m_adapter_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_adapter_model)));
-        m_adapter_context_menu = MUST(GUI::Menu::try_create());
+        m_adapter_context_menu = GUI::Menu::construct();
         m_adapter_context_menu->add_action(GUI::Action::create(
             "Open in Network Settings...", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/network.png"sv)), [this](GUI::Action&) {
                 m_adapter_table_view->selection().for_each_index([this](GUI::ModelIndex const& index) {

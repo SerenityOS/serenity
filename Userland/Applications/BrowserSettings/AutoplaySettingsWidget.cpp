@@ -65,7 +65,7 @@ ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> AutoplaySettingsWidget::create()
             widget->set_modified(true);
         }
     });
-    widget->m_entry_context_menu = TRY(GUI::Menu::try_create());
+    widget->m_entry_context_menu = GUI::Menu::construct();
     widget->m_entry_context_menu->add_action(move(delete_action));
 
     return widget;

@@ -20,7 +20,7 @@ void Sepia::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) 
 ErrorOr<RefPtr<GUI::Widget>> Sepia::get_settings_widget()
 {
     if (!m_settings_widget) {
-        auto settings_widget = TRY(GUI::Widget::try_create());
+        auto settings_widget = GUI::Widget::construct();
         settings_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto name_label = TRY(settings_widget->try_add<GUI::Label>("Sepia Filter"_string));

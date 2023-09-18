@@ -64,7 +64,7 @@ void BucketTool::on_mousedown(Layer* layer, MouseEvent& event)
 ErrorOr<GUI::Widget*> BucketTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        auto properties_widget = TRY(GUI::Widget::try_create());
+        auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto threshold_container = TRY(properties_widget->try_add<GUI::Widget>());

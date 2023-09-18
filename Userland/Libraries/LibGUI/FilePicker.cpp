@@ -38,7 +38,7 @@ namespace GUI {
 
 ErrorOr<Optional<String>> FilePicker::get_filepath(Badge<FileSystemAccessServer::ConnectionFromClient>, i32 window_server_client_id, i32 parent_window_id, Mode mode, StringView window_title, StringView file_basename, StringView path, Optional<Vector<FileTypeFilter>> allowed_file_types)
 {
-    auto picker = TRY(FilePicker::try_create(nullptr, mode, file_basename, path, ScreenPosition::DoNotPosition, move(allowed_file_types)));
+    auto picker = FilePicker::construct(nullptr, mode, file_basename, path, ScreenPosition::DoNotPosition, move(allowed_file_types));
     auto parent_rect = ConnectionToWindowServer::the().get_window_rect_from_client(window_server_client_id, parent_window_id);
     picker->center_within(parent_rect);
     picker->constrain_to_desktop();

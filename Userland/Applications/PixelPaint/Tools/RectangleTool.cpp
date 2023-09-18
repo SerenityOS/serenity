@@ -143,7 +143,7 @@ bool RectangleTool::on_keydown(GUI::KeyEvent& event)
 ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        auto properties_widget = TRY(GUI::Widget::try_create());
+        auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto thickness_or_radius_container = TRY(properties_widget->try_add<GUI::Widget>());

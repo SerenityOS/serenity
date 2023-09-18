@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto timeline_header_container = TRY(GUI::Widget::try_create());
+    auto timeline_header_container = GUI::Widget::construct();
     timeline_header_container->set_layout<GUI::VerticalBoxLayout>();
     timeline_header_container->set_fill_with_background_color(true);
     timeline_header_container->set_shrink_to_fit(true);

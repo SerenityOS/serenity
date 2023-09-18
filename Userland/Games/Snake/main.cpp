@@ -127,11 +127,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     skin_menu->set_icon(app_icon.bitmap_for_size(16));
 
     auto add_skin_action = [&](StringView name, bool enable_color) -> ErrorOr<void> {
-        auto action = TRY(GUI::Action::try_create_checkable(name, {}, [&, enable_color](auto& action) {
+        auto action = GUI::Action::create_checkable(name, GUI::Shortcut {}, [&, enable_color](auto& action) {
             Config::write_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, action.text());
             game.set_skin_name(String::from_deprecated_string(action.text()).release_value_but_fixme_should_propagate_errors());
             change_snake_color->set_enabled(enable_color);
-        }));
+        });
 
         skin_action_group.add_action(*action);
         if (snake_skin_name == name)

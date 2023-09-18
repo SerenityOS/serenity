@@ -476,7 +476,7 @@ ErrorOr<int> run_in_desktop_mode()
         paste_action->set_enabled(data_type == "text/uri-list" && access(directory_view->path().characters(), W_OK) == 0);
     };
 
-    auto desktop_view_context_menu = TRY(GUI::Menu::try_create("Directory View"_string));
+    auto desktop_view_context_menu = GUI::Menu::construct("Directory View"_string);
 
     auto file_manager_action = GUI::Action::create("Open in File &Manager", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [&](auto&) {
         auto paths = directory_view->selected_file_paths();
@@ -518,7 +518,7 @@ ErrorOr<int> run_in_desktop_mode()
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(display_properties_action);
 
-    auto desktop_context_menu = TRY(GUI::Menu::try_create("Directory View Directory"_string));
+    auto desktop_context_menu = GUI::Menu::construct("Directory View Directory"_string);
 
     desktop_context_menu->add_action(file_manager_action);
     desktop_context_menu->add_action(open_terminal_action);
@@ -679,9 +679,9 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         directory_view->refresh();
     };
 
-    auto directory_context_menu = TRY(GUI::Menu::try_create("Directory View Directory"_string));
-    auto directory_view_context_menu = TRY(GUI::Menu::try_create("Directory View"_string));
-    auto tree_view_directory_context_menu = TRY(GUI::Menu::try_create("Tree View Directory"_string));
+    auto directory_context_menu = GUI::Menu::construct("Directory View Directory"_string);
+    auto directory_view_context_menu = GUI::Menu::construct("Directory View"_string);
+    auto tree_view_directory_context_menu = GUI::Menu::construct("Tree View Directory"_string);
 
     auto open_parent_directory_action = GUI::Action::create("Open &Parent Directory", { Mod_Alt, Key_Up }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv)), [&](GUI::Action const&) {
         directory_view->open_parent_directory();

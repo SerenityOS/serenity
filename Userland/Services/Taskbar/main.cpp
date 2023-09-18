@@ -117,7 +117,7 @@ ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
 ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
 {
     Vector<DeprecatedString> const sorted_app_categories = TRY(discover_apps_and_categories());
-    auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1"_string)); // HIGH VOLTAGE SIGN
+    auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"_string); // HIGH VOLTAGE SIGN
 
     system_menu->add_action(GUI::Action::create("&About SerenityOS", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/About"sv);

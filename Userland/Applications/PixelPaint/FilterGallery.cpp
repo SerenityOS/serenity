@@ -36,7 +36,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     VERIFY(m_config_widget);
     VERIFY(m_preview_widget);
 
-    m_error_label = GUI::Label::try_create().release_value_but_fixme_should_propagate_errors();
+    m_error_label = GUI::Label::construct();
     m_error_label->set_enabled(false);
 
     auto filter_tree_model = MUST(create_filter_tree_model(editor));

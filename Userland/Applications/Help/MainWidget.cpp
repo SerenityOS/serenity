@@ -223,7 +223,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Help"_string, TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window));
 
-    m_context_menu = TRY(GUI::Menu::try_create());
+    m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(*m_go_back_action);
     m_context_menu->add_action(*m_go_forward_action);
     m_context_menu->add_action(*m_go_home_action);
