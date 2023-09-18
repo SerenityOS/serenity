@@ -47,8 +47,10 @@ template<typename... Parameters>
 }
 
 struct FileData {
-    // Full path to the file; either absolute or relative to cwd.
-    LexicalPath full_path;
+    // The current path specified on the command line
+    StringView root_path;
+    // Path to the file relative to the current root path
+    LexicalPath relative_path;
     // The parent directory of the file.
     int dirfd { -1 };
     // The file's basename, relative to the directory.
@@ -60,6 +62,22 @@ struct FileData {
     // File type as returned from readdir(), or DT_UNKNOWN.
     unsigned char d_type { DT_UNKNOWN };
 
+    DeprecatedString full_path() const
+    {
+        if (root_path.is_empty())
+            return relative_path.string();
+
+        if (relative_path.string() == ".")
+            return root_path;
+
+        // POSIX says that a single slash should be added between the root path and the relative portion if the root path doesn't end in one
+        // any additional trailing slashes should be left unaltered.
+        if (root_path.ends_with('/'))
+            return DeprecatedString::formatted("{}{}", root_path, relative_path.string());
+
+        return DeprecatedString::formatted("{}/{}", root_path, relative_path.string());
+    }
+
     const struct stat* ensure_stat()
     {
         if (stat_is_valid)
@@ -68,7 +86,7 @@ struct FileData {
         int flags = g_follow_symlinks ? 0 : AT_SYMLINK_NOFOLLOW;
         int rc = fstatat(dirfd, basename, &stat, flags);
         if (rc < 0) {
-            perror(full_path.string().characters());
+            perror(full_path().characters());
             g_there_was_an_error = true;
             return nullptr;
         }
@@ -387,7 +405,7 @@ private:
             return stat->st_size == 0;
 
         if (S_ISDIR(stat->st_mode)) {
-            auto dir_iterator = Core::DirIterator(file_data.full_path.string(), Core::DirIterator::SkipDots);
+            auto dir_iterator = Core::DirIterator(file_data.full_path(), Core::DirIterator::SkipDots);
             return !dir_iterator.has_next();
         }
 
@@ -406,7 +424,7 @@ public:
 private:
     virtual bool evaluate(FileData& file_data) const override
     {
-        return file_data.full_path.basename().matches(m_pattern, m_case_sensitivity);
+        return file_data.relative_path.basename().matches(m_pattern, m_case_sensitivity);
     }
 
     StringView m_pattern;
@@ -423,7 +441,7 @@ public:
 private:
     virtual bool evaluate(FileData& file_data) const override
     {
-        auto haystack = file_data.full_path.string();
+        auto haystack = file_data.full_path();
         auto match_result = m_regex.match(haystack);
         return match_result.success;
     }
@@ -441,7 +459,7 @@ public:
 private:
     virtual bool evaluate(FileData& file_data) const override
     {
-        auto maybe_error = Core::System::access(file_data.full_path.string(), m_mode);
+        auto maybe_error = Core::System::access(file_data.full_path(), m_mode);
         return !maybe_error.is_error();
     }
 
@@ -546,17 +564,17 @@ private:
     {
         auto printed = false;
         if (g_print_hyperlinks) {
-            auto full_path_or_error = FileSystem::real_path(file_data.full_path.string());
+            auto full_path_or_error = FileSystem::real_path(file_data.full_path());
             if (!full_path_or_error.is_error()) {
                 auto fullpath = full_path_or_error.release_value();
                 auto url = URL::create_with_file_scheme(fullpath.to_deprecated_string());
-                out("\033]8;;{}\033\\{}{}\033]8;;\033\\", url.serialize(), file_data.full_path, m_terminator);
+                out("\033]8;;{}\033\\{}{}\033]8;;\033\\", url.serialize(), file_data.full_path(), m_terminator);
                 printed = true;
             }
         }
 
         if (!printed)
-            out("{}{}", file_data.full_path, m_terminator);
+            out("{}{}", file_data.full_path(), m_terminator);
 
         return true;
     }
@@ -581,18 +599,20 @@ private:
     virtual bool evaluate(FileData& file_data) const override
     {
         // Replace any occurrences of "{}" with the path.
-        // Since we know that the array isn't modified before we
-        // fork the process, let's just const_cast away the constness.
-        auto argv = const_cast<Vector<char*>&>(m_argv);
+        Vector<DeprecatedString> full_paths;
+        Vector<char*> argv = m_argv;
         for (auto& arg : argv) {
-            if (StringView { arg, strlen(arg) } == "{}")
-                arg = const_cast<char*>(file_data.full_path.string().characters());
+            if (StringView { arg, strlen(arg) } == "{}") {
+                auto full_path = file_data.full_path();
+                full_paths.append(full_path);
+                arg = const_cast<char*>(full_path.characters());
+            }
         }
 
         if (m_await_confirmation == AwaitConfirmation::Yes) {
             out(stderr, "\"");
             bool first = true;
-            for (auto& arg : argv) {
+            for (auto const& arg : argv) {
                 if (!first)
                     out(stderr, " ");
 
@@ -620,11 +640,8 @@ private:
             perror("fork");
             g_there_was_an_error = true;
             return false;
-        }
-
-        argv.ensure_capacity(argv.size() + 1);
-        argv.append(nullptr);
-        if (pid == 0) {
+        } else if (pid == 0) {
+            argv.append(nullptr);
             execvp(m_argv[0], argv.data());
             perror("execvp");
             exit(1);
@@ -913,7 +930,7 @@ static void walk_tree(FileData& root_data, Command& command, u32 depth = 0)
             // be a directory, but turns out it's not. This is fine though.
             return;
         }
-        perror(root_data.full_path.string().characters());
+        perror(root_data.full_path().characters());
         g_there_was_an_error = true;
         return;
     }
@@ -930,7 +947,8 @@ static void walk_tree(FileData& root_data, Command& command, u32 depth = 0)
             continue;
 
         FileData file_data {
-            root_data.full_path.append({ dirent->d_name, strlen(dirent->d_name) }),
+            root_data.root_path,
+            root_data.relative_path.append({ dirent->d_name, strlen(dirent->d_name) }),
             dirfd,
             dirent->d_name,
             (struct stat) {},
@@ -954,7 +972,7 @@ static void walk_tree(FileData& root_data, Command& command, u32 depth = 0)
     }
 
     if (errno != 0) {
-        perror(root_data.full_path.string().characters());
+        perror(root_data.full_path().characters());
         g_there_was_an_error = true;
     }
 
@@ -967,7 +985,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args.append(arguments.argv + 1, arguments.argc - 1);
 
     OwnPtr<Command> command;
-    Vector<LexicalPath> paths;
+    Vector<StringView> paths;
 
     while (!args.is_empty()) {
         char* raw_arg = args.take_first();
@@ -978,7 +996,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             args.prepend(raw_arg);
             command = parse_all_commands(args);
         } else {
-            paths.append(LexicalPath(arg));
+            paths.append(arg);
         }
     }
 
@@ -988,16 +1006,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         command = make<PrintCommand>();
 
     if (paths.is_empty())
-        paths.append(LexicalPath("."));
+        paths.append("."sv);
 
     for (auto& path : paths) {
-        DeprecatedString dirname = path.dirname();
-        DeprecatedString basename = path.basename();
+        LexicalPath lexical_path { path };
+        DeprecatedString dirname = lexical_path.dirname();
+        DeprecatedString basename = lexical_path.basename();
 
         int dirfd = TRY(Core::System::open(dirname, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
 
         FileData file_data {
             path,
+            LexicalPath { "" },
             dirfd,
             basename.characters(),
             (struct stat) {},
