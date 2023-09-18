@@ -70,7 +70,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
         return layout_parent;
 
     if (layout_parent.display().is_flex_inside() || layout_parent.display().is_grid_inside()) {
-        if (layout_parent.last_child() && layout_parent.last_child()->is_anonymous() && layout_parent.last_child()->children_are_inline())
+        if (layout_parent.last_child() && layout_parent.last_child()->is_anonymous() && layout_parent.last_child()->children_are_inline() && !layout_parent.last_child()->is_generated())
             return *layout_parent.last_child();
         layout_parent.append_child(layout_parent.create_anonymous_wrapper());
         return *layout_parent.last_child();
@@ -319,6 +319,14 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
     auto* shadow_root = is<DOM::Element>(dom_node) ? verify_cast<DOM::Element>(dom_node).shadow_root_internal() : nullptr;
 
+    // Add node for the ::before pseudo-element.
+    if (is<DOM::Element>(dom_node) && layout_node->can_have_children()) {
+        auto& element = static_cast<DOM::Element&>(dom_node);
+        push_parent(verify_cast<NodeWithStyle>(*layout_node));
+        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Before, AppendOrPrepend::Prepend));
+        pop_parent();
+    }
+
     if ((dom_node.has_children() || shadow_root) && layout_node->can_have_children()) {
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
         if (shadow_root) {
@@ -412,6 +420,8 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
         Vector<JS::Handle<Node>> sequence;
         for (auto child = parent.first_child(); child; child = child->next_sibling()) {
+            if (child->is_generated_for_before_pseudo_element())
+                continue;
             sequence.append(*child);
         }
 
@@ -426,11 +436,10 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         parent.set_children_are_inline(false);
     }
 
-    // Add nodes for the ::before and ::after pseudo-elements.
+    // Add nodes for the ::after pseudo-element.
     if (is<DOM::Element>(dom_node) && layout_node->can_have_children()) {
         auto& element = static_cast<DOM::Element&>(dom_node);
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
-        TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Before, AppendOrPrepend::Prepend));
         TRY(create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::After, AppendOrPrepend::Append));
         pop_parent();
     }
