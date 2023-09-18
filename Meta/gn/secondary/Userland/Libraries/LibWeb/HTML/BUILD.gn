@@ -129,6 +129,7 @@ source_set("HTML") {
     "NavigationHistoryEntry.cpp",
     "NavigationTransition.cpp",
     "Navigator.cpp",
+    "NavigatorBeacon.cpp",
     "NavigatorID.cpp",
     "Numbers.cpp",
     "PageTransitionEvent.cpp",
