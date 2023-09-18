@@ -396,4 +396,10 @@ void WebContentClient::did_finish_handling_input_event(bool event_was_accepted)
         m_view.on_finish_handling_input_event(event_was_accepted);
 }
 
+void WebContentClient::did_change_theme_color(Gfx::Color color)
+{
+    if (m_view.on_theme_color_change)
+        m_view.on_theme_color_change(color);
+}
+
 }

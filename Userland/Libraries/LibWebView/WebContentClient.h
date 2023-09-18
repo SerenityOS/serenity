@@ -85,6 +85,7 @@ private:
     virtual void did_request_color_picker(Color const& current_color) override;
     virtual void did_finish_handling_input_event(bool event_was_accepted) override;
     virtual void did_finish_text_test() override;
+    virtual void did_change_theme_color(Gfx::Color color) override;
 
     ViewImplementation& m_view;
 };

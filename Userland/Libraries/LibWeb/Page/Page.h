@@ -256,6 +256,8 @@ public:
 
     virtual void page_did_finish_text_test() {};
 
+    virtual void page_did_change_theme_color(Gfx::Color) { }
+
 protected:
     virtual ~PageClient() = default;
 };
