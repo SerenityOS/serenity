@@ -5,9 +5,9 @@
  */
 
 #include <Kernel/Arch/DebugOutput.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/x86_64/BochsDebugOutput.h>
 #include <Kernel/Arch/x86_64/IO.h>
-#include <Kernel/Arch/x86_64/Processor.h>
 
 namespace Kernel {
 

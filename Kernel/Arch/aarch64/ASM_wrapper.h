@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <Kernel/Arch/aarch64/Processor.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 
 namespace Kernel::Aarch64::Asm {
@@ -142,15 +142,6 @@ inline void flush_data_cache(FlatPtr start, size_t size)
                      : "memory");
     asm volatile("dsb sy" ::
                      : "memory");
-}
-
-}
-
-namespace Kernel {
-
-inline bool are_interrupts_enabled()
-{
-    return Processor::are_interrupts_enabled();
 }
 
 }

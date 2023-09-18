@@ -275,7 +275,7 @@ extern "C" UNMAP_AFTER_INIT void pre_init_finished(void)
     // to this point
 
     // The target flags will get restored upon leaving the trap
-    Scheduler::leave_on_first_switch(processor_interrupts_state());
+    Scheduler::leave_on_first_switch(Processor::interrupts_state());
 }
 
 extern "C" UNMAP_AFTER_INIT void post_init_finished(void)

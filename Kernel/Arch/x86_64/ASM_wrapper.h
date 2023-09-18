@@ -105,15 +105,6 @@ void write_dr6(FlatPtr);
 FlatPtr read_dr7();
 void write_dr7(FlatPtr);
 
-ALWAYS_INLINE static bool is_kernel_mode()
-{
-    u16 cs;
-    asm volatile(
-        "mov %%cs, %[cs] \n"
-        : [cs] "=g"(cs));
-    return (cs & 3) == 0;
-}
-
 ALWAYS_INLINE void read_tsc(u32& lsw, u32& msw)
 {
     asm volatile("rdtsc"

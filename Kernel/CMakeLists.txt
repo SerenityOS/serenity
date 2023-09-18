@@ -19,8 +19,10 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     Arch/init.cpp
-    Arch/PageFault.cpp
     Arch/DeferredCallPool.cpp
+    Arch/PageFault.cpp
+    Arch/Processor.cpp
+    Arch/TrapFrame.cpp
     Boot/CommandLine.cpp
     Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
@@ -376,7 +378,6 @@ set(KERNEL_SOURCES
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
-        Arch/Processor.cpp
 
         Arch/x86_64/CMOS.cpp
         Arch/x86_64/DebugOutput.cpp
@@ -443,7 +444,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Processor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ProcessorInfo.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/SafeMem.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/TrapFrame.cpp
     )
 
     if("${SERENITY_ARCH}" STREQUAL "x86_64")
@@ -475,7 +475,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         ${KERNEL_SOURCES}
         ${RPI_SOURCES}
         ${SOURCES_RUNNING_WITHOUT_MMU}
-        Arch/Processor.cpp
 
         Arch/aarch64/Firmware/ACPI/StaticParsing.cpp
 
@@ -494,7 +493,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/PowerState.cpp
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/SmapDisabler.cpp
-        Arch/aarch64/TrapFrame.cpp
         Arch/aarch64/vector_table.S
     )
 
@@ -592,6 +590,10 @@ set(SOURCES
 add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
+
+# We use __builtin_offsetof() on Processor, which inherits from ProcessorBase and is therefore a non-standard-layout type.
+# This is an issue on non-Itanium ABIs (and in irrelevant edge cases), so we can safely ignore it.
+add_compile_options(-Wno-invalid-offsetof)
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_compile_options(-mno-80387 -mno-mmx -mno-sse -mno-sse2)

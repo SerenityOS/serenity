@@ -23,7 +23,7 @@ public:
 
     InterruptsState lock()
     {
-        InterruptsState previous_interrupts_state = processor_interrupts_state();
+        InterruptsState previous_interrupts_state = Processor::interrupts_state();
         Processor::enter_critical();
         Processor::disable_interrupts();
         while (m_lock.exchange(1, AK::memory_order_acquire) != 0)
@@ -39,7 +39,7 @@ public:
         m_lock.store(0, AK::memory_order_release);
 
         Processor::leave_critical();
-        restore_processor_interrupts_state(previous_interrupts_state);
+        Processor::restore_interrupts_state(previous_interrupts_state);
     }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
@@ -67,7 +67,7 @@ public:
 
     InterruptsState lock()
     {
-        InterruptsState previous_interrupts_state = processor_interrupts_state();
+        InterruptsState previous_interrupts_state = Processor::interrupts_state();
         Processor::disable_interrupts();
         Processor::enter_critical();
         auto& proc = Processor::current();
@@ -96,7 +96,7 @@ public:
         }
 
         Processor::leave_critical();
-        restore_processor_interrupts_state(previous_interrupts_state);
+        Processor::restore_interrupts_state(previous_interrupts_state);
     }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const

@@ -674,7 +674,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     // and Processor::assume_context() or the next context switch.
     // If we used an InterruptDisabler that calls enable_interrupts() on exit, we might timer tick'd too soon in exec().
     Processor::enter_critical();
-    previous_interrupts_state = processor_interrupts_state();
+    previous_interrupts_state = Processor::interrupts_state();
     Processor::disable_interrupts();
 
     // NOTE: Be careful to not trigger any page faults below!
@@ -998,7 +998,7 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
     // NOTE: This code path is taken in the non-syscall case, i.e when the kernel spawns
     //       a userspace process directly (such as /bin/SystemServer on startup)
 
-    restore_processor_interrupts_state(previous_interrupts_state);
+    Processor::restore_interrupts_state(previous_interrupts_state);
     Processor::leave_critical();
     return 0;
 }

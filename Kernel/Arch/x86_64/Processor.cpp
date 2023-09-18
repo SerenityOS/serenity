@@ -35,23 +35,18 @@
 
 namespace Kernel {
 
-READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
-
 READONLY_AFTER_INIT static ProcessorContainer s_processors {};
-READONLY_AFTER_INIT Atomic<u32> Processor::g_total_processors;
 READONLY_AFTER_INIT static bool volatile s_smp_enabled;
 
 static Atomic<ProcessorMessage*> s_message_pool;
 Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
-// The compiler can't see the calls to these functions inside assembly.
-// Declare them, to avoid dead code warnings.
-extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
 extern "C" FlatPtr do_init_context(Thread* thread, u32 flags) __attribute__((used));
 extern "C" void syscall_entry();
 
-bool Processor::is_smp_enabled()
+template<typename T>
+bool ProcessorBase<T>::is_smp_enabled()
 {
     return s_smp_enabled;
 }
@@ -60,11 +55,6 @@ UNMAP_AFTER_INIT static void sse_init()
 {
     write_cr0((read_cr0() & 0xfffffffbu) | 0x2);
     write_cr4(read_cr4() | 0x600);
-}
-
-void exit_kernel_thread(void)
-{
-    Thread::current()->exit();
 }
 
 UNMAP_AFTER_INIT void Processor::cpu_detect()
@@ -601,9 +591,11 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         m_features |= CPUFeature::OSPKE;
 }
 
-UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
+template<typename T>
+UNMAP_AFTER_INIT void ProcessorBase<T>::early_initialize(u32 cpu)
 {
-    m_self = this;
+    m_self = static_cast<Processor*>(this);
+    auto self = static_cast<Processor*>(this);
 
     m_cpu = cpu;
     m_in_irq = 0;
@@ -613,10 +605,10 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
     m_scheduler_initialized = false;
     m_in_scheduler = true;
 
-    m_message_queue = nullptr;
+    self->m_message_queue = nullptr;
     m_idle_thread = nullptr;
     m_current_thread = nullptr;
-    m_info = nullptr;
+    self->m_info = nullptr;
 
     m_halt_requested = false;
     if (cpu == 0) {
@@ -628,26 +620,29 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
 
     m_deferred_call_pool.init();
 
-    cpu_setup();
-    gdt_init();
+    self->cpu_setup();
+    self->gdt_init();
 
-    VERIFY(is_initialized());   // sanity check
+    VERIFY(is_initialized());
     VERIFY(&current() == this); // sanity check
 }
 
-UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
+template<typename T>
+UNMAP_AFTER_INIT void ProcessorBase<T>::initialize(u32 cpu)
 {
     VERIFY(m_self == this);
     VERIFY(&current() == this); // sanity check
 
-    m_info = new ProcessorInfo(*this);
+    auto self = static_cast<Processor*>(this);
 
-    dmesgln("CPU[{}]: Supported features: {}", current_id(), m_info->features_string());
+    self->m_info = new ProcessorInfo(*self);
+
+    dmesgln("CPU[{}]: Supported features: {}", current_id(), self->m_info->features_string());
     if (!has_feature(CPUFeature::RDRAND))
         dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", current_id());
     dmesgln("CPU[{}]: Physical address bit width: {}", current_id(), m_physical_address_bit_width);
     dmesgln("CPU[{}]: Virtual address bit width: {}", current_id(), m_virtual_address_bit_width);
-    if (m_has_qemu_hvf_quirk)
+    if (self->m_has_qemu_hvf_quirk)
         dmesgln("CPU[{}]: Applied correction for QEMU Hypervisor.framework quirk", current_id());
 
     if (cpu == 0)
@@ -672,13 +667,13 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
         }
 
         if (has_feature(CPUFeature::HYPERVISOR))
-            detect_hypervisor();
+            self->detect_hypervisor();
     }
 
     {
         // We need to prevent races between APs starting up at the same time
         VERIFY(cpu < s_processors.size());
-        s_processors[cpu] = this;
+        s_processors[cpu] = static_cast<Processor*>(this);
     }
 }
 
@@ -765,7 +760,8 @@ DescriptorTablePointer const& Processor::get_gdtr()
     return m_gdtr;
 }
 
-ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
+template<typename T>
+ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread& thread, size_t max_frames)
 {
     FlatPtr frame_ptr = 0, ip = 0;
     Vector<FlatPtr, 32> stack_trace;
@@ -836,7 +832,7 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
         // until it returns the data back to us
         auto& proc = Processor::current();
         ErrorOr<void> result;
-        smp_unicast(
+        Processor::smp_unicast(
             thread.cpu(),
             [&]() {
                 dbgln("CPU[{}] getting stack for cpu #{}", Processor::current_id(), proc.id());
@@ -889,37 +885,19 @@ ProcessorContainer& Processor::processors()
     return s_processors;
 }
 
-Processor& Processor::by_id(u32 id)
+template<typename T>
+Processor& ProcessorBase<T>::by_id(u32 id)
 {
     return *s_processors[id];
 }
 
-void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
+template<typename T>
+void ProcessorBase<T>::exit_trap(TrapFrame& trap)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
-    trap.prev_irq_level = m_in_irq;
-    if (raise_irq)
-        m_in_irq++;
-    auto* current_thread = Processor::current_thread();
-    if (current_thread) {
-        auto& current_trap = current_thread->current_trap();
-        trap.next_trap = current_trap;
-        current_trap = &trap;
 
-        auto new_previous_mode = trap.regs->previous_mode();
-        if (current_thread->set_previous_mode(new_previous_mode) && trap.prev_irq_level == 0) {
-            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == ExecutionMode::Kernel, false);
-        }
-    } else {
-        trap.next_trap = nullptr;
-    }
-}
-
-void Processor::exit_trap(TrapFrame& trap)
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(&Processor::current() == this);
+    auto* self = static_cast<Processor*>(this);
 
     // Temporarily enter a critical section. This is to prevent critical
     // sections entered and left within e.g. smp_process_pending_messages
@@ -932,7 +910,7 @@ void Processor::exit_trap(TrapFrame& trap)
     m_in_irq = trap.prev_irq_level;
 
     if (s_smp_enabled)
-        smp_process_pending_messages();
+        self->smp_process_pending_messages();
 
     // Process the deferred call queue. Among other things, this ensures
     // that any pending thread unblocks happen before we enter the scheduler.
@@ -968,19 +946,8 @@ void Processor::exit_trap(TrapFrame& trap)
         check_invoke_scheduler();
 }
 
-void Processor::check_invoke_scheduler()
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(!m_in_irq);
-    VERIFY(!m_in_critical);
-    VERIFY(&Processor::current() == this);
-    if (m_invoke_scheduler_async && m_scheduler_initialized) {
-        m_invoke_scheduler_async = false;
-        Scheduler::invoke_async();
-    }
-}
-
-void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
+template<typename T>
+void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
     auto ptr = vaddr.as_ptr();
     while (page_count > 0) {
@@ -995,10 +962,17 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     }
 }
 
-void Processor::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
+template<typename T>
+void ProcessorBase<T>::flush_entire_tlb_local()
+{
+    write_cr3(read_cr3());
+}
+
+template<typename T>
+void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
     if (s_smp_enabled && (!Memory::is_user_address(vaddr) || Process::current().thread_count() > 1))
-        smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
+        Processor::smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
     else
         flush_tlb_local(vaddr, page_count);
 }
@@ -1042,7 +1016,8 @@ ProcessorMessage& Processor::smp_get_from_pool()
     return *msg;
 }
 
-u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
+template<typename T>
+u32 ProcessorBase<T>::smp_wake_n_idle_processors(u32 wake_count)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(wake_count > 0);
@@ -1061,7 +1036,7 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
     auto& apic = APIC::the();
     while (did_wake_count < wake_count) {
         // Try to get a set of idle CPUs and flip them to busy
-        u32 idle_mask = s_idle_cpu_mask.load(AK::MemoryOrder::memory_order_relaxed) & ~(1u << current_id);
+        u32 idle_mask = Processor::s_idle_cpu_mask.load(AK::MemoryOrder::memory_order_relaxed) & ~(1u << current_id);
         u32 idle_count = popcount(idle_mask);
         if (idle_count == 0)
             break; // No (more) idle processor available
@@ -1073,7 +1048,7 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
             found_mask |= 1u << cpu;
         }
 
-        idle_mask = s_idle_cpu_mask.fetch_and(~found_mask, AK::MemoryOrder::memory_order_acq_rel) & found_mask;
+        idle_mask = Processor::s_idle_cpu_mask.fetch_and(~found_mask, AK::MemoryOrder::memory_order_acq_rel) & found_mask;
         if (idle_mask == 0)
             continue; // All of them were flipped to busy, try again
         idle_count = popcount(idle_mask);
@@ -1091,7 +1066,8 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
     return did_wake_count;
 }
 
-UNMAP_AFTER_INIT void Processor::smp_enable()
+template<typename T>
+UNMAP_AFTER_INIT void ProcessorBase<T>::smp_enable()
 {
     size_t msg_pool_size = Processor::count() * 100u;
     size_t msg_entries_cnt = Processor::count();
@@ -1325,25 +1301,13 @@ void Processor::smp_broadcast_halt()
     APIC::the().broadcast_ipi();
 }
 
-void Processor::Processor::halt()
+template<typename T>
+void ProcessorBase<T>::halt()
 {
     if (s_smp_enabled)
-        smp_broadcast_halt();
+        Processor::smp_broadcast_halt();
 
     halt_this();
-}
-
-void Processor::deferred_call_queue(Function<void()> callback)
-{
-    // NOTE: If we are called outside of a critical section and outside
-    // of an irq handler, the function will be executed before we return!
-    ScopedCritical critical;
-    auto& cur_proc = Processor::current();
-
-    auto* entry = cur_proc.m_deferred_call_pool.get_free();
-    entry->handler_value() = move(callback);
-
-    cur_proc.m_deferred_call_pool.queue_entry(entry);
 }
 
 UNMAP_AFTER_INIT void Processor::gdt_init()
@@ -1381,28 +1345,9 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     gs_base.set((u64)this);
 }
 
-extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
 {
-    VERIFY(!are_interrupts_enabled());
-    VERIFY(is_kernel_mode());
-
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
-
-    VERIFY(to_thread == Thread::current());
-
-    Scheduler::enter_current(*from_thread);
-
-    auto in_critical = to_thread->saved_critical();
-    VERIFY(in_critical > 0);
-    Processor::restore_critical(in_critical);
-
-    // Since we got here and don't have Scheduler::context_switch in the
-    // call stack (because this is the first time we switched into this
-    // context), we need to notify the scheduler so that it can release
-    // the scheduler lock. We don't want to enable interrupts at this point
-    // as we're still in the middle of a context switch. Doing so could
-    // trigger a context switch within a context switch, leading to a crash.
-    Scheduler::leave_on_first_switch(InterruptsState::Disabled);
+    do_context_first_init(from_thread, to_thread);
 }
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
@@ -1471,7 +1416,9 @@ extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
     return Processor::current().init_context(*thread, true);
 }
 
-void Processor::assume_context(Thread& thread, InterruptsState new_interrupts_state)
+// FIXME: Share this code with other architectures.
+template<typename T>
+void ProcessorBase<T>::assume_context(Thread& thread, InterruptsState new_interrupts_state)
 {
     dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
@@ -1487,34 +1434,8 @@ void Processor::assume_context(Thread& thread, InterruptsState new_interrupts_st
     VERIFY_NOT_REACHED();
 }
 
-u64 Processor::time_spent_idle() const
-{
-    return m_idle_thread->time_in_user() + m_idle_thread->time_in_kernel();
-}
-
-void Processor::leave_critical()
-{
-    InterruptDisabler disabler;
-    current().do_leave_critical();
-}
-
-void Processor::do_leave_critical()
-{
-    VERIFY(m_in_critical > 0);
-    if (m_in_critical == 1) {
-        if (m_in_irq == 0) {
-            m_deferred_call_pool.execute_pending();
-            VERIFY(m_in_critical == 1);
-        }
-        m_in_critical = 0;
-        if (m_in_irq == 0)
-            check_invoke_scheduler();
-    } else {
-        m_in_critical = m_in_critical - 1;
-    }
-}
-
-u32 Processor::clear_critical()
+template<typename T>
+u32 ProcessorBase<T>::clear_critical()
 {
     InterruptDisabler disabler;
     auto prev_critical = in_critical();
@@ -1563,13 +1484,14 @@ NAKED void do_assume_context(Thread*, u32)
     // clang-format on
 }
 
-StringView Processor::platform_string()
+template<typename T>
+StringView ProcessorBase<T>::platform_string()
 {
     return "x86_64"sv;
 }
 
-// FIXME: For the most part this is a copy of the i386-specific function, get rid of the code duplication
-FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
+template<typename T>
+FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());
@@ -1673,11 +1595,13 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     return stack_top;
 }
 
-void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
+template<typename T>
+void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
     VERIFY(is_kernel_mode());
+    auto* self = static_cast<Processor*>(this);
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
 
@@ -1739,8 +1663,8 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         : [from_rsp] "=m" (from_thread->regs().rsp),
         [from_rbp] "=m" (from_thread->regs().rbp),
         [from_rip] "=m" (from_thread->regs().rip),
-        [tss_rsp0l] "=m" (m_tss.rsp0l),
-        [tss_rsp0h] "=m" (m_tss.rsp0h),
+        [tss_rsp0l] "=m" (self->m_tss.rsp0l),
+        [tss_rsp0h] "=m" (self->m_tss.rsp0h),
         "=d" (from_thread), // needed so that from_thread retains the correct value
         "=a" (to_thread) // needed so that to_thread retains the correct value
         : [to_rsp] "g" (to_thread->regs().rsp),
@@ -1755,14 +1679,16 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
-UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
+template<typename T>
+UNMAP_AFTER_INIT void ProcessorBase<T>::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
+    auto* self = static_cast<Processor*>(this);
 
     auto& regs = initial_thread.regs();
-    m_tss.iomapbase = sizeof(m_tss);
-    m_tss.rsp0l = regs.rsp0 & 0xffffffff;
-    m_tss.rsp0h = regs.rsp0 >> 32;
+    self->m_tss.iomapbase = sizeof(self->m_tss);
+    self->m_tss.rsp0l = regs.rsp0 & 0xffffffff;
+    self->m_tss.rsp0h = regs.rsp0 >> 32;
 
     m_scheduler_initialized = true;
 
@@ -1791,10 +1717,31 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
     VERIFY_NOT_REACHED();
 }
 
-void Processor::set_thread_specific_data(VirtualAddress thread_specific_data)
+template<typename T>
+void ProcessorBase<T>::set_thread_specific_data(VirtualAddress thread_specific_data)
 {
     MSR fs_base_msr(MSR_FS_BASE);
     fs_base_msr.set(thread_specific_data.get());
 }
 
+template<typename T>
+void ProcessorBase<T>::idle_begin() const
+{
+    Processor::s_idle_cpu_mask.fetch_or(1u << m_cpu, AK::MemoryOrder::memory_order_relaxed);
 }
+
+template<typename T>
+void ProcessorBase<T>::idle_end() const
+{
+    Processor::s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
+}
+
+template<typename T>
+void ProcessorBase<T>::wait_for_interrupt() const
+{
+    asm("hlt");
+}
+
+}
+
+#include <Kernel/Arch/ProcessorFunctions.include>
