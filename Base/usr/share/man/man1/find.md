@@ -54,6 +54,19 @@ specified commands, a `-print` command is implicitly appended.
   * `M`: mebibytes (1024 kibibytes)
   * `G`: gibibytes (1024 mebibytes)
 
+* `-path pattern`: Checks if the full file path matches the given global-style
+  pattern. This check matches against the full file name, starting from one of
+  the start points given on the command line. This means that using an absolute
+  path only makes sense in the case where the start point given on the command
+  line is an absolute path. For example, the following command will never match
+  anything:
+
+  `find bar -ipath '/foo/bar/test_file' -print`
+
+  The given path is compared against the current directory concatenated with the
+  basename of the current file. Because such a concatenation can never end in a
+  '/', specifying path argument that ends with a '/' will never match anything.
+* `-ipath pattern`: Functions identically to `-path` but is case-insensitive.
 * `-name pattern`: Checks if the file name matches the given global-style
   pattern (case sensitive).
 * `-empty`: File is either an empty regular file or a directory containing no

@@ -413,22 +413,34 @@ private:
     }
 };
 
-class NameCommand : public Command {
+class PathCommand : public Command {
 public:
-    NameCommand(char const* pattern, CaseSensitivity case_sensitivity)
+    enum class PathPart {
+        FullPath,
+        Basename
+    };
+
+    PathCommand(char const* pattern, CaseSensitivity case_sensitivity, PathPart path_part)
         : m_pattern(pattern, strlen(pattern))
         , m_case_sensitivity(case_sensitivity)
+        , m_path_part(path_part)
     {
+        if (path_part == PathPart::FullPath && m_pattern.ends_with('/'))
+            warnln("find: warning: path command will not match anything because it ends with '/'.");
     }
 
 private:
     virtual bool evaluate(FileData& file_data) const override
     {
-        return file_data.relative_path.basename().matches(m_pattern, m_case_sensitivity);
+        if (m_path_part == PathPart::Basename)
+            return file_data.relative_path.basename().matches(m_pattern, m_case_sensitivity);
+
+        return file_data.full_path().matches(m_pattern, m_case_sensitivity);
     }
 
     StringView m_pattern;
     CaseSensitivity m_case_sensitivity { CaseSensitivity::CaseSensitive };
+    PathPart m_path_part { PathPart::FullPath };
 };
 
 class RegexCommand : public Command {
@@ -766,14 +778,22 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         return make<SizeCommand>(args.take_first());
     } else if (arg == "-empty") {
         return make<EmptyCommand>();
+    } else if (arg == "-path") {
+        if (args.is_empty())
+            fatal_error("-path: requires additional arguments");
+        return make<PathCommand>(args.take_first(), CaseSensitivity::CaseSensitive, PathCommand::PathPart::FullPath);
+    } else if (arg == "-ipath") {
+        if (args.is_empty())
+            fatal_error("-ipath: requires additional arguments");
+        return make<PathCommand>(args.take_first(), CaseSensitivity::CaseInsensitive, PathCommand::PathPart::FullPath);
     } else if (arg == "-name") {
         if (args.is_empty())
             fatal_error("-name: requires additional arguments");
-        return make<NameCommand>(args.take_first(), CaseSensitivity::CaseSensitive);
+        return make<PathCommand>(args.take_first(), CaseSensitivity::CaseSensitive, PathCommand::PathPart::Basename);
     } else if (arg == "-iname") {
         if (args.is_empty())
             fatal_error("-iname: requires additional arguments");
-        return make<NameCommand>(args.take_first(), CaseSensitivity::CaseInsensitive);
+        return make<PathCommand>(args.take_first(), CaseSensitivity::CaseInsensitive, PathCommand::PathPart::Basename);
     } else if (arg == "-regex") {
         if (args.is_empty())
             fatal_error("-regex: requires additional arguments");
