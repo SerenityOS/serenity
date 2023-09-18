@@ -160,7 +160,7 @@ ErrorOr<GUI::Widget*> LassoSelectTool::get_properties_widget()
         return m_properties_widget.ptr();
     }
 
-    auto properties_widget = TRY(GUI::Widget::try_create());
+    auto properties_widget = GUI::Widget::construct();
     properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
     auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());

@@ -134,7 +134,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     });
 
-    auto context_menu = TRY(GUI::Menu::try_create());
+    auto context_menu = GUI::Menu::construct();
     context_menu->add_action(open_action);
     context_menu->add_action(copy_path_action);
     context_menu->add_action(delete_action);

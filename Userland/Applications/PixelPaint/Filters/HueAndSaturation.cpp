@@ -30,7 +30,7 @@ void HueAndSaturation::apply(Gfx::Bitmap& target_bitmap) const
 ErrorOr<RefPtr<GUI::Widget>> HueAndSaturation::get_settings_widget()
 {
     if (!m_settings_widget) {
-        auto settings_widget = TRY(GUI::Widget::try_create());
+        auto settings_widget = GUI::Widget::construct();
         settings_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto add_slider = [&](auto name, int min, int max, auto member) -> ErrorOr<void> {

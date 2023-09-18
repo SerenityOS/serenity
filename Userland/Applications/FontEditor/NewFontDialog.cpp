@@ -145,13 +145,13 @@ ErrorOr<void> NewFontDialog::build()
     TRY(m_font_weight_list.try_ensure_capacity(Gfx::font_weight_names.size()));
     for (auto& it : Gfx::font_weight_names)
         m_font_weight_list.unchecked_append(TRY(String::from_utf8(it.name)));
-    m_weight_combobox->set_model(TRY(GUI::ItemListModel<String>::try_create(m_font_weight_list)));
+    m_weight_combobox->set_model(GUI::ItemListModel<String>::create(m_font_weight_list));
     m_weight_combobox->set_selected_index(3);
 
     TRY(m_font_slope_list.try_ensure_capacity(Gfx::font_slope_names.size()));
     for (auto& it : Gfx::font_slope_names)
         m_font_slope_list.unchecked_append(TRY(String::from_utf8(it.name)));
-    m_slope_combobox->set_model(TRY(GUI::ItemListModel<String>::try_create(m_font_slope_list)));
+    m_slope_combobox->set_model(GUI::ItemListModel<String>::create(m_font_slope_list));
     m_slope_combobox->set_selected_index(0);
 
     m_presentation_spinbox->set_value(12);

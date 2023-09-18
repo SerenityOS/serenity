@@ -25,7 +25,7 @@ Filter::Filter(ImageEditor* editor)
 ErrorOr<RefPtr<GUI::Widget>> Filter::get_settings_widget()
 {
     if (!m_settings_widget) {
-        auto settings_widget = TRY(GUI::Widget::try_create());
+        auto settings_widget = GUI::Widget::construct();
         settings_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto name_label = TRY(settings_widget->try_add<GUI::Label>(TRY(String::from_utf8(filter_name()))));

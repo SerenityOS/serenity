@@ -23,8 +23,8 @@ namespace GUI {
 
 ErrorOr<NonnullRefPtr<PathBreadcrumbbar>> PathBreadcrumbbar::try_create()
 {
-    auto location_text_box = TRY(TextBox::try_create());
-    auto breadcrumbbar = TRY(Breadcrumbbar::try_create());
+    auto location_text_box = TextBox::construct();
+    auto breadcrumbbar = Breadcrumbbar::construct();
 
     auto path_breadcrumbbar = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PathBreadcrumbbar(*location_text_box, *breadcrumbbar)));
     path_breadcrumbbar->set_layout<GUI::VerticalBoxLayout>();

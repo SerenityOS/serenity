@@ -221,7 +221,7 @@ ErrorOr<void> Toolbar::update_overflow_menu()
     m_overflow_action->set_enabled(true);
     m_overflow_button->set_visible(true);
 
-    m_overflow_menu = TRY(Menu::try_create());
+    m_overflow_menu = Menu::construct();
     m_overflow_button->set_menu(m_overflow_menu);
 
     for (size_t i = marginal_index.value(); i < m_items.size(); ++i) {

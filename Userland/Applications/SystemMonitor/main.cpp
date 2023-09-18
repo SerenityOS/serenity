@@ -432,7 +432,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Application::the()->quit();
     }));
 
-    auto process_context_menu = TRY(GUI::Menu::try_create());
+    auto process_context_menu = GUI::Menu::construct();
     process_context_menu->add_action(kill_action);
     process_context_menu->add_action(stop_action);
     process_context_menu->add_action(continue_action);

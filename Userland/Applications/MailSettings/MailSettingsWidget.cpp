@@ -60,7 +60,7 @@ ErrorOr<void> MailSettingsWidget::setup()
     m_port_combobox = *find_descendant_of_type_named<GUI::ComboBox>("port_input");
     m_port_combobox->set_text(Config::read_string("Mail"sv, "Connection"sv, "Port"sv, "993"sv));
     m_port_combobox->set_only_allow_values_from_model(false);
-    m_port_combobox->set_model(*TRY(GUI::ItemListModel<DeprecatedString>::try_create(m_common_ports)));
+    m_port_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_common_ports));
     m_port_combobox->on_change = [&](auto, auto) {
         set_modified(true);
     };

@@ -414,12 +414,12 @@ ErrorOr<void> MainWidget::create_models()
     TRY(m_font_slope_list.try_ensure_capacity(Gfx::font_slope_names.size()));
     for (auto& it : Gfx::font_slope_names)
         m_font_slope_list.unchecked_append(TRY(String::from_utf8(it.name)));
-    m_slope_combobox->set_model(TRY(GUI::ItemListModel<String>::try_create(m_font_slope_list)));
+    m_slope_combobox->set_model(GUI::ItemListModel<String>::create(m_font_slope_list));
 
     TRY(m_font_weight_list.try_ensure_capacity(Gfx::font_weight_names.size()));
     for (auto& it : Gfx::font_weight_names)
         m_font_weight_list.unchecked_append(TRY(String::from_utf8(it.name)));
-    m_weight_combobox->set_model(TRY(GUI::ItemListModel<String>::try_create(m_font_weight_list)));
+    m_weight_combobox->set_model(GUI::ItemListModel<String>::create(m_font_weight_list));
 
     auto unicode_blocks = Unicode::block_display_names();
     TRY(m_unicode_block_list.try_ensure_capacity(unicode_blocks.size() + 1));
@@ -427,7 +427,7 @@ ErrorOr<void> MainWidget::create_models()
     for (auto& block : unicode_blocks)
         m_unicode_block_list.unchecked_append(TRY(String::from_utf8(block.display_name)));
 
-    m_unicode_block_model = TRY(GUI::ItemListModel<String>::try_create(m_unicode_block_list));
+    m_unicode_block_model = GUI::ItemListModel<String>::create(m_unicode_block_list);
     m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_unicode_block_model));
     m_filter_model->set_filter_term(""sv);
 

@@ -128,7 +128,7 @@ void CloneTool::on_keyup(GUI::KeyEvent& event)
 ErrorOr<GUI::Widget*> CloneTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        auto properties_widget = TRY(GUI::Widget::try_create());
+        auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto size_container = TRY(properties_widget->try_add<GUI::Widget>());

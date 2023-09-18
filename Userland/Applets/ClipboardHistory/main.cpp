@@ -84,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Clipboard::the().clear();
     });
 
-    auto entry_context_menu = TRY(GUI::Menu::try_create());
+    auto entry_context_menu = GUI::Menu::construct();
     entry_context_menu->add_action(delete_action);
     entry_context_menu->add_action(debug_dump_action);
     entry_context_menu->add_separator();

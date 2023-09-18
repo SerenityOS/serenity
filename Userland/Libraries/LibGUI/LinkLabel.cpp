@@ -23,7 +23,7 @@ ErrorOr<NonnullRefPtr<LinkLabel>> LinkLabel::try_create(String text)
 {
     auto label = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) LinkLabel(move(text))));
     TRY(label->create_actions());
-    TRY(label->create_menus());
+    label->create_menus();
     return label;
 }
 
@@ -47,13 +47,12 @@ ErrorOr<void> LinkLabel::create_actions()
     return {};
 }
 
-ErrorOr<void> LinkLabel::create_menus()
+void LinkLabel::create_menus()
 {
-    m_context_menu = TRY(Menu::try_create());
+    m_context_menu = Menu::construct();
     m_context_menu->add_action(*m_open_action);
     m_context_menu->add_separator();
     m_context_menu->add_action(*m_copy_action);
-    return {};
 }
 
 void LinkLabel::set_hovered(bool hover)

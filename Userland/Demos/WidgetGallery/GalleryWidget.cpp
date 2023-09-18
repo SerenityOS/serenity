@@ -89,7 +89,7 @@ GalleryWidget::GalleryWidget()
     m_font_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_font_button->on_click = [&](auto) {
-        auto picker = GUI::FontPicker::try_create(window(), &m_text_editor->font(), false).release_value_but_fixme_should_propagate_errors();
+        auto picker = GUI::FontPicker::construct(window(), &m_text_editor->font(), false);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {
             m_text_editor->set_font(picker->font());
         }
