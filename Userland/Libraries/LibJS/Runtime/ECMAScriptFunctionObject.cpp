@@ -661,7 +661,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     // 4. Else,
                     else {
                         // a. Let initialValue be ! env.GetBindingValue(n, false).
-                        initial_value = MUST(environment->get_binding_value(vm, id.string(), false));
+                        if (id.is_local()) {
+                            initial_value = callee_context.local_variables[id.local_variable_index()];
+                        } else {
+                            initial_value = MUST(environment->get_binding_value(vm, id.string(), false));
+                        }
                     }
 
                     // 5. Perform ! varEnv.InitializeBinding(n, initialValue).
