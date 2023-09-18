@@ -9,6 +9,7 @@
 
 #include <AK/Queue.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
@@ -28,6 +29,7 @@ public:
         String tile_layer_url { "https://tile.openstreetmap.org/{}/{}/{}.png"_string };
         LatLng center;
         int zoom;
+        bool context_menu_enabled { true };
         bool scale_enabled { true };
         int scale_max_width { 100 };
         bool attribution_enabled { true };
@@ -120,6 +122,7 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent& event) override;
     virtual void paint_event(GUI::PaintEvent&) override;
 
     void set_zoom_for_mouse_event(int zoom, GUI::MouseEvent&);
@@ -154,6 +157,8 @@ private:
     String m_tile_layer_url;
     LatLng m_center;
     int m_zoom {};
+    bool m_context_menu_enabled {};
+    RefPtr<GUI::Menu> m_context_menu;
     bool m_scale_enabled {};
     int m_scale_max_width {};
     bool m_attribution_enabled {};
