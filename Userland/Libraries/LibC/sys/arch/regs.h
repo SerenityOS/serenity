@@ -14,4 +14,6 @@
 #    include "aarch64/regs.h"
 #elif ARCH(RISCV64)
 #    include "riscv64/regs.h"
+#else
+#    error Unknown architecture
 #endif

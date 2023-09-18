@@ -40,6 +40,8 @@ RegistersModel::RegistersModel(PtraceRegisters const& regs)
     m_registers.append({ "gs", regs.gs });
 #elif ARCH(AARCH64)
     TODO_AARCH64();
+#elif ARCH(RISCV64)
+    TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif
@@ -76,6 +78,9 @@ RegistersModel::RegistersModel(PtraceRegisters const& current_regs, PtraceRegist
 #elif ARCH(AARCH64)
     (void)previous_regs;
     TODO_AARCH64();
+#elif ARCH(RISCV64)
+    (void)previous_regs;
+    TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif

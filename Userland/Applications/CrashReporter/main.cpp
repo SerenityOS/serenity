@@ -140,6 +140,12 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
     builder.appendff("x20={:p} x21={:p} x22={:p} x23={:p} x24={:p}\n", regs.x[20], regs.x[21], regs.x[22], regs.x[23], regs.x[24]);
     builder.appendff("x25={:p} x26={:p} x27={:p} x28={:p} x29={:p}\n", regs.x[25], regs.x[26], regs.x[27], regs.x[28], regs.x[29]);
     builder.appendff("x30={:p}", regs.x[30]);
+#elif ARCH(RISCV64)
+    builder.appendff("Program counter pc={:p}\n", regs.pc);
+    builder.appendff("ra={:p} sp={:p} gp={:p} tp={:p} fp={:p}\n", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[7]);
+    builder.appendff("a0={:p} a1={:p} a2={:p} a3={:p} a4={:p} a5={:p} a6={:p} a7={:p}\n", regs.x[9], regs.x[10], regs.x[11], regs.x[12], regs.x[13], regs.x[14], regs.x[15], regs.x[16]);
+    builder.appendff("t0={:p} t1={:p} t2={:p} t3={:p} t4={:p} t5={:p} t6={:p}\n", regs.x[4], regs.x[5], regs.x[6], regs.x[27], regs.x[28], regs.x[29], regs.x[30]);
+    builder.appendff("s1={:p} s2={:p} s3={:p} s4={:p} s5={:p} s6={:p} s7={:p} s8={:p} s9={:p} s10={:p} s11={:p}\n", regs.x[8], regs.x[17], regs.x[18], regs.x[19], regs.x[20], regs.x[21], regs.x[22], regs.x[23], regs.x[24], regs.x[25], regs.x[26]);
 #else
 #    error Unknown architecture
 #endif
