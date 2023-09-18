@@ -361,6 +361,82 @@ void MapWidget::clear_tile_queue()
     m_tiles.remove_all_matching([](auto, auto const& value) -> bool { return !value; });
 }
 
+// Iterates from the center (0,0) outwards, towards a certain width or height (inclusive).
+// The current iteration algorithm is a basic generator-like spiral algorithm adapted for C++ iterators.
+template<Integral T>
+class CenterOutwardsIterable {
+public:
+    using ElementType = T;
+
+    constexpr CenterOutwardsIterable(T width, T height)
+        : m_width(move(width))
+        , m_height(move(height))
+    {
+    }
+
+    struct Iterator {
+        T width;
+        T height;
+
+        T index { 0 };
+        T current_x { 0 };
+        T current_y { 0 };
+
+        Gfx::Point<T> last_valid_position { current_x, current_y };
+
+        constexpr Iterator(T width, T height)
+            : width(move(width))
+            , height(move(height))
+        {
+        }
+
+        constexpr Iterator end() const
+        {
+            auto end = *this;
+            end.index = AK::max(width, height) * AK::max(width, height);
+            return end;
+        }
+        constexpr bool is_end() const { return *this == end(); }
+
+        constexpr bool operator==(Iterator const& other) const { return index == other.index; }
+        constexpr bool operator!=(Iterator const& other) const { return index != other.index; }
+
+        constexpr Gfx::Point<T> operator*() const { return last_valid_position; }
+
+        constexpr Iterator operator++()
+        {
+            auto found_valid_position = false;
+
+            while (!found_valid_position && !is_end()) {
+                // Translating the coordinates makes the range check simpler:
+                T xp = current_x + width / 2;
+                T yp = current_y + height / 2;
+                if (xp >= 0 && xp <= width && yp >= 0 && yp <= height) {
+                    last_valid_position = { current_x, current_y };
+                    found_valid_position = true;
+                }
+
+                // Figure out in which of the four squares we are.
+                if (AK::abs(current_x) <= AK::abs(current_y) && (current_x != current_y || current_x >= 0))
+                    current_x += ((current_y >= 0) ? 1 : -1);
+                else
+                    current_y += ((current_x >= 0) ? -1 : 1);
+
+                ++index;
+            }
+
+            return *this;
+        }
+    };
+
+    constexpr Iterator begin() { return Iterator { m_width, m_height }; }
+    constexpr Iterator end() { return begin().end(); }
+
+private:
+    T m_width;
+    T m_height;
+};
+
 void MapWidget::paint_map(GUI::Painter& painter)
 {
     int center_tile_x = longitude_to_tile_x(m_center.longitude, m_zoom);
@@ -371,70 +447,68 @@ void MapWidget::paint_map(GUI::Painter& painter)
     // Draw grid around center tile
     int grid_width = (width() + TILE_SIZE - 1) / TILE_SIZE;
     int grid_height = (height() + TILE_SIZE - 1) / TILE_SIZE;
-    for (int dy = -(grid_height / 2) - 1; dy < ((grid_height + 2 - 1) / 2) + 1; ++dy) {
-        for (int dx = -(grid_width / 2) - 1; dx < ((grid_width + 2 - 1) / 2) + 1; ++dx) {
-            int tile_x = center_tile_x + dx;
-            int tile_y = center_tile_y + dy;
+    for (auto const delta : CenterOutwardsIterable { grid_width + 1, grid_height + 1 }) {
+        int tile_x = center_tile_x + delta.x();
+        int tile_y = center_tile_y + delta.y();
 
-            // Only draw tiles that exist
-            if (tile_x < 0 || tile_y < 0 || tile_x > pow(2, m_zoom) - 1 || tile_y > pow(2, m_zoom) - 1)
-                continue;
+        // Only draw tiles that exist
+        if (tile_x < 0 || tile_y < 0 || tile_x > pow(2, m_zoom) - 1 || tile_y > pow(2, m_zoom) - 1)
+            continue;
 
-            auto tile_rect = Gfx::IntRect {
-                static_cast<int>(width() / 2 + dx * TILE_SIZE - offset_x),
-                static_cast<int>(height() / 2 + dy * TILE_SIZE - offset_y),
-                TILE_SIZE,
-                TILE_SIZE,
-            };
-            if (!tile_rect.intersects(frame_inner_rect()))
-                continue;
+        auto tile_rect = Gfx::IntRect {
+            static_cast<int>(width() / 2 + delta.x() * TILE_SIZE - offset_x),
+            static_cast<int>(height() / 2 + delta.y() * TILE_SIZE - offset_y),
+            TILE_SIZE,
+            TILE_SIZE,
+        };
+        if (!tile_rect.intersects(frame_inner_rect()))
+            continue;
 
-            // Get tile, when it has a loaded image draw it at the right position
-            auto tile_image = get_tile_image(tile_x, tile_y, m_zoom, TileDownloadBehavior::Download);
-            auto const tile_source = Gfx::IntRect { 0, 0, TILE_SIZE, TILE_SIZE };
-            if (tile_image.has_value()) {
-                painter.blit(tile_rect.location(), *tile_image.release_value(), tile_source, 1);
-                continue;
-            }
+        // Get tile, when it has a loaded image draw it at the right position
+        auto tile_image = get_tile_image(tile_x, tile_y, m_zoom, TileDownloadBehavior::Download);
+        auto const tile_source = Gfx::IntRect { 0, 0, TILE_SIZE, TILE_SIZE };
+        if (tile_image.has_value()) {
+            painter.blit(tile_rect.location(), *tile_image.release_value(), tile_source, 1);
+            continue;
+        }
 
-            // Fallback: try to compose the tile from already cached tiles from a higher zoom level
-            auto cached_tiles_used = 0;
-            if (m_zoom < ZOOM_MAX) {
-                auto const child_top_left_tile_x = tile_x * 2;
-                auto const child_top_left_tile_y = tile_y * 2;
-                for (auto child_tile_x = child_top_left_tile_x; child_tile_x <= child_top_left_tile_x + 1; ++child_tile_x) {
-                    for (auto child_tile_y = child_top_left_tile_y; child_tile_y <= child_top_left_tile_y + 1; ++child_tile_y) {
-                        auto child_tile = get_tile_image(child_tile_x, child_tile_y, m_zoom + 1, TileDownloadBehavior::DoNotDownload);
-                        if (!child_tile.has_value())
-                            continue;
+        // Fallback: try to compose the tile from already cached tiles from a higher zoom level
+        auto cached_tiles_used = 0;
+        if (m_zoom < ZOOM_MAX) {
+            auto const child_top_left_tile_x = tile_x * 2;
+            auto const child_top_left_tile_y = tile_y * 2;
+            for (auto child_tile_x = child_top_left_tile_x; child_tile_x <= child_top_left_tile_x + 1; ++child_tile_x) {
+                for (auto child_tile_y = child_top_left_tile_y; child_tile_y <= child_top_left_tile_y + 1; ++child_tile_y) {
+                    auto child_tile = get_tile_image(child_tile_x, child_tile_y, m_zoom + 1, TileDownloadBehavior::DoNotDownload);
+                    if (!child_tile.has_value())
+                        continue;
 
-                        auto target_rect = tile_rect;
-                        target_rect.set_size(TILE_SIZE / 2, TILE_SIZE / 2);
-                        if ((child_tile_x & 1) > 0)
-                            target_rect.translate_by(TILE_SIZE / 2, 0);
-                        if ((child_tile_y & 1) > 0)
-                            target_rect.translate_by(0, TILE_SIZE / 2);
+                    auto target_rect = tile_rect;
+                    target_rect.set_size(TILE_SIZE / 2, TILE_SIZE / 2);
+                    if ((child_tile_x & 1) > 0)
+                        target_rect.translate_by(TILE_SIZE / 2, 0);
+                    if ((child_tile_y & 1) > 0)
+                        target_rect.translate_by(0, TILE_SIZE / 2);
 
-                        painter.draw_scaled_bitmap(target_rect, *child_tile.release_value(), tile_source, 1.f, Gfx::Painter::ScalingMode::BoxSampling);
-                        ++cached_tiles_used;
-                    }
+                    painter.draw_scaled_bitmap(target_rect, *child_tile.release_value(), tile_source, 1.f, Gfx::Painter::ScalingMode::BoxSampling);
+                    ++cached_tiles_used;
                 }
             }
+        }
 
-            // Fallback: try to use an already cached tile from a lower zoom level
-            // Note: we only want to try this if we did not find exactly 4 cached child tiles in the previous fallback (i.e. there are gaps)
-            if (m_zoom > ZOOM_MIN && cached_tiles_used < 4) {
-                auto const parent_tile_x = tile_x / 2;
-                auto const parent_tile_y = tile_y / 2;
-                auto larger_tile = get_tile_image(parent_tile_x, parent_tile_y, m_zoom - 1, TileDownloadBehavior::DoNotDownload);
-                if (larger_tile.has_value()) {
-                    auto source_rect = Gfx::IntRect { 0, 0, TILE_SIZE / 2, TILE_SIZE / 2 };
-                    if ((tile_x & 1) > 0)
-                        source_rect.translate_by(TILE_SIZE / 2, 0);
-                    if ((tile_y & 1) > 0)
-                        source_rect.translate_by(0, TILE_SIZE / 2);
-                    painter.draw_scaled_bitmap(tile_rect, *larger_tile.release_value(), source_rect, 1.f, Gfx::Painter::ScalingMode::BilinearBlend);
-                }
+        // Fallback: try to use an already cached tile from a lower zoom level
+        // Note: we only want to try this if we did not find exactly 4 cached child tiles in the previous fallback (i.e. there are gaps)
+        if (m_zoom > ZOOM_MIN && cached_tiles_used < 4) {
+            auto const parent_tile_x = tile_x / 2;
+            auto const parent_tile_y = tile_y / 2;
+            auto larger_tile = get_tile_image(parent_tile_x, parent_tile_y, m_zoom - 1, TileDownloadBehavior::DoNotDownload);
+            if (larger_tile.has_value()) {
+                auto source_rect = Gfx::IntRect { 0, 0, TILE_SIZE / 2, TILE_SIZE / 2 };
+                if ((tile_x & 1) > 0)
+                    source_rect.translate_by(TILE_SIZE / 2, 0);
+                if ((tile_y & 1) > 0)
+                    source_rect.translate_by(0, TILE_SIZE / 2);
+                painter.draw_scaled_bitmap(tile_rect, *larger_tile.release_value(), source_rect, 1.f, Gfx::Painter::ScalingMode::BilinearBlend);
             }
         }
     }
