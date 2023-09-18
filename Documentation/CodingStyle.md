@@ -296,6 +296,35 @@ void MyClass::get_some_value(OutArgumentType* outArgument) const
 
 ### "using" Statements
 
+In C++ implementation files, do not use "using" declarations of any kind to import names in the standard template library. Directly qualify the names at the point they're used instead.
+
+###### Right:
+
+```cpp
+// File.cpp
+
+std::swap(a, b);
+c = std::numeric_limits<int>::max()
+```
+
+###### Wrong:
+
+```cpp
+// File.cpp
+
+using std::swap;
+swap(a, b);
+```
+
+###### Wrong:
+
+```cpp
+// File.cpp
+
+using namespace std;
+swap(a, b);
+```
+
 In header files in the AK sub-library, however, it is acceptable to use "using" declarations at the end of the file to import one or more names in the AK namespace into the global scope.
 
 ###### Right:
@@ -332,35 +361,6 @@ namespace AK {
 } // namespace AK
 
 using AK::SomethingOrOther;
-```
-
-In C++ implementation files, do not use "using" declarations of any kind to import names in the standard template library. Directly qualify the names at the point they're used instead.
-
-###### Right:
-
-```cpp
-// File.cpp
-
-std::swap(a, b);
-c = std::numeric_limits<int>::max()
-```
-
-###### Wrong:
-
-```cpp
-// File.cpp
-
-using std::swap;
-swap(a, b);
-```
-
-###### Wrong:
-
-```cpp
-// File.cpp
-
-using namespace std;
-swap(a, b);
 ```
 
 ### Types
