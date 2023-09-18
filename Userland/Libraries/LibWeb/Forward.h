@@ -335,7 +335,6 @@ class HTMLAnchorElement;
 class HTMLAreaElement;
 class HTMLAudioElement;
 class HTMLBaseElement;
-class HTMLBlinkElement;
 class HTMLBodyElement;
 class HTMLBRElement;
 class HTMLButtonElement;

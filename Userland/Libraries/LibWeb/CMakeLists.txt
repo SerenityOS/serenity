@@ -272,7 +272,6 @@ set(SOURCES
     HTML/HTMLAudioElement.cpp
     HTML/HTMLBRElement.cpp
     HTML/HTMLBaseElement.cpp
-    HTML/HTMLBlinkElement.cpp
     HTML/HTMLBodyElement.cpp
     HTML/HTMLButtonElement.cpp
     HTML/HTMLCanvasElement.cpp

@@ -39,7 +39,6 @@ source_set("HTML") {
     "HTMLAudioElement.cpp",
     "HTMLBRElement.cpp",
     "HTMLBaseElement.cpp",
-    "HTMLBlinkElement.cpp",
     "HTMLBodyElement.cpp",
     "HTMLButtonElement.cpp",
     "HTMLCanvasElement.cpp",

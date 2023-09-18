@@ -14,7 +14,6 @@
 #include <LibWeb/HTML/HTMLAudioElement.h>
 #include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/HTML/HTMLBaseElement.h>
-#include <LibWeb/HTML/HTMLBlinkElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -282,8 +281,6 @@ static JS::NonnullGCPtr<Element> create_html_element(JS::Realm& realm, Document&
         return realm.heap().allocate<HTML::HTMLAudioElement>(realm, document, move(qualified_name));
     if (lowercase_tag_name == HTML::TagNames::base)
         return realm.heap().allocate<HTML::HTMLBaseElement>(realm, document, move(qualified_name));
-    if (lowercase_tag_name == HTML::TagNames::blink)
-        return realm.heap().allocate<HTML::HTMLBlinkElement>(realm, document, move(qualified_name));
     if (lowercase_tag_name == HTML::TagNames::body)
         return realm.heap().allocate<HTML::HTMLBodyElement>(realm, document, move(qualified_name));
     if (lowercase_tag_name == HTML::TagNames::br)
