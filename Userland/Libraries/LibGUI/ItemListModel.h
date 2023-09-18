@@ -36,17 +36,6 @@ public:
         return adopt_ref(*new ItemListModel<T, Container>(data, row_count));
     }
 
-    static ErrorOr<NonnullRefPtr<ItemListModel>> try_create(Container const& data, ColumnNamesT const& column_names, Optional<size_t> const& row_count = {})
-    requires(IsTwoDimensional)
-    {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) ItemListModel<T, Container, ColumnNameListType>(data, column_names, row_count));
-    }
-    static ErrorOr<NonnullRefPtr<ItemListModel>> try_create(Container const& data, Optional<size_t> const& row_count = {})
-    requires(!IsTwoDimensional)
-    {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) ItemListModel<T, Container>(data, row_count));
-    }
-
     virtual ~ItemListModel() override = default;
 
     virtual int row_count(ModelIndex const& index) const override
