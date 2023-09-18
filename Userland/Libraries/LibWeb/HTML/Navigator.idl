@@ -1,4 +1,5 @@
 #import <HTML/MimeTypeArray.idl>
+#import <HTML/NavigatorBeacon.idl>
 #import <HTML/NavigatorID.idl>
 #import <HTML/NavigatorLanguage.idl>
 #import <HTML/NavigatorOnLine.idl>
@@ -38,6 +39,7 @@ interface mixin NavigatorAutomationInformation {
     readonly attribute boolean webdriver;
 };
 
+Navigator includes NavigatorBeacon;
 Navigator includes NavigatorID;
 Navigator includes NavigatorLanguage;
 Navigator includes NavigatorOnLine;

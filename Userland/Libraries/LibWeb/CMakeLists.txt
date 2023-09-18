@@ -362,6 +362,7 @@ set(SOURCES
     HTML/NavigationHistoryEntry.cpp
     HTML/NavigationTransition.cpp
     HTML/Navigator.cpp
+    HTML/NavigatorBeacon.cpp
     HTML/NavigatorID.cpp
     HTML/Numbers.cpp
     HTML/PageTransitionEvent.cpp
