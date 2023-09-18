@@ -65,11 +65,6 @@ NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, Shortcut c
     return adopt_ref(*new Action(move(text), shortcut, Shortcut {}, move(icon), move(callback), parent, true));
 }
 
-ErrorOr<NonnullRefPtr<Action>> Action::try_create_checkable(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent)
-{
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Action(move(text), shortcut, Shortcut {}, move(callback), parent, true));
-}
-
 RefPtr<Action> Action::find_action_for_shortcut(Core::EventReceiver& object, Shortcut const& shortcut)
 {
     RefPtr<Action> found_action = nullptr;
