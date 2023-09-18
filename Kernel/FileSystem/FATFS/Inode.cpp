@@ -14,14 +14,16 @@ namespace Kernel {
 ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, EntryLocation inode_metadata_location, Vector<FATLongFileNameEntry> const& lfn_entries)
 {
     auto filename = TRY(compute_filename(entry, lfn_entries));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, inode_metadata_location, move(filename)));
+    auto block_list = TRY(compute_block_list(fs, (((u32)entry.first_cluster_high) << 16) | entry.first_cluster_low));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, inode_metadata_location, move(filename), block_list));
 }
 
-FATInode::FATInode(FATFS& fs, FATEntry entry, EntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename)
+FATInode::FATInode(FATFS& fs, FATEntry entry, EntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename, Vector<BlockBasedFileSystem::BlockIndex> const& block_list)
     : Inode(fs, *reinterpret_cast<u64*>(&inode_metadata_location.block) * fs.m_device_block_size + inode_metadata_location.entry * sizeof(FATEntry))
     , m_entry(entry)
     , m_inode_metadata_location(inode_metadata_location)
     , m_filename(move(filename))
+    , m_block_list(block_list)
 {
     dbgln_if(FAT_DEBUG, "FATFS: Creating inode {} with filename \"{}\"", index(), m_filename);
 
@@ -36,20 +38,18 @@ FATInode::FATInode(FATFS& fs, FATEntry entry, EntryLocation inode_metadata_locat
         .ctime = time_from_packed_dos(m_entry.creation_date, m_entry.creation_time),
         .mtime = time_from_packed_dos(m_entry.modification_date, m_entry.modification_time),
         .dtime = {},
-        .block_count = 0,
-        .block_size = 0,
+        .block_count = m_block_list.size(),
+        .block_size = fs.logical_block_size(),
         .major_device = 0,
         .minor_device = 0,
     };
 }
 
-ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
+ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list(FATFS& fs, u32 first_cluster)
 {
-    VERIFY(m_inode_lock.is_locked());
+    dbgln_if(FAT_DEBUG, "FATFS: computing block list starting with cluster {}", first_cluster);
 
-    dbgln_if(FAT_DEBUG, "FATFS: computing block list for inode {}", index());
-
-    u32 cluster = first_cluster();
+    u32 cluster = first_cluster;
 
     Vector<BlockBasedFileSystem::BlockIndex> block_list;
 
@@ -57,13 +57,13 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
         return block_list;
 
     while (cluster < no_more_clusters) {
-        dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to inode {}'s cluster chain", cluster, index());
+        dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to cluster chain starting with {}", cluster, first_cluster);
 
-        BlockBasedFileSystem::BlockIndex first_block = fs().first_block_of_cluster(cluster);
-        for (u8 i = 0; i < fs().boot_record()->sectors_per_cluster; i++)
+        BlockBasedFileSystem::BlockIndex first_block = fs.first_block_of_cluster(cluster);
+        for (u8 i = 0; i < fs.boot_record()->sectors_per_cluster; i++)
             TRY(block_list.try_append(BlockBasedFileSystem::BlockIndex { first_block.value() + i }));
 
-        cluster = TRY(fs().fat_read(cluster));
+        cluster = TRY(fs.fat_read(cluster));
     }
 
     return block_list;
@@ -74,9 +74,6 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
     VERIFY(m_inode_lock.is_locked());
 
     dbgln_if(FAT_DEBUG, "FATFS: reading block list for inode {} ({} blocks)", index(), m_block_list.size());
-
-    if (m_block_list.is_empty())
-        m_block_list = TRY(compute_block_list());
 
     auto builder = TRY(KBufferBuilder::try_create());
 

@@ -33,7 +33,7 @@ public:
     FATFS const& fs() const { return static_cast<FATFS const&>(Inode::fs()); }
 
 private:
-    FATInode(FATFS&, FATEntry, EntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename);
+    FATInode(FATFS&, FATEntry, EntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename, Vector<BlockBasedFileSystem::BlockIndex> const& block_list);
 
     static constexpr u32 no_more_clusters = 0x0FFFFFF8;
 
@@ -48,8 +48,8 @@ private:
 
     static ErrorOr<NonnullOwnPtr<KString>> compute_filename(FATEntry&, Vector<FATLongFileNameEntry> const& = {});
     static StringView byte_terminated_string(StringView, u8);
+    static ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list(FATFS& fs, u32 first_cluster);
 
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
     ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);
     u32 first_cluster() const;
