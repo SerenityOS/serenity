@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
-#include <Kernel/Arch/aarch64/Processor.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Library/Panic.h>
 

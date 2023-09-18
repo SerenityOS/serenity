@@ -22,15 +22,10 @@
 
 namespace Kernel {
 
-extern "C" void thread_context_first_enter(void);
-extern "C" void exit_kernel_thread(void);
-extern "C" void do_assume_context(Thread* thread, u32 new_interrupts_state);
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread) __attribute__((used));
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
-extern "C" FlatPtr do_init_context(Thread* thread, u32 new_interrupts_state) __attribute__((used));
 
 Processor* g_current_processor;
-READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
 
 static void store_fpu_state(FPUState* fpu_state)
 {
@@ -78,7 +73,8 @@ static void load_fpu_state(FPUState* fpu_state)
         "\n" ::[fpu_state] "r"(fpu_state));
 }
 
-void Processor::early_initialize(u32 cpu)
+template<typename T>
+void ProcessorBase<T>::early_initialize(u32 cpu)
 {
     VERIFY(g_current_processor == nullptr);
     m_cpu = cpu;
@@ -86,10 +82,11 @@ void Processor::early_initialize(u32 cpu)
     m_physical_address_bit_width = detect_physical_address_bit_width();
     m_virtual_address_bit_width = detect_virtual_address_bit_width();
 
-    g_current_processor = this;
+    g_current_processor = static_cast<Processor*>(this);
 }
 
-void Processor::initialize(u32)
+template<typename T>
+void ProcessorBase<T>::initialize(u32)
 {
     m_deferred_call_pool.init();
 
@@ -102,14 +99,16 @@ void Processor::initialize(u32)
     store_fpu_state(&s_clean_fpu_state);
 }
 
-[[noreturn]] void Processor::halt()
+template<typename T>
+[[noreturn]] void ProcessorBase<T>::halt()
 {
     disable_interrupts();
     for (;;)
         asm volatile("wfi");
 }
 
-void Processor::flush_tlb_local(VirtualAddress, size_t)
+template<typename T>
+void ProcessorBase<T>::flush_tlb_local(VirtualAddress, size_t)
 {
     // FIXME: Figure out how to flush a single page
     asm volatile("dsb ishst");
@@ -118,7 +117,8 @@ void Processor::flush_tlb_local(VirtualAddress, size_t)
     asm volatile("isb");
 }
 
-void Processor::flush_entire_tlb_local()
+template<typename T>
+void ProcessorBase<T>::flush_entire_tlb_local()
 {
     asm volatile("dsb ishst");
     asm volatile("tlbi vmalle1");
@@ -126,34 +126,14 @@ void Processor::flush_entire_tlb_local()
     asm volatile("isb");
 }
 
-void Processor::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, size_t page_count)
+template<typename T>
+void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, size_t page_count)
 {
     flush_tlb_local(vaddr, page_count);
 }
 
-void Processor::leave_critical()
-{
-    InterruptDisabler disabler;
-    current().do_leave_critical();
-}
-
-void Processor::do_leave_critical()
-{
-    VERIFY(m_in_critical > 0);
-    if (m_in_critical == 1) {
-        if (m_in_irq == 0) {
-            m_deferred_call_pool.execute_pending();
-            VERIFY(m_in_critical == 1);
-        }
-        m_in_critical = 0;
-        if (m_in_irq == 0)
-            check_invoke_scheduler();
-    } else {
-        m_in_critical = m_in_critical - 1;
-    }
-}
-
-u32 Processor::clear_critical()
+template<typename T>
+u32 ProcessorBase<T>::clear_critical()
 {
     InterruptDisabler disabler;
     auto prev_critical = in_critical();
@@ -164,19 +144,16 @@ u32 Processor::clear_critical()
     return prev_critical;
 }
 
-u64 Processor::time_spent_idle() const
-{
-    return m_idle_thread->time_in_user() + m_idle_thread->time_in_kernel();
-}
-
-u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
+template<typename T>
+u32 ProcessorBase<T>::smp_wake_n_idle_processors(u32 wake_count)
 {
     (void)wake_count;
     // FIXME: Actually wake up other cores when SMP is supported for aarch64.
     return 0;
 }
 
-void Processor::initialize_context_switching(Thread& initial_thread)
+template<typename T>
+void ProcessorBase<T>::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
 
@@ -203,7 +180,8 @@ void Processor::initialize_context_switching(Thread& initial_thread)
     VERIFY_NOT_REACHED();
 }
 
-void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
+template<typename T>
+void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
@@ -307,7 +285,9 @@ extern "C" FlatPtr do_init_context(Thread* thread, u32 new_interrupts_state)
     return Processor::current().init_context(*thread, true);
 }
 
-void Processor::assume_context(Thread& thread, InterruptsState new_interrupts_state)
+// FIXME: Share this code with other architectures.
+template<typename T>
+void ProcessorBase<T>::assume_context(Thread& thread, InterruptsState new_interrupts_state)
 {
     dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
@@ -322,7 +302,8 @@ void Processor::assume_context(Thread& thread, InterruptsState new_interrupts_st
     VERIFY_NOT_REACHED();
 }
 
-FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
+template<typename T>
+FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(g_scheduler_lock.is_locked());
     if (leave_crit) {
@@ -381,28 +362,9 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     return stack_top;
 }
 
-void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(&Processor::current() == this);
-    // FIXME: Figure out if we need prev_irq_level, see duplicated code in Kernel/Arch/x86/common/Processor.cpp
-    if (raise_irq)
-        m_in_irq++;
-    auto* current_thread = Processor::current_thread();
-    if (current_thread) {
-        auto& current_trap = current_thread->current_trap();
-        trap.next_trap = current_trap;
-        current_trap = &trap;
-        auto new_previous_mode = trap.regs->previous_mode();
-        if (current_thread->set_previous_mode(new_previous_mode)) {
-            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == ExecutionMode::Kernel, false);
-        }
-    } else {
-        trap.next_trap = nullptr;
-    }
-}
-
-void Processor::exit_trap(TrapFrame& trap)
+// FIXME: Figure out if we can fully share this code with x86.
+template<typename T>
+void ProcessorBase<T>::exit_trap(TrapFrame& trap)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
@@ -449,24 +411,13 @@ void Processor::exit_trap(TrapFrame& trap)
         check_invoke_scheduler();
 }
 
-ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
+template<typename T>
+ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread& thread, size_t max_frames)
 {
     (void)thread;
     (void)max_frames;
     dbgln("FIXME: Implement Processor::capture_stack_trace() for AArch64");
     return Vector<FlatPtr, 32> {};
-}
-
-void Processor::check_invoke_scheduler()
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(!m_in_irq);
-    VERIFY(!m_in_critical);
-    VERIFY(&Processor::current() == this);
-    if (m_invoke_scheduler_async && m_scheduler_initialized) {
-        m_invoke_scheduler_async = false;
-        Scheduler::invoke_async();
-    }
 }
 
 NAKED void thread_context_first_enter(void)
@@ -498,32 +449,9 @@ NAKED void do_assume_context(Thread*, u32)
     // clang-format on
 }
 
-void exit_kernel_thread(void)
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread)
 {
-    Thread::current()->exit();
-}
-
-extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread)
-{
-    VERIFY(!are_interrupts_enabled());
-
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
-
-    VERIFY(to_thread == Thread::current());
-
-    Scheduler::enter_current(*from_thread);
-
-    auto in_critical = to_thread->saved_critical();
-    VERIFY(in_critical > 0);
-    Processor::restore_critical(in_critical);
-
-    // Since we got here and don't have Scheduler::context_switch in the
-    // call stack (because this is the first time we switched into this
-    // context), we need to notify the scheduler so that it can release
-    // the scheduler lock. We don't want to enable interrupts at this point
-    // as we're still in the middle of a context switch. Doing so could
-    // trigger a context switch within a context switch, leading to a crash.
-    Scheduler::leave_on_first_switch(InterruptsState::Disabled);
+    do_context_first_init(from_thread, to_thread);
 }
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
@@ -553,27 +481,31 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     load_fpu_state(&to_thread->fpu_state());
 }
 
-StringView Processor::platform_string()
+template<typename T>
+StringView ProcessorBase<T>::platform_string()
 {
     return "aarch64"sv;
 }
 
-void Processor::set_thread_specific_data(VirtualAddress thread_specific_data)
+template<typename T>
+void ProcessorBase<T>::set_thread_specific_data(VirtualAddress thread_specific_data)
 {
     Aarch64::Asm::set_tpidr_el0(thread_specific_data.get());
 }
 
-void Processor::deferred_call_queue(Function<void()> callback)
+template<typename T>
+void ProcessorBase<T>::wait_for_interrupt() const
 {
-    // NOTE: If we are called outside of a critical section and outside
-    // of an irq handler, the function will be executed before we return!
-    ScopedCritical critical;
-    auto& cur_proc = Processor::current();
+    asm("wfi");
+}
 
-    auto* entry = cur_proc.m_deferred_call_pool.get_free();
-    entry->handler_value() = move(callback);
-
-    cur_proc.m_deferred_call_pool.queue_entry(entry);
+template<typename T>
+Processor& ProcessorBase<T>::by_id(u32 id)
+{
+    (void)id;
+    TODO_AARCH64();
 }
 
 }
+
+#include <Kernel/Arch/ProcessorFunctions.include>
