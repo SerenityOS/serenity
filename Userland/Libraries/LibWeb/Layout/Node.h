@@ -156,9 +156,6 @@ public:
     void removed_from(Node&) { }
     void children_changed() { }
 
-    bool is_visible() const { return m_visible; }
-    void set_visible(bool visible) { m_visible = visible; }
-
     virtual void set_needs_display();
 
     bool children_are_inline() const { return m_children_are_inline; }
@@ -194,7 +191,6 @@ private:
 
     bool m_anonymous { false };
     bool m_has_style { false };
-    bool m_visible { true };
     bool m_children_are_inline { false };
     SelectionState m_selection_state { SelectionState::None };
 

@@ -40,6 +40,11 @@ PaintableBox::~PaintableBox()
 {
 }
 
+bool PaintableBox::is_visible() const
+{
+    return computed_values().visibility() == CSS::Visibility::Visible && computed_values().opacity() != 0;
+}
+
 void PaintableBox::invalidate_stacking_context()
 {
     m_stacking_context = nullptr;

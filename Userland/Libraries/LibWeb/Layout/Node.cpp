@@ -640,8 +640,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto maybe_visibility = computed_style.visibility(); maybe_visibility.has_value())
         computed_values.set_visibility(maybe_visibility.release_value());
 
-    m_visible = computed_values.opacity() != 0 && computed_values.visibility() == CSS::Visibility::Visible;
-
     computed_values.set_width(computed_style.size_value(CSS::PropertyID::Width));
     computed_values.set_min_width(computed_style.size_value(CSS::PropertyID::MinWidth));
     computed_values.set_max_width(computed_style.size_value(CSS::PropertyID::MaxWidth));
