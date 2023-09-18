@@ -74,9 +74,9 @@ RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
     for (u32 n : vec) {
         sum += n;
     }
-    warnln("vec {}, sum {}", vec, sum);
     // TODO make this test shrink more consistently
     // Can be gleaned with a variant on:
     // while true; do ./Build/lagom/bin/TestGenerator; done
+    //warnln("vec {}, sum {}", vec, sum);
     EXPECT(sum <= 10);
 }

@@ -63,7 +63,6 @@ ShrinkResult keep_if_better(RandomRun const& new_run, RandomRun const& current_b
             // Overrun:  Generators can't draw enough random bits to generate all
             //           needed values.
             // In all cases: Let's try something else.
-            warnln("Shrink: skipping passed/rejected/overrun: {}", static_cast<int>(Test::current_test_result()));
             Test::set_current_test_result(TestResult::Failed);
             return no_improvement(current_best);
     }
@@ -214,9 +213,7 @@ RandomRun shrink_once(RandomRun const& run, FN const& test_function)
             continue;
         }
         ShrinkResult result = shrink_with_cmd(cmd, current, test_function);
-        warnln("Trying {}", cmd);
         if (result.was_improvement) {
-            warnln("Shrunk from {} to {}", current, result.run);
             current = result.run;
         }
     }
@@ -226,7 +223,6 @@ RandomRun shrink_once(RandomRun const& run, FN const& test_function)
 template<typename FN>
 RandomRun shrink(RandomRun const& first_failure, FN const& test_function)
 {
-    warnln("Starting with {}", first_failure);
     if (first_failure.is_empty()) {
         // We can't do any better
         return first_failure;
@@ -238,8 +234,6 @@ RandomRun shrink(RandomRun const& first_failure, FN const& test_function)
         current = next;
         next = shrink_once(current, test_function);
     } while (next != current);
-
-    warnln("Ending with {}", next);
 
     return next;
 }
