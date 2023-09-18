@@ -615,6 +615,14 @@ struct HideCursor {
                                   url:url
                           activateTab:Web::HTML::ActivateTab::Yes];
     };
+
+    m_web_view_bridge->on_theme_color_change = [self](auto color) {
+        self.backgroundColor = [NSColor colorWithRed:(color.red() / 255.0)
+                                               green:(color.green() / 255.0)
+                                                blue:(color.blue() / 255.0)
+                                               alpha:1.0];
+        [self.observer onThemeColorChange:color];
+    };
 }
 
 - (void)colorPickerClosed:(NSNotification*)notification
