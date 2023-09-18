@@ -149,6 +149,7 @@ source_set("HTML") {
     "TextMetrics.cpp",
     "TimeRanges.cpp",
     "Timer.cpp",
+    "ToggleEvent.cpp",
     "TrackEvent.cpp",
     "TraversableNavigable.cpp",
     "VideoTrack.cpp",

@@ -34,6 +34,7 @@ source_set("StyleValues") {
     "LengthStyleValue.cpp",
     "LinearGradientStyleValue.cpp",
     "ListStyleStyleValue.cpp",
+    "MathDepthStyleValue.cpp",
     "NumberStyleValue.cpp",
     "OverflowStyleValue.cpp",
     "PlaceContentStyleValue.cpp",
