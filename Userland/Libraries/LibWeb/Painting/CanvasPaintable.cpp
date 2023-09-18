@@ -25,7 +25,7 @@ Layout::CanvasBox const& CanvasPaintable::layout_box() const
 
 void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
-    if (!layout_box().is_visible())
+    if (!is_visible())
         return;
 
     PaintableBox::paint(context, phase);
