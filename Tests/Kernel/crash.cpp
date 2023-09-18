@@ -210,6 +210,9 @@ int main(int argc, char** argv)
 #elif ARCH(AARCH64)
             (void)makeshift_esp;
             TODO_AARCH64();
+#elif ARCH(RISCV64)
+            (void)makeshift_esp;
+            TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif
@@ -226,6 +229,9 @@ int main(int argc, char** argv)
 #elif ARCH(AARCH64)
             (void)bad_esp;
             TODO_AARCH64();
+#elif ARCH(RISCV64)
+            (void)bad_esp;
+            TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif
@@ -247,6 +253,9 @@ int main(int argc, char** argv)
 #elif ARCH(AARCH64)
             (void)bad_esp;
             TODO_AARCH64();
+#elif ARCH(RISCV64)
+            (void)bad_esp;
+            TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif
@@ -290,6 +299,8 @@ int main(int argc, char** argv)
             asm volatile("str %eax");
 #elif ARCH(AARCH64)
             TODO_AARCH64();
+#elif ARCH(RISCV64)
+            TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif

@@ -31,8 +31,13 @@ struct __jmp_buf {
 #elif defined(__aarch64__)
     // FIXME: This is likely incorrect.
     uint64_t regs[22];
+#elif defined(__riscv) && __riscv_xlen == 64
+    // FIXME: This is likely incorrect.
+    uint64_t s[12];
+    uint64_t sp;
+    uint64_t pc;
 #else
-#    error
+#    error "Unknown architecture"
 #endif
     int did_save_signal_mask;
     sigset_t saved_signal_mask;
@@ -49,8 +54,10 @@ typedef struct __jmp_buf sigjmp_buf[1];
 static_assert(sizeof(struct __jmp_buf) == 72, "struct __jmp_buf unsynchronized with x86_64/setjmp.S");
 #    elif defined(__aarch64__)
 static_assert(sizeof(struct __jmp_buf) == 184, "struct __jmp_buf unsynchronized with aarch64/setjmp.S");
+#    elif defined(__riscv) && __riscv_xlen == 64
+static_assert(sizeof(struct __jmp_buf) == 120, "struct __jmp_buf unsynchronized with riscv64/setjmp.S");
 #    else
-#        error
+#        error "Unknown architecture"
 #    endif
 #endif
 

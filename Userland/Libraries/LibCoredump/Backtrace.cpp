@@ -50,6 +50,9 @@ Backtrace::Backtrace(Reader const& coredump, const ELF::Core::ThreadInfo& thread
 #elif ARCH(AARCH64)
     auto start_bp = m_thread_info.regs.x[29];
     auto start_ip = m_thread_info.regs.pc;
+#elif ARCH(RISCV64)
+    auto start_bp = m_thread_info.regs.x[7];
+    auto start_ip = m_thread_info.regs.pc;
 #else
 #    error Unknown architecture
 #endif

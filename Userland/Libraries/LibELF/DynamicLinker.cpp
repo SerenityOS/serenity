@@ -723,8 +723,12 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
     if (s_do_breakpoint_trap_before_entry) {
 #if ARCH(AARCH64)
         asm("brk #0");
-#else
+#elif ARCH(RISCV64)
+        asm("ebreak");
+#elif ARCH(X86_64)
         asm("int3");
+#else
+#    error "Unknown architecture"
 #endif
     }
 
