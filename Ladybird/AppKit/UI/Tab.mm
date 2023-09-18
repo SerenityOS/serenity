@@ -36,6 +36,8 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 @property (nonatomic, strong) ConsoleController* console_controller;
 @property (nonatomic, strong) InspectorController* inspector_controller;
 
+@property (nonatomic, assign) URL last_url;
+
 @end
 
 @implementation Tab
@@ -100,6 +102,8 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
                  object:[scroll_view contentView]];
 
         [self setContentView:scroll_view];
+        self.backgroundColor = [NSColor windowBackgroundColor];
+        self.titlebarAppearsTransparent = YES;
     }
 
     return self;
@@ -242,6 +246,11 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)is_redirect
 {
+    if (url != self.last_url) {
+        self.backgroundColor = [NSColor windowBackgroundColor];
+        self.last_url = url;
+    }
+
     [[self tabController] onLoadStart:url isRedirect:is_redirect];
 
     self.title = Ladybird::string_to_ns_string(url.serialize());
@@ -272,6 +281,23 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
     self.title = Ladybird::string_to_ns_string(title);
     [self updateTabTitleAndFavicon];
+}
+
+- (void)onThemeColorChange:(Color)color
+{
+    auto* nscolor = [NSColor colorWithRed:((CGFloat)color.red()) / 255.0
+                                    green:((CGFloat)color.green()) / 255.0
+                                     blue:((CGFloat)color.blue()) / 255.0
+                                    alpha:1.0];
+    CGFloat hue = 0.0;
+    CGFloat saturation = 0.0;
+    CGFloat brightness = 0.0;
+    [nscolor getHue:&hue saturation:&saturation brightness:&brightness alpha:nil];
+    if (brightness > 0.75)
+        brightness = 0.75;
+    nscolor = [NSColor colorWithHue:hue saturation:saturation brightness:brightness alpha:1.0];
+    self.backgroundColor = nscolor;
+    self.titlebarAppearsTransparent = YES;
 }
 
 - (void)onFaviconChange:(Gfx::Bitmap const&)bitmap

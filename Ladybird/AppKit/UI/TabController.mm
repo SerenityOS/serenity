@@ -193,9 +193,13 @@ enum class IsHistoryNavigation {
 {
     auto* delegate = (ApplicationDelegate*)[NSApp delegate];
 
+    self.tab.titlebarAppearsTransparent = NO;
+
     [delegate createNewTab:OptionalNone {}
                    fromTab:[self tab]
                activateTab:Web::HTML::ActivateTab::Yes];
+
+    self.tab.titlebarAppearsTransparent = YES;
 }
 
 - (void)updateNavigationButtonStates
@@ -212,7 +216,9 @@ enum class IsHistoryNavigation {
 
 - (void)showTabOverview:(id)sender
 {
+    self.tab.titlebarAppearsTransparent = NO;
     [self.window toggleTabOverview:sender];
+    self.tab.titlebarAppearsTransparent = YES;
 }
 
 - (void)dumpDOMTree:(id)sender
