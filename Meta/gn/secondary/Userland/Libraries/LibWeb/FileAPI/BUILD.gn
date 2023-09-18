@@ -6,5 +6,6 @@ source_set("FileAPI") {
     "BlobURLStore.cpp",
     "File.cpp",
     "FileList.cpp",
+    "FileReader.cpp",
   ]
 }

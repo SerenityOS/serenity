@@ -85,6 +85,7 @@ shared_library("LibWebView") {
     "RequestServerAdapter.cpp",
     "SourceHighlighter.cpp",
     "StylePropertiesModel.cpp",
+    "UserAgent.cpp",
     "ViewImplementation.cpp",
     "WebContentClient.cpp",
     "WebSocketClientAdapter.cpp",

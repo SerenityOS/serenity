@@ -45,6 +45,8 @@ source_set("DOM") {
     "RadioNodeList.cpp",
     "Range.cpp",
     "ShadowRoot.cpp",
+    "Slot.cpp",
+    "Slottable.cpp",
     "StaticNodeList.cpp",
     "StaticRange.cpp",
     "StyleElementUtils.cpp",

@@ -9,14 +9,14 @@ emoji_cache = cache_path + "EMOJI/"
 
 if (enable_unicode_database_download) {
   download_file("unicode_database_download") {
-    version = "15.0.0"
+    version = "15.1.0"
     url = "https://www.unicode.org/Public/" + version + "/ucd/UCD.zip"
     cache = unicode_cache
     output = "UCD.zip"
     version_file = "version.txt"
   }
   download_file("emoji_test_download") {
-    version = "15.0"
+    version = "15.1"
     url = "https://www.unicode.org/Public/emoji/" + version + "/emoji-test.txt"
     cache = emoji_cache
     output = "emoji-test.txt"
