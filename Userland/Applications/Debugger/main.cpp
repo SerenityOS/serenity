@@ -48,6 +48,9 @@ static void handle_print_registers(PtraceRegisters const& regs)
 #elif ARCH(AARCH64)
     (void)regs;
     TODO_AARCH64();
+#elif ARCH(RISCV64)
+    (void)regs;
+    TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif
@@ -251,6 +254,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #elif ARCH(AARCH64)
         const FlatPtr ip = 0; // FIXME
         TODO_AARCH64();
+#elif ARCH(RISCV64)
+        const FlatPtr ip = 0; // FIXME
+        TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif

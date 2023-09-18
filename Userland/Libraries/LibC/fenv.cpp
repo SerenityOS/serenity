@@ -10,7 +10,7 @@
 // This is the size of the floating point environment image in protected mode
 static_assert(sizeof(__x87_floating_point_environment) == 28);
 
-#if !ARCH(AARCH64)
+#if ARCH(X86_64)
 static u16 read_status_register()
 {
     u16 status_register;
@@ -58,11 +58,16 @@ int fegetenv(fenv_t* env)
 #if ARCH(AARCH64)
     (void)env;
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    (void)env;
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     asm volatile("fnstenv %0"
                  : "=m"(env->__x87_fpu_env)::"memory");
 
     env->__mxcsr = read_mxcsr();
+#else
+#    error Unknown architecture
 #endif
 
     return 0;
@@ -76,7 +81,10 @@ int fesetenv(fenv_t const* env)
 #if ARCH(AARCH64)
     (void)env;
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    (void)env;
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     if (env == FE_DFL_ENV) {
         asm volatile("finit");
         set_mxcsr(default_mxcsr_value);
@@ -87,6 +95,8 @@ int fesetenv(fenv_t const* env)
                  : "memory");
 
     set_mxcsr(env->__mxcsr);
+#else
+#    error Unknown architecture
 #endif
 
     return 0;
@@ -102,10 +112,15 @@ int feholdexcept(fenv_t* env)
 #if ARCH(AARCH64)
     (void)env;
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    (void)env;
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     current_env.__x87_fpu_env.__status_word &= ~FE_ALL_EXCEPT;
     current_env.__x87_fpu_env.__status_word &= ~(1 << 7);      // Clear the "Exception Status Summary" bit
     current_env.__x87_fpu_env.__control_word &= FE_ALL_EXCEPT; // Masking these bits stops the corresponding exceptions from being generated according to the Intel Programmer's Manual
+#else
+#    error Unknown architecture
 #endif
 
     fesetenv(&current_env);
@@ -143,9 +158,15 @@ int fesetexceptflag(fexcept_t const* except, int exceptions)
     (void)exceptions;
     (void)except;
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    (void)exceptions;
+    (void)except;
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     current_env.__x87_fpu_env.__status_word &= exceptions;
     current_env.__x87_fpu_env.__status_word &= ~(1 << 7); // Make sure exceptions don't get raised
+#else
+#    error Unknown architecture
 #endif
 
     fesetenv(&current_env);
@@ -156,9 +177,13 @@ int fegetround()
 {
 #if ARCH(AARCH64)
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     // There's no way to signal whether the SSE rounding mode and x87 ones are different, so we assume they're the same
     return (read_status_register() >> 10) & 3;
+#else
+#    error Unknown architecture
 #endif
 }
 
@@ -169,7 +194,9 @@ int fesetround(int rounding_mode)
 
 #if ARCH(AARCH64)
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     auto control_word = read_control_word();
 
     control_word &= ~(3 << 10);
@@ -183,7 +210,8 @@ int fesetround(int rounding_mode)
     mxcsr |= rounding_mode << 13;
 
     set_mxcsr(mxcsr);
-
+#else
+#    error Unknown architecture
 #endif
 
     return 0;
@@ -199,9 +227,14 @@ int feclearexcept(int exceptions)
 #if ARCH(AARCH64)
     (void)exceptions;
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    (void)exceptions;
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     current_env.__x87_fpu_env.__status_word &= ~exceptions;
     current_env.__x87_fpu_env.__status_word &= ~(1 << 7); // Clear the "Exception Status Summary" bit
+#else
+#    error Unknown architecture
 #endif
 
     fesetenv(&current_env);
@@ -213,11 +246,16 @@ int fetestexcept(int exceptions)
 #if ARCH(AARCH64)
     (void)exceptions;
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    (void)exceptions;
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     u16 status_register = read_status_register() & FE_ALL_EXCEPT;
     exceptions &= FE_ALL_EXCEPT;
 
     return status_register & exceptions;
+#else
+#    error Unknown architecture
 #endif
 }
 
@@ -231,7 +269,10 @@ int feraiseexcept(int exceptions)
 #if ARCH(AARCH64)
     (void)exceptions;
     TODO_AARCH64();
-#else
+#elif ARCH(RISCV64)
+    (void)exceptions;
+    TODO_RISCV64();
+#elif ARCH(X86_64)
     // While the order in which the exceptions is raised is unspecified, FE_OVERFLOW and FE_UNDERFLOW must be raised before FE_INEXACT, so handle that case in this branch
     if (exceptions & FE_INEXACT) {
         env.__x87_fpu_env.__status_word &= ((u16)exceptions & ~FE_INEXACT);
@@ -249,6 +290,8 @@ int feraiseexcept(int exceptions)
     env.__x87_fpu_env.__status_word &= exceptions;
     fesetenv(&env);
     asm volatile("fwait");
+#else
+#    error Unknown architecture
 #endif
 
     return 0;

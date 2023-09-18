@@ -170,6 +170,8 @@ ErrorOr<Vector<NonnullOwnPtr<DebugInfo::VariableInfo>>> DebugInfo::get_variables
         ip = regs.rip;
 #elif ARCH(AARCH64)
         TODO_AARCH64();
+#elif ARCH(RISCV64)
+        TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif
