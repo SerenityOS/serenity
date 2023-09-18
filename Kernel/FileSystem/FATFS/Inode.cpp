@@ -25,24 +25,7 @@ FATInode::FATInode(FATFS& fs, FATEntry entry, EntryLocation inode_metadata_locat
     , m_filename(move(filename))
     , m_block_list(block_list)
 {
-    dbgln_if(FAT_DEBUG, "FATFS: Creating inode {} with filename \"{}\"", index(), m_filename);
-
-    m_metadata = {
-        .inode = identifier(),
-        .size = m_entry.file_size,
-        .mode = static_cast<mode_t>((has_flag(m_entry.attributes, FATAttributes::Directory) ? S_IFDIR : S_IFREG) | 0777),
-        .uid = 0,
-        .gid = 0,
-        .link_count = 0,
-        .atime = time_from_packed_dos(m_entry.last_accessed_date, { 0 }),
-        .ctime = time_from_packed_dos(m_entry.creation_date, m_entry.creation_time),
-        .mtime = time_from_packed_dos(m_entry.modification_date, m_entry.modification_time),
-        .dtime = {},
-        .block_count = m_block_list.size(),
-        .block_size = fs.logical_block_size(),
-        .major_device = 0,
-        .minor_device = 0,
-    };
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::FATInode(): Created with filename \"{}\" and first cluster {}", identifier(), m_filename, first_cluster());
 }
 
 ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list(FATFS& fs, u32 first_cluster)
@@ -200,7 +183,7 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
 {
     dbgln_if(FAT_DEBUG, "FATFS: Reading inode {}: size: {} offset: {}", identifier().index(), size, offset);
     VERIFY(offset >= 0);
-    if (offset >= m_metadata.size)
+    if (offset >= m_entry.file_size)
         return 0;
 
     size_t size_to_read = min(size, m_entry.file_size - offset);
@@ -214,7 +197,24 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
 
 InodeMetadata FATInode::metadata() const
 {
-    return m_metadata;
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::metadata(): returning metadata for filename {}", identifier(), m_filename);
+
+    return {
+        .inode = identifier(),
+        .size = m_entry.file_size,
+        .mode = static_cast<mode_t>((has_flag(m_entry.attributes, FATAttributes::Directory) ? S_IFDIR : S_IFREG) | 0777),
+        .uid = 0,
+        .gid = 0,
+        .link_count = 0,
+        .atime = time_from_packed_dos(m_entry.last_accessed_date, { 0 }),
+        .ctime = time_from_packed_dos(m_entry.creation_date, m_entry.creation_time),
+        .mtime = time_from_packed_dos(m_entry.modification_date, m_entry.modification_time),
+        .dtime = {},
+        .block_count = m_block_list.size(),
+        .block_size = fs().logical_block_size(),
+        .major_device = 0,
+        .minor_device = 0,
+    };
 }
 
 ErrorOr<void> FATInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const

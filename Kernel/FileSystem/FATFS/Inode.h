@@ -74,7 +74,6 @@ private:
     EntryLocation m_inode_metadata_location { 0, 0 };
 
     NonnullOwnPtr<KString> m_filename;
-    InodeMetadata m_metadata;
     Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
 };
 
