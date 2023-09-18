@@ -646,10 +646,12 @@ Optional<CSS::Clear> StyleProperties::clear() const
     return value_id_to_clear(value->to_identifier());
 }
 
-CSS::ContentData StyleProperties::content() const
+StyleProperties::ContentDataAndQuoteNestingLevel StyleProperties::content(u32 initial_quote_nesting_level) const
 {
     auto value = property(CSS::PropertyID::Content);
     auto quotes_data = quotes();
+
+    auto quote_nesting_level = initial_quote_nesting_level;
 
     auto get_quote_string = [&](bool open, auto depth) {
         switch (quotes_data.type) {
@@ -684,18 +686,24 @@ CSS::ContentData StyleProperties::content() const
             } else if (item->is_identifier()) {
                 switch (item->to_identifier()) {
                 case ValueID::OpenQuote:
-                    // FIXME: Track nesting level and increment it here.
-                    builder.append(get_quote_string(true, 1));
+                    builder.append(get_quote_string(true, quote_nesting_level++));
                     break;
                 case ValueID::CloseQuote:
-                    // FIXME: Track nesting level and decrement it here.
-                    builder.append(get_quote_string(false, 1));
+                    // A 'close-quote' or 'no-close-quote' that would make the depth negative is in error and is ignored
+                    // (at rendering time): the depth stays at 0 and no quote mark is rendered (although the rest of the
+                    // 'content' property's value is still inserted).
+                    // - https://www.w3.org/TR/CSS21/generate.html#quotes-insert
+                    // (This is missing from the CONTENT-3 spec.)
+                    if (quote_nesting_level > 0)
+                        builder.append(get_quote_string(false, --quote_nesting_level));
                     break;
                 case ValueID::NoOpenQuote:
-                    // FIXME: Track nesting level and increment it here.
+                    quote_nesting_level++;
                     break;
                 case ValueID::NoCloseQuote:
-                    // FIXME: Track nesting level and decrement it here.
+                    // NOTE: See CloseQuote
+                    if (quote_nesting_level > 0)
+                        quote_nesting_level--;
                     break;
                 default:
                     dbgln("`{}` is not supported in `content` (yet?)", item->to_string());
@@ -721,19 +729,19 @@ CSS::ContentData StyleProperties::content() const
             content_data.alt_text = MUST(alt_text_builder.to_string());
         }
 
-        return content_data;
+        return { content_data, quote_nesting_level };
     }
 
     switch (value->to_identifier()) {
     case ValueID::None:
-        return { ContentData::Type::None };
+        return { { ContentData::Type::None }, quote_nesting_level };
     case ValueID::Normal:
-        return { ContentData::Type::Normal };
+        return { { ContentData::Type::Normal }, quote_nesting_level };
     default:
         break;
     }
 
-    return CSS::ContentData {};
+    return { {}, quote_nesting_level };
 }
 
 Optional<CSS::Cursor> StyleProperties::cursor() const

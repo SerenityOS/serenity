@@ -51,6 +51,8 @@ private:
 
     JS::GCPtr<Layout::Node> m_layout_root;
     Vector<JS::NonnullGCPtr<Layout::NodeWithStyle>> m_ancestor_stack;
+
+    u32 m_quote_nesting_level { 0 };
 };
 
 }

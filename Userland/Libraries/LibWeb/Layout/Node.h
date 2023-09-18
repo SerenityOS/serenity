@@ -175,6 +175,9 @@ public:
     SelectionState selection_state() const { return m_selection_state; }
     void set_selection_state(SelectionState state) { m_selection_state = state; }
 
+    u32 initial_quote_nesting_level() const { return m_initial_quote_nesting_level; }
+    void set_initial_quote_nesting_level(u32 value) { m_initial_quote_nesting_level = value; }
+
 protected:
     Node(DOM::Document&, DOM::Node*);
 
@@ -199,6 +202,8 @@ private:
     bool m_is_grid_item { false };
 
     GeneratedFor m_generated_for { GeneratedFor::NotGenerated };
+
+    u32 m_initial_quote_nesting_level { 0 };
 };
 
 class NodeWithStyle : public Node {
