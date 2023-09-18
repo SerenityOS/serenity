@@ -181,7 +181,9 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
     if (!pseudo_element_style)
         return {};
 
-    auto pseudo_element_content = pseudo_element_style->content();
+    auto initial_quote_nesting_level = m_quote_nesting_level;
+    auto [pseudo_element_content, final_quote_nesting_level] = pseudo_element_style->content(initial_quote_nesting_level);
+    m_quote_nesting_level = final_quote_nesting_level;
     auto pseudo_element_display = pseudo_element_style->display();
     // ::before and ::after only exist if they have content. `content: normal` computes to `none` for them.
     // We also don't create them if they are `display: none`.
@@ -204,6 +206,7 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
     }
 
     pseudo_element_node->set_generated_for(generated_for, element);
+    pseudo_element_node->set_initial_quote_nesting_level(initial_quote_nesting_level);
 
     // FIXME: Handle images, and multiple values
     if (pseudo_element_content.type == CSS::ContentData::Type::String) {
@@ -452,6 +455,7 @@ JS::GCPtr<Layout::Node> TreeBuilder::build(DOM::Node& dom_node)
     VERIFY(dom_node.is_document());
 
     Context context;
+    m_quote_nesting_level = 0;
     MUST(create_layout_tree(dom_node, context)); // FIXME propagate errors
 
     if (auto* root = dom_node.document().layout_node())
