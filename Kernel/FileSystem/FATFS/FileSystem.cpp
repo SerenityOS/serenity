@@ -103,6 +103,11 @@ BlockBasedFileSystem::BlockIndex FATFS::first_block_of_cluster(u32 cluster) cons
     return ((cluster - first_data_cluster) * boot_record()->sectors_per_cluster) + m_first_data_sector;
 }
 
+u32 FATFS::block_to_cluster(BlockBasedFileSystem::BlockIndex block) const
+{
+    return ((*reinterpret_cast<u64*>(&block) - m_first_data_sector) / boot_record()->sectors_per_cluster) + first_data_cluster;
+}
+
 u8 FATFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     FATAttributes attrib = static_cast<FATAttributes>(entry.file_type);

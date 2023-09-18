@@ -54,6 +54,7 @@ private:
     FATFSInfo const* fs_info() const { return reinterpret_cast<FATFSInfo const*>(m_fs_info->data()); }
 
     BlockBasedFileSystem::BlockIndex first_block_of_cluster(u32 cluster) const;
+    u32 block_to_cluster(BlockBasedFileSystem::BlockIndex block) const;
     ErrorOr<u32> allocate_cluster();
 
     ErrorOr<u32> fat_read(u32 cluster);

@@ -36,6 +36,7 @@ private:
     FATInode(FATFS&, FATEntry, EntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename, Vector<BlockBasedFileSystem::BlockIndex> const& block_list);
 
     static constexpr u32 no_more_clusters = 0x0FFFFFF8;
+    static constexpr u32 cluster_free = 0x00000000;
 
     static constexpr u8 end_entry_byte = 0x00;
     static constexpr u8 unused_entry_byte = 0xE5;
@@ -53,6 +54,8 @@ private:
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
     ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);
     u32 first_cluster() const;
+    ErrorOr<void> allocate_and_add_cluster_to_chain();
+    ErrorOr<void> remove_last_cluster_from_chain();
 
     // ^Inode
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
@@ -67,7 +70,9 @@ private:
     virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
+    virtual ErrorOr<void> truncate(u64) override;
     virtual ErrorOr<void> flush_metadata() override;
+    virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
 
     FATEntry m_entry;
 
