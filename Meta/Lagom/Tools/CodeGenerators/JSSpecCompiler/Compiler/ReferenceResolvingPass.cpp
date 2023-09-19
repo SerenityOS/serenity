@@ -29,7 +29,7 @@ RecursionDecision ReferenceResolvingPass::on_entry(Tree tree)
 
 void ReferenceResolvingPass::on_leave(Tree tree)
 {
-    auto& functions = m_function->m_context->m_functions;
+    auto& functions = m_function->m_translation_unit->function_index;
 
     if (auto reference = as<UnresolvedReference>(tree); reference) {
         auto name = reference->m_name;

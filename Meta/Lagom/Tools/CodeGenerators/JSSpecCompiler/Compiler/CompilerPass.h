@@ -15,7 +15,7 @@ namespace JSSpecCompiler {
 
 class CompilerPass {
 public:
-    CompilerPass(FunctionRef function)
+    CompilerPass(FunctionDefinitionRef function)
         : m_function(function)
     {
     }
@@ -25,7 +25,7 @@ public:
     virtual void run() = 0;
 
 protected:
-    FunctionRef m_function;
+    FunctionDefinitionRef m_function;
 };
 
 }

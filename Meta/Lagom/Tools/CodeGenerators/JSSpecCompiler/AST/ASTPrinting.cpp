@@ -164,7 +164,7 @@ void FunctionPointer::dump_tree(StringBuilder& builder)
         [&](StringView name) {
             dump_node(builder, "Func external \"{}\"", name);
         },
-        [&](FunctionRef function) {
+        [&](FunctionDefinitionRef function) {
             dump_node(builder, "Func local \"{}\"", function->m_name);
         });
 }

@@ -36,7 +36,7 @@ class GenericASTPass
     : public CompilerPass
     , protected RecursiveASTVisitor {
 public:
-    GenericASTPass(FunctionRef function)
+    GenericASTPass(FunctionDefinitionRef function)
         : CompilerPass(function)
     {
     }
