@@ -139,7 +139,7 @@ private:
     bool m_has_simple_parameter_list : 1 { false };
     FunctionKind m_kind : 3 { FunctionKind::Normal };
 
-    struct VariableNameToInitianlize {
+    struct VariableNameToInitialize {
         Identifier const& identifier;
         bool parameter_binding { false };
         bool function_name { false };
@@ -150,7 +150,7 @@ private:
     HashTable<DeprecatedFlyString> m_parameter_names;
     Vector<FunctionDeclaration const&> m_functions_to_initialize;
     bool m_arguments_object_needed { false };
-    Vector<VariableNameToInitianlize> m_var_names_to_initialize_binding;
+    Vector<VariableNameToInitialize> m_var_names_to_initialize_binding;
     Vector<StringView> m_function_names_to_initialize_binding;
 };
 
