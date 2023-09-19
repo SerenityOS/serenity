@@ -792,6 +792,8 @@ void NullLiteral::dump(int indent) const
 bool BindingPattern::contains_expression() const
 {
     for (auto& entry : entries) {
+        if (entry.name.has<NonnullRefPtr<Expression const>>())
+            return true;
         if (entry.initializer)
             return true;
         if (auto binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern const>>(); binding_ptr && (*binding_ptr)->contains_expression())
