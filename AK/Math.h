@@ -1013,14 +1013,18 @@ constexpr T pow(T x, T y)
         return 0;
     if (y == 1)
         return x;
-    int y_as_int = (int)y;
-    if (y == (T)y_as_int) {
-        T result = x;
-        for (int i = 0; i < fabs<T>(y) - 1; ++i)
-            result *= x;
-        if (y < 0)
-            result = 1.0l / result;
-        return result;
+
+    // Take an integer fast path as long as the value fits within a 64-bit integer.
+    if (y >= static_cast<T>(NumericLimits<i64>::min()) && y <= static_cast<T>(NumericLimits<i64>::max())) {
+        i64 y_as_int = static_cast<i64>(y);
+        if (y == static_cast<T>(y_as_int)) {
+            T result = x;
+            for (u64 i = 0; i < static_cast<u64>(fabs<T>(y) - 1); ++i)
+                result *= x;
+            if (y < 0)
+                result = 1.0l / result;
+            return result;
+        }
     }
 
     return exp2<T>(y * log2<T>(x));
