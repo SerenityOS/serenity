@@ -714,7 +714,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 //       1. Append n to instantiatedVarNames.
 
                 // 2. Perform ! varEnv.CreateMutableBinding(n, false).
-                MUST(var_environment->create_mutable_binding(vm, id.string(), false));
+                // NOTE: We ignore locals because they are stored in ExecutionContext instead of environment.
+                if (!id.is_local())
+                    MUST(var_environment->create_mutable_binding(vm, id.string(), false));
 
                 Value initial_value;
 
