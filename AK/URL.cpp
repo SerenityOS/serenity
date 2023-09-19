@@ -263,21 +263,21 @@ bool URL::is_special_scheme(StringView scheme)
 // https://url.spec.whatwg.org/#url-path-serializer
 DeprecatedString URL::serialize_path(ApplyPercentDecoding apply_percent_decoding) const
 {
-    // If url has an opaque path, then return url’s path.
+    // 1. If url has an opaque path, then return url’s path.
     // FIXME: Reimplement this step once we modernize the URL implementation to meet the spec.
     if (cannot_be_a_base_url())
         return m_paths[0];
 
-    // Let output be the empty string.
+    // 2. Let output be the empty string.
     StringBuilder output;
 
-    // For each segment of url’s path: append U+002F (/) followed by segment to output.
+    // 3. For each segment of url’s path: append U+002F (/) followed by segment to output.
     for (auto const& segment : m_paths) {
         output.append('/');
         output.append(apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(segment) : segment);
     }
 
-    // Return output.
+    // 4. Return output.
     return output.to_deprecated_string();
 }
 
