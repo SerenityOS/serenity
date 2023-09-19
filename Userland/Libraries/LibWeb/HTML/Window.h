@@ -209,6 +209,12 @@ private:
 
     void invoke_idle_callbacks();
 
+    struct [[nodiscard]] NamedObjects {
+        Vector<JS::NonnullGCPtr<Navigable>> navigables;
+        Vector<JS::NonnullGCPtr<DOM::Element>> elements;
+    };
+    NamedObjects named_objects(StringView name);
+
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     JS::GCPtr<DOM::Document> m_associated_document;
 
