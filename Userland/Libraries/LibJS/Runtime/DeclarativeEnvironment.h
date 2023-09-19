@@ -60,6 +60,11 @@ public:
 
     void shrink_to_fit();
 
+    void ensure_capacity(size_t needed_capacity)
+    {
+        m_bindings.ensure_capacity(needed_capacity);
+    }
+
     [[nodiscard]] u64 environment_serial_number() const { return m_environment_serial_number; }
 
 private:
