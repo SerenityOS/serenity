@@ -84,7 +84,6 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
 
 #define ENUMERATE_STYLE_VALUE_TYPES                                                           \
     __ENUMERATE_STYLE_VALUE_TYPE(Angle, angle)                                                \
-    __ENUMERATE_STYLE_VALUE_TYPE(Background, background)                                      \
     __ENUMERATE_STYLE_VALUE_TYPE(BackgroundRepeat, background_repeat)                         \
     __ENUMERATE_STYLE_VALUE_TYPE(BackgroundSize, background_size)                             \
     __ENUMERATE_STYLE_VALUE_TYPE(Border, border)                                              \

@@ -30,7 +30,6 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
-#include <LibWeb/CSS/StyleValues/BackgroundStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
@@ -661,19 +660,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Background) {
-        if (value.is_background()) {
-            auto const& background = value.as_background();
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background.color(), document, declaration, properties_for_revert);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background.image(), document, declaration, properties_for_revert);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, background.position(), document, declaration, properties_for_revert);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, background.size(), document, declaration, properties_for_revert);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, background.repeat(), document, declaration, properties_for_revert);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, background.attachment(), document, declaration, properties_for_revert);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, background.origin(), document, declaration, properties_for_revert);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, background.clip(), document, declaration, properties_for_revert);
-            return;
-        }
-
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document, declaration, properties_for_revert);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document, declaration, properties_for_revert);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, value, document, declaration, properties_for_revert);

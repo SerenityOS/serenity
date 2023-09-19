@@ -37,7 +37,6 @@
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
-#include <LibWeb/CSS/StyleValues/BackgroundStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
@@ -2654,6 +2653,12 @@ RefPtr<StyleValue> Parser::parse_aspect_ratio_value(Vector<ComponentValue> const
 
 RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
 {
+    auto make_background_shorthand = [&](auto background_color, auto background_image, auto background_position, auto background_size, auto background_repeat, auto background_attachment, auto background_origin, auto background_clip) {
+        return ShorthandStyleValue::create(PropertyID::Background,
+            { PropertyID::BackgroundColor, PropertyID::BackgroundImage, PropertyID::BackgroundPosition, PropertyID::BackgroundSize, PropertyID::BackgroundRepeat, PropertyID::BackgroundAttachment, PropertyID::BackgroundOrigin, PropertyID::BackgroundClip },
+            { move(background_color), move(background_image), move(background_position), move(background_size), move(background_repeat), move(background_attachment), move(background_origin), move(background_clip) });
+    };
+
     StyleValueVector background_images;
     StyleValueVector background_positions;
     StyleValueVector background_sizes;
@@ -2775,7 +2780,7 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
             //    If two values are present, then the first sets background-origin and the second background-clip."
             //        - https://www.w3.org/TR/css-backgrounds-3/#background
             // So, we put the first one in background-origin, then if we get a second, we put it in background-clip.
-            // If we only get one, we copy the value before creating the BackgroundStyleValue.
+            // If we only get one, we copy the value before creating the ShorthandStyleValue.
             if (!background_origin) {
                 background_origin = value.release_nonnull();
             } else if (!background_clip) {
@@ -2832,7 +2837,7 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
 
         if (!background_color)
             background_color = initial_background_color;
-        return BackgroundStyleValue::create(
+        return make_background_shorthand(
             background_color.release_nonnull(),
             StyleValueList::create(move(background_images), StyleValueList::Separator::Comma),
             StyleValueList::create(move(background_positions), StyleValueList::Separator::Comma),
@@ -2863,7 +2868,7 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
         background_clip = background_origin;
     }
 
-    return BackgroundStyleValue::create(
+    return make_background_shorthand(
         background_color.release_nonnull(),
         background_image.release_nonnull(),
         background_position.release_nonnull(),

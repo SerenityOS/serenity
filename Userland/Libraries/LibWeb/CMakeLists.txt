@@ -82,7 +82,6 @@ set(SOURCES
     CSS/StyleValues/AngleStyleValue.cpp
     CSS/StyleValues/BackgroundRepeatStyleValue.cpp
     CSS/StyleValues/BackgroundSizeStyleValue.cpp
-    CSS/StyleValues/BackgroundStyleValue.cpp
     CSS/StyleValues/BorderRadiusShorthandStyleValue.cpp
     CSS/StyleValues/BorderRadiusStyleValue.cpp
     CSS/StyleValues/BorderStyleValue.cpp
