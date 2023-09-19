@@ -95,7 +95,6 @@ set(SOURCES
     CSS/StyleValues/EdgeStyleValue.cpp
     CSS/StyleValues/FilterValueListStyleValue.cpp
     CSS/StyleValues/FlexFlowStyleValue.cpp
-    CSS/StyleValues/FlexStyleValue.cpp
     CSS/StyleValues/FontStyleValue.cpp
     CSS/StyleValues/GridAreaShorthandStyleValue.cpp
     CSS/StyleValues/GridAutoFlowStyleValue.cpp

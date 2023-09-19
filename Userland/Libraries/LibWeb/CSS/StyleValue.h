@@ -99,7 +99,6 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(Easing, easing)                                              \
     __ENUMERATE_STYLE_VALUE_TYPE(Edge, edge)                                                  \
     __ENUMERATE_STYLE_VALUE_TYPE(FilterValueList, filter_value_list)                          \
-    __ENUMERATE_STYLE_VALUE_TYPE(Flex, flex)                                                  \
     __ENUMERATE_STYLE_VALUE_TYPE(FlexFlow, flex_flow)                                         \
     __ENUMERATE_STYLE_VALUE_TYPE(Font, font)                                                  \
     __ENUMERATE_STYLE_VALUE_TYPE(Frequency, frequency)                                        \
