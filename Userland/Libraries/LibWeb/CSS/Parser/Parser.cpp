@@ -37,7 +37,6 @@
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
-#include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
@@ -3358,7 +3357,9 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentV
     auto bottom_left_radius = BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
         vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii));
 
-    return BorderRadiusShorthandStyleValue::create(move(top_left_radius), move(top_right_radius), move(bottom_right_radius), move(bottom_left_radius));
+    return ShorthandStyleValue::create(PropertyID::BorderRadius,
+        { PropertyID::BorderTopLeftRadius, PropertyID::BorderTopRightRadius, PropertyID::BorderBottomRightRadius, PropertyID::BorderBottomLeftRadius },
+        { move(top_left_radius), move(top_right_radius), move(bottom_right_radius), move(bottom_left_radius) });
 }
 
 RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& component_values, AllowInsetKeyword allow_inset_keyword)

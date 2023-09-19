@@ -88,7 +88,6 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(BackgroundSize, background_size)                             \
     __ENUMERATE_STYLE_VALUE_TYPE(Border, border)                                              \
     __ENUMERATE_STYLE_VALUE_TYPE(BorderRadius, border_radius)                                 \
-    __ENUMERATE_STYLE_VALUE_TYPE(BorderRadiusShorthand, border_radius_shorthand)              \
     __ENUMERATE_STYLE_VALUE_TYPE(Calculated, calculated)                                      \
     __ENUMERATE_STYLE_VALUE_TYPE(Color, color)                                                \
     __ENUMERATE_STYLE_VALUE_TYPE(ConicGradient, conic_gradient)                               \
