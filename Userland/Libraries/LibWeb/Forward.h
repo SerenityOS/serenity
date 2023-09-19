@@ -105,7 +105,6 @@ class ElementInlineCSSStyleDeclaration;
 class ExplicitGridTrack;
 class FilterValueListStyleValue;
 class FlexFlowStyleValue;
-class FlexStyleValue;
 class FontFace;
 class FontStyleValue;
 class Frequency;

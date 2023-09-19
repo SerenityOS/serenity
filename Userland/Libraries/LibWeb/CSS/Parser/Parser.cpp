@@ -49,7 +49,6 @@
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
-#include <LibWeb/CSS/StyleValues/FlexStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
@@ -3849,6 +3848,12 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
 {
     auto tokens = TokenStream { component_values };
 
+    auto make_flex_shorthand = [&](NonnullRefPtr<StyleValue> flex_grow, NonnullRefPtr<StyleValue> flex_shrink, NonnullRefPtr<StyleValue> flex_basis) {
+        return ShorthandStyleValue::create(PropertyID::Flex,
+            { PropertyID::FlexGrow, PropertyID::FlexShrink, PropertyID::FlexBasis },
+            { move(flex_grow), move(flex_shrink), move(flex_basis) });
+    };
+
     if (component_values.size() == 1) {
         // One-value syntax: <flex-grow> | <flex-basis> | none
         auto properties = Array { PropertyID::FlexGrow, PropertyID::FlexBasis, PropertyID::Flex };
@@ -3863,16 +3868,16 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
             // https://github.com/w3c/csswg-drafts/issues/5742
             auto flex_basis = PercentageStyleValue::create(Percentage(0));
             auto one = NumberStyleValue::create(1);
-            return FlexStyleValue::create(*value, one, flex_basis);
+            return make_flex_shorthand(*value, one, flex_basis);
         }
         case PropertyID::FlexBasis: {
             auto one = NumberStyleValue::create(1);
-            return FlexStyleValue::create(one, one, *value);
+            return make_flex_shorthand(one, one, *value);
         }
         case PropertyID::Flex: {
             if (value->is_identifier() && value->to_identifier() == ValueID::None) {
                 auto zero = NumberStyleValue::create(0);
-                return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
+                return make_flex_shorthand(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
             }
             break;
         }
@@ -3929,7 +3934,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
         flex_basis = PercentageStyleValue::create(Percentage(0));
     }
 
-    return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
+    return make_flex_shorthand(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
 
 RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& component_values)
@@ -6003,7 +6008,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             longhand_values.unchecked_append(StyleValueList::create(move(it.value), StyleValueList::Separator::Space));
     }
 
-    return { ShorthandStyleValue::create(move(longhand_properties), move(longhand_values)) };
+    return { ShorthandStyleValue::create(property_id, move(longhand_properties), move(longhand_values)) };
 }
 
 RefPtr<StyleValue> Parser::parse_css_value_for_property(PropertyID property_id, TokenStream<ComponentValue>& tokens)

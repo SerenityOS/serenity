@@ -18,7 +18,6 @@ source_set("StyleValues") {
     "EdgeStyleValue.cpp",
     "FilterValueListStyleValue.cpp",
     "FlexFlowStyleValue.cpp",
-    "FlexStyleValue.cpp",
     "FontStyleValue.cpp",
     "GridAreaShorthandStyleValue.cpp",
     "GridAutoFlowStyleValue.cpp",
