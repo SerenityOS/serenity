@@ -60,8 +60,8 @@ class Algorithm;
 class SpecFunction;
 
 // Function.h
-class ExecutionContext;
-class Function;
-using FunctionRef = Function*;
+struct TranslationUnit;
+class FunctionDefinition;
+using FunctionDefinitionRef = FunctionDefinition*;
 
 }

@@ -15,17 +15,27 @@
 
 namespace JSSpecCompiler {
 
-class ExecutionContext {
-public:
-    HashMap<StringView, FunctionPointerRef> m_functions;
+struct TranslationUnit {
+    FunctionDefinitionRef adopt_function(NonnullRefPtr<FunctionDefinition>&& function);
+
+    Vector<NonnullRefPtr<FunctionDefinition>> function_definitions;
+    HashMap<StringView, FunctionPointerRef> function_index;
 };
 
-class Function : public RefCounted<Function> {
+class FunctionDeclaration : public RefCounted<FunctionDeclaration> {
 public:
-    Function(ExecutionContext* context, StringView name, Tree ast);
+    FunctionDeclaration(StringView name);
 
-    ExecutionContext* m_context;
+    virtual ~FunctionDeclaration() = default;
+
+    TranslationUnit* m_translation_unit = nullptr;
     StringView m_name;
+};
+
+class FunctionDefinition : public FunctionDeclaration {
+public:
+    FunctionDefinition(StringView name, Tree ast);
+
     Tree m_ast;
     VariableDeclarationRef m_return_value;
     HashMap<StringView, VariableDeclarationRef> m_local_variables;

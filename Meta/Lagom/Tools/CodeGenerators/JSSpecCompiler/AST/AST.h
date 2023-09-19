@@ -456,7 +456,12 @@ public:
     {
     }
 
-    Variant<StringView, FunctionRef> m_function;
+    FunctionPointer(FunctionDefinitionRef function_definition)
+        : m_function(function_definition)
+    {
+    }
+
+    Variant<StringView, FunctionDefinitionRef> m_function;
 
 protected:
     void dump_tree(StringBuilder& builder) override;

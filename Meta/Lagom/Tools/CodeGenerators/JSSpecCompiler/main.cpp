@@ -19,12 +19,12 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     using namespace JSSpecCompiler;
 
-    ExecutionContext context;
+    TranslationUnit translation_unit;
 
     // Functions referenced in DifferenceISODate
     // TODO: This is here just for testing. In a long run, we need some place, which is not
     //       `serenity_main`, to store built-in functions.
-    auto& functions = context.m_functions;
+    auto& functions = translation_unit.function_index;
     functions.set("CompareISODate"sv, make_ref_counted<FunctionPointer>("CompareISODate"sv));
     functions.set("CreateDateDurationRecord"sv, make_ref_counted<FunctionPointer>("CreateDateDurationRecord"sv));
     functions.set("AddISODate"sv, make_ref_counted<FunctionPointer>("AddISODate"sv));
@@ -50,7 +50,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     }
     auto spec_function = maybe_function.value();
 
-    auto function = make_ref_counted<JSSpecCompiler::Function>(&context, spec_function.m_name, spec_function.m_algorithm.m_tree);
+    auto* function = translation_unit.adopt_function(
+        make_ref_counted<FunctionDefinition>(spec_function.m_name, spec_function.m_algorithm.m_tree));
 
     for (auto const& argument : spec_function.m_arguments)
         function->m_local_variables.set(argument.name, make_ref_counted<VariableDeclaration>(argument.name));
