@@ -54,6 +54,8 @@ private:
     static constexpr size_t lfn_entry_characters_part_2_length = 6;
     static constexpr size_t lfn_entry_characters_part_3_length = 2;
 
+    static constexpr size_t max_filename_length = 255;
+
     static ErrorOr<NonnullOwnPtr<KString>> compute_filename(FATEntry&, Vector<FATLongFileNameEntry> const& = {});
     static StringView byte_terminated_string(StringView, u8);
     static u8 lfn_entry_checksum(FATEntry const& entry);
