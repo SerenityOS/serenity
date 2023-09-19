@@ -18,52 +18,6 @@ LegacyPlatformObject::LegacyPlatformObject(JS::Realm& realm)
 
 LegacyPlatformObject::~LegacyPlatformObject() = default;
 
-// https://webidl.spec.whatwg.org/#dfn-named-property-visibility
-JS::ThrowCompletionOr<bool> LegacyPlatformObject::is_named_property_exposed_on_object(JS::PropertyKey const& property_key) const
-{
-    // The spec doesn't say anything about the type of the property name here.
-    // Numbers can be converted to a string, which is fine and what other engines do.
-    // However, since a symbol cannot be converted to a string, it cannot be a supported property name. Return early if it's a symbol.
-    if (property_key.is_symbol())
-        return false;
-
-    // 1. If P is not a supported property name of O, then return false.
-    // NOTE: This is in it's own variable to enforce the type.
-    Vector<DeprecatedString> supported_property_names = this->supported_property_names();
-    auto property_key_string = property_key.to_string();
-    if (!supported_property_names.contains_slow(property_key_string))
-        return false;
-
-    // 2. If O has an own property named P, then return false.
-    // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overridden internal_get_own_property.
-    auto own_property_named_p = MUST(Object::internal_get_own_property(property_key));
-
-    if (own_property_named_p.has_value())
-        return false;
-
-    // 3. If O implements an interface that has the [LegacyOverrideBuiltIns] extended attribute, then return true.
-    if (has_legacy_override_built_ins_interface_extended_attribute())
-        return true;
-
-    // 4. Let prototype be O.[[GetPrototypeOf]]().
-    auto* prototype = TRY(internal_get_prototype_of());
-
-    // 5. While prototype is not null:
-    while (prototype) {
-        // FIXME: 1. If prototype is not a named properties object, and prototype has an own property named P, then return false.
-        //           (It currently does not check for named property objects)
-        bool prototype_has_own_property_named_p = TRY(prototype->has_own_property(property_key));
-        if (prototype_has_own_property_named_p)
-            return false;
-
-        // 2. Set prototype to prototype.[[GetPrototypeOf]]().
-        prototype = TRY(prototype->internal_get_prototype_of());
-    }
-
-    // 6. Return true.
-    return true;
-}
-
 // https://webidl.spec.whatwg.org/#LegacyPlatformObjectGetOwnProperty
 JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LegacyPlatformObject::legacy_platform_object_get_own_property(JS::PropertyKey const& property_name, IgnoreNamedProps ignore_named_props) const
 {
@@ -106,7 +60,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LegacyPlatformObject::le
     // 2. If O supports named properties and ignoreNamedProps is false, then:
     if (supports_named_properties() && ignore_named_props == IgnoreNamedProps::No) {
         // 1. If the result of running the named property visibility algorithm with property name P and object O is true, then:
-        if (TRY(is_named_property_exposed_on_object(property_name))) {
+        if (TRY(WebIDL::is_named_property_exposed_on_object({ this }, property_name))) {
             // FIXME: It's unfortunate that this is done twice, once in is_named_property_exposed_on_object and here.
             auto property_name_string = property_name.to_string();
 
@@ -322,7 +276,7 @@ JS::ThrowCompletionOr<bool> LegacyPlatformObject::internal_delete(JS::PropertyKe
 
     // 2. If O supports named properties, O does not implement an interface with the [Global] extended attribute and
     //    the result of calling the named property visibility algorithm with property name P and object O is true, then:
-    if (supports_named_properties() && !has_global_interface_extended_attribute() && TRY(is_named_property_exposed_on_object(property_name))) {
+    if (supports_named_properties() && !has_global_interface_extended_attribute() && TRY(WebIDL::is_named_property_exposed_on_object({ this }, property_name))) {
         // 1. If O does not implement an interface with a named property deleter, then return false.
         if (!has_named_property_deleter())
             return false;
@@ -394,7 +348,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> LegacyPlatformObject::interna
     // 3. If O supports named properties, then for each P of O’s supported property names that is visible according to the named property visibility algorithm, append P to keys.
     if (supports_named_properties()) {
         for (auto& named_property : supported_property_names()) {
-            if (TRY(is_named_property_exposed_on_object(named_property)))
+            if (TRY(WebIDL::is_named_property_exposed_on_object({ this }, named_property)))
                 keys.append(JS::PrimitiveString::create(vm, named_property));
         }
     }

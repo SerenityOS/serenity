@@ -61,4 +61,6 @@ JS::Completion construct(WebIDL::CallbackType& callback, Args&&... args)
     return construct(callback, move(arguments_list));
 }
 
+JS::ThrowCompletionOr<bool> is_named_property_exposed_on_object(Variant<Bindings::LegacyPlatformObject const*, HTML::Window*> const& variant, JS::PropertyKey const& property_key);
+
 }

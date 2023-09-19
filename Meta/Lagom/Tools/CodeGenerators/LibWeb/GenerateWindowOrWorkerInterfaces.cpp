@@ -76,7 +76,7 @@ namespace Web::Bindings {
 class @namespace_class@;)~~~");
     };
 
-    auto add_interface = [](SourceGenerator& gen, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor) {
+    auto add_interface = [](SourceGenerator& gen, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor, StringView named_properties_class) {
         gen.set("prototype_class", prototype_class);
         gen.set("constructor_class", constructor_class);
 
@@ -89,15 +89,25 @@ class @constructor_class@;)~~~");
             gen.append(R"~~~(
 class @legacy_constructor_class@;)~~~");
         }
+        if (!named_properties_class.is_empty()) {
+            gen.set("named_properties_class", named_properties_class);
+            gen.append(R"~~~(
+class @named_properties_class@;)~~~");
+        }
     };
 
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
 
+        String named_properties_class;
+        if (interface.extended_attributes.contains("Global") && interface.supports_named_properties()) {
+            named_properties_class = MUST(String::formatted("{}Properties", interface.name));
+        }
+
         if (interface.is_namespace)
             add_namespace(gen, interface.namespace_class);
         else
-            add_interface(gen, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
+            add_interface(gen, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface), named_properties_class);
     }
 
     generator.append(R"~~~(
@@ -178,7 +188,7 @@ void Intrinsics::create_web_namespace<@namespace_class@>(JS::Realm& realm)
 )~~~");
     };
 
-    auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor) {
+    auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor, StringView named_properties_class) {
         gen.set("interface_name", name);
         gen.set("prototype_class", prototype_class);
         gen.set("constructor_class", constructor_class);
@@ -189,6 +199,16 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
 {
     auto& vm = realm.vm();
 
+)~~~");
+        if (!named_properties_class.is_empty()) {
+            gen.set("named_properties_class", named_properties_class);
+            gen.append(R"~~~(
+    auto named_properties_object = heap().allocate<@named_properties_class@>(realm, realm);
+    m_prototypes.set("@named_properties_class@"sv, named_properties_object);
+
+)~~~");
+        }
+        gen.append(R"~~~(
     auto prototype = heap().allocate<@prototype_class@>(realm, realm);
     m_prototypes.set("@interface_name@"sv, prototype);
 
@@ -217,10 +237,15 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
 
+        String named_properties_class;
+        if (interface.extended_attributes.contains("Global") && interface.supports_named_properties()) {
+            named_properties_class = MUST(String::formatted("{}Properties", interface.name));
+        }
+
         if (interface.is_namespace)
             add_namespace(gen, interface.name, interface.namespace_class);
         else
-            add_interface(gen, interface.namespaced_name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
+            add_interface(gen, interface.namespaced_name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface), named_properties_class);
     }
 
     generator.append(R"~~~(
