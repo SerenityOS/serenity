@@ -191,9 +191,6 @@ public:
     // https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
     BrowsingContext const* the_one_permitted_sandboxed_navigator() const;
 
-    Vector<JS::Handle<DOM::Document>> document_family() const;
-    bool document_family_contains(DOM::Document const&) const;
-
     bool has_been_discarded() const { return m_has_been_discarded; }
 
     Optional<AK::URL> const& creator_url() const { return m_creator_url; }

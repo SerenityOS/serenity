@@ -747,35 +747,6 @@ BrowsingContext const* BrowsingContext::the_one_permitted_sandboxed_navigator() 
     return nullptr;
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#document-family
-Vector<JS::Handle<DOM::Document>> BrowsingContext::document_family() const
-{
-    HashTable<DOM::Document*> documents;
-    for (auto& entry : m_session_history) {
-        if (!entry->document_state->document())
-            continue;
-        if (documents.set(const_cast<DOM::Document*>(entry->document_state->document().ptr())) == AK::HashSetResult::ReplacedExistingEntry)
-            continue;
-        for (auto& context : entry->document_state->document()->list_of_descendant_browsing_contexts()) {
-            for (auto& document : context->document_family()) {
-                documents.set(document.ptr());
-            }
-        }
-    }
-
-    Vector<JS::Handle<DOM::Document>> family;
-    for (auto* document : documents) {
-        family.append(*document);
-    }
-    return family;
-}
-
-// https://html.spec.whatwg.org/multipage/browsers.html#document-family
-bool BrowsingContext::document_family_contains(DOM::Document const& document) const
-{
-    return document_family().first_matching([&](auto& entry) { return entry.ptr() == &document; }).has_value();
-}
-
 void BrowsingContext::append_child(JS::NonnullGCPtr<BrowsingContext> child)
 {
     VERIFY(!child->m_parent);
