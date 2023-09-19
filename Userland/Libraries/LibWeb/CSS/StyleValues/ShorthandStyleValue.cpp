@@ -37,6 +37,8 @@ String ShorthandStyleValue::to_string() const
     switch (m_properties.shorthand_property) {
     case PropertyID::Flex:
         return MUST(String::formatted("{} {} {}", longhand(PropertyID::FlexGrow)->to_string(), longhand(PropertyID::FlexShrink)->to_string(), longhand(PropertyID::FlexBasis)->to_string()));
+    case PropertyID::FlexFlow:
+        return MUST(String::formatted("{} {}", longhand(PropertyID::FlexDirection)->to_string(), longhand(PropertyID::FlexWrap)->to_string()));
     default:
         StringBuilder builder;
         auto first = true;
