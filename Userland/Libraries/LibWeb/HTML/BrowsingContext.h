@@ -136,7 +136,6 @@ public:
     Web::EventHandler const& event_handler() const { return m_event_handler; }
 
     void scroll_to(CSSPixelPoint);
-    void scroll_to_anchor(DeprecatedString const&);
 
     JS::GCPtr<BrowsingContext> top_level_browsing_context() const;
 

@@ -340,45 +340,6 @@ void BrowsingContext::scroll_to(CSSPixelPoint position)
         m_page->client().page_did_request_scroll_to(position);
 }
 
-void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
-{
-    JS::GCPtr<DOM::Document> document = active_document();
-    if (!document)
-        return;
-
-    auto element = document->get_element_by_id(fragment);
-    if (!element) {
-        auto candidates = document->get_elements_by_name(MUST(String::from_deprecated_string(fragment)));
-        for (auto& candidate : candidates->collect_matching_elements()) {
-            if (is<HTML::HTMLAnchorElement>(*candidate)) {
-                element = &verify_cast<HTML::HTMLAnchorElement>(*candidate);
-                break;
-            }
-        }
-    }
-
-    if (!element)
-        return;
-
-    document->update_layout();
-
-    if (!element->layout_node())
-        return;
-
-    auto& layout_node = *element->layout_node();
-
-    auto const viewport_rect = document->viewport_rect();
-    CSSPixelRect target_rect { layout_node.box_type_agnostic_position(), { viewport_rect.width(), viewport_rect.height() } };
-    if (is<Layout::Box>(layout_node)) {
-        auto& layout_box = verify_cast<Layout::Box>(layout_node);
-        auto padding_box = layout_box.box_model().padding_box();
-        target_rect.translate_by(-padding_box.left, -padding_box.top);
-    }
-
-    if (m_page && this == &m_page->top_level_browsing_context())
-        m_page->client().page_did_request_scroll_into_view(target_rect);
-}
-
 JS::GCPtr<BrowsingContext> BrowsingContext::top_level_browsing_context() const
 {
     auto const* start = this;
