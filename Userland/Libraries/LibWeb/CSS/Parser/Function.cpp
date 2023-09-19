@@ -24,7 +24,8 @@ String Function::to_string() const
 
     serialize_an_identifier(builder, m_name);
     builder.append('(');
-    builder.join(' ', m_values);
+    for (auto& item : m_values)
+        builder.append(item.to_string());
     builder.append(')');
 
     return MUST(builder.to_string());
