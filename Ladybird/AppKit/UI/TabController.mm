@@ -7,8 +7,8 @@
 #include <LibWebView/History.h>
 
 #import <Application/ApplicationDelegate.h>
-#import <LibWebView/UserAgent.h>
 #import <LibWeb/Loader/ResourceLoader.h>
+#import <LibWebView/UserAgent.h>
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
@@ -488,7 +488,6 @@ enum class IsHistoryNavigation {
 
     return YES;
 }
-
 
 #pragma mark - NSToolbarDelegate
 

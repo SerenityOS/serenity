@@ -10,6 +10,7 @@ if [ "$#" -eq "1" ]; then
         git ls-files -- \
             '*.cpp' \
             '*.h' \
+            '*.mm' \
             ':!:Base' \
             ':!:Kernel/FileSystem/Ext2FS/Definitions.h' \
             ':!:Userland/Libraries/LibCodeComprehension/Cpp/Tests/*' \
@@ -19,7 +20,7 @@ if [ "$#" -eq "1" ]; then
 else
     files=()
     for file in "${@:2}"; do
-        if [[ "${file}" == *".cpp" || "${file}" == *".h" ]]; then
+        if [[ "${file}" == *".cpp" || "${file}" == *".h" || "${file}" == *".mm" ]]; then
             files+=("${file}")
         fi
     done
@@ -60,5 +61,5 @@ if (( ${#files[@]} )); then
     "${CLANG_FORMAT}" -style=file -i "${files[@]}"
     echo "Maybe some files have changed. Sorry, but clang-format doesn't indicate what happened."
 else
-    echo "No .cpp or .h files to check."
+    echo "No .cpp, .h or .mm files to check."
 fi
