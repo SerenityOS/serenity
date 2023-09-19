@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Internals/Internals.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Internals {

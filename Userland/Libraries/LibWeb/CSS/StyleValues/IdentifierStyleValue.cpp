@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::CSS {
 

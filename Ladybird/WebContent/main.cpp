@@ -21,7 +21,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Loader/ContentFilter.h>
-#include <LibWeb/Loader/FrameLoader.h>
+#include <LibWeb/Loader/FileDirectoryLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/AudioCodecPluginAgnostic.h>
@@ -70,8 +70,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #endif
     });
 
-    Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
-
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
     bool use_lagom_networking = false;
@@ -98,9 +96,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
-    Web::FrameLoader::set_resource_directory_url(DeprecatedString::formatted("file://{}/res", s_serenity_resource_root));
-    Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
-    Web::FrameLoader::set_directory_page_url(DeprecatedString::formatted("file://{}/res/html/directory.html", s_serenity_resource_root));
+    Web::set_resource_directory_url(DeprecatedString::formatted("file://{}/res", s_serenity_resource_root));
+    Web::set_directory_page_url(DeprecatedString::formatted("file://{}/res/html/directory.html", s_serenity_resource_root));
 
     TRY(Web::Bindings::initialize_main_thread_vm());
 

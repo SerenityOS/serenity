@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/SVG/SVGDecodedImageData.h>

@@ -5,7 +5,6 @@ source_set("Loader") {
     "ContentFilter.cpp",
     "FileDirectoryLoader.cpp",
     "FileRequest.cpp",
-    "FrameLoader.cpp",
     "LoadRequest.cpp",
     "ProxyMappings.cpp",
     "Resource.cpp",

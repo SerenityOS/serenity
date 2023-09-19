@@ -7,6 +7,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextGroup.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 

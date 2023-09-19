@@ -25,7 +25,6 @@
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/VisibilityState.h>
-#include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWeb/TreeNode.h>
@@ -133,9 +132,6 @@ public:
     Page* page() { return m_page; }
     Page const* page() const { return m_page; }
 
-    FrameLoader& loader() { return m_loader; }
-    FrameLoader const& loader() const { return m_loader; }
-
     Web::EventHandler& event_handler() { return m_event_handler; }
     Web::EventHandler const& event_handler() const { return m_event_handler; }
 
@@ -226,7 +222,6 @@ private:
 
     WeakPtr<Page> m_page;
 
-    FrameLoader m_loader;
     Web::EventHandler m_event_handler;
 
     // https://html.spec.whatwg.org/multipage/history.html#current-entry

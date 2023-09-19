@@ -11,9 +11,32 @@
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
 #include <LibWeb/Loader/FileDirectoryLoader.h>
-#include <LibWeb/Loader/FrameLoader.h>
 
 namespace Web {
+
+static DeprecatedString s_resource_directory_url = "file:///res";
+
+DeprecatedString resource_directory_url()
+{
+    return s_resource_directory_url;
+}
+
+void set_resource_directory_url(DeprecatedString resource_directory_url)
+{
+    s_resource_directory_url = resource_directory_url;
+}
+
+static DeprecatedString s_directory_page_url = "file:///res/html/directory.html";
+
+DeprecatedString directory_page_url()
+{
+    return s_directory_page_url;
+}
+
+void set_directory_page_url(DeprecatedString directory_page_url)
+{
+    s_directory_page_url = directory_page_url;
+}
 
 ErrorOr<DeprecatedString> load_file_directory_page(LoadRequest const& request)
 {
@@ -46,12 +69,12 @@ ErrorOr<DeprecatedString> load_file_directory_page(LoadRequest const& request)
 
     // Generate HTML directory page from directory template file
     // FIXME: Use an actual templating engine (our own one when it's built, preferably with a way to check these usages at compile time)
-    auto template_path = AK::URL::create_with_url_or_path(FrameLoader::directory_page_url()).serialize_path();
+    auto template_path = AK::URL::create_with_url_or_path(directory_page_url()).serialize_path();
     auto template_file = TRY(Core::File::open(template_path, Core::File::OpenMode::Read));
     auto template_contents = TRY(template_file->read_until_eof());
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("resource_directory_url", FrameLoader::resource_directory_url());
+    generator.set("resource_directory_url", resource_directory_url());
     generator.set("path", escape_html_entities(lexical_path.string()));
     generator.set("parent_path", escape_html_entities(lexical_path.parent().string()));
     generator.set("contents", contents.to_deprecated_string());

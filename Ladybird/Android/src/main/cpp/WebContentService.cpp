@@ -21,7 +21,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Loader/ContentFilter.h>
-#include <LibWeb/Loader/FrameLoader.h>
+#include <LibWeb/Loader/FileDirectoryLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/AudioCodecPluginAgnostic.h>
@@ -59,8 +59,6 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
         return Error::from_string_literal("Don't know how to initialize audio in this configuration!");
     });
 
-    Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
-
     auto request_server_client = TRY(bind_request_server_service());
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
 
@@ -72,9 +70,8 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
     Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
-    Web::FrameLoader::set_resource_directory_url(DeprecatedString::formatted("file://{}/res", s_serenity_resource_root));
-    Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
-    Web::FrameLoader::set_directory_page_url(DeprecatedString::formatted("file://{}/res/html/directory.html", s_serenity_resource_root));
+    Web::set_resource_directory_url(DeprecatedString::formatted("file://{}/res", s_serenity_resource_root));
+    Web::set_directory_page_url(DeprecatedString::formatted("file://{}/res/html/directory.html", s_serenity_resource_root));
 
     TRY(Web::Bindings::initialize_main_thread_vm());
 

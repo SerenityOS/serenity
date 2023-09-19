@@ -26,6 +26,7 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/XHR/FormData.h>
 

@@ -13,7 +13,6 @@
 namespace Web {
 class EditEventHandler;
 class EventHandler;
-class FrameLoader;
 class LoadRequest;
 class Page;
 class PageClient;
