@@ -315,7 +315,7 @@ void URL::set_hostname(String const& hostname)
         m_url = move(result_url);
 }
 
-// https://url.spec.whatwg.org/#ref-for-dom-url-hostname①
+// https://url.spec.whatwg.org/#dom-url-port
 WebIDL::ExceptionOr<String> URL::port() const
 {
     auto& vm = realm().vm();
