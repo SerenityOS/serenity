@@ -84,6 +84,7 @@ private:
     NonnullOwnPtr<Board> m_board;
 
     bool m_running { false };
+    bool m_dragging_enabled { true };
 
     int m_running_timer_interval { 500 };
     int m_running_pattern_preview_timer_interval { 100 };

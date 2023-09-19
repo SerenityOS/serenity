@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     statusbar.segment(1).set_fixed_width(ceil(width));
 
     auto show_statusbar_hint = [&]() {
-        auto tip = board_widget->selected_pattern() ? pattern_place_tip : toggle_cells_tip;
+        auto tip = board_widget.selected_pattern() ? pattern_place_tip : toggle_cells_tip;
         statusbar.segment(0).set_text(tip);
     };
     show_statusbar_hint();

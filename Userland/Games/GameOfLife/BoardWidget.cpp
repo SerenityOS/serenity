@@ -196,6 +196,7 @@ void BoardWidget::paint_event(GUI::PaintEvent& event)
 void BoardWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Primary) {
+        m_dragging_enabled = (m_selected_pattern == nullptr);
         set_toggling_cells(true);
         auto row_and_column = get_row_and_column_for_point(event.x(), event.y());
         if (!row_and_column.has_value())
@@ -239,7 +240,7 @@ void BoardWidget::mousemove_event(GUI::MouseEvent& event)
     if (!row_and_column.has_value())
         return;
     auto [row, column] = row_and_column.value();
-    if (m_toggling_cells) {
+    if (m_toggling_cells && m_dragging_enabled) {
         if (m_last_cell_toggled.row != row || m_last_cell_toggled.column != column)
             toggle_cell(row, column);
     }
@@ -253,6 +254,7 @@ void BoardWidget::mousemove_event(GUI::MouseEvent& event)
 void BoardWidget::mouseup_event(GUI::MouseEvent&)
 {
     set_toggling_cells(false);
+    m_dragging_enabled = true;
 }
 
 Optional<Board::RowAndColumn> BoardWidget::get_row_and_column_for_point(int x, int y) const
