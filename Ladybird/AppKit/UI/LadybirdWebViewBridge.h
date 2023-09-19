@@ -39,6 +39,7 @@ public:
     void update_palette();
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
+    void mouse_wheel_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier, int, int);
     void mouse_down_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier);
     void mouse_up_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier);
     void mouse_move_event(Gfx::IntPoint, Gfx::IntPoint, GUI::MouseButton, KeyModifier);

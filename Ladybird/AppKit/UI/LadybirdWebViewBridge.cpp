@@ -100,6 +100,11 @@ void WebViewBridge::set_preferred_color_scheme(Web::CSS::PreferredColorScheme co
     client().async_set_preferred_color_scheme(color_scheme);
 }
 
+void WebViewBridge::mouse_wheel_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers, int wheel_delta_x, int wheel_delta_y)
+{
+    client().async_mouse_wheel(to_content_position(position), screen_position, to_underlying(button), to_underlying(button), modifiers, wheel_delta_x, wheel_delta_y);
+}
+
 void WebViewBridge::mouse_down_event(Gfx::IntPoint position, Gfx::IntPoint screen_position, GUI::MouseButton button, KeyModifier modifiers)
 {
     client().async_mouse_down(to_content_position(position), screen_position, to_underlying(button), to_underlying(button), modifiers);

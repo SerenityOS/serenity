@@ -987,6 +987,18 @@ static void copy_text_to_clipboard(StringView text)
     m_web_view_bridge->mouse_move_event(position, screen_position, button, modifiers);
 }
 
+- (void)scrollWheel:(NSEvent*)event
+{
+    auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Middle);
+    CGFloat delta_x = [event scrollingDeltaX];
+    CGFloat delta_y = -[event scrollingDeltaY];
+    if (![event hasPreciseScrollingDeltas]) {
+        delta_x *= [self scrollView].horizontalLineScroll;
+        delta_y *= [self scrollView].verticalLineScroll;
+    }
+    m_web_view_bridge->mouse_wheel_event(position, screen_position, button, modifiers, delta_x, delta_y);
+}
+
 - (void)mouseDown:(NSEvent*)event
 {
     [[self window] makeFirstResponder:self];
