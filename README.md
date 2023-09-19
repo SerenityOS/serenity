@@ -86,7 +86,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **Itamar Shenhar** - [itamar8910](https://github.com/itamar8910)
 * **Luke Wilde** - [Lubrsi](https://github.com/Lubrsi)
 * **Brendan Coles** - [bcoles](https://github.com/bcoles)
-* **Andrew Kaster** - [ADKaster](https://github.com/ADKaster)
+* **Andrew Kaster** - [ADKaster](https://github.com/ADKaster) [![GitHub Sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub)](https://github.com/sponsors/ADKaster)
 * **thankyouverycool** - [thankyouverycool](https://github.com/thankyouverycool)
 * **Idan Horowitz** - [IdanHo](https://github.com/IdanHo)
 * **Gunnar Beutner** - [gunnarbeutner](https://github.com/gunnarbeutner)
