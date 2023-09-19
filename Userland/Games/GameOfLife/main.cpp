@@ -39,7 +39,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto click_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells"_string;
+    auto toggle_cells_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells"_string;
+    auto pattern_place_tip = "Tip: hold Ctrl to place multiple patterns"_string;
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-gameoflife"sv));
 
@@ -68,7 +69,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     auto width = board_widget.font().width("Ticks: 000,000,000"sv) + board_widget.font().max_glyph_width();
     statusbar.segment(1).set_fixed_width(ceil(width));
-    statusbar.segment(0).set_text(click_tip);
+
+    auto show_statusbar_hint = [&]() {
+        auto tip = board_widget->selected_pattern() ? pattern_place_tip : toggle_cells_tip;
+        statusbar.segment(0).set_text(tip);
+    };
+    show_statusbar_hint();
 
     auto& columns_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");
     auto& rows_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("rows_spinbox");
@@ -77,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     rows_spinbox.set_value(board_rows);
 
     auto size_changed_function = [&] {
-        statusbar.segment(0).set_text(click_tip);
+        show_statusbar_hint();
         board_widget.resize_board(rows_spinbox.value(), columns_spinbox.value());
         board_widget.update();
     };
@@ -103,13 +109,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_toolbar.add_action(play_pause_action);
 
     auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](const GUI::Action&) {
-        statusbar.segment(0).set_text(click_tip);
+        show_statusbar_hint();
         board_widget.run_generation();
     });
     main_toolbar.add_action(run_one_generation_action);
 
     auto clear_board_action = GUI::Action::create("&Clear board", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv)), [&](auto&) {
-        statusbar.segment(0).set_text(click_tip);
+        show_statusbar_hint();
         statusbar.segment(1).set_text({});
         board_widget.clear_cells();
         board_widget.update();
@@ -117,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_toolbar.add_action(clear_board_action);
 
     auto randomize_cells_action = GUI::Action::create("&Randomize board", { Mod_Ctrl, Key_R }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
-        statusbar.segment(0).set_text(click_tip);
+        show_statusbar_hint();
         statusbar.segment(1).set_text({});
         board_widget.randomize_cells();
         board_widget.update();
@@ -185,11 +191,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     board_widget.on_cell_toggled = [&](auto, auto, auto) {
-        statusbar.segment(0).set_text(click_tip);
+        show_statusbar_hint();
         statusbar.segment(1).set_text({});
     };
 
     board_widget.on_pattern_selection_state_change = [&] {
+        show_statusbar_hint();
         rotate_pattern_action->set_enabled(board_widget.selected_pattern() != nullptr);
     };
 
