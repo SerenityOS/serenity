@@ -48,7 +48,6 @@
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
-#include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
@@ -3973,7 +3972,9 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& c
     if (!flex_wrap)
         flex_wrap = property_initial_value(m_context.realm(), PropertyID::FlexWrap);
 
-    return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
+    return ShorthandStyleValue::create(PropertyID::FlexFlow,
+        { PropertyID::FlexDirection, PropertyID::FlexWrap },
+        { flex_direction.release_nonnull(), flex_wrap.release_nonnull() });
 }
 
 static bool is_generic_font_family(ValueID identifier)

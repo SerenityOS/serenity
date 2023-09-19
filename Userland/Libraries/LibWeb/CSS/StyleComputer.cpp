@@ -39,7 +39,6 @@
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
-#include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
@@ -806,13 +805,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::FlexFlow) {
-        if (value.is_flex_flow()) {
-            auto const& flex_flow = value.as_flex_flow();
-            set_longhand_property(CSS::PropertyID::FlexDirection, flex_flow.flex_direction());
-            set_longhand_property(CSS::PropertyID::FlexWrap, flex_flow.flex_wrap());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::FlexDirection, value);
         set_longhand_property(CSS::PropertyID::FlexWrap, value);
         return;
