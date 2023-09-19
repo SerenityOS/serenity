@@ -193,6 +193,9 @@ public:
 
     [[nodiscard]] OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> document_tree_child_navigable_target_name_property_set();
 
+    [[nodiscard]] Vector<DeprecatedString> supported_property_names();
+    [[nodiscard]] WebIDL::ExceptionOr<JS::Value> named_item_value(DeprecatedFlyString const&);
+
 private:
     explicit Window(JS::Realm&);
 

@@ -12,6 +12,9 @@
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/LegacyPlatformObject.h>
+#include <LibWeb/Bindings/WindowPrototype.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -299,6 +302,56 @@ JS::Completion construct(WebIDL::CallbackType& callback, JS::MarkedVector<JS::Va
 
     // 3. Return completion.
     return completion;
+}
+
+// https://webidl.spec.whatwg.org/#dfn-named-property-visibility
+JS::ThrowCompletionOr<bool> is_named_property_exposed_on_object(Variant<Bindings::LegacyPlatformObject const*, HTML::Window*> const& variant, JS::PropertyKey const& property_key)
+{
+    auto const& object = *variant.visit([](auto& o) { return static_cast<JS::Object const*>(o); });
+
+    // The spec doesn't say anything about the type of the property name here.
+    // Numbers can be converted to a string, which is fine and what other engines do.
+    // However, since a symbol cannot be converted to a string, it cannot be a supported property name. Return early if it's a symbol.
+    if (property_key.is_symbol())
+        return false;
+
+    // 1. If P is not a supported property name of O, then return false.
+    // NOTE: This is in it's own variable to enforce the type.
+    Vector<DeprecatedString> supported_property_names = variant.visit([](auto* o) { return o->supported_property_names(); });
+    auto property_key_string = property_key.to_string();
+    if (!supported_property_names.contains_slow(property_key_string))
+        return false;
+
+    // 2. If O has an own property named P, then return false.
+    // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overridden internal_get_own_property.
+    auto own_property_named_p = MUST(object.JS::Object::internal_get_own_property(property_key));
+
+    if (own_property_named_p.has_value())
+        return false;
+
+    // 3. If O implements an interface that has the [LegacyOverrideBuiltIns] extended attribute, then return true.
+    if (variant.has<Bindings::LegacyPlatformObject const*>() && variant.get<Bindings::LegacyPlatformObject const*>()->has_legacy_override_built_ins_interface_extended_attribute())
+        return true;
+
+    // 4. Let prototype be O.[[GetPrototypeOf]]().
+    auto* prototype = TRY(object.internal_get_prototype_of());
+
+    // 5. While prototype is not null:
+    while (prototype) {
+        // 1. If prototype is not a named properties object, and prototype has an own property named P, then return false.
+        //  FIXME: Are there other named properties objects?
+        if (!is<Bindings::WindowProperties>(prototype)) {
+            bool prototype_has_own_property_named_p = TRY(prototype->has_own_property(property_key));
+            if (prototype_has_own_property_named_p)
+                return false;
+        }
+
+        // 2. Set prototype to prototype.[[GetPrototypeOf]]().
+        prototype = TRY(prototype->internal_get_prototype_of());
+    }
+
+    // 6. Return true.
+    return true;
 }
 
 }

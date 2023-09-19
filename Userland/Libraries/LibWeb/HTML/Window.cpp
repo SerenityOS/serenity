@@ -1437,4 +1437,16 @@ OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_
     return names;
 }
 
+// https://html.spec.whatwg.org/#named-access-on-the-window-object
+Vector<DeprecatedString> Window::supported_property_names()
+{
+    return {};
+}
+
+// https://html.spec.whatwg.org/#named-access-on-the-window-object
+WebIDL::ExceptionOr<JS::Value> Window::named_item_value(DeprecatedFlyString const& name)
+{
+    return JS::js_undefined();
+}
+
 }

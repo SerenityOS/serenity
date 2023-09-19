@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Bindings {
@@ -15,6 +16,8 @@ namespace Web::Bindings {
 // https://webidl.spec.whatwg.org/#dfn-legacy-platform-object
 class LegacyPlatformObject : public PlatformObject {
     WEB_PLATFORM_OBJECT(LegacyPlatformObject, PlatformObject);
+
+    virtual bool has_legacy_override_built_ins_interface_extended_attribute() const = 0;
 
 public:
     virtual ~LegacyPlatformObject() override;
@@ -25,8 +28,6 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
-
-    JS::ThrowCompletionOr<bool> is_named_property_exposed_on_object(JS::PropertyKey const&) const;
 
     enum class IgnoreNamedProps {
         No,
@@ -80,7 +81,6 @@ protected:
 
     virtual bool has_named_property_deleter() const = 0;
 
-    virtual bool has_legacy_override_built_ins_interface_extended_attribute() const = 0;
     virtual bool has_legacy_unenumerable_named_properties_interface_extended_attribute() const = 0;
     virtual bool has_global_interface_extended_attribute() const = 0;
 

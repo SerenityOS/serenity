@@ -2549,6 +2549,169 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_json)
 )~~~");
 }
 
+static void generate_named_properties_object_declarations(IDL::Interface const& interface, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    generator.set("named_properties_class", DeprecatedString::formatted("{}Properties", interface.name));
+
+    generator.append(R"~~~(
+class @named_properties_class@ : public JS::Object {
+    JS_OBJECT(@named_properties_class@, JS::Object);
+public:
+    explicit @named_properties_class@(JS::Realm&);
+    virtual void initialize(JS::Realm&) override;
+    virtual ~@named_properties_class@() override;
+
+    JS::Realm& realm() const { return m_realm; }
+private:
+    virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyKey const&) const override;
+    virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyKey const&, JS::PropertyDescriptor const&) override;
+    virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
+    virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
+    virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
+
+    JS::Realm& m_realm; // [[Realm]]
+};
+)~~~");
+}
+
+static void generate_named_properties_object_definitions(IDL::Interface const& interface, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    generator.set("name", interface.name);
+    generator.set("parent_name", interface.parent_name);
+    generator.set("prototype_base_class", interface.prototype_base_class);
+    generator.set("named_properties_class", DeprecatedString::formatted("{}Properties", interface.name));
+
+    // https://webidl.spec.whatwg.org/#create-a-named-properties-object
+    generator.append(R"~~~(
+#include <LibWeb/WebIDL/AbstractOperations.h>
+
+@named_properties_class@::@named_properties_class@(JS::Realm& realm)
+  : JS::Object(realm, nullptr)
+  , m_realm(realm)
+{
+}
+
+@named_properties_class@::~@named_properties_class@()
+{
+}
+
+void @named_properties_class@::initialize(JS::Realm& realm)
+{
+    auto& vm = realm.vm();
+
+    // The class string of a named properties object is the concatenation of the interface's identifier and the string "Properties".
+    define_direct_property(vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "@named_properties_class@"_string), JS::Attribute::Configurable);
+)~~~");
+
+    // 1. Let proto be null
+    // 2. If interface is declared to inherit from another interface, then set proto to the interface prototype object in realm for the inherited interface.
+    // 3. Otherwise, set proto to realm.[[Intrinsics]].[[%Object.prototype%]].
+    // NOTE: Steps 4-9 handled by constructor + other overridden functions
+    // 10. Set obj.[[Prototype]] to proto.
+    if (interface.prototype_base_class == "ObjectPrototype") {
+        generator.append(R"~~~(
+
+    set_prototype(realm.intrinsics().object_prototype());
+)~~~");
+    } else {
+        generator.append(R"~~~(
+
+    set_prototype(&ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"));
+)~~~");
+    }
+
+    generator.append(R"~~~(
+};
+
+// https://webidl.spec.whatwg.org/#named-properties-object-getownproperty
+JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @named_properties_class@::internal_get_own_property(JS::PropertyKey const& property_name) const
+{
+    auto& vm = this->vm();
+    auto& realm = this->realm();
+
+    // 1. Let A be the interface for the named properties object O.
+    using A = @name@;
+
+    // 2. Let object be O.[[Realm]]'s global object.
+    // 3. Assert: object implements A.
+    auto& object = verify_cast<A>(realm.global_object());
+
+    // 4. If the result of running the named property visibility algorithm with property name P and object object is true, then:
+    if (TRY(is_named_property_exposed_on_object({ &object }, property_name))) {
+        auto property_name_string = property_name.to_string();
+
+        // 1. Let operation be the operation used to declare the named property getter.
+        // 2. Let value be an uninitialized variable.
+        // 3. If operation was defined without an identifier, then set value to the result of performing the steps listed in the interface description to determine the value of a named property with P as the name.
+        // 4. Otherwise, operation was defined with an identifier. Set value to the result of performing the method steps of operation with « P » as the only argument value.
+        auto value = TRY(throw_dom_exception_if_needed(vm, [&] { return object.named_item_value(property_name_string); }));
+
+        // 5. Let desc be a newly created Property Descriptor with no fields.
+        JS::PropertyDescriptor descriptor;
+
+        // 6. Set desc.[[Value]] to the result of converting value to an ECMAScript value.
+        descriptor.value = value;
+)~~~");
+    if (interface.extended_attributes.contains("LegacyUnenumerableNamedProperties"))
+        generator.append(R"~~~(
+        // 7. If A implements an interface with the [LegacyUnenumerableNamedProperties] extended attribute, then set desc.[[Enumerable]] to false, otherwise set it to true.
+        descriptor.enumerable = true;
+)~~~");
+    else {
+        generator.append(R"~~~(
+        // 7. If A implements an interface with the [LegacyUnenumerableNamedProperties] extended attribute, then set desc.[[Enumerable]] to false, otherwise set it to true.
+        descriptor.enumerable = false;
+)~~~");
+    }
+    generator.append(R"~~~(
+        // 8. Set desc.[[Writable]] to true and desc.[[Configurable]] to true.
+        descriptor.writable = true;
+        descriptor.configurable = true;
+
+        // 9. Return desc.
+        return descriptor;
+    }
+
+    // 5. Return OrdinaryGetOwnProperty(O, P).
+    return JS::Object::internal_get_own_property(property_name);
+}
+
+// https://webidl.spec.whatwg.org/#named-properties-object-defineownproperty
+JS::ThrowCompletionOr<bool> @named_properties_class@::internal_define_own_property(JS::PropertyKey const&, JS::PropertyDescriptor const&)
+{
+    // 1. Return false.
+    return false;
+}
+
+// https://webidl.spec.whatwg.org/#named-properties-object-delete
+JS::ThrowCompletionOr<bool> @named_properties_class@::internal_delete(JS::PropertyKey const&)
+{
+    // 1. Return false.
+    return false;
+}
+
+// https://webidl.spec.whatwg.org/#named-properties-object-setprototypeof
+JS::ThrowCompletionOr<bool> @named_properties_class@::internal_set_prototype_of(JS::Object* prototype)
+{
+    // 1. Return ? SetImmutablePrototype(O, V).
+    return set_immutable_prototype(prototype);
+}
+
+// https://webidl.spec.whatwg.org/#named-properties-object-preventextensions
+JS::ThrowCompletionOr<bool> @named_properties_class@::internal_prevent_extensions()
+{
+    // 1. Return false.
+    // Note: this keeps named properties object extensible by making [[PreventExtensions]] fail.
+    return false;
+}
+)~~~");
+}
+
+// https://webidl.spec.whatwg.org/#interface-prototype-object
 static void generate_prototype_or_global_mixin_definitions(IDL::Interface const& interface, StringBuilder& builder)
 {
     SourceGenerator generator { builder };
@@ -2561,12 +2724,14 @@ static void generate_prototype_or_global_mixin_definitions(IDL::Interface const&
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("parent_name", interface.parent_name);
     generator.set("prototype_base_class", interface.prototype_base_class);
+    generator.set("prototype_name", interface.prototype_class); // Used for Global Mixin
 
     if (interface.pair_iterator_types.has_value()) {
         generator.set("iterator_name", DeprecatedString::formatted("{}Iterator", interface.name));
     }
 
     if (is_global_interface) {
+        generator.set("named_properties_class", DeprecatedString::formatted("{}Properties", interface.name));
         // Doing this with macros is not super nice, but simplifies codegen a lot.
         generator.append(R"~~~(
 #define define_direct_property (object.define_direct_property)
@@ -2598,6 +2763,10 @@ void @class_name@::initialize(JS::Realm& realm)
 
     set_prototype(realm.intrinsics().object_prototype());
 
+)~~~");
+    } else if (is_global_interface && interface.supports_named_properties()) {
+        generator.append(R"~~~(
+    set_prototype(&ensure_web_prototype<@prototype_name@>(realm, "@name@"));
 )~~~");
     } else {
         generator.append(R"~~~(
@@ -3671,6 +3840,9 @@ private:
         generator.append(R"~~~(
 };
 )~~~");
+        if (interface.supports_named_properties()) {
+            generate_named_properties_object_declarations(interface, builder);
+        }
     } else {
         generate_prototype_or_global_mixin_declarations(interface, builder);
     }
@@ -3816,15 +3988,27 @@ namespace Web::Bindings {
 }
 )~~~");
 
-    // Generate an empty prototype object for global interfaces.
+    // Generate a mostly empty prototype object for global interfaces.
     auto is_global_interface = interface.extended_attributes.contains("Global");
     if (is_global_interface) {
         generator.append(R"~~~(
 void @prototype_class@::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
+)~~~");
+        if (interface.supports_named_properties()) {
+            generator.set("named_properties_class", DeprecatedString::formatted("{}Properties", interface.name));
+            generator.set("namespaced_name", interface.namespaced_name);
+            generator.append(R"~~~(
+    define_direct_property(vm().well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm(), "@namespaced_name@"_string), JS::Attribute::Configurable);
+    set_prototype(&ensure_web_prototype<@prototype_class@>(realm, "@named_properties_class@"));
+)~~~");
+        }
+        generator.append(R"~~~(
 }
 )~~~");
+        if (interface.supports_named_properties())
+            generate_named_properties_object_definitions(interface, builder);
     } else {
         generate_prototype_or_global_mixin_definitions(interface, builder);
     }
