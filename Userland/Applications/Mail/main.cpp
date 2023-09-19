@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mail"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto mail_widget = TRY(window->set_main_widget<MailWidget>());
+    auto mail_widget = window->set_main_widget<MailWidget>();
 
     window->set_title("Mail");
     window->resize(640, 400);

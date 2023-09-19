@@ -116,7 +116,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Optional<Gfx::IntRect> crop_region;
     if (select_region) {
         auto window = GUI::Window::construct();
-        auto container = TRY(window->set_main_widget<SelectableLayover>(window));
+        auto container = window->set_main_widget<SelectableLayover>(window);
 
         window->set_title("shot");
         window->set_has_alpha_channel(true);

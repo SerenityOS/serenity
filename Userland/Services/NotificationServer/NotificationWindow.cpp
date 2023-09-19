@@ -68,7 +68,7 @@ NotificationWindow::NotificationWindow(i32 client_id, String const& text, String
 
     m_original_rect = rect;
 
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
 
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::HorizontalBoxLayout>(8, 6);

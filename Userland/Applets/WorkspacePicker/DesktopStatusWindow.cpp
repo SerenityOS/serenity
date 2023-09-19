@@ -148,7 +148,7 @@ DesktopStatusWindow::DesktopStatusWindow()
 {
     set_window_type(GUI::WindowType::Applet);
     set_has_alpha_channel(true);
-    m_widget = set_main_widget<DesktopStatusWidget>().release_value_but_fixme_should_propagate_errors();
+    m_widget = set_main_widget<DesktopStatusWidget>();
 }
 
 void DesktopStatusWindow::wm_event(GUI::WMEvent& event)

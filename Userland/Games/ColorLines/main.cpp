@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(436, 481);
     window->set_resizable(false);
 
-    auto game = TRY(window->set_main_widget<ColorLines>(app_name));
+    auto game = window->set_main_widget<ColorLines>(app_name);
 
     auto game_menu = window->add_menu("&Game"_string);
 

@@ -84,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (mode >= Solitaire::Mode::__Count)
         update_mode(Solitaire::Mode::SingleCardDraw);
 
-    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto widget = window->set_main_widget<GUI::Widget>();
     TRY(widget->load_from_gml(solitaire_gml));
 
     auto& game = *widget->find_descendant_of_type_named<Solitaire::Game>("game");

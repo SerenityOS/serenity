@@ -45,7 +45,7 @@ CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, 
     set_icon(parent->icon());
     resize(285, 360);
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->set_layout<GUI::VerticalBoxLayout>(4);
     main_widget->set_fill_with_background_color(true);
 

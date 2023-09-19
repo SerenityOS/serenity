@@ -164,7 +164,7 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
     window->set_resizable(false);
     window->resize(300, 90);
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     main_widget->set_fill_with_background_color(true);
     main_widget->set_background_role(ColorRole::Button);
     main_widget->set_layout<GUI::VerticalBoxLayout>(4);
@@ -283,7 +283,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Terminal");
     window->set_obey_widget_min_size(false);
 
-    auto terminal = TRY(window->set_main_widget<VT::TerminalWidget>(ptm_fd, true));
+    auto terminal = window->set_main_widget<VT::TerminalWidget>(ptm_fd, true);
     terminal->on_command_exit = [&] {
         app->quit(0);
     };

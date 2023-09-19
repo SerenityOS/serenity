@@ -72,7 +72,7 @@ TaskbarWindow::TaskbarWindow()
 
 ErrorOr<void> TaskbarWindow::populate_taskbar()
 {
-    auto main_widget = TRY(set_main_widget<TaskbarWidget>());
+    auto main_widget = set_main_widget<TaskbarWidget>();
     main_widget->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2, 3, 0, 3 });
 
     m_quick_launch = TRY(Taskbar::QuickLaunchWidget::create());

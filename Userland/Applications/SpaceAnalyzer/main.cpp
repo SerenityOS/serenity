@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     // Load widgets.
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     TRY(main_widget->load_from_gml(space_analyzer_gml));
     auto& breadcrumbbar = *main_widget->find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
     auto& tree_map_widget = *main_widget->find_descendant_of_type_named<SpaceAnalyzer::TreeMapWidget>("tree_map");

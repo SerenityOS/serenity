@@ -109,7 +109,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     }
     resize(560, 320);
 
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
     widget->load_from_gml(file_picker_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& toolbar = *widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");

@@ -116,7 +116,7 @@ ComboBox::ComboBox()
     m_list_window = add<Window>(window());
     m_list_window->set_window_type(GUI::WindowType::Popup);
 
-    m_list_view = m_list_window->set_main_widget<ListView>().release_value_but_fixme_should_propagate_errors();
+    m_list_view = m_list_window->set_main_widget<ListView>();
     m_list_view->set_should_hide_unnecessary_scrollbars(true);
     m_list_view->set_alternating_row_colors(false);
     m_list_view->set_hover_highlighting(true);

@@ -82,7 +82,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
     window->resize(400, 150);
     window->center_within(*this->window());
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     TRY(main_widget->load_from_gml(font_preview_window_gml));
 
     m_preview_label = find_descendant_of_type_named<GUI::Label>("preview_label");

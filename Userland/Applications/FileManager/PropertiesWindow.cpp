@@ -70,7 +70,7 @@ PropertiesWindow::PropertiesWindow(DeprecatedString const& path, Window* parent_
 
 ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 {
-    auto main_widget = TRY(set_main_widget<GUI::Widget>());
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->set_layout<GUI::VerticalBoxLayout>(4, 6);
     main_widget->set_fill_with_background_color(true);
 

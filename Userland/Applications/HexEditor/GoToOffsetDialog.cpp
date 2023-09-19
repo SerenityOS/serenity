@@ -96,7 +96,7 @@ GoToOffsetDialog::GoToOffsetDialog()
     set_resizable(false);
     set_title("Go to Offset");
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->load_from_gml(go_to_offset_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     m_text_editor = *main_widget->find_descendant_of_type_named<GUI::TextBox>("text_editor");

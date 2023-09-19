@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return Error::from_string_view(error_message);
     }
 
-    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto widget = window->set_main_widget<GUI::Widget>();
     TRY(widget->load_from_gml(partition_editor_window_gml));
 
     auto device_paths = get_device_paths();

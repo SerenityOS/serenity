@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(Desktop::Screensaver::create_window("Tubes"sv, "app-tubes"sv));
     window->update();
 
-    auto tubes_widget = TRY(window->set_main_widget<Tubes>(refresh_rate));
+    auto tubes_widget = window->set_main_widget<Tubes>(refresh_rate);
     tubes_widget->set_fill_with_background_color(false);
     tubes_widget->set_override_cursor(Gfx::StandardCursor::Hidden);
     window->show();

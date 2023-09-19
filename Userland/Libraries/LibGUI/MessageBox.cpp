@@ -150,7 +150,7 @@ bool MessageBox::should_include_no_button() const
 
 ErrorOr<void> MessageBox::build()
 {
-    auto main_widget = TRY(set_main_widget<Widget>());
+    auto main_widget = set_main_widget<Widget>();
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<VerticalBoxLayout>(8, 6);
 

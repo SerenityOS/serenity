@@ -76,7 +76,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
     main_widget->m_preview_window = GUI::Window::construct(main_widget);
     main_widget->m_preview_window->set_title("Preview - GML Playground");
     main_widget->m_preview_window->set_icon(icon.bitmap_for_size(16));
-    main_widget->m_preview_window_widget = TRY(main_widget->m_preview_window->set_main_widget<GUI::Widget>());
+    main_widget->m_preview_window_widget = main_widget->m_preview_window->set_main_widget<GUI::Widget>();
     main_widget->m_preview_window_widget->set_fill_with_background_color(true);
 
     main_widget->m_preview = main_widget->m_preview_frame_widget;

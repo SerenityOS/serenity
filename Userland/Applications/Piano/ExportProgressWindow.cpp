@@ -20,7 +20,7 @@ ExportProgressWindow::ExportProgressWindow(GUI::Window& parent_window, Atomic<in
 
 ErrorOr<void> ExportProgressWindow::initialize_fallibles()
 {
-    auto main_widget = TRY(set_main_widget<GUI::Widget>());
+    auto main_widget = set_main_widget<GUI::Widget>();
     TRY(main_widget->load_from_gml(export_progress_widget));
 
     set_resizable(false);

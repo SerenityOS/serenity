@@ -48,7 +48,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
     , m_category_action_group(make<ActionGroup>())
 {
-    auto main_widget = set_main_widget<Frame>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<Frame>();
     main_widget->load_from_gml(emoji_input_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     set_window_type(GUI::WindowType::Popup);

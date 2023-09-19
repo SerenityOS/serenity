@@ -92,7 +92,7 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
     m_popup_window->set_obey_widget_min_size(false);
     m_popup_window->set_rect(0, 0, 175, 25);
 
-    auto main_widget = m_popup_window->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = m_popup_window->set_main_widget<GUI::Widget>();
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 

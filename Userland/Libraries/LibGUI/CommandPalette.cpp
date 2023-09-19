@@ -183,7 +183,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
 
     collect_actions(parent_window);
 
-    auto main_widget = set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Frame>();
     main_widget->set_frame_style(Gfx::FrameStyle::Window);
     main_widget->set_fill_with_background_color(true);
 

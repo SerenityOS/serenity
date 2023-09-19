@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(200, 200);
     window->set_resizable(false);
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     main_widget->set_fill_with_background_color(true);
 
     main_widget->set_layout<GUI::VerticalBoxLayout>(16);

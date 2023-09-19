@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->save_size_and_position_on_close("Maps"sv, "Window"sv);
 
     // Root widget
-    auto root_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto root_widget = window->set_main_widget<GUI::Widget>();
     root_widget->set_fill_with_background_color(true);
     root_widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 2);
 

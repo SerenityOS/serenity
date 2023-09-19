@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Image Viewer");
 
-    auto root_widget = TRY(window->set_main_widget<MainWidget>());
+    auto root_widget = window->set_main_widget<MainWidget>();
 
     auto toolbar_container = TRY(root_widget->try_add<GUI::ToolbarContainer>());
     auto main_toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());

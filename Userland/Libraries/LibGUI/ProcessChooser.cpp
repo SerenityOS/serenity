@@ -31,7 +31,7 @@ ProcessChooser::ProcessChooser(StringView window_title, String button_label, Gfx
     resize(300, 340);
     center_on_screen();
 
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::VerticalBoxLayout>();
 

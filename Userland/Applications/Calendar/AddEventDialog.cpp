@@ -33,7 +33,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
 
     m_date_time = Core::DateTime::create(m_date_time.year(), m_date_time.month(), m_date_time.day(), 12, 0);
 
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::VerticalBoxLayout>();
 

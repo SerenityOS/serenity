@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     // start in advanced view by default
-    Player* player = TRY(window->set_main_widget<SoundPlayerWidget>(window, audio_client, decoder_client));
+    Player* player = window->set_main_widget<SoundPlayerWidget>(window, audio_client, decoder_client);
 
     if (!file_path.is_empty()) {
         player->play_file_path(file_path);

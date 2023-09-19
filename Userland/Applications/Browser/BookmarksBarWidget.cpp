@@ -53,7 +53,7 @@ private:
     BookmarkEditor(Window* parent_window, StringView title, StringView url)
         : Dialog(parent_window)
     {
-        auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+        auto widget = set_main_widget<GUI::Widget>();
         widget->load_from_gml(edit_bookmark_gml).release_value_but_fixme_should_propagate_errors();
 
         set_resizable(false);

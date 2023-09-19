@@ -17,7 +17,7 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
     set_title("Commit");
     set_icon(parent->icon());
 
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
     widget->load_from_gml(git_commit_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     m_message_editor = widget->find_descendant_of_type_named<GUI::TextEditor>("message_editor");

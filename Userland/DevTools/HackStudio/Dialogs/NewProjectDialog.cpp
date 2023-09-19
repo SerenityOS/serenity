@@ -49,7 +49,7 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
     set_resizable(false);
     set_title("New Project");
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->load_from_gml(new_project_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     m_icon_view_container = *main_widget->find_descendant_of_type_named<GUI::Widget>("icon_view_container");

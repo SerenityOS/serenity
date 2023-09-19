@@ -23,7 +23,7 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString
     resize(340, 122);
     set_title(move(title));
 
-    auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<Widget>();
     widget->load_from_gml(password_input_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& key_icon = *widget->find_descendant_of_type_named<GUI::ImageWidget>("key_icon");

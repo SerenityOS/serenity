@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Eyes Demo"_string, app_icon, window));
 
-    auto eyes_widget = TRY(window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns));
+    auto eyes_widget = window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns);
     eyes_widget->on_context_menu_request = [&](auto& event) {
         file_menu->popup(event.screen_position());
     };

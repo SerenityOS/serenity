@@ -282,7 +282,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("System Monitor");
     window->resize(560, 430);
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     TRY(main_widget->load_from_gml(system_monitor_gml));
     auto& tabwidget = *main_widget->find_descendant_of_type_named<GUI::TabWidget>("main_tabs");
     statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
@@ -530,7 +530,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-system-monitor"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     TRY(main_widget->load_from_gml(process_window_gml));
 
     GUI::ModelIndex process_index;

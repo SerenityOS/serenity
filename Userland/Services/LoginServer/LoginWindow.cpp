@@ -20,7 +20,7 @@ LoginWindow::LoginWindow(GUI::Window* parent)
     set_closeable(false);
     set_icon(GUI::Icon::default_icon("ladyball"sv).bitmap_for_size(16));
 
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
     widget->load_from_gml(login_window_gml).release_value_but_fixme_should_propagate_errors();
     m_banner = *widget->find_descendant_of_type_named<GUI::ImageWidget>("banner");
     m_banner->load_from_file("/res/graphics/brand-banner.png"sv);

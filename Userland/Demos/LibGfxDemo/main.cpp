@@ -202,7 +202,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-libgfx-demo"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->set_main_widget<Canvas>());
+    (void)window->set_main_widget<Canvas>();
     window->show();
 
     return app->exec();

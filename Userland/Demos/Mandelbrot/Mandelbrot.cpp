@@ -411,7 +411,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_obey_widget_min_size(false);
     window->set_minimum_size(320, 240);
     window->resize(window->minimum_size() * 2);
-    auto mandelbrot = TRY(window->set_main_widget<Mandelbrot>());
+    auto mandelbrot = window->set_main_widget<Mandelbrot>();
 
     auto file_menu = window->add_menu("&File"_string);
 

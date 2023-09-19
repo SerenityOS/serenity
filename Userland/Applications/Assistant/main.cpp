@@ -174,7 +174,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     Assistant::Database db { app_state, providers };
 
-    auto container = TRY(window->set_main_widget<GUI::Frame>());
+    auto container = window->set_main_widget<GUI::Frame>();
     container->set_fill_with_background_color(true);
     container->set_frame_style(Gfx::FrameStyle::Window);
     container->set_layout<GUI::VerticalBoxLayout>(8);

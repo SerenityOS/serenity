@@ -45,7 +45,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(640, 470);
 
-    auto font_editor = TRY(window->set_main_widget<FontEditor::MainWidget>());
+    auto font_editor = TRY(FontEditor::MainWidget::try_create());
+    window->set_main_widget(font_editor);
     TRY(font_editor->initialize_menubar(*window));
     font_editor->reset();
 

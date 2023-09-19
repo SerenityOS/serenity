@@ -362,7 +362,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640 + 4, 480 + 4);
     window->set_resizable(false);
     window->set_double_buffering_enabled(true);
-    auto widget = TRY(window->set_main_widget<GLContextWidget>());
+    auto widget = window->set_main_widget<GLContextWidget>();
 
     auto& time = widget->add<GUI::Label>();
     time.set_visible(false);

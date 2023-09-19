@@ -14,7 +14,7 @@ ErrorOr<NonnullRefPtr<ProgressWindow>> ProgressWindow::try_create(StringView tit
 {
     auto window = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProgressWindow(title, parent)));
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 

@@ -68,7 +68,7 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, URL url)
     set_icon(app_icon.bitmap_for_size(16));
     set_title("Ladybird");
 
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
     widget->load_from_gml(browser_window_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& top_line = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");

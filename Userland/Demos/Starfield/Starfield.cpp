@@ -167,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(Desktop::Screensaver::create_window("Starfield"sv, "app-starfield"sv));
 
-    auto starfield_widget = TRY(window->set_main_widget<Starfield>(refresh_rate));
+    auto starfield_widget = window->set_main_widget<Starfield>(refresh_rate);
     starfield_widget->set_fill_with_background_color(false);
     starfield_widget->set_override_cursor(Gfx::StandardCursor::Hidden);
     starfield_widget->update();

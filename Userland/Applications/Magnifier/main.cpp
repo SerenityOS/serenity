@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(window_dimensions, window_dimensions);
     window->set_minimizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
-    auto magnifier = TRY(window->set_main_widget<MagnifierWidget>());
+    auto magnifier = window->set_main_widget<MagnifierWidget>();
 
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
