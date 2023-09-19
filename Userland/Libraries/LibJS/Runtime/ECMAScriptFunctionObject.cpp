@@ -659,10 +659,6 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     GCPtr<Environment> var_environment;
 
-    HashTable<DeprecatedFlyString> instantiated_var_names;
-    if (scope_body)
-        instantiated_var_names.ensure_capacity(scope_body->var_declaration_count());
-
     // 27. If hasParameterExpressions is false, then
     if (!m_has_parameter_expressions) {
         // a. NOTE: Only a single Environment Record is needed for the parameters and top-level vars.
