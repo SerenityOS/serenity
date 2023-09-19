@@ -448,6 +448,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         auto& values = shorthand_value.values();
         for (size_t i = 0; i < properties.size(); ++i)
             set_property_expanding_shorthands(style, properties[i], values[i], document, declaration, properties_for_revert);
+        return;
     }
 
     auto assign_edge_values = [&](PropertyID top_property, PropertyID right_property, PropertyID bottom_property, PropertyID left_property, auto const& values) {
