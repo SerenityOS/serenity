@@ -28,14 +28,20 @@
 #include <LibWeb/CSS/Screen.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
+#include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
 #include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Focus.h>
+#include <LibWeb/HTML/HTMLEmbedElement.h>
+#include <LibWeb/HTML/HTMLFormElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/HTML/HTMLObjectElement.h>
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Navigation.h>
@@ -1440,13 +1446,111 @@ OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_
 // https://html.spec.whatwg.org/#named-access-on-the-window-object
 Vector<DeprecatedString> Window::supported_property_names()
 {
-    return {};
+    // The Window object supports named properties.
+    // The supported property names of a Window object window at any moment consist of the following,
+    // in tree order according to the element that contributed them, ignoring later duplicates:
+
+    HashTable<String> property_names;
+
+    // - window's document-tree child navigable target name property set;
+    auto child_navigable_property_set = document_tree_child_navigable_target_name_property_set();
+    for (auto& entry : child_navigable_property_set)
+        property_names.set(entry.key, AK::HashSetExistingEntryBehavior::Keep);
+
+    // - the value of the name content attribute for all embed, form, img, and object elements
+    //   that have a non-empty name content attribute and are in a document tree with window's associated Document as their root; and
+    // - the value of the id content attribute for all HTML elements that have a non-empty id content attribute
+    //   and are in a document tree with window's associated Document as their root.
+    associated_document().for_each_in_subtree_of_type<DOM::Element>([&property_names](auto& element) -> IterationDecision {
+        if (is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element)) {
+            if (auto const& name = element.attribute(AttributeNames::name); name.has_value())
+                property_names.set(name.value(), AK::HashSetExistingEntryBehavior::Keep);
+        }
+        if (auto const& name = element.attribute(AttributeNames::id); name.has_value())
+            property_names.set(name.value(), AK::HashSetExistingEntryBehavior::Keep);
+        return IterationDecision::Continue;
+    });
+
+    // FIXME: Many copies here. Would be nice to be able to return Vector<String>
+    Vector<DeprecatedString> names;
+    names.ensure_capacity(property_names.size());
+    for (auto const& name : property_names) {
+        names.append(name.to_deprecated_string());
+    }
+    return names;
 }
 
 // https://html.spec.whatwg.org/#named-access-on-the-window-object
 WebIDL::ExceptionOr<JS::Value> Window::named_item_value(DeprecatedFlyString const& name)
 {
-    return JS::js_undefined();
+    // To determine the value of a named property name in a Window object window, the user agent must return the value obtained using the following steps:
+
+    // 1. Let objects be the list of named objects of window with the name name.
+    // NOTE: There will be at least one such object, since the algorithm would otherwise not have been invoked by Web IDL.
+    auto objects = named_objects(name);
+
+    // 2. If objects contains a navigable, then:
+    if (!objects.navigables.is_empty()) {
+        // 1. Let container be the first navigable container in window's associated Document's descendants whose content navigable is in objects.
+        JS::GCPtr<NavigableContainer> container = nullptr;
+        associated_document().for_each_in_subtree_of_type<HTML::NavigableContainer>([&](HTML::NavigableContainer& navigable_container) {
+            if (!navigable_container.content_navigable())
+                return IterationDecision::Continue;
+            if (objects.navigables.contains_slow(JS::NonnullGCPtr { *navigable_container.content_navigable() })) {
+                container = navigable_container;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        // 2. Return container's content navigable's active WindowProxy.
+        VERIFY(container);
+        return container->content_navigable()->active_window_proxy();
+    }
+
+    // 3. Otherwise, if objects has only one element, return that element.
+    if (objects.elements.size() == 1)
+        return objects.elements[0];
+
+    // 4. Otherwise return an HTMLCollection rooted at window's associated Document,
+    //    whose filter matches only named objects of window with the name name. (By definition, these will all be elements.)
+    return DOM::HTMLCollection::create(associated_document(), DOM::HTMLCollection::Scope::Descendants, [name](auto& element) -> bool {
+        if ((is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element))
+            && (element.attribute(AttributeNames::name) == name.view()))
+            return true;
+        return element.attribute(AttributeNames::id) == name.view();
+    });
+}
+
+// https://html.spec.whatwg.org/#dom-window-nameditem-filter
+Window::NamedObjects Window::named_objects(StringView name)
+{
+    // NOTE: Since the Window interface has the [Global] extended attribute, its named properties
+    //       follow the rules for named properties objects rather than legacy platform objects.
+
+    // Named objects of Window object window with the name name, for the purposes of the above algorithm, consist of the following:
+    NamedObjects objects;
+
+    // document-tree child navigables of window's associated Document whose target name is name;
+    auto children = associated_document().document_tree_child_navigables();
+    for (auto& navigable : children) {
+        if (navigable->target_name() == name) {
+            objects.navigables.append(*navigable);
+        }
+    }
+
+    // embed, form, img, or object elements that have a name content attribute whose value is name
+    // and are in a document tree with window's associated Document as their root; and
+    // HTML elements that have an id content attribute whose value is name and are in a document tree with window's associated Document as their root.
+    associated_document().for_each_in_subtree_of_type<DOM::Element>([&objects, &name](auto& element) -> IterationDecision {
+        if ((is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element))
+            && (element.attribute(AttributeNames::name) == name))
+            objects.elements.append(element);
+        else if (element.attribute(AttributeNames::id) == name)
+            objects.elements.append(element);
+        return IterationDecision::Continue;
+    });
+
+    return objects;
 }
 
 }
