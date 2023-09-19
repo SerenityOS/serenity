@@ -14,7 +14,6 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
-#include <LibWeb/CSS/StyleValues/BackgroundStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
@@ -36,6 +35,7 @@
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
@@ -157,24 +157,16 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     // https://www.w3.org/TR/cssom-1/#resolved-values
     switch (property_id) {
     case PropertyID::Background: {
-        auto maybe_background_color = property(PropertyID::BackgroundColor);
-        auto maybe_background_image = property(PropertyID::BackgroundImage);
-        auto maybe_background_position = property(PropertyID::BackgroundPosition);
-        auto maybe_background_size = property(PropertyID::BackgroundSize);
-        auto maybe_background_repeat = property(PropertyID::BackgroundRepeat);
-        auto maybe_background_attachment = property(PropertyID::BackgroundAttachment);
-        auto maybe_background_origin = property(PropertyID::BackgroundOrigin);
-        auto maybe_background_clip = property(PropertyID::BackgroundClip);
-
-        return BackgroundStyleValue::create(
-            value_or_default(maybe_background_color, InitialStyleValue::the()),
-            value_or_default(maybe_background_image, IdentifierStyleValue::create(ValueID::None)),
-            value_or_default(maybe_background_position, PositionStyleValue::create(EdgeStyleValue::create(PositionEdge::Left, Length::make_px(0)), EdgeStyleValue::create(PositionEdge::Top, Length::make_px(0)))),
-            value_or_default(maybe_background_size, IdentifierStyleValue::create(ValueID::Auto)),
-            value_or_default(maybe_background_repeat, BackgroundRepeatStyleValue::create(Repeat::Repeat, Repeat::Repeat)),
-            value_or_default(maybe_background_attachment, IdentifierStyleValue::create(ValueID::Scroll)),
-            value_or_default(maybe_background_origin, IdentifierStyleValue::create(ValueID::PaddingBox)),
-            value_or_default(maybe_background_clip, IdentifierStyleValue::create(ValueID::BorderBox)));
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BackgroundColor, PropertyID::BackgroundImage, PropertyID::BackgroundPosition, PropertyID::BackgroundSize, PropertyID::BackgroundRepeat, PropertyID::BackgroundAttachment, PropertyID::BackgroundOrigin, PropertyID::BackgroundClip },
+            { value_or_default(property(PropertyID::BackgroundColor), InitialStyleValue::the()),
+                value_or_default(property(PropertyID::BackgroundImage), IdentifierStyleValue::create(ValueID::None)),
+                value_or_default(property(PropertyID::BackgroundPosition), PositionStyleValue::create(EdgeStyleValue::create(PositionEdge::Left, Length::make_px(0)), EdgeStyleValue::create(PositionEdge::Top, Length::make_px(0)))),
+                value_or_default(property(PropertyID::BackgroundSize), IdentifierStyleValue::create(ValueID::Auto)),
+                value_or_default(property(PropertyID::BackgroundRepeat), BackgroundRepeatStyleValue::create(Repeat::Repeat, Repeat::Repeat)),
+                value_or_default(property(PropertyID::BackgroundAttachment), IdentifierStyleValue::create(ValueID::Scroll)),
+                value_or_default(property(PropertyID::BackgroundOrigin), IdentifierStyleValue::create(ValueID::PaddingBox)),
+                value_or_default(property(PropertyID::BackgroundClip), IdentifierStyleValue::create(ValueID::BorderBox)) });
     }
     case PropertyID::BackgroundColor:
         return ColorStyleValue::create(layout_node.computed_values().background_color());
