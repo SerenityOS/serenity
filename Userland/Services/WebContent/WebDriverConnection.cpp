@@ -1948,7 +1948,7 @@ void WebDriverConnection::restore_the_window()
     // Do not return from this operation until the visibility state of the top-level browsing context’s active document has reached the visible state, or until the operation times out.
     // FIXME: Implement timeouts.
     Web::Platform::EventLoopPlugin::the().spin_until([this]() {
-        auto state = m_page_client.page().top_level_browsing_context().system_visibility_state();
+        auto state = m_page_client.page().top_level_traversable()->system_visibility_state();
         return state == Web::HTML::VisibilityState::Visible;
     });
 }
@@ -1972,7 +1972,7 @@ Gfx::IntRect WebDriverConnection::iconify_the_window()
     // Do not return from this operation until the visibility state of the top-level browsing context’s active document has reached the hidden state, or until the operation times out.
     // FIXME: Implement timeouts.
     Web::Platform::EventLoopPlugin::the().spin_until([this]() {
-        auto state = m_page_client.page().top_level_browsing_context().system_visibility_state();
+        auto state = m_page_client.page().top_level_traversable()->system_visibility_state();
         return state == Web::HTML::VisibilityState::Hidden;
     });
 

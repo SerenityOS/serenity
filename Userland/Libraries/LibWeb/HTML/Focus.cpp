@@ -13,6 +13,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/Focus.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 
 namespace Web::HTML {
@@ -257,8 +258,8 @@ void run_unfocusing_steps(DOM::Node* old_focus_target)
     // 7. Let topDocument be old chain's last entry.
     auto* top_document = verify_cast<DOM::Document>(old_chain.last().ptr());
 
-    // 8. If topDocument's browsing context has system focus, then run the focusing steps for topDocument's viewport.
-    if (top_document->browsing_context()->system_visibility_state() == HTML::VisibilityState::Visible) {
+    // 8. If topDocument's node navigable has system focus, then run the focusing steps for topDocument's viewport.
+    if (top_document->navigable()->traversable_navigable()->system_visibility_state() == HTML::VisibilityState::Visible) {
         // FIXME: run the focusing steps for topDocument's viewport (??)
     } else {
         // FIXME: Otherwise, apply any relevant platform-specific conventions for removing system focus from

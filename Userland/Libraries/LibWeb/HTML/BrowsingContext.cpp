@@ -776,35 +776,6 @@ bool BrowsingContext::document_family_contains(DOM::Document const& document) co
     return document_family().first_matching([&](auto& entry) { return entry.ptr() == &document; }).has_value();
 }
 
-VisibilityState BrowsingContext::system_visibility_state() const
-{
-    return m_system_visibility_state;
-}
-
-// https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
-void BrowsingContext::set_system_visibility_state(VisibilityState visibility_state)
-{
-    if (m_system_visibility_state == visibility_state)
-        return;
-    m_system_visibility_state = visibility_state;
-
-    // When a user-agent determines that the system visibility state for top-level browsing context context
-    // has changed to newState, it must queue a task on the user interaction task source to update
-    // the visibility state of all the Document objects in the top-level browsing context's document family with newState.
-    auto document_family = top_level_browsing_context()->document_family();
-
-    // From the new navigable version, where it tells us what global object to use here:
-    // 1. Let document be navigable's active document.
-    // 2. Queue a global task on the user interaction task source given document's relevant global object to update the visibility state of document with newState.
-    // FIXME: Update this function to fully match the navigable version.
-    VERIFY(active_document());
-    queue_global_task(Task::Source::UserInteraction, relevant_global_object(*active_document()), [visibility_state, document_family = move(document_family)] {
-        for (auto& document : document_family) {
-            document->update_the_visibility_state(visibility_state);
-        }
-    });
-}
-
 void BrowsingContext::append_child(JS::NonnullGCPtr<BrowsingContext> child)
 {
     VERIFY(!child->m_parent);

@@ -871,7 +871,7 @@ void ConnectionFromClient::request_file(Web::FileRequest file_request)
 
 void ConnectionFromClient::set_system_visibility_state(bool visible)
 {
-    m_page_host->page().top_level_browsing_context().set_system_visibility_state(
+    m_page_host->page().top_level_traversable()->set_system_visibility_state(
         visible
             ? Web::HTML::VisibilityState::Visible
             : Web::HTML::VisibilityState::Hidden);
