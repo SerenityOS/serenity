@@ -97,6 +97,9 @@ ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATIn
     Vector<FATLongFileNameEntry> lfn_entries;
     auto blocks = TRY(read_block_list());
 
+    if (blocks->size() == 0)
+        return nullptr;
+
     for (u32 i = 0; i < blocks->size() / sizeof(FATEntry); i++) {
         auto* entry = reinterpret_cast<FATEntry*>(blocks->data() + i * sizeof(FATEntry));
         if (entry->filename[0] == end_entry_byte) {
