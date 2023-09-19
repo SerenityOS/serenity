@@ -194,9 +194,6 @@ public:
     Vector<JS::Handle<DOM::Document>> document_family() const;
     bool document_family_contains(DOM::Document const&) const;
 
-    VisibilityState system_visibility_state() const;
-    void set_system_visibility_state(VisibilityState);
-
     bool has_been_discarded() const { return m_has_been_discarded; }
 
     Optional<AK::URL> const& creator_url() const { return m_creator_url; }
@@ -252,9 +249,6 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
     JS::GCPtr<BrowsingContextGroup> m_group;
-
-    // https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
-    VisibilityState m_system_visibility_state { VisibilityState::Hidden };
 
     JS::GCPtr<BrowsingContext> m_parent;
     JS::GCPtr<BrowsingContext> m_first_child;

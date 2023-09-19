@@ -635,4 +635,33 @@ void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> 
     traversable->apply_the_push_or_replace_history_step(*target_step);
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
+void TraversableNavigable::set_system_visibility_state(VisibilityState visibility_state)
+{
+    if (m_system_visibility_state == visibility_state)
+        return;
+    m_system_visibility_state = visibility_state;
+
+    // When a user-agent determines that the system visibility state for
+    // traversable navigable traversable has changed to newState, it must run the following steps:
+
+    // 1. Let navigables be the inclusive descendant navigables of traversable.
+    // FIXME: Spec bug: https://github.com/whatwg/html/issues/9758
+    VERIFY(active_document());
+    auto navigables = active_document()->inclusive_descendant_navigables();
+
+    // 2. For each navigable of navigables:
+    for (auto& navigable : navigables) {
+        // 1. Let document be navigable's active document.
+        auto document = navigable->active_document();
+        VERIFY(document);
+
+        // 2. Queue a global task on the user interaction task source given document's relevant global object
+        //    to update the visibility state of document with newState.
+        queue_global_task(Task::Source::UserInteraction, relevant_global_object(*document), [visibility_state, document] {
+            document->update_the_visibility_state(visibility_state);
+        });
+    }
+}
+
 }
