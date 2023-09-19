@@ -37,6 +37,8 @@ public:
 
     void operator delete(void*);
 
+    [[nodiscard]] bool operator==(StringView) const;
+
     ErrorOr<NonnullOwnPtr<KString>> try_clone() const;
 
     [[nodiscard]] bool is_empty() const { return m_length == 0; }

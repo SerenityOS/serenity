@@ -55,6 +55,11 @@ NonnullOwnPtr<KString> KString::must_create_uninitialized(size_t length, char*& 
     return KString::try_create_uninitialized(length, characters).release_value();
 }
 
+bool KString::operator==(StringView other) const
+{
+    return view() == other;
+}
+
 ErrorOr<NonnullOwnPtr<KString>> KString::try_clone() const
 {
     return try_create(view());
