@@ -16,7 +16,7 @@ namespace AK {
 /// using a single read/write head.
 class FixedMemoryStream : public SeekableStream {
 public:
-    explicit FixedMemoryStream(Bytes bytes);
+    explicit FixedMemoryStream(Bytes bytes, bool writing_enabled = true);
     explicit FixedMemoryStream(ReadonlyBytes bytes);
 
     virtual bool is_eof() const override;
