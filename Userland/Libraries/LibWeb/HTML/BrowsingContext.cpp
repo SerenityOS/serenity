@@ -489,16 +489,6 @@ void BrowsingContext::select_all()
     (void)selection->select_all_children(*document->body());
 }
 
-void BrowsingContext::register_frame_nesting(AK::URL const& url)
-{
-    m_frame_nesting_levels.ensure(url)++;
-}
-
-bool BrowsingContext::is_frame_nesting_allowed(AK::URL const& url) const
-{
-    return m_frame_nesting_levels.get(url).value_or(0) < 3;
-}
-
 bool BrowsingContext::increment_cursor_position_offset()
 {
     if (!m_cursor_position.increment_offset())
