@@ -78,6 +78,12 @@ void BoardWidget::set_running(bool running)
     if (running == m_running)
         return;
 
+    if (m_selected_pattern) {
+        m_selected_pattern = nullptr;
+        if (on_pattern_selection_state_change)
+            on_pattern_selection_state_change();
+    }
+
     m_running = running;
 
     if (m_running) {
