@@ -37,7 +37,6 @@
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
-#include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
@@ -751,25 +750,13 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Font) {
-        if (value.is_font()) {
-            auto const& font_shorthand = value.as_font();
-            set_longhand_property(CSS::PropertyID::FontSize, font_shorthand.font_size());
-            set_longhand_property(CSS::PropertyID::FontFamily, font_shorthand.font_families());
-            set_longhand_property(CSS::PropertyID::FontStretch, font_shorthand.font_stretch());
-            set_longhand_property(CSS::PropertyID::FontStyle, font_shorthand.font_style());
-            set_longhand_property(CSS::PropertyID::FontWeight, font_shorthand.font_weight());
-            set_longhand_property(CSS::PropertyID::LineHeight, font_shorthand.line_height());
-            // FIXME: Implement font-variant
-            return;
-        }
-
+        set_longhand_property(CSS::PropertyID::FontStyle, value);
+        set_longhand_property(CSS::PropertyID::FontVariant, value);
+        set_longhand_property(CSS::PropertyID::FontWeight, value);
         set_longhand_property(CSS::PropertyID::FontStretch, value);
         set_longhand_property(CSS::PropertyID::FontSize, value);
-        set_longhand_property(CSS::PropertyID::FontFamily, value);
-        set_longhand_property(CSS::PropertyID::FontStyle, value);
-        set_longhand_property(CSS::PropertyID::FontWeight, value);
         set_longhand_property(CSS::PropertyID::LineHeight, value);
-        // FIXME: Implement font-variant
+        set_longhand_property(CSS::PropertyID::FontFamily, value);
         return;
     }
 

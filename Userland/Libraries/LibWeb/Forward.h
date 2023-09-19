@@ -103,7 +103,6 @@ class ElementInlineCSSStyleDeclaration;
 class ExplicitGridTrack;
 class FilterValueListStyleValue;
 class FontFace;
-class FontStyleValue;
 class Frequency;
 class FrequencyOrCalculated;
 class FrequencyPercentage;
