@@ -35,7 +35,6 @@
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
-#include <LibWeb/CSS/StyleValues/CompositeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
@@ -61,6 +60,7 @@
 #include <LibWeb/CSS/StyleValues/PlaceSelfStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
@@ -442,10 +442,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
-    if (value.is_composite()) {
-        auto& composite_value = value.as_composite();
-        auto& properties = composite_value.sub_properties();
-        auto& values = composite_value.values();
+    if (value.is_shorthand()) {
+        auto& shorthand_value = value.as_shorthand();
+        auto& properties = shorthand_value.sub_properties();
+        auto& values = shorthand_value.values();
         for (size_t i = 0; i < properties.size(); ++i)
             set_property_expanding_shorthands(style, properties[i], values[i], document, declaration, properties_for_revert);
     }

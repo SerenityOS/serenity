@@ -42,7 +42,6 @@
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
-#include <LibWeb/CSS/StyleValues/CompositeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
@@ -80,6 +79,7 @@
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RevertStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
@@ -6003,7 +6003,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             longhand_values.unchecked_append(StyleValueList::create(move(it.value), StyleValueList::Separator::Space));
     }
 
-    return { CompositeStyleValue::create(move(longhand_properties), move(longhand_values)) };
+    return { ShorthandStyleValue::create(move(longhand_properties), move(longhand_values)) };
 }
 
 RefPtr<StyleValue> Parser::parse_css_value_for_property(PropertyID property_id, TokenStream<ComponentValue>& tokens)

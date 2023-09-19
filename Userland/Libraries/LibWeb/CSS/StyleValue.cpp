@@ -20,7 +20,6 @@
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
-#include <LibWeb/CSS/StyleValues/CompositeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
@@ -61,6 +60,7 @@
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RevertStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>

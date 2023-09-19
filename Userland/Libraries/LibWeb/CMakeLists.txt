@@ -88,7 +88,6 @@ set(SOURCES
     CSS/StyleValues/BorderStyleValue.cpp
     CSS/StyleValues/CalculatedStyleValue.cpp
     CSS/StyleValues/ColorStyleValue.cpp
-    CSS/StyleValues/CompositeStyleValue.cpp
     CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
     CSS/StyleValues/DisplayStyleValue.cpp
@@ -121,6 +120,7 @@ set(SOURCES
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/StyleValues/RectStyleValue.cpp
     CSS/StyleValues/ShadowStyleValue.cpp
+    CSS/StyleValues/ShorthandStyleValue.cpp
     CSS/StyleValues/StyleValueList.cpp
     CSS/StyleValues/TextDecorationStyleValue.cpp
     CSS/StyleValues/TransformationStyleValue.cpp

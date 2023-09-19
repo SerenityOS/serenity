@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "CompositeStyleValue.h"
+#include "ShorthandStyleValue.h"
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 
 namespace Web::CSS {
 
-CompositeStyleValue::CompositeStyleValue(Vector<PropertyID> sub_properties, Vector<ValueComparingNonnullRefPtr<StyleValue const>> values)
-    : StyleValueWithDefaultOperators(Type::Composite)
+ShorthandStyleValue::ShorthandStyleValue(Vector<PropertyID> sub_properties, Vector<ValueComparingNonnullRefPtr<StyleValue const>> values)
+    : StyleValueWithDefaultOperators(Type::Shorthand)
     , m_properties { move(sub_properties), move(values) }
 {
     if (m_properties.sub_properties.size() != m_properties.values.size()) {
-        dbgln("CompositeStyleValue: sub_properties and values must be the same size! {} != {}", m_properties.sub_properties.size(), m_properties.values.size());
+        dbgln("ShorthandStyleValue: sub_properties and values must be the same size! {} != {}", m_properties.sub_properties.size(), m_properties.values.size());
         VERIFY_NOT_REACHED();
     }
 }
 
-CompositeStyleValue::~CompositeStyleValue() = default;
+ShorthandStyleValue::~ShorthandStyleValue() = default;
 
-String CompositeStyleValue::to_string() const
+String ShorthandStyleValue::to_string() const
 {
     StringBuilder builder;
     auto first = true;
