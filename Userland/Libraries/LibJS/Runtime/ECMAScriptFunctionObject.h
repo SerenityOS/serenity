@@ -152,6 +152,10 @@ private:
     bool m_arguments_object_needed { false };
     Vector<VariableNameToInitialize> m_var_names_to_initialize_binding;
     Vector<DeprecatedFlyString> m_function_names_to_initialize_binding;
+
+    size_t m_function_environment_bindings_count { 0 };
+    size_t m_var_environment_bindings_count { 0 };
+    size_t m_lex_environment_bindings_count { 0 };
 };
 
 template<>

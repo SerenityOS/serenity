@@ -182,6 +182,26 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Dep
         m_arguments_object_needed = false;
     }
 
+    size_t* environment_size = nullptr;
+
+    size_t parameter_environment_bindings_count = 0;
+    // 19. If strict is true or hasParameterExpressions is false, then
+    if (m_strict || !m_has_parameter_expressions) {
+        // a. NOTE: Only a single Environment Record is needed for the parameters, since calls to eval in strict mode code cannot create new bindings which are visible outside of the eval.
+        // b. Let env be the LexicalEnvironment of calleeContext
+        // NOTE: Here we are only interested in the size of the environment.
+        environment_size = &m_function_environment_bindings_count;
+    }
+    // 20. Else,
+    else {
+        // a. NOTE: A separate Environment Record is needed to ensure that bindings created by direct eval calls in the formal parameter list are outside the environment where parameters are declared.
+        // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
+        // c. Let env be NewDeclarativeEnvironment(calleeEnv).
+        environment_size = &parameter_environment_bindings_count;
+    }
+
+    *environment_size += m_parameter_names.size();
+
     HashTable<DeprecatedFlyString> parameter_bindings;
 
     // 22. If argumentsObjectNeeded is true, then
@@ -189,12 +209,16 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Dep
         // f. Let parameterBindings be the list-concatenation of parameterNames and « "arguments" ».
         parameter_bindings = m_parameter_names;
         parameter_bindings.set(vm().names.arguments.as_string());
+
+        (*environment_size)++;
     } else {
         parameter_bindings = m_parameter_names;
         // a. Let parameterBindings be parameterNames.
     }
 
     HashTable<DeprecatedFlyString> instantiated_var_names;
+
+    size_t* var_environment_size = nullptr;
 
     // 27. If hasParameterExpressions is false, then
     if (!m_has_parameter_expressions) {
@@ -215,10 +239,22 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Dep
                         .parameter_binding = parameter_bindings.contains(id.string()),
                         .function_name = function_names.contains(id.string()),
                     });
+
+                    if (!id.is_local())
+                        (*environment_size)++;
                 }
             }));
         }
+
+        // d. Let varEnv be env
+        var_environment_size = environment_size;
     } else {
+        // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions in the formal parameter list do not have visibility of declarations in the function body.
+
+        // b. Let varEnv be NewDeclarativeEnvironment(env).
+        // NOTE: Here we are only interested in the size of the environment.
+        var_environment_size = &m_var_environment_bindings_count;
+
         // 28. Else,
         // NOTE: Steps a, b, c and d are executed in function_declaration_instantiation.
         // e. For each element n of varNames, do
@@ -234,11 +270,16 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Dep
                         .parameter_binding = parameter_bindings.contains(id.string()),
                         .function_name = function_names.contains(id.string()),
                     });
+
+                    if (!id.is_local())
+                        (*var_environment_size)++;
                 }
             }));
         }
     }
 
+    // 29. NOTE: Annex B.3.2.1 adds additional steps at this point.
+    // B.3.2.1 Changes to FunctionDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-functiondeclarationinstantiation
     if (!m_strict && scope_body) {
         MUST(scope_body->for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
             auto function_name = function_declaration.name();
@@ -248,9 +289,34 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Dep
             if (!instantiated_var_names.contains(function_name) && function_name != vm().names.arguments.as_string()) {
                 m_function_names_to_initialize_binding.append(function_name);
                 instantiated_var_names.set(function_name);
+                (*var_environment_size)++;
             }
 
             function_declaration.set_should_do_additional_annexB_steps();
+        }));
+    }
+
+    size_t* lex_environment_size = nullptr;
+
+    // 30. If strict is false, then
+    if (!m_strict) {
+        bool can_elide_declarative_environment = !m_contains_direct_call_to_eval && (!scope_body || !scope_body->has_lexical_declarations());
+        if (can_elide_declarative_environment) {
+            lex_environment_size = var_environment_size;
+        } else {
+            // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
+            lex_environment_size = &m_lex_environment_bindings_count;
+        }
+    } else {
+        // a. let lexEnv be varEnv.
+        // NOTE: Here we are only interested in the size of the environment.
+        lex_environment_size = var_environment_size;
+    }
+
+    if (scope_body) {
+        MUST(scope_body->for_each_lexically_declared_identifier([&](auto const& id) {
+            if (!id.is_local())
+                (*lex_environment_size)++;
         }));
     }
 }
@@ -694,6 +760,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
         // b. Let varEnv be NewDeclarativeEnvironment(env).
         var_environment = new_declarative_environment(*environment);
+        static_cast<DeclarativeEnvironment*>(var_environment.ptr())->ensure_capacity(m_var_environment_bindings_count);
 
         // c. Set the VariableEnvironment of calleeContext to varEnv.
         callee_context.variable_environment = var_environment;
@@ -776,6 +843,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             //          lexically scoped declarations. This is not needed for strict functions because a strict direct eval always places
             //          all declarations into a new Environment Record.
             lex_environment = new_declarative_environment(*var_environment);
+            static_cast<DeclarativeEnvironment*>(lex_environment.ptr())->ensure_capacity(m_lex_environment_bindings_count);
         }
     }
     // 31. Else,
@@ -883,6 +951,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
     auto local_environment = new_function_environment(*this, new_target);
+    local_environment->ensure_capacity(m_function_environment_bindings_count);
 
     // 8. Set the LexicalEnvironment of calleeContext to localEnv.
     callee_context.lexical_environment = local_environment;
