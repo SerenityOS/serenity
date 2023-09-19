@@ -544,20 +544,18 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     // 21. For each String paramName of parameterNames, do
     for (auto const& parameter_name : m_parameter_names) {
         // a. Let alreadyDeclared be ! env.HasBinding(paramName).
-        auto already_declared = MUST(environment->has_binding(parameter_name));
 
         // b. NOTE: Early errors ensure that duplicate parameter names can only occur in non-strict functions that do not have parameter default values or rest parameters.
 
         // c. If alreadyDeclared is false, then
-        if (!already_declared) {
-            // i. Perform ! env.CreateMutableBinding(paramName, false).
-            MUST(environment->create_mutable_binding(vm, parameter_name, false));
+        // NOTE: alreadyDeclared is always false because we use hash table for parameterNames
+        // i. Perform ! env.CreateMutableBinding(paramName, false).
+        MUST(environment->create_mutable_binding(vm, parameter_name, false));
 
-            // ii. If hasDuplicates is true, then
-            if (m_has_duplicates) {
-                // 1. Perform ! env.InitializeBinding(paramName, undefined).
-                MUST(environment->initialize_binding(vm, parameter_name, js_undefined(), Environment::InitializeBindingHint::Normal));
-            }
+        // ii. If hasDuplicates is true, then
+        if (m_has_duplicates) {
+            // 1. Perform ! env.InitializeBinding(paramName, undefined).
+            MUST(environment->initialize_binding(vm, parameter_name, js_undefined(), Environment::InitializeBindingHint::Normal));
         }
     }
 
