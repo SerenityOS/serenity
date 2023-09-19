@@ -92,7 +92,6 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(BorderRadiusShorthand, border_radius_shorthand)              \
     __ENUMERATE_STYLE_VALUE_TYPE(Calculated, calculated)                                      \
     __ENUMERATE_STYLE_VALUE_TYPE(Color, color)                                                \
-    __ENUMERATE_STYLE_VALUE_TYPE(Composite, composite)                                        \
     __ENUMERATE_STYLE_VALUE_TYPE(ConicGradient, conic_gradient)                               \
     __ENUMERATE_STYLE_VALUE_TYPE(Content, content)                                            \
     __ENUMERATE_STYLE_VALUE_TYPE(CustomIdent, custom_ident)                                   \
@@ -133,6 +132,7 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(Resolution, resolution)                                      \
     __ENUMERATE_STYLE_VALUE_TYPE(Revert, revert)                                              \
     __ENUMERATE_STYLE_VALUE_TYPE(Shadow, shadow)                                              \
+    __ENUMERATE_STYLE_VALUE_TYPE(Shorthand, shorthand)                                        \
     __ENUMERATE_STYLE_VALUE_TYPE(String, string)                                              \
     __ENUMERATE_STYLE_VALUE_TYPE(TextDecoration, text_decoration)                             \
     __ENUMERATE_STYLE_VALUE_TYPE(Time, time)                                                  \
