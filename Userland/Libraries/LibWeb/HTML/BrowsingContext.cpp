@@ -254,7 +254,6 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
 
 BrowsingContext::BrowsingContext(Page& page, HTML::NavigableContainer* container)
     : m_page(page)
-    , m_loader(*this)
     , m_event_handler({}, *this)
     , m_container(container)
 {

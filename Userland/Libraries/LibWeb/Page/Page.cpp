@@ -52,11 +52,6 @@ void Page::load_html(StringView html)
     (void)top_level_traversable()->navigate("about:srcdoc"sv, *top_level_traversable()->active_document(), String::from_utf8(html).release_value_but_fixme_should_propagate_errors());
 }
 
-bool Page::has_ongoing_navigation() const
-{
-    return top_level_browsing_context().loader().is_pending();
-}
-
 Gfx::Palette Page::palette() const
 {
     return m_client.palette();

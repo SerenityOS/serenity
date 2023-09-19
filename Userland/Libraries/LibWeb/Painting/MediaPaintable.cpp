@@ -14,6 +14,7 @@
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Page/EventHandler.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/MediaPaintable.h>
 
 namespace Web::Painting {

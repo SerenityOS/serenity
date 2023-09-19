@@ -11,5 +11,9 @@
 namespace Web {
 
 ErrorOr<DeprecatedString> load_file_directory_page(LoadRequest const&);
+DeprecatedString resource_directory_url();
+void set_resource_directory_url(DeprecatedString);
+DeprecatedString directory_page_url();
+void set_directory_page_url(DeprecatedString);
 
 }

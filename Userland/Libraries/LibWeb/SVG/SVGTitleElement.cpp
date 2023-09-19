@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
 
 namespace Web::SVG {

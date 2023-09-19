@@ -8,7 +8,6 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHyperlinkElementUtils.h>
 #include <LibWeb/HTML/Navigable.h>
-#include <LibWeb/Loader/FrameLoader.h>
 
 namespace Web::HTML {
 
