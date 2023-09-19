@@ -171,12 +171,6 @@ public:
 
     void did_edit(Badge<EditEventHandler>);
 
-    void register_frame_nesting(AK::URL const&);
-    bool is_frame_nesting_allowed(AK::URL const&) const;
-
-    void set_frame_nesting_levels(HashMap<AK::URL, size_t> frame_nesting_levels) { m_frame_nesting_levels = move(frame_nesting_levels); }
-    HashMap<AK::URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
-
     bool has_a_rendering_opportunity() const;
 
     JS::GCPtr<DOM::Node> currently_focused_area();
@@ -255,7 +249,6 @@ private:
     RefPtr<Core::Timer> m_cursor_blink_timer;
     bool m_cursor_blink_state { false };
 
-    HashMap<AK::URL, size_t> m_frame_nesting_levels;
     DeprecatedString m_name;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
