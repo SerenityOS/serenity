@@ -39,7 +39,7 @@ ClockWidget::ClockWidget()
     m_calendar_window->set_window_type(GUI::WindowType::Popup);
     m_calendar_window->resize(m_window_size.width(), m_window_size.height());
 
-    auto root_container = m_calendar_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+    auto root_container = m_calendar_window->set_main_widget<GUI::Frame>();
     root_container->set_fill_with_background_color(true);
     root_container->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 2, 0 }, 0);
     root_container->set_frame_style(Gfx::FrameStyle::Window);

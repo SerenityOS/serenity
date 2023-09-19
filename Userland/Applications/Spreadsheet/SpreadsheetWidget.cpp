@@ -80,7 +80,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     m_inline_documentation_window->set_rect(m_cell_value_editor->rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
     m_inline_documentation_window->set_window_type(GUI::WindowType::Tooltip);
     m_inline_documentation_window->set_resizable(false);
-    auto inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+    auto inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>();
     inline_widget->set_fill_with_background_color(true);
     inline_widget->set_layout<GUI::VerticalBoxLayout>(4);
     inline_widget->set_frame_style(Gfx::FrameStyle::Plain);

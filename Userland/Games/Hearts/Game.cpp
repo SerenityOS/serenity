@@ -122,7 +122,7 @@ void Game::show_score_card(bool game_over)
     score_dialog->set_resizable(false);
     score_dialog->set_icon(window()->icon());
 
-    auto score_widget = score_dialog->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto score_widget = score_dialog->set_main_widget<GUI::Widget>();
     score_widget->set_fill_with_background_color(true);
     score_widget->set_layout<GUI::HorizontalBoxLayout>(10, 15);
 

@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Minesweeper");
     window->set_auto_shrink(true);
 
-    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto widget = window->set_main_widget<GUI::Widget>();
     TRY(widget->load_from_gml(minesweeper_window_gml));
 
     auto& flag_label = *widget->find_descendant_of_type_named<GUI::Label>("flag_label");

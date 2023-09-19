@@ -48,7 +48,7 @@ private:
         set_title(builder.string_view());
 
         resize(200, 250);
-        auto main_widget = set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+        auto main_widget = set_main_widget<GUI::Frame>();
         main_widget->set_frame_style(Gfx::FrameStyle::RaisedContainer);
         main_widget->set_fill_with_background_color(true);
         main_widget->template set_layout<GUI::VerticalBoxLayout>(4);

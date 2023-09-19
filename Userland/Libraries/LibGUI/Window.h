@@ -150,9 +150,9 @@ public:
     void set_main_widget(Widget*);
 
     template<class T, class... Args>
-    inline ErrorOr<NonnullRefPtr<T>> set_main_widget(Args&&... args)
+    inline NonnullRefPtr<T> set_main_widget(Args&&... args)
     {
-        auto widget = TRY(T::try_create(forward<Args>(args)...));
+        auto widget = T::construct(forward<Args>(args)...);
         set_main_widget(widget.ptr());
         return widget;
     }

@@ -19,7 +19,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     set_icon(parent->icon());
     set_resizable(false);
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->set_fill_with_background_color(true);
 
     main_widget->set_layout<GUI::VerticalBoxLayout>(4);

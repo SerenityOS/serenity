@@ -275,7 +275,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_window_type(GUI::WindowType::Applet);
         window->resize(GraphWidget::history_size + 2, 15);
 
-        auto graph_widget = TRY(window->set_main_widget<GraphWidget>(graph_type, graph_color, Optional<Gfx::Color> {}));
+        auto graph_widget = window->set_main_widget<GraphWidget>(graph_type, graph_color, Optional<Gfx::Color> {});
         window->show();
         applet_windows.append(move(window));
 

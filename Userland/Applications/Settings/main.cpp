@@ -101,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Settings"_string, app_icon, window));
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 

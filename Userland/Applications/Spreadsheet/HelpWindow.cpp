@@ -68,7 +68,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors());
     set_window_mode(GUI::WindowMode::Modeless);
 
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
     widget->set_layout<GUI::VerticalBoxLayout>();
     widget->set_fill_with_background_color(true);
 
@@ -115,7 +115,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             window->set_title(DeprecatedString::formatted("Spreadsheet Help - Example {} for {}", name, entry));
             window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
 
-            auto widget = window->set_main_widget<SpreadsheetWidget>(window, Vector<NonnullRefPtr<Sheet>> {}, false).release_value_but_fixme_should_propagate_errors();
+            auto widget = window->set_main_widget<SpreadsheetWidget>(window, Vector<NonnullRefPtr<Sheet>> {}, false);
             auto sheet = Sheet::from_json(value, widget->workbook());
             if (!sheet) {
                 GUI::MessageBox::show_error(this, DeprecatedString::formatted("Corrupted example '{}' in '{}'", name, example_path));

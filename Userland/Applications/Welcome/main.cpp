@@ -32,7 +32,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->center_on_screen();
     window->set_title("Welcome");
     window->set_icon(app_icon.bitmap_for_size(16));
-    auto welcome_widget = TRY(window->set_main_widget<WelcomeWidget>());
+    auto welcome_widget = TRY(WelcomeWidget::try_create());
+    window->set_main_widget(welcome_widget);
 
     window->show();
 

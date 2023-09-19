@@ -34,7 +34,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto main_widget = TRY(window->set_main_widget<VideoPlayer::VideoPlayerWidget>());
+    auto main_widget = TRY(VideoPlayer::VideoPlayerWidget::try_create());
+    window->set_main_widget(main_widget);
     main_widget->update_title();
     TRY(main_widget->initialize_menubar(window));
 

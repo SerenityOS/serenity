@@ -26,7 +26,7 @@ ImageMasking::ImageMasking(GUI::Window* parent_window, ImageEditor* editor, Mask
 {
     set_icon(parent_window->icon());
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
 
     set_resizable(false);
     m_previous_edit_mode = m_editor->active_layer()->edit_mode();

@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(170, 170);
     window->set_resizable(false);
-    auto clock = TRY(window->set_main_widget<AnalogClock>());
+    auto clock = window->set_main_widget<AnalogClock>();
 
     auto show_window_frame_action = GUI::Action::create_checkable(
         "Show Window &Frame", { Mod_Alt, KeyCode::Key_F }, [&](auto& action) {

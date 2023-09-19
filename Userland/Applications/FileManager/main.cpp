@@ -387,7 +387,7 @@ ErrorOr<int> run_in_desktop_mode()
     auto desktop_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/desktop.png"sv));
     window->set_icon(desktop_icon);
 
-    auto desktop_widget = TRY(window->set_main_widget<FileManager::DesktopWidget>());
+    auto desktop_widget = window->set_main_widget<FileManager::DesktopWidget>();
     desktop_widget->set_layout<GUI::VerticalBoxLayout>();
 
     auto directory_view = TRY(desktop_widget->try_add<DirectoryView>(DirectoryView::Mode::Desktop));
@@ -609,7 +609,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     auto window = GUI::Window::construct();
     window->set_title("File Manager");
 
-    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto widget = window->set_main_widget<GUI::Widget>();
     TRY(widget->load_from_gml(file_manager_window_gml));
 
     auto& toolbar_container = *widget->find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");

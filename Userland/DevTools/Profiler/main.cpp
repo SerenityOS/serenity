@@ -88,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 
@@ -319,7 +319,7 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
     window->center_on_screen();
 
-    auto widget = window->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = window->set_main_widget<GUI::Widget>();
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 0, 0, 16 });
 

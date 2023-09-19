@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     advice_window->set_has_alpha_channel(true);
     advice_window->set_alpha_hit_threshold(1.0f);
 
-    auto advice_widget = TRY(advice_window->set_main_widget<SpeechBubble>(catdog_widget));
+    auto advice_widget = advice_window->set_main_widget<SpeechBubble>(catdog_widget);
     advice_widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
 
     auto advice_timer = TRY(Core::Timer::create_single_shot(15'000, [&] {

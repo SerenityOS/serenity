@@ -25,7 +25,7 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     set_icon(parent->icon());
     set_resizable(false);
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->load_from_gml(game_size_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     auto board_size_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("board_size_spinbox");

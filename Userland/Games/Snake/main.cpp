@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Snake");
     window->resize(324, 345);
 
-    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto widget = window->set_main_widget<GUI::Widget>();
     TRY(widget->load_from_gml(snake_gml));
 
     auto& game = *widget->find_descendant_of_type_named<Snake::Game>("game");

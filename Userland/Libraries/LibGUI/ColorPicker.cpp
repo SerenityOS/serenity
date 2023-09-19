@@ -207,7 +207,7 @@ void ColorPicker::set_color_has_alpha_channel(bool has_alpha)
 
 void ColorPicker::build_ui()
 {
-    auto root_container = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
+    auto root_container = set_main_widget<Widget>();
     root_container->set_layout<VerticalBoxLayout>(4);
     root_container->set_fill_with_background_color(true);
 

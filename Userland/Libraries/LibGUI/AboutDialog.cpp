@@ -24,7 +24,7 @@ NonnullRefPtr<AboutDialog> AboutDialog::create(String const& name, String versio
     auto dialog = adopt_ref(*new AboutDialog(name, version, icon, parent_window));
     dialog->set_title(DeprecatedString::formatted("About {}", name));
 
-    auto widget = MUST(dialog->set_main_widget<Widget>());
+    auto widget = dialog->set_main_widget<Widget>();
     MUST(widget->load_from_gml(about_dialog_gml));
 
     auto icon_wrapper = widget->find_descendant_of_type_named<Widget>("icon_wrapper");

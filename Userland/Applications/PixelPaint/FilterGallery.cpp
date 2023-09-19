@@ -21,7 +21,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     resize(400, 250);
     set_resizable(true);
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->load_from_gml(filter_gallery_gml).release_value_but_fixme_should_propagate_errors();
 
     m_filter_tree = main_widget->find_descendant_of_type_named<GUI::TreeView>("tree_view");

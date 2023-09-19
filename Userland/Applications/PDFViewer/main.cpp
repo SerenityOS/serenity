@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto pdf_viewer_widget = TRY(window->set_main_widget<PDFViewerWidget>());
+    auto pdf_viewer_widget = window->set_main_widget<PDFViewerWidget>();
 
     TRY(pdf_viewer_widget->initialize_menubar(*window));
 

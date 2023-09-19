@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto spreadsheet_widget = TRY(window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, Vector<NonnullRefPtr<Spreadsheet::Sheet>> {}, filename.is_empty()));
+    auto spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, Vector<NonnullRefPtr<Spreadsheet::Sheet>> {}, filename.is_empty());
 
     TRY(spreadsheet_widget->initialize_menubar(*window));
     spreadsheet_widget->update_window_title();

@@ -45,7 +45,7 @@ CustomGameDialog::CustomGameDialog(Window* parent_window)
     set_resizable(false);
     set_title("Custom Game");
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->load_from_gml(minesweeper_custom_game_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_columns_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");

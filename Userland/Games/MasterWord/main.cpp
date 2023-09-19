@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_resizable(false);
     window->set_auto_shrink(true);
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto main_widget = window->set_main_widget<GUI::Widget>();
     TRY(main_widget->load_from_gml(master_word_gml));
     auto& game = *main_widget->find_descendant_of_type_named<MasterWord::WordGame>("word_game");
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");

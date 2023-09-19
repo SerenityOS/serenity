@@ -127,7 +127,7 @@ void InputBox::on_done(ExecResult result)
 
 ErrorOr<void> InputBox::build()
 {
-    auto main_widget = TRY(set_main_widget<Widget>());
+    auto main_widget = set_main_widget<Widget>();
     main_widget->set_layout<VerticalBoxLayout>(6, 6);
     main_widget->set_fill_with_background_color(true);
 

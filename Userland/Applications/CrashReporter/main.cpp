@@ -202,7 +202,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             unlink_coredump(coredump_path);
     };
 
-    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    auto widget = window->set_main_widget<GUI::Widget>();
     TRY(widget->load_from_gml(crash_reporter_window_gml));
 
     auto& icon_image_widget = *widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");

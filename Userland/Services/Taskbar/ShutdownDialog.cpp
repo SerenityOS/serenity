@@ -41,7 +41,7 @@ Optional<ShutdownDialog::Command const&> ShutdownDialog::show()
 ShutdownDialog::ShutdownDialog()
     : Dialog(nullptr)
 {
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto widget = set_main_widget<GUI::Widget>();
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
 

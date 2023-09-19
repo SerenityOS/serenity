@@ -81,7 +81,7 @@ private:
         m_slider_window = add<GUI::Window>(window());
         m_slider_window->set_window_type(GUI::WindowType::Popup);
 
-        m_root_container = TRY(m_slider_window->set_main_widget<GUI::Frame>());
+        m_root_container = m_slider_window->set_main_widget<GUI::Frame>();
         m_root_container->set_fill_with_background_color(true);
         m_root_container->set_layout<GUI::VerticalBoxLayout>(4, 0);
         m_root_container->set_frame_style(Gfx::FrameStyle::Window);
@@ -245,7 +245,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Audio");
     window->set_window_type(GUI::WindowType::Applet);
 
-    auto audio_widget = TRY(window->set_main_widget<AudioWidget>());
+    auto audio_widget = TRY(AudioWidget::try_create());
+    window->set_main_widget(audio_widget);
     window->show();
 
     // This affects the positioning, which depends on the window actually existing.

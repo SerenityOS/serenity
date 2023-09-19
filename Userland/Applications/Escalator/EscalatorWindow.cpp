@@ -36,7 +36,7 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
     set_resizable(false);
     set_minimizable(false);
 
-    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = set_main_widget<GUI::Widget>();
     main_widget->load_from_gml(escalator_gml).release_value_but_fixme_should_propagate_errors();
 
     RefPtr<GUI::Label> app_label = *main_widget->find_descendant_of_type_named<GUI::Label>("description");

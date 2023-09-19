@@ -86,7 +86,7 @@ CharacterMapWidget::CharacterMapWidget()
     m_find_glyphs_action = GUI::Action::create("&Find Glyphs...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         if (m_find_window.is_null()) {
             m_find_window = GUI::Window::construct(window());
-            auto search_widget = m_find_window->set_main_widget<CharacterSearchWidget>().release_value_but_fixme_should_propagate_errors();
+            auto search_widget = m_find_window->set_main_widget<CharacterSearchWidget>();
             search_widget->on_character_selected = [&](auto code_point) {
                 m_glyph_map->set_active_glyph(code_point);
                 m_glyph_map->scroll_to_glyph(code_point);

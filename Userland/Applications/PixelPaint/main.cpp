@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(800, 520);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto main_widget = TRY(window->set_main_widget<PixelPaint::MainWidget>());
+    auto main_widget = window->set_main_widget<PixelPaint::MainWidget>();
 
     TRY(main_widget->initialize_menubar(*window));
 

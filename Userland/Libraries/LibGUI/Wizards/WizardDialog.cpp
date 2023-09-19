@@ -25,7 +25,7 @@ ErrorOr<NonnullRefPtr<WizardDialog>> WizardDialog::create(Window* parent_window)
 
 ErrorOr<void> WizardDialog::build()
 {
-    auto main_widget = TRY(set_main_widget<Widget>());
+    auto main_widget = set_main_widget<Widget>();
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<VerticalBoxLayout>(Margins {}, 0);
 

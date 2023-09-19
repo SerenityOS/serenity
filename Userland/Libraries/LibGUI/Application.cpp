@@ -45,7 +45,7 @@ private:
     {
         set_window_type(WindowType::Tooltip);
         set_obey_widget_min_size(false);
-        m_label = set_main_widget<Label>().release_value_but_fixme_should_propagate_errors();
+        m_label = set_main_widget<Label>();
         m_label->set_background_role(Gfx::ColorRole::Tooltip);
         m_label->set_foreground_role(Gfx::ColorRole::TooltipText);
         m_label->set_fill_with_background_color(true);

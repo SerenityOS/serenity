@@ -149,7 +149,7 @@ Locator::Locator(Core::EventReceiver* parent)
     m_popup_window->set_window_type(GUI::WindowType::Popup);
     m_popup_window->set_rect(0, 0, 500, 200);
 
-    m_suggestion_view = m_popup_window->set_main_widget<GUI::TableView>().release_value_but_fixme_should_propagate_errors();
+    m_suggestion_view = m_popup_window->set_main_widget<GUI::TableView>();
     m_suggestion_view->set_column_headers_visible(false);
 
     m_suggestion_view->on_activation = [this](auto& index) {
