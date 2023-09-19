@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2023, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ShorthandStyleValue.h"
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 
 namespace Web::CSS {
@@ -71,6 +73,22 @@ String ShorthandStyleValue::to_string() const
         }
 
         return MUST(builder.to_string());
+    }
+    case PropertyID::BorderRadius: {
+        auto& top_left = longhand(PropertyID::BorderTopLeftRadius)->as_border_radius();
+        auto& top_right = longhand(PropertyID::BorderTopRightRadius)->as_border_radius();
+        auto& bottom_right = longhand(PropertyID::BorderBottomRightRadius)->as_border_radius();
+        auto& bottom_left = longhand(PropertyID::BorderBottomLeftRadius)->as_border_radius();
+
+        return MUST(String::formatted("{} {} {} {} / {} {} {} {}",
+            top_left.horizontal_radius().to_string(),
+            top_right.horizontal_radius().to_string(),
+            bottom_right.horizontal_radius().to_string(),
+            bottom_left.horizontal_radius().to_string(),
+            top_left.vertical_radius().to_string(),
+            top_right.vertical_radius().to_string(),
+            bottom_right.vertical_radius().to_string(),
+            bottom_left.vertical_radius().to_string()));
     }
     case PropertyID::Flex:
         return MUST(String::formatted("{} {} {}", longhand(PropertyID::FlexGrow)->to_string(), longhand(PropertyID::FlexShrink)->to_string(), longhand(PropertyID::FlexBasis)->to_string()));

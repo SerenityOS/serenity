@@ -74,7 +74,6 @@ class AnglePercentage;
 class AngleStyleValue;
 class BackgroundRepeatStyleValue;
 class BackgroundSizeStyleValue;
-class BorderRadiusShorthandStyleValue;
 class BorderRadiusStyleValue;
 class BorderStyleValue;
 class CSSConditionRule;

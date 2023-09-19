@@ -30,7 +30,6 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
-#include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
@@ -551,15 +550,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BorderRadius) {
-        if (value.is_border_radius_shorthand()) {
-            auto const& shorthand = value.as_border_radius_shorthand();
-            set_longhand_property(CSS::PropertyID::BorderTopLeftRadius, shorthand.top_left());
-            set_longhand_property(CSS::PropertyID::BorderTopRightRadius, shorthand.top_right());
-            set_longhand_property(CSS::PropertyID::BorderBottomRightRadius, shorthand.bottom_right());
-            set_longhand_property(CSS::PropertyID::BorderBottomLeftRadius, shorthand.bottom_left());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::BorderTopLeftRadius, value);
         set_longhand_property(CSS::PropertyID::BorderTopRightRadius, value);
         set_longhand_property(CSS::PropertyID::BorderBottomRightRadius, value);
