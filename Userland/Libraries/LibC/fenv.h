@@ -11,6 +11,8 @@
 
 __BEGIN_DECLS
 
+#if defined(__x86_64__)
+
 struct __x87_floating_point_environment {
     uint16_t __control_word;
     uint16_t __reserved1;
@@ -31,6 +33,42 @@ typedef struct fenv_t {
     struct __x87_floating_point_environment __x87_fpu_env;
     uint32_t __mxcsr;
 } fenv_t;
+
+#elif defined(__aarch64__)
+
+// TODO: Implement this.
+typedef struct fenv_t {
+} fenv_t;
+
+#elif defined(__riscv) && __riscv_xlen == 64
+
+// Chapter numbers from RISC-V Unprivileged ISA V20191213
+// RISC-V F extension version 2.2, Figure 11.1
+typedef struct fenv_t {
+    union {
+        // 11.2: fcsr is always 32 bits, even for the D and Q extensions, since only the lowest byte of data is in use.
+        uint32_t fcsr;
+        [[gnu::packed]] struct {
+            // Accrued exceptions (fflags).
+            union {
+                uint8_t accrued_exceptions : 4;
+                [[gnu::packed]] struct {
+                    uint8_t inexact : 1;           // NX
+                    uint8_t underflow : 1;         // UF
+                    uint8_t overflow : 1;          // OF
+                    uint8_t divide_by_zero : 1;    // DZ
+                    uint8_t invalid_operation : 1; // NV
+                };
+            };
+            uint8_t rounding_mode : 3; // frm
+            uint32_t reserved : 24;
+        };
+    };
+} fenv_t;
+
+#else
+#    error "Unknown architecture"
+#endif
 
 #define FE_DFL_ENV ((fenv_t const*)-1)
 
@@ -58,6 +96,8 @@ int feraiseexcept(int exceptions);
 #define FE_DOWNWARD 1
 #define FE_UPWARD 2
 #define FE_TOWARDZERO 3
+// Only exists in RISC-V at the moment; on other architectures this is replaced with FE_TONEAREST.
+#define FE_TOMAXMAGNITUDE 4
 
 int fesetround(int round);
 int fegetround(void);
