@@ -1395,4 +1395,46 @@ JS::NonnullGCPtr<CustomElementRegistry> Window::custom_elements()
     return JS::NonnullGCPtr { *m_custom_element_registry };
 }
 
+// https://html.spec.whatwg.org/#document-tree-child-navigable-target-name-property-set
+OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_navigable_target_name_property_set()
+{
+    // The document-tree child navigable target name property set of a Window object window is the return value of running these steps:
+
+    // 1. Let children be the document-tree child navigables of window's associated Document.
+    auto children = associated_document().document_tree_child_navigables();
+
+    // 2. Let firstNamedChildren be an empty ordered set.
+    OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> first_named_children;
+
+    // 3. For each navigable of children:
+    for (auto const& navigable : children) {
+        // 1. Let name be navigable's target name.
+        auto const& name = navigable->target_name();
+
+        // 2. If name is the empty string, then continue.
+        if (name.is_empty())
+            continue;
+
+        // 3. If firstNamedChildren contains a navigable whose target name is name, then continue.
+        if (first_named_children.contains(name))
+            continue;
+
+        // 4. Append navigable to firstNamedChildren.
+        (void)first_named_children.set(name, *navigable);
+    }
+
+    // 4. Let names be an empty ordered set.
+    OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> names;
+
+    // 5. For each navigable of firstNamedChildren:
+    for (auto const& [name, navigable] : first_named_children) {
+        // 1. Let name be navigable's target name.
+        // 2. If navigable's active document's origin is same origin with window's relevant settings object's origin, then append name to names.
+        if (navigable->active_document()->origin().is_same_origin(relevant_settings_object(*this).origin()))
+            names.set(name, *navigable);
+    }
+
+    return names;
+}
+
 }

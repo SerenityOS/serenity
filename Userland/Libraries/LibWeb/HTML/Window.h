@@ -191,6 +191,8 @@ public:
 
     static void set_internals_object_exposed(bool);
 
+    [[nodiscard]] OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> document_tree_child_navigable_target_name_property_set();
+
 private:
     explicit Window(JS::Realm&);
 

@@ -113,10 +113,11 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> WindowProxy::internal_ge
     if (property.has_value())
         return property;
 
-    // FIXME: 6. If property is undefined and P is in W's document-tree child browsing context name property set, then:
-    if (false) {
-        // FIXME: 1. Let value be the WindowProxy object of the named object of W with the name P.
-        auto value = JS::js_undefined();
+    // 6. If property is undefined and P is in W's document-tree child navigable target name property set, then:
+    auto navigable_property_set = m_window->document_tree_child_navigable_target_name_property_set();
+    if (auto navigable = navigable_property_set.get(property_key.to_string().view()); navigable.has_value()) {
+        // 1. Let value be the active WindowProxy of the named object of W with the name P.
+        auto value = navigable.value()->active_window_proxy();
 
         // 2. Return PropertyDescriptor{ [[Value]]: value, [[Enumerable]]: false, [[Writable]]: false, [[Configurable]]: true }.
         // NOTE: The reason the property descriptors are non-enumerable, despite this mismatching the same-origin behavior, is for compatibility with existing web content. See issue #3183 for details.
