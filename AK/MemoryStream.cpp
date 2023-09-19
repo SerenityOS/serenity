@@ -93,7 +93,11 @@ ErrorOr<size_t> FixedMemoryStream::seek(i64 offset, SeekMode seek_mode)
 
 ErrorOr<size_t> FixedMemoryStream::write_some(ReadonlyBytes bytes)
 {
-    VERIFY(m_writing_enabled);
+    // MemoryStream isn't based on file-descriptors, but since most other
+    // Stream implementations are, the interface specifies EBADF as the
+    // "we don't support this particular operation" error code.
+    if (!m_writing_enabled)
+        return Error::from_errno(EBADF);
 
     // FIXME: Can this not error?
     auto const nwritten = bytes.copy_trimmed_to(m_bytes.slice(m_offset));

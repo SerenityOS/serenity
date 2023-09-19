@@ -190,11 +190,7 @@ TEST_CASE(fixed_memory_read_only)
 
     TRY_OR_FAIL(stream.seek(0));
     ReadonlyBytes buffer { some_words.characters_without_null_termination(), some_words.length() };
-    EXPECT_CRASH("Write protection assert", [&] {
-        (void)stream.write_some(buffer);
-        return Test::Crash::Failure::DidNotCrash;
-    });
-
+    EXPECT(stream.write_some(buffer).is_error());
     EXPECT_EQ(TRY_OR_FAIL(stream.tell()), 0ull);
     EXPECT(!stream.is_eof());
 }
