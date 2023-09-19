@@ -151,7 +151,7 @@ private:
     Vector<FunctionDeclaration const&> m_functions_to_initialize;
     bool m_arguments_object_needed { false };
     Vector<VariableNameToInitialize> m_var_names_to_initialize_binding;
-    Vector<StringView> m_function_names_to_initialize_binding;
+    Vector<DeprecatedFlyString> m_function_names_to_initialize_binding;
 };
 
 template<>
