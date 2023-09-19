@@ -46,7 +46,6 @@
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
-#include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAutoFlowStyleValue.h>
@@ -4094,16 +4093,20 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     if (!font_size || !font_families)
         return nullptr;
 
-    if (!font_stretch)
-        font_stretch = property_initial_value(m_context.realm(), PropertyID::FontStretch);
     if (!font_style)
         font_style = property_initial_value(m_context.realm(), PropertyID::FontStyle);
+    if (!font_variant)
+        font_variant = property_initial_value(m_context.realm(), PropertyID::FontVariant);
     if (!font_weight)
         font_weight = property_initial_value(m_context.realm(), PropertyID::FontWeight);
+    if (!font_stretch)
+        font_stretch = property_initial_value(m_context.realm(), PropertyID::FontStretch);
     if (!line_height)
         line_height = property_initial_value(m_context.realm(), PropertyID::LineHeight);
 
-    return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
+    return ShorthandStyleValue::create(PropertyID::Font,
+        { PropertyID::FontStyle, PropertyID::FontVariant, PropertyID::FontWeight, PropertyID::FontStretch, PropertyID::FontSize, PropertyID::LineHeight, PropertyID::FontFamily },
+        { font_style.release_nonnull(), font_variant.release_nonnull(), font_weight.release_nonnull(), font_stretch.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull() });
 }
 
 RefPtr<StyleValue> Parser::parse_font_family_value(TokenStream<ComponentValue>& tokens)

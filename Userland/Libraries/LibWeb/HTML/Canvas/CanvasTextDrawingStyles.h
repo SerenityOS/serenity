@@ -8,7 +8,7 @@
 
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
-#include <LibWeb/CSS/StyleValues/FontStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
 
@@ -28,12 +28,12 @@ public:
         }
 
         // On getting, the font attribute must return the serialized form of the current font of the context (with no 'line-height' component).
-        auto const& font_style_value = my_drawing_state().font_style_value->as_font();
-        return DeprecatedString::formatted("{} {} {} {}",
-            font_style_value.font_style()->to_string(),
-            font_style_value.font_weight()->to_string(),
-            font_style_value.font_size()->to_string(),
-            font_style_value.font_families()->to_string());
+        auto const& font_style_value = my_drawing_state().font_style_value->as_shorthand();
+        auto font_style = font_style_value.longhand(CSS::PropertyID::FontStyle);
+        auto font_weight = font_style_value.longhand(CSS::PropertyID::FontWeight);
+        auto font_size = font_style_value.longhand(CSS::PropertyID::FontSize);
+        auto font_family = font_style_value.longhand(CSS::PropertyID::FontFamily);
+        return DeprecatedString::formatted("{} {} {} {}", font_style->to_string(), font_weight->to_string(), font_size->to_string(), font_family->to_string());
     }
 
     void set_font(StringView font)
@@ -51,9 +51,14 @@ public:
         my_drawing_state().font_style_value = font_style_value_result.release_nonnull();
 
         // Load font with font style value properties
-        auto const& font_style_value = my_drawing_state().font_style_value->as_font();
+        auto const& font_style_value = my_drawing_state().font_style_value->as_shorthand();
         auto& canvas_element = reinterpret_cast<IncludingClass&>(*this).canvas_element();
-        my_drawing_state().current_font = canvas_element.document().style_computer().compute_font_for_style_values(&canvas_element, {}, font_style_value.font_families(), font_style_value.font_size(), font_style_value.font_style(), font_style_value.font_weight(), font_style_value.font_stretch());
+        auto& font_style = *font_style_value.longhand(CSS::PropertyID::FontStyle);
+        auto& font_weight = *font_style_value.longhand(CSS::PropertyID::FontWeight);
+        auto& font_stretch = *font_style_value.longhand(CSS::PropertyID::FontStretch);
+        auto& font_size = *font_style_value.longhand(CSS::PropertyID::FontSize);
+        auto& font_family = *font_style_value.longhand(CSS::PropertyID::FontFamily);
+        my_drawing_state().current_font = canvas_element.document().style_computer().compute_font_for_style_values(&canvas_element, {}, font_family, font_size, font_style, font_weight, font_stretch);
     }
 
     Bindings::CanvasTextAlign text_align() const { return my_drawing_state().text_align; }
