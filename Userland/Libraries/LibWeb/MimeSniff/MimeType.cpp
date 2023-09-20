@@ -284,6 +284,16 @@ bool MimeType::is_zip_based() const
     return subtype().ends_with_bytes("+zip"sv) || essence().is_one_of("application/zip"sv);
 }
 
+// https://mimesniff.spec.whatwg.org/#archive-mime-type
+bool MimeType::is_archive() const
+{
+    // An archive MIME type is any MIME type whose essence is one of the following:
+    //    - application/x-rar-compressed
+    //    - application/zip
+    //    - application/x-gzip
+    return essence().is_one_of("application/x-rar-compressed"sv, "application/zip"sv, "application/x-gzip"sv);
+}
+
 // https://mimesniff.spec.whatwg.org/#xml-mime-type
 bool MimeType::is_xml() const
 {
