@@ -82,20 +82,6 @@ public:
     }
 
     template<typename Callback>
-    void for_each_child(Callback callback) const
-    {
-        for (auto node = first_child(); node; node = node->next_sibling())
-            callback(*node);
-    }
-
-    template<typename Callback>
-    void for_each_child(Callback callback)
-    {
-        for (auto node = first_child(); node; node = node->next_sibling())
-            callback(*node);
-    }
-
-    template<typename Callback>
     IterationDecision for_each_in_subtree(Callback callback) const
     {
         for (auto child = first_child(); child; child = child->next_sibling()) {
