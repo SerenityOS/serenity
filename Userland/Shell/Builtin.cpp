@@ -258,7 +258,7 @@ ErrorOr<int> Shell::builtin_continue(Main::Arguments arguments)
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    if (count != 0) {
+    if (count != 1) {
         raise_error(ShellError::EvaluatedSyntaxError, "continue: count must be equal to 1 (NYI)");
         return 1;
     }
