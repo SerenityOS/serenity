@@ -33,7 +33,6 @@ source_set("StyleValues") {
     "ShadowStyleValue.cpp",
     "ShorthandStyleValue.cpp",
     "StyleValueList.cpp",
-    "TextDecorationStyleValue.cpp",
     "TransformationStyleValue.cpp",
     "UnresolvedStyleValue.cpp",
   ]

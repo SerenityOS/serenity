@@ -51,7 +51,6 @@
 #include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
-#include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
@@ -462,15 +461,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     };
 
     if (property_id == CSS::PropertyID::TextDecoration) {
-        if (value.is_text_decoration()) {
-            auto const& text_decoration = value.as_text_decoration();
-            set_longhand_property(CSS::PropertyID::TextDecorationLine, text_decoration.line());
-            set_longhand_property(CSS::PropertyID::TextDecorationThickness, text_decoration.thickness());
-            set_longhand_property(CSS::PropertyID::TextDecorationStyle, text_decoration.style());
-            set_longhand_property(CSS::PropertyID::TextDecorationColor, text_decoration.color());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::TextDecorationLine, value);
         set_longhand_property(CSS::PropertyID::TextDecorationThickness, value);
         set_longhand_property(CSS::PropertyID::TextDecorationStyle, value);

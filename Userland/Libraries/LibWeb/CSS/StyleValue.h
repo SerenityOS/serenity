@@ -122,7 +122,6 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(Shadow, shadow)                                              \
     __ENUMERATE_STYLE_VALUE_TYPE(Shorthand, shorthand)                                        \
     __ENUMERATE_STYLE_VALUE_TYPE(String, string)                                              \
-    __ENUMERATE_STYLE_VALUE_TYPE(TextDecoration, text_decoration)                             \
     __ENUMERATE_STYLE_VALUE_TYPE(Time, time)                                                  \
     __ENUMERATE_STYLE_VALUE_TYPE(Transformation, transformation)                              \
     __ENUMERATE_STYLE_VALUE_TYPE(Unresolved, unresolved)                                      \
