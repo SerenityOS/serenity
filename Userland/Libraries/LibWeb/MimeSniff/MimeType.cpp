@@ -252,6 +252,30 @@ bool MimeType::is_audio_or_video() const
     return type().is_one_of("audio"sv, "video"sv) || essence() == "application/ogg"sv;
 }
 
+// https://mimesniff.spec.whatwg.org/#font-mime-type
+bool MimeType::is_font() const
+{
+    // A font MIME type is any MIME type whose type is "font", or whose essence is one of the following:
+    //    - application/font-cff
+    //    - application/font-off
+    //    - application/font-sfnt
+    //    - application/font-ttf
+    //    - application/font-woff
+    //    - application/vnd.ms-fontobject
+    //    - application/vnd.ms-opentype
+    if (type() == "font"sv)
+        return true;
+
+    return essence().is_one_of(
+        "application/font-cff"sv,
+        "application/font-off"sv,
+        "application/font-sfnt"sv,
+        "application/font-ttf"sv,
+        "application/font-woff"sv,
+        "application/vnd.ms-fontobject"sv,
+        "application/vnd.ms-opentype"sv);
+}
+
 // https://mimesniff.spec.whatwg.org/#xml-mime-type
 bool MimeType::is_xml() const
 {
