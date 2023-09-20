@@ -306,6 +306,13 @@ bool MimeType::is_html() const
     return essence().is_one_of("text/html"sv);
 }
 
+// https://mimesniff.spec.whatwg.org/#scriptable-mime-type
+bool MimeType::is_scriptable() const
+{
+    // A scriptable MIME type is an XML MIME type, HTML MIME type, or any MIME type whose essence is "application/pdf".
+    return is_xml() || is_html() || essence() == "application/pdf"sv;
+}
+
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type
 bool MimeType::is_javascript() const
 {

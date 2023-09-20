@@ -33,6 +33,7 @@ public:
     bool is_archive() const;
     bool is_xml() const;
     bool is_html() const;
+    bool is_scriptable() const;
     bool is_javascript() const;
 
     ErrorOr<void> set_parameter(String name, String value);
