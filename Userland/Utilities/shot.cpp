@@ -24,6 +24,11 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
+enum class SelectionMode {
+    Point,
+    Rect
+};
+
 class SelectableLayover final : public GUI::Widget {
     C_OBJECT(SelectableLayover)
 public:
@@ -35,17 +40,34 @@ public:
     }
 
 private:
-    SelectableLayover(GUI::Window* window)
+    Gfx::Color background_color(SelectionMode selection_mode)
+    {
+        if (selection_mode == SelectionMode::Point)
+            return Color::Transparent;
+
+        return palette().threed_highlight().with_alpha(128);
+    }
+
+    SelectableLayover(GUI::Window* window, SelectionMode selection_mode)
         : m_window(window)
-        , m_background_color(palette().threed_highlight().with_alpha(128))
+        , m_background_color(background_color(selection_mode))
+        , m_selection_mode(selection_mode)
     {
         set_override_cursor(Gfx::StandardCursor::Crosshair);
     }
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GUI::MouseButton::Primary)
-            m_anchor_point = event.position();
+        if (event.button() != GUI::MouseButton::Primary)
+            return;
+
+        if (m_selection_mode == SelectionMode::Point) {
+            m_region = Gfx::IntRect { event.position(), { 1, 1 } };
+            m_window->close();
+            return;
+        }
+
+        m_anchor_point = event.position();
     }
 
     virtual void mousemove_event(GUI::MouseEvent& event) override
@@ -86,6 +108,7 @@ private:
     Gfx::IntRect m_region;
     GUI::Window* m_window = nullptr;
     Gfx::Color const m_background_color;
+    SelectionMode m_selection_mode { SelectionMode::Rect };
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -96,6 +119,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool output_to_clipboard = false;
     unsigned delay = 0;
     bool select_region = false;
+    bool select_window = false;
     bool edit_image = false;
     int screen = -1;
 
@@ -105,8 +129,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(screen, "The index of the screen (default: -1 for all screens)", "screen", 's', "index");
     args_parser.add_option(select_region, "Select a region to capture", "region", 'r');
     args_parser.add_option(edit_image, "Open in PixelPaint", "edit", 'e');
+    args_parser.add_option(select_window, "Select a window to capture", "window", 'w');
 
     args_parser.parse(arguments);
+
+    if (select_window && select_region) {
+        warnln("The '-r' and '-w' options are mutually exclusive");
+        return 1;
+    }
 
     if (output_path.is_empty()) {
         output_path = Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
@@ -114,9 +144,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
     Optional<Gfx::IntRect> crop_region;
-    if (select_region) {
+    if (select_region || select_window) {
         auto window = GUI::Window::construct();
-        auto container = window->set_main_widget<SelectableLayover>(window);
+        auto selection_mode = select_region ? SelectionMode::Rect : SelectionMode::Point;
+        auto container = window->set_main_widget<SelectableLayover>(window, selection_mode);
 
         window->set_title("shot");
         window->set_has_alpha_channel(true);
@@ -131,12 +162,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
+    Optional<i32> window_id;
+    if (select_window)
+        window_id = GUI::ConnectionToWindowServer::the().get_topmost_window_id(crop_region->location());
+
     sleep(delay);
     Optional<u32> screen_index;
     if (screen >= 0)
         screen_index = (u32)screen;
+
     dbgln("getting screenshot...");
-    auto shared_bitmap = GUI::ConnectionToWindowServer::the().get_screen_bitmap(crop_region, screen_index);
+    auto shared_bitmap = window_id.has_value()
+        ? GUI::ConnectionToWindowServer::the().get_window_bitmap(window_id.value(), screen_index)
+        : GUI::ConnectionToWindowServer::the().get_screen_bitmap(crop_region, screen_index);
     dbgln("got screenshot");
 
     RefPtr<Gfx::Bitmap> bitmap = shared_bitmap.bitmap();

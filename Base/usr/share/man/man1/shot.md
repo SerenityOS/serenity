@@ -5,7 +5,7 @@ shot
 ## Synopsis
 
 ```sh
-$ shot [--clipboard] [--delay seconds] [--screen index] [--region] [--edit] [output]
+$ shot [--clipboard] [--delay seconds] [--screen index] [--region] [--edit] [--window] [output]
 ```
 
 ## Options
@@ -15,6 +15,7 @@ $ shot [--clipboard] [--delay seconds] [--screen index] [--region] [--edit] [out
 * `-s index`, `--screen index`: The index of the screen (default: -1 for all screens)
 * `-r`, `--region`: Select a region to capture
 * `-e`, `--edit`: Open in PixelPaint
+* `-w`, `--window`: Select a window to capture
 
 ## Arguments
 
