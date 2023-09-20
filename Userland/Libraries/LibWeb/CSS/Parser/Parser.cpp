@@ -4112,7 +4112,7 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     }
 
     // Since normal is the default value for all the properties that can have it, we don't have to actually
-    // set anything to normal here. It'll be set when we create the FontStyleValue below.
+    // set anything to normal here. It'll be set when we create the ShorthandStyleValue below.
     // We just need to make sure we were not given more normals than will fit.
     int unset_value_count = (font_style ? 0 : 1) + (font_weight ? 0 : 1) + (font_variant ? 0 : 1) + (font_stretch ? 0 : 1);
     if (unset_value_count < normal_count)
