@@ -61,7 +61,6 @@
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
-#include <LibWeb/CSS/StyleValues/PlaceItemsStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
@@ -4602,13 +4601,17 @@ RefPtr<StyleValue> Parser::parse_place_items_value(Vector<ComponentValue> const&
     if (component_values.size() == 1) {
         if (!property_accepts_identifier(PropertyID::JustifyItems, maybe_align_items_value->to_identifier()))
             return nullptr;
-        return PlaceItemsStyleValue::create(*maybe_align_items_value, *maybe_align_items_value);
+        return ShorthandStyleValue::create(PropertyID::PlaceItems,
+            { PropertyID::AlignItems, PropertyID::JustifyItems },
+            { *maybe_align_items_value, *maybe_align_items_value });
     }
 
     auto maybe_justify_items_value = parse_css_value_for_property(PropertyID::JustifyItems, tokens);
     if (!maybe_justify_items_value)
         return nullptr;
-    return PlaceItemsStyleValue::create(*maybe_align_items_value, *maybe_justify_items_value);
+    return ShorthandStyleValue::create(PropertyID::PlaceItems,
+        { PropertyID::AlignItems, PropertyID::JustifyItems },
+        { *maybe_align_items_value, *maybe_justify_items_value });
 }
 
 RefPtr<StyleValue> Parser::parse_place_self_value(Vector<ComponentValue> const& component_values)

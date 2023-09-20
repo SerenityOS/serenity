@@ -154,6 +154,13 @@ String ShorthandStyleValue::to_string() const
             return align_content;
         return MUST(String::formatted("{} {}", align_content, justify_content));
     }
+    case PropertyID::PlaceItems: {
+        auto align_items = longhand(PropertyID::AlignItems)->to_string();
+        auto justify_items = longhand(PropertyID::JustifyItems)->to_string();
+        if (align_items == justify_items)
+            return align_items;
+        return MUST(String::formatted("{} {}", align_items, justify_items));
+    }
     case PropertyID::PlaceSelf: {
         auto align_self = longhand(PropertyID::AlignSelf)->to_string();
         auto justify_self = longhand(PropertyID::JustifySelf)->to_string();
