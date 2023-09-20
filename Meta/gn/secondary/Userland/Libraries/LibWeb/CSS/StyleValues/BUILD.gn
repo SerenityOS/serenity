@@ -6,7 +6,6 @@ source_set("StyleValues") {
     "BackgroundRepeatStyleValue.cpp",
     "BackgroundSizeStyleValue.cpp",
     "BorderRadiusStyleValue.cpp",
-    "BorderStyleValue.cpp",
     "CalculatedStyleValue.cpp",
     "ColorStyleValue.cpp",
     "ConicGradientStyleValue.cpp",
