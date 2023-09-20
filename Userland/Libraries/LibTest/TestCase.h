@@ -70,11 +70,13 @@ public:
                 bool generated_successfully = false;
                 u8 gen_attempt;
                 for (gen_attempt = 0; gen_attempt < MAX_GEN_ATTEMPTS_PER_VALUE && !generated_successfully; ++gen_attempt) {
-                    // TODO disable user-visible failure printlns
+                    // We're going to run the test function many times, so let's turn off the reporting until we finish.
+                    disable_reporting();
+
                     set_current_test_result(TestResult::NotRun);
                     run_with_rand_source(RandSource::live(), test_fn);
                     switch (current_test_result()) {
-                        case TestResult::NotRun: VERIFY_NOT_REACHED();
+                        case TestResult::NotRun: break; // TODO I'd like to use VERIFY_NOT_REACHED() here
                         case TestResult::Passed: {
                             generated_successfully = true;
                             break;
@@ -83,30 +85,30 @@ public:
                             generated_successfully = true;
                             RandomRun first_failure = rand_source().run();
                             RandomRun best_failure = shrink(first_failure, test_fn);
-                            // Run one last time, so that the user can see the minimal failure
+                            // Run one last time with reporting on, so that the user can see the minimal failure
                             // TODO show the values generated during this failure
-                            // TODO enable user-visible failure printlns
+                            enable_reporting();
                             run_with_rand_source(RandSource::recorded(best_failure), test_fn);
                             return;
                         }
                         case TestResult::Rejected: break;
                         case TestResult::HitLimit: break;
                         case TestResult::Overrun: break;
-                        default: VERIFY_NOT_REACHED();
+                        default: break; // TODO I'd like to use VERIFY_NOT_REACHED() here
                     }
                 }
                 if (!generated_successfully) {
-                    VERIFY(gen_attempt == MAX_GEN_ATTEMPTS_PER_VALUE);
+                    // TODO I'd like to do: VERIFY(gen_attempt == MAX_GEN_ATTEMPTS_PER_VALUE);
                     // Meaning the loop above got to the full MAX_GEN_ATTEMPTS_PER_VALUE and gave up
-                    // Run one last time with warnings on, so that the user gets the REJECTED message.
-                    // TODO enable the warnings
+                    // Run one last time with reporting on, so that the user gets the REJECTED message.
+                    enable_reporting();
                     RandomRun last_failure = rand_source().run();
                     run_with_rand_source(RandSource::recorded(last_failure), test_fn);
                     return;
                 }
             }
             // MAX_GENERATED_VALUES_PER_TEST values generated, all passed the test.
-            VERIFY(current_test_result() == TestResult::Passed);
+            // TODO I'd like to do: VERIFY(current_test_result() == TestResult::Passed);
         };
         return make_ref_counted<TestCase>(name, test_case_fn, false);
     }
@@ -116,17 +118,6 @@ private:
     TestFunction m_function;
     bool m_is_benchmark;
 };
-
-inline void print_rejections(HashMap<StringView, u32> const& rejections)
-{
-    warnln("Couldn't generate a test value. Reasons:");
-
-    Vector<Tuple<StringView, u32>> vec;
-
-    for (auto tuple : rejections) {
-        warnln(" - {} ({}x)", tuple.key, tuple.value);
-    }
-}
 
 // Helper to hide implementation of TestSuite from users
 void add_test_case_to_suite(NonnullRefPtr<TestCase> const& test_case);

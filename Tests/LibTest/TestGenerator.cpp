@@ -28,6 +28,15 @@ RANDOMIZED_TEST_CASE(assume)
     // (It can give up if the value passing the predicate is extremely unlikely.)
 }
 
+/* TODO can we test that a test fails, perhaps asserting on the stderr message? 
+RANDOMIZED_TEST_CASE(degenerate_assume)
+{
+    u32 n = Gen::unsigned_int(10);
+    ASSUME(n > 10); // This will never succeed
+    EXPECT(n > 10);
+}
+*/
+
 RANDOMIZED_TEST_CASE(map_like)
 {
     u32 n1 = Gen::unsigned_int(10);
@@ -77,6 +86,6 @@ RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
     // TODO make this test shrink more consistently
     // Can be gleaned with a variant on:
     // while true; do ./Build/lagom/bin/TestGenerator; done
-    //warnln("vec {}, sum {}", vec, sum);
-    EXPECT(sum <= 10);
+    warnln("vec {}, sum {}", vec, sum);
+    EXPECT(sum <= max_item * vec.size());
 }

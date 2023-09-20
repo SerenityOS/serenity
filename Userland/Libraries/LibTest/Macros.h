@@ -14,11 +14,6 @@
 #include <LibTest/PBT/RandSource.h>
 #include <LibTest/TestResult.h>
 
-namespace AK {
-template<typename... Parameters>
-void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&...);
-}
-
 namespace Test {
 // Declare helpers so that we can call them from VERIFY in included headers
 TestResult current_test_result();
@@ -26,13 +21,18 @@ void set_current_test_result(TestResult);
 
 RandSource& rand_source();
 void set_rand_source(RandSource);
+
+bool can_report();
+void enable_reporting();
+void disable_reporting();
 }
 
 #undef VERIFY
 #define VERIFY(x)                                                                                    \
     do {                                                                                             \
         if (!(x)) {                                                                                  \
-            ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: VERIFY({}) failed", __FILE__, __LINE__, #x); \
+            if (::Test::can_report()) \
+                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: VERIFY({}) failed", __FILE__, __LINE__, #x); \
             ::Test::set_current_test_result(TestResult::Failed);                                     \
         }                                                                                            \
     } while (false)
@@ -40,6 +40,7 @@ void set_rand_source(RandSource);
 #undef VERIFY_NOT_REACHED
 #define VERIFY_NOT_REACHED()                                                                           \
     do {                                                                                               \
+        if (::Test::can_report()) \
         ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: VERIFY_NOT_REACHED() called", __FILE__, __LINE__); \
         ::abort();                                                                                     \
     } while (false)
@@ -47,6 +48,7 @@ void set_rand_source(RandSource);
 #undef TODO
 #define TODO()                                                                           \
     do {                                                                                 \
+        if (::Test::can_report()) \
         ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: TODO() called", __FILE__, __LINE__); \
         ::abort();                                                                       \
     } while (false)
@@ -56,6 +58,7 @@ void set_rand_source(RandSource);
         auto lhs = (a);                                                                                                                                                                      \
         auto rhs = (b);                                                                                                                                                                      \
         if (lhs != rhs) {                                                                                                                                                                    \
+            if (::Test::can_report()) \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
             ::Test::set_current_test_result(TestResult::Failed);                                                                                                                             \
         }                                                                                                                                                                                    \
@@ -68,6 +71,7 @@ void set_rand_source(RandSource);
         bool ltruth = static_cast<bool>(lhs);                                                                             \
         bool rtruth = static_cast<bool>(rhs);                                                                             \
         if (ltruth != rtruth) {                                                                                           \
+            if (::Test::can_report()) \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ_TRUTH({}, {}) failed with lhs={} ({}) and rhs={} ({})", \
                 __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, ltruth, FormatIfSupported { rhs }, rtruth);        \
             ::Test::set_current_test_result(TestResult::Failed);                                                          \
@@ -81,6 +85,7 @@ void set_rand_source(RandSource);
         auto lhs = (a);                                                                                                                          \
         auto rhs = (b);                                                                                                                          \
         if (lhs != rhs) {                                                                                                                        \
+            if (::Test::can_report()) \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, lhs, rhs); \
             ::Test::set_current_test_result(TestResult::Failed);                                                                                 \
         }                                                                                                                                        \
@@ -91,6 +96,7 @@ void set_rand_source(RandSource);
         auto lhs = (a);                                                                                                                                                                      \
         auto rhs = (b);                                                                                                                                                                      \
         if (lhs == rhs) {                                                                                                                                                                    \
+            if (::Test::can_report()) \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_NE({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
             ::Test::set_current_test_result(TestResult::Failed);                                                                                                                             \
         }                                                                                                                                                                                    \
@@ -99,6 +105,7 @@ void set_rand_source(RandSource);
 #define EXPECT(x)                                                                                    \
     do {                                                                                             \
         if (!(x)) {                                                                                  \
+            if (::Test::can_report()) \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT({}) failed", __FILE__, __LINE__, #x); \
             ::Test::set_current_test_result(TestResult::Failed);                                     \
         }                                                                                            \
@@ -110,6 +117,7 @@ void set_rand_source(RandSource);
         auto expect_close_rhs = b;                                                                              \
         auto expect_close_diff = static_cast<double>(expect_close_lhs) - static_cast<double>(expect_close_rhs); \
         if (AK::fabs(expect_close_diff) > (err)) {                                                              \
+            if (::Test::can_report()) \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_APPROXIMATE({}, {})"                             \
                          " failed with lhs={}, rhs={}, (lhs-rhs)={}",                                           \
                 __FILE__, __LINE__, #a, #b, expect_close_lhs, expect_close_rhs, expect_close_diff);             \
@@ -123,6 +131,7 @@ void set_rand_source(RandSource);
     do {                                                                                                           \
         if (!(x)) {                                                                                                \
             ::Test::set_current_test_result(TestResult::Rejected);                                                 \
+            if (::Test::can_report()) \
             ::AK::warnln("\033[31;1mREJECTED\033[0m: {}:{}: Couldn't generate random value satisfying ASSUME({})", \
                 __FILE__, __LINE__, #x);                                                                           \
             return;                                                                                                \
@@ -131,6 +140,7 @@ void set_rand_source(RandSource);
 
 #define FAIL(message)                                                                  \
     do {                                                                               \
+        if (::Test::can_report()) \
         ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: {}", __FILE__, __LINE__, message); \
         ::Test::set_current_test_result(TestResult::Failed);                           \
     } while (false)

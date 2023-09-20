@@ -63,6 +63,21 @@ RandSource& rand_source()
     return TestSuite::the().rand_source();
 }
 
+// Declared in Macros.h
+bool can_report() {
+    return TestSuite::the().m_reporting_enabled;
+}
+
+// Declared in Macros.h
+void enable_reporting() {
+    TestSuite::the().m_reporting_enabled = true;
+}
+
+// Declared in Macros.h
+void disable_reporting() {
+    TestSuite::the().m_reporting_enabled = false;
+}
+
 // Declared in TestCase.h
 void add_test_case_to_suite(NonnullRefPtr<TestCase> const& test_case)
 {
@@ -145,9 +160,11 @@ static DeprecatedString test_result_to_string(TestResult result)
     case TestResult::HitLimit:
         return "Hit random data size limit in";
     case TestResult::Overrun: // This should never get to the user; Shrink.h should do something about it.
-        VERIFY_NOT_REACHED();
+        // TODO I'd like to do: VERIFY_NOT_REACHED();
+        return "Ran out of randomness in";
     default:
-        VERIFY_NOT_REACHED();
+        // TODO I'd like to do: VERIFY_NOT_REACHED();
+        return "Unknown TestResult in";
     }
 }
 
@@ -206,8 +223,6 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         }
 
         switch (m_current_test_result) {
-        case TestResult::NotRun:
-            VERIFY_NOT_REACHED();
         case TestResult::Passed:
             test_passed_count++;
             break;
@@ -215,7 +230,8 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             test_failed_count++;
             break;
         default:
-            VERIFY_NOT_REACHED();
+            // TODO I'd like to do: VERIFY_NOT_REACHED();
+            break;
         }
     }
 

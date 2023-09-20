@@ -49,6 +49,8 @@ public:
 
     TestResult m_current_test_result = TestResult::NotRun;
 
+    bool m_reporting_enabled = true;
+
 private:
     static TestSuite* s_global;
     Vector<NonnullRefPtr<TestCase>> m_cases;
