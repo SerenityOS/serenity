@@ -276,6 +276,14 @@ bool MimeType::is_font() const
         "application/vnd.ms-opentype"sv);
 }
 
+// https://mimesniff.spec.whatwg.org/#zip-based-mime-type
+bool MimeType::is_zip_based() const
+{
+    // A ZIP-based MIME type is any MIME type whose subtype ends in "+zip" or whose essence is one of the following:
+    //    - application/zip
+    return subtype().ends_with_bytes("+zip"sv) || essence().is_one_of("application/zip"sv);
+}
+
 // https://mimesniff.spec.whatwg.org/#xml-mime-type
 bool MimeType::is_xml() const
 {
