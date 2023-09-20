@@ -682,25 +682,6 @@ void BrowsingContext::set_window_proxy(JS::GCPtr<WindowProxy> window_proxy)
     m_window_proxy = move(window_proxy);
 }
 
-void BrowsingContext::scroll_offset_did_change()
-{
-    // https://w3c.github.io/csswg-drafts/cssom-view-1/#scrolling-events
-    // Whenever a viewport gets scrolled (whether in response to user interaction or by an API), the user agent must run these steps:
-
-    // 1. Let doc be the viewport’s associated Document.
-    auto* doc = active_document();
-    VERIFY(doc);
-
-    // 2. If doc is already in doc’s pending scroll event targets, abort these steps.
-    for (auto& target : doc->pending_scroll_event_targets()) {
-        if (target.ptr() == doc)
-            return;
-    }
-
-    // 3. Append doc to doc’s pending scroll event targets.
-    doc->pending_scroll_event_targets().append(*doc);
-}
-
 BrowsingContextGroup* BrowsingContext::group()
 {
     return m_group;
