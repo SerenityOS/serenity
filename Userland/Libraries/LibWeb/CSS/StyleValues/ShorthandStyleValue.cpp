@@ -161,6 +161,8 @@ String ShorthandStyleValue::to_string() const
     }
     case PropertyID::ListStyle:
         return MUST(String::formatted("{} {} {}", longhand(PropertyID::ListStylePosition)->to_string(), longhand(PropertyID::ListStyleImage)->to_string(), longhand(PropertyID::ListStyleType)->to_string()));
+    case PropertyID::Overflow:
+        return MUST(String::formatted("{} {}", longhand(PropertyID::OverflowX)->to_string(), longhand(PropertyID::OverflowY)->to_string()));
     case PropertyID::PlaceContent: {
         auto align_content = longhand(PropertyID::AlignContent)->to_string();
         auto justify_content = longhand(PropertyID::JustifyContent)->to_string();
