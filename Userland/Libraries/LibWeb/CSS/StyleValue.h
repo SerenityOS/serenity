@@ -97,7 +97,6 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(Edge, edge)                                                  \
     __ENUMERATE_STYLE_VALUE_TYPE(FilterValueList, filter_value_list)                          \
     __ENUMERATE_STYLE_VALUE_TYPE(Frequency, frequency)                                        \
-    __ENUMERATE_STYLE_VALUE_TYPE(GridAreaShorthand, grid_area_shorthand)                      \
     __ENUMERATE_STYLE_VALUE_TYPE(GridAutoFlow, grid_auto_flow)                                \
     __ENUMERATE_STYLE_VALUE_TYPE(GridTemplateArea, grid_template_area)                        \
     __ENUMERATE_STYLE_VALUE_TYPE(GridTrackPlacement, grid_track_placement)                    \

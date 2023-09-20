@@ -8,6 +8,7 @@
 #include "ShorthandStyleValue.h"
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 
 namespace Web::CSS {
@@ -94,6 +95,22 @@ String ShorthandStyleValue::to_string() const
         return MUST(String::formatted("{} {} {}", longhand(PropertyID::FlexGrow)->to_string(), longhand(PropertyID::FlexShrink)->to_string(), longhand(PropertyID::FlexBasis)->to_string()));
     case PropertyID::FlexFlow:
         return MUST(String::formatted("{} {}", longhand(PropertyID::FlexDirection)->to_string(), longhand(PropertyID::FlexWrap)->to_string()));
+    case PropertyID::GridArea: {
+        auto& row_start = longhand(PropertyID::GridRowStart)->as_grid_track_placement();
+        auto& column_start = longhand(PropertyID::GridColumnStart)->as_grid_track_placement();
+        auto& row_end = longhand(PropertyID::GridRowEnd)->as_grid_track_placement();
+        auto& column_end = longhand(PropertyID::GridColumnEnd)->as_grid_track_placement();
+        StringBuilder builder;
+        if (!row_start.grid_track_placement().is_auto())
+            builder.appendff("{}", row_start.grid_track_placement().to_string());
+        if (!column_start.grid_track_placement().is_auto())
+            builder.appendff(" / {}", column_start.grid_track_placement().to_string());
+        if (!row_end.grid_track_placement().is_auto())
+            builder.appendff(" / {}", row_end.grid_track_placement().to_string());
+        if (!column_end.grid_track_placement().is_auto())
+            builder.appendff(" / {}", column_end.grid_track_placement().to_string());
+        return MUST(builder.to_string());
+    }
     default:
         StringBuilder builder;
         auto first = true;

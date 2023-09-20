@@ -46,7 +46,6 @@
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAutoFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
@@ -5673,7 +5672,9 @@ RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue
     else
         column_end = row_end;
 
-    return GridAreaShorthandStyleValue::create(row_start, column_start, row_end, column_end);
+    return ShorthandStyleValue::create(PropertyID::GridArea,
+        { PropertyID::GridRowStart, PropertyID::GridColumnStart, PropertyID::GridRowEnd, PropertyID::GridColumnEnd },
+        { GridTrackPlacementStyleValue::create(row_start), GridTrackPlacementStyleValue::create(column_start), GridTrackPlacementStyleValue::create(row_end), GridTrackPlacementStyleValue::create(column_end) });
 }
 
 RefPtr<StyleValue> Parser::parse_grid_shorthand_value(Vector<ComponentValue> const& component_value)
