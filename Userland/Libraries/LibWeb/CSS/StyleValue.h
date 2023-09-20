@@ -157,7 +157,9 @@ public:
     AbstractImageStyleValue const& as_abstract_image() const;
     AbstractImageStyleValue& as_abstract_image() { return const_cast<AbstractImageStyleValue&>(const_cast<StyleValue const&>(*this).as_abstract_image()); }
 
-    bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
+    // https://www.w3.org/TR/css-values-4/#common-keywords
+    // https://drafts.csswg.org/css-cascade-4/#valdef-all-revert
+    bool is_css_wide_keyword() const { return is_inherit() || is_initial() || is_revert() || is_unset(); }
 
     bool has_auto() const;
     virtual bool has_color() const { return false; }

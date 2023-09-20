@@ -71,10 +71,12 @@ Optional<ValueID> value_id_from_string(StringView);
 StringView string_from_value_id(ValueID);
 
 // https://www.w3.org/TR/css-values-4/#common-keywords
+// https://drafts.csswg.org/css-cascade-4/#valdef-all-revert
 inline bool is_css_wide_keyword(StringView name)
 {
     return name.equals_ignoring_ascii_case("inherit"sv)
         || name.equals_ignoring_ascii_case("initial"sv)
+        || name.equals_ignoring_ascii_case("revert"sv)
         || name.equals_ignoring_ascii_case("unset"sv);
 }
 
