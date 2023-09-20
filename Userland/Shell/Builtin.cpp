@@ -540,6 +540,31 @@ ErrorOr<int> Shell::builtin_dirs(Main::Arguments arguments)
     return 0;
 }
 
+ErrorOr<int> Shell::builtin_eval(Main::Arguments arguments)
+{
+    if (!m_in_posix_mode) {
+        warnln("eval: This shell is not in POSIX mode");
+        return 1;
+    }
+
+    StringBuilder joined_arguments;
+    for (size_t i = 1; i < arguments.strings.size(); ++i) {
+        if (i != 1)
+            joined_arguments.append(' ');
+        joined_arguments.append(arguments.strings[i]);
+    }
+
+    auto result = Posix::Parser { TRY(joined_arguments.to_string()) }.parse();
+    if (!result)
+        return 1;
+
+    auto value = TRY(result->run(*this));
+    if (value && value->is_job())
+        block_on_job(static_cast<AST::JobValue*>(value.ptr())->job());
+
+    return last_return_code.value_or(0);
+}
+
 ErrorOr<int> Shell::builtin_exec(Main::Arguments arguments)
 {
     if (arguments.strings.size() < 2) {

@@ -32,6 +32,7 @@
     __ENUMERATE_SHELL_BUILTIN(pwd, InAllModes)               \
     __ENUMERATE_SHELL_BUILTIN(type, InAllModes)              \
     __ENUMERATE_SHELL_BUILTIN(exec, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(eval, OnlyInPOSIXMode)         \
     __ENUMERATE_SHELL_BUILTIN(exit, InAllModes)              \
     __ENUMERATE_SHELL_BUILTIN(export, InAllModes)            \
     __ENUMERATE_SHELL_BUILTIN(glob, InAllModes)              \
