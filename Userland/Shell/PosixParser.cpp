@@ -188,7 +188,7 @@ void Parser::handle_heredoc_contents()
 
 ErrorOr<Optional<Token>> Parser::next_expanded_token(Optional<Reduction> starting_reduction)
 {
-    while (m_token_buffer.find_if([](auto& token) { return token.type == Token::Type::Eof; }).is_end()) {
+    while (m_token_buffer.is_empty() || m_token_buffer.last().type != Token::Type::Eof) {
         auto tokens = TRY(m_lexer.batch_next(starting_reduction));
         auto expanded = perform_expansions(move(tokens));
         m_token_buffer.extend(expanded);
@@ -1749,7 +1749,8 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
             case '\'':
                 if (in_quote == Quote::Single) {
                     in_quote = Quote::None;
-                    TRY(append_string_literal(string.substring_view(*run_start, i - *run_start)));
+                    if (run_start.has_value())
+                        TRY(append_string_literal(string.substring_view(*run_start, i - *run_start)));
                     run_start = i + 1;
                     continue;
                 }

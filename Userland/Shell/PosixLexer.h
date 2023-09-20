@@ -197,6 +197,7 @@ struct State {
     StringBuilder buffer {};
     Reduction previous_reduction { Reduction::Start };
     bool escaping { false };
+    bool in_skip_mode { false };
     AST::Position position {
         .start_offset = 0,
         .end_offset = 0,
@@ -320,6 +321,14 @@ struct Token {
             return Token::Type::Less;
         if (name == "\n"sv)
             return Token::Type::Newline;
+        if (name == "("sv)
+            return Token::Type::OpenParen;
+        if (name == "{"sv)
+            return Token::Type::OpenBrace;
+        if (name == ")"sv)
+            return Token::Type::CloseParen;
+        if (name == "}"sv)
+            return Token::Type::CloseBrace;
 
         return {};
     }
@@ -431,6 +440,7 @@ private:
         explicit SkipTokens(Lexer& lexer)
             : m_state_change(lexer.m_state, lexer.m_state)
         {
+            lexer.m_state.in_skip_mode = true;
         }
 
         TemporaryChange<State> m_state_change;
