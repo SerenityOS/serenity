@@ -17,9 +17,9 @@ namespace Web::CSS {
 
 class PositionStyleValue final : public StyleValueWithDefaultOperators<PositionStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<PositionStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> egde_x, ValueComparingNonnullRefPtr<StyleValue> edge_y)
+    static ValueComparingNonnullRefPtr<PositionStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> edge_x, ValueComparingNonnullRefPtr<StyleValue> edge_y)
     {
-        return adopt_ref(*new (nothrow) PositionStyleValue(move(egde_x), move(edge_y)));
+        return adopt_ref(*new (nothrow) PositionStyleValue(move(edge_x), move(edge_y)));
     }
     virtual ~PositionStyleValue() override = default;
 
