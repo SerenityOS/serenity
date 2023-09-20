@@ -35,6 +35,7 @@ public:
     bool is_html() const;
     bool is_scriptable() const;
     bool is_javascript() const;
+    bool is_json() const;
 
     ErrorOr<void> set_parameter(String name, String value);
 
