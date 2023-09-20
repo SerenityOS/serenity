@@ -351,19 +351,6 @@ static void sort_matching_rules(Vector<MatchingRule>& matching_rules)
     });
 }
 
-enum class Edge {
-    Top,
-    Right,
-    Bottom,
-    Left,
-    All,
-};
-
-static bool contains(Edge a, Edge b)
-{
-    return a == b || b == Edge::All;
-}
-
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert)
 {
     auto set_longhand_property = [&](CSS::PropertyID property_id, StyleValue const& value) {
@@ -572,45 +559,31 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         || property_id == CSS::PropertyID::BorderBottom
         || property_id == CSS::PropertyID::BorderLeft) {
 
-        Edge edge = Edge::All;
-        switch (property_id) {
-        case CSS::PropertyID::BorderTop:
-            edge = Edge::Top;
-            break;
-        case CSS::PropertyID::BorderRight:
-            edge = Edge::Right;
-            break;
-        case CSS::PropertyID::BorderBottom:
-            edge = Edge::Bottom;
-            break;
-        case CSS::PropertyID::BorderLeft:
-            edge = Edge::Left;
-            break;
-        default:
-            break;
-        }
-
         if (value.is_border()) {
             auto const& border = value.as_border();
-            if (contains(Edge::Top, edge)) {
+            if (property_id == CSS::PropertyID::BorderTop) {
                 set_longhand_property(PropertyID::BorderTopWidth, border.border_width());
                 set_longhand_property(PropertyID::BorderTopStyle, border.border_style());
                 set_longhand_property(PropertyID::BorderTopColor, border.border_color());
+                return;
             }
-            if (contains(Edge::Right, edge)) {
+            if (property_id == CSS::PropertyID::BorderRight) {
                 set_longhand_property(PropertyID::BorderRightWidth, border.border_width());
                 set_longhand_property(PropertyID::BorderRightStyle, border.border_style());
                 set_longhand_property(PropertyID::BorderRightColor, border.border_color());
+                return;
             }
-            if (contains(Edge::Bottom, edge)) {
+            if (property_id == CSS::PropertyID::BorderBottom) {
                 set_longhand_property(PropertyID::BorderBottomWidth, border.border_width());
                 set_longhand_property(PropertyID::BorderBottomStyle, border.border_style());
                 set_longhand_property(PropertyID::BorderBottomColor, border.border_color());
+                return;
             }
-            if (contains(Edge::Left, edge)) {
+            if (property_id == CSS::PropertyID::BorderLeft) {
                 set_longhand_property(PropertyID::BorderLeftWidth, border.border_width());
                 set_longhand_property(PropertyID::BorderLeftStyle, border.border_style());
                 set_longhand_property(PropertyID::BorderLeftColor, border.border_color());
+                return;
             }
             return;
         }
