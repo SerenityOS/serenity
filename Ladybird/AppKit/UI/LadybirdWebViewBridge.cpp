@@ -34,7 +34,6 @@ WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pix
     , m_preferred_color_scheme(preferred_color_scheme)
 {
     m_device_pixel_ratio = device_pixel_ratio;
-    m_inverse_device_pixel_ratio = 1.0 / device_pixel_ratio;
 
     create_client(WebView::EnableCallgrindProfiling::No);
 
@@ -69,6 +68,12 @@ WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pix
 }
 
 WebViewBridge::~WebViewBridge() = default;
+
+void WebViewBridge::set_device_pixel_ratio(float device_pixel_ratio)
+{
+    m_device_pixel_ratio = device_pixel_ratio;
+    client().async_set_device_pixels_per_css_pixel(device_pixel_ratio);
+}
 
 void WebViewBridge::set_system_visibility_state(bool is_visible)
 {
@@ -169,7 +174,7 @@ Gfx::IntPoint WebViewBridge::to_content_position(Gfx::IntPoint widget_position) 
 
 Gfx::IntPoint WebViewBridge::to_widget_position(Gfx::IntPoint content_position) const
 {
-    return scale_for_device(content_position, m_inverse_device_pixel_ratio);
+    return scale_for_device(content_position, inverse_device_pixel_ratio());
 }
 
 void WebViewBridge::create_client(WebView::EnableCallgrindProfiling enable_callgrind_profiling)

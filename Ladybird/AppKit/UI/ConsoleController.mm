@@ -60,4 +60,9 @@
     }
 }
 
+- (void)windowDidChangeBackingProperties:(NSNotification*)notification
+{
+    [[[self console] web_view] handleDevicePixelRatioChange];
+}
+
 @end

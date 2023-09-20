@@ -26,7 +26,8 @@ public:
     virtual ~WebViewBridge() override;
 
     float device_pixel_ratio() const { return m_device_pixel_ratio; }
-    float inverse_device_pixel_ratio() const { return m_inverse_device_pixel_ratio; }
+    void set_device_pixel_ratio(float device_pixel_ratio);
+    float inverse_device_pixel_ratio() const { return 1.0f / m_device_pixel_ratio; }
 
     void set_system_visibility_state(bool is_visible);
 
@@ -66,8 +67,6 @@ private:
 
     Vector<Gfx::IntRect> m_screen_rects;
     Gfx::IntRect m_viewport_rect;
-
-    float m_inverse_device_pixel_ratio { 1.0 };
 
     Optional<StringView> m_webdriver_content_ipc_path;
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
