@@ -8,7 +8,9 @@
 #include "ShorthandStyleValue.h"
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 
 namespace Web::CSS {
@@ -110,6 +112,38 @@ String ShorthandStyleValue::to_string() const
         if (!column_end.grid_track_placement().is_auto())
             builder.appendff(" / {}", column_end.grid_track_placement().to_string());
         return MUST(builder.to_string());
+    }
+        // FIXME: Serialize Grid differently once we support it better!
+    case PropertyID::Grid:
+    case PropertyID::GridTemplate: {
+        auto& areas = longhand(PropertyID::GridTemplateAreas)->as_grid_template_area();
+        auto& rows = longhand(PropertyID::GridTemplateRows)->as_grid_track_size_list();
+        auto& columns = longhand(PropertyID::GridTemplateColumns)->as_grid_track_size_list();
+
+        auto construct_rows_string = [&]() {
+            StringBuilder builder;
+            size_t idx = 0;
+            for (auto const& row : rows.grid_track_size_list().track_list()) {
+                if (areas.grid_template_area().size() > idx) {
+                    builder.append("\""sv);
+                    for (size_t y = 0; y < areas.grid_template_area()[idx].size(); ++y) {
+                        builder.append(areas.grid_template_area()[idx][y]);
+                        if (y != areas.grid_template_area()[idx].size() - 1)
+                            builder.append(" "sv);
+                    }
+                    builder.append("\" "sv);
+                }
+                builder.append(row.to_string());
+                if (idx < rows.grid_track_size_list().track_list().size() - 1)
+                    builder.append(' ');
+                idx++;
+            }
+            return MUST(builder.to_string());
+        };
+
+        if (columns.grid_track_size_list().track_list().size() == 0)
+            return MUST(String::formatted("{}", construct_rows_string()));
+        return MUST(String::formatted("{} / {}", construct_rows_string(), columns.grid_track_size_list().to_string()));
     }
     default:
         StringBuilder builder;

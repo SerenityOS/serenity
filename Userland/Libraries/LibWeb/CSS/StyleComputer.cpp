@@ -38,7 +38,6 @@
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
@@ -779,13 +778,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::GridTemplate || property_id == CSS::PropertyID::Grid) {
-        if (value.is_grid_track_size_list_shorthand()) {
-            auto const& shorthand = value.as_grid_track_size_list_shorthand();
-            set_longhand_property(CSS::PropertyID::GridTemplateAreas, shorthand.areas());
-            set_longhand_property(CSS::PropertyID::GridTemplateRows, shorthand.rows());
-            set_longhand_property(CSS::PropertyID::GridTemplateColumns, shorthand.columns());
-            return;
-        }
         set_longhand_property(CSS::PropertyID::GridTemplateAreas, value);
         set_longhand_property(CSS::PropertyID::GridTemplateRows, value);
         set_longhand_property(CSS::PropertyID::GridTemplateColumns, value);

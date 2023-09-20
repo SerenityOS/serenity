@@ -102,7 +102,6 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(GridTrackPlacement, grid_track_placement)                    \
     __ENUMERATE_STYLE_VALUE_TYPE(GridTrackPlacementShorthand, grid_track_placement_shorthand) \
     __ENUMERATE_STYLE_VALUE_TYPE(GridTrackSizeList, grid_track_size_list)                     \
-    __ENUMERATE_STYLE_VALUE_TYPE(GridTrackSizeListShorthand, grid_track_size_list_shorthand)  \
     __ENUMERATE_STYLE_VALUE_TYPE(Identifier, identifier)                                      \
     __ENUMERATE_STYLE_VALUE_TYPE(Image, image)                                                \
     __ENUMERATE_STYLE_VALUE_TYPE(Inherit, inherit)                                            \
