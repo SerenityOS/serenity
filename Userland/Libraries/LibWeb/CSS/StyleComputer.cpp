@@ -46,7 +46,6 @@
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
-#include <LibWeb/CSS/StyleValues/PlaceItemsStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
@@ -499,13 +498,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::PlaceItems) {
-        if (value.is_place_items()) {
-            auto const& place_items = value.as_place_items();
-            set_longhand_property(CSS::PropertyID::AlignItems, place_items.align_items());
-            set_longhand_property(CSS::PropertyID::JustifyItems, place_items.justify_items());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::AlignItems, value);
         set_longhand_property(CSS::PropertyID::JustifyItems, value);
         return;

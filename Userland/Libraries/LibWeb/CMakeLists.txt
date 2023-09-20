@@ -104,7 +104,6 @@ set(SOURCES
     CSS/StyleValues/MathDepthStyleValue.cpp
     CSS/StyleValues/NumberStyleValue.cpp
     CSS/StyleValues/OverflowStyleValue.cpp
-    CSS/StyleValues/PlaceItemsStyleValue.cpp
     CSS/StyleValues/PositionStyleValue.cpp
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/StyleValues/RectStyleValue.cpp
