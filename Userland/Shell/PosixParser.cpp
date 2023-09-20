@@ -1372,7 +1372,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_term()
 
 ErrorOr<RefPtr<AST::Node>> Parser::parse_for_clause()
 {
-    // FOR NAME newline+ do_group
+    // FOR NAME newline+ do_group //-> FOR NAME IN "$@" newline+ do_group
     // FOR NAME newline+ IN separator do_group
     // FOR NAME IN separator do_group
     // FOR NAME IN wordlist separator do_group
@@ -1400,16 +1400,20 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_for_clause()
 
     auto saw_in = false;
     Optional<AST::Position> in_kw_position;
+    RefPtr<AST::Node> iterated_expression;
+
     if (peek().type == Token::Type::In) {
         saw_in = true;
         in_kw_position = peek().position;
         skip();
     } else if (!saw_newline) {
         error(peek(), "Expected 'in' or a newline, not {}", peek().type_name());
+    } else {
+        // FOR NAME newline+ do_group //-> FOR NAME IN "$@" newline+ do_group
+        iterated_expression = TRY(Parser { "\"$@\""_string }.parse_word());
     }
 
-    RefPtr<AST::Node> iterated_expression;
-    if (!saw_newline)
+    if (saw_in && !saw_newline)
         iterated_expression = parse_word_list();
 
     if (saw_in) {
