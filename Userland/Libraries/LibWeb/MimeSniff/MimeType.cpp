@@ -238,6 +238,13 @@ ErrorOr<void> MimeType::set_parameter(String name, String value)
     return {};
 }
 
+// https://mimesniff.spec.whatwg.org/#image-mime-type
+bool MimeType::is_image() const
+{
+    // An image MIME type is a MIME type whose type is "image".
+    return type() == "image"sv;
+}
+
 // https://mimesniff.spec.whatwg.org/#xml-mime-type
 bool MimeType::is_xml() const
 {
