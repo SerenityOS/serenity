@@ -113,7 +113,6 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(Number, number)                                              \
     __ENUMERATE_STYLE_VALUE_TYPE(Overflow, overflow)                                          \
     __ENUMERATE_STYLE_VALUE_TYPE(Percentage, percentage)                                      \
-    __ENUMERATE_STYLE_VALUE_TYPE(PlaceContent, place_content)                                 \
     __ENUMERATE_STYLE_VALUE_TYPE(PlaceItems, place_items)                                     \
     __ENUMERATE_STYLE_VALUE_TYPE(PlaceSelf, place_self)                                       \
     __ENUMERATE_STYLE_VALUE_TYPE(Position, position)                                          \
