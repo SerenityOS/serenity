@@ -43,7 +43,6 @@
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
-#include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
@@ -468,13 +467,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Overflow) {
-        if (value.is_overflow()) {
-            auto const& overflow = value.as_overflow();
-            set_longhand_property(CSS::PropertyID::OverflowX, overflow.overflow_x());
-            set_longhand_property(CSS::PropertyID::OverflowY, overflow.overflow_y());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::OverflowX, value);
         set_longhand_property(CSS::PropertyID::OverflowY, value);
         return;

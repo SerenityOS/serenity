@@ -8,7 +8,7 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
-#include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/SVG/AttributeNames.h>

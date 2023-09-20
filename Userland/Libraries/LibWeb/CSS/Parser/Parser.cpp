@@ -58,7 +58,6 @@
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
-#include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
@@ -4549,7 +4548,9 @@ RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& co
         auto maybe_value = parse_css_value_for_property(PropertyID::Overflow, tokens);
         if (!maybe_value)
             return nullptr;
-        return OverflowStyleValue::create(*maybe_value, *maybe_value);
+        return ShorthandStyleValue::create(PropertyID::Overflow,
+            { PropertyID::OverflowX, PropertyID::OverflowY },
+            { *maybe_value, *maybe_value });
     }
 
     if (component_values.size() == 2) {
@@ -4557,7 +4558,9 @@ RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& co
         auto maybe_y_value = parse_css_value_for_property(PropertyID::OverflowY, tokens);
         if (!maybe_x_value || !maybe_y_value)
             return nullptr;
-        return OverflowStyleValue::create(maybe_x_value.release_nonnull(), maybe_y_value.release_nonnull());
+        return ShorthandStyleValue::create(PropertyID::Overflow,
+            { PropertyID::OverflowX, PropertyID::OverflowY },
+            { maybe_x_value.release_nonnull(), maybe_y_value.release_nonnull() });
     }
 
     return nullptr;
