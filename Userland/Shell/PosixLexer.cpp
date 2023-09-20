@@ -168,7 +168,8 @@ Lexer::HeredocKeyResult Lexer::process_heredoc_key(Token const& token)
                 }
                 break;
             default:
-                if (escaped) {
+                // NOTE: bash eats the backslash outside quotes :shrug:
+                if (escaped && parse_state.last() != Free) {
                     builder.append('\\');
                     escaped = false;
                 }
@@ -568,6 +569,8 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
 
         auto contents = m_lexer.input().substring_view(start_index, end_index.value_or(m_lexer.tell()) - start_index);
         reconsume(contents);
+        if (end_index.has_value())
+            reconsume(m_lexer.input().substring_view_starting_after_substring(contents).substring_view(0, m_lexer.tell() - *end_index));
 
         m_state.buffer.clear();
         m_state.buffer.append(contents);
