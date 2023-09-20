@@ -18,7 +18,6 @@ source_set("StyleValues") {
     "GridTemplateAreaStyleValue.cpp",
     "GridTrackPlacementShorthandStyleValue.cpp",
     "GridTrackPlacementStyleValue.cpp",
-    "GridTrackSizeListShorthandStyleValue.cpp",
     "GridTrackSizeListStyleValue.cpp",
     "IdentifierStyleValue.cpp",
     "ImageStyleValue.cpp",

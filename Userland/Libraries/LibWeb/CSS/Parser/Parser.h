@@ -258,7 +258,7 @@ private:
     RefPtr<StyleValue> parse_grid_track_size_list(Vector<ComponentValue> const&, bool allow_separate_line_name_blocks = false);
     RefPtr<StyleValue> parse_grid_auto_track_sizes(Vector<ComponentValue> const&);
     [[nodiscard]] RefPtr<GridAutoFlowStyleValue> parse_grid_auto_flow_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_grid_track_size_list_shorthand_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_grid_track_size_list_shorthand_value(PropertyID, Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_placement(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_template_areas_value(Vector<ComponentValue> const&);

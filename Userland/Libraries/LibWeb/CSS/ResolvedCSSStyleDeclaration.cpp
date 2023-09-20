@@ -20,7 +20,6 @@
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
@@ -349,21 +348,23 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto maybe_grid_template_areas = property(PropertyID::GridTemplateAreas);
         auto maybe_grid_template_rows = property(PropertyID::GridTemplateRows);
         auto maybe_grid_template_columns = property(PropertyID::GridTemplateColumns);
-        RefPtr<GridTemplateAreaStyleValue const> grid_template_areas;
-        RefPtr<GridTrackSizeListStyleValue const> grid_template_rows, grid_template_columns;
+        RefPtr<StyleValue const> grid_template_areas;
+        RefPtr<StyleValue const> grid_template_rows, grid_template_columns;
         if (maybe_grid_template_areas.has_value()) {
             VERIFY(maybe_grid_template_areas.value().value->is_grid_template_area());
-            grid_template_areas = maybe_grid_template_areas.value().value->as_grid_template_area();
+            grid_template_areas = maybe_grid_template_areas.value().value;
         }
         if (maybe_grid_template_rows.has_value()) {
             VERIFY(maybe_grid_template_rows.value().value->is_grid_track_size_list());
-            grid_template_rows = maybe_grid_template_rows.value().value->as_grid_track_size_list();
+            grid_template_rows = maybe_grid_template_rows.value().value;
         }
         if (maybe_grid_template_columns.has_value()) {
             VERIFY(maybe_grid_template_columns.value().value->is_grid_track_size_list());
-            grid_template_columns = maybe_grid_template_columns.value().value->as_grid_track_size_list();
+            grid_template_columns = maybe_grid_template_columns.value().value;
         }
-        return GridTrackSizeListShorthandStyleValue::create(grid_template_areas.release_nonnull(), grid_template_rows.release_nonnull(), grid_template_columns.release_nonnull());
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::GridTemplateAreas, PropertyID::GridTemplateRows, PropertyID::GridTemplateColumns },
+            { grid_template_areas.release_nonnull(), grid_template_rows.release_nonnull(), grid_template_columns.release_nonnull() });
     }
     case PropertyID::Height:
         return style_value_for_size(layout_node.computed_values().height());

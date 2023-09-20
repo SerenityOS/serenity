@@ -115,7 +115,6 @@ class GridTrackPlacement;
 class GridTrackPlacementShorthandStyleValue;
 class GridTrackPlacementStyleValue;
 class GridTrackSizeList;
-class GridTrackSizeListShorthandStyleValue;
 class GridTrackSizeListStyleValue;
 class IdentifierStyleValue;
 class ImageStyleValue;

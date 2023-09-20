@@ -50,7 +50,6 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
@@ -5554,7 +5553,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
 
 // https://www.w3.org/TR/css-grid-2/#explicit-grid-shorthand
 // 7.4. Explicit Grid Shorthand: the grid-template property
-RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID property_id, Vector<ComponentValue> const& component_values)
 {
     // The grid-template property is a shorthand for setting grid-template-columns, grid-template-rows,
     // and grid-template-areas in a single declaration. It has several distinct syntax forms:
@@ -5593,10 +5592,9 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(Vector<Com
     auto parsed_template_areas_values = parse_grid_template_areas_value(template_area_tokens);
     auto parsed_template_rows_values = parse_grid_track_size_list(template_rows_tokens, true);
     auto parsed_template_columns_values = parse_grid_track_size_list(template_columns_tokens);
-    return GridTrackSizeListShorthandStyleValue::create(
-        parsed_template_areas_values.release_nonnull()->as_grid_template_area(),
-        parsed_template_rows_values.release_nonnull()->as_grid_track_size_list(),
-        parsed_template_columns_values.release_nonnull()->as_grid_track_size_list());
+    return ShorthandStyleValue::create(property_id,
+        { PropertyID::GridTemplateAreas, PropertyID::GridTemplateRows, PropertyID::GridTemplateColumns },
+        { parsed_template_areas_values.release_nonnull(), parsed_template_rows_values.release_nonnull(), parsed_template_columns_values.release_nonnull() });
 }
 
 RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
@@ -5682,7 +5680,7 @@ RefPtr<StyleValue> Parser::parse_grid_shorthand_value(Vector<ComponentValue> con
     // <'grid-template'> |
     // FIXME: <'grid-template-rows'> / [ auto-flow && dense? ] <'grid-auto-columns'>? |
     // FIXME: [ auto-flow && dense? ] <'grid-auto-rows'>? / <'grid-template-columns'>
-    return parse_grid_track_size_list_shorthand_value(component_value);
+    return parse_grid_track_size_list_shorthand_value(PropertyID::Grid, component_value);
 }
 
 RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
@@ -5899,7 +5897,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplate:
-        if (auto parsed_value = parse_grid_track_size_list_shorthand_value(component_values))
+        if (auto parsed_value = parse_grid_track_size_list_shorthand_value(property_id, component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateColumns:
