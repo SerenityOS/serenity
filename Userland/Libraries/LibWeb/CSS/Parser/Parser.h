@@ -228,7 +228,7 @@ private:
     RefPtr<StyleValue> parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>&, PropertyID);
     RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_single_background_size_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_border_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_border_value(PropertyID, Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_border_radius_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_content_value(Vector<ComponentValue> const&);

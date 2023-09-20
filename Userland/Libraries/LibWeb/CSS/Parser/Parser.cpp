@@ -38,7 +38,6 @@
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
-#include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
@@ -3207,7 +3206,7 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
     return BackgroundSizeStyleValue::create(x_size.release_value(), y_size.release_value());
 }
 
-RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_value(PropertyID property_id, Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 3)
         return nullptr;
@@ -3216,7 +3215,41 @@ RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& comp
     RefPtr<StyleValue> border_color;
     RefPtr<StyleValue> border_style;
 
-    auto remaining_longhands = Vector { PropertyID::BorderWidth, PropertyID::BorderColor, PropertyID::BorderStyle };
+    auto color_property = PropertyID::Invalid;
+    auto style_property = PropertyID::Invalid;
+    auto width_property = PropertyID::Invalid;
+
+    switch (property_id) {
+    case PropertyID::Border:
+        color_property = PropertyID::BorderColor;
+        style_property = PropertyID::BorderStyle;
+        width_property = PropertyID::BorderWidth;
+        break;
+    case PropertyID::BorderBottom:
+        color_property = PropertyID::BorderBottomColor;
+        style_property = PropertyID::BorderBottomStyle;
+        width_property = PropertyID::BorderBottomWidth;
+        break;
+    case PropertyID::BorderLeft:
+        color_property = PropertyID::BorderLeftColor;
+        style_property = PropertyID::BorderLeftStyle;
+        width_property = PropertyID::BorderLeftWidth;
+        break;
+    case PropertyID::BorderRight:
+        color_property = PropertyID::BorderRightColor;
+        style_property = PropertyID::BorderRightStyle;
+        width_property = PropertyID::BorderRightWidth;
+        break;
+    case PropertyID::BorderTop:
+        color_property = PropertyID::BorderTopColor;
+        style_property = PropertyID::BorderTopStyle;
+        width_property = PropertyID::BorderTopWidth;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    auto remaining_longhands = Vector { width_property, color_property, style_property };
 
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
@@ -3226,35 +3259,30 @@ RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& comp
         auto& value = property_and_value->style_value;
         remove_property(remaining_longhands, property_and_value->property);
 
-        switch (property_and_value->property) {
-        case PropertyID::BorderWidth: {
+        if (property_and_value->property == width_property) {
             VERIFY(!border_width);
             border_width = value.release_nonnull();
-            continue;
-        }
-        case PropertyID::BorderColor: {
+        } else if (property_and_value->property == color_property) {
             VERIFY(!border_color);
             border_color = value.release_nonnull();
-            continue;
-        }
-        case PropertyID::BorderStyle: {
+        } else if (property_and_value->property == style_property) {
             VERIFY(!border_style);
             border_style = value.release_nonnull();
-            continue;
-        }
-        default:
+        } else {
             VERIFY_NOT_REACHED();
         }
     }
 
     if (!border_width)
-        border_width = property_initial_value(m_context.realm(), PropertyID::BorderWidth);
+        border_width = property_initial_value(m_context.realm(), width_property);
     if (!border_style)
-        border_style = property_initial_value(m_context.realm(), PropertyID::BorderStyle);
+        border_style = property_initial_value(m_context.realm(), style_property);
     if (!border_color)
-        border_color = property_initial_value(m_context.realm(), PropertyID::BorderColor);
+        border_color = property_initial_value(m_context.realm(), color_property);
 
-    return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
+    return ShorthandStyleValue::create(property_id,
+        { width_property, style_property, color_property },
+        { border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull() });
 }
 
 RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<ComponentValue> const& component_values)
@@ -5785,7 +5813,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     case PropertyID::BorderLeft:
     case PropertyID::BorderRight:
     case PropertyID::BorderTop:
-        if (auto parsed_value = parse_border_value(component_values))
+        if (auto parsed_value = parse_border_value(property_id, component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BorderTopLeftRadius:

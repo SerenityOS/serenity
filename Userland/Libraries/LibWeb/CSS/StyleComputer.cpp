@@ -31,7 +31,6 @@
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
-#include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
@@ -554,63 +553,28 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
-    if (property_id == CSS::PropertyID::BorderTop
-        || property_id == CSS::PropertyID::BorderRight
-        || property_id == CSS::PropertyID::BorderBottom
-        || property_id == CSS::PropertyID::BorderLeft) {
-
-        if (value.is_border()) {
-            auto const& border = value.as_border();
-            if (property_id == CSS::PropertyID::BorderTop) {
-                set_longhand_property(PropertyID::BorderTopWidth, border.border_width());
-                set_longhand_property(PropertyID::BorderTopStyle, border.border_style());
-                set_longhand_property(PropertyID::BorderTopColor, border.border_color());
-                return;
-            }
-            if (property_id == CSS::PropertyID::BorderRight) {
-                set_longhand_property(PropertyID::BorderRightWidth, border.border_width());
-                set_longhand_property(PropertyID::BorderRightStyle, border.border_style());
-                set_longhand_property(PropertyID::BorderRightColor, border.border_color());
-                return;
-            }
-            if (property_id == CSS::PropertyID::BorderBottom) {
-                set_longhand_property(PropertyID::BorderBottomWidth, border.border_width());
-                set_longhand_property(PropertyID::BorderBottomStyle, border.border_style());
-                set_longhand_property(PropertyID::BorderBottomColor, border.border_color());
-                return;
-            }
-            if (property_id == CSS::PropertyID::BorderLeft) {
-                set_longhand_property(PropertyID::BorderLeftWidth, border.border_width());
-                set_longhand_property(PropertyID::BorderLeftStyle, border.border_style());
-                set_longhand_property(PropertyID::BorderLeftColor, border.border_color());
-                return;
-            }
-            return;
-        }
-        if (property_id == CSS::PropertyID::BorderTop) {
-            set_longhand_property(PropertyID::BorderTopWidth, value);
-            set_longhand_property(PropertyID::BorderTopStyle, value);
-            set_longhand_property(PropertyID::BorderTopColor, value);
-            return;
-        }
-        if (property_id == CSS::PropertyID::BorderRight) {
-            set_longhand_property(PropertyID::BorderRightWidth, value);
-            set_longhand_property(PropertyID::BorderRightStyle, value);
-            set_longhand_property(PropertyID::BorderRightColor, value);
-            return;
-        }
-        if (property_id == CSS::PropertyID::BorderBottom) {
-            set_longhand_property(PropertyID::BorderBottomWidth, value);
-            set_longhand_property(PropertyID::BorderBottomStyle, value);
-            set_longhand_property(PropertyID::BorderBottomColor, value);
-            return;
-        }
-        if (property_id == CSS::PropertyID::BorderLeft) {
-            set_longhand_property(PropertyID::BorderLeftWidth, value);
-            set_longhand_property(PropertyID::BorderLeftStyle, value);
-            set_longhand_property(PropertyID::BorderLeftColor, value);
-            return
-        }
+    if (property_id == CSS::PropertyID::BorderTop) {
+        set_longhand_property(PropertyID::BorderTopWidth, value);
+        set_longhand_property(PropertyID::BorderTopStyle, value);
+        set_longhand_property(PropertyID::BorderTopColor, value);
+        return;
+    }
+    if (property_id == CSS::PropertyID::BorderRight) {
+        set_longhand_property(PropertyID::BorderRightWidth, value);
+        set_longhand_property(PropertyID::BorderRightStyle, value);
+        set_longhand_property(PropertyID::BorderRightColor, value);
+        return;
+    }
+    if (property_id == CSS::PropertyID::BorderBottom) {
+        set_longhand_property(PropertyID::BorderBottomWidth, value);
+        set_longhand_property(PropertyID::BorderBottomStyle, value);
+        set_longhand_property(PropertyID::BorderBottomColor, value);
+        return;
+    }
+    if (property_id == CSS::PropertyID::BorderLeft) {
+        set_longhand_property(PropertyID::BorderLeftWidth, value);
+        set_longhand_property(PropertyID::BorderLeftStyle, value);
+        set_longhand_property(PropertyID::BorderLeftColor, value);
         return;
     }
 

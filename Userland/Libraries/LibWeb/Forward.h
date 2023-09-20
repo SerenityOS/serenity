@@ -75,7 +75,6 @@ class AngleStyleValue;
 class BackgroundRepeatStyleValue;
 class BackgroundSizeStyleValue;
 class BorderRadiusStyleValue;
-class BorderStyleValue;
 class CSSConditionRule;
 class CSSFontFaceRule;
 class CSSGroupingRule;

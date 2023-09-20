@@ -15,7 +15,6 @@
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
-#include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
@@ -193,14 +192,18 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto width = LengthStyleValue::create(Length::make_px(top.width));
         auto style = IdentifierStyleValue::create(to_value_id(top.line_style));
         auto color = ColorStyleValue::create(top.color);
-        return BorderStyleValue::create(width, style, color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderWidth, PropertyID::BorderStyle, PropertyID::BorderColor },
+            { width, style, color });
     }
     case PropertyID::BorderBottom: {
         auto border = layout_node.computed_values().border_bottom();
         auto width = LengthStyleValue::create(Length::make_px(border.width));
         auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
         auto color = ColorStyleValue::create(border.color);
-        return BorderStyleValue::create(width, style, color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderBottomWidth, PropertyID::BorderBottomStyle, PropertyID::BorderBottomColor },
+            { width, style, color });
     }
     case PropertyID::BorderBottomColor:
         return ColorStyleValue::create(layout_node.computed_values().border_bottom().color);
@@ -216,7 +219,9 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto width = LengthStyleValue::create(Length::make_px(border.width));
         auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
         auto color = ColorStyleValue::create(border.color);
-        return BorderStyleValue::create(width, style, color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderLeftWidth, PropertyID::BorderLeftStyle, PropertyID::BorderLeftColor },
+            { width, style, color });
     }
     case PropertyID::BorderLeftColor:
         return ColorStyleValue::create(layout_node.computed_values().border_left().color);
@@ -252,7 +257,9 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto width = LengthStyleValue::create(Length::make_px(border.width));
         auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
         auto color = ColorStyleValue::create(border.color);
-        return BorderStyleValue::create(width, style, color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderRightWidth, PropertyID::BorderRightStyle, PropertyID::BorderRightColor },
+            { width, style, color });
     }
     case PropertyID::BorderRightColor:
         return ColorStyleValue::create(layout_node.computed_values().border_right().color);
@@ -268,7 +275,9 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto width = LengthStyleValue::create(Length::make_px(border.width));
         auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
         auto color = ColorStyleValue::create(border.color);
-        return BorderStyleValue::create(width, style, color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderTopWidth, PropertyID::BorderTopStyle, PropertyID::BorderTopColor },
+            { width, style, color });
     }
     case PropertyID::BorderTopColor:
         return ColorStyleValue::create(layout_node.computed_values().border_top().color);
