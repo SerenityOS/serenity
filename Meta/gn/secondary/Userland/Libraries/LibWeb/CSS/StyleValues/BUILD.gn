@@ -24,7 +24,6 @@ source_set("StyleValues") {
     "IntegerStyleValue.cpp",
     "LengthStyleValue.cpp",
     "LinearGradientStyleValue.cpp",
-    "ListStyleStyleValue.cpp",
     "MathDepthStyleValue.cpp",
     "NumberStyleValue.cpp",
     "OverflowStyleValue.cpp",

@@ -57,7 +57,6 @@
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
-#include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
@@ -4498,7 +4497,9 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
     if (!list_type)
         list_type = property_initial_value(m_context.realm(), PropertyID::ListStyleType);
 
-    return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
+    return ShorthandStyleValue::create(PropertyID::ListStyle,
+        { PropertyID::ListStylePosition, PropertyID::ListStyleImage, PropertyID::ListStyleType },
+        { list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull() });
 }
 
 RefPtr<StyleValue> Parser::parse_math_depth_value(Vector<ComponentValue> const& component_values)

@@ -42,7 +42,6 @@
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
-#include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
@@ -705,14 +704,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::ListStyle) {
-        if (value.is_list_style()) {
-            auto const& list_style = value.as_list_style();
-            set_longhand_property(CSS::PropertyID::ListStylePosition, list_style.position());
-            set_longhand_property(CSS::PropertyID::ListStyleImage, list_style.image());
-            set_longhand_property(CSS::PropertyID::ListStyleType, list_style.style_type());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::ListStylePosition, value);
         set_longhand_property(CSS::PropertyID::ListStyleImage, value);
         set_longhand_property(CSS::PropertyID::ListStyleType, value);
