@@ -458,77 +458,12 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         }
     };
 
-    if (property_id == CSS::PropertyID::TextDecoration) {
-        set_longhand_property(CSS::PropertyID::TextDecorationLine, value);
-        set_longhand_property(CSS::PropertyID::TextDecorationThickness, value);
-        set_longhand_property(CSS::PropertyID::TextDecorationStyle, value);
-        set_longhand_property(CSS::PropertyID::TextDecorationColor, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::Overflow) {
-        set_longhand_property(CSS::PropertyID::OverflowX, value);
-        set_longhand_property(CSS::PropertyID::OverflowY, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::PlaceContent) {
-        style.set_property(CSS::PropertyID::AlignContent, value);
-        style.set_property(CSS::PropertyID::JustifyContent, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::PlaceItems) {
-        set_longhand_property(CSS::PropertyID::AlignItems, value);
-        set_longhand_property(CSS::PropertyID::JustifyItems, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::PlaceSelf) {
-        set_longhand_property(CSS::PropertyID::AlignSelf, value);
-        set_longhand_property(CSS::PropertyID::JustifySelf, value);
-        return;
-    }
-
     if (property_id == CSS::PropertyID::Border) {
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document, declaration, properties_for_revert);
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document, declaration, properties_for_revert);
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value, document, declaration, properties_for_revert);
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value, document, declaration, properties_for_revert);
         // FIXME: Also reset border-image, in line with the spec: https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BorderRadius) {
-        set_longhand_property(CSS::PropertyID::BorderTopLeftRadius, value);
-        set_longhand_property(CSS::PropertyID::BorderTopRightRadius, value);
-        set_longhand_property(CSS::PropertyID::BorderBottomRightRadius, value);
-        set_longhand_property(CSS::PropertyID::BorderBottomLeftRadius, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BorderTop) {
-        set_longhand_property(PropertyID::BorderTopWidth, value);
-        set_longhand_property(PropertyID::BorderTopStyle, value);
-        set_longhand_property(PropertyID::BorderTopColor, value);
-        return;
-    }
-    if (property_id == CSS::PropertyID::BorderRight) {
-        set_longhand_property(PropertyID::BorderRightWidth, value);
-        set_longhand_property(PropertyID::BorderRightStyle, value);
-        set_longhand_property(PropertyID::BorderRightColor, value);
-        return;
-    }
-    if (property_id == CSS::PropertyID::BorderBottom) {
-        set_longhand_property(PropertyID::BorderBottomWidth, value);
-        set_longhand_property(PropertyID::BorderBottomStyle, value);
-        set_longhand_property(PropertyID::BorderBottomColor, value);
-        return;
-    }
-    if (property_id == CSS::PropertyID::BorderLeft) {
-        set_longhand_property(PropertyID::BorderLeftWidth, value);
-        set_longhand_property(PropertyID::BorderLeftStyle, value);
-        set_longhand_property(PropertyID::BorderLeftColor, value);
         return;
     }
 
@@ -571,18 +506,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         set_longhand_property(CSS::PropertyID::BorderRightColor, value);
         set_longhand_property(CSS::PropertyID::BorderBottomColor, value);
         set_longhand_property(CSS::PropertyID::BorderLeftColor, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::Background) {
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, value, document, declaration, properties_for_revert);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, value, document, declaration, properties_for_revert);
         return;
     }
 
@@ -660,64 +583,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
-    if (property_id == CSS::PropertyID::ListStyle) {
-        set_longhand_property(CSS::PropertyID::ListStylePosition, value);
-        set_longhand_property(CSS::PropertyID::ListStyleImage, value);
-        set_longhand_property(CSS::PropertyID::ListStyleType, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::Font) {
-        set_longhand_property(CSS::PropertyID::FontStyle, value);
-        set_longhand_property(CSS::PropertyID::FontVariant, value);
-        set_longhand_property(CSS::PropertyID::FontWeight, value);
-        set_longhand_property(CSS::PropertyID::FontStretch, value);
-        set_longhand_property(CSS::PropertyID::FontSize, value);
-        set_longhand_property(CSS::PropertyID::LineHeight, value);
-        set_longhand_property(CSS::PropertyID::FontFamily, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::Flex) {
-        set_longhand_property(CSS::PropertyID::FlexGrow, value);
-        set_longhand_property(CSS::PropertyID::FlexShrink, value);
-        set_longhand_property(CSS::PropertyID::FlexBasis, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::FlexFlow) {
-        set_longhand_property(CSS::PropertyID::FlexDirection, value);
-        set_longhand_property(CSS::PropertyID::FlexWrap, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::GridArea) {
-        set_longhand_property(CSS::PropertyID::GridRowStart, value);
-        set_longhand_property(CSS::PropertyID::GridColumnStart, value);
-        set_longhand_property(CSS::PropertyID::GridRowEnd, value);
-        set_longhand_property(CSS::PropertyID::GridColumnEnd, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::GridColumn) {
-        set_longhand_property(CSS::PropertyID::GridColumnStart, value);
-        set_longhand_property(CSS::PropertyID::GridColumnEnd, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::GridRow) {
-        set_longhand_property(CSS::PropertyID::GridRowStart, value);
-        set_longhand_property(CSS::PropertyID::GridRowEnd, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::GridTemplate || property_id == CSS::PropertyID::Grid) {
-        set_longhand_property(CSS::PropertyID::GridTemplateAreas, value);
-        set_longhand_property(CSS::PropertyID::GridTemplateRows, value);
-        set_longhand_property(CSS::PropertyID::GridTemplateColumns, value);
-        return;
-    }
-
     if (property_id == CSS::PropertyID::Gap || property_id == CSS::PropertyID::GridGap) {
         if (value.is_value_list()) {
             auto const& values_list = value.as_value_list();
@@ -757,6 +622,17 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 set_longhand_property(CSS::PropertyID::MinHeight, value);
             }
         }
+        return;
+    }
+
+    if (property_is_shorthand(property_id)) {
+        // ShorthandStyleValue was handled already.
+        // That means if we got here, that `value` must be a CSS-wide keyword, which we should apply to our longhand properties.
+        // We don't directly call `set_longhand_property()` because the longhands might have longhands of their own.
+        // (eg `grid` -> `grid-template` -> `grid-template-areas` & `grid-template-rows` & `grid-template-columns`)
+        VERIFY(value.is_css_wide_keyword());
+        for (auto longhand : longhands_for_shorthand(property_id))
+            set_property_expanding_shorthands(style, longhand, value, document, declaration, properties_for_revert);
         return;
     }
 
