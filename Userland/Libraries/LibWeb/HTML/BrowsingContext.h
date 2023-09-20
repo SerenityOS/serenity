@@ -229,8 +229,6 @@ private:
     Optional<HTML::Origin> m_creator_origin;
 
     JS::GCPtr<HTML::NavigableContainer> m_container;
-    CSSPixelSize m_size;
-    CSSPixelPoint m_viewport_scroll_offset;
 
     // https://w3c.github.io/webdriver/#dfn-window-handles
     String m_window_handle;
