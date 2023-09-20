@@ -472,6 +472,11 @@ enum class IsHistoryNavigation {
     }
 }
 
+- (void)windowDidChangeBackingProperties:(NSNotification*)notification
+{
+    [[[self tab] web_view] handleDevicePixelRatioChange];
+}
+
 - (BOOL)validateMenuItem:(NSMenuItem*)item
 {
     if ([item action] == @selector(toggleLineBoxBorders:)) {

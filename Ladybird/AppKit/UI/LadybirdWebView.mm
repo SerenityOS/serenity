@@ -87,6 +87,7 @@ struct HideCursor {
             screen_rects.unchecked_append(screen_rect);
         }
 
+        // This returns device pixel ratio of the screen the window is opened in
         auto device_pixel_ratio = [[NSScreen mainScreen] backingScaleFactor];
 
         m_web_view_bridge = MUST(Ladybird::WebViewBridge::create(move(screen_rects), device_pixel_ratio, [delegate webdriverContentIPCPath], [delegate preferredColorScheme]));
@@ -126,6 +127,13 @@ struct HideCursor {
 
 - (void)handleResize
 {
+    [self updateViewportRect:Ladybird::WebViewBridge::ForResize::Yes];
+    [self updateStatusLabelPosition];
+}
+
+- (void)handleDevicePixelRatioChange
+{
+    m_web_view_bridge->set_device_pixel_ratio([[self window] backingScaleFactor]);
     [self updateViewportRect:Ladybird::WebViewBridge::ForResize::Yes];
     [self updateStatusLabelPosition];
 }

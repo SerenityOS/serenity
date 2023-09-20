@@ -47,6 +47,7 @@
 - (String const&)handle;
 
 - (void)handleResize;
+- (void)handleDevicePixelRatioChange;
 - (void)handleScroll;
 - (void)handleVisibility:(BOOL)is_visible;
 
