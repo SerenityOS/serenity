@@ -151,6 +151,9 @@ public:
 
     void set_is_popup(TokenizedFeature::Popup is_popup) { m_is_popup = is_popup; }
 
+    // https://html.spec.whatwg.org/#rendering-opportunity
+    [[nodiscard]] bool has_a_rendering_opportunity() const;
+
 protected:
     Navigable();
 

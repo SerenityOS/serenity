@@ -170,8 +170,6 @@ public:
 
     void did_edit(Badge<EditEventHandler>);
 
-    bool has_a_rendering_opportunity() const;
-
     JS::GCPtr<DOM::Node> currently_focused_area();
 
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& session_history() { return m_session_history; }

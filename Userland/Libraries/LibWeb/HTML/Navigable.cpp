@@ -1652,4 +1652,23 @@ void Navigable::set_needs_display(CSSPixelRect const& rect)
         container()->layout_node()->set_needs_display();
 }
 
+// https://html.spec.whatwg.org/#rendering-opportunity
+bool Navigable::has_a_rendering_opportunity() const
+{
+    // A navigable has a rendering opportunity if the user agent is currently able to present
+    // the contents of the navigable to the user,
+    // accounting for hardware refresh rate constraints and user agent throttling for performance reasons,
+    // but considering content presentable even if it's outside the viewport.
+
+    // A navigable has no rendering opportunities if its active document is render-blocked
+    // or if it is suppressed for view transitions;
+    // otherwise, rendering opportunities are determined based on hardware constraints
+    // such as display refresh rates and other factors such as page performance
+    // or whether the document's visibility state is "visible".
+    // Rendering opportunities typically occur at regular intervals.
+
+    // FIXME: We should at the very least say `false` here if we're an inactive browser tab.
+    return true;
+}
+
 }
