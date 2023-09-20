@@ -335,4 +335,11 @@ bool MimeType::is_javascript() const
         "text/x-javascript"sv);
 }
 
+// https://mimesniff.spec.whatwg.org/#json-mime-type
+bool MimeType::is_json() const
+{
+    // A JSON MIME type is any MIME type whose subtype ends in "+json" or whose essence is "application/json" or "text/json".
+    return subtype().ends_with_bytes("+json"sv) || essence().is_one_of("application/json"sv, "text/json"sv);
+}
+
 }
