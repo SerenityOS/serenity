@@ -245,6 +245,13 @@ bool MimeType::is_image() const
     return type() == "image"sv;
 }
 
+// https://mimesniff.spec.whatwg.org/#audio-or-video-mime-type
+bool MimeType::is_audio_or_video() const
+{
+    // An audio or video MIME type is any MIME type whose type is "audio" or "video", or whose essence is "application/ogg".
+    return type().is_one_of("audio"sv, "video"sv) || essence() == "application/ogg"sv;
+}
+
 // https://mimesniff.spec.whatwg.org/#xml-mime-type
 bool MimeType::is_xml() const
 {
