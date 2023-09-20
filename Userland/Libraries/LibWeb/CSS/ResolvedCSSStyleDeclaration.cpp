@@ -33,7 +33,6 @@
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
-#include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
@@ -418,7 +417,9 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto thickness = style_value_for_property(layout_node, PropertyID::TextDecorationThickness);
         auto style = style_value_for_property(layout_node, PropertyID::TextDecorationStyle);
         auto color = style_value_for_property(layout_node, PropertyID::TextDecorationColor);
-        return TextDecorationStyleValue::create(*line, *thickness, *style, *color);
+        return ShorthandStyleValue::create(PropertyID::TextDecoration,
+            { PropertyID::TextDecorationLine, PropertyID::TextDecorationThickness, PropertyID::TextDecorationStyle, PropertyID::TextDecorationColor },
+            { line.release_nonnull(), thickness.release_nonnull(), style.release_nonnull(), color.release_nonnull() });
     }
     case PropertyID::TextDecorationColor:
         return ColorStyleValue::create(layout_node.computed_values().text_decoration_color());

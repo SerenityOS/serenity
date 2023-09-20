@@ -162,7 +162,6 @@ class StyleValue;
 class StyleValueList;
 class Supports;
 class SVGPaint;
-class TextDecorationStyleValue;
 class Time;
 class TimeOrCalculated;
 class TimePercentage;

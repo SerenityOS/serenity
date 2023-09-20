@@ -168,6 +168,8 @@ String ShorthandStyleValue::to_string() const
             return align_self;
         return MUST(String::formatted("{} {}", align_self, justify_self));
     }
+    case PropertyID::TextDecoration:
+        return MUST(String::formatted("{} {} {} {}", longhand(PropertyID::TextDecorationLine)->to_string(), longhand(PropertyID::TextDecorationThickness)->to_string(), longhand(PropertyID::TextDecorationStyle)->to_string(), longhand(PropertyID::TextDecorationColor)->to_string()));
     default:
         StringBuilder builder;
         auto first = true;
