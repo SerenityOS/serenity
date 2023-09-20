@@ -127,7 +127,6 @@ class LengthOrCalculated;
 class LengthPercentage;
 class LengthStyleValue;
 class LinearGradientStyleValue;
-class ListStyleStyleValue;
 class MathDepthStyleValue;
 class MediaFeatureValue;
 class MediaList;

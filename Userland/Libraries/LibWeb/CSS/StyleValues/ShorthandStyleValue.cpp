@@ -145,6 +145,8 @@ String ShorthandStyleValue::to_string() const
             return MUST(String::formatted("{}", construct_rows_string()));
         return MUST(String::formatted("{} / {}", construct_rows_string(), columns.grid_track_size_list().to_string()));
     }
+    case PropertyID::ListStyle:
+        return MUST(String::formatted("{} {} {}", longhand(PropertyID::ListStylePosition)->to_string(), longhand(PropertyID::ListStyleImage)->to_string(), longhand(PropertyID::ListStyleType)->to_string()));
     default:
         StringBuilder builder;
         auto first = true;
