@@ -229,19 +229,19 @@ void LadybirdViewImpl::scale_factor_changed()
 void LadybirdViewImpl::mouse_down(int x, int y, unsigned button, unsigned buttons, unsigned modifiers)
 {
     Gfx::IntPoint point(x, y);
-    client().async_mouse_down(point, button, buttons, modifiers);
+    client().async_mouse_down(point, point, button, buttons, modifiers);
 }
 
 void LadybirdViewImpl::mouse_move(int x, int y, unsigned buttons, unsigned modifiers)
 {
     Gfx::IntPoint point(x, y);
-    client().async_mouse_move(point, 0, buttons, modifiers);
+    client().async_mouse_move(point, point, 0, buttons, modifiers);
 }
 
 void LadybirdViewImpl::mouse_up(int x, int y, unsigned button, unsigned buttons, unsigned modifiers)
 {
     Gfx::IntPoint point(x, y);
-    client().async_mouse_up(point, button, buttons, modifiers);
+    client().async_mouse_up(point, point, button, buttons, modifiers);
 }
 
 void LadybirdViewImpl::key_down(KeyCode key_code, unsigned modifiers, u32 code_point)
