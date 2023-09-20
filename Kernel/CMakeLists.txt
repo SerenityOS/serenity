@@ -522,6 +522,7 @@ set(AK_SOURCES
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
     ../AK/MemoryStream.cpp
+    ../AK/SipHash.cpp
     ../AK/Stream.cpp
     ../AK/StringBuilder.cpp
     ../AK/StringUtils.cpp

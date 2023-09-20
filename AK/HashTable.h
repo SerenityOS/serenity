@@ -114,6 +114,9 @@ private:
     BucketType* m_bucket { nullptr };
 };
 
+// A set datastructure based on a hash table with closed hashing.
+// HashTable can optionally provide ordered iteration when IsOrdered = true.
+// For a (more commonly required) map datastructure with key-value entries, see HashMap.
 template<typename T, typename TraitsForT, bool IsOrdered>
 class HashTable {
     static constexpr size_t grow_capacity_at_least = 8;
