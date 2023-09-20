@@ -36,7 +36,6 @@
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
@@ -709,26 +708,12 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::GridColumn) {
-        if (value.is_grid_track_placement_shorthand()) {
-            auto const& shorthand = value.as_grid_track_placement_shorthand();
-            set_longhand_property(CSS::PropertyID::GridColumnStart, shorthand.start());
-            set_longhand_property(CSS::PropertyID::GridColumnEnd, shorthand.end());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::GridColumnStart, value);
         set_longhand_property(CSS::PropertyID::GridColumnEnd, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridRow) {
-        if (value.is_grid_track_placement_shorthand()) {
-            auto const& shorthand = value.as_grid_track_placement_shorthand();
-            set_longhand_property(CSS::PropertyID::GridRowStart, shorthand.start());
-            set_longhand_property(CSS::PropertyID::GridRowEnd, shorthand.end());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::GridRowStart, value);
         set_longhand_property(CSS::PropertyID::GridRowEnd, value);
         return;
