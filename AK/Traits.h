@@ -10,6 +10,7 @@
 #include <AK/Concepts.h>
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
+#include <AK/SipHash.h>
 #include <AK/StringHash.h>
 
 namespace AK {
@@ -33,12 +34,9 @@ template<Integral T>
 struct Traits<T> : public GenericTraits<T> {
     static constexpr bool is_trivial() { return true; }
     static constexpr bool is_trivially_serializable() { return true; }
-    static constexpr unsigned hash(T value)
+    static unsigned hash(T value)
     {
-        if constexpr (sizeof(T) < 8)
-            return int_hash(value);
-        else
-            return u64_hash(value);
+        return standard_sip_hash(static_cast<u64>(value));
     }
 };
 
@@ -47,19 +45,16 @@ template<FloatingPoint T>
 struct Traits<T> : public GenericTraits<T> {
     static constexpr bool is_trivial() { return true; }
     static constexpr bool is_trivially_serializable() { return true; }
-    static constexpr unsigned hash(T value)
+    static unsigned hash(T value)
     {
-        if constexpr (sizeof(T) < 8)
-            return int_hash(bit_cast<u32>(value));
-        else
-            return u64_hash(bit_cast<u64>(value));
+        return standard_sip_hash(bit_cast<u64>(static_cast<double>(value)));
     }
 };
 #endif
 
 template<typename T>
 requires(IsPointer<T> && !Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTraits<T> {
-    static unsigned hash(T p) { return ptr_hash(p); }
+    static unsigned hash(T p) { return standard_sip_hash(bit_cast<FlatPtr>(p)); }
     static constexpr bool is_trivial() { return true; }
 };
 

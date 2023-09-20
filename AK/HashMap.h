@@ -14,6 +14,9 @@
 
 namespace AK {
 
+// A map datastructure, mapping keys K to values V, based on a hash table with closed hashing.
+// HashMap can optionally provide ordered iteration based on the order of keys when IsOrdered = true.
+// HashMap is based on HashTable, which should be used instead if just a set datastructure is required.
 template<typename K, typename V, typename KeyTraits, typename ValueTraits, bool IsOrdered>
 class HashMap {
 private:
