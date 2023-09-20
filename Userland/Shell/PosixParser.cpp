@@ -2073,7 +2073,16 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_io_file(AST::Position start_position, O
 
     auto io_operator_token = consume();
 
-    auto word = TRY(parse_word());
+    RefPtr<AST::Node> word;
+    if (peek().type == Token::Type::IoNumber) {
+        auto token = consume();
+        word = make_ref_counted<AST::BarewordLiteral>(
+            token.position.value_or(empty_position()),
+            token.value);
+    } else {
+        word = TRY(parse_word());
+    }
+
     if (!word) {
         m_token_index = start_index;
         return nullptr;
