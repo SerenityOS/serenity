@@ -61,6 +61,7 @@ private:
     static u8 lfn_entry_checksum(FATEntry const& entry);
     static ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list(FATFS& fs, u32 first_cluster);
     static void create_83_filename_for(FATEntry& entry, StringView name);
+    static ErrorOr<Vector<FATLongFileNameEntry>> create_lfn_entries(StringView name, u8 checksum);
 
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
     ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);

@@ -60,6 +60,54 @@ void FATInode::create_83_filename_for(FATEntry& entry, StringView name)
         entry.filename[i] = to_ascii_uppercase(name[i]);
 }
 
+ErrorOr<Vector<FATLongFileNameEntry>> FATInode::create_lfn_entries(StringView name, u8 checksum)
+{
+    // FIXME: For some filenames lfn entries are not necessary
+    u32 lfn_entry_count = ceil_div(name.length(), characters_per_lfn_entry);
+
+    Vector<FATLongFileNameEntry> lfn_entries;
+    TRY(lfn_entries.try_ensure_capacity(lfn_entry_count));
+
+    auto characters_left = name.length();
+
+    for (u32 i = 0; i < lfn_entry_count; i++) {
+        FATLongFileNameEntry lfn_entry {};
+
+        size_t characters_in_part = min(characters_left, lfn_entry_characters_part_1_length);
+
+        for (size_t j = 0; j < characters_in_part; j++) {
+            lfn_entry.characters1[j] = name[name.length() - characters_left];
+            characters_left--;
+        }
+
+        if (characters_left > 0) {
+            characters_in_part = min(characters_left, lfn_entry_characters_part_2_length);
+
+            for (size_t j = 0; j < characters_in_part; j++) {
+                lfn_entry.characters2[j] = name[name.length() - characters_left];
+                characters_left--;
+            }
+        }
+
+        if (characters_left > 0) {
+            characters_in_part = min(characters_left, lfn_entry_characters_part_3_length);
+
+            for (size_t j = 0; j < characters_in_part; j++) {
+                lfn_entry.characters3[j] = name[name.length() - characters_left];
+                characters_left--;
+            }
+        }
+
+        lfn_entry.entry_index = (i + 1) | (i + 1 == lfn_entry_count ? last_lfn_entry_mask : 0);
+        lfn_entry.checksum = checksum;
+        lfn_entry.attributes = FATAttributes::LongFileName;
+
+        lfn_entries.unchecked_append(lfn_entry);
+    }
+
+    return lfn_entries;
+}
+
 ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
 {
     VERIFY(m_inode_lock.is_locked());
@@ -410,11 +458,6 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
 
     dbgln_if(FAT_DEBUG, "FATInode[{}]::create_child(): creating inode \"{}\"", identifier(), name);
 
-    // FIXME: For some filenames lfn entries are not necessary
-    u32 lfn_entry_count = ceil_div(name.length(), characters_per_lfn_entry);
-
-    auto entries = TRY(allocate_entries(lfn_entry_count + 1));
-
     FATEntry entry {};
     create_83_filename_for(entry, name);
 
@@ -422,61 +465,47 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
         entry.attributes |= FATAttributes::Directory;
     // FIXME: Set the dates
 
-    TRY(fs().write_block(entries[lfn_entry_count].block, UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&entry)), sizeof(FATEntry), entries[lfn_entry_count].entry * sizeof(FATEntry)));
+    auto lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
+    auto entries = TRY(allocate_entries(lfn_entries.size() + 1));
 
-    u8 lfn_checksum = lfn_entry_checksum(entry);
+    // FIXME: If we fail here we should clean up the entries we wrote
+    TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&entry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
 
-    Vector<FATLongFileNameEntry> lfn_entries;
-    TRY(lfn_entries.try_ensure_capacity(lfn_entry_count));
-
-    auto characters_left = name.length();
-
-    for (u32 i = 0; i < lfn_entry_count; i++) {
-        FATLongFileNameEntry lfn_entry {};
-
-        size_t characters_in_part = min(characters_left, lfn_entry_characters_part_1_length);
-
-        for (size_t j = 0; j < characters_in_part; j++) {
-            lfn_entry.characters1[j] = name[name.length() - characters_left];
-            characters_left--;
-        }
-
-        if (characters_left > 0) {
-            characters_in_part = min(characters_left, lfn_entry_characters_part_2_length);
-
-            for (size_t j = 0; j < characters_in_part; j++) {
-                lfn_entry.characters2[j] = name[name.length() - characters_left];
-                characters_left--;
-            }
-        }
-
-        if (characters_left > 0) {
-            characters_in_part = min(characters_left, lfn_entry_characters_part_3_length);
-
-            for (size_t j = 0; j < characters_in_part; j++) {
-                lfn_entry.characters3[j] = name[name.length() - characters_left];
-                characters_left--;
-            }
-        }
-
-        lfn_entry.entry_index = (i + 1) | (i + 1 == lfn_entry_count ? last_lfn_entry_mask : 0);
-        lfn_entry.checksum = lfn_checksum;
-        lfn_entry.attributes = FATAttributes::LongFileName;
-
-        auto location = entries[lfn_entry_count - i - 1];
-
-        // FIXME: If we fail here, we should clean up the entries we already wrote
-        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&lfn_entry)), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
-
-        lfn_entries.unchecked_append(lfn_entry);
+    for (u32 i = 0; i < lfn_entries.size(); i++) {
+        auto location = entries[lfn_entries.size() - i - 1];
+        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&lfn_entries[i])), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
     }
 
-    return TRY(FATInode::create(fs(), entry, entries[lfn_entry_count], lfn_entries));
+    return TRY(FATInode::create(fs(), entry, entries[lfn_entries.size()], lfn_entries));
 }
 
-ErrorOr<void> FATInode::add_child(Inode&, StringView, mode_t)
+ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
 {
-    return EROFS;
+    VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
+    VERIFY(inode.fsid() == fsid());
+
+    MutexLocker locker(m_inode_lock);
+
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::add_child(): appending inode {} as \"{}\"", identifier(), inode.identifier(), name);
+
+    auto entry = reinterpret_cast<FATInode*>(&inode)->m_entry;
+    create_83_filename_for(entry, name);
+
+    if (mode & S_IFDIR)
+        entry.attributes |= FATAttributes::Directory;
+    // FIXME: Set the dates
+
+    auto lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
+    auto entries = TRY(allocate_entries(lfn_entries.size() + 1));
+
+    TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&entry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
+
+    for (u32 i = 0; i < lfn_entries.size(); i++) {
+        auto location = entries[lfn_entries.size() - i - 1];
+        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&lfn_entries[i])), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
+    }
+
+    return {};
 }
 
 ErrorOr<void> FATInode::remove_child(StringView name)
