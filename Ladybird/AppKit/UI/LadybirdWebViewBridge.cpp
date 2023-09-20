@@ -38,9 +38,7 @@ WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pix
     create_client(WebView::EnableCallgrindProfiling::No);
 
     on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
-        // FIXME: This currently isn't reached because we do not yet propagate mouse wheel events to WebContent.
-        //        When that is implemented, make sure our mutations to the viewport position here are correct.
-        auto position = m_viewport_rect.location();
+        auto position = to_widget_position(m_viewport_rect.location());
         position.set_x(position.x() + x_delta);
         position.set_y(position.y() + y_delta);
 
