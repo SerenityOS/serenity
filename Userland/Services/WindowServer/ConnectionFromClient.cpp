@@ -1176,7 +1176,7 @@ void ConnectionFromClient::did_become_responsive()
     set_unresponsive(false);
 }
 
-Messages::WindowServer::GetScreenBitmapResponse ConnectionFromClient::get_screen_bitmap(Optional<Gfx::IntRect> const& rect, Optional<u32> const& screen_index)
+Gfx::ShareableBitmap ConnectionFromClient::get_bitmap(Gfx::IntRect const& rect, Optional<u32> const& screen_index)
 {
     if (screen_index.has_value()) {
         auto* screen = Screen::find_by_index(screen_index.value());
@@ -1184,36 +1184,42 @@ Messages::WindowServer::GetScreenBitmapResponse ConnectionFromClient::get_screen
             dbgln("get_screen_bitmap: Screen {} does not exist!", screen_index.value());
             return { Gfx::ShareableBitmap() };
         }
-        if (rect.has_value()) {
-            auto bitmap_or_error = Compositor::the().front_bitmap_for_screenshot({}, *screen).cropped(rect.value());
+        auto const& bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen);
+        if (rect != bitmap.rect()) {
+            auto src_rect = rect.intersected(screen->rect());
+            auto crop_rect = src_rect.translated(-screen->rect().location());
+            auto bitmap_or_error = bitmap.cropped(crop_rect);
             if (bitmap_or_error.is_error()) {
                 dbgln("get_screen_bitmap: Failed to crop screenshot: {}", bitmap_or_error.error());
                 return { Gfx::ShareableBitmap() };
             }
             return bitmap_or_error.release_value()->to_shareable_bitmap();
         }
-        auto& bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen);
         return bitmap.to_shareable_bitmap();
     }
     // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
-    auto bitmap_size = rect.value_or(Screen::bounding_rect()).size();
-    if (auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1); !bitmap_or_error.is_error()) {
-        auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+    if (auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1); !bitmap_or_error.is_error()) {
+        auto bitmap = bitmap_or_error.release_value();
         Gfx::Painter painter(*bitmap);
         Screen::for_each([&](auto& screen) {
             auto screen_rect = screen.rect();
-            if (rect.has_value() && !rect.value().intersects(screen_rect))
+            if (!rect.intersects(screen_rect))
                 return IterationDecision::Continue;
-            auto src_rect = rect.has_value() ? rect.value().intersected(screen_rect) : screen_rect;
+            auto src_rect = rect.intersected(screen_rect);
             VERIFY(Screen::bounding_rect().contains(src_rect));
             auto& screen_bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen);
             // TODO: painter does *not* support down-sampling!!!
-            painter.blit(screen_rect.location(), screen_bitmap, src_rect.translated(-screen_rect.location()), 1.0f, false);
+            painter.blit(src_rect.location().translated(-rect.location()), screen_bitmap, src_rect.translated(-screen_rect.location()), 1.0f, false);
             return IterationDecision::Continue;
         });
         return bitmap->to_shareable_bitmap();
     }
     return { Gfx::ShareableBitmap() };
+}
+
+Messages::WindowServer::GetScreenBitmapResponse ConnectionFromClient::get_screen_bitmap(Optional<Gfx::IntRect> const& rect, Optional<u32> const& screen_index)
+{
+    return get_bitmap(rect.value_or(Screen::bounding_rect()), screen_index);
 }
 
 Messages::WindowServer::GetScreenBitmapAroundCursorResponse ConnectionFromClient::get_screen_bitmap_around_cursor(Gfx::IntSize size)
@@ -1286,6 +1292,45 @@ Messages::WindowServer::GetScreenBitmapAroundLocationResponse ConnectionFromClie
         return bitmap->to_shareable_bitmap();
     }
     return { {} };
+}
+
+Messages::WindowServer::GetTopmostWindowIdResponse ConnectionFromClient::get_topmost_window_id(Gfx::IntPoint location)
+{
+    Optional<i32> result;
+    WindowManager::the().for_each_visible_window_from_front_to_back([&](Window& window) {
+        if (window.rect().contains(location)) {
+            result = window.window_id();
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (!result.has_value()) {
+        did_misbehave("GetTopmostWindowId: Bad location");
+        return nullptr;
+    }
+    return result.value();
+}
+
+Messages::WindowServer::GetWindowBitmapResponse ConnectionFromClient::get_window_bitmap(i32 window_id, Optional<u32> const& screen_index)
+{
+    Optional<Window&> maybe_window;
+    WindowManager::the().for_each_visible_window_from_front_to_back([&](Window& window) {
+        if (window.window_id() == window_id) {
+            maybe_window = window;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (!maybe_window.has_value()) {
+        dbgln("get_window_bitmap: Couldn't find window with ID: {}", window_id);
+        return { Gfx::ShareableBitmap() };
+    }
+
+    auto& window = maybe_window.release_value();
+    auto shareable_bitmap = get_bitmap(window.frame().rect(), screen_index);
+    return shareable_bitmap;
 }
 
 Messages::WindowServer::GetColorUnderCursorResponse ConnectionFromClient::get_color_under_cursor()

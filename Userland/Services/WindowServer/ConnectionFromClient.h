@@ -93,6 +93,8 @@ private:
     void set_unresponsive(bool);
     void destroy_window(Window&, Vector<i32>& destroyed_window_ids);
 
+    static Gfx::ShareableBitmap get_bitmap(Gfx::IntRect const& rect, Optional<u32> const& screen_index);
+
     virtual void create_menu(i32, String const&) override;
     virtual void set_menu_name(i32, String const&) override;
     virtual void destroy_menu(i32) override;
@@ -177,6 +179,8 @@ private:
     virtual Messages::WindowServer::GetScreenBitmapResponse get_screen_bitmap(Optional<Gfx::IntRect> const&, Optional<u32> const&) override;
     virtual Messages::WindowServer::GetScreenBitmapAroundCursorResponse get_screen_bitmap_around_cursor(Gfx::IntSize) override;
     virtual Messages::WindowServer::GetScreenBitmapAroundLocationResponse get_screen_bitmap_around_location(Gfx::IntSize, Gfx::IntPoint) override;
+    virtual Messages::WindowServer::GetTopmostWindowIdResponse get_topmost_window_id(Gfx::IntPoint) override;
+    virtual Messages::WindowServer::GetWindowBitmapResponse get_window_bitmap(i32, Optional<u32> const&) override;
     virtual void set_double_click_speed(i32) override;
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
     virtual void set_mouse_buttons_switched(bool) override;
