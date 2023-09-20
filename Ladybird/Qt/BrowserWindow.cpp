@@ -25,6 +25,7 @@
 #include <QGuiApplication>
 #include <QInputDialog>
 #include <QPlainTextEdit>
+#include <QShortcut>
 #include <QTabBar>
 
 namespace Ladybird {
@@ -405,6 +406,22 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     m_go_back_action->setEnabled(false);
     m_go_forward_action->setEnabled(false);
     m_reload_action->setEnabled(false);
+
+    for (int i = 0; i <= 7; ++i) {
+        new QShortcut(QKeySequence(Qt::CTRL | static_cast<Qt::Key>(Qt::Key_1 + i)), this, [this, i] {
+            if (m_tabs_container->count() <= 1)
+                return;
+
+            m_tabs_container->setCurrentIndex(min(i, m_tabs_container->count() - 1));
+        });
+    }
+
+    new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_9), this, [this] {
+        if (m_tabs_container->count() <= 1)
+            return;
+
+        m_tabs_container->setCurrentIndex(m_tabs_container->count() - 1);
+    });
 
     if (!initial_urls.is_empty()) {
         bool is_first_tab = true;
