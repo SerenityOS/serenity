@@ -145,9 +145,9 @@ void EventLoop::process()
         }
     };
 
-    // 2. Rendering opportunities: Remove from docs all Document objects whose browsing context do not have a rendering opportunity.
+    // 2. Rendering opportunities: Remove from docs all Document objects whose node navigables do not have a rendering opportunity.
     docs.remove_all_matching([&](auto& document) {
-        return document->browsing_context() && !document->browsing_context()->has_a_rendering_opportunity();
+        return document->navigable() && !document->navigable()->has_a_rendering_opportunity();
     });
 
     // 3. If docs is not empty, then set hasARenderingOpportunity to true

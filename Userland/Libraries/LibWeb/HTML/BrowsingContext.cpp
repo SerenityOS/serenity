@@ -466,16 +466,6 @@ bool BrowsingContext::decrement_cursor_position_offset()
     return true;
 }
 
-// https://html.spec.whatwg.org/#rendering-opportunity
-bool BrowsingContext::has_a_rendering_opportunity() const
-{
-    // A browsing context has a rendering opportunity if the user agent is currently able to present the contents of the browsing context to the user,
-    // accounting for hardware refresh rate constraints and user agent throttling for performance reasons, but considering content presentable even if it's outside the viewport.
-
-    // FIXME: We should at the very least say `false` here if we're an inactive browser tab.
-    return true;
-}
-
 // https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context
 JS::GCPtr<DOM::Node> BrowsingContext::currently_focused_area()
 {
