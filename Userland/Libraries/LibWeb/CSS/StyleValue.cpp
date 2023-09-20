@@ -41,7 +41,6 @@
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
-#include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceItemsStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceSelfStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>

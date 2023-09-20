@@ -147,6 +147,13 @@ String ShorthandStyleValue::to_string() const
     }
     case PropertyID::ListStyle:
         return MUST(String::formatted("{} {} {}", longhand(PropertyID::ListStylePosition)->to_string(), longhand(PropertyID::ListStyleImage)->to_string(), longhand(PropertyID::ListStyleType)->to_string()));
+    case PropertyID::PlaceContent: {
+        auto align_content = longhand(PropertyID::AlignContent)->to_string();
+        auto justify_content = longhand(PropertyID::JustifyContent)->to_string();
+        if (align_content == justify_content)
+            return align_content;
+        return MUST(String::formatted("{} {}", align_content, justify_content));
+    }
     default:
         StringBuilder builder;
         auto first = true;
