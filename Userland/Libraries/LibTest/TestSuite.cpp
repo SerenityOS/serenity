@@ -253,7 +253,7 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         }
     }
 
-    return (int)test_failed_count;
+    return (int)(test_count - test_passed_count);
 }
 
 }
