@@ -145,6 +145,20 @@ String ShorthandStyleValue::to_string() const
             return MUST(String::formatted("{}", construct_rows_string()));
         return MUST(String::formatted("{} / {}", construct_rows_string(), columns.grid_track_size_list().to_string()));
     }
+    case PropertyID::GridColumn: {
+        auto start = longhand(PropertyID::GridColumnStart);
+        auto end = longhand(PropertyID::GridColumnEnd);
+        if (end->as_grid_track_placement().grid_track_placement().is_auto())
+            return start->to_string();
+        return MUST(String::formatted("{} / {}", start->to_string(), end->to_string()));
+    }
+    case PropertyID::GridRow: {
+        auto start = longhand(PropertyID::GridRowStart);
+        auto end = longhand(PropertyID::GridRowEnd);
+        if (end->as_grid_track_placement().grid_track_placement().is_auto())
+            return start->to_string();
+        return MUST(String::formatted("{} / {}", start->to_string(), end->to_string()));
+    }
     case PropertyID::ListStyle:
         return MUST(String::formatted("{} {} {}", longhand(PropertyID::ListStylePosition)->to_string(), longhand(PropertyID::ListStyleImage)->to_string(), longhand(PropertyID::ListStyleType)->to_string()));
     case PropertyID::PlaceContent: {

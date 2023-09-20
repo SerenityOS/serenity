@@ -82,51 +82,50 @@ private:
 
 using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
 
-#define ENUMERATE_STYLE_VALUE_TYPES                                                           \
-    __ENUMERATE_STYLE_VALUE_TYPE(Angle, angle)                                                \
-    __ENUMERATE_STYLE_VALUE_TYPE(BackgroundRepeat, background_repeat)                         \
-    __ENUMERATE_STYLE_VALUE_TYPE(BackgroundSize, background_size)                             \
-    __ENUMERATE_STYLE_VALUE_TYPE(BorderRadius, border_radius)                                 \
-    __ENUMERATE_STYLE_VALUE_TYPE(Calculated, calculated)                                      \
-    __ENUMERATE_STYLE_VALUE_TYPE(Color, color)                                                \
-    __ENUMERATE_STYLE_VALUE_TYPE(ConicGradient, conic_gradient)                               \
-    __ENUMERATE_STYLE_VALUE_TYPE(Content, content)                                            \
-    __ENUMERATE_STYLE_VALUE_TYPE(CustomIdent, custom_ident)                                   \
-    __ENUMERATE_STYLE_VALUE_TYPE(Display, display)                                            \
-    __ENUMERATE_STYLE_VALUE_TYPE(Easing, easing)                                              \
-    __ENUMERATE_STYLE_VALUE_TYPE(Edge, edge)                                                  \
-    __ENUMERATE_STYLE_VALUE_TYPE(FilterValueList, filter_value_list)                          \
-    __ENUMERATE_STYLE_VALUE_TYPE(Frequency, frequency)                                        \
-    __ENUMERATE_STYLE_VALUE_TYPE(GridAutoFlow, grid_auto_flow)                                \
-    __ENUMERATE_STYLE_VALUE_TYPE(GridTemplateArea, grid_template_area)                        \
-    __ENUMERATE_STYLE_VALUE_TYPE(GridTrackPlacement, grid_track_placement)                    \
-    __ENUMERATE_STYLE_VALUE_TYPE(GridTrackPlacementShorthand, grid_track_placement_shorthand) \
-    __ENUMERATE_STYLE_VALUE_TYPE(GridTrackSizeList, grid_track_size_list)                     \
-    __ENUMERATE_STYLE_VALUE_TYPE(Identifier, identifier)                                      \
-    __ENUMERATE_STYLE_VALUE_TYPE(Image, image)                                                \
-    __ENUMERATE_STYLE_VALUE_TYPE(Inherit, inherit)                                            \
-    __ENUMERATE_STYLE_VALUE_TYPE(Initial, initial)                                            \
-    __ENUMERATE_STYLE_VALUE_TYPE(Integer, integer)                                            \
-    __ENUMERATE_STYLE_VALUE_TYPE(Length, length)                                              \
-    __ENUMERATE_STYLE_VALUE_TYPE(LinearGradient, linear_gradient)                             \
-    __ENUMERATE_STYLE_VALUE_TYPE(MathDepth, math_depth)                                       \
-    __ENUMERATE_STYLE_VALUE_TYPE(Number, number)                                              \
-    __ENUMERATE_STYLE_VALUE_TYPE(Overflow, overflow)                                          \
-    __ENUMERATE_STYLE_VALUE_TYPE(Percentage, percentage)                                      \
-    __ENUMERATE_STYLE_VALUE_TYPE(Position, position)                                          \
-    __ENUMERATE_STYLE_VALUE_TYPE(RadialGradient, radial_gradient)                             \
-    __ENUMERATE_STYLE_VALUE_TYPE(Ratio, ratio)                                                \
-    __ENUMERATE_STYLE_VALUE_TYPE(Rect, rect)                                                  \
-    __ENUMERATE_STYLE_VALUE_TYPE(Resolution, resolution)                                      \
-    __ENUMERATE_STYLE_VALUE_TYPE(Revert, revert)                                              \
-    __ENUMERATE_STYLE_VALUE_TYPE(Shadow, shadow)                                              \
-    __ENUMERATE_STYLE_VALUE_TYPE(Shorthand, shorthand)                                        \
-    __ENUMERATE_STYLE_VALUE_TYPE(String, string)                                              \
-    __ENUMERATE_STYLE_VALUE_TYPE(Time, time)                                                  \
-    __ENUMERATE_STYLE_VALUE_TYPE(Transformation, transformation)                              \
-    __ENUMERATE_STYLE_VALUE_TYPE(Unresolved, unresolved)                                      \
-    __ENUMERATE_STYLE_VALUE_TYPE(Unset, unset)                                                \
-    __ENUMERATE_STYLE_VALUE_TYPE(URL, url)                                                    \
+#define ENUMERATE_STYLE_VALUE_TYPES                                        \
+    __ENUMERATE_STYLE_VALUE_TYPE(Angle, angle)                             \
+    __ENUMERATE_STYLE_VALUE_TYPE(BackgroundRepeat, background_repeat)      \
+    __ENUMERATE_STYLE_VALUE_TYPE(BackgroundSize, background_size)          \
+    __ENUMERATE_STYLE_VALUE_TYPE(BorderRadius, border_radius)              \
+    __ENUMERATE_STYLE_VALUE_TYPE(Calculated, calculated)                   \
+    __ENUMERATE_STYLE_VALUE_TYPE(Color, color)                             \
+    __ENUMERATE_STYLE_VALUE_TYPE(ConicGradient, conic_gradient)            \
+    __ENUMERATE_STYLE_VALUE_TYPE(Content, content)                         \
+    __ENUMERATE_STYLE_VALUE_TYPE(CustomIdent, custom_ident)                \
+    __ENUMERATE_STYLE_VALUE_TYPE(Display, display)                         \
+    __ENUMERATE_STYLE_VALUE_TYPE(Easing, easing)                           \
+    __ENUMERATE_STYLE_VALUE_TYPE(Edge, edge)                               \
+    __ENUMERATE_STYLE_VALUE_TYPE(FilterValueList, filter_value_list)       \
+    __ENUMERATE_STYLE_VALUE_TYPE(Frequency, frequency)                     \
+    __ENUMERATE_STYLE_VALUE_TYPE(GridAutoFlow, grid_auto_flow)             \
+    __ENUMERATE_STYLE_VALUE_TYPE(GridTemplateArea, grid_template_area)     \
+    __ENUMERATE_STYLE_VALUE_TYPE(GridTrackPlacement, grid_track_placement) \
+    __ENUMERATE_STYLE_VALUE_TYPE(GridTrackSizeList, grid_track_size_list)  \
+    __ENUMERATE_STYLE_VALUE_TYPE(Identifier, identifier)                   \
+    __ENUMERATE_STYLE_VALUE_TYPE(Image, image)                             \
+    __ENUMERATE_STYLE_VALUE_TYPE(Inherit, inherit)                         \
+    __ENUMERATE_STYLE_VALUE_TYPE(Initial, initial)                         \
+    __ENUMERATE_STYLE_VALUE_TYPE(Integer, integer)                         \
+    __ENUMERATE_STYLE_VALUE_TYPE(Length, length)                           \
+    __ENUMERATE_STYLE_VALUE_TYPE(LinearGradient, linear_gradient)          \
+    __ENUMERATE_STYLE_VALUE_TYPE(MathDepth, math_depth)                    \
+    __ENUMERATE_STYLE_VALUE_TYPE(Number, number)                           \
+    __ENUMERATE_STYLE_VALUE_TYPE(Overflow, overflow)                       \
+    __ENUMERATE_STYLE_VALUE_TYPE(Percentage, percentage)                   \
+    __ENUMERATE_STYLE_VALUE_TYPE(Position, position)                       \
+    __ENUMERATE_STYLE_VALUE_TYPE(RadialGradient, radial_gradient)          \
+    __ENUMERATE_STYLE_VALUE_TYPE(Ratio, ratio)                             \
+    __ENUMERATE_STYLE_VALUE_TYPE(Rect, rect)                               \
+    __ENUMERATE_STYLE_VALUE_TYPE(Resolution, resolution)                   \
+    __ENUMERATE_STYLE_VALUE_TYPE(Revert, revert)                           \
+    __ENUMERATE_STYLE_VALUE_TYPE(Shadow, shadow)                           \
+    __ENUMERATE_STYLE_VALUE_TYPE(Shorthand, shorthand)                     \
+    __ENUMERATE_STYLE_VALUE_TYPE(String, string)                           \
+    __ENUMERATE_STYLE_VALUE_TYPE(Time, time)                               \
+    __ENUMERATE_STYLE_VALUE_TYPE(Transformation, transformation)           \
+    __ENUMERATE_STYLE_VALUE_TYPE(Unresolved, unresolved)                   \
+    __ENUMERATE_STYLE_VALUE_TYPE(Unset, unset)                             \
+    __ENUMERATE_STYLE_VALUE_TYPE(URL, url)                                 \
     __ENUMERATE_STYLE_VALUE_TYPE(ValueList, value_list)
 
 // NOTE:

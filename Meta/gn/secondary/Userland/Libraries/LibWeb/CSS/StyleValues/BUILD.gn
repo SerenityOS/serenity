@@ -16,7 +16,6 @@ source_set("StyleValues") {
     "FilterValueListStyleValue.cpp",
     "GridAutoFlowStyleValue.cpp",
     "GridTemplateAreaStyleValue.cpp",
-    "GridTrackPlacementShorthandStyleValue.cpp",
     "GridTrackPlacementStyleValue.cpp",
     "GridTrackSizeListStyleValue.cpp",
     "IdentifierStyleValue.cpp",

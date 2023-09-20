@@ -112,7 +112,6 @@ class GridRepeat;
 class GridSize;
 class GridTemplateAreaStyleValue;
 class GridTrackPlacement;
-class GridTrackPlacementShorthandStyleValue;
 class GridTrackPlacementStyleValue;
 class GridTrackSizeList;
 class GridTrackSizeListStyleValue;
