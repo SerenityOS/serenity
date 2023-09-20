@@ -47,7 +47,6 @@
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceItemsStyleValue.h>
-#include <LibWeb/CSS/StyleValues/PlaceSelfStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShorthandStyleValue.h>
@@ -513,13 +512,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::PlaceSelf) {
-        if (value.is_place_self()) {
-            auto const& place_self = value.as_place_self();
-            set_longhand_property(CSS::PropertyID::AlignSelf, place_self.align_self());
-            set_longhand_property(CSS::PropertyID::JustifySelf, place_self.justify_self());
-            return;
-        }
-
         set_longhand_property(CSS::PropertyID::AlignSelf, value);
         set_longhand_property(CSS::PropertyID::JustifySelf, value);
         return;

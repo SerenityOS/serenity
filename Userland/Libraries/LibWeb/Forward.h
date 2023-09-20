@@ -140,7 +140,6 @@ class Percentage;
 class PercentageOrCalculated;
 class PercentageStyleValue;
 class PlaceItemsStyleValue;
-class PlaceSelfStyleValue;
 class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
 class RadialGradientStyleValue;
