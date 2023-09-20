@@ -26,6 +26,7 @@ public:
     String const& subtype() const { return m_subtype; }
     OrderedHashMap<String, String> const& parameters() const { return m_parameters; }
 
+    bool is_image() const;
     bool is_xml() const;
     bool is_html() const;
     bool is_javascript() const;
