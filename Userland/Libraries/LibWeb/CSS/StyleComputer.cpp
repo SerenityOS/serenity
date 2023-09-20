@@ -587,6 +587,30 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             }
             return;
         }
+        if (property_id == CSS::PropertyID::BorderTop) {
+            set_longhand_property(PropertyID::BorderTopWidth, value);
+            set_longhand_property(PropertyID::BorderTopStyle, value);
+            set_longhand_property(PropertyID::BorderTopColor, value);
+            return;
+        }
+        if (property_id == CSS::PropertyID::BorderRight) {
+            set_longhand_property(PropertyID::BorderRightWidth, value);
+            set_longhand_property(PropertyID::BorderRightStyle, value);
+            set_longhand_property(PropertyID::BorderRightColor, value);
+            return;
+        }
+        if (property_id == CSS::PropertyID::BorderBottom) {
+            set_longhand_property(PropertyID::BorderBottomWidth, value);
+            set_longhand_property(PropertyID::BorderBottomStyle, value);
+            set_longhand_property(PropertyID::BorderBottomColor, value);
+            return;
+        }
+        if (property_id == CSS::PropertyID::BorderLeft) {
+            set_longhand_property(PropertyID::BorderLeftWidth, value);
+            set_longhand_property(PropertyID::BorderLeftStyle, value);
+            set_longhand_property(PropertyID::BorderLeftColor, value);
+            return
+        }
         return;
     }
 
