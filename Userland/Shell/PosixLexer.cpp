@@ -642,20 +642,6 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
         };
     }
 
-    if (!m_state.escaping && is_part_of_operator(""sv, m_lexer.peek())) {
-        auto tokens = TRY(Token::maybe_from_state(m_state));
-        m_state.buffer.clear();
-        m_state.buffer.append(consume());
-        m_state.expansions.clear();
-        m_state.position.start_offset = m_state.position.end_offset;
-        m_state.position.start_line = m_state.position.end_line;
-
-        return ReductionResult {
-            .tokens = move(tokens),
-            .next_reduction = Reduction::Operator,
-        };
-    }
-
     if (!m_state.escaping && consume_specific('\'')) {
         m_state.buffer.append('\'');
         return ReductionResult {
@@ -708,11 +694,25 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
         };
     }
 
-    if (!m_state.escaping && is_any_of("})"sv)(m_lexer.peek())) {
+    if (!m_state.escaping && m_state.in_skip_mode && is_any_of("})"sv)(m_lexer.peek())) {
         // That's an eof for us.
         return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::None,
+        };
+    }
+
+    if (!m_state.escaping && is_part_of_operator(""sv, m_lexer.peek())) {
+        auto tokens = TRY(Token::maybe_from_state(m_state));
+        m_state.buffer.clear();
+        m_state.buffer.append(consume());
+        m_state.expansions.clear();
+        m_state.position.start_offset = m_state.position.end_offset;
+        m_state.position.start_line = m_state.position.end_line;
+
+        return ReductionResult {
+            .tokens = move(tokens),
+            .next_reduction = Reduction::Operator,
         };
     }
 
