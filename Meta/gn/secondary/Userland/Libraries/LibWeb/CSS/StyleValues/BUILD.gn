@@ -14,7 +14,6 @@ source_set("StyleValues") {
     "EasingStyleValue.cpp",
     "EdgeStyleValue.cpp",
     "FilterValueListStyleValue.cpp",
-    "GridAreaShorthandStyleValue.cpp",
     "GridAutoFlowStyleValue.cpp",
     "GridTemplateAreaStyleValue.cpp",
     "GridTrackPlacementShorthandStyleValue.cpp",

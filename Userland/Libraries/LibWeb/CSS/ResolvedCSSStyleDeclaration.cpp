@@ -18,7 +18,6 @@
 #include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
@@ -314,11 +313,9 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
             VERIFY(maybe_grid_column_end.value().value->is_grid_track_placement());
             grid_column_end = maybe_grid_column_end.value().value->as_grid_track_placement();
         }
-        return GridAreaShorthandStyleValue::create(
-            grid_row_start.release_nonnull(),
-            grid_column_start.release_nonnull(),
-            grid_row_end.release_nonnull(),
-            grid_column_end.release_nonnull());
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::GridRowStart, PropertyID::GridColumnStart, PropertyID::GridRowEnd, PropertyID::GridColumnEnd },
+            { grid_row_start.release_nonnull(), grid_column_start.release_nonnull(), grid_row_end.release_nonnull(), grid_column_end.release_nonnull() });
     }
     case PropertyID::GridColumn: {
         auto maybe_grid_column_end = property(PropertyID::GridColumnEnd);
