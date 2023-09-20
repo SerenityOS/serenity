@@ -419,6 +419,7 @@ if (BUILD_LAGOM)
         GPU
         HTTP
         IMAP
+        ImageDecoderClient
         IPC
         JS
         Line
