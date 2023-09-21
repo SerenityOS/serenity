@@ -6,15 +6,19 @@
 
 #pragma once
 
-#include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web {
 
 String resource_directory_url();
 void set_resource_directory_url(String);
+String error_page_url();
+void set_error_page_url(String);
 String directory_page_url();
 void set_directory_page_url(String);
+
+ErrorOr<String> load_error_page(AK::URL const&);
 
 ErrorOr<String> load_file_directory_page(LoadRequest const&);
 
