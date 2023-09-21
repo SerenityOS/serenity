@@ -141,4 +141,10 @@ void __ubsan_handle_pointer_overflow(PointerOverflowData const& data, ValueHandl
 {
     print_location(data.location);
 }
+
+void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const&, ValueHandle) __attribute__((used));
+void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const& data, ValueHandle)
+{
+    print_location(data.location);
+}
 }

@@ -208,4 +208,11 @@ void __ubsan_handle_pointer_overflow(PointerOverflowData const& data, ValueHandl
         critical_dmesgln("KUBSAN: addition of unsigned offset to {:p} overflowed to {:p}", base, result);
     print_location(data.location);
 }
+
+void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const&) __attribute__((used));
+void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const& data)
+{
+    critical_dmesgln("KUBSAN: call to function through pointer to incorrect function type {}", data.type.name());
+    print_location(data.location);
+}
 }

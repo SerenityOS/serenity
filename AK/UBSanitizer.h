@@ -148,6 +148,11 @@ struct PointerOverflowData {
     SourceLocation location;
 };
 
+struct FunctionTypeMismatchData {
+    SourceLocation location;
+    TypeDescriptor const& type;
+};
+
 struct FloatCastOverflowData {
     SourceLocation location;
     TypeDescriptor const& from_type;
