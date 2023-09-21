@@ -9,6 +9,7 @@
 #include <AK/Endian.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
+#include <AK/SipHash.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
@@ -162,7 +163,7 @@ static_assert(sizeof(IPv4Address) == 4);
 
 template<>
 struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
-    static constexpr unsigned hash(IPv4Address const& address) { return int_hash(address.to_u32()); }
+    static unsigned hash(IPv4Address const& address) { return secure_sip_hash(static_cast<u64>(address.to_u32())); }
 };
 
 #ifdef KERNEL

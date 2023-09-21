@@ -270,18 +270,8 @@ static_assert(sizeof(IPv6Address) == 16);
 
 template<>
 struct Traits<IPv6Address> : public GenericTraits<IPv6Address> {
-    static constexpr unsigned hash(IPv6Address const& address)
-    {
-        unsigned h = 0;
-        for (int group = 0; group < 8; group += 2) {
-            u32 two_groups = ((u32)address[group] << 16) | (u32)address[group + 1];
-            if (group == 0)
-                h = int_hash(two_groups);
-            else
-                h = pair_int_hash(h, two_groups);
-        }
-        return h;
-    }
+    // SipHash-4-8 is considered conservatively secure, even if not cryptographically secure.
+    static unsigned hash(IPv6Address const& address) { return sip_hash_bytes<4, 8>({ &address.to_in6_addr_t(), sizeof(address.to_in6_addr_t()) }); }
 };
 
 #ifdef KERNEL
