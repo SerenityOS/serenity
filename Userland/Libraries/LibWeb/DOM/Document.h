@@ -445,6 +445,10 @@ public:
     bool is_initial_about_blank() const { return m_is_initial_about_blank; }
     void set_is_initial_about_blank(bool b) { m_is_initial_about_blank = b; }
 
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-about-base-url
+    Optional<AK::URL> about_base_url() const { return m_about_base_url; }
+    void set_about_base_url(Optional<AK::URL> url) { m_about_base_url = url; }
+
     DeprecatedString domain() const;
     void set_domain(String const&);
 
@@ -654,6 +658,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
     bool m_is_initial_about_blank { false };
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-about-base-url
+    Optional<AK::URL> m_about_base_url;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-coop
     HTML::CrossOriginOpenerPolicy m_cross_origin_opener_policy;

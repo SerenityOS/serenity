@@ -54,16 +54,18 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
     response->url_list().append(url);
     HTML::NavigationParams navigation_params {
         .id = {},
+        .navigable = navigable,
         .request = nullptr,
         .response = response,
+        .fetch_controller = nullptr,
+        .commit_early_hints = nullptr,
+        .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
+        .reserved_environment = {},
         .origin = HTML::Origin {},
         .policy_container = HTML::PolicyContainer {},
         .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
         .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
-        .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
-        .reserved_environment = {},
-        .browsing_context = nullptr,
-        .navigable = navigable,
+        .about_base_url = {},
     };
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", navigation_params).release_value_but_fixme_should_propagate_errors();
     navigable->set_ongoing_navigation({});

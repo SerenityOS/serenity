@@ -325,7 +325,8 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
             if (!target_entry->document_state->document() || target_entry->document_state->reload_pending()) {
                 // FIXME: 1. Let navTimingType be "back_forward" if targetEntry's document is null; otherwise "reload".
 
-                // FIXME: 2. Let targetSnapshotParams be the result of snapshotting target snapshot params given navigable.
+                // 2. Let targetSnapshotParams be the result of snapshotting target snapshot params given navigable.
+                auto target_snapshot_params = navigable->snapshot_target_snapshot_params();
 
                 // 3. Let potentiallyTargetSpecificSourceSnapshotParams be sourceSnapshotParams.
                 Optional<SourceSnapshotParams> potentially_target_specific_source_snapshot_params = source_snapshot_params;
@@ -344,7 +345,7 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
                 // 7. In parallel, attempt to populate the history entry's document for targetEntry, given navigable, potentiallyTargetSpecificSourceSnapshotParams,
                 //    targetSnapshotParams, with allowPOST set to allowPOST and completionSteps set to queue a global task on the navigation and traversal task source given
                 //    navigable's active window to run afterDocumentPopulated.
-                navigable->populate_session_history_entry_document(target_entry, {}, {}, *potentially_target_specific_source_snapshot_params, allow_POST, [this, after_document_populated]() mutable {
+                navigable->populate_session_history_entry_document(target_entry, *potentially_target_specific_source_snapshot_params, target_snapshot_params, {}, Empty {}, CSPNavigationType::Other, allow_POST, [this, after_document_populated]() mutable {
                              queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [after_document_populated]() mutable {
                                  after_document_populated();
                              });

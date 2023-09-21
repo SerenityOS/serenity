@@ -236,7 +236,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
         HTML::WindowEnvironmentSettingsObject::setup(
             creation_url.value(),
             move(realm_execution_context),
-            navigation_params.reserved_environment,
+            navigation_params.reserved_environment.visit(
+                // FIXME: Environment is virtual. We *really* shouldn't be slicing it here
+                [](Empty const&) -> Optional<HTML::Environment> { return {}; },
+                [](HTML::Environment* env) -> Optional<HTML::Environment> { if (env) return *env; return {}; },
+                [](JS::NonnullGCPtr<HTML::EnvironmentSettingsObject>) -> Optional<HTML::Environment> {
+                    TODO();
+                }),
             top_level_creation_url.value(),
             top_level_origin);
     }

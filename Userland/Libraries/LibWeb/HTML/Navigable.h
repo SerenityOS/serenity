@@ -15,6 +15,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
+#include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/POSTResource.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/SourceSnapshotParams.h>
@@ -111,7 +112,15 @@ public:
     Variant<Empty, Traversal, String> ongoing_navigation() const { return m_ongoing_navigation; }
     void set_ongoing_navigation(Variant<Empty, Traversal, String> ongoing_navigation);
 
-    WebIDL::ExceptionOr<void> populate_session_history_entry_document(JS::GCPtr<SessionHistoryEntry>, Optional<NavigationParams>, Optional<String> navigation_id, SourceSnapshotParams const&, bool allow_POST, Function<void()>);
+    WebIDL::ExceptionOr<void> populate_session_history_entry_document(
+        JS::GCPtr<SessionHistoryEntry> entry,
+        SourceSnapshotParams const& source_snapshot_params,
+        TargetSnapshotParams const& target_snapshot_params,
+        Optional<String> navigation_id = {},
+        Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams> navigation_params = Empty {},
+        CSPNavigationType csp_navigation_type = CSPNavigationType::Other,
+        bool allow_POST = false,
+        Function<void()> completion_steps = [] {});
 
     WebIDL::ExceptionOr<void> navigate(
         AK::URL const&,
@@ -154,6 +163,8 @@ public:
     // https://html.spec.whatwg.org/#rendering-opportunity
     [[nodiscard]] bool has_a_rendering_opportunity() const;
 
+    [[nodiscard]] TargetSnapshotParams snapshot_target_snapshot_params();
+
 protected:
     Navigable();
 
@@ -167,7 +178,6 @@ protected:
 
 private:
     bool allowed_by_sandboxing_to_navigate(Navigable const& target, SourceSnapshotParams const&);
-    TargetSnapshotParams snapshot_target_snapshot_params();
 
     void scroll_offset_did_change();
 
