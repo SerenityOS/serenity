@@ -69,6 +69,9 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
 
     _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/pdf_reference_1-7.pdf"sv));
+    //    _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/DC-008-Translation-2023-E.pdf"sv));
+    //    _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/ISO_32000-2-2020_sponsored.pdf"sv));
+    //    _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/Text.pdf"sv));
     auto document = TRY(PDF::Document::create(_file->bytes()));
     TRY(document->initialize());
     return document;
@@ -87,7 +90,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     static bool did_load = false;
     if (!did_load) {
-        _page_index = 0;
+        _page_index = 24 - 1;
         did_load = true;
         if (auto doc_or = [self load]; !doc_or.is_error()) {
             _doc = doc_or.value();
