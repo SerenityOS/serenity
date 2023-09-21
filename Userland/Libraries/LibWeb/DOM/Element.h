@@ -199,7 +199,7 @@ public:
     bool is_target() const;
     bool is_document_element() const;
 
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(DeprecatedFlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(StringView);
 
     bool is_shadow_host() const;
     ShadowRoot* shadow_root_internal() { return m_shadow_root.ptr(); }
