@@ -199,7 +199,7 @@ void AsyncGenerator::execute(VM& vm, Completion completion)
         else
             bytecode_interpreter.accumulator() = completion_object;
 
-        auto next_result = bytecode_interpreter.run_and_return_frame(realm, *m_generating_function->bytecode_executable(), next_block, frame);
+        auto next_result = bytecode_interpreter.run_and_return_frame(*m_generating_function->bytecode_executable(), next_block, frame);
 
         if (!m_frame.has_value())
             m_frame = move(*next_result.frame);

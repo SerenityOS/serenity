@@ -45,9 +45,9 @@ public:
     ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
     ThrowCompletionOr<Value> run(SourceTextModule&);
 
-    ThrowCompletionOr<Value> run(Realm& realm, Bytecode::Executable& executable, Bytecode::BasicBlock const* entry_point = nullptr)
+    ThrowCompletionOr<Value> run(Bytecode::Executable& executable, Bytecode::BasicBlock const* entry_point = nullptr)
     {
-        auto value_and_frame = run_and_return_frame(realm, executable, entry_point);
+        auto value_and_frame = run_and_return_frame(executable, entry_point);
         return move(value_and_frame.value);
     }
 
@@ -55,7 +55,7 @@ public:
         ThrowCompletionOr<Value> value;
         OwnPtr<CallFrame> frame;
     };
-    ValueAndFrame run_and_return_frame(Realm&, Bytecode::Executable&, Bytecode::BasicBlock const* entry_point, CallFrame* = nullptr);
+    ValueAndFrame run_and_return_frame(Bytecode::Executable&, Bytecode::BasicBlock const* entry_point, CallFrame* = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     ALWAYS_INLINE Value& saved_return_value() { return reg(Register::saved_return_value()); }

@@ -306,7 +306,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
 ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
 {
     auto executable = TRY(Bytecode::compile(*this, node, FunctionKind::Normal, ""sv));
-    auto result_or_error = bytecode_interpreter().run_and_return_frame(*current_realm(), *executable, nullptr);
+    auto result_or_error = bytecode_interpreter().run_and_return_frame(*executable, nullptr);
     if (result_or_error.value.is_error())
         return result_or_error.value.release_error();
     return result_or_error.frame->registers[0];

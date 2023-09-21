@@ -120,7 +120,7 @@ ThrowCompletionOr<Value> GeneratorObject::execute(VM& vm, Completion const& comp
     else
         bytecode_interpreter.accumulator() = completion_object;
 
-    auto next_result = bytecode_interpreter.run_and_return_frame(realm, *m_generating_function->bytecode_executable(), next_block, frame);
+    auto next_result = bytecode_interpreter.run_and_return_frame(*m_generating_function->bytecode_executable(), next_block, frame);
 
     vm.pop_execution_context();
 
