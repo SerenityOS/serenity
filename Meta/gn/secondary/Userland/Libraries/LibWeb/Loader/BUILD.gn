@@ -3,8 +3,8 @@ source_set("Loader") {
   deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
   sources = [
     "ContentFilter.cpp",
-    "FileDirectoryLoader.cpp",
     "FileRequest.cpp",
+    "GeneratedPagesLoader.cpp",
     "LoadRequest.cpp",
     "ProxyMappings.cpp",
     "Resource.cpp",

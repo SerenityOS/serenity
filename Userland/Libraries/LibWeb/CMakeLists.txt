@@ -460,8 +460,8 @@ set(SOURCES
     Layout/TreeBuilder.cpp
     Layout/VideoBox.cpp
     Loader/ContentFilter.cpp
-    Loader/FileDirectoryLoader.cpp
     Loader/FileRequest.cpp
+    Loader/GeneratedPagesLoader.cpp
     Loader/LoadRequest.cpp
     Loader/ProxyMappings.cpp
     Loader/Resource.cpp
