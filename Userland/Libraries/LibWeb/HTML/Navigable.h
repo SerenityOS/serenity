@@ -31,7 +31,7 @@ enum class CSPNavigationType {
 };
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#user-navigation-involvement
-enum class UserNaviagationInvolvement {
+enum class UserNavigationInvolvement {
     BrowserUI,
     Activation,
     None,
@@ -123,7 +123,7 @@ public:
         Optional<SerializationRecord> navigation_api_state = {},
         Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list = {},
         ReferrerPolicy::ReferrerPolicy = ReferrerPolicy::ReferrerPolicy::EmptyString,
-        UserNaviagationInvolvement = UserNaviagationInvolvement::None);
+        UserNavigationInvolvement = UserNavigationInvolvement::None);
 
     WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
 

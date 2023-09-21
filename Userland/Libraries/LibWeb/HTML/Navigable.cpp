@@ -858,7 +858,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     Optional<SerializationRecord> navigation_api_state,
     Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list,
     ReferrerPolicy::ReferrerPolicy referrer_policy,
-    UserNaviagationInvolvement user_involvement)
+    UserNavigationInvolvement user_involvement)
 {
     auto& active_document = *this->active_document();
     auto& realm = active_document.realm();
@@ -978,7 +978,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     //     - navigable's active document's is initial about:blank is false; and
     //     - url's scheme is a fetch scheme
     //     then:
-    if (user_involvement != UserNaviagationInvolvement::BrowserUI && active_document.origin().is_same_origin_domain(source_document->origin()) && !active_document.is_initial_about_blank() && Fetch::Infrastructure::is_fetch_scheme(url.scheme())) {
+    if (user_involvement != UserNavigationInvolvement::BrowserUI && active_document.origin().is_same_origin_domain(source_document->origin()) && !active_document.is_initial_about_blank() && Fetch::Infrastructure::is_fetch_scheme(url.scheme())) {
         // 1. Let navigation be navigable's active window's navigation API.
         auto navigation = active_window()->navigation();
 
