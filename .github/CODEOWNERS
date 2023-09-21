@@ -5,15 +5,16 @@
 /Lagom/Tools/CodeGenerators/LibWeb @AtkinsSJ
 /Ports @timschumi
 /Tests/LibCompress @timschumi
+/Toolchain @BertalanD
 /Userland/Applications/Spreadsheet @alimpfard
 /Userland/BuggieBox @timschumi
-/Userland/DynamicLoader @timschumi
+/Userland/DynamicLoader @BertalanD @timschumi
 /Userland/Libraries/LibArchive @timschumi
 /Userland/Libraries/LibCompress @timschumi
 /Userland/Libraries/LibCore/File.* @timschumi
 /Userland/Libraries/LibCore/Socket.* @timschumi
 /Userland/Libraries/LibCrypto @alimpfard
-/Userland/Libraries/LibELF @timschumi
+/Userland/Libraries/LibELF @BertalanD @timschumi
 /Userland/Libraries/LibGL @GMTA
 /Userland/Libraries/LibGPU @GMTA
 /Userland/Libraries/LibHTTP @alimpfard
