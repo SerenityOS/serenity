@@ -20,8 +20,6 @@ RANDOMIZED_TEST_CASE(unsigned_int_min_max_bounds)
     EXPECT(n >= 3 && n <= 6);
 }
 
-
-
 RANDOMIZED_TEST_CASE(assume)
 {
     GEN(n, Gen::unsigned_int(10));
@@ -163,4 +161,24 @@ RANDOMIZED_TEST_CASE(boolean_false)
     GEN(b, Gen::boolean());
     ASSUME(b == false);
     EXPECT(b == false);
+}
+
+RANDOMIZED_TEST_CASE(frequency_int)
+{
+    GEN(x, Gen::frequency(
+                Tuple{5,'x'},
+                Tuple{1,'o'}
+    ));
+    ASSUME(x == 'x');
+    EXPECT(x == 'x');
+}
+
+RANDOMIZED_TEST_CASE(frequency_float)
+{
+    GEN(x, Gen::frequency(
+                Tuple{2.5,'x'},
+                Tuple{0.5,'o'}
+    ));
+    ASSUME(x == 'x');
+    EXPECT(x == 'x');
 }

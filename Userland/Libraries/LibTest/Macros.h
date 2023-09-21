@@ -127,6 +127,14 @@ void disable_reporting();
 
 #define EXPECT_APPROXIMATE(a, b) EXPECT_APPROXIMATE_WITH_ERROR(a, b, 0.0000005)
 
+#define REJECT(message)                                      \
+    do {                                                     \
+      ::Test::set_current_test_result(TestResult::Rejected); \
+      if (::Test::can_report())                              \
+      ::AK::warnln("\033[31;1mREJECTED\033[0m: {}:{}: {}",   \
+                __FILE__, __LINE__, #message);               \
+    } while (false)
+
 #define ASSUME(x)                                                                                                  \
     do {                                                                                                           \
         if (!(x)) {                                                                                                \
