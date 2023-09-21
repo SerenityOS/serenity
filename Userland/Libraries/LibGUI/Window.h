@@ -109,6 +109,7 @@ public:
     int height() const { return rect().height(); }
 
     Gfx::IntRect rect() const;
+    Gfx::IntRect floating_rect() const;
     Gfx::IntRect applet_rect_on_screen() const;
     Gfx::IntSize size() const { return rect().size(); }
     void set_rect(Gfx::IntRect const&);
@@ -300,6 +301,7 @@ private:
     WeakPtr<Widget> m_hovered_widget;
     Gfx::IntRect m_rect_when_windowless;
     Gfx::IntSize m_minimum_size_when_windowless { 0, 0 };
+    Gfx::IntRect m_floating_rect;
     DeprecatedString m_title_when_windowless;
     Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
     Gfx::IntSize m_size_increment;

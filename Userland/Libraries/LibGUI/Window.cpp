@@ -81,6 +81,7 @@ Window::Window(Core::EventReceiver* parent)
 
     all_windows->set(this);
     m_rect_when_windowless = { -5000, -5000, 0, 0 };
+    m_floating_rect = { -5000, -5000, 0, 0 };
     m_title_when_windowless = "GUI::Window";
 
     register_property(
@@ -220,6 +221,7 @@ void Window::hide()
         return;
 
     m_rect_when_windowless = rect();
+    m_floating_rect = floating_rect();
 
     auto destroyed_window_ids = ConnectionToWindowServer::the().destroy_window(m_window_id);
     server_did_destroy();
@@ -271,6 +273,13 @@ Gfx::IntRect Window::rect() const
     return ConnectionToWindowServer::the().get_window_rect(m_window_id);
 }
 
+Gfx::IntRect Window::floating_rect() const
+{
+    if (!is_visible())
+        return m_floating_rect;
+    return ConnectionToWindowServer::the().get_window_floating_rect(m_window_id);
+}
+
 void Window::set_rect(Gfx::IntRect const& a_rect)
 {
     if (a_rect.location() != m_rect_when_windowless.location()) {
@@ -278,6 +287,8 @@ void Window::set_rect(Gfx::IntRect const& a_rect)
     }
 
     m_rect_when_windowless = a_rect;
+    m_floating_rect = a_rect;
+
     if (!is_visible()) {
         if (m_main_widget)
             m_main_widget->resize(m_rect_when_windowless.size());
@@ -548,10 +559,11 @@ void Window::restore_size_and_position(StringView domain, StringView group, Opti
 
 void Window::save_size_and_position(StringView domain, StringView group) const
 {
-    Config::write_i32(domain, group, "X"sv, x());
-    Config::write_i32(domain, group, "Y"sv, y());
-    Config::write_i32(domain, group, "Width"sv, width());
-    Config::write_i32(domain, group, "Height"sv, height());
+    auto rect_to_save = floating_rect();
+    Config::write_i32(domain, group, "X"sv, rect_to_save.x());
+    Config::write_i32(domain, group, "Y"sv, rect_to_save.y());
+    Config::write_i32(domain, group, "Width"sv, rect_to_save.width());
+    Config::write_i32(domain, group, "Height"sv, rect_to_save.height());
     Config::write_bool(domain, group, "Maximized"sv, is_maximized());
 }
 
