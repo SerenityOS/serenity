@@ -19,9 +19,7 @@
 /* Generators take random bits from the RandSource and return a value back.
 
    Example:
-   - Gen::constant(100)         --> 100
-   - Gen::i32(-5,5)             --> 0, -1, 5, -5, 3, ...
-   - Gen::vector(Gen::i32(1,3)) --> {2,1,1,3}, {1}, {}, {1,3,3}, ...
+   - Gen::u32(5,10) --> 9, 7, 5, 10, 8, ...
  */
 namespace Gen {
 
@@ -42,7 +40,6 @@ namespace Gen {
  */
 static u32 unsigned_int(u32 max)
 {
-
     // BOILERPLATE - START
     //
     // TODO extract the common parts from unsigned_int(u32) and
@@ -54,7 +51,7 @@ static u32 unsigned_int(u32 max)
             Test::set_current_test_result(TestResult::HitLimit);
         }
         // THE INTERESTING PART - START
-        u32 value = AK::get_random_uniform(max);
+        u32 value = AK::get_random_uniform(max + 1);
         run.append(value);
         return value;
         // THE INTERESTING PART - END
@@ -63,7 +60,7 @@ static u32 unsigned_int(u32 max)
     auto next = run.next();
     if (next.has_value()) {
         // THE INTERESTING PART - START
-        return next.value();
+        return min(next.value(), max);
         // THE INTERESTING PART - END
     }
     Test::set_current_test_result(TestResult::Overrun);

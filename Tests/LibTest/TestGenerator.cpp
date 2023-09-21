@@ -20,6 +20,8 @@ RANDOMIZED_TEST_CASE(unsigned_int_min_max_bounds)
     EXPECT(n >= 3 && n <= 6);
 }
 
+
+
 RANDOMIZED_TEST_CASE(assume)
 {
     GEN(n, Gen::unsigned_int(10));
@@ -28,14 +30,11 @@ RANDOMIZED_TEST_CASE(assume)
     // (It can give up if the value passing the predicate is extremely unlikely.)
 }
 
-/* TODO can we test that a test fails, perhaps asserting on the stderr message? 
-RANDOMIZED_TEST_CASE(degenerate_assume)
-{
-    GEN(n, Gen::unsigned_int(10));
-    ASSUME(n > 10); // This will never succeed
-    EXPECT(n > 10);
-}
-*/
+// TODO find a way to test that a test "unsigned_int(3) can't reach 0" fails
+// TODO find a way to test that a test "unsigned_int(3) can't reach 3" fails
+// TODO find a way to test that a test "unsigned_int(3,6) can't reach 3" fails
+// TODO find a way to test that a test "unsigned_int(3,6) can't reach 6" fails
+// TODO find a way to test that a test "unsigned_int(10) can reach n>10" fails
 
 RANDOMIZED_TEST_CASE(map_like)
 {
@@ -87,6 +86,7 @@ RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
     // Can be gleaned with a variant on:
     // while true; do ./Build/lagom/bin/TestGenerator; done
     EXPECT(sum <= 10);
+    // EXPECT(sum <= vec.size() * max_item);
 }
 
 RANDOMIZED_TEST_CASE(vector)
