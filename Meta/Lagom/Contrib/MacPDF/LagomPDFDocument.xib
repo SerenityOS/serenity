@@ -8,6 +8,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="LagomPDFDocument">
             <connections>
+                <outlet property="_pdfView" destination="gIp-Ho-8D9" id="bcT-vU-foe"/>
                 <outlet property="window" destination="xOd-HO-29H" id="JIz-fz-R2o"/>
             </connections>
         </customObject>

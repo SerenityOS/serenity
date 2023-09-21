@@ -15,8 +15,7 @@
 
 @interface LagomPDFView ()
 {
-    RefPtr<Core::MappedFile> _file;
-    RefPtr<PDF::Document> _doc;
+    WeakPtr<PDF::Document> _doc;
     NSBitmapImageRep* _rep;
     int _page_index;
 }
@@ -63,18 +62,11 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 @implementation LagomPDFView
 
-- (PDF::PDFErrorOr<NonnullRefPtr<PDF::Document>>)load
+- (void)setDocument:(WeakPtr<PDF::Document>)doc
 {
-    auto source_root = DeprecatedString("/Users/thakis/src/serenity");
-    Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
-
-    _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/pdf_reference_1-7.pdf"sv));
-    //    _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/DC-008-Translation-2023-E.pdf"sv));
-    //    _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/ISO_32000-2-2020_sponsored.pdf"sv));
-    //    _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/Text.pdf"sv));
-    auto document = TRY(PDF::Document::create(_file->bytes()));
-    TRY(document->initialize());
-    return document;
+    _doc = move(doc);
+    _page_index = min(24 - 1, _doc->get_page_count() - 1);
+    [self pageChanged];
 }
 
 - (void)pageChanged
@@ -88,17 +80,8 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 - (void)drawRect:(NSRect)rect
 {
-    static bool did_load = false;
-    if (!did_load) {
-        _page_index = 24 - 1;
-        did_load = true;
-        if (auto doc_or = [self load]; !doc_or.is_error()) {
-            _doc = doc_or.value();
-            [self pageChanged];
-        } else {
-            NSLog(@"failed to load: %@", @(doc_or.error().message().characters()));
-        }
-    }
+    if (!_doc)
+        return;
     [_rep drawInRect:self.bounds];
 }
 

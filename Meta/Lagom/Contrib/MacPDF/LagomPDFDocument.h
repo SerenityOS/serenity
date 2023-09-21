@@ -10,9 +10,14 @@
 #import <Cocoa/Cocoa.h>
 #undef FixedPoint
 
+#import "LagomPDFView.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface LagomPDFDocument : NSDocument
+{
+    IBOutlet LagomPDFView* _pdfView;
+}
 
 @end
 

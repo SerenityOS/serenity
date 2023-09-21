@@ -12,7 +12,13 @@
 #import <Cocoa/Cocoa.h>
 #undef FixedPoint
 
+#include <AK/WeakPtr.h>
+#include <LibPDF/Document.h>
+
 @interface LagomPDFView : NSView
 {
 }
+
+- (void)setDocument:(WeakPtr<PDF::Document>)doc;
+
 @end
