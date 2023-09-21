@@ -21,7 +21,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Loader/ContentFilter.h>
-#include <LibWeb/Loader/FileDirectoryLoader.h>
+#include <LibWeb/Loader/GeneratedPagesLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/AudioCodecPluginAgnostic.h>
@@ -70,8 +70,8 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
     Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
-    Web::set_resource_directory_url(DeprecatedString::formatted("file://{}/res", s_serenity_resource_root));
-    Web::set_directory_page_url(DeprecatedString::formatted("file://{}/res/html/directory.html", s_serenity_resource_root));
+    Web::set_resource_directory_url(TRY(String::formatted("file://{}/res", s_serenity_resource_root)));
+    Web::set_directory_page_url(TRY(String::formatted("file://{}/res/html/directory.html", s_serenity_resource_root)));
 
     TRY(Web::Bindings::initialize_main_thread_vm());
 
