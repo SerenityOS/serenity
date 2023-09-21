@@ -14,6 +14,7 @@
 #include <LibWeb/Fetch/Infrastructure/URL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/DocumentState.h>
+#include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/Navigation.h>
@@ -380,8 +381,87 @@ Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_en
     VERIFY_NOT_REACHED();
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#determining-navigation-params-policy-container
+static PolicyContainer determine_navigation_params_policy_container(AK::URL const& response_url,
+    Optional<PolicyContainer> history_policy_container,
+    Optional<PolicyContainer> initiator_policy_container,
+    Optional<PolicyContainer> parent_policy_container,
+    Optional<PolicyContainer> response_policy_container)
+{
+    // NOTE: The clone a policy container AO is just a C++ copy
+
+    // 1. If historyPolicyContainer is not null, then:
+    if (history_policy_container.has_value()) {
+        // FIXME: 1. Assert: responseURL requires storing the policy container in history.
+
+        // 2. Return a clone of historyPolicyContainer.
+        return *history_policy_container;
+    }
+
+    // 2. If responseURL is about:srcdoc, then:
+    if (response_url == "about:srcdoc"sv) {
+        // 1. Assert: parentPolicyContainer is not null.
+        VERIFY(parent_policy_container.has_value());
+
+        // 2. Return a clone of parentPolicyContainer.
+        return *parent_policy_container;
+    }
+
+    // 3. If responseURL is local and initiatorPolicyContainer is not null, then return a clone of initiatorPolicyContainer.
+    if (Fetch::Infrastructure::is_local_url(response_url) && initiator_policy_container.has_value())
+        return *initiator_policy_container;
+
+    // 4. If responsePolicyContainer is not null, then return responsePolicyContainer.
+    // FIXME: File a spec issue to say "a clone of" here for consistency
+    if (response_policy_container.has_value())
+        return *response_policy_container;
+
+    // 5. Return a new policy container.
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#obtain-coop
+static CrossOriginOpenerPolicy obtain_a_cross_origin_opener_policy(JS::NonnullGCPtr<Fetch::Infrastructure::Response>, Fetch::Infrastructure::Request::ReservedClientType const& reserved_client)
+{
+
+    // 1. Let policy be a new cross-origin opener policy.
+    CrossOriginOpenerPolicy policy = {};
+
+    // AD-HOC: We don't yet setup environments in all cases
+    if (reserved_client.has<Empty>())
+        return policy;
+
+    auto& reserved_environment = reserved_client.visit(
+        [](Empty const&) -> Environment& { VERIFY_NOT_REACHED(); },
+        [](Environment* env) -> Environment& { return *env; },
+        [](JS::GCPtr<EnvironmentSettingsObject> eso) -> Environment& { return *eso; });
+
+    // 2. If reservedEnvironment is a non-secure context, then return policy.
+    if (is_non_secure_context(reserved_environment))
+        return policy;
+
+    // FIXME: We don't yet have the technology to extract structured data from Fetch headers
+    // FIXME: 3. Let parsedItem be the result of getting a structured field value given `Cross-Origin-Opener-Policy` and "item" from response's header list.
+    // FIXME: 4. If parsedItem is not null, then:
+    //     FIXME: nested steps...
+    // FIXME: 5. Set parsedItem to the result of getting a structured field value given `Cross-Origin-Opener-Policy-Report-Only` and "item" from response's header list.
+    // FIXME: 6. If parsedItem is not null, then:
+    //     FIXME: nested steps...
+
+    // 7. Return policy.
+    return policy;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#attempt-to-create-a-non-fetch-scheme-document
+static JS::GCPtr<DOM::Document> attempt_to_create_a_non_fetch_scheme_document(NonFetchSchemeNavigationParams const& params)
+{
+    // FIXME: Implement this algorithm to hand off to external software or display inline content
+    dbgln("(FIXME) Don't know how to navigate to {}", params.url);
+    return nullptr;
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#create-navigation-params-from-a-srcdoc-resource
-static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_srcdoc_resource(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const&, Optional<String> navigation_id)
+static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_srcdoc_resource(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, TargetSnapshotParams const& target_snapshot_params, Optional<String> navigation_id)
 {
     auto& vm = navigable->vm();
     auto& realm = navigable->active_window()->realm();
@@ -400,11 +480,11 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
     response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, document_resource.get<String>().bytes())));
 
-    // 3. Let responseOrigin be the result of determining the origin given response's URL, targetSnapshotParams's sandboxing flags, null, and entry's document state's origin.
-    auto response_origin = determine_the_origin(*response->url(), SandboxingFlagSet {}, entry->document_state->origin());
+    // 3. Let responseOrigin be the result of determining the origin given response's URL, targetSnapshotParams's sandboxing flags, and entry's document state's origin.
+    auto response_origin = determine_the_origin(*response->url(), target_snapshot_params.sandboxing_flags, entry->document_state->origin());
 
     // 4. Let coop be a new cross-origin opener policy.
-    CrossOriginOpenerPolicy coop;
+    CrossOriginOpenerPolicy coop = {};
 
     // 5. Let coopEnforcementResult be a new cross-origin opener policy enforcement result with
     //    url: response's URL
@@ -416,44 +496,53 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
         .cross_origin_opener_policy = coop
     };
 
-    // FIXME: 6. Let policyContainer be the result of determining navigation params policy container given response's URL, entry's document state's history policy container, null, navigable's container document's policy container, and null.
+    // 6. Let policyContainer be the result of determining navigation params policy container given response's URL,
+    //    entry's document state's history policy container, null, navigable's container document's policy container, and null.
+    Optional<PolicyContainer> history_policy_container = entry->document_state->history_policy_container().visit(
+        [](PolicyContainer const& c) -> Optional<PolicyContainer> { return c; },
+        [](DocumentState::Client) -> Optional<PolicyContainer> { return {}; });
+    auto policy_container = determine_navigation_params_policy_container(*response->url(), history_policy_container, {}, navigable->container_document()->policy_container(), {});
 
     // 7. Return a new navigation params, with
     //    id: navigationId
+    //    navigable: navigable
     //    request: null
     //    response: response
-    //    origin: responseOrigin
-    //    FIXME: policy container: policyContainer
-    //    FIXME: final sandboxing flag set: targetSnapshotParams's sandboxing flags
-    //    cross-origin opener policy: coop
-    //    COOP enforcement result: coopEnforcementResult
-    //    reserved environment: null
-    //    navigable: navigable
-    //    FIXME: navigation timing type: navTimingType
     //    fetch controller: null
     //    commit early hints: null
-    HTML::NavigationParams navigation_params {
-        .id = navigation_id,
-        .request = {},
+    //    COOP enforcement result: coopEnforcementResult
+    //    reserved environment: null
+    //    origin: responseOrigin
+    //    policy container: policyContainer
+    //    final sandboxing flag set: targetSnapshotParams's sandboxing flags
+    //    cross-origin opener policy: coop
+    //    FIXME: navigation timing type: navTimingType
+    //    about base URL: entry's document state's about base URL
+    return NavigationParams {
+        .id = move(navigation_id),
+        .navigable = navigable,
+        .request = nullptr,
         .response = *response,
-        .origin = move(response_origin),
-        .policy_container = PolicyContainer {},
-        .final_sandboxing_flag_set = SandboxingFlagSet {},
-        .cross_origin_opener_policy = move(coop),
+        .fetch_controller = nullptr,
+        .commit_early_hints = nullptr,
         .coop_enforcement_result = move(coop_enforcement_result),
         .reserved_environment = {},
-        .browsing_context = navigable->active_browsing_context(),
-        .navigable = navigable,
+        .origin = move(response_origin),
+        .policy_container = policy_container,
+        .final_sandboxing_flag_set = target_snapshot_params.sandboxing_flags,
+        .cross_origin_opener_policy = move(coop),
+        .about_base_url = entry->document_state->about_base_url(),
     };
-
-    return { navigation_params };
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#create-navigation-params-by-fetching
-static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_by_fetching(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const& source_snapshot_params, Optional<String> navigation_id)
+static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams>> create_navigation_params_by_fetching(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const& source_snapshot_params, TargetSnapshotParams const& target_snapshot_params, CSPNavigationType csp_navigation_type, Optional<String> navigation_id)
 {
     auto& vm = navigable->vm();
     auto& realm = navigable->active_window()->realm();
+    auto& active_document = *navigable->active_document();
+
+    (void)csp_navigation_type;
 
     // FIXME: 1. Assert: this is running in parallel.
 
@@ -470,7 +559,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     //    replaces client id: navigable's active document's relevant settings object's id
     //    mode: "navigate"
     //    referrer: entry's document state's request referrer
-    //    FIXME: referrer policy: entry's document state's request referrer policy
+    //    referrer policy: entry's document state's request referrer policy
     auto request = Fetch::Infrastructure::Request::create(vm);
     request->set_url(entry->url);
     request->set_client(source_snapshot_params.fetch_client);
@@ -478,7 +567,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::Include);
     request->set_use_url_credentials(true);
     request->set_redirect_mode(Fetch::Infrastructure::Request::RedirectMode::Manual);
-    auto replaces_client_id = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(navigable->active_document()->relevant_settings_object().id));
+    auto replaces_client_id = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(active_document.relevant_settings_object().id));
     request->set_replaces_client_id(replaces_client_id);
     request->set_mode(Fetch::Infrastructure::Request::Mode::Navigate);
     request->set_referrer(entry->document_state->request_referrer());
@@ -517,6 +606,33 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     if (entry->document_state->ever_populated())
         request->set_history_navigation(true);
 
+    // 7. If sourceSnapshotParams's has transient activation is true, then set request's user-activation to true.
+    if (source_snapshot_params.has_transient_activation)
+        request->set_user_activation(true);
+
+    // 8. If navigable's container is non-null:
+    if (navigable->container() != nullptr) {
+        // 1. If the navigable's container has a browsing context scope origin, then set request's origin to that browsing context scope origin.
+        // FIXME: From "browsing context scope origin": This definition is broken and needs investigation to see what it was intended to express: see issue #4703.
+        //        The referenced issue suggests that it is a no-op to retrieve the browsing context scope origin.
+
+        // 2. Set request's destination to navigable's container's local name.
+        // FIXME: Are there other container types? If so, we need a helper here
+        Web::Fetch::Infrastructure::Request::Destination destination = is<HTMLIFrameElement>(*navigable->container()) ? Web::Fetch::Infrastructure::Request::Destination::IFrame
+                                                                                                                      : Web::Fetch::Infrastructure::Request::Destination::Object;
+        request->set_destination(destination);
+
+        // 3. If sourceSnapshotParams's fetch client is navigable's container document's relevant settings object,
+        //    then set request's initiator type to navigable's container's local name.
+        // NOTE: This ensure that only container-initiated navigations are reported to resource timing.
+        if (source_snapshot_params.fetch_client == &navigable->container_document()->relevant_settings_object()) {
+            // FIXME: Are there other container types? If so, we need a helper here
+            Web::Fetch::Infrastructure::Request::InitiatorType initiator_type = is<HTMLIFrameElement>(*navigable->container()) ? Web::Fetch::Infrastructure::Request::InitiatorType::IFrame
+                                                                                                                               : Web::Fetch::Infrastructure::Request::InitiatorType::Object;
+            request->set_initiator_type(initiator_type);
+        }
+    }
+
     // 9. Let response be null.
     // NOTE: We use a heap-allocated cell to hold the response pointer because the processResponse callback below
     //       might use it after this stack is freed.
@@ -528,8 +644,27 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     // 11. Let fetchController be null.
     JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller = nullptr;
 
+    // 12. Let coopEnforcementResult be a new cross-origin opener policy enforcement result, with
+    // - url: navigable's active document's URL
+    // - origin: navigable's active document's origin
+    // - cross-origin opener policy: navigable's active document's cross-origin opener policy
+    // - current context is navigation source: true if navigable's active document's origin is same origin with
+    //                                         entry's document state's initiator origin otherwise false
+    CrossOriginOpenerPolicyEnforcementResult coop_enforcement_result = {
+        .url = active_document.url(),
+        .origin = active_document.origin(),
+        .cross_origin_opener_policy = active_document.cross_origin_opener_policy(),
+        .current_context_is_navigation_source = entry->document_state->initiator_origin().has_value() && active_document.origin().is_same_origin(*entry->document_state->initiator_origin())
+    };
+
     // 13. Let finalSandboxFlags be an empty sandboxing flag set.
     SandboxingFlagSet final_sandbox_flags = {};
+
+    // 14. Let responsePolicyContainer be null.
+    Optional<PolicyContainer> response_policy_container = {};
+
+    // 15. Let responseCOOP be a new cross-origin opener policy.
+    CrossOriginOpenerPolicy response_coop = {};
 
     // 16. Let locationURL be null.
     ErrorOr<Optional<AK::URL>> location_url { OptionalNone {} };
@@ -537,7 +672,8 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     // 17. Let currentURL be request's current URL.
     AK::URL current_url = request->current_url();
 
-    // FIXME: 18. Let commitEarlyHints be null.
+    // 18. Let commitEarlyHints be null.
+    Function<void(DOM::Document&)> commit_early_hints = nullptr;
 
     // 19. While true:
     while (true) {
@@ -592,7 +728,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
         // If the latter condition occurs, then abort fetchController, and return. Otherwise, proceed onward.
         if (navigation_id.has_value() && (!navigable->ongoing_navigation().has<String>() || navigable->ongoing_navigation().get<String>() != *navigation_id)) {
             fetch_controller->abort(realm, {});
-            return OptionalNone {};
+            return Empty {};
         }
 
         // 8. If request's body is null, then set entry's document state's resource to null.
@@ -600,8 +736,30 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
             entry->document_state->set_resource(Empty {});
         }
 
+        // FIXME 9. Set responsePolicyContainer to the result of creating a policy container from a fetch response given response and request's reserved client.
+        // FIXME 10. Set finalSandboxFlags to the union of targetSnapshotParams's sandboxing flags and responsePolicyContainer's CSP list's CSP-derived sandboxing flags.
+
         // 11. Set responseOrigin to the result of determining the origin given response's URL, finalSandboxFlags, and entry's document state's initiator origin.
         response_origin = determine_the_origin(*response_holder->response()->url(), final_sandbox_flags, entry->document_state->initiator_origin());
+
+        // 12. If navigable is a top-level traversable, then:
+        if (navigable->is_top_level_traversable()) {
+            // 1. Set responseCOOP to the result of obtaining a cross-origin opener policy given response and request's reserved client.
+            response_coop = obtain_a_cross_origin_opener_policy(*response_holder->response(), request->reserved_client());
+
+            // FIXME: 2. Set coopEnforcementResult to the result of enforcing the response's cross-origin opener policy given navigable's active browsing context,
+            //    response's URL, responseOrigin, responseCOOP, coopEnforcementResult and request's referrer.
+
+            // FIXME: 3. If finalSandboxFlags is not empty and responseCOOP's value is not "unsafe-none", then set response to an appropriate network error and break.
+            // NOTE: This results in a network error as one cannot simultaneously provide a clean slate to a response
+            //       using cross-origin opener policy and sandbox the result of navigating to that response.
+        }
+
+        // 13. FIXME If response is not a network error, navigable is a child navigable, and the result of performing a cross-origin resource policy check
+        //    with navigable's container document's origin, navigable's container document's relevant settings object, request's destination, response,
+        //    and true is blocked, then set response to a network error and break.
+        // NOTE: Here we're running the cross-origin resource policy check against the parent navigable rather than navigable itself
+        //       This is because we care about the same-originness of the embedded content against the parent context, not the navigation source.
 
         // 14. Set locationURL to response's location URL given currentURL's fragment.
         auto location_url = response_holder->response()->location_url(current_url.fragment());
@@ -616,7 +774,8 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
         // 16. Assert: locationURL is a URL.
         VERIFY(location_url.value()->is_valid());
 
-        // FIXME: 17. Set entry's serialized state to StructuredSerializeForStorage(null).
+        // 17. Set entry's classic history API state to StructuredSerializeForStorage(null).
+        entry->classic_history_api_state = MUST(structured_serialize_for_storage(vm, JS::js_null()));
 
         // 18. Let oldDocState be entry's document state.
         auto old_doc_state = entry->document_state;
@@ -654,10 +813,23 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
         entry->url = current_url;
     }
 
-    // FIXME: 20. If locationURL is a URL whose scheme is not a fetch scheme, then return a new non-fetch scheme navigation params, with
-    //            initiator origin request's current URL's origin
+    // 20. If locationURL is a URL whose scheme is not a fetch scheme, then return a new non-fetch scheme navigation params, with
     if (!location_url.is_error() && location_url.value().has_value() && !Fetch::Infrastructure::is_fetch_scheme(location_url.value().value().scheme())) {
-        TODO();
+        // - id: navigationId
+        // - navigable: navigable
+        // - URL: locationURL
+        // - target snapshot sandboxing flags: targetSnapshotParams's sandboxing flags
+        // - source snapshot has transient activation: sourceSnapshotParams's has transient activation
+        // - initiator origin: responseOrigin
+        // FIXME: - navigation timing type: navTimingType
+        return NonFetchSchemeNavigationParams {
+            .id = navigation_id,
+            .navigable = navigable,
+            .url = location_url.release_value().value(),
+            .target_snapshot_sandboxing_flags = target_snapshot_params.sandboxing_flags,
+            .source_snapshot_has_transient_activation = source_snapshot_params.has_transient_activation,
+            .initiator_origin = move(*response_origin),
+        };
     }
 
     // 21. If any of the following are true:
@@ -666,57 +838,75 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     //       - locationURL is a URL whose scheme is a fetch scheme
     //     then return null.
     if (response_holder->response()->is_network_error() || location_url.is_error() || (location_url.value().has_value() && Fetch::Infrastructure::is_fetch_scheme(location_url.value().value().scheme()))) {
-        return OptionalNone {};
+        return Empty {};
     }
 
     // 22. Assert: locationURL is null and response is not a network error.
     VERIFY(!location_url.value().has_value());
     VERIFY(!response_holder->response()->is_network_error());
 
-    // FIXME: 23. Let resultPolicyContainer be the result of determining navigation params policy container given response's
-    //        URL, entry's document state's history policy container, sourceSnapshotParams's source policy container,
-    //        null, and responsePolicyContainer.
+    // 23. Let resultPolicyContainer be the result of determining navigation params policy container given response's URL,
+    //     entry's document state's history policy container, sourceSnapshotParams's source policy container, null, and responsePolicyContainer.
+    Optional<PolicyContainer> history_policy_container = entry->document_state->history_policy_container().visit(
+        [](PolicyContainer const& c) -> Optional<PolicyContainer> { return c; },
+        [](DocumentState::Client) -> Optional<PolicyContainer> { return {}; });
+    auto result_policy_container = determine_navigation_params_policy_container(*response_holder->response()->url(), history_policy_container, source_snapshot_params.source_policy_container, {}, response_policy_container);
+
+    // 24. If navigable's container is an iframe, and response's timing allow passed flag is set, then set container's pending resource-timing start time to null.
+    if (navigable->container() && is<HTML::HTMLIFrameElement>(*navigable->container()) && response_holder->response()->timing_allow_passed())
+        static_cast<HTML::HTMLIFrameElement&>(*navigable->container()).set_pending_resource_start_time({});
 
     // 25. Return a new navigation params, with
     //     id: navigationId
+    //     navigable: navigable
     //     request: request
     //     response: response
-    //     origin: responseOrigin
-    //     FIXME: policy container: resultPolicyContainer
-    //     FIXME: final sandboxing flag set: finalSandboxFlags
-    //     FIXME: cross-origin opener policy: responseCOOP
-    //     FIXME: COOP enforcement result: coopEnforcementResult
-    //     FIXME: reserved environment: request's reserved client
-    //     navigable: navigable
-    //     FIXME: navigation timing type: navTimingType
     //     fetch controller: fetchController
-    //     FIXME: commit early hints: commitEarlyHints
+    //     commit early hints: commitEarlyHints
+    //     cross-origin opener policy: responseCOOP
+    //     reserved environment: request's reserved client
+    //     origin: responseOrigin
+    //     policy container: resultPolicyContainer
+    //     final sandboxing flag set: finalSandboxFlags
+    //     COOP enforcement result: coopEnforcementResult
+    //     FIXME: navigation timing type: navTimingType
+    //     about base URL: entry's document state's about base URL
     HTML::NavigationParams navigation_params {
         .id = navigation_id,
+        .navigable = navigable,
         .request = request,
         .response = *response_holder->response(),
-        .origin = *response_origin,
-        .policy_container = PolicyContainer {},
-        .final_sandboxing_flag_set = SandboxingFlagSet {},
-        .cross_origin_opener_policy = CrossOriginOpenerPolicy {},
-        .coop_enforcement_result = CrossOriginOpenerPolicyEnforcementResult {},
-        .reserved_environment = {},
-        .browsing_context = navigable->active_browsing_context(),
-        .navigable = navigable,
         .fetch_controller = fetch_controller,
+        .commit_early_hints = move(commit_early_hints),
+        .coop_enforcement_result = coop_enforcement_result,
+        .reserved_environment = request->reserved_client(),
+        .origin = *response_origin,
+        .policy_container = result_policy_container,
+        .final_sandboxing_flag_set = final_sandbox_flags,
+        .cross_origin_opener_policy = response_coop,
+        .about_base_url = entry->document_state->about_base_url(),
     };
 
-    return { navigation_params };
+    return navigation_params;
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#attempt-to-populate-the-history-entry's-document
-WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS::GCPtr<SessionHistoryEntry> entry, Optional<NavigationParams> navigation_params, Optional<String> navigation_id, SourceSnapshotParams const& source_snapshot_params, bool allow_POST, Function<void()> completion_steps)
+WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
+    JS::GCPtr<SessionHistoryEntry> entry,
+    SourceSnapshotParams const& source_snapshot_params,
+    TargetSnapshotParams const& target_snapshot_params,
+    Optional<String> navigation_id,
+    Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams> navigation_params,
+    CSPNavigationType csp_navigation_type,
+    bool allow_POST,
+    Function<void()> completion_steps)
 {
     // FIXME: 1. Assert: this is running in parallel.
 
     // 2. Assert: if navigationParams is non-null, then navigationParams's response is non-null.
-    if (navigation_params.has_value())
-        VERIFY(navigation_params->response);
+    // NavigationParams' response field is NonnullGCPtr
+    if (!navigation_params.has<Empty>())
+        VERIFY(navigation_params.has<NavigationParams>());
 
     // 3. Let currentBrowsingContext be navigable's active browsing context.
     [[maybe_unused]] auto current_browsing_context = active_browsing_context();
@@ -725,23 +915,36 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
     auto document_resource = entry->document_state->resource();
 
     // 5. If navigationParams is null, then:
-    if (!navigation_params.has_value()) {
+    if (navigation_params.has<Empty>()) {
         // 1. If documentResource is a string, then set navigationParams to the result
         //    of creating navigation params from a srcdoc resource given entry, navigable,
         //    targetSnapshotParams, navigationId, and navTimingType.
         if (document_resource.has<String>()) {
-            navigation_params = create_navigation_params_from_a_srcdoc_resource(entry, this, source_snapshot_params, navigation_id).release_value_but_fixme_should_propagate_errors();
+            navigation_params = TRY(create_navigation_params_from_a_srcdoc_resource(entry, this, target_snapshot_params, navigation_id));
         }
         // 2. Otherwise, if both of the following are true:
         //    - entry's URL's scheme is a fetch scheme; and
         //    - documentResource is null, or allowPOST is true and documentResource's request body is not failure (FIXME: check if request body is not failure)
         else if (Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme()) && (document_resource.has<Empty>() || allow_POST)) {
-            navigation_params = create_navigation_params_by_fetching(entry, this, source_snapshot_params, navigation_id).release_value_but_fixme_should_propagate_errors();
+            navigation_params = TRY(create_navigation_params_by_fetching(entry, this, source_snapshot_params, target_snapshot_params, csp_navigation_type, navigation_id));
         }
-        // FIXME: 3. Otherwise, if entry's URL's scheme is not a fetch scheme, then set navigationParams to a new non-fetch scheme navigation params, with
-        //    initiator origin: entry's document state's initiator origin
-        else {
-            TODO();
+        // 3. Otherwise, if entry's URL's scheme is not a fetch scheme, then set navigationParams to a new non-fetch scheme navigation params, with:
+        else if (!Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme())) {
+            // - id: navigationId
+            // - navigable: navigable
+            // - URL: entry's URL
+            // - target snapshot sandboxing flags: targetSnapshotParams's sandboxing flags
+            // - source snapshot has transient activation: sourceSnapshotParams's has transient activation
+            // - initiator origin: entry's document state's initiator origin
+            // FIXME: - navigation timing type: navTimingType
+            navigation_params = NonFetchSchemeNavigationParams {
+                .id = navigation_id,
+                .navigable = this,
+                .url = entry->url,
+                .target_snapshot_sandboxing_flags = target_snapshot_params.sandboxing_flags,
+                .source_snapshot_has_transient_activation = source_snapshot_params.has_transient_activation,
+                .initiator_origin = *entry->document_state->initiator_origin(),
+            };
         }
     }
 
@@ -750,7 +953,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
         return {};
 
     // 6. Queue a global task on the navigation and traversal task source, given navigable's active window, to run these steps:
-    queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, entry, navigation_params, navigation_id, completion_steps = move(completion_steps)] {
+    queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, entry, navigation_params = move(navigation_params), navigation_id, completion_steps = move(completion_steps)]() mutable {
         // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
         if (has_been_destroyed())
             return;
@@ -764,12 +967,21 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
         // 2. Let failure be false.
         auto failure = false;
 
-        // FIXME: 3. If navigationParams is a non-fetch scheme navigation params, then set entry's document state's document to the result of running attempt to create a non-fetch
-        //    scheme document given entry's URL, navigable, targetSnapshotParams's sandboxing flags, navigationId, navTimingType, sourceSnapshotParams's has transient
-        //    activation, and navigationParams's initiator origin.
+        // 3. If navigationParams is a non-fetch scheme navigation params, then set entry's document state's document to the result of
+        //    running attempt to create a non-fetch scheme document navigationParams
+        if (navigation_params.has<NonFetchSchemeNavigationParams>()) {
+            // FIXME: https://github.com/whatwg/html/issues/9767
+            // We probably are expected to skip to steps 13 and 14 and return after doing this
+            entry->document_state->set_document(attempt_to_create_a_non_fetch_scheme_document(navigation_params.get<NonFetchSchemeNavigationParams>()));
+            if (entry->document_state->document()) {
+                entry->document_state->set_ever_populated(true);
+            }
+            completion_steps();
+            return;
+        }
 
         // 4. Otherwise, if navigationParams is null, then set failure to true.
-        if (!navigation_params.has_value()) {
+        if (navigation_params.has<Empty>()) {
             failure = true;
         }
 
@@ -778,6 +990,9 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
 
         // FIXME: 6. Otherwise, if navigationParams's reserved environment is non-null and the result of checking a navigation response's adherence to its embedder policy given
         //    navigationParams's response, navigable, and navigationParams's policy container's embedder policy is false, then set failure to true.
+
+        // FIXME: 7. Otherwise, if the result of checking a navigation response's adherence to `X-Frame-Options` given navigationParams's response, navigable,
+        //    navigationParams's policy container's CSP list, and navigationParams's origin is false, then set failure to true.
 
         // 8. If failure is true, then:
         if (failure) {
@@ -792,12 +1007,14 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
             entry->document_state->document()->set_salvageable(false);
 
             // FIXME: 3. If navigationParams is not null, then:
-            if (navigation_params.has_value()) {
-                TODO();
+            if (!navigation_params.has<Empty>()) {
+                // 1. FIXME: Run the environment discarding steps for navigationParams's reserved environment.
+                // 2. Invoke WebDriver BiDi navigation failed with currentBrowsingContext and a new WebDriver BiDi navigation status
+                //    whose id is navigationId, status is "canceled", and url is navigationParams's response's URL.
             }
         }
         // FIXME: 9. Otherwise, if navigationParams's response's status is 204 or 205, then:
-        else if (navigation_params->response->status() == 204 || navigation_params->response->status() == 205) {
+        else if (navigation_params.get<NavigationParams>().response->status() == 204 || navigation_params.get<NavigationParams>().response->status() == 205) {
             // 1. Run completionSteps.
             completion_steps();
 
@@ -810,7 +1027,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
         else {
             // 1. Let document be the result of loading a document given navigationParams, sourceSnapshotParams,
             //    and entry's document state's initiator origin.
-            auto document = load_document(navigation_params);
+            auto document = load_document(move(navigation_params.get<NavigationParams>()));
 
             // 2. If document is null, then run completionSteps and return.
             if (!document) {
@@ -826,6 +1043,8 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
         }
 
         // FIXME: 12. If entry's document state's request referrer is "client", then set it to request's referrer.
+        //     https://github.com/whatwg/html/issues/9767
+        //     What is "request" here?
 
         // 13. If entry's document state's document is not null, then set entry's document state's ever populated to true.
         if (entry->document_state->document()) {
@@ -947,7 +1166,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     [[maybe_unused]] auto target_browsing_context = active_browsing_context();
 
     // 14. Let targetSnapshotParams be the result of snapshotting target snapshot params given navigable.
-    [[maybe_unused]] auto target_snapshot_params = snapshot_target_snapshot_params();
+    auto target_snapshot_params = snapshot_target_snapshot_params();
 
     // 15. Invoke WebDriver BiDi navigation started with targetBrowsingContext, and a new WebDriver BiDi navigation status whose id is navigationId, url is url, and status is "pending".
 
@@ -1010,7 +1229,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     }
 
     // 20. In parallel, run these steps:
-    Platform::EventLoopPlugin::the().deferred_invoke([this, source_snapshot_params = move(source_snapshot_params), document_resource, url, navigation_id, referrer_policy, initiator_origin_snapshot, response, history_handling, initiator_base_url_snapshot] {
+    Platform::EventLoopPlugin::the().deferred_invoke([this, source_snapshot_params, target_snapshot_params, csp_navigation_type, document_resource, url, navigation_id, referrer_policy, initiator_origin_snapshot, response, history_handling, initiator_base_url_snapshot] {
         // NOTE: Not in the spec but subsequent steps will fail because destroyed navigable does not have active document.
         if (has_been_destroyed())
             return;
@@ -1058,7 +1277,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         history_entry->document_state = document_state;
 
         // 8. Let navigationParams be null.
-        Optional<NavigationParams> navigation_params;
+        Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams> navigation_params = Empty {};
 
         // FIXME: 9. If response is non-null:
         if (response) {
@@ -1068,7 +1287,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         //     for historyEntry, given navigable, "navigate", sourceSnapshotParams,
         //     targetSnapshotParams, navigationId, navigationParams, cspNavigationType, with allowPOST
         //     set to true and completionSteps set to the following step:
-        populate_session_history_entry_document(history_entry, navigation_params, navigation_id, source_snapshot_params, true, [this, history_entry, history_handling, navigation_id] {
+        populate_session_history_entry_document(history_entry, source_snapshot_params, target_snapshot_params, navigation_id, move(navigation_params), csp_navigation_type, true, [this, history_entry, history_handling, navigation_id] {
+            // 1.     Append session history traversal steps to navigable's traversable to finalize a cross-document navigation given navigable, historyHandling, and historyEntry.
             traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
                 if (this->has_been_destroyed()) {
                     // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
@@ -1167,7 +1387,8 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
     // 2. Let encodedScriptSource be the result of removing the leading "javascript:" from urlString.
     auto encoded_script_source = url_string.substring_view(11, url_string.length() - 11);
 
-    // FIXME: 3. Let scriptSource be the UTF-8 decoding of the percent-decoding of encodedScriptSource.
+    // 3. Let scriptSource be the UTF-8 decoding of the percent-decoding of encodedScriptSource.
+    auto script_source = AK::URL::percent_decode(encoded_script_source);
 
     // 4. Let settings be targetNavigable's active document's relevant settings object.
     auto& settings = active_document()->relevant_settings_object();
@@ -1176,7 +1397,7 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
     auto base_url = settings.api_base_url();
 
     // 6. Let script be the result of creating a classic script given scriptSource, settings, baseURL, and the default classic script fetch options.
-    auto script = HTML::ClassicScript::create("(javascript url)", encoded_script_source, settings, base_url);
+    auto script = HTML::ClassicScript::create("(javascript url)", script_source, settings, base_url);
 
     // 7. Let evaluationStatus be the result of running the classic script script.
     auto evaluation_status = script->run();
@@ -1206,8 +1427,9 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
     auto const& policy_container = active_document()->policy_container();
 
     // FIXME: 13. Let finalSandboxFlags be policyContainer's CSP list's CSP-derived sandboxing flags.
+    auto final_sandbox_flags = SandboxingFlagSet {};
 
-    // FIXME: 14. Let coop be targetNavigable's active document's cross-origin opener policy.
+    // 14. Let coop be targetNavigable's active document's cross-origin opener policy.
     auto const& coop = active_document()->cross_origin_opener_policy();
 
     // 15. Let coopEnforcementResult be a new cross-origin opener policy enforcement result with
@@ -1233,24 +1455,26 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
     //     policy container: policyContainer
     //     final sandboxing flag set: finalSandboxFlags
     //     cross-origin opener policy: coop
-    //     navigation timing type: "navigate"
+    // FIXME: navigation timing type: "navigate"
     //     about base URL: targetNavigable's active document's about base URL
     NavigationParams navigation_params {
         .id = navigation_id,
+        .navigable = this,
         .request = {},
         .response = response,
-        .origin = new_document_origin,
-        .policy_container = policy_container,
-        .cross_origin_opener_policy = coop,
+        .fetch_controller = nullptr,
+        .commit_early_hints = nullptr,
         .coop_enforcement_result = move(coop_enforcement_result),
         .reserved_environment = {},
-        .browsing_context = active_browsing_context(),
-        .navigable = this,
-        .fetch_controller = nullptr,
+        .origin = new_document_origin,
+        .policy_container = policy_container,
+        .final_sandboxing_flag_set = final_sandbox_flags,
+        .cross_origin_opener_policy = coop,
+        .about_base_url = active_document()->about_base_url(),
     };
 
     // 17. Return the result of loading an HTML document given navigationParams.
-    return load_document(navigation_params);
+    return load_document(move(navigation_params));
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-to-a-javascript:-url

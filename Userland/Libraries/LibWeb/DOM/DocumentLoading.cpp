@@ -263,7 +263,7 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
     auto& realm = document->realm();
 
     if (navigation_params->response->body()) {
-        auto process_body = [navigation_params, document](ByteBuffer bytes) {
+        auto process_body = [document](ByteBuffer bytes) {
             if (!parse_document(*document, bytes)) {
                 dbgln("FIXME: Load html page with an error if parsing failed.");
             }
@@ -307,32 +307,35 @@ JS::GCPtr<DOM::Document> create_document_for_inline_content(JS::GCPtr<HTML::Navi
 
     // 4. Let navigationParams be a new navigation params with
     //    id: navigationId
+    //    navigable: navigable
     //    request: null
     //    response: a new response
     //    origin: origin
+    //    fetch controller: null
+    //    commit early hints: null
+    //    COOP enforcement result: coopEnforcementResult
+    //    reserved environment: null
     //    policy container: a new policy container
     //    final sandboxing flag set: an empty set
     //    cross-origin opener policy: coop
-    //    COOP enforcement result: coopEnforcementResult
-    //    reserved environment: null
-    //    navigable: navigable
     //    FIXME: navigation timing type: navTimingType
-    //    FIXME: fetch controller: fetch controller
-    //    FIXME: commit early hints: null
+    //    about base URL: null
     auto response = Fetch::Infrastructure::Response::create(vm);
     response->url_list().append(AK::URL("about:error")); // AD-HOC: https://github.com/whatwg/html/issues/9122
     HTML::NavigationParams navigation_params {
         .id = navigation_id,
+        .navigable = navigable,
         .request = {},
         .response = *response,
+        .fetch_controller = nullptr,
+        .commit_early_hints = nullptr,
+        .coop_enforcement_result = move(coop_enforcement_result),
+        .reserved_environment = {},
         .origin = move(origin),
         .policy_container = HTML::PolicyContainer {},
         .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
         .cross_origin_opener_policy = move(coop),
-        .coop_enforcement_result = move(coop_enforcement_result),
-        .reserved_environment = {},
-        .browsing_context = navigable->active_browsing_context(),
-        .navigable = navigable,
+        .about_base_url = {},
     };
 
     // 5. Let document be the result of creating and initializing a Document object given "html", "text/html", and navigationParams.

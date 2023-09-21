@@ -23,6 +23,9 @@ public:
 
     void set_current_navigation_was_lazy_loaded(bool value) { m_current_navigation_was_lazy_loaded = value; }
 
+    Optional<HighResolutionTime::DOMHighResTimeStamp> const& pending_resource_start_time() const { return m_pending_resource_start_time; }
+    void set_pending_resource_start_time(Optional<HighResolutionTime::DOMHighResTimeStamp> time) { m_pending_resource_start_time = time; }
+
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
 private:
@@ -41,6 +44,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#current-navigation-was-lazy-loaded
     bool m_current_navigation_was_lazy_loaded { false };
+
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#iframe-pending-resource-timing-start-time
+    Optional<HighResolutionTime::DOMHighResTimeStamp> m_pending_resource_start_time = {};
 };
 
 void run_iframe_load_event_steps(HTML::HTMLIFrameElement&);
