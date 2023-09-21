@@ -81,12 +81,18 @@ void AppProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
         auto query_and_arguments = query.split_limit(' ', 2);
         auto app_name = query_and_arguments.is_empty() ? query : query_and_arguments[0];
         auto arguments = query_and_arguments.size() < 2 ? DeprecatedString::empty() : query_and_arguments[1];
-        auto match_result = fuzzy_match(app_name, app_file->name());
-        if (!match_result.matched)
-            continue;
+        auto score = 0;
+        if (app_name.equals_ignoring_ascii_case(app_file->name()))
+            score = NumericLimits<int>::max();
+        else {
+            auto match_result = fuzzy_match(app_name, app_file->name());
+            if (!match_result.matched)
+                continue;
 
+            score = match_result.score;
+        }
         auto icon = GUI::FileIconProvider::icon_for_executable(app_file->executable());
-        results.append(make_ref_counted<AppResult>(icon.bitmap_for_size(16), app_file->name(), String(), app_file, arguments, match_result.score));
+        results.append(make_ref_counted<AppResult>(icon.bitmap_for_size(16), app_file->name(), String(), app_file, arguments, score));
     };
 
     on_complete(move(results));
@@ -147,17 +153,24 @@ void FileProvider::query(DeprecatedString const& query, Function<void(Vector<Non
                 if (task.is_canceled())
                     return {};
 
-                auto match_result = fuzzy_match(query, path);
-                if (!match_result.matched)
-                    continue;
-                if (match_result.score < 0)
-                    continue;
+                auto score = 0;
+                if (query.equals_ignoring_ascii_case(path)) {
+                    score = NumericLimits<int>::max();
+                } else {
+                    auto match_result = fuzzy_match(query, path);
+                    if (!match_result.matched)
+                        continue;
+                    if (match_result.score < 0)
+                        continue;
 
-                if (sorted_results.size() < MAX_SEARCH_RESULTS || match_result.score > sorted_results.peek_min_key()) {
+                    score = match_result.score;
+                }
+
+                if (sorted_results.size() < MAX_SEARCH_RESULTS || score > sorted_results.peek_min_key()) {
                     if (sorted_results.size() == MAX_SEARCH_RESULTS)
                         sorted_results.pop_min();
 
-                    sorted_results.insert(match_result.score, path);
+                    sorted_results.insert(score, path);
                 }
             }
 
