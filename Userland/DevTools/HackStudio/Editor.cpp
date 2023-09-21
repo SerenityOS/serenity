@@ -350,7 +350,7 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
 void Editor::drag_enter_event(GUI::DragEvent& event)
 {
     auto const& mime_types = event.mime_types();
-    if (mime_types.contains_slow("text/uri-list"))
+    if (mime_types.contains_slow("text/uri-list"sv))
         event.accept();
 }
 
