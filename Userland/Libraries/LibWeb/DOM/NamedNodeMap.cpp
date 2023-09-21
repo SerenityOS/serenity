@@ -60,7 +60,7 @@ Vector<DeprecatedString> NamedNodeMap::supported_property_names() const
 
     // 2. If this NamedNodeMap object’s element is in the HTML namespace and its node document is an HTML document, then for each name in names:
     // FIXME: Handle the second condition, assume it is an HTML document for now.
-    if (associated_element().namespace_uri() == Namespace::HTML) {
+    if (associated_element().namespace_() == Namespace::HTML) {
         // 1. Let lowercaseName be name, in ASCII lowercase.
         // 2. If lowercaseName is not equal to name, remove name from names.
         names.remove_all_matching([](auto const& name) { return name != name.to_lowercase(); });
@@ -157,7 +157,7 @@ Attr const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_
 
     // 1. If element is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
-    bool compare_as_lowercase = associated_element().namespace_uri() == Namespace::HTML;
+    bool compare_as_lowercase = associated_element().namespace_() == Namespace::HTML;
 
     // 2. Return the first attribute in element’s attribute list whose qualified name is qualifiedName; otherwise null.
     for (auto const& attribute : m_attributes) {

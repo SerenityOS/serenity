@@ -526,7 +526,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
     auto inherited_ns = namespace_;
 
     // 10. Let ns be the value of node's namespaceURI attribute.
-    auto const& ns = element.namespace_uri();
+    auto const& ns = element.namespace_();
 
     // 11. If inherited ns is equal to ns, then:
     if (inherited_ns == ns) {

@@ -277,7 +277,7 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
 {
     // FIXME: Filter out non-default namespace using prefixes
     auto namespace_uri = rule.sheet->default_namespace();
-    if (namespace_uri.has_value() && namespace_uri.value() != element.namespace_uri()) {
+    if (namespace_uri.has_value() && namespace_uri.value() != element.namespace_()) {
         return false;
     }
     return true;
