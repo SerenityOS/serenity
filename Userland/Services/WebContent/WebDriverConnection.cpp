@@ -1345,7 +1345,7 @@ Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_cli
 
             // 3. If element’s container has the multiple attribute, toggle the element’s selectedness state
             //    by setting it to the opposite value of its current selectedness.
-            if (parent_node.has_value() && parent_node->has_attribute("multiple")) {
+            if (parent_node.has_value() && parent_node->has_attribute(Web::HTML::AttributeNames::multiple)) {
                 option_element.set_selected(!option_element.selected());
             }
             //    Otherwise, set the element’s selectedness state to true.

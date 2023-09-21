@@ -131,7 +131,7 @@ void Element::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
-DeprecatedString Element::get_attribute(DeprecatedFlyString const& name) const
+DeprecatedString Element::get_attribute(StringView name) const
 {
     // 1. Let attr be the result of getting an attribute given qualifiedName and this.
     auto const* attribute = m_attributes->get_attribute(name);
@@ -145,7 +145,7 @@ DeprecatedString Element::get_attribute(DeprecatedFlyString const& name) const
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-value
-DeprecatedString Element::get_attribute_value(DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_) const
+DeprecatedString Element::get_attribute_value(StringView local_name, DeprecatedFlyString const& namespace_) const
 {
     // 1. Let attr be the result of getting an attribute given namespace, localName, and element.
     auto const* attribute = m_attributes->get_attribute_ns(namespace_, local_name);

@@ -96,8 +96,9 @@ public:
     bool has_attribute_ns(DeprecatedFlyString namespace_, DeprecatedFlyString const& name) const;
     bool has_attributes() const;
 
-    DeprecatedString deprecated_attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
-    Optional<String> attribute(DeprecatedFlyString const& name) const
+    // FIXME: This should be taking a 'FlyString const&'
+    DeprecatedString deprecated_attribute(StringView name) const { return get_attribute(name); }
+    Optional<String> attribute(StringView name) const
     {
         auto ret = deprecated_attribute(name);
         if (ret.is_null())
@@ -106,8 +107,8 @@ public:
     }
 
     // FIXME: This should be taking a 'FlyString const&' / 'Optional<FlyString> const&'
-    DeprecatedString get_attribute(DeprecatedFlyString const& name) const;
-    DeprecatedString get_attribute_value(DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_ = {}) const;
+    DeprecatedString get_attribute(StringView name) const;
+    DeprecatedString get_attribute_value(StringView local_name, DeprecatedFlyString const& namespace_ = {}) const;
 
     WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
     WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, Optional<String> const& value);
@@ -264,55 +265,55 @@ public:
     }
 
     // https://www.w3.org/TR/wai-aria-1.2/#accessibilityroleandproperties-correspondence
-    ARIA_IMPL(role, "role");
-    ARIA_IMPL(aria_active_descendant, "aria-activedescendant");
-    ARIA_IMPL(aria_atomic, "aria-atomic");
-    ARIA_IMPL(aria_auto_complete, "aria-autocomplete");
-    ARIA_IMPL(aria_busy, "aria-busy");
-    ARIA_IMPL(aria_checked, "aria-checked");
-    ARIA_IMPL(aria_col_count, "aria-colcount");
-    ARIA_IMPL(aria_col_index, "aria-colindex");
-    ARIA_IMPL(aria_col_span, "aria-colspan");
-    ARIA_IMPL(aria_controls, "aria-controls");
-    ARIA_IMPL(aria_current, "aria-current");
-    ARIA_IMPL(aria_described_by, "aria-describedby");
-    ARIA_IMPL(aria_details, "aria-details");
-    ARIA_IMPL(aria_drop_effect, "aria-dropeffect");
-    ARIA_IMPL(aria_error_message, "aria-errormessage");
-    ARIA_IMPL(aria_disabled, "aria-disabled");
-    ARIA_IMPL(aria_expanded, "aria-expanded");
-    ARIA_IMPL(aria_flow_to, "aria-flowto");
-    ARIA_IMPL(aria_grabbed, "aria-grabbed");
-    ARIA_IMPL(aria_has_popup, "aria-haspopup");
-    ARIA_IMPL(aria_hidden, "aria-hidden");
-    ARIA_IMPL(aria_invalid, "aria-invalid");
-    ARIA_IMPL(aria_key_shortcuts, "aria-keyshortcuts");
-    ARIA_IMPL(aria_label, "aria-label");
-    ARIA_IMPL(aria_labelled_by, "aria-labelledby");
-    ARIA_IMPL(aria_level, "aria-level");
-    ARIA_IMPL(aria_live, "aria-live");
-    ARIA_IMPL(aria_modal, "aria-modal");
-    ARIA_IMPL(aria_multi_line, "aria-multiline");
-    ARIA_IMPL(aria_multi_selectable, "aria-multiselectable");
-    ARIA_IMPL(aria_orientation, "aria-orientation");
-    ARIA_IMPL(aria_owns, "aria-owns");
-    ARIA_IMPL(aria_placeholder, "aria-placeholder");
-    ARIA_IMPL(aria_pos_in_set, "aria-posinset");
-    ARIA_IMPL(aria_pressed, "aria-pressed");
-    ARIA_IMPL(aria_read_only, "aria-readonly");
-    ARIA_IMPL(aria_relevant, "aria-relevant");
-    ARIA_IMPL(aria_required, "aria-required");
-    ARIA_IMPL(aria_role_description, "aria-roledescription");
-    ARIA_IMPL(aria_row_count, "aria-rowcount");
-    ARIA_IMPL(aria_row_index, "aria-rowindex");
-    ARIA_IMPL(aria_row_span, "aria-rowspan");
-    ARIA_IMPL(aria_selected, "aria-selected");
-    ARIA_IMPL(aria_set_size, "aria-setsize");
-    ARIA_IMPL(aria_sort, "aria-sort");
-    ARIA_IMPL(aria_value_max, "aria-valuemax");
-    ARIA_IMPL(aria_value_min, "aria-valuemin");
-    ARIA_IMPL(aria_value_now, "aria-valuenow");
-    ARIA_IMPL(aria_value_text, "aria-valuetext");
+    ARIA_IMPL(role, "role"sv);
+    ARIA_IMPL(aria_active_descendant, "aria-activedescendant"sv);
+    ARIA_IMPL(aria_atomic, "aria-atomic"sv);
+    ARIA_IMPL(aria_auto_complete, "aria-autocomplete"sv);
+    ARIA_IMPL(aria_busy, "aria-busy"sv);
+    ARIA_IMPL(aria_checked, "aria-checked"sv);
+    ARIA_IMPL(aria_col_count, "aria-colcount"sv);
+    ARIA_IMPL(aria_col_index, "aria-colindex"sv);
+    ARIA_IMPL(aria_col_span, "aria-colspan"sv);
+    ARIA_IMPL(aria_controls, "aria-controls"sv);
+    ARIA_IMPL(aria_current, "aria-current"sv);
+    ARIA_IMPL(aria_described_by, "aria-describedby"sv);
+    ARIA_IMPL(aria_details, "aria-details"sv);
+    ARIA_IMPL(aria_drop_effect, "aria-dropeffect"sv);
+    ARIA_IMPL(aria_error_message, "aria-errormessage"sv);
+    ARIA_IMPL(aria_disabled, "aria-disabled"sv);
+    ARIA_IMPL(aria_expanded, "aria-expanded"sv);
+    ARIA_IMPL(aria_flow_to, "aria-flowto"sv);
+    ARIA_IMPL(aria_grabbed, "aria-grabbed"sv);
+    ARIA_IMPL(aria_has_popup, "aria-haspopup"sv);
+    ARIA_IMPL(aria_hidden, "aria-hidden"sv);
+    ARIA_IMPL(aria_invalid, "aria-invalid"sv);
+    ARIA_IMPL(aria_key_shortcuts, "aria-keyshortcuts"sv);
+    ARIA_IMPL(aria_label, "aria-label"sv);
+    ARIA_IMPL(aria_labelled_by, "aria-labelledby"sv);
+    ARIA_IMPL(aria_level, "aria-level"sv);
+    ARIA_IMPL(aria_live, "aria-live"sv);
+    ARIA_IMPL(aria_modal, "aria-modal"sv);
+    ARIA_IMPL(aria_multi_line, "aria-multiline"sv);
+    ARIA_IMPL(aria_multi_selectable, "aria-multiselectable"sv);
+    ARIA_IMPL(aria_orientation, "aria-orientation"sv);
+    ARIA_IMPL(aria_owns, "aria-owns"sv);
+    ARIA_IMPL(aria_placeholder, "aria-placeholder"sv);
+    ARIA_IMPL(aria_pos_in_set, "aria-posinset"sv);
+    ARIA_IMPL(aria_pressed, "aria-pressed"sv);
+    ARIA_IMPL(aria_read_only, "aria-readonly"sv);
+    ARIA_IMPL(aria_relevant, "aria-relevant"sv);
+    ARIA_IMPL(aria_required, "aria-required"sv);
+    ARIA_IMPL(aria_role_description, "aria-roledescription"sv);
+    ARIA_IMPL(aria_row_count, "aria-rowcount"sv);
+    ARIA_IMPL(aria_row_index, "aria-rowindex"sv);
+    ARIA_IMPL(aria_row_span, "aria-rowspan"sv);
+    ARIA_IMPL(aria_selected, "aria-selected"sv);
+    ARIA_IMPL(aria_set_size, "aria-setsize"sv);
+    ARIA_IMPL(aria_sort, "aria-sort"sv);
+    ARIA_IMPL(aria_value_max, "aria-valuemax"sv);
+    ARIA_IMPL(aria_value_min, "aria-valuemin"sv);
+    ARIA_IMPL(aria_value_now, "aria-valuenow"sv);
+    ARIA_IMPL(aria_value_text, "aria-valuetext"sv);
 
 #undef ARIA_IMPL
 

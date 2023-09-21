@@ -1088,7 +1088,7 @@ Optional<ARIA::Role> HTMLInputElement::default_role() const
     if (type_state() == TypeAttributeState::Checkbox)
         return ARIA::Role::checkbox;
     // https://www.w3.org/TR/html-aria/#el-input-email
-    if (type_state() == TypeAttributeState::Email && deprecated_attribute("list").is_null())
+    if (type_state() == TypeAttributeState::Email && !has_attribute(AttributeNames::list))
         return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-image
     if (type_state() == TypeAttributeState::ImageButton)
@@ -1111,10 +1111,10 @@ Optional<ARIA::Role> HTMLInputElement::default_role() const
             || type_state() == TypeAttributeState::Telephone
             || type_state() == TypeAttributeState::URL
             || type_state() == TypeAttributeState::Email)
-        && !deprecated_attribute("list").is_null())
+        && has_attribute(AttributeNames::list))
         return ARIA::Role::combobox;
     // https://www.w3.org/TR/html-aria/#el-input-search
-    if (type_state() == TypeAttributeState::Search && deprecated_attribute("list").is_null())
+    if (type_state() == TypeAttributeState::Search && !has_attribute(AttributeNames::list))
         return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-submit
     if (type_state() == TypeAttributeState::SubmitButton)
@@ -1123,10 +1123,10 @@ Optional<ARIA::Role> HTMLInputElement::default_role() const
     if (type_state() == TypeAttributeState::Telephone)
         return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-text
-    if (type_state() == TypeAttributeState::Text && deprecated_attribute("list").is_null())
+    if (type_state() == TypeAttributeState::Text && !has_attribute(AttributeNames::list))
         return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-url
-    if (type_state() == TypeAttributeState::URL && deprecated_attribute("list").is_null())
+    if (type_state() == TypeAttributeState::URL && !has_attribute(AttributeNames::list))
         return ARIA::Role::textbox;
 
     // https://www.w3.org/TR/html-aria/#el-input-color
