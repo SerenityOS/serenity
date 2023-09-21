@@ -167,7 +167,7 @@ Optional<ARIA::Role> HTMLSelectElement::default_role() const
     if (has_attribute(AttributeNames::multiple))
         return ARIA::Role::listbox;
     if (has_attribute(AttributeNames::size)) {
-        auto size_attribute = deprecated_attribute("size").to_int();
+        auto size_attribute = deprecated_attribute(AttributeNames::size).to_int();
         if (size_attribute.has_value() && size_attribute.value() > 1)
             return ARIA::Role::listbox;
     }

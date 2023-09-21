@@ -25,7 +25,7 @@ public:
     virtual DeprecatedString aria_level() const override
     {
         // TODO: aria-level = the number in the element's tag name
-        return get_attribute("aria-level");
+        return get_attribute("aria-level"sv);
     }
 
 private:
