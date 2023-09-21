@@ -150,3 +150,17 @@ RANDOMIZED_TEST_CASE(weighted_boolean_fair_false)
     ASSUME(b == false);
     EXPECT(b == false);
 }
+
+RANDOMIZED_TEST_CASE(boolean_true)
+{
+    GEN(b, Gen::boolean());
+    ASSUME(b == true);
+    EXPECT(b == true);
+}
+
+RANDOMIZED_TEST_CASE(boolean_false)
+{
+    GEN(b, Gen::boolean());
+    ASSUME(b == false);
+    EXPECT(b == false);
+}

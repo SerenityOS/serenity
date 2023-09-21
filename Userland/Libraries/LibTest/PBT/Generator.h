@@ -151,6 +151,10 @@ static inline bool weighted_boolean(float probability) {
     // BOILERPLATE - END
 }
 
+static inline bool boolean() {
+    return weighted_boolean(0.5);
+}
+
 /* A vector generator of a random length between the given limits.
 
    The minimum value is the smaller of the two size_t arguments.
