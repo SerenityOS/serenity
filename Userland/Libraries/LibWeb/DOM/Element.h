@@ -114,7 +114,9 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
 
-    void remove_attribute(DeprecatedFlyString const& name);
+    // FIXME: This should take a 'FlyString cosnt&'
+    void remove_attribute(StringView name);
+
     WebIDL::ExceptionOr<bool> toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const;
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
