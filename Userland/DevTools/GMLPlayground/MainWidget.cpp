@@ -317,7 +317,7 @@ GUI::Window::CloseRequestDecision MainWidget::request_close()
 void MainWidget::drag_enter_event(GUI::DragEvent& event)
 {
     auto const& mime_types = event.mime_types();
-    if (mime_types.contains_slow("text/uri-list"))
+    if (mime_types.contains_slow("text/uri-list"sv))
         event.accept();
 }
 

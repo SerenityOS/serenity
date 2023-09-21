@@ -789,7 +789,7 @@ ErrorOr<String> FileSystemModel::column_name(int column) const
 
 bool FileSystemModel::accepts_drag(ModelIndex const& index, Vector<DeprecatedString> const& mime_types) const
 {
-    if (!mime_types.contains_slow("text/uri-list"))
+    if (!mime_types.contains_slow("text/uri-list"sv))
         return false;
 
     if (!index.is_valid())
