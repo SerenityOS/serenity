@@ -62,6 +62,8 @@ public:
 
     virtual ~NavigateEvent() override;
 
+    JS::NonnullGCPtr<DOM::AbortController> abort_controller() const { return *m_abort_controller; }
+
 private:
     NavigateEvent(JS::Realm&, FlyString const& event_name, NavigateEventInit const& event_init);
 

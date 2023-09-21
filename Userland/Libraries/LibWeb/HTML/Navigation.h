@@ -106,8 +106,12 @@ public:
     // Abstract Operations
     bool has_entries_and_events_disabled() const;
     i64 get_the_navigation_api_entry_index(SessionHistoryEntry const&) const;
+    void abort_the_ongoing_navigation(Optional<JS::NonnullGCPtr<WebIDL::DOMException>> error = {});
 
     virtual ~Navigation() override;
+
+    // Internal Getters
+    JS::GCPtr<NavigateEvent> ongoing_navigate_event() const { return m_ongoing_navigate_event; }
 
 private:
     explicit Navigation(JS::Realm&);

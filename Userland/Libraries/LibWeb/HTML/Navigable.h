@@ -171,6 +171,8 @@ private:
 
     void scroll_offset_did_change();
 
+    void inform_the_navigation_api_about_aborting_navigation();
+
     // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-id
     String m_id;
 
