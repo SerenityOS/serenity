@@ -29,9 +29,4 @@
     return YES;
 }
 
-- (IBAction)openDocument:(id)sender
-{
-    NSLog(@"open");
-}
-
 @end
