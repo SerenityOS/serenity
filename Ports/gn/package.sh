@@ -1,6 +1,5 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gn'
-workdir='gn'
 version='2023.07.12'
 useconfigure='true'
 files=(
