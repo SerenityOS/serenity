@@ -188,7 +188,7 @@ public:
     CSS::CSSStyleDeclaration* style_for_bindings();
 
     WebIDL::ExceptionOr<DeprecatedString> inner_html() const;
-    WebIDL::ExceptionOr<void> set_inner_html(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_inner_html(StringView);
 
     WebIDL::ExceptionOr<void> insert_adjacent_html(DeprecatedString position, DeprecatedString text);
 

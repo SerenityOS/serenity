@@ -715,7 +715,7 @@ WebIDL::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) 
     return nullptr;
 }
 
-WebIDL::ExceptionOr<void> Element::set_inner_html(DeprecatedString const& markup)
+WebIDL::ExceptionOr<void> Element::set_inner_html(StringView markup)
 {
     TRY(DOMParsing::inner_html_setter(*this, markup));
     return {};
