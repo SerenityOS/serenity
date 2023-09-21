@@ -184,13 +184,25 @@ ShrinkResult shrink_minimize(MinimizeChoice c, RandomRun const& run, FN const& t
 }
 
 template<typename FN>
+ShrinkResult shrink_swap_chunk(SwapChunkWithNeighbour c, RandomRun const& run, FN const& test_function)
+{
+    RandomRun run_swapped = run;
+    // The safety of these swaps was guaranteed by has_a_chance() earlier
+    for (size_t i = c.chunk.index; i < c.chunk.index + c.chunk.size; ++i) {
+        AK::swap(run_swapped[i], run_swapped[i + c.chunk.size]);
+    }
+    return keep_if_better(run_swapped, run, test_function);
+}
+
+template<typename FN>
 ShrinkResult shrink_with_cmd(ShrinkCmd cmd, RandomRun const& run, FN const& test_function)
 {
     return cmd.visit(
         [&](ZeroChunk c) { return shrink_zero(c, run, test_function); },
         [&](SortChunk c) { return shrink_sort(c, run, test_function); },
         [&](DeleteChunkAndMaybeDecPrevious c) { return shrink_delete(c, run, test_function); },
-        [&](MinimizeChoice c) { return shrink_minimize(c, run, test_function); });
+        [&](MinimizeChoice c) { return shrink_minimize(c, run, test_function); },
+        [&](SwapChunkWithNeighbour c) { return shrink_swap_chunk(c, run, test_function); });
 }
 
 template<typename FN>

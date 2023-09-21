@@ -25,10 +25,25 @@ struct DeleteChunkAndMaybeDecPrevious {
 struct MinimizeChoice {
     size_t index;
 };
+struct SwapChunkWithNeighbour {
+    Chunk chunk;
+
+    Chunk const neighbour() {
+        return Chunk{chunk.size, chunk.index + chunk.size};
+    }
+};
+
+using CmdVariant = Variant<
+    ZeroChunk,
+    SortChunk,
+    DeleteChunkAndMaybeDecPrevious,
+    MinimizeChoice,
+    SwapChunkWithNeighbour
+>;
 
 class ShrinkCmd {
 public:
-    explicit ShrinkCmd(Variant<ZeroChunk, SortChunk, DeleteChunkAndMaybeDecPrevious, MinimizeChoice> const& cmd)
+    explicit ShrinkCmd(CmdVariant const& cmd)
         : m_cmd(cmd)
     {
     }
@@ -43,6 +58,7 @@ public:
         all.extend(deletion_cmds(run_size));
         all.extend(zero_cmds(run_size));
         all.extend(sort_cmds(run_size));
+        all.extend(swap_chunk_cmds(run_size));
         all.extend(minimize_cmds(run_size));
         return all;
     }
@@ -53,7 +69,8 @@ public:
             [&](ZeroChunk c) { return run.has_a_chance(c.chunk); },
             [&](SortChunk c) { return run.has_a_chance(c.chunk); },
             [&](DeleteChunkAndMaybeDecPrevious c) { return run.has_a_chance(c.chunk); },
-            [&](MinimizeChoice c) { return run.size() > c.index; });
+            [&](MinimizeChoice c) { return run.size() > c.index; },
+            [&](SwapChunkWithNeighbour c) { return run.has_a_chance(c.neighbour());  });
     }
 
     ErrorOr<String> to_string()
@@ -62,21 +79,23 @@ public:
             [](ZeroChunk c) { return String::formatted("ZeroChunk({})", c.chunk); },
             [](SortChunk c) { return String::formatted("SortChunk({})", c.chunk); },
             [](DeleteChunkAndMaybeDecPrevious c) { return String::formatted("DeleteChunkAndMaybeDecPrevious({})", c.chunk); },
-            [](MinimizeChoice c) { return String::formatted("MinimizeChoice(i={})", c.index); });
+            [](MinimizeChoice c) { return String::formatted("MinimizeChoice(i={})", c.index); },
+            [](SwapChunkWithNeighbour c) { return String::formatted("SwapChunkWithNeighbour({})", c.chunk); });
     }
 
-    template<typename C1, typename C2, typename C3, typename C4>
-    auto visit(C1 on_zero, C2 on_sort, C3 on_delete, C4 on_minimize)
+    template<typename C1, typename C2, typename C3, typename C4, typename C5>
+    auto visit(C1 on_zero, C2 on_sort, C3 on_delete, C4 on_minimize, C5 on_swap_chunk)
     {
         return m_cmd.visit(
             [&](ZeroChunk c) { return on_zero(c); },
             [&](SortChunk c) { return on_sort(c); },
             [&](DeleteChunkAndMaybeDecPrevious c) { return on_delete(c); },
-            [&](MinimizeChoice c) { return on_minimize(c); });
+            [&](MinimizeChoice c) { return on_minimize(c); },
+            [&](SwapChunkWithNeighbour c) { return on_swap_chunk(c); });
     }
 
 private:
-    Variant<ZeroChunk, SortChunk, DeleteChunkAndMaybeDecPrevious, MinimizeChoice> m_cmd;
+    CmdVariant m_cmd;
 
     /* Will generate ShrinkCmds for all chunks of sizes 1,2,3,4,8 in bounds of the
      * given RandomRun size.
@@ -169,6 +188,15 @@ private:
             run_size,
             allow_chunks_size1,
             [](Chunk c) { return ShrinkCmd(ZeroChunk { c }); });
+    }
+
+    static Vector<ShrinkCmd> swap_chunk_cmds(size_t run_size)
+    {
+        bool allow_chunks_size1 = false; // already happens in "redistribute choice"
+        return chunk_cmds(
+            run_size, // TODO this is not optimal as the later chunks will hit OOB. For now, it will work though.
+            allow_chunks_size1,
+            [](Chunk c) { return ShrinkCmd(SwapChunkWithNeighbour { c }); });
     }
 };
 
