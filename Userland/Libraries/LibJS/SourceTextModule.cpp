@@ -701,7 +701,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         else {
             auto executable = maybe_executable.release_value();
 
-            auto value_and_frame = vm.bytecode_interpreter().run_and_return_frame(realm(), *executable, nullptr);
+            auto value_and_frame = vm.bytecode_interpreter().run_and_return_frame(*executable, nullptr);
             if (value_and_frame.value.is_error()) {
                 result = value_and_frame.value.release_error();
             } else {

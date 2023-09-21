@@ -105,7 +105,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
                 executable->dump();
 
             // a. Set result to the result of evaluating script.
-            auto result_or_error = run_and_return_frame(script_record.realm(), *executable, nullptr);
+            auto result_or_error = run_and_return_frame(*executable, nullptr);
             if (result_or_error.value.is_error())
                 result = result_or_error.value.release_error();
             else
@@ -165,7 +165,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm&, Executable& executable, BasicBlock const* entry_point, CallFrame* in_frame)
+Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executable, BasicBlock const* entry_point, CallFrame* in_frame)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 

@@ -626,7 +626,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
                     argument_value = execution_context_arguments[i];
                 } else if (parameter.default_value) {
-                    auto value_and_frame = vm.bytecode_interpreter().run_and_return_frame(realm, *m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
+                    auto value_and_frame = vm.bytecode_interpreter().run_and_return_frame(*m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
                     if (value_and_frame.value.is_error())
                         return value_and_frame.value.release_error();
                     // Resulting value is in the accumulator.
@@ -998,7 +998,7 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
     auto& running_context = vm.running_execution_context();
 
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
-    auto execution_steps = NativeFunction::create(realm, "", [&realm, &async_body, &promise_capability, &async_context](auto& vm) -> ThrowCompletionOr<Value> {
+    auto execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability, &async_context](auto& vm) -> ThrowCompletionOr<Value> {
         Completion result;
 
         // a. If asyncBody is a Parse Node, then
@@ -1009,12 +1009,10 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
             if (maybe_executable.is_error())
                 result = maybe_executable.release_error();
             else
-                result = vm.bytecode_interpreter().run_and_return_frame(realm, *maybe_executable.value(), nullptr).value;
+                result = vm.bytecode_interpreter().run_and_return_frame(*maybe_executable.value(), nullptr).value;
         }
         // b. Else,
         else {
-            (void)realm;
-
             // i. Assert: asyncBody is an Abstract Closure with no parameters.
             static_assert(IsCallableWithArguments<T, Completion>);
 
@@ -1126,7 +1124,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         }
     }
 
-    auto result_and_frame = vm.bytecode_interpreter().run_and_return_frame(realm, *m_bytecode_executable, nullptr);
+    auto result_and_frame = vm.bytecode_interpreter().run_and_return_frame(*m_bytecode_executable, nullptr);
 
     VERIFY(result_and_frame.frame != nullptr);
     if (result_and_frame.value.is_error())
