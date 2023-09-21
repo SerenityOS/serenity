@@ -748,10 +748,10 @@ bool Element::is_document_element() const
     return document().document_element() == this;
 }
 
-JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedFlyString const& class_names)
+JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(StringView class_names)
 {
     Vector<FlyString> list_of_class_names;
-    for (auto& name : class_names.view().split_view_if(Infra::is_ascii_whitespace)) {
+    for (auto& name : class_names.split_view_if(Infra::is_ascii_whitespace)) {
         list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
     }
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
