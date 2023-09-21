@@ -25,6 +25,8 @@ public:
     }
 
     constexpr SourceLocation() = default;
+    constexpr SourceLocation(SourceLocation const&) = default;
+    SourceLocation& operator=(SourceLocation& other) = default;
 
 private:
     constexpr SourceLocation(char const* const file, u32 line, char const* const function)
@@ -34,9 +36,9 @@ private:
     {
     }
 
-    char const* const m_function { nullptr };
-    char const* const m_file { nullptr };
-    const u32 m_line { 0 };
+    char const* m_function { nullptr };
+    char const* m_file { nullptr };
+    u32 m_line { 0 };
 };
 
 }
