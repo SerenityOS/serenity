@@ -317,5 +317,13 @@
     "url": "https://discord.com/channels/830522505605283862/830525235803586570/1135586864959598722",
     "utc_time": 1690815406,
     "context": "Let's just say it has grown out of control a tiny bit"
+  },
+  {
+    "quote": "ISO C++ is a conspiracy by big diagnostic to sell you more compiler diagnostics",
+    "author": "CxByte",
+    "url": "https://discord.com/channels/830522505605283862/860165510263996427/1154472970903887892",
+    "utc_time": 1695318205,
+    "context": "me: I'll just make NavigationParams match the spec\nevery call site that was constructing one with C++ designated initializers: error: ISO C++ requires field designators to be specified in declaration order; field 'reserved_environment' will be initialized after field 'navigable' [-Werror,-Wreorder-init-list]"
+    
   }
 ]
