@@ -50,6 +50,8 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute(Attr& attribute);
     void replace_attribute(Attr& old_attribute, Attr& new_attribute, size_t old_attribute_index);
     void append_attribute(Attr& attribute);
+
+    // FIXME: This should take a 'FlyString cosnt&'
     Attr const* remove_attribute(StringView qualified_name);
     Attr const* remove_attribute_ns(StringView namespace_, StringView local_name);
 

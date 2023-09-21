@@ -295,7 +295,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> Element::set_attribute_node_ns(Attr& attr)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
-void Element::remove_attribute(DeprecatedFlyString const& name)
+void Element::remove_attribute(StringView name)
 {
     // The removeAttribute(qualifiedName) method steps are to remove an attribute given qualifiedName and this, and then return undefined.
     m_attributes->remove_attribute(name);
