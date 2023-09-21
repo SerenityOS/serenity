@@ -376,7 +376,7 @@ fetch_git() {
 
     directory="$(basename "${repository}")"
     backing_copy="${PORT_META_DIR}/${directory}"
-    working_copy="${PORT_BUILD_DIR}/${directory}"
+    working_copy="${PORT_BUILD_DIR}/${workdir}"
 
     run_nocd git init --bare "${backing_copy}"
     run_nocd git -C "${backing_copy}" config core.autocrlf false
