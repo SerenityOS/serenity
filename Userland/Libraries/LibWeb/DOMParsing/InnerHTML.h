@@ -16,6 +16,6 @@ namespace Web::DOMParsing {
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
 WebIDL::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, StringView value);
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(DeprecatedString const& markup, DOM::Element& context_element);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(StringView markup, DOM::Element& context_element);
 
 }

@@ -14,7 +14,7 @@
 namespace Web::DOMParsing {
 
 // https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
-WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(DeprecatedString const& markup, DOM::Element& context_element)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(StringView markup, DOM::Element& context_element)
 {
     // FIXME: Handle XML documents.
 
