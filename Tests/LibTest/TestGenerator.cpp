@@ -10,19 +10,19 @@
 
 RANDOMIZED_TEST_CASE(unsigned_int_max_bounds)
 {
-    u32 n = Gen::unsigned_int(10);
+    GEN(n, Gen::unsigned_int(10));
     EXPECT(/* n >= 0 && */ n <= 10); // It's an unsigned int, of course it's >= 0
 }
 
 RANDOMIZED_TEST_CASE(unsigned_int_min_max_bounds)
 {
-    u32 n = Gen::unsigned_int(3, 6);
+    GEN(n, Gen::unsigned_int(3, 6));
     EXPECT(n >= 3 && n <= 6);
 }
 
 RANDOMIZED_TEST_CASE(assume)
 {
-    u32 n = Gen::unsigned_int(10);
+    GEN(n, Gen::unsigned_int(10));
     ASSUME(n % 2 == 0); // This will try to generate until it finds an even number
     EXPECT(n % 2 == 0); // This will then succeed
     // (It can give up if the value passing the predicate is extremely unlikely.)
@@ -31,7 +31,7 @@ RANDOMIZED_TEST_CASE(assume)
 /* TODO can we test that a test fails, perhaps asserting on the stderr message? 
 RANDOMIZED_TEST_CASE(degenerate_assume)
 {
-    u32 n = Gen::unsigned_int(10);
+    GEN(n, Gen::unsigned_int(10));
     ASSUME(n > 10); // This will never succeed
     EXPECT(n > 10);
 }
@@ -39,15 +39,15 @@ RANDOMIZED_TEST_CASE(degenerate_assume)
 
 RANDOMIZED_TEST_CASE(map_like)
 {
-    u32 n1 = Gen::unsigned_int(10);
-    u32 n2 = n1 * 2;
+    GEN(n1, Gen::unsigned_int(10));
+    GEN(n2, n1 * 2);
     EXPECT(n2 % 2 == 0);
 }
 
 RANDOMIZED_TEST_CASE(bind_like)
 {
-    u32 n1 = Gen::unsigned_int(1, 9);
-    u32 n2 = Gen::unsigned_int(n1 * 10, n1 * 100);
+    GEN(n1, Gen::unsigned_int(1, 9));
+    GEN(n2, Gen::unsigned_int(n1 * 10, n1 * 100));
     EXPECT(n2 >= 10 && n2 <= 900);
 }
 
@@ -78,7 +78,7 @@ Vector<InvokeResult<FN>> vector_suboptimal(FN item_gen)
 RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
 {
     u32 max_item = 5;
-    Vector<u32> vec = vector_suboptimal([&]() { return Gen::unsigned_int(max_item); });
+    GEN(vec, vector_suboptimal([&]() { return Gen::unsigned_int(max_item); }));
     u32 sum = 0;
     for (u32 n : vec) {
         sum += n;
@@ -86,34 +86,33 @@ RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
     // TODO make this test shrink more consistently
     // Can be gleaned with a variant on:
     // while true; do ./Build/lagom/bin/TestGenerator; done
-    //warnln("vec {}, sum {}", vec, sum);
-    EXPECT(sum <= max_item * vec.size());
+    EXPECT(sum <= 10);
 }
 
 RANDOMIZED_TEST_CASE(vector)
 {
     u32 max_item = 5;
-    Vector<u32> vec = Gen::vector([&]() { return Gen::unsigned_int(max_item); });
+    GEN(vec, Gen::vector([&]() { return Gen::unsigned_int(max_item); }));
     EXPECT(vec.size() <= 32);
 }
 
 RANDOMIZED_TEST_CASE(vector_max)
 {
     u32 max_item = 5;
-    Vector<u32> vec = Gen::vector(3,[&]() { return Gen::unsigned_int(max_item); });
+    GEN(vec, Gen::vector(3,[&]() { return Gen::unsigned_int(max_item); }));
     EXPECT(vec.size() <= 3);
 }
 
 RANDOMIZED_TEST_CASE(vector_min_max)
 {
     u32 max_item = 5;
-    Vector<u32> vec = Gen::vector(1,4,[&]() { return Gen::unsigned_int(max_item); });
+    GEN(vec, Gen::vector(1,4,[&]() { return Gen::unsigned_int(max_item); }));
     EXPECT(vec.size() >= 1 && vec.size() <= 4);
 }
 
 RANDOMIZED_TEST_CASE(vector_of_length)
 {
     u32 max_item = 5;
-    Vector<u32> vec = Gen::vector_of_length(3,[&]() { return Gen::unsigned_int(max_item); });
+    GEN(vec, Gen::vector_of_length(3,[&]() { return Gen::unsigned_int(max_item); }));
     EXPECT(vec.size() == 3);
 }

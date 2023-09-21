@@ -86,7 +86,6 @@ public:
                             RandomRun first_failure = rand_source().run();
                             RandomRun best_failure = shrink(first_failure, test_fn);
                             // Run one last time with reporting on, so that the user can see the minimal failure
-                            // TODO show the values generated during this failure
                             enable_reporting();
                             run_with_rand_source(RandSource::recorded(best_failure), test_fn);
                             return;
@@ -185,3 +184,9 @@ void set_suite_setup_function(Function<void()> setup);
     };                                                                                           \
     static struct __RANDOMIZED_TEST_TYPE(x) __RANDOMIZED_TEST_TYPE(x);                           \
     static void __RANDOMIZED_TEST_FUNC(x)()
+
+#define GEN(identifier,value) \
+    auto (identifier) = (value); \
+    if (::Test::can_report()) \
+        ::AK::warnln("{} = {}", #identifier, (identifier))
+
