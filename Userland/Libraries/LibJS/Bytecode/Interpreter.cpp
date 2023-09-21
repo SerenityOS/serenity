@@ -165,7 +165,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable& executable, BasicBlock const* entry_point, CallFrame* in_frame)
+Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm&, Executable& executable, BasicBlock const* entry_point, CallFrame* in_frame)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
@@ -174,20 +174,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     TemporaryChange restore_saved_exception { m_saved_exception, {} };
 
     VERIFY(!vm().execution_context_stack().is_empty());
-    bool pushed_execution_context = false;
-    ExecutionContext execution_context(vm().heap());
-    if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
-        // The "normal" interpreter pushes an execution context without environment so in that case we also want to push one.
-        execution_context.this_value = &realm.global_object();
-        static DeprecatedFlyString global_execution_context_name = "(*BC* global execution context)";
-        execution_context.function_name = global_execution_context_name;
-        execution_context.lexical_environment = &realm.global_environment();
-        execution_context.variable_environment = &realm.global_environment();
-        execution_context.realm = realm;
-        execution_context.is_strict_mode = executable.is_strict_mode;
-        vm().push_execution_context(execution_context);
-        pushed_execution_context = true;
-    }
 
     TemporaryChange restore_current_block { m_current_block, entry_point ?: executable.basic_blocks.first() };
 
@@ -313,11 +299,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.
     vm().run_queued_promise_jobs();
-
-    if (pushed_execution_context) {
-        VERIFY(&vm().running_execution_context() == &execution_context);
-        vm().pop_execution_context();
-    }
 
     vm().finish_execution_generation();
 
