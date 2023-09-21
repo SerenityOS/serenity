@@ -112,3 +112,41 @@ RANDOMIZED_TEST_CASE(vector_of_length)
     GEN(vec, Gen::vector_of_length(3,[&]() { return Gen::unsigned_int(max_item); }));
     EXPECT(vec.size() == 3);
 }
+
+RANDOMIZED_TEST_CASE(weighted_boolean_below0)
+{
+    GEN(b, Gen::weighted_boolean(-0.5));
+    EXPECT(b == false);
+}
+
+RANDOMIZED_TEST_CASE(weighted_boolean_0)
+{
+    GEN(b, Gen::weighted_boolean(0));
+    EXPECT(b == false);
+}
+
+RANDOMIZED_TEST_CASE(weighted_boolean_1)
+{
+    GEN(b, Gen::weighted_boolean(1));
+    EXPECT(b == true);
+}
+
+RANDOMIZED_TEST_CASE(weighted_boolean_above1)
+{
+    GEN(b, Gen::weighted_boolean(1.5));
+    EXPECT(b == true);
+}
+
+RANDOMIZED_TEST_CASE(weighted_boolean_fair_true)
+{
+    GEN(b, Gen::weighted_boolean(0.5));
+    ASSUME(b == true);
+    EXPECT(b == true);
+}
+
+RANDOMIZED_TEST_CASE(weighted_boolean_fair_false)
+{
+    GEN(b, Gen::weighted_boolean(0.5));
+    ASSUME(b == false);
+    EXPECT(b == false);
+}
