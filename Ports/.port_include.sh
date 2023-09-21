@@ -387,6 +387,7 @@ fetch_git() {
 
     if [ ! -e "${working_copy}/.git" ]; then
         run_nocd git -C "${backing_copy}" worktree add "${working_copy}" "${revision}"
+        run_nocd git -C "${working_copy}" submodule update --init --recursive
     fi
 
     old_revision=""
@@ -399,6 +400,7 @@ fetch_git() {
         run_nocd git -C "${working_copy}" reset --hard
         run_nocd git -C "${working_copy}" tag --no-sign -f source "${revision}"
         run_nocd git -C "${working_copy}" checkout "${revision}"
+        run_nocd git -C "${working_copy}" submodule update --init --recursive
     fi
 }
 
