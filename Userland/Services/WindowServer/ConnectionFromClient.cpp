@@ -502,6 +502,16 @@ Messages::WindowServer::GetWindowRectResponse ConnectionFromClient::get_window_r
     return it->value->rect();
 }
 
+Messages::WindowServer::GetWindowFloatingRectResponse ConnectionFromClient::get_window_floating_rect(i32 window_id)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("GetWindowFloatingRect: Bad window ID");
+        return nullptr;
+    }
+    return it->value->floating_rect();
+}
+
 static Gfx::IntSize calculate_minimum_size_for_window(Window const& window)
 {
     if (window.is_frameless())

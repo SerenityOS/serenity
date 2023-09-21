@@ -77,6 +77,8 @@ endpoint WindowServer
     set_window_rect(i32 window_id, Gfx::IntRect rect) => (Gfx::IntRect rect)
     get_window_rect(i32 window_id) => (Gfx::IntRect rect)
 
+    get_window_floating_rect(i32 window_id) => (Gfx::IntRect rect)
+
     set_window_minimum_size(i32 window_id, Gfx::IntSize size) =|
     get_window_minimum_size(i32 window_id) => (Gfx::IntSize size)
 

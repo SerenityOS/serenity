@@ -115,6 +115,7 @@ private:
     virtual void start_window_resize(i32, i32) override;
     virtual Messages::WindowServer::SetWindowRectResponse set_window_rect(i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::GetWindowRectResponse get_window_rect(i32) override;
+    virtual Messages::WindowServer::GetWindowFloatingRectResponse get_window_floating_rect(i32) override;
     virtual void set_window_minimum_size(i32, Gfx::IntSize) override;
     virtual Messages::WindowServer::GetWindowMinimumSizeResponse get_window_minimum_size(i32) override;
     virtual Messages::WindowServer::GetAppletRectOnScreenResponse get_applet_rect_on_screen(i32) override;
