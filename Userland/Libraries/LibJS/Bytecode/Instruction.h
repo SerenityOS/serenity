@@ -132,7 +132,6 @@ public:
 #undef __BYTECODE_OP
     };
 
-    bool is_terminator() const;
     Type type() const { return m_type; }
     size_t length() const { return m_length; }
     DeprecatedString to_deprecated_string(Bytecode::Executable const&) const;

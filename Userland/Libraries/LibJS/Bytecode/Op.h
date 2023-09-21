@@ -1442,18 +1442,4 @@ ALWAYS_INLINE ThrowCompletionOr<void> Instruction::execute(Bytecode::Interpreter
 #undef __BYTECODE_OP
 }
 
-ALWAYS_INLINE bool Instruction::is_terminator() const
-{
-#define __BYTECODE_OP(op) \
-    case Type::op:        \
-        return Op::op::IsTerminator;
-
-    switch (type()) {
-        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
-    default:
-        VERIFY_NOT_REACHED();
-    }
-#undef __BYTECODE_OP
-}
-
 }
