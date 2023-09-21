@@ -286,7 +286,8 @@ void Navigable::set_ongoing_navigation(Variant<Empty, Traversal, String> ongoing
     if (m_ongoing_navigation == ongoing_navigation)
         return;
 
-    // FIXME: 2. Inform the navigation API about aborting navigation given navigable.
+    // 2. Inform the navigation API about aborting navigation given navigable.
+    inform_the_navigation_api_about_aborting_navigation();
 
     // 3. Set navigable's ongoing navigation to newValue.
     m_ongoing_navigation = ongoing_navigation;
@@ -1669,6 +1670,25 @@ bool Navigable::has_a_rendering_opportunity() const
 
     // FIXME: We should at the very least say `false` here if we're an inactive browser tab.
     return true;
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#inform-the-navigation-api-about-aborting-navigation
+void Navigable::inform_the_navigation_api_about_aborting_navigation()
+{
+    // FIXME: 1. If this algorithm is running on navigable's active window's relevant agent's event loop, then continue on to the following steps.
+    // Otherwise, queue a global task on the navigation and traversal task source given navigable's active window to run the following steps.
+
+    queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this] {
+        // 2. Let navigation be navigable's active window's navigation API.
+        auto navigation = active_window()->navigation();
+
+        // 3. If navigation's ongoing navigate event is null, then return.
+        if (navigation->ongoing_navigate_event() == nullptr)
+            return;
+
+        // 4. Abort the ongoing navigation given navigation.
+        navigation->abort_the_ongoing_navigation();
+    });
 }
 
 }
