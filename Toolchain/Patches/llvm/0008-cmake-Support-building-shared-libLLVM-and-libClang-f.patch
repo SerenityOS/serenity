@@ -29,7 +29,7 @@ index 4f23065a2..f180d2229 100644
    set(USE_VERSION_SCRIPT ${LLVM_HAVE_LINK_VERSION_SCRIPT})
  endif()
 diff --git a/llvm/tools/llvm-shlib/CMakeLists.txt b/llvm/tools/llvm-shlib/CMakeLists.txt
-index 90e290435..f72ca9646 100644
+index 4f6a2cbfb..c86c6859d 100644
 --- a/llvm/tools/llvm-shlib/CMakeLists.txt
 +++ b/llvm/tools/llvm-shlib/CMakeLists.txt
 @@ -40,6 +40,7 @@ if(LLVM_BUILD_LLVM_DYLIB)

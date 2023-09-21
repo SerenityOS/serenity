@@ -11,7 +11,7 @@ compilation error.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-index b457c7297..5e2907f0c 100644
+index ca4950077..cb216298c 100644
 --- a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
 @@ -215,7 +215,7 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
@@ -24,7 +24,7 @@ index b457c7297..5e2907f0c 100644
    EPC.callSPSWrapperAsync<
        rt::SPSExecutorSharedMemoryMapperServiceReserveSignature>(
 diff --git a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-index 147f915f6..ca773e1ca 100644
+index 3f70dbf60..b92390b93 100644
 --- a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
 @@ -47,7 +47,7 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {

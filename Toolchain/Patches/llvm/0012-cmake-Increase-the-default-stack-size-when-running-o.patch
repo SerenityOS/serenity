@@ -9,10 +9,10 @@ Subject: [PATCH] cmake: Increase the default stack size when running on
  1 file changed, 3 insertions(+)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index 59d2c7539..7c3b1ff6d 100644
+index b88729acf..fe518048c 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
-@@ -455,6 +455,9 @@ elseif(MINGW) # FIXME: Also cygwin?
+@@ -465,6 +465,9 @@ elseif(MINGW) # FIXME: Also cygwin?
    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
      append("-Wa,-mbig-obj" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
    endif()

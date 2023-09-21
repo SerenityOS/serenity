@@ -14,7 +14,7 @@ process's resource usage information.
  3 files changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/llvm/include/llvm/Support/SwapByteOrder.h b/llvm/include/llvm/Support/SwapByteOrder.h
-index 9dd08665b..8915f92e8 100644
+index 1bbc2e2f9..33a685f7e 100644
 --- a/llvm/include/llvm/Support/SwapByteOrder.h
 +++ b/llvm/include/llvm/Support/SwapByteOrder.h
 @@ -20,7 +20,7 @@
@@ -27,7 +27,7 @@ index 9dd08665b..8915f92e8 100644
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index 3efcad4f2..4f83d0e76 100644
+index e2aece49c..b2fc7197d 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
 @@ -112,7 +112,7 @@ typedef uint_t uint;

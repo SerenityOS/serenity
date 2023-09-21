@@ -17,10 +17,10 @@ OS ABI for userspace binaries to 3, or GNU/Linux.
  4 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index 5f51befc1..6a7e45549 100644
+index 8d3dc8d20..d0e51dd4c 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
-@@ -774,7 +774,7 @@ else()
+@@ -778,7 +778,7 @@ else()
  endif()
  
  if (PROFILE_SUPPORTED_ARCH AND NOT LLVM_USE_SANITIZER AND
@@ -30,7 +30,7 @@ index 5f51befc1..6a7e45549 100644
  else()
    set(COMPILER_RT_HAS_PROFILE FALSE)
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
-index adf4132c6..1ed5bd295 100644
+index 2cce0a4b2..8ba7dfb4c 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 @@ -8,7 +8,7 @@
@@ -56,10 +56,10 @@ index c7b6e842c..00fdf9ee6 100644
  #include <stdlib.h>
  #include <stdio.h>
 diff --git a/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp b/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
-index c04092062..e148cff6f 100644
+index a7b1953ce..0a874023f 100644
 --- a/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
 +++ b/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
-@@ -829,7 +829,8 @@ static bool needsRuntimeRegistrationOfSectionRange(const Triple &TT) {
+@@ -918,7 +918,8 @@ static bool needsRuntimeRegistrationOfSectionRange(const Triple &TT) {
      return false;
    // Use linker script magic to get data/cnts/name start/end.
    if (TT.isOSAIX() || TT.isOSLinux() || TT.isOSFreeBSD() || TT.isOSNetBSD() ||

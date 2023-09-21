@@ -9,20 +9,20 @@ Subject: [PATCH] [Triple] Add triple for SerenityOS
  2 files changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/llvm/include/llvm/TargetParser/Triple.h b/llvm/include/llvm/TargetParser/Triple.h
-index 59513fa2f..951d69010 100644
+index 79ccd644a..11b6c01ad 100644
 --- a/llvm/include/llvm/TargetParser/Triple.h
 +++ b/llvm/include/llvm/TargetParser/Triple.h
-@@ -223,7 +223,8 @@ public:
-     WASI,       // Experimental WebAssembly OS
+@@ -225,7 +225,8 @@ public:
      Emscripten,
      ShaderModel, // DirectX ShaderModel
--    LastOSType = ShaderModel
+     LiteOS,
+-    LastOSType = LiteOS
 +    Serenity,
 +    LastOSType = Serenity
    };
    enum EnvironmentType {
      UnknownEnvironment,
-@@ -670,6 +671,11 @@ public:
+@@ -677,6 +678,11 @@ public:
      return getOS() == Triple::AIX;
    }
  
@@ -35,7 +35,7 @@ index 59513fa2f..951d69010 100644
    bool isOSBinFormatELF() const {
      return getObjectFormat() == Triple::ELF;
 diff --git a/llvm/lib/TargetParser/Triple.cpp b/llvm/lib/TargetParser/Triple.cpp
-index a68035989..1ee9ea3b1 100644
+index a3d6a06af..4a4e20d21 100644
 --- a/llvm/lib/TargetParser/Triple.cpp
 +++ b/llvm/lib/TargetParser/Triple.cpp
 @@ -237,6 +237,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
@@ -44,12 +44,12 @@ index a68035989..1ee9ea3b1 100644
    case Solaris: return "solaris";
 +  case Serenity: return "serenity";
    case TvOS: return "tvos";
+   case UEFI: return "uefi";
    case WASI: return "wasi";
-   case WatchOS: return "watchos";
-@@ -596,6 +597,7 @@ static Triple::OSType parseOS(StringRef OSName) {
-     .StartsWith("wasi", Triple::WASI)
+@@ -616,6 +617,7 @@ static Triple::OSType parseOS(StringRef OSName) {
      .StartsWith("emscripten", Triple::Emscripten)
      .StartsWith("shadermodel", Triple::ShaderModel)
+     .StartsWith("liteos", Triple::LiteOS)
 +    .StartsWith("serenity", Triple::Serenity)
      .Default(Triple::UnknownOS);
  }
