@@ -43,6 +43,7 @@ public:
     WebIDL::ExceptionOr<Attr const*> remove_named_item_ns(Optional<String> const& namespace_, StringView local_name);
 
     // Methods defined by the spec for internal use:
+    // FIXME: These should be taking `FlyString const&' / 'Optional<FlyString> const&'
     Attr* get_attribute(StringView qualified_name, size_t* item_index = nullptr);
     Attr* get_attribute_ns(StringView namespace_, StringView local_name, size_t* item_index = nullptr);
     Attr const* get_attribute(StringView qualified_name, size_t* item_index = nullptr) const;

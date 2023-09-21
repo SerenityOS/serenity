@@ -91,7 +91,8 @@ public:
     // NOTE: This is for the JS bindings
     DeprecatedFlyString namespace_uri() const { return namespace_(); }
 
-    bool has_attribute(DeprecatedFlyString const& name) const;
+    // FIXME: This should be taking a 'FlyString const&'
+    bool has_attribute(StringView name) const;
     bool has_attribute_ns(DeprecatedFlyString namespace_, DeprecatedFlyString const& name) const;
     bool has_attributes() const;
 
@@ -104,6 +105,7 @@ public:
         return String::from_deprecated_string(ret).release_value();
     }
 
+    // FIXME: This should be taking a 'FlyString const&' / 'Optional<FlyString> const&'
     DeprecatedString get_attribute(DeprecatedFlyString const& name) const;
     DeprecatedString get_attribute_value(DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_ = {}) const;
 
