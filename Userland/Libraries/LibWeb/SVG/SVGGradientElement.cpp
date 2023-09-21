@@ -94,7 +94,7 @@ JS::GCPtr<SVGGradientElement const> SVGGradientElement::linked_gradient() const
     // FIXME: This entire function is an ad-hoc hack!
     // It can only resolve #<ids> in the same document.
 
-    auto link = has_attribute("href") ? get_attribute("href") : get_attribute("xlink:href");
+    auto link = has_attribute(AttributeNames::href) ? get_attribute(AttributeNames::href) : get_attribute("xlink:href"sv);
     if (auto href = link; !href.is_empty()) {
         auto url = document().parse_url(href);
         auto id = url.fragment();

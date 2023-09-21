@@ -302,7 +302,7 @@ void Element::remove_attribute(StringView name)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
-bool Element::has_attribute(DeprecatedFlyString const& name) const
+bool Element::has_attribute(StringView name) const
 {
     return m_attributes->get_attribute(name) != nullptr;
 }
