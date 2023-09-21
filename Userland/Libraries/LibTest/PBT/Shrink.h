@@ -195,6 +195,68 @@ ShrinkResult shrink_swap_chunk(SwapChunkWithNeighbour c, RandomRun const& run, F
 }
 
 template<typename FN>
+ShrinkResult shrink_redistribute(RedistributeChoicesAndMaybeInc c, RandomRun const& run, FN const& test_function)
+{
+    RandomRun current_best = run;
+    RandomRun run_after_swap = current_best;
+
+    // First try to swap them if they're out of order.
+    if (run_after_swap[c.left_index] > run_after_swap[c.right_index]) 
+        AK::swap(run_after_swap[c.left_index], run_after_swap[c.right_index]);
+
+    ShrinkResult after_swap = keep_if_better(run_after_swap, current_best, test_function);
+    current_best = after_swap.run;
+    u32 constant_sum = current_best[c.right_index] + current_best[c.left_index];
+
+    ShrinkResult after_redistribute = binary_shrink(
+        0,
+        current_best[c.left_index],
+        [&](u32 new_value, RandomRun const& run) {
+            RandomRun copied_run = run;
+            copied_run[c.left_index] = new_value;
+            copied_run[c.right_index] = constant_sum - new_value;
+            return copied_run;
+        },
+        current_best,
+        test_function);
+    
+    if (after_redistribute.was_improvement)
+        return after_redistribute;
+
+    // If the redistribute failed, this can sometimes signal that a value needs
+    // to fall into the next `int_frequency` bucket. We can try one last-ditch
+    // attempt and see if incrementing the number right before the right index
+    // helps.
+
+    if (c.left_index == c.right_index - 1) {
+        // There's no "bucket index" between the left and right index.
+        // Let's not even try.
+        return after_swap;
+    }
+
+    RandomRun run_after_increment = after_redistribute.run;
+    ++run_after_increment[c.right_index - 1];
+
+    ShrinkResult after_inc_redistribute = binary_shrink(
+        0,
+        current_best[c.left_index],
+        [&](u32 new_value, RandomRun const& run) {
+            RandomRun copied_run = run;
+            copied_run[c.left_index] = new_value;
+            copied_run[c.right_index] = constant_sum - new_value;
+            return copied_run;
+        },
+        current_best,
+        test_function);
+
+    if (after_inc_redistribute.was_improvement)
+        return after_inc_redistribute;
+
+    return after_swap;
+    
+}
+
+template<typename FN>
 ShrinkResult shrink_with_cmd(ShrinkCmd cmd, RandomRun const& run, FN const& test_function)
 {
     return cmd.visit(
@@ -202,6 +264,7 @@ ShrinkResult shrink_with_cmd(ShrinkCmd cmd, RandomRun const& run, FN const& test
         [&](SortChunk c) { return shrink_sort(c, run, test_function); },
         [&](DeleteChunkAndMaybeDecPrevious c) { return shrink_delete(c, run, test_function); },
         [&](MinimizeChoice c) { return shrink_minimize(c, run, test_function); },
+        [&](RedistributeChoicesAndMaybeInc c) { return shrink_redistribute(c, run, test_function); },
         [&](SwapChunkWithNeighbour c) { return shrink_swap_chunk(c, run, test_function); });
 }
 

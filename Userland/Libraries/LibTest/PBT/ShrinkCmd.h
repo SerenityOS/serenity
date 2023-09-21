@@ -32,13 +32,18 @@ struct SwapChunkWithNeighbour {
         return Chunk{chunk.size, chunk.index + chunk.size};
     }
 };
+struct RedistributeChoicesAndMaybeInc {
+    size_t left_index;
+    size_t right_index;
+};
 
 using CmdVariant = Variant<
     ZeroChunk,
     SortChunk,
     DeleteChunkAndMaybeDecPrevious,
     MinimizeChoice,
-    SwapChunkWithNeighbour
+    SwapChunkWithNeighbour,
+    RedistributeChoicesAndMaybeInc
 >;
 
 class ShrinkCmd {
@@ -60,6 +65,7 @@ public:
         all.extend(sort_cmds(run_size));
         all.extend(swap_chunk_cmds(run_size));
         all.extend(minimize_cmds(run_size));
+        all.extend(redistribute_cmds(run_size));
         return all;
     }
 
@@ -70,6 +76,7 @@ public:
             [&](SortChunk c) { return run.has_a_chance(c.chunk); },
             [&](DeleteChunkAndMaybeDecPrevious c) { return run.has_a_chance(c.chunk); },
             [&](MinimizeChoice c) { return run.size() > c.index; },
+            [&](RedistributeChoicesAndMaybeInc c) { return run.size() > c.right_index; },
             [&](SwapChunkWithNeighbour c) { return run.has_a_chance(c.neighbour());  });
     }
 
@@ -80,17 +87,19 @@ public:
             [](SortChunk c) { return String::formatted("SortChunk({})", c.chunk); },
             [](DeleteChunkAndMaybeDecPrevious c) { return String::formatted("DeleteChunkAndMaybeDecPrevious({})", c.chunk); },
             [](MinimizeChoice c) { return String::formatted("MinimizeChoice(i={})", c.index); },
+            [](RedistributeChoicesAndMaybeInc c) { return String::formatted("RedistributeChoicesAndMaybeInc(left={},right={})", c.left_index, c.right_index); },
             [](SwapChunkWithNeighbour c) { return String::formatted("SwapChunkWithNeighbour({})", c.chunk); });
     }
 
-    template<typename C1, typename C2, typename C3, typename C4, typename C5>
-    auto visit(C1 on_zero, C2 on_sort, C3 on_delete, C4 on_minimize, C5 on_swap_chunk)
+    template<typename C1, typename C2, typename C3, typename C4, typename C5, typename C6>
+    auto visit(C1 on_zero, C2 on_sort, C3 on_delete, C4 on_minimize, C5 on_redistribute, C6 on_swap_chunk)
     {
         return m_cmd.visit(
             [&](ZeroChunk c) { return on_zero(c); },
             [&](SortChunk c) { return on_sort(c); },
             [&](DeleteChunkAndMaybeDecPrevious c) { return on_delete(c); },
             [&](MinimizeChoice c) { return on_minimize(c); },
+            [&](RedistributeChoicesAndMaybeInc c) { return on_redistribute(c); },
             [&](SwapChunkWithNeighbour c) { return on_swap_chunk(c); });
     }
 
@@ -168,6 +177,19 @@ private:
         for (size_t i = 0; i < run_size; ++i) {
             ShrinkCmd cmd = ShrinkCmd(MinimizeChoice { i });
             cmds.append(cmd);
+        }
+        return cmds;
+    }
+
+    static Vector<ShrinkCmd> redistribute_cmds(size_t run_size)
+    {
+        Vector<ShrinkCmd> cmds;
+        for (size_t offset = 3; offset > 0; --offset) {
+            if (offset >= run_size) continue;
+            for (size_t i = 0; i < run_size - offset; ++i) {
+                ShrinkCmd cmd = ShrinkCmd(RedistributeChoicesAndMaybeInc { i, i + offset });
+                cmds.append(cmd);
+            }
         }
         return cmds;
     }
