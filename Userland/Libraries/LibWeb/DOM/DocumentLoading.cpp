@@ -344,7 +344,8 @@ JS::GCPtr<DOM::Document> create_document_for_inline_content(JS::GCPtr<HTML::Navi
     // 6. Either associate document with a custom rendering that is not rendered using the normal Document rendering rules, or mutate document until it represents the content the
     //    user agent wants to render.
     auto parser = HTML::HTMLParser::create(document, content_html, "utf-8");
-    parser->run(AK::URL("about:error"));
+    document->set_url(AK::URL("about:error"));
+    parser->run();
 
     // 7. Return document.
     return document;

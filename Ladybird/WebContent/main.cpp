@@ -97,6 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
     Web::set_resource_directory_url(TRY(String::formatted("file://{}/res", s_serenity_resource_root)));
+    Web::set_error_page_url(TRY(String::formatted("file://{}/res/html/error.html", s_serenity_resource_root)));
     Web::set_directory_page_url(TRY(String::formatted("file://{}/res/html/directory.html", s_serenity_resource_root)));
 
     TRY(Web::Bindings::initialize_main_thread_vm());

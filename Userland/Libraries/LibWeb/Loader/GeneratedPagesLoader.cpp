@@ -26,6 +26,18 @@ void set_resource_directory_url(String resource_directory_url)
     s_resource_directory_url = resource_directory_url;
 }
 
+static String s_error_page_url = "file:///res/html/error.html"_string;
+
+String error_page_url()
+{
+    return s_error_page_url;
+}
+
+void set_error_page_url(String error_page_url)
+{
+    s_error_page_url = error_page_url;
+}
+
 static String s_directory_page_url = "file:///res/html/directory.html"_string;
 
 String directory_page_url()
@@ -38,6 +50,20 @@ void set_directory_page_url(String directory_page_url)
     s_directory_page_url = directory_page_url;
 }
 
+ErrorOr<String> load_error_page(AK::URL const& url)
+{
+    // Generate HTML error page from error template file
+    // FIXME: Use an actual templating engine (our own one when it's built, preferably with a way to check these usages at compile time)
+    auto template_path = AK::URL::create_with_url_or_path(error_page_url().to_deprecated_string()).serialize_path();
+    auto template_file = TRY(Core::File::open(template_path, Core::File::OpenMode::Read));
+    auto template_contents = TRY(template_file->read_until_eof());
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+    generator.set("resource_directory_url", resource_directory_url());
+    generator.set("failed_url", url.to_deprecated_string());
+    generator.append(template_contents);
+    return TRY(String::from_utf8(generator.as_string_view()));
+}
 
 ErrorOr<String> load_file_directory_page(LoadRequest const& request)
 {

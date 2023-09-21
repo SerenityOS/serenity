@@ -27,6 +27,7 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Loader/GeneratedPagesLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/XHR/FormData.h>
@@ -998,9 +999,8 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         if (failure) {
             // 1. Set entry's document state's document to the result of creating a document for inline content that doesn't have a DOM, given navigable, null, and navTimingType.
             //    The inline content should indicate to the user the sort of error that occurred.
-            // FIXME: Use SourceGenerator to produce error page from file:///res/html/error.html
-            //        and display actual error from fetch response.
-            auto error_html = String::formatted("<h1>Failed to load {}</h1>"sv, entry->url).release_value_but_fixme_should_propagate_errors();
+            // FIXME: Add error message to generated error page
+            auto error_html = load_error_page(entry->url).release_value_but_fixme_should_propagate_errors();
             entry->document_state->set_document(create_document_for_inline_content(this, navigation_id, error_html));
 
             // 2. Set entry's document state's document's salvageable to false.
