@@ -86,6 +86,34 @@ RANDOMIZED_TEST_CASE(bind_vector_suboptimal)
     // TODO make this test shrink more consistently
     // Can be gleaned with a variant on:
     // while true; do ./Build/lagom/bin/TestGenerator; done
-    warnln("vec {}, sum {}", vec, sum);
+    //warnln("vec {}, sum {}", vec, sum);
     EXPECT(sum <= max_item * vec.size());
+}
+
+RANDOMIZED_TEST_CASE(vector)
+{
+    u32 max_item = 5;
+    Vector<u32> vec = Gen::vector([&]() { return Gen::unsigned_int(max_item); });
+    EXPECT(vec.size() <= 32);
+}
+
+RANDOMIZED_TEST_CASE(vector_max)
+{
+    u32 max_item = 5;
+    Vector<u32> vec = Gen::vector(3,[&]() { return Gen::unsigned_int(max_item); });
+    EXPECT(vec.size() <= 3);
+}
+
+RANDOMIZED_TEST_CASE(vector_min_max)
+{
+    u32 max_item = 5;
+    Vector<u32> vec = Gen::vector(1,4,[&]() { return Gen::unsigned_int(max_item); });
+    EXPECT(vec.size() >= 1 && vec.size() <= 4);
+}
+
+RANDOMIZED_TEST_CASE(vector_of_length)
+{
+    u32 max_item = 5;
+    Vector<u32> vec = Gen::vector_of_length(3,[&]() { return Gen::unsigned_int(max_item); });
+    EXPECT(vec.size() == 3);
 }
