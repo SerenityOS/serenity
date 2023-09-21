@@ -46,7 +46,9 @@
 - (void)windowControllerDidLoadNib:(NSWindowController*)aController
 {
     [super windowControllerDidLoadNib:aController];
-    // Add any code here that needs to be executed once the windowController has loaded the document's window.
+    if (_doc) {
+        [_pdfView setDocument:_doc->make_weak_ptr()];
+    }
 }
 
 - (NSData*)dataOfType:(NSString*)typeName error:(NSError**)outError
@@ -93,6 +95,12 @@
 
 + (BOOL)autosavesInPlace
 {
+    return YES;
+}
+
++ (BOOL)canConcurrentlyReadDocumentsOfType:(NSString*)typeName
+{
+    // Run readFromData:ofType:error: on background thread:
     return YES;
 }
 
