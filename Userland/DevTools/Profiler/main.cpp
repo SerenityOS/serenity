@@ -86,7 +86,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->set_title("Profiler");
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->resize(800, 600);
+    window->restore_size_and_position("Profiler"sv, "Window"sv, { { 800, 600 } });
+    window->save_size_and_position_on_close("Profiler"sv, "Window"sv);
 
     auto main_widget = window->set_main_widget<GUI::Widget>();
     main_widget->set_fill_with_background_color(true);

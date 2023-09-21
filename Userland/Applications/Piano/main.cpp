@@ -47,7 +47,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto main_widget = TRY(MainWidget::try_create(track_manager, audio_loop));
     window->set_main_widget(main_widget);
     window->set_title("Piano");
-    window->resize(840, 600);
+    window->restore_size_and_position("Piano"sv, "Window"sv, { { 840, 600 } });
+    window->save_size_and_position_on_close("Piano"sv, "Window"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto wav_progress_window = ExportProgressWindow::construct(*window, wav_percent_written);
