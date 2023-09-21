@@ -34,7 +34,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
     window->set_title("Hex Editor");
-    window->resize(640, 400);
+    window->restore_size_and_position("HexEditor"sv, "Window"sv, { { 640, 400 } });
+    window->save_size_and_position_on_close("HexEditor"sv, "Window"sv);
 
     auto hex_editor_widget = window->set_main_widget<HexEditorWidget>();
 

@@ -64,7 +64,8 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, URL url)
     auto app_icon = GUI::Icon::default_icon("app-browser"sv);
     m_bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), true);
 
-    resize(730, 560);
+    restore_size_and_position("Browser"sv, "Window"sv, { { 730, 560 } });
+    save_size_and_position_on_close("Browser"sv, "Window"sv);
     set_icon(app_icon.bitmap_for_size(16));
     set_title("Ladybird");
 

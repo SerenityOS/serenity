@@ -280,7 +280,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
     window->set_title("System Monitor");
-    window->resize(560, 430);
+    window->restore_size_and_position("SystemMonitor"sv, "Window"sv, { { 560, 430 } });
+    window->save_size_and_position_on_close("SystemMonitor"sv, "Window"sv);
 
     auto main_widget = window->set_main_widget<GUI::Widget>();
     TRY(main_widget->load_from_gml(system_monitor_gml));

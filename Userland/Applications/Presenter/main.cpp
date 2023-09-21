@@ -27,6 +27,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = GUI::Window::construct();
     window->set_title("Presenter");
     window->set_icon(GUI::Icon::default_icon("app-presenter"sv).bitmap_for_size(16));
+    window->restore_size_and_position("Presenter"sv, "Window"sv, { { 640, 400 } });
+    window->save_size_and_position_on_close("Presenter"sv, "Window"sv);
     auto main_widget = window->set_main_widget<PresenterWidget>();
     TRY(main_widget->initialize_menubar());
     window->show();

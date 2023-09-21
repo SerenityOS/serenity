@@ -43,7 +43,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->resize(640, 470);
+    window->restore_size_and_position("FontEditor"sv, "Window"sv, { { 640, 470 } });
+    window->save_size_and_position_on_close("FontEditor"sv, "Window"sv);
 
     auto font_editor = TRY(FontEditor::MainWidget::try_create());
     window->set_main_widget(font_editor);

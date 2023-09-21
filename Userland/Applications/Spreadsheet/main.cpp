@@ -52,7 +52,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-spreadsheet"sv);
     auto window = GUI::Window::construct();
-    window->resize(640, 480);
+    window->restore_size_and_position("Spreadsheet"sv, "Window"sv, { { 640, 480 } });
+    window->save_size_and_position_on_close("Spreadsheet"sv, "Window"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, Vector<NonnullRefPtr<Spreadsheet::Sheet>> {}, filename.is_empty());

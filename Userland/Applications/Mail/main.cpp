@@ -43,7 +43,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto mail_widget = window->set_main_widget<MailWidget>();
 
     window->set_title("Mail");
-    window->resize(640, 400);
+    window->restore_size_and_position("Mail"sv, "Window"sv, { { 640, 400 } });
+    window->save_size_and_position_on_close("Mail"sv, "Window"sv);
 
     auto file_menu = window->add_menu("&File"_string);
 

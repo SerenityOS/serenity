@@ -60,7 +60,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-calendar"sv));
     auto window = GUI::Window::construct();
     window->set_title("Calendar");
-    window->resize(600, 480);
+    window->restore_size_and_position("Calendar"sv, "Window"sv, { { 600, 480 } });
+    window->save_size_and_position_on_close("Calendar"sv, "Window"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto calendar_widget = TRY(Calendar::CalendarWidget::create(window));

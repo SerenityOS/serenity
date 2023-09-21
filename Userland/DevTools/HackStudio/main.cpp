@@ -44,7 +44,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domains({ "HackStudio", "Terminal", "FileManager" });
 
     auto window = GUI::Window::construct();
-    window->resize(840, 600);
+    window->restore_size_and_position("HackStudio"sv, "Window"sv, { { 840, 600 } });
+    window->save_size_and_position_on_close("HackStudio"sv, "Window"sv);
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv));
     window->set_icon(icon);
 

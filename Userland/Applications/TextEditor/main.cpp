@@ -42,7 +42,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-text-editor"sv);
 
     auto window = GUI::Window::construct();
-    window->resize(640, 400);
+    window->restore_size_and_position("TextEditor"sv, "Window"sv, { { 640, 400 } });
+    window->save_size_and_position_on_close("TextEditor"sv, "Window"sv);
 
     auto text_widget = window->set_main_widget<MainWidget>();
 

@@ -43,7 +43,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = GUI::Window::construct();
     window->set_title("GML Playground");
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->resize(800, 600);
+    window->restore_size_and_position("GMLPlayground"sv, "Window"sv, { { 800, 600 } });
+    window->save_size_and_position_on_close("GMLPlayground"sv, "Window"sv);
 
     auto main_widget = TRY(MainWidget::try_create(app_icon));
     window->set_main_widget(main_widget);
