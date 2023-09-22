@@ -48,7 +48,6 @@ public:
     }
     u32& operator[](size_t index) { return m_data[index]; }
     u32 operator[](size_t index) const { return m_data[index]; }
-    u32 at(size_t index) const { return m_data[index]; }
     bool operator==(RandomRun const& rhs) const { return m_data == rhs.m_data; }
     bool operator!=(RandomRun const& rhs) const { return m_data != rhs.m_data; }
     bool operator<(RandomRun const& rhs) const
@@ -60,10 +59,10 @@ public:
             return false;
 
         for (size_t i = 0; i < size(); i++) {
-            if (at(i) < rhs.at(i))
+            if (m_data[i] < rhs.m_data[i])
                 return true;
 
-            if (at(i) > rhs.at(i))
+            if (m_data[i] > rhs.m_data[i])
                 return false;
         }
         return false;
