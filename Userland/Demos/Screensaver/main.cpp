@@ -89,12 +89,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto icon_view = TRY(main_widget->try_add<GUI::IconView>());
-    icon_view->set_should_hide_unnecessary_scrollbars(true);
+    auto& icon_view = main_widget->add<GUI::IconView>();
+    icon_view.set_should_hide_unnecessary_scrollbars(true);
     auto model = adopt_ref(*new ScreensaverAppsModel);
-    icon_view->set_model(*model);
+    icon_view.set_model(*model);
 
-    icon_view->on_activation = [&](GUI::ModelIndex const& index) {
+    icon_view.on_activation = [&](GUI::ModelIndex const& index) {
         auto executable = model->data(index, GUI::ModelRole::Custom).as_string();
         GUI::Process::spawn_or_show_error(window, executable);
     };

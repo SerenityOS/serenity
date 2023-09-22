@@ -75,31 +75,31 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
     auto properties_widget = GUI::Widget::construct();
     properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto threshold_container = TRY(properties_widget->try_add<GUI::Widget>());
-    threshold_container->set_fixed_height(20);
-    threshold_container->set_layout<GUI::HorizontalBoxLayout>();
+    auto& threshold_container = properties_widget->add<GUI::Widget>();
+    threshold_container.set_fixed_height(20);
+    threshold_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto threshold_label = TRY(threshold_container->try_add<GUI::Label>("Threshold:"_string));
-    threshold_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    threshold_label->set_fixed_size(80, 20);
+    auto& threshold_label = threshold_container.add<GUI::Label>("Threshold:"_string);
+    threshold_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    threshold_label.set_fixed_size(80, 20);
 
-    auto threshold_slider = TRY(threshold_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
-    threshold_slider->set_range(0, 100);
-    threshold_slider->set_value(m_threshold);
+    auto& threshold_slider = threshold_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string);
+    threshold_slider.set_range(0, 100);
+    threshold_slider.set_value(m_threshold);
 
-    threshold_slider->on_change = [this](int value) {
+    threshold_slider.on_change = [this](int value) {
         m_threshold = value;
     };
-    set_primary_slider(threshold_slider);
+    set_primary_slider(&threshold_slider);
 
-    auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
-    mode_container->set_fixed_height(20);
-    mode_container->set_layout<GUI::HorizontalBoxLayout>();
+    auto& mode_container = properties_widget->add<GUI::Widget>();
+    mode_container.set_fixed_height(20);
+    mode_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto mode_label = TRY(mode_container->try_add<GUI::Label>());
-    mode_label->set_text("Mode:"_string);
-    mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    mode_label->set_fixed_size(80, 20);
+    auto& mode_label = mode_container.add<GUI::Label>();
+    mode_label.set_text("Mode:"_string);
+    mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    mode_label.set_fixed_size(80, 20);
 
     for (int i = 0; i < (int)Selection::MergeMode::__Count; i++) {
         switch ((Selection::MergeMode)i) {
@@ -120,11 +120,11 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
         }
     }
 
-    auto mode_combo = TRY(mode_container->try_add<GUI::ComboBox>());
-    mode_combo->set_only_allow_values_from_model(true);
-    mode_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_merge_mode_names));
-    mode_combo->set_selected_index((int)m_merge_mode);
-    mode_combo->on_change = [this](auto&&, GUI::ModelIndex const& index) {
+    auto& mode_combo = mode_container.add<GUI::ComboBox>();
+    mode_combo.set_only_allow_values_from_model(true);
+    mode_combo.set_model(*GUI::ItemListModel<DeprecatedString>::create(m_merge_mode_names));
+    mode_combo.set_selected_index((int)m_merge_mode);
+    mode_combo.on_change = [this](auto&&, GUI::ModelIndex const& index) {
         VERIFY(index.row() >= 0);
         VERIFY(index.row() < (int)Selection::MergeMode::__Count);
 

@@ -203,12 +203,12 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
         auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
-        mode_container->set_fixed_height(20);
-        mode_container->set_layout<GUI::HorizontalBoxLayout>();
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
-        mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        mode_label->set_fixed_size(60, 20);
+        auto& mode_container = properties_widget->add<GUI::Widget>();
+        mode_container.set_fixed_height(20);
+        mode_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& mode_label = mode_container.add<GUI::Label>("Mode:"_string);
+        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        mode_label.set_fixed_size(60, 20);
 
         static constexpr auto s_mode_names = [] {
             Array<StringView, (int)BrushMode::__Count> names;
@@ -233,18 +233,18 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
             return names;
         }();
 
-        auto mode_combobox = TRY(mode_container->try_add<GUI::ComboBox>());
-        mode_combobox->set_only_allow_values_from_model(true);
-        mode_combobox->set_model(*GUI::ItemListModel<StringView, decltype(s_mode_names)>::create(s_mode_names));
-        mode_combobox->set_selected_index((int)m_mode, GUI::AllowCallback::No);
+        auto& mode_combobox = mode_container.add<GUI::ComboBox>();
+        mode_combobox.set_only_allow_values_from_model(true);
+        mode_combobox.set_model(*GUI::ItemListModel<StringView, decltype(s_mode_names)>::create(s_mode_names));
+        mode_combobox.set_selected_index((int)m_mode, GUI::AllowCallback::No);
 
-        auto priority_container = TRY(properties_widget->try_add<GUI::Widget>());
-        priority_container->set_fixed_height(20);
-        priority_container->set_visible(false);
-        priority_container->set_layout<GUI::HorizontalBoxLayout>();
-        auto priority_label = TRY(priority_container->try_add<GUI::Label>("Priority:"_string));
-        priority_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        priority_label->set_fixed_size(60, 20);
+        auto& priority_container = properties_widget->add<GUI::Widget>();
+        priority_container.set_fixed_height(20);
+        priority_container.set_visible(false);
+        priority_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& priority_label = priority_container.add<GUI::Label>("Priority:"_string);
+        priority_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        priority_label.set_fixed_size(60, 20);
 
         static constexpr auto s_priority_names = [] {
             Array<StringView, (int)PriorityMode::__Count> names;
@@ -266,37 +266,37 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
             return names;
         }();
 
-        auto priority_combobox = TRY(priority_container->try_add<GUI::ComboBox>());
-        priority_combobox->set_only_allow_values_from_model(true);
-        priority_combobox->set_model(*GUI::ItemListModel<StringView, decltype(s_priority_names)>::create(s_priority_names));
-        priority_combobox->set_selected_index((int)m_priority, GUI::AllowCallback::No);
+        auto& priority_combobox = priority_container.add<GUI::ComboBox>();
+        priority_combobox.set_only_allow_values_from_model(true);
+        priority_combobox.set_model(*GUI::ItemListModel<StringView, decltype(s_priority_names)>::create(s_priority_names));
+        priority_combobox.set_selected_index((int)m_priority, GUI::AllowCallback::No);
 
-        auto exposure_container = TRY(properties_widget->try_add<GUI::Widget>());
-        exposure_container->set_fixed_height(20);
-        exposure_container->set_visible(false);
-        exposure_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& exposure_container = properties_widget->add<GUI::Widget>();
+        exposure_container.set_fixed_height(20);
+        exposure_container.set_visible(false);
+        exposure_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto exposure_label = TRY(exposure_container->try_add<GUI::Label>("Exposure:"_string));
-        exposure_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        exposure_label->set_fixed_size(60, 20);
+        auto& exposure_label = exposure_container.add<GUI::Label>("Exposure:"_string);
+        exposure_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        exposure_label.set_fixed_size(60, 20);
 
-        auto exposure_slider = TRY(exposure_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
-        exposure_slider->set_range(1, 100);
-        exposure_slider->set_value(m_exposure * 100);
+        auto& exposure_slider = exposure_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string);
+        exposure_slider.set_range(1, 100);
+        exposure_slider.set_value(m_exposure * 100);
 
-        mode_combobox->on_change = [this, priority_container, exposure_container](auto&, auto& model_index) {
+        mode_combobox.on_change = [this, &priority_container, &exposure_container](auto&, auto& model_index) {
             VERIFY(model_index.row() >= 0);
             VERIFY(model_index.row() < (int)BrushMode::__Count);
 
             m_mode = (BrushMode)model_index.row();
-            priority_container->set_visible(m_mode == BrushMode::Dodge || m_mode == BrushMode::Burn);
-            exposure_container->set_visible(m_mode == BrushMode::Dodge || m_mode == BrushMode::Burn);
+            priority_container.set_visible(m_mode == BrushMode::Dodge || m_mode == BrushMode::Burn);
+            exposure_container.set_visible(m_mode == BrushMode::Dodge || m_mode == BrushMode::Burn);
 
             if (m_mode == BrushMode::Dodge || m_mode == BrushMode::Burn)
                 update_precomputed_color_values();
         };
 
-        priority_combobox->on_change = [this](auto&, auto& model_index) {
+        priority_combobox.on_change = [this](auto&, auto& model_index) {
             VERIFY(model_index.row() >= 0);
             VERIFY(model_index.row() < (int)PriorityMode::__Count);
 
@@ -304,47 +304,47 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
             update_precomputed_color_values();
         };
 
-        exposure_slider->on_change = [this](int value) {
+        exposure_slider.on_change = [this](int value) {
             m_exposure = value / 100.0f;
             update_precomputed_color_values();
         };
 
-        auto size_container = TRY(properties_widget->try_add<GUI::Widget>());
-        size_container->set_fixed_height(20);
-        size_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& size_container = properties_widget->add<GUI::Widget>();
+        size_container.set_fixed_height(20);
+        size_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_string));
-        size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label->set_fixed_size(60, 20);
+        auto& size_label = size_container.add<GUI::Label>("Size:"_string);
+        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label.set_fixed_size(60, 20);
 
-        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
-        size_slider->set_range(1, 250);
-        size_slider->set_value(m_size);
-        size_slider->set_override_cursor(cursor());
+        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string);
+        size_slider.set_range(1, 250);
+        size_slider.set_value(m_size);
+        size_slider.set_override_cursor(cursor());
 
-        size_slider->on_change = [this, size_slider](int value) {
+        size_slider.on_change = [this, &size_slider](int value) {
             set_size(value);
             // Update cursor to provide an instant preview for the selected size.
-            size_slider->set_override_cursor(cursor());
+            size_slider.set_override_cursor(cursor());
         };
-        set_primary_slider(size_slider);
+        set_primary_slider(&size_slider);
 
-        auto hardness_container = TRY(properties_widget->try_add<GUI::Widget>());
-        hardness_container->set_fixed_height(20);
-        hardness_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& hardness_container = properties_widget->add<GUI::Widget>();
+        hardness_container.set_fixed_height(20);
+        hardness_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"_string));
-        hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        hardness_label->set_fixed_size(60, 20);
+        auto& hardness_label = hardness_container.add<GUI::Label>("Hardness:"_string);
+        hardness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        hardness_label.set_fixed_size(60, 20);
 
-        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
-        hardness_slider->set_range(1, 100);
-        hardness_slider->set_value(m_hardness);
+        auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string);
+        hardness_slider.set_range(1, 100);
+        hardness_slider.set_value(m_hardness);
 
-        hardness_slider->on_change = [this](int value) {
+        hardness_slider.on_change = [this](int value) {
             set_hardness(value);
         };
-        set_secondary_slider(hardness_slider);
+        set_secondary_slider(&hardness_slider);
         m_properties_widget = properties_widget;
     }
 

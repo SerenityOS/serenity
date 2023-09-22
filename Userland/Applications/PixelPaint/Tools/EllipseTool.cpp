@@ -132,59 +132,59 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto thickness_container = TRY(properties_widget->try_add<GUI::Widget>());
-        thickness_container->set_fixed_height(20);
-        thickness_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& thickness_container = properties_widget->add<GUI::Widget>();
+        thickness_container.set_fixed_height(20);
+        thickness_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>("Thickness:"_string));
-        thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        thickness_label->set_fixed_size(80, 20);
+        auto& thickness_label = thickness_container.add<GUI::Label>("Thickness:"_string);
+        thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        thickness_label.set_fixed_size(80, 20);
 
-        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
-        thickness_slider->set_range(1, 10);
-        thickness_slider->set_value(m_thickness);
+        auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string);
+        thickness_slider.set_range(1, 10);
+        thickness_slider.set_value(m_thickness);
 
-        thickness_slider->on_change = [this](int value) {
+        thickness_slider.on_change = [this](int value) {
             m_thickness = value;
         };
-        set_primary_slider(thickness_slider);
+        set_primary_slider(&thickness_slider);
 
-        auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
-        mode_container->set_fixed_height(70);
-        mode_container->set_layout<GUI::HorizontalBoxLayout>();
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
-        mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        auto& mode_container = properties_widget->add<GUI::Widget>();
+        mode_container.set_fixed_height(70);
+        mode_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& mode_label = mode_container.add<GUI::Label>("Mode:"_string);
+        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-        auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
-        mode_radio_container->set_layout<GUI::VerticalBoxLayout>();
-        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_string));
-        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_string));
-        auto aa_enable_checkbox = TRY(mode_radio_container->try_add<GUI::CheckBox>("Anti-alias"_string));
+        auto& mode_radio_container = mode_container.add<GUI::Widget>();
+        mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
+        auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>("Outline"_string);
+        auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>("Fill"_string);
+        auto& aa_enable_checkbox = mode_radio_container.add<GUI::CheckBox>("Anti-alias"_string);
 
-        aa_enable_checkbox->on_checked = [this](bool checked) {
+        aa_enable_checkbox.on_checked = [this](bool checked) {
             m_antialias_enabled = checked;
         };
-        outline_mode_radio->on_checked = [this](bool checked) {
+        outline_mode_radio.on_checked = [this](bool checked) {
             if (checked)
                 m_fill_mode = FillMode::Outline;
         };
-        fill_mode_radio->on_checked = [this](bool checked) {
+        fill_mode_radio.on_checked = [this](bool checked) {
             if (checked)
                 m_fill_mode = FillMode::Fill;
         };
 
-        aa_enable_checkbox->set_checked(true);
-        outline_mode_radio->set_checked(true);
+        aa_enable_checkbox.set_checked(true);
+        outline_mode_radio.set_checked(true);
 
-        auto aspect_container = TRY(properties_widget->try_add<GUI::Widget>());
-        aspect_container->set_fixed_height(20);
-        aspect_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& aspect_container = properties_widget->add<GUI::Widget>();
+        aspect_container.set_fixed_height(20);
+        aspect_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto aspect_label = TRY(aspect_container->try_add<GUI::Label>("Aspect Ratio:"_string));
-        aspect_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        aspect_label->set_fixed_size(80, 20);
+        auto& aspect_label = aspect_container.add<GUI::Label>("Aspect Ratio:"_string);
+        aspect_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        aspect_label.set_fixed_size(80, 20);
 
-        m_aspect_w_textbox = TRY(aspect_container->try_add<GUI::TextBox>());
+        m_aspect_w_textbox = aspect_container.add<GUI::TextBox>();
         m_aspect_w_textbox->set_fixed_height(20);
         m_aspect_w_textbox->set_fixed_width(25);
         m_aspect_w_textbox->on_change = [this] {
@@ -197,11 +197,11 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
             }
         };
 
-        auto multiply_label = TRY(aspect_container->try_add<GUI::Label>("x"_string));
-        multiply_label->set_text_alignment(Gfx::TextAlignment::Center);
-        multiply_label->set_fixed_size(10, 20);
+        auto& multiply_label = aspect_container.add<GUI::Label>("x"_string);
+        multiply_label.set_text_alignment(Gfx::TextAlignment::Center);
+        multiply_label.set_fixed_size(10, 20);
 
-        m_aspect_h_textbox = TRY(aspect_container->try_add<GUI::TextBox>());
+        m_aspect_h_textbox = aspect_container.add<GUI::TextBox>();
         m_aspect_h_textbox->set_fixed_height(20);
         m_aspect_h_textbox->set_fixed_width(25);
         m_aspect_h_textbox->on_change = [this] { m_aspect_w_textbox->on_change(); };

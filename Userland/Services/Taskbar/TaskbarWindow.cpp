@@ -78,17 +78,17 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
     m_quick_launch = TRY(Taskbar::QuickLaunchWidget::create());
     TRY(main_widget->try_add_child(*m_quick_launch));
 
-    m_task_button_container = TRY(main_widget->try_add<GUI::Widget>());
+    m_task_button_container = main_widget->add<GUI::Widget>();
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 3);
 
     m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
 
-    m_applet_area_container = TRY(main_widget->try_add<GUI::Frame>());
+    m_applet_area_container = main_widget->add<GUI::Frame>();
     m_applet_area_container->set_frame_style(Gfx::FrameStyle::SunkenPanel);
 
-    m_clock_widget = TRY(main_widget->try_add<Taskbar::ClockWidget>());
+    m_clock_widget = main_widget->add<Taskbar::ClockWidget>();
 
-    m_show_desktop_button = TRY(main_widget->try_add<GUI::Button>());
+    m_show_desktop_button = main_widget->add<GUI::Button>();
     m_show_desktop_button->set_tooltip_deprecated("Show Desktop");
     m_show_desktop_button->set_icon(TRY(GUI::Icon::try_create_default_icon("desktop"sv)).bitmap_for_size(16));
     m_show_desktop_button->set_button_style(Gfx::ButtonStyle::Coolbar);

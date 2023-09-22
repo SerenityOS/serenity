@@ -74,15 +74,15 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     main_widget->set_layout<GUI::VerticalBoxLayout>(4, 6);
     main_widget->set_fill_with_background_color(true);
 
-    auto tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
+    auto& tab_widget = main_widget->add<GUI::TabWidget>();
     TRY(create_general_tab(tab_widget, disable_rename));
     TRY(create_file_type_specific_tabs(tab_widget));
 
-    auto button_widget = TRY(main_widget->try_add<GUI::Widget>());
-    button_widget->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5);
-    button_widget->set_fixed_height(22);
+    auto& button_widget = main_widget->add<GUI::Widget>();
+    button_widget.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5);
+    button_widget.set_fixed_height(22);
 
-    button_widget->add_spacer();
+    button_widget.add_spacer();
 
     auto ok_button = TRY(make_button("OK"_string, button_widget));
     ok_button->on_click = [this](auto) {
@@ -594,8 +594,8 @@ ErrorOr<void> PropertiesWindow::setup_permission_checkboxes(GUI::CheckBox& box_r
 
 ErrorOr<NonnullRefPtr<GUI::Button>> PropertiesWindow::make_button(String text, GUI::Widget& parent)
 {
-    auto button = TRY(parent.try_add<GUI::Button>(text));
-    button->set_fixed_size(70, 22);
+    auto& button = parent.add<GUI::Button>(text);
+    button.set_fixed_size(70, 22);
     return button;
 }
 

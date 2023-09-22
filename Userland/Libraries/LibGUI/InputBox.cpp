@@ -132,13 +132,13 @@ ErrorOr<void> InputBox::build()
     main_widget->set_fill_with_background_color(true);
 
     if (!m_prompt.is_empty()) {
-        auto prompt_container = TRY(main_widget->try_add<Widget>());
-        prompt_container->set_layout<HorizontalBoxLayout>(0, 8);
+        auto& prompt_container = main_widget->add<Widget>();
+        prompt_container.set_layout<HorizontalBoxLayout>(0, 8);
         if (m_icon) {
-            auto image_widget = TRY(prompt_container->try_add<ImageWidget>());
-            image_widget->set_bitmap(m_icon);
+            auto& image_widget = prompt_container.add<ImageWidget>();
+            image_widget.set_bitmap(m_icon);
         }
-        m_prompt_label = TRY(prompt_container->try_add<Label>());
+        m_prompt_label = prompt_container.add<Label>();
         m_prompt_label->set_autosize(true);
         m_prompt_label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
         m_prompt_label->set_text(m_prompt);
@@ -147,21 +147,21 @@ ErrorOr<void> InputBox::build()
     switch (m_input_type) {
     case InputType::Text:
     case InputType::NonemptyText:
-        m_text_editor = TRY(main_widget->try_add<TextBox>());
+        m_text_editor = main_widget->add<TextBox>();
         break;
     case InputType::Password:
-        m_text_editor = TRY(main_widget->try_add<PasswordBox>());
+        m_text_editor = main_widget->add<PasswordBox>();
         break;
     case InputType::Numeric:
-        m_spinbox = TRY(main_widget->try_add<SpinBox>());
+        m_spinbox = main_widget->add<SpinBox>();
         break;
     }
 
-    auto button_container = TRY(main_widget->try_add<Widget>());
-    button_container->set_layout<HorizontalBoxLayout>(0, 6);
-    button_container->add_spacer();
+    auto& button_container = main_widget->add<Widget>();
+    button_container.set_layout<HorizontalBoxLayout>(0, 6);
+    button_container.add_spacer();
 
-    m_ok_button = TRY(button_container->try_add<DialogButton>("OK"_string));
+    m_ok_button = button_container.add<DialogButton>("OK"_string);
     m_ok_button->on_click = [this](auto) {
         if (m_spinbox)
             m_spinbox->set_value_from_current_text();
@@ -169,15 +169,15 @@ ErrorOr<void> InputBox::build()
     };
     m_ok_button->set_default(true);
 
-    m_cancel_button = TRY(button_container->try_add<DialogButton>("Cancel"_string));
+    m_cancel_button = button_container.add<DialogButton>("Cancel"_string);
     m_cancel_button->on_click = [this](auto) { done(ExecResult::Cancel); };
 
-    auto guarantee_width = [this, button_container] {
+    auto guarantee_width = [this, &button_container] {
         if (m_prompt.is_empty())
             return;
-        auto width = button_container->calculated_min_size().value().width().as_int();
+        auto width = button_container.calculated_min_size().value().width().as_int();
         auto constexpr golden_ratio = 1.618;
-        button_container->set_min_width(width * golden_ratio);
+        button_container.set_min_width(width * golden_ratio);
     };
     guarantee_width();
     on_font_change = [guarantee_width] { guarantee_width(); };

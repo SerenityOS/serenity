@@ -25,19 +25,19 @@ ErrorOr<void> CoverWizardPage::build(String title, String subtitle)
     set_fill_with_background_color(true);
     set_background_role(Gfx::ColorRole::Base);
     set_layout<HorizontalBoxLayout>();
-    m_banner_image_widget = TRY(try_add<ImageWidget>());
+    m_banner_image_widget = add<ImageWidget>();
     m_banner_image_widget->set_fixed_size(160, 315);
     m_banner_image_widget->load_from_file("/res/graphics/wizard-banner-simple.png"sv);
 
-    m_content_widget = TRY(try_add<Widget>());
+    m_content_widget = add<Widget>();
     m_content_widget->set_layout<VerticalBoxLayout>(20);
 
-    m_header_label = TRY(m_content_widget->try_add<Label>(move(title)));
+    m_header_label = m_content_widget->add<Label>(move(title));
     m_header_label->set_font(Gfx::FontDatabase::the().get("Pebbleton"_fly_string, 14, 700, Gfx::FontWidth::Normal, 0));
     m_header_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
     m_header_label->set_fixed_height(48);
 
-    m_body_label = TRY(m_content_widget->try_add<Label>(move(subtitle)));
+    m_body_label = m_content_widget->add<Label>(move(subtitle));
     m_body_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
 
     return {};

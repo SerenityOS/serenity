@@ -192,14 +192,14 @@ ErrorOr<GUI::Widget*> PolygonalSelectTool::get_properties_widget()
     auto properties_widget = GUI::Widget::construct();
     properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
-    mode_container->set_fixed_height(20);
-    mode_container->set_layout<GUI::HorizontalBoxLayout>();
+    auto& mode_container = properties_widget->add<GUI::Widget>();
+    mode_container.set_fixed_height(20);
+    mode_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto mode_label = TRY(mode_container->try_add<GUI::Label>());
-    mode_label->set_text("Mode:"_string);
-    mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    mode_label->set_fixed_size(80, 20);
+    auto& mode_label = mode_container.add<GUI::Label>();
+    mode_label.set_text("Mode:"_string);
+    mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    mode_label.set_fixed_size(80, 20);
 
     static constexpr auto s_merge_mode_names = [] {
         Array<StringView, (int)Selection::MergeMode::__Count> names;
@@ -224,11 +224,11 @@ ErrorOr<GUI::Widget*> PolygonalSelectTool::get_properties_widget()
         return names;
     }();
 
-    auto mode_combo = TRY(mode_container->try_add<GUI::ComboBox>());
-    mode_combo->set_only_allow_values_from_model(true);
-    mode_combo->set_model(*GUI::ItemListModel<StringView, decltype(s_merge_mode_names)>::create(s_merge_mode_names));
-    mode_combo->set_selected_index((int)m_merge_mode);
-    mode_combo->on_change = [this](auto&&, GUI::ModelIndex const& index) {
+    auto& mode_combo = mode_container.add<GUI::ComboBox>();
+    mode_combo.set_only_allow_values_from_model(true);
+    mode_combo.set_model(*GUI::ItemListModel<StringView, decltype(s_merge_mode_names)>::create(s_merge_mode_names));
+    mode_combo.set_selected_index((int)m_merge_mode);
+    mode_combo.on_change = [this](auto&&, GUI::ModelIndex const& index) {
         VERIFY(index.row() >= 0);
         VERIFY(index.row() < (int)Selection::MergeMode::__Count);
 

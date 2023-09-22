@@ -75,7 +75,7 @@ ErrorOr<NonnullRefPtr<ThreadStackWidget>> ThreadStackWidget::try_create()
 {
     auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThreadStackWidget()));
     widget->set_layout<GUI::VerticalBoxLayout>(4);
-    widget->m_stack_table = TRY(widget->try_add<GUI::TableView>());
+    widget->m_stack_table = widget->add<GUI::TableView>();
     widget->m_stack_table->set_model(TRY(try_make_ref_counted<ThreadStackModel>()));
     return widget;
 }

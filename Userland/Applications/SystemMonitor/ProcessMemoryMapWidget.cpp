@@ -53,7 +53,7 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
 {
     auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessMemoryMapWidget()));
     widget->set_layout<GUI::VerticalBoxLayout>(4);
-    widget->m_table_view = TRY(widget->try_add<GUI::TableView>());
+    widget->m_table_view = widget->add<GUI::TableView>();
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
     TRY(pid_vm_fields.try_empend(
@@ -110,7 +110,7 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
     widget->m_table_view->set_column_painting_delegate(7, TRY(try_make<PagemapPaintingDelegate>()));
 
     widget->m_table_view->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);
-    widget->m_timer = TRY(widget->try_add<Core::Timer>(1000, [widget] { widget->refresh(); }));
+    widget->m_timer = widget->add<Core::Timer>(1000, [widget] { widget->refresh(); });
     widget->m_timer->start();
 
     return widget;

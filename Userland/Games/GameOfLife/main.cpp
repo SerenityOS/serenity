@@ -61,12 +61,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& board_widget_container = *main_widget->find_descendant_of_type_named<GUI::Widget>("board_widget_container");
     board_widget_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
-    auto board_widget = TRY(board_widget_container.try_add<BoardWidget>(board_rows, board_columns));
-    board_widget->randomize_cells();
-    board_widget->set_min_size(board_columns, board_rows);
+    auto& board_widget = board_widget_container.add<BoardWidget>(board_rows, board_columns);
+    board_widget.randomize_cells();
+    board_widget.set_min_size(board_columns, board_rows);
 
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
-    auto width = board_widget->font().width("Ticks: 000,000,000"sv) + board_widget->font().max_glyph_width();
+    auto width = board_widget.font().width("Ticks: 000,000,000"sv) + board_widget.font().max_glyph_width();
     statusbar.segment(1).set_fixed_width(ceil(width));
     statusbar.segment(0).set_text(click_tip);
 
@@ -78,8 +78,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto size_changed_function = [&] {
         statusbar.segment(0).set_text(click_tip);
-        board_widget->resize_board(rows_spinbox.value(), columns_spinbox.value());
-        board_widget->update();
+        board_widget.resize_board(rows_spinbox.value(), columns_spinbox.value());
+        board_widget.update();
     };
 
     rows_spinbox.on_change = [&](auto) { size_changed_function(); };
@@ -88,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& interval_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("interval_spinbox");
 
     interval_spinbox.on_change = [&](auto value) {
-        board_widget->set_running_timer_interval(value);
+        board_widget.set_running_timer_interval(value);
     };
 
     interval_spinbox.set_value(150);
@@ -97,35 +97,35 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
 
     auto play_pause_action = GUI::Action::create("&Play", { Mod_None, Key_Return }, *play_icon, [&](GUI::Action&) {
-        board_widget->set_running(!board_widget->is_running());
+        board_widget.set_running(!board_widget.is_running());
     });
 
     main_toolbar.add_action(play_pause_action);
 
     auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](const GUI::Action&) {
         statusbar.segment(0).set_text(click_tip);
-        board_widget->run_generation();
+        board_widget.run_generation();
     });
     main_toolbar.add_action(run_one_generation_action);
 
     auto clear_board_action = GUI::Action::create("&Clear board", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv)), [&](auto&) {
         statusbar.segment(0).set_text(click_tip);
         statusbar.segment(1).set_text({});
-        board_widget->clear_cells();
-        board_widget->update();
+        board_widget.clear_cells();
+        board_widget.update();
     });
     main_toolbar.add_action(clear_board_action);
 
     auto randomize_cells_action = GUI::Action::create("&Randomize board", { Mod_Ctrl, Key_R }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         statusbar.segment(0).set_text(click_tip);
         statusbar.segment(1).set_text({});
-        board_widget->randomize_cells();
-        board_widget->update();
+        board_widget.randomize_cells();
+        board_widget.update();
     });
     main_toolbar.add_action(randomize_cells_action);
 
     auto rotate_pattern_action = GUI::Action::create("&Rotate pattern", { 0, Key_R }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/redo.png"sv)), [&](auto&) {
-        board_widget->selected_pattern()->rotate_clockwise();
+        board_widget.selected_pattern()->rotate_clockwise();
     });
     rotate_pattern_action->set_enabled(false);
     main_toolbar.add_action(rotate_pattern_action);
@@ -149,12 +149,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Game of Life"_string, app_icon, window));
 
-    board_widget->on_tick = [&](u64 ticks) {
+    board_widget.on_tick = [&](u64 ticks) {
         statusbar.segment(1).set_text(String::formatted("Ticks: {:'}", ticks).release_value_but_fixme_should_propagate_errors());
     };
 
-    board_widget->on_running_state_change = [&]() {
-        if (board_widget->is_running()) {
+    board_widget.on_running_state_change = [&]() {
+        if (board_widget.is_running()) {
             statusbar.segment(0).set_text("Running..."_string);
             play_pause_action->set_icon(paused_icon);
             play_pause_action->set_text("&Pause");
@@ -166,31 +166,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             main_widget->set_override_cursor(Gfx::StandardCursor::Drag);
         }
 
-        interval_spinbox.set_value(board_widget->running_timer_interval());
+        interval_spinbox.set_value(board_widget.running_timer_interval());
 
-        rows_spinbox.set_enabled(!board_widget->is_running());
-        columns_spinbox.set_enabled(!board_widget->is_running());
-        interval_spinbox.set_enabled(!board_widget->is_running());
+        rows_spinbox.set_enabled(!board_widget.is_running());
+        columns_spinbox.set_enabled(!board_widget.is_running());
+        interval_spinbox.set_enabled(!board_widget.is_running());
 
-        run_one_generation_action->set_enabled(!board_widget->is_running());
-        clear_board_action->set_enabled(!board_widget->is_running());
-        randomize_cells_action->set_enabled(!board_widget->is_running());
+        run_one_generation_action->set_enabled(!board_widget.is_running());
+        clear_board_action->set_enabled(!board_widget.is_running());
+        randomize_cells_action->set_enabled(!board_widget.is_running());
 
-        board_widget->update();
+        board_widget.update();
     };
 
-    board_widget->on_stall = [&] {
+    board_widget.on_stall = [&] {
         play_pause_action->activate();
         statusbar.segment(0).set_text("Stalled"_string);
     };
 
-    board_widget->on_cell_toggled = [&](auto, auto, auto) {
+    board_widget.on_cell_toggled = [&](auto, auto, auto) {
         statusbar.segment(0).set_text(click_tip);
         statusbar.segment(1).set_text({});
     };
 
-    board_widget->on_pattern_selection_state_change = [&] {
-        rotate_pattern_action->set_enabled(board_widget->selected_pattern() != nullptr);
+    board_widget.on_pattern_selection_state_change = [&] {
+        rotate_pattern_action->set_enabled(board_widget.selected_pattern() != nullptr);
     };
 
     window->resize(600, 500);

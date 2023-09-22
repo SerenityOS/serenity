@@ -15,7 +15,7 @@ GalleryWidget::GalleryWidget()
     auto& inner_widget = add<GUI::Widget>();
     inner_widget.set_layout<GUI::VerticalBoxLayout>(4);
 
-    m_tab_widget = inner_widget.try_add<GUI::TabWidget>().release_value_but_fixme_should_propagate_errors();
+    m_tab_widget = inner_widget.add<GUI::TabWidget>();
     m_statusbar = add<GUI::Statusbar>();
 
     (void)load_basic_model_tab();

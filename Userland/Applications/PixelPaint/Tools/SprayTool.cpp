@@ -96,39 +96,39 @@ ErrorOr<GUI::Widget*> SprayTool::get_properties_widget()
         auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto size_container = TRY(properties_widget->try_add<GUI::Widget>());
-        size_container->set_fixed_height(20);
-        size_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& size_container = properties_widget->add<GUI::Widget>();
+        size_container.set_fixed_height(20);
+        size_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_string));
-        size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label->set_fixed_size(80, 20);
+        auto& size_label = size_container.add<GUI::Label>("Size:"_string);
+        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label.set_fixed_size(80, 20);
 
-        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
-        size_slider->set_range(1, 20);
-        size_slider->set_value(m_thickness);
+        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string);
+        size_slider.set_range(1, 20);
+        size_slider.set_value(m_thickness);
 
-        size_slider->on_change = [this](int value) {
+        size_slider.on_change = [this](int value) {
             m_thickness = value;
         };
-        set_primary_slider(size_slider);
+        set_primary_slider(&size_slider);
 
-        auto density_container = TRY(properties_widget->try_add<GUI::Widget>());
-        density_container->set_fixed_height(20);
-        density_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& density_container = properties_widget->add<GUI::Widget>();
+        density_container.set_fixed_height(20);
+        density_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto density_label = TRY(density_container->try_add<GUI::Label>("Density:"_string));
-        density_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        density_label->set_fixed_size(80, 20);
+        auto& density_label = density_container.add<GUI::Label>("Density:"_string);
+        density_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        density_label.set_fixed_size(80, 20);
 
-        auto density_slider = TRY(density_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
-        density_slider->set_range(1, 100);
-        density_slider->set_value(m_density);
+        auto& density_slider = density_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string);
+        density_slider.set_range(1, 100);
+        density_slider.set_value(m_density);
 
-        density_slider->on_change = [this](int value) {
+        density_slider.on_change = [this](int value) {
             m_density = value;
         };
-        set_secondary_slider(density_slider);
+        set_secondary_slider(&density_slider);
         m_properties_widget = properties_widget;
     }
 

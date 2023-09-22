@@ -169,53 +169,53 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
     main_widget->set_background_role(ColorRole::Button);
     main_widget->set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto find = TRY(main_widget->try_add<GUI::Widget>());
-    find->set_layout<GUI::HorizontalBoxLayout>(4);
-    find->set_fixed_height(30);
+    auto& find = main_widget->add<GUI::Widget>();
+    find.set_layout<GUI::HorizontalBoxLayout>(4);
+    find.set_fixed_height(30);
 
-    auto find_textbox = TRY(find->try_add<GUI::TextBox>());
-    find_textbox->set_fixed_width(230);
-    find_textbox->set_focus(true);
+    auto& find_textbox = find.add<GUI::TextBox>();
+    find_textbox.set_fixed_width(230);
+    find_textbox.set_focus(true);
     if (terminal.has_selection())
-        find_textbox->set_text(terminal.selected_text().replace("\n"sv, " "sv, ReplaceMode::All));
-    auto find_backwards = TRY(find->try_add<GUI::Button>());
-    find_backwards->set_fixed_width(25);
-    find_backwards->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png"sv)));
-    auto find_forwards = TRY(find->try_add<GUI::Button>());
-    find_forwards->set_fixed_width(25);
-    find_forwards->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"sv)));
+        find_textbox.set_text(terminal.selected_text().replace("\n"sv, " "sv, ReplaceMode::All));
+    auto& find_backwards = find.add<GUI::Button>();
+    find_backwards.set_fixed_width(25);
+    find_backwards.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png"sv)));
+    auto& find_forwards = find.add<GUI::Button>();
+    find_forwards.set_fixed_width(25);
+    find_forwards.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"sv)));
 
-    find_textbox->on_return_pressed = [find_backwards] {
-        find_backwards->click();
+    find_textbox.on_return_pressed = [&find_backwards] {
+        find_backwards.click();
     };
 
-    find_textbox->on_shift_return_pressed = [find_forwards] {
-        find_forwards->click();
+    find_textbox.on_shift_return_pressed = [&find_forwards] {
+        find_forwards.click();
     };
 
-    auto match_case = TRY(main_widget->try_add<GUI::CheckBox>("Case sensitive"_string));
-    auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>("Wrap around"_string));
+    auto& match_case = main_widget->add<GUI::CheckBox>("Case sensitive"_string);
+    auto& wrap_around = main_widget->add<GUI::CheckBox>("Wrap around"_string);
 
-    find_backwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) {
-        auto needle = find_textbox->text();
+    find_backwards.on_click = [&terminal, &find_textbox, &match_case, &wrap_around](auto) {
+        auto needle = find_textbox.text();
         if (needle.is_empty()) {
             return;
         }
 
-        auto found_range = terminal.find_previous(needle, terminal.normalized_selection().start(), match_case->is_checked(), wrap_around->is_checked());
+        auto found_range = terminal.find_previous(needle, terminal.normalized_selection().start(), match_case.is_checked(), wrap_around.is_checked());
 
         if (found_range.is_valid()) {
             terminal.scroll_to_row(found_range.start().row());
             terminal.set_selection(found_range);
         }
     };
-    find_forwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) {
-        auto needle = find_textbox->text();
+    find_forwards.on_click = [&terminal, &find_textbox, &match_case, &wrap_around](auto) {
+        auto needle = find_textbox.text();
         if (needle.is_empty()) {
             return;
         }
 
-        auto found_range = terminal.find_next(needle, terminal.normalized_selection().end(), match_case->is_checked(), wrap_around->is_checked());
+        auto found_range = terminal.find_next(needle, terminal.normalized_selection().end(), match_case.is_checked(), wrap_around.is_checked());
 
         if (found_range.is_valid()) {
             terminal.scroll_to_row(found_range.start().row());
