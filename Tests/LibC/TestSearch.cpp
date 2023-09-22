@@ -12,8 +12,12 @@
 
 #define NODE(node) static_cast<struct search_tree_node*>(node)
 #define ROOTP(root) reinterpret_cast<void**>(root)
-#define COMP(func) reinterpret_cast<int (*)(void const*, void const*)>(func)
 #define U8(value) static_cast<u8>(value)
+
+static int comparison_function(void const* node1, void const* node2)
+{
+    return strcmp(reinterpret_cast<char const*>(node1), reinterpret_cast<char const*>(node2));
+}
 
 struct twalk_test_entry {
     void const* node;
@@ -33,62 +37,62 @@ TEST_CASE(tsearch)
     char* search;
 
     // Try a nullptr rootp.
-    ret = tsearch("buggie", nullptr, COMP(strcmp));
+    ret = tsearch("buggie", nullptr, comparison_function);
     EXPECT_EQ(ret, nullptr);
 
     // Try creating a new tree.
     key = "5";
-    ret = tsearch(key, ROOTP(&root), COMP(strcmp));
+    ret = tsearch(key, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root);
     EXPECT_EQ(NODE(ret)->key, key);
 
     // Insert an element on the left side.
     key = "3";
-    ret = tsearch(key, ROOTP(&root), COMP(strcmp));
+    ret = tsearch(key, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->left);
     EXPECT_EQ(NODE(ret)->key, key);
 
     // Insert an element on the right side.
     key = "7";
-    ret = tsearch(key, ROOTP(&root), COMP(strcmp));
+    ret = tsearch(key, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->right);
     EXPECT_EQ(NODE(ret)->key, key);
 
     // Add another layer for testing.
-    ret = tsearch("2", ROOTP(&root), COMP(strcmp));
+    ret = tsearch("2", ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->left->left);
-    ret = tsearch("4", ROOTP(&root), COMP(strcmp));
+    ret = tsearch("4", ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->left->right);
-    ret = tsearch("6", ROOTP(&root), COMP(strcmp));
+    ret = tsearch("6", ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->right->left);
-    ret = tsearch("8", ROOTP(&root), COMP(strcmp));
+    ret = tsearch("8", ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->right->right);
 
     // Find the root element.
     // strdup ensures that we are using the comparator.
     search = strdup("5");
-    ret = tsearch(search, ROOTP(&root), COMP(strcmp));
+    ret = tsearch(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root);
     free(search);
 
     // Find the lowest-level elements.
     search = strdup("2");
-    ret = tsearch(search, ROOTP(&root), COMP(strcmp));
+    ret = tsearch(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->left->left);
     free(search);
 
     search = strdup("4");
-    ret = tsearch(search, ROOTP(&root), COMP(strcmp));
+    ret = tsearch(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->left->right);
     free(search);
 
     search = strdup("6");
-    ret = tsearch(search, ROOTP(&root), COMP(strcmp));
+    ret = tsearch(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->right->left);
     free(search);
 
     search = strdup("8");
-    ret = tsearch(search, ROOTP(&root), COMP(strcmp));
+    ret = tsearch(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->right->right);
     free(search);
 
@@ -102,11 +106,11 @@ TEST_CASE(tfind)
     char* search;
 
     // Try a nullptr rootp.
-    ret = tfind("buggie", nullptr, COMP(strcmp));
+    ret = tfind("buggie", nullptr, comparison_function);
     EXPECT_EQ(ret, nullptr);
 
     // Search for something that doesn't exist.
-    ret = tfind("buggie", ROOTP(&root), COMP(strcmp));
+    ret = tfind("buggie", ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, nullptr);
 
     // Construct a tree for testing.
@@ -121,28 +125,28 @@ TEST_CASE(tfind)
     // Find the root element.
     // strdup ensures that we are using the comparator.
     search = strdup("5");
-    ret = tfind(search, ROOTP(&root), COMP(strcmp));
+    ret = tfind(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root);
     free(search);
 
     // Find the lowest-level elements.
     search = strdup("2");
-    ret = tfind(search, ROOTP(&root), COMP(strcmp));
+    ret = tfind(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->left->left);
     free(search);
 
     search = strdup("4");
-    ret = tfind(search, ROOTP(&root), COMP(strcmp));
+    ret = tfind(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->left->right);
     free(search);
 
     search = strdup("6");
-    ret = tfind(search, ROOTP(&root), COMP(strcmp));
+    ret = tfind(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->right->left);
     free(search);
 
     search = strdup("8");
-    ret = tfind(search, ROOTP(&root), COMP(strcmp));
+    ret = tfind(search, ROOTP(&root), comparison_function);
     EXPECT_EQ(ret, root->right->right);
     free(search);
 
