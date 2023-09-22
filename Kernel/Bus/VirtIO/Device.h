@@ -35,7 +35,7 @@ protected:
 
     void mask_status_bits(u8 status_mask);
     void set_status_bit(u8);
-    bool setup_queues(u16 requested_queue_count = 0);
+    ErrorOr<void> setup_queues(u16 requested_queue_count = 0);
     void finish_init();
 
     Queue& get_queue(u16 queue_index)
@@ -51,7 +51,7 @@ protected:
     }
 
     template<typename F>
-    bool negotiate_features(F f)
+    ErrorOr<void> negotiate_features(F f)
     {
         u64 device_features = m_transport_entity->get_device_features();
         u64 accept_features = f(device_features);
@@ -72,16 +72,16 @@ protected:
 
     void supply_chain_and_notify(u16 queue_index, QueueChain& chain);
 
-    virtual bool handle_device_config_change() = 0;
+    virtual ErrorOr<void> handle_device_config_change() = 0;
     virtual void handle_queue_update(u16 queue_index) = 0;
 
     TransportEntity& transport_entity() { return *m_transport_entity; }
 
 private:
-    bool accept_device_features(u64 device_features, u64 accepted_features);
+    ErrorOr<void> accept_device_features(u64 device_features, u64 accepted_features);
 
-    bool setup_queue(u16 queue_index);
-    bool activate_queue(u16 queue_index);
+    ErrorOr<void> setup_queue(u16 queue_index);
+    ErrorOr<void> activate_queue(u16 queue_index);
     void notify_queue(u16 queue_index);
 
     Vector<NonnullOwnPtr<Queue>> m_queues;

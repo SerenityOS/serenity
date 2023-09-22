@@ -135,16 +135,16 @@ void TransportEntity::notify_queue(Badge<VirtIO::Device>, NotifyQueueDescriptor 
         config_write16(*m_notify_cfg, descriptor.possible_notify_offset * m_notify_multiplier, descriptor.queue_index);
 }
 
-bool TransportEntity::activate_queue(Badge<VirtIO::Device>, u16 queue_index)
+ErrorOr<void> TransportEntity::activate_queue(Badge<VirtIO::Device>, u16 queue_index)
 {
     if (!m_common_cfg)
-        return false;
+        return Error::from_errno(ENXIO);
 
     config_write16(*m_common_cfg, COMMON_CFG_QUEUE_SELECT, queue_index);
     config_write16(*m_common_cfg, COMMON_CFG_QUEUE_ENABLE, true);
 
     dbgln_if(VIRTIO_DEBUG, "Queue[{}] activated", queue_index);
-    return true;
+    return {};
 }
 
 u64 TransportEntity::get_device_features()

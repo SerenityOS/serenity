@@ -30,7 +30,7 @@ public:
         u16 possible_notify_offset;
     };
     void notify_queue(Badge<VirtIO::Device>, NotifyQueueDescriptor);
-    bool activate_queue(Badge<VirtIO::Device>, u16 queue_index);
+    ErrorOr<void> activate_queue(Badge<VirtIO::Device>, u16 queue_index);
     ErrorOr<NonnullOwnPtr<Queue>> setup_queue(Badge<VirtIO::Device>, u16 queue_index);
     void set_status_bits(Badge<VirtIO::Device>, u8 status_bits);
     void reset_device(Badge<VirtIO::Device>);

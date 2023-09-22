@@ -59,7 +59,7 @@ private:
     constexpr static size_t CONTROL_MESSAGE_SIZE = sizeof(ControlMessage);
     constexpr static size_t CONTROL_BUFFER_SIZE = CONTROL_MESSAGE_SIZE * 32;
 
-    virtual bool handle_device_config_change() override;
+    virtual ErrorOr<void> handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
 
     Vector<LockRefPtr<ConsolePort>> m_ports;

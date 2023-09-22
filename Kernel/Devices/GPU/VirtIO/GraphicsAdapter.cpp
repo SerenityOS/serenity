@@ -150,7 +150,7 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_virtio_resources()
     TRY(VirtIO::Device::initialize_virtio_resources());
     auto* config = TRY(transport_entity().get_config(VirtIO::ConfigurationType::Device));
     m_device_configuration = config;
-    bool success = negotiate_features([&](u64 supported_features) {
+    TRY(negotiate_features([&](u64 supported_features) {
         u64 negotiated = 0;
         if (is_feature_set(supported_features, VIRTIO_GPU_F_VIRGL)) {
             dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: VirGL is available, enabling");
@@ -160,21 +160,17 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_virtio_resources()
         if (is_feature_set(supported_features, VIRTIO_GPU_F_EDID))
             negotiated |= VIRTIO_GPU_F_EDID;
         return negotiated;
+    }));
+    transport_entity().read_config_atomic([&]() {
+        m_num_scanouts = transport_entity().config_read32(*config, DEVICE_NUM_SCANOUTS);
     });
-    if (success) {
-        transport_entity().read_config_atomic([&]() {
-            m_num_scanouts = transport_entity().config_read32(*config, DEVICE_NUM_SCANOUTS);
-        });
-        dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: num_scanouts: {}", m_num_scanouts);
-        success = setup_queues(2); // CONTROLQ + CURSORQ
-    }
-    if (!success)
-        return Error::from_errno(EIO);
+    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: num_scanouts: {}", m_num_scanouts);
+    TRY(setup_queues(2)); // CONTROLQ + CURSORQ
     finish_init();
     return {};
 }
 
-bool VirtIOGraphicsAdapter::handle_device_config_change()
+ErrorOr<void> VirtIOGraphicsAdapter::handle_device_config_change()
 {
     auto events = get_pending_events();
     if (events & VIRTIO_GPU_EVENT_DISPLAY) {
@@ -184,9 +180,9 @@ bool VirtIOGraphicsAdapter::handle_device_config_change()
     }
     if (events & ~VIRTIO_GPU_EVENT_DISPLAY) {
         dbgln("VirtIO::GraphicsAdapter: Got unknown device config change event: {:#x}", events);
-        return false;
+        return Error::from_errno(EIO);
     }
-    return true;
+    return {};
 }
 
 void VirtIOGraphicsAdapter::handle_queue_update(u16)

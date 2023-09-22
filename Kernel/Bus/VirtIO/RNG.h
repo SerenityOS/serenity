@@ -27,7 +27,7 @@ public:
 private:
     virtual StringView class_name() const override { return "VirtIORNG"sv; }
     explicit RNG(NonnullOwnPtr<TransportEntity>);
-    virtual bool handle_device_config_change() override;
+    virtual ErrorOr<void> handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
     void request_entropy_from_host();
 
