@@ -49,7 +49,6 @@ public:
     u32& operator[](size_t index) { return m_data[index]; }
     u32 operator[](size_t index) const { return m_data[index]; }
     bool operator==(RandomRun const& rhs) const { return m_data == rhs.m_data; }
-    bool operator!=(RandomRun const& rhs) const { return m_data != rhs.m_data; }
     bool operator<(RandomRun const& rhs) const
     {
         if (size() < rhs.size())
