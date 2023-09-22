@@ -64,17 +64,20 @@ RandSource& rand_source()
 }
 
 // Declared in Macros.h
-bool can_report() {
+bool can_report()
+{
     return TestSuite::the().m_reporting_enabled;
 }
 
 // Declared in Macros.h
-void enable_reporting() {
+void enable_reporting()
+{
     TestSuite::the().m_reporting_enabled = true;
 }
 
 // Declared in Macros.h
-void disable_reporting() {
+void disable_reporting()
+{
     TestSuite::the().m_reporting_enabled = false;
 }
 

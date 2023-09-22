@@ -28,8 +28,9 @@ struct MinimizeChoice {
 struct SwapChunkWithNeighbour {
     Chunk chunk;
 
-    Chunk const neighbour() {
-        return Chunk{chunk.size, chunk.index + chunk.size};
+    Chunk const neighbour()
+    {
+        return Chunk { chunk.size, chunk.index + chunk.size };
     }
 };
 struct RedistributeChoicesAndMaybeInc {
@@ -43,8 +44,7 @@ using CmdVariant = Variant<
     DeleteChunkAndMaybeDecPrevious,
     MinimizeChoice,
     SwapChunkWithNeighbour,
-    RedistributeChoicesAndMaybeInc
->;
+    RedistributeChoicesAndMaybeInc>;
 
 class ShrinkCmd {
 public:
@@ -77,7 +77,7 @@ public:
             [&](DeleteChunkAndMaybeDecPrevious c) { return run.has_a_chance(c.chunk); },
             [&](MinimizeChoice c) { return run.size() > c.index; },
             [&](RedistributeChoicesAndMaybeInc c) { return run.size() > c.right_index; },
-            [&](SwapChunkWithNeighbour c) { return run.has_a_chance(c.neighbour());  });
+            [&](SwapChunkWithNeighbour c) { return run.has_a_chance(c.neighbour()); });
     }
 
     ErrorOr<String> to_string()
@@ -185,7 +185,8 @@ private:
     {
         Vector<ShrinkCmd> cmds;
         for (size_t offset = 3; offset > 0; --offset) {
-            if (offset >= run_size) continue;
+            if (offset >= run_size)
+                continue;
             for (size_t i = 0; i < run_size - offset; ++i) {
                 ShrinkCmd cmd = ShrinkCmd(RedistributeChoicesAndMaybeInc { i, i + offset });
                 cmds.append(cmd);

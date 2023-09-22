@@ -49,7 +49,7 @@ RANDOMIZED_TEST_CASE(bind_like)
 }
 
 /* An example of an user-defined generator (for the test bind_vector_suboptimal).
-  
+
    For why this is a suboptimal way to generate collections, see the comment in
    Shrink::shrink_delete().
 
@@ -93,21 +93,21 @@ RANDOMIZED_TEST_CASE(vector)
 RANDOMIZED_TEST_CASE(vector_max)
 {
     u32 max_item = 5;
-    GEN(vec, Gen::vector(3,[&]() { return Gen::unsigned_int(max_item); }));
+    GEN(vec, Gen::vector(3, [&]() { return Gen::unsigned_int(max_item); }));
     EXPECT(vec.size() <= 3);
 }
 
 RANDOMIZED_TEST_CASE(vector_min_max)
 {
     u32 max_item = 5;
-    GEN(vec, Gen::vector(1,4,[&]() { return Gen::unsigned_int(max_item); }));
+    GEN(vec, Gen::vector(1, 4, [&]() { return Gen::unsigned_int(max_item); }));
     EXPECT(vec.size() >= 1 && vec.size() <= 4);
 }
 
 RANDOMIZED_TEST_CASE(vector_of_length)
 {
     u32 max_item = 5;
-    GEN(vec, Gen::vector_of_length(3,[&]() { return Gen::unsigned_int(max_item); }));
+    GEN(vec, Gen::vector_of_length(3, [&]() { return Gen::unsigned_int(max_item); }));
     EXPECT(vec.size() == 3);
 }
 
@@ -165,20 +165,14 @@ RANDOMIZED_TEST_CASE(boolean_false)
 
 RANDOMIZED_TEST_CASE(frequency_int)
 {
-    GEN(x, Gen::frequency(
-                Tuple{5,'x'},
-                Tuple{1,'o'}
-    ));
+    GEN(x, Gen::frequency(Tuple { 5, 'x' }, Tuple { 1, 'o' }));
     ASSUME(x == 'x');
     EXPECT(x == 'x');
 }
 
 RANDOMIZED_TEST_CASE(frequency_float)
 {
-    GEN(x, Gen::frequency(
-                Tuple{2.5,'x'},
-                Tuple{0.5,'o'}
-    ));
+    GEN(x, Gen::frequency(Tuple { 2.5, 'x' }, Tuple { 0.5, 'o' }));
     ASSUME(x == 'x');
     EXPECT(x == 'x');
 }

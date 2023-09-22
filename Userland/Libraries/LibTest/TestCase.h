@@ -76,24 +76,29 @@ public:
                     set_current_test_result(TestResult::NotRun);
                     run_with_rand_source(RandSource::live(), test_fn);
                     switch (current_test_result()) {
-                        case TestResult::NotRun: break; // TODO I'd like to use VERIFY_NOT_REACHED() here
-                        case TestResult::Passed: {
-                            generated_successfully = true;
-                            break;
-                        }
-                        case TestResult::Failed: {
-                            generated_successfully = true;
-                            RandomRun first_failure = rand_source().run();
-                            RandomRun best_failure = shrink(first_failure, test_fn);
-                            // Run one last time with reporting on, so that the user can see the minimal failure
-                            enable_reporting();
-                            run_with_rand_source(RandSource::recorded(best_failure), test_fn);
-                            return;
-                        }
-                        case TestResult::Rejected: break;
-                        case TestResult::HitLimit: break;
-                        case TestResult::Overrun: break;
-                        default: break; // TODO I'd like to use VERIFY_NOT_REACHED() here
+                    case TestResult::NotRun:
+                        break; // TODO I'd like to use VERIFY_NOT_REACHED() here
+                    case TestResult::Passed: {
+                        generated_successfully = true;
+                        break;
+                    }
+                    case TestResult::Failed: {
+                        generated_successfully = true;
+                        RandomRun first_failure = rand_source().run();
+                        RandomRun best_failure = shrink(first_failure, test_fn);
+                        // Run one last time with reporting on, so that the user can see the minimal failure
+                        enable_reporting();
+                        run_with_rand_source(RandSource::recorded(best_failure), test_fn);
+                        return;
+                    }
+                    case TestResult::Rejected:
+                        break;
+                    case TestResult::HitLimit:
+                        break;
+                    case TestResult::Overrun:
+                        break;
+                    default:
+                        break; // TODO I'd like to use VERIFY_NOT_REACHED() here
                     }
                 }
                 if (!generated_successfully) {
@@ -185,8 +190,7 @@ void set_suite_setup_function(Function<void()> setup);
     static struct __RANDOMIZED_TEST_TYPE(x) __RANDOMIZED_TEST_TYPE(x);                           \
     static void __RANDOMIZED_TEST_FUNC(x)()
 
-#define GEN(identifier,value) \
-    auto (identifier) = (value); \
-    if (::Test::can_report()) \
-        ::AK::warnln("{} = {}", #identifier, (identifier))
-
+#define GEN(identifier, value)  \
+    auto(identifier) = (value); \
+    if (::Test::can_report())   \
+    ::AK::warnln("{} = {}", #identifier, (identifier))

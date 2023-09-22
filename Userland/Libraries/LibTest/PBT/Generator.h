@@ -11,15 +11,16 @@
 #include <LibTest/PBT/RandSource.h>
 #include <LibTest/PBT/RandomRun.h>
 
-#include <AK/Tuple.h>
 #include <AK/Function.h>
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Tuple.h>
 
 /* Returns a random double value in range 0..1.
-*/
-inline double get_random_probability() {
+ */
+inline double get_random_probability()
+{
     static constexpr u32 max_u32 = NumericLimits<u32>::max();
     u32 random_u32 = AK::get_random_uniform(max_u32);
     return static_cast<double>(random_u32) / static_cast<double>(max_u32);
@@ -122,7 +123,7 @@ static inline CommonType<Ts...> one_of(Ts... choices)
         REJECT("one_of: The list of values can't be empty");
     }
 
-    Vector<CommonType<Ts...>> choices_vec{choices...};
+    Vector<CommonType<Ts...>> choices_vec { choices... };
 
     size_t i = unsigned_int(count - 1);
     return choices_vec[i];
@@ -140,17 +141,17 @@ static inline CommonType<Ts...> one_of(Ts... choices)
    Shrinks towards the earlier arguments (above, towards 'x').
 */
 template<typename... Ts>
-static inline CommonType<Ts...> frequency(Tuple<i32,Ts>... choices)
+static inline CommonType<Ts...> frequency(Tuple<i32, Ts>... choices)
 {
     constexpr size_t count = sizeof...(choices);
     if (count == 0) {
         REJECT("frequency: The list of choices can't be empty");
     }
 
-    Vector<Tuple<i32,CommonType<Ts...>>> choices_vec{choices...};
+    Vector<Tuple<i32, CommonType<Ts...>>> choices_vec { choices... };
 
     i32 sum = 0;
-    for (Tuple<i32,CommonType<Ts...>> choice : choices_vec) {
+    for (Tuple<i32, CommonType<Ts...>> choice : choices_vec) {
         i32 weight = choice.template get<0>();
         if (weight <= 0) {
             REJECT("frequency: Choice weights must be positive");
@@ -160,7 +161,7 @@ static inline CommonType<Ts...> frequency(Tuple<i32,Ts>... choices)
 
     i32 target = AK::get_random_uniform(sum + 1);
     size_t i = 0;
-    for (Tuple<i32,CommonType<Ts...>> choice : choices_vec) {
+    for (Tuple<i32, CommonType<Ts...>> choice : choices_vec) {
         i32 weight = choice.template get<0>();
         if (weight >= target) {
             return choice.template get<1>();
@@ -168,7 +169,7 @@ static inline CommonType<Ts...> frequency(Tuple<i32,Ts>... choices)
         target -= weight;
         ++i;
     }
-    return choices_vec[i-1].template get<1>();
+    return choices_vec[i - 1].template get<1>();
 }
 
 /* Randomly (uniformly) selects a value out of the given weighted arguments.
@@ -183,17 +184,17 @@ static inline CommonType<Ts...> frequency(Tuple<i32,Ts>... choices)
    Shrinks towards the earlier arguments (above, towards 'o').
 */
 template<typename... Ts>
-static inline CommonType<Ts...> frequency(Tuple<double,Ts>... choices)
+static inline CommonType<Ts...> frequency(Tuple<double, Ts>... choices)
 {
     constexpr size_t count = sizeof...(choices);
     if (count == 0) {
         REJECT("frequency: The list of choices can't be empty");
     }
 
-    Vector<Tuple<double,CommonType<Ts...>>> choices_vec{choices...};
+    Vector<Tuple<double, CommonType<Ts...>>> choices_vec { choices... };
 
     double sum = 0;
-    for (Tuple<double,CommonType<Ts...>> choice : choices_vec) {
+    for (Tuple<double, CommonType<Ts...>> choice : choices_vec) {
         double weight = choice.template get<0>();
         if (weight <= 0) {
             REJECT("frequency: Choice weights must be positive");
@@ -203,7 +204,7 @@ static inline CommonType<Ts...> frequency(Tuple<double,Ts>... choices)
 
     double target = get_random_probability() * sum;
     size_t i = 0;
-    for (Tuple<double,CommonType<Ts...>> choice : choices_vec) {
+    for (Tuple<double, CommonType<Ts...>> choice : choices_vec) {
         double weight = choice.template get<0>();
         if (weight >= target) {
             return choice.template get<1>();
@@ -211,7 +212,7 @@ static inline CommonType<Ts...> frequency(Tuple<double,Ts>... choices)
         target -= weight;
         ++i;
     }
-    return choices_vec[i-1].template get<1>();
+    return choices_vec[i - 1].template get<1>();
 }
 
 /* An unsigned integer generator in the full u32 range.
@@ -236,12 +237,11 @@ static inline u32 unsigned_int()
 {
     u32 bits = frequency(
         // weight, bits
-        Tuple{4,4},
-        Tuple{8,8},
-        Tuple{2,0},
-        Tuple{2,16},
-        Tuple{1,32}
-    );
+        Tuple { 4, 4 },
+        Tuple { 8, 8 },
+        Tuple { 2, 0 },
+        Tuple { 2, 16 },
+        Tuple { 1, 32 });
 
     if (bits == 0) {
         // Special cases, eg. max integers for u8, u16, u32.
@@ -249,8 +249,7 @@ static inline u32 unsigned_int()
             0U,
             NumericLimits<u8>::max(),
             NumericLimits<u16>::max(),
-            NumericLimits<u32>::max()
-        );
+            NumericLimits<u32>::max());
     }
 
     u32 max = ((u64)1 << bits) - 1;
@@ -273,9 +272,12 @@ static inline u32 unsigned_int()
    that add to / read values from the RandSource (the other being
    unsigned_int).
  */
-static inline bool weighted_boolean(double probability) {
-    if (probability <= 0) return false;
-    if (probability >= 1) return true;
+static inline bool weighted_boolean(double probability)
+{
+    if (probability <= 0)
+        return false;
+    if (probability >= 1)
+        return true;
 
     // BOILERPLATE - START
     //
@@ -308,7 +310,8 @@ static inline bool weighted_boolean(double probability) {
     // BOILERPLATE - END
 }
 
-static inline bool boolean() {
+static inline bool boolean()
+{
     return weighted_boolean(0.5);
 }
 
@@ -333,7 +336,8 @@ static inline bool boolean() {
    Shrinks towards shorter vectors, with simpler elements inside.
  */
 template<typename FN>
-inline Vector<InvokeResult<FN>> vector(size_t min, size_t max, FN item_gen) {
+inline Vector<InvokeResult<FN>> vector(size_t min, size_t max, FN item_gen)
+{
     if (max < min) {
         return vector(max, min, item_gen);
     }
@@ -397,15 +401,16 @@ inline Vector<InvokeResult<FN>> vector(size_t min, size_t max, FN item_gen) {
    Shrinks towards shorter vectors, with simpler elements inside.
  */
 template<typename FN>
-inline Vector<InvokeResult<FN>> vector(size_t max, FN item_gen) {
-    return vector(0,max,item_gen);
+inline Vector<InvokeResult<FN>> vector(size_t max, FN item_gen)
+{
+    return vector(0, max, item_gen);
 }
 
 /* A vector generator of a random length between 0 and 32 elements.
 
    If you need a different length, use vector(max,item_gen) or
    vector(min,max,item_gen).
-   
+
    Gen::vector([]() { return Gen::unsigned_int(5); })
      -> value [],         RandomRun [0]
      -> value [1],        RandomRun [1,1,0]
@@ -417,8 +422,9 @@ inline Vector<InvokeResult<FN>> vector(size_t max, FN item_gen) {
    Shrinks towards shorter vectors, with simpler elements inside.
  */
 template<typename FN>
-inline Vector<InvokeResult<FN>> vector(FN item_gen) {
-    return vector(0,32,item_gen);
+inline Vector<InvokeResult<FN>> vector(FN item_gen)
+{
+    return vector(0, 32, item_gen);
 }
 
 /* A vector generator of a given length.
@@ -431,8 +437,9 @@ inline Vector<InvokeResult<FN>> vector(FN item_gen) {
    Shrinks towards shorter vectors, with simpler elements inside.
  */
 template<typename FN>
-inline Vector<InvokeResult<FN>> vector_of_length(size_t len, FN item_gen) {
-    return vector(len,len,item_gen);
+inline Vector<InvokeResult<FN>> vector_of_length(size_t len, FN item_gen)
+{
+    return vector(len, len, item_gen);
 }
 
 } // namespace Gen

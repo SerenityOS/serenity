@@ -43,29 +43,29 @@ ShrinkResult keep_if_better(RandomRun const& new_run, RandomRun const& current_b
     }
 
     switch (Test::current_test_result()) {
-        case TestResult::Failed:
-            // Our smaller RandomRun resulted in a simpler failing value!
-            // Let's keep it.
-            return ShrinkResult { true, new_run };
-        case TestResult::Passed:
-        case TestResult::Rejected:
-        case TestResult::Overrun: 
-            // Passing:  We shrank from a failing value to a passing value.
-            // Rejected: We shrank to value that doesn't get past the ASSUME(...)
-            //           macro.
-            // Overrun:  Generators can't draw enough random bits to generate all
-            //           needed values.
-            // In all cases: Let's try something else.
-            Test::set_current_test_result(TestResult::Failed);
-            return no_improvement(current_best);
-        case TestResult::NotRun:
-        case TestResult::HitLimit:
-        default:
-            // Neither of these cases should happen.
-            // NotRun:   We've literally just set it to Passed if it was NotRun!
-            // HitLimit: This should have happened earlier; no ShrinkCmd _adds_
-            //           integers to a RandomRun, right?
-            return no_improvement(current_best); // TODO I'd like to use VERIFY_NOT_REACHED() here
+    case TestResult::Failed:
+        // Our smaller RandomRun resulted in a simpler failing value!
+        // Let's keep it.
+        return ShrinkResult { true, new_run };
+    case TestResult::Passed:
+    case TestResult::Rejected:
+    case TestResult::Overrun:
+        // Passing:  We shrank from a failing value to a passing value.
+        // Rejected: We shrank to value that doesn't get past the ASSUME(...)
+        //           macro.
+        // Overrun:  Generators can't draw enough random bits to generate all
+        //           needed values.
+        // In all cases: Let's try something else.
+        Test::set_current_test_result(TestResult::Failed);
+        return no_improvement(current_best);
+    case TestResult::NotRun:
+    case TestResult::HitLimit:
+    default:
+        // Neither of these cases should happen.
+        // NotRun:   We've literally just set it to Passed if it was NotRun!
+        // HitLimit: This should have happened earlier; no ShrinkCmd _adds_
+        //           integers to a RandomRun, right?
+        return no_improvement(current_best); // TODO I'd like to use VERIFY_NOT_REACHED() here
     }
 }
 
@@ -201,7 +201,7 @@ ShrinkResult shrink_redistribute(RedistributeChoicesAndMaybeInc c, RandomRun con
     RandomRun run_after_swap = current_best;
 
     // First try to swap them if they're out of order.
-    if (run_after_swap[c.left_index] > run_after_swap[c.right_index]) 
+    if (run_after_swap[c.left_index] > run_after_swap[c.right_index])
         AK::swap(run_after_swap[c.left_index], run_after_swap[c.right_index]);
 
     ShrinkResult after_swap = keep_if_better(run_after_swap, current_best, test_function);
@@ -219,7 +219,7 @@ ShrinkResult shrink_redistribute(RedistributeChoicesAndMaybeInc c, RandomRun con
         },
         current_best,
         test_function);
-    
+
     if (after_redistribute.was_improvement)
         return after_redistribute;
 
@@ -253,7 +253,6 @@ ShrinkResult shrink_redistribute(RedistributeChoicesAndMaybeInc c, RandomRun con
         return after_inc_redistribute;
 
     return after_swap;
-    
 }
 
 template<typename FN>
