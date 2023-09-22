@@ -84,17 +84,17 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 
     button_widget.add_spacer();
 
-    auto ok_button = TRY(make_button("OK"_string, button_widget));
-    ok_button->on_click = [this](auto) {
+    auto& ok_button = make_button("OK"_string, button_widget);
+    ok_button.on_click = [this](auto) {
         if (apply_changes())
             close();
     };
-    auto cancel_button = TRY(make_button("Cancel"_string, button_widget));
-    cancel_button->on_click = [this](auto) {
+    auto& cancel_button = make_button("Cancel"_string, button_widget);
+    cancel_button.on_click = [this](auto) {
         close();
     };
 
-    m_apply_button = TRY(make_button("Apply"_string, button_widget));
+    m_apply_button = make_button("Apply"_string, button_widget);
     m_apply_button->on_click = [this](auto) { apply_changes(); };
     m_apply_button->set_enabled(false);
 
@@ -592,7 +592,7 @@ ErrorOr<void> PropertiesWindow::setup_permission_checkboxes(GUI::CheckBox& box_r
     return {};
 }
 
-ErrorOr<NonnullRefPtr<GUI::Button>> PropertiesWindow::make_button(String text, GUI::Widget& parent)
+GUI::Button& PropertiesWindow::make_button(String text, GUI::Widget& parent)
 {
     auto& button = parent.add<GUI::Button>(text);
     button.set_fixed_size(70, 22);
