@@ -189,6 +189,7 @@ void set_suite_setup_function(Function<void()> setup);
     static struct __RANDOMIZED_TEST_TYPE(x) __RANDOMIZED_TEST_TYPE(x);                           \
     static void __RANDOMIZED_TEST_FUNC(x)()
 
+// This allows us to print the generated locals in the test after a failure is fully shrunk.
 #define GEN(identifier, value)  \
     auto(identifier) = (value); \
     if (::Test::can_report())   \
