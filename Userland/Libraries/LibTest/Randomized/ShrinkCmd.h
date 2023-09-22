@@ -72,12 +72,12 @@ public:
     bool has_a_chance(RandomRun const& run) const
     {
         return m_cmd.visit(
-            [&](ZeroChunk c) { return run.has_a_chance(c.chunk); },
-            [&](SortChunk c) { return run.has_a_chance(c.chunk); },
-            [&](DeleteChunkAndMaybeDecPrevious c) { return run.has_a_chance(c.chunk); },
+            [&](ZeroChunk c) { return run.contains_chunk(c.chunk); },
+            [&](SortChunk c) { return run.contains_chunk(c.chunk); },
+            [&](DeleteChunkAndMaybeDecPrevious c) { return run.contains_chunk(c.chunk); },
             [&](MinimizeChoice c) { return run.size() > c.index; },
             [&](RedistributeChoicesAndMaybeInc c) { return run.size() > c.right_index; },
-            [&](SwapChunkWithNeighbour c) { return run.has_a_chance(c.neighbour()); });
+            [&](SwapChunkWithNeighbour c) { return run.contains_chunk(c.neighbour()); });
     }
 
     ErrorOr<String> to_string()

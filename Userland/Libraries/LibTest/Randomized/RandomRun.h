@@ -25,7 +25,6 @@ RandomRun is conceptually a sequence of unsigned integers, e.g. [5,3,10,8,0,0,1]
 class RandomRun {
 public:
     RandomRun() { m_data = Vector<u32>(); }
-    RandomRun(RandomRun&& rhs) { m_data = rhs.m_data; }
     RandomRun(RandomRun const& rhs) { m_data = rhs.m_data; }
     RandomRun(Vector<u32> const& rhs) { m_data = rhs; }
     RandomRun& operator=(RandomRun const& rhs)
@@ -37,17 +36,7 @@ public:
         return *this;
     }
     bool is_empty() const { return m_data.is_empty(); }
-    bool has_a_chance(Chunk const& c) const
-    {
-        // Is the chunk fully inside the RandomRun?
-        // Example:
-        // size: 6
-        // 0 1 2 3 4 5
-        //     ^ ^ ^ ^
-        // chunk size 4
-        //       index 2
-        return (c.index + c.size <= m_data.size());
-    }
+    bool contains_chunk(Chunk const& c) const { return (c.index + c.size <= m_data.size()); }
     void append(u32 n) { m_data.append(n); }
     size_t size() const { return m_data.size(); }
     Optional<u32> next()
