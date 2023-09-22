@@ -20,7 +20,6 @@
 class RandSource {
 public:
     static RandSource live() { return RandSource(RandomRun(), true); }
-    static RandSource live_with(RandomRun const& run) { return RandSource(run, true); }
     static RandSource recorded(RandomRun const& run) { return RandSource(run, false); }
     RandomRun& run() { return m_run; }
     bool is_live() const { return m_is_live; }
