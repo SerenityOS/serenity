@@ -3430,36 +3430,51 @@ void HTMLParser::handle_after_after_frameset(HTMLToken& token)
     log_parse_error();
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inforeign
 void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
 {
     if (token.is_character()) {
+        // -> A character token that is U+0000 NULL
         if (token.code_point() == 0) {
+            // Parse error. Insert a U+FFFD REPLACEMENT CHARACTER character.
             log_parse_error();
             insert_character(0xFFFD);
             return;
         }
+
+        // -> A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF), U+000C FORM FEED (FF), U+000D CARRIAGE RETURN (CR), or U+0020 SPAC
         if (token.is_parser_whitespace()) {
             insert_character(token.code_point());
             return;
         }
+
+        // -> Any other character token
         insert_character(token.code_point());
         m_frameset_ok = false;
         return;
     }
 
+    // -> A comment token
     if (token.is_comment()) {
+        // Insert a comment.
         insert_comment(token);
         return;
     }
 
+    // -> A DOCTYPE token
     if (token.is_doctype()) {
+        // Parse error. Ignore the token.
         log_parse_error();
         return;
     }
 
+    // -> A start tag whose tag name is one of: "b", "big", "blockquote", "body", "br", "center", "code", "dd", "div", "dl", "dt", "em", "embed", "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr", "i", "img", "li", "listing", "menu", "meta", "nobr", "ol", "p", "pre", "ruby", "s", "small", "span", "strong", "strike", "sub", "sup", "table", "tt", "u", "ul", "var"
+    // -> A start tag whose tag name is "font", if the token has any attributes named "color", "face", or "size"
+    // -> An end tag whose tag name is "br", "p"
     if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::b, HTML::TagNames::big, HTML::TagNames::blockquote, HTML::TagNames::body, HTML::TagNames::br, HTML::TagNames::center, HTML::TagNames::code, HTML::TagNames::dd, HTML::TagNames::div, HTML::TagNames::dl, HTML::TagNames::dt, HTML::TagNames::em, HTML::TagNames::embed, HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6, HTML::TagNames::head, HTML::TagNames::hr, HTML::TagNames::i, HTML::TagNames::img, HTML::TagNames::li, HTML::TagNames::listing, HTML::TagNames::menu, HTML::TagNames::meta, HTML::TagNames::nobr, HTML::TagNames::ol, HTML::TagNames::p, HTML::TagNames::pre, HTML::TagNames::ruby, HTML::TagNames::s, HTML::TagNames::small, HTML::TagNames::span, HTML::TagNames::strong, HTML::TagNames::strike, HTML::TagNames::sub, HTML::TagNames::sup, HTML::TagNames::table, HTML::TagNames::tt, HTML::TagNames::u, HTML::TagNames::ul, HTML::TagNames::var))
         || (token.is_start_tag() && token.tag_name() == HTML::TagNames::font && (token.has_attribute(HTML::AttributeNames::color) || token.has_attribute(HTML::AttributeNames::face) || token.has_attribute(HTML::AttributeNames::size)))
         || (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::br, HTML::TagNames::p))) {
+        // Parse error.
         log_parse_error();
 
         // While the current node is not a MathML text integration point, an HTML integration point, or an element in the HTML namespace, pop elements from the stack of open elements.
@@ -3476,29 +3491,46 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
 
     // Any other start tag
     if (token.is_start_tag()) {
+        // If the adjusted current node is an element in the MathML namespace, adjust MathML attributes for the token. (This fixes the case of MathML attributes that are not all lowercase.)
         if (adjusted_current_node().namespace_() == Namespace::MathML) {
             adjust_mathml_attributes(token);
-        } else if (adjusted_current_node().namespace_() == Namespace::SVG) {
+        }
+        // If the adjusted current node is an element in the SVG namespace, and the token's tag name is one of the ones in the first column of the
+        // following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG
+        // elements that are not all lowercase.)
+        else if (adjusted_current_node().namespace_() == Namespace::SVG) {
             adjust_svg_tag_names(token);
+            // If the adjusted current node is an element in the SVG namespace, adjust SVG attributes for the token. (This fixes the case of SVG attributes that are not all lowercase.)
             adjust_svg_attributes(token);
         }
 
+        // Adjust foreign attributes for the token. (This fixes the use of namespaced attributes, in particular XLink in SVG.)
         adjust_foreign_attributes(token);
+
+        // Insert a foreign element for the token, in the same namespace as the adjusted current node.
         (void)insert_foreign_element(token, adjusted_current_node().namespace_());
 
+        // If the token has its self-closing flag set, then run the appropriate steps from the following list:
         if (token.is_self_closing()) {
+
+            // -> If the token's tag name is "script", and the new current node is in the SVG namespace
             if (token.tag_name() == SVG::TagNames::script && current_node().namespace_() == Namespace::SVG) {
+                // Acknowledge the token's self-closing flag, and then act as described in the steps for a "script" end tag below.
                 token.acknowledge_self_closing_flag_if_set();
                 goto ScriptEndTag;
             }
-
-            (void)m_stack_of_open_elements.pop();
-            token.acknowledge_self_closing_flag_if_set();
+            // -> Otherwise
+            else {
+                // Pop the current node off the stack of open elements and acknowledge the token's self-closing flag.
+                (void)m_stack_of_open_elements.pop();
+                token.acknowledge_self_closing_flag_if_set();
+            }
         }
 
         return;
     }
 
+    // -> An end tag whose tag name is "script", if the current node is an SVG script element
     if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
     ScriptEndTag:
         // Pop the current node off the stack of open elements.
@@ -3511,8 +3543,10 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         increment_script_nesting_level();
         // Set the parser pause flag to true.
         m_parser_pause_flag = true;
-        // FIXME: Implement SVG script parsing.
+
+        // FIXME: If the active speculative HTML parser is null and the user agent supports SVG, then Process the SVG script element according to the SVG rules. [SVG]
         TODO();
+
         // Decrement the parser's script nesting level by one.
         decrement_script_nesting_level();
         // If the parser's script nesting level is zero, then set the parser pause flag to false.
@@ -3522,18 +3556,24 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         // Let the insertion point have the value of the old insertion point.
         m_tokenizer.restore_insertion_point();
     }
-
+    // -> Any other end tag
     if (token.is_end_tag()) {
+        // 1. Initialize node to be the current node (the bottommost node of the stack).
         JS::GCPtr<DOM::Element> node = current_node();
         // FIXME: Not sure if this is the correct to_lowercase, as the specification says "to ASCII lowercase"
+        // 2. If node's tag name, converted to ASCII lowercase, is not the same as the tag name of the token, then this is a parse error.
         if (node->tag_name().to_lowercase() != token.tag_name())
             log_parse_error();
+
+        // 3. Loop: If node is the topmost element in the stack of open elements, then return. (fragment case)
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
             if (node.ptr() == &m_stack_of_open_elements.first()) {
                 VERIFY(m_parsing_fragment);
                 return;
             }
             // FIXME: See the above FIXME
+            // 4. If node's tag name, converted to ASCII lowercase, is the same as the tag name of the token, pop elements from the stack
+            // of open elements until node has been popped from the stack, and then return.
             if (node->tag_name().to_lowercase() == token.tag_name()) {
                 while (&current_node() != node.ptr())
                     (void)m_stack_of_open_elements.pop();
@@ -3541,11 +3581,14 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
                 return;
             }
 
+            // 5. Set node to the previous entry in the stack of open elements.
             node = m_stack_of_open_elements.elements().at(i - 1).ptr();
 
+            // 6. If node is not an element in the HTML namespace, return to the step labeled loop.
             if (node->namespace_() != Namespace::HTML)
                 continue;
 
+            // 7. Otherwise, process the token according to the rules given in the section corresponding to the current insertion mode in HTML content.
             process_using_the_rules_for(m_insertion_mode, token);
             return;
         }
