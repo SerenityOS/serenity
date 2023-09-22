@@ -29,6 +29,7 @@ public:
     auto const& left_side_floats() const { return m_left_floats; }
     auto const& right_side_floats() const { return m_right_floats; }
 
+    bool box_should_avoid_floats_because_it_establishes_fc(Box const&);
     void compute_width(Box const&, AvailableSpace const&, LayoutMode = LayoutMode::Normal);
 
     // https://www.w3.org/TR/css-display/#block-formatting-context-root

@@ -117,6 +117,19 @@ void BlockFormattingContext::parent_context_did_dimension_child_root_box()
     }
 }
 
+bool BlockFormattingContext::box_should_avoid_floats_because_it_establishes_fc(Box const& box)
+{
+    if (auto formatting_context_type = formatting_context_type_created_by_box(box); formatting_context_type.has_value()) {
+        if (formatting_context_type.value() == Type::Block)
+            return true;
+        if (formatting_context_type.value() == Type::Flex)
+            return true;
+        if (formatting_context_type.value() == Type::Grid)
+            return true;
+    }
+    return false;
+}
+
 void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const& available_space, LayoutMode)
 {
     if (box.is_absolutely_positioned()) {
@@ -125,7 +138,9 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     }
 
     auto remaining_available_space = available_space;
-    if (available_space.width.is_definite() && creates_block_formatting_context(box)) {
+    if (available_space.width.is_definite() && box_should_avoid_floats_because_it_establishes_fc(box)) {
+        // NOTE: Although CSS 2.2 specification says that only block formatting contexts should avoid floats,
+        //       we also do this for flex and grid formatting contexts, because that how other engines behave.
         // 9.5 Floats
         // The border box of a table, a block-level replaced element, or an element in the normal flow that establishes a
         // new block formatting context (such as an element with 'overflow' other than 'visible') must not overlap the margin
