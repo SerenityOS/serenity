@@ -1531,6 +1531,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const&
     document_state->set_request_referrer_policy(old_doc_state->request_referrer_policy());
     document_state->set_initiator_origin(initiator_origin);
     document_state->set_origin(initiator_origin);
+    document_state->set_about_base_url(old_doc_state->about_base_url());
     document_state->set_ever_populated(true);
     document_state->set_navigable_target_name(old_doc_state->navigable_target_name());
 

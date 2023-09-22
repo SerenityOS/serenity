@@ -269,6 +269,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     document->set_url(*creation_url);
     document->m_navigation_id = navigation_params.id;
     document->m_readiness = HTML::DocumentReadyState::Loading;
+    document->m_about_base_url = navigation_params.about_base_url;
 
     document->m_window = window;
 

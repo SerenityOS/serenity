@@ -80,12 +80,18 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
         target_name = String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors();
 
     // 6. Let documentState be a new document state, with
-    //    document: document
-    //    navigable target name: targetName
+    //  - document: document
+    //  - initiator origin: document's origin
+    //  - origin: document's origin
+    //  - navigable target name: targetName
+    //  - about base URL: document's about base URL
     JS::NonnullGCPtr<DocumentState> document_state = *heap().allocate_without_realm<HTML::DocumentState>();
     document_state->set_document(document);
+    document_state->set_initiator_origin(document->origin());
+    document_state->set_origin(document->origin());
     if (target_name.has_value())
         document_state->set_navigable_target_name(*target_name);
+    document_state->set_about_base_url(document->about_base_url());
 
     // 7. Let navigable be a new navigable.
     JS::NonnullGCPtr<Navigable> navigable = *heap().allocate_without_realm<Navigable>();

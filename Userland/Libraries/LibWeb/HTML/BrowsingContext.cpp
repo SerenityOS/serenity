@@ -121,10 +121,16 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     // 3. Let creatorOrigin be null.
     Optional<Origin> creator_origin = {};
 
+    // FIXME: This algorithm needs re-aligned with the spec
+    Optional<AK::URL> creator_base_url = {};
+
     // 4. If creator is non-null, then:
     if (creator) {
         // 1. Set creatorOrigin to creator's origin.
         creator_origin = creator->origin();
+
+        // FIXME: This algorithm needs re-aligned with the spec
+        creator_base_url = creator->base_url();
 
         // FIXME: 2. Set browsingContext's creator base URL to an algorithm which returns creator's base URL.
 
@@ -210,6 +216,9 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
 
     // is initial about:blank: true
     document->set_is_initial_about_blank(true);
+
+    // about base URL: creatorBaseURL
+    document->set_about_base_url(creator_base_url);
 
     // 15. If creator is non-null, then:
     if (creator) {
