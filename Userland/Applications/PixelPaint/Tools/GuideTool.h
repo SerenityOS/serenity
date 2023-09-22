@@ -27,7 +27,7 @@ public:
 
     virtual void on_tool_activation() override;
 
-    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
+    virtual NonnullRefPtr<GUI::Widget> get_properties_widget() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:

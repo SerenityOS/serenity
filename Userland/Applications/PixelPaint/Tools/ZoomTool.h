@@ -18,7 +18,7 @@ public:
     virtual ~ZoomTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
-    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
+    virtual NonnullRefPtr<GUI::Widget> get_properties_widget() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override { return Gfx::StandardCursor::Zoom; }
 
 private:

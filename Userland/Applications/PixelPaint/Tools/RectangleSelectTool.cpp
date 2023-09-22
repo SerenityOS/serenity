@@ -151,10 +151,10 @@ void RectangleSelectTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
     m_editor->draw_marching_ants(painter, rect_in_editor.to_rounded<int>());
 }
 
-ErrorOr<GUI::Widget*> RectangleSelectTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> RectangleSelectTool::get_properties_widget()
 {
     if (m_properties_widget) {
-        return m_properties_widget.ptr();
+        return *m_properties_widget.ptr();
     }
 
     auto properties_widget = GUI::Widget::construct();
@@ -191,16 +191,16 @@ ErrorOr<GUI::Widget*> RectangleSelectTool::get_properties_widget()
     for (int i = 0; i < (int)Selection::MergeMode::__Count; i++) {
         switch ((Selection::MergeMode)i) {
         case Selection::MergeMode::Set:
-            TRY(m_merge_mode_names.try_append("Set"));
+            m_merge_mode_names.append("Set");
             break;
         case Selection::MergeMode::Add:
-            TRY(m_merge_mode_names.try_append("Add"));
+            m_merge_mode_names.append("Add");
             break;
         case Selection::MergeMode::Subtract:
-            TRY(m_merge_mode_names.try_append("Subtract"));
+            m_merge_mode_names.append("Subtract");
             break;
         case Selection::MergeMode::Intersect:
-            TRY(m_merge_mode_names.try_append("Intersect"));
+            m_merge_mode_names.append("Intersect");
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -219,7 +219,7 @@ ErrorOr<GUI::Widget*> RectangleSelectTool::get_properties_widget()
     };
 
     m_properties_widget = properties_widget;
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 Gfx::IntPoint RectangleSelectTool::point_position_to_preferred_cell(Gfx::FloatPoint position) const

@@ -154,10 +154,10 @@ bool LassoSelectTool::on_keydown(GUI::KeyEvent& key_event)
     return Tool::on_keydown(key_event);
 }
 
-ErrorOr<GUI::Widget*> LassoSelectTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> LassoSelectTool::get_properties_widget()
 {
     if (m_properties_widget) {
-        return m_properties_widget.ptr();
+        return *m_properties_widget.ptr();
     }
 
     auto properties_widget = GUI::Widget::construct();
@@ -207,7 +207,7 @@ ErrorOr<GUI::Widget*> LassoSelectTool::get_properties_widget()
     };
 
     m_properties_widget = properties_widget;
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 }

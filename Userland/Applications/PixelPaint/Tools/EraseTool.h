@@ -20,7 +20,7 @@ public:
     EraseTool() = default;
     virtual ~EraseTool() override = default;
 
-    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
+    virtual NonnullRefPtr<GUI::Widget> get_properties_widget() override;
 
 protected:
     virtual Color color_for(GUI::MouseEvent const& event) override;
