@@ -8,10 +8,10 @@
 #pragma once
 
 #include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
-#include <LibTest/PBT/GenResult.h>
-#include <LibTest/PBT/Generator.h>
-#include <LibTest/PBT/RandSource.h>
-#include <LibTest/PBT/Shrink.h>
+#include <LibTest/Randomized/GenResult.h>
+#include <LibTest/Randomized/Generator.h>
+#include <LibTest/Randomized/RandSource.h>
+#include <LibTest/Randomized/Shrink.h>
 
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>

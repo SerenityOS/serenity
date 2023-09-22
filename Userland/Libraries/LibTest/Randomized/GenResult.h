@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibTest/PBT/RandomRun.h>
+#include <LibTest/Randomized/RandomRun.h>
 
 #include <AK/Optional.h>
 #include <AK/StringView.h>

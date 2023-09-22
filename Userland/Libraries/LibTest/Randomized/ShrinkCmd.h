@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <LibTest/PBT/Chunk.h>
-#include <LibTest/PBT/RandomRun.h>
+#include <LibTest/Randomized/Chunk.h>
+#include <LibTest/Randomized/RandomRun.h>
 
 #include <AK/String.h>
 #include <AK/Variant.h>

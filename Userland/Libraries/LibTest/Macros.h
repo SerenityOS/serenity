@@ -11,7 +11,7 @@
 #include <AK/CheckedFormatString.h>
 #include <AK/Math.h>
 #include <LibTest/CrashTest.h>
-#include <LibTest/PBT/RandSource.h>
+#include <LibTest/Randomized/RandSource.h>
 #include <LibTest/TestResult.h>
 
 namespace Test {

@@ -7,9 +7,9 @@
 #pragma once
 
 #include <LibTest/Macros.h>
-#include <LibTest/PBT/GenResult.h>
-#include <LibTest/PBT/RandSource.h>
-#include <LibTest/PBT/RandomRun.h>
+#include <LibTest/Randomized/GenResult.h>
+#include <LibTest/Randomized/RandSource.h>
+#include <LibTest/Randomized/RandomRun.h>
 
 #include <AK/Function.h>
 #include <AK/Random.h>

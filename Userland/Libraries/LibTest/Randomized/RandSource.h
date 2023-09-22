@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibTest/PBT/RandomRun.h>
+#include <LibTest/Randomized/RandomRun.h>
 
 /* RandSource provides random bits to Generators.
 

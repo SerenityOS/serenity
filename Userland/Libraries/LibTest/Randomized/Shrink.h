@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <LibTest/PBT/GenResult.h>
-#include <LibTest/PBT/Generator.h>
-#include <LibTest/PBT/RandSource.h>
-#include <LibTest/PBT/RandomRun.h>
-#include <LibTest/PBT/ShrinkCmd.h>
+#include <LibTest/Randomized/GenResult.h>
+#include <LibTest/Randomized/Generator.h>
+#include <LibTest/Randomized/RandSource.h>
+#include <LibTest/Randomized/RandomRun.h>
+#include <LibTest/Randomized/ShrinkCmd.h>
 #include <LibTest/TestResult.h>
 
 #include <AK/String.h>

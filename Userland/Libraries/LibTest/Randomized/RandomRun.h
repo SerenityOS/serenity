@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibTest/PBT/Chunk.h>
+#include <LibTest/Randomized/Chunk.h>
 
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>

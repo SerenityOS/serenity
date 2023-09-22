@@ -5,7 +5,7 @@
  */
 
 #include <AK/StdLibExtraDetails.h>
-#include <LibTest/PBT/Generator.h>
+#include <LibTest/Randomized/Generator.h>
 #include <LibTest/TestCase.h>
 
 RANDOMIZED_TEST_CASE(unsigned_int_max_bounds)
