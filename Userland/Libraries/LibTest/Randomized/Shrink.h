@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibTest/Randomized/GenResult.h>
 #include <LibTest/Randomized/Generator.h>
 #include <LibTest/Randomized/RandSource.h>
 #include <LibTest/Randomized/RandomRun.h>

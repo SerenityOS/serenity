@@ -8,7 +8,6 @@
 #pragma once
 
 #include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
-#include <LibTest/Randomized/GenResult.h>
 #include <LibTest/Randomized/Generator.h>
 #include <LibTest/Randomized/RandSource.h>
 #include <LibTest/Randomized/Shrink.h>

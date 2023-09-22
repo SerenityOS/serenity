@@ -65,17 +65,6 @@ Here are the important concepts and their descriptions:
     then subject to shrinking if the run led to failing values.
   - Example: `{2,5,0,11,8,0,0,1}`
 
-- `GenResult<T>`
-  - A result of generation attempt.
-  - There are two possible cases:
-    - `Generated<T>`
-      - A successfully generated value alongside the `RandomRun` from which it
-        can be again generated.
-    - `Rejected`
-      - Holds a string detailing the reason for the failure to generate a value.
-        These are later collected and reported to the user if the runner wasn't
-        able to generate a single value (in 15 tries).
-
 - `ShrinkCmd`
   - A high-level recipe for how to try and minimize a given `RandomRun`.
   - For example, "zero this contiguous chunk of it" or "minimize the number on

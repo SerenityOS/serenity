@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibTest/Macros.h>
-#include <LibTest/Randomized/GenResult.h>
 #include <LibTest/Randomized/RandSource.h>
 #include <LibTest/Randomized/RandomRun.h>
 
