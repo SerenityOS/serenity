@@ -32,6 +32,28 @@ inline double get_random_probability()
  */
 namespace Gen {
 
+/* An internal foundational generator: it adds values into / reads values from
+   the RandSource.
+ */
+static inline u32 draw_from_rand_source(u32 max, Function<u32()> random_generator)
+{
+    RandSource& rand = Test::rand_source();
+    RandomRun& run = rand.run();
+    if (rand.is_live()) {
+        u32 value = random_generator();
+        run.append(value);
+        return value;
+    }
+
+    auto next = run.next();
+    if (next.has_value()) {
+        return min(next.value(), max);
+    }
+
+    Test::set_current_test_result(TestResult::Overrun);
+    return 0; // The value returned doesn't matter at this point but we need to return something
+}
+
 /* An unsigned integer generator.
 
    The minimum value will always be 0.
@@ -42,36 +64,13 @@ namespace Gen {
                          etc.
 
    Shrinks towards 0.
-
-   This is a foundational generator: it's one of the only two generators
-   that add to / read values from the RandSource (the other being
-   weighted_boolean). Other generators will be largely built from this one.
  */
 static u32 unsigned_int(u32 max)
 {
-    // BOILERPLATE - START
-    //
-    // TODO extract the common parts from unsigned_int(u32) and
-    // weighted_boolean(double)?
-    RandSource& rand = Test::rand_source();
-    RandomRun& run = rand.run();
-    if (rand.is_live()) {
-        // THE INTERESTING PART - START
-        u32 value = AK::get_random_uniform(max + 1);
-        run.append(value);
-        return value;
-        // THE INTERESTING PART - END
-    }
-    // Not live => Recorded.
-    auto next = run.next();
-    if (next.has_value()) {
-        // THE INTERESTING PART - START
-        return min(next.value(), max);
-        // THE INTERESTING PART - END
-    }
-    Test::set_current_test_result(TestResult::Overrun);
-    return 0; // The value returned doesn't matter at this point but we need to return _something_
-    // BOILERPLATE - END
+    u32 random = draw_from_rand_source(max, [&]() {
+        return AK::get_random_uniform(max + 1);
+    });
+    return random;
 }
 
 /* An unsigned integer generator in a particular range.
@@ -263,10 +262,6 @@ static inline u32 unsigned_int()
      -> value true,  RandomRun [1]
 
    Shrinks towards false.
-
-   This is a foundational generator: it's one of the only two generators
-   that add to / read values from the RandSource (the other being
-   unsigned_int).
  */
 static inline bool weighted_boolean(double probability)
 {
@@ -275,32 +270,12 @@ static inline bool weighted_boolean(double probability)
     if (probability >= 1)
         return true;
 
-    // BOILERPLATE - START
-    //
-    // TODO extract the common parts from unsigned_int(u32) and
-    // weighted_boolean(double)?
-    RandSource& rand = Test::rand_source();
-    RandomRun& run = rand.run();
-    if (rand.is_live()) {
-        // THE INTERESTING PART - START
-        double random_double = get_random_probability();
-        bool random_bool = random_double <= probability;
-        run.append(random_bool ? 1 : 0);
-        return random_bool;
-        // THE INTERESTING PART - END
-    }
-    // Not live => Recorded.
-    auto next = run.next();
-    if (next.has_value()) {
-        // THE INTERESTING PART - START
-        auto next_value = next.value();
-        bool next_bool = next_value > 0;
-        return next_bool;
-        // THE INTERESTING PART - END
-    }
-    Test::set_current_test_result(TestResult::Overrun);
-    return false; // The value returned doesn't matter at this point but we need to return _something_
-    // BOILERPLATE - END
+    u32 random_int = draw_from_rand_source(1, [&]() {
+        double drawn_probability = get_random_probability();
+        return drawn_probability <= probability ? 1 : 0;
+    });
+    bool random_bool = random_int == 1;
+    return random_bool;
 }
 
 static inline bool boolean()
