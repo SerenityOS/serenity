@@ -98,6 +98,7 @@
 #include <LibWeb/SVG/SVGRadialGradientElement.h>
 #include <LibWeb/SVG/SVGRectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
+#include <LibWeb/SVG/SVGScriptElement.h>
 #include <LibWeb/SVG/SVGStopElement.h>
 #include <LibWeb/SVG/SVGStyleElement.h>
 #include <LibWeb/SVG/SVGSymbolElement.h>
@@ -472,6 +473,8 @@ static JS::GCPtr<SVG::SVGElement> create_svg_element(JS::Realm& realm, Document&
         return realm.heap().allocate<SVG::SVGTSpanElement>(realm, document, move(qualified_name));
     if (local_name == SVG::TagNames::use)
         return realm.heap().allocate<SVG::SVGUseElement>(realm, document, move(qualified_name));
+    if (local_name == SVG::TagNames::script)
+        return realm.heap().allocate<SVG::SVGScriptElement>(realm, document, move(qualified_name));
 
     return nullptr;
 }
