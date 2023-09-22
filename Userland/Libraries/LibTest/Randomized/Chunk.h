@@ -12,17 +12,17 @@
 /* Chunk is a description of a RandomRun slice.
 Used to say which part of a given RandomRun will be shrunk by some ShrinkCmd.
 
-Example:
+For a RandomRun [0,1,2,3,4,5,6,7,8], the Chunk{size=4, index=2} means this:
+                [_,_,X,X,X,X,_,_,_]
 
-    We're trying to shrink RandomRun [5,1,3,18,4,2,3,0] (length: 8).
-    Many ShrinkCmds get created, among which are these:
-        - ZeroChunk(Chunk{m_size = 4, m_index = 1})
-            - results in RandomRun [5,0,0,0,0,2,3,0]
-        - SortChunk(Chunk{m_size = 3, m_index = 3})
-            - results in RandomRun [5,1,3,2,4,18,3,0]
-        - DeleteChunkAndMaybeDecPrevious(Chunk{m_size = 4, m_index = 4})
-            - results in RandomRun [5,1,3,18]
+Different ShrinkCmds will use the Chunk in different ways. A few examples:
 
+    Original RandomRun:             [5,1,3,9,4,2,3,0]
+    Chunk we'll show off:           [_,_,X,X,X,X,_,_]
+
+    ZeroChunk:                      [5,1,0,0,0,0,3,0]
+    SortChunk:                      [5,1,2,3,4,9,3,0]
+    DeleteChunkAndMaybeDecPrevious: [5,1,        3,0]
 */
 struct Chunk {
     uint8_t size;
