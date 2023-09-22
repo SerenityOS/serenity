@@ -3545,7 +3545,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         m_parser_pause_flag = true;
 
         // FIXME: If the active speculative HTML parser is null and the user agent supports SVG, then Process the SVG script element according to the SVG rules. [SVG]
-        TODO();
+        dbgln("FIXME: Missing 'Process the SVG script element according to the SVG rules.");
 
         // Decrement the parser's script nesting level by one.
         decrement_script_nesting_level();
@@ -3555,7 +3555,9 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
 
         // Let the insertion point have the value of the old insertion point.
         m_tokenizer.restore_insertion_point();
+        return;
     }
+
     // -> Any other end tag
     if (token.is_end_tag()) {
         // 1. Initialize node to be the current node (the bottommost node of the stack).
