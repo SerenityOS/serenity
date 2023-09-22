@@ -73,6 +73,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     if (!_doc || _doc->get_page_count() == 0)
         return;
+    [self invalidateRestorableState];
     NSSize pixel_size = [self convertSizeToBacking:self.bounds.size];
     if (auto bitmap_or = render(*_doc, _page_index, pixel_size); !bitmap_or.is_error())
         _rep = ns_from_gfx(bitmap_or.value());
@@ -111,5 +112,15 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
         [self pageChanged];
         [self setNeedsDisplay:YES];
     }
+}
+
+- (void)encodeRestorableStateWithCoder:(NSCoder*)coder
+{
+    NSLog(@"FIXME encodeRestorableStateWithCoder");
+}
+
+- (void)restoreStateWithCoder:(NSCoder*)coder
+{
+    NSLog(@"FIXME restoreStateWithCoder");
 }
 @end
