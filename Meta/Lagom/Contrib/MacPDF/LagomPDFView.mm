@@ -62,8 +62,12 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 - (void)setDocument:(WeakPtr<PDF::Document>)doc
 {
+    NSLog(@"doc set");
     _doc = move(doc);
-    _page_index = min(24 - 1, _doc->get_page_count() - 1);
+    _page_index = 0;
+
+    // FIXME: We do this again in restoreStateWithCoder:, which is wasteful.
+    // Compute bitmap lazily.
     [self pageChanged];
 }
 
@@ -71,7 +75,6 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     if (!_doc || _doc->get_page_count() == 0)
         return;
-    [self invalidateRestorableState];
     NSSize pixel_size = [self convertSizeToBacking:self.bounds.size];
     if (auto bitmap_or = render(*_doc, _page_index, pixel_size); !bitmap_or.is_error())
         _rep = ns_from_gfx(bitmap_or.value());
@@ -98,6 +101,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     if (_page_index > 0) {
         _page_index--;
+        [self invalidateRestorableState];
         [self pageChanged];
         [self setNeedsDisplay:YES];
     }
@@ -107,6 +111,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     if (_page_index < _doc->get_page_count() - 1) {
         _page_index++;
+        [self invalidateRestorableState];
         [self pageChanged];
         [self setNeedsDisplay:YES];
     }
@@ -114,11 +119,18 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 - (void)encodeRestorableStateWithCoder:(NSCoder*)coder
 {
-    NSLog(@"FIXME encodeRestorableStateWithCoder");
+    [coder encodeInt:_page_index forKey:@"PageIndex"];
+    NSLog(@"encodeRestorableStateWithCoder encoded %d", _page_index);
 }
 
 - (void)restoreStateWithCoder:(NSCoder*)coder
 {
-    NSLog(@"FIXME restoreStateWithCoder");
+    if ([coder containsValueForKey:@"PageIndex"]) {
+        int page_index = [coder decodeIntForKey:@"PageIndex"];
+        _page_index = min(max(0, page_index), _doc->get_page_count() - 1);
+        NSLog(@"encodeRestorableStateWithCoder restored %d", _page_index);
+        [self pageChanged];
+        [self setNeedsDisplay:YES];
+    }
 }
 @end
