@@ -10,8 +10,9 @@
 
 namespace JS {
 
-HandleImpl::HandleImpl(Cell* cell)
+HandleImpl::HandleImpl(Cell* cell, SourceLocation location)
     : m_cell(cell)
+    , m_location(location)
 {
     m_cell->heap().did_create_handle({}, *this);
 }

@@ -12,13 +12,13 @@
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibJS/Heap/HeapRootTypeOrLocation.h>
+#include <LibJS/Heap/HeapRoot.h>
 
 namespace JS {
 
 class MarkedVectorBase {
 public:
-    virtual void gather_roots(HashMap<Cell*, JS::HeapRootTypeOrLocation>&) const = 0;
+    virtual void gather_roots(HashMap<Cell*, JS::HeapRoot>&) const = 0;
 
 protected:
     explicit MarkedVectorBase(Heap&);
@@ -65,14 +65,14 @@ public:
         return *this;
     }
 
-    virtual void gather_roots(HashMap<Cell*, JS::HeapRootTypeOrLocation>& roots) const override
+    virtual void gather_roots(HashMap<Cell*, JS::HeapRoot>& roots) const override
     {
         for (auto& value : *this) {
             if constexpr (IsSame<Value, T>) {
                 if (value.is_cell())
-                    roots.set(&const_cast<T&>(value).as_cell(), HeapRootType::MarkedVector);
+                    roots.set(&const_cast<T&>(value).as_cell(), HeapRoot { .type = HeapRoot::Type::MarkedVector });
             } else {
-                roots.set(value, HeapRootType::MarkedVector);
+                roots.set(value, HeapRoot { .type = HeapRoot::Type::MarkedVector });
             }
         }
     }
