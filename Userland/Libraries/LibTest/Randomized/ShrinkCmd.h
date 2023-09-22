@@ -217,7 +217,21 @@ private:
     {
         bool allow_chunks_size1 = false; // already happens in "redistribute choice"
         return chunk_cmds(
-            run_size, // TODO this is not optimal as the later chunks will hit OOB. For now, it will work though.
+            run_size, /* TODO: This is not optimal as the chunks near the end of
+                               the RandomRun will hit OOB.
+
+                               This is because SwapChunkWithNeighbour doesn't
+                               just touch the Chunk but also its right neighbour:
+                               [_,_,X,X,X,Y,Y,Y,_]
+
+                               Thus if the chunk is too far to the right, it
+                               would go OOB:
+                               [_,_,_,_,X,X,X,Y,Y]Y
+
+                               For now, this will work though, there will just be
+                               a bit of unnecessary work calling .has_a_chance()
+                               on these chunks that are too far to the right.
+                       */
             allow_chunks_size1,
             [](Chunk c) { return ShrinkCmd(SwapChunkWithNeighbour { c }); });
     }
