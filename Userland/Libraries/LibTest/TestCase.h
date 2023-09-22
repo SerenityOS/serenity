@@ -71,7 +71,8 @@ public:
                     run_with_rand_source(RandSource::live(), test_fn);
                     switch (current_test_result()) {
                     case TestResult::NotRun:
-                        break; // TODO I'd like to use VERIFY_NOT_REACHED() here
+                        VERIFY_NOT_REACHED();
+                        break;
                     case TestResult::Passed: {
                         generated_successfully = true;
                         break;
@@ -90,12 +91,13 @@ public:
                     case TestResult::Overrun:
                         break;
                     default:
-                        break; // TODO I'd like to use VERIFY_NOT_REACHED() here
+                        VERIFY_NOT_REACHED();
+                        break;
                     }
                 }
                 if (!generated_successfully) {
-                    // TODO I'd like to do: VERIFY(gen_attempt == MAX_GEN_ATTEMPTS_PER_VALUE);
-                    // Meaning the loop above got to the full MAX_GEN_ATTEMPTS_PER_VALUE and gave up
+                    VERIFY(gen_attempt == MAX_GEN_ATTEMPTS_PER_VALUE);
+                    // The loop above got to the full MAX_GEN_ATTEMPTS_PER_VALUE and gave up.
                     // Run one last time with reporting on, so that the user gets the REJECTED message.
                     enable_reporting();
                     RandomRun last_failure = rand_source().run();
@@ -104,7 +106,7 @@ public:
                 }
             }
             // MAX_GENERATED_VALUES_PER_TEST values generated, all passed the test.
-            // TODO I'd like to do: VERIFY(current_test_result() == TestResult::Passed);
+            VERIFY(current_test_result() == TestResult::Passed);
         };
         return make_ref_counted<TestCase>(name, test_case_fn, false);
     }
