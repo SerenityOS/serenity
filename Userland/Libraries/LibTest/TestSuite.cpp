@@ -196,6 +196,10 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             sum_of_squared_times += iteration_time * iteration_time;
             min_time = min(min_time, iteration_time);
             max_time = max(max_time, iteration_time);
+
+            // Non-randomized tests don't touch the test result when passing.
+            if (m_current_test_result == TestResult::NotRun) 
+                m_current_test_result = TestResult::Passed;
         }
 
         if (repetitions != 1) {
