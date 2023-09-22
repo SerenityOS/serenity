@@ -58,10 +58,12 @@ ShrinkResult keep_if_better(RandomRun const& new_run, RandomRun const& current_b
         Test::set_current_test_result(TestResult::Failed);
         return no_improvement(current_best);
     case TestResult::NotRun:
+        // We've literally just set it to Passed if it was NotRun!
+        VERIFY_NOT_REACHED();
+        return no_improvement(current_best);
     default:
-        // Neither of these cases should happen.
-        // NotRun:   We've literally just set it to Passed if it was NotRun!
-        return no_improvement(current_best); // TODO I'd like to use VERIFY_NOT_REACHED() here
+        VERIFY_NOT_REACHED();
+        return no_improvement(current_best);
     }
 }
 
@@ -78,11 +80,16 @@ ShrinkResult binary_shrink(u32 low, u32 high, SET_FN update_run, RandomRun const
         return after_low;
     }
 
-    // Gotta do the loop!
+    // Ah well, gotta do some actual work.
+    //
+    // We're already guaranteed that `high` makes the test fail. We're trying to
+    // get as low as `low` (but we know `low` doesn't make the test fail, else
+    // the `if` above would succeed and return).
+    //
+    // Failing value above, passing value below; we try to find the lowest value
+    // that still fails.
     ShrinkResult result = after_low;
     while (low + 1 < high) {
-        // TODO: do the average in a safer way?
-        // https://stackoverflow.com/questions/24920503/what-is-the-right-way-to-find-the-average-of-two-values
         u32 mid = low + (high - low) / 2;
         RandomRun run_with_mid = update_run(mid, current_best);
         ShrinkResult after_mid = keep_if_better(run_with_mid, current_best, test_function);
@@ -104,7 +111,6 @@ ShrinkResult binary_shrink(u32 low, u32 high, SET_FN update_run, RandomRun const
 template<typename FN>
 ShrinkResult shrink_zero(ZeroChunk c, RandomRun const& run, FN const& test_function)
 {
-    // TODO do we need to copy? or is it done automatically
     RandomRun new_run = run;
     size_t end = c.chunk.index + c.chunk.size;
     for (size_t i = c.chunk.index; i < end; i++) {
