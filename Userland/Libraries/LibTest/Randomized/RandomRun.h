@@ -11,8 +11,6 @@
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
 
-#define MAX_RANDOMRUN_LENGTH (64UL * 1024UL) // 64k unsigned ints worth of random bits
-
 /* RandomRun is a record of random bits used in generation of random values.
 Once a value failing user test is found, we then attempt to shrink its RandomRun
 using various ShrinkCmds.
@@ -39,7 +37,6 @@ public:
         return *this;
     }
     bool is_empty() const { return m_data.is_empty(); }
-    bool is_full() { return m_data.size() >= MAX_RANDOMRUN_LENGTH; }
     bool has_a_chance(Chunk const& c) const
     {
         // Is the chunk fully inside the RandomRun?

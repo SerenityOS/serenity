@@ -92,8 +92,6 @@ public:
                     }
                     case TestResult::Rejected:
                         break;
-                    case TestResult::HitLimit:
-                        break;
                     case TestResult::Overrun:
                         break;
                     default:

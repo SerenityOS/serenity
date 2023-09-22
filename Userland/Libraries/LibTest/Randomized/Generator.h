@@ -56,9 +56,6 @@ static u32 unsigned_int(u32 max)
     RandSource& rand = Test::rand_source();
     RandomRun& run = rand.run();
     if (rand.is_live()) {
-        if (run.is_full()) {
-            Test::set_current_test_result(TestResult::HitLimit);
-        }
         // THE INTERESTING PART - START
         u32 value = AK::get_random_uniform(max + 1);
         run.append(value);
@@ -285,9 +282,6 @@ static inline bool weighted_boolean(double probability)
     RandSource& rand = Test::rand_source();
     RandomRun& run = rand.run();
     if (rand.is_live()) {
-        if (run.is_full()) {
-            Test::set_current_test_result(TestResult::HitLimit);
-        }
         // THE INTERESTING PART - START
         double random_double = get_random_probability();
         bool random_bool = random_double <= probability;

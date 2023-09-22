@@ -105,8 +105,6 @@ static DeprecatedString test_result_to_string(TestResult result)
         return "Failed";
     case TestResult::Rejected:
         return "Rejected";
-    case TestResult::HitLimit:
-        return "Hit random data size limit";
     case TestResult::Overrun:
         return "Ran out of randomness";
     default:

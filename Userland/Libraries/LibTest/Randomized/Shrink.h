@@ -58,12 +58,9 @@ ShrinkResult keep_if_better(RandomRun const& new_run, RandomRun const& current_b
         Test::set_current_test_result(TestResult::Failed);
         return no_improvement(current_best);
     case TestResult::NotRun:
-    case TestResult::HitLimit:
     default:
         // Neither of these cases should happen.
         // NotRun:   We've literally just set it to Passed if it was NotRun!
-        // HitLimit: This should have happened earlier; no ShrinkCmd _adds_
-        //           integers to a RandomRun, right?
         return no_improvement(current_best); // TODO I'd like to use VERIFY_NOT_REACHED() here
     }
 }
