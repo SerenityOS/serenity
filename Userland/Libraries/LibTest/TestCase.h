@@ -8,17 +8,13 @@
 #pragma once
 
 #include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
-#include <LibTest/Randomized/Generator.h>
 #include <LibTest/Randomized/RandSource.h>
 #include <LibTest/Randomized/Shrink.h>
 
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/Tuple.h>
-#include <AK/Vector.h>
 
 #ifndef MAX_GENERATED_VALUES_PER_TEST
 #    define MAX_GENERATED_VALUES_PER_TEST 100
