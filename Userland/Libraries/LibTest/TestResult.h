@@ -4,9 +4,11 @@
  */
 enum class TestResult {
     NotRun,
-    Passed,   // test function ran to completion without setting any of the below flags:
-    Failed,   // didn't get through EXPECT(...)
-    Rejected, // didn't get through the ASSUME(...) filter 15 times in a row (in a randomized test)
-              // alternatively, user used REJECT(...)
-    Overrun,  // ran out of RandomRun data (in a randomized test, when shrinking)
+    Passed,   // Test fn ran to completion without setting any of the below flags:
+    Failed,   // Didn't get through EXPECT(...).
+    Rejected, // Didn't get through the ASSUME(...) filter 15 times in a row
+              // (in a randomized test).
+              // Alternatively, user used REJECT(...).
+    Overrun,  // Ran out of RandomRun data (in a randomized test, when shrinking).
+              // This is fine, we'll just try some other shrink.
 };
