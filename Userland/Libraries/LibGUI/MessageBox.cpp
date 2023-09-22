@@ -154,41 +154,41 @@ ErrorOr<void> MessageBox::build()
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<VerticalBoxLayout>(8, 6);
 
-    auto message_container = TRY(main_widget->try_add<Widget>());
+    auto& message_container = main_widget->add<Widget>();
     auto message_margins = Margins { 8, m_type != Type::None ? 8 : 0 };
-    message_container->set_layout<HorizontalBoxLayout>(message_margins, 8);
+    message_container.set_layout<HorizontalBoxLayout>(message_margins, 8);
 
     if (auto icon = TRY(this->icon()); icon && m_type != Type::None) {
-        auto image_widget = TRY(message_container->try_add<ImageWidget>());
-        image_widget->set_bitmap(icon);
+        auto& image_widget = message_container.add<ImageWidget>();
+        image_widget.set_bitmap(icon);
     }
 
-    m_text_label = TRY(message_container->try_add<Label>());
+    m_text_label = message_container.add<Label>();
     m_text_label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
     m_text_label->set_autosize(true);
     if (m_type != Type::None)
         m_text_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    auto button_container = TRY(main_widget->try_add<Widget>());
-    button_container->set_layout<HorizontalBoxLayout>(Margins {}, 8);
+    auto& button_container = main_widget->add<Widget>();
+    button_container.set_layout<HorizontalBoxLayout>(Margins {}, 8);
 
-    auto add_button = [&](String text, ExecResult result) -> ErrorOr<NonnullRefPtr<Button>> {
-        auto button = TRY(button_container->try_add<DialogButton>());
-        button->set_text(move(text));
-        button->on_click = [this, result](auto) { done(result); };
+    auto add_button = [&](String text, ExecResult result) -> NonnullRefPtr<Button> {
+        auto& button = button_container.add<DialogButton>();
+        button.set_text(move(text));
+        button.on_click = [this, result](auto) { done(result); };
         return button;
     };
 
-    button_container->add_spacer();
+    button_container.add_spacer();
     if (should_include_ok_button())
-        m_ok_button = TRY(add_button("OK"_string, ExecResult::OK));
+        m_ok_button = add_button("OK"_string, ExecResult::OK);
     if (should_include_yes_button())
-        m_yes_button = TRY(add_button("Yes"_string, ExecResult::Yes));
+        m_yes_button = add_button("Yes"_string, ExecResult::Yes);
     if (should_include_no_button())
-        m_no_button = TRY(add_button("No"_string, ExecResult::No));
+        m_no_button = add_button("No"_string, ExecResult::No);
     if (should_include_cancel_button())
-        m_cancel_button = TRY(add_button("Cancel"_string, ExecResult::Cancel));
-    button_container->add_spacer();
+        m_cancel_button = add_button("Cancel"_string, ExecResult::Cancel);
+    button_container.add_spacer();
 
     return {};
 }

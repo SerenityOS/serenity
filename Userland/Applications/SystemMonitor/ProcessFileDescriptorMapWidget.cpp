@@ -19,7 +19,7 @@ ErrorOr<NonnullRefPtr<ProcessFileDescriptorMapWidget>> ProcessFileDescriptorMapW
 {
     auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessFileDescriptorMapWidget()));
     widget->set_layout<GUI::VerticalBoxLayout>(4);
-    widget->m_table_view = TRY(widget->try_add<GUI::TableView>());
+    widget->m_table_view = widget->add<GUI::TableView>();
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_fds_fields;
     TRY(pid_fds_fields.try_empend("fd", "FD"_string, Gfx::TextAlignment::CenterRight));

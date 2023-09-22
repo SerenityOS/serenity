@@ -239,41 +239,41 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& backtrace_tab = tab_widget.add_tab<GUI::Widget>("Backtrace"_string);
     backtrace_tab.set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto backtrace_label = TRY(backtrace_tab.try_add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"_string));
-    backtrace_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    backtrace_label->set_fixed_height(16);
+    auto& backtrace_label = backtrace_tab.add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"_string);
+    backtrace_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    backtrace_label.set_fixed_height(16);
 
-    auto backtrace_tab_widget = TRY(backtrace_tab.try_add<GUI::TabWidget>());
-    backtrace_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    auto& backtrace_tab_widget = backtrace_tab.add<GUI::TabWidget>();
+    backtrace_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
     auto& cpu_registers_tab = tab_widget.add_tab<GUI::Widget>("CPU Registers"_string);
     cpu_registers_tab.set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto cpu_registers_label = TRY(cpu_registers_tab.try_add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:"_string));
-    cpu_registers_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    cpu_registers_label->set_fixed_height(16);
+    auto& cpu_registers_label = cpu_registers_tab.add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:"_string);
+    cpu_registers_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    cpu_registers_label.set_fixed_height(16);
 
-    auto cpu_registers_tab_widget = TRY(cpu_registers_tab.try_add<GUI::TabWidget>());
-    cpu_registers_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    auto& cpu_registers_tab_widget = cpu_registers_tab.add<GUI::TabWidget>();
+    cpu_registers_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
     auto& environment_tab = tab_widget.add_tab<GUI::Widget>("Environment"_string);
     environment_tab.set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto environment_text_editor = TRY(environment_tab.try_add<GUI::TextEditor>());
-    environment_text_editor->set_text(DeprecatedString::join('\n', environment));
-    environment_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
-    environment_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
-    environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
+    auto& environment_text_editor = environment_tab.add<GUI::TextEditor>();
+    environment_text_editor.set_text(DeprecatedString::join('\n', environment));
+    environment_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
+    environment_text_editor.set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+    environment_text_editor.set_should_hide_unnecessary_scrollbars(true);
 
     auto& memory_regions_tab = tab_widget.add_tab<GUI::Widget>("Memory Regions"_string);
     memory_regions_tab.set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto memory_regions_text_editor = TRY(memory_regions_tab.try_add<GUI::TextEditor>());
-    memory_regions_text_editor->set_text(DeprecatedString::join('\n', memory_regions));
-    memory_regions_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
-    memory_regions_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
-    memory_regions_text_editor->set_should_hide_unnecessary_scrollbars(true);
-    memory_regions_text_editor->set_visualize_trailing_whitespace(false);
+    auto& memory_regions_text_editor = memory_regions_tab.add<GUI::TextEditor>();
+    memory_regions_text_editor.set_text(DeprecatedString::join('\n', memory_regions));
+    memory_regions_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
+    memory_regions_text_editor.set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+    memory_regions_text_editor.set_should_hide_unnecessary_scrollbars(true);
+    memory_regions_text_editor.set_visualize_trailing_whitespace(false);
 
     auto& close_button = *widget->find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {
@@ -330,24 +330,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         [&](auto results) -> ErrorOr<void> {
             for (auto& backtrace : results.thread_backtraces) {
-                auto& container = backtrace_tab_widget->add_tab<GUI::Widget>(TRY(String::from_deprecated_string(backtrace.title)));
+                auto& container = backtrace_tab_widget.add_tab<GUI::Widget>(TRY(String::from_deprecated_string(backtrace.title)));
                 container.template set_layout<GUI::VerticalBoxLayout>(4);
-                auto backtrace_text_editor = TRY(container.template try_add<GUI::TextEditor>());
-                backtrace_text_editor->set_text(backtrace.text);
-                backtrace_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
-                backtrace_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
-                backtrace_text_editor->set_should_hide_unnecessary_scrollbars(true);
+                auto& backtrace_text_editor = container.template add<GUI::TextEditor>();
+                backtrace_text_editor.set_text(backtrace.text);
+                backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
+                backtrace_text_editor.set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+                backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
                 TRY(full_backtrace.try_appendff("==== {} ====\n{}\n", backtrace.title, backtrace.text));
             }
 
             for (auto& cpu_registers : results.thread_cpu_registers) {
-                auto& container = cpu_registers_tab_widget->add_tab<GUI::Widget>(TRY(String::from_deprecated_string(cpu_registers.title)));
+                auto& container = cpu_registers_tab_widget.add_tab<GUI::Widget>(TRY(String::from_deprecated_string(cpu_registers.title)));
                 container.template set_layout<GUI::VerticalBoxLayout>(4);
-                auto cpu_registers_text_editor = TRY(container.template try_add<GUI::TextEditor>());
-                cpu_registers_text_editor->set_text(cpu_registers.text);
-                cpu_registers_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
-                cpu_registers_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
-                cpu_registers_text_editor->set_should_hide_unnecessary_scrollbars(true);
+                auto& cpu_registers_text_editor = container.template add<GUI::TextEditor>();
+                cpu_registers_text_editor.set_text(cpu_registers.text);
+                cpu_registers_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
+                cpu_registers_text_editor.set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+                cpu_registers_text_editor.set_should_hide_unnecessary_scrollbars(true);
             }
 
             progressbar.set_visible(false);

@@ -39,11 +39,11 @@ ErrorOr<void> MainWidget::initialize()
     set_layout<GUI::VerticalBoxLayout>(2, 2);
     set_fill_with_background_color(true);
 
-    m_wave_widget = TRY(try_add<WaveWidget>(m_track_manager));
+    m_wave_widget = add<WaveWidget>(m_track_manager);
     m_wave_widget->set_fixed_height(100);
     TRY(m_wave_widget->set_sample_size(sample_count));
 
-    m_tab_widget = TRY(try_add<GUI::TabWidget>());
+    m_tab_widget = add<GUI::TabWidget>();
     m_roll_widget = m_tab_widget->add_tab<RollWidget>("Piano Roll"_string, m_track_manager);
 
     m_roll_widget->set_fixed_height(300);
@@ -51,23 +51,23 @@ ErrorOr<void> MainWidget::initialize()
     m_tab_widget->add_tab<SamplerWidget>("Sampler"_string, m_track_manager);
     m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, *this, m_audio_loop));
 
-    m_keys_and_knobs_container = TRY(try_add<GUI::Widget>());
+    m_keys_and_knobs_container = add<GUI::Widget>();
     m_keys_and_knobs_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 2);
     m_keys_and_knobs_container->set_fixed_height(130);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 
-    m_keys_widget = TRY(m_keys_and_knobs_container->try_add<KeysWidget>(m_track_manager.keyboard()));
+    m_keys_widget = m_keys_and_knobs_container->add<KeysWidget>(m_track_manager.keyboard());
 
-    m_octave_container = TRY(m_keys_and_knobs_container->try_add<GUI::Widget>());
+    m_octave_container = m_keys_and_knobs_container->add<GUI::Widget>();
     m_octave_container->set_preferred_width(GUI::SpecialDimension::Fit);
     m_octave_container->set_layout<GUI::VerticalBoxLayout>();
-    auto octave_label = TRY(m_octave_container->try_add<GUI::Label>("Octave"_string));
-    octave_label->set_preferred_width(GUI::SpecialDimension::Fit);
-    m_octave_value = TRY(m_octave_container->try_add<GUI::Label>(TRY(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()))));
+    auto& octave_label = m_octave_container->add<GUI::Label>("Octave"_string);
+    octave_label.set_preferred_width(GUI::SpecialDimension::Fit);
+    m_octave_value = m_octave_container->add<GUI::Label>(TRY(String::number(m_track_manager.keyboard()->virtual_keyboard_octave())));
     m_octave_value->set_preferred_width(GUI::SpecialDimension::Fit);
 
     // FIXME: Implement vertical flipping in GUI::Slider, not here.
-    m_octave_knob = TRY(m_octave_container->try_add<GUI::VerticalSlider>());
+    m_octave_knob = m_octave_container->add<GUI::VerticalSlider>();
     m_octave_knob->set_preferred_width(GUI::SpecialDimension::Fit);
     m_octave_knob->set_tooltip_deprecated("Z: octave down, X: octave up");
     m_octave_knob->set_range(octave_min - 1, octave_max - 1);
@@ -80,7 +80,7 @@ ErrorOr<void> MainWidget::initialize()
         m_octave_value->set_text(String::number(new_octave).release_value_but_fixme_should_propagate_errors());
     };
 
-    m_knobs_widget = TRY(m_keys_and_knobs_container->try_add<GUI::StackWidget>());
+    m_knobs_widget = m_keys_and_knobs_container->add<GUI::StackWidget>();
     for (auto track : m_track_manager.tracks())
         TRY(m_track_controls.try_append(TRY(m_knobs_widget->try_add<TrackControlsWidget>(TRY(track->try_make_weak_ptr())))));
 

@@ -204,12 +204,12 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
-        mode_container->set_fixed_height(20);
-        mode_container->set_layout<GUI::HorizontalBoxLayout>();
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Gradient Type:"_string));
-        mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        mode_label->set_fixed_size(80, 20);
+        auto& mode_container = properties_widget->add<GUI::Widget>();
+        mode_container.set_fixed_height(20);
+        mode_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& mode_label = mode_container.add<GUI::Label>("Gradient Type:"_string);
+        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        mode_label.set_fixed_size(80, 20);
 
         static constexpr auto s_mode_names = [] {
             Array<StringView, (int)GradientMode::__Count> names;
@@ -228,36 +228,36 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
             return names;
         }();
 
-        auto mode_combobox = TRY(mode_container->try_add<GUI::ComboBox>());
-        mode_combobox->set_only_allow_values_from_model(true);
-        mode_combobox->set_model(*GUI::ItemListModel<StringView, decltype(s_mode_names)>::create(s_mode_names));
-        mode_combobox->set_selected_index((int)m_mode, GUI::AllowCallback::No);
+        auto& mode_combobox = mode_container.add<GUI::ComboBox>();
+        mode_combobox.set_only_allow_values_from_model(true);
+        mode_combobox.set_model(*GUI::ItemListModel<StringView, decltype(s_mode_names)>::create(s_mode_names));
+        mode_combobox.set_selected_index((int)m_mode, GUI::AllowCallback::No);
 
-        auto opacity_container = TRY(properties_widget->try_add<GUI::Widget>());
-        opacity_container->set_fixed_height(20);
-        opacity_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& opacity_container = properties_widget->add<GUI::Widget>();
+        opacity_container.set_fixed_height(20);
+        opacity_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto opacity_label = TRY(opacity_container->try_add<GUI::Label>("Opacity:"_string));
-        opacity_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        opacity_label->set_fixed_size(80, 20);
+        auto& opacity_label = opacity_container.add<GUI::Label>("Opacity:"_string);
+        opacity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        opacity_label.set_fixed_size(80, 20);
 
-        auto opacity_slider = TRY(opacity_container->try_add<GUI::HorizontalOpacitySlider>());
-        opacity_slider->set_range(1, 100);
-        opacity_slider->set_value(100);
+        auto& opacity_slider = opacity_container.add<GUI::HorizontalOpacitySlider>();
+        opacity_slider.set_range(1, 100);
+        opacity_slider.set_value(100);
 
-        opacity_slider->on_change = [this](int value) {
+        opacity_slider.on_change = [this](int value) {
             m_opacity = value;
             m_editor->update();
         };
 
-        set_primary_slider(opacity_slider);
+        set_primary_slider(&opacity_slider);
 
-        auto hardness_container = TRY(properties_widget->try_add<GUI::Widget>());
-        hardness_container->set_layout<GUI::HorizontalBoxLayout>();
-        hardness_container->set_fixed_height(20);
-        hardness_container->set_visible(m_mode == GradientMode::Radial);
+        auto& hardness_container = properties_widget->add<GUI::Widget>();
+        hardness_container.set_layout<GUI::HorizontalBoxLayout>();
+        hardness_container.set_fixed_height(20);
+        hardness_container.set_visible(m_mode == GradientMode::Radial);
 
-        mode_combobox->on_change = [this, hardness_container](auto&, auto& model_index) {
+        mode_combobox.on_change = [this, &hardness_container](auto&, auto& model_index) {
             VERIFY(model_index.row() >= 0);
             VERIFY(model_index.row() < (int)GradientMode::__Count);
 
@@ -268,37 +268,37 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
                 reset();
             }
 
-            hardness_container->set_visible(m_mode == GradientMode::Radial);
+            hardness_container.set_visible(m_mode == GradientMode::Radial);
         };
 
-        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"_string));
-        hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        hardness_label->set_fixed_size(80, 20);
+        auto& hardness_label = hardness_container.add<GUI::Label>("Hardness:"_string);
+        hardness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        hardness_label.set_fixed_size(80, 20);
 
-        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
-        hardness_slider->set_range(1, 99);
-        hardness_slider->set_value(m_hardness);
-        hardness_slider->on_change = [this](int value) {
+        auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string);
+        hardness_slider.set_range(1, 99);
+        hardness_slider.set_value(m_hardness);
+        hardness_slider.on_change = [this](int value) {
             if (m_mode == GradientMode::Radial && m_editor) {
                 m_hardness = value;
                 m_editor->update();
             }
         };
-        set_secondary_slider(hardness_slider);
+        set_secondary_slider(&hardness_slider);
 
-        auto use_secondary_color_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>("Use secondary color"_string));
-        use_secondary_color_checkbox->on_checked = [this](bool checked) {
+        auto& use_secondary_color_checkbox = properties_widget->add<GUI::CheckBox>("Use secondary color"_string);
+        use_secondary_color_checkbox.on_checked = [this](bool checked) {
             m_use_secondary_color = checked;
             m_editor->update();
         };
 
-        auto button_container = TRY(properties_widget->try_add<GUI::Widget>());
-        button_container->set_fixed_height(22);
-        button_container->set_layout<GUI::HorizontalBoxLayout>();
-        button_container->add_spacer();
+        auto& button_container = properties_widget->add<GUI::Widget>();
+        button_container.set_fixed_height(22);
+        button_container.set_layout<GUI::HorizontalBoxLayout>();
+        button_container.add_spacer();
 
-        auto apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_string));
-        apply_button->on_click = [this](auto) {
+        auto& apply_button = button_container.add<GUI::DialogButton>("Apply"_string);
+        apply_button.on_click = [this](auto) {
             rasterize_gradient();
         };
         m_properties_widget = properties_widget;

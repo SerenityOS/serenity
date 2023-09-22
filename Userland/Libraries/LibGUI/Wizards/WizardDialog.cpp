@@ -29,24 +29,24 @@ ErrorOr<void> WizardDialog::build()
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<VerticalBoxLayout>(Margins {}, 0);
 
-    m_page_container_widget = TRY(main_widget->try_add<Widget>());
+    m_page_container_widget = main_widget->add<Widget>();
     m_page_container_widget->set_fixed_size(500, 315);
     m_page_container_widget->set_layout<VerticalBoxLayout>();
 
-    auto separator = TRY(main_widget->try_add<SeparatorWidget>(Gfx::Orientation::Horizontal));
-    separator->set_fixed_height(2);
+    auto& separator = main_widget->add<SeparatorWidget>(Gfx::Orientation::Horizontal);
+    separator.set_fixed_height(2);
 
-    auto nav_container_widget = TRY(main_widget->try_add<Widget>());
-    nav_container_widget->set_layout<HorizontalBoxLayout>(Margins { 0, 10 }, 0);
-    nav_container_widget->set_fixed_height(42);
-    nav_container_widget->add_spacer();
+    auto& nav_container_widget = main_widget->add<Widget>();
+    nav_container_widget.set_layout<HorizontalBoxLayout>(Margins { 0, 10 }, 0);
+    nav_container_widget.set_fixed_height(42);
+    nav_container_widget.add_spacer();
 
-    m_back_button = TRY(nav_container_widget->try_add<DialogButton>("< Back"_string));
+    m_back_button = nav_container_widget.add<DialogButton>("< Back"_string);
     m_back_button->on_click = [&](auto) {
         pop_page();
     };
 
-    m_next_button = TRY(nav_container_widget->try_add<DialogButton>("Next >"_string));
+    m_next_button = nav_container_widget.add<DialogButton>("Next >"_string);
     m_next_button->on_click = [&](auto) {
         VERIFY(has_pages());
 
@@ -60,10 +60,10 @@ ErrorOr<void> WizardDialog::build()
         push_page(*next_page);
     };
 
-    auto button_spacer = TRY(nav_container_widget->try_add<Widget>());
-    button_spacer->set_fixed_width(10);
+    auto& button_spacer = nav_container_widget.add<Widget>();
+    button_spacer.set_fixed_width(10);
 
-    m_cancel_button = TRY(nav_container_widget->try_add<DialogButton>("Cancel"_string));
+    m_cancel_button = nav_container_widget.add<DialogButton>("Cancel"_string);
     m_cancel_button->on_click = [&](auto) {
         handle_cancel();
     };

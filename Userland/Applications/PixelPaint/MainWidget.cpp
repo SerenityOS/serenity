@@ -1190,7 +1190,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     toolbar.add_action(*m_zoom_out_action);
     toolbar.add_action(*m_reset_zoom_action);
 
-    m_zoom_combobox = TRY(toolbar.try_add<GUI::ComboBox>());
+    m_zoom_combobox = toolbar.add<GUI::ComboBox>();
     m_zoom_combobox->set_max_width(75);
     m_zoom_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(s_suggested_zoom_levels));
     m_zoom_combobox->on_change = [this](DeprecatedString const& value, GUI::ModelIndex const& index) {

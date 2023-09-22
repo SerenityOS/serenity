@@ -26,24 +26,24 @@ ErrorOr<NonnullRefPtr<TrackControlsWidget>> TrackControlsWidget::try_create(Weak
     widget->set_preferred_width(GUI::SpecialDimension::Grow);
     widget->set_fill_with_background_color(true);
 
-    auto mastering_parameters = TRY(widget->try_add<GUI::GroupBox>());
-    mastering_parameters->set_layout<GUI::HorizontalBoxLayout>();
+    auto& mastering_parameters = widget->add<GUI::GroupBox>();
+    mastering_parameters.set_layout<GUI::HorizontalBoxLayout>();
 
     auto strong_track = widget->m_track.value();
 
     for (auto& parameter : strong_track->track_mastering()->parameters())
-        (void)TRY(mastering_parameters->try_add<ProcessorParameterWidget>(parameter));
+        mastering_parameters.add<ProcessorParameterWidget>(parameter);
 
     TRY(widget->m_processor_groups.try_append(mastering_parameters));
 
     widget->add_spacer();
 
     for (auto& processor : strong_track->processor_chain()) {
-        auto processor_parameters = TRY(widget->try_add<GUI::GroupBox>());
-        processor_parameters->set_layout<GUI::HorizontalBoxLayout>();
+        auto& processor_parameters = widget->add<GUI::GroupBox>();
+        processor_parameters.set_layout<GUI::HorizontalBoxLayout>();
 
         for (auto& parameter : processor->parameters())
-            (void)TRY(processor_parameters->try_add<ProcessorParameterWidget>(parameter));
+            processor_parameters.add<ProcessorParameterWidget>(parameter);
 
         TRY(widget->m_processor_groups.try_append(processor_parameters));
     }

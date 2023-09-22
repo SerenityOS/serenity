@@ -332,8 +332,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             memory_stats_widget->refresh();
     };
     update_stats();
-    auto refresh_timer = TRY(window->try_add<Core::Timer>(frequency * 1000, move(update_stats)));
-    refresh_timer->start();
+    auto& refresh_timer = window->add<Core::Timer>(frequency * 1000, move(update_stats));
+    refresh_timer.start();
 
     auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())
@@ -454,7 +454,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto make_frequency_action = [&](int seconds) -> ErrorOr<void> {
         auto action = GUI::Action::create_checkable(DeprecatedString::formatted("&{} Sec", seconds), [&refresh_timer, seconds](auto&) {
             Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, seconds);
-            refresh_timer->restart(seconds * 1000);
+            refresh_timer.restart(seconds * 1000);
         });
         action->set_status_tip(TRY(String::formatted("Refresh every {} seconds", seconds)));
         action->set_checked(frequency == seconds);
@@ -578,24 +578,24 @@ ErrorOr<void> build_performance_tab(GUI::Widget& graphs_container)
 
     Vector<SystemMonitor::GraphWidget&> cpu_graphs;
     for (auto row = 0u; row < cpu_graph_rows; ++row) {
-        auto cpu_graph_row = TRY(cpu_graph_group_box.try_add<GUI::Widget>());
-        cpu_graph_row->set_layout<GUI::HorizontalBoxLayout>(6);
-        cpu_graph_row->set_fixed_height(108);
+        auto& cpu_graph_row = cpu_graph_group_box.add<GUI::Widget>();
+        cpu_graph_row.set_layout<GUI::HorizontalBoxLayout>(6);
+        cpu_graph_row.set_fixed_height(108);
         for (auto i = 0u; i < cpu_graphs_per_row; ++i) {
-            auto cpu_graph = TRY(cpu_graph_row->try_add<SystemMonitor::GraphWidget>());
-            cpu_graph->set_max(100);
-            cpu_graph->set_value_format(0, {
-                                               .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                               .text_formatter = [](u64 value) {
-                                                   return DeprecatedString::formatted("Total: {}%", value);
-                                               },
-                                           });
-            cpu_graph->set_value_format(1, {
-                                               .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                               .text_formatter = [](u64 value) {
-                                                   return DeprecatedString::formatted("Kernel: {}%", value);
-                                               },
-                                           });
+            auto& cpu_graph = cpu_graph_row.add<SystemMonitor::GraphWidget>();
+            cpu_graph.set_max(100);
+            cpu_graph.set_value_format(0, {
+                                              .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
+                                              .text_formatter = [](u64 value) {
+                                                  return DeprecatedString::formatted("Total: {}%", value);
+                                              },
+                                          });
+            cpu_graph.set_value_format(1, {
+                                              .graph_color_role = ColorRole::SyntaxPreprocessorValue,
+                                              .text_formatter = [](u64 value) {
+                                                  return DeprecatedString::formatted("Kernel: {}%", value);
+                                              },
+                                          });
             cpu_graphs.append(cpu_graph);
         }
     }

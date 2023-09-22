@@ -45,10 +45,10 @@ ErrorOr<void> PlayerWidget::initialize()
     set_fill_with_background_color(true);
     TRY(m_track_number_choices.try_append("1"));
 
-    RefPtr<GUI::Label> label = TRY(try_add<GUI::Label>("Track"_string));
+    RefPtr<GUI::Label> label = add<GUI::Label>("Track"_string);
     label->set_max_width(75);
 
-    m_track_dropdown = TRY(try_add<GUI::ComboBox>());
+    m_track_dropdown = add<GUI::ComboBox>();
     m_track_dropdown->set_max_width(75);
     m_track_dropdown->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_track_number_choices));
     m_track_dropdown->set_only_allow_values_from_model(true);
@@ -59,7 +59,7 @@ ErrorOr<void> PlayerWidget::initialize()
         m_main_widget.update_selected_track();
     };
 
-    m_add_track_button = TRY(try_add<GUI::Button>());
+    m_add_track_button = add<GUI::Button>();
     m_add_track_button->set_icon(*m_add_track_icon);
     m_add_track_button->set_fixed_width(30);
     m_add_track_button->set_tooltip_deprecated("Add Track");
@@ -68,7 +68,7 @@ ErrorOr<void> PlayerWidget::initialize()
         add_track();
     };
 
-    m_next_track_button = TRY(try_add<GUI::Button>());
+    m_next_track_button = add<GUI::Button>();
     m_next_track_button->set_icon(*m_next_track_icon);
     m_next_track_button->set_fixed_width(30);
     m_next_track_button->set_tooltip_deprecated("Next Track");
@@ -77,7 +77,7 @@ ErrorOr<void> PlayerWidget::initialize()
         next_track();
     };
 
-    m_play_button = TRY(try_add<GUI::Button>());
+    m_play_button = add<GUI::Button>();
     m_play_button->set_icon(*m_pause_icon);
     m_play_button->set_fixed_width(30);
     m_play_button->set_tooltip_deprecated("Play/Pause playback");
@@ -92,7 +92,7 @@ ErrorOr<void> PlayerWidget::initialize()
         }
     };
 
-    m_back_button = TRY(try_add<GUI::Button>());
+    m_back_button = add<GUI::Button>();
     m_back_button->set_icon(*m_back_icon);
     m_back_button->set_fixed_width(30);
     m_back_button->set_tooltip_deprecated("Previous Note");
@@ -101,7 +101,7 @@ ErrorOr<void> PlayerWidget::initialize()
         m_track_manager.time_forward(-(sample_rate / (beats_per_minute / 60) / notes_per_beat));
     };
 
-    m_next_button = TRY(try_add<GUI::Button>());
+    m_next_button = add<GUI::Button>();
     m_next_button->set_icon(*m_next_icon);
     m_next_button->set_fixed_width(30);
     m_next_button->set_tooltip_deprecated("Next Note");

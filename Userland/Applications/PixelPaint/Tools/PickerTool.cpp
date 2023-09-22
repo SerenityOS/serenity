@@ -47,9 +47,9 @@ ErrorOr<GUI::Widget*> PickerTool::get_properties_widget()
         auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto sample_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>("Sample all layers"_string));
-        sample_checkbox->set_checked(m_sample_all_layers);
-        sample_checkbox->on_checked = [this](bool value) {
+        auto& sample_checkbox = properties_widget->add<GUI::CheckBox>("Sample all layers"_string);
+        sample_checkbox.set_checked(m_sample_all_layers);
+        sample_checkbox.on_checked = [this](bool value) {
             m_sample_all_layers = value;
         };
         m_properties_widget = properties_widget;

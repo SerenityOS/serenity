@@ -24,8 +24,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     main_widget->set_layout<GUI::VerticalBoxLayout>(16);
 
-    auto button = TRY(main_widget->try_add<GUI::Button>("Click me!"_string));
-    button->on_click = [&](auto) {
+    auto& button = main_widget->add<GUI::Button>("Click me!"_string);
+    button.on_click = [&](auto) {
         GUI::MessageBox::show(window, "Hello friends!"sv, ":^)"sv);
     };
 

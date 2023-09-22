@@ -469,13 +469,13 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
     properties_list->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8 }, 12);
 
     for (auto const& group : property_tab.property_groups) {
-        NonnullRefPtr<GUI::GroupBox> group_box = TRY(properties_list->try_add<GUI::GroupBox>(group.title));
+        NonnullRefPtr<GUI::GroupBox> group_box = properties_list->add<GUI::GroupBox>(group.title);
         // 1px less on the left makes the text line up with the group title.
         group_box->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8, 8, 8, 7 }, 12);
         group_box->set_preferred_height(GUI::SpecialDimension::Fit);
 
         for (auto const& property : group.properties) {
-            NonnullRefPtr<GUI::Widget> row_widget = TRY(group_box->try_add<GUI::Widget>());
+            NonnullRefPtr<GUI::Widget> row_widget = group_box->add<GUI::Widget>();
             row_widget->set_fixed_height(22);
             TRY(property.role.visit(
                 [&](Gfx::AlignmentRole role) -> ErrorOr<void> {

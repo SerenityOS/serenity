@@ -105,16 +105,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto icon_view = TRY(main_widget->try_add<GUI::IconView>());
-    icon_view->set_should_hide_unnecessary_scrollbars(true);
+    auto& icon_view = main_widget->add<GUI::IconView>();
+    icon_view.set_should_hide_unnecessary_scrollbars(true);
     auto model = adopt_ref(*new SettingsAppsModel);
-    icon_view->set_model(*model);
+    icon_view.set_model(*model);
 
-    icon_view->on_activation = [&](GUI::ModelIndex const& index) {
+    icon_view.on_activation = [&](GUI::ModelIndex const& index) {
         auto executable = model->data(index, GUI::ModelRole::Custom).as_string();
         auto requires_root = model->data(index, static_cast<GUI::ModelRole>(SettingsAppsModelCustomRole::RequiresRoot)).as_bool();
 
-        auto launch_origin_rect = icon_view->to_widget_rect(icon_view->content_rect(index)).translated(icon_view->screen_relative_rect().location());
+        auto launch_origin_rect = icon_view.to_widget_rect(icon_view.content_rect(index)).translated(icon_view.screen_relative_rect().location());
         setenv("__libgui_launch_origin_rect", DeprecatedString::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
 
         if (requires_root)
@@ -123,17 +123,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::Process::spawn_or_show_error(window, executable);
     };
 
-    auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
+    auto& statusbar = main_widget->add<GUI::Statusbar>();
 
-    icon_view->on_selection_change = [&] {
-        auto index = icon_view->selection().first();
+    icon_view.on_selection_change = [&] {
+        auto index = icon_view.selection().first();
         if (!index.is_valid()) {
-            statusbar->set_text({});
+            statusbar.set_text({});
             return;
         }
 
         auto& app = *(NonnullRefPtr<Desktop::AppFile>*)index.internal_data();
-        statusbar->set_text(String::from_deprecated_string(app->description()).release_value_but_fixme_should_propagate_errors());
+        statusbar.set_text(String::from_deprecated_string(app->description()).release_value_but_fixme_should_propagate_errors());
     };
 
     window->set_icon(app_icon.bitmap_for_size(16));

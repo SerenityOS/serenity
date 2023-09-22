@@ -111,13 +111,13 @@ ErrorOr<GUI::Widget*> TextTool::get_properties_widget()
     auto properties_widget = GUI::Widget::construct();
     properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-    auto font_header = TRY(properties_widget->try_add<GUI::Label>("Current Font:"_string));
-    font_header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto& font_header = properties_widget->add<GUI::Label>("Current Font:"_string);
+    font_header.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    m_font_label = TRY(properties_widget->try_add<GUI::Label>(m_selected_font->human_readable_name()));
+    m_font_label = properties_widget->add<GUI::Label>(m_selected_font->human_readable_name());
 
-    auto change_font_button = TRY(properties_widget->try_add<GUI::Button>("Change Font..."_string));
-    change_font_button->on_click = [this](auto) {
+    auto& change_font_button = properties_widget->add<GUI::Button>("Change Font..."_string);
+    change_font_button.on_click = [this](auto) {
         auto picker = GUI::FontPicker::construct(nullptr, m_selected_font, false);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {
             m_font_label->set_text(picker->font()->human_readable_name());

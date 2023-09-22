@@ -125,36 +125,36 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto thickness_container = TRY(properties_widget->try_add<GUI::Widget>());
-        thickness_container->set_fixed_height(20);
-        thickness_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& thickness_container = properties_widget->add<GUI::Widget>();
+        thickness_container.set_fixed_height(20);
+        thickness_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>("Thickness:"_string));
-        thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        thickness_label->set_fixed_size(80, 20);
+        auto& thickness_label = thickness_container.add<GUI::Label>("Thickness:"_string);
+        thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        thickness_label.set_fixed_size(80, 20);
 
-        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
-        thickness_slider->set_range(1, 10);
-        thickness_slider->set_value(m_thickness);
+        auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string);
+        thickness_slider.set_range(1, 10);
+        thickness_slider.set_value(m_thickness);
 
-        thickness_slider->on_change = [this](int value) {
+        thickness_slider.on_change = [this](int value) {
             m_thickness = value;
         };
-        set_primary_slider(thickness_slider);
+        set_primary_slider(&thickness_slider);
 
-        auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
-        mode_container->set_fixed_height(20);
-        mode_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& mode_container = properties_widget->add<GUI::Widget>();
+        mode_container.set_fixed_height(20);
+        mode_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
-        mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        mode_label->set_fixed_size(80, 20);
+        auto& mode_label = mode_container.add<GUI::Label>("Mode:"_string);
+        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        mode_label.set_fixed_size(80, 20);
 
-        auto aa_enable_checkbox = TRY(mode_container->try_add<GUI::CheckBox>("Anti-alias"_string));
-        aa_enable_checkbox->on_checked = [this](bool checked) {
+        auto& aa_enable_checkbox = mode_container.add<GUI::CheckBox>("Anti-alias"_string);
+        aa_enable_checkbox.on_checked = [this](bool checked) {
             m_antialias_enabled = checked;
         };
-        aa_enable_checkbox->set_checked(true);
+        aa_enable_checkbox.set_checked(true);
         m_properties_widget = properties_widget;
     }
 

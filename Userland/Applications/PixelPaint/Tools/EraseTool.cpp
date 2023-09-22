@@ -60,78 +60,78 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
         auto properties_widget = GUI::Widget::construct();
         properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto size_container = TRY(properties_widget->try_add<GUI::Widget>());
-        size_container->set_fixed_height(20);
-        size_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& size_container = properties_widget->add<GUI::Widget>();
+        size_container.set_fixed_height(20);
+        size_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_string));
-        size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label->set_fixed_size(80, 20);
+        auto& size_label = size_container.add<GUI::Label>("Size:"_string);
+        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label.set_fixed_size(80, 20);
 
-        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
-        size_slider->set_range(1, 250);
-        size_slider->set_value(size());
+        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string);
+        size_slider.set_range(1, 250);
+        size_slider.set_value(size());
 
-        size_slider->on_change = [this, size_slider](int value) {
+        size_slider.on_change = [this, &size_slider](int value) {
             set_size(value);
-            size_slider->set_override_cursor(cursor());
+            size_slider.set_override_cursor(cursor());
         };
-        set_primary_slider(size_slider);
+        set_primary_slider(&size_slider);
 
-        auto hardness_container = TRY(properties_widget->try_add<GUI::Widget>());
-        hardness_container->set_fixed_height(20);
-        hardness_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& hardness_container = properties_widget->add<GUI::Widget>();
+        hardness_container.set_fixed_height(20);
+        hardness_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"_string));
-        hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        hardness_label->set_fixed_size(80, 20);
+        auto& hardness_label = hardness_container.add<GUI::Label>("Hardness:"_string);
+        hardness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        hardness_label.set_fixed_size(80, 20);
 
-        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
-        hardness_slider->set_range(1, 100);
-        hardness_slider->set_value(hardness());
+        auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string);
+        hardness_slider.set_range(1, 100);
+        hardness_slider.set_value(hardness());
 
-        hardness_slider->on_change = [this](int value) {
+        hardness_slider.on_change = [this](int value) {
             set_hardness(value);
         };
-        set_secondary_slider(hardness_slider);
+        set_secondary_slider(&hardness_slider);
 
-        auto secondary_color_container = TRY(properties_widget->try_add<GUI::Widget>());
-        secondary_color_container->set_fixed_height(20);
-        secondary_color_container->set_layout<GUI::HorizontalBoxLayout>();
+        auto& secondary_color_container = properties_widget->add<GUI::Widget>();
+        secondary_color_container.set_fixed_height(20);
+        secondary_color_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto use_secondary_color_checkbox = TRY(secondary_color_container->try_add<GUI::CheckBox>());
-        use_secondary_color_checkbox->set_checked(m_use_secondary_color);
-        use_secondary_color_checkbox->set_text("Use secondary color"_string);
-        use_secondary_color_checkbox->on_checked = [this](bool checked) {
+        auto& use_secondary_color_checkbox = secondary_color_container.add<GUI::CheckBox>();
+        use_secondary_color_checkbox.set_checked(m_use_secondary_color);
+        use_secondary_color_checkbox.set_text("Use secondary color"_string);
+        use_secondary_color_checkbox.on_checked = [this](bool checked) {
             m_use_secondary_color = checked;
         };
 
-        auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
-        mode_container->set_fixed_height(46);
-        mode_container->set_layout<GUI::HorizontalBoxLayout>();
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Draw Mode:"_string));
-        mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        mode_label->set_fixed_size(80, 20);
+        auto& mode_container = properties_widget->add<GUI::Widget>();
+        mode_container.set_fixed_height(46);
+        mode_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& mode_label = mode_container.add<GUI::Label>("Draw Mode:"_string);
+        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        mode_label.set_fixed_size(80, 20);
 
-        auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
-        mode_radio_container->set_layout<GUI::VerticalBoxLayout>();
-        auto pencil_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Pencil"_string));
-        auto brush_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Brush"_string));
+        auto& mode_radio_container = mode_container.add<GUI::Widget>();
+        mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
+        auto& pencil_mode_radio = mode_radio_container.add<GUI::RadioButton>("Pencil"_string);
+        auto& brush_mode_radio = mode_radio_container.add<GUI::RadioButton>("Brush"_string);
 
-        pencil_mode_radio->on_checked = [this, hardness_slider, size_slider](bool) {
+        pencil_mode_radio.on_checked = [this, &hardness_slider, &size_slider](bool) {
             m_draw_mode = DrawMode::Pencil;
-            hardness_slider->set_enabled(false);
+            hardness_slider.set_enabled(false);
             refresh_editor_cursor();
-            size_slider->set_override_cursor(cursor());
+            size_slider.set_override_cursor(cursor());
         };
-        brush_mode_radio->on_checked = [this, hardness_slider, size_slider](bool) {
+        brush_mode_radio.on_checked = [this, &hardness_slider, &size_slider](bool) {
             m_draw_mode = DrawMode::Brush;
-            hardness_slider->set_enabled(true);
+            hardness_slider.set_enabled(true);
             refresh_editor_cursor();
-            size_slider->set_override_cursor(cursor());
+            size_slider.set_override_cursor(cursor());
         };
 
-        pencil_mode_radio->set_checked(true);
+        pencil_mode_radio.set_checked(true);
         m_properties_widget = properties_widget;
     }
 
