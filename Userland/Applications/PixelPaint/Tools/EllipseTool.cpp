@@ -126,7 +126,7 @@ bool EllipseTool::on_keydown(GUI::KeyEvent& event)
     return Tool::on_keydown(event);
 }
 
-ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> EllipseTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = GUI::Widget::construct();
@@ -208,7 +208,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         m_properties_widget = properties_widget;
     }
 
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 }

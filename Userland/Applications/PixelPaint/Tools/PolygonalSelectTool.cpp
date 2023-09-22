@@ -184,10 +184,10 @@ bool PolygonalSelectTool::on_keydown(GUI::KeyEvent& key_event)
     return Tool::on_keydown(key_event);
 }
 
-ErrorOr<GUI::Widget*> PolygonalSelectTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> PolygonalSelectTool::get_properties_widget()
 {
     if (m_properties_widget)
-        return m_properties_widget.ptr();
+        return *m_properties_widget.ptr();
 
     auto properties_widget = GUI::Widget::construct();
     properties_widget->set_layout<GUI::VerticalBoxLayout>();
@@ -236,7 +236,7 @@ ErrorOr<GUI::Widget*> PolygonalSelectTool::get_properties_widget()
     };
 
     m_properties_widget = properties_widget;
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 Gfx::IntPoint PolygonalSelectTool::point_position_to_preferred_cell(Gfx::FloatPoint position) const

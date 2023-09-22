@@ -41,7 +41,7 @@ void PickerTool::on_mousemove(Layer* layer, MouseEvent& event)
     m_editor->set_editor_color_to_color_at_mouse_position(layer_event, m_sample_all_layers);
 }
 
-ErrorOr<GUI::Widget*> PickerTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> PickerTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = GUI::Widget::construct();
@@ -55,7 +55,7 @@ ErrorOr<GUI::Widget*> PickerTool::get_properties_widget()
         m_properties_widget = properties_widget;
     }
 
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 }

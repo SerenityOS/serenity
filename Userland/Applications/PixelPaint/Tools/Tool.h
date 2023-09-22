@@ -67,7 +67,7 @@ public:
     virtual void on_secondary_color_change(Color) { }
     virtual void on_tool_activation() { }
     virtual void on_tool_deactivation() { }
-    virtual ErrorOr<GUI::Widget*> get_properties_widget() { return nullptr; }
+    virtual NonnullRefPtr<GUI::Widget> get_properties_widget() { return GUI::Widget::construct(); }
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() { return Gfx::StandardCursor::None; }
     virtual Gfx::IntPoint point_position_to_preferred_cell(Gfx::FloatPoint position) const { return position.to_type<int>(); }
 

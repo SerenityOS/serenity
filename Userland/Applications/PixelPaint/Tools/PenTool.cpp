@@ -35,7 +35,7 @@ void PenTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint sta
     painter.draw_line(start, end, color, size());
 }
 
-ErrorOr<GUI::Widget*> PenTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> PenTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = GUI::Widget::construct();
@@ -60,7 +60,7 @@ ErrorOr<GUI::Widget*> PenTool::get_properties_widget()
         m_properties_widget = properties_widget;
     }
 
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 }

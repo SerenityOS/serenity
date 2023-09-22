@@ -90,7 +90,7 @@ void SprayTool::on_mouseup(Layer*, MouseEvent&)
     }
 }
 
-ErrorOr<GUI::Widget*> SprayTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> SprayTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = GUI::Widget::construct();
@@ -132,7 +132,7 @@ ErrorOr<GUI::Widget*> SprayTool::get_properties_widget()
         m_properties_widget = properties_widget;
     }
 
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 }

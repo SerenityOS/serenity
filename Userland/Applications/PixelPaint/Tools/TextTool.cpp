@@ -103,10 +103,10 @@ void TextTool::on_mousedown(Layer*, MouseEvent& event)
     }
 }
 
-ErrorOr<GUI::Widget*> TextTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> TextTool::get_properties_widget()
 {
     if (m_properties_widget)
-        return m_properties_widget.ptr();
+        return *m_properties_widget.ptr();
 
     auto properties_widget = GUI::Widget::construct();
     properties_widget->set_layout<GUI::VerticalBoxLayout>();
@@ -128,7 +128,7 @@ ErrorOr<GUI::Widget*> TextTool::get_properties_widget()
     };
 
     m_properties_widget = properties_widget;
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 void TextTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)

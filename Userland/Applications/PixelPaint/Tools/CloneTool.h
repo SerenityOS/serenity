@@ -15,7 +15,7 @@ public:
     CloneTool() = default;
     virtual ~CloneTool() override = default;
 
-    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
+    virtual NonnullRefPtr<GUI::Widget> get_properties_widget() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override;
 
     virtual bool is_overriding_alt() override { return true; }

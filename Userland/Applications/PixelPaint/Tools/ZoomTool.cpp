@@ -23,7 +23,7 @@ void ZoomTool::on_mousedown(Layer*, MouseEvent& event)
     m_editor->scale_centered(new_scale, raw_event.position());
 }
 
-ErrorOr<GUI::Widget*> ZoomTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> ZoomTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = GUI::Widget::construct();
@@ -48,7 +48,7 @@ ErrorOr<GUI::Widget*> ZoomTool::get_properties_widget()
         m_properties_widget = properties_widget;
     }
 
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 }

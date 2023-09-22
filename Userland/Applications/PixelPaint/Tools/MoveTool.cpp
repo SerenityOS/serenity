@@ -289,7 +289,7 @@ Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> MoveTool::cursor(
     return Gfx::StandardCursor::Move;
 }
 
-ErrorOr<GUI::Widget*> MoveTool::get_properties_widget()
+NonnullRefPtr<GUI::Widget> MoveTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = GUI::Widget::construct();
@@ -319,7 +319,7 @@ ErrorOr<GUI::Widget*> MoveTool::get_properties_widget()
         m_properties_widget = properties_widget;
     }
 
-    return m_properties_widget.ptr();
+    return *m_properties_widget;
 }
 
 void MoveTool::toggle_selection_mode()
