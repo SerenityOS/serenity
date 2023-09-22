@@ -11,6 +11,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/SourceLocation.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -26,12 +27,15 @@ public:
     Cell* cell() { return m_cell; }
     Cell const* cell() const { return m_cell; }
 
+    SourceLocation const& source_location() const { return m_location; }
+
 private:
     template<class T>
     friend class Handle;
 
-    explicit HandleImpl(Cell*);
+    explicit HandleImpl(Cell*, SourceLocation location);
     GCPtr<Cell> m_cell;
+    SourceLocation m_location;
 
     IntrusiveListNode<HandleImpl> m_list_node;
 
@@ -44,29 +48,29 @@ class Handle {
 public:
     Handle() = default;
 
-    static Handle create(T* cell)
+    static Handle create(T* cell, SourceLocation location = SourceLocation::current())
     {
-        return Handle(adopt_ref(*new HandleImpl(const_cast<RemoveConst<T>*>(cell))));
+        return Handle(adopt_ref(*new HandleImpl(const_cast<RemoveConst<T>*>(cell), location)));
     }
 
-    Handle(T* cell)
+    Handle(T* cell, SourceLocation location = SourceLocation::current())
     {
         if (cell)
-            m_impl = adopt_ref(*new HandleImpl(cell));
+            m_impl = adopt_ref(*new HandleImpl(cell, location));
     }
 
-    Handle(T& cell)
-        : m_impl(adopt_ref(*new HandleImpl(&cell)))
+    Handle(T& cell, SourceLocation location = SourceLocation::current())
+        : m_impl(adopt_ref(*new HandleImpl(&cell, location)))
     {
     }
 
-    Handle(GCPtr<T> cell)
-        : Handle(cell.ptr())
+    Handle(GCPtr<T> cell, SourceLocation location = SourceLocation::current())
+        : Handle(cell.ptr(), location)
     {
     }
 
-    Handle(NonnullGCPtr<T> cell)
-        : Handle(*cell)
+    Handle(NonnullGCPtr<T> cell, SourceLocation location = SourceLocation::current())
+        : Handle(*cell, location)
     {
     }
 
@@ -118,31 +122,31 @@ private:
 };
 
 template<class T>
-inline Handle<T> make_handle(T* cell)
+inline Handle<T> make_handle(T* cell, SourceLocation location = SourceLocation::current())
 {
     if (!cell)
         return Handle<T> {};
-    return Handle<T>::create(cell);
+    return Handle<T>::create(cell, location);
 }
 
 template<class T>
-inline Handle<T> make_handle(T& cell)
+inline Handle<T> make_handle(T& cell, SourceLocation location = SourceLocation::current())
 {
-    return Handle<T>::create(&cell);
+    return Handle<T>::create(&cell, location);
 }
 
 template<class T>
-inline Handle<T> make_handle(GCPtr<T> cell)
+inline Handle<T> make_handle(GCPtr<T> cell, SourceLocation location = SourceLocation::current())
 {
     if (!cell)
         return Handle<T> {};
-    return Handle<T>::create(cell.ptr());
+    return Handle<T>::create(cell.ptr(), location);
 }
 
 template<class T>
-inline Handle<T> make_handle(NonnullGCPtr<T> cell)
+inline Handle<T> make_handle(NonnullGCPtr<T> cell, SourceLocation location = SourceLocation::current())
 {
-    return Handle<T>::create(cell.ptr());
+    return Handle<T>::create(cell.ptr(), location);
 }
 
 template<>
@@ -150,10 +154,10 @@ class Handle<Value> {
 public:
     Handle() = default;
 
-    static Handle create(Value value)
+    static Handle create(Value value, SourceLocation location)
     {
         if (value.is_cell())
-            return Handle(value, &value.as_cell());
+            return Handle(value, &value.as_cell(), location);
         return Handle(value);
     }
 
@@ -171,9 +175,9 @@ private:
     {
     }
 
-    explicit Handle(Value value, Cell* cell)
+    explicit Handle(Value value, Cell* cell, SourceLocation location)
         : m_value(value)
-        , m_handle(Handle<Cell>::create(cell))
+        , m_handle(Handle<Cell>::create(cell, location))
     {
     }
 
@@ -181,9 +185,9 @@ private:
     Handle<Cell> m_handle;
 };
 
-inline Handle<Value> make_handle(Value value)
+inline Handle<Value> make_handle(Value value, SourceLocation location = SourceLocation::current())
 {
-    return Handle<Value>::create(value);
+    return Handle<Value>::create(value, location);
 }
 
 }

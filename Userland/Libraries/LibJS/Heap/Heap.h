@@ -19,7 +19,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibJS/Heap/HeapRootTypeOrLocation.h>
+#include <LibJS/Heap/HeapRoot.h>
 #include <LibJS/Heap/Internals.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
@@ -88,10 +88,10 @@ private:
 
     Cell* allocate_cell(size_t);
 
-    void gather_roots(HashMap<Cell*, HeapRootTypeOrLocation>&);
-    void gather_conservative_roots(HashMap<Cell*, HeapRootTypeOrLocation>&);
-    void gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRootTypeOrLocation>&, FlatPtr);
-    void mark_live_cells(HashMap<Cell*, HeapRootTypeOrLocation> const& live_cells);
+    void gather_roots(HashMap<Cell*, HeapRoot>&);
+    void gather_conservative_roots(HashMap<Cell*, HeapRoot>&);
+    void gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>&, FlatPtr);
+    void mark_live_cells(HashMap<Cell*, HeapRoot> const& live_cells);
     void finalize_unmarked_cells();
     void sweep_dead_cells(bool print_report, Core::ElapsedTimer const&);
 

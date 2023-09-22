@@ -95,7 +95,7 @@ Cell* Heap::allocate_cell(size_t size)
     return allocator.allocate_cell(*this);
 }
 
-static void add_possible_value(HashMap<FlatPtr, HeapRootTypeOrLocation>& possible_pointers, FlatPtr data, HeapRootTypeOrLocation origin)
+static void add_possible_value(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr data, HeapRoot origin)
 {
     if constexpr (sizeof(FlatPtr*) == sizeof(Value)) {
         // Because Value stores pointers in non-canonical form we have to check if the top bytes
@@ -114,7 +114,7 @@ static void add_possible_value(HashMap<FlatPtr, HeapRootTypeOrLocation>& possibl
 }
 
 template<typename Callback>
-static void for_each_cell_among_possible_pointers(HashTable<HeapBlock*> const& all_live_heap_blocks, HashMap<FlatPtr, HeapRootTypeOrLocation>& possible_pointers, Callback callback)
+static void for_each_cell_among_possible_pointers(HashTable<HeapBlock*> const& all_live_heap_blocks, HashMap<FlatPtr, HeapRoot>& possible_pointers, Callback callback)
 {
     for (auto possible_pointer : possible_pointers.keys()) {
         if (!possible_pointer)
@@ -130,7 +130,7 @@ static void for_each_cell_among_possible_pointers(HashTable<HeapBlock*> const& a
 
 class GraphConstructorVisitor final : public Cell::Visitor {
 public:
-    explicit GraphConstructorVisitor(Heap& heap, HashMap<Cell*, HeapRootTypeOrLocation> const& roots)
+    explicit GraphConstructorVisitor(Heap& heap, HashMap<Cell*, HeapRoot> const& roots)
         : m_heap(heap)
     {
         m_heap.for_each_block([&](auto& block) {
@@ -159,11 +159,11 @@ public:
 
     virtual void visit_possible_values(ReadonlyBytes bytes) override
     {
-        HashMap<FlatPtr, HeapRootTypeOrLocation> possible_pointers;
+        HashMap<FlatPtr, HeapRoot> possible_pointers;
 
         auto* raw_pointer_sized_values = reinterpret_cast<FlatPtr const*>(bytes.data());
         for (size_t i = 0; i < (bytes.size() / sizeof(FlatPtr)); ++i)
-            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRootType::HeapFunctionCapturedPointer);
+            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRoot { .type = HeapRoot::Type::HeapFunctionCapturedPointer });
 
         for_each_cell_among_possible_pointers(m_all_live_heap_blocks, possible_pointers, [&](Cell* cell, FlatPtr) {
             if (m_node_being_visited)
@@ -197,31 +197,30 @@ public:
 
             auto node = AK::JsonObject();
             if (it.value.root_origin.has_value()) {
-                it.value.root_origin->visit(
-                    [&](HeapRootType location) {
-                        switch (location) {
-                        case HeapRootType::Handle:
-                            node.set("root"sv, "Handle"sv);
-                            return;
-                        case HeapRootType::MarkedVector:
-                            node.set("root"sv, "MarkedVector");
-                            return;
-                        case HeapRootType::RegisterPointer:
-                            node.set("root"sv, "RegisterPointer");
-                            return;
-                        case HeapRootType::StackPointer:
-                            node.set("root"sv, "StackPointer");
-                            return;
-                        case HeapRootType::VM:
-                            node.set("root"sv, "VM");
-                            return;
-                        default:
-                            VERIFY_NOT_REACHED();
-                        }
-                    },
-                    [&](SourceLocation* location) {
-                        node.set("root", DeprecatedString::formatted("SafeFunction {} {}:{}", location->function_name(), location->filename(), location->line_number()));
-                    });
+                auto type = it.value.root_origin->type;
+                auto location = it.value.root_origin->location;
+                switch (type) {
+                case HeapRoot::Type::Handle:
+                    node.set("root"sv, DeprecatedString::formatted("Handle {} {}:{}", location->function_name(), location->filename(), location->line_number()));
+                    break;
+                case HeapRoot::Type::MarkedVector:
+                    node.set("root"sv, "MarkedVector");
+                    break;
+                case HeapRoot::Type::RegisterPointer:
+                    node.set("root"sv, "RegisterPointer");
+                    break;
+                case HeapRoot::Type::StackPointer:
+                    node.set("root"sv, "StackPointer");
+                    break;
+                case HeapRoot::Type::VM:
+                    node.set("root"sv, "VM");
+                    break;
+                case HeapRoot::Type::SafeFunction:
+                    node.set("root"sv, DeprecatedString::formatted("SafeFunction {} {}:{}", location->function_name(), location->filename(), location->line_number()));
+                    break;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
             }
             node.set("class_name"sv, it.value.class_name);
             node.set("edges"sv, edges);
@@ -233,7 +232,7 @@ public:
 
 private:
     struct GraphNode {
-        Optional<HeapRootTypeOrLocation> root_origin;
+        Optional<HeapRoot> root_origin;
         StringView class_name;
         HashTable<FlatPtr> edges {};
     };
@@ -248,7 +247,7 @@ private:
 
 void Heap::dump_graph()
 {
-    HashMap<Cell*, HeapRootTypeOrLocation> roots;
+    HashMap<Cell*, HeapRoot> roots;
     gather_roots(roots);
     GraphConstructorVisitor visitor(*this, roots);
     vm().bytecode_interpreter().visit_edges(visitor);
@@ -275,7 +274,7 @@ void Heap::collect_garbage(CollectionType collection_type, bool print_report)
             m_should_gc_when_deferral_ends = true;
             return;
         }
-        HashMap<Cell*, HeapRootTypeOrLocation> roots;
+        HashMap<Cell*, HeapRoot> roots;
         gather_roots(roots);
         mark_live_cells(roots);
     }
@@ -283,13 +282,13 @@ void Heap::collect_garbage(CollectionType collection_type, bool print_report)
     sweep_dead_cells(print_report, collection_measurement_timer);
 }
 
-void Heap::gather_roots(HashMap<Cell*, HeapRootTypeOrLocation>& roots)
+void Heap::gather_roots(HashMap<Cell*, HeapRoot>& roots)
 {
     vm().gather_roots(roots);
     gather_conservative_roots(roots);
 
     for (auto& handle : m_handles)
-        roots.set(handle.cell(), HeapRootType::Handle);
+        roots.set(handle.cell(), HeapRoot { .type = HeapRoot::Type::Handle, .location = &handle.source_location() });
 
     for (auto& vector : m_marked_vectors)
         vector.gather_roots(roots);
@@ -302,7 +301,7 @@ void Heap::gather_roots(HashMap<Cell*, HeapRootTypeOrLocation>& roots)
 }
 
 #ifdef HAS_ADDRESS_SANITIZER
-__attribute__((no_sanitize("address"))) void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRootTypeOrLocation>& possible_pointers, FlatPtr addr)
+__attribute__((no_sanitize("address"))) void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr addr)
 {
     void* begin = nullptr;
     void* end = nullptr;
@@ -313,17 +312,17 @@ __attribute__((no_sanitize("address"))) void Heap::gather_asan_fake_stack_roots(
             void const* real_address = *real_stack_addr;
             if (real_address == nullptr)
                 continue;
-            add_possible_value(possible_pointers, reinterpret_cast<FlatPtr>(real_address), HeapRootType::StackPointer);
+            add_possible_value(possible_pointers, reinterpret_cast<FlatPtr>(real_address), HeapRoot { .type = HeapRoot::Type::StackPointer });
         }
     }
 }
 #else
-void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRootTypeOrLocation>&, FlatPtr)
+void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>&, FlatPtr)
 {
 }
 #endif
 
-__attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(HashMap<Cell*, HeapRootTypeOrLocation>& roots)
+__attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(HashMap<Cell*, HeapRoot>& roots)
 {
     FlatPtr dummy;
 
@@ -332,19 +331,19 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
     jmp_buf buf;
     setjmp(buf);
 
-    HashMap<FlatPtr, HeapRootTypeOrLocation> possible_pointers;
+    HashMap<FlatPtr, HeapRoot> possible_pointers;
 
     auto* raw_jmp_buf = reinterpret_cast<FlatPtr const*>(buf);
 
     for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); ++i)
-        add_possible_value(possible_pointers, raw_jmp_buf[i], HeapRootType::RegisterPointer);
+        add_possible_value(possible_pointers, raw_jmp_buf[i], HeapRoot { .type = HeapRoot::Type::RegisterPointer });
 
     auto stack_reference = bit_cast<FlatPtr>(&dummy);
     auto& stack_info = m_vm.stack_info();
 
     for (FlatPtr stack_address = stack_reference; stack_address < stack_info.top(); stack_address += sizeof(FlatPtr)) {
         auto data = *reinterpret_cast<FlatPtr*>(stack_address);
-        add_possible_value(possible_pointers, data, HeapRootType::StackPointer);
+        add_possible_value(possible_pointers, data, HeapRoot { .type = HeapRoot::Type::StackPointer });
         gather_asan_fake_stack_roots(possible_pointers, data);
     }
 
@@ -354,7 +353,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
         for (auto& custom_range : *s_custom_ranges_for_conservative_scan) {
             for (size_t i = 0; i < (custom_range.value / sizeof(FlatPtr)); ++i) {
                 auto safe_function_location = s_safe_function_locations->get(custom_range.key);
-                add_possible_value(possible_pointers, custom_range.key[i], *safe_function_location);
+                add_possible_value(possible_pointers, custom_range.key[i], HeapRoot { .type = HeapRoot::Type::SafeFunction, .location = *safe_function_location });
             }
         }
     }
@@ -377,7 +376,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 
 class MarkingVisitor final : public Cell::Visitor {
 public:
-    explicit MarkingVisitor(Heap& heap, HashMap<Cell*, HeapRootTypeOrLocation> const& roots)
+    explicit MarkingVisitor(Heap& heap, HashMap<Cell*, HeapRoot> const& roots)
         : m_heap(heap)
     {
         m_heap.for_each_block([&](auto& block) {
@@ -402,11 +401,11 @@ public:
 
     virtual void visit_possible_values(ReadonlyBytes bytes) override
     {
-        HashMap<FlatPtr, HeapRootTypeOrLocation> possible_pointers;
+        HashMap<FlatPtr, HeapRoot> possible_pointers;
 
         auto* raw_pointer_sized_values = reinterpret_cast<FlatPtr const*>(bytes.data());
         for (size_t i = 0; i < (bytes.size() / sizeof(FlatPtr)); ++i)
-            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRootType::HeapFunctionCapturedPointer);
+            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRoot { .type = HeapRoot::Type::HeapFunctionCapturedPointer });
 
         for_each_cell_among_possible_pointers(m_all_live_heap_blocks, possible_pointers, [&](Cell* cell, FlatPtr) {
             if (cell->is_marked())
@@ -431,7 +430,7 @@ private:
     HashTable<HeapBlock*> m_all_live_heap_blocks;
 };
 
-void Heap::mark_live_cells(HashMap<Cell*, HeapRootTypeOrLocation> const& roots)
+void Heap::mark_live_cells(HashMap<Cell*, HeapRoot> const& roots)
 {
     dbgln_if(HEAP_DEBUG, "mark_live_cells:");
 
