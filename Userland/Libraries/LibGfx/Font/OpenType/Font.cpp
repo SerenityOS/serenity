@@ -326,7 +326,7 @@ String Name::string_for_id(NameId id) const
 
     if (platform_id == to_underlying(Platform::Windows)) {
         static auto& decoder = *TextCodec::decoder_for("utf-16be"sv);
-        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length }).release_value_but_fixme_should_propagate_errors();
+        return decoder.to_utf8(StringView { (char const*)m_slice.offset(storage_offset + offset), length }).release_value_but_fixme_should_propagate_errors();
     }
 
     return String::from_utf8(m_slice.slice(storage_offset + offset, length)).release_value_but_fixme_should_propagate_errors();
@@ -343,7 +343,7 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
         };
     }
 
-    auto const* left_side_bearings = bit_cast<BigEndian<u16> const*>(m_slice.offset_pointer(m_number_of_h_metrics * sizeof(LongHorMetric)));
+    auto const* left_side_bearings = bit_cast<BigEndian<u16> const*>(m_slice.offset(m_number_of_h_metrics * sizeof(LongHorMetric)));
     return GlyphHorizontalMetrics {
         .advance_width = static_cast<u16>(long_hor_metrics[m_number_of_h_metrics - 1].advance_width),
         .left_side_bearing = static_cast<i16>(left_side_bearings[glyph_id - m_number_of_h_metrics]),
@@ -369,7 +369,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         if (buffer.size() < (u32)Sizes::TTCHeaderV1 + sizeof(u32) * (index + 1))
             return Error::from_string_literal("Font file too small");
 
-        u32 offset = be_u32(buffer.offset_pointer((u32)Sizes::TTCHeaderV1 + sizeof(u32) * index));
+        u32 offset = be_u32(buffer.offset((u32)Sizes::TTCHeaderV1 + sizeof(u32) * index));
         return try_load_from_offset(buffer, offset);
     }
     if (tag == tag_from_str("OTTO"))
@@ -417,15 +417,15 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<CBDT> cbdt;
     Optional<GPOS> gpos;
 
-    auto num_tables = be_u16(buffer.offset_pointer(offset + (u32)Offsets::NumTables));
+    auto num_tables = be_u16(buffer.offset(offset + (u32)Offsets::NumTables));
     if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
         return Error::from_string_literal("Font file too small");
 
     for (auto i = 0; i < num_tables; i++) {
         u32 record_offset = offset + (u32)Sizes::OffsetTable + i * (u32)Sizes::TableRecord;
-        u32 tag = be_u32(buffer.offset_pointer(record_offset));
-        u32 table_offset = be_u32(buffer.offset_pointer(record_offset + (u32)Offsets::TableRecord_Offset));
-        u32 table_length = be_u32(buffer.offset_pointer(record_offset + (u32)Offsets::TableRecord_Length));
+        u32 tag = be_u32(buffer.offset(record_offset));
+        u32 table_offset = be_u32(buffer.offset(record_offset + (u32)Offsets::TableRecord_Offset));
+        u32 table_length = be_u32(buffer.offset(record_offset + (u32)Offsets::TableRecord_Length));
 
         if (Checked<u32>::addition_would_overflow(table_offset, table_length))
             return Error::from_string_literal("Invalid table offset or length in font");
@@ -433,7 +433,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         if (buffer.size() < table_offset + table_length)
             return Error::from_string_literal("Font file too small");
 
-        auto buffer_here = ReadonlyBytes(buffer.offset_pointer(table_offset), table_length);
+        auto buffer_here = ReadonlyBytes(buffer.offset(table_offset), table_length);
 
         // Get the table offsets we need.
         if (tag == tag_from_str("head")) {
