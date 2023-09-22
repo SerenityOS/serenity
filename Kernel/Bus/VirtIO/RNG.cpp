@@ -19,14 +19,10 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<RNG> RNG::must_create_for_pci_instance(PCI::D
 UNMAP_AFTER_INIT ErrorOr<void> RNG::initialize_virtio_resources()
 {
     TRY(Device::initialize_virtio_resources());
-    bool success = negotiate_features([&](auto) {
+    TRY(negotiate_features([&](auto) {
         return 0;
-    });
-    if (!success)
-        return Error::from_errno(EIO);
-    success = setup_queues(1);
-    if (!success)
-        return Error::from_errno(EIO);
+    }));
+    TRY(setup_queues(1));
     finish_init();
     m_entropy_buffer = TRY(MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG"sv, Memory::Region::Access::ReadWrite));
     memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
@@ -39,9 +35,9 @@ UNMAP_AFTER_INIT RNG::RNG(NonnullOwnPtr<TransportEntity> transport_entity)
 {
 }
 
-bool RNG::handle_device_config_change()
+ErrorOr<void> RNG::handle_device_config_change()
 {
-    return false; // Device has no config
+    return Error::from_errno(EIO); // Device has no config
 }
 
 void RNG::handle_queue_update(u16 queue_index)

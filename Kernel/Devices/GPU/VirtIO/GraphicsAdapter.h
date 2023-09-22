@@ -69,7 +69,7 @@ private:
 
     ErrorOr<void> initialize_adapter();
 
-    virtual bool handle_device_config_change() override;
+    virtual ErrorOr<void> handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
     u32 get_pending_events();
     void clear_pending_events(u32 event_bitmask);

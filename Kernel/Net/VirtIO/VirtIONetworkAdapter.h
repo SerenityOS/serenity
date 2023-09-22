@@ -37,7 +37,7 @@ private:
     explicit VirtIONetworkAdapter(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity>);
 
     // VirtIO::Device
-    virtual bool handle_device_config_change() override;
+    virtual ErrorOr<void> handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
 
     // NetworkAdapter

@@ -127,7 +127,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize_virtio_resources
     TRY(Device::initialize_virtio_resources());
     m_device_config = TRY(transport_entity().get_config(VirtIO::ConfigurationType::Device));
 
-    bool success = negotiate_features([&](u64 supported_features) {
+    TRY(negotiate_features([&](u64 supported_features) {
         u64 negotiated = 0;
         if (is_feature_set(supported_features, VIRTIO_NET_F_STATUS))
             negotiated |= VIRTIO_NET_F_STATUS;
@@ -138,17 +138,10 @@ UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize_virtio_resources
         if (is_feature_set(supported_features, VIRTIO_NET_F_MTU))
             negotiated |= VIRTIO_NET_F_MTU;
         return negotiated;
-    });
-    if (!success)
-        return Error::from_errno(EIO);
+    }));
 
-    success = handle_device_config_change();
-    if (!success)
-        return Error::from_errno(EIO);
-
-    success = setup_queues(2); // receive & transmit
-    if (!success)
-        return Error::from_errno(EIO);
+    TRY(handle_device_config_change());
+    TRY(setup_queues(2)); // receive & transmit
 
     finish_init();
 
@@ -168,7 +161,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize_virtio_resources
     return {};
 }
 
-bool VirtIONetworkAdapter::handle_device_config_change()
+ErrorOr<void> VirtIONetworkAdapter::handle_device_config_change()
 {
     dbgln_if(VIRTIO_DEBUG, "VirtIONetworkAdapter: handle_device_config_change");
     transport_entity().read_config_atomic([&]() {
@@ -196,7 +189,7 @@ bool VirtIONetworkAdapter::handle_device_config_change()
             m_link_duplex = duplex == 0x01;
         }
     });
-    return true;
+    return {};
 }
 
 void VirtIONetworkAdapter::handle_queue_update(u16 queue_index)

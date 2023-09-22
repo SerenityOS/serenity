@@ -25,16 +25,14 @@ UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
 {
     TRY(Device::initialize_virtio_resources());
     auto const* cfg = TRY(transport_entity().get_config(VirtIO::ConfigurationType::Device));
-    bool success = negotiate_features([&](u64 supported_features) {
+    TRY(negotiate_features([&](u64 supported_features) {
         u64 negotiated = 0;
         if (is_feature_set(supported_features, VIRTIO_CONSOLE_F_SIZE))
             dbgln("VirtIO::Console: Console size is not yet supported!");
         if (is_feature_set(supported_features, VIRTIO_CONSOLE_F_MULTIPORT))
             negotiated |= VIRTIO_CONSOLE_F_MULTIPORT;
         return negotiated;
-    });
-    if (!success)
-        return Error::from_errno(EIO);
+    }));
     u32 max_nr_ports = 0;
     u16 cols = 0, rows = 0;
     transport_entity().read_config_atomic([&]() {
@@ -49,9 +47,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
     });
     dbgln("VirtIO::Console: cols: {}, rows: {}, max nr ports {}", cols, rows, max_nr_ports);
     // Base receiveq/transmitq for port0 + optional control queues and 2 per every additional port
-    success = setup_queues(2 + max_nr_ports > 0 ? 2 + 2 * max_nr_ports : 0);
-    if (!success)
-        return Error::from_errno(EIO);
+    TRY(setup_queues(2 + max_nr_ports > 0 ? 2 + 2 * max_nr_ports : 0));
     finish_init();
 
     if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT)) {
@@ -70,10 +66,10 @@ UNMAP_AFTER_INIT Console::Console(NonnullOwnPtr<TransportEntity> transport_entit
 {
 }
 
-bool Console::handle_device_config_change()
+ErrorOr<void> Console::handle_device_config_change()
 {
     dbgln("VirtIO::Console: Handle device config change");
-    return true;
+    return {};
 }
 
 void Console::handle_queue_update(u16 queue_index)

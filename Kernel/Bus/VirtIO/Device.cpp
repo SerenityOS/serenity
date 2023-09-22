@@ -38,7 +38,7 @@ void Device::set_status_bit(u8 status_bit)
     m_transport_entity->set_status_bits({}, m_status);
 }
 
-bool Device::accept_device_features(u64 device_features, u64 accepted_features)
+ErrorOr<void> Device::accept_device_features(u64 device_features, u64 accepted_features)
 {
     VERIFY(!m_did_accept_features);
     m_did_accept_features = true;
@@ -70,28 +70,24 @@ bool Device::accept_device_features(u64 device_features, u64 accepted_features)
     if (!(m_status & DEVICE_STATUS_FEATURES_OK)) {
         set_status_bit(DEVICE_STATUS_FAILED);
         dbgln("{}: Features not accepted by host!", m_class_name);
-        return false;
+        return Error::from_errno(EIO);
     }
 
     m_accepted_features = accepted_features;
     dbgln_if(VIRTIO_DEBUG, "{}: Features accepted by host", m_class_name);
-    return true;
+    return {};
 }
 
-bool Device::setup_queue(u16 queue_index)
+ErrorOr<void> Device::setup_queue(u16 queue_index)
 {
-    auto queue_or_error = m_transport_entity->setup_queue({}, queue_index);
-    if (queue_or_error.is_error())
-        return false;
-
-    auto queue = queue_or_error.release_value();
+    auto queue = TRY(m_transport_entity->setup_queue({}, queue_index));
     dbgln_if(VIRTIO_DEBUG, "{}: Queue[{}] configured with size: {}", m_class_name, queue_index, queue->size());
 
-    m_queues.append(move(queue));
-    return true;
+    TRY(m_queues.try_append(move(queue)));
+    return {};
 }
 
-bool Device::setup_queues(u16 requested_queue_count)
+ErrorOr<void> Device::setup_queues(u16 requested_queue_count)
 {
     VERIFY(!m_did_setup_queues);
     m_did_setup_queues = true;
@@ -103,7 +99,7 @@ bool Device::setup_queues(u16 requested_queue_count)
             m_queue_count = maximum_queue_count;
         } else if (requested_queue_count > maximum_queue_count) {
             dbgln("{}: {} queues requested but only {} available!", m_class_name, m_queue_count, maximum_queue_count);
-            return false;
+            return Error::from_errno(ENXIO);
         } else {
             m_queue_count = requested_queue_count;
         }
@@ -113,15 +109,13 @@ bool Device::setup_queues(u16 requested_queue_count)
     }
 
     dbgln_if(VIRTIO_DEBUG, "{}: Setting up {} queues", m_class_name, m_queue_count);
-    for (u16 i = 0; i < m_queue_count; i++) {
-        if (!setup_queue(i))
-            return false;
-    }
-    for (u16 i = 0; i < m_queue_count; i++) { // Queues can only be activated *after* all others queues were also configured
-        if (!m_transport_entity->activate_queue({}, i))
-            return false;
-    }
-    return true;
+    for (u16 i = 0; i < m_queue_count; i++)
+        TRY(setup_queue(i));
+
+    // NOTE: Queues can only be activated *after* all others queues were also configured
+    for (u16 i = 0; i < m_queue_count; i++)
+        TRY(m_transport_entity->activate_queue({}, i));
+    return {};
 }
 
 void Device::finish_init()
@@ -143,7 +137,7 @@ bool Device::handle_irq(Badge<TransportInterruptHandler>)
     }
     if (isr_type & DEVICE_CONFIG_INTERRUPT) {
         dbgln_if(VIRTIO_DEBUG, "{}: VirtIO Device config interrupt!", class_name());
-        if (!handle_device_config_change()) {
+        if (handle_device_config_change().is_error()) {
             set_status_bit(DEVICE_STATUS_FAILED);
             dbgln("{}: Failed to handle device config change!", class_name());
         }
