@@ -53,15 +53,16 @@ void disable_reporting();
         ::abort();                                                                           \
     } while (false)
 
-#define EXPECT_EQ(a, b)                                                                                                                                                                          \
-    do {                                                                                                                                                                                         \
-        auto lhs = (a);                                                                                                                                                                          \
-        auto rhs = (b);                                                                                                                                                                          \
-        if (lhs != rhs) {                                                                                                                                                                        \
-            if (::Test::can_report())                                                                                                                                                            \
-                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
-            ::Test::set_current_test_result(TestResult::Failed);                                                                                                                                 \
-        }                                                                                                                                                                                        \
+#define EXPECT_EQ(a, b)                                                                                       \
+    do {                                                                                                      \
+        auto lhs = (a);                                                                                       \
+        auto rhs = (b);                                                                                       \
+        if (lhs != rhs) {                                                                                     \
+            if (::Test::can_report())                                                                         \
+                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", \
+                    __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs });        \
+            ::Test::set_current_test_result(TestResult::Failed);                                              \
+        }                                                                                                     \
     } while (false)
 
 #define EXPECT_EQ_TRUTH(a, b)                                                                                                 \
@@ -80,26 +81,28 @@ void disable_reporting();
 
 // If you're stuck and `EXPECT_EQ` seems to refuse to print anything useful,
 // try this: It'll spit out a nice compiler error telling you why it doesn't print.
-#define EXPECT_EQ_FORCE(a, b)                                                                                                                        \
-    do {                                                                                                                                             \
-        auto lhs = (a);                                                                                                                              \
-        auto rhs = (b);                                                                                                                              \
-        if (lhs != rhs) {                                                                                                                            \
-            if (::Test::can_report())                                                                                                                \
-                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, lhs, rhs); \
-            ::Test::set_current_test_result(TestResult::Failed);                                                                                     \
-        }                                                                                                                                            \
+#define EXPECT_EQ_FORCE(a, b)                                                                                 \
+    do {                                                                                                      \
+        auto lhs = (a);                                                                                       \
+        auto rhs = (b);                                                                                       \
+        if (lhs != rhs) {                                                                                     \
+            if (::Test::can_report())                                                                         \
+                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", \
+                    __FILE__, __LINE__, #a, #b, lhs, rhs);                                                    \
+            ::Test::set_current_test_result(TestResult::Failed);                                              \
+        }                                                                                                     \
     } while (false)
 
-#define EXPECT_NE(a, b)                                                                                                                                                                          \
-    do {                                                                                                                                                                                         \
-        auto lhs = (a);                                                                                                                                                                          \
-        auto rhs = (b);                                                                                                                                                                          \
-        if (lhs == rhs) {                                                                                                                                                                        \
-            if (::Test::can_report())                                                                                                                                                            \
-                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_NE({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
-            ::Test::set_current_test_result(TestResult::Failed);                                                                                                                                 \
-        }                                                                                                                                                                                        \
+#define EXPECT_NE(a, b)                                                                                       \
+    do {                                                                                                      \
+        auto lhs = (a);                                                                                       \
+        auto rhs = (b);                                                                                       \
+        if (lhs == rhs) {                                                                                     \
+            if (::Test::can_report())                                                                         \
+                ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_NE({}, {}) failed with lhs={} and rhs={}", \
+                    __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs });        \
+            ::Test::set_current_test_result(TestResult::Failed);                                              \
+        }                                                                                                     \
     } while (false)
 
 #define EXPECT(x)                                                                                        \
