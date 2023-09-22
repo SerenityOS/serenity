@@ -44,12 +44,19 @@ public:
 
     void set_suite_setup(Function<void()> setup) { m_setup = move(setup); }
 
+    // The RandSource is where generators record / replay random data from.
+    // Initially a live "truly random" RandSource is used, and when a failure is
+    // found, a set of hardcoded RandSources is used during shrinking.
     void set_rand_source(RandSource source) { m_rand_source = move(source); }
-
     RandSource& rand_source() { return m_rand_source; }
 
     TestResult m_current_test_result = TestResult::NotRun;
 
+    // Dictates whether FAIL(), EXPECT() and similar macros in LibTest/Macros.h
+    // print messages or not.
+    // This is important for randomized tests because they run the test function
+    // many times in a row, and we only want to report the _minimal_ (shrunk)
+    // failure to the user, not all of them.
     bool m_reporting_enabled = true;
 
 private:

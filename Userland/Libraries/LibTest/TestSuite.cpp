@@ -149,28 +149,6 @@ Vector<NonnullRefPtr<TestCase>> TestSuite::find_cases(DeprecatedString const& se
     return matches;
 }
 
-static DeprecatedString test_result_to_string(TestResult result)
-{
-    switch (result) {
-    case TestResult::NotRun:
-        return "Not run";
-    case TestResult::Passed:
-        return "Completed";
-    case TestResult::Failed:
-        return "Failed";
-    case TestResult::Rejected:
-        return "Rejected";
-    case TestResult::HitLimit:
-        return "Hit random data size limit in";
-    case TestResult::Overrun: // This should never get to the user; Shrink.h should do something about it.
-        // TODO I'd like to do: VERIFY_NOT_REACHED();
-        return "Ran out of randomness in";
-    default:
-        // TODO I'd like to do: VERIFY_NOT_REACHED();
-        return "Unknown TestResult in";
-    }
-}
-
 int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
 {
     size_t test_count = 0;
@@ -199,10 +177,6 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             sum_of_squared_times += iteration_time * iteration_time;
             min_time = min(min_time, iteration_time);
             max_time = max(max_time, iteration_time);
-
-            if (m_current_test_result == TestResult::NotRun) {
-                m_current_test_result = TestResult::Passed;
-            }
         }
 
         if (repetitions != 1) {
@@ -233,7 +207,6 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             test_failed_count++;
             break;
         default:
-            // TODO I'd like to do: VERIFY_NOT_REACHED();
             break;
         }
     }
@@ -256,6 +229,8 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         }
     }
 
+    // We have multiple TestResults, all except for Passed being "bad".
+    // Let's get a count of them:
     return (int)(test_count - test_passed_count);
 }
 
