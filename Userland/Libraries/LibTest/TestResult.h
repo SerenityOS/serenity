@@ -1,7 +1,7 @@
 #pragma once
 
 /* TestResult signals to the TestSuite how the TestCase execution went.
-*/
+ */
 enum class TestResult {
     NotRun,
     Passed,   // test function ran to completion without setting any of the below flags:

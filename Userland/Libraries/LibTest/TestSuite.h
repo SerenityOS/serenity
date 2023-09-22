@@ -12,6 +12,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/Vector.h>
+#include <LibTest/Randomized/RandSource.h>
 #include <LibTest/TestCase.h>
 #include <LibTest/TestResult.h>
 
