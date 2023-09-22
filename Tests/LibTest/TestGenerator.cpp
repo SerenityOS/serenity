@@ -11,7 +11,7 @@
 RANDOMIZED_TEST_CASE(unsigned_int_max_bounds)
 {
     GEN(n, Gen::unsigned_int(10));
-    EXPECT(/* n >= 0 && */ n <= 10); // It's an unsigned int, of course it's >= 0
+    EXPECT(n <= 10);
 }
 
 RANDOMIZED_TEST_CASE(unsigned_int_min_max_bounds)
@@ -25,7 +25,7 @@ RANDOMIZED_TEST_CASE(assume)
     GEN(n, Gen::unsigned_int(10));
     ASSUME(n % 2 == 0); // This will try to generate until it finds an even number
     EXPECT(n % 2 == 0); // This will then succeed
-    // (It can give up if the value passing the predicate is extremely unlikely.)
+    // It will give up if the value doesn't pass the ASSUME(...) predicate 15 times in a row.
 }
 
 // TODO find a way to test that a test "unsigned_int(3) can't reach 0" fails
@@ -60,6 +60,9 @@ RANDOMIZED_TEST_CASE(bind_like)
    a next item. That makes each item much better shrinkable, since its
    contribution to the sequence length (a boolean 0 or 1) is right next to its
    own data.
+
+   Because it's a pretty natural way to do this, we take special care in the
+   internal shrinker to work well on this style too.
 */
 template<typename FN>
 Vector<InvokeResult<FN>> vector_suboptimal(FN item_gen)
