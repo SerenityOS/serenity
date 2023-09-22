@@ -9,6 +9,7 @@
 
 #include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
+#include <LibTest/TestResult.h>
 #include <LibTest/TestSuite.h>
 #include <math.h>
 #include <stdlib.h>
@@ -91,6 +92,26 @@ void add_test_case_to_suite(NonnullRefPtr<TestCase> const& test_case)
 void set_suite_setup_function(Function<void()> setup)
 {
     TestSuite::the().set_suite_setup(move(setup));
+}
+
+static DeprecatedString test_result_to_string(TestResult result)
+{
+    switch (result) {
+    case TestResult::NotRun:
+        return "Not run";
+    case TestResult::Passed:
+        return "Completed";
+    case TestResult::Failed:
+        return "Failed";
+    case TestResult::Rejected:
+        return "Rejected";
+    case TestResult::HitLimit:
+        return "Hit random data size limit";
+    case TestResult::Overrun:
+        return "Ran out of randomness";
+    default:
+        return "Unknown TestResult";
+    }
 }
 
 int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> arguments)
