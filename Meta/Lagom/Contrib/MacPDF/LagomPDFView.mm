@@ -7,8 +7,6 @@
 
 #import "LagomPDFView.h"
 
-#include <LibCore/File.h>
-#include <LibCore/MappedFile.h>
 #include <LibGfx/Bitmap.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Renderer.h>
