@@ -151,6 +151,9 @@ void Window::set_rect(Gfx::IntRect const& rect)
         return;
     auto old_rect = m_rect;
     m_rect = rect;
+    if (!m_should_show_window_content) {
+        m_rect.set_height(0);
+    }
     if (rect.is_empty()) {
         m_backing_store = nullptr;
     } else if (is_internal() && (!m_backing_store || old_rect.size() != rect.size())) {
@@ -406,10 +409,14 @@ void Window::set_maximized(bool maximized)
         return;
     m_tile_type = maximized ? WindowTileType::Maximized : WindowTileType::None;
     update_window_menu_items();
-    if (maximized)
+    if (maximized) {
+        exit_roll_up_mode();
         set_rect(WindowManager::the().tiled_window_rect(*this));
-    else
+    } else {
+        exit_roll_up_mode();
         set_rect(m_floating_rect);
+    }
+
     m_frame.did_set_maximized({}, maximized);
     send_resize_event_to_client();
     send_move_event_to_client();
@@ -728,6 +735,12 @@ void Window::ensure_window_menu()
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
+        auto roll_up_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleWindowRollUp, "&Roll Up");
+        m_window_menu_roll_up_item = roll_up_item.ptr();
+        m_window_menu_roll_up_item->set_checked(!m_should_show_window_content);
+        roll_up_item->set_checkable(true);
+        m_window_menu->add_item(move(roll_up_item));
+
         auto menubar_visibility_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleMenubarVisibility, "Menu &Bar");
         m_window_menu_menubar_visibility_item = menubar_visibility_item.ptr();
         menubar_visibility_item->set_checkable(true);
@@ -788,6 +801,23 @@ void Window::handle_window_menu_action(WindowMenuAction action)
         frame().invalidate();
         item.set_checked(!item.is_checked());
         m_should_show_menubar = item.is_checked();
+        frame().invalidate();
+        recalculate_rect();
+        invalidate_last_rendered_screen_rects();
+        break;
+    }
+    case WindowMenuAction::ToggleWindowRollUp: {
+        auto& item = *m_window_menu->item_by_identifier((unsigned)action);
+        frame().invalidate();
+        item.set_checked(!item.is_checked());
+        m_should_show_window_content = !item.is_checked();
+        if (!m_should_show_window_content) {
+            m_saved_before_roll_up_rect = m_rect;
+            m_rect.set_height(0);
+        } else {
+            m_rect.set_height(m_saved_before_roll_up_rect.height());
+        }
+
         frame().invalidate();
         recalculate_rect();
         invalidate_last_rendered_screen_rects();
@@ -949,12 +979,25 @@ void Window::set_tiled(WindowTileType tile_type, Optional<Screen const&> tile_on
     tile_type_changed(tile_on_screen);
 }
 
+void Window::exit_roll_up_mode()
+{
+    if (m_should_show_window_content)
+        return;
+    m_rect.set_height(m_saved_before_roll_up_rect.height());
+    m_should_show_window_content = true;
+    if (m_window_menu_roll_up_item)
+        m_window_menu_roll_up_item->set_checked(false);
+}
+
 void Window::tile_type_changed(Optional<Screen const&> tile_on_screen)
 {
-    if (m_tile_type != WindowTileType::None)
+    if (m_tile_type != WindowTileType::None) {
+        exit_roll_up_mode();
         set_rect(WindowManager::the().tiled_window_rect(*this, tile_on_screen, m_tile_type));
-    else
+    } else {
         set_rect(m_floating_rect);
+    }
+
     send_resize_event_to_client();
     send_move_event_to_client();
 }

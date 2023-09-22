@@ -61,6 +61,7 @@ enum class WindowMenuAction {
     MinimizeOrUnminimize = 0,
     MaximizeOrRestore,
     ToggleMenubarVisibility,
+    ToggleWindowRollUp,
     Close,
     Move,
     ToggleAlwaysOnTop,
@@ -388,6 +389,8 @@ private:
     void tile_type_changed(Optional<Screen const&> = {});
     ErrorOr<Optional<DeprecatedString>> compute_title_username(ConnectionFromClient* client);
 
+    void exit_roll_up_mode();
+
     ConnectionFromClient* m_client { nullptr };
 
     WeakPtr<Window> m_parent_window;
@@ -398,6 +401,7 @@ private:
     DeprecatedString m_title;
     Optional<DeprecatedString> m_title_username;
     Gfx::IntRect m_rect;
+    Gfx::IntRect m_saved_before_roll_up_rect;
     Gfx::IntRect m_saved_nonfullscreen_rect;
     Gfx::IntRect m_taskbar_rect;
     Vector<Screen*, default_screen_count> m_screens;
@@ -436,6 +440,7 @@ private:
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
     Gfx::IntSize m_backing_store_visible_size {};
+    Gfx::IntSize m_backup_backing_store_visible_size {};
     i32 m_backing_store_serial { -1 };
     i32 m_last_backing_store_serial { -1 };
     int m_window_id { -1 };
@@ -455,11 +460,13 @@ private:
     MenuItem* m_window_menu_maximize_item { nullptr };
     MenuItem* m_window_menu_move_item { nullptr };
     MenuItem* m_window_menu_close_item { nullptr };
+    MenuItem* m_window_menu_roll_up_item { nullptr };
     MenuItem* m_window_menu_always_on_top_item { nullptr };
     MenuItem* m_window_menu_menubar_visibility_item { nullptr };
     MenuItem* m_window_menu_add_to_quick_launch_item { nullptr };
     Optional<int> m_progress;
     bool m_should_show_menubar { true };
+    bool m_should_show_window_content { true };
     WindowStack* m_window_stack { nullptr };
     RefPtr<Animation> m_animation;
 
