@@ -7,18 +7,9 @@
 
 #import "LagomPDFDocument.h"
 
-// Several AK types conflict with MacOS types.
-#define FixedPoint FixedPointMacOS
-#import <Cocoa/Cocoa.h>
-#undef FixedPoint
-
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
-#include <LibCore/File.h>
-#include <LibCore/MappedFile.h>
-#include <LibGfx/Bitmap.h>
 #include <LibPDF/Document.h>
-#include <LibPDF/Renderer.h>
 
 @interface LagomPDFDocument ()
 {
