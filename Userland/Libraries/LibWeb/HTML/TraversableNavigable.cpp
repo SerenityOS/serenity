@@ -71,8 +71,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable
     // document: document
     document_state->set_document(document);
 
+    // initiator origin: null if opener is null; otherwise, document's origin
+    document_state->set_initiator_origin(opener ? Optional<Origin> {} : document->origin());
+
+    // origin: document's origin
+    document_state->set_origin(document->origin());
+
     // navigable target name: targetName
     document_state->set_navigable_target_name(target_name);
+
+    // about base URL: document's about base URL
+    document_state->set_about_base_url(document->about_base_url());
 
     // 5. Let traversable be a new traversable navigable.
     auto traversable = vm.heap().allocate_without_realm<TraversableNavigable>(page);
