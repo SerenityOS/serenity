@@ -47,35 +47,9 @@
 {
     [super windowControllerDidLoadNib:aController];
 
-    NSLog(@"restorationClass %@", aController.window.restorationClass);
-    NSLog(@"restorable %@", @(aController.window.restorable));
-    NSLog(@"identifier %@", aController.window.identifier);
-
     if (_doc) {
         [_pdfView setDocument:_doc->make_weak_ptr()];
     }
-}
-
-+ (NSArray<Class>*)allowedClassesForRestorableStateKeyPath:(NSString*)keyPath
-{
-    auto res = [NSDocument allowedClassesForRestorableStateKeyPath:keyPath];
-    NSLog(@"restore %@", res);
-    return res;
-}
-
-- (void)restoreDocumentWindowWithIdentifier:(NSUserInterfaceItemIdentifier)identifier
-                                      state:(NSCoder*)state
-                          completionHandler:(void (^)(NSWindow*, NSError*))completionHandler
-{
-    NSLog(@"here restoreDocumentWindowWithIdentifier");
-    return [super restoreDocumentWindowWithIdentifier:identifier state:state completionHandler:completionHandler];
-}
-
-- (void)encodeRestorableStateWithCoder:(NSCoder*)coder
-{
-    // called on switch away from app
-    NSLog(@"here encodeRestorableStateWithCoder");
-    [super encodeRestorableStateWithCoder:coder];
 }
 
 - (NSData*)dataOfType:(NSString*)typeName error:(NSError**)outError
