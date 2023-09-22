@@ -39,9 +39,9 @@ wasn't equal to `CSSPixels(1) + CSSPixels(0)`.
 
 ## Property based testing?
 
-Property based testing involves generating random test inputs and checking that
-they satisfy certain properties. This allows testing a large number of possible
-cases automatically, and is exceptionally good at finding edge cases.
+Property based testing (PBT) involves generating random test inputs and checking
+that they satisfy certain properties. This allows testing a large number of
+possible cases automatically, and is exceptionally good at finding edge cases.
 
 When a failure is found, it's automatically shrunk to a minimal reproducing
 case. (This is good, because random values contain a lot of unimportant details
