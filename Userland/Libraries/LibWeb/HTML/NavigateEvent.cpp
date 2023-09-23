@@ -14,7 +14,9 @@
 #include <LibWeb/DOM/AbortController.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/NavigateEvent.h>
+#include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationDestination.h>
 #include <LibWeb/XHR/FormData.h>
 
@@ -194,6 +196,91 @@ void NavigateEvent::process_scroll_behavior()
             document.scroll_to_the_fragment();
         }
     }
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#potentially-process-scroll-behavior
+void NavigateEvent::potentially_process_scroll_behavior()
+{
+    // 1. Assert: event's interception state is "committed" or "scrolled".
+    VERIFY(m_interception_state != InterceptionState::Committed && m_interception_state != InterceptionState::Scrolled);
+
+    // 2. If event's interception state is "scrolled", then return.
+    if (m_interception_state == InterceptionState::Scrolled)
+        return;
+
+    // 3. If event's scroll behavior is "manual", then return.
+    // NOTE: If it was left as null, then we treat that as "after-transition", and continue onward.
+    if (m_scroll_behavior == Bindings::NavigationScrollBehavior::Manual)
+        return;
+
+    // 4. Process scroll behavior given event.
+    process_scroll_behavior();
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#potentially-reset-the-focus
+void NavigateEvent::potentially_reset_the_focus()
+{
+    // 1. Assert: event's interception state is "committed" or "scrolled".
+    VERIFY(m_interception_state == InterceptionState::Committed || m_interception_state == InterceptionState::Scrolled);
+
+    // 2. Let navigation be event's relevant global object's navigation API.
+    auto& relevant_global_object = verify_cast<Window>(HTML::relevant_global_object(*this));
+    auto navigation = relevant_global_object.navigation();
+
+    // 3. Let focusChanged be navigation's focus changed during ongoing navigation.
+    auto focus_changed = navigation->focus_changed_during_ongoing_navigation();
+
+    // 4. Set navigation's focus changed during ongoing navigation to false.
+    navigation->set_focus_changed_during_ongoing_navigation(false);
+
+    // 5. If focusChanged is true, then return.
+    if (focus_changed)
+        return;
+
+    // 6. If event's focus reset behavior is "manual", then return.
+    // NOTE: If it was left as null, then we treat that as "after-transition", and continue onward.
+    if (m_focus_reset_behavior == Bindings::NavigationFocusReset::Manual)
+        return;
+
+    // 7. Let document be event's relevant global object's associated Document.
+    auto& document = relevant_global_object.associated_document();
+
+    // 8. FIXME: Let focusTarget be the autofocus delegate for document.
+    JS::GCPtr<DOM::Node> focus_target = nullptr;
+
+    // 9. If focusTarget is null, then set focusTarget to document's body element.
+    if (focus_target == nullptr)
+        focus_target = document.body();
+
+    // 10. If focusTarget is null, then set focusTarget to document's document element.
+    if (focus_target == nullptr)
+        focus_target = document.document_element();
+
+    // FIXME: 11. Run the focusing steps for focusTarget, with document's viewport as the fallback target.
+    run_focusing_steps(focus_target, nullptr);
+
+    // FIXME: 12. Move the sequential focus navigation starting point to focusTarget.
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigateevent-finish
+void NavigateEvent::finish(bool did_fulfill)
+{
+    // 1. Assert: event's interception state is not "intercepted" or "finished".
+    VERIFY(m_interception_state != InterceptionState::Intercepted && m_interception_state != InterceptionState::Finished);
+
+    // 2. If event's interception state is "none", then return.
+    if (m_interception_state == InterceptionState::None)
+        return;
+
+    // 3. Potentially reset the focus given event.
+    potentially_reset_the_focus();
+
+    // 4. If didFulfill is true, then potentially process scroll behavior given event.
+    if (did_fulfill)
+        potentially_process_scroll_behavior();
+
+    // 5. Set event's interception state to "finished".
+    m_interception_state = InterceptionState::Finished;
 }
 
 }

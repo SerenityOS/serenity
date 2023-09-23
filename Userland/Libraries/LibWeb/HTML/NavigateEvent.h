@@ -64,6 +64,8 @@ public:
 
     JS::NonnullGCPtr<DOM::AbortController> abort_controller() const { return *m_abort_controller; }
 
+    void finish(bool did_fulfill);
+
 private:
     NavigateEvent(JS::Realm&, FlyString const& event_name, NavigateEventInit const& event_init);
 
@@ -72,6 +74,8 @@ private:
 
     WebIDL::ExceptionOr<void> perform_shared_checks();
     void process_scroll_behavior();
+    void potentially_process_scroll_behavior();
+    void potentially_reset_the_focus();
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigateevent-interception-state
     enum class InterceptionState {
