@@ -110,6 +110,14 @@ public:
     i64 get_the_navigation_api_entry_index(SessionHistoryEntry const&) const;
     void abort_the_ongoing_navigation(Optional<JS::NonnullGCPtr<WebIDL::DOMException>> error = {});
     bool fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryEntry> destination_she, UserNavigationInvolvement = UserNavigationInvolvement::None);
+    bool fire_a_push_replace_reload_navigate_event(
+        Bindings::NavigationType,
+        AK::URL destination_url,
+        bool is_same_document,
+        UserNavigationInvolvement = UserNavigationInvolvement::None,
+        Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list = {},
+        Optional<SerializationRecord> navigation_api_state = {},
+        Optional<SerializationRecord> classic_history_api_state = {});
 
     virtual ~Navigation() override;
 
