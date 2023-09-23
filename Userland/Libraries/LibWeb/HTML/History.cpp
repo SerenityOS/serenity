@@ -9,6 +9,7 @@
 #include <LibWeb/HTML/History.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 
@@ -188,6 +189,12 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
     ///          with navigationType set to historyHandling, isSameDocument set to true, destinationURL set to newURL,
     //           and classicHistoryAPIState set to serializedData.
     // FIXME: 9. If continue is false, then return.
+
+    auto navigable = document->navigable();
+    if (navigable->is_top_level_traversable()) {
+        if (auto* page = navigable->active_browsing_context()->page())
+            page->client().page_did_start_loading(new_url, false);
+    }
 
     // 10. Run the URL and history update steps given document and newURL, with serializedData set to
     //     serializedData and historyHandling set to historyHandling.
