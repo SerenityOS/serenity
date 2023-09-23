@@ -186,11 +186,22 @@ ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeFamily::Type unix_dev
     return {};
 }
 
-static ErrorOr<void> create_kcov_device_node()
+struct PluggableOnceCharacterDeviceNodeMatch {
+    StringView path;
+    mode_t mode;
+    MajorNumber major;
+    MinorNumber minor;
+};
+
+static constexpr PluggableOnceCharacterDeviceNodeMatch s_simple_matchers[] = {
+    { "/dev/kcov"sv, 0666, 30, 0 },
+};
+
+static ErrorOr<void> create_pluggable_once_char_device_node(PluggableOnceCharacterDeviceNodeMatch const& match)
 {
     mode_t old_mask = umask(0);
     ScopeGuard umask_guard([old_mask] { umask(old_mask); });
-    TRY(Core::System::create_char_device("/dev/kcov"sv, 0666, 30, 0));
+    TRY(Core::System::create_char_device(match.path, match.mode, match.major.value(), match.minor.value()));
     return {};
 }
 
@@ -216,14 +227,26 @@ ErrorOr<void> DeviceEventLoop::drain_events_from_devctl()
             continue;
 
         if (event.state == DeviceEvent::State::Inserted) {
-            // NOTE: We have a special function for the KCOV device, because we don't
-            // want to create a new MinorNumberAllocationType (e.g. SingleInstance).
-            // Instead, just blindly create that device node and assume we will never
-            // have to worry about it, so we don't need to register that!
-            if (event.major_number == 30 && event.minor_number == 0 && !event.is_block_device) {
-                TRY(create_kcov_device_node());
-                continue;
+            if (!event.is_block_device) {
+                // NOTE: We have a special handling for the pluggable-once devices, etc,
+                // as these device (if they appear) should only "hotplug" (being inserted)
+                // once during the OS runtime.
+                // Therefore, we don't want to create a new MinorNumberAllocationType (e.g. SingleInstance).
+                // Instead, just blindly create such device node and assume we will never
+                // have to worry about it, so we don't need to register that!
+                auto possible_pluggable_once_char_device_match = ([](DeviceEvent& event) -> Optional<PluggableOnceCharacterDeviceNodeMatch const&> {
+                    for (auto const& match : s_simple_matchers) {
+                        if (event.major_number == match.major.value() && event.minor_number == match.minor.value())
+                            return match;
+                    }
+                    return Optional<PluggableOnceCharacterDeviceNodeMatch const&> {};
+                })(event);
+                if (possible_pluggable_once_char_device_match.has_value()) {
+                    TRY(create_pluggable_once_char_device_node(possible_pluggable_once_char_device_match.value()));
+                    continue;
+                }
             }
+
             VERIFY(event.is_block_device == 1 || event.is_block_device == 0);
             TRY(register_new_device(event.is_block_device ? DeviceNodeFamily::Type::BlockDevice : DeviceNodeFamily::Type::CharacterDevice, event.major_number, event.minor_number));
         } else if (event.state == DeviceEvent::State::Removed) {
