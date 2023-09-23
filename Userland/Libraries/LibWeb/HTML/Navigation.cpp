@@ -13,14 +13,18 @@
 #include <LibWeb/DOM/AbortController.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/ErrorEvent.h>
+#include <LibWeb/HTML/History.h>
 #include <LibWeb/HTML/NavigateEvent.h>
 #include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationCurrentEntryChangeEvent.h>
+#include <LibWeb/HTML/NavigationDestination.h>
 #include <LibWeb/HTML/NavigationHistoryEntry.h>
 #include <LibWeb/HTML/NavigationTransition.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/XHR/FormData.h>
 
 namespace Web::HTML {
 
@@ -859,6 +863,343 @@ void Navigation::reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMetho
 
     // 3. Clean up apiMethodTracker.
     clean_up(api_method_tracker);
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#inner-navigate-event-firing-algorithm
+bool Navigation::inner_navigate_event_firing_algorithm(
+    Bindings::NavigationType navigation_type,
+    JS::NonnullGCPtr<NavigationDestination> destination,
+    UserNavigationInvolvement user_involvement,
+    Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list,
+    Optional<String> download_request_filename,
+    Optional<SerializationRecord> classic_history_api_state)
+{
+    auto& realm = relevant_realm(*this);
+
+    // 1. If navigation has entries and events disabled, then:
+    // NOTE: These assertions holds because traverseTo(), back(), and forward() will immediately fail when entries and events are disabled
+    //       (since there are no entries to traverse to), and if our starting point is instead navigate() or reload(),
+    //       then we avoided setting the upcoming non-traverse API method tracker in the first place.
+    if (has_entries_and_events_disabled()) {
+        // 1. Assert: navigation's ongoing API method tracker is null.
+        VERIFY(m_ongoing_api_method_tracker == nullptr);
+
+        // 2. Assert: navigation's upcoming non-traverse API method tracker is null.
+        VERIFY(m_upcoming_non_traverse_api_method_tracker == nullptr);
+
+        // 3. Assert: navigation's upcoming traverse API method trackers is empty.
+        VERIFY(m_upcoming_traverse_api_method_trackers.is_empty());
+
+        // 4. Return true.
+        return true;
+    }
+
+    // 2. Let destinationKey be null.
+    Optional<String> destination_key = {};
+
+    // 3. If destination's entry is non-null, then set destinationKey to destination's entry's key.
+    if (destination->navigation_history_entry() != nullptr)
+        destination_key = destination->navigation_history_entry()->key();
+
+    // 4. Assert: destinationKey is not the empty string.
+    VERIFY(destination_key != ""sv);
+
+    // 5. Promote an upcoming API method tracker to ongoing given navigation and destinationKey.
+    promote_an_upcoming_api_method_tracker_to_ongoing(destination_key);
+
+    // 6. Let apiMethodTracker be navigation's ongoing API method tracker.
+    auto api_method_tracker = m_ongoing_api_method_tracker;
+
+    // 7. Let navigable be navigation's relevant global object's navigable.
+    auto& relevant_global_object = verify_cast<HTML::Window>(Web::HTML::relevant_global_object(*this));
+    auto navigable = relevant_global_object.navigable();
+
+    // 8. Let document be navigation's relevant global object's associated Document.
+    auto& document = relevant_global_object.associated_document();
+
+    // Note: We create the Event in this algorithm instead of passing it in,
+    //       and have all the following "initialize" steps set up the event init
+    NavigateEventInit event_init = {};
+
+    // 9.  If document can have its URL rewritten to destination's URL,
+    //     and either destination's is same document is true or navigationType is not "traverse",
+    //     then initialize event's canIntercept to true. Otherwise, initialize it to false.
+    event_init.can_intercept = can_have_its_url_rewritten(document, destination->raw_url()) && (destination->same_document() || navigation_type != Bindings::NavigationType::Traverse);
+
+    // 10. Let traverseCanBeCanceled be true if all of the following are true:
+    //      - navigable is a top-level traversable;
+    //      - destination's is same document is true; and
+    //      - either userInvolvement is not "browser UI", or navigation's relevant global object has transient activation.
+    //     Otherwise, let it be false.
+    bool const traverse_can_be_canceled = navigable->is_top_level_traversable()
+        && destination->same_document()
+        && (user_involvement != UserNavigationInvolvement::BrowserUI || relevant_global_object.has_transient_activation());
+
+    // FIXME: Fix spec grammaro, extra 'the -> set'
+    // 11. If either:
+    //      - navigationType is not "traverse"; or
+    //      - traverseCanBeCanceled is true
+    //     the initialize event's cancelable to true. Otherwise, initialize it to false.
+    event_init.cancelable = (navigation_type != Bindings::NavigationType::Traverse) || traverse_can_be_canceled;
+
+    // 12. Initialize event's type to "navigate".
+    // AD-HOC: Happens later, when calling the factory function
+
+    // 13. Initialize event's navigationType to navigationType.
+    event_init.navigation_type = navigation_type;
+
+    // 14. Initialize event's destination to destination.
+    event_init.destination = destination;
+
+    // 15. Initialize event's downloadRequest to downloadRequestFilename.
+    event_init.download_request = move(download_request_filename);
+
+    // 16. If apiMethodTracker is not null, then initialize event's info to apiMethodTracker's info. Otherwise, initialize it to undefined.
+    // NOTE: At this point apiMethodTracker's info is no longer needed and can be nulled out instead of keeping it alive for the lifetime of the navigation API method tracker.
+    if (api_method_tracker) {
+        event_init.info = api_method_tracker->info;
+        api_method_tracker->info = JS::js_undefined();
+    } else {
+        event_init.info = JS::js_undefined();
+    }
+
+    // FIXME: 17: Initialize event's hasUAVisualTransition to true if a visual transition, to display a cached rendered state
+    //     of the document's latest entry, was done by the user agent. Otherwise, initialize it to false.
+    event_init.has_ua_visual_transition = false;
+
+    // 18. Set event's abort controller to a new AbortController created in navigation's relevant realm.
+    // AD-HOC: Set on the NavigateEvent later after construction
+    auto abort_controller = MUST(DOM::AbortController::construct_impl(realm));
+
+    // 19. Initialize event's signal to event's abort controller's signal.
+    event_init.signal = abort_controller->signal();
+
+    // 20. Let currentURL be document's URL.
+    auto current_url = document.url();
+
+    // 21. If all of the following are true:
+    //  - destination's is same document is true;
+    //  - destination's URL equals currentURL with exclude fragments set to true; and
+    //  - destination's URL's fragment is not identical to currentURL's fragment,
+    //  then initialize event's hashChange to true. Otherwise, initialize it to false.
+    event_init.hash_change = (destination->same_document()
+        && destination->raw_url().equals(current_url, AK::URL::ExcludeFragment::Yes)
+        && destination->raw_url().fragment() != current_url.fragment());
+
+    // 22. If userInvolvement is not "none", then initialize event's userInitiated to true. Otherwise, initialize it to false.
+    event_init.user_initiated = user_involvement != UserNavigationInvolvement::None;
+
+    // 23. If formDataEntryList is not null, then initialize event's formData to a new FormData created in navigation's relevant realm,
+    //     associated to formDataEntryList. Otherwise, initialize it to null.
+    if (form_data_entry_list.has_value()) {
+        event_init.form_data = MUST(XHR::FormData::construct_impl(realm, form_data_entry_list.release_value()));
+    } else {
+        event_init.form_data = nullptr;
+    }
+
+    // AD-HOC: *Now* we have all the info required to create the event
+    auto event = NavigateEvent::construct_impl(realm, EventNames::navigate, event_init);
+    event->set_abort_controller(abort_controller);
+
+    // AD-HOC: This is supposed to be set in "fire a <type> navigate event", and is only non-null when
+    //         we're doing a push or replace. We set it here because we create the event here
+    event->set_classic_history_api_state(move(classic_history_api_state));
+
+    // 24. Assert: navigation's ongoing navigate event is null.
+    VERIFY(m_ongoing_navigate_event == nullptr);
+
+    // 25. Set navigation's ongoing navigate event to event.
+    m_ongoing_navigate_event = event;
+
+    // 26. Set navigation's focus changed during ongoing navigation to false.
+    m_focus_changed_during_ongoing_navigation = false;
+
+    // 27. Set navigation's suppress normal scroll restoration during ongoing navigation to false.
+    m_suppress_scroll_restoration_during_ongoing_navigation = false;
+
+    // 28. Let dispatchResult be the result of dispatching event at navigation.
+    auto dispatch_result = dispatch_event(*event);
+
+    // 29. If dispatchResult is false:
+    if (!dispatch_result) {
+        // FIXME: 1. If navigationType is "traverse", then consume history-action user activation.
+
+        // 2. If event's abort controller's signal is not aborted, then abort the ongoing navigation given navigation.
+        if (!event->abort_controller()->signal()->aborted())
+            abort_the_ongoing_navigation();
+
+        // 3. Return false.
+        return false;
+    }
+
+    // 30. Let endResultIsSameDocument be true if event's interception state
+    //     is not "none" or event's destination's is same document is true.
+    bool const end_result_is_same_document = (event->interception_state() != NavigateEvent::InterceptionState::None) || event->destination()->same_document();
+
+    // 31. Prepare to run script given navigation's relevant settings object.
+    // NOTE: There's a massive spec note here
+    relevant_settings_object(*this).prepare_to_run_script();
+
+    // 32. If event's interception state is not "none":
+    if (event->interception_state() != NavigateEvent::InterceptionState::None) {
+        // 1. Set event's interception state to "committed".
+        event->set_interception_state(NavigateEvent::InterceptionState::Committed);
+
+        // 2. Let fromNHE be the current entry of navigation.
+        auto from_nhe = current_entry();
+
+        // 3. Assert: fromNHE is not null.
+        VERIFY(from_nhe != nullptr);
+
+        // 4. Set navigation's transition to a new NavigationTransition created in navigation's relevant realm,
+        //    whose navigation type is navigationType, from entry is fromNHE, and whose finished promise is a new promise
+        //    created in navigation's relevant realm.
+        m_transition = NavigationTransition::create(realm, navigation_type, *from_nhe, JS::Promise::create(realm));
+
+        // 5. Mark as handled navigation's transition's finished promise.
+        m_transition->finished()->set_is_handled();
+
+        // 6. If navigationType is "traverse", then set navigation's suppress normal scroll restoration during ongoing navigation to true.
+        // NOTE: If event's scroll behavior was set to "after-transition", then scroll restoration will happen as part of finishing
+        //       the relevant NavigateEvent. Otherwise, there will be no scroll restoration. That is, no navigation which is intercepted
+        //       by intercept() goes through the normal scroll restoration process; scroll restoration for such navigations
+        //       is either done manually, by the web developer, or is done after the transition.
+        if (navigation_type == Bindings::NavigationType::Traverse)
+            m_suppress_scroll_restoration_during_ongoing_navigation = true;
+
+        // FIXME: Fix spec typo "serialied"
+        // 7. If navigationType is "push" or "replace", then run the URL and history update steps given document and
+        //    event's destination's URL, with serialiedData set to event's classic history API state and historyHandling
+        //    set to navigationType.
+        // FIXME: Pass the serialized data to this algorithm
+        if (navigation_type == Bindings::NavigationType::Push || navigation_type == Bindings::NavigationType::Replace) {
+            auto history_handling = navigation_type == Bindings::NavigationType::Push ? HistoryHandlingBehavior::Push : HistoryHandlingBehavior::Replace;
+            perform_url_and_history_update_steps(document, event->destination()->raw_url(), history_handling);
+        }
+        // Big spec note about reload here
+    }
+
+    // 33. If endResultIsSameDocument is true:
+    if (end_result_is_same_document) {
+        // 1. Let promisesList be an empty list.
+        JS::MarkedVector<JS::NonnullGCPtr<WebIDL::Promise>> promises_list(realm.heap());
+
+        // 2. For each handler of event's navigation handler list:
+        for (auto const& handler : event->navigation_handler_list()) {
+            // 1. Append the result of invoking handler with an empty arguments list to promisesList.
+            auto result = WebIDL::invoke_callback(handler, {});
+            if (result.is_abrupt()) {
+                // FIXME: https://github.com/whatwg/html/issues/9774
+                report_exception(result.release_error(), realm);
+                continue;
+            }
+            // This *should* be equivalent to converting a promise to a promise capability
+            promises_list.append(WebIDL::create_resolved_promise(realm, result.value().value()));
+        }
+
+        // 3. If promisesList's size is 0, then set promisesList to « a promise resolved with undefined ».
+        // NOTE: There is a subtle timing difference between how waiting for all schedules its success and failure
+        //       steps when given zero promises versus ≥1 promises. For most uses of waiting for all, this does not matter.
+        //       However, with this API, there are so many events and promise handlers which could fire around the same time
+        //       that the difference is pretty easily observable: it can cause the event/promise handler sequence to vary.
+        //       (Some of the events and promises involved include: navigatesuccess / navigateerror, currententrychange,
+        //       dispose, apiMethodTracker's promises, and the navigation.transition.finished promise.)
+        if (promises_list.size() == 0) {
+            promises_list.append(WebIDL::create_resolved_promise(realm, JS::js_undefined()));
+        }
+
+        // 4. Wait for all of promisesList, with the following success steps:
+        WebIDL::wait_for_all(
+            realm, promises_list, [&](JS::MarkedVector<JS::Value> const&) -> void {
+                // FIXME: Spec issue: Event's relevant global objects' *associated document*
+                // 1. If event's relevant global object is not fully active, then abort these steps.
+                if (!relevant_global_object.associated_document().is_fully_active())
+                    return;
+
+                // 2. If event's abort controller's signal is aborted, then abort these steps.
+                if (event->abort_controller()->signal()->aborted())
+                    return;
+
+                // 3. Assert: event equals navigation's ongoing navigate event.
+                VERIFY(event == m_ongoing_navigate_event);
+
+                // 4. Set navigation's ongoing navigate event to null.
+                m_ongoing_navigate_event = nullptr;
+
+                // 5. Finish event given true.
+                event->finish(true);
+
+                // FIXME: Implement https://dom.spec.whatwg.org/#concept-event-fire somewhere
+                // 6. Fire an event named navigatesuccess at navigation.
+                dispatch_event(DOM::Event::create(realm, EventNames::navigatesuccess));
+
+                // 7. If navigation's transition is not null, then resolve navigation's transition's finished promise with undefined.
+                if (m_transition != nullptr)
+                    m_transition->finished()->fulfill(JS::js_undefined());
+
+                // 8. Set navigation's transition to null.
+                m_transition = nullptr;
+
+                // 9. If apiMethodTracker is non-null, then resolve the finished promise for apiMethodTracker.
+                if (api_method_tracker)
+                    resolve_the_finished_promise(*api_method_tracker); },
+            // and the following failure steps given reason rejectionReason:
+            [&](JS::Value rejection_reason) -> void {
+                // FIXME: Spec issue: Event's relevant global objects' *associated document*
+                // 1. If event's relevant global object is not fully active, then abort these steps.
+                if (!relevant_global_object.associated_document().is_fully_active())
+                    return;
+
+                // 2. If event's abort controller's signal is aborted, then abort these steps.
+                if (event->abort_controller()->signal()->aborted())
+                    return;
+
+                // 3. Assert: event equals navigation's ongoing navigate event.
+                VERIFY(event == m_ongoing_navigate_event);
+
+                // 4. Set navigation's ongoing navigate event to null.
+                m_ongoing_navigate_event = nullptr;
+
+                // 5. Finish event given false.
+                event->finish(false);
+
+                // 6. Fire an event named navigateerror at navigation using ErrorEvent, with error initialized to rejectionReason, and message,
+                //    filename, lineno, and colno initialized to appropriate values that can be extracted from rejectionReason in the same
+                //    underspecified way that the report the exception algorithm does.
+                ErrorEventInit event_init = {};
+                event_init.error = rejection_reason;
+                // FIXME: Extract information from the exception and the JS context in the wishy-washy way the spec says here.
+                event_init.filename = String {};
+                event_init.colno = 0;
+                event_init.lineno = 0;
+                event_init.message = String {};
+
+                dispatch_event(ErrorEvent::create(realm, EventNames::navigateerror, event_init));
+
+                // 7. If navigation's transition is not null, then reject navigation's transition's finished promise with rejectionReason.
+                if (m_transition)
+                    m_transition->finished()->reject(rejection_reason);
+
+                // 8. Set navigation's transition to null.
+                m_transition = nullptr;
+
+                // 9. If apiMethodTracker is non-null, then reject the finished promise for apiMethodTracker with rejectionReason.
+                if (api_method_tracker)
+                    reject_the_finished_promise(*api_method_tracker, rejection_reason);
+            });
+    }
+
+    // 34. Otherwise, if apiMethodTracker is non-null, then clean up apiMethodTracker.
+    else if (api_method_tracker) {
+        clean_up(*api_method_tracker);
+    }
+
+    // 35. Clean up after running script given navigation's relevant settings object.
+    relevant_settings_object(*this).clean_up_after_running_script();
+
+    // 36. If event's interception state is "none", then return true.
+    // 37. Return false.
+    return event->interception_state() == NavigateEvent::InterceptionState::None;
 }
 
 }
