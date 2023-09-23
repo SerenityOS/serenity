@@ -118,6 +118,7 @@ public:
         Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list = {},
         Optional<SerializationRecord> navigation_api_state = {},
         Optional<SerializationRecord> classic_history_api_state = {});
+    bool fire_a_download_request_navigate_event(AK::URL destination_url, UserNavigationInvolvement user_involvement, String filename);
 
     virtual ~Navigation() override;
 
