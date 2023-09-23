@@ -42,6 +42,15 @@ class NavigateEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(NavigateEvent, DOM::Event);
 
 public:
+    // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigateevent-interception-state
+    enum class InterceptionState {
+        None,
+        Intercepted,
+        Committed,
+        Scrolled,
+        Finished
+    };
+
     [[nodiscard]] static JS::NonnullGCPtr<NavigateEvent> construct_impl(JS::Realm&, FlyString const& event_name, NavigateEventInit const&);
 
     // The navigationType, destination, canIntercept, userInitiated, hashChange, signal, formData,
@@ -63,6 +72,12 @@ public:
     virtual ~NavigateEvent() override;
 
     JS::NonnullGCPtr<DOM::AbortController> abort_controller() const { return *m_abort_controller; }
+    InterceptionState interception_state() const { return m_interception_state; }
+    Vector<NavigationInterceptHandler> const& navigation_handler_list() const { return m_navigation_handler_list; }
+
+    void set_abort_controller(JS::NonnullGCPtr<DOM::AbortController> c) { m_abort_controller = c; }
+    void set_interception_state(InterceptionState s) { m_interception_state = s; }
+    void set_classic_history_api_state(Optional<SerializationRecord> r) { m_classic_history_api_state = move(r); }
 
     void finish(bool did_fulfill);
 
@@ -78,13 +93,6 @@ private:
     void potentially_reset_the_focus();
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigateevent-interception-state
-    enum class InterceptionState {
-        None,
-        Intercepted,
-        Committed,
-        Scrolled,
-        Finished
-    };
     InterceptionState m_interception_state = InterceptionState::None;
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigateevent-navigation-handler-list

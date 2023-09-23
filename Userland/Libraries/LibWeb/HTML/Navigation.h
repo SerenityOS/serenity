@@ -10,6 +10,8 @@
 #include <LibWeb/Bindings/NavigationPrototype.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
+#include <LibWeb/HTML/Navigable.h>
+#include <LibWeb/HTML/NavigationType.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 
 namespace Web::HTML {
@@ -132,6 +134,14 @@ private:
     void resolve_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
     void reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::Value exception);
     void clean_up(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
+
+    bool inner_navigate_event_firing_algorithm(
+        Bindings::NavigationType,
+        JS::NonnullGCPtr<NavigationDestination>,
+        UserNavigationInvolvement,
+        Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list,
+        Optional<String> download_request_filename,
+        Optional<SerializationRecord> classic_history_api_state);
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-entry-list
     // Each Navigation has an associated entry list, a list of NavigationHistoryEntry objects, initially empty.
