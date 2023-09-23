@@ -110,8 +110,11 @@ public:
 
     virtual ~Navigation() override;
 
-    // Internal Getters
+    // Internal Getters/Setters
     JS::GCPtr<NavigateEvent> ongoing_navigate_event() const { return m_ongoing_navigate_event; }
+
+    bool focus_changed_during_ongoing_navigation() const { return m_focus_changed_during_ongoing_navigation; }
+    void set_focus_changed_during_ongoing_navigation(bool b) { m_focus_changed_during_ongoing_navigation = b; }
 
 private:
     explicit Navigation(JS::Realm&);
