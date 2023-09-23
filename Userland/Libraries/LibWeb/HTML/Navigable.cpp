@@ -1330,23 +1330,31 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     // 7. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
     auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_session_history_entry() : nullptr;
 
-    // FIXME: 8. Let history be navigable's active document's history object.
+    // 8. Let history be navigable's active document's history object.
+    auto history = active_document()->history();
 
-    // FIXME: 9. Let scriptHistoryIndex be history's index.
+    // 9. Let scriptHistoryIndex be history's index.
+    auto script_history_index = history->m_index;
 
-    // FIXME: 10. Let scriptHistoryIndex be history's index.
+    // 10. Let scriptHistoryLength be history's length.
+    auto script_history_length = history->m_length;
 
     // 11. If historyHandling is "push", then:
     if (history_handling == HistoryHandlingBehavior::Push) {
         // FIXME: 1. Set history's state to null.
-        // FIXME: 2. Increment scriptHistoryIndex.
-        // FIXME: 3. Set scriptHistoryLength to scriptHistoryIndex + 1.
+
+        // 2. Increment scriptHistoryIndex.
+        script_history_index++;
+
+        // 3. Set scriptHistoryLength to scriptHistoryIndex + 1.
+        script_history_length = script_history_index + 1;
     }
 
     // 12. Set navigable's active session history entry to historyEntry.
     m_active_session_history_entry = history_entry;
 
-    // FIXME: 13. Update document for history step application given navigable's active document, historyEntry, true, scriptHistoryIndex, and scriptHistoryLength.
+    // 13. Update document for history step application given navigable's active document, historyEntry, true, scriptHistoryIndex, and scriptHistoryLength.
+    active_document()->update_for_history_step_application(*history_entry, true, script_history_length, script_history_index);
 
     // FIXME: 14. Update the navigation API entries for a same-document navigation given navigation, historyEntry, and historyHandling.
 

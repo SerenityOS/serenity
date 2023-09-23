@@ -3489,4 +3489,37 @@ Painting::ViewportPaintable* Document::paintable()
     return static_cast<Painting::ViewportPaintable*>(Node::paintable());
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#update-document-for-history-step-application
+void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry, bool do_not_reactive, size_t script_history_length, size_t script_history_index)
+{
+    // 1. Let documentIsNew be true if document's latest entry is null; otherwise false.
+    auto document_is_new = !m_latest_entry;
+
+    // 2. Let documentsEntryChanged be true if document's latest entry is not entry; otherwise false.
+    auto documents_entry_changed = m_latest_entry != entry;
+
+    // 3. Set document's history object's index to scriptHistoryIndex.
+    history()->m_index = script_history_index;
+
+    // 4. Set document's history object's length to scriptHistoryLength.
+    history()->m_length = script_history_length;
+
+    // 5. If documentsEntryChanged is true, then:
+    if (documents_entry_changed) {
+        // FIXME: Implement this.
+    }
+
+    // 6. If documentIsNew is true, then:
+    if (document_is_new) {
+        // FIXME: 1. Try to scroll to the fragment for document.
+        // FIXME: 2. At this point scripts may run for the newly-created document document.
+    }
+
+    // 7. Otherwise, if documentsEntryChanged is false and doNotReactivate is false, then:
+    if (!documents_entry_changed && !do_not_reactive) {
+        // FIXME: 1. Assert: entriesForNavigationAPI is given.
+        // FIXME: 2. Reactivate document given entry and entriesForNavigationAPI.
+    }
+}
+
 }
