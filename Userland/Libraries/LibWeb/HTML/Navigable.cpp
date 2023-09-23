@@ -1744,9 +1744,11 @@ void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_u
 
     // 6. If historyHandling is "push", then:
     if (history_handling == HistoryHandlingBehavior::Push) {
-        // FIXME: 1. Increment document's history object's index.
-        // FIXME: 2. Set document's history object's length to its index + 1.
-        TODO();
+        // 1. Increment document's history object's index.
+        document.history()->m_index++;
+
+        // 2. Set document's history object's length to its index + 1.
+        document.history()->m_length = document.history()->m_index + 1;
     }
 
     // FIXME: 7. If serializedData is not null, then restore the history object state given document and newEntry.
