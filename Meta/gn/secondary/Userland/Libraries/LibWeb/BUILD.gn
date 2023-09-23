@@ -230,6 +230,13 @@ embed_as_string_view("generate_mathml_stylesheet_source") {
   namespace = "Web::CSS"
 }
 
+embed_as_string_view("generate_svg_stylesheet_source") {
+  input = "SVG/Default.css"
+  output = "$target_gen_dir/SVG/SVGStyleSheetSource.cpp"
+  variable_name = "svg_stylesheet_source"
+  namespace = "Web::CSS"
+}
+
 embed_as_string_view("generate_quirks_mode_stylesheet_source") {
   input = "CSS/QuirksMode.css"
   output = "$target_gen_dir/CSS/QuirksModeStyleSheetSource.cpp"

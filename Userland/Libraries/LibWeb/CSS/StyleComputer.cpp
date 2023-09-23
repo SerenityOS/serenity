@@ -239,6 +239,16 @@ static CSSStyleSheet& mathml_stylesheet(DOM::Document const& document)
     return *sheet;
 }
 
+static CSSStyleSheet& svg_stylesheet(DOM::Document const& document)
+{
+    static JS::Handle<CSSStyleSheet> sheet;
+    if (!sheet.cell()) {
+        extern StringView svg_stylesheet_source;
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), svg_stylesheet_source));
+    }
+    return *sheet;
+}
+
 template<typename Callback>
 void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
 {
@@ -247,6 +257,7 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
         if (document().in_quirks_mode())
             callback(quirks_mode_stylesheet(document()));
         callback(mathml_stylesheet(document()));
+        callback(svg_stylesheet(document()));
     }
     if (cascade_origin == CascadeOrigin::User) {
         if (m_user_style_sheet)
