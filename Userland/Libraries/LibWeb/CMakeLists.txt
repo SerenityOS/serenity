@@ -655,6 +655,7 @@ set(GENERATED_SOURCES
     CSS/TransformFunctions.cpp
     CSS/ValueID.cpp
     MathML/MathMLStyleSheetSource.cpp
+    SVG/SVGStyleSheetSource.cpp
 )
 
 serenity_lib(LibWeb web)

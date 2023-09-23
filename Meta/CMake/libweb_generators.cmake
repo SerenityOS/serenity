@@ -96,6 +96,14 @@ function (generate_css_implementation)
         NAMESPACE "Web::CSS"
     )
 
+    embed_as_string_view(
+        "SVGStyleSheetSource.cpp"
+        "${LIBWEB_INPUT_FOLDER}/SVG/Default.css"
+        "SVG/SVGStyleSheetSource.cpp"
+        "svg_stylesheet_source"
+        NAMESPACE "Web::CSS"
+    )
+
     set(CSS_GENERATED_TO_INSTALL
         "CSS/EasingFunctions.h"
         "CSS/Enums.h"
