@@ -575,12 +575,12 @@ void Heap::did_destroy_weak_container(Badge<WeakContainer>, WeakContainer& set)
     m_weak_containers.remove(set);
 }
 
-void Heap::defer_gc(Badge<DeferGC>)
+void Heap::defer_gc()
 {
     ++m_gc_deferrals;
 }
 
-void Heap::undefer_gc(Badge<DeferGC>)
+void Heap::undefer_gc()
 {
     VERIFY(m_gc_deferrals > 0);
     --m_gc_deferrals;

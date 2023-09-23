@@ -15,12 +15,12 @@ public:
     explicit DeferGC(Heap& heap)
         : m_heap(heap)
     {
-        m_heap.defer_gc({});
+        m_heap.defer_gc();
     }
 
     ~DeferGC()
     {
-        m_heap.undefer_gc({});
+        m_heap.undefer_gc();
     }
 
 private:

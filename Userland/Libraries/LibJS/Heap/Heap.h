@@ -73,9 +73,6 @@ public:
     void did_create_weak_container(Badge<WeakContainer>, WeakContainer&);
     void did_destroy_weak_container(Badge<WeakContainer>, WeakContainer&);
 
-    void defer_gc(Badge<DeferGC>);
-    void undefer_gc(Badge<DeferGC>);
-
     BlockAllocator& block_allocator() { return m_block_allocator; }
 
     void uproot_cell(Cell* cell);
@@ -83,6 +80,10 @@ public:
 private:
     friend class MarkingVisitor;
     friend class GraphConstructorVisitor;
+    friend class DeferGC;
+
+    void defer_gc();
+    void undefer_gc();
 
     static bool cell_must_survive_garbage_collection(Cell const&);
 
