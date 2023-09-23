@@ -37,6 +37,8 @@ public:
 
     virtual ~NavigationDestination() override;
 
+    AK::URL const& raw_url() const { return m_url; }
+
 private:
     NavigationDestination(JS::Realm&);
 
