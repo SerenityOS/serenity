@@ -14,13 +14,10 @@
 #ifndef _DYNAMIC_LOADER
 extern "C" {
 
-extern uintptr_t __stack_chk_guard;
-extern bool s_global_initializers_ran;
-
 int main(int, char**, char**);
 
 // Tell the compiler that this may be called from somewhere else.
-int _entry(int argc, char** argv, char** env) __attribute__((used));
+int _entry(int argc, char** argv) __attribute__((used));
 void _start(int, char**, char**) __attribute__((used));
 
 NAKED void _start(int, char**, char**)
@@ -37,15 +34,9 @@ NAKED void _start(int, char**, char**)
 #    endif
 }
 
-int _entry(int argc, char** argv, char** env)
+int _entry(int argc, char** argv)
 {
-    environ = env;
-    __environ_is_malloced = false;
     __begin_atexit_locking();
-
-    s_global_initializers_ran = true;
-
-    _init();
 
     int status = main(argc, argv, environ);
 
