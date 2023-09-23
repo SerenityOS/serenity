@@ -42,4 +42,6 @@ private:
     JS::NonnullGCPtr<DOM::Document> m_associated_document;
 };
 
+bool can_have_its_url_rewritten(DOM::Document const& document, AK::URL const& target_url);
+
 }
