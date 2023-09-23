@@ -29,5 +29,6 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(Promise const&, Optional<Reaction
 JS::NonnullGCPtr<JS::Promise> upon_fulfillment(Promise const&, ReactionSteps);
 JS::NonnullGCPtr<JS::Promise> upon_rejection(Promise const&, ReactionSteps);
 void mark_promise_as_handled(Promise const&);
+void wait_for_all(JS::Realm&, JS::MarkedVector<JS::NonnullGCPtr<Promise>> const& promises, JS::SafeFunction<void(JS::MarkedVector<JS::Value> const&)> success_steps, JS::SafeFunction<void(JS::Value)> failure_steps);
 
 }
