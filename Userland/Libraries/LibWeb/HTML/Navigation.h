@@ -128,6 +128,10 @@ private:
     JS::NonnullGCPtr<NavigationAPIMethodTracker> maybe_set_the_upcoming_non_traverse_api_method_tracker(JS::Value info, Optional<SerializationRecord>);
     JS::NonnullGCPtr<NavigationAPIMethodTracker> add_an_upcoming_traverse_api_method_tracker(String destination_key, JS::Value info);
     WebIDL::ExceptionOr<NavigationResult> perform_a_navigation_api_traversal(String key, NavigationOptions const&);
+    void promote_an_upcoming_api_method_tracker_to_ongoing(Optional<String> destination_key);
+    void resolve_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
+    void reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::Value exception);
+    void clean_up(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-entry-list
     // Each Navigation has an associated entry list, a list of NavigationHistoryEntry objects, initially empty.

@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/NavigationTransition.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::HTML {
 
@@ -764,6 +765,100 @@ void Navigation::abort_the_ongoing_navigation(Optional<JS::NonnullGCPtr<WebIDL::
         // 2. Set navigation's transition to null.
         m_transition = nullptr;
     }
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#promote-an-upcoming-api-method-tracker-to-ongoing
+void Navigation::promote_an_upcoming_api_method_tracker_to_ongoing(Optional<String> destination_key)
+{
+    // 1. Assert: navigation's ongoing API method tracker is null.
+    VERIFY(m_ongoing_api_method_tracker == nullptr);
+
+    // 2. If destinationKey is not null, then:
+    if (destination_key.has_value()) {
+        // 1. Assert: navigation's upcoming non-traverse API method tracker is null.
+        VERIFY(m_upcoming_non_traverse_api_method_tracker == nullptr);
+
+        // 2. If navigation's upcoming traverse API method trackers[destinationKey] exists, then:
+        if (auto tracker = m_upcoming_traverse_api_method_trackers.get(destination_key.value()); tracker.has_value()) {
+            // 1. Set navigation's ongoing API method tracker to navigation's upcoming traverse API method trackers[destinationKey].
+            m_ongoing_api_method_tracker = tracker.value();
+
+            // 2. Remove navigation's upcoming traverse API method trackers[destinationKey].
+            m_upcoming_traverse_api_method_trackers.remove(destination_key.value());
+        }
+    }
+
+    // 3. Otherwise:
+    else {
+        VERIFY(m_upcoming_non_traverse_api_method_tracker != nullptr);
+
+        // 1. Set navigation's ongoing API method tracker to navigation's upcoming non-traverse API method tracker.
+        m_ongoing_api_method_tracker = m_upcoming_non_traverse_api_method_tracker;
+
+        // 2. Set navigation's upcoming non-traverse API method tracker to null.
+        m_upcoming_non_traverse_api_method_tracker = nullptr;
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api-method-tracker-clean-up
+void Navigation::clean_up(JS::NonnullGCPtr<NavigationAPIMethodTracker> api_method_tracker)
+{
+    // 1. Let navigation be apiMethodTracker's navigation object.
+    VERIFY(api_method_tracker->navigation == this);
+
+    // 2. If navigation's ongoing API method tracker is apiMethodTracker, then set navigation's ongoing API method tracker to null.
+    if (m_ongoing_api_method_tracker == api_method_tracker) {
+        m_ongoing_api_method_tracker = nullptr;
+    }
+    // 3. Otherwise:
+    else {
+        // 1. Let key be apiMethodTracker's key.
+        auto& key = api_method_tracker->key;
+
+        // 2. Assert: key is not null.
+        VERIFY(key.has_value());
+
+        // 3. Assert: navigation's upcoming traverse API method trackers[key] exists.
+        VERIFY(m_upcoming_traverse_api_method_trackers.contains(*key));
+
+        // 4. Remove navigation's upcoming traverse API method trackers[key].
+        m_upcoming_traverse_api_method_trackers.remove(*key);
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#resolve-the-finished-promise
+void Navigation::resolve_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker> api_method_tracker)
+{
+    auto& realm = this->realm();
+
+    // 1. Resolve apiMethodTracker's committed promise with its committed-to entry.
+    // NOTE: Usually, notify about the committed-to entry has previously been called on apiMethodTracker,
+    //       and so this will do nothing. However, in some cases resolve the finished promise is called
+    //       directly, in which case this step is necessary.
+    WebIDL::resolve_promise(realm, api_method_tracker->committed_promise, api_method_tracker->commited_to_entry);
+
+    // 2. Resolve apiMethodTracker's finished promise with its committed-to entry.
+    WebIDL::resolve_promise(realm, api_method_tracker->finished_promise, api_method_tracker->commited_to_entry);
+
+    // 3. Clean up apiMethodTracker.
+    clean_up(api_method_tracker);
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#reject-the-finished-promise
+void Navigation::reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker> api_method_tracker, JS::Value exception)
+{
+    auto& realm = this->realm();
+
+    // 1. Reject apiMethodTracker's committed promise with exception.
+    // NOTE: This will do nothing if apiMethodTracker's committed promise was previously resolved
+    //       via notify about the committed-to entry.
+    WebIDL::reject_promise(realm, api_method_tracker->committed_promise, exception);
+
+    // 2. Reject apiMethodTracker's finished promise with exception.
+    WebIDL::reject_promise(realm, api_method_tracker->finished_promise, exception);
+
+    // 3. Clean up apiMethodTracker.
+    clean_up(api_method_tracker);
 }
 
 }
