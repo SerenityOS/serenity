@@ -15,10 +15,10 @@
 #include <LibGfx/Size.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibWeb/Bindings/NavigationPrototype.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/HTML/AbstractBrowsingContext.h>
 #include <LibWeb/HTML/ActivateTab.h>
-#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>

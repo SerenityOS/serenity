@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/NavigationPrototype.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentLoading.h>
@@ -15,7 +16,6 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
-#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationParams.h>
@@ -1150,7 +1150,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         && url.equals(active_session_history_entry()->url, AK::URL::ExcludeFragment::Yes)
         && url.fragment().has_value()) {
         // 1. Navigate to a fragment given navigable, url, historyHandling, and navigationId.
-        TRY(navigate_to_a_fragment(url, to_history_handling_behavior(history_handling), navigation_id));
+        TRY(navigate_to_a_fragment(url, history_handling, navigation_id));
 
         traversable_navigable()->process_session_history_traversal_queue();
 
@@ -1185,7 +1185,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     if (url.scheme() == "javascript"sv) {
         // 1. Queue a global task on the navigation and traversal task source given navigable's active window to navigate to a javascript: URL given navigable, url, historyHandling, initiatorOriginSnapshot, and cspNavigationType.
         queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, url, history_handling, initiator_origin_snapshot, csp_navigation_type, navigation_id] {
-            (void)navigate_to_a_javascript_url(url, to_history_handling_behavior(history_handling), initiator_origin_snapshot, csp_navigation_type, navigation_id);
+            (void)navigate_to_a_javascript_url(url, history_handling, initiator_origin_snapshot, csp_navigation_type, navigation_id);
         });
 
         // 2. Return.
@@ -1298,7 +1298,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
                     // NOTE: This check is not in the spec but we should not continue navigation if ongoing navigation id has changed.
                     return;
                 }
-                finalize_a_cross_document_navigation(*this, to_history_handling_behavior(history_handling), history_entry);
+                finalize_a_cross_document_navigation(*this, history_handling, history_entry);
             });
         }).release_value_but_fixme_should_propagate_errors();
     });
@@ -1306,7 +1306,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     return {};
 }
 
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String navigation_id)
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, Bindings::NavigationHistoryBehavior history_handling, String navigation_id)
 {
     (void)navigation_id;
 
@@ -1328,7 +1328,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     history_entry->scroll_restoration_mode = active_session_history_entry()->scroll_restoration_mode;
 
     // 7. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
-    auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_session_history_entry() : nullptr;
+    auto entry_to_replace = history_handling == Bindings::NavigationHistoryBehavior::Replace ? active_session_history_entry() : nullptr;
 
     // FIXME: 8. Let history be navigable's active document's history object.
 
@@ -1337,7 +1337,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     // FIXME: 10. Let scriptHistoryIndex be history's index.
 
     // 11. If historyHandling is "push", then:
-    if (history_handling == HistoryHandlingBehavior::Push) {
+    if (history_handling == Bindings::NavigationHistoryBehavior::Push) {
         // FIXME: 1. Set history's state to null.
         // FIXME: 2. Increment scriptHistoryIndex.
         // FIXME: 3. Set scriptHistoryLength to scriptHistoryIndex + 1.
@@ -1478,10 +1478,10 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> Navigable::evaluate_javascript_url
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-to-a-javascript:-url
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const& url, HistoryHandlingBehavior history_handling, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id)
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const& url, Bindings::NavigationHistoryBehavior history_handling, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id)
 {
     // 1. Assert: historyHandling is "replace".
-    VERIFY(history_handling == HistoryHandlingBehavior::Replace);
+    VERIFY(history_handling == Bindings::NavigationHistoryBehavior::Replace);
 
     // 2. Set the ongoing navigation for targetNavigable to null.
     set_ongoing_navigation({});
@@ -1645,7 +1645,7 @@ TargetSnapshotParams Navigable::snapshot_target_snapshot_params()
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-cross-document-navigation
-void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable, HistoryHandlingBehavior history_handling, JS::NonnullGCPtr<SessionHistoryEntry> history_entry)
+void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable, Bindings::NavigationHistoryBehavior history_handling, JS::NonnullGCPtr<SessionHistoryEntry> history_entry)
 {
     // NOTE: This is not in the spec but we should not navigate destroyed navigable.
     if (navigable->has_been_destroyed())
@@ -1669,7 +1669,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
         history_entry->document_state->set_navigable_target_name(String {});
 
     // 5. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
-    auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? navigable->active_session_history_entry() : nullptr;
+    auto entry_to_replace = history_handling == Bindings::NavigationHistoryBehavior::Replace ? navigable->active_session_history_entry() : nullptr;
 
     // 6. Let traversable be navigable's traversable navigable.
     auto traversable = navigable->traversable_navigable();
@@ -1715,7 +1715,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#url-and-history-update-steps
-void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, HistoryHandlingBehavior history_handling)
+void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, Bindings::NavigationHistoryBehavior history_handling)
 {
     // 1. Let navigable be document's node navigable.
     auto navigable = document.navigable();
@@ -1736,14 +1736,14 @@ void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_u
 
     // 4. If document's is initial about:blank is true, then set historyHandling to "replace".
     if (document.is_initial_about_blank()) {
-        history_handling = HistoryHandlingBehavior::Replace;
+        history_handling = Bindings::NavigationHistoryBehavior::Replace;
     }
 
     // 5. Let entryToReplace be activeEntry if historyHandling is "replace", otherwise null.
-    auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_entry : nullptr;
+    auto entry_to_replace = history_handling == Bindings::NavigationHistoryBehavior::Replace ? active_entry : nullptr;
 
     // 6. If historyHandling is "push", then:
-    if (history_handling == HistoryHandlingBehavior::Push) {
+    if (history_handling == Bindings::NavigationHistoryBehavior::Push) {
         // FIXME: 1. Increment document's history object's index.
         // FIXME: 2. Set document's history object's length to its index + 1.
         TODO();

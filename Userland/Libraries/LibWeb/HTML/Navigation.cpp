@@ -189,23 +189,6 @@ bool Navigation::can_go_forward() const
     return (m_current_entry_index != static_cast<i64>(m_entry_list.size()));
 }
 
-HistoryHandlingBehavior to_history_handling_behavior(Bindings::NavigationHistoryBehavior b)
-{
-    // A history handling behavior is a NavigationHistoryBehavior that is either "push" or "replace",
-    // i.e., that has been resolved away from any initial "auto" value.
-    VERIFY(b != Bindings::NavigationHistoryBehavior::Auto);
-
-    switch (b) {
-    case Bindings::NavigationHistoryBehavior::Push:
-        return HistoryHandlingBehavior::Push;
-    case Bindings::NavigationHistoryBehavior::Replace:
-        return HistoryHandlingBehavior::Replace;
-    case Bindings::NavigationHistoryBehavior::Auto:
-        VERIFY_NOT_REACHED();
-    };
-    VERIFY_NOT_REACHED();
-}
-
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-navigate
 WebIDL::ExceptionOr<NavigationResult> Navigation::navigate(String url, NavigationNavigateOptions const& options)
 {
@@ -267,7 +250,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::navigate(String url, Navigatio
     //       of the navigation, and we don't need to deal with the allowed by sandboxing to navigate check and its
     //       acccompanying exceptionsEnabled flag. We just treat all navigations as if they come from the Document
     //       corresponding to this Navigation object itself (i.e., document).
-    [[maybe_unused]] auto history_handling_behavior = to_history_handling_behavior(options.history);
+    [[maybe_unused]] auto history_handling_behavior = options.history;
     // FIXME: Actually call navigate once Navigables are implemented enough to guarantee a node navigable on
     //        an active document that's not being unloaded.
     //        document.navigable().navigate(url, document, history behavior, state)
@@ -1074,7 +1057,7 @@ bool Navigation::inner_navigate_event_firing_algorithm(
         //    set to navigationType.
         // FIXME: Pass the serialized data to this algorithm
         if (navigation_type == Bindings::NavigationType::Push || navigation_type == Bindings::NavigationType::Replace) {
-            auto history_handling = navigation_type == Bindings::NavigationType::Push ? HistoryHandlingBehavior::Push : HistoryHandlingBehavior::Replace;
+            auto history_handling = navigation_type == Bindings::NavigationType::Push ? Bindings::NavigationHistoryBehavior::Push : Bindings::NavigationHistoryBehavior::Replace;
             perform_url_and_history_update_steps(document, event->destination()->raw_url(), history_handling);
         }
         // Big spec note about reload here

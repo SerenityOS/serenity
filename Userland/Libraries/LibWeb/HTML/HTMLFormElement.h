@@ -9,10 +9,10 @@
 #pragma once
 
 #include <LibWeb/ARIA/Roles.h>
+#include <LibWeb/Bindings/NavigationPrototype.h>
 #include <LibWeb/HTML/AbstractBrowsingContext.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
-#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 
 namespace Web::HTML {
 
@@ -96,12 +96,12 @@ private:
 
     ErrorOr<String> pick_an_encoding() const;
 
-    ErrorOr<void> mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
-    ErrorOr<void> submit_as_entity_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
-    void get_action_url(AK::URL parsed_action, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
-    ErrorOr<void> mail_with_headers(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
-    ErrorOr<void> mail_as_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
-    void plan_to_navigate_to(AK::URL url, Variant<Empty, String, POSTResource> post_resource, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
+    ErrorOr<void> mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling);
+    ErrorOr<void> submit_as_entity_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling);
+    void get_action_url(AK::URL parsed_action, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling);
+    ErrorOr<void> mail_with_headers(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling);
+    ErrorOr<void> mail_as_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling);
+    void plan_to_navigate_to(AK::URL url, Variant<Empty, String, POSTResource> post_resource, JS::NonnullGCPtr<Navigable> target_navigable, Bindings::NavigationHistoryBehavior history_handling);
 
     bool m_firing_submission_events { false };
 

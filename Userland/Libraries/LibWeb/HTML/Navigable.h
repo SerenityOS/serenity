@@ -14,7 +14,6 @@
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
-#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/POSTResource.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
@@ -134,10 +133,10 @@ public:
         ReferrerPolicy::ReferrerPolicy = ReferrerPolicy::ReferrerPolicy::EmptyString,
         UserNavigationInvolvement = UserNavigationInvolvement::None);
 
-    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, Bindings::NavigationHistoryBehavior, String navigation_id);
 
     WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> evaluate_javascript_url(AK::URL const&, Origin const& new_document_origin, String navigation_id);
-    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, Bindings::NavigationHistoryBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id);
 
     void reload();
 
@@ -213,7 +212,7 @@ private:
 HashTable<Navigable*>& all_navigables();
 
 bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document);
-void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable>, HistoryHandlingBehavior, JS::NonnullGCPtr<SessionHistoryEntry>);
-void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Reload);
+void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable>, Bindings::NavigationHistoryBehavior, JS::NonnullGCPtr<SessionHistoryEntry>);
+void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, Bindings::NavigationHistoryBehavior history_handling = Bindings::NavigationHistoryBehavior::Replace);
 
 }
