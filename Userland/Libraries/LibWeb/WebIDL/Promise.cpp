@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HostDefined.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -179,6 +180,91 @@ void mark_promise_as_handled(Promise const& promise)
     // To mark as handled a Promise<T> promise, set promise.[[Promise]].[[PromiseIsHandled]] to true.
     auto promise_object = verify_cast<JS::Promise>(promise.promise().ptr());
     promise_object->set_is_handled();
+}
+
+// https://webidl.spec.whatwg.org/#wait-for-all
+void wait_for_all(JS::Realm& realm, JS::MarkedVector<JS::NonnullGCPtr<Promise>> const& promises, JS::SafeFunction<void(JS::MarkedVector<JS::Value> const&)> success_steps, JS::SafeFunction<void(JS::Value)> failure_steps)
+{
+    // FIXME: Fix spec typo, fullfilled --> fulfilled
+    // 1. Let fullfilledCount be 0.
+    size_t fulfilled_count = 0;
+
+    // 2. Let rejected be false.
+    auto rejected = false;
+
+    // 3. Let rejectionHandlerSteps be the following steps given arg:
+    auto rejection_handler_steps = [&rejected, failure_steps = move(failure_steps)](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+        // 1. If rejected is true, abort these steps.
+        if (rejected)
+            return JS::js_undefined();
+
+        // 2. Set rejected to true.
+        rejected = true;
+
+        // 3. Perform failureSteps given arg.
+        failure_steps(vm.argument(0));
+
+        return JS::js_undefined();
+    };
+
+    // 4. Let rejectionHandler be CreateBuiltinFunction(rejectionHandlerSteps, « »):
+    auto rejection_handler = JS::NativeFunction::create(realm, move(rejection_handler_steps), 1, "");
+
+    // 5. Let total be promises’s size.
+    auto total = promises.size();
+
+    // 6. If total is 0, then:
+    if (total == 0) {
+        // 1. Queue a microtask to perform successSteps given « ».
+        HTML::queue_a_microtask(nullptr, [&realm, success_steps = move(success_steps)] {
+            success_steps(JS::MarkedVector<JS::Value> { realm.heap() });
+        });
+
+        // 2. Return.
+        return;
+    }
+
+    // 7. Let index be 0.
+    auto index = 0;
+
+    // 8. Let result be a list containing total null values.
+    auto result = JS::MarkedVector<JS::Value>(realm.heap());
+    result.ensure_capacity(total);
+    for (size_t i = 0; i < total; ++i)
+        result.unchecked_append(JS::js_null());
+
+    // 9. For each promise of promises:
+    for (auto const& promise : promises) {
+        // 1. Let promiseIndex be index.
+        auto promise_index = index;
+
+        // FIXME: This should be fulfillmentHandlerSteps
+        // 2. Let fulfillmentHandler be the following steps given arg:
+        auto fulfillment_handler_steps = [&](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+            auto arg = vm.argument(0);
+
+            // 1. Set result[promiseIndex] to arg.
+            result[promise_index] = arg;
+
+            // 2. Set fullfilledCount to fullfilledCount + 1.
+            ++fulfilled_count;
+
+            // 3. If fullfilledCount equals total, then perform successSteps given result.
+            if (fulfilled_count == total)
+                success_steps(result);
+
+            return JS::js_undefined();
+        };
+
+        // 3. Let fulfillmentHandler be CreateBuiltinFunction(fulfillmentHandler, « »):
+        auto fulfillment_handler = JS::NativeFunction::create(realm, move(fulfillment_handler_steps), 1, "");
+
+        // 4. Perform PerformPromiseThen(promise, fulfillmentHandler, rejectionHandler).
+        static_cast<JS::Promise&>(*promise->promise()).perform_then(fulfillment_handler, rejection_handler, nullptr);
+
+        // 5. Set index to index + 1.
+        ++index;
+    }
 }
 
 }
