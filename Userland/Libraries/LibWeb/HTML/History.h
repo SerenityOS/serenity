@@ -27,6 +27,9 @@ public:
     WebIDL::ExceptionOr<void> forward();
     WebIDL::ExceptionOr<u64> length() const;
 
+    u64 m_index { 0 };
+    u64 m_length { 0 };
+
 private:
     History(JS::Realm&, DOM::Document&);
 

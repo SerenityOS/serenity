@@ -54,16 +54,12 @@ WebIDL::ExceptionOr<void> History::replace_state(JS::Value data, String const&, 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-length
 WebIDL::ExceptionOr<u64> History::length() const
 {
-    // 1. If this's associated Document is not fully active, then throw a "SecurityError" DOMException.
+    // 1. If this's relevant global object's associated Document is not fully active, then throw a "SecurityError" DOMException.
     if (!m_associated_document->is_fully_active())
         return WebIDL::SecurityError::create(realm(), "Cannot perform length on a document that isn't fully active."_fly_string);
 
-    // 2. Return the number of entries in the top-level browsing context's joint session history.
-    auto const* browsing_context = m_associated_document->browsing_context();
-
-    // FIXME: We don't have the concept of "joint session history", this is an ad-hoc implementation.
-    //        See: https://html.spec.whatwg.org/multipage/history.html#joint-session-history
-    return browsing_context->session_history().size();
+    // 2. Return this's length.
+    return m_length;
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-go
