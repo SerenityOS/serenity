@@ -39,11 +39,20 @@ public:
 private:
     HTMLSlotElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual bool is_html_slot_element() const override { return true; }
+
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     // https://html.spec.whatwg.org/multipage/scripting.html#manually-assigned-nodes
     Vector<DOM::Slottable> m_manually_assigned_nodes;
 };
+
+}
+
+namespace Web::DOM {
+
+template<>
+inline bool Node::fast_is<HTML::HTMLSlotElement>() const { return is_html_slot_element(); }
 
 }

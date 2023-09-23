@@ -103,6 +103,7 @@ public:
     virtual bool is_html_table_cell_element() const { return false; }
     virtual bool is_html_br_element() const { return false; }
     virtual bool is_html_button_element() const { return false; }
+    virtual bool is_html_slot_element() const { return false; }
     virtual bool is_navigable_container() const { return false; }
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> pre_insert(JS::NonnullGCPtr<Node>, JS::GCPtr<Node>);
