@@ -12,6 +12,7 @@
 #include <LibWeb/Bindings/NavigationPrototype.h>
 #include <LibWeb/DOM/AbortController.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/ErrorEvent.h>
 #include <LibWeb/HTML/History.h>
 #include <LibWeb/HTML/NavigateEvent.h>
@@ -1200,6 +1201,55 @@ bool Navigation::inner_navigate_event_firing_algorithm(
     // 36. If event's interception state is "none", then return true.
     // 37. Return false.
     return event->interception_state() == NavigateEvent::InterceptionState::None;
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#fire-a-traverse-navigate-event
+bool Navigation::fire_a_traverse_navigate_event(JS::NonnullGCPtr<SessionHistoryEntry> destination_she, UserNavigationInvolvement user_involvement)
+{
+    auto& realm = relevant_realm(*this);
+    auto& vm = this->vm();
+
+    // 1. Let event be the result of creating an event given NavigateEvent, in navigation's relevant realm.
+    // 2. Set event's classic history API state to null.
+    // AD-HOC: These are handled in the inner algorithm
+
+    // 3. Let destination be a new NavigationDestination created in navigation's relevant realm.
+    auto destination = NavigationDestination::create(realm);
+
+    // 4. Set destination's URL to destinationSHE's URL.
+    destination->set_url(destination_she->url);
+
+    // 5. Let destinationNHE be the NavigationHistoryEntry in navigation's entry list whose session history entry is destinationSHE,
+    //    or null if no such NavigationHistoryEntry exists.
+    auto destination_nhe = m_entry_list.find_if([destination_she](auto& nhe) {
+        return &nhe->session_history_entry() == destination_she;
+    });
+
+    // 6. If destinationNHE is non-null, then:
+    if (destination_nhe != m_entry_list.end()) {
+        // 1. Set destination's entry to destinationNHE.
+        destination->set_entry(*destination_nhe);
+
+        // 2. Set destination's state to destinationSHE's navigation API state.
+        destination->set_state(destination_she->navigation_api_state);
+    }
+
+    // 7. Otherwise:
+    else {
+        // 1. Set destination's entry to null.
+        destination->set_entry(nullptr);
+
+        // 2. Set destination's state to StructuredSerializeForStorage(null).
+        destination->set_state(MUST(structured_serialize_for_storage(vm, JS::js_null())));
+    }
+
+    // 8. Set destination's is same document to true if destinationSHE's document is equal to
+    //    navigation's relevant global object's associated Document; otherwise false.
+    destination->set_is_same_document(destination_she->document_state->document() == &verify_cast<Window>(relevant_global_object(*this)).associated_document());
+
+    // 9. Return the result of performing the inner navigate event firing algorithm given navigation, "traverse", event, destination, userInvolvement, null, and null.
+    // AD-HOC: We don't pass the event, but we do pass the classic_history_api state at the end to be set later
+    return inner_navigate_event_firing_algorithm(Bindings::NavigationType::Traverse, destination, user_involvement, {}, {}, {});
 }
 
 }
