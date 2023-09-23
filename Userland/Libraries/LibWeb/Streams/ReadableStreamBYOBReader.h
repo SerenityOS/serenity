@@ -16,7 +16,9 @@
 namespace Web::Streams {
 
 // https://streams.spec.whatwg.org/#read-into-request
-class ReadIntoRequest : public RefCounted<ReadIntoRequest> {
+class ReadIntoRequest : public JS::Cell {
+    JS_CELL(ReadIntoRequest, JS::Cell);
+
 public:
     virtual ~ReadIntoRequest() = default;
 
@@ -43,7 +45,7 @@ public:
 
     void release_lock();
 
-    Vector<NonnullRefPtr<ReadIntoRequest>>& read_into_requests() { return m_read_into_requests; }
+    Vector<JS::NonnullGCPtr<ReadIntoRequest>>& read_into_requests() { return m_read_into_requests; }
 
 private:
     explicit ReadableStreamBYOBReader(JS::Realm&);
@@ -52,7 +54,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreambyobreader-readintorequests
     // A list of read-into requests, used when a consumer requests chunks sooner than they are available
-    Vector<NonnullRefPtr<ReadIntoRequest>> m_read_into_requests;
+    Vector<JS::NonnullGCPtr<ReadIntoRequest>> m_read_into_requests;
 };
 
 }
