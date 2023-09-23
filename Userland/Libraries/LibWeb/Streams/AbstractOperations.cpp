@@ -312,10 +312,10 @@ void readable_stream_error(ReadableStream& stream, JS::Value error)
     // 9. Otherwise,
     else {
         // 1. Assert: reader implements ReadableStreamBYOBReader.
-        // 2. Perform ! ReadableStreamBYOBReaderErrorReadIntoRequests(reader, e).
+        VERIFY(reader->has<JS::NonnullGCPtr<ReadableStreamBYOBReader>>());
 
-        // FIXME: Handle BYOBReader
-        TODO();
+        // 2. Perform ! ReadableStreamBYOBReaderErrorReadIntoRequests(reader, e).
+        readable_stream_byob_reader_error_read_into_requests(*reader->get<JS::NonnullGCPtr<ReadableStreamBYOBReader>>(), error);
     }
 }
 
