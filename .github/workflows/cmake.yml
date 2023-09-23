@@ -21,6 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
+        use-rr: ['true', 'false']
         os: [ubuntu-22.04]
         arch: ['x86_64', 'aarch64']
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
@@ -29,6 +30,10 @@ jobs:
           # We currently manually disable the ALL_DEBUG build on AArch64 for sake of saving CI time, as it's not our main target.
           - debug-options: 'ALL_DEBUG'
             arch: 'aarch64'
+          - use-rr: 'true'
+            arch: 'aarch64'
+          - use-rr: 'false'
+            arch: 'x86_64'
 
     steps:
       # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
@@ -64,6 +69,10 @@ jobs:
             # FIXME: Remove this when we no longer build our own Qemu binary.
             sudo apt-get install libgtk-3-dev libpixman-1-dev libsdl2-dev libslirp-dev
           fi
+      - name: Install rr
+        if: ${{ matrix.use-rr == 'true' }}
+        run: |
+          sudo apt-get install rr
       - name: Install JS dependencies
         run: sudo npm install -g prettier@2.7.1
       - name: Install Python dependencies
@@ -237,12 +246,14 @@ jobs:
         run: ninja install && ninja qemu-image
 
       - name: Run On-Target Tests
+        id: on-target-tests
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch != 'aarch64' }}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
           SERENITY_KERNEL_CMDLINE: "graphics_subsystem_mode=off panic=shutdown system_mode=self-test"
           SERENITY_RUN: "ci"
+          SERENITY_QEMU_USE_RR: ${{ matrix.use-rr }}
         run: |
           echo "::group::ninja run # Qemu output"
           ninja run
@@ -265,3 +276,17 @@ jobs:
         if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         run: '[ ! -e debug.log ] || cat debug.log'
+      - name: Package and publish rr artefacts
+        #if: ${{ !cancelled() && steps.on-target-tests.outcome == 'failure' && matrix.use-rr == 'true' && matrix.debug-options == 'NORMAL_DEBUG' }}
+        if: ${{ !cancelled() && matrix.use-rr == 'true' && matrix.debug-options == 'NORMAL_DEBUG' }}
+        working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
+        run: |
+          rr pack pack-dir
+          tar czvf rr-pack.tar.gz pack-dir
+          rm -fr pack-dir
+      - uses: actions/upload-artifact@v3
+        if: ${{ !cancelled() && matrix.use-rr == 'true' && matrix.debug-options == 'NORMAL_DEBUG' }}
+        with:
+          name: Packed rr trace
+          path: ${{ github.workspace }}/Build/${{ matrix.arch }}/rr-pack.tar.gz
+

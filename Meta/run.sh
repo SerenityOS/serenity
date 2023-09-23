@@ -10,6 +10,12 @@ die() {
 
 SCRIPT_DIR="$(dirname "${0}")"
 
+if [ "${SERENITY_QEMU_USE_RR}" = true ]; then
+    SERENITY_RR_INVOKE_ARGS="rr record -n -o rr-trace"
+else
+    SERENITY_RR_INVOKE_ARGS=""
+fi
+
 # https://www.shellcheck.net/wiki/SC1090 No need to shellcheck private config.
 # shellcheck source=/dev/null
 [ -x "$SCRIPT_DIR/../run-local.sh" ] && . "$SCRIPT_DIR/../run-local.sh"
@@ -217,7 +223,7 @@ if [ -z "$SERENITY_QEMU_DISPLAY_DEVICE" ]; then
         else
             SERENITY_QEMU_DISPLAY_DEVICE="virtio-vga-gl "
         fi
-        
+
         if [ "$SERENITY_SCREENS" -gt 1 ]; then
             die "SERENITY_GL and multi-monitor support cannot be setup simultaneously"
         fi
@@ -383,7 +389,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device isa-vga
 -device isa-ide
 $SERENITY_BOOT_DRIVE
--device i8042 
+-device i8042
 -device ide-hd,drive=disk
 "
 
@@ -440,10 +446,10 @@ if [ "$SERENITY_RUN" = "b" ]; then
         [ -z "$SERENITY_SOURCE_DIR" ] && die 'SERENITY_SOURCE_DIR not set or empty'
         SERENITY_BOCHSRC="$SERENITY_SOURCE_DIR/Meta/bochsrc"
     }
-    "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_BOCHSRC"
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_BOCHSRC"
 elif [ "$SERENITY_RUN" = "qn" ]; then
     # Meta/run.sh qn: qemu without network
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         -device $SERENITY_ETHERNET_DEVICE_TYPE \
         $SERENITY_KERNEL_AND_INITRD \
@@ -452,7 +458,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
     sudo ip tuntap del dev tap0 mode tap || true
     sudo ip tuntap add dev tap0 mode tap user "$(id -u)"
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
@@ -463,7 +469,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
     sudo ip tuntap del dev tap0 mode tap
 elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
     # Meta/run.sh qgrub: qemu with grub/extlinux
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
@@ -471,7 +477,7 @@ elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
 elif [ "$SERENITY_RUN" = "q35" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU Q35 machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE \
@@ -480,7 +486,7 @@ elif [ "$SERENITY_RUN" = "q35" ]; then
 elif [ "$SERENITY_RUN" = "isapc" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU ISA-PC machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ISA_PC_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS \
@@ -490,7 +496,7 @@ elif [ "$SERENITY_RUN" = "isapc" ]; then
 elif [ "$SERENITY_RUN" = "microvm" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU MicroVM machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_MICROVM_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS \
@@ -499,19 +505,19 @@ elif [ "$SERENITY_RUN" = "microvm" ]; then
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$SERENITY_RUN" = "q35grub" ]; then
     # Meta/run.sh q35grub: qemu (q35 chipset) with SerenityOS, using a grub disk image
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE
 elif [ "$SERENITY_RUN" = "limine" ]; then
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG
 elif [ "$SERENITY_RUN" = "ci" ]; then
     # Meta/run.sh ci: qemu in text mode
     echo "Running QEMU in CI"
     if [ "$SERENITY_ARCH" = "aarch64" ]; then
-      "$SERENITY_QEMU_BIN" \
+      $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
             $SERENITY_EXTRA_QEMU_ARGS \
             $SERENITY_VIRT_TECH_ARG \
             $SERENITY_BOOT_DRIVE \
@@ -526,7 +532,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
             $SERENITY_KERNEL_AND_INITRD \
             -append "${SERENITY_KERNEL_CMDLINE}"
     else
-        "$SERENITY_QEMU_BIN" \
+        $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
             $SERENITY_EXTRA_QEMU_ARGS \
             $SERENITY_VIRT_TECH_ARG \
             $SERENITY_BOOT_DRIVE \
@@ -544,7 +550,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
     fi
 else
     # Meta/run.sh: qemu with user networking
-    "$SERENITY_QEMU_BIN" \
+    $SERENITY_RR_INVOKE_ARGS "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
