@@ -34,8 +34,8 @@ public:
     void set_system_visibility_state(VisibilityState);
 
     struct HistoryObjectLengthAndIndex {
-        size_t script_history_length;
-        size_t script_history_index;
+        u64 script_history_length;
+        u64 script_history_index;
     };
     HistoryObjectLengthAndIndex get_the_history_object_length_and_index(int) const;
 

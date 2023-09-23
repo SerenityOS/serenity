@@ -407,14 +407,14 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
         navigable->set_ongoing_navigation({});
 
         // 8. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
-        auto [script_history_length, script_history_index] = get_the_history_object_length_and_index(target_step);
-        (void)script_history_length;
-        (void)script_history_index;
+        auto history_object_length_and_index = get_the_history_object_length_and_index(target_step);
+        auto script_history_length = history_object_length_and_index.script_history_length;
+        auto script_history_index = history_object_length_and_index.script_history_index;
 
         // FIXME: 9. Append navigable to navigablesThatMustWaitBeforeHandlingSyncNavigation.
 
         // 10. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
-        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only] {
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index] {
             // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
             if (navigable->has_been_destroyed())
                 return;
@@ -439,8 +439,10 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
             // FIXME: 2. If targetEntry's document is not equal to displayedDocument, then queue a global task on the navigation and traversal task source given targetEntry's document's
             //           relevant global object to perform the following step. Otherwise, continue onward to perform the following step within the currently-queued task.
 
-            // FIXME: 3. Update document for history step application given targetEntry's document, targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength, and
-            //           scriptHistoryIndex.
+            // 3. Update document for history step application given targetEntry's document, targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength, and
+            //    scriptHistoryIndex and entriesForNavigationAPI.
+            //    FIXME: Pass entriesForNavigationAPI
+            target_entry->document_state->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index);
 
             // 4. Increment completedChangeJobs.
             completed_change_jobs++;

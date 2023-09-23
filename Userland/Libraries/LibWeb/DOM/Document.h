@@ -531,6 +531,8 @@ public:
 
     HTML::SourceSnapshotParams snapshot_source_snapshot_params() const;
 
+    void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactive, size_t script_history_length, size_t script_history_index);
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -730,6 +732,9 @@ private:
     RefPtr<Core::Timer> m_active_refresh_timer;
 
     bool m_temporary_document_for_fragment_parsing { false };
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#latest-entry
+    JS::GCPtr<HTML::SessionHistoryEntry> m_latest_entry;
 };
 
 template<>
