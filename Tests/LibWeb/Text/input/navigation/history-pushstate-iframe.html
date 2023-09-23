@@ -1,0 +1,20 @@
+<script src="../include.js"></script>
+<script>
+    try {
+        const initialHistoryLength = window.history.length;
+
+        history.pushState({}, "hello", "history-pushstate-iframe.html#hello");
+
+        if (window.self !== window.top) {
+            parent.postMessage(
+                "history object length has changed by " +
+                    (window.history.length - initialHistoryLength),
+                "*"
+            );
+        } else {
+            test(() => {});
+        }
+    } catch (e) {
+        if (window.self !== window.top) parent.postMessage("ERROR:" + e, "*");
+    }
+</script>

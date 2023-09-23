@@ -38,17 +38,17 @@ void History::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-pushstate
+// The pushState(data, unused, url) method steps are to run the shared history push/replace state steps given this, data, url, and "push".
 WebIDL::ExceptionOr<void> History::push_state(JS::Value data, String const&, Optional<String> const& url)
 {
-    // NOTE: The second parameter of this function is intentionally unused.
-    return shared_history_push_replace_state(data, url, IsPush::Yes);
+    return shared_history_push_replace_state(data, url, HistoryHandlingBehavior::Push);
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-replacestate
+// The replaceState(data, unused, url) method steps are to run the shared history push/replace state steps given this, data, url, and "replace".
 WebIDL::ExceptionOr<void> History::replace_state(JS::Value data, String const&, Optional<String> const& url)
 {
-    // NOTE: The second parameter of this function is intentionally unused.
-    return shared_history_push_replace_state(data, url, IsPush::No);
+    return shared_history_push_replace_state(data, url, HistoryHandlingBehavior::Replace);
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-length
@@ -145,7 +145,7 @@ bool can_have_its_url_rewritten(DOM::Document const& document, AK::URL const& ta
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#shared-history-push/replace-state-steps
-WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value value, Optional<String> const& url, IsPush)
+WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value value, Optional<String> const& url, HistoryHandlingBehavior history_handling)
 {
     // 1. Let document be history's associated Document.
     auto& document = m_associated_document;
@@ -188,10 +188,11 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
     ///          with navigationType set to historyHandling, isSameDocument set to true, destinationURL set to newURL,
     //           and classicHistoryAPIState set to serializedData.
     // FIXME: 9. If continue is false, then return.
-    // FIXME: 10. Run the URL and history update steps given document and newURL, with serializedData set to
-    //            serializedData and historyHandling set to historyHandling.
 
-    dbgln("FIXME: Implement shared_history_push_replace_state.");
+    // 10. Run the URL and history update steps given document and newURL, with serializedData set to
+    //     serializedData and historyHandling set to historyHandling.
+    perform_url_and_history_update_steps(document, new_url, history_handling);
+
     return {};
 }
 
