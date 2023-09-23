@@ -20,7 +20,6 @@ __thread int errno_storage;
 char** environ;
 bool __environ_is_malloced;
 bool __stdio_is_initialized;
-bool s_global_initializers_ran;
 void* __auxiliary_vector;
 
 static void __auxiliary_vector_init();
