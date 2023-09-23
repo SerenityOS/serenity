@@ -43,6 +43,12 @@ struct FileMetadata {
     };
 };
 
+enum class FieldToSortBy {
+    ModifiedAt,
+    Name,
+    Size
+};
+
 static int do_file_system_object_long(DeprecatedString const& path);
 static int do_file_system_object_short(DeprecatedString const& path);
 
@@ -63,7 +69,7 @@ static bool flag_print_numeric = false;
 static bool flag_hide_group = false;
 static bool flag_human_readable = false;
 static bool flag_human_readable_si = false;
-static bool flag_sort_by_timestamp = false;
+static FieldToSortBy flag_sort_by { FieldToSortBy::Name };
 static bool flag_reverse_sort = false;
 static bool flag_disable_hyperlinks = false;
 static bool flag_recursive = false;
@@ -108,7 +114,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_ignore_backups, "Do not list implied entries ending with ~", "ignore-backups", 'B');
     args_parser.add_option(flag_list_directories_only, "List directories themselves, not their contents", "directory", 'd');
     args_parser.add_option(flag_long, "Display long info", "long", 'l');
-    args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't');
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
+        .help_string = "Sort files by timestamp (newest first)",
+        .short_name = 't',
+        .accept_value = [](StringView) {
+            flag_sort_by = FieldToSortBy::ModifiedAt;
+            return true;
+        } });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
+        .help_string = "Sort files by size (largest first)",
+        .short_name = 'S',
+        .accept_value = [](StringView) {
+            flag_sort_by = FieldToSortBy::Size;
+            return true;
+        } });
     args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
     args_parser.add_option(flag_classify, "Append a file type indicator to entries", "classify", 'F');
     args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');
@@ -589,7 +610,9 @@ int do_file_system_object_short(DeprecatedString const& path)
 
 bool filemetadata_comparator(FileMetadata& a, FileMetadata& b)
 {
-    if (flag_sort_by_timestamp && (a.stat.st_mtime != b.stat.st_mtime))
+    if (flag_sort_by == FieldToSortBy::ModifiedAt && (a.stat.st_mtime != b.stat.st_mtime))
         return (a.stat.st_mtime > b.stat.st_mtime) ^ flag_reverse_sort;
+    if (flag_sort_by == FieldToSortBy::Size && a.stat.st_size != b.stat.st_size)
+        return (a.stat.st_size > b.stat.st_size) ^ flag_reverse_sort;
     return (a.name < b.name) ^ flag_reverse_sort;
 }

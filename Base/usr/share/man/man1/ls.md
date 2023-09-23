@@ -23,7 +23,8 @@ If no *path* argument is provided the current working directory is used.
 * `-F`, `--classify`: Append a file type indicator to entries
 * `-d`, `--directory`: List directories themselves, not their contents
 * `-l`, `--long`: Display long info
-* `-t`: Sort files by timestamp
+* `-t`: Sort files by timestamp (newest first)
+* `-S`: Sort files by size (largest first)
 * `-r`, `--reverse`: Reverse sort order
 * `-G`: Use pretty colors
 * `-i`, `--inode`: Show inode ids
