@@ -45,6 +45,8 @@ void ReadableStreamBYOBReader::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     ReadableStreamGenericReaderMixin::visit_edges(visitor);
+    for (auto& request : m_read_into_requests)
+        visitor.visit(request);
 }
 
 }
