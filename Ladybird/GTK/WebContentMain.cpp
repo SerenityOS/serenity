@@ -11,7 +11,7 @@
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Loader/FrameLoader.h>
+#include <LibWeb/Loader/FileDirectoryLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWebView/RequestServerAdapter.h>
@@ -37,10 +37,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPlugin);
-    Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
-    Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
+
+    Web::set_resource_directory_url(DeprecatedString::formatted("file://{}/res", s_serenity_resource_root));
+    Web::set_directory_page_url(DeprecatedString::formatted("file://{}/res/html/directory.html", s_serenity_resource_root));
 
     if (use_lagom_networking) {
         auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
