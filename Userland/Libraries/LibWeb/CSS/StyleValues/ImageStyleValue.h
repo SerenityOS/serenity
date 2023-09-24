@@ -10,9 +10,11 @@
 #pragma once
 
 #include <AK/URL.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
+#include <LibWeb/HTML/SharedImageRequest.h>
 
 namespace Web::CSS {
 
@@ -25,6 +27,13 @@ public:
         return adopt_ref(*new (nothrow) ImageStyleValue(url));
     }
     virtual ~ImageStyleValue() override = default;
+
+    void visit_edges(JS::Cell::Visitor& visitor) const
+    {
+        // FIXME: visit_edges in non-GC allocated classes is confusing pattern.
+        //        Consider making StyleValue to be GC allocated instead.
+        visitor.visit(m_image_request);
+    }
 
     virtual String to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
@@ -44,7 +53,7 @@ public:
 private:
     ImageStyleValue(AK::URL const&);
 
-    JS::Handle<HTML::SharedImageRequest> m_image_request;
+    JS::GCPtr<HTML::SharedImageRequest> m_image_request;
 
     void animate();
     Gfx::Bitmap const* bitmap(size_t frame_index, Gfx::IntSize = {}) const;

@@ -9,6 +9,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Infra/Strings.h>
@@ -36,6 +37,15 @@ PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(JS::Realm& 
     , m_properties(move(properties))
     , m_custom_properties(move(custom_properties))
 {
+}
+
+void PropertyOwningCSSStyleDeclaration::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& property : m_properties) {
+        if (property.value->is_image())
+            property.value->as_image().visit_edges(visitor);
+    }
 }
 
 String PropertyOwningCSSStyleDeclaration::item(size_t index) const
