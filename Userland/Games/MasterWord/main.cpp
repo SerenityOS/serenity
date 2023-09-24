@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "MainWidget.h"
 #include "WordGame.h"
 #include <AK/URL.h>
-#include <Games/MasterWord/MasterWordGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -47,8 +47,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_resizable(false);
     window->set_auto_shrink(true);
 
-    auto main_widget = window->set_main_widget<GUI::Widget>();
-    TRY(main_widget->load_from_gml(master_word_gml));
+    auto main_widget = TRY(MasterWord::MainWidget::try_create());
+    window->set_main_widget(main_widget);
     auto& game = *main_widget->find_descendant_of_type_named<MasterWord::WordGame>("word_game");
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {

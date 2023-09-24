@@ -18,8 +18,6 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
-REGISTER_WIDGET(MasterWord, WordGame)
-
 // TODO: Add stats
 namespace MasterWord {
 
