@@ -14,6 +14,8 @@
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/PEM.h>
+#include <LibCrypto/Curves/Ed25519.h>
+#include <LibCrypto/Curves/SECP256r1.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibFileSystem/FileSystem.h>
@@ -347,40 +349,83 @@ bool Context::verify_certificate_pair(Certificate const& subject, Certificate co
     Crypto::Hash::HashKind kind = Crypto::Hash::HashKind::Unknown;
     auto identifier = subject.signature_algorithm.identifier;
 
-    if (identifier == rsa_encryption_oid)
+    bool is_rsa = true;
+
+    if (identifier == rsa_encryption_oid) {
         kind = Crypto::Hash::HashKind::None;
-    if (identifier == rsa_md5_encryption_oid)
+    } else if (identifier == rsa_md5_encryption_oid) {
         kind = Crypto::Hash::HashKind::MD5;
-    if (identifier == rsa_sha1_encryption_oid)
+    } else if (identifier == rsa_sha1_encryption_oid) {
         kind = Crypto::Hash::HashKind::SHA1;
-    if (identifier == rsa_sha256_encryption_oid)
+    } else if (identifier == rsa_sha256_encryption_oid) {
         kind = Crypto::Hash::HashKind::SHA256;
-    if (identifier == rsa_sha384_encryption_oid)
+    } else if (identifier == rsa_sha384_encryption_oid) {
         kind = Crypto::Hash::HashKind::SHA384;
-    if (identifier == rsa_sha512_encryption_oid)
+    } else if (identifier == rsa_sha512_encryption_oid) {
         kind = Crypto::Hash::HashKind::SHA512;
+    } else if (identifier == ecdsa_with_sha256_encryption_oid) {
+        kind = Crypto::Hash::HashKind::SHA256;
+        is_rsa = false;
+    } else if (identifier == ecdsa_with_sha384_encryption_oid) {
+        kind = Crypto::Hash::HashKind::SHA384;
+        is_rsa = false;
+    } else if (identifier == ecdsa_with_sha512_encryption_oid) {
+        kind = Crypto::Hash::HashKind::SHA512;
+        is_rsa = false;
+    }
 
     if (kind == Crypto::Hash::HashKind::Unknown) {
-        dbgln("verify_certificate_pair: Unknown signature algorithm, expected RSA with SHA1/256/384/512, got OID {}", identifier);
+        dbgln("verify_certificate_pair: Unknown signature algorithm, expected RSA or ECDSA with SHA1/256/384/512, got OID {}", identifier);
         return false;
     }
 
-    Crypto::PK::RSAPrivateKey dummy_private_key;
-    Crypto::PK::RSAPublicKey public_key_copy { issuer.public_key.rsa };
-    auto rsa = Crypto::PK::RSA(public_key_copy, dummy_private_key);
-    auto verification_buffer_result = ByteBuffer::create_uninitialized(subject.signature_value.size());
-    if (verification_buffer_result.is_error()) {
-        dbgln("verify_certificate_pair: Unable to allocate buffer for verification");
+    if (is_rsa) {
+        Crypto::PK::RSAPrivateKey dummy_private_key;
+        Crypto::PK::RSAPublicKey public_key_copy { issuer.public_key.rsa };
+        auto rsa = Crypto::PK::RSA(public_key_copy, dummy_private_key);
+        auto verification_buffer_result = ByteBuffer::create_uninitialized(subject.signature_value.size());
+        if (verification_buffer_result.is_error()) {
+            dbgln("verify_certificate_pair: Unable to allocate buffer for verification");
+            return false;
+        }
+        auto verification_buffer = verification_buffer_result.release_value();
+        auto verification_buffer_bytes = verification_buffer.bytes();
+        rsa.verify(subject.signature_value, verification_buffer_bytes);
+
+        ReadonlyBytes message = subject.tbs_asn1.bytes();
+        auto pkcs1 = Crypto::PK::EMSA_PKCS1_V1_5<Crypto::Hash::Manager>(kind);
+        auto verification = pkcs1.verify(message, verification_buffer_bytes, subject.signature_value.size() * 8);
+        return verification == Crypto::VerificationConsistency::Consistent;
+    }
+
+    // ECDSA hash verification: hash, then check signature against the specific curve
+    switch (issuer.public_key.algorithm.ec_parameters) {
+    case SupportedGroup::SECP256R1: {
+        Crypto::Hash::Manager hasher(kind);
+        hasher.update(subject.tbs_asn1.bytes());
+        auto hash = hasher.digest();
+
+        Crypto::Curves::SECP256r1 curve;
+        auto result = curve.verify(hash.bytes(), issuer.public_key.raw_key, subject.signature_value);
+        if (result.is_error()) {
+            dbgln("verify_certificate_pair: Failed to check SECP256r1 signature {}", result.release_error());
+            return false;
+        }
+        return result.value();
+    }
+    case SupportedGroup::X25519: {
+        Crypto::Curves::Ed25519 curve;
+        auto result = curve.verify(issuer.public_key.raw_key, subject.signature_value, subject.tbs_asn1.bytes());
+        if (!result) {
+            dbgln("verify_certificate_pair: Failed to check Ed25519 signature");
+            return false;
+        }
+        return result;
+    }
+    default:
+        dbgln("verify_certificate_pair: Don't know how to verify signature for curve {}", to_underlying(issuer.public_key.algorithm.ec_parameters));
         return false;
     }
-    auto verification_buffer = verification_buffer_result.release_value();
-    auto verification_buffer_bytes = verification_buffer.bytes();
-    rsa.verify(subject.signature_value, verification_buffer_bytes);
-
-    ReadonlyBytes message = subject.tbs_asn1.bytes();
-    auto pkcs1 = Crypto::PK::EMSA_PKCS1_V1_5<Crypto::Hash::Manager>(kind);
-    auto verification = pkcs1.verify(message, verification_buffer_bytes, subject.signature_value.size() * 8);
-    return verification == Crypto::VerificationConsistency::Consistent;
 }
 
 template<typename HMACType>
