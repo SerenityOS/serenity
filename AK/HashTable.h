@@ -9,6 +9,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/Error.h>
+#include <AK/ReverseIterator.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -85,6 +86,27 @@ public:
 
 private:
     OrderedHashTableIterator(BucketType* bucket, BucketType*)
+        : m_bucket(bucket)
+    {
+    }
+
+    BucketType* m_bucket { nullptr };
+};
+
+template<typename OrderedHashTableType, typename T, typename BucketType>
+class ReverseOrderedHashTableIterator {
+    friend OrderedHashTableType;
+
+public:
+    bool operator==(ReverseOrderedHashTableIterator const& other) const { return m_bucket == other.m_bucket; }
+    bool operator!=(ReverseOrderedHashTableIterator const& other) const { return m_bucket != other.m_bucket; }
+    T& operator*() { return *m_bucket->slot(); }
+    T* operator->() { return m_bucket->slot(); }
+    void operator++() { m_bucket = m_bucket->previous; }
+    void operator--() { m_bucket = m_bucket->next; }
+
+private:
+    ReverseOrderedHashTableIterator(BucketType* bucket)
         : m_bucket(bucket)
     {
     }
@@ -274,6 +296,42 @@ public:
     {
         return ConstIterator(nullptr, nullptr);
     }
+
+    using ReverseIterator = Conditional<IsOrdered,
+        ReverseOrderedHashTableIterator<HashTable, T, BucketType>,
+        void>;
+
+    [[nodiscard]] ReverseIterator rbegin()
+    requires(IsOrdered)
+    {
+        return ReverseIterator(m_collection_data.tail);
+    }
+
+    [[nodiscard]] ReverseIterator rend()
+    requires(IsOrdered)
+    {
+        return ReverseIterator(nullptr);
+    }
+
+    auto in_reverse() { return ReverseWrapper::in_reverse(*this); }
+
+    using ReverseConstIterator = Conditional<IsOrdered,
+        ReverseOrderedHashTableIterator<HashTable const, T const, BucketType const>,
+        void>;
+
+    [[nodiscard]] ReverseConstIterator rbegin() const
+    requires(IsOrdered)
+    {
+        return ReverseConstIterator(m_collection_data.tail);
+    }
+
+    [[nodiscard]] ReverseConstIterator rend() const
+    requires(IsOrdered)
+    {
+        return ReverseConstIterator(nullptr);
+    }
+
+    auto in_reverse() const { return ReverseWrapper::in_reverse(*this); }
 
     void clear()
     {
