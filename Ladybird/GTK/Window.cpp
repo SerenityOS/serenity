@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "BitmapPaintable.h"
 #include "LocationEntry.h"
+#include "NavigationHistory.h"
 #include "Tab.h"
 #include "WebView.h"
 #include <glib/gi18n.h>
@@ -19,7 +20,9 @@ struct _LadybirdWindow {
 
     gulong page_url_changed_id;
     gulong activate_url_id;
-    bool incognito;
+    gulong can_navigate_back_changed_id;
+    gulong can_navigate_forward_changed_id;
+    bool incognito : 1;
 };
 
 enum {
@@ -34,20 +37,32 @@ G_BEGIN_DECLS
 
 G_DEFINE_FINAL_TYPE(LadybirdWindow, ladybird_window, ADW_TYPE_APPLICATION_WINDOW)
 
-static void ladybird_window_dispose(GObject* object)
+static void disconnect_last_selected(LadybirdWindow* self)
 {
-    LadybirdWindow* self = LADYBIRD_WINDOW(object);
-
     if (self->last_selected_web_view) {
         if (self->page_url_changed_id)
             g_signal_handler_disconnect(self->last_selected_web_view, self->page_url_changed_id);
         if (self->activate_url_id)
             g_signal_handler_disconnect(self->last_selected_web_view, self->activate_url_id);
+
+        LadybirdNavigationHistory* history = ladybird_web_view_get_navigation_history(self->last_selected_web_view);
+        if (self->can_navigate_back_changed_id)
+            g_signal_handler_disconnect(history, self->can_navigate_back_changed_id);
+        if (self->can_navigate_forward_changed_id)
+            g_signal_handler_disconnect(history, self->can_navigate_forward_changed_id);
     }
     self->page_url_changed_id = 0;
     self->activate_url_id = 0;
     self->last_selected_web_view = nullptr;
+    self->can_navigate_back_changed_id = 0;
+    self->can_navigate_forward_changed_id = 0;
+}
 
+static void ladybird_window_dispose(GObject* object)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(object);
+
+    disconnect_last_selected(self);
     gtk_widget_dispose_template(GTK_WIDGET(self), LADYBIRD_TYPE_WINDOW);
 
     G_OBJECT_CLASS(ladybird_window_parent_class)->dispose(object);
@@ -125,6 +140,24 @@ static void ladybird_window_set_property(GObject* object, guint prop_id, GValue 
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
+}
+
+static void on_can_navigate_back_changed(LadybirdWindow* self)
+{
+    if (!self->last_selected_web_view)
+        return;
+    LadybirdNavigationHistory* history = ladybird_web_view_get_navigation_history(self->last_selected_web_view);
+    bool enable = ladybird_navigation_history_can_navigate_back(history);
+    gtk_widget_action_set_enabled(GTK_WIDGET(self), "page.navigate-back", enable);
+}
+
+static void on_can_navigate_forward_changed(LadybirdWindow* self)
+{
+    if (!self->last_selected_web_view)
+        return;
+    LadybirdNavigationHistory* history = ladybird_web_view_get_navigation_history(self->last_selected_web_view);
+    bool enable = ladybird_navigation_history_can_navigate_forward(history);
+    gtk_widget_action_set_enabled(GTK_WIDGET(self), "page.navigate-forward", enable);
 }
 
 static void win_new_tab_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -329,22 +362,23 @@ static void on_activate_url(LadybirdWindow* self, char const* url, gboolean swit
 
 static void on_selected_page_changed(LadybirdWindow* self)
 {
-    if (self->last_selected_web_view) {
-        if (self->page_url_changed_id)
-            g_signal_handler_disconnect(self->last_selected_web_view, self->page_url_changed_id);
-        if (self->activate_url_id)
-            g_signal_handler_disconnect(self->last_selected_web_view, self->activate_url_id);
-    }
-    self->page_url_changed_id = 0;
-    self->activate_url_id = 0;
+    disconnect_last_selected(self);
 
-    LadybirdWebView* web_view = self->last_selected_web_view = ladybird_window_get_current_page(self);
-    if (!web_view)
+    AdwTabPage* tab_page = adw_tab_view_get_selected_page(self->tab_view);
+    if (!tab_page)
         return;
+    LadybirdTab* tab = LADYBIRD_TAB(adw_tab_page_get_child(tab_page));
+
+    LadybirdWebView* web_view = self->last_selected_web_view = ladybird_tab_get_web_view(tab);
+    LadybirdNavigationHistory* history = ladybird_web_view_get_navigation_history(web_view);
 
     self->page_url_changed_id = g_signal_connect_object(web_view, "notify::page-url", G_CALLBACK(on_page_url_changed), self, G_CONNECT_SWAPPED);
     on_page_url_changed(self);
     self->activate_url_id = g_signal_connect_object(web_view, "activate-url", G_CALLBACK(on_activate_url), self, G_CONNECT_SWAPPED);
+    self->can_navigate_back_changed_id = g_signal_connect_object(history, "notify::can-navigate-back", G_CALLBACK(on_can_navigate_back_changed), self, G_CONNECT_SWAPPED);
+    self->can_navigate_forward_changed_id = g_signal_connect_object(history, "notify::can-navigate-forward", G_CALLBACK(on_can_navigate_forward_changed), self, G_CONNECT_SWAPPED);
+    on_can_navigate_back_changed(self);
+    on_can_navigate_forward_changed(self);
 }
 
 static void on_webview_close(LadybirdWindow* self, LadybirdWebView* web_view)
@@ -403,6 +437,17 @@ static void page_zoom_reset_action(GtkWidget* widget, [[maybe_unused]] char cons
     LadybirdWindow* self = LADYBIRD_WINDOW(widget);
 
     ladybird_web_view_zoom_reset(ladybird_window_get_current_page(self));
+}
+
+static void page_navigate_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+    if (!self->last_selected_web_view)
+        return;
+
+    int delta = strcmp(action_name, "page.navigate-back") ? 1 : -1;
+    LadybirdNavigationHistory* history = ladybird_web_view_get_navigation_history(self->last_selected_web_view);
+    ladybird_navigation_history_navigate(history, delta);
 }
 
 static void page_reload_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -510,7 +555,11 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_minus, GDK_CONTROL_MASK, "page.zoom-out", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_0, GDK_CONTROL_MASK, "page.zoom-reset", nullptr);
 
+    gtk_widget_class_install_action(widget_class, "page.navigate-back", nullptr, page_navigate_action);
+    gtk_widget_class_install_action(widget_class, "page.navigate-forward", nullptr, page_navigate_action);
     gtk_widget_class_install_action(widget_class, "page.reload-page", nullptr, page_reload_action);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_Left, GDK_ALT_MASK, "page.navigate-back", nullptr);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_Right, GDK_ALT_MASK, "page.navigate-forward", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_F5, GdkModifierType(0), "page.reload-page", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_r, GDK_CONTROL_MASK, "page.reload-page", nullptr);
 
