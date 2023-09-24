@@ -30,15 +30,13 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     on_title_change = [this](DeprecatedString const& title) {
         ladybird_web_view_set_page_title(m_widget, title.characters());
     };
-    on_load_start = [this](AK::URL const& url, [[maybe_unused]] bool is_redirect) {
+    on_load_start = [this](AK::URL const& url, bool is_redirect) {
         DeprecatedString url_string = url.serialize();
-        ladybird_web_view_set_page_url(m_widget, url_string.characters());
-        ladybird_web_view_set_loading(m_widget, true);
+        ladybird_web_view_on_load_start(m_widget, url_string.characters(), is_redirect);
     };
     on_load_finish = [this](AK::URL const& url) {
         DeprecatedString url_string = url.serialize();
-        ladybird_web_view_set_page_url(m_widget, url_string.characters());
-        ladybird_web_view_set_loading(m_widget, false);
+        ladybird_web_view_on_load_finish(m_widget, url_string.characters());
     };
 
     on_get_all_cookies = [this](AK::URL const& url) {

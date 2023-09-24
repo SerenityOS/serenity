@@ -14,6 +14,9 @@ char const* ladybird_web_view_get_hovered_link(LadybirdWebView* self);
 bool ladybird_web_view_get_loading(LadybirdWebView* self);
 GdkPaintable* ladybird_web_view_get_favicon(LadybirdWebView* self);
 
+typedef struct _LadybirdNavigationHistory LadybirdNavigationHistory;
+LadybirdNavigationHistory* ladybird_web_view_get_navigation_history(LadybirdWebView* self);
+
 void ladybird_web_view_zoom_in(LadybirdWebView* self);
 void ladybird_web_view_zoom_out(LadybirdWebView* self);
 void ladybird_web_view_zoom_reset(LadybirdWebView* self);

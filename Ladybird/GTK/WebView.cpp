@@ -1,5 +1,7 @@
 #include "WebView.h"
 #include "BitmapPaintable.h"
+#include "HistoryEntry.h"
+#include "NavigationHistory.h"
 #include "ViewImpl.h"
 #include "WebViewPrivate.h"
 
@@ -10,6 +12,7 @@ struct _LadybirdWebView {
     LadybirdBitmapPaintable* bitmap_paintable;
     LadybirdBitmapPaintable* favicon;
     WebView::CookieJar* cookie_jar;
+    LadybirdNavigationHistory* navigation_history;
     GFile* webdriver_content_ipc_path;
 
     GtkScrollablePolicy hscroll_policy;
@@ -33,6 +36,7 @@ enum {
     PROP_PAGE_TITLE,
     PROP_PAGE_URL,
     PROP_LOADING,
+    PROP_NAVIGATION_HISTORY,
     PROP_ZOOM_PERCENT,
     PROP_COOKIE_JAR,
     PROP_HOVERED_LINK,
@@ -66,6 +70,17 @@ G_BEGIN_DECLS
 G_DEFINE_FINAL_TYPE_WITH_CODE(LadybirdWebView, ladybird_web_view, GTK_TYPE_WIDGET,
     G_IMPLEMENT_INTERFACE(GTK_TYPE_SCROLLABLE, nullptr))
 
+static LadybirdHistoryEntry* ensure_history_entry(LadybirdWebView* self)
+{
+    LadybirdHistoryEntry* entry = ladybird_navigation_history_get_current_entry(self->navigation_history);
+    if (entry)
+        return entry;
+
+    entry = ladybird_history_entry_new(self->page_url);
+    ladybird_navigation_history_push(self->navigation_history, entry);
+    return entry;
+}
+
 char const* ladybird_web_view_get_page_title(LadybirdWebView* self)
 {
     g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
@@ -77,8 +92,12 @@ void ladybird_web_view_set_page_title(LadybirdWebView* self, char const* title)
 {
     g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
 
-    if (g_set_str(&self->page_title, title))
+    if (g_set_str(&self->page_title, title)) {
+        LadybirdHistoryEntry* entry = ensure_history_entry(self);
+        ladybird_history_entry_set_title(entry, title);
+
         g_object_notify_by_pspec(G_OBJECT(self), props[PROP_PAGE_TITLE]);
+    }
 }
 
 void ladybird_web_view_set_page_size(LadybirdWebView* self, int width, int height)
@@ -106,12 +125,49 @@ char const* ladybird_web_view_get_page_url(LadybirdWebView* self)
     return self->page_url;
 }
 
-void ladybird_web_view_set_page_url(LadybirdWebView* self, char const* page_url)
+static void on_navigation(LadybirdWebView* self)
+{
+    LadybirdHistoryEntry* entry = ladybird_navigation_history_get_current_entry(self->navigation_history);
+    if (!entry)
+        return;
+    char const* url = ladybird_history_entry_get_url(entry);
+    if (!g_strcmp0(self->page_url, url))
+        return;
+    ladybird_web_view_load_url(self, url);
+}
+
+void ladybird_web_view_on_load_start(LadybirdWebView* self, char const* url, bool is_redirect)
 {
     g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
 
-    if (g_set_str(&self->page_url, page_url))
-        g_object_notify_by_pspec(G_OBJECT(self), props[PROP_PAGE_URL]);
+    self->loading = true;
+
+    if (!g_set_str(&self->page_url, url)) {
+        g_object_notify_by_pspec(G_OBJECT(self), props[PROP_LOADING]);
+        return;
+    }
+
+    LadybirdHistoryEntry* entry = ensure_history_entry(self);
+    if (is_redirect) {
+        ladybird_history_entry_set_url(entry, url);
+    } else if (g_strcmp0(url, ladybird_history_entry_get_url(entry))) {
+        entry = ladybird_history_entry_new(url);
+        ladybird_navigation_history_push(self->navigation_history, entry);
+    }
+
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_PAGE_URL]);
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_LOADING]);
+}
+
+void ladybird_web_view_on_load_finish(LadybirdWebView* self, char const* url)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    // TODO: Handle URL being different from page_url somehow.
+    (void)url;
+
+    self->loading = false;
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_LOADING]);
 }
 
 void ladybird_web_view_load_url(LadybirdWebView* self, char const* url)
@@ -123,21 +179,18 @@ void ladybird_web_view_load_url(LadybirdWebView* self, char const* url)
     self->impl->load(ak_url);
 }
 
+LadybirdNavigationHistory* ladybird_web_view_get_navigation_history(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return self->navigation_history;
+}
+
 bool ladybird_web_view_get_loading(LadybirdWebView* self)
 {
     g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), false);
 
     return self->loading;
-}
-
-void ladybird_web_view_set_loading(LadybirdWebView* self, bool loading)
-{
-    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
-
-    if (self->loading == loading)
-        return;
-    self->loading = loading;
-    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_LOADING]);
 }
 
 char const* ladybird_web_view_get_hovered_link(LadybirdWebView* self)
@@ -358,6 +411,10 @@ static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValu
 
     case PROP_LOADING:
         g_value_set_boolean(value, self->loading);
+        break;
+
+    case PROP_NAVIGATION_HISTORY:
+        g_value_set_object(value, self->navigation_history);
         break;
 
     case PROP_ZOOM_PERCENT:
@@ -965,6 +1022,9 @@ static void ladybird_web_view_init(LadybirdWebView* self)
     self->bitmap_paintable = ladybird_bitmap_paintable_new();
     g_signal_connect_object(self->bitmap_paintable, "invalidate-contents", G_CALLBACK(gtk_widget_queue_draw), self, G_CONNECT_SWAPPED);
     self->favicon = ladybird_bitmap_paintable_new();
+
+    self->navigation_history = ladybird_navigation_history_new();
+    g_signal_connect_object(self->navigation_history, "notify::current-entry", G_CALLBACK(on_navigation), self, G_CONNECT_SWAPPED);
 }
 
 static void ladybird_web_view_dispose(GObject* object)
@@ -975,6 +1035,7 @@ static void ladybird_web_view_dispose(GObject* object)
 
     g_clear_object(&self->bitmap_paintable);
     g_clear_object(&self->favicon);
+    g_clear_object(&self->navigation_history);
     g_clear_object(&self->hadjustment);
     g_clear_object(&self->vadjustment);
     g_clear_object(&self->webdriver_content_ipc_path);
@@ -1017,6 +1078,7 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     props[PROP_PAGE_TITLE] = g_param_spec_string("page-title", nullptr, nullptr, nullptr, ro_param_flags);
     props[PROP_PAGE_URL] = g_param_spec_string("page-url", nullptr, nullptr, nullptr, ro_param_flags);
     props[PROP_LOADING] = g_param_spec_boolean("loading", nullptr, nullptr, false, ro_param_flags);
+    props[PROP_NAVIGATION_HISTORY] = g_param_spec_object("navigation-history", nullptr, nullptr, LADYBIRD_TYPE_NAVIGATION_HISTORY, ro_param_flags);
     props[PROP_ZOOM_PERCENT] = g_param_spec_uint("zoom-percent", nullptr, nullptr, 30, 500, 100, ro_param_flags);
     props[PROP_COOKIE_JAR] = g_param_spec_pointer("cookie-jar", nullptr, nullptr, param_flags);
     props[PROP_HOVERED_LINK] = g_param_spec_string("hovered-link", nullptr, nullptr, nullptr, ro_param_flags);
