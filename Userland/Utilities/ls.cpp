@@ -114,22 +114,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_ignore_backups, "Do not list implied entries ending with ~", "ignore-backups", 'B');
     args_parser.add_option(flag_list_directories_only, "List directories themselves, not their contents", "directory", 'd');
     args_parser.add_option(flag_long, "Display long info", "long", 'l');
-    args_parser.add_option(Core::ArgsParser::Option {
-        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
-        .help_string = "Sort files by timestamp (newest first)",
-        .short_name = 't',
-        .accept_value = [](StringView) {
-            flag_sort_by = FieldToSortBy::ModifiedAt;
-            return true;
-        } });
-    args_parser.add_option(Core::ArgsParser::Option {
-        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
-        .help_string = "Sort files by size (largest first)",
-        .short_name = 'S',
-        .accept_value = [](StringView) {
-            flag_sort_by = FieldToSortBy::Size;
-            return true;
-        } });
+    args_parser.add_option(flag_sort_by, FieldToSortBy::ModifiedAt, "Sort files by timestamp (newest first)", nullptr, 't');
+    args_parser.add_option(flag_sort_by, FieldToSortBy::Size, "Sort files by size (largest first)", nullptr, 'S');
     args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
     args_parser.add_option(flag_classify, "Append a file type indicator to entries", "classify", 'F');
     args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');

@@ -121,26 +121,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return true;
         },
     });
-    args_parser.add_option(Core::ArgsParser::Option {
-        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
-        .help_string = "Treat binary files as text (same as --binary-mode text)",
-        .long_name = "text",
-        .short_name = 'a',
-        .accept_value = [&](auto) {
-            binary_mode = BinaryFileMode::Text;
-            return true;
-        },
-    });
-    args_parser.add_option(Core::ArgsParser::Option {
-        .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
-        .help_string = "Ignore binary files (same as --binary-mode skip)",
-        .long_name = nullptr,
-        .short_name = 'I',
-        .accept_value = [&](auto) {
-            binary_mode = BinaryFileMode::Skip;
-            return true;
-        },
-    });
+    args_parser.add_option(binary_mode, BinaryFileMode::Text, "Treat binary files as text (same as --binary-mode text)", "text", 'a');
+    args_parser.add_option(binary_mode, BinaryFileMode::Skip, "Ignore binary files (same as --binary-mode skip)", nullptr, 'I');
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "When to use colored output for the matching text ([auto], never, always)",
