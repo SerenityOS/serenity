@@ -179,7 +179,7 @@ public:
         resize(false);
     }
 
-    void resize(bool clear = true)
+    void populate_line_buffer()
     {
         // First, we get the current size of the window.
         struct winsize window;
@@ -207,6 +207,11 @@ public:
             }
             --additional_lines;
         }
+    }
+
+    void resize(bool clear = true)
+    {
+        populate_line_buffer();
 
         reflow();
         bound_cursor();
@@ -522,6 +527,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString prompt = "?f%f :.(line %l)?e (END):.";
     bool dont_switch_buffer = false;
     bool quit_at_eof = false;
+    bool quit_if_one_screen = false;
     bool emulate_more = false;
     bool show_line_numbers = false;
 
@@ -534,6 +540,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dont_switch_buffer, "Don't use xterm alternate buffer", "no-init", 'X');
     args_parser.add_option(show_line_numbers, "Show line numbers", "line-numbers", 'N');
     args_parser.add_option(quit_at_eof, "Exit when the end of the file is reached", "quit-at-eof", 'e');
+    args_parser.add_option(quit_if_one_screen, "Exit immediately if the entire file can be displayed on one screen", "quit-if-one-screen", 'F');
     args_parser.add_option(emulate_more, "Pretend that we are more(1)", "emulate-more", 'm');
     args_parser.parse(arguments);
 
@@ -567,6 +574,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
+    Pager pager(filename, file, stdout, prompt, show_line_numbers);
+    pager.populate_line_buffer();
+
+    if (quit_if_one_screen && pager.at_end()) {
+        pager.init();
+        pager.clear_status();
+        return 0;
+    }
+
     TRY(setup_tty(!dont_switch_buffer));
 
     ScopeGuard teardown_guard([] {
@@ -585,7 +601,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ignore_action.sa_handler = { SIG_IGN };
     TRY(Core::System::sigaction(SIGINT, &ignore_action, nullptr));
 
-    Pager pager(filename, file, stdout, prompt, show_line_numbers);
     pager.init();
 
     StringBuilder modifier_buffer = StringBuilder(10);
