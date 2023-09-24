@@ -57,6 +57,7 @@ else()
           ../Android/src/main/cpp/WebContentService.cpp
           ../Android/src/main/cpp/WebContentServiceJNI.cpp
           ../Android/src/main/cpp/LadybirdServiceBaseJNI.cpp
+          ../Android/src/main/cpp/JNIHelpers.cpp
         )
         target_link_libraries(webcontent PRIVATE android)
     endif()

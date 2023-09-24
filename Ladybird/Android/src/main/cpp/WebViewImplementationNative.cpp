@@ -34,6 +34,13 @@ WebViewImplementationNative::WebViewImplementationNative(jobject thiz)
         JavaEnvironment env(global_vm);
         env.get()->CallVoidMethod(m_java_instance, invalidate_layout_method);
     };
+
+    on_load_start = [this](AK::URL const& url, bool is_redirect) {
+        JavaEnvironment env(global_vm);
+        auto url_string = env.jstring_from_ak_string(MUST(url.to_string()));
+        env.get()->CallVoidMethod(m_java_instance, on_load_start_method, url_string, is_redirect);
+        env.get()->DeleteLocalRef(url_string);
+    };
 }
 
 void WebViewImplementationNative::create_client(WebView::EnableCallgrindProfiling)
