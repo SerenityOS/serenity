@@ -14,7 +14,7 @@
 @interface LagomPDFView ()
 {
     WeakPtr<PDF::Document> _doc;
-    NSBitmapImageRep* _rep;
+    NSBitmapImageRep* _cachedBitmap;
     int _page_index;
 }
 @end
@@ -60,32 +60,44 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 @implementation LagomPDFView
 
+// Called from LagomPDFDocument
 - (void)setDocument:(WeakPtr<PDF::Document>)doc
 {
     NSLog(@"doc set");
     _doc = move(doc);
     _page_index = 0;
 
-    // FIXME: We do this again in restoreStateWithCoder:, which is wasteful.
-    // Compute bitmap lazily.
-    [self pageChanged];
+    [self invalidateCachedBitmap];
 }
 
-- (void)pageChanged
+#pragma mark Drawing
+
+- (void)invalidateCachedBitmap
+{
+    _cachedBitmap = nil;
+    [self setNeedsDisplay:YES];
+}
+
+- (void)ensureCachedBitmapIsUpToDate
 {
     if (!_doc || _doc->get_page_count() == 0)
         return;
+
     NSSize pixel_size = [self convertSizeToBacking:self.bounds.size];
+    if (NSEqualSizes([_cachedBitmap size], pixel_size))
+        return;
+
     if (auto bitmap_or = render(*_doc, _page_index, pixel_size); !bitmap_or.is_error())
-        _rep = ns_from_gfx(bitmap_or.value());
+        _cachedBitmap = ns_from_gfx(bitmap_or.value());
 }
 
 - (void)drawRect:(NSRect)rect
 {
-    if (!_doc)
-        return;
-    [_rep drawInRect:self.bounds];
+    [self ensureCachedBitmapIsUpToDate];
+    [_cachedBitmap drawInRect:self.bounds];
 }
+
+#pragma mark Keyboard handling
 
 - (BOOL)acceptsFirstResponder
 {
@@ -94,28 +106,31 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 - (void)keyDown:(NSEvent*)event
 {
+    // Calls moveLeft: or moveRight: below.
     [self interpretKeyEvents:@[ event ]];
 }
 
+// Called on left arrow.
 - (IBAction)moveLeft:(id)sender
 {
     if (_page_index > 0) {
         _page_index--;
         [self invalidateRestorableState];
-        [self pageChanged];
-        [self setNeedsDisplay:YES];
+        [self invalidateCachedBitmap];
     }
 }
 
+// Called on right arrow.
 - (IBAction)moveRight:(id)sender
 {
     if (_page_index < _doc->get_page_count() - 1) {
         _page_index++;
         [self invalidateRestorableState];
-        [self pageChanged];
-        [self setNeedsDisplay:YES];
+        [self invalidateCachedBitmap];
     }
 }
+
+#pragma mark State restoration
 
 - (void)encodeRestorableStateWithCoder:(NSCoder*)coder
 {
@@ -129,8 +144,8 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
         int page_index = [coder decodeIntForKey:@"PageIndex"];
         _page_index = min(max(0, page_index), _doc->get_page_count() - 1);
         NSLog(@"encodeRestorableStateWithCoder restored %d", _page_index);
-        [self pageChanged];
-        [self setNeedsDisplay:YES];
+        [self invalidateCachedBitmap];
     }
 }
+
 @end
