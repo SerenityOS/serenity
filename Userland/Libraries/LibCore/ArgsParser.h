@@ -87,6 +87,20 @@ public:
     void add_option(Option&&);
     void add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
+    /// If the option is present, set the enum to have the given `new_value`.
+    template<Enum T>
+    void add_option(T& value, T new_value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None)
+    {
+        add_option({ .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
+            .help_string = help_string,
+            .long_name = long_name,
+            .short_name = short_name,
+            .accept_value = [&](StringView) {
+                value = new_value;
+                return true;
+            },
+            .hide_mode = hide_mode });
+    }
     void add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
