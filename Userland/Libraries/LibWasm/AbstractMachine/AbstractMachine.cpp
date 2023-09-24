@@ -162,11 +162,14 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             auxiliary_instance.globals().append(*ptr);
     }
 
+    Vector<FunctionAddress> module_functions;
+    module_functions.ensure_capacity(module.functions().size());
+
     for (auto& func : module.functions()) {
         auto address = m_store.allocate(main_module_instance, func);
         VERIFY(address.has_value());
         auxiliary_instance.functions().append(*address);
-        main_module_instance.functions().append(*address);
+        module_functions.append(*address);
     }
 
     BytecodeInterpreter interpreter(m_stack_info);
@@ -193,7 +196,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
     if (instantiation_result.has_value())
         return instantiation_result.release_value();
 
-    if (auto result = allocate_all_initial_phase(module, main_module_instance, externs, global_values); result.has_value())
+    if (auto result = allocate_all_initial_phase(module, main_module_instance, externs, global_values, module_functions); result.has_value())
         return result.release_value();
 
     module.for_each_section_of_type<ElementSection>([&](ElementSection const& section) {
@@ -393,7 +396,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
     return InstantiationResult { move(main_module_instance_pointer) };
 }
 
-Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(Module const& module, ModuleInstance& module_instance, Vector<ExternValue>& externs, Vector<Value>& global_values)
+Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(Module const& module, ModuleInstance& module_instance, Vector<ExternValue>& externs, Vector<Value>& global_values, Vector<FunctionAddress>& own_functions)
 {
     Optional<InstantiationError> result;
 
@@ -404,6 +407,8 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(Module 
             [&](MemoryAddress const& address) { module_instance.memories().append(address); },
             [&](GlobalAddress const& address) { module_instance.globals().append(address); });
     }
+
+    module_instance.functions().extend(own_functions);
 
     // FIXME: What if this fails?
 
