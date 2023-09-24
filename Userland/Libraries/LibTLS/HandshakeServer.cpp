@@ -493,11 +493,6 @@ ssize_t TLSv12::verify_ecdsa_server_key_exchange(ReadonlyBytes server_key_info_b
         res = curve.verify(digest.bytes(), server_point, signature);
         break;
     }
-    case SupportedGroup::X25519: {
-        Crypto::Curves::Ed25519 curve;
-        res = curve.verify(public_key.raw_key, signature, message);
-        break;
-    }
     default: {
         dbgln("verify_ecdsa_server_key_exchange failed: Server certificate public key algorithm is not supported: {}", to_underlying(public_key.algorithm.ec_parameters));
         break;
