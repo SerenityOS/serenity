@@ -23,6 +23,7 @@ but largely incompatible with
 * `-X`, `--no-init`: Don't switch to the xterm alternate buffer on startup.
 * `-N`, `--line-numbers`: Show line numbers before printed lines.
 * `-e`, `--quit-at-eof`: Immediately exit less when the last line of the document is reached.
+* `-F`, `--quit-if-one-screen`: Exit immediately if the entire file can be displayed on one screen.
 * `-m`, `--emulate-more`: Apply `-Xe`, set the prompt to `--More--`, and disable
   scrollback. This option is automatically applied when `less` is executed as `more`
 
