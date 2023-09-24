@@ -70,6 +70,24 @@ TEST_CASE(range_loop)
     EXPECT_EQ(loop_counter, 3);
 }
 
+TEST_CASE(range_loop_reverse)
+{
+    Array strings = { "One"sv, "Two"sv, "Three"sv };
+    OrderedHashTable<DeprecatedString> table;
+    EXPECT_EQ(table.set(strings[0]), AK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(table.set(strings[1]), AK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(table.set(strings[2]), AK::HashSetResult::InsertedNewEntry);
+
+    int loop_counter = 0;
+    int index = strings.size() - 1;
+    for (auto& it : table.in_reverse()) {
+        EXPECT_EQ(it, strings[index]);
+        ++loop_counter;
+        --index;
+    }
+    EXPECT_EQ(loop_counter, 3);
+}
+
 TEST_CASE(table_remove)
 {
     HashTable<DeprecatedString> strings;
@@ -326,6 +344,12 @@ TEST_CASE(ordered_insertion_and_deletion)
             EXPECT_EQ(*it, values[index]);
             EXPECT(table.contains(values[index]));
         }
+
+        index = table.size() - 1;
+        for (auto it = table.rbegin(); it != table.rend(); ++it, --index) {
+            EXPECT_EQ(*it, values[index]);
+            EXPECT(table.contains(values[index]));
+        }
     };
 
     expect_table(table, Array<int, 4> { 0, 1, 2, 3 });
@@ -357,6 +381,13 @@ TEST_CASE(ordered_deletion_and_reinsertion)
     EXPECT_EQ(*it, 1);
     ++it;
     EXPECT_EQ(it, table.end());
+
+    auto rit = table.rbegin();
+    EXPECT_EQ(*rit, 1);
+    ++rit;
+    EXPECT_EQ(*rit, 3);
+    ++rit;
+    EXPECT_EQ(rit, table.rend());
 }
 
 TEST_CASE(ordered_take_last)
