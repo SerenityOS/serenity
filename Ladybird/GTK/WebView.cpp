@@ -613,7 +613,7 @@ static KeyCode translate_key(unsigned keyval)
         unsigned gdk_key;
         KeyCode serenity_key;
     };
-    static const Mapping mappings[] = {
+    static Mapping const mappings[] = {
         { GDK_KEY_BackSpace, Key_Backspace },
         { GDK_KEY_Tab, Key_Tab },
         { GDK_KEY_Linefeed, Key_Return },
