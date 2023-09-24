@@ -294,7 +294,9 @@ static void ladybird_tab_class_init(LadybirdTabClass* klass)
     object_class->set_property = ladybird_tab_set_property;
     object_class->dispose = ladybird_tab_dispose;
 
-    props[PROP_WEB_VIEW] = g_param_spec_object("web-view", nullptr, nullptr, LADYBIRD_TYPE_WEB_VIEW, GParamFlags(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY));
+    GParamFlags ro_param_flags = GParamFlags(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+    props[PROP_WEB_VIEW] = g_param_spec_object("web-view", nullptr, nullptr, LADYBIRD_TYPE_WEB_VIEW, ro_param_flags);
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/Ladybird-gtk4/tab.ui");
