@@ -64,7 +64,7 @@ Java_org_serenityos_ladybird_LadybirdActivity_initNativeCode(JNIEnv* env, jobjec
 
     auto* event_loop_manager = new Ladybird::ALooperEventLoopManager(timer_service_ref);
     event_loop_manager->on_did_post_event = [] {
-        JavaEnvironment env(global_vm);
+        Ladybird::JavaEnvironment env(global_vm);
         env.get()->CallVoidMethod(s_java_instance, s_schedule_event_loop_method);
     };
     Core::EventLoopManager::install(*event_loop_manager);
