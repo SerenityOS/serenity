@@ -85,6 +85,8 @@ protected:
 private:
     bool set_a_css_declaration(PropertyID, NonnullRefPtr<StyleValue const>, Important);
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
     Vector<StyleProperty> m_properties;
     HashMap<DeprecatedString, StyleProperty> m_custom_properties;
 };
