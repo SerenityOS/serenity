@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/String.h>
 #include <jni.h>
 
 namespace Ladybird {
@@ -36,6 +37,8 @@ public:
     }
 
     JNIEnv* get() const { return m_env; }
+
+    jstring jstring_from_ak_string(String const& str);
 
 private:
     JavaVM* m_vm = nullptr;

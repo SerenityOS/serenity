@@ -11,12 +11,12 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.View
-import java.net.URL
 
 // FIXME: This should (eventually) implement NestedScrollingChild3 and ScrollingView
 class WebView(context: Context, attributeSet: AttributeSet) : View(context, attributeSet) {
     private val viewImpl = WebViewImplementation(this)
     private lateinit var contentBitmap: Bitmap
+    var onLoadStart: (url: String, isRedirect: Boolean) -> Unit = { _, _ -> }
 
     fun initialize(resourceDir: String) {
         viewImpl.initialize(resourceDir)
@@ -26,7 +26,7 @@ class WebView(context: Context, attributeSet: AttributeSet) : View(context, attr
         viewImpl.dispose()
     }
 
-    fun loadURL(url: URL) {
+    fun loadURL(url: String) {
         viewImpl.loadURL(url)
     }
 
@@ -47,4 +47,5 @@ class WebView(context: Context, attributeSet: AttributeSet) : View(context, attr
         viewImpl.drawIntoBitmap(contentBitmap);
         canvas?.drawBitmap(contentBitmap, 0f, 0f, null)
     }
+
 }

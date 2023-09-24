@@ -33,8 +33,8 @@ class WebViewImplementation(private val view: WebView) {
         nativeInstance = 0
     }
 
-    fun loadURL(url: URL) {
-        nativeLoadURL(nativeInstance, url.toString())
+    fun loadURL(url: String) {
+        nativeLoadURL(nativeInstance, url)
     }
 
     fun drawIntoBitmap(bitmap: Bitmap) {
@@ -68,6 +68,10 @@ class WebViewImplementation(private val view: WebView) {
     fun invalidateLayout() {
         view.requestLayout()
         view.invalidate()
+    }
+
+    fun onLoadStart(url: String, isRedirect: Boolean) {
+        view.onLoadStart(url, isRedirect)
     }
 
     // Functions implemented in native code

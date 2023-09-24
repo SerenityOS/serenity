@@ -161,6 +161,7 @@ elseif(ANDROID)
         Android/src/main/cpp/WebViewImplementationNativeJNI.cpp
         Android/src/main/cpp/ALooperEventLoopImplementation.cpp
         Android/src/main/cpp/TimerExecutorService.cpp
+        Android/src/main/cpp/JNIHelpers.cpp
     )
     target_link_libraries(ladybird PRIVATE LibArchive jnigraphics android)
 else()

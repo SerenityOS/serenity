@@ -16,7 +16,20 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_scrollFlags="scroll|snap|enterAlways"/>
+            app:layout_scrollFlags="scroll|snap|enterAlways">
+
+            <EditText
+                android:id="@+id/urlEditText"
+                style="@style/Widget.AppCompat.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="url"
+                android:ems="10"
+                android:hint="@string/url_edit_default"
+                android:imeOptions="actionGo|actionSearch"
+                android:inputType="textUri"
+                android:singleLine="true" />
+        </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

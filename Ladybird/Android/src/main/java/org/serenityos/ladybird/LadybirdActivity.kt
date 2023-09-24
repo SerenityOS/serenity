@@ -8,15 +8,18 @@ package org.serenityos.ladybird
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.TextView
 import org.serenityos.ladybird.databinding.ActivityMainBinding
-import java.net.URL
-import kotlin.io.path.Path
 
 class LadybirdActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var resourceDir: String
     private lateinit var view: WebView
+    private lateinit var urlEditText: EditText
     private var timerService = TimerExecutorService()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,16 +31,23 @@ class LadybirdActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+        urlEditText = binding.urlEditText
         view = binding.webView
+        view.onLoadStart = { url: String, _ ->
+            urlEditText.setText(url, TextView.BufferType.EDITABLE)
+        }
+        urlEditText.setOnEditorActionListener { textView: TextView, actionId: Int, _: KeyEvent? ->
+            when (actionId) {
+                EditorInfo.IME_ACTION_GO, EditorInfo.IME_ACTION_SEARCH -> view.loadURL(textView.text.toString())
+            }
+            false
+        }
         view.initialize(resourceDir)
+        view.loadURL(intent.dataString ?: "https://ladybird.dev")
     }
 
     override fun onStart() {
         super.onStart()
-
-        // FIXME: This is not the right place to load the homepage :^)
-        val initialURL = URL("https://ladybird.dev")
-        view.loadURL(initialURL)
     }
 
     override fun onDestroy() {
@@ -52,7 +62,10 @@ class LadybirdActivity : AppCompatActivity() {
         }
     }
 
-    private external fun initNativeCode(resourceDir: String, tag: String, timerService: TimerExecutorService)
+    private external fun initNativeCode(
+        resourceDir: String, tag: String, timerService: TimerExecutorService
+    )
+
     private external fun disposeNativeCode()
     private external fun execMainEventLoop()
 
