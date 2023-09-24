@@ -978,12 +978,22 @@ static void ladybird_web_view_dispose(GObject* object)
     g_clear_object(&self->hadjustment);
     g_clear_object(&self->vadjustment);
     g_clear_object(&self->webdriver_content_ipc_path);
+
+    G_OBJECT_CLASS(ladybird_web_view_parent_class)->dispose(object);
+}
+
+static void ladybird_web_view_finalize(GObject* object)
+{
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
+
+    self->impl.~OwnPtr();
+
     g_clear_pointer(&self->page_url, g_free);
     g_clear_pointer(&self->page_title, g_free);
     g_clear_pointer(&self->hovered_link, g_free);
     g_clear_pointer(&self->prompt_text, g_free);
 
-    G_OBJECT_CLASS(ladybird_web_view_parent_class)->dispose(object);
+    G_OBJECT_CLASS(ladybird_web_view_parent_class)->finalize(object);
 }
 
 static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
@@ -994,6 +1004,7 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     object_class->get_property = ladybird_web_view_get_property;
     object_class->set_property = ladybird_web_view_set_property;
     object_class->dispose = ladybird_web_view_dispose;
+    object_class->finalize = ladybird_web_view_finalize;
 
     g_object_class_override_property(object_class, PROP_HADJUSTMENT, "hadjustment");
     g_object_class_override_property(object_class, PROP_VADJUSTMENT, "vadjustment");

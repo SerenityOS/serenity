@@ -175,6 +175,16 @@ static void ladybird_application_dispose(GObject* object)
     G_OBJECT_CLASS(ladybird_application_parent_class)->dispose(object);
 }
 
+static void ladybird_application_finalize(GObject* object)
+{
+    LadybirdApplication* self = LADYBIRD_APPLICATION(object);
+
+    self->cookie_jar.~OwnPtr();
+    self->incognito_cookie_jar.~OwnPtr();
+
+    G_OBJECT_CLASS(ladybird_application_parent_class)->finalize(object);
+}
+
 static void ladybird_application_init([[maybe_unused]] LadybirdApplication* self)
 {
     GApplication* g_app = G_APPLICATION(self);
@@ -200,6 +210,7 @@ static void ladybird_application_class_init(LadybirdApplicationClass* klass)
     GApplicationClass* g_application_class = G_APPLICATION_CLASS(klass);
 
     object_class->dispose = ladybird_application_dispose;
+    object_class->finalize = ladybird_application_finalize;
 
     g_application_class->activate = ladybird_application_activate;
     g_application_class->open = ladybird_application_open;

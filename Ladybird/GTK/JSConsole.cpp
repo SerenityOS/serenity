@@ -104,6 +104,15 @@ static void ladybird_js_console_dispose(GObject* object)
     G_OBJECT_CLASS(ladybird_js_console_parent_class)->dispose(object);
 }
 
+static void ladybird_js_console_finalize(GObject* object)
+{
+    LadybirdJSConsole* self = LADYBIRD_JS_CONSOLE(object);
+
+    self->console_client.~OwnPtr();
+
+    G_OBJECT_CLASS(ladybird_js_console_parent_class)->finalize(object);
+}
+
 static void ladybird_js_console_class_init(LadybirdJSConsoleClass* klass)
 {
     GObjectClass* object_class = G_OBJECT_CLASS(klass);
@@ -112,6 +121,7 @@ static void ladybird_js_console_class_init(LadybirdJSConsoleClass* klass)
     object_class->get_property = ladybird_js_console_get_property;
     object_class->set_property = ladybird_js_console_set_property;
     object_class->dispose = ladybird_js_console_dispose;
+    object_class->finalize = ladybird_js_console_finalize;
 
     props[PROP_WEB_VIEW] = g_param_spec_object("web-view", nullptr, nullptr, LADYBIRD_TYPE_WEB_VIEW, GParamFlags(G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY));
     g_object_class_install_properties(object_class, NUM_PROPS, props);
