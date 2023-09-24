@@ -1026,7 +1026,7 @@ ThrowCompletionOr<void> VM::import_module_dynamically(ScriptOrModule referencing
         host_finish_dynamic_import(referencing_script_or_module, module_request, promise_capability, promise);
     };
 
-    // Generally within ECMA262 we always get a referencing_script_or_moulde. However, ShadowRealm gives an explicit null.
+    // Generally within ECMA262 we always get a referencing_script_or_module. However, ShadowRealm gives an explicit null.
     // To get around this is we attempt to get the active script_or_module otherwise we might start loading "random" files from the working directory.
     if (referencing_script_or_module.has<Empty>()) {
         referencing_script_or_module = get_active_script_or_module();
