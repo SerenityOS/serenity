@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -102,6 +103,56 @@ void DOMMatrix::initialize(JS::Realm& realm)
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::from_matrix(JS::VM& vm, DOMMatrixInit other)
 {
     return create_from_dom_matrix_init(*vm.current_realm(), other);
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-fromfloat32array
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::from_float32_array(JS::VM& vm, JS::Handle<JS::Object> const& array32)
+{
+    if (!is<JS::Float32Array>(*array32))
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Float32Array");
+
+    auto& realm = *vm.current_realm();
+    auto& float32_array = static_cast<JS::Float32Array&>(*array32);
+    ReadonlySpan<float> elements = float32_array.data();
+
+    // If array32 has 6 elements, return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers taking the values from array32 in the provided order.
+    if (elements.size() == 6)
+        return realm.heap().allocate<DOMMatrix>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3), elements.at(4), elements.at(5));
+
+    // If array32 has 16 elements, return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers taking the values from array32 in the provided order.
+    if (elements.size() == 16)
+        return realm.heap().allocate<DOMMatrix>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3),
+            elements.at(4), elements.at(5), elements.at(6), elements.at(7),
+            elements.at(8), elements.at(9), elements.at(10), elements.at(11),
+            elements.at(12), elements.at(13), elements.at(14), elements.at(15));
+
+    // Otherwise, throw a TypeError exception.
+    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Expected a Float32Array argument with 6 or 16 elements"_string };
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-fromfloat64array
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::from_float64_array(JS::VM& vm, JS::Handle<JS::Object> const& array64)
+{
+    if (!is<JS::Float64Array>(*array64))
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Float64Array");
+
+    auto& realm = *vm.current_realm();
+    auto& float64_array = static_cast<JS::Float64Array&>(*array64);
+    ReadonlySpan<double> elements = float64_array.data();
+
+    // If array64 has 6 elements, return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers taking the values from array64 in the provided order.
+    if (elements.size() == 6)
+        return realm.heap().allocate<DOMMatrix>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3), elements.at(4), elements.at(5));
+
+    // If array64 has 16 elements, return the result of invoking create a 3d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers taking the values from array64 in the provided order.
+    if (elements.size() == 16)
+        return realm.heap().allocate<DOMMatrix>(realm, realm, elements.at(0), elements.at(1), elements.at(2), elements.at(3),
+            elements.at(4), elements.at(5), elements.at(6), elements.at(7),
+            elements.at(8), elements.at(9), elements.at(10), elements.at(11),
+            elements.at(12), elements.at(13), elements.at(14), elements.at(15));
+
+    // Otherwise, throw a TypeError exception.
+    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Expected a Float64Array argument with 6 or 16 elements"_string };
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-m11
