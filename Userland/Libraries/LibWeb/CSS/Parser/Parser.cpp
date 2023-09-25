@@ -6200,6 +6200,25 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
         || any_property_accepts_type(property_ids, ValueType::Time).has_value();
 
     if (property_accepts_dimension) {
+        if (peek_token.is(Token::Type::Number) && m_context.is_parsing_svg_presentation_attribute()) {
+            auto transaction = tokens.begin_transaction();
+            auto token = tokens.next_token();
+            // https://svgwg.org/svg2-draft/types.html#presentation-attribute-css-value
+            // We need to allow <number> in any place that expects a <length> or <angle>.
+            // FIXME: How should these numbers be interpreted? https://github.com/w3c/svgwg/issues/792
+            //        For now: Convert them to px lengths, or deg angles.
+            auto angle = Angle::make_degrees(token.token().number_value());
+            if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value() && property_accepts_angle(*property, angle)) {
+                transaction.commit();
+                return PropertyAndValue { *property, AngleStyleValue::create(angle) };
+            }
+            auto length = Length::make_px(CSSPixels::nearest_value_for(token.token().number_value()));
+            if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value() && property_accepts_length(*property, length)) {
+                transaction.commit();
+                return PropertyAndValue { *property, LengthStyleValue::create(length) };
+            }
+        }
+
         auto transaction = tokens.begin_transaction();
         if (auto maybe_dimension = parse_dimension(peek_token); maybe_dimension.has_value()) {
             (void)tokens.next_token();
@@ -6249,6 +6268,9 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
             (void)tokens.next_token();
             auto& calculated = *maybe_calculated;
             // This is a bit sensitive to ordering: `<foo>` and `<percentage>` have to be checked before `<foo-percentage>`.
+            // FIXME: When parsing SVG presentation attributes, <number> is permitted wherever <length>, <length-percentage>, or <angle> are.
+            //        The specifics are unclear, so I'm ignoring this for calculated values for now.
+            //        See https://github.com/w3c/svgwg/issues/792
             if (calculated.resolves_to_percentage()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
                     return PropertyAndValue { *property, calculated };

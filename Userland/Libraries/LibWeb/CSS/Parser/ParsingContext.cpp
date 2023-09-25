@@ -13,29 +13,33 @@
 
 namespace Web::CSS::Parser {
 
-ParsingContext::ParsingContext(JS::Realm& realm)
+ParsingContext::ParsingContext(JS::Realm& realm, Mode mode)
     : m_realm(realm)
+    , m_mode(mode)
 {
 }
 
-ParsingContext::ParsingContext(DOM::Document const& document, AK::URL url)
+ParsingContext::ParsingContext(DOM::Document const& document, AK::URL url, Mode mode)
     : m_realm(const_cast<JS::Realm&>(document.realm()))
     , m_document(&document)
     , m_url(move(url))
+    , m_mode(mode)
 {
 }
 
-ParsingContext::ParsingContext(DOM::Document const& document)
+ParsingContext::ParsingContext(DOM::Document const& document, Mode mode)
     : m_realm(const_cast<JS::Realm&>(document.realm()))
     , m_document(&document)
     , m_url(document.url())
+    , m_mode(mode)
 {
 }
 
-ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
+ParsingContext::ParsingContext(DOM::ParentNode& parent_node, Mode mode)
     : m_realm(parent_node.realm())
     , m_document(&parent_node.document())
     , m_url(parent_node.document().url())
+    , m_mode(mode)
 {
 }
 
