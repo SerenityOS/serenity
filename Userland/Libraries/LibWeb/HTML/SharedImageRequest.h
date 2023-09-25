@@ -11,6 +11,7 @@
 #include <AK/URL.h>
 #include <LibGfx/Size.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/Forward.h>
 
@@ -33,7 +34,7 @@ public:
 
     void fetch_image(JS::Realm&, JS::NonnullGCPtr<Fetch::Infrastructure::Request>);
 
-    void add_callbacks(JS::SafeFunction<void()> on_finish, JS::SafeFunction<void()> on_fail);
+    void add_callbacks(Function<void()> on_finish, Function<void()> on_fail);
 
     bool is_fetching() const;
     bool needs_fetching() const;
@@ -58,8 +59,8 @@ private:
     Page& m_page;
 
     struct Callbacks {
-        JS::SafeFunction<void()> on_finish;
-        JS::SafeFunction<void()> on_fail;
+        JS::GCPtr<JS::HeapFunction<void()>> on_finish;
+        JS::GCPtr<JS::HeapFunction<void()>> on_fail;
     };
     Vector<Callbacks> m_callbacks;
 
