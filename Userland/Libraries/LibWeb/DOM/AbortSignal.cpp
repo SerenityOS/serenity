@@ -29,14 +29,14 @@ void AbortSignal::initialize(JS::Realm& realm)
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add
-void AbortSignal::add_abort_algorithm(JS::SafeFunction<void()> abort_algorithm)
+void AbortSignal::add_abort_algorithm(Function<void()> abort_algorithm)
 {
     // 1. If signal is aborted, then return.
     if (aborted())
         return;
 
     // 2. Append algorithm to signal’s abort algorithms.
-    m_abort_algorithms.append(move(abort_algorithm));
+    m_abort_algorithms.append(JS::create_heap_function(vm().heap(), move(abort_algorithm)));
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-signal-abort
@@ -54,7 +54,7 @@ void AbortSignal::signal_abort(JS::Value reason)
 
     // 3. For each algorithm in signal’s abort algorithms: run algorithm.
     for (auto& algorithm : m_abort_algorithms)
-        algorithm();
+        algorithm->function()();
 
     // 4. Empty signal’s abort algorithms.
     m_abort_algorithms.clear();
@@ -87,6 +87,8 @@ void AbortSignal::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_abort_reason);
+    for (auto& algorithm : m_abort_algorithms)
+        visitor.visit(algorithm);
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-follow
