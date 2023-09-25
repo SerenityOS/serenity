@@ -618,6 +618,7 @@ class SVGPathElement;
 class SVGPolygonElement;
 class SVGPolylineElement;
 class SVGRectElement;
+class SVGScriptElement;
 class SVGSVGElement;
 class SVGTitleElement;
 }
