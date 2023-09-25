@@ -96,7 +96,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     _delegate = delegate;
 }
 
-#pragma mark Drawing
+#pragma mark - Drawing
 
 - (void)invalidateCachedBitmap
 {
@@ -123,7 +123,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     [_cachedBitmap drawInRect:self.bounds];
 }
 
-#pragma mark Keyboard handling
+#pragma mark - Keyboard handling
 
 - (BOOL)acceptsFirstResponder
 {
@@ -150,7 +150,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     [self goToPage:current_page + 1];
 }
 
-#pragma mark State restoration
+#pragma mark - State restoration
 
 - (void)encodeRestorableStateWithCoder:(NSCoder*)coder
 {
