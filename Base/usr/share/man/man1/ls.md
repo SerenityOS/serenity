@@ -21,6 +21,7 @@ If no *path* argument is provided the current working directory is used.
 * `-A`: Do not list implied . and .. directories
 * `-B`, `--ignore-backups`: Do not list implied entries ending with ~
 * `-F`, `--classify`: Append a file type indicator to entries
+* `-p`: Append a '/' indicator to directories
 * `-d`, `--directory`: List directories themselves, not their contents
 * `-l`, `--long`: Display long info
 * `-t`: Sort files by timestamp (newest first)

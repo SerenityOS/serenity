@@ -49,6 +49,15 @@ enum class FieldToSortBy {
     Size
 };
 
+enum class IndicatorStyle {
+    None = 0,
+    Directory = 1 << 0,
+    Executable = 1 << 1,
+    SymbolicLink = 1 << 2,
+    Classify = Directory | Executable | SymbolicLink
+};
+AK_ENUM_BITWISE_OPERATORS(IndicatorStyle)
+
 static int do_file_system_object_long(DeprecatedString const& path);
 static int do_file_system_object_short(DeprecatedString const& path);
 
@@ -56,7 +65,7 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
 
 static bool filemetadata_comparator(FileMetadata& a, FileMetadata& b);
 
-static bool flag_classify = false;
+static IndicatorStyle flag_indicator_style = IndicatorStyle::None;
 static bool flag_colorize = false;
 static bool flag_long = false;
 static bool flag_show_dotfiles = false;
@@ -117,7 +126,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_sort_by, FieldToSortBy::ModifiedAt, "Sort files by timestamp (newest first)", nullptr, 't');
     args_parser.add_option(flag_sort_by, FieldToSortBy::Size, "Sort files by size (largest first)", nullptr, 'S');
     args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
-    args_parser.add_option(flag_classify, "Append a file type indicator to entries", "classify", 'F');
+    args_parser.add_option(flag_indicator_style, IndicatorStyle::Classify, "Append a file type indicator to entries", "classify", 'F');
+    args_parser.add_option(flag_indicator_style, IndicatorStyle::Directory, "Append a '/' indicator to directories", nullptr, 'p');
     args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');
     args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
     args_parser.add_option(flag_show_raw_inode, "Show raw inode ids if possible", "raw-inode", 'I');
@@ -292,14 +302,14 @@ static size_t print_name(const struct stat& st, DeprecatedString const& name, Op
                 nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value());
             }
         } else {
-            if (flag_classify)
+            if (has_flag(flag_indicator_style, IndicatorStyle::SymbolicLink))
                 nprinted += printf("@");
         }
     } else if (S_ISDIR(st.st_mode)) {
-        if (flag_classify)
+        if (has_flag(flag_indicator_style, IndicatorStyle::Directory))
             nprinted += printf("/");
     } else if (st.st_mode & 0111) {
-        if (flag_classify)
+        if (has_flag(flag_indicator_style, IndicatorStyle::Executable))
             nprinted += printf("*");
     }
 
