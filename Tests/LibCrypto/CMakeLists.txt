@@ -4,6 +4,7 @@ set(TEST_SOURCES
     TestBigInteger.cpp
     TestChecksum.cpp
     TestChaCha20.cpp
+    TestChacha20Poly1305.cpp
     TestCurves.cpp
     TestEd25519.cpp
     TestHash.cpp
