@@ -20,5 +20,6 @@
 }
 
 - (void)setDocument:(WeakPtr<PDF::Document>)doc;
+- (void)goToPage:(int)page;
 
 @end

@@ -70,6 +70,20 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     [self invalidateCachedBitmap];
 }
 
+- (void)goToPage:(int)page
+{
+    if (!_doc)
+        return;
+
+    int new_index = max(0, min(page - 1, _doc->get_page_count() - 1));
+    if (new_index == _page_index)
+        return;
+
+    _page_index = new_index;
+    [self invalidateRestorableState];
+    [self invalidateCachedBitmap];
+}
+
 #pragma mark Drawing
 
 - (void)invalidateCachedBitmap
@@ -113,21 +127,15 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 // Called on left arrow.
 - (IBAction)moveLeft:(id)sender
 {
-    if (_page_index > 0) {
-        _page_index--;
-        [self invalidateRestorableState];
-        [self invalidateCachedBitmap];
-    }
+    int current_page = _page_index + 1;
+    [self goToPage:current_page - 1];
 }
 
 // Called on right arrow.
 - (IBAction)moveRight:(id)sender
 {
-    if (_page_index < _doc->get_page_count() - 1) {
-        _page_index++;
-        [self invalidateRestorableState];
-        [self invalidateCachedBitmap];
-    }
+    int current_page = _page_index + 1;
+    [self goToPage:current_page + 1];
 }
 
 #pragma mark State restoration

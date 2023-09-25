@@ -142,4 +142,28 @@
     return YES;
 }
 
+- (IBAction)showGoToPageDialog:(id)sender
+{
+    auto alert = [[NSAlert alloc] init];
+    alert.messageText = @"Page Number";
+    [alert addButtonWithTitle:@"Go"];
+    [alert addButtonWithTitle:@"Cancel"];
+
+    // FIXME: Pre-populate with current page.
+    auto textField = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 100, 24)];
+    NSNumberFormatter* formatter = [[NSNumberFormatter alloc] init];
+    formatter.numberStyle = NSNumberFormatterNoStyle; // Integers only.
+    [textField setFormatter:formatter];
+
+    alert.accessoryView = textField;
+    alert.window.initialFirstResponder = textField;
+
+    NSWindow* window = _pdfView.window;
+    [alert beginSheetModalForWindow:window
+                  completionHandler:^(NSModalResponse response) {
+                      if (response == NSAlertFirstButtonReturn)
+                          [self->_pdfView goToPage:[textField intValue]];
+                  }];
+}
+
 @end

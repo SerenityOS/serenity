@@ -636,6 +636,19 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="Go" id="XZ6-XO-pVc">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Go" id="u8F-oH-oMu">
+                        <items>
+                            <menuItem title="Go to Page…" keyEquivalent="g" id="Ou1-5M-LzJ">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="showGoToPageDialog:" target="-1" id="hmq-Sy-pJC"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
                 <menuItem title="Window" id="aUF-d1-5bR">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Window" systemMenu="window" id="Td7-aD-5lo">
