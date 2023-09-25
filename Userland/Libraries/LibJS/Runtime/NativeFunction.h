@@ -9,10 +9,10 @@
 
 #include <AK/Badge.h>
 #include <AK/Optional.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/PropertyKey.h>
-#include <LibJS/SafeFunction.h>
 
 namespace JS {
 
@@ -20,8 +20,8 @@ class NativeFunction : public FunctionObject {
     JS_OBJECT(NativeFunction, FunctionObject);
 
 public:
-    static NonnullGCPtr<NativeFunction> create(Realm&, SafeFunction<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
-    static NonnullGCPtr<NativeFunction> create(Realm&, DeprecatedFlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)>);
+    static NonnullGCPtr<NativeFunction> create(Realm&, Function<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
+    static NonnullGCPtr<NativeFunction> create(Realm&, DeprecatedFlyString const& name, Function<ThrowCompletionOr<Value>(VM&)>);
 
     virtual ~NativeFunction() override = default;
 
@@ -43,16 +43,22 @@ public:
 
 protected:
     NativeFunction(DeprecatedFlyString name, Object& prototype);
-    NativeFunction(SafeFunction<ThrowCompletionOr<Value>(VM&)>, Object* prototype, Realm& realm);
-    NativeFunction(DeprecatedFlyString name, SafeFunction<ThrowCompletionOr<Value>(VM&)>, Object& prototype);
+    NativeFunction(JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>>, Object* prototype, Realm& realm);
+    NativeFunction(DeprecatedFlyString name, JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>>, Object& prototype);
     explicit NativeFunction(Object& prototype);
+
+    virtual void visit_edges(Cell::Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+        visitor.visit(m_native_function);
+    }
 
 private:
     virtual bool is_native_function() const final { return true; }
 
     DeprecatedFlyString m_name;
     Optional<DeprecatedFlyString> m_initial_name; // [[InitialName]]
-    SafeFunction<ThrowCompletionOr<Value>(VM&)> m_native_function;
+    JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>> m_native_function;
     GCPtr<Realm> m_realm;
 };
 
