@@ -818,7 +818,7 @@ ErrorOr<void> MainWidget::save_file(StringView path, NonnullOwnPtr<Core::File> f
 ErrorOr<void> MainWidget::open_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
     auto mapped_file = TRY(Core::MappedFile::map_from_file(move(file), path));
-    auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file))->unmasked_character_set());
+    auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_mapped_file(move(mapped_file)))->unmasked_character_set());
     TRY(initialize(path, move(unmasked_font)));
     if (!path.is_empty())
         GUI::Application::the()->set_most_recently_open_file(TRY(String::from_utf8(path)));

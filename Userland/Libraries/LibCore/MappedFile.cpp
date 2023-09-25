@@ -14,18 +14,18 @@
 
 namespace Core {
 
-ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(StringView path)
+ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map(StringView path)
 {
     auto fd = TRY(Core::System::open(path, O_RDONLY | O_CLOEXEC, 0));
     return map_from_fd_and_close(fd, path);
 }
 
-ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_file(NonnullOwnPtr<Core::File> stream, StringView path)
+ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_file(NonnullOwnPtr<Core::File> stream, StringView path)
 {
     return map_from_fd_and_close(stream->leak_fd(Badge<MappedFile> {}), path);
 }
 
-ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] StringView path)
+ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] StringView path)
 {
     TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
 
@@ -38,7 +38,7 @@ ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[m
 
     auto* ptr = TRY(Core::System::mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0, 0, path));
 
-    return adopt_ref(*new MappedFile(ptr, size));
+    return adopt_own(*new MappedFile(ptr, size));
 }
 
 MappedFile::MappedFile(void* ptr, size_t size)

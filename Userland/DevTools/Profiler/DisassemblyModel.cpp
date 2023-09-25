@@ -29,7 +29,8 @@ static ELF::Image* try_load_kernel_binary()
     auto kernel_binary_or_error = Core::MappedFile::map("/boot/Kernel"sv);
     if (!kernel_binary_or_error.is_error()) {
         auto kernel_binary = kernel_binary_or_error.release_value();
-        s_kernel_binary = { { kernel_binary, ELF::Image(kernel_binary->bytes()) } };
+        auto image = ELF::Image(kernel_binary->bytes());
+        s_kernel_binary = { { move(kernel_binary), image } };
         return &s_kernel_binary->elf;
     }
     return nullptr;

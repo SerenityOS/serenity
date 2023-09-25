@@ -246,7 +246,7 @@ ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& t
     return {};
 }
 
-ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file)
+ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, NonnullOwnPtr<Core::MappedFile> mapped_file)
 {
     auto maybe_zip = Archive::Zip::try_create(mapped_file->bytes());
     if (!maybe_zip.has_value()) {
@@ -268,7 +268,7 @@ ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, N
     return {};
 }
 
-ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file)
+ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, NonnullOwnPtr<Core::MappedFile> mapped_file)
 {
     auto loader_or_error = Audio::Loader::create(mapped_file->bytes());
     if (loader_or_error.is_error()) {
@@ -317,10 +317,10 @@ struct FontInfo {
     Format format;
     NonnullRefPtr<Gfx::Typeface> typeface;
 };
-static ErrorOr<FontInfo> load_font(StringView path, StringView mime_type, NonnullRefPtr<Core::MappedFile> mapped_file)
+static ErrorOr<FontInfo> load_font(StringView path, StringView mime_type, NonnullOwnPtr<Core::MappedFile> mapped_file)
 {
     if (path.ends_with(".font"sv)) {
-        auto font = TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file));
+        auto font = TRY(Gfx::BitmapFont::try_load_from_mapped_file(move(mapped_file)));
         auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
         typeface->add_bitmap_font(move(font));
         return FontInfo { FontInfo::Format::BitmapFont, move(typeface) };
@@ -349,9 +349,9 @@ static ErrorOr<FontInfo> load_font(StringView path, StringView mime_type, Nonnul
     return Error::from_string_view("Unrecognized font format."sv);
 }
 
-ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file, StringView mime_type)
+ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, NonnullOwnPtr<Core::MappedFile> mapped_file, StringView mime_type)
 {
-    auto font_info_or_error = load_font(m_path, mime_type, mapped_file);
+    auto font_info_or_error = load_font(m_path, mime_type, move(mapped_file));
     if (font_info_or_error.is_error()) {
         warnln("Failed to open '{}': {}", m_path, font_info_or_error.release_error());
         return {};
@@ -398,7 +398,7 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
     return {};
 }
 
-ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file, StringView mime_type)
+ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, NonnullOwnPtr<Core::MappedFile> mapped_file, StringView mime_type)
 {
     auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
     if (!image_decoder)
@@ -456,7 +456,7 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
     return {};
 }
 
-ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file)
+ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, NonnullOwnPtr<Core::MappedFile> mapped_file)
 {
     auto maybe_document = PDF::Document::create(mapped_file->bytes());
     if (maybe_document.is_error()) {

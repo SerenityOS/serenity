@@ -122,7 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Map file chunk-by-chunk once we have mmap() with offset.
     //        This will require mapping some parts then unmapping them repeatedly,
     //        but it would be significantly faster and less syscall heavy than seek()/read() at every read.
-    RefPtr<Core::MappedFile> mapped_file;
+    OwnPtr<Core::MappedFile> mapped_file;
     ReadonlyBytes input_bytes;
     if (st.st_size > 0) {
         mapped_file = TRY(Core::MappedFile::map(zip_file_path));

@@ -17,7 +17,7 @@
 namespace Profiler {
 
 struct MappedObject {
-    NonnullRefPtr<Core::MappedFile> file;
+    NonnullOwnPtr<Core::MappedFile> file;
     ELF::Image elf;
 };
 

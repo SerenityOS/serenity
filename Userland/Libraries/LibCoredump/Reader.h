@@ -66,7 +66,7 @@ public:
     struct LibraryData {
         DeprecatedString name;
         FlatPtr base_address { 0 };
-        NonnullRefPtr<Core::MappedFile> file;
+        NonnullOwnPtr<Core::MappedFile> file;
         ELF::Image lib_elf;
     };
     LibraryData const* library_containing(FlatPtr address) const;
@@ -83,7 +83,7 @@ public:
 private:
     explicit Reader(ReadonlyBytes);
     explicit Reader(ByteBuffer);
-    explicit Reader(NonnullRefPtr<Core::MappedFile>);
+    explicit Reader(NonnullOwnPtr<Core::MappedFile>);
 
     static Optional<ByteBuffer> decompress_coredump(ReadonlyBytes);
 
@@ -108,7 +108,7 @@ private:
     const JsonObject process_info() const;
 
     // For uncompressed coredumps, we keep the MappedFile
-    RefPtr<Core::MappedFile> m_mapped_file;
+    OwnPtr<Core::MappedFile> m_mapped_file;
 
     // For compressed coredumps, we decompress them into a ByteBuffer
     ByteBuffer m_coredump_buffer;

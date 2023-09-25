@@ -280,7 +280,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         if (!debuginfo_file_or_error.is_error()) {
             auto debuginfo_file = debuginfo_file_or_error.release_value();
             auto debuginfo_image = ELF::Image(debuginfo_file->bytes());
-            g_kernel_debuginfo_object = { { debuginfo_file, move(debuginfo_image) } };
+            g_kernel_debuginfo_object = { { move(debuginfo_file), move(debuginfo_image) } };
         }
     }
 

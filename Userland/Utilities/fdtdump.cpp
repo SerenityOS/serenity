@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto const* fdt_header = reinterpret_cast<DeviceTree::FlattenedDeviceTreeHeader const*>(file->data());
-    auto bytes = ReadonlyBytes { file->data(), file->size() };
+    auto bytes = file->bytes();
 
     TRY(DeviceTree::dump(*fdt_header, bytes));
 

@@ -107,7 +107,7 @@ private:
     {
     }
 
-    RefPtr<Core::MappedFile> m_mapped_file;
+    OwnPtr<Core::MappedFile> m_mapped_file;
 
     ReadonlyBytes m_buffer;
 
