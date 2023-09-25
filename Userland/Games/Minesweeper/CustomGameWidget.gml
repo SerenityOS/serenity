@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Minesweeper::CustomGameWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [4]
@@ -7,7 +7,6 @@
 
     @GUI::GroupBox {
         title: "Field"
-        autosize: true
         layout: @GUI::HorizontalBoxLayout {
             margins: [6]
         }

@@ -7,11 +7,26 @@
 
 #include "CustomGameDialog.h"
 #include "Field.h"
-#include <Games/Minesweeper/MinesweeperCustomGameWindowGML.h>
+
+namespace Minesweeper {
+
+ErrorOr<NonnullRefPtr<CustomGameDialog>> CustomGameDialog::try_create(GUI::Window* parent)
+{
+    auto settings_widget = TRY(CustomGameWidget::try_create());
+    auto settings_dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow)
+            CustomGameDialog(move(settings_widget), move(parent))));
+    return settings_dialog;
+}
 
 GUI::Dialog::ExecResult CustomGameDialog::show(GUI::Window* parent_window, Field& field)
 {
-    auto dialog = CustomGameDialog::construct(parent_window);
+    auto dialog_or_error = CustomGameDialog::try_create(parent_window);
+    if (dialog_or_error.is_error()) {
+        GUI::MessageBox::show(parent_window, "Couldn't load custom game dialog"sv, "Error while opening custom game dialog"sv, GUI::MessageBox::Type::Error);
+        return ExecResult::Aborted;
+    }
+
+    auto dialog = dialog_or_error.release_value();
 
     if (parent_window) {
         dialog->set_icon(parent_window->icon());
@@ -38,21 +53,20 @@ void CustomGameDialog::set_max_mines()
     m_mines_spinbox->set_max((m_rows_spinbox->value() * m_columns_spinbox->value()) - 9);
 }
 
-CustomGameDialog::CustomGameDialog(Window* parent_window)
+CustomGameDialog::CustomGameDialog(NonnullRefPtr<CustomGameWidget> custom_game_widget, GUI::Window* parent_window)
     : Dialog(parent_window)
 {
     resize(300, 82);
     set_resizable(false);
     set_title("Custom Game");
 
-    auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(minesweeper_custom_game_window_gml).release_value_but_fixme_should_propagate_errors();
+    set_main_widget(custom_game_widget);
 
-    m_columns_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");
-    m_rows_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("rows_spinbox");
-    m_mines_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("mines_spinbox");
-    m_ok_button = *main_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
-    m_cancel_button = *main_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_columns_spinbox = *custom_game_widget->find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");
+    m_rows_spinbox = *custom_game_widget->find_descendant_of_type_named<GUI::SpinBox>("rows_spinbox");
+    m_mines_spinbox = *custom_game_widget->find_descendant_of_type_named<GUI::SpinBox>("mines_spinbox");
+    m_ok_button = *custom_game_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
+    m_cancel_button = *custom_game_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
 
     m_columns_spinbox->on_change = [this](auto) {
         set_max_mines();
@@ -71,4 +85,6 @@ CustomGameDialog::CustomGameDialog(Window* parent_window)
     };
 
     set_max_mines();
+}
+
 }

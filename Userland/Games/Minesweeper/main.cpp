@@ -6,8 +6,8 @@
 
 #include "CustomGameDialog.h"
 #include "Field.h"
+#include "MainWidget.h"
 #include <AK/URL.h>
-#include <Games/Minesweeper/MinesweeperWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -49,14 +49,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Minesweeper");
     window->set_auto_shrink(true);
 
-    auto widget = window->set_main_widget<GUI::Widget>();
-    TRY(widget->load_from_gml(minesweeper_window_gml));
+    auto main_widget = TRY(Minesweeper::MainWidget::try_create());
+    window->set_main_widget(main_widget);
 
-    auto& flag_label = *widget->find_descendant_of_type_named<GUI::Label>("flag_label");
-    auto& time_label = *widget->find_descendant_of_type_named<GUI::Label>("time_label");
-    auto& face_button = *widget->find_descendant_of_type_named<GUI::Button>("face_button");
+    auto& flag_label = *main_widget->find_descendant_of_type_named<GUI::Label>("flag_label");
+    auto& time_label = *main_widget->find_descendant_of_type_named<GUI::Label>("time_label");
+    auto& face_button = *main_widget->find_descendant_of_type_named<GUI::Button>("face_button");
     auto field = TRY(Field::create(flag_label, time_label, face_button));
-    TRY(widget->try_add_child(field));
+    TRY(main_widget->try_add_child(field));
 
     auto game_menu = window->add_menu("&Game"_string);
 
@@ -112,7 +112,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     difficulty_menu->add_separator();
     action = GUI::Action::create_checkable("&Custom Game...", { Mod_Ctrl, Key_C }, [&](auto&) {
-        CustomGameDialog::show(window, field);
+        Minesweeper::CustomGameDialog::show(window, field);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Custom);
     difficulty_menu->add_action(action);
