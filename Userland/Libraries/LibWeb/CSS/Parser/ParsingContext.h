@@ -14,10 +14,18 @@ namespace Web::CSS::Parser {
 
 class ParsingContext {
 public:
-    explicit ParsingContext(JS::Realm&);
-    explicit ParsingContext(DOM::Document const&);
-    explicit ParsingContext(DOM::Document const&, AK::URL);
-    explicit ParsingContext(DOM::ParentNode&);
+    enum class Mode {
+        Normal,
+        SVGPresentationAttribute, // See https://svgwg.org/svg2-draft/types.html#presentation-attribute-css-value
+    };
+
+    explicit ParsingContext(JS::Realm&, Mode = Mode::Normal);
+    explicit ParsingContext(DOM::Document const&, Mode = Mode::Normal);
+    explicit ParsingContext(DOM::Document const&, AK::URL, Mode = Mode::Normal);
+    explicit ParsingContext(DOM::ParentNode&, Mode = Mode::Normal);
+
+    Mode mode() const { return m_mode; }
+    bool is_parsing_svg_presentation_attribute() const { return m_mode == Mode::SVGPresentationAttribute; }
 
     bool in_quirks_mode() const;
     DOM::Document const* document() const { return m_document; }
@@ -34,6 +42,7 @@ private:
     JS::GCPtr<DOM::Document const> m_document;
     PropertyID m_current_property_id { PropertyID::Invalid };
     AK::URL m_url;
+    Mode m_mode { Mode::Normal };
 };
 
 }
