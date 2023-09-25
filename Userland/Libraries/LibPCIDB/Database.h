@@ -64,7 +64,7 @@ public:
     const StringView get_programming_interface(u8 class_id, u8 subclass_id, u8 programming_interface_id) const;
 
 private:
-    explicit Database(NonnullRefPtr<Core::MappedFile> file)
+    explicit Database(NonnullOwnPtr<Core::MappedFile> file)
         : m_file(move(file))
     {
     }
@@ -77,7 +77,7 @@ private:
         ClassMode,
     };
 
-    NonnullRefPtr<Core::MappedFile> m_file;
+    NonnullOwnPtr<Core::MappedFile> m_file;
     StringView m_view {};
     HashMap<int, NonnullOwnPtr<Vendor>> m_vendors;
     HashMap<int, NonnullOwnPtr<Class>> m_classes;

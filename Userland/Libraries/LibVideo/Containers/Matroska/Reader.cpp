@@ -86,13 +86,13 @@ constexpr u32 CUE_REFERENCE_ID = 0xDB;
 DecoderErrorOr<Reader> Reader::from_file(StringView path)
 {
     auto mapped_file = DECODER_TRY(DecoderErrorCategory::IO, Core::MappedFile::map(path));
-    return from_mapped_file(mapped_file);
+    return from_mapped_file(move(mapped_file));
 }
 
-DecoderErrorOr<Reader> Reader::from_mapped_file(NonnullRefPtr<Core::MappedFile> mapped_file)
+DecoderErrorOr<Reader> Reader::from_mapped_file(NonnullOwnPtr<Core::MappedFile> mapped_file)
 {
     auto reader = TRY(from_data(mapped_file->bytes()));
-    reader.m_mapped_file = move(mapped_file);
+    reader.m_mapped_file = make_ref_counted<Core::SharedMappedFile>(move(mapped_file));
     return reader;
 }
 

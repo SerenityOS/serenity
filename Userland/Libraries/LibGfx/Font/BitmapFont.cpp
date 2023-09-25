@@ -239,10 +239,10 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(DeprecatedStri
     return try_load_from_mapped_file(move(mapped_file));
 }
 
-ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_mapped_file(RefPtr<Core::MappedFile> const& mapped_file)
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_mapped_file(OwnPtr<Core::MappedFile> mapped_file)
 {
     auto font = TRY(load_from_memory((u8 const*)mapped_file->data()));
-    font->m_mapped_file = mapped_file;
+    font->m_mapped_file = move(mapped_file);
     return font;
 }
 

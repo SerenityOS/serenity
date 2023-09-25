@@ -266,7 +266,7 @@ ErrorOr<void> GzipCompressor::compress_file(StringView input_filename, NonnullOw
 {
     // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
     // TODO: automatically fallback to buffered streaming for very large files
-    RefPtr<Core::MappedFile> file;
+    OwnPtr<Core::MappedFile> file;
     ReadonlyBytes input_bytes;
 
     if (TRY(Core::System::stat(input_filename)).st_size > 0) {

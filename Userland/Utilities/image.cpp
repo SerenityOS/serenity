@@ -116,7 +116,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
 
-    RefPtr<Core::MappedFile> icc_file;
+    OwnPtr<Core::MappedFile> icc_file;
     if (!assign_color_profile_path.is_empty()) {
         icc_file = TRY(Core::MappedFile::map(assign_color_profile_path));
         icc_data = icc_file->bytes();
@@ -128,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        auto source_icc_file = icc_file;
+        auto source_icc_file = move(icc_file);
         auto source_icc_data = icc_data.value();
         icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
         icc_data = icc_file->bytes();

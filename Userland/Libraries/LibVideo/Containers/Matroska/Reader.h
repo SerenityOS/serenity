@@ -25,7 +25,7 @@ public:
     typedef Function<DecoderErrorOr<IterationDecision>(TrackEntry const&)> TrackEntryCallback;
 
     static DecoderErrorOr<Reader> from_file(StringView path);
-    static DecoderErrorOr<Reader> from_mapped_file(NonnullRefPtr<Core::MappedFile> mapped_file);
+    static DecoderErrorOr<Reader> from_mapped_file(NonnullOwnPtr<Core::MappedFile> mapped_file);
 
     static DecoderErrorOr<Reader> from_data(ReadonlyBytes data);
 
@@ -60,7 +60,7 @@ private:
     DecoderErrorOr<void> ensure_cues_are_parsed();
     DecoderErrorOr<void> seek_to_cue_for_timestamp(SampleIterator&, Duration const&);
 
-    RefPtr<Core::MappedFile> m_mapped_file;
+    RefPtr<Core::SharedMappedFile> m_mapped_file;
     ReadonlyBytes m_data;
 
     Optional<EBMLHeader> m_header;
@@ -89,7 +89,7 @@ public:
 private:
     friend class Reader;
 
-    SampleIterator(RefPtr<Core::MappedFile> file, ReadonlyBytes data, TrackEntry track, u64 timestamp_scale, size_t position)
+    SampleIterator(RefPtr<Core::SharedMappedFile> file, ReadonlyBytes data, TrackEntry track, u64 timestamp_scale, size_t position)
         : m_file(move(file))
         , m_data(data)
         , m_track(move(track))
@@ -100,7 +100,7 @@ private:
 
     DecoderErrorOr<void> seek_to_cue_point(CuePoint const& cue_point);
 
-    RefPtr<Core::MappedFile> m_file;
+    RefPtr<Core::SharedMappedFile> m_file;
     ReadonlyBytes m_data;
     TrackEntry m_track;
     u64 m_segment_timestamp_scale { 0 };
