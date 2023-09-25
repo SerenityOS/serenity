@@ -152,11 +152,11 @@
     [alert addButtonWithTitle:@"Go"];
     [alert addButtonWithTitle:@"Cancel"];
 
-    // FIXME: Pre-populate with current page.
     auto textField = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 100, 24)];
     NSNumberFormatter* formatter = [[NSNumberFormatter alloc] init];
     formatter.numberStyle = NSNumberFormatterNoStyle; // Integers only.
     [textField setFormatter:formatter];
+    [textField setIntValue:[_pdfView page]];
 
     alert.accessoryView = textField;
     alert.window.initialFirstResponder = textField;
