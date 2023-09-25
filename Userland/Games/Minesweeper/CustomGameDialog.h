@@ -7,20 +7,25 @@
 
 #pragma once
 
+#include "CustomGameWidget.h"
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/SpinBox.h>
 
 class Field;
 
+namespace Minesweeper {
+
 class CustomGameDialog : public GUI::Dialog {
-    C_OBJECT(CustomGameDialog);
+    C_OBJECT_ABSTRACT(CustomGameDialog);
 
 public:
     static ExecResult show(GUI::Window* parent_window, Field& field);
+    static ErrorOr<NonnullRefPtr<CustomGameDialog>> try_create(GUI::Window* parent);
 
 private:
-    CustomGameDialog(GUI::Window* parent_window);
+    CustomGameDialog(NonnullRefPtr<CustomGameWidget> custom_game_widget, GUI::Window* parent_window);
     virtual ~CustomGameDialog() override = default;
 
     void set_max_mines();
@@ -31,3 +36,5 @@ private:
     RefPtr<GUI::SpinBox> m_rows_spinbox;
     RefPtr<GUI::SpinBox> m_mines_spinbox;
 };
+
+}

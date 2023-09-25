@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Minesweeper::MainWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         spacing: 0
