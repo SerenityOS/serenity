@@ -662,7 +662,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = JS::make_handle(TRY(@js_name@@js_suffix@.to_object(vm)));
 )~~~");
         }
-    } else if (parameter.type->name() == "BufferSource") {
+    } else if (parameter.type->name() == "BufferSource" || parameter.type->name() == "Float32Array" || parameter.type->name() == "Float64Array") {
         if (optional) {
             scoped_generator.append(R"~~~(
     Optional<JS::Handle<JS::Object>> @cpp_name@;
