@@ -1,6 +1,7 @@
 add_compile_options(-Wvla)
 
 set(SOURCES
+    AEAD/ChaCha20Poly1305.cpp
     ASN1/ASN1.cpp
     ASN1/DER.cpp
     ASN1/PEM.cpp
