@@ -11,27 +11,6 @@
 
 namespace Web::SVG {
 
-namespace FIXME {
-class TemporarilyEnableQuirksMode {
-public:
-    TemporarilyEnableQuirksMode(DOM::Document const& document)
-        : m_document(const_cast<DOM::Document&>(document))
-        , m_previous_quirks_mode(document.mode())
-    {
-        m_document.set_quirks_mode(DOM::QuirksMode::Yes);
-    }
-
-    ~TemporarilyEnableQuirksMode()
-    {
-        m_document.set_quirks_mode(m_previous_quirks_mode);
-    }
-
-private:
-    DOM::Document& m_document;
-    DOM::QuirksMode m_previous_quirks_mode {};
-};
-}
-
 class SVGElement : public DOM::Element {
     WEB_PLATFORM_OBJECT(SVGElement, DOM::Element);
 
