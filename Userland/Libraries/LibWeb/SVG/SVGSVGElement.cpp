@@ -38,11 +38,8 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
 {
     Base::apply_presentational_hints(style);
 
-    // NOTE: Hack to ensure SVG unitless widths/heights are parsed even with <!DOCTYPE html>
-    FIXME::TemporarilyEnableQuirksMode enable_quirks(document());
-
     auto width_attribute = deprecated_attribute(SVG::AttributeNames::width);
-    auto parsing_context = CSS::Parser::ParsingContext { document() };
+    auto parsing_context = CSS::Parser::ParsingContext { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
     if (auto width_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width)) {
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
     } else if (width_attribute == "") {
