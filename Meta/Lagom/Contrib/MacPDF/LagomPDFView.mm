@@ -16,6 +16,7 @@
     WeakPtr<PDF::Document> _doc;
     NSBitmapImageRep* _cachedBitmap;
     int _page_index;
+    __weak id<LagomPDFViewDelegate> _delegate;
 }
 @end
 
@@ -82,6 +83,17 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     _page_index = new_index;
     [self invalidateRestorableState];
     [self invalidateCachedBitmap];
+    [_delegate pageChanged];
+}
+
+- (int)page
+{
+    return _page_index + 1;
+}
+
+- (void)setDelegate:(id<LagomPDFViewDelegate>)delegate
+{
+    _delegate = delegate;
 }
 
 #pragma mark Drawing

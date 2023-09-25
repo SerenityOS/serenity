@@ -68,6 +68,7 @@
         NSLog(@"failed to load 2: %@", @(err.error().message().characters()));
     } else {
         [_pdfView setDocument:_doc->make_weak_ptr()];
+        [self pageChanged];
     }
 }
 
@@ -81,6 +82,8 @@
 - (void)windowControllerDidLoadNib:(NSWindowController*)aController
 {
     [super windowControllerDidLoadNib:aController];
+
+    [_pdfView setDelegate:self];
 
     if (_doc) {
         if (auto handler = _doc->security_handler(); handler && !handler->has_user_password()) {
@@ -164,6 +167,12 @@
                       if (response == NSAlertFirstButtonReturn)
                           [self->_pdfView goToPage:[textField intValue]];
                   }];
+}
+
+- (void)pageChanged
+{
+    [_pdfView.window setSubtitle:
+                         [NSString stringWithFormat:@"Page %d of %d", [_pdfView page], _doc -> get_page_count()]];
 }
 
 @end
