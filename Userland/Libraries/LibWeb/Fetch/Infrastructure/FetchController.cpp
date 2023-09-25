@@ -24,27 +24,39 @@ void FetchController::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_full_timing_info);
+    visitor.visit(m_report_timing_steps);
+    visitor.visit(m_next_manual_redirect_steps);
     visitor.visit(m_fetch_params);
+}
+
+void FetchController::set_report_timing_steps(Function<void(JS::Object const&)> report_timing_steps)
+{
+    m_report_timing_steps = JS::create_heap_function(vm().heap(), move(report_timing_steps));
+}
+
+void FetchController::set_next_manual_redirect_steps(Function<void()> next_manual_redirect_steps)
+{
+    m_next_manual_redirect_steps = JS::create_heap_function(vm().heap(), move(next_manual_redirect_steps));
 }
 
 // https://fetch.spec.whatwg.org/#finalize-and-report-timing
 void FetchController::report_timing(JS::Object const& global) const
 {
     // 1. Assert: this’s report timing steps is not null.
-    VERIFY(m_report_timing_steps.has_value());
+    VERIFY(m_report_timing_steps);
 
     // 2. Call this’s report timing steps with global.
-    (*m_report_timing_steps)(global);
+    m_report_timing_steps->function()(global);
 }
 
 // https://fetch.spec.whatwg.org/#fetch-controller-process-the-next-manual-redirect
 void FetchController::process_next_manual_redirect() const
 {
     // 1. Assert: controller’s next manual redirect steps are not null.
-    VERIFY(m_next_manual_redirect_steps.has_value());
+    VERIFY(m_next_manual_redirect_steps);
 
     // 2. Call controller’s next manual redirect steps.
-    (*m_next_manual_redirect_steps)();
+    m_next_manual_redirect_steps->function()();
 }
 
 // https://fetch.spec.whatwg.org/#extract-full-timing-info

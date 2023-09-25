@@ -10,6 +10,8 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibJS/Heap/HeapFunction.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/Fetch/Infrastructure/FetchTimingInfo.h>
 #include <LibWeb/Forward.h>
@@ -30,8 +32,8 @@ public:
     [[nodiscard]] static JS::NonnullGCPtr<FetchController> create(JS::VM&);
 
     void set_full_timing_info(JS::NonnullGCPtr<FetchTimingInfo> full_timing_info) { m_full_timing_info = full_timing_info; }
-    void set_report_timing_steps(JS::SafeFunction<void(JS::Object const&)> report_timing_steps) { m_report_timing_steps = move(report_timing_steps); }
-    void set_next_manual_redirect_steps(JS::SafeFunction<void()> next_manual_redirect_steps) { m_next_manual_redirect_steps = move(next_manual_redirect_steps); }
+    void set_report_timing_steps(Function<void(JS::Object const&)> report_timing_steps);
+    void set_next_manual_redirect_steps(Function<void()> next_manual_redirect_steps);
 
     [[nodiscard]] State state() const { return m_state; }
 
@@ -63,7 +65,7 @@ private:
     // https://fetch.spec.whatwg.org/#fetch-controller-report-timing-steps
     // report timing steps (default null)
     //    Null or an algorithm accepting a global object.
-    Optional<JS::SafeFunction<void(JS::Object const&)>> m_report_timing_steps;
+    JS::GCPtr<JS::HeapFunction<void(JS::Object const&)>> m_report_timing_steps;
 
     // https://fetch.spec.whatwg.org/#fetch-controller-report-timing-steps
     // FIXME: serialized abort reason (default null)
@@ -72,7 +74,7 @@ private:
     // https://fetch.spec.whatwg.org/#fetch-controller-next-manual-redirect-steps
     // next manual redirect steps (default null)
     //     Null or an algorithm accepting nothing.
-    Optional<JS::SafeFunction<void()>> m_next_manual_redirect_steps;
+    JS::GCPtr<JS::HeapFunction<void()>> m_next_manual_redirect_steps;
 
     JS::GCPtr<FetchParams> m_fetch_params;
 };
