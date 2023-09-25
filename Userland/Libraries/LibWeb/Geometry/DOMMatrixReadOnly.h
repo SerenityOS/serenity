@@ -101,6 +101,8 @@ public:
 
     JS::NonnullGCPtr<DOMPoint> transform_point(DOMPointInit const&) const;
     JS::NonnullGCPtr<DOMPoint> transform_point(DOMPointReadOnly const&) const;
+    JS::NonnullGCPtr<JS::Float32Array> to_float32_array() const;
+    JS::NonnullGCPtr<JS::Float64Array> to_float64_array() const;
 
     WebIDL::ExceptionOr<String> to_string() const;
 

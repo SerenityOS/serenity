@@ -54,8 +54,8 @@ interface DOMMatrixReadOnly {
     [NewObject] DOMMatrix inverse();
 
     [NewObject] DOMPoint transformPoint(optional DOMPointInit point = {});
-    // FIXME: [NewObject] Float32Array toFloat32Array();
-    // FIXME: [NewObject] Float64Array toFloat64Array();
+    [NewObject] Float32Array toFloat32Array();
+    [NewObject] Float64Array toFloat64Array();
 
     [Exposed=Window] stringifier;
     [Default] object toJSON();
