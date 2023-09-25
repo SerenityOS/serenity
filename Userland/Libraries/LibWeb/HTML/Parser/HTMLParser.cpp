@@ -39,6 +39,7 @@
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/MathML/TagNames.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/SVG/SVGScriptElement.h>
 #include <LibWeb/SVG/TagNames.h>
 
 namespace Web::HTML {
@@ -3525,6 +3526,9 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
 
             // -> If the token's tag name is "script", and the new current node is in the SVG namespace
             if (token.tag_name() == SVG::TagNames::script && current_node().namespace_uri() == Namespace::SVG) {
+                auto& script_element = verify_cast<SVG::SVGScriptElement>(current_node());
+                script_element.set_source_line_number({}, token.start_position().line + 1); // FIXME: This +1 is incorrect for script tags whose script does not start on a new line
+
                 // Acknowledge the token's self-closing flag, and then act as described in the steps for a "script" end tag below.
                 token.acknowledge_self_closing_flag_if_set();
                 goto ScriptEndTag;
@@ -3544,7 +3548,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
     if (token.is_end_tag() && current_node().namespace_uri() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
     ScriptEndTag:
         // Pop the current node off the stack of open elements.
-        (void)m_stack_of_open_elements.pop();
+        auto& script_element = verify_cast<SVG::SVGScriptElement>(*m_stack_of_open_elements.pop());
         // Let the old insertion point have the same value as the current insertion point.
         m_tokenizer.store_insertion_point();
         // Let the insertion point be just before the next input character.
@@ -3554,8 +3558,12 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         // Set the parser pause flag to true.
         m_parser_pause_flag = true;
 
-        // FIXME: If the active speculative HTML parser is null and the user agent supports SVG, then Process the SVG script element according to the SVG rules. [SVG]
-        dbgln("FIXME: Missing 'Process the SVG script element according to the SVG rules.");
+        // Non-standard: Make sure the <script> element has up-to-date text content before processing the script.
+        flush_character_insertions();
+
+        // If the active speculative HTML parser is null and the user agent supports SVG, then Process the SVG script element according to the SVG rules. [SVG]
+        // FIXME: If the active speculative HTML parser is null
+        script_element.process_the_script_element();
 
         // Decrement the parser's script nesting level by one.
         decrement_script_nesting_level();

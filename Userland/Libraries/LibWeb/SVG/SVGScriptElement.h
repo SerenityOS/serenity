@@ -15,6 +15,10 @@ class SVGScriptElement : public SVGElement {
     WEB_PLATFORM_OBJECT(SVGScriptElement, SVGElement);
 
 public:
+    void process_the_script_element();
+
+    void set_source_line_number(Badge<HTML::HTMLParser>, size_t source_line_number) { m_source_line_number = source_line_number; }
+
 protected:
     SVGScriptElement(DOM::Document&, DOM::QualifiedName);
 
@@ -22,6 +26,14 @@ protected:
 
 private:
     virtual bool is_svg_script_element() const final { return true; }
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    bool m_already_processed { false };
+
+    JS::GCPtr<HTML::ClassicScript> m_script;
+
+    size_t m_source_line_number { 1 };
 };
 
 }
