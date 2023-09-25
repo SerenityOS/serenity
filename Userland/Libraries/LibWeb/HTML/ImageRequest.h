@@ -55,7 +55,7 @@ public:
     void prepare_for_presentation(HTMLImageElement&);
 
     void fetch_image(JS::Realm&, JS::NonnullGCPtr<Fetch::Infrastructure::Request>);
-    void add_callbacks(JS::SafeFunction<void()> on_finish, JS::SafeFunction<void()> on_fail);
+    void add_callbacks(Function<void()> on_finish, Function<void()> on_fail);
 
     SharedImageRequest const* shared_image_request() const { return m_shared_image_request; }
 

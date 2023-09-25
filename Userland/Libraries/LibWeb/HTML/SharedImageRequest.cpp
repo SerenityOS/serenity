@@ -48,6 +48,10 @@ void SharedImageRequest::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_fetch_controller);
+    for (auto& callback : m_callbacks) {
+        visitor.visit(callback.on_finish);
+        visitor.visit(callback.on_fail);
+    }
 }
 
 RefPtr<DecodedImageData const> SharedImageRequest::image_data() const
@@ -99,7 +103,7 @@ void SharedImageRequest::fetch_image(JS::Realm& realm, JS::NonnullGCPtr<Fetch::I
     set_fetch_controller(fetch_controller);
 }
 
-void SharedImageRequest::add_callbacks(JS::SafeFunction<void()> on_finish, JS::SafeFunction<void()> on_fail)
+void SharedImageRequest::add_callbacks(Function<void()> on_finish, Function<void()> on_fail)
 {
     if (m_state == State::Finished) {
         if (on_finish)
@@ -113,7 +117,13 @@ void SharedImageRequest::add_callbacks(JS::SafeFunction<void()> on_finish, JS::S
         return;
     }
 
-    m_callbacks.append({ move(on_finish), move(on_fail) });
+    Callbacks callbacks;
+    if (on_finish)
+        callbacks.on_finish = JS::create_heap_function(vm().heap(), move(on_finish));
+    if (on_fail)
+        callbacks.on_fail = JS::create_heap_function(vm().heap(), move(on_fail));
+
+    m_callbacks.append(move(callbacks));
 }
 
 void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, StringView mime_type, ByteBuffer data)
@@ -129,7 +139,7 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
         m_state = State::Failed;
         for (auto& callback : m_callbacks) {
             if (callback.on_fail)
-                callback.on_fail();
+                callback.on_fail->function()();
         }
     };
 
@@ -160,7 +170,7 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
 
     for (auto& callback : m_callbacks) {
         if (callback.on_finish)
-            callback.on_finish();
+            callback.on_finish->function()();
     }
     m_callbacks.clear();
 }
@@ -170,7 +180,7 @@ void SharedImageRequest::handle_failed_fetch()
     m_state = State::Failed;
     for (auto& callback : m_callbacks) {
         if (callback.on_fail)
-            callback.on_fail();
+            callback.on_fail->function()();
     }
     m_callbacks.clear();
 }

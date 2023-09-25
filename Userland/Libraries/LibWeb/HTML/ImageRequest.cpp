@@ -125,7 +125,7 @@ void ImageRequest::fetch_image(JS::Realm& realm, JS::NonnullGCPtr<Fetch::Infrast
     m_shared_image_request->fetch_image(realm, request);
 }
 
-void ImageRequest::add_callbacks(JS::SafeFunction<void()> on_finish, JS::SafeFunction<void()> on_fail)
+void ImageRequest::add_callbacks(Function<void()> on_finish, Function<void()> on_fail)
 {
     VERIFY(m_shared_image_request);
     m_shared_image_request->add_callbacks(move(on_finish), move(on_fail));
