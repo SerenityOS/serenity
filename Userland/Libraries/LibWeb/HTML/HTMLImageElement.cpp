@@ -69,6 +69,7 @@ void HTMLImageElement::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_current_request);
     visitor.visit(m_pending_request);
+    visitor.visit(m_lazy_load_resumption_steps);
 }
 
 void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const
@@ -157,6 +158,11 @@ RefPtr<Gfx::Bitmap const> HTMLImageElement::current_image_bitmap(Gfx::IntSize si
 void HTMLImageElement::set_visible_in_viewport(bool)
 {
     // FIXME: Loosen grip on image data when it's not visible, e.g via volatile memory.
+}
+
+void HTMLImageElement::set_lazy_load_resumption_steps(Function<void()> steps)
+{
+    m_lazy_load_resumption_steps = JS::create_heap_function(vm().heap(), move(steps));
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-width
@@ -549,9 +555,9 @@ after_step_7:
         // 24. If the will lazy load element steps given the img return true, then:
         if (will_lazy_load()) {
             // 1. Set the img's lazy load resumption steps to the rest of this algorithm starting with the step labeled fetch the image.
-            m_lazy_load_resumption_steps = [this, request, image_request]() {
+            set_lazy_load_resumption_steps([this, request, image_request]() {
                 image_request->fetch_image(realm(), request);
-            };
+            });
 
             // 2. Start intersection-observing a lazy loading element for the img element.
             document().start_intersection_observing_a_lazy_loading_element(*this);
@@ -1022,9 +1028,11 @@ bool HTMLImageElement::will_lazy_load() const
     return lazy_loading() == LazyLoading::Lazy;
 }
 
-JS::SafeFunction<void()> HTMLImageElement::take_lazy_load_resumption_steps(Badge<DOM::Document>)
+JS::GCPtr<JS::HeapFunction<void()>> HTMLImageElement::take_lazy_load_resumption_steps(Badge<DOM::Document>)
 {
-    return move(m_lazy_load_resumption_steps);
+    auto lazy_load_resumption_steps = m_lazy_load_resumption_steps;
+    m_lazy_load_resumption_steps = nullptr;
+    return lazy_load_resumption_steps;
 }
 
 }

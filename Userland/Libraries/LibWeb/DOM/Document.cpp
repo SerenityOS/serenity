@@ -3282,7 +3282,7 @@ void Document::start_intersection_observing_a_lazy_loading_element(Element& elem
                 auto& entry = verify_cast<IntersectionObserver::IntersectionObserverEntry>(entries.get_without_side_effects(property_key).as_object());
 
                 // 1. Let resumptionSteps be null.
-                JS::SafeFunction<void()> resumption_steps;
+                JS::GCPtr<JS::HeapFunction<void()>> resumption_steps;
 
                 // 2. If entry.isIntersecting is true, then set resumptionSteps to entry.target's lazy load resumption steps.
                 if (entry.is_intersecting()) {
@@ -3306,7 +3306,7 @@ void Document::start_intersection_observing_a_lazy_loading_element(Element& elem
                 m_lazy_load_intersection_observer->unobserve(entry.target());
 
                 // 6. Invoke resumptionSteps.
-                resumption_steps();
+                resumption_steps->function()();
             }
 
             return JS::js_undefined();

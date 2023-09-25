@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Forward.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -90,7 +91,8 @@ public:
     virtual RefPtr<Gfx::Bitmap const> current_image_bitmap(Gfx::IntSize = {}) const override;
     virtual void set_visible_in_viewport(bool) override;
 
-    JS::SafeFunction<void()> take_lazy_load_resumption_steps(Badge<DOM::Document>);
+    void set_lazy_load_resumption_steps(Function<void()>);
+    JS::GCPtr<JS::HeapFunction<void()>> take_lazy_load_resumption_steps(Badge<DOM::Document>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -136,7 +138,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-load-resumption-steps
     // Each img and iframe element has associated lazy load resumption steps, initially null.
-    JS::SafeFunction<void()> m_lazy_load_resumption_steps;
+    JS::GCPtr<JS::HeapFunction<void()>> m_lazy_load_resumption_steps;
 
     CSSPixelSize m_last_seen_viewport_size;
 };
