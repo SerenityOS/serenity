@@ -2369,10 +2369,14 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
         if (!m_finalizer)
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
 
-        generator.begin_variable_scope();
+        // OPTIMIZATION: We avoid creating a lexical environment if the catch clause has no parameter.
+        bool did_create_variable_scope_for_catch_clause = false;
+
         TRY(m_handler->parameter().visit(
             [&](DeprecatedFlyString const& parameter) -> Bytecode::CodeGenerationErrorOr<void> {
                 if (!parameter.is_empty()) {
+                    generator.begin_variable_scope();
+                    did_create_variable_scope_for_catch_clause = true;
                     auto parameter_identifier = generator.intern_identifier(parameter);
                     generator.emit<Bytecode::Op::CreateVariable>(parameter_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
                     generator.emit<Bytecode::Op::SetVariable>(parameter_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize);
@@ -2380,6 +2384,9 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
                 return {};
             },
             [&](NonnullRefPtr<BindingPattern const> const& binding_pattern) -> Bytecode::CodeGenerationErrorOr<void> {
+                generator.begin_variable_scope();
+                did_create_variable_scope_for_catch_clause = true;
+
                 auto value_register = generator.allocate_register();
                 generator.emit<Bytecode::Op::Store>(value_register);
                 TRY(generate_binding_pattern_bytecode(generator, *binding_pattern, Bytecode::Op::SetVariable::InitializationMode::Initialize, value_register, true));
@@ -2393,7 +2400,9 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
 
         TRY(m_handler->body().generate_bytecode(generator));
         handler_target = Bytecode::Label { handler_block };
-        generator.end_variable_scope();
+
+        if (did_create_variable_scope_for_catch_clause)
+            generator.end_variable_scope();
 
         if (!generator.is_current_block_terminated()) {
             if (m_finalizer) {
