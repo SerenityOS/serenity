@@ -84,6 +84,8 @@ static bool is_javascript_builtin(Type const& type)
     // might simply need to add another type here.
     static constexpr Array types = {
         "ArrayBuffer"sv,
+        "Float32Array"sv,
+        "Float64Array"sv,
     };
 
     return types.span().contains_slow(type.name());

@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
@@ -451,6 +453,32 @@ JS::NonnullGCPtr<DOMPoint> DOMMatrixReadOnly::transform_point(DOMPointReadOnly c
     // 11. Set transformedPoint’s w perspective to pointVector’s fourth element.
     // 12. Return transformedPoint.
     return DOMPoint::construct_impl(realm(), point_vector.x(), point_vector.y(), point_vector.z(), point_vector.w());
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-tofloat32array
+JS::NonnullGCPtr<JS::Float32Array> DOMMatrixReadOnly::to_float32_array() const
+{
+    // Returns the serialized 16 elements m11 to m44 of the current matrix in column-major order as Float32Array.
+    float elements[16] = { static_cast<float>(m11()), static_cast<float>(m12()), static_cast<float>(m13()), static_cast<float>(m14()),
+        static_cast<float>(m21()), static_cast<float>(m22()), static_cast<float>(m23()), static_cast<float>(m24()),
+        static_cast<float>(m31()), static_cast<float>(m32()), static_cast<float>(m33()), static_cast<float>(m34()),
+        static_cast<float>(m41()), static_cast<float>(m42()), static_cast<float>(m43()), static_cast<float>(m44()) };
+    auto bytes = MUST(ByteBuffer::copy(elements, sizeof(elements)));
+    auto array_buffer = JS::ArrayBuffer::create(realm(), move(bytes));
+    return JS::Float32Array::create(realm(), sizeof(elements) / sizeof(float), array_buffer);
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-tofloat64array
+JS::NonnullGCPtr<JS::Float64Array> DOMMatrixReadOnly::to_float64_array() const
+{
+    // Returns the serialized 16 elements m11 to m44 of the current matrix in column-major order as Float64Array.
+    double elements[16] = { m11(), m12(), m13(), m14(),
+        m21(), m22(), m23(), m24(),
+        m31(), m32(), m33(), m34(),
+        m41(), m42(), m43(), m44() };
+    auto bytes = MUST(ByteBuffer::copy(elements, sizeof(elements)));
+    auto array_buffer = JS::ArrayBuffer::create(realm(), move(bytes));
+    return JS::Float64Array::create(realm(), sizeof(elements) / sizeof(double), array_buffer);
 }
 
 // https://drafts.fxtf.org/geometry/#dommatrixreadonly-stringification-behavior
