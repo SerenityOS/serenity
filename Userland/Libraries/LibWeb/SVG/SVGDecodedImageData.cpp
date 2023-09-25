@@ -67,8 +67,10 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
         .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
         .about_base_url = {},
     };
+    // FIXME: Use Navigable::navigate() instead of manually replacing the navigable's document.
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", navigation_params).release_value_but_fixme_should_propagate_errors();
     navigable->set_ongoing_navigation({});
+    navigable->active_document()->destroy();
     navigable->active_session_history_entry()->document_state->set_document(document);
 
     auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
