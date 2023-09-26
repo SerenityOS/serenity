@@ -33,6 +33,14 @@ public:
         return Register(exception_index);
     }
 
+    static constexpr Register this_value()
+    {
+        constexpr u32 this_value_index = 3;
+        return Register(this_value_index);
+    }
+
+    static constexpr u32 reserved_register_count = 4;
+
     constexpr explicit Register(u32 index)
         : m_index(index)
     {

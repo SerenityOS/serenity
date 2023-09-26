@@ -252,7 +252,7 @@ private:
     NonnullOwnPtr<IdentifierTable> m_identifier_table;
     NonnullOwnPtr<RegexTable> m_regex_table;
 
-    u32 m_next_register { 3 };
+    u32 m_next_register { Register::reserved_register_count };
     u32 m_next_block { 1 };
     u32 m_next_property_lookup_cache { 0 };
     u32 m_next_global_variable_cache { 0 };
