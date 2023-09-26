@@ -31,7 +31,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    RefPtr<Platform::Timer> m_timer;
+    RefPtr<Core::Timer> m_timer;
     JS::NonnullGCPtr<JS::Object> m_window_or_worker_global_scope;
     Function<void()> m_callback;
     i32 m_id { 0 };
