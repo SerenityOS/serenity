@@ -9,6 +9,7 @@
 
 #include <AK/Queue.h>
 #include <LibConfig/Listener.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -102,6 +103,12 @@ public:
         update();
     }
 
+    LatLng context_menu_latlng() const { return m_context_menu_latlng; }
+    void add_context_menu_action(NonnullRefPtr<GUI::Action> const& action)
+    {
+        m_context_menu_actions.append(action);
+    }
+
     struct TileKey {
         int x;
         int y;
@@ -174,6 +181,8 @@ private:
     int m_zoom {};
     bool m_context_menu_enabled {};
     RefPtr<GUI::Menu> m_context_menu;
+    LatLng m_context_menu_latlng;
+    Vector<NonnullRefPtr<GUI::Action>> m_context_menu_actions;
     bool m_scale_enabled {};
     int m_scale_max_width {};
     bool m_attribution_enabled {};
