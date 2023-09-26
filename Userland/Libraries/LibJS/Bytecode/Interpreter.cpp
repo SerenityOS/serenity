@@ -33,8 +33,6 @@ void Interpreter::visit_edges(Cell::Visitor& visitor)
 {
     if (m_return_value.has_value())
         visitor.visit(*m_return_value);
-    if (m_saved_exception.has_value())
-        visitor.visit(*m_saved_exception);
     for (auto& frame : m_call_frames) {
         frame.visit([&](auto& value) { value->visit_edges(visitor); });
     }
@@ -171,7 +169,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
 
     TemporaryChange restore_executable { m_current_executable, &executable };
     TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
-    TemporaryChange restore_saved_exception { m_saved_exception, {} };
 
     VERIFY(!vm().execution_context_stack().is_empty());
 
@@ -196,8 +193,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
             auto& instruction = *pc;
             auto ran_or_error = instruction.execute(*this);
             if (ran_or_error.is_error()) {
-                auto exception_value = *ran_or_error.throw_completion().value();
-                m_saved_exception = exception_value;
+                reg(Register::exception()) = *ran_or_error.throw_completion().value();
                 if (unwind_contexts().is_empty())
                     break;
                 auto& unwind_context = unwind_contexts().last();
@@ -208,8 +204,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
                     m_current_block = unwind_context.handler;
                     unwind_context.handler_called = true;
 
-                    accumulator() = exception_value;
-                    m_saved_exception = {};
+                    accumulator() = reg(Register::exception());
+                    reg(Register::exception()) = {};
                     will_jump = true;
                     break;
                 }
@@ -219,7 +215,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
                     // from the `finally` block. But if the exception is from the `try` block, and has already been
                     // handled by `catch`, we swallow it.
                     if (!unwind_context.handler_called)
-                        m_saved_exception = {};
+                        reg(Register::exception()) = {};
                     will_jump = true;
                     break;
                 }
@@ -261,7 +257,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
         if (pc.at_end())
             break;
 
-        if (m_saved_exception.has_value())
+        if (!reg(Register::exception()).is_empty())
             break;
 
         if (will_return)
@@ -282,6 +278,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
     }
 
     auto saved_return_value = reg(Register::saved_return_value());
+    auto exception = reg(Register::exception());
 
     auto frame = pop_call_frame();
 
@@ -302,12 +299,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
 
     vm().finish_execution_generation();
 
-    if (m_saved_exception.has_value()) {
-        Value thrown_value = m_saved_exception.value();
-        m_saved_exception = {};
+    if (!exception.is_empty()) {
         if (auto* call_frame = frame.get_pointer<NonnullOwnPtr<CallFrame>>())
-            return { throw_completion(thrown_value), move(*call_frame) };
-        return { throw_completion(thrown_value), nullptr };
+            return { throw_completion(exception), move(*call_frame) };
+        return { throw_completion(exception), nullptr };
     }
 
     if (auto* call_frame = frame.get_pointer<NonnullOwnPtr<CallFrame>>())
@@ -331,9 +326,8 @@ void Interpreter::leave_unwind_context()
 
 ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume_label)
 {
-    if (m_saved_exception.has_value()) {
-        return throw_completion(m_saved_exception.release_value());
-    }
+    if (auto exception = reg(Register::exception()); !exception.is_empty())
+        return throw_completion(exception);
 
     if (!saved_return_value().is_empty()) {
         do_return(saved_return_value());

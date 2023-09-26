@@ -26,6 +26,13 @@ public:
         return Register(saved_return_value_index);
     }
 
+    static constexpr u32 exception_index = 2;
+
+    static constexpr Register exception()
+    {
+        return Register(exception_index);
+    }
+
     constexpr explicit Register(u32 index)
         : m_index(index)
     {
