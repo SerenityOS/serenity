@@ -46,6 +46,7 @@ public:
     i32 set_interval(TimerHandler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
     void clear_timeout(i32);
     void clear_interval(i32);
+    void clear_map_of_active_timers();
 
     PerformanceTimeline::PerformanceEntryTuple& relevant_performance_entry_tuple(FlyString const& entry_type);
     void queue_performance_entry(JS::NonnullGCPtr<PerformanceTimeline::PerformanceEntry> new_entry);

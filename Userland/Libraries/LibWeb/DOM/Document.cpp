@@ -2656,6 +2656,27 @@ Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_
     return list;
 }
 
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#unloading-document-cleanup-steps
+void Document::run_unloading_cleanup_steps()
+{
+    // 1. Let window be document's relevant global object.
+    auto* window = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&HTML::relevant_global_object(*this));
+    VERIFY(window);
+
+    // FIXME: 2. For each WebSocket object webSocket whose relevant global object is window, make disappear webSocket.
+    //            If this affected any WebSocket objects, then set document's salvageable state to false.
+
+    // FIXME: 3. For each WebTransport object transport whose relevant global object is window, run the context cleanup steps given transport.
+
+    // 4. If document's salvageable state is false, then:
+    if (m_salvageable) {
+        // FIXME: 1. For each EventSource object eventSource whose relevant global object is equal to window, forcibly close eventSource.
+
+        // 2. Clear window's map of active timers.
+        window->clear_map_of_active_timers();
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
 void Document::destroy()
 {
@@ -2668,7 +2689,8 @@ void Document::destroy()
     // 2. Set document's salvageable state to false.
     m_salvageable = false;
 
-    // FIXME: 3. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+    // 3. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+    run_unloading_cleanup_steps();
 
     // 5. Remove any tasks whose document is document from any task queue (without running those tasks).
     HTML::main_thread_event_loop().task_queue().remove_tasks_matching([this](auto& task) {

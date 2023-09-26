@@ -545,6 +545,8 @@ private:
 
     void tear_down_layout_tree();
 
+    void run_unloading_cleanup_steps();
+
     void evaluate_media_rules();
 
     WebIDL::ExceptionOr<void> run_the_document_write_steps(StringView);

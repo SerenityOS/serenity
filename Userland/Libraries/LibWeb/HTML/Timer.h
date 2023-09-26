@@ -24,6 +24,7 @@ public:
     virtual ~Timer() override;
 
     void start();
+    void stop();
 
 private:
     Timer(JS::Object& window, i32 milliseconds, Function<void()> callback, i32 id);
