@@ -231,35 +231,40 @@ void MapWidget::context_menu_event(GUI::ContextMenuEvent& event)
     if (!m_context_menu_enabled)
         return;
 
-    LatLng latlng = { tile_y_to_latitude(latitude_to_tile_y(m_center.latitude, m_zoom) + static_cast<double>(event.position().y() - height() / 2) / TILE_SIZE, m_zoom),
+    m_context_menu_latlng = { tile_y_to_latitude(latitude_to_tile_y(m_center.latitude, m_zoom) + static_cast<double>(event.position().y() - height() / 2) / TILE_SIZE, m_zoom),
         tile_x_to_longitude(longitude_to_tile_x(m_center.longitude, m_zoom) + static_cast<double>(event.position().x() - width() / 2) / TILE_SIZE, m_zoom) };
 
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(GUI::Action::create(
-        "&Copy Coordinates to Clipboard", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [latlng](auto&) {
-            GUI::Clipboard::the().set_plain_text(MUST(String::formatted("{}, {}", latlng.latitude, latlng.longitude)).bytes_as_string_view());
+        "&Copy Coordinates to Clipboard", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [this](auto&) {
+            GUI::Clipboard::the().set_plain_text(MUST(String::formatted("{}, {}", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude)).bytes_as_string_view());
         }));
     m_context_menu->add_separator();
+    if (!m_context_menu_actions.is_empty()) {
+        for (auto& action : m_context_menu_actions)
+            m_context_menu->add_action(action);
+        m_context_menu->add_separator();
+    }
     auto link_icon = MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-symlink.png"sv));
     m_context_menu->add_action(GUI::Action::create(
-        "Open in &OpenStreetMap", link_icon, [this, latlng](auto&) {
-            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.openstreetmap.org/#map={}/{}/{}", m_zoom, latlng.latitude, latlng.longitude))));
+        "Open in &OpenStreetMap", link_icon, [this](auto&) {
+            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.openstreetmap.org/#map={}/{}/{}", m_zoom, m_context_menu_latlng.latitude, m_context_menu_latlng.longitude))));
         }));
     m_context_menu->add_action(GUI::Action::create(
-        "Open in &Google Maps", link_icon, [this, latlng](auto&) {
-            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.google.com/maps/@{},{},{}z", latlng.latitude, latlng.longitude, m_zoom))));
+        "Open in &Google Maps", link_icon, [this](auto&) {
+            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.google.com/maps/@{},{},{}z", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude, m_zoom))));
         }));
     m_context_menu->add_action(GUI::Action::create(
-        "Open in &Bing Maps", link_icon, [this, latlng](auto&) {
-            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.bing.com/maps/?cp={}~{}&lvl={}", latlng.latitude, latlng.longitude, m_zoom))));
+        "Open in &Bing Maps", link_icon, [this](auto&) {
+            Desktop::Launcher::open(URL(MUST(String::formatted("https://www.bing.com/maps/?cp={}~{}&lvl={}", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude, m_zoom))));
         }));
     m_context_menu->add_action(GUI::Action::create(
-        "Open in &DuckDuckGo Maps", link_icon, [latlng](auto&) {
-            Desktop::Launcher::open(URL(MUST(String::formatted("https://duckduckgo.com/?q={},+{}&ia=web&iaxm=maps", latlng.latitude, latlng.longitude))));
+        "Open in &DuckDuckGo Maps", link_icon, [this](auto&) {
+            Desktop::Launcher::open(URL(MUST(String::formatted("https://duckduckgo.com/?q={},+{}&ia=web&iaxm=maps", m_context_menu_latlng.latitude, m_context_menu_latlng.longitude))));
         }));
     m_context_menu->add_separator();
     m_context_menu->add_action(GUI::Action::create(
-        "Center &map here", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)), [this, latlng](auto&) { set_center(latlng); }));
+        "Center &map here", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)), [this](auto&) { set_center(m_context_menu_latlng); }));
     m_context_menu->popup(event.screen_position());
 }
 
