@@ -24,7 +24,7 @@ public:
 
     virtual ~HeapFunction() override = default;
 
-    Function<T> const& function() const { return m_function; }
+    [[nodiscard]] Function<T> const& function() const { return m_function; }
 
 private:
     HeapFunction(Function<T> function)
