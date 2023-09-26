@@ -173,14 +173,15 @@ void Interpreter::run_bytecode()
 
         while (!pc.at_end()) {
             auto& instruction = *pc;
+
             auto ran_or_error = instruction.execute(*this);
             if (ran_or_error.is_error()) [[unlikely]] {
                 reg(Register::exception()) = *ran_or_error.throw_completion().value();
                 if (unwind_contexts().is_empty())
-                    break;
+                    return;
                 auto& unwind_context = unwind_contexts().last();
                 if (unwind_context.executable != m_current_executable)
-                    break;
+                    return;
                 if (unwind_context.handler && !unwind_context.handler_called) {
                     vm().running_execution_context().lexical_environment = unwind_context.lexical_environment;
                     m_current_block = unwind_context.handler;
@@ -232,9 +233,6 @@ void Interpreter::run_bytecode()
         }
 
         if (pc.at_end())
-            break;
-
-        if (!reg(Register::exception()).is_empty())
             break;
 
         if (will_return)
