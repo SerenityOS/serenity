@@ -64,16 +64,6 @@ public:
     auto& saved_lexical_environment_stack() { return call_frame().saved_lexical_environments; }
     auto& unwind_contexts() { return call_frame().unwind_contexts; }
 
-    void jump(Label const& label)
-    {
-        m_pending_jump = &label.block();
-    }
-    void schedule_jump(Label const& label)
-    {
-        m_scheduled_jump = &label.block();
-        VERIFY(unwind_contexts().last().finalizer);
-        jump(Label { *unwind_contexts().last().finalizer });
-    }
     void do_return(Value value)
     {
         reg(Register::return_value()) = value;
@@ -82,7 +72,6 @@ public:
 
     void enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target);
     void leave_unwind_context();
-    ThrowCompletionOr<void> continue_pending_unwind(Label const& resume_label);
 
     Executable& current_executable() { return *m_current_executable; }
     Executable const& current_executable() const { return *m_current_executable; }
@@ -113,7 +102,6 @@ private:
     VM& m_vm;
     Vector<Variant<NonnullOwnPtr<CallFrame>, CallFrame*>> m_call_frames;
     Span<Value> m_current_call_frame;
-    Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
     Executable* m_current_executable { nullptr };
     BasicBlock const* m_current_block { nullptr };

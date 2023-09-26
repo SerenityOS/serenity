@@ -759,10 +759,10 @@ ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& 
     return {};
 }
 
-ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter&) const
 {
-    interpreter.jump(*m_true_target);
-    return {};
+    // Handled in the interpreter loop.
+    VERIFY_NOT_REACHED();
 }
 
 ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -807,40 +807,22 @@ ThrowCompletionOr<void> GetImportMeta::execute_impl(Bytecode::Interpreter& inter
     return {};
 }
 
-ThrowCompletionOr<void> JumpConditional::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> JumpConditional::execute_impl(Bytecode::Interpreter&) const
 {
-    VERIFY(m_true_target.has_value());
-    VERIFY(m_false_target.has_value());
-    auto result = interpreter.accumulator();
-    if (result.to_boolean())
-        interpreter.jump(m_true_target.value());
-    else
-        interpreter.jump(m_false_target.value());
-    return {};
+    // Handled in the interpreter loop.
+    VERIFY_NOT_REACHED();
 }
 
-ThrowCompletionOr<void> JumpNullish::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> JumpNullish::execute_impl(Bytecode::Interpreter&) const
 {
-    VERIFY(m_true_target.has_value());
-    VERIFY(m_false_target.has_value());
-    auto result = interpreter.accumulator();
-    if (result.is_nullish())
-        interpreter.jump(m_true_target.value());
-    else
-        interpreter.jump(m_false_target.value());
-    return {};
+    // Handled in the interpreter loop.
+    VERIFY_NOT_REACHED();
 }
 
-ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) const
 {
-    VERIFY(m_true_target.has_value());
-    VERIFY(m_false_target.has_value());
-    auto result = interpreter.accumulator();
-    if (result.is_undefined())
-        interpreter.jump(m_true_target.value());
-    else
-        interpreter.jump(m_false_target.value());
-    return {};
+    // Handled in the interpreter loop.
+    VERIFY_NOT_REACHED();
 }
 
 // 13.3.8.1 https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
@@ -1058,17 +1040,16 @@ ThrowCompletionOr<void> ThrowIfNullish::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
-ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter&) const
 {
-    interpreter.enter_unwind_context(m_handler_target, m_finalizer_target);
-    interpreter.jump(m_entry_point);
-    return {};
+    // Handled in the interpreter loop.
+    VERIFY_NOT_REACHED();
 }
 
-ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter&) const
 {
-    interpreter.schedule_jump(m_target);
-    return {};
+    // Handled in the interpreter loop.
+    VERIFY_NOT_REACHED();
 }
 
 ThrowCompletionOr<void> LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1083,9 +1064,10 @@ ThrowCompletionOr<void> LeaveUnwindContext::execute_impl(Bytecode::Interpreter& 
     return {};
 }
 
-ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interpreter&) const
 {
-    return interpreter.continue_pending_unwind(m_resume_target);
+    // Handled in the interpreter loop.
+    VERIFY_NOT_REACHED();
 }
 
 ThrowCompletionOr<void> PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const

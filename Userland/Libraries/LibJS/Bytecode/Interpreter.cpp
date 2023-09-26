@@ -171,12 +171,67 @@ void Interpreter::run_bytecode()
         bool will_return = false;
         bool will_yield = false;
 
+        ThrowCompletionOr<void> result;
+
         while (!pc.at_end()) {
             auto& instruction = *pc;
 
-            auto ran_or_error = instruction.execute(*this);
-            if (ran_or_error.is_error()) [[unlikely]] {
-                reg(Register::exception()) = *ran_or_error.throw_completion().value();
+            switch (instruction.type()) {
+            case Instruction::Type::Jump:
+                m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
+                goto start;
+            case Instruction::Type::JumpConditional:
+                if (accumulator().to_boolean())
+                    m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
+                else
+                    m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
+                goto start;
+            case Instruction::Type::JumpNullish:
+                if (accumulator().is_nullish())
+                    m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
+                else
+                    m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
+                goto start;
+            case Instruction::Type::JumpUndefined:
+                if (accumulator().is_undefined())
+                    m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
+                else
+                    m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
+                goto start;
+            case Instruction::Type::EnterUnwindContext:
+                enter_unwind_context(
+                    static_cast<Op::EnterUnwindContext const&>(instruction).handler_target(),
+                    static_cast<Op::EnterUnwindContext const&>(instruction).finalizer_target());
+                m_current_block = &static_cast<Op::EnterUnwindContext const&>(instruction).entry_point().block();
+                goto start;
+            case Instruction::Type::ContinuePendingUnwind:
+                if (auto exception = reg(Register::exception()); !exception.is_empty()) {
+                    result = throw_completion(exception);
+                    break;
+                }
+                if (!saved_return_value().is_empty()) {
+                    do_return(saved_return_value());
+                    break;
+                }
+                if (m_scheduled_jump) {
+                    // FIXME: If we `break` or `continue` in the finally, we need to clear
+                    //        this field
+                    m_current_block = exchange(m_scheduled_jump, nullptr);
+                } else {
+                    m_current_block = &static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target().block();
+                }
+                goto start;
+            case Instruction::Type::ScheduleJump:
+                m_scheduled_jump = &static_cast<Op::ScheduleJump const&>(instruction).target().block();
+                m_current_block = unwind_contexts().last().finalizer;
+                goto start;
+            default:
+                result = instruction.execute(*this);
+                break;
+            }
+
+            if (result.is_error()) [[unlikely]] {
+                reg(Register::exception()) = *result.throw_completion().value();
                 if (unwind_contexts().is_empty())
                     return;
                 auto& unwind_context = unwind_contexts().last();
@@ -204,10 +259,7 @@ void Interpreter::run_bytecode()
                 // If you run into this, you probably forgot to remove the current unwind_context somewhere.
                 VERIFY_NOT_REACHED();
             }
-            if (m_pending_jump.has_value()) {
-                m_current_block = m_pending_jump.release_value();
-                goto start;
-            }
+
             if (!reg(Register::return_value()).is_empty()) {
                 will_return = true;
                 // Note: A `yield` statement will not go through a finally statement,
@@ -313,27 +365,6 @@ void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<
 void Interpreter::leave_unwind_context()
 {
     unwind_contexts().take_last();
-}
-
-ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume_label)
-{
-    if (auto exception = reg(Register::exception()); !exception.is_empty())
-        return throw_completion(exception);
-
-    if (!saved_return_value().is_empty()) {
-        do_return(saved_return_value());
-        return {};
-    }
-
-    if (m_scheduled_jump) {
-        // FIXME: If we `break` or `continue` in the finally, we need to clear
-        //        this field
-        jump(Label { *m_scheduled_jump });
-        m_scheduled_jump = nullptr;
-    } else {
-        jump(resume_label);
-    }
-    return {};
 }
 
 ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
