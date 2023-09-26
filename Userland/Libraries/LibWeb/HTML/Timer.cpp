@@ -34,11 +34,17 @@ void Timer::visit_edges(Cell::Visitor& visitor)
 
 Timer::~Timer()
 {
+    VERIFY(!m_timer->is_active());
 }
 
 void Timer::start()
 {
     m_timer->start();
+}
+
+void Timer::stop()
+{
+    m_timer->stop();
 }
 
 }

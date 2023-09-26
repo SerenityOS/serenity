@@ -183,13 +183,24 @@ i32 WindowOrWorkerGlobalScopeMixin::set_interval(TimerHandler handler, i32 timeo
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-cleartimeout
 void WindowOrWorkerGlobalScopeMixin::clear_timeout(i32 id)
 {
+    if (auto timer = m_timers.get(id); timer.has_value())
+        timer.value()->stop();
     m_timers.remove(id);
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-clearinterval
 void WindowOrWorkerGlobalScopeMixin::clear_interval(i32 id)
 {
+    if (auto timer = m_timers.get(id); timer.has_value())
+        timer.value()->stop();
     m_timers.remove(id);
+}
+
+void WindowOrWorkerGlobalScopeMixin::clear_map_of_active_timers()
+{
+    for (auto& it : m_timers)
+        it.value->stop();
+    m_timers.clear();
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
