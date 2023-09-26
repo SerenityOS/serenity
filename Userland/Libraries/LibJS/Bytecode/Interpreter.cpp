@@ -164,11 +164,10 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
 void Interpreter::run_bytecode()
 {
     for (;;) {
+    start:
         auto pc = InstructionStreamIterator { m_current_block->instruction_stream(), m_current_executable };
         TemporaryChange temp_change { m_pc, Optional<InstructionStreamIterator&>(pc) };
 
-        // FIXME: This is getting kinda spaghetti-y
-        bool will_jump = false;
         bool will_return = false;
         bool will_yield = false;
 
@@ -189,8 +188,7 @@ void Interpreter::run_bytecode()
 
                     accumulator() = reg(Register::exception());
                     reg(Register::exception()) = {};
-                    will_jump = true;
-                    break;
+                    goto start;
                 }
                 if (unwind_context.finalizer) {
                     m_current_block = unwind_context.finalizer;
@@ -199,8 +197,7 @@ void Interpreter::run_bytecode()
                     // handled by `catch`, we swallow it.
                     if (!unwind_context.handler_called)
                         reg(Register::exception()) = {};
-                    will_jump = true;
-                    break;
+                    goto start;
                 }
                 // An unwind context with no handler or finalizer? We have nowhere to jump, and continuing on will make us crash on the next `Call` to a non-native function if there's an exception! So let's crash here instead.
                 // If you run into this, you probably forgot to remove the current unwind_context somewhere.
@@ -208,8 +205,7 @@ void Interpreter::run_bytecode()
             }
             if (m_pending_jump.has_value()) {
                 m_current_block = m_pending_jump.release_value();
-                will_jump = true;
-                break;
+                goto start;
             }
             if (!reg(Register::return_value()).is_empty()) {
                 will_return = true;
@@ -223,9 +219,6 @@ void Interpreter::run_bytecode()
             }
             ++pc;
         }
-
-        if (will_jump)
-            continue;
 
         if (!unwind_contexts().is_empty() && !will_yield) {
             auto& unwind_context = unwind_contexts().last();
