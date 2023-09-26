@@ -10,6 +10,12 @@
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     AK::set_debug_enabled(false);
-    (void)Compress::GzipCompressor::compress_all(ReadonlyBytes { data, size });
+    auto input = ReadonlyBytes { data, size };
+
+    auto compressed = MUST(Compress::GzipCompressor::compress_all(input));
+    auto decompressed = MUST(Compress::GzipDecompressor::decompress_all(compressed));
+
+    VERIFY(decompressed == input);
+
     return 0;
 }
