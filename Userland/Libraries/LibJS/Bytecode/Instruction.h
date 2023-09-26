@@ -158,35 +158,32 @@ private:
 class InstructionStreamIterator {
 public:
     InstructionStreamIterator(ReadonlyBytes bytes, Executable const* executable = nullptr)
-        : m_bytes(bytes)
+        : m_begin(bytes.data())
+        , m_end(bytes.data() + bytes.size())
+        , m_ptr(bytes.data())
         , m_executable(executable)
     {
     }
 
-    size_t offset() const { return m_offset; }
-    bool at_end() const { return m_offset >= m_bytes.size(); }
-    void jump(size_t offset)
-    {
-        VERIFY(offset <= m_bytes.size());
-        m_offset = offset;
-    }
+    size_t offset() const { return m_ptr - m_begin; }
+    bool at_end() const { return m_ptr >= m_end; }
 
     Instruction const& operator*() const { return dereference(); }
 
     ALWAYS_INLINE void operator++()
     {
-        VERIFY(!at_end());
-        m_offset += dereference().length();
+        m_ptr += dereference().length();
     }
 
     UnrealizedSourceRange source_range() const;
     RefPtr<SourceCode> source_code() const;
 
 private:
-    Instruction const& dereference() const { return *reinterpret_cast<Instruction const*>(m_bytes.data() + offset()); }
+    Instruction const& dereference() const { return *reinterpret_cast<Instruction const*>(m_ptr); }
 
-    ReadonlyBytes m_bytes;
-    size_t m_offset { 0 };
+    u8 const* m_begin { nullptr };
+    u8 const* m_end { nullptr };
+    u8 const* m_ptr { nullptr };
     Executable const* m_executable { nullptr };
 };
 
