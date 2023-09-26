@@ -839,8 +839,11 @@
     "longhands": [
       "font-family",
       "font-size",
+      "font-stretch",
+      "font-style",
       "font-variant",
-      "font-weight"
+      "font-weight",
+      "line-height"
     ]
   },
   "font-family": {

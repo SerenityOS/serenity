@@ -97,6 +97,15 @@ String ShorthandStyleValue::to_string() const
         return MUST(String::formatted("{} {} {}", longhand(PropertyID::FlexGrow)->to_string(), longhand(PropertyID::FlexShrink)->to_string(), longhand(PropertyID::FlexBasis)->to_string()));
     case PropertyID::FlexFlow:
         return MUST(String::formatted("{} {}", longhand(PropertyID::FlexDirection)->to_string(), longhand(PropertyID::FlexWrap)->to_string()));
+    case PropertyID::Font:
+        return MUST(String::formatted("{} {} {} {} {} / {} {}",
+            longhand(PropertyID::FontStyle)->to_string(),
+            longhand(PropertyID::FontVariant)->to_string(),
+            longhand(PropertyID::FontWeight)->to_string(),
+            longhand(PropertyID::FontStretch)->to_string(),
+            longhand(PropertyID::FontSize)->to_string(),
+            longhand(PropertyID::LineHeight)->to_string(),
+            longhand(PropertyID::FontFamily)->to_string()));
     case PropertyID::GridArea: {
         auto& row_start = longhand(PropertyID::GridRowStart)->as_grid_track_placement();
         auto& column_start = longhand(PropertyID::GridColumnStart)->as_grid_track_placement();
