@@ -27,4 +27,6 @@ void ladybird_web_view_close(LadybirdWebView* self);
 class LadybirdViewImpl;
 LadybirdViewImpl* ladybird_web_view_get_impl(LadybirdWebView* self);
 
+void ladybird_web_view_redraw_favicon(LadybirdWebView* self);
+
 G_END_DECLS

@@ -58,6 +58,7 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     on_favicon_change = [this](Gfx::Bitmap const& bitmap) {
         LadybirdBitmapPaintable* favicon_paintable = LADYBIRD_BITMAP_PAINTABLE(ladybird_web_view_get_favicon(m_widget));
         ladybird_bitmap_paintable_push_bitmap(favicon_paintable, &bitmap, bitmap.width(), bitmap.height(), 1.0, false);
+        ladybird_web_view_redraw_favicon(m_widget);
     };
 
     on_scroll_by_delta = [this](auto x_delta, auto y_delta) {

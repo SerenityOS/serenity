@@ -15,4 +15,7 @@ void ladybird_history_entry_set_url(LadybirdHistoryEntry* self, char const* url)
 char const* ladybird_history_entry_get_title(LadybirdHistoryEntry* self);
 void ladybird_history_entry_set_title(LadybirdHistoryEntry* self, char const* title);
 
+GdkPaintable* ladybird_history_entry_get_favicon(LadybirdHistoryEntry* self);
+void ladybird_history_entry_set_favicon(LadybirdHistoryEntry* self, GdkPaintable* paintable);
+
 G_END_DECLS

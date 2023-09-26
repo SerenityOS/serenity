@@ -638,6 +638,27 @@ GdkPaintable* ladybird_web_view_get_favicon(LadybirdWebView* self)
     return GDK_PAINTABLE(self->favicon);
 }
 
+void ladybird_web_view_redraw_favicon(LadybirdWebView* self)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    // Is this horrible? Yes, yes it is.
+    GskRenderer* renderer = gsk_cairo_renderer_new();
+    gsk_renderer_realize(renderer, nullptr, nullptr);
+    GtkSnapshot* snapshot = gtk_snapshot_new();
+    // FIXME what
+    gdk_paintable_snapshot(GDK_PAINTABLE(self->favicon), snapshot, 64, 64);
+    GskRenderNode* node = gtk_snapshot_free_to_node(snapshot);
+    GdkTexture* texture = gsk_renderer_render_texture(renderer, node, nullptr);
+    gsk_render_node_unref(node);
+    gsk_renderer_unrealize(renderer);
+    g_object_unref(renderer);
+
+    LadybirdHistoryEntry* entry = ladybird_navigation_history_get_current_entry(self->navigation_history);
+    ladybird_history_entry_set_favicon(entry, GDK_PAINTABLE(texture));
+    g_object_unref(texture);
+}
+
 static void ladybird_web_view_snapshot(GtkWidget* widget, GtkSnapshot* snapshot)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(widget);

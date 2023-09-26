@@ -52,6 +52,21 @@ size_t ladybird_navigation_history_get_current_position(LadybirdNavigationHistor
     return self->current_position;
 }
 
+void ladybird_navigation_history_set_current_position(LadybirdNavigationHistory* self, size_t position)
+{
+    g_return_if_fail(LADYBIRD_IS_NAVIGATION_HISTORY(self));
+    g_return_if_fail(position < self->entries.size());
+
+    if (self->current_position == position)
+        return;
+    self->current_position = position;
+
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CAN_NAVIGATE_BACK]);
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CAN_NAVIGATE_FORWARD]);
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CURRENT_POSITION]);
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CURRENT_ENTRY]);
+}
+
 LadybirdHistoryEntry* ladybird_navigation_history_get_current_entry(LadybirdNavigationHistory* self)
 {
     g_return_val_if_fail(LADYBIRD_IS_NAVIGATION_HISTORY(self), nullptr);
@@ -86,6 +101,22 @@ void ladybird_navigation_history_navigate(LadybirdNavigationHistory* self, int d
     } else {
         self->current_position += delta;
     }
+
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CAN_NAVIGATE_BACK]);
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CAN_NAVIGATE_FORWARD]);
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CURRENT_POSITION]);
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CURRENT_ENTRY]);
+}
+
+void ladybird_navigation_history_navigate_to_entry(LadybirdNavigationHistory* self, LadybirdHistoryEntry* entry)
+{
+    g_return_if_fail(LADYBIRD_IS_NAVIGATION_HISTORY(self));
+    g_return_if_fail(LADYBIRD_IS_HISTORY_ENTRY(entry));
+
+    auto optional_index = self->entries.find_first_index(entry);
+    g_return_if_fail(optional_index.has_value());
+
+    self->current_position = optional_index.value();
 
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CAN_NAVIGATE_BACK]);
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CAN_NAVIGATE_FORWARD]);
@@ -128,9 +159,15 @@ static void ladybird_navigation_history_get_property(GObject* object, guint prop
     }
 }
 
-static void ladybird_navigation_history_set_property(GObject* object, guint prop_id, [[maybe_unused]] GValue const* value, GParamSpec* pspec)
+static void ladybird_navigation_history_set_property(GObject* object, guint prop_id, GValue const* value, GParamSpec* pspec)
 {
+    LadybirdNavigationHistory* self = LADYBIRD_NAVIGATION_HISTORY(object);
+
     switch (prop_id) {
+    case PROP_CURRENT_POSITION:
+        ladybird_navigation_history_set_current_position(self, g_value_get_uint(value));
+        break;
+
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -184,7 +221,7 @@ static void* ladybird_navigation_history_get_item(GListModel* model, guint posit
     LadybirdNavigationHistory* self = LADYBIRD_NAVIGATION_HISTORY(model);
     g_return_val_if_fail(position < self->entries.size(), nullptr);
 
-    return self->entries[position];
+    return g_object_ref(self->entries[position]);
 }
 
 static void ladybird_navigation_history_init_list_model(GListModelInterface* iface)
@@ -203,13 +240,14 @@ static void ladybird_navigation_history_class_init(LadybirdNavigationHistoryClas
     object_class->dispose = ladybird_navigation_history_dispose;
     object_class->finalize = ladybird_navigation_history_finalize;
 
+    constexpr GParamFlags param_flags = GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
     constexpr GParamFlags ro_param_flags = GParamFlags(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     props[PROP_ITEM_TYPE] = g_param_spec_gtype("item-type", nullptr, nullptr, G_TYPE_OBJECT, ro_param_flags);
     props[PROP_N_ITEMS] = g_param_spec_uint("n-items", nullptr, nullptr, 0, G_MAXUINT, 0, ro_param_flags);
     props[PROP_CAN_NAVIGATE_BACK] = g_param_spec_boolean("can-navigate-back", nullptr, nullptr, false, ro_param_flags);
     props[PROP_CAN_NAVIGATE_FORWARD] = g_param_spec_boolean("can-navigate-forward", nullptr, nullptr, false, ro_param_flags);
-    props[PROP_CURRENT_POSITION] = g_param_spec_uint("current-position", nullptr, nullptr, 0, G_MAXUINT, 0, ro_param_flags);
+    props[PROP_CURRENT_POSITION] = g_param_spec_uint("current-position", nullptr, nullptr, 0, G_MAXUINT, 0, param_flags);
     props[PROP_CURRENT_ENTRY] = g_param_spec_object("current-entry", nullptr, nullptr, LADYBIRD_TYPE_HISTORY_ENTRY, ro_param_flags);
 
     g_object_class_install_properties(object_class, NUM_PROPS, props);

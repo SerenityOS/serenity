@@ -60,6 +60,51 @@ Popover bookmarks_popover {
   }
 }
 
+Popover navigation_history_popover {
+  styles ["menu"]
+
+  ScrolledWindow {
+    hscrollbar-policy: never;
+    propagate-natural-height: true;
+
+    ListView navigation_history_list_view {
+      single-click-activate: true;
+      activate => $on_navigation_history_activate(template) swapped;
+
+      factory: BuilderListItemFactory {
+        template ListItem {
+          child: Box {
+            orientation: horizontal;
+            spacing: 6;
+
+            Image {
+              paintable: bind template.item as <$LadybirdHistoryEntry>.favicon;
+            }
+            Box {
+              hexpand: true;
+              orientation: vertical;
+              Label {
+                label: bind template.item as <$LadybirdHistoryEntry>.title;
+                xalign: 0;
+                width-chars: 30;
+                single-line-mode: true;
+                ellipsize: end;
+              }
+              Label {
+                label: bind template.item as <$LadybirdHistoryEntry>.url;
+                xalign: 0;
+                width-chars: 30;
+                ellipsize: end;
+                styles ["dim-label"]
+              }
+            }
+          };
+        }
+      };
+    }
+  }
+}
+
 template $LadybirdWindow : Adw.ApplicationWindow {
   title: "Ladybird";
   default-height: 560;
@@ -99,12 +144,24 @@ template $LadybirdWindow : Adw.ApplicationWindow {
             action-name: "page.navigate-back";
             tooltip-text: _("Navigate Back");
             focus-on-click: false;
+
+            GestureClick {
+              button: 3;
+              pressed => $claim_event();
+              released => $on_navigate_back_right_clicked(template) swapped;
+            }
           }
           Button {
             icon-name: "go-next-symbolic";
             action-name: "page.navigate-forward";
             tooltip-text: _("Navigate Forward");
             focus-on-click: false;
+
+            GestureClick {
+              button: 3;
+              pressed => $claim_event();
+              released => $on_navigate_forward_right_clicked(template) swapped;
+            }
           }
           Button {
             icon-name: "view-refresh-symbolic";
