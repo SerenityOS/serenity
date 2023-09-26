@@ -188,7 +188,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
         while (!pc.at_end()) {
             auto& instruction = *pc;
             auto ran_or_error = instruction.execute(*this);
-            if (ran_or_error.is_error()) {
+            if (ran_or_error.is_error()) [[unlikely]] {
                 reg(Register::exception()) = *ran_or_error.throw_completion().value();
                 if (unwind_contexts().is_empty())
                     break;
