@@ -77,7 +77,7 @@ public:
     void do_return(Value return_value)
     {
         m_return_value = return_value;
-        m_saved_exception = {};
+        reg(Register::exception()) = {};
     }
 
     void enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target);
@@ -118,7 +118,6 @@ private:
     BasicBlock const* m_scheduled_jump { nullptr };
     Optional<Value> m_this_value;
     Optional<Value> m_return_value;
-    Optional<Value> m_saved_exception;
     Executable* m_current_executable { nullptr };
     BasicBlock const* m_current_block { nullptr };
     Optional<InstructionStreamIterator&> m_pc {};
