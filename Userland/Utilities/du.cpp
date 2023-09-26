@@ -36,6 +36,26 @@ struct DuOption {
     size_t max_depth = SIZE_MAX;
 };
 
+struct VisitedFile {
+    dev_t device;
+    ino_t inode;
+};
+
+template<>
+struct AK::Traits<VisitedFile> : public GenericTraits<VisitedFile> {
+    static unsigned hash(VisitedFile const& visited_file)
+    {
+        return pair_int_hash(u64_hash(visited_file.device), u64_hash(visited_file.inode));
+    }
+
+    static bool equals(VisitedFile const& a, VisitedFile const& b)
+    {
+        return a.device == b.device && a.inode == b.inode;
+    }
+};
+
+static HashTable<VisitedFile> s_visited_files;
+
 static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option);
 static u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
 
@@ -144,6 +164,13 @@ u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, s
     }
 
     auto path_stat = path_stat_or_error.release_value();
+
+    VisitedFile visited_file { path_stat.st_dev, path_stat.st_ino };
+    if (s_visited_files.contains(visited_file)) {
+        return 0;
+    }
+    s_visited_files.set(visited_file);
+
     bool const is_directory = S_ISDIR(path_stat.st_mode);
     if (is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
