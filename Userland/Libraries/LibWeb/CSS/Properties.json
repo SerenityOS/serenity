@@ -953,7 +953,9 @@
     ],
     "percentages-resolve-to": "length",
     "longhands": [
-      "grid-template"
+      "grid-template-areas",
+      "grid-template-rows",
+      "grid-template-columns"
     ]
   },
   "grid-area": {
