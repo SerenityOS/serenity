@@ -398,7 +398,8 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen
                 // If we didn't focus anything, place the document text cursor at the mouse position.
                 // FIXME: This is all rather strange. Find a better solution.
                 if (!did_focus_something) {
-                    m_browsing_context->set_cursor_position(DOM::Position(*paintable->dom_node(), result->index_in_node));
+                    auto& realm = document->realm();
+                    m_browsing_context->set_cursor_position(DOM::Position::create(realm, *paintable->dom_node(), result->index_in_node));
                     if (auto selection = document->get_selection()) {
                         (void)selection->set_base_and_extent(*paintable->dom_node(), result->index_in_node, *paintable->dom_node(), result->index_in_node);
                     }
@@ -419,6 +420,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
         return false;
 
     auto& document = *m_browsing_context->active_document();
+    auto& realm = document.realm();
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
@@ -495,7 +497,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
         if (m_in_mouse_selection) {
             auto hit = paint_root()->hit_test(position, Painting::HitTestType::TextCursor);
             if (start_index.has_value() && hit.has_value() && hit->dom_node()) {
-                m_browsing_context->set_cursor_position(DOM::Position(*hit->dom_node(), *start_index));
+                m_browsing_context->set_cursor_position(DOM::Position::create(realm, *hit->dom_node(), *start_index));
                 if (auto selection = document.get_selection()) {
                     auto anchor_node = selection->anchor_node();
                     if (anchor_node)
@@ -611,7 +613,8 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint scre
                 return text_for_rendering.length();
             }();
 
-            m_browsing_context->set_cursor_position(DOM::Position(hit_dom_node, first_word_break_after));
+            auto& realm = node->document().realm();
+            m_browsing_context->set_cursor_position(DOM::Position::create(realm, hit_dom_node, first_word_break_after));
             if (auto selection = node->document().get_selection()) {
                 (void)selection->set_base_and_extent(hit_dom_node, first_word_break_before, hit_dom_node, first_word_break_after);
             }
@@ -709,13 +712,15 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         return focus_next_element();
     }
 
+    auto& realm = document->realm();
+
     if (auto selection = document->get_selection()) {
         auto range = selection->range();
         if (range && range->start_container()->is_editable()) {
             selection->remove_all_ranges();
 
             // FIXME: This doesn't work for some reason?
-            m_browsing_context->set_cursor_position({ *range->start_container(), range->start_offset() });
+            m_browsing_context->set_cursor_position(DOM::Position::create(realm, *range->start_container(), range->start_offset()));
 
             if (key == KeyCode::Key_Backspace || key == KeyCode::Key_Delete) {
                 m_edit_event_handler->handle_delete(*range);
@@ -723,7 +728,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             }
             if (!should_ignore_keydown_event(code_point)) {
                 m_edit_event_handler->handle_delete(*range);
-                m_edit_event_handler->handle_insert(m_browsing_context->cursor_position(), code_point);
+                m_edit_event_handler->handle_insert(JS::NonnullGCPtr { *m_browsing_context->cursor_position() }, code_point);
                 m_browsing_context->increment_cursor_position_offset();
                 return true;
             }
@@ -735,22 +740,22 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         media_element.handle_keydown({}, key).release_value_but_fixme_should_propagate_errors();
     }
 
-    if (m_browsing_context->cursor_position().is_valid() && m_browsing_context->cursor_position().node()->is_editable()) {
+    if (m_browsing_context->cursor_position() && m_browsing_context->cursor_position()->node()->is_editable()) {
         if (key == KeyCode::Key_Backspace) {
             if (!m_browsing_context->decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node and delete the last character there.
                 return true;
             }
 
-            m_edit_event_handler->handle_delete_character_after(m_browsing_context->cursor_position());
+            m_edit_event_handler->handle_delete_character_after(*m_browsing_context->cursor_position());
             return true;
         }
         if (key == KeyCode::Key_Delete) {
-            if (m_browsing_context->cursor_position().offset_is_at_end_of_node()) {
+            if (m_browsing_context->cursor_position()->offset_is_at_end_of_node()) {
                 // FIXME: Move to the next node and delete the first character there.
                 return true;
             }
-            m_edit_event_handler->handle_delete_character_after(m_browsing_context->cursor_position());
+            m_edit_event_handler->handle_delete_character_after(*m_browsing_context->cursor_position());
             return true;
         }
         if (key == KeyCode::Key_Right) {
@@ -766,17 +771,17 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             return true;
         }
         if (key == KeyCode::Key_Home) {
-            auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(m_browsing_context->cursor_position().node()));
-            m_browsing_context->set_cursor_position(DOM::Position { node, 0 });
+            auto& node = verify_cast<DOM::Text>(*m_browsing_context->cursor_position()->node());
+            m_browsing_context->set_cursor_position(DOM::Position::create(realm, node, 0));
             return true;
         }
         if (key == KeyCode::Key_End) {
-            auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(m_browsing_context->cursor_position().node()));
-            m_browsing_context->set_cursor_position(DOM::Position { node, (unsigned)node.data().bytes().size() });
+            auto& node = verify_cast<DOM::Text>(*m_browsing_context->cursor_position()->node());
+            m_browsing_context->set_cursor_position(DOM::Position::create(realm, node, (unsigned)node.data().bytes().size()));
             return true;
         }
         if (!should_ignore_keydown_event(code_point)) {
-            m_edit_event_handler->handle_insert(m_browsing_context->cursor_position(), code_point);
+            m_edit_event_handler->handle_insert(JS::NonnullGCPtr { *m_browsing_context->cursor_position() }, code_point);
             m_browsing_context->increment_cursor_position_offset();
             return true;
         }

@@ -10,21 +10,23 @@
 #include <AK/Error.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {
 
-class Position {
+class Position final : public JS::Cell {
+    JS_CELL(Position, JS::Cell);
+
 public:
-    Position() = default;
-    Position(Node&, unsigned offset);
+    [[nodiscard]] static JS::NonnullGCPtr<Position> create(JS::Realm& realm, JS::NonnullGCPtr<Node> node, unsigned offset)
+    {
+        return realm.heap().allocate<Position>(realm, node, offset);
+    }
 
-    bool is_valid() const { return m_node.ptr(); }
-
-    Node* node() { return m_node.cell(); }
-    Node const* node() const { return m_node.cell(); }
+    JS::GCPtr<Node> node() { return m_node; }
+    JS::GCPtr<Node const> node() const { return m_node; }
 
     unsigned offset() const { return m_offset; }
     bool offset_is_at_end_of_node() const;
@@ -32,15 +34,17 @@ public:
     bool increment_offset();
     bool decrement_offset();
 
-    bool operator==(Position const& other) const
+    bool equals(JS::NonnullGCPtr<Position> other) const
     {
-        return m_node.ptr() == other.m_node.ptr() && m_offset == other.m_offset;
+        return m_node.ptr() == other->m_node.ptr() && m_offset == other->m_offset;
     }
 
     ErrorOr<String> to_string() const;
 
 private:
-    JS::Handle<Node> m_node;
+    Position(JS::GCPtr<Node>, unsigned offset);
+
+    JS::GCPtr<Node> m_node;
     unsigned m_offset { 0 };
 };
 

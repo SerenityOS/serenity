@@ -13,8 +13,8 @@
 
 namespace Web::DOM {
 
-Position::Position(Node& node, unsigned offset)
-    : m_node(JS::make_handle(node))
+Position::Position(JS::GCPtr<Node> node, unsigned offset)
+    : m_node(node)
     , m_offset(offset)
 {
 }
@@ -23,7 +23,7 @@ ErrorOr<String> Position::to_string() const
 {
     if (!node())
         return String::formatted("DOM::Position(nullptr, {})", offset());
-    return String::formatted("DOM::Position({} ({})), {})", node()->node_name(), node(), offset());
+    return String::formatted("DOM::Position({} ({})), {})", node()->node_name(), node().ptr(), offset());
 }
 
 bool Position::increment_offset()

@@ -144,8 +144,8 @@ public:
     CSSPixelPoint to_top_level_position(CSSPixelPoint);
     CSSPixelRect to_top_level_rect(CSSPixelRect const&);
 
-    DOM::Position const& cursor_position() const { return m_cursor_position; }
-    void set_cursor_position(DOM::Position);
+    JS::GCPtr<DOM::Position> cursor_position() const { return m_cursor_position; }
+    void set_cursor_position(JS::NonnullGCPtr<DOM::Position>);
     bool increment_cursor_position_offset();
     bool decrement_cursor_position_offset();
 
@@ -218,7 +218,7 @@ private:
     // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context
     JS::GCPtr<HTML::WindowProxy> m_window_proxy;
 
-    DOM::Position m_cursor_position;
+    JS::GCPtr<DOM::Position> m_cursor_position;
     RefPtr<Core::Timer> m_cursor_blink_timer;
     bool m_cursor_blink_state { false };
 

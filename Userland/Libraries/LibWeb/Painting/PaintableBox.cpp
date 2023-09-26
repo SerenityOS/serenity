@@ -520,11 +520,11 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
     if (!browsing_context.cursor_blink_state())
         return;
 
-    if (browsing_context.cursor_position().node() != &text_node.dom_node())
+    if (browsing_context.cursor_position()->node() != &text_node.dom_node())
         return;
 
     // NOTE: This checks if the cursor is before the start or after the end of the fragment. If it is at the end, after all text, it should still be painted.
-    if (browsing_context.cursor_position().offset() < (unsigned)fragment.start() || browsing_context.cursor_position().offset() > (unsigned)(fragment.start() + fragment.length()))
+    if (browsing_context.cursor_position()->offset() < (unsigned)fragment.start() || browsing_context.cursor_position()->offset() > (unsigned)(fragment.start() + fragment.length()))
         return;
 
     if (!fragment.layout_node().dom_node() || !fragment.layout_node().dom_node()->is_editable())
@@ -533,7 +533,7 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
     auto fragment_rect = fragment.absolute_rect();
 
     CSSPixelRect cursor_rect {
-        fragment_rect.x() + CSSPixels::nearest_value_for(text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position().offset() - fragment.start()))),
+        fragment_rect.x() + CSSPixels::nearest_value_for(text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position()->offset() - fragment.start()))),
         fragment_rect.top(),
         1,
         fragment_rect.height()

@@ -17,19 +17,19 @@
 
 namespace Web {
 
-void EditEventHandler::handle_delete_character_after(DOM::Position const& cursor_position)
+void EditEventHandler::handle_delete_character_after(JS::NonnullGCPtr<DOM::Position> cursor_position)
 {
-    auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(cursor_position.node()));
+    auto& node = verify_cast<DOM::Text>(*cursor_position->node());
     auto& text = node.data();
 
-    auto next_grapheme_offset = Unicode::next_grapheme_segmentation_boundary(Utf8View { text }, cursor_position.offset());
+    auto next_grapheme_offset = Unicode::next_grapheme_segmentation_boundary(Utf8View { text }, cursor_position->offset());
     if (!next_grapheme_offset.has_value()) {
         // FIXME: Move to the next node and delete the first character there.
         return;
     }
 
     StringBuilder builder;
-    builder.append(text.bytes_as_string_view().substring_view(0, cursor_position.offset()));
+    builder.append(text.bytes_as_string_view().substring_view(0, cursor_position->offset()));
     builder.append(text.bytes_as_string_view().substring_view(*next_grapheme_offset));
     node.set_data(MUST(builder.to_string()));
 
@@ -102,15 +102,15 @@ void EditEventHandler::handle_delete(DOM::Range& range)
     m_browsing_context->did_edit({});
 }
 
-void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
+void EditEventHandler::handle_insert(JS::NonnullGCPtr<DOM::Position> position, u32 code_point)
 {
-    if (is<DOM::Text>(*position.node())) {
-        auto& node = verify_cast<DOM::Text>(*position.node());
+    if (is<DOM::Text>(*position->node())) {
+        auto& node = verify_cast<DOM::Text>(*position->node());
 
         StringBuilder builder;
-        builder.append(node.data().bytes_as_string_view().substring_view(0, position.offset()));
+        builder.append(node.data().bytes_as_string_view().substring_view(0, position->offset()));
         builder.append_code_point(code_point);
-        builder.append(node.data().bytes_as_string_view().substring_view(position.offset()));
+        builder.append(node.data().bytes_as_string_view().substring_view(position->offset()));
         node.set_data(MUST(builder.to_string()));
 
         node.invalidate_style();
