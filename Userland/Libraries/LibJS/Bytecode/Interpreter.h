@@ -88,7 +88,6 @@ public:
     Executable const& current_executable() const { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
     auto& instruction_stream_iterator() const { return m_pc; }
-    DeprecatedString debug_position() const;
 
     void visit_edges(Cell::Visitor&);
 

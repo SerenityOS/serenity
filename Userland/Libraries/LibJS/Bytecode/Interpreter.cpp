@@ -339,12 +339,6 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
     return {};
 }
 
-DeprecatedString Interpreter::debug_position() const
-{
-    auto offset = m_pc.has_value() ? m_pc->offset() : 0;
-    return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), offset);
-}
-
 ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
 {
     auto executable_result = Bytecode::Generator::generate(node, kind);
