@@ -1,6 +1,6 @@
 serenity_component(
     Maps
-    REQUIRED
+    RECOMMENDED
     TARGETS Maps
 )
 
