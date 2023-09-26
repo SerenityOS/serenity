@@ -599,11 +599,6 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     case InitializationMode::Set:
         TRY(reference.put_value(vm, interpreter.accumulator()));
         break;
-    case InitializationMode::InitializeOrSet:
-        VERIFY(reference.is_environment_reference());
-        VERIFY(reference.base_environment().is_declarative_environment());
-        TRY(static_cast<DeclarativeEnvironment&>(reference.base_environment()).initialize_or_set_mutable_binding(vm, name, interpreter.accumulator()));
-        break;
     }
     return {};
 }
@@ -1581,9 +1576,7 @@ DeprecatedString EnterObjectEnvironment::to_deprecated_string_impl(Executable co
 
 DeprecatedString SetVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
-    auto initialization_mode_name = m_initialization_mode == InitializationMode ::Initialize ? "Initialize"
-        : m_initialization_mode == InitializationMode::Set                                   ? "Set"
-                                                                                             : "InitializeOrSet";
+    auto initialization_mode_name = m_initialization_mode == InitializationMode::Initialize ? "Initialize" : "Set";
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
     return DeprecatedString::formatted("SetVariable env:{} init:{} {} ({})", mode_string, initialization_mode_name, m_identifier, executable.identifier_table->get(m_identifier));
 }

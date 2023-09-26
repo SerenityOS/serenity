@@ -408,7 +408,6 @@ public:
     enum class InitializationMode {
         Initialize,
         Set,
-        InitializeOrSet,
     };
     explicit SetVariable(IdentifierTableIndex identifier, InitializationMode initialization_mode = InitializationMode::Set, EnvironmentMode mode = EnvironmentMode::Lexical)
         : Instruction(Type::SetVariable, sizeof(*this))
