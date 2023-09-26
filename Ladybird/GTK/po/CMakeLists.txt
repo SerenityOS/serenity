@@ -22,6 +22,7 @@ if (GETTEXT_FOUND AND XGETTEXT)
 
     set(linguas
         eo.po
+        fr.po
         ru.po
         sv.po
     )

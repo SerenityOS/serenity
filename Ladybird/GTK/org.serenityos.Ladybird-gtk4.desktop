@@ -2,6 +2,7 @@
 Name=Ladybird
 GenericName=Web Browser
 GenericName[eo]=Retumilo
+GenericName[fr]=Navigateur Web
 GenericName[ru]=Веб-браузер
 GenericName[sv]=Webbläsare
 Exec=ladybird %U
@@ -17,6 +18,7 @@ X-Purism-FormFactor=Workstation;Mobile;
 [Desktop Action new-window]
 Name=New Window
 Name[eo]=Nova fenestro
+Name[fr]=Nouvelle Fenêtre
 Name[ru]=Новое окно
 Name[sv]=Nytt fönster
 Exec=ladybird --no-such-option
@@ -24,6 +26,7 @@ Exec=ladybird --no-such-option
 [Desktop Action new-incognito-window]
 Name=New Incognito Window
 Name[eo]=Nova inkognita fenestro
+Name[fr]=Nouvelle Fenêtre de Navigation Privée
 Name[ru]=Новое окно инкогнито
 Name[sv]=Nytt privat fönster
 Exec=ladybird --no-such-option
