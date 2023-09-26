@@ -767,13 +767,14 @@ ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter& interpreter) c
 
 ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (!interpreter.this_value().has_value()) {
+    auto& cached_this_value = interpreter.reg(Register::this_value());
+    if (cached_this_value.is_empty()) {
         // OPTIMIZATION: Because the value of 'this' cannot be reassigned during a function execution, it's
         //               resolved once and then saved for subsequent use.
         auto& vm = interpreter.vm();
-        interpreter.this_value() = TRY(vm.resolve_this_binding());
+        cached_this_value = TRY(vm.resolve_this_binding());
     }
-    interpreter.accumulator() = interpreter.this_value().value();
+    interpreter.accumulator() = cached_this_value;
     return {};
 }
 

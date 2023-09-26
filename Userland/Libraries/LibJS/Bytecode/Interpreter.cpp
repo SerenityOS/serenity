@@ -179,8 +179,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
     else
         push_call_frame(make<CallFrame>(), executable.number_of_registers);
 
-    TemporaryChange restore_this_value { m_this_value, {} };
-
     for (;;) {
         auto pc = InstructionStreamIterator { m_current_block->instruction_stream(), m_current_executable };
         TemporaryChange temp_change { m_pc, Optional<InstructionStreamIterator&>(pc) };

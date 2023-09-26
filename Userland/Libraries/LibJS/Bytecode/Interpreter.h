@@ -90,8 +90,6 @@ public:
     auto& instruction_stream_iterator() const { return m_pc; }
     DeprecatedString debug_position() const;
 
-    Optional<Value>& this_value() { return m_this_value; }
-
     void visit_edges(Cell::Visitor&);
 
 private:
@@ -116,7 +114,6 @@ private:
     Span<Value> m_current_call_frame;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
-    Optional<Value> m_this_value;
     Optional<Value> m_return_value;
     Executable* m_current_executable { nullptr };
     BasicBlock const* m_current_block { nullptr };
