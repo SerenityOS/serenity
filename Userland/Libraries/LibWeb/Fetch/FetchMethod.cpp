@@ -62,7 +62,7 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
     (void)global_object;
 
     // 7. Let responseObject be null.
-    JS::Handle<Response> response_object_handle;
+    JS::GCPtr<Response> response_object;
 
     // 8. Let relevantRealm be this’s relevant Realm.
     // NOTE: This assumes that the running execution context is for the fetch() function call.
@@ -81,7 +81,7 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
 
     // 12. Set controller to the result of calling fetch given request and processResponse given response being these
     //     steps:
-    auto process_response = [locally_aborted, promise_capability, request, response_object_handle, &relevant_realm](JS::NonnullGCPtr<Infrastructure::Response> response) mutable {
+    auto process_response = [locally_aborted, promise_capability, request, response_object, &relevant_realm](JS::NonnullGCPtr<Infrastructure::Response> response) mutable {
         // 1. If locallyAborted is true, then abort these steps.
         if (locally_aborted->value())
             return;
@@ -96,7 +96,7 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
             auto deserialized_error = JS::js_undefined();
 
             // 2. Abort the fetch() call with p, request, responseObject, and deserializedError.
-            abort_fetch(relevant_realm, promise_capability, request, response_object_handle.cell(), deserialized_error);
+            abort_fetch(relevant_realm, promise_capability, request, response_object, deserialized_error);
 
             // 3. Abort these steps.
             return;
@@ -111,8 +111,7 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
 
         // 4. Set responseObject to the result of creating a Response object, given response, "immutable", and
         //    relevantRealm.
-        auto response_object = Response::create(relevant_realm, response, Headers::Guard::Immutable);
-        response_object_handle = JS::make_handle(response_object);
+        response_object = Response::create(relevant_realm, response, Headers::Guard::Immutable);
 
         // 5. Resolve p with responseObject.
         WebIDL::resolve_promise(relevant_realm, promise_capability, response_object);
@@ -131,12 +130,8 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
             })));
 
     // 11. Add the following abort steps to requestObject’s signal:
-    request_object->signal()->add_abort_algorithm([locally_aborted, request, controller, promise_capability_handle = JS::make_handle(*promise_capability), request_object_handle = JS::make_handle(*request_object), response_object_handle, &relevant_realm] {
+    request_object->signal()->add_abort_algorithm([locally_aborted, request, controller, promise_capability, request_object, response_object, &relevant_realm] {
         dbgln_if(WEB_FETCH_DEBUG, "Fetch: Request object signal's abort algorithm called");
-
-        auto& promise_capability = *promise_capability_handle;
-        auto& request_object = *request_object_handle;
-        JS::GCPtr<Response> response_object = response_object_handle.ptr();
 
         // 1. Set locallyAborted to true.
         locally_aborted->set_value(true);
@@ -145,10 +140,10 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
         VERIFY(controller);
 
         // 3. Abort controller with requestObject’s signal’s abort reason.
-        controller->abort(relevant_realm, request_object.signal()->reason());
+        controller->abort(relevant_realm, request_object->signal()->reason());
 
         // 4. Abort the fetch() call with p, request, responseObject, and requestObject’s signal’s abort reason.
-        abort_fetch(relevant_realm, promise_capability, request, response_object, request_object.signal()->reason());
+        abort_fetch(relevant_realm, *promise_capability, request, response_object, request_object->signal()->reason());
     });
 
     // 13. Return p.
