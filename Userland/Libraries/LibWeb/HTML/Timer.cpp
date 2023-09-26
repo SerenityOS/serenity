@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Timer.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/Platform/Timer.h>
 
 namespace Web::HTML {
 
@@ -21,9 +21,9 @@ Timer::Timer(JS::Object& window_or_worker_global_scope, i32 milliseconds, Functi
     , m_callback(move(callback))
     , m_id(id)
 {
-    m_timer = Platform::Timer::create_single_shot(milliseconds, [this] {
+    m_timer = Core::Timer::create_single_shot(milliseconds, [this] {
         m_callback();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 void Timer::visit_edges(Cell::Visitor& visitor)
