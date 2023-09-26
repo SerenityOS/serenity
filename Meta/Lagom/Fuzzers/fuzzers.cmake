@@ -11,8 +11,8 @@ set(FUZZER_TARGETS
     FlacLoader
     Gemini
     GIFLoader
-    GzipCompression
     GzipDecompression
+    GzipRoundtrip
     HttpRequest
     ICCProfile
     ICOLoader
@@ -83,8 +83,8 @@ set(FUZZER_DEPENDENCIES_ELF LibELF)
 set(FUZZER_DEPENDENCIES_FlacLoader LibAudio)
 set(FUZZER_DEPENDENCIES_Gemini LibGemini)
 set(FUZZER_DEPENDENCIES_GIFLoader LibGfx)
-set(FUZZER_DEPENDENCIES_GzipCompression LibCompress)
 set(FUZZER_DEPENDENCIES_GzipDecompression LibCompress)
+set(FUZZER_DEPENDENCIES_GzipRoundtrip LibCompress)
 set(FUZZER_DEPENDENCIES_HttpRequest LibHTTP)
 set(FUZZER_DEPENDENCIES_ICCProfile LibGfx)
 set(FUZZER_DEPENDENCIES_ICOLoader LibGfx)

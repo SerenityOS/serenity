@@ -25,8 +25,8 @@
     T(FlacLoader)            \
     T(Gemini)                \
     T(GIFLoader)             \
-    T(GzipCompression)       \
     T(GzipDecompression)     \
+    T(GzipRoundtrip)         \
     T(HttpRequest)           \
     T(ICCProfile)            \
     T(ICOLoader)             \
