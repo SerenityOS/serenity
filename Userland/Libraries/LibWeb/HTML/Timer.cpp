@@ -13,16 +13,17 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<Timer> Timer::create(JS::Object& window_or_worker_global_scope, i32 milliseconds, Function<void()> callback, i32 id)
 {
-    return window_or_worker_global_scope.heap().allocate_without_realm<Timer>(window_or_worker_global_scope, milliseconds, move(callback), id);
+    auto heap_function_callback = JS::create_heap_function(window_or_worker_global_scope.heap(), move(callback));
+    return window_or_worker_global_scope.heap().allocate_without_realm<Timer>(window_or_worker_global_scope, milliseconds, heap_function_callback, id);
 }
 
-Timer::Timer(JS::Object& window_or_worker_global_scope, i32 milliseconds, Function<void()> callback, i32 id)
+Timer::Timer(JS::Object& window_or_worker_global_scope, i32 milliseconds, JS::NonnullGCPtr<JS::HeapFunction<void()>> callback, i32 id)
     : m_window_or_worker_global_scope(window_or_worker_global_scope)
     , m_callback(move(callback))
     , m_id(id)
 {
     m_timer = Core::Timer::create_single_shot(milliseconds, [this] {
-        m_callback();
+        m_callback->function()();
     }).release_value_but_fixme_should_propagate_errors();
 }
 
@@ -30,6 +31,7 @@ void Timer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_window_or_worker_global_scope.ptr());
+    visitor.visit(m_callback);
 }
 
 Timer::~Timer()

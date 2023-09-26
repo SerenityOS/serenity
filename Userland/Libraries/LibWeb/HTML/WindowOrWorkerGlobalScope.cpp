@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/FetchMethod.h>
@@ -226,8 +227,10 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
     // 7. Let initiating script be the active script.
     auto const* initiating_script = Web::Bindings::active_script();
 
+    auto& vm = this_impl().vm();
+
     // 8. Let task be a task that runs the following substeps:
-    JS::SafeFunction<void()> task = [this, handler = move(handler), timeout, arguments = move(arguments), repeat, id, initiating_script]() mutable {
+    auto task = JS::create_heap_function(vm.heap(), Function<void()>([this, handler = move(handler), timeout, arguments = move(arguments), repeat, id, initiating_script]() {
         // 1. If id does not exist in global's map of active timers, then abort these steps.
         if (!m_timers.contains(id))
             return;
@@ -288,14 +291,16 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
             m_timers.remove(id);
             break;
         }
-    };
+    }));
 
     // FIXME: 9. Increment nesting level by one.
     // FIXME: 10. Set task's timer nesting level to nesting level.
 
     // 11. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
-    JS::SafeFunction<void()> completion_step = [this, task = move(task)]() mutable {
-        queue_global_task(Task::Source::TimerTask, this_impl(), move(task));
+    Function<void()> completion_step = [this, task = move(task)]() mutable {
+        queue_global_task(Task::Source::TimerTask, this_impl(), [task] {
+            task->function()();
+        });
     };
 
     // 12. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
