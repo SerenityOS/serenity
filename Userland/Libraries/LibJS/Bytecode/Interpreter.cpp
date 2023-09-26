@@ -161,22 +161,8 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executable, BasicBlock const* entry_point, CallFrame* in_frame)
+void Interpreter::run_bytecode()
 {
-    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
-
-    TemporaryChange restore_executable { m_current_executable, &executable };
-    TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
-
-    VERIFY(!vm().execution_context_stack().is_empty());
-
-    TemporaryChange restore_current_block { m_current_block, entry_point ?: executable.basic_blocks.first() };
-
-    if (in_frame)
-        push_call_frame(in_frame, executable.number_of_registers);
-    else
-        push_call_frame(make<CallFrame>(), executable.number_of_registers);
-
     for (;;) {
         auto pc = InstructionStreamIterator { m_current_block->instruction_stream(), m_current_executable };
         TemporaryChange temp_change { m_pc, Optional<InstructionStreamIterator&>(pc) };
@@ -185,6 +171,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
         bool will_jump = false;
         bool will_return = false;
         bool will_yield = false;
+
         while (!pc.at_end()) {
             auto& instruction = *pc;
             auto ran_or_error = instruction.execute(*this);
@@ -260,6 +247,25 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
         if (will_return)
             break;
     }
+}
+
+Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executable, BasicBlock const* entry_point, CallFrame* in_frame)
+{
+    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
+
+    TemporaryChange restore_executable { m_current_executable, &executable };
+    TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
+
+    VERIFY(!vm().execution_context_stack().is_empty());
+
+    TemporaryChange restore_current_block { m_current_block, entry_point ?: executable.basic_blocks.first() };
+
+    if (in_frame)
+        push_call_frame(in_frame, executable.number_of_registers);
+    else
+        push_call_frame(make<CallFrame>(), executable.number_of_registers);
+
+    run_bytecode();
 
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &executable);
 

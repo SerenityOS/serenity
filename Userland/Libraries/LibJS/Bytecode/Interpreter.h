@@ -92,6 +92,8 @@ public:
     void visit_edges(Cell::Visitor&);
 
 private:
+    void run_bytecode();
+
     CallFrame& call_frame()
     {
         return m_call_frames.last().visit([](auto& x) -> CallFrame& { return *x; });
