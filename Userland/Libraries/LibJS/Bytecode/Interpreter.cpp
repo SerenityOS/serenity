@@ -31,8 +31,6 @@ Interpreter::~Interpreter()
 
 void Interpreter::visit_edges(Cell::Visitor& visitor)
 {
-    if (m_return_value.has_value())
-        visitor.visit(*m_return_value);
     for (auto& frame : m_call_frames) {
         frame.visit([&](auto& value) { value->visit_edges(visitor); });
     }
@@ -226,7 +224,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
                 will_jump = true;
                 break;
             }
-            if (m_return_value.has_value()) {
+            if (!reg(Register::return_value()).is_empty()) {
                 will_return = true;
                 // Note: A `yield` statement will not go through a finally statement,
                 //       hence we need to set a flag to not do so,
@@ -245,7 +243,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
         if (!unwind_contexts().is_empty() && !will_yield) {
             auto& unwind_context = unwind_contexts().last();
             if (unwind_context.executable == m_current_executable && unwind_context.finalizer) {
-                reg(Register::saved_return_value()) = m_return_value.release_value();
+                reg(Register::saved_return_value()) = reg(Register::return_value());
+                reg(Register::return_value()) = {};
                 m_current_block = unwind_context.finalizer;
                 // the unwind_context will be pop'ed when entering the finally block
                 continue;
@@ -275,17 +274,14 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
         }
     }
 
-    auto saved_return_value = reg(Register::saved_return_value());
+    auto return_value = js_undefined();
+    if (!reg(Register::return_value()).is_empty())
+        return_value = reg(Register::return_value());
+    else if (!reg(Register::saved_return_value()).is_empty())
+        return_value = reg(Register::saved_return_value());
     auto exception = reg(Register::exception());
 
     auto frame = pop_call_frame();
-
-    Value return_value = js_undefined();
-    if (m_return_value.has_value()) {
-        return_value = m_return_value.release_value();
-    } else if (!saved_return_value.is_empty()) {
-        return_value = saved_return_value;
-    }
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
     if (!m_call_frames.is_empty())
@@ -374,6 +370,7 @@ void Interpreter::push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*> 
     m_call_frames.append(move(frame));
     this->call_frame().registers.resize(register_count);
     m_current_call_frame = this->call_frame().registers;
+    reg(Register::return_value()) = {};
 }
 
 Variant<NonnullOwnPtr<CallFrame>, CallFrame*> Interpreter::pop_call_frame()

@@ -74,9 +74,9 @@ public:
         VERIFY(unwind_contexts().last().finalizer);
         jump(Label { *unwind_contexts().last().finalizer });
     }
-    void do_return(Value return_value)
+    void do_return(Value value)
     {
-        m_return_value = return_value;
+        reg(Register::return_value()) = value;
         reg(Register::exception()) = {};
     }
 
@@ -114,7 +114,6 @@ private:
     Span<Value> m_current_call_frame;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
-    Optional<Value> m_return_value;
     Executable* m_current_executable { nullptr };
     BasicBlock const* m_current_block { nullptr };
     Optional<InstructionStreamIterator&> m_pc {};

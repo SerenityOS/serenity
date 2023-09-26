@@ -39,7 +39,13 @@ public:
         return Register(this_value_index);
     }
 
-    static constexpr u32 reserved_register_count = 4;
+    static constexpr Register return_value()
+    {
+        constexpr u32 return_value_index = 4;
+        return Register(return_value_index);
+    }
+
+    static constexpr u32 reserved_register_count = 5;
 
     constexpr explicit Register(u32 index)
         : m_index(index)
