@@ -269,9 +269,9 @@ BrowsingContext::BrowsingContext(Page& page, HTML::NavigableContainer* container
     m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
         if (!is_focused_context())
             return;
-        if (m_cursor_position.node() && m_cursor_position.node()->layout_node()) {
+        if (m_cursor_position && m_cursor_position->node()->layout_node()) {
             m_cursor_blink_state = !m_cursor_blink_state;
-            m_cursor_position.node()->layout_node()->set_needs_display();
+            m_cursor_position->node()->layout_node()->set_needs_display();
         }
     }).release_value_but_fixme_should_propagate_errors();
 }
@@ -285,6 +285,7 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
     for (auto& entry : m_session_history)
         visitor.visit(entry);
     visitor.visit(m_container);
+    visitor.visit(m_cursor_position);
     visitor.visit(m_window_proxy);
     visitor.visit(m_opener_browsing_context);
     visitor.visit(m_group);
@@ -309,8 +310,8 @@ void BrowsingContext::did_edit(Badge<EditEventHandler>)
 {
     reset_cursor_blink_cycle();
 
-    if (m_cursor_position.node() && is<DOM::Text>(*m_cursor_position.node())) {
-        auto& text_node = static_cast<DOM::Text&>(*m_cursor_position.node());
+    if (m_cursor_position && is<DOM::Text>(*m_cursor_position->node())) {
+        auto& text_node = static_cast<DOM::Text&>(*m_cursor_position->node());
         if (auto* text_node_owner = text_node.editable_text_node_owner())
             text_node_owner->did_edit_text_node({});
     }
@@ -320,8 +321,8 @@ void BrowsingContext::reset_cursor_blink_cycle()
 {
     m_cursor_blink_state = true;
     m_cursor_blink_timer->restart();
-    if (m_cursor_position.is_valid() && m_cursor_position.node()->layout_node())
-        m_cursor_position.node()->layout_node()->set_needs_display();
+    if (m_cursor_position && m_cursor_position->node()->layout_node())
+        m_cursor_position->node()->layout_node()->set_needs_display();
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context
@@ -392,18 +393,18 @@ CSSPixelPoint BrowsingContext::to_top_level_position(CSSPixelPoint a_position)
     return position;
 }
 
-void BrowsingContext::set_cursor_position(DOM::Position position)
+void BrowsingContext::set_cursor_position(JS::NonnullGCPtr<DOM::Position> position)
 {
-    if (m_cursor_position == position)
+    if (m_cursor_position && m_cursor_position->equals(position))
         return;
 
-    if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
-        m_cursor_position.node()->layout_node()->set_needs_display();
+    if (m_cursor_position && m_cursor_position->node()->layout_node())
+        m_cursor_position->node()->layout_node()->set_needs_display();
 
-    m_cursor_position = move(position);
+    m_cursor_position = position;
 
-    if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
-        m_cursor_position.node()->layout_node()->set_needs_display();
+    if (m_cursor_position && m_cursor_position->node()->layout_node())
+        m_cursor_position->node()->layout_node()->set_needs_display();
 
     reset_cursor_blink_cycle();
 }
@@ -461,7 +462,7 @@ void BrowsingContext::select_all()
 
 bool BrowsingContext::increment_cursor_position_offset()
 {
-    if (!m_cursor_position.increment_offset())
+    if (!m_cursor_position->increment_offset())
         return false;
     reset_cursor_blink_cycle();
     return true;
@@ -469,7 +470,7 @@ bool BrowsingContext::increment_cursor_position_offset()
 
 bool BrowsingContext::decrement_cursor_position_offset()
 {
-    if (!m_cursor_position.decrement_offset())
+    if (!m_cursor_position->decrement_offset())
         return false;
     reset_cursor_blink_cycle();
     return true;

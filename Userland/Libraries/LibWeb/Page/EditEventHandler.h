@@ -20,9 +20,9 @@ public:
 
     virtual ~EditEventHandler() = default;
 
-    virtual void handle_delete_character_after(DOM::Position const&);
+    virtual void handle_delete_character_after(JS::NonnullGCPtr<DOM::Position>);
     virtual void handle_delete(DOM::Range&);
-    virtual void handle_insert(DOM::Position, u32 code_point);
+    virtual void handle_insert(JS::NonnullGCPtr<DOM::Position>, u32 code_point);
 
 private:
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;

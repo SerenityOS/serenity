@@ -537,7 +537,7 @@ void HTMLInputElement::did_receive_focus()
         return;
     if (!m_text_node)
         return;
-    browsing_context->set_cursor_position(DOM::Position { *m_text_node, 0 });
+    browsing_context->set_cursor_position(DOM::Position::create(realm(), *m_text_node, 0));
 }
 
 void HTMLInputElement::did_lose_focus()
