@@ -92,7 +92,7 @@ void IntersectionObserver::observe(DOM::Element& target)
     //    property set to observer, a previousThresholdIndex property set to -1, and a previousIsIntersecting
     //    property set to false.
     auto intersection_observer_registration = IntersectionObserverRegistration {
-        .observer = JS::make_handle(*this),
+        .observer = *this,
         .previous_threshold_index = OptionalNone {},
         .previous_is_intersecting = false,
     };

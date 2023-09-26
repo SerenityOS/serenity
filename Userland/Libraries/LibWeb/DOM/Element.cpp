@@ -128,6 +128,8 @@ void Element::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_custom_element_definition.ptr());
     for (auto& pseudo_element_layout_node : m_pseudo_element_nodes)
         visitor.visit(pseudo_element_layout_node);
+    for (auto& registered_intersection_observers : m_registered_intersection_observers)
+        visitor.visit(registered_intersection_observers.observer);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute

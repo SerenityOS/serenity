@@ -23,7 +23,7 @@ struct IntersectionObserverInit {
 struct IntersectionObserverRegistration {
     // https://www.w3.org/TR/intersection-observer/#dom-intersectionobserverregistration-observer
     // [A]n observer property holding an IntersectionObserver.
-    JS::Handle<IntersectionObserver> observer;
+    JS::NonnullGCPtr<IntersectionObserver> observer;
 
     // https://www.w3.org/TR/intersection-observer/#dom-intersectionobserverregistration-observer
     // NOTE: Optional is used in place of the spec using -1 to indicate no previous index.
