@@ -12,6 +12,7 @@
 #include <LibCore/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {
@@ -27,13 +28,13 @@ public:
     void stop();
 
 private:
-    Timer(JS::Object& window, i32 milliseconds, Function<void()> callback, i32 id);
+    Timer(JS::Object& window, i32 milliseconds, JS::NonnullGCPtr<JS::HeapFunction<void()>> callback, i32 id);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
     RefPtr<Core::Timer> m_timer;
     JS::NonnullGCPtr<JS::Object> m_window_or_worker_global_scope;
-    Function<void()> m_callback;
+    JS::NonnullGCPtr<JS::HeapFunction<void()>> m_callback;
     i32 m_id { 0 };
 };
 
