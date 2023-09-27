@@ -373,18 +373,18 @@ static bool print_filesystem_object(DeprecatedString const& path, DeprecatedStri
     if (!flag_hide_owner) {
         auto username = users.get(st.st_uid);
         if (!flag_print_numeric && username.has_value()) {
-            printf(" %7s", username.value().characters());
+            printf(" %-7s", username.value().characters());
         } else {
-            printf(" %7u", st.st_uid);
+            printf(" %-7u", st.st_uid);
         }
     }
 
     if (!flag_hide_group) {
         auto groupname = groups.get(st.st_gid);
         if (!flag_print_numeric && groupname.has_value()) {
-            printf(" %7s", groupname.value().characters());
+            printf(" %-7s", groupname.value().characters());
         } else {
-            printf(" %7u", st.st_gid);
+            printf(" %-7u", st.st_gid);
         }
     }
 
