@@ -657,9 +657,7 @@ void TraversableNavigable::set_system_visibility_state(VisibilityState visibilit
     // When a user-agent determines that the system visibility state for
     // traversable navigable traversable has changed to newState, it must run the following steps:
 
-    // 1. Let navigables be the inclusive descendant navigables of traversable.
-    // FIXME: Spec bug: https://github.com/whatwg/html/issues/9758
-    VERIFY(active_document());
+    // 1. Let navigables be the inclusive descendant navigables of traversable's active document.
     auto navigables = active_document()->inclusive_descendant_navigables();
 
     // 2. For each navigable of navigables:
