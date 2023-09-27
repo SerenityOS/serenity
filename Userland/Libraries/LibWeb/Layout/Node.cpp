@@ -307,6 +307,17 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
     m_font = Platform::FontPlugin::the().default_font();
 }
 
+void NodeWithStyle::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& layer : m_computed_values.background_layers()) {
+        if (layer.background_image && layer.background_image->is_image())
+            layer.background_image->as_image().visit_edges(visitor);
+    }
+    if (m_list_style_image && m_list_style_image->is_image())
+        m_list_style_image->as_image().visit_edges(visitor);
+}
+
 // https://www.w3.org/TR/css-values-4/#snap-a-length-as-a-border-width
 static CSSPixels snap_a_length_as_a_border_width(double device_pixels_per_css_pixel, CSSPixels length)
 {

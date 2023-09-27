@@ -29,6 +29,8 @@ public:
 private:
     HTMLBodyElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void visit_edges(Visitor&) override;
+
     // ^DOM::Node
     virtual bool is_html_body_element() const override { return true; }
 

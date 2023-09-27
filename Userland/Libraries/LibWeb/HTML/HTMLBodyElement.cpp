@@ -22,6 +22,13 @@ HTMLBodyElement::HTMLBodyElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLBodyElement::~HTMLBodyElement() = default;
 
+void HTMLBodyElement::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    if (m_background_style_value)
+        m_background_style_value->visit_edges(visitor);
+}
+
 void HTMLBodyElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
