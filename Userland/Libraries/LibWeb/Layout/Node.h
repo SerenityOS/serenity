@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/FontCache.h>
 #include <LibWeb/Forward.h>
@@ -221,6 +222,8 @@ public:
     JS::NonnullGCPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
     void transfer_table_box_computed_values_to_wrapper_computed_values(CSS::ComputedValues& wrapper_computed_values);
+
+    virtual void visit_edges(Cell::Visitor& visitor) override;
 
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
