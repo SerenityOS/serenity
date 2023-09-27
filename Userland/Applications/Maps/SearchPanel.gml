@@ -26,7 +26,7 @@
         }
     }
 
-    //  Start, empty and places are toggled in visibility
+    // Start, empty and places are toggled in visibility
     @GUI::Frame {
         name: "start_container"
         frame_style: "SunkenPanel"
