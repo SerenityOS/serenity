@@ -476,12 +476,10 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(De
     // ...and with all other properties set to their initial values.
     // FIXME: Actually use a LineBox here instead of, you know, using the default font and measuring its size (which is not the spec at all).
     // FIXME: Once we have CanvasTextDrawingStyles, add the CSS attributes.
-    size_t width = 0;
+    size_t width = font->width(text.view());
     size_t height = font->pixel_size();
 
     Utf8View replaced_text_view { replaced_text };
-    for (auto it = replaced_text_view.begin(); it != replaced_text_view.end(); ++it)
-        width += font->glyph_or_emoji_width(it);
 
     // 6. If maxWidth was provided and the hypothetical width of the inline box in the hypothetical line box is greater than maxWidth CSS pixels, then change font to have a more condensed font (if one is available or if a reasonably readable one can be synthesized by applying a horizontal scale factor to the font) or a smaller font, and return to the previous step.
     // FIXME: Record the font size used for this piece of text, and actually retry with a smaller size if needed.
