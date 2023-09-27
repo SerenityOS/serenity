@@ -29,7 +29,13 @@ MutationObserver::MutationObserver(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackT
     agent_custom_data->mutation_observers.append(*this);
 }
 
-MutationObserver::~MutationObserver() = default;
+MutationObserver::~MutationObserver()
+{
+    auto* agent_custom_data = verify_cast<Bindings::WebEngineCustomData>(vm().custom_data());
+    agent_custom_data->mutation_observers.remove_all_matching([this](auto& observer) {
+        return observer.ptr() == this;
+    });
+}
 
 void MutationObserver::initialize(JS::Realm& realm)
 {

@@ -49,7 +49,7 @@ struct WebEngineCustomData final : public JS::VM::CustomData {
 
     // https://dom.spec.whatwg.org/#mutation-observer-list
     // FIXME: This should be a set.
-    Vector<JS::Handle<DOM::MutationObserver>> mutation_observers;
+    Vector<JS::NonnullGCPtr<DOM::MutationObserver>> mutation_observers;
 
     JS::Handle<JS::Realm> internal_realm;
 
