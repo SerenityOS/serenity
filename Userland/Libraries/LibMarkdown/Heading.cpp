@@ -4,15 +4,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Slugify.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Heading.h>
 #include <LibMarkdown/Visitor.h>
+#include <LibUnicode/Normalize.h>
 
 namespace Markdown {
 
 DeprecatedString Heading::render_to_html(bool) const
 {
-    return DeprecatedString::formatted("<h{}>{}</h{}>\n", m_level, m_text.render_to_html(), m_level);
+    auto input = Unicode::normalize(m_text.render_for_raw_print().view(), Unicode::NormalizationForm::NFD);
+    auto slugified = MUST(AK::slugify(input));
+    return DeprecatedString::formatted("<h{} id='{}'><a href='#{}'>#</a> {}</h{}>\n", m_level, slugified, slugified, m_text.render_to_html(), m_level);
 }
 
 Vector<DeprecatedString> Heading::render_lines_for_terminal(size_t) const
