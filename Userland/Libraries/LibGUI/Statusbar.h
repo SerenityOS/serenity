@@ -63,6 +63,7 @@ public:
     };
 
     Segment& segment(size_t index) { return m_segments.at(index); }
+    void set_segment_count(size_t);
 
 protected:
     explicit Statusbar(int segment_count = 1);
@@ -70,7 +71,6 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
 
 private:
-    void set_segment_count(size_t);
     size_t segment_count() const { return m_segments.size(); }
     void update_segment(size_t);
     NonnullRefPtr<Segment> create_segment();
