@@ -7,13 +7,19 @@ Enforce UTF-8 as the locale encoding
 By defining `_Py_FORCE_UTF8_LOCALE` as some other platforms already do,
 we can enforce UTF-8 as the encoding.
 
-## `0002-Tweak-configure-and-configure.ac.patch`
+## `0002-Tweak-configure.patch`
 
-Tweak configure and configure.ac
+Tweak configure
+
+Merged patches from Linus Groh, Julian Offenhäuser, Oskar Skog:
 
 As usual, make the `configure` script recognize Serenity. Also set
 `MACHDEP` (which is used for `sys.platform`) to a version-less
 `serenityos`, even when not cross-compiling.
+
+Set name of shared libpython
+
+Compile with CCSHARED=-fPIC
 
 ## `0003-Include-sys-uio.h-in-socketmodule.c.patch`
 
@@ -57,6 +63,3 @@ given `TCP_NODELAY` as an argument. This TCP socket option is used in
 many applications (like pip and requests) for optimization purposes.
 For now, it can be safely ignored until it's supported in the kernel.
 
-## `0007-Set-name-of-shared-libpython.patch`
-
-Set name of shared libpython
