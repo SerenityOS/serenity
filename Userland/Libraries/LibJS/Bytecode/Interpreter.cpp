@@ -508,22 +508,22 @@ static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value thi
     return {};
 }
 
-ThrowCompletionOr<void> Load::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Load::execute_impl(Bytecode::Interpreter&) const
 {
-    interpreter.accumulator() = interpreter.reg(m_src);
-    return {};
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
 }
 
-ThrowCompletionOr<void> LoadImmediate::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> LoadImmediate::execute_impl(Bytecode::Interpreter&) const
 {
-    interpreter.accumulator() = m_value;
-    return {};
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
 }
 
-ThrowCompletionOr<void> Store::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> Store::execute_impl(Bytecode::Interpreter&) const
 {
-    interpreter.reg(m_dst) = interpreter.accumulator();
-    return {};
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
 }
 
 static ThrowCompletionOr<Value> abstract_inequals(VM& vm, Value src1, Value src2)
@@ -930,15 +930,10 @@ ThrowCompletionOr<void> GetGlobal::execute_impl(Bytecode::Interpreter& interpret
     return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
 }
 
-ThrowCompletionOr<void> GetLocal::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> GetLocal::execute_impl(Bytecode::Interpreter&) const
 {
-    auto& vm = interpreter.vm();
-    if (vm.running_execution_context().local_variables[m_index].is_empty()) {
-        auto const& variable_name = vm.running_execution_context().function->local_variables_names()[m_index];
-        return interpreter.vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, variable_name);
-    }
-    interpreter.accumulator() = vm.running_execution_context().local_variables[m_index];
-    return {};
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1020,10 +1015,10 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
-ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter&) const
 {
-    interpreter.vm().running_execution_context().local_variables[m_index] = interpreter.accumulator();
-    return {};
+    // Handled in the interpreter loop.
+    __builtin_unreachable();
 }
 
 static ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(Bytecode::Interpreter& interpreter, Value base_value)
@@ -1179,7 +1174,7 @@ ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& 
 ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1227,19 +1222,19 @@ ThrowCompletionOr<void> GetImportMeta::execute_impl(Bytecode::Interpreter& inter
 ThrowCompletionOr<void> JumpConditional::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> JumpNullish::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
 // 13.3.8.1 https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
@@ -1460,13 +1455,13 @@ ThrowCompletionOr<void> ThrowIfNullish::execute_impl(Bytecode::Interpreter& inte
 ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1484,7 +1479,7 @@ ThrowCompletionOr<void> LeaveUnwindContext::execute_impl(Bytecode::Interpreter& 
 ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
-    VERIFY_NOT_REACHED();
+    __builtin_unreachable();
 }
 
 ThrowCompletionOr<void> PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
