@@ -36,6 +36,7 @@ public:
 
 private:
     SearchPanel() = default;
+
     static ErrorOr<NonnullRefPtr<SearchPanel>> try_create();
 
     ErrorOr<void> setup();
@@ -47,7 +48,6 @@ private:
     RefPtr<GUI::Frame> m_start_container;
     RefPtr<GUI::Frame> m_empty_container;
     RefPtr<GUI::ListView> m_places_list;
-    RefPtr<GUI::ItemListModel<String>> m_places_names_model;
     Vector<Place> m_places;
     Vector<String> m_places_names;
 };

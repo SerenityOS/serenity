@@ -96,9 +96,9 @@ void SearchPanel::search(StringView query)
             // FIXME: Handle JSON parsing errors
             auto const& json_place = json_places.at(i).as_object();
 
-            String name = MUST(String::from_deprecated_string(json_place.get_deprecated_string("display_name"sv).release_value()));
             MapWidget::LatLng latlng = { json_place.get_deprecated_string("lat"sv).release_value().to_double().release_value(),
                 json_place.get_deprecated_string("lon"sv).release_value().to_double().release_value() };
+            String name = MUST(String::formatted("{}\n{:.5}, {:.5}", json_place.get_deprecated_string("display_name"sv).release_value(), latlng.latitude, latlng.longitude));
 
             // Calculate the right zoom level for bounding box
             auto const& json_boundingbox = json_place.get_array("boundingbox"sv);
@@ -110,7 +110,7 @@ void SearchPanel::search(StringView query)
             };
 
             m_places.append({ name, latlng, bounds.get_zoom() });
-            m_places_names.append(MUST(String::formatted("{}\n{:.5}, {:.5}", name, latlng.latitude, latlng.longitude)));
+            m_places_names.append(name);
         }
         on_places_change(m_places);
 
