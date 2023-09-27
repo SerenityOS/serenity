@@ -1,4 +1,4 @@
-@GUI::Widget {
+@SpaceAnalyzer::MainWidget {
     layout: @GUI::VerticalBoxLayout {
         spacing: 0
     }
