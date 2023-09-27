@@ -8,7 +8,6 @@ set(SOURCES
     Bytecode/IdentifierTable.cpp
     Bytecode/Instruction.cpp
     Bytecode/Interpreter.cpp
-    Bytecode/Op.cpp
     Bytecode/RegexTable.cpp
     Bytecode/StringTable.cpp
     Console.cpp
