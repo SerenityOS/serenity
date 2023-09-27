@@ -40,6 +40,8 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    Register src() const { return m_src; }
+
 private:
     Register m_src;
 };
@@ -54,6 +56,8 @@ public:
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+
+    Value value() const { return m_value; }
 
 private:
     Value m_value;

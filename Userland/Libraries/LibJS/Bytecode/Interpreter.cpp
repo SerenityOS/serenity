@@ -178,6 +178,9 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
 
 void Interpreter::run_bytecode()
 {
+    auto* locals = vm().running_execution_context().local_variables.data();
+    auto* registers = this->registers().data();
+    auto& accumulator = this->accumulator();
     for (;;) {
     start:
         auto pc = InstructionStreamIterator { m_current_block->instruction_stream(), m_current_executable };
@@ -192,23 +195,45 @@ void Interpreter::run_bytecode()
             auto& instruction = *pc;
 
             switch (instruction.type()) {
+            case Instruction::Type::GetLocal: {
+                auto& local = locals[static_cast<Op::GetLocal const&>(instruction).index()];
+                if (local.is_empty()) {
+                    auto const& variable_name = vm().running_execution_context().function->local_variables_names()[static_cast<Op::GetLocal const&>(instruction).index()];
+                    result = vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, variable_name);
+                    break;
+                }
+                accumulator = local;
+                break;
+            }
+            case Instruction::Type::SetLocal:
+                locals[static_cast<Op::SetLocal const&>(instruction).index()] = accumulator;
+                break;
+            case Instruction::Type::Load:
+                accumulator = registers[static_cast<Op::Load const&>(instruction).src().index()];
+                break;
+            case Instruction::Type::Store:
+                registers[static_cast<Op::Store const&>(instruction).dst().index()] = accumulator;
+                break;
+            case Instruction::Type::LoadImmediate:
+                accumulator = static_cast<Op::LoadImmediate const&>(instruction).value();
+                break;
             case Instruction::Type::Jump:
                 m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
                 goto start;
             case Instruction::Type::JumpConditional:
-                if (accumulator().to_boolean())
+                if (accumulator.to_boolean())
                     m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
                 else
                     m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
                 goto start;
             case Instruction::Type::JumpNullish:
-                if (accumulator().is_nullish())
+                if (accumulator.is_nullish())
                     m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
                 else
                     m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
                 goto start;
             case Instruction::Type::JumpUndefined:
-                if (accumulator().is_undefined())
+                if (accumulator.is_undefined())
                     m_current_block = &static_cast<Op::Jump const&>(instruction).true_target()->block();
                 else
                     m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
@@ -257,7 +282,7 @@ void Interpreter::run_bytecode()
                     m_current_block = unwind_context.handler;
                     unwind_context.handler_called = true;
 
-                    accumulator() = reg(Register::exception());
+                    accumulator = reg(Register::exception());
                     reg(Register::exception()) = {};
                     goto start;
                 }
