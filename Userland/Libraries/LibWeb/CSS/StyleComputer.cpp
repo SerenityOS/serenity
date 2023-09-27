@@ -1757,7 +1757,6 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         if (font_size.is_percentage()) {
             // Percentages refer to parent element's font size
             maybe_length = Length::make_px(CSSPixels::nearest_value_for(font_size.as_percentage().percentage().as_fraction() * parent_font_size().to_double()));
-
         } else if (font_size.is_length()) {
             maybe_length = font_size.as_length().length();
         } else if (font_size.is_calculated()) {
@@ -1776,9 +1775,11 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
     FontSelector font_selector;
     bool monospace = false;
 
-    float const font_size_in_pt = font_size_in_px * 0.75f;
+    float font_size_in_pt = font_size_in_px * (POINTS_PER_INCH / DEFAULT_DPI);
 
     auto find_font = [&](FlyString const& family) -> RefPtr<Gfx::Font const> {
+        if (Gfx::FontDatabase::the().is_bitmap_family(family))
+            font_size_in_pt = font_size_in_px * 1.0f;
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
         FontFaceKey key {

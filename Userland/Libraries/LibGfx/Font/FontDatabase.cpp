@@ -270,4 +270,14 @@ void FontDatabase::for_each_typeface_with_family_name(FlyString const& family_na
         callback(*typeface);
 }
 
+bool FontDatabase::is_bitmap_family(FlyString const& family_name)
+{
+    auto it = m_private->typefaces.find(family_name);
+    if (it != m_private->typefaces.end()) {
+        for (auto const& typeface : it->value)
+            return typeface->is_fixed_size();
+    }
+    return false;
+}
+
 }
