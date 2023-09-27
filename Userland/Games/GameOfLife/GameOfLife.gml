@@ -1,4 +1,4 @@
-@GUI::Widget {
+@GameOfLife::MainWidget {
     layout: @GUI::VerticalBoxLayout {}
 
     @GUI::ToolbarContainer {
