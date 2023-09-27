@@ -23,6 +23,7 @@
 #include <Applications/Browser/TabGML.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -702,6 +703,14 @@ void Tab::update_reset_zoom_button()
 Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
 {
     DeprecatedString text = m_location_box->text();
+    if (text.starts_with('/') && FileSystem::is_regular_file(text)) {
+        auto real_path = FileSystem::real_path(text);
+        if (real_path.is_error()) {
+            return {};
+        }
+
+        return URL::create_with_file_scheme(real_path.value().to_deprecated_string());
+    }
 
     StringBuilder builder;
     builder.append(text);
