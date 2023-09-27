@@ -63,6 +63,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& board_widget_container = *main_widget->find_descendant_of_type_named<GUI::Widget>("board_widget_container");
     board_widget_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
     auto& board_widget = board_widget_container.add<BoardWidget>(board_rows, board_columns);
+    board_widget.set_focus_policy(GUI::FocusPolicy::StrongFocus);
+    board_widget.set_focus(true);
     board_widget.randomize_cells();
     board_widget.set_min_size(board_columns, board_rows);
 
