@@ -24,6 +24,7 @@ set(AK_SOURCES
     OptionParser.cpp
     Random.cpp
     SipHash.cpp
+    Slugify.cpp
     StackInfo.cpp
     Stream.cpp
     String.cpp

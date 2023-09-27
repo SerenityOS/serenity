@@ -65,6 +65,7 @@ set(AK_TEST_SOURCES
     TestRefPtr.cpp
     TestSIMD.cpp
     TestSinglyLinkedList.cpp
+    TestSlugify.cpp
     TestSourceGenerator.cpp
     TestSourceLocation.cpp
     TestSpan.cpp
