@@ -1,5 +1,6 @@
 set(FUZZER_TARGETS
     ASN1
+    Base64Roundtrip
     BLAKE2b
     BMPLoader
     Brotli
