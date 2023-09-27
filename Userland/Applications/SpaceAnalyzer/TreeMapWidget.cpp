@@ -17,8 +17,6 @@
 #include <LibGfx/Font/Font.h>
 #include <WindowServer/WindowManager.h>
 
-REGISTER_WIDGET(SpaceAnalyzer, TreeMapWidget)
-
 namespace SpaceAnalyzer {
 
 static constexpr Array colors = {

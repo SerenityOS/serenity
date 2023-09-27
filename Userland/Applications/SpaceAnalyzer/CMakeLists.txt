@@ -3,17 +3,14 @@ serenity_component(
     TARGETS SpaceAnalyzer
 )
 
-stringify_gml(SpaceAnalyzer.gml SpaceAnalyzerGML.h space_analyzer_gml)
+compile_gml(SpaceAnalyzer.gml SpaceAnalyzerGML.cpp)
 
 set(SOURCES
     ProgressWindow.cpp
+    SpaceAnalyzerGML.cpp
     Tree.cpp
     TreeMapWidget.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    SpaceAnalyzerGML.h
 )
 
 serenity_app(SpaceAnalyzer ICON app-space-analyzer)

@@ -5,12 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "MainWidget.h"
 #include "Tree.h"
 #include "TreeMapWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/URL.h>
-#include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
@@ -53,8 +53,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     // Load widgets.
-    auto main_widget = window->set_main_widget<GUI::Widget>();
-    TRY(main_widget->load_from_gml(space_analyzer_gml));
+    auto main_widget = TRY(SpaceAnalyzer::MainWidget::try_create());
+    window->set_main_widget(main_widget);
+
     auto& breadcrumbbar = *main_widget->find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
     auto& tree_map_widget = *main_widget->find_descendant_of_type_named<SpaceAnalyzer::TreeMapWidget>("tree_map");
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
