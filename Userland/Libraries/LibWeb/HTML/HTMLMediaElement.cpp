@@ -57,11 +57,11 @@ void HTMLMediaElement::initialize(JS::Realm& realm)
     m_document_observer = realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document());
 
     // https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:media-element-82
-    m_document_observer->document_became_inactive = [this]() {
+    m_document_observer->set_document_became_inactive([this]() {
         // If the media element's node document stops being a fully active document, then the playback will stop until
         // the document is active again.
         pause_element().release_value_but_fixme_should_propagate_errors();
-    };
+    });
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#queue-a-media-element-task

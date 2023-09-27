@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
@@ -17,8 +18,11 @@ class DocumentObserver final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DocumentObserver, Bindings::PlatformObject);
 
 public:
-    JS::SafeFunction<void()> document_became_inactive;
-    JS::SafeFunction<void()> document_completely_loaded;
+    [[nodiscard]] JS::GCPtr<JS::HeapFunction<void()>> document_became_inactive() const { return m_document_became_inactive; }
+    void set_document_became_inactive(Function<void()>);
+
+    [[nodiscard]] JS::GCPtr<JS::HeapFunction<void()>> document_completely_loaded() const { return m_document_completely_loaded; }
+    void set_document_completely_loaded(Function<void()>);
 
 private:
     explicit DocumentObserver(JS::Realm&, DOM::Document&);
@@ -27,6 +31,8 @@ private:
     virtual void finalize() override;
 
     JS::NonnullGCPtr<DOM::Document> m_document;
+    JS::GCPtr<JS::HeapFunction<void()>> m_document_became_inactive;
+    JS::GCPtr<JS::HeapFunction<void()>> m_document_completely_loaded;
 };
 
 }
