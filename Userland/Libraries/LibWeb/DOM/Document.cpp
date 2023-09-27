@@ -1512,32 +1512,44 @@ JS::NonnullGCPtr<HTML::HTMLScriptElement> Document::take_pending_parsing_blockin
 
 void Document::add_script_to_execute_when_parsing_has_finished(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
-    m_scripts_to_execute_when_parsing_has_finished.append(JS::make_handle(script));
+    m_scripts_to_execute_when_parsing_has_finished.append(script);
 }
 
 Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTML::HTMLParser>)
 {
-    return move(m_scripts_to_execute_when_parsing_has_finished);
+    Vector<JS::Handle<HTML::HTMLScriptElement>> handles;
+    for (auto script : m_scripts_to_execute_when_parsing_has_finished)
+        handles.append(JS::make_handle(script));
+    m_scripts_to_execute_when_parsing_has_finished.clear();
+    return handles;
 }
 
 void Document::add_script_to_execute_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
-    m_scripts_to_execute_as_soon_as_possible.append(JS::make_handle(script));
+    m_scripts_to_execute_as_soon_as_possible.append(script);
 }
 
 Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLParser>)
 {
-    return move(m_scripts_to_execute_as_soon_as_possible);
+    Vector<JS::Handle<HTML::HTMLScriptElement>> handles;
+    for (auto script : m_scripts_to_execute_as_soon_as_possible)
+        handles.append(JS::make_handle(script));
+    m_scripts_to_execute_as_soon_as_possible.clear();
+    return handles;
 }
 
 void Document::add_script_to_execute_in_order_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
-    m_scripts_to_execute_in_order_as_soon_as_possible.append(JS::make_handle(script));
+    m_scripts_to_execute_in_order_as_soon_as_possible.append(script);
 }
 
 Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_in_order_as_soon_as_possible(Badge<HTML::HTMLParser>)
 {
-    return move(m_scripts_to_execute_in_order_as_soon_as_possible);
+    Vector<JS::Handle<HTML::HTMLScriptElement>> handles;
+    for (auto script : m_scripts_to_execute_in_order_as_soon_as_possible)
+        handles.append(JS::make_handle(script));
+    m_scripts_to_execute_in_order_as_soon_as_possible.clear();
+    return handles;
 }
 
 // https://dom.spec.whatwg.org/#dom-document-importnode
@@ -1942,8 +1954,8 @@ void Document::completely_finish_loading()
 
     auto observers_to_notify = m_document_observers.values();
     for (auto& document_observer : observers_to_notify) {
-        if (document_observer->document_completely_loaded)
-            document_observer->document_completely_loaded();
+        if (document_observer->document_completely_loaded())
+            document_observer->document_completely_loaded()->function()();
     }
 }
 
@@ -2897,8 +2909,8 @@ void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::Br
 
     auto observers_to_notify = m_document_observers.values();
     for (auto& document_observer : observers_to_notify) {
-        if (document_observer->document_became_inactive)
-            document_observer->document_became_inactive();
+        if (document_observer->document_became_inactive())
+            document_observer->document_became_inactive()->function()();
     }
 }
 
@@ -2908,8 +2920,8 @@ void Document::did_stop_being_active_document_in_navigable()
 
     auto observers_to_notify = m_document_observers.values();
     for (auto& document_observer : observers_to_notify) {
-        if (document_observer->document_became_inactive)
-            document_observer->document_became_inactive();
+        if (document_observer->document_became_inactive())
+            document_observer->document_became_inactive()->function()();
     }
 }
 
