@@ -9,6 +9,8 @@
 #include <AK/BinaryHeap.h>
 #include <AK/DeprecatedString.h>
 
+using namespace Test::Randomized;
+
 TEST_CASE(construct)
 {
     BinaryHeap<int, int, 5> empty;
@@ -63,5 +65,40 @@ TEST_CASE(large_populate_reverse)
     for (int i = 0; i < 1024; i++) {
         EXPECT_EQ(ints.peek_min(), i);
         EXPECT_EQ(ints.pop_min(), i);
+    }
+}
+
+RANDOMIZED_TEST_CASE(pop_min_is_min)
+{
+    GEN(vec, Gen::vector(1, 10, []() { return Gen::unsigned_int(); }));
+
+    auto sorted { vec };
+    AK::quick_sort(sorted);
+
+    BinaryHeap<u32, u32, 10> heap;
+
+    // insert in a non-sorted order
+    for (u32 n : vec) {
+        heap.insert(n, n);
+    }
+
+    // check in a sorted order
+    for (u32 sorted_n : sorted) {
+        EXPECT_EQ(heap.pop_min(), sorted_n);
+    }
+}
+
+RANDOMIZED_TEST_CASE(peek_min_same_as_pop_min)
+{
+    GEN(vec, Gen::vector(1, 10, []() { return Gen::unsigned_int(); }));
+    BinaryHeap<u32, u32, 10> heap;
+    for (u32 n : vec) {
+        heap.insert(n, n);
+    }
+
+    while (!heap.is_empty()) {
+        u32 peeked = heap.peek_min();
+        u32 popped = heap.pop_min();
+        EXPECT_EQ(peeked, popped);
     }
 }
