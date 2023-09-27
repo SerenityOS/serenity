@@ -32,6 +32,7 @@ If no *path* argument is provided the current working directory is used.
 * `-I`, `--raw-inode`: Show raw inode ids if possible (see Notes to understand when this will not work)
 * `-n`, `--numeric-uid-gid`: In long format, display numeric UID/GID. Implies `-l`
 * `-o`: In long format, do not show group information. Implies `-l`
+* `-g`: In long format, do not show owner information. Implies `-l`
 * `-h`, `--human-readable`: Print human-readable sizes
 * `--si`: Print human-readable sizes in SI units
 * `-K`, `--no-hyperlinks`: Disable hyperlinks

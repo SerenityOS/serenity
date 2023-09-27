@@ -76,6 +76,7 @@ static bool flag_show_inode = false;
 static bool flag_show_raw_inode = false;
 static bool flag_print_numeric = false;
 static bool flag_hide_group = false;
+static bool flag_hide_owner = false;
 static bool flag_human_readable = false;
 static bool flag_human_readable_si = false;
 static FieldToSortBy flag_sort_by { FieldToSortBy::Name };
@@ -133,6 +134,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_show_raw_inode, "Show raw inode ids if possible", "raw-inode", 'I');
     args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID. Implies '-l'", "numeric-uid-gid", 'n');
     args_parser.add_option(flag_hide_group, "In long format, do not show group information. Implies '-l'", nullptr, 'o');
+    args_parser.add_option(flag_hide_owner, "In long format, do not show owner information. Implies '-l'", nullptr, 'g');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si", 0);
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
@@ -141,7 +143,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    if (flag_print_numeric || flag_hide_group)
+    if (flag_print_numeric || flag_hide_group || flag_hide_owner)
         flag_long = true;
 
     if (flag_show_almost_all_dotfiles)
@@ -368,11 +370,13 @@ static bool print_filesystem_object(DeprecatedString const& path, DeprecatedStri
 
     printf(" %3lu", st.st_nlink);
 
-    auto username = users.get(st.st_uid);
-    if (!flag_print_numeric && username.has_value()) {
-        printf(" %7s", username.value().characters());
-    } else {
-        printf(" %7u", st.st_uid);
+    if (!flag_hide_owner) {
+        auto username = users.get(st.st_uid);
+        if (!flag_print_numeric && username.has_value()) {
+            printf(" %7s", username.value().characters());
+        } else {
+            printf(" %7u", st.st_uid);
+        }
     }
 
     if (!flag_hide_group) {
