@@ -131,8 +131,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');
     args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
     args_parser.add_option(flag_show_raw_inode, "Show raw inode ids if possible", "raw-inode", 'I');
-    args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
-    args_parser.add_option(flag_hide_group, "In long format, do not show group information", nullptr, 'o');
+    args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID. Implies '-l'", "numeric-uid-gid", 'n');
+    args_parser.add_option(flag_hide_group, "In long format, do not show group information. Implies '-l'", nullptr, 'o');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si", 0);
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
@@ -140,6 +140,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_force_newline, "List one file per line", nullptr, '1');
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    if (flag_print_numeric || flag_hide_group)
+        flag_long = true;
 
     if (flag_show_almost_all_dotfiles)
         flag_show_dotfiles = true;
