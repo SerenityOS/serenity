@@ -34,9 +34,9 @@ void SVGUseElement::initialize(JS::Realm& realm)
     set_shadow_root(shadow_root);
 
     m_document_observer = realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document());
-    m_document_observer->document_completely_loaded = [this]() {
+    m_document_observer->set_document_completely_loaded([this]() {
         clone_element_tree_as_our_shadow_tree(referenced_element());
-    };
+    });
 }
 
 void SVGUseElement::visit_edges(Cell::Visitor& visitor)
