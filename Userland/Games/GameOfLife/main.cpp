@@ -6,9 +6,9 @@
  */
 
 #include "BoardWidget.h"
+#include "MainWidget.h"
 #include <AK/Try.h>
 #include <AK/URL.h>
-#include <Games/GameOfLife/GameOfLifeGML.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
@@ -53,8 +53,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_double_buffering_enabled(false);
     window->set_title("Game of Life");
 
-    auto main_widget = window->set_main_widget<GUI::Widget>();
-    TRY(main_widget->load_from_gml(game_of_life_gml));
+    auto main_widget = TRY(GameOfLife::MainWidget::try_create());
+    window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
 
     auto& main_toolbar = *main_widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");
