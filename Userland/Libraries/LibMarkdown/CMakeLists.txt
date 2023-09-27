@@ -15,4 +15,4 @@ set(SOURCES
 )
 
 serenity_lib(LibMarkdown markdown)
-target_link_libraries(LibMarkdown PRIVATE LibJS LibRegex LibSyntax)
+target_link_libraries(LibMarkdown PRIVATE LibUnicode LibJS LibRegex LibSyntax)
