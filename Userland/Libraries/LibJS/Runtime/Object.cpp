@@ -1197,7 +1197,7 @@ void Object::set_prototype(Object* new_prototype)
         m_shape = shape.create_prototype_transition(new_prototype);
 }
 
-void Object::define_native_accessor(Realm& realm, PropertyKey const& property_key, SafeFunction<ThrowCompletionOr<Value>(VM&)> getter, SafeFunction<ThrowCompletionOr<Value>(VM&)> setter, PropertyAttributes attribute)
+void Object::define_native_accessor(Realm& realm, PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&)> getter, Function<ThrowCompletionOr<Value>(VM&)> setter, PropertyAttributes attribute)
 {
     FunctionObject* getter_function = nullptr;
     if (getter)
@@ -1257,7 +1257,7 @@ Value Object::get_without_side_effects(PropertyKey const& property_key) const
     return {};
 }
 
-void Object::define_native_function(Realm& realm, PropertyKey const& property_key, SafeFunction<ThrowCompletionOr<Value>(VM&)> native_function, i32 length, PropertyAttributes attribute)
+void Object::define_native_function(Realm& realm, PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto function = NativeFunction::create(realm, move(native_function), length, property_key, &realm);
     define_direct_property(property_key, function, attribute);
