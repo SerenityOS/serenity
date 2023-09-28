@@ -394,13 +394,13 @@ void Generator::generate_scoped_jump(JumpType type)
         switch (boundary) {
         case Break:
             if (type == JumpType::Break) {
-                emit<Op::Jump>().set_targets(nearest_breakable_scope(), {});
+                emit<Op::Jump>(nearest_breakable_scope());
                 return;
             }
             break;
         case Continue:
             if (type == JumpType::Continue) {
-                emit<Op::Jump>().set_targets(nearest_continuable_scope(), {});
+                emit<Op::Jump>(nearest_continuable_scope());
                 return;
             }
             break;
@@ -455,7 +455,7 @@ void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const&
         }
 
         if (jumpable_scope.language_label_set.contains_slow(label)) {
-            emit<Op::Jump>().set_targets(jumpable_scope.bytecode_target, {});
+            emit<Op::Jump>(jumpable_scope.bytecode_target);
             return;
         }
     }
