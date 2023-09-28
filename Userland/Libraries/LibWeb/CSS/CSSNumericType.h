@@ -66,7 +66,6 @@ public:
     bool matches_angle() const { return matches_dimension(BaseType::Angle); }
     bool matches_angle_percentage() const { return matches_dimension_percentage(BaseType::Angle); }
     bool matches_flex() const { return matches_dimension(BaseType::Flex); }
-    bool matches_flex_percentage() const { return matches_dimension_percentage(BaseType::Flex); }
     bool matches_frequency() const { return matches_dimension(BaseType::Frequency); }
     bool matches_frequency_percentage() const { return matches_dimension_percentage(BaseType::Frequency); }
     bool matches_length() const { return matches_dimension(BaseType::Length); }

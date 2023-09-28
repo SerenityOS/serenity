@@ -38,6 +38,7 @@ static double resolve_value(CalculatedStyleValue::CalculationResult::Value value
     return value.visit(
         [](Number const& number) { return number.value(); },
         [](Angle const& angle) { return angle.to_degrees(); },
+        [](Flex const& flex) { return flex.to_fr(); },
         [](Frequency const& frequency) { return frequency.to_hertz(); },
         [&context](Length const& length) { return length.to_px(*context).to_double(); },
         [](Percentage const& percentage) { return percentage.value(); },
@@ -74,6 +75,8 @@ static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleV
         return { Number(Number::Type::Number, value) };
     case CalculatedStyleValue::ResolvedType::Angle:
         return { Angle::make_degrees(value) };
+    case CalculatedStyleValue::ResolvedType::Flex:
+        return { Flex::make_fr(value) };
     case CalculatedStyleValue::ResolvedType::Frequency:
         return { Frequency::make_hertz(value) };
     case CalculatedStyleValue::ResolvedType::Length:
@@ -137,6 +140,7 @@ Optional<CalculatedStyleValue::ResolvedType> NumericCalculationNode::resolved_ty
     return m_value.visit(
         [](Number const&) { return CalculatedStyleValue::ResolvedType::Number; },
         [](Angle const&) { return CalculatedStyleValue::ResolvedType::Angle; },
+        [](Flex const&) { return CalculatedStyleValue::ResolvedType::Flex; },
         [](Frequency const&) { return CalculatedStyleValue::ResolvedType::Frequency; },
         [](Length const&) { return CalculatedStyleValue::ResolvedType::Length; },
         [](Percentage const&) { return CalculatedStyleValue::ResolvedType::Percentage; },
@@ -175,7 +179,11 @@ Optional<CSSNumericType> NumericCalculationNode::determine_type(PropertyID prope
             return CSSNumericType { CSSNumericType::BaseType::Frequency, 1 };
         },
         // FIXME: <resolution>
-        // FIXME: <flex>
+        [](Flex const&) {
+            // -> <flex>
+            //    the type is «[ "flex" → 1 ]»
+            return CSSNumericType { CSSNumericType::BaseType::Flex, 1 };
+        },
         // NOTE: <calc-constant> is a separate node type. (FIXME: Should it be?)
         [property_id](Percentage const&) {
             // -> <percentage>
@@ -2053,6 +2061,24 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
                     m_value = Angle::make_degrees(this_degrees - other_degrees);
             }
         },
+        [&](Flex const& flex) {
+            auto this_fr = flex.to_fr();
+            if (other.m_value.has<Flex>()) {
+                auto other_fr = other.m_value.get<Flex>().to_fr();
+                if (op == SumOperation::Add)
+                    m_value = Flex::make_fr(this_fr + other_fr);
+                else
+                    m_value = Flex::make_fr(this_fr - other_fr);
+            } else {
+                VERIFY(percentage_basis.has<Flex>());
+
+                auto other_fr = percentage_basis.get<Flex>().percentage_of(other.m_value.get<Percentage>()).to_fr();
+                if (op == SumOperation::Add)
+                    m_value = Flex::make_fr(this_fr + other_fr);
+                else
+                    m_value = Flex::make_fr(this_fr - other_fr);
+            }
+        },
         [&](Frequency const& frequency) {
             auto this_hertz = frequency.to_hertz();
             if (other.m_value.has<Frequency>()) {
@@ -2151,6 +2177,9 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
         [&](Angle const& angle) {
             m_value = Angle::make_degrees(angle.to_degrees() * other.m_value.get<Number>().value());
         },
+        [&](Flex const& flex) {
+            m_value = Flex::make_fr(flex.to_fr() * other.m_value.get<Number>().value());
+        },
         [&](Frequency const& frequency) {
             m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value());
         },
@@ -2183,6 +2212,9 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
         [&](Angle const& angle) {
             m_value = Angle::make_degrees(angle.to_degrees() / denominator);
         },
+        [&](Flex const& flex) {
+            m_value = Flex::make_fr(flex.to_fr() / denominator);
+        },
         [&](Frequency const& frequency) {
             m_value = Frequency::make_hertz(frequency.to_hertz() / denominator);
         },
@@ -2205,6 +2237,9 @@ void CalculatedStyleValue::CalculationResult::negate()
         },
         [&](Angle const& angle) {
             m_value = Angle { 0 - angle.raw_value(), angle.type() };
+        },
+        [&](Flex const& flex) {
+            m_value = Flex { 0 - flex.raw_value(), flex.type() };
         },
         [&](Frequency const& frequency) {
             m_value = Frequency { 0 - frequency.raw_value(), frequency.type() };
@@ -2229,6 +2264,9 @@ void CalculatedStyleValue::CalculationResult::invert()
         },
         [&](Angle const& angle) {
             m_value = Angle { 1 / angle.raw_value(), angle.type() };
+        },
+        [&](Flex const& flex) {
+            m_value = Flex { 1 / flex.raw_value(), flex.type() };
         },
         [&](Frequency const& frequency) {
             m_value = Frequency { 1 / frequency.raw_value(), frequency.type() };
@@ -2281,6 +2319,15 @@ Optional<Angle> CalculatedStyleValue::resolve_angle_percentage(Angle const& perc
         [&](auto const&) -> Optional<Angle> {
             return {};
         });
+}
+
+Optional<Flex> CalculatedStyleValue::resolve_flex() const
+{
+    auto result = m_calculation->resolve({}, {});
+
+    if (result.value().has<Flex>())
+        return result.value().get<Flex>();
+    return {};
 }
 
 Optional<Frequency> CalculatedStyleValue::resolve_frequency() const

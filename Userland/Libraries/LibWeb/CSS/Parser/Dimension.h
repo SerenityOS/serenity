@@ -8,6 +8,7 @@
 
 #include <AK/Variant.h>
 #include <LibWeb/CSS/Angle.h>
+#include <LibWeb/CSS/Flex.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
@@ -20,6 +21,11 @@ namespace Web::CSS::Parser {
 class Dimension {
 public:
     Dimension(Angle&& value)
+        : m_value(move(value))
+    {
+    }
+
+    Dimension(Flex&& value)
         : m_value(move(value))
     {
     }
@@ -58,6 +64,9 @@ public:
             return angle();
         return percentage();
     }
+
+    bool is_flex() const { return m_value.has<Flex>(); }
+    Flex flex() const { return m_value.get<Flex>(); }
 
     bool is_frequency() const { return m_value.has<Frequency>(); }
     Frequency frequency() const { return m_value.get<Frequency>(); }
@@ -99,7 +108,7 @@ public:
     }
 
 private:
-    Variant<Angle, Frequency, Length, Percentage, Resolution, Time> m_value;
+    Variant<Angle, Flex, Frequency, Length, Percentage, Resolution, Time> m_value;
 };
 
 }

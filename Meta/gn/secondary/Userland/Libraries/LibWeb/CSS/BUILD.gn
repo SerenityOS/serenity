@@ -28,6 +28,7 @@ source_set("CSS") {
     "Clip.cpp",
     "Display.cpp",
     "EdgeRect.cpp",
+    "Flex.cpp",
     "FontFace.cpp",
     "Frequency.cpp",
     "GridTrackPlacement.cpp",

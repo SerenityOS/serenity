@@ -101,6 +101,8 @@ class EdgeStyleValue;
 class ElementInlineCSSStyleDeclaration;
 class ExplicitGridTrack;
 class FilterValueListStyleValue;
+class Flex;
+class FlexStyleValue;
 class FontFace;
 class Frequency;
 class FrequencyOrCalculated;
