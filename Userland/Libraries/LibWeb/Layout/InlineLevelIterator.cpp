@@ -180,13 +180,19 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next_without_lookahead(
             m_text_node_context->is_last_chunk = true;
 
         auto& chunk = chunk_opt.value();
-        CSSPixels chunk_width = CSSPixels::nearest_value_for(text_node.font().width(chunk.view) + text_node.font().glyph_spacing());
 
         if (m_text_node_context->do_respect_linebreaks && chunk.has_breaking_newline) {
             return Item {
                 .type = Item::Type::ForcedBreak,
             };
         }
+
+        CSSPixels chunk_width;
+
+        if (m_text_node_context->is_last_chunk)
+            chunk_width = CSSPixels::nearest_value_for(text_node.font().width(chunk.view));
+        else
+            chunk_width = CSSPixels::nearest_value_for(text_node.font().width(chunk.view) + text_node.font().glyph_spacing());
 
         // NOTE: We never consider `content: ""` to be collapsible whitespace.
         bool is_generated_empty_string = text_node.is_generated() && chunk.length == 0;
