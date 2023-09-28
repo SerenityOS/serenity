@@ -501,22 +501,6 @@ Object* get_super_constructor(VM& vm)
     return super_constructor;
 }
 
-// 13.3.7.3 MakeSuperPropertyReference ( actualThis, propertyKey, strict ), https://tc39.es/ecma262/#sec-makesuperpropertyreference
-ThrowCompletionOr<Reference> make_super_property_reference(VM& vm, Value actual_this, PropertyKey const& property_key, bool strict)
-{
-    // 1. Let env be GetThisEnvironment().
-    auto& env = verify_cast<FunctionEnvironment>(*get_this_environment(vm));
-
-    // 2. Assert: env.HasSuperBinding() is true.
-    VERIFY(env.has_super_binding());
-
-    // 3. Let baseValue be ? env.GetSuperBase().
-    auto base_value = TRY(env.get_super_base());
-
-    // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
-    return Reference { base_value, property_key, actual_this, strict };
-}
-
 // 19.2.1.1 PerformEval ( x, strictCaller, direct ), https://tc39.es/ecma262/#sec-performeval
 ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller, EvalMode direct)
 {
