@@ -1261,8 +1261,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         && !response
         && url.equals(active_session_history_entry()->url, AK::URL::ExcludeFragment::Yes)
         && url.fragment().has_value()) {
-        // 1. Navigate to a fragment given navigable, url, historyHandling, and navigationId.
-        TRY(navigate_to_a_fragment(url, to_history_handling_behavior(history_handling), navigation_id));
+        // 1. Navigate to a fragment given navigable, url, historyHandling, userInvolvement, navigationAPIState, and navigationId.
+        TRY(navigate_to_a_fragment(url, to_history_handling_behavior(history_handling), user_involvement, navigation_api_state, navigation_id));
 
         traversable_navigable()->process_session_history_traversal_queue();
 
@@ -1387,14 +1387,14 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         history_entry->url = url;
         history_entry->document_state = document_state;
 
-        // 8. Let navigationParams be null.
+        // 7. Let navigationParams be null.
         Variant<Empty, NavigationParams, NonFetchSchemeNavigationParams> navigation_params = Empty {};
 
-        // FIXME: 9. If response is non-null:
+        // FIXME: 8. If response is non-null:
         if (response) {
         }
 
-        // 10. Attempt to populate the history entry's document
+        // 9. Attempt to populate the history entry's document
         //     for historyEntry, given navigable, "navigate", sourceSnapshotParams,
         //     targetSnapshotParams, navigationId, navigationParams, cspNavigationType, with allowPOST
         //     set to true and completionSteps set to the following step:
@@ -1417,14 +1417,26 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
     return {};
 }
 
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String)
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, UserNavigationInvolvement user_involvement, Optional<SerializationRecord> navigation_api_state, String navigation_id)
 {
-    // FIXME: 1. Let navigation be navigable's active window's navigation API.
-    // FIXME: 2. Let destinationNavigationAPIState be navigable's active session history entry's navigation API state.
-    // FIXME: 3. If navigationAPIState is not null, then set destinationNavigationAPIState to navigationAPIState.
-    // FIXME: 4. Let continue be the result of firing a push/replace/reload navigate event at navigation with navigationType set to historyHandling, isSameDocument set to true,
-    //           userInvolvement set to userInvolvement, and destinationURL set to url, and navigationAPIState set to destinationNavigationAPIState.
-    // FIXME: 5. If continue is false, then return.
+    (void)navigation_id;
+
+    // 1. Let navigation be navigable's active window's navigation API.
+    auto navigation = active_window()->navigation();
+
+    // 2. Let destinationNavigationAPIState be navigable's active session history entry's navigation API state.
+    // 3. If navigationAPIState is not null, then set destinationNavigationAPIState to navigationAPIState.
+    auto destination_navigation_api_state = navigation_api_state.has_value() ? *navigation_api_state : active_session_history_entry()->navigation_api_state;
+
+    // 4. Let continue be the result of firing a push/replace/reload navigate event at navigation with navigationType set to historyHandling, isSameDocument set to true,
+    //    userInvolvement set to userInvolvement, and destinationURL set to url, and navigationAPIState set to destinationNavigationAPIState.
+    auto navigation_type = history_handling == HistoryHandlingBehavior::Push ? Bindings::NavigationType::Push : Bindings::NavigationType::Replace;
+    bool const continue_ = navigation->fire_a_push_replace_reload_navigate_event(navigation_type, url, true, user_involvement, {}, destination_navigation_api_state);
+
+    // 5. If continue is false, then return.
+    if (!continue_)
+        return {};
 
     // 6. Let historyEntry be a new session history entry, with
     //      URL: url
@@ -1434,6 +1446,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     JS::NonnullGCPtr<SessionHistoryEntry> history_entry = heap().allocate_without_realm<SessionHistoryEntry>();
     history_entry->url = url;
     history_entry->document_state = active_session_history_entry()->document_state;
+    history_entry->navigation_api_state = destination_navigation_api_state;
     history_entry->scroll_restoration_mode = active_session_history_entry()->scroll_restoration_mode;
 
     // 7. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
@@ -1450,7 +1463,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
 
     // 11. If historyHandling is "push", then:
     if (history_handling == HistoryHandlingBehavior::Push) {
-        // FIXME: 1. Set history's state to null.
+        // 1. Set history's state to null.
+        history->set_state(JS::js_null());
 
         // 2. Increment scriptHistoryIndex.
         script_history_index++;
@@ -1463,9 +1477,11 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     m_active_session_history_entry = history_entry;
 
     // 13. Update document for history step application given navigable's active document, historyEntry, true, scriptHistoryIndex, and scriptHistoryLength.
-    active_document()->update_for_history_step_application(*history_entry, true, script_history_length, script_history_index);
+    // AD HOC: Skip updating the navigation api entries twice here
+    active_document()->update_for_history_step_application(*history_entry, true, script_history_length, script_history_index, {}, false);
 
-    // FIXME: 14. Update the navigation API entries for a same-document navigation given navigation, historyEntry, and historyHandling.
+    // 14. Update the navigation API entries for a same-document navigation given navigation, historyEntry, and historyHandling.
+    navigation->update_the_navigation_api_entries_for_a_same_document_navigation(history_entry, navigation_type);
 
     // 15. Scroll to the fragment given navigable's active document.
     // FIXME: Specification doesn't say when document url needs to update during fragment navigation
@@ -1827,7 +1843,7 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#url-and-history-update-steps
-void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, HistoryHandlingBehavior history_handling)
+void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, Optional<SerializationRecord> serialized_data, HistoryHandlingBehavior history_handling)
 {
     // 1. Let navigable be document's node navigable.
     auto navigable = document.navigable();
@@ -1835,14 +1851,16 @@ void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_u
     // 2. Let activeEntry be navigable's active session history entry.
     auto active_entry = navigable->active_session_history_entry();
 
+    // FIXME: Spec should be updated to say "classic history api state" instead of serialized state
     // 3. Let newEntry be a new session history entry, with
     //      URL: newURL
     //      serialized state: if serializedData is not null, serializedData; otherwise activeEntry's classic history API state
     //      document state: activeEntry's document state
     //      scroll restoration mode: activeEntry's scroll restoration mode
-    //      persisted user state: activeEntry's persisted user state
+    // FIXME: persisted user state: activeEntry's persisted user state
     JS::NonnullGCPtr<SessionHistoryEntry> new_entry = document.heap().allocate_without_realm<SessionHistoryEntry>();
     new_entry->url = new_url;
+    new_entry->classic_history_api_state = serialized_data.value_or(active_entry->classic_history_api_state);
     new_entry->document_state = active_entry->document_state;
     new_entry->scroll_restoration_mode = active_entry->scroll_restoration_mode;
 
@@ -1863,17 +1881,23 @@ void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_u
         document.history()->m_length = document.history()->m_index + 1;
     }
 
-    // FIXME: 7. If serializedData is not null, then restore the history object state given document and newEntry.
+    // If serializedData is not null, then restore the history object state given document and newEntry.
+    if (serialized_data.has_value())
+        document.restore_the_history_object_state(new_entry);
 
     // 8. Set document's URL to newURL.
     document.set_url(new_url);
 
-    // FIXME: 9. Set document's latest entry to newEntry.
+    // 9. Set document's latest entry to newEntry.
+    document.set_latest_entry(new_entry);
 
     // 10. Set navigable's active session history entry to newEntry.
     navigable->set_active_session_history_entry(new_entry);
 
-    // FIXME: 11. Update the navigation API entries for a same-document navigation given document's relevant global object's navigation API, newEntry, and historyHandling.
+    // 11. Update the navigation API entries for a same-document navigation given document's relevant global object's navigation API, newEntry, and historyHandling.
+    auto& relevant_global_object = verify_cast<Window>(HTML::relevant_global_object(document));
+    auto navigation_type = history_handling == HistoryHandlingBehavior::Push ? Bindings::NavigationType::Push : Bindings::NavigationType::Replace;
+    relevant_global_object.navigation()->update_the_navigation_api_entries_for_a_same_document_navigation(new_entry, navigation_type);
 
     // 12. Let traversable be navigable's traversable navigable.
     auto traversable = navigable->traversable_navigable();

@@ -139,10 +139,12 @@ public:
 
     WebIDL::ExceptionOr<void> navigate(NavigateParams);
 
-    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, UserNavigationInvolvement, Optional<SerializationRecord> navigation_api_state, String navigation_id);
 
     WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> evaluate_javascript_url(AK::URL const&, Origin const& new_document_origin, String navigation_id);
     WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type, String navigation_id);
+
+    bool allowed_by_sandboxing_to_navigate(Navigable const& target, SourceSnapshotParams const&);
 
     void reload();
 
@@ -189,8 +191,6 @@ protected:
     TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
 
 private:
-    bool allowed_by_sandboxing_to_navigate(Navigable const& target, SourceSnapshotParams const&);
-
     void scroll_offset_did_change();
 
     void inform_the_navigation_api_about_aborting_navigation();
@@ -226,6 +226,6 @@ HashTable<Navigable*>& all_navigables();
 
 bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document);
 void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable>, HistoryHandlingBehavior, JS::NonnullGCPtr<SessionHistoryEntry>);
-void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Reload);
+void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, Optional<SerializationRecord> = {}, HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Reload);
 
 }

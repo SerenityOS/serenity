@@ -535,9 +535,10 @@ public:
 
     HTML::SourceSnapshotParams snapshot_source_snapshot_params() const;
 
-    void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactive, size_t script_history_length, size_t script_history_index);
+    void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api = {}, bool update_navigation_api = true);
 
     HashMap<AK::URL, JS::GCPtr<HTML::SharedImageRequest>>& shared_image_requests();
+
     void restore_the_history_object_state(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry);
 
     JS::NonnullGCPtr<Animations::DocumentTimeline> timeline();
@@ -553,6 +554,9 @@ public:
     void append_pending_animation_event(PendingAnimationEvent const&);
 
     bool ready_to_run_scripts() const { return m_ready_to_run_scripts; }
+
+    JS::GCPtr<HTML::SessionHistoryEntry> latest_entry() const { return m_latest_entry; }
+    void set_latest_entry(JS::GCPtr<HTML::SessionHistoryEntry> e) { m_latest_entry = e; }
 
 protected:
     virtual void initialize(JS::Realm&) override;

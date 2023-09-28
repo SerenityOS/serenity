@@ -160,8 +160,10 @@ bool can_have_its_url_rewritten(DOM::Document const& document, AK::URL const& ta
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#shared-history-push/replace-state-steps
-WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value value, Optional<String> const& url, HistoryHandlingBehavior history_handling)
+WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value data, Optional<String> const& url, HistoryHandlingBehavior history_handling)
 {
+    auto& vm = this->vm();
+
     // 1. Let document be history's associated Document.
     auto& document = m_associated_document;
 
@@ -175,7 +177,8 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
     // 4. Let serializedData be StructuredSerializeForStorage(data). Rethrow any exceptions.
     //    FIXME: Actually rethrow exceptions here once we start using the serialized data.
     //           Throwing here on data types we don't yet serialize will regress sites that use push/replaceState.
-    [[maybe_unused]] auto serialized_data_or_error = structured_serialize_for_storage(vm(), value);
+    auto serialized_data_or_error = structured_serialize_for_storage(vm, data);
+    auto serialized_data = serialized_data_or_error.is_error() ? MUST(structured_serialize_for_storage(vm, JS::js_null())) : serialized_data_or_error.release_value();
 
     // 5. Let newURL be document's URL.
     auto new_url = document->url();
@@ -211,7 +214,7 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
 
     // 10. Run the URL and history update steps given document and newURL, with serializedData set to
     //     serializedData and historyHandling set to historyHandling.
-    perform_url_and_history_update_steps(document, new_url, history_handling);
+    perform_url_and_history_update_steps(document, new_url, serialized_data, history_handling);
 
     return {};
 }

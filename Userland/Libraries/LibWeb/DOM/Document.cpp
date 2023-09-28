@@ -71,6 +71,7 @@
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Navigable.h>
+#include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Origin.h>
@@ -3621,7 +3622,7 @@ void Document::restore_the_history_object_state(JS::NonnullGCPtr<HTML::SessionHi
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#update-document-for-history-step-application
-void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry, bool do_not_reactive, size_t script_history_length, size_t script_history_index)
+void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api, bool update_navigation_api)
 {
     // 1. Let documentIsNew be true if document's latest entry is null; otherwise false.
     auto document_is_new = !m_latest_entry;
@@ -3636,8 +3637,52 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     history()->m_length = script_history_length;
 
     // 5. If documentsEntryChanged is true, then:
+    // NOTE: documentsEntryChanged can be false for one of two reasons: either we are restoring from bfcache,
+    //      or we are asynchronously finishing up a synchronous navigation which already synchronously set document's latest entry.
+    //      The doNotReactivate argument distinguishes between these two cases.
     if (documents_entry_changed) {
-        // FIXME: Implement this.
+        // 1. Let oldURL be document's latest entry's URL.
+        auto old_url = m_latest_entry ? m_latest_entry->url : AK::URL {};
+
+        // 2. Set document's latest entry to entry.
+        m_latest_entry = entry;
+
+        // 3. Restore the history object state given document and entry.
+        restore_the_history_object_state(entry);
+
+        // 4. Let navigation be history's relevant global object's navigation API.
+        auto navigation = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).navigation();
+
+        // 5. If documentIsNew is false, then:
+        if (!document_is_new) {
+            // AD HOC: Skip this in situations the spec steps don't account for
+            if (update_navigation_api) {
+                // 1. Update the navigation API entries for a same-document navigation given navigation, entry, and "traverse".
+                navigation->update_the_navigation_api_entries_for_a_same_document_navigation(entry, Bindings::NavigationType::Traverse);
+            }
+
+            // FIXME: 2. Fire an event named popstate at document's relevant global object, using PopStateEvent,
+            //           with the state attribute initialized to document's history object's state and hasUAVisualTransition initialized to true
+            //           if a visual transition, to display a cached rendered state of the latest entry, was done by the user agent.
+
+            // FIXME: 3. Restore persisted state given entry.
+
+            // FIXME: 4. If oldURL's fragment is not equal to entry's URL's fragment, then queue a global task on the DOM manipulation task source
+            //           given document's relevant global object to fire an event named hashchange at document's relevant global object,
+            //           using HashChangeEvent, with the oldURL attribute initialized to the serialization of oldURL and the newURL attribute
+            //           initialized to the serialization of entry's URL.
+        }
+
+        // 6. Otherwise:
+        else {
+            // 1. Assert: entriesForNavigationAPI is given.
+            VERIFY(entries_for_navigation_api.has_value());
+
+            // FIXME: 2. Restore persisted state given entry.
+
+            // 3. Initialize the navigation API entries for a new document given navigation, entriesForNavigationAPI, and entry.
+            navigation->initialize_the_navigation_api_entries_for_a_new_document(*entries_for_navigation_api, entry);
+        }
     }
 
     // 6. If documentIsNew is true, then:
@@ -3653,7 +3698,8 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     }
 
     // 7. Otherwise, if documentsEntryChanged is false and doNotReactivate is false, then:
-    if (!documents_entry_changed && !do_not_reactive) {
+    // NOTE: This is for bfcache restoration
+    if (!documents_entry_changed && !do_not_reactivate) {
         // FIXME: 1. Assert: entriesForNavigationAPI is given.
         // FIXME: 2. Reactivate document given entry and entriesForNavigationAPI.
     }
