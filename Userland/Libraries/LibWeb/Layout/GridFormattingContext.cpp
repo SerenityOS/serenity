@@ -1250,9 +1250,11 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater than
     // the track’s base size, set its base size to that product.
     for (auto& track : tracks_and_gaps) {
-        auto scaled_fraction = CSSPixels::nearest_value_for(track.max_track_sizing_function.flex_factor()) * flex_fraction;
-        if (scaled_fraction > track.base_size) {
-            track.base_size = scaled_fraction;
+        if (track.max_track_sizing_function.is_flexible_length()) {
+            auto scaled_fraction = CSSPixels::nearest_value_for(track.max_track_sizing_function.flex_factor()) * flex_fraction;
+            if (scaled_fraction > track.base_size) {
+                track.base_size = scaled_fraction;
+            }
         }
     }
 }
