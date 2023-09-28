@@ -472,6 +472,77 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
     m_current_session_history_step = target_step;
 }
 
+Vector<JS::NonnullGCPtr<SessionHistoryEntry>> TraversableNavigable::get_session_history_entries_for_the_navigation_api(JS::NonnullGCPtr<Navigable> navigable, int target_step)
+{
+    // 1. Let rawEntries be the result of getting session history entries for navigable.
+    auto raw_entries = navigable->get_session_history_entries();
+
+    if (raw_entries.is_empty())
+        return {};
+
+    // 2. Let entriesForNavigationAPI be a new empty list.
+    Vector<JS::NonnullGCPtr<SessionHistoryEntry>> entries_for_navigation_api;
+
+    // 3. Let startingIndex be the index of the session history entry in rawEntries who has the greatest step less than or equal to targetStep.
+    // FIXME: Use min/max_element algorithm or some such here
+    int starting_index = 0;
+    auto max_step = 0;
+    for (auto i = 0u; i < raw_entries.size(); ++i) {
+        auto const& entry = raw_entries[i];
+        if (entry->step.has<int>()) {
+            auto step = entry->step.get<int>();
+            if (step <= target_step && step > max_step) {
+                starting_index = static_cast<int>(i);
+            }
+        }
+    }
+
+    // 4. Append rawEntries[startingIndex] to entriesForNavigationAPI.
+    entries_for_navigation_api.append(raw_entries[starting_index]);
+
+    // 5. Let startingOrigin be rawEntries[startingIndex]'s document state's origin.
+    auto starting_origin = raw_entries[starting_index]->document_state->origin();
+
+    // 6. Let i be startingIndex − 1.
+    auto i = starting_index - 1;
+
+    // 7. While i > 0:
+    while (i > 0) {
+        auto& entry = raw_entries[static_cast<unsigned>(i)];
+        // 1. If rawEntries[i]'s document state's origin is not same origin with startingOrigin, then break.
+        auto entry_origin = entry->document_state->origin();
+        if (starting_origin.has_value() && entry_origin.has_value() && !entry_origin->is_same_origin(*starting_origin))
+            break;
+
+        // 2. Prepend rawEntries[i] to entriesForNavigationAPI.
+        entries_for_navigation_api.prepend(entry);
+
+        // 3. Set i to i − 1.
+        --i;
+    }
+
+    // 8. Set i to startingIndex + 1.
+    i = starting_index + 1;
+
+    // 9. While i < rawEntries's size:
+    while (i < static_cast<int>(raw_entries.size())) {
+        auto& entry = raw_entries[static_cast<unsigned>(i)];
+        // 1. If rawEntries[i]'s document state's origin is not same origin with startingOrigin, then break.
+        auto entry_origin = entry->document_state->origin();
+        if (starting_origin.has_value() && entry_origin.has_value() && !entry_origin->is_same_origin(*starting_origin))
+            break;
+
+        // 2. Append rawEntries[i] to entriesForNavigationAPI.
+        entries_for_navigation_api.append(entry);
+
+        // 3. Set i to i + 1.
+        ++i;
+    }
+
+    // 10. Return entriesForNavigationAPI.
+    return entries_for_navigation_api;
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#clear-the-forward-session-history
 void TraversableNavigable::clear_the_forward_session_history()
 {

@@ -148,7 +148,7 @@ WebIDL::ExceptionOr<void> Navigation::update_current_entry(NavigationUpdateCurre
     NavigationCurrentEntryChangeEventInit event_init = {};
     event_init.navigation_type = {};
     event_init.from = current;
-    dispatch_event(HTML::NavigationCurrentEntryChangeEvent::create(realm(), HTML::EventNames::currententrychange, event_init));
+    dispatch_event(HTML::NavigationCurrentEntryChangeEvent::construct_impl(realm(), HTML::EventNames::currententrychange, event_init));
 
     return {};
 }
@@ -868,6 +868,28 @@ void Navigation::reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMetho
     clean_up(api_method_tracker);
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#notify-about-the-committed-to-entry
+void Navigation::notify_about_the_committed_to_entry(JS::NonnullGCPtr<NavigationAPIMethodTracker> api_method_tracker, JS::NonnullGCPtr<NavigationHistoryEntry> nhe)
+{
+    auto& realm = this->realm();
+
+    // 1. Set apiMethodTracker's committed-to entry to nhe.
+    api_method_tracker->commited_to_entry = nhe;
+
+    // 2. If apiMethodTracker's serialized state is not null, then set nhe's session history entry's navigation API state to apiMethodTracker's serialized state.'
+    // NOTE: If it's null, then we're traversing to nhe via navigation.traverseTo(), which does not allow changing the state.
+    if (api_method_tracker->serialized_state.has_value()) {
+        // NOTE: At this point, apiMethodTracker's serialized state is no longer needed.
+        //       Implementations might want to clear it out to avoid keeping it alive for the lifetime of the navigation API method tracker.
+        nhe->session_history_entry().navigation_api_state = *api_method_tracker->serialized_state;
+        api_method_tracker->serialized_state = {};
+    }
+
+    // 3. Resolve apiMethodTracker's committed promise with nhe.
+    TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
+    WebIDL::resolve_promise(realm, api_method_tracker->committed_promise, nhe);
+}
+
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#inner-navigate-event-firing-algorithm
 bool Navigation::inner_navigate_event_firing_algorithm(
     Bindings::NavigationType navigation_type,
@@ -1325,6 +1347,136 @@ bool Navigation::fire_a_download_request_navigate_event(AK::URL destination_url,
     //   "push", event, destination, userInvolvement, null, and filename.
     // AD-HOC: We don't pass the event, but we do pass the classic_history_api state at the end to be set later
     return inner_navigate_event_firing_algorithm(Bindings::NavigationType::Push, destination, user_involvement, {}, move(filename), {});
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#initialize-the-navigation-api-entries-for-a-new-document
+void Navigation::initialize_the_navigation_api_entries_for_a_new_document(Vector<JS::NonnullGCPtr<SessionHistoryEntry>> const& new_shes, JS::NonnullGCPtr<SessionHistoryEntry> initial_she)
+{
+    auto& realm = relevant_realm(*this);
+
+    // 1. Assert: navigation's entry list is empty.
+    VERIFY(m_entry_list.is_empty());
+
+    // 2. Assert: navigation's current entry index is −1.
+    VERIFY(m_current_entry_index == -1);
+
+    // 3. If navigation has entries and events disabled, then return.
+    if (has_entries_and_events_disabled())
+        return;
+
+    // 4. For each newSHE of newSHEs:
+    for (auto const& new_she : new_shes) {
+        // 1. Let newNHE be a new NavigationHistoryEntry created in the relevant realm of navigation.
+        // 2. Set newNHE's session history entry to newSHE.
+        auto new_nhe = NavigationHistoryEntry::create(realm, new_she);
+
+        // 3. Append newNHE to navigation's entry list.
+        m_entry_list.append(new_nhe);
+    }
+
+    // 5. Set navigation's current entry index to the result of getting the navigation API entry index of initialSHE within navigation.
+    m_current_entry_index = get_the_navigation_api_entry_index(*initial_she);
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#update-the-navigation-api-entries-for-a-same-document-navigation
+void Navigation::update_the_navigation_api_entries_for_a_same_document_navigation(JS::NonnullGCPtr<SessionHistoryEntry> destination_she, Bindings::NavigationType navigation_type)
+{
+    auto& realm = relevant_realm(*this);
+
+    // 1. If navigation has entries and events disabled, then return.
+    if (has_entries_and_events_disabled())
+        return;
+
+    // 2. Let oldCurrentNHE be the current entry of navigation.
+    auto old_current_nhe = current_entry();
+
+    // 3. Let disposedNHEs be a new empty list.
+    Vector<JS::NonnullGCPtr<NavigationHistoryEntry>> disposed_nhes;
+
+    // 4. If navigationType is "traverse", then:
+    if (navigation_type == Bindings::NavigationType::Traverse) {
+        // 1. Set navigation's current entry index to the result of getting the navigation API entry index of destinationSHE within navigation.
+        m_current_entry_index = get_the_navigation_api_entry_index(destination_she);
+
+        // 2. Assert: navigation's current entry index is not −1.
+        // NOTE: This algorithm is only called for same-document traversals.
+        //       Cross-document traversals will instead call either initialize the navigation API entries for a new document
+        //       or update the navigation API entries for reactivation
+        VERIFY(m_current_entry_index != -1);
+    }
+
+    // 5. Otherwise, if navigationType is "push", then:
+    else if (navigation_type == Bindings::NavigationType::Push) {
+        // 1. Set navigation's current entry index to navigation's current entry index + 1.
+        m_current_entry_index++;
+
+        // 2. Let i be navigation's current entry index.
+        auto i = m_current_entry_index;
+
+        // 3. While i < navigation's entry list's size:
+        while (i < static_cast<i64>(m_entry_list.size())) {
+            // 1. Append navigation's entry list[i] to disposedNHEs.
+            disposed_nhes.append(m_entry_list[i]);
+
+            // 2. Set i to i + 1.
+            ++i;
+        }
+
+        // 4. Remove all items in disposedNHEs from navigation's entry list.
+        m_entry_list.remove(m_current_entry_index, m_entry_list.size() - m_current_entry_index);
+    }
+
+    // 6. Otherwise, if navigationType is "replace", then:
+    else if (navigation_type == Bindings::NavigationType::Replace) {
+        VERIFY(old_current_nhe != nullptr);
+
+        // 1. Append oldCurrentNHE to disposedNHEs.
+        disposed_nhes.append(*old_current_nhe);
+    }
+
+    // 7. If navigationType is "push" or "replace", then:
+    if (navigation_type == Bindings::NavigationType::Push || navigation_type == Bindings::NavigationType::Replace) {
+        // 1. Let newNHE be a new NavigationHistoryEntry created in the relevant realm of navigation.
+        // 2. Set newNHE's session history entry to destinationSHE.
+        auto new_nhe = NavigationHistoryEntry::create(realm, destination_she);
+
+        VERIFY(m_current_entry_index != -1);
+
+        // 3. Set navigation's entry list[navigation's current entry index] to newNHE.
+        if (m_current_entry_index < static_cast<i64>(m_entry_list.size()))
+            m_entry_list[m_current_entry_index] = new_nhe;
+        else {
+            VERIFY(m_current_entry_index == static_cast<i64>(m_entry_list.size()));
+            m_entry_list.append(new_nhe);
+        }
+    }
+
+    // 8. If navigation's ongoing API method tracker is non-null, then notify about the committed-to entry
+    //    given navigation's ongoing API method tracker and the current entry of navigation.
+    // NOTE: It is important to do this before firing the dispose or currententrychange events,
+    //       since event handlers could start another navigation, or otherwise change the value of
+    //       navigation's ongoing API method tracker.
+    if (m_ongoing_api_method_tracker != nullptr)
+        notify_about_the_committed_to_entry(*m_ongoing_api_method_tracker, *current_entry());
+
+    // 9. Prepare to run script given navigation's relevant settings object.
+    relevant_settings_object(*this).prepare_to_run_script();
+
+    // 10. Fire an event named currententrychange at navigation using NavigationCurrentEntryChangeEvent,
+    //     with its navigationType attribute initialized to navigationType and its from initialized to oldCurrentNHE.
+    NavigationCurrentEntryChangeEventInit event_init = {};
+    event_init.navigation_type = navigation_type;
+    event_init.from = old_current_nhe;
+    dispatch_event(NavigationCurrentEntryChangeEvent::construct_impl(realm, EventNames::currententrychange, event_init));
+
+    // 11. For each disposedNHE of disposedNHEs:
+    for (auto& disposed_nhe : disposed_nhes) {
+        // 1. Fire an event named dispose at disposedNHE.
+        disposed_nhe->dispatch_event(DOM::Event::create(realm, EventNames::dispose, {}));
+    }
+
+    // 12. Clean up after running script given navigation's relevant settings object.
+    relevant_settings_object(*this).clean_up_after_running_script();
 }
 
 }
