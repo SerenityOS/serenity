@@ -27,7 +27,6 @@ NonnullGCPtr<PrivateEnvironment> new_private_environment(VM& vm, PrivateEnvironm
 NonnullGCPtr<Environment> get_this_environment(VM&);
 bool can_be_held_weakly(Value);
 Object* get_super_constructor(VM&);
-ThrowCompletionOr<Reference> make_super_property_reference(VM&, Value actual_this, PropertyKey const&, bool strict);
 ThrowCompletionOr<Value> require_object_coercible(VM&, Value);
 ThrowCompletionOr<Value> call_impl(VM&, Value function, Value this_value, Optional<MarkedVector<Value>> = {});
 ThrowCompletionOr<Value> call_impl(VM&, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> = {});
