@@ -78,11 +78,7 @@ void BoardWidget::set_running(bool running)
     if (running == m_running)
         return;
 
-    if (m_selected_pattern) {
-        m_selected_pattern = nullptr;
-        if (on_pattern_selection_state_change)
-            on_pattern_selection_state_change();
-    }
+    clear_selected_pattern();
 
     m_running = running;
 
@@ -206,17 +202,23 @@ void BoardWidget::mousedown_event(GUI::MouseEvent& event)
         if (m_selected_pattern) {
             place_pattern(row, column);
             if (!event.ctrl()) {
-                m_selected_pattern = nullptr;
-                if (on_pattern_selection_state_change)
-                    on_pattern_selection_state_change();
-
-                if (m_pattern_preview_timer->is_active())
-                    m_pattern_preview_timer->stop();
+                clear_selected_pattern();
             }
         } else {
             toggle_cell(row, column);
         }
     }
+}
+
+void BoardWidget::keydown_event(GUI::KeyEvent& event)
+{
+    if (event.key() == Key_Escape) {
+        clear_selected_pattern();
+        update();
+        return;
+    }
+
+    event.ignore();
 }
 
 void BoardWidget::context_menu_event(GUI::ContextMenuEvent& event)
@@ -285,6 +287,19 @@ void BoardWidget::place_pattern(size_t row, size_t column)
         }
         y_offset++;
     }
+}
+
+void BoardWidget::clear_selected_pattern()
+{
+    if (!m_selected_pattern)
+        return;
+
+    m_selected_pattern = nullptr;
+    if (on_pattern_selection_state_change)
+        on_pattern_selection_state_change();
+
+    if (m_pattern_preview_timer->is_active())
+        m_pattern_preview_timer->stop();
 }
 
 void BoardWidget::setup_patterns()
