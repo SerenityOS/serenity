@@ -502,7 +502,13 @@ static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_src
     Optional<PolicyContainer> history_policy_container = entry->document_state->history_policy_container().visit(
         [](PolicyContainer const& c) -> Optional<PolicyContainer> { return c; },
         [](DocumentState::Client) -> Optional<PolicyContainer> { return {}; });
-    auto policy_container = determine_navigation_params_policy_container(*response->url(), history_policy_container, {}, navigable->container_document()->policy_container(), {});
+    PolicyContainer policy_container;
+    if (navigable->container()) {
+        // NOTE: Specification assumes that only navigables corresponding to iframes can be navigated to about:srcdoc.
+        //       We also use srcdoc to implement load_html() for top level navigables so we need to null check container
+        //       because it might be null.
+        policy_container = determine_navigation_params_policy_container(*response->url(), history_policy_container, {}, navigable->container_document()->policy_container(), {});
+    }
 
     // 7. Return a new navigation params, with
     //    id: navigationId
