@@ -40,10 +40,17 @@ public:
     };
     HistoryObjectLengthAndIndex get_the_history_object_length_and_index(int) const;
 
-    void apply_the_traverse_history_step(int, Optional<SourceSnapshotParams>, JS::GCPtr<Navigable>, UserNavigationInvolvement);
-    void apply_the_reload_history_step();
-    void apply_the_push_or_replace_history_step(int step);
-    void update_for_navigable_creation_or_destruction();
+    enum class HistoryStepResult {
+        InitiatorDisallowed,
+        CanceledByBeforeUnload,
+        CanceledByNavigate,
+        Applied,
+    };
+
+    HistoryStepResult apply_the_traverse_history_step(int, Optional<SourceSnapshotParams>, JS::GCPtr<Navigable>, UserNavigationInvolvement);
+    HistoryStepResult apply_the_reload_history_step();
+    HistoryStepResult apply_the_push_or_replace_history_step(int step);
+    HistoryStepResult update_for_navigable_creation_or_destruction();
 
     int get_the_used_step(int step) const;
     Vector<JS::Handle<Navigable>> get_all_navigables_whose_current_session_history_entry_will_change_or_reload(int) const;
@@ -75,17 +82,10 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    enum class HistoryStepResult {
-        InitiatorDisallowed,
-        CanceledByBeforeUnload,
-        CanceledByNavigate,
-        Applied,
-    };
     // FIXME: Fix spec typo cancelation --> cancellation
     HistoryStepResult apply_the_history_step(
         int step,
         bool check_for_cancelation,
-        bool fire_navigate_event_on_commit,
         Optional<SourceSnapshotParams>,
         JS::GCPtr<Navigable> initiator_to_check,
         Optional<UserNavigationInvolvement> user_involvement_for_navigate_events);
