@@ -5118,17 +5118,15 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
-        if (auto maybe_calculated = parse_calculated_value(component_value))
-            return GridSize(LengthPercentage(maybe_calculated.release_nonnull()));
+        if (auto maybe_calculated = parse_calculated_value(component_value)) {
+            if (maybe_calculated->resolves_to_length_percentage())
+                return GridSize(LengthPercentage(maybe_calculated.release_nonnull()));
+            // FIXME: Support calculated <flex>
+        }
 
         return {};
     }
     auto token = component_value.token();
-    if (token.is(Token::Type::Dimension) && token.dimension_unit().equals_ignoring_ascii_case("fr"sv)) {
-        auto numeric_value = token.dimension_value();
-        if (numeric_value)
-            return GridSize(numeric_value);
-    }
     if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("auto"sv))
         return GridSize::make_auto();
     if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("max-content"sv))
@@ -5142,6 +5140,8 @@ Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_
         return GridSize(dimension->length());
     else if (dimension->is_percentage())
         return GridSize(dimension->percentage());
+    else if (dimension->is_flex())
+        return GridSize(dimension->flex());
     return {};
 }
 

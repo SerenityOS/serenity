@@ -22,7 +22,7 @@ public:
     };
 
     GridSize(LengthPercentage);
-    GridSize(double);
+    GridSize(Flex);
     GridSize(Type);
     GridSize();
     ~GridSize();
@@ -38,7 +38,7 @@ public:
     bool is_min_content() const { return m_type == Type::MinContent; }
 
     LengthPercentage length_percentage() const { return m_length_percentage; }
-    double flex_factor() const { return m_flex_factor; }
+    double flex_factor() const { return m_flex_factor.to_fr(); }
 
     // https://www.w3.org/TR/css-grid-2/#layout-algorithm
     // An intrinsic sizing function (min-content, max-content, auto, fit-content()).
@@ -57,13 +57,13 @@ public:
     {
         return m_type == other.type()
             && m_length_percentage == other.length_percentage()
-            && m_flex_factor == other.flex_factor();
+            && m_flex_factor == other.m_flex_factor;
     }
 
 private:
     Type m_type;
     LengthPercentage m_length_percentage;
-    double m_flex_factor { 0 };
+    Flex m_flex_factor { 0, Flex::Type::Fr };
 };
 
 class GridMinMax {
