@@ -262,10 +262,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
 
     db.on_new_results = [&](auto results) {
-        if (results.is_empty())
+        if (results.is_empty()) {
             app_state.selected_index = {};
-        else
+        } else if (app_state.selected_index.has_value()) {
+            auto current_selected_result = app_state.results[app_state.selected_index.value()];
+            auto new_selected_index = results.find_first_index(current_selected_result).value_or(0);
+            if (new_selected_index >= Assistant::MAX_SEARCH_RESULTS) {
+                new_selected_index = 0;
+            }
+            app_state.selected_index = new_selected_index;
+        } else {
             app_state.selected_index = 0;
+        }
         app_state.results = results;
         app_state.visible_result_count = min(results.size(), Assistant::MAX_SEARCH_RESULTS);
 
