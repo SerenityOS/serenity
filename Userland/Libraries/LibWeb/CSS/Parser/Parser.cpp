@@ -6957,6 +6957,17 @@ bool Parser::substitute_attr_function(DOM::Element& element, StringView property
                     return true;
                 }
             }
+        } else if (attribute_type.equals_ignoring_ascii_case("flex"_fly_string)) {
+            // Parse a component value from the attribute’s value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            // If the result is a <dimension-token> whose unit matches the given type, the result is the substitution value.
+            // Otherwise, there is no substitution value.
+            if (component_value.has_value() && component_value->is(Token::Type::Dimension)) {
+                if (Flex::unit_from_name(component_value->token().dimension_unit()).has_value()) {
+                    dest.append(component_value.release_value());
+                    return true;
+                }
+            }
         } else if (attribute_type.equals_ignoring_ascii_case("frequency"_fly_string)) {
             // Parse a component value from the attribute’s value.
             auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
@@ -7043,6 +7054,9 @@ bool Parser::substitute_attr_function(DOM::Element& element, StringView property
                     dest.empend(Token::create_dimension(component_value->token().number_value(), attribute_type));
                     return true;
                 } else if (auto angle_unit = Angle::unit_from_name(attribute_type); angle_unit.has_value()) {
+                    dest.empend(Token::create_dimension(component_value->token().number_value(), attribute_type));
+                    return true;
+                } else if (auto flex_unit = Flex::unit_from_name(attribute_type); flex_unit.has_value()) {
                     dest.empend(Token::create_dimension(component_value->token().number_value(), attribute_type));
                     return true;
                 } else if (auto frequency_unit = Frequency::unit_from_name(attribute_type); frequency_unit.has_value()) {
