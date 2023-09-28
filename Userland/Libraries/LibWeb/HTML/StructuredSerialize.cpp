@@ -1142,8 +1142,16 @@ WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationR
     if (!memory.has_value())
         memory = DeserializationMemory { vm.heap() };
 
+    // IMPLEMENTATION DEFINED: We need to make sure there's an execution context for target_realm on the stack before constructing these JS objects
+    auto& target_settings = Bindings::host_defined_environment_settings_object(target_realm);
+    target_settings.prepare_to_run_script();
+
     Deserializer deserializer(vm, target_realm, serialized.span(), *memory);
-    return deserializer.deserialize();
+
+    auto result = deserializer.deserialize();
+
+    target_settings.clean_up_after_running_script();
+    return result;
 }
 
 }
