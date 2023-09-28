@@ -830,12 +830,6 @@ public:
     {
     }
 
-    void set_targets(Label true_target, Optional<Label> false_target)
-    {
-        m_true_target = move(true_target);
-        m_false_target = move(false_target);
-    }
-
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
