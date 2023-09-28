@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/DocumentState.h>
+#include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
@@ -239,24 +240,130 @@ Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_whose_cur
     return results;
 }
 
-// https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-history-step
-void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnapshotParams> source_snapshot_params)
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-all-navigables-that-only-need-history-object-length/index-update
+Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_that_only_need_history_object_length_index_update(int target_step) const
 {
+    // NOTE: Other navigables might not be impacted by the traversal. For example, if the response is a 204, the currently active document will remain.
+    //       Additionally, going 'back' after a 204 will change the current session history entry, but the active session history entry will already be correct.
+
+    // 1. Let results be an empty list.
+    Vector<JS::Handle<Navigable>> results;
+
+    // 2. Let navigablesToCheck be « traversable ».
+    Vector<JS::Handle<Navigable>> navigables_to_check;
+    navigables_to_check.append(const_cast<TraversableNavigable&>(*this));
+
+    // 3. For each navigable of navigablesToCheck:
+    while (!navigables_to_check.is_empty()) {
+        auto navigable = navigables_to_check.take_first();
+
+        // 1. Let targetEntry be the result of getting the target history entry given navigable and targetStep.
+        auto target_entry = navigable->get_the_target_history_entry(target_step);
+
+        // 2. If targetEntry is navigable's current session history entry and targetEntry's document state's reload pending is false, then:
+        if (target_entry == navigable->current_session_history_entry() && !target_entry->document_state->reload_pending()) {
+            // 1.  Append navigable to results.
+            results.append(navigable);
+
+            // 2. Extend navigablesToCheck with navigable's child navigables.
+            navigables_to_check.extend(navigable->child_navigables());
+        }
+    }
+
+    // 4. Return results.
+    return results;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-all-navigables-that-might-experience-a-cross-document-traversal
+Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_that_might_experience_a_cross_document_traversal(int target_step) const
+{
+    // NOTE: From traversable's session history traversal queue's perspective, these documents are candidates for going cross-document during the
+    //       traversal described by targetStep. They will not experience a cross-document traversal if the status code for their target document is
+    //       HTTP 204 No Content.
+    //       Note that if a given navigable might experience a cross-document traversal, this algorithm will return navigable but not its child navigables.
+    //       Those would end up unloaded, not traversed.
+
+    // 1. Let results be an empty list.
+    Vector<JS::Handle<Navigable>> results;
+
+    // 2. Let navigablesToCheck be « traversable ».
+    Vector<JS::Handle<Navigable>> navigables_to_check;
+    navigables_to_check.append(const_cast<TraversableNavigable&>(*this));
+
+    // 3. For each navigable of navigablesToCheck:
+    while (!navigables_to_check.is_empty()) {
+        auto navigable = navigables_to_check.take_first();
+
+        // 1. Let targetEntry be the result of getting the target history entry given navigable and targetStep.
+        auto target_entry = navigable->get_the_target_history_entry(target_step);
+
+        // 2. If targetEntry's document is not navigable's document or targetEntry's document state's reload pending is true, then append navigable to results.
+        // NOTE: Although navigable's active history entry can change synchronously, the new entry will always have the same Document,
+        //       so accessing navigable's document is reliable.
+        if (target_entry->document_state->document() != navigable->active_document() || target_entry->document_state->reload_pending()) {
+            results.append(navigable);
+        }
+
+        // 3. Otherwise, extend navigablesToCheck with navigable's child navigables.
+        //    Adding child navigables to navigablesToCheck means those navigables will also be checked by this loop.
+        //    Child navigables are only checked if the navigable's active document will not change as part of this traversal.
+        else {
+            navigables_to_check.extend(navigable->child_navigables());
+        }
+    }
+
+    // 4. Return results.
+    return results;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-history-step
+TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_step(
+    int step,
+    bool check_for_cancelation,
+    bool fire_navigate_event_on_commit,
+    Optional<SourceSnapshotParams> source_snapshot_params,
+    JS::GCPtr<Navigable> initiator_to_check,
+    Optional<UserNavigationInvolvement> user_involvement_for_navigate_events)
+{
+    // FIXME: fireNavigateEventOnCommit is unused in this algorithm (https://github.com/whatwg/html/issues/9800)
+    (void)fire_navigate_event_on_commit;
+
+    auto& vm = this->vm();
+
     // FIXME: 1. Assert: This is running within traversable's session history traversal queue.
 
     // 2. Let targetStep be the result of getting the used step given traversable and step.
     auto target_step = get_the_used_step(step);
 
-    // FIXME: 3. If initiatorToCheck is given, then:
+    // Note: Calling this early so we can re-use the same list in 3.2 and 6.
+    auto change_or_reload_navigables = get_all_navigables_whose_current_session_history_entry_will_change_or_reload(target_step);
 
-    // FIXME: 4. Let navigablesCrossingDocuments be the result of getting all navigables that might experience a cross-document traversal given traversable and targetStep.
+    // 3. If initiatorToCheck is not null, then:
+    if (initiator_to_check != nullptr) {
+        // 1. Assert: sourceSnapshotParams is not null.
+        VERIFY(source_snapshot_params.has_value());
 
-    // FIXME: 5. If checkForUserCancelation is true, and the result of checking if unloading is user-canceled given navigablesCrossingDocuments given traversable and targetStep is true, then return.
+        // 2. For each navigable of get all navigables whose current session history entry will change or reload:
+        //    if initiatorToCheck is not allowed by sandboxing to navigate navigable given sourceSnapshotParams, then return "initiator-disallowed".
+        for (auto const& navigable : change_or_reload_navigables) {
+            if (!initiator_to_check->allowed_by_sandboxing_to_navigate(*navigable, *source_snapshot_params))
+                return HistoryStepResult::InitiatorDisallowed;
+        }
+    }
+
+    // 4. Let navigablesCrossingDocuments be the result of getting all navigables that might experience a cross-document traversal given traversable and targetStep.
+    [[maybe_unused]] auto navigables_crossing_documents = get_all_navigables_that_might_experience_a_cross_document_traversal(target_step);
+
+    // 5. FIXME: If checkForCancelation is true, and the result of checking if unloading is canceled given navigablesCrossingDocuments, traversable, targetStep,
+    //           and userInvolvementForNavigateEvents is not "continue", then return that result.
+    (void)check_for_cancelation;
+    (void)user_involvement_for_navigate_events;
 
     // 6. Let changingNavigables be the result of get all navigables whose current session history entry will change or reload given traversable and targetStep.
-    auto changing_navigables = get_all_navigables_whose_current_session_history_entry_will_change_or_reload(target_step);
+    auto changing_navigables = move(change_or_reload_navigables);
 
-    // FIXME: 7. Let nonchangingNavigablesThatStillNeedUpdates be the result of getting all navigables that only need history object length/index update given traversable and targetStep.
+    // 7. Let nonchangingNavigablesThatStillNeedUpdates be the result of getting all navigables that only need history object length/index update given traversable and targetStep.
+    auto non_changing_navigables_that_still_need_updates = get_all_navigables_that_only_need_history_object_length_index_update(target_step);
 
     // 8. For each navigable of changingNavigables:
     for (auto& navigable : changing_navigables) {
@@ -280,10 +387,11 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
         JS::Handle<DOM::Document> displayed_document;
         JS::Handle<SessionHistoryEntry> target_entry;
         JS::Handle<Navigable> navigable;
-        bool update_only;
+        bool update_only = false;
     };
 
     // 11. Let changingNavigableContinuations be an empty queue of changing navigable continuation states.
+    // NOTE: This queue is used to split the operations on changingNavigables into two parts. Specifically, changingNavigableContinuations holds data for the second part.
     Queue<ChangingNavigableContinuationState> changing_navigable_continuations;
 
     // 12. For each navigable of changingNavigables, queue a global task on the navigation and traversal task source of navigable's active window to run the steps:
@@ -320,17 +428,31 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
             }
 
             // 5. Let oldOrigin be targetEntry's document state's origin.
-            [[maybe_unused]] auto old_origin = target_entry->document_state->origin();
+            auto old_origin = target_entry->document_state->origin();
 
-            auto after_document_populated = [target_entry, changing_navigable_continuation, &changing_navigable_continuations]() mutable {
+            auto after_document_populated = [old_origin, target_entry, changing_navigable_continuation, &changing_navigable_continuations, &vm, &navigable]() mutable {
                 // 1. If targetEntry's document is null, then set changingNavigableContinuation's update-only to true.
                 if (!target_entry->document_state->document()) {
                     changing_navigable_continuation.update_only = true;
                 }
 
-                // FIXME: 2. If targetEntry's document's origin is not oldOrigin, then set targetEntry's serialized state to StructuredSerializeForStorage(null).
+                else {
+                    // 2. If targetEntry's document's origin is not oldOrigin, then set targetEntry's classic history API state to StructuredSerializeForStorage(null).
+                    if (target_entry->document_state->document()->origin() != old_origin) {
+                        target_entry->classic_history_api_state = MUST(structured_serialize_for_storage(vm, JS::js_null()));
+                    }
 
-                // FIXME: 3. If all of the following are true:
+                    // 3. If all of the following are true:
+                    //     - navigable's parent is null;
+                    //     - targetEntry's document's browsing context is not an auxiliary browsing context whose opener browsing context is non-null; and
+                    //     - targetEntry's document's origin is not oldOrigin,
+                    //    then set targetEntry's document state's navigable target name to the empty string.
+                    if (navigable->parent() != nullptr
+                        && target_entry->document_state->document()->browsing_context()->opener_browsing_context() == nullptr
+                        && target_entry->document_state->origin() != old_origin) {
+                        target_entry->document_state->set_navigable_target_name(String {});
+                    }
+                }
 
                 // 4. Enqueue changingNavigableContinuation on changingNavigableContinuations.
                 changing_navigable_continuations.enqueue(move(changing_navigable_continuation));
@@ -419,8 +541,11 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
 
         // FIXME: 9. Append navigable to navigablesThatMustWaitBeforeHandlingSyncNavigation.
 
-        // 10. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
-        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index] {
+        // 10. Let entriesForNavigationAPI be the result of getting session history entries for the navigation API given navigable and targetStep.
+        auto entries_for_navigation_api = get_session_history_entries_for_the_navigation_api(*navigable, target_step);
+
+        // 11. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)]() mutable {
             // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
             if (navigable->has_been_destroyed())
                 return;
@@ -445,15 +570,33 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
                 navigable->activate_history_entry(*target_entry);
             }
 
-            // FIXME: 2. If targetEntry's document is not equal to displayedDocument, then queue a global task on the navigation and traversal task source given targetEntry's document's
-            //           relevant global object to perform the following step. Otherwise, continue onward to perform the following step within the currently-queued task.
+            // 2. If navigable is not traversable, and targetEntry is not navigable's current session history entry, and targetEntry's document state's origin is the same as
+            //    navigable's current session history entry's document state's origin, then fire a traverse navigate event given targetEntry and userInvolvementForNavigateEvents.
+            auto target_origin = target_entry->document_state->origin();
+            auto current_origin = navigable->current_session_history_entry()->document_state->origin();
+            bool const is_same_origin = target_origin.has_value() && current_origin.has_value() && target_origin->is_same_origin(*current_origin);
+            if (!navigable->is_traversable()
+                && target_entry.ptr() != navigable->current_session_history_entry()
+                && is_same_origin) {
+                navigable->active_window()->navigation()->fire_a_traverse_navigate_event(*target_entry, user_involvement_for_navigate_events.value_or(UserNavigationInvolvement::None));
+            }
 
-            // 3. Update document for history step application given targetEntry's document, targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength, and
-            //    scriptHistoryIndex and entriesForNavigationAPI.
-            //    FIXME: Pass entriesForNavigationAPI
-            target_entry->document_state->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index);
+            // 3. Let updateDocument be an algorithm step which performs update document for history step application given targetEntry's document,
+            //    targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength, scriptHistoryIndex, and entriesForNavigationAPI.
+            auto update_document = JS::SafeFunction<void()>([target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)] {
+                target_entry->document_state->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index, entries_for_navigation_api);
+            });
 
-            // 4. Increment completedChangeJobs.
+            // 4. If targetEntry's document is equal to displayedDocument, then perform updateDocument.
+            if (target_entry->document_state->document() == displayed_document.ptr()) {
+                update_document();
+            }
+            // 5. Otherwise, queue a global task on the navigation and traversal task source given targetEntry's document's relevant global object to perform updateDocument
+            else {
+                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document_state->document()), move(update_document));
+            }
+
+            // 6. Increment completedChangeJobs.
             completed_change_jobs++;
         });
     }
@@ -470,6 +613,9 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
 
     // 20. Set traversable's current session history step to targetStep.
     m_current_session_history_step = target_step;
+
+    // 21. Return "applied".
+    return HistoryStepResult::Applied;
 }
 
 Vector<JS::NonnullGCPtr<SessionHistoryEntry>> TraversableNavigable::get_session_history_entries_for_the_navigation_api(JS::NonnullGCPtr<Navigable> navigable, int target_step)
@@ -575,14 +721,29 @@ void TraversableNavigable::clear_the_forward_session_history()
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#traverse-the-history-by-a-delta
-void TraversableNavigable::traverse_the_history_by_delta(int delta)
+void TraversableNavigable::traverse_the_history_by_delta(int delta, Optional<DOM::Document&> source_document)
 {
-    // FIXME: 1. Let sourceSnapshotParams and initiatorToCheck be null.
+    // 1. Let sourceSnapshotParams and initiatorToCheck be null.
+    Optional<SourceSnapshotParams> source_snapshot_params = {};
+    JS::GCPtr<Navigable> initiator_to_check = nullptr;
 
-    // FIXME: 2. If sourceDocument is given, then:
+    // 2. Let userInvolvement be "browser UI".
+    UserNavigationInvolvement user_involvement = UserNavigationInvolvement::BrowserUI;
 
-    // 3. Append the following session history traversal steps to traversable:
-    append_session_history_traversal_steps([this, delta] {
+    // 1. If sourceDocument is given, then:
+    if (source_document.has_value()) {
+        // 1. Set sourceSnapshotParams to the result of snapshotting source snapshot params given sourceDocument.
+        source_snapshot_params = source_document->snapshot_source_snapshot_params();
+
+        // 2. Set initiatorToCheck to sourceDocument's node navigable.
+        initiator_to_check = source_document->navigable();
+
+        // 3. Set userInvolvement to "none".
+        user_involvement = UserNavigationInvolvement::None;
+    }
+
+    // 4. Append the following session history traversal steps to traversable:
+    append_session_history_traversal_steps([this, delta, source_snapshot_params = move(source_snapshot_params), initiator_to_check, user_involvement] {
         // 1. Let allSteps be the result of getting all used history steps for traversable.
         auto all_steps = get_all_used_history_steps();
 
@@ -597,9 +758,9 @@ void TraversableNavigable::traverse_the_history_by_delta(int delta)
             return;
         }
 
-        // 5. Apply the history step allSteps[targetStepIndex] to traversable, with checkForUserCancelation set to true,
-        //    sourceSnapshotParams set to sourceSnapshotParams, and initiatorToCheck set to initiatorToCheck.
-        apply_the_history_step(all_steps[target_step_index]);
+        // 5. Apply the traverse history step allSteps[targetStepIndex] to traversable, given sourceSnapshotParams,
+        //    initiatorToCheck, and userInvolvement.
+        apply_the_traverse_history_step(all_steps[target_step_index], source_snapshot_params, initiator_to_check, user_involvement);
     });
 }
 
@@ -610,8 +771,8 @@ void TraversableNavigable::update_for_navigable_creation_or_destruction()
     auto step = current_session_history_step();
 
     // 2. Return the result of applying the history step step to traversable given false, false, null, null, and null.
-    // FIXME: Pass false, false, null, null, and null as arguments.
-    apply_the_history_step(step);
+    // FIXME: Return result of history application.
+    apply_the_history_step(step, false, false, {}, {}, {});
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-reload-history-step
@@ -621,16 +782,22 @@ void TraversableNavigable::apply_the_reload_history_step()
     auto step = current_session_history_step();
 
     // 2. Return the result of applying the history step step to traversable given true, false, null, null, and null.
-    // FIXME: Pass true, false, null, null, and null as arguments.
-    apply_the_history_step(step);
+    // FIXME: Return result of history application.
+    apply_the_history_step(step, true, false, {}, {}, {});
 }
 
 void TraversableNavigable::apply_the_push_or_replace_history_step(int step)
 {
     // 1. Return the result of applying the history step step to traversable given false, false, null, null, and null.
-    // FIXME: Pass false, false, null, null, and null as arguments.
     // FIXME: Return result of history application.
-    apply_the_history_step(step);
+    apply_the_history_step(step, false, false, {}, {}, {});
+}
+
+void TraversableNavigable::apply_the_traverse_history_step(int step, Optional<SourceSnapshotParams> source_snapshot_params, JS::GCPtr<Navigable> initiator_to_check, UserNavigationInvolvement user_involvement)
+{
+    // 1. Return the result of applying the history step step to traversable given true, true, sourceSnapshotParams, initiatorToCheck, and userInvolvement.
+    // FIXME: Return result of history application.
+    apply_the_history_step(step, true, true, move(source_snapshot_params), initiator_to_check, user_involvement);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#close-a-top-level-traversable

@@ -40,15 +40,19 @@ public:
     };
     HistoryObjectLengthAndIndex get_the_history_object_length_and_index(int) const;
 
+    void apply_the_traverse_history_step(int, Optional<SourceSnapshotParams>, JS::GCPtr<Navigable>, UserNavigationInvolvement);
     void apply_the_reload_history_step();
     void apply_the_push_or_replace_history_step(int step);
     void update_for_navigable_creation_or_destruction();
 
     int get_the_used_step(int step) const;
     Vector<JS::Handle<Navigable>> get_all_navigables_whose_current_session_history_entry_will_change_or_reload(int) const;
+    Vector<JS::Handle<Navigable>> get_all_navigables_that_only_need_history_object_length_index_update(int) const;
+    Vector<JS::Handle<Navigable>> get_all_navigables_that_might_experience_a_cross_document_traversal(int) const;
+
     Vector<int> get_all_used_history_steps() const;
     void clear_the_forward_session_history();
-    void traverse_the_history_by_delta(int delta);
+    void traverse_the_history_by_delta(int delta, Optional<DOM::Document&> source_document = {});
 
     void close_top_level_traversable();
     void destroy_top_level_traversable();
@@ -71,7 +75,20 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    void apply_the_history_step(int step, Optional<SourceSnapshotParams> = {});
+    enum class HistoryStepResult {
+        InitiatorDisallowed,
+        CanceledByBeforeUnload,
+        CanceledByNavigate,
+        Applied,
+    };
+    // FIXME: Fix spec typo cancelation --> cancellation
+    HistoryStepResult apply_the_history_step(
+        int step,
+        bool check_for_cancelation,
+        bool fire_navigate_event_on_commit,
+        Optional<SourceSnapshotParams>,
+        JS::GCPtr<Navigable> initiator_to_check,
+        Optional<UserNavigationInvolvement> user_involvement_for_navigate_events);
 
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>> get_session_history_entries_for_the_navigation_api(JS::NonnullGCPtr<Navigable>, int);
 
