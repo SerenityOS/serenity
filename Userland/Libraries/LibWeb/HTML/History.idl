@@ -3,7 +3,7 @@
 interface History {
     readonly attribute unsigned long length;
     // FIXME: attribute ScrollRestoration scrollRestoration;
-    // FIXME: readonly attribute any state;
+    readonly attribute any state;
     undefined go(optional long delta = 0);
     undefined back();
     undefined forward();
