@@ -259,14 +259,11 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::navigate(String url, Navigatio
     // FIXME: Fix spec typo here
     // NOTE: Unlike location.assign() and friends, which are exposed across origin-domain boundaries,
     //       navigation.navigate() can only be accessed by code with direct synchronous access to the
-    ///      window.navigation property. Thus, we avoid the complications about attributing the source document
+    //       window.navigation property. Thus, we avoid the complications about attributing the source document
     //       of the navigation, and we don't need to deal with the allowed by sandboxing to navigate check and its
     //       acccompanying exceptionsEnabled flag. We just treat all navigations as if they come from the Document
     //       corresponding to this Navigation object itself (i.e., document).
-    [[maybe_unused]] auto history_handling_behavior = to_history_handling_behavior(options.history);
-    // FIXME: Actually call navigate once Navigables are implemented enough to guarantee a node navigable on
-    //        an active document that's not being unloaded.
-    //        document.navigable().navigate(url, document, history behavior, state)
+    TRY(document.navigable()->navigate({ .url = url_record, .source_document = document, .history_handling = options.history, .navigation_api_state = move(serialized_state) }));
 
     // 11. If this's upcoming non-traverse API method tracker is apiMethodTracker, then:
     // NOTE: If the upcoming non-traverse API method tracker is still apiMethodTracker, this means that the navigate
@@ -330,9 +327,8 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::reload(NavigationReloadOptions
     auto api_method_tracker = maybe_set_the_upcoming_non_traverse_api_method_tracker(info, serialized_state);
 
     // 9. Reload document's node navigable with navigationAPIState set to serializedState.
-    // FIXME: Actually call reload once Navigables are implemented enough to guarantee a node navigable on
-    //        an active document that's not being unloaded.
-    //        document.navigable().reload(state)
+    // FIXME: Pass serialized_state to reload
+    document.navigable()->reload();
 
     return navigation_api_method_tracker_derived_result(api_method_tracker);
 }
@@ -653,7 +649,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
     auto source_snapshot_params = document.snapshot_source_snapshot_params();
 
     // 12. Append the following session history traversal steps to traversable:
-    traversable->append_session_history_traversal_steps([key, api_method_tracker, navigable, source_snapshot_params, this] {
+    traversable->append_session_history_traversal_steps([key, api_method_tracker, navigable, source_snapshot_params, traversable, this] {
         // 1. Let navigableSHEs be the result of getting session history entries given navigable.
         auto navigable_shes = navigable->get_session_history_entries();
 
@@ -669,6 +665,7 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
             //    to reject the finished promise for apiMethodTracker with an "InvalidStateError" DOMException.
             queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), [this, api_method_tracker] {
                 auto& reject_realm = relevant_realm(*this);
+                TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
                 WebIDL::reject_promise(reject_realm, api_method_tracker->finished_promise,
                     WebIDL::InvalidStateError::create(reject_realm, "Cannot traverse with stale session history entry"_fly_string));
             });
@@ -684,22 +681,36 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_trave
         if (target_she == navigable->active_session_history_entry())
             return;
 
-        // FIXME: 4. Let result be the result of applying the traverse history step given by targetSHE's step to traversable,
+        // 4. Let result be the result of applying the traverse history step given by targetSHE's step to traversable,
         //    given sourceSnapshotParams, navigable, and "none".
-        (void)source_snapshot_params;
+        auto result = traversable->apply_the_traverse_history_step(target_she->step.get<int>(), source_snapshot_params, navigable, UserNavigationInvolvement::None);
 
         // NOTE: When result is "canceled-by-beforeunload" or "initiator-disallowed", the navigate event was never fired,
         //       aborting the ongoing navigation would not be correct; it would result in a navigateerror event without a
         //       preceding navigate event. In the "canceled-by-navigate" case, navigate is fired, but the inner navigate event
         //       firing algorithm will take care of aborting the ongoing navigation.
 
-        // FIXME: 5. If result is "canceled-by-beforeunload", then queue a global task on the navigation and traversal task source
-        //           given navigation's relevant global object to reject the finished promise for apiMethodTracker with a
-        //           new "AbortError"DOMException created in navigation's relevant realm.
+        // 5. If result is "canceled-by-beforeunload", then queue a global task on the navigation and traversal task source
+        //    given navigation's relevant global object to reject the finished promise for apiMethodTracker with a
+        //    new "AbortError" DOMException created in navigation's relevant realm.
+        auto& realm = relevant_realm(*this);
+        auto& global = relevant_global_object(*this);
+        if (result == TraversableNavigable::HistoryStepResult::CanceledByBeforeUnload) {
+            queue_global_task(Task::Source::NavigationAndTraversal, global, [this, api_method_tracker, &realm] {
+                TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
+                reject_the_finished_promise(api_method_tracker, WebIDL::AbortError::create(realm, "Navigation cancelled by beforeunload"_fly_string));
+            });
+        }
 
-        // FIXME: 6. If result is "initiator-disallowed", then queue a global task on the navigation and traversal task source
-        //           given navigation's relevant global object to reject the finished promise for apiMethodTracker with a
-        //           new "SecurityError" DOMException created in navigation's relevant realm.
+        // 6. If result is "initiator-disallowed", then queue a global task on the navigation and traversal task source
+        //    given navigation's relevant global object to reject the finished promise for apiMethodTracker with a
+        //    new "SecurityError" DOMException created in navigation's relevant realm.
+        if (result == TraversableNavigable::HistoryStepResult::InitiatorDisallowed) {
+            queue_global_task(Task::Source::NavigationAndTraversal, global, [this, api_method_tracker, &realm] {
+                TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
+                reject_the_finished_promise(api_method_tracker, WebIDL::SecurityError::create(realm, "Navigation disallowed from this origin"_fly_string));
+            });
+        }
     });
 
     // 13. Return a navigation API method tracker-derived result for apiMethodTracker.

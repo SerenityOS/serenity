@@ -320,16 +320,11 @@ Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_that_migh
 TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_step(
     int step,
     bool check_for_cancelation,
-    bool fire_navigate_event_on_commit,
     Optional<SourceSnapshotParams> source_snapshot_params,
     JS::GCPtr<Navigable> initiator_to_check,
     Optional<UserNavigationInvolvement> user_involvement_for_navigate_events)
 {
-    // FIXME: fireNavigateEventOnCommit is unused in this algorithm (https://github.com/whatwg/html/issues/9800)
-    (void)fire_navigate_event_on_commit;
-
     auto& vm = this->vm();
-
     // FIXME: 1. Assert: This is running within traversable's session history traversal queue.
 
     // 2. Let targetStep be the result of getting the used step given traversable and step.
@@ -765,39 +760,35 @@ void TraversableNavigable::traverse_the_history_by_delta(int delta, Optional<DOM
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#update-for-navigable-creation/destruction
-void TraversableNavigable::update_for_navigable_creation_or_destruction()
+TraversableNavigable::HistoryStepResult TraversableNavigable::update_for_navigable_creation_or_destruction()
 {
     // 1. Let step be traversable's current session history step.
     auto step = current_session_history_step();
 
-    // 2. Return the result of applying the history step step to traversable given false, false, null, null, and null.
-    // FIXME: Return result of history application.
-    apply_the_history_step(step, false, false, {}, {}, {});
+    // 2. Return the result of applying the history step step to traversable given, false, null, null, and null.
+    return apply_the_history_step(step, false, {}, {}, {});
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-reload-history-step
-void TraversableNavigable::apply_the_reload_history_step()
+TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_reload_history_step()
 {
     // 1. Let step be traversable's current session history step.
     auto step = current_session_history_step();
 
-    // 2. Return the result of applying the history step step to traversable given true, false, null, null, and null.
-    // FIXME: Return result of history application.
-    apply_the_history_step(step, true, false, {}, {}, {});
+    // 2. Return the result of applying the history step step to traversable given true, null, null, and null.
+    return apply_the_history_step(step, true, {}, {}, {});
 }
 
-void TraversableNavigable::apply_the_push_or_replace_history_step(int step)
+TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_push_or_replace_history_step(int step)
 {
-    // 1. Return the result of applying the history step step to traversable given false, false, null, null, and null.
-    // FIXME: Return result of history application.
-    apply_the_history_step(step, false, false, {}, {}, {});
+    // 1. Return the result of applying the history step step to traversable given false, null, null, and null.
+    return apply_the_history_step(step, false, {}, {}, {});
 }
 
-void TraversableNavigable::apply_the_traverse_history_step(int step, Optional<SourceSnapshotParams> source_snapshot_params, JS::GCPtr<Navigable> initiator_to_check, UserNavigationInvolvement user_involvement)
+TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_traverse_history_step(int step, Optional<SourceSnapshotParams> source_snapshot_params, JS::GCPtr<Navigable> initiator_to_check, UserNavigationInvolvement user_involvement)
 {
-    // 1. Return the result of applying the history step step to traversable given true, true, sourceSnapshotParams, initiatorToCheck, and userInvolvement.
-    // FIXME: Return result of history application.
-    apply_the_history_step(step, true, true, move(source_snapshot_params), initiator_to_check, user_involvement);
+    // 1. Return the result of applying the history step step to traversable given true, sourceSnapshotParams, initiatorToCheck, and userInvolvement.
+    return apply_the_history_step(step, true, move(source_snapshot_params), initiator_to_check, user_involvement);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#close-a-top-level-traversable
