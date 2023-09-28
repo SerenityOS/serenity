@@ -1096,10 +1096,9 @@ bool Navigation::inner_navigate_event_firing_algorithm(
         // 7. If navigationType is "push" or "replace", then run the URL and history update steps given document and
         //    event's destination's URL, with serialiedData set to event's classic history API state and historyHandling
         //    set to navigationType.
-        // FIXME: Pass the serialized data to this algorithm
         if (navigation_type == Bindings::NavigationType::Push || navigation_type == Bindings::NavigationType::Replace) {
             auto history_handling = navigation_type == Bindings::NavigationType::Push ? HistoryHandlingBehavior::Push : HistoryHandlingBehavior::Replace;
-            perform_url_and_history_update_steps(document, event->destination()->raw_url(), history_handling);
+            perform_url_and_history_update_steps(document, event->destination()->raw_url(), event->classic_history_api_state(), history_handling);
         }
         // Big spec note about reload here
     }

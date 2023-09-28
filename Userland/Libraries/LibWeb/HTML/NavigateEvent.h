@@ -75,6 +75,7 @@ public:
     JS::NonnullGCPtr<DOM::AbortController> abort_controller() const { return *m_abort_controller; }
     InterceptionState interception_state() const { return m_interception_state; }
     Vector<NavigationInterceptHandler> const& navigation_handler_list() const { return m_navigation_handler_list; }
+    Optional<SerializationRecord> classic_history_api_state() const { return m_classic_history_api_state; }
 
     void set_abort_controller(JS::NonnullGCPtr<DOM::AbortController> c) { m_abort_controller = c; }
     void set_interception_state(InterceptionState s) { m_interception_state = s; }
