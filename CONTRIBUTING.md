@@ -33,6 +33,10 @@ The following applies to all user-facing strings, code, comments, and commit mes
 
 Everyone is encouraged to make use of tooling (spell checkers, etc) to make this easier.
 
+## Testing policy
+
+When possible, please include tests when fixing bugs or adding new features.
+
 ## Code submission policy
 
 Nobody is perfect, and sometimes we mess things up. That said, here are some good dos & don'ts to try and stick to:
