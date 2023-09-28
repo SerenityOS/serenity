@@ -6194,6 +6194,7 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
     }
 
     bool property_accepts_dimension = any_property_accepts_type(property_ids, ValueType::Angle).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Frequency).has_value()
         || any_property_accepts_type(property_ids, ValueType::Length).has_value()
         || any_property_accepts_type(property_ids, ValueType::Percentage).has_value()
         || any_property_accepts_type(property_ids, ValueType::Resolution).has_value()
