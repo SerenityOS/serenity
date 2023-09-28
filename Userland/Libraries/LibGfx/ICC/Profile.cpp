@@ -1437,9 +1437,12 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
         };
 
         if (data_color_space() == ColorSpace::Gray) {
+            VERIFY(color.size() == 1); // True because of color.size() check further up.
+
             // ICC v4, F.2 grayTRCTag
-            // FIXME
-            return Error::from_string_literal("ICC::Profile::to_pcs: Gray handling not yet implemented");
+            // "connection = grayTRC[device]"
+            float gray = evaluate_curve(grayTRCTag, color[0] / 255.f);
+            return FloatVector3 { gray, gray, gray };
         }
 
         // FIXME: Per ICC v4, A.1 General, this should also handle HLS, HSV, YCbCr.
