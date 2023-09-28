@@ -1428,6 +1428,14 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
         // "d) Use TRCs (redTRCTag, greenTRCTag, blueTRCTag, or grayTRCTag) and colorants
         //     (redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag) when tags in a), b), and c) are not
         //     used."
+        auto evaluate_curve = [this](TagSignature curve_tag, float f) {
+            auto const& trc = *m_tag_table.get(curve_tag).value();
+            VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
+            if (trc.type() == CurveTagData::Type)
+                return static_cast<CurveTagData const&>(trc).evaluate(f);
+            return static_cast<ParametricCurveTagData const&>(trc).evaluate(f);
+        };
+
         if (data_color_space() == ColorSpace::Gray) {
             // ICC v4, F.2 grayTRCTag
             // FIXME
@@ -1447,14 +1455,6 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
             //  [connection_X] = [redMatrixColumn_X greenMatrixColumn_X blueMatrixColumn_X]   [ linear_r ]
             //  [connection_Y] = [redMatrixColumn_Y greenMatrixColumn_Y blueMatrixColumn_Y] * [ linear_g ]
             //  [connection_Z] = [redMatrixColumn_Z greenMatrixColumn_Z blueMatrixColumn_Z]   [ linear_b ]"
-            auto evaluate_curve = [this](TagSignature curve_tag, float f) {
-                auto const& trc = *m_tag_table.get(curve_tag).value();
-                VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
-                if (trc.type() == CurveTagData::Type)
-                    return static_cast<CurveTagData const&>(trc).evaluate(f);
-                return static_cast<ParametricCurveTagData const&>(trc).evaluate(f);
-            };
-
             float linear_r = evaluate_curve(redTRCTag, color[0] / 255.f);
             float linear_g = evaluate_curve(greenTRCTag, color[1] / 255.f);
             float linear_b = evaluate_curve(blueTRCTag, color[2] / 255.f);
