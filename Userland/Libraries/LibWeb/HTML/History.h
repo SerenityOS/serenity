@@ -28,9 +28,12 @@ public:
     WebIDL::ExceptionOr<void> back();
     WebIDL::ExceptionOr<void> forward();
     WebIDL::ExceptionOr<u64> length() const;
+    WebIDL::ExceptionOr<JS::Value> state() const;
 
     u64 m_index { 0 };
     u64 m_length { 0 };
+
+    void set_state(JS::Value s) { m_state = s; }
 
 private:
     History(JS::Realm&, DOM::Document&);
@@ -41,6 +44,7 @@ private:
     WebIDL::ExceptionOr<void> shared_history_push_replace_state(JS::Value data, Optional<String> const& url, HistoryHandlingBehavior);
 
     JS::NonnullGCPtr<DOM::Document> m_associated_document;
+    JS::Value m_state { JS::js_null() };
 };
 
 bool can_have_its_url_rewritten(DOM::Document const& document, AK::URL const& target_url);

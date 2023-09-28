@@ -38,6 +38,7 @@ void History::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_associated_document);
+    visitor.visit(m_state);
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-pushstate
@@ -63,6 +64,17 @@ WebIDL::ExceptionOr<u64> History::length() const
 
     // 2. Return this's length.
     return m_length;
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-history-state
+WebIDL::ExceptionOr<JS::Value> History::state() const
+{
+    // 1. If this's relevant global object's associated Document is not fully active, then throw a "SecurityError" DOMException.
+    if (!m_associated_document->is_fully_active())
+        return WebIDL::SecurityError::create(realm(), "Cannot perform state on a document that isn't fully active."_fly_string);
+
+    // 2. Return this's state.
+    return m_state;
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-go
