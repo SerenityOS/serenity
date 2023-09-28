@@ -8,7 +8,6 @@
 #include <AK/Array.h>
 #include <AK/Hex.h>
 #include <AK/StringView.h>
-#include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/MessageBox.h>
@@ -32,7 +31,13 @@ static constexpr Array<Option, 2> options = {
 
 GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)
 {
-    auto dialog = FindDialog::construct();
+    auto dialog_or_error = FindDialog::try_create();
+    if (dialog_or_error.is_error()) {
+        GUI::MessageBox::show(parent_window, "Couldn't load find dialog"sv, "Error while opening find dialog"sv, GUI::MessageBox::Type::Error);
+        return ExecResult::Aborted;
+    }
+
+    auto dialog = dialog_or_error.release_value();
 
     if (parent_window)
         dialog->set_icon(parent_window->icon());
@@ -91,7 +96,15 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
     }
 }
 
-FindDialog::FindDialog()
+ErrorOr<NonnullRefPtr<FindDialog>> FindDialog::try_create()
+{
+    auto find_widget = TRY(HexEditor::FindWidget::try_create());
+    auto find_dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow)
+            FindDialog(move(find_widget))));
+    return find_dialog;
+}
+
+FindDialog::FindDialog(NonnullRefPtr<HexEditor::FindWidget> find_widget)
     : Dialog(nullptr)
 {
     resize(280, 146);
@@ -99,15 +112,14 @@ FindDialog::FindDialog()
     set_resizable(false);
     set_title("Find");
 
-    auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(find_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    set_main_widget(find_widget);
 
-    m_text_editor = *main_widget->find_descendant_of_type_named<GUI::TextBox>("text_editor");
-    m_find_button = *main_widget->find_descendant_of_type_named<GUI::Button>("find_button");
-    m_find_all_button = *main_widget->find_descendant_of_type_named<GUI::Button>("find_all_button");
-    m_cancel_button = *main_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_text_editor = *find_widget->find_descendant_of_type_named<GUI::TextBox>("text_editor");
+    m_find_button = *find_widget->find_descendant_of_type_named<GUI::Button>("find_button");
+    m_find_all_button = *find_widget->find_descendant_of_type_named<GUI::Button>("find_all_button");
+    m_cancel_button = *find_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
 
-    auto& radio_container = *main_widget->find_descendant_of_type_named<GUI::Widget>("radio_container");
+    auto& radio_container = *find_widget->find_descendant_of_type_named<GUI::Widget>("radio_container");
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
         auto& radio = radio_container.add<GUI::RadioButton>();

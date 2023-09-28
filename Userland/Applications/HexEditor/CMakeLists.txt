@@ -4,23 +4,20 @@ serenity_component(
     TARGETS HexEditor
 )
 
-stringify_gml(HexEditorWindow.gml HexEditorWindowGML.h hex_editor_window_gml)
-stringify_gml(GoToOffsetDialog.gml GoToOffsetDialogGML.h go_to_offset_dialog_gml)
-stringify_gml(FindDialog.gml FindDialogGML.h find_dialog_gml)
+compile_gml(HexEditorWidget.gml HexEditorWidgetGML.cpp)
+compile_gml(GoToOffsetWidget.gml GoToOffsetWidgetGML.cpp)
+compile_gml(FindWidget.gml FindWidgetGML.cpp)
 
 set(SOURCES
     FindDialog.cpp
+    FindWidgetGML.cpp
     GoToOffsetDialog.cpp
+    GoToOffsetWidgetGML.cpp
     HexDocument.cpp
     HexEditor.cpp
+    HexEditorWidgetGML.cpp
     HexEditorWidget.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    FindDialogGML.h
-    GoToOffsetDialogGML.h
-    HexEditorWindowGML.h
 )
 
 serenity_app(HexEditor ICON app-hex-editor)

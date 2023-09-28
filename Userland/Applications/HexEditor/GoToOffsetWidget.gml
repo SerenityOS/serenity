@@ -1,4 +1,4 @@
-@GUI::Widget {
+@HexEditor::GoToOffsetWidget {
     name: "main"
     fixed_width: 300
     fixed_height: 80

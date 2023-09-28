@@ -15,7 +15,6 @@
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
-#include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -36,15 +35,20 @@
 #include <LibTextCodec/Decoder.h>
 #include <string.h>
 
-REGISTER_WIDGET(HexEditor, HexEditor);
+namespace HexEditor {
 
-HexEditorWidget::HexEditorWidget()
+ErrorOr<NonnullRefPtr<HexEditorWidget>> HexEditorWidget::create()
 {
-    load_from_gml(hex_editor_window_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(try_create());
+    TRY(widget->setup());
+    return widget;
+}
 
+ErrorOr<void> HexEditorWidget::setup()
+{
     m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
-    m_editor = *find_descendant_of_type_named<HexEditor>("editor");
+    m_editor = *find_descendant_of_type_named<::HexEditor::HexEditor>("editor");
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     m_search_results = *find_descendant_of_type_named<GUI::TableView>("search_results");
     m_search_results_container = *find_descendant_of_type_named<GUI::Widget>("search_results_container");
@@ -60,9 +64,9 @@ HexEditorWidget::HexEditorWidget()
         m_editor->update();
     };
 
-    m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
+    m_editor->on_status_change = [this](int position, HexEditor::HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
         m_statusbar->set_text(0, String::formatted("Offset: {:#08X}", position).release_value_but_fixme_should_propagate_errors());
-        m_statusbar->set_text(1, String::formatted("Edit Mode: {}", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text").release_value_but_fixme_should_propagate_errors());
+        m_statusbar->set_text(1, String::formatted("Edit Mode: {}", edit_mode == HexEditor::HexEditor::EditMode::Hex ? "Hex" : "Text").release_value_but_fixme_should_propagate_errors());
         m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start).release_value_but_fixme_should_propagate_errors());
         m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end).release_value_but_fixme_should_propagate_errors());
         m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", m_editor->selection_size()).release_value_but_fixme_should_propagate_errors());
@@ -279,6 +283,8 @@ HexEditorWidget::HexEditorWidget()
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
         m_statusbar->set_override_text({});
     };
+
+    return {};
 }
 
 void HexEditorWidget::update_inspector_values(size_t position)
@@ -646,4 +652,6 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
             return;
         open_file(response.value().filename(), response.value().release_stream());
     }
+}
+
 }

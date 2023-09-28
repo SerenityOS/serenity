@@ -30,6 +30,8 @@
 #include <string.h>
 #include <unistd.h>
 
+namespace HexEditor {
+
 HexEditor::HexEditor()
     : m_document(make<HexDocumentMemory>(ByteBuffer::create_zeroed(0).release_value_but_fixme_should_propagate_errors()))
 {
@@ -287,7 +289,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         if (offset >= m_document->size())
             return;
 
-        dbgln_if(HEX_DEBUG, "HexEditor::mousedown_event(hex): offset={}", offset);
+        dbgln_if(HEX_DEBUG, "Editor::mousedown_event(hex): offset={}", offset);
 
         m_edit_mode = EditMode::Hex;
         m_cursor_at_low_nibble = false;
@@ -310,7 +312,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         if (offset >= m_document->size())
             return;
 
-        dbgln_if(HEX_DEBUG, "HexEditor::mousedown_event(text): offset={}", offset);
+        dbgln_if(HEX_DEBUG, "Editor::mousedown_event(text): offset={}", offset);
 
         m_position = offset;
         m_cursor_at_low_nibble = false;
@@ -416,7 +418,7 @@ void HexEditor::scroll_position_into_view(size_t position)
 
 void HexEditor::keydown_event(GUI::KeyEvent& event)
 {
-    dbgln_if(HEX_DEBUG, "HexEditor::keydown_event key={}", static_cast<u8>(event.key()));
+    dbgln_if(HEX_DEBUG, "Editor::keydown_event key={}", static_cast<u8>(event.key()));
 
     auto move_and_update_cursor_by = [&](i64 cursor_location_change) {
         size_t new_position = m_position + cursor_location_change;
@@ -913,4 +915,6 @@ bool HexEditor::redo()
 GUI::UndoStack& HexEditor::undo_stack()
 {
     return m_undo_stack;
+}
+
 }
