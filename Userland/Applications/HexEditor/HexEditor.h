@@ -21,6 +21,8 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/TextAlignment.h>
 
+namespace HexEditor {
+
 class HexEditor : public GUI::AbstractScrollableWidget {
     C_OBJECT(HexEditor)
 public:
@@ -111,3 +113,5 @@ private:
 
     void reset_cursor_blink_state();
 };
+
+}

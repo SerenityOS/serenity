@@ -37,7 +37,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->restore_size_and_position("HexEditor"sv, "Window"sv, { { 640, 400 } });
     window->save_size_and_position_on_close("HexEditor"sv, "Window"sv);
 
-    auto hex_editor_widget = window->set_main_widget<HexEditorWidget>();
+    auto hex_editor_widget = TRY(HexEditor::HexEditorWidget::create());
+    window->set_main_widget(hex_editor_widget);
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (hex_editor_widget->request_close())

@@ -5,7 +5,6 @@
  */
 
 #include "GoToOffsetDialog.h"
-#include <Applications/HexEditor/GoToOffsetDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
@@ -18,7 +17,14 @@
 
 GUI::Dialog::ExecResult GoToOffsetDialog::show(GUI::Window* parent_window, int& history_offset, int& out_offset, int selection_offset, int buffer_size)
 {
-    auto dialog = GoToOffsetDialog::construct();
+    auto dialog_or_error = GoToOffsetDialog::try_create();
+    if (dialog_or_error.is_error()) {
+        GUI::MessageBox::show(parent_window, "Couldn't load \"go to offset\" dialog"sv, "Error while opening \"go to offset\" dialog"sv, GUI::MessageBox::Type::Error);
+        return ExecResult::Aborted;
+    }
+
+    auto dialog = dialog_or_error.release_value();
+
     dialog->m_selection_offset = selection_offset;
     dialog->m_buffer_size = buffer_size;
 
@@ -88,7 +94,15 @@ void GoToOffsetDialog::update_statusbar()
     m_statusbar->set_text(1, String::formatted("DEC: {}", new_offset).release_value_but_fixme_should_propagate_errors());
 }
 
-GoToOffsetDialog::GoToOffsetDialog()
+ErrorOr<NonnullRefPtr<GoToOffsetDialog>> GoToOffsetDialog::try_create()
+{
+    auto offset_widget = TRY(HexEditor::GoToOffsetWidget::try_create());
+    auto offset_dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow)
+            GoToOffsetDialog(move(offset_widget))));
+    return offset_dialog;
+}
+
+GoToOffsetDialog::GoToOffsetDialog(NonnullRefPtr<HexEditor::GoToOffsetWidget> goto_offset_widget)
     : Dialog(nullptr)
 {
     resize(300, 80);
@@ -96,14 +110,13 @@ GoToOffsetDialog::GoToOffsetDialog()
     set_resizable(false);
     set_title("Go to Offset");
 
-    auto main_widget = set_main_widget<GUI::Widget>();
-    main_widget->load_from_gml(go_to_offset_dialog_gml).release_value_but_fixme_should_propagate_errors();
+    set_main_widget(goto_offset_widget);
 
-    m_text_editor = *main_widget->find_descendant_of_type_named<GUI::TextBox>("text_editor");
-    m_go_button = *main_widget->find_descendant_of_type_named<GUI::Button>("go_button");
-    m_offset_type_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("offset_type");
-    m_offset_from_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("offset_from");
-    m_statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    m_text_editor = *goto_offset_widget->find_descendant_of_type_named<GUI::TextBox>("text_editor");
+    m_go_button = *goto_offset_widget->find_descendant_of_type_named<GUI::Button>("go_button");
+    m_offset_type_box = *goto_offset_widget->find_descendant_of_type_named<GUI::ComboBox>("offset_type");
+    m_offset_from_box = *goto_offset_widget->find_descendant_of_type_named<GUI::ComboBox>("offset_from");
+    m_statusbar = *goto_offset_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     m_offset_type.append("Decimal"sv);
     m_offset_type.append("Hexadecimal"sv);

@@ -1,4 +1,4 @@
-@GUI::Widget {
+@HexEditor::FindWidget {
     name: "main"
     fixed_width: 280
     fixed_height: 146

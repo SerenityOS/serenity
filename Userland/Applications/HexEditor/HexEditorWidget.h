@@ -19,18 +19,23 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 
-class HexEditor;
-
+namespace HexEditor {
 class HexEditorWidget final : public GUI::Widget {
-    C_OBJECT(HexEditorWidget)
+    C_OBJECT_ABSTRACT(HexEditorWidget)
 public:
     virtual ~HexEditorWidget() override = default;
     void open_file(String const& filename, NonnullOwnPtr<Core::File>);
     ErrorOr<void> initialize_menubar(GUI::Window&);
     bool request_close();
 
+    static ErrorOr<NonnullRefPtr<HexEditorWidget>> create();
+
+protected:
+    static ErrorOr<NonnullRefPtr<HexEditorWidget>> try_create();
+
 private:
-    HexEditorWidget();
+    ErrorOr<void> setup();
+    HexEditorWidget() = default;
     void set_path(StringView);
     void update_title();
     void set_search_results_visible(bool visible);
@@ -85,3 +90,5 @@ private:
     bool m_value_inspector_little_endian { true };
     bool m_selecting_from_inspector { false };
 };
+
+}

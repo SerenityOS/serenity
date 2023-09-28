@@ -6,18 +6,20 @@
 
 #pragma once
 
+#include "GoToOffsetWidget.h"
 #include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibGUI/Dialog.h>
 
 class GoToOffsetDialog : public GUI::Dialog {
-    C_OBJECT(GoToOffsetDialog);
+    C_OBJECT_ABSTRACT(GoToOffsetDialog);
 
 public:
     static ExecResult show(GUI::Window* parent_window, int& history_offset, int& out_offset, int selection_offset, int end);
+    static ErrorOr<NonnullRefPtr<GoToOffsetDialog>> try_create();
 
 private:
-    GoToOffsetDialog();
+    GoToOffsetDialog(NonnullRefPtr<HexEditor::GoToOffsetWidget> goto_offset_widget);
     virtual ~GoToOffsetDialog() override = default;
     void update_statusbar();
     int process_input();

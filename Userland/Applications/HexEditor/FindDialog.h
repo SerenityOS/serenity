@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "FindWidget.h"
 #include <AK/Result.h>
 #include <AK/String.h>
 #include <LibGUI/Dialog.h>
@@ -17,10 +18,11 @@ enum OptionId {
 };
 
 class FindDialog : public GUI::Dialog {
-    C_OBJECT(FindDialog);
+    C_OBJECT_ABSTRACT(FindDialog);
 
 public:
     static ExecResult show(GUI::Window* parent_window, String& out_tex, ByteBuffer& out_buffer, bool& find_all);
+    static ErrorOr<NonnullRefPtr<FindDialog>> try_create();
 
 private:
     Result<ByteBuffer, String> process_input(String text_value, OptionId opt);
@@ -29,7 +31,7 @@ private:
     OptionId selected_option() const { return m_selected_option; }
     bool find_all() const { return m_find_all; }
 
-    FindDialog();
+    FindDialog(NonnullRefPtr<HexEditor::FindWidget> find_widget);
     virtual ~FindDialog() override = default;
 
     RefPtr<GUI::TextEditor> m_text_editor;
