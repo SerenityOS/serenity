@@ -121,6 +121,9 @@ public:
         Optional<SerializationRecord> classic_history_api_state = {});
     bool fire_a_download_request_navigate_event(AK::URL destination_url, UserNavigationInvolvement user_involvement, String filename);
 
+    void initialize_the_navigation_api_entries_for_a_new_document(Vector<JS::NonnullGCPtr<SessionHistoryEntry>> const& new_shes, JS::NonnullGCPtr<SessionHistoryEntry> initial_she);
+    void update_the_navigation_api_entries_for_a_same_document_navigation(JS::NonnullGCPtr<SessionHistoryEntry> destination_she, Bindings::NavigationType);
+
     virtual ~Navigation() override;
 
     // Internal Getters/Setters
@@ -145,6 +148,7 @@ private:
     void resolve_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
     void reject_the_finished_promise(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::Value exception);
     void clean_up(JS::NonnullGCPtr<NavigationAPIMethodTracker>);
+    void notify_about_the_committed_to_entry(JS::NonnullGCPtr<NavigationAPIMethodTracker>, JS::NonnullGCPtr<NavigationHistoryEntry>);
 
     bool inner_navigate_event_firing_algorithm(
         Bindings::NavigationType,

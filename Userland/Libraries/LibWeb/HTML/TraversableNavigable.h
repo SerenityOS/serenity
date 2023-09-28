@@ -73,6 +73,8 @@ private:
 
     void apply_the_history_step(int step, Optional<SourceSnapshotParams> = {});
 
+    Vector<JS::NonnullGCPtr<SessionHistoryEntry>> get_session_history_entries_for_the_navigation_api(JS::NonnullGCPtr<Navigable>, int);
+
     // https://html.spec.whatwg.org/multipage/document-sequences.html#tn-current-session-history-step
     int m_current_session_history_step { 0 };
 

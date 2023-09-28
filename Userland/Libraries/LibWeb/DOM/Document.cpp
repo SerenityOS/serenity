@@ -3605,6 +3605,21 @@ Painting::ViewportPaintable* Document::paintable()
     return static_cast<Painting::ViewportPaintable*>(Node::paintable());
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#restore-the-history-object-state
+void Document::restore_the_history_object_state(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry)
+{
+    // 1. Let targetRealm be document's relevant realm.
+    auto& target_realm = HTML::relevant_realm(*this);
+
+    // 2. Let state be StructuredDeserialize(entry's classic history API state, targetRealm). If this throws an exception, catch it and let state be null.
+    // 3. Set document's history object's state to state.
+    auto state_or_error = HTML::structured_deserialize(target_realm.vm(), entry->classic_history_api_state, target_realm, {});
+    if (state_or_error.is_error())
+        m_history->set_state(JS::js_null());
+    else
+        m_history->set_state(state_or_error.release_value());
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#update-document-for-history-step-application
 void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry, bool do_not_reactive, size_t script_history_length, size_t script_history_index)
 {
