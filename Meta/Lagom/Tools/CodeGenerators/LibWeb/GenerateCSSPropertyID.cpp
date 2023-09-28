@@ -21,7 +21,7 @@ void generate_bounds_checking_function(JsonObject& properties, SourceGenerator& 
 static bool type_name_is_enum(StringView type_name)
 {
     return !AK::first_is_one_of(type_name,
-        "angle"sv, "color"sv, "custom-ident"sv, "easing-function"sv, "frequency"sv, "image"sv,
+        "angle"sv, "color"sv, "custom-ident"sv, "easing-function"sv, "flex"sv, "frequency"sv, "image"sv,
         "integer"sv, "length"sv, "number"sv, "paint"sv, "percentage"sv, "ratio"sv, "rect"sv,
         "resolution"sv, "string"sv, "time"sv, "url"sv);
 }
@@ -172,6 +172,7 @@ enum class ValueType {
     CustomIdent,
     EasingFunction,
     FilterValueList,
+    Flex,
     Frequency,
     Image,
     Integer,
@@ -193,6 +194,7 @@ Optional<ValueType> property_resolves_percentages_relative_to(PropertyID);
 
 // These perform range-checking, but are also safe to call with properties that don't accept that type. (They'll just return false.)
 bool property_accepts_angle(PropertyID, Angle const&);
+bool property_accepts_flex(PropertyID, Flex const&);
 bool property_accepts_frequency(PropertyID, Frequency const&);
 bool property_accepts_integer(PropertyID, i64 const&);
 bool property_accepts_length(PropertyID, Length const&);
@@ -620,6 +622,8 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
                     property_generator.appendln("        case ValueType::CustomIdent:");
                 } else if (type_name == "easing-function") {
                     property_generator.appendln("        case ValueType::EasingFunction:");
+                } else if (type_name == "flex") {
+                    property_generator.appendln("        case ValueType::Flex:");
                 } else if (type_name == "frequency") {
                     property_generator.appendln("        case ValueType::Frequency:");
                 } else if (type_name == "image") {
@@ -774,6 +778,7 @@ size_t property_maximum_value_count(PropertyID property_id)
 })~~~");
 
     generate_bounds_checking_function(properties, generator, "angle"sv, "Angle"sv, "Deg"sv);
+    generate_bounds_checking_function(properties, generator, "flex"sv, "Flex"sv, "Fr"sv);
     generate_bounds_checking_function(properties, generator, "frequency"sv, "Frequency"sv, "Hertz"sv);
     generate_bounds_checking_function(properties, generator, "integer"sv, "i64"sv, {}, "value"sv);
     generate_bounds_checking_function(properties, generator, "length"sv, "Length"sv, {}, "value.raw_value()"sv);

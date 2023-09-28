@@ -20,6 +20,8 @@ Optional<CSSNumericType::BaseType> CSSNumericType::base_type_from_value_type(Val
     switch (value_type) {
     case ValueType::Angle:
         return BaseType::Angle;
+    case ValueType::Flex:
+        return BaseType::Flex;
     case ValueType::Frequency:
         return BaseType::Frequency;
     case ValueType::Length:

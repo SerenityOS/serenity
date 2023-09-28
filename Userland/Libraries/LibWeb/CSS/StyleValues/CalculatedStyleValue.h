@@ -12,6 +12,7 @@
 #include <AK/Function.h>
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/CSSNumericType.h>
+#include <LibWeb/CSS/Flex.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
@@ -26,6 +27,7 @@ class CalculatedStyleValue : public StyleValue {
 public:
     enum class ResolvedType {
         Angle,
+        Flex,
         Frequency,
         Integer,
         Length,
@@ -43,11 +45,11 @@ public:
         Divide,
     };
 
-    using PercentageBasis = Variant<Empty, Angle, Frequency, Length, Time>;
+    using PercentageBasis = Variant<Empty, Angle, Flex, Frequency, Length, Time>;
 
     class CalculationResult {
     public:
-        using Value = Variant<Number, Angle, Frequency, Length, Percentage, Time>;
+        using Value = Variant<Number, Angle, Flex, Frequency, Length, Percentage, Time>;
         CalculationResult(Value value)
             : m_value(move(value))
         {
@@ -78,6 +80,9 @@ public:
     bool resolves_to_angle_percentage() const { return m_resolved_type.matches_angle_percentage(); }
     Optional<Angle> resolve_angle() const;
     Optional<Angle> resolve_angle_percentage(Angle const& percentage_basis) const;
+
+    bool resolves_to_flex() const { return m_resolved_type.matches_flex(); }
+    Optional<Flex> resolve_flex() const;
 
     bool resolves_to_frequency() const { return m_resolved_type.matches_frequency(); }
     bool resolves_to_frequency_percentage() const { return m_resolved_type.matches_frequency_percentage(); }

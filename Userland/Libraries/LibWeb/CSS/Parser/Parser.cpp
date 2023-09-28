@@ -45,6 +45,7 @@
 #include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/FlexStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAutoFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
@@ -1756,6 +1757,9 @@ Optional<Dimension> Parser::parse_dimension(ComponentValue const& component_valu
 
         if (auto angle_type = Angle::unit_from_name(unit_string); angle_type.has_value())
             return Angle { numeric_value, angle_type.release_value() };
+
+        if (auto flex_type = Flex::unit_from_name(unit_string); flex_type.has_value())
+            return Flex { numeric_value, flex_type.release_value() };
 
         if (auto frequency_type = Frequency::unit_from_name(unit_string); frequency_type.has_value())
             return Frequency { numeric_value, frequency_type.release_value() };
@@ -6194,6 +6198,7 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
     }
 
     bool property_accepts_dimension = any_property_accepts_type(property_ids, ValueType::Angle).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Flex).has_value()
         || any_property_accepts_type(property_ids, ValueType::Frequency).has_value()
         || any_property_accepts_type(property_ids, ValueType::Length).has_value()
         || any_property_accepts_type(property_ids, ValueType::Percentage).has_value()
@@ -6229,6 +6234,13 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value() && property_accepts_angle(*property, angle)) {
                     transaction.commit();
                     return PropertyAndValue { *property, AngleStyleValue::create(angle) };
+                }
+            }
+            if (dimension.is_flex()) {
+                auto flex = dimension.flex();
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Flex); property.has_value() && property_accepts_flex(*property, flex)) {
+                    transaction.commit();
+                    return PropertyAndValue { *property, FlexStyleValue::create(flex) };
                 }
             }
             if (dimension.is_frequency()) {
@@ -6280,6 +6292,9 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
                     return PropertyAndValue { *property, calculated };
             } else if (calculated.resolves_to_angle_percentage()) {
                 if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Angle); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_flex()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Flex); property.has_value())
                     return PropertyAndValue { *property, calculated };
             } else if (calculated.resolves_to_frequency()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
