@@ -1,4 +1,4 @@
-@GUI::Frame {
+@GamesSettings::CardSettingsWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
@@ -19,7 +19,7 @@
 
         @GUI::ColorInput {
             name: "cards_background_color"
-            has_alpha_channel: false
+            color_has_alpha_channel: false
         }
     }
 
@@ -42,7 +42,7 @@
 
             @GUI::ComboBox {
                 name: "cards_front_image_set"
-                model_only: true
+                only_allow_values_from_model: true
             }
         }
 

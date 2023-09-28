@@ -1,4 +1,4 @@
-@GUI::Frame {
+@GamesSettings::ChessSettingsWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
@@ -29,7 +29,7 @@
 
             @GUI::ComboBox {
                 name: "piece_set"
-                model_only: true
+                only_allow_values_from_model: true
             }
         }
 
@@ -45,7 +45,7 @@
 
             @GUI::ComboBox {
                 name: "board_theme"
-                model_only: true
+                only_allow_values_from_model: true
             }
         }
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "CardGamePreview.h"
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Frame.h>
@@ -16,12 +17,11 @@
 
 namespace GamesSettings {
 
-class CardGamePreview;
-
 class CardSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(CardSettingsWidget)
 public:
     static ErrorOr<NonnullRefPtr<CardSettingsWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<CardSettingsWidget>> create();
     virtual ~CardSettingsWidget() override = default;
 
     virtual void apply_settings() override;

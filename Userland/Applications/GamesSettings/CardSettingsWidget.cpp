@@ -5,7 +5,6 @@
  */
 
 #include "CardSettingsWidget.h"
-#include <Applications/GamesSettings/CardSettingsWidgetGML.h>
 #include <LibCards/Card.h>
 #include <LibCards/CardGame.h>
 #include <LibCards/CardPainter.h>
@@ -21,66 +20,56 @@ namespace GamesSettings {
 static constexpr StringView default_card_back_image_path = "/res/graphics/cards/backs/Red.png"sv;
 static constexpr StringView default_card_front_image_set = "Classic"sv;
 
-class CardGamePreview final : public Cards::CardGame {
-    C_OBJECT_ABSTRACT(CardGamePreview)
-
-public:
-    static ErrorOr<NonnullRefPtr<CardGamePreview>> try_create()
-    {
-        auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CardGamePreview()));
-
-        Gfx::IntPoint point { 25, 24 };
-        TRY(preview->add_stack(point, Cards::CardStack::Type::Stock));
-
-        point.translate_by(Cards::Card::width + 30, 0);
-        TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
-
-        point.translate_by(Cards::Card::width + 30, 0);
-        TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
-
-        point.translate_by(20, 10);
-        TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
-
-        for (size_t i = 0; i < Cards::Card::card_count; ++i)
-            TRY(preview->stack_at_location(0).push(TRY(Cards::Card::try_create(Cards::Suit::Diamonds, static_cast<Cards::Rank>(i)))));
-        TRY(preview->stack_at_location(1).push(TRY(Cards::Card::try_create(Cards::Suit::Spades, Cards::Rank::Ace))));
-        TRY(preview->stack_at_location(2).push(TRY(Cards::Card::try_create(Cards::Suit::Hearts, Cards::Rank::Queen))));
-        TRY(preview->stack_at_location(3).push(TRY(Cards::Card::try_create(Cards::Suit::Clubs, Cards::Rank::Jack))));
-
-        preview->stack_at_location(0).peek().set_upside_down(true);
-        preview->stack_at_location(2).set_highlighted(true);
-
-        return preview;
-    }
-
-private:
-    CardGamePreview() = default;
-
-    virtual void paint_event(GUI::PaintEvent& event) override
-    {
-        Cards::CardGame::paint_event(event);
-
-        GUI::Painter painter(*this);
-        painter.add_clip_rect(frame_inner_rect());
-        painter.add_clip_rect(event.rect());
-
-        auto background_color = this->background_color();
-        for (auto& stack : stacks())
-            stack->paint(painter, background_color);
-    }
-};
-
-ErrorOr<NonnullRefPtr<CardSettingsWidget>> CardSettingsWidget::try_create()
+ErrorOr<NonnullRefPtr<CardGamePreview>> CardGamePreview::try_create()
 {
-    auto card_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CardSettingsWidget));
+    auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CardGamePreview()));
+
+    Gfx::IntPoint point { 25, 24 };
+    TRY(preview->add_stack(point, Cards::CardStack::Type::Stock));
+
+    point.translate_by(Cards::Card::width + 30, 0);
+    TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
+
+    point.translate_by(Cards::Card::width + 30, 0);
+    TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
+
+    point.translate_by(20, 10);
+    TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
+
+    for (size_t i = 0; i < Cards::Card::card_count; ++i)
+        TRY(preview->stack_at_location(0).push(TRY(Cards::Card::try_create(Cards::Suit::Diamonds, static_cast<Cards::Rank>(i)))));
+    TRY(preview->stack_at_location(1).push(TRY(Cards::Card::try_create(Cards::Suit::Spades, Cards::Rank::Ace))));
+    TRY(preview->stack_at_location(2).push(TRY(Cards::Card::try_create(Cards::Suit::Hearts, Cards::Rank::Queen))));
+    TRY(preview->stack_at_location(3).push(TRY(Cards::Card::try_create(Cards::Suit::Clubs, Cards::Rank::Jack))));
+
+    preview->stack_at_location(0).peek().set_upside_down(true);
+    preview->stack_at_location(2).set_highlighted(true);
+
+    return preview;
+}
+
+void CardGamePreview::paint_event(GUI::PaintEvent& event)
+{
+    Cards::CardGame::paint_event(event);
+
+    GUI::Painter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
+    painter.add_clip_rect(event.rect());
+
+    auto background_color = this->background_color();
+    for (auto& stack : stacks())
+        stack->paint(painter, background_color);
+}
+
+ErrorOr<NonnullRefPtr<CardSettingsWidget>> CardSettingsWidget::create()
+{
+    auto card_settings_widget = TRY(try_create());
     TRY(card_settings_widget->initialize());
     return card_settings_widget;
 }
 
 ErrorOr<void> CardSettingsWidget::initialize()
 {
-    TRY(load_from_gml(card_settings_widget_gml));
-
     auto background_color = Gfx::Color::from_string(Config::read_string("Games"sv, "Cards"sv, "BackgroundColor"sv)).value_or(Gfx::Color::from_rgb(0x008000));
 
     m_preview_frame = find_descendant_of_type_named<CardGamePreview>("cards_preview");
@@ -179,5 +168,3 @@ String CardSettingsWidget::card_front_images_set_name() const
 }
 
 }
-
-REGISTER_WIDGET(GamesSettings, CardGamePreview);
