@@ -60,7 +60,7 @@ public:
     }
 
     template<typename OpType, typename... Args>
-    OpType& emit_with_extra_register_slots(size_t extra_register_slots, Args&&... args)
+    void emit_with_extra_register_slots(size_t extra_register_slots, Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
 
@@ -73,7 +73,6 @@ public:
             m_current_basic_block->terminate({});
         auto* op = static_cast<OpType*>(slot);
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
-        return *op;
     }
 
     CodeGenerationErrorOr<void> emit_load_from_reference(JS::ASTNode const&);
