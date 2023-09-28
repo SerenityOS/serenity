@@ -45,7 +45,7 @@ public:
     };
 
     template<typename OpType, typename... Args>
-    OpType& emit(Args&&... args)
+    void emit(Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
         size_t slot_offset = m_current_basic_block->size();
@@ -56,7 +56,6 @@ public:
             m_current_basic_block->terminate({});
         auto* op = static_cast<OpType*>(slot);
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
-        return *op;
     }
 
     template<typename OpType, typename... Args>
