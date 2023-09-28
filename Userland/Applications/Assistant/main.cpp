@@ -84,7 +84,7 @@ public:
     {
     }
 
-    Function<void(Vector<NonnullRefPtr<Result const>>)> on_new_results;
+    Function<void(Vector<NonnullRefPtr<Result const>>&&)> on_new_results;
 
     void search(DeprecatedString const& query)
     {
@@ -131,7 +131,7 @@ private:
             return a->score() > b->score();
         });
 
-        on_new_results(all_results);
+        on_new_results(move(all_results));
     }
 
     AppState& m_state;
