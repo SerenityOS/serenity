@@ -816,21 +816,21 @@ class Jump : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
 
-    explicit Jump(Type type, Optional<Label> taken_target = {}, Optional<Label> nontaken_target = {})
+    explicit Jump(Type type, Label taken_target, Optional<Label> nontaken_target = {})
         : Instruction(type, sizeof(*this))
         , m_true_target(move(taken_target))
         , m_false_target(move(nontaken_target))
     {
     }
 
-    explicit Jump(Optional<Label> taken_target = {}, Optional<Label> nontaken_target = {})
+    explicit Jump(Label taken_target, Optional<Label> nontaken_target = {})
         : Instruction(Type::Jump, sizeof(*this))
         , m_true_target(move(taken_target))
         , m_false_target(move(nontaken_target))
     {
     }
 
-    void set_targets(Optional<Label> true_target, Optional<Label> false_target)
+    void set_targets(Label true_target, Optional<Label> false_target)
     {
         m_true_target = move(true_target);
         m_false_target = move(false_target);
@@ -849,7 +849,7 @@ protected:
 
 class JumpConditional final : public Jump {
 public:
-    explicit JumpConditional(Optional<Label> true_target = {}, Optional<Label> false_target = {})
+    explicit JumpConditional(Label true_target, Label false_target)
         : Jump(Type::JumpConditional, move(true_target), move(false_target))
     {
     }
@@ -860,7 +860,7 @@ public:
 
 class JumpNullish final : public Jump {
 public:
-    explicit JumpNullish(Optional<Label> true_target = {}, Optional<Label> false_target = {})
+    explicit JumpNullish(Label true_target, Label false_target)
         : Jump(Type::JumpNullish, move(true_target), move(false_target))
     {
     }
@@ -871,7 +871,7 @@ public:
 
 class JumpUndefined final : public Jump {
 public:
-    explicit JumpUndefined(Optional<Label> true_target = {}, Optional<Label> false_target = {})
+    explicit JumpUndefined(Label true_target, Label false_target)
         : Jump(Type::JumpUndefined, move(true_target), move(false_target))
     {
     }
