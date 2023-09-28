@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "ChessGamePreview.h"
 #include <AK/Array.h>
 #include <AK/StringView.h>
 #include <LibGUI/SettingsWindow.h>
@@ -13,12 +14,11 @@
 
 namespace GamesSettings {
 
-class ChessGamePreview;
-
 class ChessSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(ChessSettingsWidget)
 public:
     static ErrorOr<NonnullRefPtr<ChessSettingsWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<ChessSettingsWidget>> create();
     virtual ~ChessSettingsWidget() override = default;
 
     virtual void apply_settings() override;
@@ -30,7 +30,7 @@ private:
 
     Vector<DeprecatedString> m_piece_sets;
 
-    RefPtr<ChessGamePreview> m_preview;
+    RefPtr<GamesSettings::ChessGamePreview> m_preview;
     RefPtr<GUI::ComboBox> m_piece_set_combobox;
     RefPtr<GUI::ComboBox> m_board_theme_combobox;
     RefPtr<GUI::CheckBox> m_show_coordinates_checkbox;

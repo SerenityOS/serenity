@@ -4,18 +4,15 @@ serenity_component(
     TARGETS GamesSettings
 )
 
-stringify_gml(CardSettingsWidget.gml CardSettingsWidgetGML.h card_settings_widget_gml)
-stringify_gml(ChessSettingsWidget.gml ChessSettingsWidgetGML.h chess_settings_widget_gml)
+compile_gml(CardSettingsWidget.gml CardSettingsWidgetGML.cpp)
+compile_gml(ChessSettingsWidget.gml ChessSettingsWidgetGML.cpp)
 
 set(SOURCES
     main.cpp
     CardSettingsWidget.cpp
+    CardSettingsWidgetGML.cpp
+    ChessSettingsWidgetGML.cpp
     ChessSettingsWidget.cpp
-)
-
-set(GENERATED_SOURCES
-    CardSettingsWidgetGML.h
-    ChessSettingsWidgetGML.h
 )
 
 serenity_app(GamesSettings ICON games)

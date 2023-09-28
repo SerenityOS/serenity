@@ -5,7 +5,7 @@
  */
 
 #include "ChessSettingsWidget.h"
-#include <Applications/GamesSettings/ChessSettingsWidgetGML.h>
+#include "ChessGamePreview.h"
 #include <LibChess/Chess.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Directory.h>
@@ -75,185 +75,171 @@ private:
     }
 };
 
-class ChessGamePreview final : public GUI::Frame {
-    C_OBJECT_ABSTRACT(ChessGamePreview)
+ChessGamePreview::ChessGamePreview()
+    : m_dark_square_color { s_board_themes[0].dark_square_color }
+    , m_light_square_color { s_board_themes[0].light_square_color }
+{
+}
 
-public:
-    static ErrorOr<NonnullRefPtr<ChessGamePreview>> try_create()
-    {
-        auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ChessGamePreview()));
-        return preview;
-    }
+ErrorOr<NonnullRefPtr<ChessGamePreview>> ChessGamePreview::try_create()
+{
+    auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ChessGamePreview()));
+    return preview;
+}
 
-    virtual ~ChessGamePreview() = default;
+void ChessGamePreview::set_piece_set_name(String piece_set_name)
+{
+    if (m_piece_set_name == piece_set_name)
+        return;
 
-    void set_piece_set_name(String piece_set_name)
-    {
-        if (m_piece_set_name == piece_set_name)
+    m_piece_set_name = move(piece_set_name);
+    m_piece_images.clear();
+    m_any_piece_images_are_missing = false;
+
+    auto load_piece_image = [&](Chess::Color color, Chess::Type piece, StringView filename) {
+        auto path = MUST(String::formatted("/res/graphics/chess/sets/{}/{}", m_piece_set_name, filename));
+        auto image = Gfx::Bitmap::load_from_file(path.bytes_as_string_view());
+        if (image.is_error()) {
+            m_any_piece_images_are_missing = true;
             return;
+        }
+        m_piece_images.set({ color, piece }, image.release_value());
+    };
 
-        m_piece_set_name = move(piece_set_name);
-        m_piece_images.clear();
-        m_any_piece_images_are_missing = false;
+    load_piece_image(Chess::Color::White, Chess::Type::Pawn, "white-pawn.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Pawn, "black-pawn.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::Knight, "white-knight.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Knight, "black-knight.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::Bishop, "white-bishop.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Bishop, "black-bishop.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::Rook, "white-rook.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Rook, "black-rook.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::Queen, "white-queen.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Queen, "black-queen.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::King, "white-king.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::King, "black-king.png"sv);
 
-        auto load_piece_image = [&](Chess::Color color, Chess::Type piece, StringView filename) {
-            auto path = MUST(String::formatted("/res/graphics/chess/sets/{}/{}", m_piece_set_name, filename));
-            auto image = Gfx::Bitmap::load_from_file(path.bytes_as_string_view());
-            if (image.is_error()) {
-                m_any_piece_images_are_missing = true;
-                return;
-            }
-            m_piece_images.set({ color, piece }, image.release_value());
+    update();
+}
+
+void ChessGamePreview::set_dark_square_color(Gfx::Color dark_square_color)
+{
+    if (m_dark_square_color == dark_square_color)
+        return;
+
+    m_dark_square_color = dark_square_color;
+    update();
+}
+
+void ChessGamePreview::set_light_square_color(Gfx::Color light_square_color)
+{
+    if (m_light_square_color == light_square_color)
+        return;
+
+    m_light_square_color = light_square_color;
+    update();
+}
+
+void ChessGamePreview::set_show_coordinates(bool show_coordinates)
+{
+    if (m_show_coordinates == show_coordinates)
+        return;
+
+    m_show_coordinates = show_coordinates;
+    update();
+}
+
+void ChessGamePreview::paint_event(GUI::PaintEvent& event)
+{
+    GUI::Frame::paint_event(event);
+
+    GUI::Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(frame_inner_rect());
+
+    auto& coordinate_font = Gfx::FontDatabase::default_font().bold_variant();
+
+    // To show all the piece graphics, we need at least 12 squares visible.
+    // With the same preview size as we use for card games, a nice fit is 2 ranks of 6.
+    // There are definitely better ways of doing this, but it'll do. ;^)
+    auto square_size = 61;
+    auto square_margin = square_size / 10;
+
+    auto rect_for_square = [&](Chess::Square const& square) {
+        return Gfx::IntRect {
+            frame_inner_rect().left() + square.file * square_size,
+            frame_inner_rect().bottom() - (square.rank + 1) * square_size,
+            square_size,
+            square_size
         };
+    };
 
-        load_piece_image(Chess::Color::White, Chess::Type::Pawn, "white-pawn.png"sv);
-        load_piece_image(Chess::Color::Black, Chess::Type::Pawn, "black-pawn.png"sv);
-        load_piece_image(Chess::Color::White, Chess::Type::Knight, "white-knight.png"sv);
-        load_piece_image(Chess::Color::Black, Chess::Type::Knight, "black-knight.png"sv);
-        load_piece_image(Chess::Color::White, Chess::Type::Bishop, "white-bishop.png"sv);
-        load_piece_image(Chess::Color::Black, Chess::Type::Bishop, "black-bishop.png"sv);
-        load_piece_image(Chess::Color::White, Chess::Type::Rook, "white-rook.png"sv);
-        load_piece_image(Chess::Color::Black, Chess::Type::Rook, "black-rook.png"sv);
-        load_piece_image(Chess::Color::White, Chess::Type::Queen, "white-queen.png"sv);
-        load_piece_image(Chess::Color::Black, Chess::Type::Queen, "black-queen.png"sv);
-        load_piece_image(Chess::Color::White, Chess::Type::King, "white-king.png"sv);
-        load_piece_image(Chess::Color::Black, Chess::Type::King, "black-king.png"sv);
+    for (int rank = 0; rank < 3; ++rank) {
+        for (int file = 0; file < 8; ++file) {
+            Chess::Square square { rank, file };
+            auto square_rect = rect_for_square(square);
+            painter.fill_rect(square_rect, square.is_light() ? m_light_square_color : m_dark_square_color);
 
-        update();
-    }
+            if (m_show_coordinates) {
+                auto text_color = square.is_light() ? m_dark_square_color : m_light_square_color;
+                auto shrunken_rect = square_rect.shrunken(4, 4);
 
-    void set_dark_square_color(Gfx::Color dark_square_color)
-    {
-        if (m_dark_square_color == dark_square_color)
-            return;
+                if (square.rank == 0) {
+                    auto file_char = square.file_char();
+                    painter.draw_text(shrunken_rect, { &file_char, 1 }, coordinate_font, Gfx::TextAlignment::BottomRight, text_color);
+                }
 
-        m_dark_square_color = dark_square_color;
-        update();
-    }
-
-    void set_light_square_color(Gfx::Color light_square_color)
-    {
-        if (m_light_square_color == light_square_color)
-            return;
-
-        m_light_square_color = light_square_color;
-        update();
-    }
-
-    void set_show_coordinates(bool show_coordinates)
-    {
-        if (m_show_coordinates == show_coordinates)
-            return;
-
-        m_show_coordinates = show_coordinates;
-        update();
-    }
-
-private:
-    ChessGamePreview() = default;
-
-    virtual void paint_event(GUI::PaintEvent& event) override
-    {
-        GUI::Frame::paint_event(event);
-
-        GUI::Painter painter(*this);
-        painter.add_clip_rect(event.rect());
-        painter.add_clip_rect(frame_inner_rect());
-
-        auto& coordinate_font = Gfx::FontDatabase::default_font().bold_variant();
-
-        // To show all the piece graphics, we need at least 12 squares visible.
-        // With the same preview size as we use for card games, a nice fit is 2 ranks of 6.
-        // There are definitely better ways of doing this, but it'll do. ;^)
-        auto square_size = 61;
-        auto square_margin = square_size / 10;
-
-        auto rect_for_square = [&](Chess::Square const& square) {
-            return Gfx::IntRect {
-                frame_inner_rect().left() + square.file * square_size,
-                frame_inner_rect().bottom() - (square.rank + 1) * square_size,
-                square_size,
-                square_size
-            };
-        };
-
-        for (int rank = 0; rank < 3; ++rank) {
-            for (int file = 0; file < 8; ++file) {
-                Chess::Square square { rank, file };
-                auto square_rect = rect_for_square(square);
-                painter.fill_rect(square_rect, square.is_light() ? m_light_square_color : m_dark_square_color);
-
-                if (m_show_coordinates) {
-                    auto text_color = square.is_light() ? m_dark_square_color : m_light_square_color;
-                    auto shrunken_rect = square_rect.shrunken(4, 4);
-
-                    if (square.rank == 0) {
-                        auto file_char = square.file_char();
-                        painter.draw_text(shrunken_rect, { &file_char, 1 }, coordinate_font, Gfx::TextAlignment::BottomRight, text_color);
-                    }
-
-                    if (square.file == 0) {
-                        auto rank_char = square.rank_char();
-                        painter.draw_text(shrunken_rect, { &rank_char, 1 }, coordinate_font, Gfx::TextAlignment::TopLeft, text_color);
-                    }
+                if (square.file == 0) {
+                    auto rank_char = square.rank_char();
+                    painter.draw_text(shrunken_rect, { &rank_char, 1 }, coordinate_font, Gfx::TextAlignment::TopLeft, text_color);
                 }
             }
         }
-
-        auto draw_piece = [&](Chess::Piece const& piece, Chess::Square const& square) {
-            auto maybe_bitmap = m_piece_images.get(piece);
-            if (!maybe_bitmap.has_value())
-                return;
-            auto& bitmap = *maybe_bitmap.value();
-            painter.draw_scaled_bitmap(
-                rect_for_square(square).shrunken(square_margin, square_margin, square_margin, square_margin),
-                bitmap,
-                bitmap.rect(),
-                1.0f,
-                Gfx::Painter::ScalingMode::BilinearBlend);
-        };
-
-        draw_piece({ Chess::Color::White, Chess::Type::King }, { 0, 0 });
-        draw_piece({ Chess::Color::Black, Chess::Type::King }, { 1, 0 });
-        draw_piece({ Chess::Color::White, Chess::Type::Queen }, { 0, 1 });
-        draw_piece({ Chess::Color::Black, Chess::Type::Queen }, { 1, 1 });
-        draw_piece({ Chess::Color::White, Chess::Type::Rook }, { 0, 2 });
-        draw_piece({ Chess::Color::Black, Chess::Type::Rook }, { 1, 2 });
-        draw_piece({ Chess::Color::White, Chess::Type::Bishop }, { 0, 3 });
-        draw_piece({ Chess::Color::Black, Chess::Type::Bishop }, { 1, 3 });
-        draw_piece({ Chess::Color::White, Chess::Type::Knight }, { 0, 4 });
-        draw_piece({ Chess::Color::Black, Chess::Type::Knight }, { 1, 4 });
-        draw_piece({ Chess::Color::White, Chess::Type::Pawn }, { 0, 5 });
-        draw_piece({ Chess::Color::Black, Chess::Type::Pawn }, { 1, 5 });
-
-        if (m_any_piece_images_are_missing) {
-            auto warning_rect = frame_inner_rect();
-            warning_rect.set_height(coordinate_font.preferred_line_height() + 4);
-            painter.fill_rect(warning_rect, palette().base());
-            painter.draw_text(warning_rect.shrunken(4, 4), "Warning: This set is missing images for some pieces!"sv, coordinate_font, Gfx::TextAlignment::CenterLeft, palette().base_text());
-        }
     }
 
-    HashMap<Chess::Piece, RefPtr<Gfx::Bitmap>> m_piece_images;
-    bool m_any_piece_images_are_missing { false };
+    auto draw_piece = [&](Chess::Piece const& piece, Chess::Square const& square) {
+        auto maybe_bitmap = m_piece_images.get(piece);
+        if (!maybe_bitmap.has_value())
+            return;
+        auto& bitmap = *maybe_bitmap.value();
+        painter.draw_scaled_bitmap(
+            rect_for_square(square).shrunken(square_margin, square_margin, square_margin, square_margin),
+            bitmap,
+            bitmap.rect(),
+            1.0f,
+            Gfx::Painter::ScalingMode::BilinearBlend);
+    };
 
-    Gfx::Color m_dark_square_color { s_board_themes[0].dark_square_color };
-    Gfx::Color m_light_square_color { s_board_themes[0].light_square_color };
-    bool m_show_coordinates { true };
-    String m_piece_set_name;
-};
+    draw_piece({ Chess::Color::White, Chess::Type::King }, { 0, 0 });
+    draw_piece({ Chess::Color::Black, Chess::Type::King }, { 1, 0 });
+    draw_piece({ Chess::Color::White, Chess::Type::Queen }, { 0, 1 });
+    draw_piece({ Chess::Color::Black, Chess::Type::Queen }, { 1, 1 });
+    draw_piece({ Chess::Color::White, Chess::Type::Rook }, { 0, 2 });
+    draw_piece({ Chess::Color::Black, Chess::Type::Rook }, { 1, 2 });
+    draw_piece({ Chess::Color::White, Chess::Type::Bishop }, { 0, 3 });
+    draw_piece({ Chess::Color::Black, Chess::Type::Bishop }, { 1, 3 });
+    draw_piece({ Chess::Color::White, Chess::Type::Knight }, { 0, 4 });
+    draw_piece({ Chess::Color::Black, Chess::Type::Knight }, { 1, 4 });
+    draw_piece({ Chess::Color::White, Chess::Type::Pawn }, { 0, 5 });
+    draw_piece({ Chess::Color::Black, Chess::Type::Pawn }, { 1, 5 });
 
-ErrorOr<NonnullRefPtr<ChessSettingsWidget>> ChessSettingsWidget::try_create()
+    if (m_any_piece_images_are_missing) {
+        auto warning_rect = frame_inner_rect();
+        warning_rect.set_height(coordinate_font.preferred_line_height() + 4);
+        painter.fill_rect(warning_rect, palette().base());
+        painter.draw_text(warning_rect.shrunken(4, 4), "Warning: This set is missing images for some pieces!"sv, coordinate_font, Gfx::TextAlignment::CenterLeft, palette().base_text());
+    }
+}
+
+ErrorOr<NonnullRefPtr<ChessSettingsWidget>> ChessSettingsWidget::create()
 {
-    auto chess_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ChessSettingsWidget));
+    auto chess_settings_widget = TRY(try_create());
     TRY(chess_settings_widget->initialize());
     return chess_settings_widget;
 }
 
 ErrorOr<void> ChessSettingsWidget::initialize()
 {
-    TRY(load_from_gml(chess_settings_widget_gml));
-
     auto piece_set_name = Config::read_string("Games"sv, "Chess"sv, "PieceSet"sv, "Classic"sv);
     auto board_theme = get_board_theme(Config::read_string("Games"sv, "Chess"sv, "BoardTheme"sv, "Beige"sv));
     auto show_coordinates = Config::read_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, true);
@@ -328,5 +314,3 @@ void ChessSettingsWidget::reset_default_values()
 }
 
 }
-
-REGISTER_WIDGET(GamesSettings, ChessGamePreview);
