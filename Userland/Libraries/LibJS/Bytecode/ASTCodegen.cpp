@@ -2048,33 +2048,27 @@ Bytecode::CodeGenerationErrorOr<void> IfStatement::generate_bytecode(Bytecode::G
 
     auto& true_block = generator.make_block();
     auto& false_block = generator.make_block();
+    auto& end_block = generator.make_block();
 
     TRY(m_predicate->generate_bytecode(generator));
     generator.emit<Bytecode::Op::JumpConditional>(
         Bytecode::Label { true_block },
         Bytecode::Label { false_block });
 
-    Bytecode::Op::Jump* true_block_jump { nullptr };
-
     generator.switch_to_basic_block(true_block);
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     TRY(m_consequent->generate_bytecode(generator));
     if (!generator.is_current_block_terminated()) {
-        // FIXME: This should be initialized to the right target right away.
-        true_block_jump = &generator.emit<Bytecode::Op::Jump>(Bytecode::Label { true_block });
+        generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
     }
 
     generator.switch_to_basic_block(false_block);
-    auto& end_block = generator.make_block();
 
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     if (m_alternate)
         TRY(m_alternate->generate_bytecode(generator));
     if (!generator.is_current_block_terminated())
         generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
-
-    if (true_block_jump)
-        true_block_jump->set_targets(Bytecode::Label { end_block }, {});
 
     generator.switch_to_basic_block(end_block);
     return {};
