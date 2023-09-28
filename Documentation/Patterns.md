@@ -18,21 +18,24 @@ result of the contents of the TRY will be the result of the macro's execution.
 
 ### Examples:
 
-Example from LibGUI: 
+Example from LibGfx:
 
 ```cpp
 #include <AK/Try.h>
 
 ... snip ...
 
-ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_shareable(BitmapFormat format, IntSize size, int scale_factor)
 {
-    auto menu = m_menubar->add_menu({}, move(name));
-    if (m_window_id) {
-        menu->realize_menu_if_needed();
-        ConnectionToWindowServer::the().async_add_menu(m_window_id, menu->menu_id());
-    }
-    return menu;
+    if (size_would_overflow(format, size, scale_factor))
+        return Error::from_string_literal("Gfx::Bitmap::create_shareable size overflow");
+
+    auto const pitch = minimum_pitch(size.width() * scale_factor, format);
+    auto const data_size = size_in_bytes(pitch, size.height() * scale_factor);
+
+    auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE)));
+    auto bitmap = TRY(Bitmap::create_with_anonymous_buffer(format, buffer, size, scale_factor, {}));
+    return bitmap;
 }
 ```
 
