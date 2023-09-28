@@ -1,5 +1,5 @@
-entries is empty: true
-currentEntry is null: true
+entries[length - 1] is current entry: true
+currentEntry is a [object NavigationHistoryEntry]
 transition is null: true
-canGoBack: false
-canGoForward: false
+canGoBack: true
+canGoForward: true
