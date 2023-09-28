@@ -34,18 +34,6 @@ public:
 
     Register allocate_register();
 
-    void ensure_enough_space(size_t size)
-    {
-        // Make sure there's always enough space for a single jump at the end.
-        if (!m_current_basic_block->can_grow(size + sizeof(Op::Jump))) {
-            auto& new_block = make_block();
-            emit<Op::Jump>().set_targets(
-                Label { new_block },
-                {});
-            switch_to_basic_block(new_block);
-        }
-    }
-
     class SourceLocationScope {
     public:
         SourceLocationScope(Generator&, ASTNode const& node);
@@ -60,15 +48,12 @@ public:
     OpType& emit(Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
-        // If the block doesn't have enough space, switch to another block
-        if constexpr (!OpType::IsTerminator)
-            ensure_enough_space(sizeof(OpType));
-
-        void* slot = next_slot();
+        size_t slot_offset = m_current_basic_block->size();
         grow(sizeof(OpType));
+        void* slot = m_current_basic_block->data() + slot_offset;
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
-            m_current_basic_block->terminate({}, static_cast<Instruction const*>(slot));
+            m_current_basic_block->terminate({});
         auto* op = static_cast<OpType*>(slot);
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
         return *op;
@@ -80,16 +65,12 @@ public:
         VERIFY(!is_current_block_terminated());
 
         size_t size_to_allocate = round_up_to_power_of_two(sizeof(OpType) + extra_register_slots * sizeof(Register), alignof(void*));
-
-        // If the block doesn't have enough space, switch to another block
-        if constexpr (!OpType::IsTerminator)
-            ensure_enough_space(size_to_allocate);
-
-        void* slot = next_slot();
+        size_t slot_offset = m_current_basic_block->size();
         grow(size_to_allocate);
+        void* slot = m_current_basic_block->data() + slot_offset;
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
-            m_current_basic_block->terminate({}, static_cast<Instruction const*>(slot));
+            m_current_basic_block->terminate({});
         auto* op = static_cast<OpType*>(slot);
         op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
         return *op;
@@ -238,7 +219,6 @@ private:
     ~Generator() = default;
 
     void grow(size_t);
-    void* next_slot();
 
     struct LabelableScope {
         Label bytecode_target;

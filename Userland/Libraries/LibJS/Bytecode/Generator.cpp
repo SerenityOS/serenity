@@ -82,12 +82,6 @@ void Generator::grow(size_t additional_size)
     m_current_basic_block->grow(additional_size);
 }
 
-void* Generator::next_slot()
-{
-    VERIFY(m_current_basic_block);
-    return m_current_basic_block->next_slot();
-}
-
 Register Generator::allocate_register()
 {
     VERIFY(m_next_register != NumericLimits<u32>::max());
