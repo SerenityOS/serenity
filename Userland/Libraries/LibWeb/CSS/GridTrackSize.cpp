@@ -12,17 +12,18 @@ namespace Web::CSS {
 
 GridSize::GridSize(LengthPercentage length_percentage)
     : m_type(Type::LengthPercentage)
-    , m_length_percentage(length_percentage) {};
+    , m_value(move(length_percentage))
+{
+}
 
 GridSize::GridSize(Flex flex_factor)
     : m_type(Type::FlexibleLength)
-    , m_length_percentage { Length::make_px(0) }
-    , m_flex_factor(flex_factor)
+    , m_value(move(flex_factor))
 {
 }
 
 GridSize::GridSize(Type type)
-    : m_length_percentage { Length::make_auto() }
+    : m_value { Empty() }
 {
     VERIFY(type == Type::MinContent || type == Type::MaxContent);
     m_type = type;
@@ -30,7 +31,7 @@ GridSize::GridSize(Type type)
 
 GridSize::GridSize()
     : m_type(Type::LengthPercentage)
-    , m_length_percentage { Length::make_auto() }
+    , m_value { Length::make_auto() }
 {
 }
 
@@ -39,9 +40,10 @@ GridSize::~GridSize() = default;
 bool GridSize::is_auto(Layout::AvailableSize const& available_size) const
 {
     if (m_type == Type::LengthPercentage) {
-        if (m_length_percentage.contains_percentage())
+        auto& length_percentage = m_value.get<LengthPercentage>();
+        if (length_percentage.contains_percentage())
             return !available_size.is_definite();
-        return m_length_percentage.is_auto();
+        return length_percentage.is_auto();
     }
 
     return false;
@@ -50,9 +52,10 @@ bool GridSize::is_auto(Layout::AvailableSize const& available_size) const
 bool GridSize::is_fixed(Layout::AvailableSize const& available_size) const
 {
     if (m_type == Type::LengthPercentage) {
-        if (m_length_percentage.contains_percentage())
+        auto& length_percentage = m_value.get<LengthPercentage>();
+        if (length_percentage.contains_percentage())
             return available_size.is_definite();
-        return !m_length_percentage.is_auto();
+        return !length_percentage.is_auto();
     }
 
     return false;
@@ -71,23 +74,23 @@ GridSize GridSize::make_auto()
 Size GridSize::css_size() const
 {
     VERIFY(m_type == Type::LengthPercentage);
-    if (m_length_percentage.is_auto())
+    auto& length_percentage = m_value.get<LengthPercentage>();
+    if (length_percentage.is_auto())
         return CSS::Size::make_auto();
-    if (m_length_percentage.is_length())
-        return CSS::Size::make_length(m_length_percentage.length());
-    if (m_length_percentage.is_calculated()) {
-        return CSS::Size::make_calculated(m_length_percentage.calculated());
-    }
-    return CSS::Size::make_percentage(m_length_percentage.percentage());
+    if (length_percentage.is_length())
+        return CSS::Size::make_length(length_percentage.length());
+    if (length_percentage.is_calculated())
+        return CSS::Size::make_calculated(length_percentage.calculated());
+    return CSS::Size::make_percentage(length_percentage.percentage());
 }
 
 String GridSize::to_string() const
 {
     switch (m_type) {
     case Type::LengthPercentage:
-        return m_length_percentage.to_string();
+        return m_value.get<LengthPercentage>().to_string();
     case Type::FlexibleLength:
-        return m_flex_factor.to_string();
+        return m_value.get<Flex>().to_string();
     case Type::MaxContent:
         return "max-content"_string;
     case Type::MinContent:
