@@ -26,6 +26,7 @@ public:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
 
     void set_toggling_cells(bool toggling)
@@ -74,6 +75,7 @@ private:
     BoardWidget(size_t rows, size_t columns);
     void setup_patterns();
     void place_pattern(size_t row, size_t column);
+    void clear_selected_pattern();
 
     bool m_toggling_cells { false };
     Board::RowAndColumn m_last_cell_toggled {};
