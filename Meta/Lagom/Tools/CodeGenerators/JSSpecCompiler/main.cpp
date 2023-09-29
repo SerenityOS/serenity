@@ -56,9 +56,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
     for (auto const& argument : spec_function.m_arguments)
         function->m_local_variables.set(argument.name, make_ref_counted<VariableDeclaration>(argument.name));
 
-    FunctionCallCanonicalizationPass(function).run();
-    IfBranchMergingPass(function).run();
-    ReferenceResolvingPass(function).run();
+    FunctionCallCanonicalizationPass(&translation_unit).run();
+    IfBranchMergingPass(&translation_unit).run();
+    ReferenceResolvingPass(&translation_unit).run();
 
     out("{}", function->m_ast);
     return 0;

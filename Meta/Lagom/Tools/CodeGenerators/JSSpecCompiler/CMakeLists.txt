@@ -1,6 +1,7 @@
 set(SOURCES
     AST/AST.cpp
     AST/ASTPrinting.cpp
+    Compiler/CompilerPass.cpp
     Compiler/FunctionCallCanonicalizationPass.cpp
     Compiler/GenericASTPass.cpp
     Compiler/IfBranchMergingPass.cpp

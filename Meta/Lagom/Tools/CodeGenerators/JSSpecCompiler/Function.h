@@ -28,7 +28,7 @@ public:
 
     virtual ~FunctionDeclaration() = default;
 
-    TranslationUnit* m_translation_unit = nullptr;
+    TranslationUnitRef m_translation_unit = nullptr;
     StringView m_name;
 };
 
