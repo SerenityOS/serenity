@@ -61,15 +61,23 @@ void ResolvedCSSStyleDeclaration::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_element.ptr());
 }
 
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-length
 size_t ResolvedCSSStyleDeclaration::length() const
 {
-    return 0;
+    // The length attribute must return the number of CSS declarations in the declarations.
+    // FIXME: Include the number of custom properties.
+    return to_underlying(last_longhand_property_id) - to_underlying(first_longhand_property_id) + 1;
 }
 
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-item
 String ResolvedCSSStyleDeclaration::item(size_t index) const
 {
-    (void)index;
-    return {};
+    // The item(index) method must return the property name of the CSS declaration at position index.
+    // FIXME: Return custom properties if index > last_longhand_property_id.
+    if (index > length())
+        return {};
+    auto property_id = static_cast<PropertyID>(index + to_underlying(first_longhand_property_id));
+    return MUST(String::from_utf8(string_from_property_id(property_id)));
 }
 
 static NonnullRefPtr<StyleValue const> style_value_for_background_property(Layout::NodeWithStyle const& layout_node, Function<NonnullRefPtr<StyleValue const>(BackgroundLayerData const&)> callback, Function<NonnullRefPtr<StyleValue const>()> default_value)
