@@ -136,6 +136,28 @@ static NonnullRefPtr<StyleValue const> style_value_for_sided_shorthand(ValueComp
     return StyleValueList::create(StyleValueVector { move(top), move(right), move(bottom), move(left) }, StyleValueList::Separator::Space);
 }
 
+enum class LogicalSide {
+    BlockStart,
+    BlockEnd,
+    InlineStart,
+    InlineEnd,
+};
+static RefPtr<StyleValue const> style_value_for_length_box_logical_side(Layout::NodeWithStyle const&, LengthBox const& box, LogicalSide logical_side)
+{
+    // FIXME: Actually determine the logical sides based on layout_node's writing-mode and direction.
+    switch (logical_side) {
+    case LogicalSide::BlockStart:
+        return style_value_for_length_percentage(box.top());
+    case LogicalSide::BlockEnd:
+        return style_value_for_length_percentage(box.bottom());
+    case LogicalSide::InlineStart:
+        return style_value_for_length_percentage(box.left());
+    case LogicalSide::InlineEnd:
+        return style_value_for_length_percentage(box.right());
+    }
+    VERIFY_NOT_REACHED();
+}
+
 RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
     // A limited number of properties have special rules for producing their "resolved value".
@@ -189,19 +211,19 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         // FIXME: -> block-size
         // -> height
         // FIXME: -> inline-size
-        // FIXME: -> margin-block-end
-        // FIXME: -> margin-block-start
+        // -> margin-block-end
+        // -> margin-block-start
         // -> margin-bottom
-        // FIXME: -> margin-inline-end
-        // FIXME: -> margin-inline-start
+        // -> margin-inline-end
+        // -> margin-inline-start
         // -> margin-left
         // -> margin-right
         // -> margin-top
-        // FIXME: -> padding-block-end
-        // FIXME: -> padding-block-start
+        // -> padding-block-end
+        // -> padding-block-start
         // -> padding-bottom
-        // FIXME: -> padding-inline-end
-        // FIXME: -> padding-inline-start
+        // -> padding-inline-end
+        // -> padding-inline-start
         // -> padding-left
         // -> padding-right
         // -> padding-top
@@ -212,16 +234,32 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         //    Otherwise the resolved value is the computed value.
     case PropertyID::Height:
         return style_value_for_size(layout_node.computed_values().height());
+    case PropertyID::MarginBlockEnd:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().margin(), LogicalSide::BlockEnd);
+    case PropertyID::MarginBlockStart:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().margin(), LogicalSide::BlockStart);
     case PropertyID::MarginBottom:
         return style_value_for_length_percentage(layout_node.computed_values().margin().bottom());
+    case PropertyID::MarginInlineEnd:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().margin(), LogicalSide::InlineEnd);
+    case PropertyID::MarginInlineStart:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().margin(), LogicalSide::InlineStart);
     case PropertyID::MarginLeft:
         return style_value_for_length_percentage(layout_node.computed_values().margin().left());
     case PropertyID::MarginRight:
         return style_value_for_length_percentage(layout_node.computed_values().margin().right());
     case PropertyID::MarginTop:
         return style_value_for_length_percentage(layout_node.computed_values().margin().top());
+    case PropertyID::PaddingBlockEnd:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().padding(), LogicalSide::BlockEnd);
+    case PropertyID::PaddingBlockStart:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().padding(), LogicalSide::BlockStart);
     case PropertyID::PaddingBottom:
         return style_value_for_length_percentage(layout_node.computed_values().padding().bottom());
+    case PropertyID::PaddingInlineEnd:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().padding(), LogicalSide::InlineEnd);
+    case PropertyID::PaddingInlineStart:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().padding(), LogicalSide::InlineStart);
     case PropertyID::PaddingLeft:
         return style_value_for_length_percentage(layout_node.computed_values().padding().left());
     case PropertyID::PaddingRight:
@@ -233,10 +271,10 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
 
         // -> bottom
         // -> left
-        // FIXME: -> inset-block-end
-        // FIXME: -> inset-block-start
-        // FIXME: -> inset-inline-end
-        // FIXME: -> inset-inline-start
+        // -> inset-block-end
+        // -> inset-block-start
+        // -> inset-inline-end
+        // -> inset-inline-start
         // -> right
         // -> top
         // -> A resolved value special case property like top defined in another specification
@@ -245,6 +283,14 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         //    Otherwise the resolved value is the computed value.
     case PropertyID::Bottom:
         return style_value_for_length_percentage(layout_node.computed_values().inset().bottom());
+    case PropertyID::InsetBlockEnd:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().inset(), LogicalSide::BlockEnd);
+    case PropertyID::InsetBlockStart:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().inset(), LogicalSide::BlockStart);
+    case PropertyID::InsetInlineEnd:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().inset(), LogicalSide::InlineEnd);
+    case PropertyID::InsetInlineStart:
+        return style_value_for_length_box_logical_side(layout_node, layout_node.computed_values().inset(), LogicalSide::InlineStart);
     case PropertyID::Left:
         return style_value_for_length_percentage(layout_node.computed_values().inset().left());
     case PropertyID::Right:
