@@ -177,8 +177,14 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     case PropertyID::TextDecorationColor:
         return ColorStyleValue::create(layout_node.computed_values().text_decoration_color());
 
-        // FIXME: -> line-height
+        // -> line-height
         //    The resolved value is normal if the computed value is normal, or the used value otherwise.
+    case PropertyID::LineHeight: {
+        auto line_height = static_cast<DOM::Element const&>(*layout_node.dom_node()).computed_css_values()->property(property_id);
+        if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
+            return line_height;
+        return LengthStyleValue::create(Length::make_px(layout_node.line_height()));
+    }
 
         // FIXME: -> block-size
         // -> height
