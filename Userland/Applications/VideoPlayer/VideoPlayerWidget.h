@@ -25,6 +25,7 @@ class VideoPlayerWidget final : public GUI::Widget {
 
 public:
     static ErrorOr<NonnullRefPtr<VideoPlayerWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<VideoPlayerWidget>> create();
     virtual ~VideoPlayerWidget() override = default;
     void close_file();
     void open_file(FileSystemAccessClient::File filename);

@@ -9,8 +9,6 @@
 
 #include "VideoFrameWidget.h"
 
-REGISTER_WIDGET(VideoPlayer, VideoFrameWidget);
-
 namespace VideoPlayer {
 
 VideoFrameWidget::VideoFrameWidget()

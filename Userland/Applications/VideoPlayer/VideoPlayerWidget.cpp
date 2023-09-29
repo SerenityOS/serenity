@@ -19,16 +19,14 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
-#include <Userland/Applications/VideoPlayer/VideoPlayerWindowGML.h>
 
 #include "VideoPlayerWidget.h"
 
 namespace VideoPlayer {
 
-ErrorOr<NonnullRefPtr<VideoPlayerWidget>> VideoPlayerWidget::try_create()
+ErrorOr<NonnullRefPtr<VideoPlayerWidget>> VideoPlayerWidget::create()
 {
-    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VideoPlayerWidget()));
-    TRY(main_widget->load_from_gml(videoplayer_window_gml));
+    auto main_widget = TRY(try_create());
 
     TRY(main_widget->setup_interface());
 
