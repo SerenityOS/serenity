@@ -95,8 +95,11 @@ Cell* Heap::allocate_cell(size_t size)
     return allocator.allocate_cell(*this);
 }
 
-static void add_possible_value(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr data, HeapRoot origin)
+static void add_possible_value(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr data, HeapRoot origin, FlatPtr min_block_address, FlatPtr max_block_address)
 {
+    if (data < min_block_address || data > max_block_address)
+        return;
+
     if constexpr (sizeof(FlatPtr*) == sizeof(Value)) {
         // Because Value stores pointers in non-canonical form we have to check if the top bytes
         // match any pointer-backed tag, in that case we have to extract the pointer to its
@@ -111,6 +114,27 @@ static void add_possible_value(HashMap<FlatPtr, HeapRoot>& possible_pointers, Fl
         // add both the upper and lower bytes as possible pointers.
         possible_pointers.set(data, move(origin));
     }
+}
+
+void Heap::find_min_and_max_block_addresses(FlatPtr& min_address, FlatPtr& max_address)
+{
+    Optional<FlatPtr> min_block_address, max_block_address;
+    for_each_block([&](auto& block) {
+        if (!min_block_address.has_value())
+            min_block_address = reinterpret_cast<FlatPtr>(&block);
+        else if (reinterpret_cast<FlatPtr>(&block) < min_block_address.value())
+            min_block_address = reinterpret_cast<FlatPtr>(&block);
+        if (!max_block_address.has_value())
+            max_block_address = reinterpret_cast<FlatPtr>(&block + HeapBlockBase::block_size);
+        else if (reinterpret_cast<FlatPtr>(&block + HeapBlockBase::block_size) > max_block_address.value())
+            max_block_address = reinterpret_cast<FlatPtr>(&block + HeapBlockBase::block_size);
+        return IterationDecision::Continue;
+    });
+
+    VERIFY(min_block_address.has_value());
+    VERIFY(max_block_address.has_value());
+    min_address = min_block_address.value();
+    max_address = max_block_address.value();
 }
 
 template<typename Callback>
@@ -133,6 +157,7 @@ public:
     explicit GraphConstructorVisitor(Heap& heap, HashMap<Cell*, HeapRoot> const& roots)
         : m_heap(heap)
     {
+        m_heap.find_min_and_max_block_addresses(m_min_block_address, m_max_block_address);
         m_heap.for_each_block([&](auto& block) {
             m_all_live_heap_blocks.set(&block);
             return IterationDecision::Continue;
@@ -163,7 +188,7 @@ public:
 
         auto* raw_pointer_sized_values = reinterpret_cast<FlatPtr const*>(bytes.data());
         for (size_t i = 0; i < (bytes.size() / sizeof(FlatPtr)); ++i)
-            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRoot { .type = HeapRoot::Type::HeapFunctionCapturedPointer });
+            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRoot { .type = HeapRoot::Type::HeapFunctionCapturedPointer }, m_min_block_address, m_max_block_address);
 
         for_each_cell_among_possible_pointers(m_all_live_heap_blocks, possible_pointers, [&](Cell* cell, FlatPtr) {
             if (m_node_being_visited)
@@ -243,6 +268,8 @@ private:
 
     Heap& m_heap;
     HashTable<HeapBlock*> m_all_live_heap_blocks;
+    FlatPtr m_min_block_address;
+    FlatPtr m_max_block_address;
 };
 
 void Heap::dump_graph()
@@ -301,7 +328,7 @@ void Heap::gather_roots(HashMap<Cell*, HeapRoot>& roots)
 }
 
 #ifdef HAS_ADDRESS_SANITIZER
-__attribute__((no_sanitize("address"))) void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr addr)
+__attribute__((no_sanitize("address"))) void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr addr, FlatPtr min_block_address, FlatPtr max_block_address)
 {
     void* begin = nullptr;
     void* end = nullptr;
@@ -312,12 +339,12 @@ __attribute__((no_sanitize("address"))) void Heap::gather_asan_fake_stack_roots(
             void const* real_address = *real_stack_addr;
             if (real_address == nullptr)
                 continue;
-            add_possible_value(possible_pointers, reinterpret_cast<FlatPtr>(real_address), HeapRoot { .type = HeapRoot::Type::StackPointer });
+            add_possible_value(possible_pointers, reinterpret_cast<FlatPtr>(real_address), HeapRoot { .type = HeapRoot::Type::StackPointer }, min_block_address, max_block_address);
         }
     }
 }
 #else
-void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>&, FlatPtr)
+void Heap::gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRoot>&, FlatPtr, FlatPtr, FlatPtr)
 {
 }
 #endif
@@ -335,16 +362,19 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 
     auto* raw_jmp_buf = reinterpret_cast<FlatPtr const*>(buf);
 
+    FlatPtr min_block_address, max_block_address;
+    find_min_and_max_block_addresses(min_block_address, max_block_address);
+
     for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); ++i)
-        add_possible_value(possible_pointers, raw_jmp_buf[i], HeapRoot { .type = HeapRoot::Type::RegisterPointer });
+        add_possible_value(possible_pointers, raw_jmp_buf[i], HeapRoot { .type = HeapRoot::Type::RegisterPointer }, min_block_address, max_block_address);
 
     auto stack_reference = bit_cast<FlatPtr>(&dummy);
     auto& stack_info = m_vm.stack_info();
 
     for (FlatPtr stack_address = stack_reference; stack_address < stack_info.top(); stack_address += sizeof(FlatPtr)) {
         auto data = *reinterpret_cast<FlatPtr*>(stack_address);
-        add_possible_value(possible_pointers, data, HeapRoot { .type = HeapRoot::Type::StackPointer });
-        gather_asan_fake_stack_roots(possible_pointers, data);
+        add_possible_value(possible_pointers, data, HeapRoot { .type = HeapRoot::Type::StackPointer }, min_block_address, max_block_address);
+        gather_asan_fake_stack_roots(possible_pointers, data, min_block_address, max_block_address);
     }
 
     // NOTE: If we have any custom ranges registered, scan those as well.
@@ -353,7 +383,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
         for (auto& custom_range : *s_custom_ranges_for_conservative_scan) {
             for (size_t i = 0; i < (custom_range.value / sizeof(FlatPtr)); ++i) {
                 auto safe_function_location = s_safe_function_locations->get(custom_range.key);
-                add_possible_value(possible_pointers, custom_range.key[i], HeapRoot { .type = HeapRoot::Type::SafeFunction, .location = *safe_function_location });
+                add_possible_value(possible_pointers, custom_range.key[i], HeapRoot { .type = HeapRoot::Type::SafeFunction, .location = *safe_function_location }, min_block_address, max_block_address);
             }
         }
     }
@@ -379,6 +409,7 @@ public:
     explicit MarkingVisitor(Heap& heap, HashMap<Cell*, HeapRoot> const& roots)
         : m_heap(heap)
     {
+        m_heap.find_min_and_max_block_addresses(m_min_block_address, m_max_block_address);
         m_heap.for_each_block([&](auto& block) {
             m_all_live_heap_blocks.set(&block);
             return IterationDecision::Continue;
@@ -405,7 +436,7 @@ public:
 
         auto* raw_pointer_sized_values = reinterpret_cast<FlatPtr const*>(bytes.data());
         for (size_t i = 0; i < (bytes.size() / sizeof(FlatPtr)); ++i)
-            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRoot { .type = HeapRoot::Type::HeapFunctionCapturedPointer });
+            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRoot { .type = HeapRoot::Type::HeapFunctionCapturedPointer }, m_min_block_address, m_max_block_address);
 
         for_each_cell_among_possible_pointers(m_all_live_heap_blocks, possible_pointers, [&](Cell* cell, FlatPtr) {
             if (cell->is_marked())
@@ -428,6 +459,8 @@ private:
     Heap& m_heap;
     Vector<Cell&> m_work_queue;
     HashTable<HeapBlock*> m_all_live_heap_blocks;
+    FlatPtr m_min_block_address;
+    FlatPtr m_max_block_address;
 };
 
 void Heap::mark_live_cells(HashMap<Cell*, HeapRoot> const& roots)
