@@ -33,15 +33,13 @@ private:
 };
 
 class GenericASTPass
-    : public CompilerPass
+    : public IntraproceduralCompilerPass
     , protected RecursiveASTVisitor {
 public:
-    GenericASTPass(FunctionDefinitionRef function)
-        : CompilerPass(function)
-    {
-    }
+    using IntraproceduralCompilerPass::IntraproceduralCompilerPass;
 
-    void run() override;
+protected:
+    void process_function() override;
 };
 
 }

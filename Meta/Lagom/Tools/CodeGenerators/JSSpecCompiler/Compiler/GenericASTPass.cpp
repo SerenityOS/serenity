@@ -52,7 +52,7 @@ RecursionDecision RecursiveASTVisitor::recurse(Tree root, NodeSubtreePointer& po
     return RecursionDecision::Continue;
 }
 
-void GenericASTPass::run()
+void GenericASTPass::process_function()
 {
     run_in_subtree(m_function->m_ast);
 }

@@ -15,8 +15,8 @@ namespace JSSpecCompiler {
 
 class CompilerPass {
 public:
-    CompilerPass(FunctionDefinitionRef function)
-        : m_function(function)
+    CompilerPass(TranslationUnitRef translation_unit)
+        : m_translation_unit(translation_unit)
     {
     }
 
@@ -25,6 +25,21 @@ public:
     virtual void run() = 0;
 
 protected:
+    TranslationUnitRef m_translation_unit;
+};
+
+class IntraproceduralCompilerPass : public CompilerPass {
+public:
+    IntraproceduralCompilerPass(TranslationUnitRef translation_unit)
+        : CompilerPass(translation_unit)
+    {
+    }
+
+    void run() override final;
+
+protected:
+    virtual void process_function() = 0;
+
     FunctionDefinitionRef m_function;
 };
 
