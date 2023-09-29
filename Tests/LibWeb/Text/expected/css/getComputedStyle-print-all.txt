@@ -1,0 +1,165 @@
+accent-color: auto
+align-content: stretch
+align-items: normal
+align-self: auto
+animation-delay: 0s
+animation-direction: normal
+animation-duration: auto
+animation-fill-mode: none
+animation-iteration-count: 1
+animation-name: none
+animation-play-state: running
+animation-timing-function: ease
+appearance: auto
+aspect-ratio: auto
+backdrop-filter: none
+background-attachment: scroll
+background-clip: border-box
+background-color: rgba(0, 0, 0, 0)
+background-image: none
+background-origin: padding-box
+background-position-x: left 0%
+background-position-y: top 0%
+background-repeat: repeat repeat
+background-size: auto auto
+border-bottom-color: rgb(0, 0, 0)
+border-bottom-left-radius: 0px
+border-bottom-right-radius: 0px
+border-bottom-style: none
+border-bottom-width: medium
+border-collapse: separate
+border-left-color: rgb(0, 0, 0)
+border-left-style: none
+border-left-width: medium
+border-right-color: rgb(0, 0, 0)
+border-right-style: none
+border-right-width: medium
+border-spacing: 0px
+border-top-color: rgb(0, 0, 0)
+border-top-left-radius: 0px
+border-top-right-radius: 0px
+border-top-style: none
+border-top-width: medium
+bottom: auto
+box-shadow: none
+box-sizing: content-box
+caption-side: top
+clear: none
+clip: auto
+color: rgb(0, 0, 0)
+column-count: auto
+column-gap: auto
+content: normal
+cursor: auto
+direction: ltr
+display: block
+fill: rgb(0, 0, 0)
+fill-opacity: 1
+fill-rule: nonzero
+flex-basis: auto
+flex-direction: row
+flex-grow: 0
+flex-shrink: 1
+flex-wrap: nowrap
+float: none
+font-family: serif
+font-size: 16px
+font-stretch: normal
+font-style: normal
+font-variant: normal
+font-weight: 400
+grid-auto-columns: auto
+grid-auto-flow: row
+grid-auto-rows: auto
+grid-column-end: auto
+grid-column-gap: auto
+grid-column-start: auto
+grid-row-end: auto
+grid-row-gap: auto
+grid-row-start: auto
+grid-template-areas: 
+grid-template-columns: 
+grid-template-rows: 
+height: auto
+image-rendering: auto
+inset-block-end: auto
+inset-block-start: auto
+inset-inline-end: auto
+inset-inline-start: auto
+justify-content: flex-start
+justify-items: legacy
+justify-self: auto
+left: auto
+letter-spacing: normal
+line-height: normal
+list-style-image: none
+list-style-position: outside
+list-style-type: disc
+margin-block-end: 8px
+margin-block-start: 8px
+margin-bottom: 8px
+margin-inline-end: 8px
+margin-inline-start: 8px
+margin-left: 8px
+margin-right: 8px
+margin-top: 8px
+mask: none
+math-depth: 0
+math-shift: normal
+math-style: normal
+max-height: none
+max-inline-size: none
+max-width: none
+min-height: auto
+min-inline-size: 0px
+min-width: auto
+object-fit: fill
+opacity: 1
+order: 0
+outline-color: rgb(0, 0, 0)
+outline-offset: 0px
+outline-style: none
+outline-width: medium
+overflow-x: visible
+overflow-y: visible
+padding-block-end: 0px
+padding-block-start: 0px
+padding-bottom: 0px
+padding-inline-end: 0px
+padding-inline-start: 0px
+padding-left: 0px
+padding-right: 0px
+padding-top: 0px
+pointer-events: auto
+position: static
+quotes: auto
+right: auto
+row-gap: auto
+stop-color: rgb(0, 0, 0)
+stop-opacity: 1
+stroke: none
+stroke-opacity: 1
+stroke-width: 1px
+table-layout: auto
+text-align: left
+text-anchor: start
+text-decoration-color: rgb(0, 0, 0)
+text-decoration-line: none
+text-decoration-style: solid
+text-decoration-thickness: auto
+text-indent: 0px
+text-justify: auto
+text-shadow: none
+text-transform: none
+top: auto
+transform: none
+transform-origin: 50% 50%
+transition-delay: 0s
+user-select: auto
+vertical-align: baseline
+visibility: visible
+white-space: normal
+width: auto
+word-spacing: normal
+word-wrap: normal
+z-index: auto
