@@ -19,6 +19,20 @@
 			<string>LagomPDFDocument</string>
 		</dict>
 	</array>
+	<key>CFBundleExecutable</key>
+	<string>MacPDF</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.serenityos.MacPDF</string>
+	<key>CFBundleName</key>
+	<string>MacPDF</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.3</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<true/>
 	<key>NSSupportsSuddenTermination</key>
