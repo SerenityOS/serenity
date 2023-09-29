@@ -61,6 +61,8 @@ ErrorOr<void> Transfer::write_buffer(u16 len, UserOrKernelBuffer data)
 
 void Transfer::invoke_async_callback()
 {
+    if (transfer_data_size() == 0)
+        return;
     if (m_callback)
         m_callback(this);
 }
