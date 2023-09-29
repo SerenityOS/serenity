@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/UnicodeUtils.h>
 
 // This file contains definitions of AK::String methods which require UCD data.
@@ -31,7 +32,7 @@ ErrorOr<String> String::to_uppercase(Optional<StringView> const& locale) const
 ErrorOr<String> String::to_titlecase(Optional<StringView> const& locale) const
 {
     StringBuilder builder;
-    TRY(Unicode::Detail::build_titlecase_string(code_points(), builder, locale));
+    TRY(Unicode::Detail::build_titlecase_string(code_points(), builder, locale, Unicode::TrailingCodePointTransformation::Lowercase));
     return builder.to_string();
 }
 

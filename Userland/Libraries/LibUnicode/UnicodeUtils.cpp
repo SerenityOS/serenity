@@ -266,7 +266,7 @@ ErrorOr<void> build_uppercase_string([[maybe_unused]] Utf8View code_points, [[ma
 }
 
 // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G34078
-ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder, [[maybe_unused]] Optional<StringView> const& locale)
+ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder, [[maybe_unused]] Optional<StringView> const& locale, TrailingCodePointTransformation trailing_code_point_transformation)
 {
 #if ENABLE_UNICODE_DATA
     // toTitlecase(X): Find the word boundaries in X according to Unicode Standard Annex #29,
@@ -317,8 +317,15 @@ ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[ma
             boundary = code_point_offset + code_point_length;
         }
 
-        auto substring_to_lowercase = code_points.substring_view(boundary, *next_boundary - boundary);
-        TRY(build_lowercase_string(substring_to_lowercase, builder, locale));
+        auto remaining_code_points = code_points.substring_view(boundary, *next_boundary - boundary);
+        switch (trailing_code_point_transformation) {
+        case TrailingCodePointTransformation::Lowercase:
+            TRY(build_lowercase_string(remaining_code_points, builder, locale));
+            break;
+        case TrailingCodePointTransformation::PreserveExisting:
+            TRY(builder.try_append(remaining_code_points.as_string()));
+            break;
+        }
 
         boundary = *next_boundary;
     }
