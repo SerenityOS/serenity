@@ -53,10 +53,10 @@ ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView string, Optional<
     return builder.to_deprecated_string();
 }
 
-ErrorOr<String> to_unicode_titlecase_full(StringView string, Optional<StringView> const& locale)
+ErrorOr<String> to_unicode_titlecase_full(StringView string, Optional<StringView> const& locale, TrailingCodePointTransformation trailing_code_point_transformation)
 {
     StringBuilder builder;
-    TRY(Detail::build_titlecase_string(Utf8View { string }, builder, locale));
+    TRY(Detail::build_titlecase_string(Utf8View { string }, builder, locale, trailing_code_point_transformation));
     return builder.to_string();
 }
 

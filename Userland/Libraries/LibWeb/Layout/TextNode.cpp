@@ -287,7 +287,9 @@ static ErrorOr<DeprecatedString> apply_text_transform(DeprecatedString const& st
         return string;
     case CSS::TextTransform::MathAuto:
         return apply_math_auto_text_transform(string);
-    case CSS::TextTransform::Capitalize:
+    case CSS::TextTransform::Capitalize: {
+        return TRY(Unicode::to_unicode_titlecase_full(string, {}, Unicode::TrailingCodePointTransformation::PreserveExisting)).to_deprecated_string();
+    }
     case CSS::TextTransform::FullSizeKana:
     case CSS::TextTransform::FullWidth:
         // FIXME: Implement these!
