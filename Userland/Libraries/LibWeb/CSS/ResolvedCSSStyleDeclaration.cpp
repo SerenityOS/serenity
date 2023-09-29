@@ -142,118 +142,70 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     // We also have to manually construct shorthands from their longhands here.
     // Everything else uses the computed value.
     // https://www.w3.org/TR/cssom-1/#resolved-values
+
+    // The resolved value for a given longhand property can be determined as follows:
     switch (property_id) {
+        // -> background-color
+        // FIXME: -> border-block-end-color
+        // FIXME: -> border-block-start-color
+        // -> border-bottom-color
+        // FIXME: -> border-inline-end-color
+        // FIXME: -> border-inline-start-color
+        // -> border-left-color
+        // -> border-right-color
+        // -> border-top-color
+        // FIXME: -> box-shadow
+        // FIXME: -> caret-color
+        // -> color
+        // -> outline-color
+        // -> A resolved value special case property like color defined in another specification
+        //    The resolved value is the used value.
     case PropertyID::BackgroundColor:
         return ColorStyleValue::create(layout_node.computed_values().background_color());
-    case PropertyID::BackgroundPosition:
-        return style_value_for_background_property(
-            layout_node,
-            [](auto& layer) -> NonnullRefPtr<StyleValue> {
-                return PositionStyleValue::create(
-                    EdgeStyleValue::create(layer.position_edge_x, layer.position_offset_x),
-                    EdgeStyleValue::create(layer.position_edge_y, layer.position_offset_y));
-            },
-            []() -> NonnullRefPtr<StyleValue> {
-                return PositionStyleValue::create(
-                    EdgeStyleValue::create(PositionEdge::Left, Percentage(0)),
-                    EdgeStyleValue::create(PositionEdge::Top, Percentage(0)));
-            });
-    case PropertyID::Border: {
-        auto top = layout_node.computed_values().border_top();
-        auto right = layout_node.computed_values().border_right();
-        auto bottom = layout_node.computed_values().border_bottom();
-        auto left = layout_node.computed_values().border_left();
-        // `border` only has a reasonable value if all four sides are the same.
-        if (top != right || top != bottom || top != left)
-            return nullptr;
-        auto width = LengthStyleValue::create(Length::make_px(top.width));
-        auto style = IdentifierStyleValue::create(to_value_id(top.line_style));
-        auto color = ColorStyleValue::create(top.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderWidth, PropertyID::BorderStyle, PropertyID::BorderColor },
-            { width, style, color });
-    }
-    case PropertyID::BorderBottom: {
-        auto border = layout_node.computed_values().border_bottom();
-        auto width = LengthStyleValue::create(Length::make_px(border.width));
-        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
-        auto color = ColorStyleValue::create(border.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderBottomWidth, PropertyID::BorderBottomStyle, PropertyID::BorderBottomColor },
-            { width, style, color });
-    }
     case PropertyID::BorderBottomColor:
         return ColorStyleValue::create(layout_node.computed_values().border_bottom().color);
-    case PropertyID::BorderColor: {
-        auto top = ColorStyleValue::create(layout_node.computed_values().border_top().color);
-        auto right = ColorStyleValue::create(layout_node.computed_values().border_right().color);
-        auto bottom = ColorStyleValue::create(layout_node.computed_values().border_bottom().color);
-        auto left = ColorStyleValue::create(layout_node.computed_values().border_left().color);
-        return style_value_for_sided_shorthand(top, right, bottom, left);
-    }
-    case PropertyID::BorderLeft: {
-        auto border = layout_node.computed_values().border_left();
-        auto width = LengthStyleValue::create(Length::make_px(border.width));
-        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
-        auto color = ColorStyleValue::create(border.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderLeftWidth, PropertyID::BorderLeftStyle, PropertyID::BorderLeftColor },
-            { width, style, color });
-    }
     case PropertyID::BorderLeftColor:
         return ColorStyleValue::create(layout_node.computed_values().border_left().color);
-    case PropertyID::BorderRight: {
-        auto border = layout_node.computed_values().border_right();
-        auto width = LengthStyleValue::create(Length::make_px(border.width));
-        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
-        auto color = ColorStyleValue::create(border.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderRightWidth, PropertyID::BorderRightStyle, PropertyID::BorderRightColor },
-            { width, style, color });
-    }
     case PropertyID::BorderRightColor:
         return ColorStyleValue::create(layout_node.computed_values().border_right().color);
-    case PropertyID::BorderStyle: {
-        auto top = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style));
-        auto right = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style));
-        auto bottom = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_bottom().line_style));
-        auto left = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_left().line_style));
-        return style_value_for_sided_shorthand(top, right, bottom, left);
-    }
-    case PropertyID::BorderTop: {
-        auto border = layout_node.computed_values().border_top();
-        auto width = LengthStyleValue::create(Length::make_px(border.width));
-        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
-        auto color = ColorStyleValue::create(border.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderTopWidth, PropertyID::BorderTopStyle, PropertyID::BorderTopColor },
-            { width, style, color });
-    }
     case PropertyID::BorderTopColor:
         return ColorStyleValue::create(layout_node.computed_values().border_top().color);
-    case PropertyID::BorderWidth: {
-        auto top = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
-        auto right = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_right().width));
-        auto bottom = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_bottom().width));
-        auto left = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_left().width));
-        return style_value_for_sided_shorthand(top, right, bottom, left);
-    }
-    case PropertyID::Bottom:
-        return style_value_for_length_percentage(layout_node.computed_values().inset().bottom());
     case PropertyID::Color:
         return ColorStyleValue::create(layout_node.computed_values().color());
+    case PropertyID::OutlineColor:
+        return ColorStyleValue::create(layout_node.computed_values().outline_color());
+    case PropertyID::TextDecorationColor:
+        return ColorStyleValue::create(layout_node.computed_values().text_decoration_color());
+
+        // FIXME: -> line-height
+        //    The resolved value is normal if the computed value is normal, or the used value otherwise.
+
+        // FIXME: -> block-size
+        // -> height
+        // FIXME: -> inline-size
+        // FIXME: -> margin-block-end
+        // FIXME: -> margin-block-start
+        // -> margin-bottom
+        // FIXME: -> margin-inline-end
+        // FIXME: -> margin-inline-start
+        // -> margin-left
+        // -> margin-right
+        // -> margin-top
+        // FIXME: -> padding-block-end
+        // FIXME: -> padding-block-start
+        // -> padding-bottom
+        // FIXME: -> padding-inline-end
+        // FIXME: -> padding-inline-start
+        // -> padding-left
+        // -> padding-right
+        // -> padding-top
+        // FIXME: -> width
+        // -> A resolved value special case property like height defined in another specification
+        // FIXME: If the property applies to the element or pseudo-element and the resolved value of the
+        //    display property is not none or contents, then the resolved value is the used value.
+        //    Otherwise the resolved value is the computed value.
     case PropertyID::Height:
         return style_value_for_size(layout_node.computed_values().height());
-    case PropertyID::Left:
-        return style_value_for_length_percentage(layout_node.computed_values().inset().left());
-    case PropertyID::Margin: {
-        auto margin = layout_node.computed_values().margin();
-        auto top = style_value_for_length_percentage(margin.top());
-        auto right = style_value_for_length_percentage(margin.right());
-        auto bottom = style_value_for_length_percentage(margin.bottom());
-        auto left = style_value_for_length_percentage(margin.left());
-        return style_value_for_sided_shorthand(move(top), move(right), move(bottom), move(left));
-    }
     case PropertyID::MarginBottom:
         return style_value_for_length_percentage(layout_node.computed_values().margin().bottom());
     case PropertyID::MarginLeft:
@@ -262,16 +214,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return style_value_for_length_percentage(layout_node.computed_values().margin().right());
     case PropertyID::MarginTop:
         return style_value_for_length_percentage(layout_node.computed_values().margin().top());
-    case PropertyID::OutlineColor:
-        return ColorStyleValue::create(layout_node.computed_values().outline_color());
-    case PropertyID::Padding: {
-        auto padding = layout_node.computed_values().padding();
-        auto top = style_value_for_length_percentage(padding.top());
-        auto right = style_value_for_length_percentage(padding.right());
-        auto bottom = style_value_for_length_percentage(padding.bottom());
-        auto left = style_value_for_length_percentage(padding.left());
-        return style_value_for_sided_shorthand(move(top), move(right), move(bottom), move(left));
-    }
     case PropertyID::PaddingBottom:
         return style_value_for_length_percentage(layout_node.computed_values().padding().bottom());
     case PropertyID::PaddingLeft:
@@ -280,12 +222,32 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return style_value_for_length_percentage(layout_node.computed_values().padding().right());
     case PropertyID::PaddingTop:
         return style_value_for_length_percentage(layout_node.computed_values().padding().top());
+    case PropertyID::Width:
+        return style_value_for_size(layout_node.computed_values().width());
+
+        // -> bottom
+        // -> left
+        // FIXME: -> inset-block-end
+        // FIXME: -> inset-block-start
+        // FIXME: -> inset-inline-end
+        // FIXME: -> inset-inline-start
+        // -> right
+        // -> top
+        // -> A resolved value special case property like top defined in another specification
+        // FIXME: If the property applies to a positioned element and the resolved value of the display property is not
+        //    none or contents, and the property is not over-constrained, then the resolved value is the used value.
+        //    Otherwise the resolved value is the computed value.
+    case PropertyID::Bottom:
+        return style_value_for_length_percentage(layout_node.computed_values().inset().bottom());
+    case PropertyID::Left:
+        return style_value_for_length_percentage(layout_node.computed_values().inset().left());
     case PropertyID::Right:
         return style_value_for_length_percentage(layout_node.computed_values().inset().right());
-    case PropertyID::TextDecorationColor:
-        return ColorStyleValue::create(layout_node.computed_values().text_decoration_color());
     case PropertyID::Top:
         return style_value_for_length_percentage(layout_node.computed_values().inset().top());
+
+        // -> A resolved value special case property defined in another specification
+        //    As defined in the relevant specification.
     case PropertyID::Transform: {
         // NOTE: The computed value for `transform` serializes as a single `matrix(...)` value, instead of
         //       the original list of transform functions. So, we produce a StyleValue for that.
@@ -323,8 +285,113 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         StyleValueVector matrix_functions { matrix_function };
         return StyleValueList::create(move(matrix_functions), StyleValueList::Separator::Space);
     }
-    case PropertyID::Width:
-        return style_value_for_size(layout_node.computed_values().width());
+
+        // -> Any other property
+        //    The resolved value is the computed value.
+        //    NOTE: This is handled inside the `default` case.
+
+        // NOTE: Everything below is a shorthand that requires some manual construction.
+    case PropertyID::BackgroundPosition:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) -> NonnullRefPtr<StyleValue> {
+                return PositionStyleValue::create(
+                    EdgeStyleValue::create(layer.position_edge_x, layer.position_offset_x),
+                    EdgeStyleValue::create(layer.position_edge_y, layer.position_offset_y));
+            },
+            []() -> NonnullRefPtr<StyleValue> {
+                return PositionStyleValue::create(
+                    EdgeStyleValue::create(PositionEdge::Left, Percentage(0)),
+                    EdgeStyleValue::create(PositionEdge::Top, Percentage(0)));
+            });
+    case PropertyID::Border: {
+        auto top = layout_node.computed_values().border_top();
+        auto right = layout_node.computed_values().border_right();
+        auto bottom = layout_node.computed_values().border_bottom();
+        auto left = layout_node.computed_values().border_left();
+        // `border` only has a reasonable value if all four sides are the same.
+        if (top != right || top != bottom || top != left)
+            return nullptr;
+        auto width = LengthStyleValue::create(Length::make_px(top.width));
+        auto style = IdentifierStyleValue::create(to_value_id(top.line_style));
+        auto color = ColorStyleValue::create(top.color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderWidth, PropertyID::BorderStyle, PropertyID::BorderColor },
+            { width, style, color });
+    }
+    case PropertyID::BorderBottom: {
+        auto border = layout_node.computed_values().border_bottom();
+        auto width = LengthStyleValue::create(Length::make_px(border.width));
+        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
+        auto color = ColorStyleValue::create(border.color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderBottomWidth, PropertyID::BorderBottomStyle, PropertyID::BorderBottomColor },
+            { width, style, color });
+    }
+    case PropertyID::BorderColor: {
+        auto top = ColorStyleValue::create(layout_node.computed_values().border_top().color);
+        auto right = ColorStyleValue::create(layout_node.computed_values().border_right().color);
+        auto bottom = ColorStyleValue::create(layout_node.computed_values().border_bottom().color);
+        auto left = ColorStyleValue::create(layout_node.computed_values().border_left().color);
+        return style_value_for_sided_shorthand(top, right, bottom, left);
+    }
+    case PropertyID::BorderLeft: {
+        auto border = layout_node.computed_values().border_left();
+        auto width = LengthStyleValue::create(Length::make_px(border.width));
+        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
+        auto color = ColorStyleValue::create(border.color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderLeftWidth, PropertyID::BorderLeftStyle, PropertyID::BorderLeftColor },
+            { width, style, color });
+    }
+    case PropertyID::BorderRight: {
+        auto border = layout_node.computed_values().border_right();
+        auto width = LengthStyleValue::create(Length::make_px(border.width));
+        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
+        auto color = ColorStyleValue::create(border.color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderRightWidth, PropertyID::BorderRightStyle, PropertyID::BorderRightColor },
+            { width, style, color });
+    }
+    case PropertyID::BorderStyle: {
+        auto top = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style));
+        auto right = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style));
+        auto bottom = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_bottom().line_style));
+        auto left = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_left().line_style));
+        return style_value_for_sided_shorthand(top, right, bottom, left);
+    }
+    case PropertyID::BorderTop: {
+        auto border = layout_node.computed_values().border_top();
+        auto width = LengthStyleValue::create(Length::make_px(border.width));
+        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
+        auto color = ColorStyleValue::create(border.color);
+        return ShorthandStyleValue::create(property_id,
+            { PropertyID::BorderTopWidth, PropertyID::BorderTopStyle, PropertyID::BorderTopColor },
+            { width, style, color });
+    }
+    case PropertyID::BorderWidth: {
+        auto top = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
+        auto right = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_right().width));
+        auto bottom = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_bottom().width));
+        auto left = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_left().width));
+        return style_value_for_sided_shorthand(top, right, bottom, left);
+    }
+    case PropertyID::Margin: {
+        auto margin = layout_node.computed_values().margin();
+        auto top = style_value_for_length_percentage(margin.top());
+        auto right = style_value_for_length_percentage(margin.right());
+        auto bottom = style_value_for_length_percentage(margin.bottom());
+        auto left = style_value_for_length_percentage(margin.left());
+        return style_value_for_sided_shorthand(move(top), move(right), move(bottom), move(left));
+    }
+    case PropertyID::Padding: {
+        auto padding = layout_node.computed_values().padding();
+        auto top = style_value_for_length_percentage(padding.top());
+        auto right = style_value_for_length_percentage(padding.right());
+        auto bottom = style_value_for_length_percentage(padding.bottom());
+        auto left = style_value_for_length_percentage(padding.left());
+        return style_value_for_sided_shorthand(move(top), move(right), move(bottom), move(left));
+    }
     case PropertyID::Invalid:
         return IdentifierStyleValue::create(ValueID::Invalid);
     case PropertyID::Custom:
