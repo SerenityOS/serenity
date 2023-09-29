@@ -4,16 +4,13 @@ serenity_component(
     DEPENDS AudioServer
 )
 
-stringify_gml(VideoPlayerWindow.gml VideoPlayerWindowGML.h videoplayer_window_gml)
+compile_gml(VideoPlayerWidget.gml VideoPlayerWidgetGML.cpp)
 
 set(SOURCES
     main.cpp
+    VideoPlayerWidgetGML.cpp
     VideoFrameWidget.cpp
     VideoPlayerWidget.cpp
-)
-
-set(GENERATED_SOURCES
-    VideoPlayerWindowGML.h
 )
 
 serenity_app(VideoPlayer ICON app-video-player)
