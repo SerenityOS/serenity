@@ -1,0 +1,9 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        const style = getComputedStyle(document.body);
+        for (const property_name of style) {
+            println(`${property_name}: ${style[property_name]}`);
+        }
+    });
+</script>
