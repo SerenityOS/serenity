@@ -1,4 +1,4 @@
-@GUI::Frame {
+@NetworkSettings::NetworkSettingsWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [10]
@@ -24,7 +24,6 @@
         }
 
         @GUI::ComboBox {
-            model_only: true
             name: "adapters_combobox"
         }
     }
