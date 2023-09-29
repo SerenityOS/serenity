@@ -319,15 +319,6 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
             { PropertyID::BorderWidth, PropertyID::BorderStyle, PropertyID::BorderColor },
             { width, style, color });
     }
-    case PropertyID::BorderBottom: {
-        auto border = layout_node.computed_values().border_bottom();
-        auto width = LengthStyleValue::create(Length::make_px(border.width));
-        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
-        auto color = ColorStyleValue::create(border.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderBottomWidth, PropertyID::BorderBottomStyle, PropertyID::BorderBottomColor },
-            { width, style, color });
-    }
     case PropertyID::BorderColor: {
         auto top = ColorStyleValue::create(layout_node.computed_values().border_top().color);
         auto right = ColorStyleValue::create(layout_node.computed_values().border_right().color);
@@ -335,39 +326,12 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         auto left = ColorStyleValue::create(layout_node.computed_values().border_left().color);
         return style_value_for_sided_shorthand(top, right, bottom, left);
     }
-    case PropertyID::BorderLeft: {
-        auto border = layout_node.computed_values().border_left();
-        auto width = LengthStyleValue::create(Length::make_px(border.width));
-        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
-        auto color = ColorStyleValue::create(border.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderLeftWidth, PropertyID::BorderLeftStyle, PropertyID::BorderLeftColor },
-            { width, style, color });
-    }
-    case PropertyID::BorderRight: {
-        auto border = layout_node.computed_values().border_right();
-        auto width = LengthStyleValue::create(Length::make_px(border.width));
-        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
-        auto color = ColorStyleValue::create(border.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderRightWidth, PropertyID::BorderRightStyle, PropertyID::BorderRightColor },
-            { width, style, color });
-    }
     case PropertyID::BorderStyle: {
         auto top = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style));
         auto right = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style));
         auto bottom = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_bottom().line_style));
         auto left = IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_left().line_style));
         return style_value_for_sided_shorthand(top, right, bottom, left);
-    }
-    case PropertyID::BorderTop: {
-        auto border = layout_node.computed_values().border_top();
-        auto width = LengthStyleValue::create(Length::make_px(border.width));
-        auto style = IdentifierStyleValue::create(to_value_id(border.line_style));
-        auto color = ColorStyleValue::create(border.color);
-        return ShorthandStyleValue::create(property_id,
-            { PropertyID::BorderTopWidth, PropertyID::BorderTopStyle, PropertyID::BorderTopColor },
-            { width, style, color });
     }
     case PropertyID::BorderWidth: {
         auto top = LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
