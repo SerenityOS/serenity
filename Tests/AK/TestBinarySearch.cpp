@@ -12,6 +12,8 @@
 #include <cstring>
 #include <new>
 
+using namespace Test::Randomized;
+
 TEST_CASE(vector_ints)
 {
     Vector<int> ints;
@@ -116,4 +118,28 @@ TEST_CASE(unsigned_to_signed_regression)
     size_t nearby_index = 1;
     EXPECT_EQ(binary_search(input, 1u, &nearby_index), &input[1]);
     EXPECT_EQ(nearby_index, 1u);
+}
+
+RANDOMIZED_TEST_CASE(finds_number_that_is_present)
+{
+    GEN(vec, Gen::vector(1, 16, []() { return Gen::unsigned_int(); }));
+    GEN(i, Gen::unsigned_int(0, vec.size() - 1));
+    AK::quick_sort(vec);
+    u32 n = vec[i];
+    auto ptr = binary_search(vec, n);
+    EXPECT_NE(ptr, nullptr);
+    EXPECT_EQ(*ptr, n);
+}
+
+RANDOMIZED_TEST_CASE(doesnt_find_number_that_is_not_present)
+{
+    GEN(vec, Gen::vector(1, 16, []() { return Gen::unsigned_int(); }));
+    AK::quick_sort(vec);
+
+    u32 not_present = 0;
+    while (!vec.find(not_present).is_end()) {
+        ++not_present;
+    }
+
+    EXPECT_EQ(binary_search(vec, not_present), nullptr);
 }
