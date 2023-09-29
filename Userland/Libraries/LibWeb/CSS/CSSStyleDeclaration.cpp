@@ -407,6 +407,8 @@ JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_has_property(JS::Prope
 
 JS::ThrowCompletionOr<JS::Value> CSSStyleDeclaration::internal_get(JS::PropertyKey const& name, JS::Value receiver, JS::CacheablePropertyMetadata* cacheable_metadata) const
 {
+    if (name.is_number())
+        return { JS::PrimitiveString::create(vm(), item(name.as_number())) };
     if (!name.is_string())
         return Base::internal_get(name, receiver, cacheable_metadata);
     auto property_id = property_id_from_name(name.to_string());
