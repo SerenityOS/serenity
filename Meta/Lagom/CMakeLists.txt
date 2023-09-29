@@ -534,6 +534,10 @@ if (BUILD_LAGOM)
             add_serenity_subdirectory(Ladybird)
         endif()
 
+        if (APPLE)
+            add_serenity_subdirectory(Meta/Lagom/Contrib/MacPDF)
+        endif()
+
         add_executable(icc ../../Userland/Utilities/icc.cpp)
         target_link_libraries(icc LibCore LibGfx LibMain)
 
