@@ -527,6 +527,20 @@ struct HideCursor {
                      returnCode:NSModalResponseCancel];
     };
 
+    m_web_view_bridge->on_request_color_picker = [self](Color current_color) {
+        auto* panel = [NSColorPanel sharedColorPanel];
+        [panel setColor:Ladybird::gfx_color_to_ns_color(current_color)];
+        [panel setShowsAlpha:NO];
+
+        NSNotificationCenter* notification_center = [NSNotificationCenter defaultCenter];
+        [notification_center addObserver:self
+                                selector:@selector(colorPickerClosed:)
+                                    name:NSWindowWillCloseNotification
+                                  object:panel];
+
+        [panel makeKeyAndOrderFront:nil];
+    };
+
     m_web_view_bridge->on_get_all_cookies = [](auto const& url) {
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
         return [delegate cookieJar].get_all_cookies(url);
@@ -601,6 +615,11 @@ struct HideCursor {
                                   url:url
                           activateTab:Web::HTML::ActivateTab::Yes];
     };
+}
+
+- (void)colorPickerClosed:(NSNotification*)notification
+{
+    m_web_view_bridge->color_picker_closed(Ladybird::ns_color_to_gfx_color([[NSColorPanel sharedColorPanel] color]));
 }
 
 - (NSScrollView*)scrollView

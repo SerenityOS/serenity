@@ -86,4 +86,25 @@ NSPoint gfx_point_to_ns_point(Gfx::IntPoint point)
         static_cast<CGFloat>(point.y()));
 }
 
+Gfx::Color ns_color_to_gfx_color(NSColor* color)
+{
+    auto rgb_color = [color colorUsingColorSpace:NSColorSpace.genericRGBColorSpace];
+    if (rgb_color != nil)
+        return {
+            static_cast<u8>([rgb_color redComponent] * 255),
+            static_cast<u8>([rgb_color greenComponent] * 255),
+            static_cast<u8>([rgb_color blueComponent] * 255),
+            static_cast<u8>([rgb_color alphaComponent] * 255)
+        };
+    return {};
+}
+
+NSColor* gfx_color_to_ns_color(Gfx::Color color)
+{
+    return [NSColor colorWithRed:(color.red() / 255.f)
+                           green:(color.green() / 255.f)
+                            blue:(color.blue() / 255.f)
+                           alpha:(color.alpha() / 255.f)];
+}
+
 }

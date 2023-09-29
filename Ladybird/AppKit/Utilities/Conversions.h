@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibGfx/Color.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -29,5 +30,8 @@ NSSize gfx_size_to_ns_size(Gfx::IntSize);
 
 Gfx::IntPoint ns_point_to_gfx_point(NSPoint);
 NSPoint gfx_point_to_ns_point(Gfx::IntPoint);
+
+Gfx::Color ns_color_to_gfx_color(NSColor*);
+NSColor* gfx_color_to_ns_color(Gfx::Color);
 
 }
