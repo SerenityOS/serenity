@@ -158,6 +158,32 @@ static RefPtr<StyleValue const> style_value_for_length_box_logical_side(Layout::
     VERIFY_NOT_REACHED();
 }
 
+static RefPtr<StyleValue const> style_value_for_shadow(Vector<ShadowData> const& shadow_data)
+{
+    if (shadow_data.is_empty())
+        return IdentifierStyleValue::create(ValueID::None);
+
+    auto make_shadow_style_value = [](ShadowData const& shadow) {
+        return ShadowStyleValue::create(
+            shadow.color,
+            style_value_for_length_percentage(shadow.offset_x),
+            style_value_for_length_percentage(shadow.offset_y),
+            style_value_for_length_percentage(shadow.blur_radius),
+            style_value_for_length_percentage(shadow.spread_distance),
+            shadow.placement);
+    };
+
+    if (shadow_data.size() == 1)
+        return make_shadow_style_value(shadow_data.first());
+
+    StyleValueVector style_values;
+    style_values.ensure_capacity(shadow_data.size());
+    for (auto& shadow : shadow_data)
+        style_values.unchecked_append(make_shadow_style_value(shadow));
+
+    return StyleValueList::create(move(style_values), StyleValueList::Separator::Comma);
+}
+
 RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
     // A limited number of properties have special rules for producing their "resolved value".
@@ -176,7 +202,7 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         // -> border-left-color
         // -> border-right-color
         // -> border-top-color
-        // FIXME: -> box-shadow
+        // -> box-shadow
         // FIXME: -> caret-color
         // -> color
         // -> outline-color
@@ -192,12 +218,17 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return ColorStyleValue::create(layout_node.computed_values().border_right().color);
     case PropertyID::BorderTopColor:
         return ColorStyleValue::create(layout_node.computed_values().border_top().color);
+    case PropertyID::BoxShadow:
+        return style_value_for_shadow(layout_node.computed_values().box_shadow());
     case PropertyID::Color:
         return ColorStyleValue::create(layout_node.computed_values().color());
     case PropertyID::OutlineColor:
         return ColorStyleValue::create(layout_node.computed_values().outline_color());
     case PropertyID::TextDecorationColor:
         return ColorStyleValue::create(layout_node.computed_values().text_decoration_color());
+        // NOTE: text-shadow isn't listed, but is computed the same as box-shadow.
+    case PropertyID::TextShadow:
+        return style_value_for_shadow(layout_node.computed_values().text_shadow());
 
         // -> line-height
         //    The resolved value is normal if the computed value is normal, or the used value otherwise.
