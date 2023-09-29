@@ -10,7 +10,6 @@
 #include <AK/IPv4Address.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
-#include <Applications/NetworkSettings/NetworkSettingsGML.h>
 #include <LibCore/Command.h>
 #include <LibCore/System.h>
 #include <LibGUI/CheckBox.h>
@@ -30,17 +29,15 @@ static int netmask_to_cidr(IPv4Address const& address)
     return 32 - count_trailing_zeroes_safe(address_in_host_representation);
 }
 
-ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> NetworkSettingsWidget::try_create()
+ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> NetworkSettingsWidget::create()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) NetworkSettingsWidget()));
+    auto widget = TRY(try_create());
     TRY(widget->setup());
     return widget;
 }
 
 ErrorOr<void> NetworkSettingsWidget::setup()
 {
-    TRY(load_from_gml(network_settings_gml));
-
     m_adapters_combobox = *find_descendant_of_type_named<GUI::ComboBox>("adapters_combobox");
     m_enabled_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("enabled_checkbox");
     m_enabled_checkbox->on_checked = [&](bool value) {

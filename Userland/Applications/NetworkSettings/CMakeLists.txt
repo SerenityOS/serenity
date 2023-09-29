@@ -4,15 +4,12 @@ serenity_component(
     TARGETS NetworkSettings
 )
 
-stringify_gml(NetworkSettings.gml NetworkSettingsGML.h network_settings_gml)
+compile_gml(NetworkSettings.gml NetworkSettingsGML.cpp)
 
 set(SOURCES
     NetworkSettingsWidget.cpp
+    NetworkSettingsGML.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    NetworkSettingsGML.h
 )
 
 serenity_app(NetworkSettings ICON network)

@@ -16,10 +16,13 @@ class NetworkSettingsWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(NetworkSettingsWidget)
 
 public:
-    static ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> create();
 
     virtual void apply_settings() override;
     void switch_adapter(DeprecatedString const& adapter);
+
+protected:
+    static ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> try_create();
 
 private:
     NetworkSettingsWidget() = default;
