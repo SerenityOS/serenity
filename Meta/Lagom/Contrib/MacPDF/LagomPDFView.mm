@@ -164,6 +164,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
         _page_index = min(max(0, page_index), _doc->get_page_count() - 1);
         NSLog(@"encodeRestorableStateWithCoder restored %d", _page_index);
         [self invalidateCachedBitmap];
+        [_delegate pageChanged];
     }
 }
 
