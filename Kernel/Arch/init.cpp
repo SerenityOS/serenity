@@ -420,7 +420,13 @@ void init_stage2(void*)
     for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
         (*init_function)();
 
-    StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
+    StorageManagement::the().initialize(kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
+    for (int i = 0; i < 5; ++i) {
+        if (StorageManagement::the().determine_boot_device(kernel_command_line().root_device()))
+            break;
+        dbgln_if(STORAGE_DEVICE_DEBUG, "Boot device {} not found, sleeping 2 seconds", kernel_command_line().root_device());
+        (void)Thread::current()->sleep(Duration::from_seconds(2));
+    }
     if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
         PANIC("VirtualFileSystem::mount_root failed");
     }

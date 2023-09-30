@@ -24,9 +24,10 @@ class StorageManagement {
 
 public:
     StorageManagement();
-    void initialize(StringView boot_argument, bool force_pio, bool nvme_poll);
+    void initialize(bool force_pio, bool nvme_poll);
     static StorageManagement& the();
 
+    bool determine_boot_device(StringView boot_argument);
     NonnullRefPtr<FileSystem> root_filesystem() const;
 
     static MajorNumber storage_type_major_number();
@@ -49,7 +50,6 @@ private:
     ErrorOr<void> enumerate_device_partitions(StorageDevice&);
     void enumerate_disk_partitions();
 
-    void determine_boot_device();
     void determine_boot_device_with_partition_uuid();
 
     void resolve_partition_from_boot_device_parameter(StorageDevice const& chosen_storage_device, StringView boot_device_prefix);
