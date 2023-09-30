@@ -14,11 +14,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
+    bool quiet { false };
     Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
         "Show the 'real' path of a file, by resolving all symbolic links along the way.");
+    args_parser.add_option(quiet, "Suppress error messages", "quiet", 'q');
     args_parser.add_positional_argument(paths, "Path to resolve", "paths");
     args_parser.parse(arguments);
 
@@ -26,7 +28,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto path : paths) {
         auto resolved_path_or_error = FileSystem::real_path(path);
         if (resolved_path_or_error.is_error()) {
-            warnln("realpath: {}: {}", path, strerror(resolved_path_or_error.error().code()));
+            if (!quiet)
+                warnln("realpath: {}: {}", path, strerror(resolved_path_or_error.error().code()));
+
             has_errors = true;
             continue;
         }
