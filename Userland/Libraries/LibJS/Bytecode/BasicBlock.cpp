@@ -43,6 +43,7 @@ void BasicBlock::dump(Bytecode::Executable const& executable) const
 
 void BasicBlock::grow(size_t additional_size)
 {
+    m_buffer.grow_capacity(m_buffer.size() + additional_size);
     m_buffer.resize(m_buffer.size() + additional_size);
 }
 
