@@ -16,9 +16,14 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
-    // FIXME: copy the fonts to the bundle or something
-    auto source_root = DeprecatedString("/Users/thakis/src/serenity");
-    Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
+    // FIXME: Copy the fonts to the bundle or something
+
+    // Get from `Build/lagom/bin/MacPDF.app/Contents/MacOS/MacPDF` to `.`.
+    NSString* source_root = [[NSBundle mainBundle] executablePath];
+    for (int i = 0; i < 7; ++i)
+        source_root = [source_root stringByDeletingLastPathComponent];
+    auto source_root_string = DeprecatedString([source_root UTF8String]);
+    Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root_string));
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification
