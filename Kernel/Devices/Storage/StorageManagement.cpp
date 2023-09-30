@@ -376,38 +376,39 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_logical_unit
         resolve_partition_from_boot_device_parameter(*chosen_storage_device, logical_unit_number_device_prefix);
 }
 
-UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
+UNMAP_AFTER_INIT bool StorageManagement::determine_boot_device(StringView boot_argument)
 {
     VERIFY(!m_controllers.is_empty());
+    m_boot_argument = boot_argument;
 
     if (m_boot_argument.starts_with(block_device_prefix)) {
         determine_block_boot_device();
-        return;
+        return m_boot_block_device;
     }
 
     if (m_boot_argument.starts_with(partition_uuid_prefix)) {
         determine_boot_device_with_partition_uuid();
-        return;
+        return m_boot_block_device;
     }
 
     if (m_boot_argument.starts_with(logical_unit_number_device_prefix)) {
         determine_boot_device_with_logical_unit_number();
-        return;
+        return m_boot_block_device;
     }
 
     if (m_boot_argument.starts_with(ata_device_prefix)) {
         determine_ata_boot_device();
-        return;
+        return m_boot_block_device;
     }
 
     if (m_boot_argument.starts_with(nvme_device_prefix)) {
         determine_nvme_boot_device();
-        return;
+        return m_boot_block_device;
     }
 
     if (m_boot_argument.starts_with(sd_device_prefix)) {
         determine_sd_boot_device();
-        return;
+        return m_boot_block_device;
     }
     PANIC("StorageManagement: Invalid root boot parameter.");
 }
@@ -476,10 +477,9 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     return file_system;
 }
 
-UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool force_pio, bool poll)
+UNMAP_AFTER_INIT void StorageManagement::initialize(bool force_pio, bool poll)
 {
     VERIFY(s_storage_device_minor_number == 0);
-    m_boot_argument = root_device;
     if (PCI::Access::is_disabled()) {
 #if ARCH(X86_64)
         // Note: If PCI is disabled, we assume that at least we have an ISA IDE controller
@@ -502,12 +502,6 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
 
     enumerate_storage_devices();
     enumerate_disk_partitions();
-
-    determine_boot_device();
-    if (m_boot_block_device.is_null()) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: boot device {} not found", m_boot_argument);
-    }
 }
 
 StorageManagement& StorageManagement::the()
