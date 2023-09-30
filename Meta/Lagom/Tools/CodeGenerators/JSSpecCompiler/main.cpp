@@ -17,6 +17,11 @@
 
 using namespace JSSpecCompiler;
 
+struct CompilationStepWithDumpOptions {
+    OwnPtr<CompilationStep> step;
+    bool dump_ast = false;
+};
+
 class CompilationPipeline {
 public:
     template<typename T>
@@ -35,9 +40,9 @@ public:
         for (auto pass : pass_list.split_view(',')) {
             if (pass == "all") {
                 for (auto const& step : m_pipeline)
-                    selected_steps.set(step->name());
+                    selected_steps.set(step.step->name());
             } else if (pass == "last") {
-                selected_steps.set(m_pipeline.last()->name());
+                selected_steps.set(m_pipeline.last().step->name());
             } else if (pass.starts_with('-')) {
                 VERIFY(selected_steps.remove(pass.substring_view(1)));
             } else {
@@ -46,19 +51,19 @@ public:
         }
 
         for (auto& step : m_pipeline)
-            if (selected_steps.contains(step->name()))
+            if (selected_steps.contains(step.step->name()))
                 func(step);
     }
 
     void add_step(OwnPtr<CompilationStep>&& step)
     {
-        m_pipeline.append(move(step));
+        m_pipeline.append({ move(step) });
     }
 
     auto const& pipeline() const { return m_pipeline; }
 
 private:
-    Vector<OwnPtr<CompilationStep>> m_pipeline;
+    Vector<CompilationStepWithDumpOptions> m_pipeline;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -82,6 +87,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
     });
 
+    StringView passes_to_dump_ast;
+    args_parser.add_option(passes_to_dump_ast, "Dump AST after specified passes.", "dump-ast", 0, "{all|last|<pass-name>|-<pass-name>[,...]}");
+
     args_parser.parse(arguments);
 
     CompilationPipeline pipeline;
@@ -92,6 +100,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pipeline.add_compilation_pass<FunctionCallCanonicalizationPass>();
     pipeline.add_compilation_pass<IfBranchMergingPass>();
     pipeline.add_compilation_pass<ReferenceResolvingPass>();
+
+    pipeline.for_each_step_in(passes_to_dump_ast, [](CompilationStepWithDumpOptions& step) {
+        step.dump_ast = true;
+    });
 
     TranslationUnit translation_unit;
     translation_unit.filename = filename;
@@ -108,8 +120,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     functions.set("truncate"sv, make_ref_counted<FunctionPointer>("truncate"sv));
     functions.set("remainder"sv, make_ref_counted<FunctionPointer>("remainder"sv));
 
-    for (auto const& step : pipeline.pipeline())
-        step->run(&translation_unit);
+    for (auto const& step : pipeline.pipeline()) {
+        step.step->run(&translation_unit);
+
+        if (step.dump_ast) {
+            outln(stderr, "===== AST after {} =====", step.step->name());
+            for (auto const& function : translation_unit.function_definitions) {
+                outln(stderr, "{}():", function->m_name);
+                outln(stderr, "{}", function->m_ast);
+            }
+        }
+    }
 
     return 0;
 }
