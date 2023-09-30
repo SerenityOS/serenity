@@ -11,13 +11,13 @@
 #import <Cocoa/Cocoa.h>
 #undef FixedPoint
 
-#import "LagomPDFView.h"
+#import "MacPDFView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface LagomPDFDocument : NSDocument <LagomPDFViewDelegate>
+@interface LagomPDFDocument : NSDocument <MacPDFViewDelegate>
 {
-    IBOutlet LagomPDFView* _pdfView;
+    IBOutlet MacPDFView* _pdfView;
 }
 
 - (IBAction)showGoToPageDialog:(id)sender;
