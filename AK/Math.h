@@ -1015,12 +1015,16 @@ constexpr T pow(T x, T y)
         return x;
 
     // Take an integer fast path as long as the value fits within a 64-bit integer.
-    if (y >= static_cast<T>(NumericLimits<i64>::min()) && y <= static_cast<T>(NumericLimits<i64>::max())) {
+    if (y >= static_cast<T>(NumericLimits<i64>::min() + 1) && y <= static_cast<T>(NumericLimits<i64>::max())) {
         i64 y_as_int = static_cast<i64>(y);
         if (y == static_cast<T>(y_as_int)) {
-            T result = x;
-            for (u64 i = 0; i < static_cast<u64>(fabs<T>(y) - 1); ++i)
-                result *= x;
+            T result = 1;
+            y_as_int = abs(y_as_int);
+            for (; y_as_int; y_as_int >>= 1) {
+                if (y_as_int & 1)
+                    result *= x;
+                x *= x;
+            }
             if (y < 0)
                 result = 1.0l / result;
             return result;
