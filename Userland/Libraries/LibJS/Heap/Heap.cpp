@@ -97,19 +97,22 @@ Cell* Heap::allocate_cell(size_t size)
 
 static void add_possible_value(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr data, HeapRoot origin, FlatPtr min_block_address, FlatPtr max_block_address)
 {
-    if (data < min_block_address || data > max_block_address)
-        return;
-
     if constexpr (sizeof(FlatPtr*) == sizeof(Value)) {
         // Because Value stores pointers in non-canonical form we have to check if the top bytes
         // match any pointer-backed tag, in that case we have to extract the pointer to its
         // canonical form and add that as a possible pointer.
+        FlatPtr possible_pointer;
         if ((data & SHIFTED_IS_CELL_PATTERN) == SHIFTED_IS_CELL_PATTERN)
-            possible_pointers.set(Value::extract_pointer_bits(data), move(origin));
+            possible_pointer = Value::extract_pointer_bits(data);
         else
-            possible_pointers.set(data, move(origin));
+            possible_pointer = data;
+        if (possible_pointer < min_block_address || possible_pointer > max_block_address)
+            return;
+        possible_pointers.set(possible_pointer, move(origin));
     } else {
         static_assert((sizeof(Value) % sizeof(FlatPtr*)) == 0);
+        if (data < min_block_address || data > max_block_address)
+            return;
         // In the 32-bit case we will look at the top and bottom part of Value separately we just
         // add both the upper and lower bytes as possible pointers.
         possible_pointers.set(data, move(origin));
@@ -118,23 +121,13 @@ static void add_possible_value(HashMap<FlatPtr, HeapRoot>& possible_pointers, Fl
 
 void Heap::find_min_and_max_block_addresses(FlatPtr& min_address, FlatPtr& max_address)
 {
-    Optional<FlatPtr> min_block_address, max_block_address;
+    min_address = explode_byte(0xff);
+    max_address = 0;
     for_each_block([&](auto& block) {
-        if (!min_block_address.has_value())
-            min_block_address = reinterpret_cast<FlatPtr>(&block);
-        else if (reinterpret_cast<FlatPtr>(&block) < min_block_address.value())
-            min_block_address = reinterpret_cast<FlatPtr>(&block);
-        if (!max_block_address.has_value())
-            max_block_address = reinterpret_cast<FlatPtr>(&block + HeapBlockBase::block_size);
-        else if (reinterpret_cast<FlatPtr>(&block + HeapBlockBase::block_size) > max_block_address.value())
-            max_block_address = reinterpret_cast<FlatPtr>(&block + HeapBlockBase::block_size);
+        min_address = min(min_address, reinterpret_cast<FlatPtr>(&block));
+        max_address = max(max_address, reinterpret_cast<FlatPtr>(&block) + HeapBlockBase::block_size);
         return IterationDecision::Continue;
     });
-
-    VERIFY(min_block_address.has_value());
-    VERIFY(max_block_address.has_value());
-    min_address = min_block_address.value();
-    max_address = max_block_address.value();
 }
 
 template<typename Callback>
