@@ -31,7 +31,7 @@ SECTIONS
         *(.text*)
     } :text
 
-    .driver_init ALIGN(4K) : AT (ADDR(.driver_init))
+    .driver_init ALIGN(4K) : AT (ADDR(.driver_init) - KERNEL_MAPPING_BASE)
     {
         driver_init_table_start = .;
         *(.driver_init)
