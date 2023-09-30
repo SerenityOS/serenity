@@ -1,0 +1,108 @@
+===== AST after parser =====
+f():
+TreeList
+  IfBranch
+    UnresolvedReference cond1
+    TreeList
+      BinaryOperation Declaration
+        UnresolvedReference a
+        MathematicalConstant 1
+      IfBranch
+        UnresolvedReference cond2
+        TreeList
+          BinaryOperation Declaration
+            UnresolvedReference b
+            UnresolvedReference a
+      ElseIfBranch Else
+        TreeList
+          BinaryOperation Declaration
+            UnresolvedReference b
+            MathematicalConstant 3
+  ElseIfBranch Else
+    TreeList
+      BinaryOperation Declaration
+        UnresolvedReference b
+        MathematicalConstant 4
+  ReturnNode
+    UnresolvedReference b
+
+===== AST after function-call-canonicalization =====
+f():
+TreeList
+  IfBranch
+    UnresolvedReference cond1
+    TreeList
+      BinaryOperation Declaration
+        UnresolvedReference a
+        MathematicalConstant 1
+      IfBranch
+        UnresolvedReference cond2
+        TreeList
+          BinaryOperation Declaration
+            UnresolvedReference b
+            UnresolvedReference a
+      ElseIfBranch Else
+        TreeList
+          BinaryOperation Declaration
+            UnresolvedReference b
+            MathematicalConstant 3
+  ElseIfBranch Else
+    TreeList
+      BinaryOperation Declaration
+        UnresolvedReference b
+        MathematicalConstant 4
+  ReturnNode
+    UnresolvedReference b
+
+===== AST after if-branch-merging =====
+f():
+TreeList
+  IfElseIfChain
+    UnresolvedReference cond1
+    TreeList
+      BinaryOperation Declaration
+        UnresolvedReference a
+        MathematicalConstant 1
+      IfElseIfChain
+        UnresolvedReference cond2
+        TreeList
+          BinaryOperation Declaration
+            UnresolvedReference b
+            UnresolvedReference a
+        TreeList
+          BinaryOperation Declaration
+            UnresolvedReference b
+            MathematicalConstant 3
+    TreeList
+      BinaryOperation Declaration
+        UnresolvedReference b
+        MathematicalConstant 4
+  ReturnNode
+    UnresolvedReference b
+
+===== AST after reference-resolving =====
+f():
+TreeList
+  IfElseIfChain
+    UnresolvedReference cond1
+    TreeList
+      BinaryOperation Declaration
+        Var a
+        MathematicalConstant 1
+      IfElseIfChain
+        UnresolvedReference cond2
+        TreeList
+          BinaryOperation Declaration
+            Var b
+            Var a
+        TreeList
+          BinaryOperation Declaration
+            Var b
+            MathematicalConstant 3
+    TreeList
+      BinaryOperation Declaration
+        Var b
+        MathematicalConstant 4
+  ReturnNode
+    Var b
+

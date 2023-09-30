@@ -29,7 +29,17 @@ constexpr StringView stderr_capture_filename = "stderr"sv;
 constexpr StringView compiler_binary_name = "JSSpecCompiler"sv;
 constexpr StringView relative_path_to_test = "Tests"sv;
 
-Array<TestDescription, 0> const regression_tests = {};
+constexpr TestDescription::Flag always_dump_ast = {
+    .name = "all"sv,
+    .dump_ast = true,
+};
+
+const Array regression_tests = {
+    TestDescription {
+        .sources = { "simple.cpp"sv },
+        .flags = { always_dump_ast },
+    },
+};
 
 static const LexicalPath path_to_compiler_binary = [] {
     auto path_to_self = LexicalPath(MUST(Core::System::current_executable_path())).parent();
