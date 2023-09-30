@@ -18,6 +18,7 @@ static ErrorOr<int> stat(StringView file, bool should_follow_links)
 {
     auto st = TRY(should_follow_links ? Core::System::stat(file) : Core::System::lstat(file));
     outln("    File: {}", file);
+    outln("  Device: {}", st.st_dev);
     outln("   Inode: {}", st.st_ino);
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
         outln("  Device: {},{}", major(st.st_rdev), minor(st.st_rdev));
