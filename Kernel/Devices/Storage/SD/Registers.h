@@ -103,7 +103,7 @@ struct HostControlRegisterMap {
             u32 tuning_error : 1;
             u32 response_error : 1;
             u32 vendor_specific_error : 1;
-        };
+        } const;
         u32 raw;
     } interrupt_status;
     u32 interrupt_status_enable;
