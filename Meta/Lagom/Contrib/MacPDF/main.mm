@@ -1,16 +1,12 @@
-//
-//  main.m
-//  SerenityPDF
-//
-//  Created by Nico Weber on 7/22/23.
-//
+/*
+ * Copyright (c) 2023, Nico Weber <thakis@chromium.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
 
 #import <Cocoa/Cocoa.h>
 
 int main(int argc, char const* argv[])
 {
-    @autoreleasepool {
-        // Setup code that might create autoreleased objects goes here.
-    }
     return NSApplicationMain(argc, argv);
 }
