@@ -7,6 +7,8 @@
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
+add_compile_options(-DAK_DONT_REPLACE_STD)
+
 set(RESOURCES
     LagomPDFDocument.xib
     MainMenu.xib
