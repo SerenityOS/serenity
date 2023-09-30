@@ -10,14 +10,14 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 add_compile_options(-DAK_DONT_REPLACE_STD)
 
 set(RESOURCES
-    LagomPDFDocument.xib
+    MacPDFDocument.xib
     MainMenu.xib
 )
 
 add_executable(MacPDF MACOSX_BUNDLE
     main.mm
     AppDelegate.mm
-    LagomPDFDocument.mm
+    MacPDFDocument.mm
     MacPDFView.mm
 )
 target_compile_options(MacPDF PRIVATE

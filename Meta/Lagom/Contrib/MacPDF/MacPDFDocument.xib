@@ -5,7 +5,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
-        <customObject id="-2" userLabel="File's Owner" customClass="LagomPDFDocument">
+        <customObject id="-2" userLabel="File's Owner" customClass="MacPDFDocument">
             <connections>
                 <outlet property="_pdfView" destination="gIp-Ho-8D9" id="bcT-vU-foe"/>
                 <outlet property="window" destination="xOd-HO-29H" id="JIz-fz-R2o"/>

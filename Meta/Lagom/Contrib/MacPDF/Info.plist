@@ -16,7 +16,7 @@
 				<string>com.adobe.pdf</string>
 			</array>
 			<key>NSDocumentClass</key>
-			<string>LagomPDFDocument</string>
+			<string>MacPDFDocument</string>
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>

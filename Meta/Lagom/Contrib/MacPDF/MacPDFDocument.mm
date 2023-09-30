@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#import "LagomPDFDocument.h"
+#import "MacPDFDocument.h"
 
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include <LibPDF/Document.h>
 
-@interface LagomPDFDocument ()
+@interface MacPDFDocument ()
 {
     NSData* _data; // Strong, _doc refers to it.
     RefPtr<PDF::Document> _doc;
 }
 @end
 
-@implementation LagomPDFDocument
+@implementation MacPDFDocument
 
 - (void)promptForPassword:(NSWindow*)window
 {
@@ -73,7 +73,7 @@
 
 - (NSString*)windowNibName
 {
-    return @"LagomPDFDocument";
+    return @"MacPDFDocument";
 }
 
 - (void)windowControllerDidLoadNib:(NSWindowController*)aController
