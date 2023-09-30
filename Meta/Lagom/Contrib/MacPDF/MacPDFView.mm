@@ -60,7 +60,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 
 @implementation MacPDFView
 
-// Called from LagomPDFDocument
+// Called from MacPDFDocument.
 - (void)setDocument:(WeakPtr<PDF::Document>)doc
 {
     NSLog(@"doc set");

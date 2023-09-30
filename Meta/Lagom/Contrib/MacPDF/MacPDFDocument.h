@@ -15,7 +15,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface LagomPDFDocument : NSDocument <MacPDFViewDelegate>
+@interface MacPDFDocument : NSDocument <MacPDFViewDelegate>
 {
     IBOutlet MacPDFView* _pdfView;
 }
