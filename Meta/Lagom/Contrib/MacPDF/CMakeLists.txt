@@ -18,7 +18,7 @@ add_executable(MacPDF MACOSX_BUNDLE
     main.mm
     AppDelegate.mm
     LagomPDFDocument.mm
-    LagomPDFView.mm
+    MacPDFView.mm
 )
 target_compile_options(MacPDF PRIVATE
     -fobjc-arc

@@ -14,16 +14,16 @@
 #include <AK/WeakPtr.h>
 #include <LibPDF/Document.h>
 
-@protocol LagomPDFViewDelegate
+@protocol MacPDFViewDelegate
 - (void)pageChanged;
 @end
 
-@interface LagomPDFView : NSView
+@interface MacPDFView : NSView
 
 - (void)setDocument:(WeakPtr<PDF::Document>)doc;
 - (void)goToPage:(int)page;
 - (int)page;
 
-- (void)setDelegate:(id<LagomPDFViewDelegate>)delegate;
+- (void)setDelegate:(id<MacPDFViewDelegate>)delegate;
 
 @end

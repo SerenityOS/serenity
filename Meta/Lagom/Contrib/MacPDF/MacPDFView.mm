@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#import "LagomPDFView.h"
+#import "MacPDFView.h"
 
 #include <LibGfx/Bitmap.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Renderer.h>
 
-@interface LagomPDFView ()
+@interface MacPDFView ()
 {
     WeakPtr<PDF::Document> _doc;
     NSBitmapImageRep* _cachedBitmap;
     int _page_index;
-    __weak id<LagomPDFViewDelegate> _delegate;
+    __weak id<MacPDFViewDelegate> _delegate;
 }
 @end
 
@@ -58,7 +58,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     return bmp;
 }
 
-@implementation LagomPDFView
+@implementation MacPDFView
 
 // Called from LagomPDFDocument
 - (void)setDocument:(WeakPtr<PDF::Document>)doc
@@ -90,7 +90,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     return _page_index + 1;
 }
 
-- (void)setDelegate:(id<LagomPDFViewDelegate>)delegate
+- (void)setDelegate:(id<MacPDFViewDelegate>)delegate
 {
     _delegate = delegate;
 }
