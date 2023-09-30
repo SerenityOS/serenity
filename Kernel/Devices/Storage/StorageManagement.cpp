@@ -225,7 +225,6 @@ ErrorOr<void> StorageManagement::enumerate_device_partitions(StorageDevice& devi
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
 {
-    VERIFY(!m_storage_devices.is_empty());
     for (auto& device : m_storage_devices) {
         // FIXME: Maybe handle this error in some way shape or form
         (void)enumerate_device_partitions(device);
