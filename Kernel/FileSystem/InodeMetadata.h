@@ -104,7 +104,7 @@ struct InodeMetadata {
         buffer.st_nlink = link_count;
         buffer.st_uid = uid.value();
         buffer.st_gid = gid.value();
-        buffer.st_dev = 0; // FIXME
+        buffer.st_dev = inode.fsid().value();
         buffer.st_size = size;
         buffer.st_blksize = block_size;
         buffer.st_blocks = block_count;
