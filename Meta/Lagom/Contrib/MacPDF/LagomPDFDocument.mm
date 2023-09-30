@@ -136,6 +136,11 @@
     return YES;
 }
 
+- (BOOL)isEntireFileLoaded
+{
+    return NO;
+}
+
 - (IBAction)showGoToPageDialog:(id)sender
 {
     auto alert = [[NSAlert alloc] init];
