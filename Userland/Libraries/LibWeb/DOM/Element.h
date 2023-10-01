@@ -93,7 +93,7 @@ public:
 
     // FIXME: This should be taking a 'FlyString const&'
     bool has_attribute(StringView name) const;
-    bool has_attribute_ns(DeprecatedFlyString namespace_, DeprecatedFlyString const& name) const;
+    bool has_attribute_ns(StringView namespace_, StringView name) const;
     bool has_attributes() const;
 
     // FIXME: This should be taking a 'FlyString const&'

@@ -310,7 +310,7 @@ bool Element::has_attribute(StringView name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattributens
-bool Element::has_attribute_ns(DeprecatedFlyString namespace_, DeprecatedFlyString const& name) const
+bool Element::has_attribute_ns(StringView namespace_, StringView name) const
 {
     // 1. If namespace is the empty string, then set it to null.
     if (namespace_.is_empty())
