@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/MultiHash.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Bitmap.h>
@@ -208,7 +209,7 @@ template<>
 struct Traits<PDF::Renderer::FontCacheKey> : public DefaultTraits<PDF::Renderer::FontCacheKey> {
     static unsigned hash(PDF::Renderer::FontCacheKey const& key)
     {
-        return pair_int_hash(ptr_hash(key.font_dictionary.ptr()), int_hash(bit_cast<u32>(key.font_size)));
+        return multi_hash(key.font_dictionary.ptr(), bit_cast<u32>(key.font_size));
     }
 };
 

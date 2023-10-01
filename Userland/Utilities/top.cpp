@@ -79,7 +79,7 @@ struct PidAndTid {
 namespace AK {
 template<>
 struct Traits<PidAndTid> : public DefaultTraits<PidAndTid> {
-    static unsigned hash(PidAndTid const& value) { return pair_int_hash(value.pid, value.tid); }
+    static unsigned hash(PidAndTid const& value) { return multi_hash(value.pid, value.tid); }
 };
 }
 

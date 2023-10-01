@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/MultiHash.h>
 #include <AK/Traits.h>
 
 class WindowIdentifier {
@@ -38,6 +39,6 @@ private:
 namespace AK {
 template<>
 struct Traits<WindowIdentifier> : public DefaultTraits<WindowIdentifier> {
-    static unsigned hash(WindowIdentifier const& w) { return pair_int_hash(w.client_id(), w.window_id()); }
+    static unsigned hash(WindowIdentifier const& w) { return multi_hash(w.client_id(), w.window_id()); }
 };
 }

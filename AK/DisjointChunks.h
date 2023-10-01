@@ -9,6 +9,7 @@
 
 #include <AK/AllOf.h>
 #include <AK/Forward.h>
+#include <AK/SipHash.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>
@@ -455,7 +456,7 @@ struct Traits<DisjointSpans<T>> : public DefaultTraits<DisjointSpans<T>> {
         unsigned hash = 0;
         for (auto const& value : span) {
             auto value_hash = Traits<T>::hash(value);
-            hash = pair_int_hash(hash, value_hash);
+            hash = multi_hash(hash, value_hash);
         }
         return hash;
     }

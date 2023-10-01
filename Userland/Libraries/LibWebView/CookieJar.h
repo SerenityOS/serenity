@@ -9,6 +9,7 @@
 #include <AK/ByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/MultiHash.h>
 #include <AK/Optional.h>
 #include <AK/Traits.h>
 #include <LibCore/DateTime.h>
@@ -94,10 +95,6 @@ template<>
 struct AK::Traits<WebView::CookieStorageKey> : public AK::DefaultTraits<WebView::CookieStorageKey> {
     static unsigned hash(WebView::CookieStorageKey const& key)
     {
-        unsigned hash = 0;
-        hash = pair_int_hash(hash, string_hash(key.name.characters(), key.name.length()));
-        hash = pair_int_hash(hash, string_hash(key.domain.characters(), key.domain.length()));
-        hash = pair_int_hash(hash, string_hash(key.path.characters(), key.path.length()));
-        return hash;
+        return multi_hash(string_hash(key.name.characters(), key.name.length()), string_hash(key.domain.characters(), key.domain.length()), string_hash(key.path.characters(), key.path.length()));
     }
 };

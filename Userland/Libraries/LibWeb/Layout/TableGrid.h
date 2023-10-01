@@ -92,7 +92,7 @@ template<>
 struct Traits<Web::Layout::TableGrid::GridPosition> : public DefaultTraits<Web::Layout::TableGrid::GridPosition> {
     static unsigned hash(Web::Layout::TableGrid::GridPosition const& key)
     {
-        return pair_int_hash(key.x, key.y);
+        return multi_hash(key.x, key.y);
     }
 };
 

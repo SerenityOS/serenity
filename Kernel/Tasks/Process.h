@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/IntrusiveListRelaxedConst.h>
+#include <AK/MultiHash.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Userspace.h>
@@ -1101,7 +1102,7 @@ struct AK::Formatter<Kernel::Process> : AK::Formatter<FormatString> {
 namespace AK {
 template<>
 struct Traits<Kernel::GlobalFutexKey> : public DefaultTraits<Kernel::GlobalFutexKey> {
-    static unsigned hash(Kernel::GlobalFutexKey const& futex_key) { return pair_int_hash(ptr_hash(futex_key.raw.parent), ptr_hash(futex_key.raw.offset)); }
+    static unsigned hash(Kernel::GlobalFutexKey const& futex_key) { return multi_hash(futex_key.raw.parent, futex_key.raw.offset); }
     static bool equals(Kernel::GlobalFutexKey const& a, Kernel::GlobalFutexKey const& b) { return a.raw.parent == b.raw.parent && a.raw.offset == b.raw.offset; }
 };
 };

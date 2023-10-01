@@ -84,7 +84,7 @@ template<>
 struct Traits<Web::HTML::ModuleLocationTuple> : public DefaultTraits<Web::HTML::ModuleLocationTuple> {
     static unsigned hash(Web::HTML::ModuleLocationTuple const& tuple)
     {
-        return pair_int_hash(tuple.url().to_byte_string().hash(), tuple.type().hash());
+        return multi_hash(tuple.url().to_deprecated_string().hash(), tuple.type().hash());
     }
 };
 

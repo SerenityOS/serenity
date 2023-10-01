@@ -29,11 +29,7 @@ bool Answer::has_expired() const
 
 unsigned Answer::hash() const
 {
-    auto hash = pair_int_hash(CaseInsensitiveStringTraits::hash(name().as_string()), (u32)type());
-    hash = pair_int_hash(hash, pair_int_hash((u32)class_code(), ttl()));
-    hash = pair_int_hash(hash, record_data().hash());
-    hash = pair_int_hash(hash, (u32)mdns_cache_flush());
-    return hash;
+    return multi_hash(CaseInsensitiveStringTraits::hash(name().as_string()), static_cast<u32>(type()), static_cast<u32>(class_code()), ttl(), record_data().hash(), static_cast<u32>(mdns_cache_flush()));
 }
 
 bool Answer::operator==(Answer const& other) const

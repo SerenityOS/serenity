@@ -193,9 +193,9 @@ struct Traits<CodeComprehension::Cpp::CppComprehensionEngine::SymbolName> : publ
     static unsigned hash(CodeComprehension::Cpp::CppComprehensionEngine::SymbolName const& key)
     {
         unsigned hash = 0;
-        hash = pair_int_hash(hash, string_hash(key.name.characters_without_null_termination(), key.name.length()));
+        hash = multi_hash(hash, string_hash(key.name.characters_without_null_termination(), key.name.length()));
         for (auto& scope_part : key.scope) {
-            hash = pair_int_hash(hash, string_hash(scope_part.characters_without_null_termination(), scope_part.length()));
+            hash = multi_hash(hash, string_hash(scope_part.characters_without_null_termination(), scope_part.length()));
         }
         return hash;
     }

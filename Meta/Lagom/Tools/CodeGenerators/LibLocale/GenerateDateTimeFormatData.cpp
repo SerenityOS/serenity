@@ -12,12 +12,12 @@
 #include <AK/Find.h>
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
-#include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
+#include <AK/MultiHash.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <AK/Traits.h>
@@ -40,14 +40,13 @@ struct CalendarPattern : public Locale::CalendarPattern {
 
     unsigned hash() const
     {
-        auto hash = pair_int_hash(pattern_index, pattern12_index);
-        hash = pair_int_hash(hash, skeleton_index);
+        auto hash = multi_hash(pattern_index, pattern12_index, skeleton_index);
 
         auto hash_field = [&](auto const& field) {
             if (field.has_value())
-                hash = pair_int_hash(hash, static_cast<u8>(*field));
+                hash = multi_hash(hash, static_cast<u8>(*field));
             else
-                hash = pair_int_hash(hash, -1);
+                hash = multi_hash(hash, -1);
         };
 
         hash_field(era);
@@ -125,13 +124,9 @@ struct AK::Traits<CalendarPattern> : public DefaultTraits<CalendarPattern> {
 struct CalendarRangePattern : public CalendarPattern {
     unsigned hash() const
     {
-        auto hash = CalendarPattern::hash();
-
+        auto hash = multi_hash(CalendarPattern::hash(), start_range, separator, end_range);
         if (field.has_value())
-            hash = pair_int_hash(hash, static_cast<u8>(*field));
-        hash = pair_int_hash(hash, start_range);
-        hash = pair_int_hash(hash, separator);
-        hash = pair_int_hash(hash, end_range);
+            hash = multi_hash(hash, static_cast<u8>(*field));
 
         return hash;
     }
@@ -192,10 +187,7 @@ struct AK::Traits<CalendarRangePattern> : public DefaultTraits<CalendarRangePatt
 struct CalendarFormat {
     unsigned hash() const
     {
-        auto hash = pair_int_hash(full_format, long_format);
-        hash = pair_int_hash(hash, medium_format);
-        hash = pair_int_hash(hash, short_format);
-        return hash;
+        return multi_hash(full_format, long_format, medium_format, short_format);
     }
 
     bool operator==(CalendarFormat const& other) const
@@ -235,9 +227,7 @@ using SymbolList = Vector<size_t>;
 struct CalendarSymbols {
     unsigned hash() const
     {
-        auto hash = pair_int_hash(narrow_symbols, short_symbols);
-        hash = pair_int_hash(hash, long_symbols);
-        return hash;
+        return multi_hash(narrow_symbols, short_symbols, long_symbols);
     }
 
     bool operator==(CalendarSymbols const& other) const
@@ -276,15 +266,7 @@ using CalendarSymbolsList = Vector<size_t>;
 struct Calendar {
     unsigned hash() const
     {
-        auto hash = int_hash(date_formats);
-        hash = pair_int_hash(hash, time_formats);
-        hash = pair_int_hash(hash, date_time_formats);
-        hash = pair_int_hash(hash, available_formats);
-        hash = pair_int_hash(hash, default_range_format);
-        hash = pair_int_hash(hash, range_formats);
-        hash = pair_int_hash(hash, range12_formats);
-        hash = pair_int_hash(hash, symbols);
-        return hash;
+        return multi_hash(date_formats, time_formats, date_time_formats, available_formats, default_range_format, range_formats, range12_formats, symbols);
     }
 
     bool operator==(Calendar const& other) const
@@ -336,13 +318,7 @@ struct AK::Traits<Calendar> : public DefaultTraits<Calendar> {
 struct TimeZoneNames {
     unsigned hash() const
     {
-        auto hash = pair_int_hash(short_standard_name, long_standard_name);
-        hash = pair_int_hash(hash, short_daylight_name);
-        hash = pair_int_hash(hash, long_daylight_name);
-        hash = pair_int_hash(hash, short_generic_name);
-        hash = pair_int_hash(hash, long_generic_name);
-
-        return hash;
+        return multi_hash(short_standard_name, long_standard_name, short_daylight_name, long_daylight_name, short_generic_name, long_generic_name);
     }
 
     bool operator==(TimeZoneNames const& other) const
@@ -388,13 +364,7 @@ struct AK::Traits<TimeZoneNames> : public DefaultTraits<TimeZoneNames> {
 struct TimeZoneFormat {
     unsigned hash() const
     {
-        auto hash = int_hash(symbol_ahead_sign);
-        hash = pair_int_hash(hash, symbol_ahead_separator);
-        hash = pair_int_hash(hash, symbol_behind_sign);
-        hash = pair_int_hash(hash, symbol_behind_separator);
-        hash = pair_int_hash(hash, gmt_format);
-        hash = pair_int_hash(hash, gmt_zero_format);
-        return hash;
+        return multi_hash(symbol_ahead_sign, symbol_ahead_separator, symbol_behind_sign, symbol_behind_separator, gmt_format, gmt_zero_format);
     }
 
     bool operator==(TimeZoneFormat const& other) const
@@ -439,10 +409,7 @@ struct AK::Traits<TimeZoneFormat> : public DefaultTraits<TimeZoneFormat> {
 struct DayPeriod {
     unsigned hash() const
     {
-        auto hash = int_hash(static_cast<u8>(day_period));
-        hash = pair_int_hash(hash, begin);
-        hash = pair_int_hash(hash, end);
-        return hash;
+        return multi_hash(static_cast<u8>(day_period), begin, end);
     }
 
     bool operator==(DayPeriod const& other) const

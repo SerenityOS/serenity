@@ -69,7 +69,7 @@ namespace AK {
 // traits for FontFaceKey
 template<>
 struct Traits<Web::CSS::FontFaceKey> : public DefaultTraits<Web::CSS::FontFaceKey> {
-    static unsigned hash(Web::CSS::FontFaceKey const& key) { return pair_int_hash(key.family_name.hash(), pair_int_hash(key.weight, key.slope)); }
+    static unsigned hash(Web::CSS::FontFaceKey const& key) { return key.hash(); }
 };
 
 }

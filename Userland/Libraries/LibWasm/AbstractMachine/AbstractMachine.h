@@ -9,6 +9,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
+#include <AK/MultiHash.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
 #include <AK/StackInfo.h>
@@ -672,6 +673,6 @@ private:
 template<>
 struct AK::Traits<Wasm::Linker::Name> : public AK::DefaultTraits<Wasm::Linker::Name> {
     static constexpr bool is_trivial() { return false; }
-    static unsigned hash(Wasm::Linker::Name const& entry) { return pair_int_hash(entry.module.hash(), entry.name.hash()); }
+    static unsigned hash(Wasm::Linker::Name const& entry) { return multi_hash(entry.module.hash(), entry.name.hash()); }
     static bool equals(Wasm::Linker::Name const& a, Wasm::Linker::Name const& b) { return a.name == b.name && a.module == b.module; }
 };

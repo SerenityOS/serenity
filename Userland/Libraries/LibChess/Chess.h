@@ -9,6 +9,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/IterationDecision.h>
+#include <AK/MultiHash.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
@@ -296,7 +297,7 @@ template<>
 struct AK::Traits<Chess::Piece> : public DefaultTraits<Chess::Piece> {
     static unsigned hash(Chess::Piece const& piece)
     {
-        return pair_int_hash(static_cast<u32>(piece.color), static_cast<u32>(piece.type));
+        return multi_hash(static_cast<u32>(piece.color), static_cast<u32>(piece.type));
     }
 };
 
@@ -304,14 +305,10 @@ template<>
 struct AK::Traits<Chess::Board> : public DefaultTraits<Chess::Board> {
     static unsigned hash(Chess::Board const& chess)
     {
-        unsigned hash = 0;
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_queenside));
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_kingside));
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_queenside));
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_kingside));
+        unsigned hash = multi_hash(static_cast<u32>(chess.m_white_can_castle_queenside), static_cast<u32>(chess.m_white_can_castle_kingside), static_cast<u32>(chess.m_black_can_castle_queenside), static_cast<u32>(chess.m_black_can_castle_kingside));
 
         Chess::Square::for_each([&](Chess::Square sq) {
-            hash = pair_int_hash(hash, Traits<Chess::Piece>::hash(chess.get_piece(sq)));
+            hash = multi_hash(hash, Traits<Chess::Piece>::hash(chess.get_piece(sq)));
             return IterationDecision::Continue;
         });
 

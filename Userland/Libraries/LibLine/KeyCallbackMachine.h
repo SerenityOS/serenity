@@ -8,6 +8,7 @@
 
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/MultiHash.h>
 #include <AK/Vector.h>
 
 namespace Line {
@@ -68,7 +69,7 @@ namespace AK {
 template<>
 struct Traits<Line::Key> : public DefaultTraits<Line::Key> {
     static constexpr bool is_trivial() { return true; }
-    static unsigned hash(Line::Key k) { return pair_int_hash(k.key, k.modifiers); }
+    static unsigned hash(Line::Key k) { return multi_hash(k.key, k.modifiers); }
 };
 
 template<>

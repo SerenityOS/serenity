@@ -11,12 +11,12 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Find.h>
 #include <AK/Format.h>
-#include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
+#include <AK/MultiHash.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
@@ -41,14 +41,10 @@ struct NumberFormat : public Locale::NumberFormat {
 
     unsigned hash() const
     {
-        auto hash = pair_int_hash(magnitude, exponent);
-        hash = pair_int_hash(hash, to_underlying(plurality));
-        hash = pair_int_hash(hash, zero_format_index);
-        hash = pair_int_hash(hash, positive_format_index);
-        hash = pair_int_hash(hash, negative_format_index);
+        auto hash = multi_hash(magnitude, exponent, to_underlying(plurality), zero_format_index, positive_format_index, negative_format_index);
 
         for (auto index : identifier_indices)
-            hash = pair_int_hash(hash, index);
+            hash = multi_hash(hash, index);
 
         return hash;
     }
@@ -100,18 +96,7 @@ using NumericSymbolList = Vector<size_t>;
 struct NumberSystem {
     unsigned hash() const
     {
-        auto hash = int_hash(symbols);
-        hash = pair_int_hash(hash, primary_grouping_size);
-        hash = pair_int_hash(hash, secondary_grouping_size);
-        hash = pair_int_hash(hash, decimal_format);
-        hash = pair_int_hash(hash, decimal_long_formats);
-        hash = pair_int_hash(hash, decimal_short_formats);
-        hash = pair_int_hash(hash, currency_format);
-        hash = pair_int_hash(hash, accounting_format);
-        hash = pair_int_hash(hash, currency_unit_formats);
-        hash = pair_int_hash(hash, percent_format);
-        hash = pair_int_hash(hash, scientific_format);
-        return hash;
+        return multi_hash(symbols, primary_grouping_size, secondary_grouping_size, decimal_format, decimal_long_formats, decimal_short_formats, currency_format, accounting_format, currency_unit_formats, percent_format, scientific_format);
     }
 
     bool operator==(NumberSystem const& other) const
@@ -174,11 +159,7 @@ struct AK::Traits<NumberSystem> : public DefaultTraits<NumberSystem> {
 struct Unit {
     unsigned hash() const
     {
-        auto hash = int_hash(unit);
-        hash = pair_int_hash(hash, long_formats);
-        hash = pair_int_hash(hash, short_formats);
-        hash = pair_int_hash(hash, narrow_formats);
-        return hash;
+        return multi_hash(unit, long_formats, short_formats, narrow_formats);
     }
 
     bool operator==(Unit const& other) const

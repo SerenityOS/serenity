@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/ByteString.h>
+#include <AK/MultiHash.h>
 #include <AK/URL.h>
 #include <AK/URLParser.h>
 
@@ -125,10 +126,10 @@ template<>
 struct Traits<Web::HTML::Origin> : public DefaultTraits<Web::HTML::Origin> {
     static unsigned hash(Web::HTML::Origin const& origin)
     {
-        auto hash_without_host = pair_int_hash(origin.scheme().hash(), origin.port());
+        auto hash_without_host = multi_hash(origin.scheme().hash(), origin.port());
         if (origin.host().has<Empty>())
             return hash_without_host;
-        return pair_int_hash(hash_without_host, URLParser::serialize_host(origin.host()).release_value_but_fixme_should_propagate_errors().hash());
+        return multi_hash(hash_without_host, URLParser::serialize_host(origin.host()).release_value_but_fixme_should_propagate_errors().hash());
     }
 };
 } // namespace AK

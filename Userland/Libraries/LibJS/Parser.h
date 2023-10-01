@@ -10,6 +10,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
+#include <AK/MultiHash.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
@@ -338,7 +339,7 @@ private:
     public:
         static int hash(Position const& position)
         {
-            return int_hash(position.line) ^ int_hash(position.column);
+            return static_cast<int>(multi_hash(position.line, position.column));
         }
 
         static bool equals(Position const& a, Position const& b)

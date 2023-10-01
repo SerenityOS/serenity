@@ -6,9 +6,14 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/HashFunctions.h>
+#include <AK/BitCast.h>
+#include <AK/MultiHash.h>
 #include <AK/SipHash.h>
+#include <AK/Span.h>
+#include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 
 TEST_CASE(int_hash)
 {
@@ -111,4 +116,58 @@ BENCHMARK_CASE(fast_sip_hash)
 BENCHMARK_CASE(secure_sip_hash)
 {
     run_benchmark(secure_sip_hash);
+}
+
+BENCHMARK_CASE(sip_hash_bytes)
+{
+    auto maybe_bytes = ByteBuffer::create_uninitialized(128 * MiB);
+    if (maybe_bytes.is_error()) {
+        dbgln("Not enough space to perform sip hash benchmark");
+        return;
+    }
+    auto bytes = maybe_bytes.release_value();
+    AK::taint_for_optimizer(bytes);
+    (void)sip_hash_bytes<1, 3>(bytes);
+}
+
+BENCHMARK_CASE(sip_multihash_bytes)
+{
+    auto maybe_bytes = ByteBuffer::create_uninitialized(128 * MiB);
+    if (maybe_bytes.is_error()) {
+        dbgln("Not enough space to perform sip hash benchmark");
+        return;
+    }
+    auto bytes = maybe_bytes.release_value();
+    AK::taint_for_optimizer(bytes);
+    u32 hash = 0;
+    for (auto value : bytes.span()) {
+        hash = multi_hash(hash, value);
+    }
+}
+
+BENCHMARK_CASE(sip_hash_span)
+{
+    Vector<u32> numbers;
+    numbers.resize(128 * MiB);
+    AK::taint_for_optimizer(numbers);
+    Traits<Span<u32>>::hash(numbers.span());
+}
+
+struct OpaqueU32 {
+    u32 value { 0 };
+};
+template<>
+struct AK::Traits<OpaqueU32> : public AK::DefaultTraits<OpaqueU32> {
+    static constexpr unsigned hash(OpaqueU32 value)
+    {
+        return value.value;
+    }
+};
+
+BENCHMARK_CASE(sip_multihash_span)
+{
+    Vector<OpaqueU32> numbers;
+    numbers.resize(128 * MiB);
+    AK::taint_for_optimizer(numbers);
+    Traits<Span<OpaqueU32>>::hash(numbers.span());
 }

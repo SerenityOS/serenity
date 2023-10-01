@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/MultiHash.h>
 #include <AK/Traits.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelRole.h>
@@ -73,7 +74,7 @@ template<>
 struct Traits<GUI::ModelIndex> : public DefaultTraits<GUI::ModelIndex> {
     static unsigned hash(const GUI::ModelIndex& index)
     {
-        return pair_int_hash(pair_int_hash(index.row(), index.column()), reinterpret_cast<FlatPtr>(index.internal_data()));
+        return multi_hash(index.row(), index.column(), index.internal_data());
     }
 };
 

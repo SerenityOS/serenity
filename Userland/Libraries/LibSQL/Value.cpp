@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/MultiHash.h>
 #include <AK/NumericLimits.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
@@ -412,7 +413,7 @@ u32 Value::hash() const
                 if (hash == 0)
                     hash = element.hash();
                 else
-                    hash = pair_int_hash(hash, element.hash());
+                    hash = multi_hash(hash, element.hash());
             }
 
             return hash;

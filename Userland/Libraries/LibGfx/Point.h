@@ -8,6 +8,7 @@
 
 #include <AK/Format.h>
 #include <AK/Math.h>
+#include <AK/MultiHash.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Forward.h>
@@ -317,6 +318,6 @@ struct AK::Traits<Gfx::Point<T>> : public AK::DefaultTraits<Gfx::Point<T>> {
     static constexpr bool is_trivial() { return false; }
     static unsigned hash(Gfx::Point<T> const& point)
     {
-        return pair_int_hash(AK::Traits<T>::hash(point.x()), AK::Traits<T>::hash(point.y()));
+        return multi_hash(point.x(), point.y());
     }
 };

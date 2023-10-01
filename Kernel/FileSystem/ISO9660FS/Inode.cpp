@@ -246,7 +246,7 @@ InodeIndex ISO9660Inode::get_inode_index(ISO::DirectoryRecordHeader const& recor
         return 1;
     }
 
-    return { pair_int_hash(LittleEndian { record.extent_location.little }, string_hash(name.characters_without_null_termination(), name.length())) };
+    return { multi_hash(LittleEndian { record.extent_location.little }, string_hash(name.characters_without_null_termination(), name.length())) };
 }
 
 }

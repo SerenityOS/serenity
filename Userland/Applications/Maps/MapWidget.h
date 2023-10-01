@@ -116,7 +116,7 @@ public:
 
         unsigned hash() const
         {
-            return pair_int_hash(x, pair_int_hash(y, zoom));
+            return multi_hash(x, y, zoom);
         }
 
         bool operator==(TileKey const& other) const

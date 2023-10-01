@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/MultiHash.h>
 #include <AK/OwnPtr.h>
 #include <AK/StringView.h>
 #include <AK/WeakPtr.h>
@@ -126,6 +127,6 @@ template<>
 struct AK::Traits<JS::TransitionKey> : public DefaultTraits<JS::TransitionKey> {
     static unsigned hash(const JS::TransitionKey& key)
     {
-        return pair_int_hash(key.attributes.bits(), Traits<JS::StringOrSymbol>::hash(key.property_key));
+        return multi_hash(key.attributes.bits(), Traits<JS::StringOrSymbol>::hash(key.property_key));
     }
 };

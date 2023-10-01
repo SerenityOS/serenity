@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/MultiHash.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Traits.h>
@@ -37,9 +38,9 @@ template<>
 struct Traits<Web::HTML::CrossOriginKey> : public DefaultTraits<Web::HTML::CrossOriginKey> {
     static unsigned hash(Web::HTML::CrossOriginKey const& key)
     {
-        return pair_int_hash(
+        return multi_hash(
             Traits<JS::PropertyKey>::hash(key.property_key),
-            pair_int_hash(ptr_hash(key.current_settings_object), ptr_hash(key.relevant_settings_object)));
+            key.current_settings_object, key.relevant_settings_object);
     }
 
     static bool equals(Web::HTML::CrossOriginKey const& a, Web::HTML::CrossOriginKey const& b)

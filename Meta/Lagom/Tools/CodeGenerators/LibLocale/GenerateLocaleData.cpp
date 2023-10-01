@@ -15,6 +15,7 @@
 #include <AK/JsonParser.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
+#include <AK/MultiHash.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
@@ -36,7 +37,7 @@ static ByteString format_identifier(StringView owner, ByteString identifier)
 struct DisplayPattern {
     unsigned hash() const
     {
-        return pair_int_hash(locale_pattern, locale_separator);
+        return multi_hash(locale_pattern, locale_separator);
     }
 
     bool operator==(DisplayPattern const& other) const
@@ -68,12 +69,7 @@ struct AK::Traits<DisplayPattern> : public DefaultTraits<DisplayPattern> {
 struct ListPatterns {
     unsigned hash() const
     {
-        auto hash = pair_int_hash(type.hash(), style.hash());
-        hash = pair_int_hash(hash, start);
-        hash = pair_int_hash(hash, middle);
-        hash = pair_int_hash(hash, end);
-        hash = pair_int_hash(hash, pair);
-        return hash;
+        return multi_hash(type, style, start, middle, end, pair);
     }
 
     bool operator==(ListPatterns const& other) const

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/MultiHash.h>
 #include <AK/Traits.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGUI/Event.h>
@@ -83,11 +84,11 @@ template<>
 struct Traits<GUI::Shortcut> : public DefaultTraits<GUI::Shortcut> {
     static unsigned hash(const GUI::Shortcut& shortcut)
     {
-        auto base_hash = pair_int_hash(shortcut.modifiers(), (u32)shortcut.type());
+        auto base_hash = multi_hash(shortcut.modifiers(), (u32)shortcut.type());
         if (shortcut.type() == GUI::Shortcut::Type::Keyboard) {
-            return pair_int_hash(base_hash, shortcut.key());
+            return multi_hash(base_hash, shortcut.key());
         } else {
-            return pair_int_hash(base_hash, shortcut.mouse_button());
+            return multi_hash(base_hash, shortcut.mouse_button());
         }
     }
 };

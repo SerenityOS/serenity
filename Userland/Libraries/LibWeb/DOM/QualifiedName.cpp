@@ -5,6 +5,7 @@
  */
 
 #include <AK/HashTable.h>
+#include <AK/MultiHash.h>
 #include <LibWeb/DOM/QualifiedName.h>
 
 namespace Web::DOM {
@@ -13,9 +14,9 @@ static unsigned hash_impl(FlyString const& local_name, Optional<FlyString> const
 {
     unsigned hash = local_name.hash();
     if (prefix.has_value())
-        hash = pair_int_hash(hash, prefix->hash());
+        hash = multi_hash(hash, prefix->hash());
     if (namespace_.has_value())
-        hash = pair_int_hash(hash, namespace_->hash());
+        hash = multi_hash(hash, namespace_->hash());
     return hash;
 }
 

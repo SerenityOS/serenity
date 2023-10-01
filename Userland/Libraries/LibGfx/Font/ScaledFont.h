@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/MultiHash.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/VectorFont.h>
@@ -100,7 +101,7 @@ template<>
 struct Traits<Gfx::GlyphIndexWithSubpixelOffset> : public DefaultTraits<Gfx::GlyphIndexWithSubpixelOffset> {
     static unsigned hash(Gfx::GlyphIndexWithSubpixelOffset const& index)
     {
-        return pair_int_hash(index.glyph_id, (index.subpixel_offset.x << 8) | index.subpixel_offset.y);
+        return multi_hash(index.glyph_id, index.subpixel_offset.x, index.subpixel_offset.y);
     }
 };
 

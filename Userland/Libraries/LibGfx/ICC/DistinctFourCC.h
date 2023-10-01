@@ -68,7 +68,7 @@ template<Gfx::ICC::FourCCType Type>
 struct AK::Traits<Gfx::ICC::DistinctFourCC<Type>> : public DefaultTraits<Gfx::ICC::DistinctFourCC<Type>> {
     static unsigned hash(Gfx::ICC::DistinctFourCC<Type> const& key)
     {
-        return int_hash(key.value);
+        return standard_sip_hash(key.value);
     }
 
     static bool equals(Gfx::ICC::DistinctFourCC<Type> const& a, Gfx::ICC::DistinctFourCC<Type> const& b)

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/HashFunctions.h>
+#include <AK/MultiHash.h>
 #include <AK/Time.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -64,7 +64,7 @@ public:
 
     unsigned hash() const
     {
-        return pair_int_hash(to_underlying(m_type), m_identifier);
+        return multi_hash(to_underlying(m_type), m_identifier);
     }
 
 private:

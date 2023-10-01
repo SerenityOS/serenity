@@ -5,6 +5,7 @@
  */
 
 #include <AK/ByteString.h>
+#include <AK/MultiHash.h>
 #include <AK/StringBuilder.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/Tuple.h>
@@ -195,11 +196,7 @@ u32 Tuple::hash() const
 {
     u32 ret = 0u;
     for (auto& value : m_data) {
-        // This is an extension of the pair_int_hash function from AK/HashFunctions.h:
-        if (!ret)
-            ret = value.hash();
-        else
-            ret = int_hash((ret * 209) ^ (value.hash() * 413));
+        ret = multi_hash(ret, value.hash());
     }
     return ret;
 }

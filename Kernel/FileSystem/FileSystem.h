@@ -8,6 +8,7 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/Error.h>
+#include <AK/MultiHash.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
@@ -89,7 +90,7 @@ namespace AK {
 
 template<>
 struct Traits<Kernel::InodeIdentifier> : public DefaultTraits<Kernel::InodeIdentifier> {
-    static unsigned hash(Kernel::InodeIdentifier const& inode) { return pair_int_hash(inode.fsid().value(), inode.index().value()); }
+    static unsigned hash(Kernel::InodeIdentifier const& inode) { return multi_hash(inode.fsid().value(), inode.index().value()); }
 };
 
 }

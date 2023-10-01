@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/MultiHash.h>
 #include <AK/Noncopyable.h>
 #include <LibAccelGfx/GL.h>
 #include <LibGfx/Font/Font.h>
@@ -57,7 +58,7 @@ template<>
 struct Traits<AccelGfx::GlyphAtlas::GlyphsTextureKey> : public DefaultTraits<AccelGfx::GlyphAtlas::GlyphsTextureKey> {
     static unsigned hash(AccelGfx::GlyphAtlas::GlyphsTextureKey const& key)
     {
-        return pair_int_hash(ptr_hash(key.font), key.code_point);
+        return multi_hash(key.font, key.code_point);
     }
 };
 

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/MultiHash.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/RedBlackTree.h>
@@ -35,7 +36,7 @@ struct FontFaceKey {
     int weight { 0 };
     int slope { 0 };
 
-    [[nodiscard]] u32 hash() const { return pair_int_hash(family_name.hash(), pair_int_hash(weight, slope)); }
+    [[nodiscard]] u32 hash() const { return multi_hash(family_name.hash(), weight, slope); }
     [[nodiscard]] bool operator==(FontFaceKey const&) const = default;
 };
 
@@ -251,7 +252,7 @@ private:
 
 template<>
 struct AK::Traits<Web::CSS::StyleComputer::AnimationKey> : public AK::DefaultTraits<Web::CSS::StyleComputer::AnimationKey> {
-    static unsigned hash(Web::CSS::StyleComputer::AnimationKey const& k) { return pair_int_hash(ptr_hash(k.source_declaration), ptr_hash(k.element)); }
+    static unsigned hash(Web::CSS::StyleComputer::AnimationKey const& k) { return multi_hash(k.source_declaration, k.element); }
     static bool equals(Web::CSS::StyleComputer::AnimationKey const& a, Web::CSS::StyleComputer::AnimationKey const& b)
     {
         return a.element == b.element && a.source_declaration == b.source_declaration;

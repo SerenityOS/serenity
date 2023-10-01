@@ -22,12 +22,7 @@
 struct RelativeTimeFormat {
     unsigned hash() const
     {
-        auto hash = time_unit.hash();
-        hash = pair_int_hash(hash, style.hash());
-        hash = pair_int_hash(hash, plurality.hash());
-        hash = pair_int_hash(hash, tense_or_number);
-        hash = pair_int_hash(hash, pattern);
-        return hash;
+        return multi_hash(time_unit.hash(), style.hash(), plurality.hash(), tense_or_number, pattern);
     }
 
     bool operator==(RelativeTimeFormat const& other) const

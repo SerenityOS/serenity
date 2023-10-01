@@ -8,7 +8,7 @@
 #include "PDFViewer.h"
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
-#include <AK/HashFunctions.h>
+#include <AK/MultiHash.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/MessageBox.h>
@@ -72,7 +72,7 @@ PDF::PDFErrorOr<void> PDFViewer::set_document(RefPtr<PDF::Document> document)
 
 PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::get_rendered_page(u32 index)
 {
-    auto key = pair_int_hash(m_rendering_preferences.hash(), m_zoom_level);
+    auto key = multi_hash(m_rendering_preferences.hash(), m_zoom_level);
     auto& rendered_page_map = m_rendered_page_list[index];
     auto existing_rendered_page = rendered_page_map.get(key);
     if (existing_rendered_page.has_value() && existing_rendered_page.value().rotation == m_rotations)

@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
+#include <AK/MultiHash.h>
 #include <AK/NumericLimits.h>
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
@@ -41,9 +42,9 @@ struct AK::Traits<Vector<T>> : public DefaultTraits<Vector<T>> {
 
         for (auto value : list) {
             if constexpr (Enum<T>)
-                hash = pair_int_hash(hash, to_underlying(value));
+                hash = multi_hash(hash, to_underlying(value));
             else
-                hash = pair_int_hash(hash, value);
+                hash = multi_hash(hash, value);
         }
 
         return hash;

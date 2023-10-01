@@ -8,9 +8,9 @@
 #pragma once
 
 #include <AK/IPv4Address.h>
+#include <AK/MultiHash.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -108,6 +108,6 @@ template<>
 struct AK::Traits<Core::SocketAddress> : public DefaultTraits<Core::SocketAddress> {
     static unsigned hash(Core::SocketAddress const& socket_address)
     {
-        return pair_int_hash(Traits<IPv4Address>::hash(socket_address.ipv4_address()), Traits<u16>::hash(socket_address.port()));
+        return multi_hash(Traits<IPv4Address>::hash(socket_address.ipv4_address()), Traits<u16>::hash(socket_address.port()));
     }
 };

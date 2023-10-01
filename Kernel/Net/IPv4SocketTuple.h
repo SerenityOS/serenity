@@ -59,9 +59,8 @@ template<>
 struct Traits<Kernel::IPv4SocketTuple> : public DefaultTraits<Kernel::IPv4SocketTuple> {
     static unsigned hash(Kernel::IPv4SocketTuple const& tuple)
     {
-        auto h1 = pair_int_hash(tuple.local_address().to_u32(), tuple.local_port());
-        auto h2 = pair_int_hash(tuple.peer_address().to_u32(), tuple.peer_port());
-        return pair_int_hash(h1, h2);
+        // NOTE: The multi hash is not itself resistant to HashDoS, but we hash the IP addresses through SipHash-4-8 first.
+        return multi_hash(tuple.local_address(), tuple.local_port(), tuple.peer_address(), tuple.peer_port());
     }
 };
 

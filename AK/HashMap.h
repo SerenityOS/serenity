@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/HashTable.h>
+#include <AK/MultiHash.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <initializer_list>
@@ -283,8 +284,7 @@ public:
     {
         u32 hash = 0;
         for (auto& it : *this) {
-            auto entry_hash = pair_int_hash(it.key.hash(), it.value.hash());
-            hash = pair_int_hash(hash, entry_hash);
+            hash = multi_hash(hash, it.key.hash(), it.value.hash());
         }
         return hash;
     }
