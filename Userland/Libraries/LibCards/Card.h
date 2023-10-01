@@ -81,9 +81,9 @@ class Card final : public Core::EventReceiver {
     C_OBJECT(Card)
 public:
     static constexpr int width = 80;
-    static constexpr int height = 100;
+    static constexpr int height = 110;
     static constexpr int card_count = to_underlying(Rank::__Count);
-    static constexpr int card_radius = 5;
+    static constexpr int card_radius = 7;
 
     virtual ~Card() override = default;
 
