@@ -123,11 +123,19 @@ requires(HasFormatter<T>) struct Formatter<BigEndian<T>> : Formatter<T> {
 template<typename T>
 struct Traits<LittleEndian<T>> : public DefaultTraits<LittleEndian<T>> {
     static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
+    static unsigned hash(T value)
+    {
+        return standard_sip_hash(static_cast<u64>(static_cast<T>(value)));
+    }
 };
 
 template<typename T>
 struct Traits<BigEndian<T>> : public DefaultTraits<BigEndian<T>> {
     static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
+    static unsigned hash(T value)
+    {
+        return standard_sip_hash(static_cast<u64>(static_cast<T>(value)));
+    }
 };
 
 constexpr u16 bitswap(u16 v)
