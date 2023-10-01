@@ -64,6 +64,14 @@ TEST_CASE(sip_hash)
     EXPECT_NE(standard_sip_hash(42), secure_sip_hash(42));
 }
 
+TEST_CASE(sip_ptr_hash)
+{
+    EXPECT_EQ(standard_sip_ptr_hash(bit_cast<void const*>(FlatPtr(42))), standard_sip_ptr_hash(bit_cast<void const*>(FlatPtr(42))));
+    // The pointer hash should only use the integer value (at whatever size) of the pointer as entropy.
+    EXPECT_EQ(standard_sip_ptr_hash(bit_cast<void const*>(FlatPtr(42))), standard_sip_hash(FlatPtr(42)));
+    EXPECT_NE(standard_sip_ptr_hash(bit_cast<void const*>(FlatPtr(42))), standard_sip_ptr_hash(nullptr));
+}
+
 TEST_CASE(sip_hash_bytes)
 {
     constexpr Array<u8, 8> short_test_array { 1, 2, 3, 4, 5, 6, 7, 8 };

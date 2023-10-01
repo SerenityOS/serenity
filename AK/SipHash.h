@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/BitCast.h>
 #include <AK/Forward.h>
 
 namespace AK {
@@ -20,10 +21,16 @@ u64 sip_hash_bytes(ReadonlyBytes input);
 unsigned standard_sip_hash(u64 input);
 unsigned secure_sip_hash(u64 input);
 
+inline unsigned standard_sip_ptr_hash(void const* ptr)
+{
+    return standard_sip_hash(bit_cast<FlatPtr>(ptr));
+}
+
 }
 
 #ifdef USING_AK_GLOBALLY
 using AK::secure_sip_hash;
 using AK::sip_hash_bytes;
 using AK::standard_sip_hash;
+using AK::standard_sip_ptr_hash;
 #endif

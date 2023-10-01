@@ -128,7 +128,7 @@ public:
     {
         if (is_string())
             return as_string_impl().hash();
-        return ptr_hash(as_symbol());
+        return standard_sip_ptr_hash(as_symbol());
     }
 
 private:

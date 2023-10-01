@@ -332,7 +332,7 @@ template<typename T>
 struct Traits<NonnullLockRefPtr<T>> : public DefaultTraits<NonnullLockRefPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = T const*;
-    static unsigned hash(NonnullLockRefPtr<T> const& p) { return ptr_hash(p.ptr()); }
+    static unsigned hash(NonnullLockRefPtr<T> const& p) { return standard_sip_ptr_hash(p.ptr()); }
     static bool equals(NonnullLockRefPtr<T> const& a, NonnullLockRefPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
 

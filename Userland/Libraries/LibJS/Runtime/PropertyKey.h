@@ -202,8 +202,8 @@ struct Traits<JS::PropertyKey> : public DefaultTraits<JS::PropertyKey> {
         if (name.is_string())
             return name.as_string().hash();
         if (name.is_number())
-            return int_hash(name.as_number());
-        return ptr_hash(name.as_symbol());
+            return standard_sip_hash(name.as_number());
+        return standard_sip_ptr_hash(name.as_symbol());
     }
 
     static bool equals(JS::PropertyKey const& a, JS::PropertyKey const& b)

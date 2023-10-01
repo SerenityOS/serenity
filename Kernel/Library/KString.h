@@ -101,7 +101,7 @@ struct Traits<OwnPtr<Kernel::KString>> : public DefaultTraits<OwnPtr<Kernel::KSt
     static unsigned hash(OwnPtr<Kernel::KString> const& p)
     {
         if (!p)
-            return ptr_hash(nullptr);
+            return standard_sip_ptr_hash(nullptr);
         return string_hash(p->characters(), p->length());
     }
     static bool equals(OwnPtr<Kernel::KString> const& a, OwnPtr<Kernel::KString> const& b)

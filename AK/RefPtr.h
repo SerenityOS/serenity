@@ -296,7 +296,7 @@ template<typename T>
 struct Traits<RefPtr<T>> : public DefaultTraits<RefPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = T const*;
-    static unsigned hash(RefPtr<T> const& p) { return ptr_hash(p.ptr()); }
+    static unsigned hash(RefPtr<T> const& p) { return standard_sip_ptr_hash(p.ptr()); }
     static bool equals(RefPtr<T> const& a, RefPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
 
