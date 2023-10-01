@@ -64,7 +64,7 @@ DOMTokenList::DOMTokenList(Element& associated_element, FlyString associated_att
     , m_associated_element(associated_element)
     , m_associated_attribute(move(associated_attribute))
 {
-    auto value = associated_element.get_attribute(m_associated_attribute.to_deprecated_fly_string());
+    auto value = associated_element.deprecated_get_attribute(m_associated_attribute);
     associated_attribute_changed(value);
 }
 

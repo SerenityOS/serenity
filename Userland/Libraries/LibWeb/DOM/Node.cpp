@@ -1387,7 +1387,7 @@ bool Node::is_equal_node(Node const* other_node) const
         // If A is an element, each attribute in its attribute list has an attribute that equals an attribute in B’s attribute list.
         bool has_same_attributes = true;
         this_element.for_each_attribute([&](auto& name, auto& value) {
-            if (other_element.get_attribute(name) != value)
+            if (other_element.deprecated_get_attribute(name) != value)
                 has_same_attributes = false;
         });
         if (!has_same_attributes)
@@ -1473,8 +1473,8 @@ DeprecatedString Node::debug_description() const
     builder.append(node_name().to_deprecated_fly_string().to_lowercase());
     if (is_element()) {
         auto& element = static_cast<DOM::Element const&>(*this);
-        if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null())
-            builder.appendff("#{}", id);
+        if (auto id = element.get_attribute(HTML::AttributeNames::id); id.has_value())
+            builder.appendff("#{}", id.value());
         for (auto const& class_name : element.class_names())
             builder.appendff(".{}", class_name);
     }

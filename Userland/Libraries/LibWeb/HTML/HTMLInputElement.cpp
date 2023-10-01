@@ -352,7 +352,7 @@ DeprecatedString HTMLInputElement::value() const
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default-on
     if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
         // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return the string "on".
-        return has_attribute(AttributeNames::value) ? get_attribute(AttributeNames::value) : "on";
+        return get_attribute(AttributeNames::value).value_or("on"_string).to_deprecated_string();
     }
 
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default
@@ -362,7 +362,7 @@ DeprecatedString HTMLInputElement::value() const
         || type_state() == TypeAttributeState::ResetButton
         || type_state() == TypeAttributeState::Button) {
         // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return the empty string.
-        return has_attribute(AttributeNames::value) ? get_attribute(AttributeNames::value) : DeprecatedString::empty();
+        return get_attribute(AttributeNames::value).value_or(String {}).to_deprecated_string();
     }
 
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
@@ -934,7 +934,7 @@ void HTMLInputElement::reset_algorithm()
     m_dirty_checkedness = false;
 
     // set the value of the element to the value of the value content attribute, if there is one, or the empty string otherwise,
-    m_value = has_attribute(AttributeNames::value) ? get_attribute(AttributeNames::value) : DeprecatedString::empty();
+    m_value = get_attribute(AttributeNames::value).value_or(String {}).to_deprecated_string();
 
     // set the checkedness of the element to true if the element has a checked content attribute and false if it does not,
     m_checked = has_attribute(AttributeNames::checked);

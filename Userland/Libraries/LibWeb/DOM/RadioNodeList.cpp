@@ -60,44 +60,38 @@ FlyString RadioNodeList::value() const
         return String {};
 
     // 3. If element is an element with no value attribute, return the string "on".
-    auto const value = element->get_attribute(HTML::AttributeNames::value);
-    if (value.is_null())
-        return "on"_fly_string;
-
     // 4. Otherwise, return the value of element's value attribute.
-    return MUST(FlyString::from_deprecated_fly_string(value));
+    return element->get_attribute(HTML::AttributeNames::value).value_or("on"_string);
 }
 
 void RadioNodeList::set_value(FlyString const& value)
 {
     HTML::HTMLInputElement* element = nullptr;
 
-    auto deprecated_value = value.to_deprecated_fly_string();
-
     // 1. If the new value is the string "on": let element be the first element in tree order represented by the RadioNodeList object
     //    that is an input element whose type attribute is in the Radio Button state and whose value content attribute is either absent,
     //    or present and equal to the new value, if any. If no such element exists, then instead let element be null.
     if (value == "on"sv) {
-        element = verify_cast<HTML::HTMLInputElement>(first_matching([&deprecated_value](auto const& node) {
+        element = verify_cast<HTML::HTMLInputElement>(first_matching([&value](auto const& node) {
             auto const* button = radio_button(node);
             if (!button)
                 return false;
 
-            auto const value = button->get_attribute(HTML::AttributeNames::value);
-            return value.is_null() || value == deprecated_value;
+            auto const maybe_value = button->get_attribute(HTML::AttributeNames::value);
+            return !maybe_value.has_value() || maybe_value.value() == value;
         }));
     }
     // 2. Otherwise: let element be the first element in tree order represented by the RadioNodeList object that is an input element whose
-    //   type attribute is in the Radio Button state and whose value content attribute is present and equal to the new value, if any. If
-    //   no such element exists, then instead let element be null.
+    //    type attribute is in the Radio Button state and whose value content attribute is present and equal to the new value, if any. If
+    //    no such element exists, then instead let element be null.
     else {
-        element = verify_cast<HTML::HTMLInputElement>(first_matching([&deprecated_value](auto const& node) {
+        element = verify_cast<HTML::HTMLInputElement>(first_matching([&value](auto const& node) {
             auto const* button = radio_button(node);
             if (!button)
                 return false;
 
-            auto const value = button->get_attribute(HTML::AttributeNames::value);
-            return !value.is_null() && value == deprecated_value;
+            auto const maybe_value = button->get_attribute(HTML::AttributeNames::value);
+            return maybe_value.has_value() && maybe_value.value() == value;
         }));
     }
 

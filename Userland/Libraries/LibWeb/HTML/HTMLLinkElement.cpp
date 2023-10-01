@@ -160,9 +160,7 @@ HTMLLinkElement::LinkProcessingOptions HTMLLinkElement::create_link_options()
     LinkProcessingOptions options;
     // FIXME: destination                      the result of translating the state of el's as attribute
     // crossorigin                      the state of el's crossorigin content attribute
-    options.crossorigin = cors_setting_attribute_from_keyword(
-        has_attribute(AttributeNames::crossorigin) ? String::from_deprecated_string(get_attribute(AttributeNames::crossorigin)).release_value_but_fixme_should_propagate_errors()
-                                                   : Optional<String> {});
+    options.crossorigin = cors_setting_attribute_from_keyword(get_attribute(AttributeNames::crossorigin));
     // FIXME: referrer policy                  the state of el's referrerpolicy content attribute
     // FIXME: source set                       el's source set
     // base URL                         document's URL
@@ -178,16 +176,16 @@ HTMLLinkElement::LinkProcessingOptions HTMLLinkElement::create_link_options()
     // FIXME: cryptographic nonce metadata     The current value of el's [[CryptographicNonce]] internal slot
 
     // 3. If el has an href attribute, then set options's href to the value of el's href attribute.
-    if (has_attribute(AttributeNames::href))
-        options.href = String::from_deprecated_string(get_attribute(AttributeNames::href)).release_value_but_fixme_should_propagate_errors();
+    if (auto maybe_href = get_attribute(AttributeNames::href); maybe_href.has_value())
+        options.href = maybe_href.value();
 
     // 4. If el has an integrity attribute, then set options's integrity to the value of el's integrity content attribute.
-    if (has_attribute(AttributeNames::integrity))
-        options.integrity = String::from_deprecated_string(get_attribute(AttributeNames::integrity)).release_value_but_fixme_should_propagate_errors();
+    if (auto maybe_integrity = get_attribute(AttributeNames::integrity); maybe_integrity.has_value())
+        options.integrity = maybe_integrity.value();
 
     // 5. If el has a type attribute, then set options's type to the value of el's type attribute.
-    if (has_attribute(AttributeNames::type))
-        options.type = String::from_deprecated_string(get_attribute(AttributeNames::type)).release_value_but_fixme_should_propagate_errors();
+    if (auto maybe_type = get_attribute(AttributeNames::type); maybe_type.has_value())
+        options.type = maybe_type.value();
 
     // FIXME: 6. Assert: options's href is not the empty string, or options's source set is not null.
     //           A link element with neither an href or an imagesrcset does not represent a link.

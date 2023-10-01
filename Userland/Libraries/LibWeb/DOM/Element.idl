@@ -28,7 +28,7 @@ interface Element : Node {
     readonly attribute DOMString localName;
     readonly attribute DOMString tagName;
 
-    DOMString? getAttribute(DOMString qualifiedName);
+    [ImplementedAs=deprecated_get_attribute] DOMString? getAttribute(DOMString qualifiedName);
     [CEReactions] undefined setAttribute(DOMString qualifiedName, DOMString value);
     [CEReactions] undefined setAttributeNS(DOMString? namespace , DOMString qualifiedName , DOMString value);
     [CEReactions] Attr? setAttributeNode(Attr attr);
