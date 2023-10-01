@@ -10,7 +10,7 @@ work in cpp, assume that it exists.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/libavutil/error.h b/libavutil/error.h
-index 0d3269a..a54d80d 100644
+index 0d3269aa6da136e849faa7f810ae36748659a2e0..a54d80d0f2d7be91e617cb0ed0640568bffdd693 100644
 --- a/libavutil/error.h
 +++ b/libavutil/error.h
 @@ -37,7 +37,7 @@
