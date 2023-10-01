@@ -49,6 +49,7 @@
 #include <LibWeb/WebGL/EventNames.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/XHR/EventNames.h>
+#include <LibWeb/XLink/AttributeNames.h>
 
 namespace Web::Bindings {
 
@@ -99,6 +100,7 @@ ErrorOr<void> initialize_main_thread_vm()
     UIEvents::EventNames::initialize_strings();
     WebGL::EventNames::initialize_strings();
     XHR::EventNames::initialize_strings();
+    XLink::AttributeNames::initialize_strings();
 
     static_cast<WebEngineCustomData*>(s_main_thread_vm->custom_data())->event_loop.set_vm(*s_main_thread_vm);
 

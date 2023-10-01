@@ -624,6 +624,7 @@ set(SOURCES
     XHR/XMLHttpRequestEventTarget.cpp
     XHR/XMLHttpRequestUpload.cpp
     XML/XMLDocumentBuilder.cpp
+    XLink/AttributeNames.cpp
 )
 
 invoke_generator(
