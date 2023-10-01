@@ -176,6 +176,7 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
         { "foreground_role"sv, "Gfx::ColorRole"sv },
         { "frame_style"sv, "Gfx::FrameStyle"sv },
         { "text_wrapping"sv, "Gfx::TextWrapping"sv },
+        { "button_style"sv, "Gfx::ButtonStyle"sv },
     };
 
     auto const& enum_type_name = enum_properties.get(property_name);
