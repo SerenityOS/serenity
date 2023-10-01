@@ -133,7 +133,7 @@ void Element::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
-DeprecatedString Element::get_attribute(StringView name) const
+Optional<String> Element::get_attribute(StringView name) const
 {
     // 1. Let attr be the result of getting an attribute given qualifiedName and this.
     auto const* attribute = m_attributes->get_attribute(name);
@@ -143,7 +143,16 @@ DeprecatedString Element::get_attribute(StringView name) const
         return {};
 
     // 3. Return attr’s value.
-    return attribute->value().to_deprecated_string();
+    return attribute->value();
+}
+
+DeprecatedString Element::deprecated_get_attribute(StringView name) const
+{
+    auto maybe_attribute = get_attribute(name);
+    if (!maybe_attribute.has_value())
+        return {};
+
+    return maybe_attribute->to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-value

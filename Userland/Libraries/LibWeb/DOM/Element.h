@@ -99,17 +99,12 @@ public:
     bool has_attributes() const;
 
     // FIXME: This should be taking a 'FlyString const&'
-    DeprecatedString deprecated_attribute(StringView name) const { return get_attribute(name); }
-    Optional<String> attribute(StringView name) const
-    {
-        auto ret = deprecated_attribute(name);
-        if (ret.is_null())
-            return {};
-        return String::from_deprecated_string(ret).release_value();
-    }
+    DeprecatedString deprecated_attribute(StringView name) const { return deprecated_get_attribute(name); }
+    Optional<String> attribute(StringView name) const { return get_attribute(name); }
 
     // FIXME: This should be taking a 'FlyString const&' / 'Optional<FlyString> const&'
-    DeprecatedString get_attribute(StringView name) const;
+    Optional<String> get_attribute(StringView name) const;
+    DeprecatedString deprecated_get_attribute(StringView name) const;
     DeprecatedString get_attribute_value(StringView local_name, DeprecatedFlyString const& namespace_ = {}) const;
 
     WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
@@ -257,7 +252,7 @@ public:
 #define ARIA_IMPL(name, attribute)                                               \
     DeprecatedString name() const override                                       \
     {                                                                            \
-        return get_attribute(attribute);                                         \
+        return deprecated_get_attribute(attribute);                              \
     }                                                                            \
                                                                                  \
     WebIDL::ExceptionOr<void> set_##name(DeprecatedString const& value) override \

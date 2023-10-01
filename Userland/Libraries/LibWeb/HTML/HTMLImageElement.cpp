@@ -175,7 +175,7 @@ unsigned HTMLImageElement::width() const
         return paintable_box->content_width().to_int();
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
-    auto width_attr = get_attribute(HTML::AttributeNames::width);
+    auto width_attr = deprecated_get_attribute(HTML::AttributeNames::width);
     if (auto converted = width_attr.to_uint(); converted.has_value())
         return *converted;
 
@@ -203,7 +203,7 @@ unsigned HTMLImageElement::height() const
         return paintable_box->content_height().to_int();
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
-    auto height_attr = get_attribute(HTML::AttributeNames::height);
+    auto height_attr = deprecated_get_attribute(HTML::AttributeNames::height);
     if (auto converted = height_attr.to_uint(); converted.has_value())
         return *converted;
 
