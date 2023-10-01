@@ -9,6 +9,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
+#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
@@ -145,10 +146,10 @@ public:
         m_string_data = move(comment);
     }
 
-    DeprecatedFlyString const& tag_name() const
+    FlyString tag_name() const
     {
         VERIFY(is_start_tag() || is_end_tag());
-        return m_string_data;
+        return MUST(FlyString::from_deprecated_fly_string(m_string_data));
     }
 
     void set_tag_name(DeprecatedString name)
@@ -275,7 +276,7 @@ public:
     void adjust_tag_name(DeprecatedFlyString const& old_name, DeprecatedFlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        if (old_name == tag_name())
+        if (old_name == tag_name().to_deprecated_fly_string())
             set_tag_name(new_name);
     }
 

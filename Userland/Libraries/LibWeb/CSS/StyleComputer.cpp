@@ -314,7 +314,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
         if (auto it = rule_cache.rules_by_id.find(id.value()); it != rule_cache.rules_by_id.end())
             add_rules_to_run(it->value);
     }
-    if (auto it = rule_cache.rules_by_tag_name.find(FlyString::from_deprecated_fly_string(element.local_name()).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_tag_name.end())
+    if (auto it = rule_cache.rules_by_tag_name.find(element.local_name()); it != rule_cache.rules_by_tag_name.end())
         add_rules_to_run(it->value);
     add_rules_to_run(rule_cache.other_rules);
 

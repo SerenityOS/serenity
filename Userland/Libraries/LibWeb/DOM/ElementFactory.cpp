@@ -80,6 +80,7 @@
 #include <LibWeb/HTML/HTMLUnknownElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/MathML/MathMLElement.h>
 #include <LibWeb/MathML/TagNames.h>
 #include <LibWeb/Namespace.h>
@@ -111,139 +112,139 @@
 
 namespace Web::DOM {
 
-ErrorOr<FixedArray<DeprecatedFlyString>> valid_local_names_for_given_html_element_interface(StringView html_element_interface_name)
+ErrorOr<FixedArray<FlyString>> valid_local_names_for_given_html_element_interface(StringView html_element_interface_name)
 {
     if (html_element_interface_name == "HTMLAnchorElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::a });
+        return FixedArray<FlyString>::create({ HTML::TagNames::a });
     if (html_element_interface_name == "HTMLAreaElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::area });
+        return FixedArray<FlyString>::create({ HTML::TagNames::area });
     if (html_element_interface_name == "HTMLAudioElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::audio });
+        return FixedArray<FlyString>::create({ HTML::TagNames::audio });
     if (html_element_interface_name == "HTMLBaseElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::base });
+        return FixedArray<FlyString>::create({ HTML::TagNames::base });
     if (html_element_interface_name == "HTMLBodyElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::body });
+        return FixedArray<FlyString>::create({ HTML::TagNames::body });
     if (html_element_interface_name == "HTMLBRElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::br });
+        return FixedArray<FlyString>::create({ HTML::TagNames::br });
     if (html_element_interface_name == "HTMLButtonElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::button });
+        return FixedArray<FlyString>::create({ HTML::TagNames::button });
     if (html_element_interface_name == "HTMLCanvasElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::canvas });
+        return FixedArray<FlyString>::create({ HTML::TagNames::canvas });
     if (html_element_interface_name == "HTMLDataElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::data });
+        return FixedArray<FlyString>::create({ HTML::TagNames::data });
     if (html_element_interface_name == "HTMLDataListElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::datalist });
+        return FixedArray<FlyString>::create({ HTML::TagNames::datalist });
     if (html_element_interface_name == "HTMLDetailsElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::details });
+        return FixedArray<FlyString>::create({ HTML::TagNames::details });
     if (html_element_interface_name == "HTMLDialogElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::dialog });
+        return FixedArray<FlyString>::create({ HTML::TagNames::dialog });
     if (html_element_interface_name == "HTMLDirectoryElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::dir });
+        return FixedArray<FlyString>::create({ HTML::TagNames::dir });
     if (html_element_interface_name == "HTMLDivElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::div });
+        return FixedArray<FlyString>::create({ HTML::TagNames::div });
     if (html_element_interface_name == "HTMLDListElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::dl });
+        return FixedArray<FlyString>::create({ HTML::TagNames::dl });
     if (html_element_interface_name == "HTMLEmbedElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::embed });
+        return FixedArray<FlyString>::create({ HTML::TagNames::embed });
     if (html_element_interface_name == "HTMLFieldsetElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::fieldset });
+        return FixedArray<FlyString>::create({ HTML::TagNames::fieldset });
     if (html_element_interface_name == "HTMLFontElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::font });
+        return FixedArray<FlyString>::create({ HTML::TagNames::font });
     if (html_element_interface_name == "HTMLFormElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::form });
+        return FixedArray<FlyString>::create({ HTML::TagNames::form });
     if (html_element_interface_name == "HTMLFrameElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::frame });
+        return FixedArray<FlyString>::create({ HTML::TagNames::frame });
     if (html_element_interface_name == "HTMLFrameSetElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::frameset });
+        return FixedArray<FlyString>::create({ HTML::TagNames::frameset });
     if (html_element_interface_name == "HTMLHeadElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::head });
+        return FixedArray<FlyString>::create({ HTML::TagNames::head });
     if (html_element_interface_name == "HTMLHeadingElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6 });
+        return FixedArray<FlyString>::create({ HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6 });
     if (html_element_interface_name == "HTMLHRElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::hr });
+        return FixedArray<FlyString>::create({ HTML::TagNames::hr });
     if (html_element_interface_name == "HTMLHtmlElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::html });
+        return FixedArray<FlyString>::create({ HTML::TagNames::html });
     if (html_element_interface_name == "HTMLIFrameElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::iframe });
+        return FixedArray<FlyString>::create({ HTML::TagNames::iframe });
     if (html_element_interface_name == "HTMLImageElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::img });
+        return FixedArray<FlyString>::create({ HTML::TagNames::img });
     if (html_element_interface_name == "HTMLInputElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::input });
+        return FixedArray<FlyString>::create({ HTML::TagNames::input });
     if (html_element_interface_name == "HTMLLabelElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::label });
+        return FixedArray<FlyString>::create({ HTML::TagNames::label });
     if (html_element_interface_name == "HTMLLIElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::li });
+        return FixedArray<FlyString>::create({ HTML::TagNames::li });
     if (html_element_interface_name == "HTMLLinkElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::link });
+        return FixedArray<FlyString>::create({ HTML::TagNames::link });
     if (html_element_interface_name == "HTMLMapElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::map });
+        return FixedArray<FlyString>::create({ HTML::TagNames::map });
     if (html_element_interface_name == "HTMLMarqueeElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::marquee });
+        return FixedArray<FlyString>::create({ HTML::TagNames::marquee });
     if (html_element_interface_name == "HTMLMenuElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::menu });
+        return FixedArray<FlyString>::create({ HTML::TagNames::menu });
     if (html_element_interface_name == "HTMLMeterElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::meter });
+        return FixedArray<FlyString>::create({ HTML::TagNames::meter });
     if (html_element_interface_name == "HTMLModElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::ins, HTML::TagNames::del });
+        return FixedArray<FlyString>::create({ HTML::TagNames::ins, HTML::TagNames::del });
     if (html_element_interface_name == "HTMLObjectElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::object });
+        return FixedArray<FlyString>::create({ HTML::TagNames::object });
     if (html_element_interface_name == "HTMLOutputElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::output });
+        return FixedArray<FlyString>::create({ HTML::TagNames::output });
     if (html_element_interface_name == "HTMLParagraphElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::p });
+        return FixedArray<FlyString>::create({ HTML::TagNames::p });
     if (html_element_interface_name == "HTMLParamElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::param });
+        return FixedArray<FlyString>::create({ HTML::TagNames::param });
     if (html_element_interface_name == "HTMLPictureElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::picture });
+        return FixedArray<FlyString>::create({ HTML::TagNames::picture });
     if (html_element_interface_name == "HTMLPreElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::pre, HTML::TagNames::listing, HTML::TagNames::xmp });
+        return FixedArray<FlyString>::create({ HTML::TagNames::pre, HTML::TagNames::listing, HTML::TagNames::xmp });
     if (html_element_interface_name == "HTMLProgressElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::progress });
+        return FixedArray<FlyString>::create({ HTML::TagNames::progress });
     if (html_element_interface_name == "HTMLQuoteElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::blockquote, HTML::TagNames::q });
+        return FixedArray<FlyString>::create({ HTML::TagNames::blockquote, HTML::TagNames::q });
     if (html_element_interface_name == "HTMLScriptElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::script });
+        return FixedArray<FlyString>::create({ HTML::TagNames::script });
     if (html_element_interface_name == "HTMLSelectElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::select });
+        return FixedArray<FlyString>::create({ HTML::TagNames::select });
     if (html_element_interface_name == "HTMLSlotElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::slot });
+        return FixedArray<FlyString>::create({ HTML::TagNames::slot });
     if (html_element_interface_name == "HTMLSourceElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::source });
+        return FixedArray<FlyString>::create({ HTML::TagNames::source });
     if (html_element_interface_name == "HTMLSpanElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::span });
+        return FixedArray<FlyString>::create({ HTML::TagNames::span });
     if (html_element_interface_name == "HTMLStyleElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::style });
+        return FixedArray<FlyString>::create({ HTML::TagNames::style });
     if (html_element_interface_name == "HTMLTableCaptionElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::caption });
+        return FixedArray<FlyString>::create({ HTML::TagNames::caption });
     if (html_element_interface_name == "HTMLTableCellElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::td, HTML::TagNames::th });
+        return FixedArray<FlyString>::create({ HTML::TagNames::td, HTML::TagNames::th });
     if (html_element_interface_name == "HTMLTableColElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::colgroup, HTML::TagNames::col });
+        return FixedArray<FlyString>::create({ HTML::TagNames::colgroup, HTML::TagNames::col });
     if (html_element_interface_name == "HTMLTableElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::table });
+        return FixedArray<FlyString>::create({ HTML::TagNames::table });
     if (html_element_interface_name == "HTMLTableSectionElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::tbody, HTML::TagNames::thead, HTML::TagNames::tfoot });
+        return FixedArray<FlyString>::create({ HTML::TagNames::tbody, HTML::TagNames::thead, HTML::TagNames::tfoot });
     if (html_element_interface_name == "HTMLTemplateElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::template_ });
+        return FixedArray<FlyString>::create({ HTML::TagNames::template_ });
     if (html_element_interface_name == "HTMLTextAreaElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::textarea });
+        return FixedArray<FlyString>::create({ HTML::TagNames::textarea });
     if (html_element_interface_name == "HTMLTimeElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::time });
+        return FixedArray<FlyString>::create({ HTML::TagNames::time });
     if (html_element_interface_name == "HTMLTitleElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::title });
+        return FixedArray<FlyString>::create({ HTML::TagNames::title });
     if (html_element_interface_name == "HTMLTrackElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::track });
+        return FixedArray<FlyString>::create({ HTML::TagNames::track });
     if (html_element_interface_name == "HTMLUListElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::ul });
+        return FixedArray<FlyString>::create({ HTML::TagNames::ul });
     if (html_element_interface_name == "HTMLVideoElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::video });
+        return FixedArray<FlyString>::create({ HTML::TagNames::video });
     if (html_element_interface_name == "HTMLElement"sv)
-        return FixedArray<DeprecatedFlyString>::create({ HTML::TagNames::article, HTML::TagNames::section, HTML::TagNames::nav, HTML::TagNames::aside, HTML::TagNames::hgroup, HTML::TagNames::header, HTML::TagNames::footer, HTML::TagNames::address, HTML::TagNames::dt, HTML::TagNames::dd, HTML::TagNames::figure, HTML::TagNames::figcaption, HTML::TagNames::main, HTML::TagNames::em, HTML::TagNames::strong, HTML::TagNames::small, HTML::TagNames::s, HTML::TagNames::cite, HTML::TagNames::dfn, HTML::TagNames::abbr, HTML::TagNames::ruby, HTML::TagNames::rt, HTML::TagNames::rp, HTML::TagNames::code, HTML::TagNames::var, HTML::TagNames::samp, HTML::TagNames::kbd, HTML::TagNames::sub, HTML::TagNames::sup, HTML::TagNames::i, HTML::TagNames::b, HTML::TagNames::u, HTML::TagNames::mark, HTML::TagNames::bdi, HTML::TagNames::bdo, HTML::TagNames::wbr, HTML::TagNames::summary, HTML::TagNames::noscript, HTML::TagNames::acronym, HTML::TagNames::basefont, HTML::TagNames::big, HTML::TagNames::center, HTML::TagNames::nobr, HTML::TagNames::noembed, HTML::TagNames::noframes, HTML::TagNames::plaintext, HTML::TagNames::rb, HTML::TagNames::rtc, HTML::TagNames::strike, HTML::TagNames::tt });
-    return FixedArray<DeprecatedFlyString>::create({});
+        return FixedArray<FlyString>::create({ HTML::TagNames::article, HTML::TagNames::section, HTML::TagNames::nav, HTML::TagNames::aside, HTML::TagNames::hgroup, HTML::TagNames::header, HTML::TagNames::footer, HTML::TagNames::address, HTML::TagNames::dt, HTML::TagNames::dd, HTML::TagNames::figure, HTML::TagNames::figcaption, HTML::TagNames::main, HTML::TagNames::em, HTML::TagNames::strong, HTML::TagNames::small, HTML::TagNames::s, HTML::TagNames::cite, HTML::TagNames::dfn, HTML::TagNames::abbr, HTML::TagNames::ruby, HTML::TagNames::rt, HTML::TagNames::rp, HTML::TagNames::code, HTML::TagNames::var, HTML::TagNames::samp, HTML::TagNames::kbd, HTML::TagNames::sub, HTML::TagNames::sup, HTML::TagNames::i, HTML::TagNames::b, HTML::TagNames::u, HTML::TagNames::mark, HTML::TagNames::bdi, HTML::TagNames::bdo, HTML::TagNames::wbr, HTML::TagNames::summary, HTML::TagNames::noscript, HTML::TagNames::acronym, HTML::TagNames::basefont, HTML::TagNames::big, HTML::TagNames::center, HTML::TagNames::nobr, HTML::TagNames::noembed, HTML::TagNames::noframes, HTML::TagNames::plaintext, HTML::TagNames::rb, HTML::TagNames::rtc, HTML::TagNames::strike, HTML::TagNames::tt });
+    return FixedArray<FlyString>::create({});
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#elements-in-the-dom%3Aelement-interface
-bool is_unknown_html_element(DeprecatedFlyString const& tag_name)
+bool is_unknown_html_element(FlyString const& tag_name)
 {
     // NOTE: This is intentionally case-sensitive.
 
@@ -272,7 +273,7 @@ bool is_unknown_html_element(DeprecatedFlyString const& tag_name)
 // https://html.spec.whatwg.org/#elements-in-the-dom:element-interface
 static JS::NonnullGCPtr<Element> create_html_element(JS::Realm& realm, Document& document, QualifiedName qualified_name)
 {
-    auto lowercase_tag_name = qualified_name.local_name().to_deprecated_fly_string().to_lowercase();
+    FlyString lowercase_tag_name = MUST(Infra::to_ascii_lowercase(qualified_name.local_name()));
 
     if (lowercase_tag_name == HTML::TagNames::a)
         return realm.heap().allocate<HTML::HTMLAnchorElement>(realm, document, move(qualified_name));
@@ -489,7 +490,7 @@ static JS::GCPtr<MathML::MathMLElement> create_mathml_element(JS::Realm& realm, 
     return nullptr;
 }
 // https://dom.spec.whatwg.org/#concept-create-element
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document, DeprecatedFlyString local_name, DeprecatedFlyString namespace_, DeprecatedFlyString prefix, Optional<String> is_value, bool synchronous_custom_elements_flag)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document, FlyString local_name, DeprecatedFlyString namespace_, DeprecatedFlyString prefix, Optional<String> is_value, bool synchronous_custom_elements_flag)
 {
     auto& realm = document.realm();
 
@@ -503,7 +504,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
     // NOTE: We collapse this into just returning an element where necessary.
 
     // 4. Let definition be the result of looking up a custom element definition given document, namespace, localName, and is.
-    auto definition = document.lookup_custom_element_definition(namespace_, local_name, is_value);
+    auto definition = document.lookup_custom_element_definition(namespace_, local_name.to_deprecated_fly_string(), is_value);
 
     // 5. If definition is non-null, and definition’s name is not equal to its local name (i.e., definition represents a customized built-in element), then:
     if (definition && definition->name() != definition->local_name()) {
@@ -511,7 +512,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
         // 2. Set result to a new element that implements interface, with no attributes, namespace set to the HTML namespace,
         //    namespace prefix set to prefix, local name set to localName, custom element state set to "undefined", custom element definition set to null,
         //    is value set to is, and node document set to document.
-        auto element = create_html_element(realm, document, QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, Namespace::HTML });
+        auto element = create_html_element(realm, document, QualifiedName { local_name, prefix, Namespace::HTML });
 
         // 3. If the synchronous custom elements flag is set, then run this step while catching any exceptions:
         if (synchronous_custom_elements_flag) {
@@ -596,7 +597,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
 
                 // 2. Set result to a new element that implements the HTMLUnknownElement interface, with no attributes, namespace set to the HTML namespace, namespace prefix set to prefix,
                 //    local name set to localName, custom element state set to "failed", custom element definition set to null, is value set to null, and node document set to document.
-                JS::NonnullGCPtr<Element> element = realm.heap().allocate<HTML::HTMLUnknownElement>(realm, document, QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, Namespace::HTML });
+                JS::NonnullGCPtr<Element> element = realm.heap().allocate<HTML::HTMLUnknownElement>(realm, document, QualifiedName { local_name, prefix, Namespace::HTML });
                 element->set_custom_element_state(CustomElementState::Failed);
                 return element;
             }
@@ -607,7 +608,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
         // 2. Otherwise:
         // 1. Set result to a new element that implements the HTMLElement interface, with no attributes, namespace set to the HTML namespace, namespace prefix set to prefix,
         //    local name set to localName, custom element state set to "undefined", custom element definition set to null, is value set to null, and node document set to document.
-        auto element = realm.heap().allocate<HTML::HTMLElement>(realm, document, QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, Namespace::HTML });
+        auto element = realm.heap().allocate<HTML::HTMLElement>(realm, document, QualifiedName { local_name, prefix, Namespace::HTML });
         element->set_custom_element_state(CustomElementState::Undefined);
 
         // 2. Enqueue a custom element upgrade reaction given result and definition.
@@ -621,7 +622,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
     //       local name set to localName, custom element state set to "uncustomized", custom element definition set to null, is value set to is,
     //       and node document set to document.
 
-    auto qualified_name = QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, namespace_ };
+    auto qualified_name = QualifiedName { local_name, prefix, namespace_ };
 
     if (namespace_ == Namespace::HTML) {
         auto element = create_html_element(realm, document, move(qualified_name));

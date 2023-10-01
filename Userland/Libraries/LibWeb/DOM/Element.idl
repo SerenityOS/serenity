@@ -25,7 +25,7 @@ dictionary ScrollIntoViewOptions : ScrollOptions {
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
     [ImplementedAs=deprecated_prefix] readonly attribute DOMString? prefix;
-    readonly attribute DOMString localName;
+    [ImplementedAs=deprecated_local_name] readonly attribute DOMString localName;
     readonly attribute DOMString tagName;
 
     [ImplementedAs=deprecated_get_attribute] DOMString? getAttribute(DOMString qualifiedName);

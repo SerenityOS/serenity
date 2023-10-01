@@ -1361,7 +1361,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String c
         namespace_ = Namespace::HTML;
 
     // 6. Return the result of creating an element given this, localName, namespace, null, is, and with the synchronous custom elements flag set.
-    return TRY(DOM::create_element(*this, local_name, namespace_, {}, move(is_value), true));
+    return TRY(DOM::create_element(*this, MUST(FlyString::from_deprecated_fly_string(local_name)), namespace_, {}, move(is_value), true));
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelementns
@@ -1387,7 +1387,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optio
     }
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
-    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name().to_deprecated_fly_string(), extracted_qualified_name.deprecated_namespace_(), extracted_qualified_name.deprecated_prefix(), move(is_value), true));
+    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.deprecated_namespace_(), extracted_qualified_name.deprecated_prefix(), move(is_value), true));
 }
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()

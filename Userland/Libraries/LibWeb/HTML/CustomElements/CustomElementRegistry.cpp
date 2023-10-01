@@ -143,7 +143,7 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
             return JS::throw_completion(WebIDL::NotSupportedError::create(realm, MUST(String::formatted("'{}' is a custom element name, only non-custom elements can be extended"sv, extends.value()))));
 
         // 2. If the element interface for extends and the HTML namespace is HTMLUnknownElement (e.g., if extends does not indicate an element definition in this specification), then throw a "NotSupportedError" DOMException.
-        if (DOM::is_unknown_html_element(extends.value().to_deprecated_string()))
+        if (DOM::is_unknown_html_element(extends.value()))
             return JS::throw_completion(WebIDL::NotSupportedError::create(realm, MUST(String::formatted("'{}' is an unknown HTML element"sv, extends.value()))));
 
         // 3. Set localName to extends.
@@ -285,7 +285,7 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
 
         auto& inclusive_descendant_element = static_cast<DOM::Element&>(inclusive_descendant);
 
-        if (inclusive_descendant_element.namespace_() == Namespace::HTML && inclusive_descendant_element.local_name() == local_name.to_deprecated_string() && (!extends.has_value() || inclusive_descendant_element.is_value() == name))
+        if (inclusive_descendant_element.namespace_() == Namespace::HTML && inclusive_descendant_element.local_name() == local_name && (!extends.has_value() || inclusive_descendant_element.is_value() == name))
             upgrade_candidates.append(JS::make_handle(inclusive_descendant_element));
 
         return IterationDecision::Continue;

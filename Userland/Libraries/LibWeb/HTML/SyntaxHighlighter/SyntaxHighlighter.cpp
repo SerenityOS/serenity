@@ -150,7 +150,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
                 token->start_position().line,
                 token->start_position().column,
                 token->start_position().line,
-                token->start_position().column + token->tag_name().length(),
+                token->start_position().column + token->tag_name().bytes().size(),
                 { palette.syntax_keyword(), {}, true },
                 token->is_start_tag() ? AugmentedTokenKind::OpenTag : AugmentedTokenKind::CloseTag);
 

@@ -662,7 +662,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
         is_value = String::from_utf8(is_value_deprecated_string).release_value_but_fixme_should_propagate_errors();
 
     // 6. Let definition be the result of looking up a custom element definition given document, given namespace, local name, and is.
-    auto definition = document->lookup_custom_element_definition(namespace_, local_name, is_value);
+    auto definition = document->lookup_custom_element_definition(namespace_, local_name.to_deprecated_fly_string(), is_value);
 
     // 7. If definition is non-null and the parser was not created as part of the HTML fragment parsing algorithm, then let will execute script be true. Otherwise, let it be false.
     bool will_execute_script = definition && !m_parsing_fragment;
@@ -813,7 +813,7 @@ void HTMLParser::handle_before_head(HTMLToken& token)
     }
 
 AnythingElse:
-    m_head_element = JS::make_handle(verify_cast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head))));
+    m_head_element = JS::make_handle(verify_cast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head.to_deprecated_fly_string()))));
     m_insertion_mode = InsertionMode::InHead;
     process_using_the_rules_for(InsertionMode::InHead, token);
     return;
@@ -1107,12 +1107,12 @@ void HTMLParser::handle_after_head(HTMLToken& token)
     }
 
 AnythingElse:
-    (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::body));
+    (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::body.to_deprecated_fly_string()));
     m_insertion_mode = InsertionMode::InBody;
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLParser::generate_implied_end_tags(DeprecatedFlyString const& exception)
+void HTMLParser::generate_implied_end_tags(FlyString const& exception)
 {
     while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
         (void)m_stack_of_open_elements.pop();
@@ -1242,7 +1242,7 @@ Create:
     VERIFY(!entry->is_marker());
 
     // FIXME: Hold on to the real token!
-    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->element->local_name()));
+    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->element->local_name().to_deprecated_fly_string()));
 
     // 9. Replace the entry for entry in the list with an entry for new element.
     m_list_of_active_formatting_elements.entries().at(index).element = JS::make_handle(new_element);
@@ -1256,7 +1256,7 @@ Create:
 HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_algorithm(HTMLToken& token)
 {
     // 1. Let subject be token's tag name.
-    auto& subject = token.tag_name();
+    auto const& subject = token.tag_name();
 
     // 2. If the current node is an HTML element whose tag name is subject,
     //    and the current node is not in the list of active formatting elements,
@@ -1383,7 +1383,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
             // 6. Create an element for the token for which the element node was created,
             //    in the HTML namespace, with common ancestor as the intended parent;
             // FIXME: hold onto the real token
-            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name()), Namespace::HTML, *common_ancestor);
+            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name().to_deprecated_fly_string()), Namespace::HTML, *common_ancestor);
             // replace the entry for node in the list of active formatting elements with an entry for the new element,
             m_list_of_active_formatting_elements.replace(*node, *element);
             // replace the entry for node in the stack of open elements with an entry for the new element,
@@ -1412,7 +1412,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
         // 15. Create an element for the token for which formatting element was created,
         //     in the HTML namespace, with furthest block as the intended parent.
         // FIXME: hold onto the real token
-        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name()), Namespace::HTML, *furthest_block);
+        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name().to_deprecated_fly_string()), Namespace::HTML, *furthest_block);
 
         // 16. Take all of the child nodes of furthest block and append them to the element created in the last step.
         for (auto& child : furthest_block->children_as_vector())
@@ -1437,7 +1437,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#special
-bool HTMLParser::is_special_tag(DeprecatedFlyString const& tag_name, DeprecatedFlyString const& namespace_)
+bool HTMLParser::is_special_tag(FlyString const& tag_name, DeprecatedFlyString const& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(
@@ -1846,7 +1846,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::p) {
         if (!m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p)) {
             log_parse_error();
-            (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::p));
+            (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::p.to_deprecated_fly_string()));
         }
         close_a_p_element();
         return;
@@ -2708,7 +2708,7 @@ void HTMLParser::handle_in_table_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::th, HTML::TagNames::td)) {
         log_parse_error();
         clear_the_stack_back_to_a_table_body_context();
-        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tr));
+        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tr.to_deprecated_fly_string()));
         m_insertion_mode = InsertionMode::InRow;
         process_using_the_rules_for(m_insertion_mode, token);
         return;
@@ -2811,7 +2811,7 @@ void HTMLParser::handle_in_table(HTMLToken& token)
         clear_the_stack_back_to_a_table_context();
 
         // Insert an HTML element for a "colgroup" start tag token with no attributes, then switch the insertion mode to "in column group".
-        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::colgroup));
+        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::colgroup.to_deprecated_fly_string()));
         m_insertion_mode = InsertionMode::InColumnGroup;
 
         // Reprocess the current token.
@@ -2836,7 +2836,7 @@ void HTMLParser::handle_in_table(HTMLToken& token)
         clear_the_stack_back_to_a_table_context();
 
         // Insert an HTML element for a "tbody" start tag token with no attributes, then switch the insertion mode to "in table body".
-        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tbody));
+        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tbody.to_deprecated_fly_string()));
         m_insertion_mode = InsertionMode::InTableBody;
 
         // Reprocess the current token.
@@ -3514,7 +3514,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         if (token.is_self_closing()) {
 
             // -> If the token's tag name is "script", and the new current node is in the SVG namespace
-            if (token.tag_name() == SVG::TagNames::script && current_node().namespace_() == Namespace::SVG) {
+            if (token.tag_name().to_deprecated_fly_string() == SVG::TagNames::script && current_node().namespace_() == Namespace::SVG) {
                 // Acknowledge the token's self-closing flag, and then act as described in the steps for a "script" end tag below.
                 token.acknowledge_self_closing_flag_if_set();
                 goto ScriptEndTag;
@@ -3564,7 +3564,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         JS::GCPtr<DOM::Element> node = current_node();
         // FIXME: Not sure if this is the correct to_lowercase, as the specification says "to ASCII lowercase"
         // 2. If node's tag name, converted to ASCII lowercase, is not the same as the tag name of the token, then this is a parse error.
-        if (node->tag_name().to_lowercase() != token.tag_name())
+        if (node->tag_name().to_lowercase() != token.tag_name().to_deprecated_fly_string())
             log_parse_error();
 
         // 3. Loop: If node is the topmost element in the stack of open elements, then return. (fragment case)
@@ -3576,7 +3576,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
             // FIXME: See the above FIXME
             // 4. If node's tag name, converted to ASCII lowercase, is the same as the tag name of the token, pop elements from the stack
             // of open elements until node has been popped from the stack, and then return.
-            if (node->tag_name().to_lowercase() == token.tag_name()) {
+            if (node->tag_name().to_lowercase() == token.tag_name().to_deprecated_fly_string()) {
                 while (&current_node() != node.ptr())
                     (void)m_stack_of_open_elements.pop();
                 (void)m_stack_of_open_elements.pop();
@@ -3898,7 +3898,7 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
             DeprecatedString tag_name;
 
             if (element.namespace_().is_one_of(Namespace::HTML, Namespace::MathML, Namespace::SVG))
-                tag_name = element.local_name();
+                tag_name = element.local_name().to_deprecated_fly_string();
             else
                 tag_name = element.qualified_name();
 

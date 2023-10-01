@@ -142,7 +142,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)";
     else if (is<DOM::Element>(layout_node.dom_node()))
-        tag_name = verify_cast<DOM::Element>(*layout_node.dom_node()).local_name();
+        tag_name = verify_cast<DOM::Element>(*layout_node.dom_node()).local_name().to_deprecated_fly_string();
     else
         tag_name = layout_node.dom_node()->node_name().to_deprecated_fly_string();
 

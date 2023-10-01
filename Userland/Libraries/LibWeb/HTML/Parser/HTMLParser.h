@@ -68,7 +68,7 @@ public:
 
     InsertionMode insertion_mode() const { return m_insertion_mode; }
 
-    static bool is_special_tag(DeprecatedFlyString const& tag_name, DeprecatedFlyString const& namespace_);
+    static bool is_special_tag(FlyString const& tag_name, DeprecatedFlyString const& namespace_);
 
     HTMLTokenizer& tokenizer() { return m_tokenizer; }
 
@@ -118,7 +118,7 @@ private:
 
     void stop_parsing() { m_stop_parsing = true; }
 
-    void generate_implied_end_tags(DeprecatedFlyString const& exception = {});
+    void generate_implied_end_tags(FlyString const& exception = {});
     void generate_all_implied_end_tags_thoroughly();
     JS::NonnullGCPtr<DOM::Element> create_element_for(HTMLToken const&, DeprecatedFlyString const& namespace_, DOM::Node& intended_parent);
 

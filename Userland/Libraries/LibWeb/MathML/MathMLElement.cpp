@@ -28,7 +28,7 @@ void MathMLElement::initialize(JS::Realm& realm)
 Optional<ARIA::Role> MathMLElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-math
-    if (local_name() == TagNames::math.to_deprecated_fly_string())
+    if (local_name() == TagNames::math)
         return ARIA::Role::math;
     return {};
 }
