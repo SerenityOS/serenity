@@ -549,7 +549,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
     // 12. Otherwise, inherited ns is not equal to ns (the node's own namespace is different from the context namespace of its parent). Run these sub-steps:
     else {
         // 1. Let prefix be the value of node's prefix attribute.
-        auto prefix = element.prefix();
+        auto prefix = element.deprecated_prefix();
 
         // 2. Let candidate prefix be the result of retrieving a preferred prefix string prefix from map given namespace ns.
         auto candidate_prefix = retrieve_a_preferred_prefix_string(prefix, map, ns);

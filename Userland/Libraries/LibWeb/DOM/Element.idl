@@ -24,7 +24,7 @@ dictionary ScrollIntoViewOptions : ScrollOptions {
 [Exposed=Window, UseDeprecatedAKString]
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
-    readonly attribute DOMString? prefix;
+    [ImplementedAs=deprecated_prefix] readonly attribute DOMString? prefix;
     readonly attribute DOMString localName;
     readonly attribute DOMString tagName;
 
