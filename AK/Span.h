@@ -9,6 +9,8 @@
 #include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/Iterator.h>
+#include <AK/MultiHash.h>
+#include <AK/SipHash.h>
 #include <AK/TypedTransfer.h>
 #include <AK/Types.h>
 
@@ -305,12 +307,22 @@ template<typename T>
 struct Traits<Span<T>> : public DefaultTraits<Span<T>> {
     static unsigned hash(Span<T> const& span)
     {
-        unsigned hash = 0;
-        for (auto const& value : span) {
-            auto value_hash = Traits<T>::hash(value);
-            hash = pair_int_hash(hash, value_hash);
+        // FIXME: Maybe other trivial types benefit from this faster hash method as well?
+        if constexpr (IsIntegral<T> || IsFloatingPoint<T>) {
+            Span<u8 const> span_data {
+                bit_cast<u8 const*>(span.data()),
+                sizeof(T) * span.size(),
+            };
+            auto hash_u64 = sip_hash_bytes<1, 3>(span_data);
+            return hash_u64 ^ (hash_u64 >> 32);
+        } else {
+            unsigned hash = 0;
+            for (auto const& value : span) {
+                auto value_hash = Traits<T>::hash(value);
+                hash = multi_hash(hash, value_hash);
+            }
+            return hash;
         }
-        return hash;
     }
 
     constexpr static bool is_trivial() { return true; }
