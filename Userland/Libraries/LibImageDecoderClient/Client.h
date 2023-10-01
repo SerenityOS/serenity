@@ -14,7 +14,7 @@
 namespace ImageDecoderClient {
 
 struct Frame {
-    RefPtr<Gfx::Bitmap> bitmap;
+    NonnullRefPtr<Gfx::Bitmap> bitmap;
     u32 duration { 0 };
 };
 

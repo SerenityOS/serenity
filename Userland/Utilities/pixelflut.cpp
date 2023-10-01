@@ -80,7 +80,7 @@ ErrorOr<NonnullRefPtr<Client>> Client::create(StringView image_path, StringView 
     if (!maybe_image.has_value())
         return Error::from_string_view("Image could not be read"sv);
 
-    auto image = maybe_image->frames.take_first().bitmap.release_nonnull();
+    auto image = maybe_image->frames.take_first().bitmap;
 
     // Make sure to not draw out of bounds; some servers will disconnect us for that!
     if (image->width() > canvas_size.width()) {
