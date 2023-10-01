@@ -1292,8 +1292,10 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
                 u8 mask = 8;
                 while (column < width && mask > 0) {
                     mask -= 1;
-                    auto color_idx = (byte >> mask) & 0x1;
+                    size_t color_idx = (byte >> mask) & 0x1;
                     if (context.is_included_in_ico) {
+                        if (color_idx >= context.color_table.size())
+                            return Error::from_string_literal("Invalid color table index");
                         auto color = context.color_table[color_idx];
                         context.bitmap->scanline(row)[column++] = color;
                     } else {
@@ -1309,8 +1311,10 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
                 u8 mask = 8;
                 while (column < width && mask > 0) {
                     mask -= 2;
-                    auto color_idx = (byte >> mask) & 0x3;
+                    size_t color_idx = (byte >> mask) & 0x3;
                     if (context.is_included_in_ico) {
+                        if (color_idx >= context.color_table.size())
+                            return Error::from_string_literal("Invalid color table index");
                         auto color = context.color_table[color_idx];
                         context.bitmap->scanline(row)[column++] = color;
                     } else {
@@ -1329,6 +1333,8 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
                 u32 low_color_idx = byte & 0xf;
 
                 if (context.is_included_in_ico) {
+                    if (high_color_idx >= context.color_table.size() || low_color_idx >= context.color_table.size())
+                        return Error::from_string_literal("Invalid color table index");
                     auto high_color = context.color_table[high_color_idx];
                     auto low_color = context.color_table[low_color_idx];
                     context.bitmap->scanline(row)[column++] = high_color;
@@ -1348,6 +1354,8 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
 
                 u8 byte = streamer.read_u8();
                 if (context.is_included_in_ico) {
+                    if (byte >= context.color_table.size())
+                        return Error::from_string_literal("Invalid color table index");
                     auto color = context.color_table[byte];
                     context.bitmap->scanline(row)[column++] = color;
                 } else {
