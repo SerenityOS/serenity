@@ -1,9 +1,10 @@
-@GUI::Widget {
+@LoginServer::Widget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {}
 
     @GUI::ImageWidget {
         name: "banner"
+        bitmap: "/res/graphics/brand-banner.png"
         auto_resize: true
     }
 
