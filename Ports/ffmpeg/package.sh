@@ -1,13 +1,22 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=ffmpeg
-version=5.0
-useconfigure=true
-depends=("libiconv" "libtiff" "xz" "bzip2" "SDL2" "x264" "x265")
-files=(
-    "https://ffmpeg.org/releases/ffmpeg-${version}.tar.gz#7bf52bc242b5db8df67c62cb826df134d917dedcf6abf1289e15e4057bcc1750"
+port='ffmpeg'
+version='6.0'
+useconfigure='true'
+depends=(
+    'bzip2'
+    'libiconv'
+    'libtiff'
+    'SDL2'
+    'x264'
+    'x265'
+    'xz'
 )
-installopts=("INSTALL_TOP=${SERENITY_INSTALL_ROOT}/usr/local")
-configopts=("SRC_PATH=.")
+files=(
+    "https://ffmpeg.org/releases/ffmpeg-${version}.tar.gz#f4ccf961403752c93961927715f524576d1f4dd02cd76d8c76aed3bbe6686656"
+)
+installopts=(
+    "INSTALL_TOP=${SERENITY_INSTALL_ROOT}/usr/local"
+)
 
 configure() {
     run ./configure \
