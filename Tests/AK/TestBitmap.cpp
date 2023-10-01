@@ -8,6 +8,8 @@
 
 #include <AK/Bitmap.h>
 
+using namespace Test::Randomized;
+
 TEST_CASE(construct_empty)
 {
     Bitmap bitmap;
@@ -277,6 +279,49 @@ TEST_CASE(byte_aligned_access)
     }
 }
 
+RANDOMIZED_TEST_CASE(set_get)
+{
+    GEN(init, Gen::boolean());
+    GEN(new_value, Gen::boolean());
+    GEN(size, Gen::unsigned_int(1, 64));
+    GEN(i, Gen::unsigned_int(size - 1));
+
+    auto bitmap = MUST(Bitmap::create(size, init));
+    bitmap.set(i, new_value);
+
+    EXPECT_EQ(bitmap.get(i), new_value);
+}
+
+RANDOMIZED_TEST_CASE(set_range)
+{
+    GEN(init, Gen::boolean());
+    GEN(size, Gen::unsigned_int(1, 64));
+    GEN(new_value, Gen::boolean());
+
+    GEN(start, Gen::unsigned_int(size - 1));
+    GEN(len, Gen::unsigned_int(size - start - 1));
+
+    auto bitmap = MUST(Bitmap::create(size, init));
+    bitmap.set_range(start, len, new_value);
+
+    for (size_t i = start; i < start + len; ++i)
+        EXPECT_EQ(bitmap.get(i), new_value);
+
+    EXPECT_EQ(bitmap.count_in_range(start, len, new_value), len);
+}
+
+RANDOMIZED_TEST_CASE(fill)
+{
+    GEN(init, Gen::boolean());
+    GEN(size, Gen::unsigned_int(1, 64));
+    GEN(new_value, Gen::boolean());
+
+    auto bitmap = MUST(Bitmap::create(size, init));
+    bitmap.fill(new_value);
+
+    EXPECT_EQ(bitmap.count_slow(new_value), size);
+}
+
 TEST_CASE(find_one_anywhere_edge_case)
 {
     {
@@ -286,6 +331,26 @@ TEST_CASE(find_one_anywhere_edge_case)
     }
 }
 
+RANDOMIZED_TEST_CASE(find_one_anywhere)
+{
+    GEN(init, Gen::boolean());
+    GEN(size, Gen::unsigned_int(1, 64));
+    GEN(hint, Gen::unsigned_int(size - 1));
+
+    GEN(new_value, Gen::boolean());
+    GEN(i, Gen::unsigned_int(size - 1));
+
+    auto bitmap = MUST(Bitmap::create(size, init));
+    bitmap.set(i, new_value);
+
+    Optional<size_t> result = new_value
+        ? bitmap.find_one_anywhere_set(hint)
+        : bitmap.find_one_anywhere_unset(hint);
+
+    auto expected_found_index = init == new_value ? 0 : i;
+    EXPECT_EQ(result.value(), expected_found_index);
+}
+
 TEST_CASE(find_first_edge_case)
 {
     {
@@ -293,4 +358,23 @@ TEST_CASE(find_first_edge_case)
         bitmap.set(0, false);
         EXPECT_EQ(bitmap.find_first_unset().value(), 0UL);
     }
+}
+
+RANDOMIZED_TEST_CASE(find_first)
+{
+    GEN(init, Gen::boolean());
+    GEN(size, Gen::unsigned_int(1, 64));
+
+    GEN(new_value, Gen::boolean());
+    GEN(i, Gen::unsigned_int(size - 1));
+
+    auto bitmap = MUST(Bitmap::create(size, init));
+    bitmap.set(i, new_value);
+
+    Optional<size_t> result = new_value
+        ? bitmap.find_first_set()
+        : bitmap.find_first_unset();
+
+    auto expected_found_index = init == new_value ? 0 : i;
+    EXPECT_EQ(result.value(), expected_found_index);
 }
