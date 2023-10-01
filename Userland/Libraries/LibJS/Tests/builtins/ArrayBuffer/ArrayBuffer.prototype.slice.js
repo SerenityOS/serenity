@@ -27,3 +27,14 @@ test("both parameters", () => {
     expect(slicedView).toHaveLength(1);
     expect(slicedView[0]).toBe(12);
 });
+
+test("throws TypeError if |this| is SharedArrayBuffer", () => {
+    const sab = new SharedArrayBuffer(16);
+    expect(() => ArrayBuffer.prototype.slice.call(sab)).toThrow(TypeError);
+});
+
+test("slice creates a new ArrayBuffer", () => {
+    const ab = new ArrayBuffer(16);
+    expect(ab).toBeInstanceOf(ArrayBuffer);
+    expect(ab.slice(0)).toBeInstanceOf(ArrayBuffer);
+});

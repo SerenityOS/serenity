@@ -47,7 +47,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-    // FIXME: Check for shared buffer
+    if (array_buffer_object->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
 
     // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
     if (array_buffer_object->is_detached())
@@ -99,7 +100,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto* new_array_buffer_object = static_cast<ArrayBuffer*>(new_array_buffer.ptr());
 
     // 18. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
-    // FIXME: Check for shared buffer
+    if (array_buffer_object->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
 
     // 19. If IsDetachedBuffer(new) is true, throw a TypeError exception.
     if (new_array_buffer_object->is_detached())
@@ -157,7 +159,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::detached_getter)
     auto array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-    // FIXME: Check for shared buffer
+    if (array_buffer_object->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
 
     // 4. Return IsDetachedBuffer(O).
     return Value(array_buffer_object->is_detached());

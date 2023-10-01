@@ -17,3 +17,11 @@ test("ArrayBuffer size limit", () => {
         new ArrayBuffer(2 ** 53);
     }).toThrowWithMessage(RangeError, "Invalid array buffer length");
 });
+
+test("ArrayBuffer is detached after transfer()", () => {
+    const ab = new ArrayBuffer(16);
+    expect(ab.detached).toBe(false);
+    const transferred = ab.transfer();
+    expect(ab.detached).toBe(true);
+    expect(transferred.detached).toBe(false);
+});

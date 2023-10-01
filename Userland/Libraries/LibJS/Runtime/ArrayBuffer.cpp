@@ -158,7 +158,7 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& co
 ThrowCompletionOr<void> detach_array_buffer(VM& vm, ArrayBuffer& array_buffer, Optional<Value> key)
 {
     // 1. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
-    // FIXME: Check for shared buffer
+    VERIFY(!array_buffer.is_shared_array_buffer());
 
     // 2. If key is not present, set key to undefined.
     if (!key.has_value())
@@ -207,7 +207,9 @@ ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer
 
     // 1. Perform ? RequireInternalSlot(arrayBuffer, [[ArrayBufferData]]).
 
-    // FIXME: 2. If IsSharedArrayBuffer(arrayBuffer) is true, throw a TypeError exception.
+    // 2. If IsSharedArrayBuffer(arrayBuffer) is true, throw a TypeError exception.
+    if (array_buffer.is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
 
     // 3. If newLength is undefined, then
     // a. Let newByteLength be arrayBuffer.[[ArrayBufferByteLength]].
