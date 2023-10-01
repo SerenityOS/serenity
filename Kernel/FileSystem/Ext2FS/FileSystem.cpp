@@ -510,8 +510,10 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, St
     ext2_inode e2inode {};
     auto now = kgettimeofday().truncated_seconds_since_epoch();
     e2inode.i_mode = mode;
-    e2inode.i_uid = uid.value();
-    e2inode.i_gid = gid.value();
+    e2inode.i_uid = static_cast<u16>(uid.value());
+    ext2fs_set_i_uid_high(e2inode, uid.value() >> 16);
+    e2inode.i_gid = static_cast<u16>(gid.value());
+    ext2fs_set_i_gid_high(e2inode, gid.value() >> 16);
     e2inode.i_size = 0;
     e2inode.i_atime = now;
     e2inode.i_ctime = now;

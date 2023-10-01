@@ -40,6 +40,7 @@ serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED)
 set(LIBTEST_BASED_SOURCES
     TestEmptyPrivateInodeVMObject.cpp
     TestEmptySharedInodeVMObject.cpp
+    TestExt2FS.cpp
     TestInvalidUIDSet.cpp
     TestSharedInodeVMObject.cpp
     TestPosixFallocate.cpp

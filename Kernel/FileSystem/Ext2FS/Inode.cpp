@@ -471,8 +471,8 @@ InodeMetadata Ext2FSInode::metadata() const
     metadata.inode = identifier();
     metadata.size = size();
     metadata.mode = m_raw_inode.i_mode;
-    metadata.uid = m_raw_inode.i_uid;
-    metadata.gid = m_raw_inode.i_gid;
+    metadata.uid = inode_uid(m_raw_inode);
+    metadata.gid = inode_gid(m_raw_inode);
     metadata.link_count = m_raw_inode.i_links_count;
     metadata.atime = UnixDateTime::from_seconds_since_epoch(m_raw_inode.i_atime);
     metadata.ctime = UnixDateTime::from_seconds_since_epoch(m_raw_inode.i_ctime);
@@ -1051,10 +1051,12 @@ ErrorOr<void> Ext2FSInode::chmod(mode_t mode)
 ErrorOr<void> Ext2FSInode::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
-    if (m_raw_inode.i_uid == uid && m_raw_inode.i_gid == gid)
+    if (inode_uid(m_raw_inode) == uid && inode_gid(m_raw_inode) == gid)
         return {};
-    m_raw_inode.i_uid = uid.value();
-    m_raw_inode.i_gid = gid.value();
+    m_raw_inode.i_uid = static_cast<u16>(uid.value());
+    ext2fs_set_i_uid_high(m_raw_inode, uid.value() >> 16);
+    m_raw_inode.i_gid = static_cast<u16>(gid.value());
+    ext2fs_set_i_gid_high(m_raw_inode, gid.value() >> 16);
     set_metadata_dirty(true);
     return {};
 }
