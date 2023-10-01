@@ -558,7 +558,7 @@ static bool ends_in_a_number_checker(StringView input)
 
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
-static Optional<URL::Host> parse_host(StringView input, bool is_not_special = false)
+static Optional<URL::Host> parse_host(StringView input, bool is_opaque = false)
 {
     // 1. If input starts with U+005B ([), then:
     if (input.starts_with('[')) {
@@ -575,8 +575,8 @@ static Optional<URL::Host> parse_host(StringView input, bool is_not_special = fa
         return address.release_value();
     }
 
-    // 2. If isNotSpecial is true, then return the result of opaque-host parsing input.
-    if (is_not_special)
+    // 2. If isOpaque is true, then return the result of opaque-host parsing input.
+    if (is_opaque)
         return parse_opaque_host(input);
 
     // 3. Assert: input is not the empty string.
