@@ -7,6 +7,7 @@
 
 #include <AK/MultiHash.h>
 #include <AK/NumericLimits.h>
+#include <AK/SipHash.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 #include <LibSQL/AST/AST.h>
@@ -398,23 +399,15 @@ u32 Value::hash() const
         [](ByteString const& value) -> u32 { return value.hash(); },
         [](Integer auto value) -> u32 {
             return downsize_integer(value, [](auto integer, auto) {
-                if constexpr (sizeof(decltype(integer)) == 8)
-                    return u64_hash(integer);
-                else
-                    return int_hash(integer);
+                return standard_sip_hash(integer);
             });
         },
         [](double) -> u32 { VERIFY_NOT_REACHED(); },
-        [](bool value) -> u32 { return int_hash(value); },
+        [](bool value) -> u32 { return standard_sip_hash(value); },
         [](TupleValue const& value) -> u32 {
             u32 hash = 0;
-
-            for (auto const& element : value.values) {
-                if (hash == 0)
-                    hash = element.hash();
-                else
-                    hash = multi_hash(hash, element.hash());
-            }
+            for (auto const& element : value.values)
+                hash = multi_hash(hash, element.hash());
 
             return hash;
         });

@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/IPv4Address.h>
 #include <AK/MACAddress.h>
+#include <AK/SipHash.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
@@ -108,7 +109,7 @@ enum class DHCPMessageType : u8 {
 template<>
 struct AK::Traits<DHCPOption> : public DefaultTraits<DHCPOption> {
     static constexpr bool is_trivial() { return true; }
-    static unsigned hash(DHCPOption u) { return int_hash((u8)u); }
+    static unsigned hash(DHCPOption u) { return secure_sip_hash(to_underlying(u)); }
 };
 
 struct ParsedDHCPv4Options {

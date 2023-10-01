@@ -9,7 +9,6 @@
 #include <AK/BitCast.h>
 #include <AK/Concepts.h>
 #include <AK/Forward.h>
-#include <AK/HashFunctions.h>
 #include <AK/SipHash.h>
 #include <AK/StringHash.h>
 

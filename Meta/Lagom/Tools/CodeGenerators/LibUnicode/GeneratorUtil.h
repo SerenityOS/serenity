@@ -8,7 +8,6 @@
 
 #include <AK/ByteString.h>
 #include <AK/Function.h>
-#include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
@@ -16,6 +15,7 @@
 #include <AK/NumericLimits.h>
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
+#include <AK/SipHash.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -38,7 +38,7 @@ template<IntegralOrEnum T>
 struct AK::Traits<Vector<T>> : public DefaultTraits<Vector<T>> {
     static unsigned hash(Vector<T> const& list)
     {
-        auto hash = int_hash(static_cast<u32>(list.size()));
+        auto hash = standard_sip_hash(static_cast<u32>(list.size()));
 
         for (auto value : list) {
             if constexpr (Enum<T>)

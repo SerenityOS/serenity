@@ -87,7 +87,6 @@ shared_library("AK") {
     "GenericLexer.cpp",
     "GenericLexer.h",
     "GenericShorthands.h",
-    "HashFunctions.h",
     "HashMap.h",
     "HashTable.h",
     "Hex.cpp",

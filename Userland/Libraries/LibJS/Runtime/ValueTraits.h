@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/SipHash.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
@@ -35,7 +36,7 @@ struct ValueTraits : public Traits<Value> {
         else if (value.is_nan())
             value = js_nan();
 
-        return u64_hash(value.encoded()); // FIXME: Is this the best way to hash pointers, doubles & ints?
+        return standard_sip_hash(value.encoded());
     }
     static bool equals(const Value a, const Value b)
     {

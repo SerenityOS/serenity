@@ -37,7 +37,7 @@ template<>
 struct Traits<DeviceMapper::RegisteredDeviceNode> : public DefaultTraits<DeviceMapper::RegisteredDeviceNode> {
     static unsigned hash(DeviceMapper::RegisteredDeviceNode const& node)
     {
-        return int_hash(node.minor_number().value());
+        return standard_sip_hash(node.minor_number().value());
     }
 
     static bool equals(DeviceMapper::RegisteredDeviceNode const& a, DeviceMapper::RegisteredDeviceNode const& b)
