@@ -7,6 +7,7 @@
 #include <AK/ByteString.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
+#include <AK/SipHash.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
@@ -14,7 +15,6 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <limits.h>
 #include <string.h>
 
 struct DuOption {
@@ -46,7 +46,7 @@ template<>
 struct AK::Traits<VisitedFile> : public DefaultTraits<VisitedFile> {
     static unsigned hash(VisitedFile const& visited_file)
     {
-        return pair_int_hash(u64_hash(visited_file.device), u64_hash(visited_file.inode));
+        return standard_sip_hash_trivial(visited_file);
     }
 
     static bool equals(VisitedFile const& a, VisitedFile const& b)

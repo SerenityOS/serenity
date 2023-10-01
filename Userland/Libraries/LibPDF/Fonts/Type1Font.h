@@ -6,16 +6,17 @@
 
 #pragma once
 
+#include <AK/SipHash.h>
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibPDF/Fonts/SimpleFont.h>
 #include <LibPDF/Fonts/Type1FontProgram.h>
 
 namespace PDF {
 
-struct Type1GlyphCacheKey {
+struct [[gnu::packed]] Type1GlyphCacheKey {
     u32 glyph_id;
-    Gfx::GlyphSubpixelOffset subpixel_offset;
     float width;
+    Gfx::GlyphSubpixelOffset subpixel_offset;
 
     bool operator==(Type1GlyphCacheKey const&) const = default;
 };
@@ -46,7 +47,7 @@ template<>
 struct Traits<PDF::Type1GlyphCacheKey> : public DefaultTraits<PDF::Type1GlyphCacheKey> {
     static unsigned hash(PDF::Type1GlyphCacheKey const& index)
     {
-        return pair_int_hash(pair_int_hash(index.glyph_id, (index.subpixel_offset.x << 8) | index.subpixel_offset.y), int_hash(bit_cast<u32>(index.width)));
+        return standard_sip_hash_trivial(index);
     }
 };
 

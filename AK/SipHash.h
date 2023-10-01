@@ -26,11 +26,22 @@ inline unsigned standard_sip_ptr_hash(void const* ptr)
     return standard_sip_hash(bit_cast<FlatPtr>(ptr));
 }
 
+// This function intentionally doesn't just allow C++ trivial types,
+// it allows you to hash any types based on the entirety of their bits (as determined by sizeof).
+// However, if there's contained types with padding, this may lead to a varying hash, so be careful!
+template<typename TrivialType>
+inline unsigned standard_sip_hash_trivial(TrivialType const& value)
+{
+    auto u64_output = sip_hash_bytes<1, 3>({ bit_cast<u8 const*>(&value), sizeof(value) });
+    return u64_output ^ (u64_output << 32);
+}
+
 }
 
 #ifdef USING_AK_GLOBALLY
 using AK::secure_sip_hash;
 using AK::sip_hash_bytes;
 using AK::standard_sip_hash;
+using AK::standard_sip_hash_trivial;
 using AK::standard_sip_ptr_hash;
 #endif

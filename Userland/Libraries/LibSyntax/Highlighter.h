@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
+#include <AK/SipHash.h>
 #include <AK/WeakPtr.h>
 #include <LibGfx/Palette.h>
 #include <LibSyntax/Document.h>
@@ -152,7 +153,7 @@ template<>
 struct AK::Traits<Syntax::Highlighter::MatchingTokenPair> : public AK::DefaultTraits<Syntax::Highlighter::MatchingTokenPair> {
     static unsigned hash(Syntax::Highlighter::MatchingTokenPair const& pair)
     {
-        return pair_int_hash(u64_hash(pair.open), u64_hash(pair.close));
+        return standard_sip_hash_trivial(pair);
     }
     static bool equals(Syntax::Highlighter::MatchingTokenPair const& a, Syntax::Highlighter::MatchingTokenPair const& b)
     {

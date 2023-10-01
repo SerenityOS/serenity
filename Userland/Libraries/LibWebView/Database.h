@@ -13,6 +13,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
+#include <AK/SipHash.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/Promise.h>
@@ -75,9 +76,9 @@ private:
     };
 
     struct ExecutionKeyTraits : public Traits<ExecutionKey> {
-        static constexpr unsigned hash(ExecutionKey const& key)
+        static unsigned hash(ExecutionKey const& key)
         {
-            return pair_int_hash(u64_hash(key.statement_id), u64_hash(key.execution_id));
+            return standard_sip_hash_trivial(key);
         }
     };
 

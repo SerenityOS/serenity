@@ -93,7 +93,7 @@ PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint po
     point = point.translated(translation);
 
     auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(point);
-    Type1GlyphCacheKey index { char_code, glyph_position.subpixel_offset, width };
+    Type1GlyphCacheKey index { char_code, width, glyph_position.subpixel_offset };
 
     RefPtr<Gfx::Bitmap> bitmap;
     auto maybe_bitmap = m_glyph_cache.get(index);
