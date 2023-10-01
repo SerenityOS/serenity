@@ -82,7 +82,8 @@ public:
     FlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
-    DeprecatedString const& tag_name() const { return html_uppercased_qualified_name(); }
+    FlyString tag_name() const { return MUST(FlyString::from_deprecated_fly_string(html_uppercased_qualified_name())); }
+    DeprecatedString const& deprecated_tag_name() const { return html_uppercased_qualified_name(); }
 
     Optional<FlyString> const& prefix() const { return m_qualified_name.prefix(); }
     DeprecatedFlyString deprecated_prefix() const { return m_qualified_name.deprecated_prefix(); }

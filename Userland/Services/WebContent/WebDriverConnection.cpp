@@ -1183,7 +1183,7 @@ Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_el
     auto qualified_name = element->tag_name();
 
     // 5. Return success with data qualified name.
-    return qualified_name;
+    return MUST(JsonValue::from_string(qualified_name));
 }
 
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect

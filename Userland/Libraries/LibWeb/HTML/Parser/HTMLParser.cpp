@@ -3531,7 +3531,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
     }
 
     // -> An end tag whose tag name is "script", if the current node is an SVG script element
-    if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
+    if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name().to_deprecated_fly_string() == SVG::TagNames::script) {
     ScriptEndTag:
         // Pop the current node off the stack of open elements.
         (void)m_stack_of_open_elements.pop();
@@ -3562,9 +3562,9 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
     if (token.is_end_tag()) {
         // 1. Initialize node to be the current node (the bottommost node of the stack).
         JS::GCPtr<DOM::Element> node = current_node();
-        // FIXME: Not sure if this is the correct to_lowercase, as the specification says "to ASCII lowercase"
+
         // 2. If node's tag name, converted to ASCII lowercase, is not the same as the tag name of the token, then this is a parse error.
-        if (node->tag_name().to_lowercase() != token.tag_name().to_deprecated_fly_string())
+        if (node->tag_name().equals_ignoring_ascii_case(token.tag_name()))
             log_parse_error();
 
         // 3. Loop: If node is the topmost element in the stack of open elements, then return. (fragment case)
@@ -3573,10 +3573,10 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
                 VERIFY(m_parsing_fragment);
                 return;
             }
-            // FIXME: See the above FIXME
+
             // 4. If node's tag name, converted to ASCII lowercase, is the same as the tag name of the token, pop elements from the stack
             // of open elements until node has been popped from the stack, and then return.
-            if (node->tag_name().to_lowercase() == token.tag_name().to_deprecated_fly_string()) {
+            if (node->tag_name().equals_ignoring_ascii_case(token.tag_name())) {
                 while (&current_node() != node.ptr())
                     (void)m_stack_of_open_elements.pop();
                 (void)m_stack_of_open_elements.pop();
