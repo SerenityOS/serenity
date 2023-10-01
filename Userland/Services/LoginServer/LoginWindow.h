@@ -12,6 +12,8 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 
+namespace LoginServer {
+
 class LoginWindow final : public GUI::Window {
     C_OBJECT(LoginWindow);
 
@@ -37,3 +39,5 @@ private:
     RefPtr<GUI::Label> m_fail_message;
     RefPtr<GUI::Button> m_log_in_button;
 };
+
+}
