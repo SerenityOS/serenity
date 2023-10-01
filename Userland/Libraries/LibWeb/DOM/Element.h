@@ -83,7 +83,9 @@ public:
     // NOTE: This is for the JS bindings
     DeprecatedString const& tag_name() const { return html_uppercased_qualified_name(); }
 
-    DeprecatedFlyString prefix() const { return m_qualified_name.deprecated_prefix(); }
+    Optional<FlyString> const& prefix() const { return m_qualified_name.prefix(); }
+    DeprecatedFlyString deprecated_prefix() const { return m_qualified_name.deprecated_prefix(); }
+
     void set_prefix(DeprecatedFlyString const& value);
 
     DeprecatedFlyString namespace_() const { return m_qualified_name.deprecated_namespace_(); }
