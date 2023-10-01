@@ -208,6 +208,11 @@ public:
     {
     }
 
+    UISize(Array<i64, 2> size)
+        : UISize(size[0], size[1])
+    {
+    }
+
     UISize(SpecialDimension special)
         : Gfx::Size<UIDimension>(UIDimension { special }, UIDimension { special })
     {
