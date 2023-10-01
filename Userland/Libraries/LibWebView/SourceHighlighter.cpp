@@ -108,7 +108,7 @@ String highlight_source(URL const& url, StringView source)
             auto tag_name_start = token->start_position().byte_offset;
 
             append_source(tag_name_start);
-            append_source(tag_name_start + token->tag_name().length(), "tag"sv);
+            append_source(tag_name_start + token->tag_name().bytes().size(), "tag"sv);
 
             token->for_each_attribute([&](auto const& attribute) {
                 append_source(attribute.name_start_position.byte_offset);

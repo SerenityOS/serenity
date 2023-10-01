@@ -485,7 +485,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_element(DOM::Element cons
     // 1. If the require well-formed flag is set (its value is true), and this node's localName attribute contains the character ":" (U+003A COLON) or does not match the XML Name production,
     //    then throw an exception; the serialization of this node would not be a well-formed element.
     if (require_well_formed == RequireWellFormed::Yes) {
-        if (element.local_name().view().contains(':'))
+        if (element.local_name().bytes_as_string_view().contains(':'))
             return WebIDL::InvalidStateError::create(realm, "Element's local name contains a colon"_fly_string);
 
         // FIXME: Check element's local name against the XML Char production.

@@ -165,8 +165,10 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(Deprecated
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagnamens
 // NOTE: This method is only exposed on Document and Element, but is in ParentNode to prevent code duplication.
-JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(DeprecatedFlyString const& nullable_namespace, DeprecatedFlyString const& local_name)
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(DeprecatedFlyString const& nullable_namespace, DeprecatedFlyString const& deprecated_local_name)
 {
+    auto local_name = MUST(FlyString::from_deprecated_fly_string(deprecated_local_name));
+
     // 1. If namespace is the empty string, set it to null.
     DeprecatedString namespace_ = nullable_namespace;
     if (namespace_.is_empty())
