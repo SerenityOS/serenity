@@ -47,6 +47,8 @@ public:
 
         // https://fetch.spec.whatwg.org/#fetch-timing-info-decoded-body-size
         u64 decoded_size { 0 };
+
+        bool operator==(BodyInfo const&) const = default;
     };
 
     [[nodiscard]] static JS::NonnullGCPtr<Response> create(JS::VM&);

@@ -79,9 +79,22 @@ bool Response::is_aborted_network_error() const
 // https://fetch.spec.whatwg.org/#concept-network-error
 bool Response::is_network_error() const
 {
-    // A response whose type is "error" is known as a network error.
+    // A network error is a response whose type is "error", status is 0, status message is the empty byte sequence,
+    // header list is « », body is null, and body info is a new response body info.
     // NOTE: We have to use the virtual getter here to not bypass filtered responses.
-    return type() == Type::Error;
+    if (type() != Type::Error)
+        return false;
+    if (status() != 0)
+        return false;
+    if (!status_message().is_empty())
+        return false;
+    if (!header_list()->is_empty())
+        return false;
+    if (!body())
+        return false;
+    if (body_info() != BodyInfo {})
+        return false;
+    return true;
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-url
