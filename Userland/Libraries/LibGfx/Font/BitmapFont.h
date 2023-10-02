@@ -31,7 +31,7 @@ public:
 
     static RefPtr<BitmapFont> load_from_file(DeprecatedString const& path);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(DeprecatedString const& path);
-    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_mapped_file(OwnPtr<Core::MappedFile>);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_mapped_file(NonnullOwnPtr<Core::MappedFile>);
 
     ErrorOr<void> write_to_file(DeprecatedString const& path);
     ErrorOr<void> write_to_file(NonnullOwnPtr<Core::File> file);
@@ -133,8 +133,6 @@ private:
     BitmapFont(String name, String family, Bytes rows, Span<u8> widths, bool is_fixed_width,
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, Bytes range_mask,
         u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays = false);
-
-    static ErrorOr<NonnullRefPtr<BitmapFont>> load_from_memory(u8 const*);
 
     template<typename T>
     int unicode_view_width(T const& view) const;
