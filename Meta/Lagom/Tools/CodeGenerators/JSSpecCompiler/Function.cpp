@@ -28,8 +28,15 @@ FunctionDeclaration::FunctionDeclaration(StringView name)
 FunctionDefinition::FunctionDefinition(StringView name, Tree ast)
     : FunctionDeclaration(name)
     , m_ast(move(ast))
-    , m_return_value(make_ref_counted<VariableDeclaration>("$return"sv))
+    , m_return_value(make_ref_counted<NamedVariableDeclaration>("$return"sv))
 {
+}
+
+void FunctionDefinition::reindex_ssa_variables()
+{
+    size_t index = 0;
+    for (auto const& var : m_local_ssa_variables)
+        var->m_index = index++;
 }
 
 }

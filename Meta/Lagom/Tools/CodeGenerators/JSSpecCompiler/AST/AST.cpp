@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
+
 #include "AST/AST.h"
 
 namespace JSSpecCompiler {
@@ -17,6 +19,9 @@ Tree NodeSubtreePointer::get(Badge<RecursiveASTVisitor>)
         },
         [&](Tree* tree) -> Tree {
             return *tree;
+        },
+        [&](VariableRef* tree) -> Tree {
+            return *tree;
         });
 }
 
@@ -28,6 +33,9 @@ void NodeSubtreePointer::replace_subtree(Badge<RecursiveASTVisitor>, NullableTre
         },
         [&](Tree* tree) {
             *tree = replacement.release_nonnull();
+        },
+        [&](VariableRef*) {
+            VERIFY_NOT_REACHED();
         });
 }
 
@@ -129,6 +137,13 @@ Vector<NodeSubtreePointer> FunctionCall::subtrees()
     for (auto& child : m_arguments)
         result.append({ &child });
     return result;
+}
+
+String Variable::name() const
+{
+    if (m_ssa)
+        return MUST(String::formatted("{}@{}", m_name->m_name, m_ssa->m_version));
+    return MUST(String::from_utf8(m_name->m_name));
 }
 
 }

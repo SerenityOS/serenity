@@ -16,15 +16,28 @@ namespace JSSpecCompiler {
 
 class BasicBlock : public RefCounted<BasicBlock> {
 public:
+    struct PhiNode {
+        struct Branch {
+            BasicBlockRef block;
+            VariableRef value;
+        };
+
+        VariableRef var;
+        Vector<Branch> branches;
+    };
+
     BasicBlock(size_t index, NonnullRefPtr<ControlFlowOperator> continuation)
         : m_index(index)
         , m_continuation(move(continuation))
+        , m_immediate_dominator(nullptr)
     {
     }
 
     size_t m_index;
+    Vector<PhiNode> m_phi_nodes;
     Vector<Tree> m_expressions;
     NonnullRefPtr<ControlFlowOperator> m_continuation;
+    BasicBlockRef m_immediate_dominator;
 };
 
 class ControlFlowGraph : public RefCounted<ControlFlowGraph> {

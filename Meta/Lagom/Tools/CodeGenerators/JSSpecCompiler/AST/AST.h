@@ -33,21 +33,42 @@ public:
     {
     }
 
+    NodeSubtreePointer(VariableRef* tree_ptr)
+        : m_tree_ptr(tree_ptr)
+    {
+    }
+
     Tree get(Badge<RecursiveASTVisitor>);
     void replace_subtree(Badge<RecursiveASTVisitor>, NullableTree replacement);
 
 private:
-    Variant<Tree*, NullableTree*> m_tree_ptr;
+    Variant<Tree*, NullableTree*, VariableRef*> m_tree_ptr;
 };
 
 class VariableDeclaration : public RefCounted<VariableDeclaration> {
 public:
-    VariableDeclaration(StringView name)
+    virtual ~VariableDeclaration() = default;
+};
+
+class NamedVariableDeclaration : public VariableDeclaration {
+public:
+    NamedVariableDeclaration(StringView name)
         : m_name(name)
     {
     }
 
     StringView m_name;
+};
+
+class SSAVariableDeclaration : public VariableDeclaration {
+public:
+    SSAVariableDeclaration(u64 version)
+        : m_version(version)
+    {
+    }
+
+    size_t m_index = 0;
+    u64 m_version;
 };
 
 class Node : public RefCounted<Node> {
@@ -60,6 +81,7 @@ public:
     virtual Vector<NodeSubtreePointer> subtrees() { return {}; }
 
     virtual bool is_list() const { return false; }
+    virtual bool is_statement() { VERIFY_NOT_REACHED(); }
 
 protected:
     template<typename... Parameters>
@@ -78,11 +100,20 @@ protected:
 //   auto tmp3 = d;
 //   a = tmp1 + tmp2;
 // ```.
-class Statement : public Node { };
-class Expression : public Node { };
+class Statement : public Node {
+public:
+    bool is_statement() override { return true; }
+};
+
+class Expression : public Node {
+public:
+    bool is_statement() override { return false; }
+};
 
 class ControlFlowOperator : public Statement {
 public:
+    bool is_statement() override { return false; }
+
     virtual Vector<BasicBlockRef*> references() = 0;
 };
 
@@ -110,6 +141,7 @@ public:
 
     VariableRef m_return_value;
 
+    Vector<NodeSubtreePointer> subtrees() override { return { { &m_return_value } }; }
     Vector<BasicBlockRef*> references() override { return {}; }
 
 protected:
@@ -143,6 +175,7 @@ public:
     {
     }
 
+    Vector<NodeSubtreePointer> subtrees() override { return { { &m_condition } }; }
     Vector<BasicBlockRef*> references() override;
 
     Tree m_condition;
@@ -448,12 +481,15 @@ protected:
 
 class Variable : public Expression {
 public:
-    Variable(VariableDeclarationRef variable_declaration)
-        : m_variable_declaration(move(variable_declaration))
+    Variable(NamedVariableDeclarationRef name)
+        : m_name(move(name))
     {
     }
 
-    VariableDeclarationRef m_variable_declaration;
+    NamedVariableDeclarationRef m_name;
+    SSAVariableDeclarationRef m_ssa;
+
+    String name() const;
 
 protected:
     void dump_tree(StringBuilder& builder) override;

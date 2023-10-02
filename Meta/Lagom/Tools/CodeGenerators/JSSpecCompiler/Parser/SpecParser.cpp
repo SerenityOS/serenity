@@ -200,7 +200,7 @@ void SpecParsingStep::run(TranslationUnitRef translation_unit)
         make_ref_counted<FunctionDefinition>(spec_function.m_name, spec_function.m_algorithm.m_tree));
 
     for (auto const& argument : spec_function.m_arguments)
-        function->m_local_variables.set(argument.name, make_ref_counted<VariableDeclaration>(argument.name));
+        function->m_local_variables.set(argument.name, make_ref_counted<NamedVariableDeclaration>(argument.name));
 }
 
 }

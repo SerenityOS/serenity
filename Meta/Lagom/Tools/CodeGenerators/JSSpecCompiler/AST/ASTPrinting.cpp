@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 
@@ -156,7 +157,7 @@ void SlotName::dump_tree(StringBuilder& builder)
 
 void Variable::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "Var {}", m_variable_declaration->m_name);
+    dump_node(builder, "Var {}", name());
 }
 
 void FunctionPointer::dump_tree(StringBuilder& builder)
