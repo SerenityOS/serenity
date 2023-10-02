@@ -166,8 +166,15 @@ TEST_CASE(test_regression)
             bool exited_with_code_0 = MUST(process.wait_for_termination());
             EXPECT(exited_with_code_0);
 
-            if (exited_with_code_0)
+            if (!exited_with_code_0) {
+                auto captured_output = read(path_to_captured_stderr);
+                if (!captured_output.is_error()) {
+                    StringView stderr_output_view = captured_output.value();
+                    dbgln("Compiler invocation failed. Captured output:\n{}", stderr_output_view);
+                }
+            } else {
                 check_expectations(path_to_expectation, path_to_captured_stderr, should_update_expectations);
+            }
         }
     }
 }
