@@ -21,7 +21,7 @@ namespace Gfx {
 class BitmapFont final : public Font {
 public:
     virtual NonnullRefPtr<Font> clone() const override;
-    ErrorOr<NonnullRefPtr<Font>> try_clone() const override;
+    virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const override;
     static ErrorOr<NonnullRefPtr<BitmapFont>> create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count);
 
     virtual FontPixelMetrics pixel_metrics() const override;
