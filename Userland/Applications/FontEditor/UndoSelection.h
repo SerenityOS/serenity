@@ -25,10 +25,10 @@ public:
     {
         auto state = TRY(try_make_ref_counted<UndoSelection>(m_start, m_size, m_active_glyph, *m_font, m_glyph_map_widget));
         size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * font().glyph_height();
-        auto* rows = font().rows() + m_start * bytes_per_glyph;
-        auto* widths = font().widths() + m_start;
+        auto rows = font().rows().slice(m_start * bytes_per_glyph, m_size * bytes_per_glyph);
+        auto widths = font().widths().slice(m_start, m_size);
         TRY(state->m_data.try_append(&rows[0], bytes_per_glyph * m_size));
-        TRY(state->m_data.try_append(&widths[0], m_size));
+        TRY(state->m_data.try_append(widths));
 
         TRY(state->m_restored_modified_state.try_ensure_capacity(m_size));
         for (int glyph = m_start; glyph < m_start + m_size; ++glyph)
@@ -39,10 +39,10 @@ public:
     void restore_state(UndoSelection const& state)
     {
         size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * font().glyph_height();
-        auto* rows = font().rows() + state.m_start * bytes_per_glyph;
-        auto* widths = font().widths() + state.m_start;
-        memcpy(rows, &state.m_data[0], bytes_per_glyph * state.m_size);
-        memcpy(widths, &state.m_data[bytes_per_glyph * state.m_size], state.m_size);
+        auto rows = font().rows().slice(state.m_start * bytes_per_glyph, state.m_size * bytes_per_glyph);
+        auto widths = font().widths().slice(state.m_start, state.m_size);
+        memcpy(rows.data(), &state.m_data[0], bytes_per_glyph * state.m_size);
+        memcpy(widths.data(), &state.m_data[bytes_per_glyph * state.m_size], state.m_size);
 
         for (int i = 0; i < state.m_size; ++i)
             m_glyph_map_widget->set_glyph_modified(state.m_start + i, state.m_restored_modified_state[i]);

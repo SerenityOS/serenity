@@ -1026,12 +1026,12 @@ ErrorOr<void> MainWidget::copy_selected_glyphs()
 {
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_font->glyph_height();
     auto selection = m_glyph_map_widget->selection().normalized();
-    auto* rows = m_font->rows() + selection.start() * bytes_per_glyph;
-    auto* widths = m_font->widths() + selection.start();
+    auto rows = m_font->rows().slice(selection.start() * bytes_per_glyph, selection.size() * bytes_per_glyph);
+    auto widths = m_font->widths().slice(selection.start(), selection.size());
 
     ByteBuffer buffer;
-    TRY(buffer.try_append(rows, bytes_per_glyph * selection.size()));
-    TRY(buffer.try_append(widths, selection.size()));
+    TRY(buffer.try_append(rows));
+    TRY(buffer.try_append(widths));
 
     HashMap<DeprecatedString, DeprecatedString> metadata;
     metadata.set("start", DeprecatedString::number(selection.start()));
@@ -1073,8 +1073,8 @@ void MainWidget::paste_glyphs()
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_font->glyph_height();
     size_t bytes_per_copied_glyph = Gfx::GlyphBitmap::bytes_per_row() * height;
     size_t copyable_bytes_per_glyph = min(bytes_per_glyph, bytes_per_copied_glyph);
-    auto* rows = m_font->rows() + selection.start() * bytes_per_glyph;
-    auto* widths = m_font->widths() + selection.start();
+    auto rows = m_font->rows().slice(selection.start() * bytes_per_glyph);
+    auto widths = m_font->widths().slice(selection.start());
 
     for (size_t i = 0; i < range_bound_glyph_count; ++i) {
         auto copyable_width = m_font->is_fixed_width()
@@ -1105,10 +1105,10 @@ void MainWidget::delete_selected_glyphs()
     push_undo(action_text);
 
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_font->glyph_height();
-    auto* rows = m_font->rows() + selection.start() * bytes_per_glyph;
-    auto* widths = m_font->widths() + selection.start();
-    memset(rows, 0, bytes_per_glyph * selection.size());
-    memset(widths, 0, selection.size());
+    auto rows = m_font->rows().slice(selection.start() * bytes_per_glyph, selection.size() * bytes_per_glyph);
+    auto widths = m_font->widths().slice(selection.start(), selection.size());
+    memset(rows.data(), 0, bytes_per_glyph * selection.size());
+    memset(widths.data(), 0, selection.size());
 
     if (m_font->is_fixed_width())
         m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
