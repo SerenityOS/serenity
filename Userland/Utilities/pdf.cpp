@@ -150,6 +150,9 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     bool dump_contents = false;
     args_parser.add_option(dump_contents, "Dump page contents", "dump-contents", {});
 
+    bool dump_outline = false;
+    args_parser.add_option(dump_outline, "Dump document outline", "dump-outline", {});
+
     u32 page_number = 1;
     args_parser.add_option(page_number, "Page number (1-based)", "page", {}, "PAGE");
 
@@ -193,6 +196,14 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
         return 1;
     }
     int page_index = page_number - 1;
+
+    if (dump_outline) {
+        if (auto outline = document->outline(); outline)
+            outln("{}", *outline);
+        else
+            outln("(no outline)");
+        return 0;
+    }
 
     if (dump_contents) {
         TRY(document->dump_page(page_index));
