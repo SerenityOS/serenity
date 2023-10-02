@@ -19,6 +19,7 @@ add_executable(MacPDF MACOSX_BUNDLE
     AppDelegate.mm
     MacPDFDocument.mm
     MacPDFView.mm
+    MacPDFWindowController.mm
 )
 target_compile_options(MacPDF PRIVATE
     -fobjc-arc

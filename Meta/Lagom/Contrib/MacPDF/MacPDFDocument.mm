@@ -8,6 +8,7 @@
 
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
+#import "MacPDFWindowController.h"
 #include <LibPDF/Document.h>
 
 @interface MacPDFDocument ()
@@ -71,9 +72,9 @@
     }
 }
 
-- (NSString*)windowNibName
+- (void)makeWindowControllers
 {
-    return @"MacPDFDocument";
+    [self addWindowController:[[MacPDFWindowController alloc] initWithDocument:self]];
 }
 
 - (void)windowControllerDidLoadNib:(NSWindowController*)aController
