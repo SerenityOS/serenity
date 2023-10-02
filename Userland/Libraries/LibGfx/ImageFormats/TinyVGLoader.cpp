@@ -205,6 +205,9 @@ public:
     {
         auto read_color = [&]() -> ErrorOr<Color> {
             auto color_index = TRY(m_stream.read_value<VarUInt>());
+            if (color_index >= m_color_table.size())
+                return Error::from_string_literal("Invalid color table index");
+
             return m_color_table[color_index];
         };
         auto read_gradient = [&]() -> ErrorOr<NonnullRefPtr<SVGGradientPaintStyle>> {
