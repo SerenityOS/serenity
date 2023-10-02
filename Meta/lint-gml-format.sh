@@ -21,7 +21,7 @@ fi
 if [ "$#" -gt "0" ] ; then
     # We're in the middle of a pre-commit run, so we should only check the files that have
     # actually changed. The reason is that "git ls-files | grep" on the entire repo takes
-    # about 100ms. That is perfectly fine during a CI run, but becomes noticable during a
+    # about 100ms. That is perfectly fine during a CI run, but becomes noticeable during a
     # pre-commit hook. It is unnecessary to check the entire repository on every single
     # commit, so we save some time here.
     for file in "$@"; do
