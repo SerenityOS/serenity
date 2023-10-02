@@ -86,21 +86,21 @@ TreeList
   IfElseIfChain
     UnresolvedReference cond1
     TreeList
-      BinaryOperation Declaration
+      BinaryOperation Assignment
         Var a
         MathematicalConstant 1
       IfElseIfChain
         UnresolvedReference cond2
         TreeList
-          BinaryOperation Declaration
+          BinaryOperation Assignment
             Var b
             Var a
         TreeList
-          BinaryOperation Declaration
+          BinaryOperation Assignment
             Var b
             MathematicalConstant 3
     TreeList
-      BinaryOperation Declaration
+      BinaryOperation Assignment
         Var b
         MathematicalConstant 4
   ReturnNode
@@ -112,21 +112,21 @@ TreeList
   IfElseIfChain
     UnresolvedReference cond1
     TreeList
-      BinaryOperation Declaration
+      BinaryOperation Assignment
         Var a
         MathematicalConstant 1
       IfElseIfChain
         UnresolvedReference cond2
         TreeList
-          BinaryOperation Declaration
+          BinaryOperation Assignment
             Var b
             Var a
         TreeList
-          BinaryOperation Declaration
+          BinaryOperation Assignment
             Var b
             MathematicalConstant 3
     TreeList
-      BinaryOperation Declaration
+      BinaryOperation Assignment
         Var b
         MathematicalConstant 4
   ReturnNode
@@ -149,7 +149,7 @@ BinaryOperation Assignment
 ControlFlowJump jump=1
 
 3:
-BinaryOperation Declaration
+BinaryOperation Assignment
   Var a
   MathematicalConstant 1
 ControlFlowBranch true=5 false=6
@@ -159,19 +159,19 @@ ControlFlowBranch true=5 false=6
 ControlFlowJump jump=2
 
 5:
-BinaryOperation Declaration
+BinaryOperation Assignment
   Var b
   Var a
 ControlFlowJump jump=4
 
 6:
-BinaryOperation Declaration
+BinaryOperation Assignment
   Var b
   MathematicalConstant 3
 ControlFlowJump jump=4
 
 7:
-BinaryOperation Declaration
+BinaryOperation Assignment
   Var b
   MathematicalConstant 4
 ControlFlowJump jump=2
@@ -188,21 +188,21 @@ TreeList
   IfElseIfChain
     UnresolvedReference cond1
     TreeList
-      BinaryOperation Declaration
+      BinaryOperation Assignment
         Var a
         MathematicalConstant 1
       IfElseIfChain
         UnresolvedReference cond2
         TreeList
-          BinaryOperation Declaration
+          BinaryOperation Assignment
             Var b
             Var a
         TreeList
-          BinaryOperation Declaration
+          BinaryOperation Assignment
             Var b
             MathematicalConstant 3
     TreeList
-      BinaryOperation Declaration
+      BinaryOperation Assignment
         Var b
         MathematicalConstant 4
   ReturnNode
@@ -225,26 +225,26 @@ BinaryOperation Assignment
 ControlFlowJump jump=1
 
 3:
-BinaryOperation Declaration
+BinaryOperation Assignment
   Var a
   MathematicalConstant 1
 ControlFlowBranch true=4 false=5
   UnresolvedReference cond2
 
 4:
-BinaryOperation Declaration
+BinaryOperation Assignment
   Var b
   Var a
 ControlFlowJump jump=2
 
 5:
-BinaryOperation Declaration
+BinaryOperation Assignment
   Var b
   MathematicalConstant 3
 ControlFlowJump jump=2
 
 6:
-BinaryOperation Declaration
+BinaryOperation Assignment
   Var b
   MathematicalConstant 4
 ControlFlowJump jump=2
