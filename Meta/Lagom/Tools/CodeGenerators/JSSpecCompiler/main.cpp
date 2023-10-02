@@ -21,6 +21,7 @@ using namespace JSSpecCompiler;
 struct CompilationStepWithDumpOptions {
     OwnPtr<CompilationStep> step;
     bool dump_ast = false;
+    bool dump_cfg = false;
 };
 
 class CompilationPipeline {
@@ -91,6 +92,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView passes_to_dump_ast;
     args_parser.add_option(passes_to_dump_ast, "Dump AST after specified passes.", "dump-ast", 0, "{all|last|<pass-name>|-<pass-name>[,...]}");
 
+    StringView passes_to_dump_cfg;
+    args_parser.add_option(passes_to_dump_cfg, "Dump CFG after specified passes.", "dump-cfg", 0, "{all|last|<pass-name>|-<pass-name>[,...]}");
+
     args_parser.parse(arguments);
 
     CompilationPipeline pipeline;
@@ -105,6 +109,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     pipeline.for_each_step_in(passes_to_dump_ast, [](CompilationStepWithDumpOptions& step) {
         step.dump_ast = true;
+    });
+    pipeline.for_each_step_in(passes_to_dump_cfg, [](CompilationStepWithDumpOptions& step) {
+        step.dump_cfg = true;
     });
 
     TranslationUnit translation_unit;
@@ -130,6 +137,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             for (auto const& function : translation_unit.function_definitions) {
                 outln(stderr, "{}():", function->m_name);
                 outln(stderr, "{}", function->m_ast);
+            }
+        }
+        if (step.dump_cfg && translation_unit.function_definitions[0]->m_cfg != nullptr) {
+            outln(stderr, "===== CFG after {} =====", step.step->name());
+            for (auto const& function : translation_unit.function_definitions) {
+                outln(stderr, "{}():", function->m_name);
+                outln(stderr, "{}", *function->m_cfg);
             }
         }
     }

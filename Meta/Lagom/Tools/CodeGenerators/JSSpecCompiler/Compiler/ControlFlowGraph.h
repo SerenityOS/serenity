@@ -39,3 +39,12 @@ public:
 };
 
 }
+
+namespace AK {
+
+template<>
+struct Formatter<JSSpecCompiler::ControlFlowGraph> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, JSSpecCompiler::ControlFlowGraph const& control_flow_graph);
+};
+
+}

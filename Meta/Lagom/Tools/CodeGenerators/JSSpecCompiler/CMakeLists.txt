@@ -2,6 +2,7 @@ set(SOURCES
     AST/AST.cpp
     AST/ASTPrinting.cpp
     Compiler/CompilerPass.cpp
+    Compiler/ControlFlowGraph.cpp
     Compiler/GenericASTPass.cpp
     Compiler/Passes/CFGBuildingPass.cpp
     Compiler/Passes/FunctionCallCanonicalizationPass.cpp
