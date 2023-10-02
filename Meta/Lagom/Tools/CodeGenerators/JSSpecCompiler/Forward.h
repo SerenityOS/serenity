@@ -14,6 +14,10 @@ namespace JSSpecCompiler {
 class NodeSubtreePointer;
 class VariableDeclaration;
 using VariableDeclarationRef = NonnullRefPtr<VariableDeclaration>;
+class NamedVariableDeclaration;
+using NamedVariableDeclarationRef = NonnullRefPtr<NamedVariableDeclaration>;
+class SSAVariableDeclaration;
+using SSAVariableDeclarationRef = RefPtr<SSAVariableDeclaration>;
 
 class Node;
 using NullableTree = RefPtr<Node>;

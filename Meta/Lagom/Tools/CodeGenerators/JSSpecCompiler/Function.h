@@ -37,9 +37,14 @@ class FunctionDefinition : public FunctionDeclaration {
 public:
     FunctionDefinition(StringView name, Tree ast);
 
+    void reindex_ssa_variables();
+
     Tree m_ast;
-    VariableDeclarationRef m_return_value;
-    HashMap<StringView, VariableDeclarationRef> m_local_variables;
+    NamedVariableDeclarationRef m_return_value;
+    // NOTE: The hash map here is ordered since we do not want random hash changes to break our test
+    //       expectations (looking at you, SipHash).
+    OrderedHashMap<StringView, NamedVariableDeclarationRef> m_local_variables;
+    Vector<SSAVariableDeclarationRef> m_local_ssa_variables;
     RefPtr<ControlFlowGraph> m_cfg;
 };
 
