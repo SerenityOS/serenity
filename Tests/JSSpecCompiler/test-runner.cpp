@@ -18,6 +18,7 @@ struct TestDescription {
     struct Flag {
         StringView name;
         bool dump_ast = false;
+        bool dump_cfg = false;
     };
 
     Vector<StringView> sources;
@@ -29,15 +30,16 @@ constexpr StringView stderr_capture_filename = "stderr"sv;
 constexpr StringView compiler_binary_name = "JSSpecCompiler"sv;
 constexpr StringView relative_path_to_test = "Tests"sv;
 
-constexpr TestDescription::Flag always_dump_ast = {
+constexpr TestDescription::Flag always_dump_all = {
     .name = "all"sv,
     .dump_ast = true,
+    .dump_cfg = true
 };
 
 const Array regression_tests = {
     TestDescription {
         .sources = { "simple.cpp"sv },
-        .flags = { always_dump_ast },
+        .flags = { always_dump_all },
     },
 };
 
@@ -52,6 +54,7 @@ Vector<DeprecatedString> build_command_line_arguments(LexicalPath const& test_so
     Vector<DeprecatedString> result;
 
     StringBuilder dump_ast_option;
+    StringBuilder dump_cfg_option;
 
     for (auto const& flag : description.flags) {
         if (flag.dump_ast) {
@@ -59,9 +62,16 @@ Vector<DeprecatedString> build_command_line_arguments(LexicalPath const& test_so
                 dump_ast_option.append(","sv);
             dump_ast_option.append(flag.name);
         }
+        if (flag.dump_cfg) {
+            if (!dump_cfg_option.is_empty())
+                dump_cfg_option.append(","sv);
+            dump_cfg_option.append(flag.name);
+        }
     }
     if (!dump_ast_option.is_empty())
         result.append(DeprecatedString::formatted("--dump-ast={}", dump_ast_option.string_view()));
+    if (!dump_cfg_option.is_empty())
+        result.append(DeprecatedString::formatted("--dump-cfg={}", dump_cfg_option.string_view()));
 
     if (test_source.has_extension(".cpp"sv))
         result.append("-xc++"sv);
