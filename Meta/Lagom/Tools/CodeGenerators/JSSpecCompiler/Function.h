@@ -16,11 +16,13 @@
 namespace JSSpecCompiler {
 
 struct TranslationUnit {
-    FunctionDefinitionRef adopt_function(NonnullRefPtr<FunctionDefinition>&& function);
+    void adopt_declaration(NonnullRefPtr<FunctionDeclaration>&& declaration);
+    FunctionDefinitionRef adopt_function(NonnullRefPtr<FunctionDefinition>&& definition);
 
     StringView filename;
-    Vector<NonnullRefPtr<FunctionDefinition>> function_definitions;
-    HashMap<StringView, FunctionPointerRef> function_index;
+    Vector<FunctionDefinitionRef> functions_to_compile;
+    Vector<NonnullRefPtr<FunctionDeclaration>> declarations_owner;
+    HashMap<StringView, FunctionDeclarationRef> function_index;
 };
 
 class FunctionDeclaration : public RefCounted<FunctionDeclaration> {

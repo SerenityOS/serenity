@@ -10,13 +10,18 @@
 
 namespace JSSpecCompiler {
 
+void TranslationUnit::adopt_declaration(NonnullRefPtr<FunctionDeclaration>&& declaration)
+{
+    declaration->m_translation_unit = this;
+    function_index.set(declaration->m_name, declaration.ptr());
+    declarations_owner.append(move(declaration));
+}
+
 FunctionDefinitionRef TranslationUnit::adopt_function(NonnullRefPtr<FunctionDefinition>&& function)
 {
-    function->m_translation_unit = this;
-    function_index.set(function->m_name, make_ref_counted<FunctionPointer>(function));
-
     FunctionDefinitionRef result = function.ptr();
-    function_definitions.append(move(function));
+    functions_to_compile.append(result);
+    adopt_declaration(function);
     return result;
 }
 
