@@ -260,8 +260,9 @@ Glyph BitmapFont::glyph(u32 code_point) const
     // character, fall back to painting '?' if necessary.
     auto index = glyph_index(code_point).value_or('?');
     auto width = m_glyph_widths[index];
+    auto glyph_byte_count = m_glyph_height * GlyphBitmap::bytes_per_row();
     return Glyph(
-        GlyphBitmap(m_rows.data(), index * m_glyph_height, { width, m_glyph_height }),
+        GlyphBitmap(m_rows.slice(index * glyph_byte_count, glyph_byte_count), { width, m_glyph_height }),
         0,
         width,
         m_glyph_height);
@@ -270,8 +271,9 @@ Glyph BitmapFont::glyph(u32 code_point) const
 Glyph BitmapFont::raw_glyph(u32 code_point) const
 {
     auto width = m_glyph_widths[code_point];
+    auto glyph_byte_count = m_glyph_height * GlyphBitmap::bytes_per_row();
     return Glyph(
-        GlyphBitmap(m_rows.data(), code_point * m_glyph_height, { width, m_glyph_height }),
+        GlyphBitmap(m_rows.slice(code_point * glyph_byte_count, glyph_byte_count), { width, m_glyph_height }),
         0,
         width,
         m_glyph_height);
