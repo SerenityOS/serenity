@@ -61,12 +61,7 @@ ErrorOr<NonnullRefPtr<Font>> BitmapFont::try_clone() const
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true)));
 }
 
-NonnullRefPtr<BitmapFont> BitmapFont::create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count)
-{
-    return MUST(try_create(glyph_height, glyph_width, fixed, glyph_count));
-}
-
-ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count)
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count)
 {
     glyph_count += 256 - (glyph_count % 256);
     glyph_count = min(glyph_count, s_max_glyph_count);

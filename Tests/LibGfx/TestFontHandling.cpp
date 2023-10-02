@@ -52,7 +52,7 @@ TEST_CASE(test_clone)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
+    auto font = MUST(Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256));
 
     auto new_font = font->clone();
     EXPECT(!new_font->name().is_empty());
@@ -65,7 +65,7 @@ TEST_CASE(test_set_name)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
+    auto font = MUST(Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256));
 
     auto name = "my newly created font"_string;
     font->set_name(name);
@@ -78,7 +78,7 @@ TEST_CASE(test_set_family)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
+    auto font = MUST(Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256));
 
     auto family = "my newly created font family"_string;
     font->set_family(family);
@@ -91,7 +91,7 @@ TEST_CASE(test_set_glyph_width)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
+    auto font = MUST(Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256));
 
     size_t ch = 123;
     font->set_glyph_width(ch, glyph_width);
@@ -103,7 +103,7 @@ TEST_CASE(test_set_glyph_spacing)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
+    auto font = MUST(Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256));
 
     u8 glyph_spacing = 8;
     font->set_glyph_spacing(glyph_spacing);
@@ -115,7 +115,7 @@ TEST_CASE(test_width)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
+    auto font = MUST(Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256));
 
     EXPECT(font->width("A"sv) == glyph_width);
 }
@@ -124,7 +124,7 @@ TEST_CASE(test_glyph_or_emoji_width)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
+    auto font = MUST(Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256));
 
     Utf8View view { " "sv };
     auto it = view.begin();
@@ -142,7 +142,7 @@ TEST_CASE(test_write_to_file)
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
+    auto font = MUST(Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256));
 
     char path[] = "/tmp/new.font.XXXXXX";
     EXPECT(mkstemp(path) != -1);

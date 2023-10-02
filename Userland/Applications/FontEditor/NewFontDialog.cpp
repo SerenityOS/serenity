@@ -236,7 +236,7 @@ ErrorOr<NonnullRefPtr<Gfx::BitmapFont>> NewFontDialog::create_font()
 {
     save_metadata();
 
-    auto font = TRY(Gfx::BitmapFont::try_create(m_new_font_metadata.glyph_height, m_new_font_metadata.glyph_width, m_new_font_metadata.is_fixed_width, 0x110000));
+    auto font = TRY(Gfx::BitmapFont::create(m_new_font_metadata.glyph_height, m_new_font_metadata.glyph_width, m_new_font_metadata.is_fixed_width, 0x110000));
     font->set_name(m_new_font_metadata.name);
     font->set_family(m_new_font_metadata.family);
     font->set_presentation_size(m_new_font_metadata.presentation_size);
