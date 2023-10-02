@@ -23,9 +23,8 @@ namespace Gfx {
 class GlyphBitmap {
 public:
     GlyphBitmap() = default;
-    GlyphBitmap(u8 const* rows, size_t start_index, IntSize size)
+    GlyphBitmap(Bytes rows, IntSize size)
         : m_rows(rows)
-        , m_start_index(start_index)
         , m_size(size)
     {
     }
@@ -46,11 +45,10 @@ public:
 private:
     AK::Bitmap bitmap(size_t y) const
     {
-        return { const_cast<u8*>(m_rows) + bytes_per_row() * (m_start_index + y), bytes_per_row() * 8 };
+        return { const_cast<u8*>(m_rows.offset_pointer(bytes_per_row() * y)), bytes_per_row() * 8 };
     }
 
-    u8 const* m_rows { nullptr };
-    size_t m_start_index { 0 };
+    Bytes m_rows;
     IntSize m_size { 0, 0 };
 };
 
