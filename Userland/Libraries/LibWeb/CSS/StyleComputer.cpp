@@ -96,7 +96,6 @@ public:
         , m_family_name(move(family_name))
         , m_urls(move(urls))
     {
-        start_loading_next_url();
     }
 
     virtual ~FontLoader() override { }
@@ -114,10 +113,12 @@ public:
     {
     }
 
-    RefPtr<Gfx::Font> font_with_point_size(float point_size) const
+    RefPtr<Gfx::Font> font_with_point_size(float point_size)
     {
-        if (!m_vector_font)
+        if (!m_vector_font) {
+            start_loading_next_url();
             return nullptr;
+        }
 
         if (auto it = m_cached_fonts.find(point_size); it != m_cached_fonts.end())
             return it->value;
@@ -136,6 +137,8 @@ public:
 private:
     void start_loading_next_url()
     {
+        if (resource() && resource()->is_pending())
+            return;
         if (m_urls.is_empty())
             return;
         LoadRequest request;
