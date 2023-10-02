@@ -21,6 +21,9 @@ set(SOURCES
     Notifier.cpp
     Process.cpp
     ProcessStatisticsReader.cpp
+    Resource.cpp
+    ResourceImplementation.cpp
+    ResourceImplementationFile.cpp
     SecretString.cpp
     SessionManagement.cpp
     Socket.cpp
