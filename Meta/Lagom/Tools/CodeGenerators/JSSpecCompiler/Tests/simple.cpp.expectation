@@ -132,3 +132,53 @@ TreeList
   ReturnNode
     Var b
 
+===== CFG after cfg-building =====
+f():
+0:
+ControlFlowBranch true=3 false=7
+  UnresolvedReference cond1
+
+1:
+ControlFlowFunctionReturn
+  Var $return
+
+2:
+BinaryOperation Assignment
+  Var $return
+  Var b
+ControlFlowJump jump=1
+
+3:
+BinaryOperation Declaration
+  Var a
+  MathematicalConstant 1
+ControlFlowBranch true=5 false=6
+  UnresolvedReference cond2
+
+4:
+ControlFlowJump jump=2
+
+5:
+BinaryOperation Declaration
+  Var b
+  Var a
+ControlFlowJump jump=4
+
+6:
+BinaryOperation Declaration
+  Var b
+  MathematicalConstant 3
+ControlFlowJump jump=4
+
+7:
+BinaryOperation Declaration
+  Var b
+  MathematicalConstant 4
+ControlFlowJump jump=2
+
+8:
+BinaryOperation Assignment
+  Var $return
+  Error ""
+ControlFlowJump jump=1
+
