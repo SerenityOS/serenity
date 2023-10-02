@@ -5,7 +5,10 @@
  */
 
 #include <AK/NonnullOwnPtr.h>
+#include <LibCore/File.h>
+#include <LibXML/Parser/Parser.h>
 
+#include "Function.h"
 #include "Parser/Lexer.h"
 #include "Parser/SpecParser.h"
 #include "Parser/TextParser.h"
@@ -171,6 +174,33 @@ ParseErrorOr<void> SpecFunction::parse_definition(XML::Node const* element)
         m_arguments.append({ argument });
 
     return {};
+}
+
+SpecParsingStep::SpecParsingStep()
+    : CompilationStep("parser"sv)
+{
+}
+
+SpecParsingStep::~SpecParsingStep() = default;
+
+void SpecParsingStep::run(TranslationUnitRef translation_unit)
+{
+    auto filename = translation_unit->filename;
+
+    auto file = Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    m_input = file->read_until_eof().release_value_but_fixme_should_propagate_errors();
+
+    XML::Parser parser { m_input };
+    auto document = parser.parse().release_value_but_fixme_should_propagate_errors();
+    m_document = AK::adopt_own_if_nonnull(new XML::Document(move(document)));
+
+    auto spec_function = SpecFunction::create(&m_document->root()).release_value_but_fixme_should_propagate_errors();
+
+    auto* function = translation_unit->adopt_function(
+        make_ref_counted<FunctionDefinition>(spec_function.m_name, spec_function.m_algorithm.m_tree));
+
+    for (auto const& argument : spec_function.m_arguments)
+        function->m_local_variables.set(argument.name, make_ref_counted<VariableDeclaration>(argument.name));
 }
 
 }

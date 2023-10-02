@@ -17,6 +17,8 @@ namespace JSSpecCompiler {
 // `f(a, b, c, d)` as `f "function_call_operator" (a, (b, (c, d))))`.
 class FunctionCallCanonicalizationPass : public GenericASTPass {
 public:
+    inline static constexpr StringView name = "function-call-canonicalization"sv;
+
     using GenericASTPass::GenericASTPass;
 
 protected:

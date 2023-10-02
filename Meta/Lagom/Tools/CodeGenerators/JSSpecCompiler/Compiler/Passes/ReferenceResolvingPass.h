@@ -14,6 +14,8 @@ namespace JSSpecCompiler {
 // UnresolvedReference nodes with either SlotName, Variable, or FunctionPointer nodes.
 class ReferenceResolvingPass : public GenericASTPass {
 public:
+    inline static constexpr StringView name = "reference-resolving"sv;
+
     using GenericASTPass::GenericASTPass;
 
 protected:

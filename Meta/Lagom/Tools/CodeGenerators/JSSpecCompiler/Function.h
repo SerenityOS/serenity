@@ -18,6 +18,7 @@ namespace JSSpecCompiler {
 struct TranslationUnit {
     FunctionDefinitionRef adopt_function(NonnullRefPtr<FunctionDefinition>&& function);
 
+    StringView filename;
     Vector<NonnullRefPtr<FunctionDefinition>> function_definitions;
     HashMap<StringView, FunctionPointerRef> function_index;
 };

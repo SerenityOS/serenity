@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Parser/CppASTConverter.h"
+#include <LibCore/File.h>
+
 #include "Function.h"
+#include "Parser/CppASTConverter.h"
 #include "Parser/SpecParser.h"
 
 namespace JSSpecCompiler {
@@ -217,6 +219,34 @@ Tree CppASTConverter::as_possibly_empty_tree(Cpp::Statement const* statement)
     if (result)
         return result.release_nonnull();
     return make_ref_counted<TreeList>(Vector<Tree> {});
+}
+
+CppParsingStep::CppParsingStep()
+    : CompilationStep("parser"sv)
+{
+}
+
+CppParsingStep::~CppParsingStep() = default;
+
+void CppParsingStep::run(TranslationUnitRef translation_unit)
+{
+    auto filename = translation_unit->filename;
+
+    auto file = Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    m_input = file->read_until_eof().release_value_but_fixme_should_propagate_errors();
+
+    Cpp::Preprocessor preprocessor { filename, m_input };
+    m_parser = adopt_own_if_nonnull(new Cpp::Parser { preprocessor.process_and_lex(), filename });
+
+    auto cpp_translation_unit = m_parser->parse();
+    VERIFY(m_parser->errors().is_empty());
+
+    for (auto const& declaration : cpp_translation_unit->declarations()) {
+        if (declaration->is_function()) {
+            auto const* cpp_function = AK::verify_cast<Cpp::FunctionDeclaration>(declaration.ptr());
+            translation_unit->adopt_function(CppASTConverter(cpp_function).convert());
+        }
+    }
 }
 
 }
