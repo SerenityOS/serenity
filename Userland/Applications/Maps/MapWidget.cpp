@@ -379,10 +379,8 @@ public:
         T height;
 
         T index { 0 };
-        T current_x { 0 };
-        T current_y { 0 };
 
-        Gfx::Point<T> last_valid_position { current_x, current_y };
+        Gfx::Point<T> position { 0, 0 };
 
         constexpr Iterator(T width, T height)
             : width(move(width))
@@ -401,28 +399,24 @@ public:
         constexpr bool operator==(Iterator const& other) const { return index == other.index; }
         constexpr bool operator!=(Iterator const& other) const { return index != other.index; }
 
-        constexpr Gfx::Point<T> operator*() const { return last_valid_position; }
+        constexpr Gfx::Point<T> operator*() const { return position; }
 
         constexpr Iterator operator++()
         {
-            auto found_valid_position = false;
-
-            while (!found_valid_position && !is_end()) {
-                // Translating the coordinates makes the range check simpler:
-                T xp = current_x + width / 2;
-                T yp = current_y + height / 2;
-                if (xp >= 0 && xp <= width && yp >= 0 && yp <= height) {
-                    last_valid_position = { current_x, current_y };
-                    found_valid_position = true;
-                }
-
+            while (!is_end()) {
                 // Figure out in which of the four squares we are.
-                if (AK::abs(current_x) <= AK::abs(current_y) && (current_x != current_y || current_x >= 0))
-                    current_x += ((current_y >= 0) ? 1 : -1);
+                if (AK::abs(position.x()) <= AK::abs(position.y()) && (position.x() != position.y() || position.x() >= 0))
+                    position.translate_by(position.y() >= 0 ? 1 : -1, 0);
                 else
-                    current_y += ((current_x >= 0) ? -1 : 1);
-
+                    position.translate_by(0, position.x() >= 0 ? -1 : 1);
                 ++index;
+
+                // Translating the coordinates makes the range check simpler:
+                T xp = position.x() + width / 2;
+                T yp = position.y() + height / 2;
+                if (xp >= 0 && xp <= width && yp >= 0 && yp <= height) {
+                    break;
+                }
             }
 
             return *this;
