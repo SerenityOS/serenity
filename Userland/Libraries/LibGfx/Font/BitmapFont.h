@@ -119,7 +119,6 @@ public:
     size_t glyph_count() const override { return m_glyph_count; }
     Optional<size_t> glyph_index(u32 code_point) const;
 
-    u16 range_size() const { return m_range_mask_size; }
     bool is_range_empty(u32 code_point) const { return !(m_range_mask[code_point / 256 / 8] & 1 << (code_point / 256 % 8)); }
 
     virtual String family() const override { return m_family; }
@@ -133,7 +132,7 @@ public:
 
 private:
     BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width,
-        u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
+        u8 glyph_width, u8 glyph_height, u8 glyph_spacing, Bytes range_mask,
         u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays = false);
 
     static ErrorOr<NonnullRefPtr<BitmapFont>> load_from_memory(u8 const*);
@@ -149,8 +148,7 @@ private:
     String m_family;
     size_t m_glyph_count { 0 };
 
-    u16 m_range_mask_size { 0 };
-    u8* m_range_mask { nullptr };
+    Bytes m_range_mask;
     Vector<Optional<size_t>> m_range_indices;
 
     u8* m_rows { nullptr };
