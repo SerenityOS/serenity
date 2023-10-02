@@ -12,6 +12,8 @@
 #define ASCII 0x80
 #define UNICODE 0x10FFFF + 100
 
+using namespace Test::Randomized;
+
 void compare_bool_output_over(u32 range, auto& old_function, auto& new_function)
 {
     bool result1 = false;
@@ -19,7 +21,7 @@ void compare_bool_output_over(u32 range, auto& old_function, auto& new_function)
     for (u32 i = 0; i < range; ++i) {
         EXPECT_EQ(result1 = (old_function(i) > 0), result2 = (new_function(i) > 0));
         if (result1 != result2)
-            dbgln("Function input value was {}.", i);
+            FAIL(String::formatted("New result {} does not match old result {} for input {}.", result1, result2, i));
     }
 }
 
@@ -30,11 +32,35 @@ void compare_value_output_over(u32 range, auto& old_function, auto& new_function
     for (u32 i = 0; i < range; ++i) {
         EXPECT_EQ(result1 = old_function(i), result2 = new_function(i));
         if (result1 != result2)
-            dbgln("Function input value was {}.", i);
+            FAIL(String::formatted("New result {} does not match old result {} for input {}.", result1, result2, i));
     }
 }
 
-// NOTE: Avoid comparing over UNICODE in "TEST_CASE" due to test runtime becoming too long.
+void randomized_compare_bool_output_over(u32 range, auto& old_function, auto& new_function)
+{
+    // NOTE: randomized tests also run multiple times (100 by default). This means we'll try 10k random numbers times each time the test suite is run.
+    for (u32 n = 0; n < 100; ++n) {
+        bool result1 = false;
+        bool result2 = false;
+        GEN(i, Gen::unsigned_int(range - 1));
+        EXPECT_EQ(result1 = (old_function(i) > 0), result2 = (new_function(i) > 0));
+        if (result1 != result2)
+            FAIL(String::formatted("New result {} does not match old result {} for input {}.", result1, result2, i));
+    }
+}
+
+void randomized_compare_value_output_over(u32 range, auto& old_function, auto& new_function)
+{
+    // NOTE: randomized tests also run multiple times (100 by default). This means we'll try 10k random numbers times each time the test suite is run.
+    for (u32 n = 0; n < 100; ++n) {
+        i64 result1 = false;
+        i64 result2 = false;
+        GEN(i, Gen::unsigned_int(range - 1));
+        EXPECT_EQ(result1 = old_function(i), result2 = new_function(i));
+        if (result1 != result2)
+            FAIL(String::formatted("New result {} does not match old result {} for input {}.", result1, result2, i));
+    }
+}
 
 TEST_CASE(is_ascii_alphanumeric)
 {
@@ -144,4 +170,20 @@ BENCHMARK_CASE(to_ascii_lowercase_unicode)
 BENCHMARK_CASE(to_ascii_uppercase_unicode)
 {
     compare_value_output_over(UNICODE, toupper, to_ascii_uppercase);
+}
+
+// NOTE: This would take too long to run exhaustively. Let's at least run random subsets of it!
+RANDOMIZED_TEST_CASE(is_ascii_unicode)
+{
+    randomized_compare_bool_output_over(UNICODE, isascii, is_ascii);
+}
+
+RANDOMIZED_TEST_CASE(to_ascii_lowercase_unicode)
+{
+    randomized_compare_value_output_over(UNICODE, tolower, to_ascii_lowercase);
+}
+
+RANDOMIZED_TEST_CASE(to_ascii_uppercase_unicode)
+{
+    randomized_compare_value_output_over(UNICODE, toupper, to_ascii_uppercase);
 }
