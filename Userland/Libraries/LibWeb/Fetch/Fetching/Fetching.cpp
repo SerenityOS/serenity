@@ -1776,7 +1776,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
             // FIXME: Set response status message
             pending_response->resolve(response);
         },
-        [&vm, request, pending_response](auto& error, auto status_code) {
+        [&realm, &vm, request, pending_response](auto& error, auto status_code, auto, auto&) {
             dbgln_if(WEB_FETCH_DEBUG, "Fetch: ResourceLoader load for '{}' failed: {} (status {})", request->url(), error, status_code.value_or(0));
             auto response = Infrastructure::Response::create(vm);
             // FIXME: This is ugly, ResourceLoader should tell us.

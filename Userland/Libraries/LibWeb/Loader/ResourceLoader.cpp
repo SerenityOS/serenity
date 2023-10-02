@@ -115,7 +115,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
         [=](auto data, auto& headers, auto status_code) {
             const_cast<Resource&>(*resource).did_load({}, data, headers, status_code);
         },
-        [=](auto& error, auto status_code) {
+        [=](auto& error, auto status_code, auto, auto) {
             const_cast<Resource&>(*resource).did_fail({}, error, status_code);
         });
 
@@ -158,7 +158,7 @@ static void store_response_cookies(Page& page, AK::URL const& url, DeprecatedStr
 
 static size_t resource_id = 0;
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
+void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback, ErrorCallback error_callback, Optional<u32> timeout, TimeoutCallback timeout_callback)
 {
     auto& url = request.url();
     request.start_timer();
@@ -188,7 +188,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     if (ContentFilter::the().is_filtered(url)) {
         auto filter_message = "URL was filtered"sv;
         log_failure(request, filter_message);
-        error_callback(filter_message, {});
+        error_callback(filter_message, {}, {}, {});
         return;
     }
 
@@ -210,7 +210,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         if (data_url_or_error.is_error()) {
             auto error_message = data_url_or_error.error().string_literal();
             log_failure(request, error_message);
-            error_callback(error_message, {});
+            error_callback(error_message, {}, {}, {});
             return;
         }
         auto data_url = data_url_or_error.release_value();
@@ -246,7 +246,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                 log_failure(request, file_or_error.error());
                 if (error_callback) {
                     auto status = file_or_error.error().code() == ENOENT ? 404u : 500u;
-                    error_callback(DeprecatedString::formatted("{}", file_or_error.error()), status);
+                    error_callback(DeprecatedString::formatted("{}", file_or_error.error()), status, {}, {});
                 }
                 return;
             }
@@ -260,7 +260,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                 if (maybe_response.is_error()) {
                     log_failure(request, maybe_response.error());
                     if (error_callback)
-                        error_callback(DeprecatedString::formatted("{}", maybe_response.error()), 500u);
+                        error_callback(DeprecatedString::formatted("{}", maybe_response.error()), 500u, {}, {});
                     return;
                 }
 
@@ -276,7 +276,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());
                 if (error_callback)
-                    error_callback(DeprecatedString::formatted("{}", maybe_file.error()), 500u);
+                    error_callback(DeprecatedString::formatted("{}", maybe_file.error()), 500u, {}, {});
                 return;
             }
 
@@ -285,7 +285,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             if (maybe_data.is_error()) {
                 log_failure(request, maybe_data.error());
                 if (error_callback)
-                    error_callback(DeprecatedString::formatted("{}", maybe_data.error()), 500u);
+                    error_callback(DeprecatedString::formatted("{}", maybe_data.error()), 500u, {}, {});
                 return;
             }
             auto data = maybe_data.release_value();
@@ -325,7 +325,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             auto start_request_failure_msg = "Failed to initiate load"sv;
             log_failure(request, start_request_failure_msg);
             if (error_callback)
-                error_callback(start_request_failure_msg, {});
+                error_callback(start_request_failure_msg, {}, {}, {});
             return;
         }
 
@@ -364,7 +364,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                     error_builder.append("Load failed"sv);
                 log_failure(request, error_builder.string_view());
                 if (error_callback)
-                    error_callback(error_builder.to_deprecated_string(), status_code);
+                    error_callback(error_builder.to_deprecated_string(), status_code, payload, response_headers);
                 return;
             }
             log_success(request);
@@ -386,10 +386,10 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     auto not_implemented_error = DeprecatedString::formatted("Protocol not implemented: {}", url.scheme());
     log_failure(request, not_implemented_error);
     if (error_callback)
-        error_callback(not_implemented_error, {});
+        error_callback(not_implemented_error, {}, {}, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
+void ResourceLoader::load(const AK::URL& url, SuccessCallback success_callback, ErrorCallback error_callback, Optional<u32> timeout, TimeoutCallback timeout_callback)
 {
     LoadRequest request;
     request.set_url(url);

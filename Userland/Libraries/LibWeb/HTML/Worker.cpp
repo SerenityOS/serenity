@@ -314,7 +314,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
             // 28. Event loop: Run the responsible event loop specified by inside settings until it is destroyed.
         },
-        [](auto&, auto) {
+        [](auto&, auto, auto, auto&) {
             dbgln_if(WEB_WORKER_DEBUG, "WebWorker: HONK! Failed to load script.");
         });
 }
