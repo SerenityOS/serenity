@@ -40,6 +40,18 @@ static_assert(AssertSize<FontFileHeader, 80>());
 static constexpr size_t s_max_glyph_count = 0x110000;
 static constexpr size_t s_max_range_mask_size = s_max_glyph_count / (256 * 8);
 
+}
+
+// FIXME: We define the traits for the const FontFileHeader, because that's the one we use, and defining
+//        Traits<T> doesn't apply to Traits<T const>. Once that's fixed, remove the const here.
+template<>
+class AK::Traits<Gfx::FontFileHeader const> : public GenericTraits<Gfx::FontFileHeader const> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+namespace Gfx {
+
 NonnullRefPtr<Font> BitmapFont::clone() const
 {
     return MUST(try_clone());
@@ -176,9 +188,9 @@ BitmapFont::~BitmapFont()
     }
 }
 
-ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::load_from_memory(u8 const* data)
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_mapped_file(NonnullOwnPtr<Core::MappedFile> mapped_file)
 {
-    auto const& header = *reinterpret_cast<FontFileHeader const*>(data);
+    auto& header = *TRY(mapped_file->read_in_place<FontFileHeader const>());
     if (memcmp(header.magic, "!Fnt", 4))
         return Error::from_string_literal("Gfx::BitmapFont::load_from_memory: Incompatible header");
     if (header.name[sizeof(header.name) - 1] != '\0')
@@ -188,16 +200,29 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::load_from_memory(u8 const* data)
 
     size_t bytes_per_glyph = sizeof(u32) * header.glyph_height;
     size_t glyph_count { 0 };
-    u8* range_mask_start = const_cast<u8*>(data + sizeof(FontFileHeader));
-    Bytes range_mask { range_mask_start, header.range_mask_size };
+
+    // FIXME: These ReadonlyFoo -> Foo casts are awkward, and only needed because BitmapFont is
+    //        sometimes editable and sometimes not. Splitting it into editable/non-editable classes
+    //        would make this a lot cleaner.
+    ReadonlyBytes readonly_range_mask = TRY(mapped_file->read_in_place<u8 const>(header.range_mask_size));
+    Bytes range_mask { const_cast<u8*>(readonly_range_mask.data()), readonly_range_mask.size() };
     for (size_t i = 0; i < header.range_mask_size; ++i)
         glyph_count += 256 * popcount(range_mask[i]);
-    u8* rows_start = range_mask_start + header.range_mask_size;
-    Bytes rows { rows_start, glyph_count * bytes_per_glyph };
-    Span<u8> widths { rows_start + glyph_count * bytes_per_glyph, glyph_count };
+
+    ReadonlyBytes readonly_rows = TRY(mapped_file->read_in_place<u8 const>(glyph_count * bytes_per_glyph));
+    Bytes rows { const_cast<u8*>(readonly_rows.data()), readonly_rows.size() };
+
+    ReadonlySpan<u8> readonly_widths = TRY(mapped_file->read_in_place<u8 const>(glyph_count));
+    Span<u8> widths { const_cast<u8*>(readonly_widths.data()), readonly_widths.size() };
+
+    if (!mapped_file->is_eof())
+        return Error::from_string_literal("Gfx::BitmapFont::load_from_memory: Trailing data in file");
+
     auto name = TRY(String::from_utf8(ReadonlyBytes { header.name, strlen(header.name) }));
     auto family = TRY(String::from_utf8(ReadonlyBytes { header.family, strlen(header.family) }));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(move(name), move(family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));
+    auto font = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(move(name), move(family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope)));
+    font->m_mapped_file = move(mapped_file);
+    return font;
 }
 
 RefPtr<BitmapFont> BitmapFont::load_from_file(DeprecatedString const& path)
@@ -209,13 +234,6 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(DeprecatedStri
 {
     auto mapped_file = TRY(Core::MappedFile::map(path));
     return try_load_from_mapped_file(move(mapped_file));
-}
-
-ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_mapped_file(OwnPtr<Core::MappedFile> mapped_file)
-{
-    auto font = TRY(load_from_memory((u8 const*)mapped_file->data()));
-    font->m_mapped_file = move(mapped_file);
-    return font;
 }
 
 ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
