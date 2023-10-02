@@ -38,8 +38,8 @@ public:
 
     ~BitmapFont();
 
-    u8* rows() { return m_rows.data(); }
-    u8* widths() { return m_glyph_widths.data(); }
+    Bytes rows() { return m_rows; }
+    Span<u8> widths() { return m_glyph_widths; }
 
     virtual float point_size() const override { return m_presentation_size; }
 
