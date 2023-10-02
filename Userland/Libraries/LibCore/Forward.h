@@ -32,6 +32,8 @@ class NetworkJob;
 class NetworkResponse;
 class Notifier;
 class ProcessStatisticsReader;
+class Resource;
+class ResourceImplementation;
 class Socket;
 template<typename Result, typename TError = AK::Error>
 class Promise;
