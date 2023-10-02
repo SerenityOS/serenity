@@ -13,6 +13,7 @@
 #include "Compiler/Passes/FunctionCallCanonicalizationPass.h"
 #include "Compiler/Passes/IfBranchMergingPass.h"
 #include "Compiler/Passes/ReferenceResolvingPass.h"
+#include "Compiler/Passes/SSABuildingPass.h"
 #include "Function.h"
 #include "Parser/CppASTConverter.h"
 #include "Parser/SpecParser.h"
@@ -108,6 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pipeline.add_compilation_pass<ReferenceResolvingPass>();
     pipeline.add_compilation_pass<CFGBuildingPass>();
     pipeline.add_compilation_pass<CFGSimplificationPass>();
+    pipeline.add_compilation_pass<SSABuildingPass>();
 
     pipeline.for_each_step_in(passes_to_dump_ast, [](CompilationStepWithDumpOptions& step) {
         step.dump_ast = true;

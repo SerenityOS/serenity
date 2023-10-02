@@ -9,6 +9,7 @@ set(SOURCES
     Compiler/Passes/FunctionCallCanonicalizationPass.cpp
     Compiler/Passes/IfBranchMergingPass.cpp
     Compiler/Passes/ReferenceResolvingPass.cpp
+    Compiler/Passes/SSABuildingPass.cpp
     Parser/CppASTConverter.cpp
     Parser/Lexer.cpp
     Parser/ParseError.cpp
