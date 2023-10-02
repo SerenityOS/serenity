@@ -2,10 +2,10 @@ set(SOURCES
     AST/AST.cpp
     AST/ASTPrinting.cpp
     Compiler/CompilerPass.cpp
-    Compiler/FunctionCallCanonicalizationPass.cpp
     Compiler/GenericASTPass.cpp
-    Compiler/IfBranchMergingPass.cpp
-    Compiler/ReferenceResolvingPass.cpp
+    Compiler/Passes/FunctionCallCanonicalizationPass.cpp
+    Compiler/Passes/IfBranchMergingPass.cpp
+    Compiler/Passes/ReferenceResolvingPass.cpp
     Parser/CppASTConverter.cpp
     Parser/Lexer.cpp
     Parser/ParseError.cpp

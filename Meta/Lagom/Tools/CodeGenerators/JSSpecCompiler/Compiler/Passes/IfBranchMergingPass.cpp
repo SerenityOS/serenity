@@ -7,7 +7,7 @@
 #include <AK/TypeCasts.h>
 
 #include "AST/AST.h"
-#include "Compiler/IfBranchMergingPass.h"
+#include "Compiler/Passes/IfBranchMergingPass.h"
 
 namespace JSSpecCompiler {
 

@@ -7,7 +7,7 @@
 #include <AK/HashMap.h>
 
 #include "AST/AST.h"
-#include "Compiler/ReferenceResolvingPass.h"
+#include "Compiler/Passes/ReferenceResolvingPass.h"
 #include "Function.h"
 
 namespace JSSpecCompiler {
