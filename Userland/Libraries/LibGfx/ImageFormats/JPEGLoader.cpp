@@ -230,6 +230,9 @@ private:
         VERIFY(m_byte_offset == m_current_size);
 
         m_current_size = TRY(m_stream->read_some(m_buffer.span())).size();
+        if (m_current_size == 0)
+            return Error::from_string_literal("Unexpected end of file");
+
         m_byte_offset = 0;
 
         return {};
