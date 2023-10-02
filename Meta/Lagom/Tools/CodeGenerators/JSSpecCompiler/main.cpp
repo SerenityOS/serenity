@@ -9,9 +9,9 @@
 #include <LibMain/Main.h>
 #include <LibXML/Parser/Parser.h>
 
-#include "Compiler/FunctionCallCanonicalizationPass.h"
-#include "Compiler/IfBranchMergingPass.h"
-#include "Compiler/ReferenceResolvingPass.h"
+#include "Compiler/Passes/FunctionCallCanonicalizationPass.h"
+#include "Compiler/Passes/IfBranchMergingPass.h"
+#include "Compiler/Passes/ReferenceResolvingPass.h"
 #include "Function.h"
 #include "Parser/SpecParser.h"
 

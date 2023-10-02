@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Compiler/FunctionCallCanonicalizationPass.h"
+#include "Compiler/Passes/FunctionCallCanonicalizationPass.h"
 #include "AST/AST.h"
 
 namespace JSSpecCompiler {
