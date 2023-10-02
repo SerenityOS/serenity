@@ -18,6 +18,8 @@ RecursionDecision ReferenceResolvingPass::on_entry(Tree tree)
         if (binary_operation->m_operation != BinaryOperator::Declaration)
             return RecursionDecision::Recurse;
 
+        binary_operation->m_operation = BinaryOperator::Assignment;
+
         if (auto variable_name = as<UnresolvedReference>(binary_operation->m_left); variable_name) {
             auto name = variable_name->m_name;
             if (!m_function->m_local_variables.contains(name))
