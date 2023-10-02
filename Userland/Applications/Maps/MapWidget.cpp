@@ -438,10 +438,11 @@ void MapWidget::paint_map(GUI::Painter& painter)
     double offset_x = (longitude_to_tile_x(m_center.longitude, m_zoom) - center_tile_x) * TILE_SIZE;
     double offset_y = (latitude_to_tile_y(m_center.latitude, m_zoom) - center_tile_y) * TILE_SIZE;
 
-    // Draw grid around center tile
-    int grid_width = (width() + TILE_SIZE - 1) / TILE_SIZE;
-    int grid_height = (height() + TILE_SIZE - 1) / TILE_SIZE;
-    for (auto const delta : CenterOutwardsIterable { grid_width + 1, grid_height + 1 }) {
+    // Draw grid around center tile; always pad the dimensions with 2 tiles for left/right and top/bottom edges
+    // plus one additional tile to account for the width() / 2 in CenterOutwardsIterable.
+    int grid_width = width() / TILE_SIZE + 3;
+    int grid_height = height() / TILE_SIZE + 3;
+    for (auto const delta : CenterOutwardsIterable { grid_width, grid_height }) {
         int tile_x = center_tile_x + delta.x();
         int tile_y = center_tile_y + delta.y();
 
