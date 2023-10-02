@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <LibCpp/AST.h>
+#include <LibCpp/Parser.h>
 
-#include "Forward.h"
+#include "CompilationPipeline.h"
 
 namespace JSSpecCompiler {
 
@@ -29,6 +31,18 @@ private:
     Tree as_possibly_empty_tree(Cpp::Statement const* statement);
 
     RefPtr<Cpp::FunctionDeclaration> m_function;
+};
+
+class CppParsingStep : public CompilationStep {
+public:
+    CppParsingStep();
+    ~CppParsingStep();
+
+    void run(TranslationUnitRef translation_unit) override;
+
+private:
+    OwnPtr<Cpp::Parser> m_parser;
+    ByteBuffer m_input;
 };
 
 }

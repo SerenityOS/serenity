@@ -24,6 +24,8 @@ namespace JSSpecCompiler {
 // ```
 class IfBranchMergingPass : public GenericASTPass {
 public:
+    inline static constexpr StringView name = "if-branch-merging"sv;
+
     using GenericASTPass::GenericASTPass;
 
 protected:

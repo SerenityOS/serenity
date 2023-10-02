@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
+
 #include "AST/AST.h"
+#include "CompilationPipeline.h"
 #include "Forward.h"
 #include "Parser/ParseError.h"
 #include "Parser/Token.h"
@@ -56,6 +59,18 @@ public:
 
     Vector<Argument> m_arguments;
     Algorithm m_algorithm;
+};
+
+class SpecParsingStep : public CompilationStep {
+public:
+    SpecParsingStep();
+    ~SpecParsingStep();
+
+    void run(TranslationUnitRef translation_unit) override;
+
+private:
+    OwnPtr<XML::Document> m_document;
+    ByteBuffer m_input;
 };
 
 }
