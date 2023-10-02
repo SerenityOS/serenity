@@ -104,8 +104,12 @@ public:
 
     RefPtr<Resource> load_resource(Resource::Type, LoadRequest&);
 
-    void load(LoadRequest&, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback = nullptr, Optional<u32> timeout = {}, Function<void()> timeout_callback = nullptr);
-    void load(const AK::URL&, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback = nullptr, Optional<u32> timeout = {}, Function<void()> timeout_callback = nullptr);
+    using SuccessCallback = Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)>;
+    using ErrorCallback = Function<void(DeprecatedString const&, Optional<u32> status_code, ReadonlyBytes payload, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers)>;
+    using TimeoutCallback = Function<void()>;
+
+    void load(LoadRequest&, SuccessCallback success_callback, ErrorCallback error_callback = nullptr, Optional<u32> timeout = {}, TimeoutCallback timeout_callback = nullptr);
+    void load(const AK::URL&, SuccessCallback success_callback, ErrorCallback error_callback = nullptr, Optional<u32> timeout = {}, TimeoutCallback timeout_callback = nullptr);
 
     ResourceLoaderConnector& connector() { return *m_connector; }
 
