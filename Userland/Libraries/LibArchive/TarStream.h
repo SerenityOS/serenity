@@ -93,10 +93,17 @@ inline ErrorOr<void> TarInputStream::for_each_extended_header(F func)
         Optional<unsigned int> length = file_contents.substring_view(0, length_end_index.value()).to_uint();
         if (!length.has_value())
             return Error::from_string_literal("Malformed extended header: Could not parse length.");
+
+        if (length_end_index.value() >= length.value())
+            return Error::from_string_literal("Malformed extended header: Header length too short.");
+
         unsigned int remaining_length = length.value();
 
         remaining_length -= length_end_index.value() + 1;
         file_contents = file_contents.substring_view(length_end_index.value() + 1);
+
+        if (file_contents.length() < remaining_length - 1)
+            return Error::from_string_literal("Malformed extended header: Header length too large.");
 
         // Extract the header.
         StringView header = file_contents.substring_view(0, remaining_length - 1);
