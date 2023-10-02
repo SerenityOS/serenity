@@ -497,17 +497,12 @@ protected:
 
 class FunctionPointer : public Expression {
 public:
-    FunctionPointer(StringView function_name)
-        : m_function(function_name)
+    FunctionPointer(FunctionDeclarationRef declaration)
+        : m_declaration(declaration)
     {
     }
 
-    FunctionPointer(FunctionDefinitionRef function_definition)
-        : m_function(function_definition)
-    {
-    }
-
-    Variant<StringView, FunctionDefinitionRef> m_function;
+    FunctionDeclarationRef m_declaration;
 
 protected:
     void dump_tree(StringBuilder& builder) override;

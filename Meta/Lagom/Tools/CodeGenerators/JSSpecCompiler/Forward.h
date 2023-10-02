@@ -67,6 +67,8 @@ class SpecFunction;
 // Function.h
 struct TranslationUnit;
 using TranslationUnitRef = TranslationUnit*;
+class FunctionDeclaration;
+using FunctionDeclarationRef = FunctionDeclaration*;
 class FunctionDefinition;
 using FunctionDefinitionRef = FunctionDefinition*;
 

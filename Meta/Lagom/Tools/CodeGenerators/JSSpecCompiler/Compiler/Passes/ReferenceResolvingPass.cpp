@@ -47,7 +47,7 @@ void ReferenceResolvingPass::on_leave(Tree tree)
         }
 
         if (auto it = functions.find(name); it != functions.end()) {
-            replace_current_node_with(it->value);
+            replace_current_node_with(make_ref_counted<FunctionPointer>(it->value));
             return;
         }
     }

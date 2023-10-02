@@ -126,28 +126,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Functions referenced in DifferenceISODate
     // TODO: This is here just for testing. In a long run, we need some place, which is not
     //       `serenity_main`, to store built-in functions.
-    auto& functions = translation_unit.function_index;
-    functions.set("CompareISODate"sv, make_ref_counted<FunctionPointer>("CompareISODate"sv));
-    functions.set("CreateDateDurationRecord"sv, make_ref_counted<FunctionPointer>("CreateDateDurationRecord"sv));
-    functions.set("AddISODate"sv, make_ref_counted<FunctionPointer>("AddISODate"sv));
-    functions.set("ISODaysInMonth"sv, make_ref_counted<FunctionPointer>("ISODaysInMonth"sv));
-    functions.set("ISODateToEpochDays"sv, make_ref_counted<FunctionPointer>("ISODateToEpochDays"sv));
-    functions.set("truncate"sv, make_ref_counted<FunctionPointer>("truncate"sv));
-    functions.set("remainder"sv, make_ref_counted<FunctionPointer>("remainder"sv));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("CompareISODate"sv));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("CreateDateDurationRecord"sv));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("AddISODate"sv));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("ISODaysInMonth"sv));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("ISODateToEpochDays"sv));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("truncate"sv));
+    translation_unit.adopt_declaration(make_ref_counted<FunctionDeclaration>("remainder"sv));
 
     for (auto const& step : pipeline.pipeline()) {
         step.step->run(&translation_unit);
 
         if (step.dump_ast) {
             outln(stderr, "===== AST after {} =====", step.step->name());
-            for (auto const& function : translation_unit.function_definitions) {
+            for (auto const& function : translation_unit.functions_to_compile) {
                 outln(stderr, "{}():", function->m_name);
                 outln(stderr, "{}", function->m_ast);
             }
         }
-        if (step.dump_cfg && translation_unit.function_definitions[0]->m_cfg != nullptr) {
+        if (step.dump_cfg && translation_unit.functions_to_compile[0]->m_cfg != nullptr) {
             outln(stderr, "===== CFG after {} =====", step.step->name());
-            for (auto const& function : translation_unit.function_definitions) {
+            for (auto const& function : translation_unit.functions_to_compile) {
                 outln(stderr, "{}():", function->m_name);
                 outln(stderr, "{}", *function->m_cfg);
             }

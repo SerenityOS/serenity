@@ -162,13 +162,7 @@ void Variable::dump_tree(StringBuilder& builder)
 
 void FunctionPointer::dump_tree(StringBuilder& builder)
 {
-    m_function.visit(
-        [&](StringView name) {
-            dump_node(builder, "Func external \"{}\"", name);
-        },
-        [&](FunctionDefinitionRef function) {
-            dump_node(builder, "Func local \"{}\"", function->m_name);
-        });
+    dump_node(builder, "Func \"{}\"", m_declaration->m_name);
 }
 
 }
