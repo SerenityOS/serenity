@@ -33,8 +33,6 @@ static DeprecatedString s_window_title_font_query;
 static RefPtr<Font> s_fixed_width_font;
 static DeprecatedString s_fixed_width_font_query;
 
-static DeprecatedString s_default_fonts_lookup_path = "/res/fonts";
-
 void FontDatabase::set_default_font_query(DeprecatedString query)
 {
     if (s_default_font_query == query)
@@ -59,18 +57,6 @@ void FontDatabase::set_window_title_font_query(DeprecatedString query)
 DeprecatedString FontDatabase::window_title_font_query()
 {
     return s_window_title_font_query;
-}
-
-void FontDatabase::set_default_fonts_lookup_path(DeprecatedString path)
-{
-    if (s_default_fonts_lookup_path == path)
-        return;
-    s_default_fonts_lookup_path = move(path);
-}
-
-DeprecatedString FontDatabase::default_fonts_lookup_path()
-{
-    return s_default_fonts_lookup_path;
 }
 
 Font& FontDatabase::default_font()
@@ -121,11 +107,6 @@ struct FontDatabase::Private {
     HashMap<FlyString, Vector<NonnullRefPtr<Typeface>>, AK::ASCIICaseInsensitiveFlyStringTraits> typefaces;
 };
 
-void FontDatabase::load_all_fonts_from_path(DeprecatedString const& path)
-{
-    load_all_fonts_from_uri(MUST(String::formatted("file://{}", path)));
-}
-
 void FontDatabase::load_all_fonts_from_uri(StringView uri)
 {
     auto root_or_error = Core::Resource::load_from_uri(uri);
@@ -168,7 +149,6 @@ FontDatabase::FontDatabase()
     : m_private(make<Private>())
 {
     load_all_fonts_from_uri("resource://fonts"sv);
-    load_all_fonts_from_path(s_default_fonts_lookup_path);
 }
 
 void FontDatabase::for_each_font(Function<void(Gfx::Font const&)> callback)

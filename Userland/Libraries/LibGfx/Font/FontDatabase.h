@@ -47,7 +47,6 @@ public:
     static void set_default_font_query(DeprecatedString);
     static void set_window_title_font_query(DeprecatedString);
     static void set_fixed_width_font_query(DeprecatedString);
-    static void set_default_fonts_lookup_path(DeprecatedString);
 
     RefPtr<Gfx::Font> get(FlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
@@ -58,7 +57,6 @@ public:
     void for_each_typeface(Function<void(Typeface const&)>);
     void for_each_typeface_with_family_name(FlyString const& family_name, Function<void(Typeface const&)>);
 
-    void load_all_fonts_from_path(DeprecatedString const&);
     void load_all_fonts_from_uri(StringView);
 
 private:
