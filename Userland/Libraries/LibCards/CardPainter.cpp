@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2022, the SerenityOS developers.
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "CardPainter.h"
+#include <AK/Array.h>
+#include <AK/GenericShorthands.h>
 #include <LibConfig/Client.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -22,6 +24,7 @@ CardPainter& CardPainter::the()
 CardPainter::CardPainter()
 {
     m_background_image_path = MUST(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/graphics/cards/backs/buggie-deck.png"sv)));
+    set_front_images_set_name(MUST(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardFrontImages"sv, "Classic"sv))));
 }
 
 static constexpr Gfx::CharacterBitmap s_diamond {
@@ -155,6 +158,48 @@ void CardPainter::set_background_image_path(StringView path)
         paint_inverted_card(*m_card_back_inverted, *m_card_back);
 }
 
+void CardPainter::set_front_images_set_name(AK::StringView path)
+{
+    if (m_front_images_set_name == path)
+        return;
+
+    m_front_images_set_name = MUST(String::from_utf8(path));
+
+    if (m_front_images_set_name.is_empty()) {
+        for (auto& pip_bitmap : m_suit_pips)
+            pip_bitmap = nullptr;
+        for (auto& pip_bitmap : m_suit_pips_flipped_vertically)
+            pip_bitmap = nullptr;
+    } else {
+        auto diamond = Gfx::Bitmap::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/diamond.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
+        m_suit_pips[to_underlying(Suit::Diamonds)] = diamond;
+        m_suit_pips_flipped_vertically[to_underlying(Suit::Diamonds)] = diamond->flipped(Gfx::Orientation::Vertical).release_value_but_fixme_should_propagate_errors();
+
+        auto club = Gfx::Bitmap::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/club.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
+        m_suit_pips[to_underlying(Suit::Clubs)] = club;
+        m_suit_pips_flipped_vertically[to_underlying(Suit::Clubs)] = club->flipped(Gfx::Orientation::Vertical).release_value_but_fixme_should_propagate_errors();
+
+        auto heart = Gfx::Bitmap::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/heart.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
+        m_suit_pips[to_underlying(Suit::Hearts)] = heart;
+        m_suit_pips_flipped_vertically[to_underlying(Suit::Hearts)] = heart->flipped(Gfx::Orientation::Vertical).release_value_but_fixme_should_propagate_errors();
+
+        auto spade = Gfx::Bitmap::load_from_file(MUST(String::formatted("/res/graphics/cards/fronts/{}/spade.png", m_front_images_set_name))).release_value_but_fixme_should_propagate_errors();
+        m_suit_pips[to_underlying(Suit::Spades)] = spade;
+        m_suit_pips_flipped_vertically[to_underlying(Suit::Spades)] = spade->flipped(Gfx::Orientation::Vertical).release_value_but_fixme_should_propagate_errors();
+    }
+
+    // Clear all bitmaps using front images
+    for (auto& suit_array : m_cards) {
+        for (auto& card_bitmap : suit_array)
+            card_bitmap = nullptr;
+    }
+
+    for (auto& suit_array : m_cards_highlighted) {
+        for (auto& card_bitmap : suit_array)
+            card_bitmap = nullptr;
+    }
+}
+
 void CardPainter::set_background_color(Color background_color)
 {
     m_background_color = background_color;
@@ -169,6 +214,123 @@ void CardPainter::set_background_color(Color background_color)
 NonnullRefPtr<Gfx::Bitmap> CardPainter::create_card_bitmap()
 {
     return Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { Card::width, Card::height }).release_value_but_fixme_should_propagate_errors();
+}
+
+void CardPainter::paint_card_front_pips(Gfx::Bitmap& bitmap, Suit suit, Rank rank)
+{
+    Gfx::Painter painter { bitmap };
+    auto& pip_bitmap = m_suit_pips[to_underlying(suit)];
+    auto& pip_bitmap_flipped_vertically = m_suit_pips_flipped_vertically[to_underlying(suit)];
+
+    struct Pip {
+        int x;
+        int y;
+        bool flip_vertically;
+    };
+
+    auto paint_pips = [&](Span<Pip> pips) {
+        for (auto& pip : pips) {
+            auto& bitmap = pip.flip_vertically ? pip_bitmap_flipped_vertically : pip_bitmap;
+            painter.blit({ pip.x - bitmap->width() / 2, pip.y - bitmap->height() / 2 }, *bitmap, bitmap->rect());
+        }
+    };
+
+    constexpr int column_left = Card::width * 1 / 3;
+    constexpr int column_middle = Card::width * 1 / 2;
+    constexpr int column_right = Card::width - column_left;
+    constexpr int row_top = Card::height / 6;
+    constexpr int row_middle = Card::height / 2;
+    constexpr int row_bottom = Card::height - row_top - 1;
+    constexpr int row_2_of_4 = row_top + (row_bottom - row_top) * 1 / 3;
+    constexpr int row_3_of_4 = Card::height - row_2_of_4 - 1;
+    constexpr int row_2_of_5 = row_top + (row_bottom - row_top) * 1 / 4;
+    constexpr int row_4_of_5 = Card::height - row_2_of_5 - 1;
+    constexpr int row_2_of_7 = row_top + (row_bottom - row_top) * 1 / 6;
+    constexpr int row_6_of_7 = Card::height - row_2_of_7 - 1;
+
+    switch (rank) {
+    case Rank::Ace:
+        paint_pips(Array<Pip, 1>({ Pip { column_middle, row_middle, false } }));
+        break;
+    case Rank::Two:
+        paint_pips(Array<Pip, 2>({ { column_middle, row_top, false },
+            { column_middle, row_bottom, true } }));
+        break;
+    case Rank::Three:
+        paint_pips(Array<Pip, 3>({ { column_middle, row_top, false },
+            { column_middle, row_middle, false },
+            { column_middle, row_bottom, true } }));
+        break;
+    case Rank::Four:
+        paint_pips(Array<Pip, 4>({ { column_left, row_top, false },
+            { column_right, row_top, false },
+            { column_left, row_bottom, true },
+            { column_right, row_bottom, true } }));
+        break;
+    case Rank::Five:
+        paint_pips(Array<Pip, 5>({ { column_left, row_top, false },
+            { column_right, row_top, false },
+            { column_middle, row_middle, false },
+            { column_left, row_bottom, true },
+            { column_right, row_bottom, true } }));
+        break;
+    case Rank::Six:
+        paint_pips(Array<Pip, 6>({ { column_left, row_top, false },
+            { column_right, row_top, false },
+            { column_left, row_middle, false },
+            { column_right, row_middle, false },
+            { column_left, row_bottom, true },
+            { column_right, row_bottom, true } }));
+        break;
+    case Rank::Seven:
+        paint_pips(Array<Pip, 7>({ { column_left, row_top, false },
+            { column_right, row_top, false },
+            { column_middle, row_2_of_5, false },
+            { column_left, row_middle, false },
+            { column_right, row_middle, false },
+            { column_left, row_bottom, true },
+            { column_right, row_bottom, true } }));
+        break;
+    case Rank::Eight:
+        paint_pips(Array<Pip, 8>({ { column_left, row_top, false },
+            { column_right, row_top, false },
+            { column_middle, row_2_of_5, false },
+            { column_left, row_middle, false },
+            { column_right, row_middle, false },
+            { column_middle, row_4_of_5, true },
+            { column_left, row_bottom, true },
+            { column_right, row_bottom, true } }));
+        break;
+    case Rank::Nine:
+        paint_pips(Array<Pip, 9>({ { column_left, row_top, false },
+            { column_right, row_top, false },
+            { column_left, row_2_of_4, false },
+            { column_right, row_2_of_4, false },
+            { column_middle, row_middle, false },
+            { column_left, row_3_of_4, true },
+            { column_right, row_3_of_4, true },
+            { column_left, row_bottom, true },
+            { column_right, row_bottom, true } }));
+        break;
+    case Rank::Ten:
+        paint_pips(Array<Pip, 10>({ { column_left, row_top, false },
+            { column_right, row_top, false },
+            { column_middle, row_2_of_7, false },
+            { column_left, row_2_of_4, false },
+            { column_right, row_2_of_4, false },
+            { column_left, row_3_of_4, true },
+            { column_right, row_3_of_4, true },
+            { column_middle, row_6_of_7, true },
+            { column_left, row_bottom, true },
+            { column_right, row_bottom, true } }));
+        break;
+
+    case Rank::Jack:
+    case Rank::Queen:
+    case Rank::King:
+    case Rank::__Count:
+        break;
+    }
 }
 
 void CardPainter::paint_card_front(Gfx::Bitmap& bitmap, Cards::Suit suit, Cards::Rank rank)
@@ -211,6 +373,60 @@ void CardPainter::paint_card_front(Gfx::Bitmap& bitmap, Cards::Suit suit, Cards:
     for (int y = Card::height / 2; y < Card::height; ++y) {
         for (int x = 0; x < Card::width; ++x)
             bitmap.set_pixel(x, y, bitmap.get_pixel(Card::width - x - 1, Card::height - y - 1));
+    }
+
+    if (!m_front_images_set_name.is_empty()) {
+        // Paint pips for number cards except the ace of spades
+        if (!first_is_one_of(rank, Rank::Ace, Rank::Jack, Rank::Queen, Rank::King)
+            || (rank == Rank::Ace && suit != Suit::Spades)) {
+            paint_card_front_pips(bitmap, suit, rank);
+        } else {
+            // Paint pictures for royal cards and ace of spades
+            StringView rank_name;
+            switch (rank) {
+            case Rank::Ace:
+                rank_name = "ace"sv;
+                break;
+            case Rank::Jack:
+                rank_name = "jack"sv;
+                break;
+            case Rank::Queen:
+                rank_name = "queen"sv;
+                break;
+            case Rank::King:
+                rank_name = "king"sv;
+                break;
+            default:
+                break;
+            }
+
+            StringView suit_name;
+            switch (suit) {
+            case Suit::Diamonds:
+                suit_name = "diamonds"sv;
+                break;
+            case Suit::Clubs:
+                suit_name = "clubs"sv;
+                break;
+            case Suit::Hearts:
+                suit_name = "hearts"sv;
+                break;
+            case Suit::Spades:
+                suit_name = "spades"sv;
+                break;
+            case Suit::__Count:
+                return;
+            }
+
+            auto front_image_path = MUST(String::formatted("/res/graphics/cards/fronts/{}/{}-{}.png", m_front_images_set_name, suit_name, rank_name));
+            auto maybe_front_image = Gfx::Bitmap::load_from_file(front_image_path);
+            if (maybe_front_image.is_error()) {
+                dbgln("Failed to load `{}`: {}", front_image_path, maybe_front_image.error());
+                return;
+            }
+            auto front_image = maybe_front_image.release_value();
+            painter.blit({ (bitmap.width() - front_image->width()) / 2, (bitmap.height() - front_image->height()) / 2 }, front_image, front_image->rect());
+        }
     }
 }
 

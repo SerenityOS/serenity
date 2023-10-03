@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,16 +25,20 @@ public:
     NonnullRefPtr<Gfx::Bitmap> card_front_highlighted(Suit, Rank);
 
     void set_background_image_path(StringView path);
+    void set_front_images_set_name(StringView path);
     void set_background_color(Color);
 
 private:
     CardPainter();
     NonnullRefPtr<Gfx::Bitmap> create_card_bitmap();
     void paint_card_front(Gfx::Bitmap&, Suit, Rank);
+    void paint_card_front_pips(Gfx::Bitmap&, Suit, Rank);
     void paint_card_back(Gfx::Bitmap&);
     void paint_inverted_card(Gfx::Bitmap& bitmap, Gfx::Bitmap const& source_to_invert);
     void paint_highlighted_card(Gfx::Bitmap& bitmap, Gfx::Bitmap const& source_to_highlight);
 
+    Array<RefPtr<Gfx::Bitmap>, to_underlying(Suit::__Count)> m_suit_pips;
+    Array<RefPtr<Gfx::Bitmap>, to_underlying(Suit::__Count)> m_suit_pips_flipped_vertically;
     Array<Array<RefPtr<Gfx::Bitmap>, to_underlying(Rank::__Count)>, to_underlying(Suit::__Count)> m_cards;
     Array<Array<RefPtr<Gfx::Bitmap>, to_underlying(Rank::__Count)>, to_underlying(Suit::__Count)> m_cards_inverted;
     Array<Array<RefPtr<Gfx::Bitmap>, to_underlying(Rank::__Count)>, to_underlying(Suit::__Count)> m_cards_highlighted;
@@ -42,6 +46,7 @@ private:
     RefPtr<Gfx::Bitmap> m_card_back_inverted;
 
     String m_background_image_path;
+    String m_front_images_set_name;
     Color m_background_color;
 };
 
