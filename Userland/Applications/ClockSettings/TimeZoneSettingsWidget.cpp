@@ -63,7 +63,17 @@ TimeZoneSettingsWidget::TimeZoneSettingsWidget()
 {
     load_from_gml(time_zone_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
-    static auto time_zones = TimeZone::all_time_zones();
+    static auto time_zones = []() {
+        Vector<StringView> time_zones;
+
+        for (auto const& time_zone : TimeZone::all_time_zones()) {
+            if (time_zone.is_link == TimeZone::IsLink::No)
+                time_zones.append(time_zone.name);
+        }
+
+        return time_zones;
+    }();
+
     m_time_zone = TimeZone::system_time_zone();
 
     m_time_zone_combo_box = *find_descendant_of_type_named<GUI::ComboBox>("time_zone_input");

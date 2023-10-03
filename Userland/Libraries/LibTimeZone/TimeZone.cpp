@@ -143,10 +143,10 @@ ErrorOr<void> change_time_zone([[maybe_unused]] StringView time_zone)
 #endif
 }
 
-ReadonlySpan<StringView> __attribute__((weak)) all_time_zones()
+ReadonlySpan<TimeZoneIdentifier> __attribute__((weak)) all_time_zones()
 {
 #if !ENABLE_TIME_ZONE_DATA
-    static constexpr auto utc = Array { "UTC"sv };
+    static constexpr auto utc = Array { TimeZoneIdentifier { "UTC"sv, IsLink::No } };
     return utc;
 #else
     return {};

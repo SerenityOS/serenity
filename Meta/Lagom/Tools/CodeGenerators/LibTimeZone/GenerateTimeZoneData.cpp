@@ -67,6 +67,8 @@ struct TimeZoneData {
 
     HashMap<DeprecatedString, Vector<size_t>> time_zone_regions;
     Vector<DeprecatedString> time_zone_region_names;
+
+    Vector<TimeZone::TimeZoneIdentifier> time_zones_and_links;
 };
 
 }
@@ -124,6 +126,17 @@ struct AK::Formatter<DaylightSavingsOffset> : Formatter<FormatString> {
                 : max_year_as_time,
             dst_offset.in_effect,
             dst_offset.format);
+    }
+};
+
+template<>
+struct AK::Formatter<TimeZone::TimeZoneIdentifier> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, TimeZone::TimeZoneIdentifier const& time_zone)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ \"{}\"sv, IsLink::{} }}"sv,
+            time_zone.name,
+            time_zone.is_link == TimeZone::IsLink::Yes ? "Yes"sv : "No"sv);
     }
 };
 
@@ -249,8 +262,10 @@ static Vector<TimeZoneOffset>& parse_zone(StringView zone_line, TimeZoneData& ti
     auto& time_zones = time_zone_data.time_zones.ensure(name);
     time_zones.append(move(time_zone));
 
-    if (!time_zone_data.time_zone_names.contains_slow(name))
+    if (!time_zone_data.time_zone_names.contains_slow(name)) {
         time_zone_data.time_zone_names.append(name);
+        time_zone_data.time_zones_and_links.append({ time_zone_data.time_zone_names.last(), TimeZone::IsLink::No });
+    }
 
     return time_zones;
 }
@@ -281,6 +296,7 @@ static void parse_link(StringView link_line, TimeZoneData& time_zone_data)
     auto alias = segments[2];
 
     time_zone_data.time_zone_aliases.append({ target, alias });
+    time_zone_data.time_zones_and_links.append({ time_zone_data.time_zone_aliases.last().alias, TimeZone::IsLink::Yes });
 }
 
 static void parse_rule(StringView rule_line, TimeZoneData& time_zone_data)
@@ -794,9 +810,27 @@ Vector<StringView> time_zones_in_region(StringView region)
 }
 )~~~");
 
-    generate_available_values(generator, "all_time_zones"sv, time_zone_data.time_zone_names);
+    quick_sort(time_zone_data.time_zones_and_links, [](auto const& lhs, auto const& rhs) {
+        return lhs.name < rhs.name;
+    });
+
+    generator.set("time_zones_and_links_size", MUST(String::number(time_zone_data.time_zones_and_links.size())));
 
     generator.append(R"~~~(
+ReadonlySpan<TimeZoneIdentifier> all_time_zones()
+{
+    static constexpr Array<TimeZoneIdentifier, @time_zones_and_links_size@> time_zones_and_links { {)~~~");
+
+    bool first = true;
+    for (auto const& zone : time_zone_data.time_zones_and_links) {
+        generator.append(first ? " "sv : ", "sv);
+        generator.append(MUST(String::formatted("{}", zone)));
+        first = false;
+    }
+    generator.append(R"~~~( } };
+
+    return time_zones_and_links.span();
+}
 
 }
 )~~~");
