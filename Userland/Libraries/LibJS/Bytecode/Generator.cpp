@@ -20,7 +20,7 @@ Generator::Generator()
 {
 }
 
-CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
+CodeGenerationErrorOr<NonnullRefPtr<Executable>> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());
@@ -56,24 +56,18 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
     else if (is<FunctionExpression>(node))
         is_strict_mode = static_cast<FunctionExpression const&>(node).is_strict_mode();
 
-    Vector<PropertyLookupCache> property_lookup_caches;
-    property_lookup_caches.resize(generator.m_next_property_lookup_cache);
+    auto executable = adopt_ref(*new Executable(
+        move(generator.m_identifier_table),
+        move(generator.m_string_table),
+        move(generator.m_regex_table),
+        node.source_code(),
+        generator.m_next_property_lookup_cache,
+        generator.m_next_global_variable_cache,
+        generator.m_next_register,
+        move(generator.m_root_basic_blocks),
+        is_strict_mode));
 
-    Vector<GlobalVariableCache> global_variable_caches;
-    global_variable_caches.resize(generator.m_next_global_variable_cache);
-
-    return adopt_own(*new Executable {
-        .name = {},
-        .property_lookup_caches = move(property_lookup_caches),
-        .global_variable_caches = move(global_variable_caches),
-        .basic_blocks = move(generator.m_root_basic_blocks),
-        .string_table = move(generator.m_string_table),
-        .identifier_table = move(generator.m_identifier_table),
-        .regex_table = move(generator.m_regex_table),
-        .source_code = node.source_code(),
-        .number_of_registers = generator.m_next_register,
-        .is_strict_mode = is_strict_mode,
-    });
+    return executable;
 }
 
 void Generator::grow(size_t additional_size)

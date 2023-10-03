@@ -5,8 +5,33 @@
  */
 
 #include <LibJS/Bytecode/Executable.h>
+#include <LibJS/SourceCode.h>
 
 namespace JS::Bytecode {
+
+Executable::Executable(
+    NonnullOwnPtr<IdentifierTable> identifier_table,
+    NonnullOwnPtr<StringTable> string_table,
+    NonnullOwnPtr<RegexTable> regex_table,
+    NonnullRefPtr<SourceCode const> source_code,
+    size_t number_of_property_lookup_caches,
+    size_t number_of_global_variable_caches,
+    size_t number_of_registers,
+    Vector<NonnullOwnPtr<BasicBlock>> basic_blocks,
+    bool is_strict_mode)
+    : basic_blocks(move(basic_blocks))
+    , string_table(move(string_table))
+    , identifier_table(move(identifier_table))
+    , regex_table(move(regex_table))
+    , source_code(move(source_code))
+    , number_of_registers(number_of_registers)
+    , is_strict_mode(is_strict_mode)
+{
+    property_lookup_caches.resize(number_of_property_lookup_caches);
+    global_variable_caches.resize(number_of_global_variable_caches);
+}
+
+Executable::~Executable() = default;
 
 void Executable::dump() const
 {

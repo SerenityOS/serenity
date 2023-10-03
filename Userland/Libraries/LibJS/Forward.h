@@ -302,7 +302,7 @@ class MarkedVector;
 
 namespace Bytecode {
 class BasicBlock;
-struct Executable;
+class Executable;
 class Generator;
 class Instruction;
 class Interpreter;

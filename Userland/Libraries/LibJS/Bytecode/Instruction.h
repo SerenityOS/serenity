@@ -178,13 +178,15 @@ public:
     UnrealizedSourceRange source_range() const;
     RefPtr<SourceCode> source_code() const;
 
+    Executable const* executable() const { return m_executable; }
+
 private:
     Instruction const& dereference() const { return *reinterpret_cast<Instruction const*>(m_ptr); }
 
     u8 const* m_begin { nullptr };
     u8 const* m_end { nullptr };
     u8 const* m_ptr { nullptr };
-    Executable const* m_executable { nullptr };
+    RefPtr<Executable const> m_executable;
 };
 
 }

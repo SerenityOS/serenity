@@ -31,7 +31,21 @@ struct SourceRecord {
     u32 source_end_offset {};
 };
 
-struct Executable {
+class Executable final : public RefCounted<Executable> {
+public:
+    Executable(
+        NonnullOwnPtr<IdentifierTable>,
+        NonnullOwnPtr<StringTable>,
+        NonnullOwnPtr<RegexTable>,
+        NonnullRefPtr<SourceCode const>,
+        size_t number_of_property_lookup_caches,
+        size_t number_of_global_variable_caches,
+        size_t number_of_registers,
+        Vector<NonnullOwnPtr<BasicBlock>>,
+        bool is_strict_mode);
+
+    ~Executable();
+
     DeprecatedFlyString name;
     Vector<PropertyLookupCache> property_lookup_caches;
     Vector<GlobalVariableCache> global_variable_caches;

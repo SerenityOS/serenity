@@ -110,6 +110,6 @@ private:
 
 extern bool g_dump_bytecode;
 
-ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name);
+ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name);
 
 }

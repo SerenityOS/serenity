@@ -407,7 +407,7 @@ void Interpreter::leave_unwind_context()
     unwind_contexts().take_last();
 }
 
-ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
+ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
 {
     auto executable_result = Bytecode::Generator::generate(node, kind);
     if (executable_result.is_error())
