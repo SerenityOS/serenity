@@ -7,7 +7,9 @@ useconfigure='true'
 configopts=(
     '--disable-all-programs'
     '--disable-nls'
+    '--disable-static'
     '--enable-libuuid'
+    '--enable-shared'
     '--prefix=/usr/local'
 )
 files=(
