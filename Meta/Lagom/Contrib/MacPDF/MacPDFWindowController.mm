@@ -19,18 +19,21 @@
 
 - (instancetype)initWithDocument:(MacPDFDocument*)document
 {
-    if (self = [super initWithWindowNibName:@"MacPDFDocument" owner:self]; !self)
+    auto const style_mask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
+    NSWindow* window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 600, 800)
+                                                   styleMask:style_mask
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:YES];
+
+    if (self = [super initWithWindow:window]; !self)
         return nil;
+
+    _pdfView = [[MacPDFView alloc] initWithFrame:NSZeroRect];
+    window.contentView = _pdfView;
+    [_pdfView setDelegate:self];
 
     _pdfDocument = document;
     return self;
-}
-
-- (void)windowDidLoad
-{
-    [super windowDidLoad];
-    [_pdfView setDelegate:self];
-    [_pdfDocument windowIsReady];
 }
 
 - (void)pdfDidInitialize

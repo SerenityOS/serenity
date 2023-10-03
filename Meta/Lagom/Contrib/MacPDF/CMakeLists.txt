@@ -10,7 +10,6 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 add_compile_options(-DAK_DONT_REPLACE_STD)
 
 set(RESOURCES
-    MacPDFDocument.xib
     MainMenu.xib
 )
 
