@@ -803,7 +803,7 @@ void DynamicLoader::call_object_init_functions()
     typedef void (*InitFunc)();
 
     if (m_dynamic_object->has_init_section()) {
-        auto init_function = (InitFunc)(m_dynamic_object->init_section().address().as_ptr());
+        auto init_function = m_dynamic_object->init_section_function();
         (init_function)();
     }
 

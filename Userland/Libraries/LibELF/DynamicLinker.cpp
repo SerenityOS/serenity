@@ -38,12 +38,16 @@ namespace ELF {
 
 static HashMap<DeprecatedString, NonnullRefPtr<ELF::DynamicLoader>> s_loaders;
 static DeprecatedString s_main_program_path;
+
+// Dependencies have to always be added after the object that depends on them in `s_global_objects`.
+// This is needed for calling the destructors in the correct order.
 static OrderedHashMap<DeprecatedString, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
 
 using EntryPointFunction = int (*)(int, char**, char**);
 using LibCExitFunction = void (*)(int);
 using DlIteratePhdrCallbackFunction = int (*)(struct dl_phdr_info*, size_t, void*);
 using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
+using CallFiniFunctionsFunction = void (*)();
 
 extern "C" [[noreturn]] void _invoke_entry(int argc, char** argv, char** envp, EntryPointFunction entry);
 
@@ -65,6 +69,7 @@ static Result<void, DlErrorMessage> __dlclose(void* handle);
 static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags);
 static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_name);
 static Result<void, DlErrorMessage> __dladdr(void const* addr, Dl_info* info);
+static void __call_fini_functions();
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(StringView name)
 {
@@ -305,6 +310,10 @@ static void initialize_libc(DynamicObject& libc)
     VERIFY(res.has_value());
     *((DlAddrFunction*)res.value().address.as_ptr()) = __dladdr;
 
+    res = libc.lookup_symbol("__call_fini_functions"sv);
+    VERIFY(res.has_value());
+    *((CallFiniFunctionsFunction*)res.value().address.as_ptr()) = __call_fini_functions;
+
     res = libc.lookup_symbol("__libc_init"sv);
     VERIFY(res.has_value());
     typedef void libc_init_func();
@@ -384,11 +393,9 @@ static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& pa
 
     auto loaders = collect_loaders_for_library(path);
 
-    for (auto& loader : loaders) {
-        auto dynamic_object = loader->map();
-        if (dynamic_object)
-            s_global_objects.set(dynamic_object->filepath(), *dynamic_object);
-    }
+    // Verify that all objects are already mapped
+    for (auto& loader : loaders)
+        VERIFY(!loader->map());
 
     for (auto& loader : loaders) {
         bool success = loader->link(flags);
@@ -592,6 +599,36 @@ static Result<void, DlErrorMessage> __dladdr(void const* addr, Dl_info* info)
         info->dli_sname = nullptr;
     }
     return {};
+}
+
+static void __call_fini_functions()
+{
+    typedef void (*FiniFunc)();
+
+    for (auto& it : s_global_objects) {
+        auto object = it.value;
+
+        if (object->has_fini_array_section()) {
+            auto fini_array_section = object->fini_array_section();
+
+            FiniFunc* fini_begin = (FiniFunc*)(fini_array_section.address().as_ptr());
+            FiniFunc* fini_end = fini_begin + fini_array_section.entry_count();
+            while (fini_begin != fini_end) {
+                --fini_end;
+
+                // Android sources claim that these can be -1, to be ignored.
+                // 0 deffiniely shows up. Apparently 0/-1 are valid? Confusing.
+                if (!*fini_end || ((FlatPtr)*fini_end == (FlatPtr)-1))
+                    continue;
+                (*fini_end)();
+            }
+        }
+
+        if (object->has_fini_section()) {
+            auto fini_function = object->fini_section_function();
+            (fini_function)();
+        }
+    }
 }
 
 static void read_environment_variables()
