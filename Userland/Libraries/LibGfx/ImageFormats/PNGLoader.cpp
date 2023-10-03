@@ -166,8 +166,8 @@ struct PNGLoadingContext {
     u8 const* data { nullptr };
     u8 const* data_current_ptr { nullptr };
     size_t data_size { 0 };
-    int width { -1 };
-    int height { -1 };
+    i32 width { -1 };
+    i32 height { -1 };
     u8 bit_depth { 0 };
     PNG::ColorType color_type { 0 };
     u8 compression_method { 0 };
@@ -926,12 +926,43 @@ static bool is_valid_filter_method(u8 filter_method)
     return filter_method == 0;
 }
 
+static bool is_valid_bit_depth(u8 bit_depth, PNG::ColorType color_type)
+{
+    switch (bit_depth) {
+    case 1:
+    case 2:
+    case 4:
+        return color_type == PNG::ColorType::Greyscale || color_type == PNG::ColorType::IndexedColor;
+    case 8:
+        return true;
+    case 16:
+        return color_type != PNG::ColorType::IndexedColor;
+    default:
+        return false;
+    }
+}
+
 static ErrorOr<void> process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 {
     if (data.size() < (int)sizeof(PNG_IHDR))
         return Error::from_string_literal("IHDR chunk has an abnormal size");
 
     auto const& ihdr = *(const PNG_IHDR*)data.data();
+
+    if (ihdr.width == 0 || ihdr.width > NumericLimits<i32>::max()) {
+        dbgln("PNG has invalid width {}", ihdr.width);
+        return Error::from_string_literal("Invalid width");
+    }
+
+    if (ihdr.height == 0 || ihdr.height > NumericLimits<i32>::max()) {
+        dbgln("PNG has invalid height {}", ihdr.height);
+        return Error::from_string_literal("Invalid height");
+    }
+
+    if (!is_valid_bit_depth(ihdr.bit_depth, ihdr.color_type)) {
+        dbgln("PNG has invalid bit depth {} for color type {}", ihdr.bit_depth, to_underlying(ihdr.color_type));
+        return Error::from_string_literal("Invalid bit depth");
+    }
 
     if (!is_valid_compression_method(ihdr.compression_method)) {
         dbgln("PNG has invalid compression method {}", ihdr.compression_method);
