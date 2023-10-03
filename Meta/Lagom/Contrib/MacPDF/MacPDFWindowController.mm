@@ -19,7 +19,7 @@
 
 - (instancetype)initWithDocument:(MacPDFDocument*)document
 {
-    auto const style_mask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
+    auto const style_mask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView;
     NSWindow* window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 600, 800)
                                                    styleMask:style_mask
                                                      backing:NSBackingStoreBuffered
@@ -123,7 +123,10 @@
 {
     // NSToolbarToggleSidebarItemIdentifier sends toggleSidebar: along the responder chain,
     // which NSSplitViewController conveniently implements.
-    return @[ NSToolbarToggleSidebarItemIdentifier ];
+    return @[
+        NSToolbarToggleSidebarItemIdentifier,
+        NSToolbarSidebarTrackingSeparatorItemIdentifier,
+    ];
 }
 
 - (NSToolbarItem*)toolbar:(NSToolbar*)toolbar
