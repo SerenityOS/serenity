@@ -233,14 +233,21 @@ void DynamicLoader::do_main_relocations()
             *((FlatPtr*)relocation.address().as_ptr()) += m_dynamic_object->base_address().get();
     };
 
-    // FIXME: Or LD_BIND_NOW is set?
-    if (m_dynamic_object->must_bind_now()) {
-        m_dynamic_object->plt_relocation_section().for_each_relocation([&](DynamicObject::Relocation const& relocation) {
-            if (relocation.type() == R_X86_64_IRELATIVE || relocation.type() == R_AARCH64_IRELATIVE) {
-                m_direct_ifunc_relocations.append(relocation);
-                return;
-            }
+    m_dynamic_object->plt_relocation_section().for_each_relocation([&](DynamicObject::Relocation const& relocation) {
+        if (relocation.type() == R_X86_64_IRELATIVE || relocation.type() == R_AARCH64_IRELATIVE) {
+            m_direct_ifunc_relocations.append(relocation);
+            return;
+        }
+        if (relocation.type() == R_X86_64_TLSDESC || relocation.type() == R_AARCH64_TLSDESC) {
+            // GNU ld for some reason puts TLSDESC relocations into .rela.plt
+            // https://sourceware.org/bugzilla/show_bug.cgi?id=28387
 
+            VERIFY(do_direct_relocation(relocation, cached_result, ShouldInitializeWeak::No, ShouldCallIfuncResolver::No) == RelocationResult::Success);
+            return;
+        }
+
+        // FIXME: Or LD_BIND_NOW is set?
+        if (m_dynamic_object->must_bind_now()) {
             switch (do_plt_relocation(relocation, ShouldCallIfuncResolver::No)) {
             case RelocationResult::Failed:
                 dbgln("Loader.so: {} unresolved symbol '{}'", m_filepath, relocation.symbol().name());
@@ -255,16 +262,10 @@ void DynamicLoader::do_main_relocations()
             case RelocationResult::Success:
                 break;
             }
-        });
-    } else {
-        m_dynamic_object->plt_relocation_section().for_each_relocation([&](DynamicObject::Relocation const& relocation) {
-            if (relocation.type() == R_X86_64_IRELATIVE || relocation.type() == R_AARCH64_IRELATIVE) {
-                m_direct_ifunc_relocations.append(relocation);
-                return;
-            }
+        } else {
             fixup_trampoline_pointer(relocation);
-        });
-    }
+        }
+    });
 }
 
 Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags)
