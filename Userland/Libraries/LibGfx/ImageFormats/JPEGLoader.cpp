@@ -94,7 +94,7 @@ struct HuffmanTable {
     static constexpr u8 maximum_bits_per_code = 16;
     u8 first_non_cached_code_index {};
 
-    void generate_codes()
+    ErrorOr<void> generate_codes()
     {
         unsigned code = 0;
         for (auto number_of_codes : code_counts) {
@@ -103,7 +103,8 @@ struct HuffmanTable {
             code <<= 1;
         }
 
-        generate_lookup_table();
+        TRY(generate_lookup_table());
+        return {};
     }
 
     struct SymbolAndSize {
@@ -138,7 +139,7 @@ struct HuffmanTable {
 private:
     static constexpr u16 invalid_entry = 0xFF;
 
-    void generate_lookup_table()
+    ErrorOr<void> generate_lookup_table()
     {
         lookup_table.fill(invalid_entry);
 
@@ -146,12 +147,17 @@ private:
         for (u8 code_length = 1; code_length <= bits_per_cached_code; code_length++) {
             for (u32 i = 0; i < code_counts[code_length - 1]; i++, code_offset++) {
                 u32 code_key = codes[code_offset] << (bits_per_cached_code - code_length);
-                for (u8 duplicate_count = 1 << (bits_per_cached_code - code_length); duplicate_count > 0; duplicate_count--) {
+                u8 duplicate_count = 1 << (bits_per_cached_code - code_length);
+                if (code_key + duplicate_count >= lookup_table.size())
+                    return Error::from_string_literal("Malformed Huffman table");
+
+                for (; duplicate_count > 0; duplicate_count--) {
                     lookup_table[code_key] = (code_length << bits_per_cached_code) | symbols[code_offset];
                     code_key++;
                 }
             }
         }
+        return {};
     }
 
     Array<u16, 1 << bits_per_cached_code> lookup_table {};
@@ -1015,7 +1021,7 @@ static ErrorOr<void> read_huffman_table(JPEGStream& stream, JPEGLoadingContext& 
             table.symbols.append(symbol);
         }
 
-        table.generate_codes();
+        TRY(table.generate_codes());
 
         auto& huffman_table = table.type == 0 ? context.dc_tables : context.ac_tables;
         huffman_table.set(table.destination_id, table);
