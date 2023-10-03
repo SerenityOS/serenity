@@ -87,10 +87,10 @@ static Vector<StringView> available_canonical_time_zones()
     Vector<StringView> result;
 
     // 3. For each element name of names, do
-    for (auto name : names) {
+    for (auto const& name : names) {
         // a. Assert: IsValidTimeZoneName( name ) is true.
         // b. Let canonical be ! CanonicalizeTimeZoneName( name ).
-        auto canonical = TimeZone::canonicalize_time_zone(name).value();
+        auto canonical = TimeZone::canonicalize_time_zone(name.name).value();
 
         // c. If result does not contain an element equal to canonical, then
         if (!result.contains_slow(canonical)) {

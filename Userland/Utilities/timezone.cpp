@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (list_time_zones) {
         for (auto time_zone : TimeZone::all_time_zones())
-            outln("{}", time_zone);
+            outln("{}", time_zone.name);
         return 0;
     }
 
