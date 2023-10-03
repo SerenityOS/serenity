@@ -8,6 +8,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/ResourceImplementationFile.h>
+#include <LibCore/System.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
@@ -186,8 +188,8 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 #if !defined(AK_OS_SERENITY)
     if (debugging_stats || !render_path.is_empty()) {
         // Get from Build/lagom/bin/pdf to Base/res/fonts.
-        auto source_root = LexicalPath(arguments.argv[0]).parent().parent().parent().parent().string();
-        Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
+        auto source_root = LexicalPath(MUST(Core::System::current_executable_path()).to_deprecated_string()).parent().parent().parent().parent().string();
+        Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(TRY(String::formatted("{}/Base/res", source_root))));
     }
 #endif
 
