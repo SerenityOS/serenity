@@ -61,6 +61,8 @@ ErrorOr<void> FlacWriter::finalize()
         TRY(bit_stream.align_to_byte_boundary());
     }
 
+    TRY(flush_seektable());
+
     // TODO: Write the audio data MD5 to the header.
 
     m_stream->close();
@@ -124,6 +126,53 @@ ErrorOr<void> FlacWriter::set_metadata(Metadata const& metadata)
     return add_metadata_block(move(vorbis_block), 0);
 }
 
+size_t FlacWriter::max_number_of_seekpoints() const
+{
+    if (m_last_padding.has_value())
+        return m_last_padding->size / flac_seekpoint_size;
+
+    if (!m_cached_metadata_blocks.is_empty() && m_cached_metadata_blocks.last().type == FlacMetadataBlockType::PADDING)
+        return m_cached_metadata_blocks.last().length / flac_seekpoint_size;
+
+    return 0;
+}
+
+void FlacWriter::sample_count_hint(size_t sample_count)
+{
+    constexpr StringView oom_warning = "FLAC Warning: Couldn't use sample hint to reserve {} bytes padding; ignoring hint."sv;
+
+    auto const samples_per_seekpoint = m_sample_rate * seekpoint_period_seconds;
+    auto seekpoint_count = round_to<size_t>(static_cast<double>(sample_count) / samples_per_seekpoint);
+    // Round seekpoint count down to an even number, so that the seektable byte size is divisible by 4.
+    // One seekpoint is 18 bytes, which isn't divisible by 4.
+    seekpoint_count &= ~1;
+    auto const seektable_size = seekpoint_count * flac_seekpoint_size;
+
+    // Only modify the trailing padding block; other padding blocks are intentionally untouched.
+    if (!m_cached_metadata_blocks.is_empty() && m_cached_metadata_blocks.last().type == FlacMetadataBlockType::PADDING) {
+        auto padding_block = m_cached_metadata_blocks.last();
+        auto result = padding_block.data.try_resize(seektable_size);
+        padding_block.length = padding_block.data.size();
+        // Fuzzers and inputs with wrong large sample counts often hit this.
+        if (result.is_error())
+            dbgln(oom_warning, seektable_size);
+    } else {
+        auto empty_buffer = ByteBuffer::create_zeroed(seektable_size);
+        if (empty_buffer.is_error()) {
+            dbgln(oom_warning, seektable_size);
+            return;
+        }
+        FlacRawMetadataBlock padding {
+            .is_last_block = true,
+            .type = FlacMetadataBlockType::PADDING,
+            .length = static_cast<u32>(empty_buffer.value().size()),
+            .data = empty_buffer.release_value(),
+        };
+        // If we can't add padding, we're out of luck.
+        (void)add_metadata_block(move(padding));
+    }
+}
+
 ErrorOr<void> FlacWriter::write_header()
 {
     ByteBuffer data;
@@ -158,6 +207,19 @@ ErrorOr<void> FlacWriter::write_header()
     };
     TRY(add_metadata_block(move(streaminfo_block), 0));
 
+    // Add default padding if necessary.
+    if (m_cached_metadata_blocks.last().type != FlacMetadataBlockType::PADDING) {
+        auto padding_data = ByteBuffer::create_zeroed(default_padding);
+        if (!padding_data.is_error()) {
+            TRY(add_metadata_block({
+                .is_last_block = true,
+                .type = FlacMetadataBlockType::PADDING,
+                .length = default_padding,
+                .data = padding_data.release_value(),
+            }));
+        }
+    }
+
     TRY(m_stream->write_until_depleted(flac_magic.bytes()));
     m_streaminfo_start_index = TRY(m_stream->tell());
 
@@ -166,11 +228,18 @@ ErrorOr<void> FlacWriter::write_header()
         // Correct is_last_block flag here to avoid index shenanigans in add_metadata_block.
         auto const is_last_block = i == m_cached_metadata_blocks.size() - 1;
         block.is_last_block = is_last_block;
+        if (is_last_block) {
+            m_last_padding = LastPadding {
+                .start = TRY(m_stream->tell()),
+                .size = block.length,
+            };
+        }
 
         TRY(write_metadata_block(block));
     }
 
     m_cached_metadata_blocks.clear();
+    m_frames_start_index = TRY(m_stream->tell());
     return {};
 }
 
@@ -187,8 +256,50 @@ ErrorOr<void> FlacWriter::add_metadata_block(FlacRawMetadataBlock block, Optiona
     return {};
 }
 
-ErrorOr<void> FlacWriter::write_metadata_block(FlacRawMetadataBlock const& block)
+ErrorOr<void> FlacWriter::write_metadata_block(FlacRawMetadataBlock& block)
 {
+    if (m_state == WriteState::FormatFinalized) {
+        if (!m_last_padding.has_value())
+            return Error::from_string_view("No (more) padding available to write block into"sv);
+
+        auto const last_padding = m_last_padding.release_value();
+        if (block.length > last_padding.size)
+            return Error::from_string_view("Late metadata block doesn't fit in available padding"sv);
+
+        auto const current_position = TRY(m_stream->tell());
+        ScopeGuard guard = [&] { (void)m_stream->seek(current_position, SeekMode::SetPosition); };
+        TRY(m_stream->seek(last_padding.start, SeekMode::SetPosition));
+
+        // No more padding after this: the new block is the last.
+        auto new_size = last_padding.size - block.length;
+        if (new_size == 0)
+            block.is_last_block = true;
+
+        TRY(m_stream->write_value(block));
+
+        // If the size is zero, we don't need to write a new padding block.
+        // If the size is between 1 and 3, we have empty space that cannot be marked with an empty padding block, so we must abort.
+        // Other code should make sure that this never happens; e.g. our seektable only has sizes divisible by 4 anyways.
+        // If the size is 4, we have no padding, but the padding block header can be written without any subsequent payload.
+        if (new_size >= 4) {
+            FlacRawMetadataBlock new_padding_block {
+                .is_last_block = true,
+                .type = FlacMetadataBlockType::PADDING,
+                .length = static_cast<u32>(new_size),
+                .data = TRY(ByteBuffer::create_zeroed(new_size)),
+            };
+            m_last_padding = LastPadding {
+                .start = TRY(m_stream->tell()),
+                .size = new_size,
+            };
+            TRY(m_stream->write_value(new_padding_block));
+        } else if (new_size != 0) {
+            return Error::from_string_view("Remaining padding is not divisible by 4, there will be some stray zero bytes!"sv);
+        }
+
+        return {};
+    }
+
     return m_stream->write_value(block);
 }
 
@@ -202,6 +313,52 @@ ErrorOr<void> FlacRawMetadataBlock::write_to_stream(Stream& stream) const
     VERIFY(data.size() == length);
     TRY(bit_stream.write_until_depleted(data));
     return {};
+}
+
+ErrorOr<void> FlacWriter::flush_seektable()
+{
+    if (m_cached_seektable.size() == 0)
+        return {};
+
+    auto max_seekpoints = max_number_of_seekpoints();
+    if (max_seekpoints < m_cached_seektable.size()) {
+        dbgln("FLAC Warning: There are {} seekpoints, but we only have space for {}. Some seekpoints will be dropped.", m_cached_seektable.size(), max_seekpoints);
+        // Drop seekpoints in regular intervals to space out the loss of seek precision.
+        auto const points_to_drop = m_cached_seektable.size() - max_seekpoints;
+        auto const drop_interval = static_cast<double>(m_cached_seektable.size()) / static_cast<double>(points_to_drop);
+        double ratio = 0.;
+        for (size_t i = 0; i < m_cached_seektable.size(); ++i) {
+            // Avoid dropping the first seekpoint.
+            if (ratio > drop_interval) {
+                m_cached_seektable.seek_points().remove(i);
+                --i;
+                ratio -= drop_interval;
+            }
+            ++ratio;
+        }
+        // Account for integer division imprecisions.
+        if (max_seekpoints < m_cached_seektable.size())
+            m_cached_seektable.seek_points().shrink(max_seekpoints);
+    }
+
+    auto seektable_data = TRY(ByteBuffer::create_zeroed(m_cached_seektable.size() * flac_seekpoint_size));
+    FixedMemoryStream seektable_stream { seektable_data.bytes() };
+
+    for (auto const& seekpoint : m_cached_seektable.seek_points()) {
+        // https://www.ietf.org/archive/id/draft-ietf-cellar-flac-08.html#name-seekpoint
+        TRY(seektable_stream.write_value<BigEndian<u64>>(seekpoint.sample_index));
+        TRY(seektable_stream.write_value<BigEndian<u64>>(seekpoint.byte_offset));
+        // This is probably wrong for the last frame, but it doesn't seem to matter.
+        TRY(seektable_stream.write_value<BigEndian<u16>>(block_size));
+    }
+
+    FlacRawMetadataBlock seektable {
+        .is_last_block = false,
+        .type = FlacMetadataBlockType::SEEKTABLE,
+        .length = static_cast<u32>(seektable_data.size()),
+        .data = move(seektable_data),
+    };
+    return write_metadata_block(seektable);
 }
 
 // If the given sample count is uncommon, this function will return one of the uncommon marker block sizes.
@@ -394,10 +551,24 @@ ErrorOr<void> FlacWriter::write_frame()
         }
     }
 
-    return write_frame_for(subframe_samples, channel_type);
+    auto const sample_index = m_sample_count;
+    auto const frame_start_byte = TRY(write_frame_for(subframe_samples, channel_type));
+
+    // Insert a seekpoint if necessary.
+    auto const seekpoint_period_samples = m_sample_rate * seekpoint_period_seconds;
+    auto const last_seekpoint = m_cached_seektable.seek_point_before(sample_index);
+    if (!last_seekpoint.has_value() || static_cast<double>(sample_index - last_seekpoint->sample_index) >= seekpoint_period_samples) {
+        dbgln_if(FLAC_ENCODER_DEBUG, "Inserting seekpoint at sample index {} frame start {}", sample_index, frame_start_byte);
+        TRY(m_cached_seektable.insert_seek_point({
+            .sample_index = sample_index,
+            .byte_offset = frame_start_byte - m_frames_start_index,
+        }));
+    }
+
+    return {};
 }
 
-ErrorOr<void> FlacWriter::write_frame_for(ReadonlySpan<Vector<i64, block_size>> subblock, FlacFrameChannelType channel_type)
+ErrorOr<size_t> FlacWriter::write_frame_for(ReadonlySpan<Vector<i64, block_size>> subblock, FlacFrameChannelType channel_type)
 {
     auto sample_count = subblock.first().size();
 
@@ -406,7 +577,6 @@ ErrorOr<void> FlacWriter::write_frame_for(ReadonlySpan<Vector<i64, block_size>> 
         .sample_count = static_cast<u16>(sample_count),
         .sample_or_frame_index = static_cast<u32>(m_current_frame),
         .blocking_strategy = BlockingStrategy::Fixed,
-        // FIXME: We should brute-force channel coupling for stereo.
         .channels = channel_type,
         .bit_depth = static_cast<u8>(m_bits_per_sample),
         // Calculated for us during header write.
@@ -444,7 +614,7 @@ ErrorOr<void> FlacWriter::write_frame_for(ReadonlySpan<Vector<i64, block_size>> 
     m_current_frame++;
     m_sample_count += sample_count;
 
-    return {};
+    return frame_start_offset;
 }
 
 ErrorOr<void> FlacWriter::write_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample)

@@ -37,6 +37,8 @@ using FlacFrameHeaderCRC = Crypto::Checksum::CRC8<flac_polynomial>;
 static constexpr u16 ibm_polynomial = 0xA001;
 using IBMCRC = Crypto::Checksum::CRC16<ibm_polynomial>;
 
+static constexpr size_t flac_seekpoint_size = (64 + 64 + 16) / 8;
+
 // 11.8 BLOCK_TYPE (7 bits)
 enum class FlacMetadataBlockType : u8 {
     STREAMINFO = 0,     // Important data about the audio format

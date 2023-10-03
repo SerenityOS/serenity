@@ -55,6 +55,10 @@ class FlacWriter : public Encoder {
     // After how many useless (i.e. worse than current optimal) Rice parameters to abort parameter search.
     // Note that due to the zig-zag search, we start with searching the parameters that are most likely to be good.
     static constexpr size_t useless_parameter_threshold = 2;
+    // How often a seek point is inserted.
+    static constexpr double seekpoint_period_seconds = 2.0;
+    // Default padding reserved for seek points; enough for almost 4 minutes of audio.
+    static constexpr size_t default_padding = 2048;
 
     enum class WriteState {
         // Header has not been written at all, audio data cannot be written.
@@ -83,6 +87,12 @@ public:
     ErrorOr<void> set_sample_rate(u32 sample_rate);
     ErrorOr<void> set_bits_per_sample(u16 bits_per_sample);
 
+    // The FLAC encoder by default tries to reserve some space for seek points,
+    // but that may not be enough if more than approximately four minutes of audio are stored.
+    // The sample count hint can be used to instruct the FLAC encoder on how much space to reserve for seek points,
+    // which will both reduce the padding for small files and allow the FLAC encoder to write seek points at the end of large files.
+    virtual void sample_count_hint(size_t sample_count) override;
+
     virtual ErrorOr<void> set_metadata(Metadata const& metadata) override;
 
     ErrorOr<void> finalize_header_format();
@@ -92,7 +102,8 @@ private:
     ErrorOr<void> write_header();
 
     ErrorOr<void> write_frame();
-    ErrorOr<void> write_frame_for(ReadonlySpan<Vector<i64, block_size>> subblock, FlacFrameChannelType channel_type);
+    // Returns the frame start byte offset, to be used for creating a seektable.
+    ErrorOr<size_t> write_frame_for(ReadonlySpan<Vector<i64, block_size>> subblock, FlacFrameChannelType channel_type);
     ErrorOr<void> write_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample);
     ErrorOr<void> write_lpc_subframe(FlacLPCEncodedSubframe lpc_subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample);
     ErrorOr<void> write_verbatim_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample);
@@ -104,7 +115,12 @@ private:
     ErrorOr<Optional<FlacLPCEncodedSubframe>> encode_fixed_lpc(FlacFixedLPC order, ReadonlySpan<i64> subframe, size_t current_min_cost, u8 bits_per_sample);
 
     ErrorOr<void> add_metadata_block(FlacRawMetadataBlock block, Optional<size_t> insertion_index = {});
-    ErrorOr<void> write_metadata_block(FlacRawMetadataBlock const& block);
+    // Depending on whether the header is finished or not, we either write to the current position for an unfinished header,
+    // or we write to the start of the last padding and adjust that padding block.
+    ErrorOr<void> write_metadata_block(FlacRawMetadataBlock& block);
+    // Determine how many seekpoints we can write depending on the size of our final padding.
+    size_t max_number_of_seekpoints() const;
+    ErrorOr<void> flush_seektable();
 
     NonnullOwnPtr<SeekableStream> m_stream;
     WriteState m_state { WriteState::HeaderUnwritten };
@@ -122,9 +138,21 @@ private:
     size_t m_sample_count { 0 };
     // Remember where the STREAMINFO block was written in the stream.
     size_t m_streaminfo_start_index;
+    // Start of the first frame, used for calculating seektable byte offsets.
+    size_t m_frames_start_index;
+
+    struct LastPadding {
+        size_t start;
+        size_t size;
+    };
+    // Remember last PADDING block data, since we overwrite part of it with "late" metadata blocks.
+    Optional<LastPadding> m_last_padding;
 
     // Raw metadata blocks that will be written out before header finalization.
     Vector<FlacRawMetadataBlock> m_cached_metadata_blocks;
+
+    // The full seektable, may be fully or partially written.
+    SeekTable m_cached_seektable {};
 };
 
 }

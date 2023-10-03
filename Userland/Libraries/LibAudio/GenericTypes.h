@@ -66,6 +66,7 @@ public:
 
     size_t size() const;
     ReadonlySpan<SeekPoint> seek_points() const;
+    Vector<SeekPoint>& seek_points();
 
     ErrorOr<void> insert_seek_point(SeekPoint);
 
