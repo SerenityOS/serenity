@@ -81,6 +81,7 @@
 {
     _windowController = [[MacPDFWindowController alloc] initWithDocument:self];
     [self addWindowController:_windowController];
+    [self windowIsReady];
 }
 
 - (void)windowIsReady
