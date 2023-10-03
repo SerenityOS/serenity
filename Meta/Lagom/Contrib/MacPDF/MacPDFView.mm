@@ -66,7 +66,25 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     _doc = move(doc);
     _page_index = 0;
 
+    [self addObserver:self
+           forKeyPath:@"safeAreaRect"
+              options:NSKeyValueObservingOptionNew
+              context:nil];
+
     [self invalidateCachedBitmap];
+}
+
+- (void)observeValueForKeyPath:(NSString*)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary<NSKeyValueChangeKey, id>*)change
+                       context:(void*)context
+{
+    // AppKit by default doesn't invalidate a view if safeAreaRect changes but the view's bounds don't change.
+    // This happens for example when toggling the visibility of the toolbar with a full-size content view.
+    // We do want a repaint in this case.
+    VERIFY([keyPath isEqualToString:@"safeAreaRect"]);
+    VERIFY(object == self);
+    [self setNeedsDisplay:YES];
 }
 
 - (void)goToPage:(int)page
@@ -107,7 +125,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     if (!_doc || _doc->get_page_count() == 0)
         return;
 
-    NSSize pixel_size = [self convertSizeToBacking:self.bounds.size];
+    NSSize pixel_size = [self convertSizeToBacking:self.safeAreaRect.size];
     if (NSEqualSizes([_cachedBitmap size], pixel_size))
         return;
 
@@ -118,7 +136,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 - (void)drawRect:(NSRect)rect
 {
     [self ensureCachedBitmapIsUpToDate];
-    [_cachedBitmap drawInRect:self.bounds];
+    [_cachedBitmap drawInRect:self.safeAreaRect];
 }
 
 #pragma mark - Keyboard handling
