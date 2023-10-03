@@ -146,8 +146,12 @@ Painting::PaintableBox const* EventHandler::paint_root() const
 
 bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
 {
-    if (m_browsing_context->active_document())
-        m_browsing_context->active_document()->update_layout();
+    if (!m_browsing_context->active_document())
+        return false;
+    if (!m_browsing_context->active_document()->is_fully_active())
+        return false;
+
+    m_browsing_context->active_document()->update_layout();
 
     if (!paint_root())
         return false;
@@ -205,8 +209,12 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint scree
 
 bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    if (m_browsing_context->active_document())
-        m_browsing_context->active_document()->update_layout();
+    if (!m_browsing_context->active_document())
+        return false;
+    if (!m_browsing_context->active_document()->is_fully_active())
+        return false;
+
+    m_browsing_context->active_document()->update_layout();
 
     if (!paint_root())
         return false;
@@ -321,8 +329,12 @@ after_node_use:
 
 bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    if (m_browsing_context->active_document())
-        m_browsing_context->active_document()->update_layout();
+    if (!m_browsing_context->active_document())
+        return false;
+    if (!m_browsing_context->active_document()->is_fully_active())
+        return false;
+
+    m_browsing_context->active_document()->update_layout();
 
     if (!paint_root())
         return false;
@@ -413,8 +425,12 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen
 
 bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned buttons, unsigned modifiers)
 {
-    if (m_browsing_context->active_document())
-        m_browsing_context->active_document()->update_layout();
+    if (!m_browsing_context->active_document())
+        return false;
+    if (!m_browsing_context->active_document()->is_fully_active())
+        return false;
+
+    m_browsing_context->active_document()->update_layout();
 
     if (!paint_root())
         return false;
@@ -533,8 +549,12 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
 
 bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    if (m_browsing_context->active_document())
-        m_browsing_context->active_document()->update_layout();
+    if (!m_browsing_context->active_document())
+        return false;
+    if (!m_browsing_context->active_document()->is_fully_active())
+        return false;
+
+    m_browsing_context->active_document()->update_layout();
 
     if (!paint_root())
         return false;
@@ -628,6 +648,9 @@ bool EventHandler::focus_next_element()
 {
     if (!m_browsing_context->active_document())
         return false;
+    if (!m_browsing_context->active_document()->is_fully_active())
+        return false;
+
     auto* element = m_browsing_context->active_document()->focused_element();
     if (!element) {
         element = m_browsing_context->active_document()->first_child_of_type<DOM::Element>();
@@ -648,6 +671,9 @@ bool EventHandler::focus_previous_element()
 {
     if (!m_browsing_context->active_document())
         return false;
+    if (!m_browsing_context->active_document()->is_fully_active())
+        return false;
+
     auto* element = m_browsing_context->active_document()->focused_element();
     if (!element) {
         element = m_browsing_context->active_document()->last_child_of_type<DOM::Element>();
@@ -676,6 +702,8 @@ bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::Browsi
     JS::GCPtr<DOM::Document> document = browsing_context.active_document();
     if (!document)
         return false;
+    if (!document->is_fully_active())
+        return false;
 
     if (JS::GCPtr<DOM::Element> focused_element = document->focused_element()) {
         if (is<HTML::NavigableContainer>(*focused_element)) {
@@ -700,6 +728,8 @@ bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::Browsi
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 {
     if (!m_browsing_context->active_document())
+        return false;
+    if (!m_browsing_context->active_document()->is_fully_active())
         return false;
 
     JS::NonnullGCPtr<DOM::Document> document = *m_browsing_context->active_document();
