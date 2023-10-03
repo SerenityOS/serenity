@@ -19,12 +19,9 @@ namespace Ladybird {
 FontPlugin::FontPlugin(bool is_layout_test_mode)
     : m_is_layout_test_mode(is_layout_test_mode)
 {
-    // Load the default SerenityOS fonts...
-    Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/res/fonts", s_serenity_resource_root));
-
-    // ...and also anything we can find in the system's font directories
+    // Load anything we can find in the system's font directories
     for (auto const& path : Core::StandardPaths::font_directories().release_value_but_fixme_should_propagate_errors())
-        Gfx::FontDatabase::the().load_all_fonts_from_path(path.to_deprecated_string());
+        Gfx::FontDatabase::the().load_all_fonts_from_uri(MUST(String::formatted("file://{}", path)));
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");

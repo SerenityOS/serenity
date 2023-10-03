@@ -8,6 +8,7 @@
 #include "Utilities.h"
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
+#include <LibCore/ResourceImplementationFile.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 
@@ -39,6 +40,8 @@ void platform_init()
         return LexicalPath(app_dir).parent().append("share"sv).string();
 #endif
     }();
+
+    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/res", s_serenity_resource_root))));
 }
 
 ErrorOr<Vector<String>> get_paths_for_helper_process(StringView process_name)
