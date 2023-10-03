@@ -59,6 +59,7 @@ public:
     void for_each_typeface_with_family_name(FlyString const& family_name, Function<void(Typeface const&)>);
 
     void load_all_fonts_from_path(DeprecatedString const&);
+    void load_all_fonts_from_uri(StringView);
 
 private:
     FontDatabase();

@@ -8,7 +8,7 @@
 #include <AK/FlyString.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Resource.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -121,54 +121,53 @@ struct FontDatabase::Private {
     HashMap<FlyString, Vector<NonnullRefPtr<Typeface>>, AK::ASCIICaseInsensitiveFlyStringTraits> typefaces;
 };
 
-void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
+void FontDatabase::load_all_fonts_from_path(DeprecatedString const& path)
 {
-    Queue<DeprecatedString> path_queue;
-    path_queue.enqueue(root);
+    load_all_fonts_from_uri(MUST(String::formatted("file://{}", path)));
+}
 
-    while (!path_queue.is_empty()) {
-        auto current_directory = path_queue.dequeue();
-        Core::DirIterator dir_iterator(current_directory, Core::DirIterator::SkipParentAndBaseDir);
-        if (dir_iterator.has_error()) {
-            dbgln("FontDatabase::load_all_fonts_from_path('{}'): {}", root, dir_iterator.error());
-            continue;
-        }
-        while (dir_iterator.has_next()) {
-            auto path = dir_iterator.next_full_path();
-
-            if (FileSystem::is_directory(path)) {
-                path_queue.enqueue(path);
-                continue;
-            }
-
-            if (path.ends_with(".font"sv)) {
-                if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
-                    auto font = font_or_error.release_value();
-                    m_private->full_name_to_font_map.set(font->qualified_name().to_deprecated_string(), *font);
-                    auto typeface = get_or_create_typeface(font->family(), font->variant());
-                    typeface->add_bitmap_font(font);
-                }
-            } else if (path.ends_with(".ttf"sv)) {
-                // FIXME: What about .otf
-                if (auto font_or_error = OpenType::Font::try_load_from_file(path); !font_or_error.is_error()) {
-                    auto font = font_or_error.release_value();
-                    auto typeface = get_or_create_typeface(font->family(), font->variant());
-                    typeface->set_vector_font(move(font));
-                }
-            } else if (path.ends_with(".woff"sv)) {
-                if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
-                    auto font = font_or_error.release_value();
-                    auto typeface = get_or_create_typeface(font->family(), font->variant());
-                    typeface->set_vector_font(move(font));
-                }
-            }
-        }
+void FontDatabase::load_all_fonts_from_uri(StringView uri)
+{
+    auto root_or_error = Core::Resource::load_from_uri(uri);
+    if (root_or_error.is_error()) {
+        dbgln("FontDatabase::load_all_fonts_from_uri('{}'): {}", uri, root_or_error.error());
+        return;
     }
+    auto root = root_or_error.release_value();
+
+    root->for_each_descendant_file([this](Core::Resource const& resource) -> IterationDecision {
+        // FIXME: Use Resources and their bytes/streams throughout so we don't have to use the path here
+        auto path_string = resource.filesystem_path().release_value();
+        auto path = path_string.bytes_as_string_view();
+        if (path.ends_with(".font"sv)) {
+            if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
+                auto font = font_or_error.release_value();
+                m_private->full_name_to_font_map.set(font->qualified_name().to_deprecated_string(), *font);
+                auto typeface = get_or_create_typeface(font->family(), font->variant());
+                typeface->add_bitmap_font(font);
+            }
+        } else if (path.ends_with(".ttf"sv)) {
+            // FIXME: What about .otf
+            if (auto font_or_error = OpenType::Font::try_load_from_file(path); !font_or_error.is_error()) {
+                auto font = font_or_error.release_value();
+                auto typeface = get_or_create_typeface(font->family(), font->variant());
+                typeface->set_vector_font(move(font));
+            }
+        } else if (path.ends_with(".woff"sv)) {
+            if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
+                auto font = font_or_error.release_value();
+                auto typeface = get_or_create_typeface(font->family(), font->variant());
+                typeface->set_vector_font(move(font));
+            }
+        }
+        return IterationDecision::Continue;
+    });
 }
 
 FontDatabase::FontDatabase()
     : m_private(make<Private>())
 {
+    load_all_fonts_from_uri("resource://fonts"sv);
     load_all_fonts_from_path(s_default_fonts_lookup_path);
 }
 
