@@ -82,17 +82,4 @@ private:
     }
 };
 
-class HorizontalSlider final : public Slider {
-    C_OBJECT(HorizontalSlider);
-
-public:
-    virtual ~HorizontalSlider() override = default;
-
-private:
-    HorizontalSlider()
-        : Slider(Orientation::Horizontal)
-    {
-    }
-};
-
 }
