@@ -63,7 +63,6 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 // Called from MacPDFDocument.
 - (void)setDocument:(WeakPtr<PDF::Document>)doc
 {
-    NSLog(@"doc set");
     _doc = move(doc);
     _page_index = 0;
 
