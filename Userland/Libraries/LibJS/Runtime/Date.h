@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -49,27 +49,27 @@ constexpr inline double ms_per_day = 86'400'000;
 constexpr inline double ns_per_day = 86'400'000'000'000;
 extern Crypto::SignedBigInteger const ns_per_day_bigint;
 
-u16 day_within_year(double);
-u8 date_from_time(double);
+double day(double);
+double time_within_day(double);
 u16 days_in_year(i32);
 double day_from_year(i32);
 double time_from_year(i32);
 i32 year_from_time(double);
+u16 day_within_year(double);
 bool in_leap_year(double);
 u8 month_from_time(double);
+u8 date_from_time(double);
+u8 week_day(double);
 u8 hour_from_time(double);
 u8 min_from_time(double);
 u8 sec_from_time(double);
 u16 ms_from_time(double);
-u8 week_day(double);
 Crypto::SignedBigInteger get_utc_epoch_nanoseconds(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 Vector<Crypto::SignedBigInteger> get_named_time_zone_epoch_nanoseconds(StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Crypto::SignedBigInteger const& epoch_nanoseconds);
 StringView default_time_zone();
 double local_time(double time);
 double utc_time(double time);
-double day(double);
-double time_within_day(double);
 double make_time(double hour, double min, double sec, double ms);
 double make_day(double year, double month, double date);
 double make_date(double day, double time);
