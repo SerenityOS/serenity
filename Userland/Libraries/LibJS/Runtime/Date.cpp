@@ -411,9 +411,57 @@ i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Cryp
     return offset->seconds * 1'000'000'000;
 }
 
-// 21.4.1.24 DefaultTimeZone ( ), https://tc39.es/ecma262/#sec-defaulttimezone
+// 21.4.1.23 AvailableNamedTimeZoneIdentifiers ( ), https://tc39.es/ecma262/#sec-time-zone-identifier-record
+Vector<TimeZoneIdentifier> available_named_time_zone_identifiers()
+{
+    // 1. If the implementation does not include local political rules for any time zones, then
+    //     a. Return « the Time Zone Identifier Record { [[Identifier]]: "UTC", [[PrimaryIdentifier]]: "UTC" } ».
+    // NOTE: This step is not applicable as LibTimeZone will always return at least UTC, even if the TZDB is disabled.
+
+    // 2. Let identifiers be the List of unique available named time zone identifiers.
+    auto identifiers = TimeZone::all_time_zones();
+
+    // 3. Sort identifiers into the same order as if an Array of the same values had been sorted using %Array.prototype.sort% with undefined as comparefn.
+    // NOTE: LibTimeZone provides the identifiers already sorted.
+
+    // 4. Let result be a new empty List.
+    Vector<TimeZoneIdentifier> result;
+    result.ensure_capacity(identifiers.size());
+
+    bool found_utc = false;
+
+    // 5. For each element identifier of identifiers, do
+    for (auto identifier : identifiers) {
+        // a. Let primary be identifier.
+        auto primary = identifier.name;
+
+        // b. If identifier is a non-primary time zone identifier in this implementation and identifier is not "UTC", then
+        if (identifier.is_link == TimeZone::IsLink::Yes && identifier.name != "UTC"sv) {
+            // i. Set primary to the primary time zone identifier associated with identifier.
+            // ii. NOTE: An implementation may need to resolve identifier iteratively to obtain the primary time zone identifier.
+            primary = TimeZone::canonicalize_time_zone(identifier.name).value();
+        }
+
+        // c. Let record be the Time Zone Identifier Record { [[Identifier]]: identifier, [[PrimaryIdentifier]]: primary }.
+        TimeZoneIdentifier record { .identifier = identifier.name, .primary_identifier = primary };
+
+        // d. Append record to result.
+        result.unchecked_append(record);
+
+        if (!found_utc && identifier.name == "UTC"sv && primary == "UTC"sv)
+            found_utc = true;
+    }
+
+    // 6. Assert: result contains a Time Zone Identifier Record r such that r.[[Identifier]] is "UTC" and r.[[PrimaryIdentifier]] is "UTC".
+    VERIFY(found_utc);
+
+    // 7. Return result.
+    return result;
+}
+
+// 21.4.1.24 SystemTimeZoneIdentifier ( ), https://tc39.es/ecma262/#sec-systemtimezoneidentifier
 // 6.4.3 DefaultTimeZone ( ), https://tc39.es/ecma402/#sup-defaulttimezone
-StringView default_time_zone()
+StringView system_time_zone_identifier()
 {
     return TimeZone::current_time_zone();
 }
@@ -421,21 +469,21 @@ StringView default_time_zone()
 // 21.4.1.25 LocalTime ( t ), https://tc39.es/ecma262/#sec-localtime
 double local_time(double time)
 {
-    // 1. Let localTimeZone be DefaultTimeZone().
-    auto local_time_zone = default_time_zone();
+    // 1. Let systemTimeZoneIdentifier be SystemTimeZoneIdentifier().
+    auto system_time_zone_identifier = JS::system_time_zone_identifier();
 
     double offset_nanoseconds { 0 };
 
-    // 2. If IsTimeZoneOffsetString(localTimeZone) is true, then
-    if (is_time_zone_offset_string(local_time_zone)) {
-        // a. Let offsetNs be ParseTimeZoneOffsetString(localTimeZone).
-        offset_nanoseconds = parse_time_zone_offset_string(local_time_zone);
+    // 2. If IsTimeZoneOffsetString(systemTimeZoneIdentifier) is true, then
+    if (is_time_zone_offset_string(system_time_zone_identifier)) {
+        // a. Let offsetNs be ParseTimeZoneOffsetString(systemTimeZoneIdentifier).
+        offset_nanoseconds = parse_time_zone_offset_string(system_time_zone_identifier);
     }
     // 3. Else,
     else {
-        // a. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(localTimeZone, ℤ(ℝ(t) × 10^6)).
+        // a. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, ℤ(ℝ(t) × 10^6)).
         auto time_bigint = Crypto::SignedBigInteger { time }.multiplied_by(s_one_million_bigint);
-        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(local_time_zone, time_bigint);
+        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(system_time_zone_identifier, time_bigint);
     }
 
     // 4. Let offsetMs be truncate(offsetNs / 10^6).
@@ -448,20 +496,20 @@ double local_time(double time)
 // 21.4.1.26 UTC ( t ), https://tc39.es/ecma262/#sec-utc-t
 double utc_time(double time)
 {
-    // 1. Let localTimeZone be DefaultTimeZone().
-    auto local_time_zone = default_time_zone();
+    // 1. Let systemTimeZoneIdentifier be SystemTimeZoneIdentifier().
+    auto system_time_zone_identifier = JS::system_time_zone_identifier();
 
     double offset_nanoseconds { 0 };
 
-    // 2. If IsTimeZoneOffsetString(localTimeZone) is true, then
-    if (is_time_zone_offset_string(local_time_zone)) {
-        // a. Let offsetNs be ParseTimeZoneOffsetString(localTimeZone).
-        offset_nanoseconds = parse_time_zone_offset_string(local_time_zone);
+    // 2. If IsTimeZoneOffsetString(systemTimeZoneIdentifier) is true, then
+    if (is_time_zone_offset_string(system_time_zone_identifier)) {
+        // a. Let offsetNs be ParseTimeZoneOffsetString(systemTimeZoneIdentifier).
+        offset_nanoseconds = parse_time_zone_offset_string(system_time_zone_identifier);
     }
     // 3. Else,
     else {
-        // a. Let possibleInstants be GetNamedTimeZoneEpochNanoseconds(localTimeZone, ℝ(YearFromTime(t)), ℝ(MonthFromTime(t)) + 1, ℝ(DateFromTime(t)), ℝ(HourFromTime(t)), ℝ(MinFromTime(t)), ℝ(SecFromTime(t)), ℝ(msFromTime(t)), 0, 0).
-        auto possible_instants = get_named_time_zone_epoch_nanoseconds(local_time_zone, year_from_time(time), month_from_time(time) + 1, date_from_time(time), hour_from_time(time), min_from_time(time), sec_from_time(time), ms_from_time(time), 0, 0);
+        // a. Let possibleInstants be GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, ℝ(YearFromTime(t)), ℝ(MonthFromTime(t)) + 1, ℝ(DateFromTime(t)), ℝ(HourFromTime(t)), ℝ(MinFromTime(t)), ℝ(SecFromTime(t)), ℝ(msFromTime(t)), 0, 0).
+        auto possible_instants = get_named_time_zone_epoch_nanoseconds(system_time_zone_identifier, year_from_time(time), month_from_time(time) + 1, date_from_time(time), hour_from_time(time), min_from_time(time), sec_from_time(time), ms_from_time(time), 0, 0);
 
         // b. NOTE: The following steps ensure that when t represents local time repeating multiple times at a negative time zone transition (e.g. when the daylight saving time ends or the time zone offset is decreased due to a time zone rule change) or skipped local time at a positive time zone transition (e.g. when the daylight saving time starts or the time zone offset is increased due to a time zone rule change), t is interpreted using the time zone offset before the transition.
         Crypto::SignedBigInteger disambiguated_instant;
@@ -474,7 +522,7 @@ double utc_time(double time)
         // d. Else,
         else {
             // i. NOTE: t represents a local time skipped at a positive time zone transition (e.g. due to daylight saving time starting or a time zone rule change increasing the UTC offset).
-            // ii. Let possibleInstantsBefore be GetNamedTimeZoneEpochNanoseconds(localTimeZone, ℝ(YearFromTime(tBefore)), ℝ(MonthFromTime(tBefore)) + 1, ℝ(DateFromTime(tBefore)), ℝ(HourFromTime(tBefore)), ℝ(MinFromTime(tBefore)), ℝ(SecFromTime(tBefore)), ℝ(msFromTime(tBefore)), 0, 0), where tBefore is the largest integral Number < t for which possibleInstantsBefore is not empty (i.e., tBefore represents the last local time before the transition).
+            // ii. Let possibleInstantsBefore be GetNamedTimeZoneEpochNanoseconds(systemTimeZoneIdentifier, ℝ(YearFromTime(tBefore)), ℝ(MonthFromTime(tBefore)) + 1, ℝ(DateFromTime(tBefore)), ℝ(HourFromTime(tBefore)), ℝ(MinFromTime(tBefore)), ℝ(SecFromTime(tBefore)), ℝ(msFromTime(tBefore)), 0, 0), where tBefore is the largest integral Number < t for which possibleInstantsBefore is not empty (i.e., tBefore represents the last local time before the transition).
             // iii. Let disambiguatedInstant be the last element of possibleInstantsBefore.
 
             // FIXME: This branch currently cannot be reached with our implementation, because LibTimeZone does not handle skipped time points.
@@ -482,8 +530,8 @@ double utc_time(double time)
             VERIFY_NOT_REACHED();
         }
 
-        // e. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(localTimeZone, disambiguatedInstant).
-        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(local_time_zone, disambiguated_instant);
+        // e. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, disambiguatedInstant).
+        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(system_time_zone_identifier, disambiguated_instant);
     }
 
     // 4. Let offsetMs be truncate(offsetNs / 10^6).

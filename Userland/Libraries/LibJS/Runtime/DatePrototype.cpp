@@ -1106,21 +1106,21 @@ DeprecatedString date_string(double time)
 // 21.4.4.41.3 TimeZoneString ( tv ), https://tc39.es/ecma262/#sec-timezoneestring
 DeprecatedString time_zone_string(double time)
 {
-    // 1. Let localTimeZone be DefaultTimeZone().
-    auto local_time_zone = default_time_zone();
+    // 1. Let systemTimeZoneIdentifier be SystemTimeZoneIdentifier().
+    auto system_time_zone_identifier = JS::system_time_zone_identifier();
 
     double offset_nanoseconds { 0 };
 
-    // 2. If IsTimeZoneOffsetString(localTimeZone) is true, then
-    if (is_time_zone_offset_string(local_time_zone)) {
-        // a. Let offsetNs be ParseTimeZoneOffsetString(localTimeZone).
-        offset_nanoseconds = parse_time_zone_offset_string(local_time_zone);
+    // 2. If IsTimeZoneOffsetString(systemTimeZoneIdentifier) is true, then
+    if (is_time_zone_offset_string(system_time_zone_identifier)) {
+        // a. Let offsetNs be ParseTimeZoneOffsetString(systemTimeZoneIdentifier).
+        offset_nanoseconds = parse_time_zone_offset_string(system_time_zone_identifier);
     }
     // 3. Else,
     else {
-        // a. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(localTimeZone, ℤ(ℝ(tv) × 10^6)).
+        // a. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(systemTimeZoneIdentifier, ℤ(ℝ(tv) × 10^6)).
         auto time_bigint = Crypto::SignedBigInteger { time }.multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 });
-        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(local_time_zone, time_bigint);
+        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(system_time_zone_identifier, time_bigint);
     }
 
     // 4. Let offset be 𝔽(truncate(offsetNs / 106)).

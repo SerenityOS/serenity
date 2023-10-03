@@ -152,7 +152,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_time_iso)
 TimeZone* system_time_zone(VM& vm)
 {
     // 1. Let identifier be ! DefaultTimeZone().
-    auto identifier = default_time_zone();
+    auto identifier = system_time_zone_identifier();
 
     // 2. Return ! CreateTemporalTimeZone(identifier).
     // FIXME: Propagate possible OOM error
