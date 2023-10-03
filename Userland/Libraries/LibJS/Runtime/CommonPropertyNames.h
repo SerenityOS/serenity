@@ -191,6 +191,7 @@ namespace JS {
     P(findLastIndex)                         \
     P(findIndex)                             \
     P(firstDay)                              \
+    P(firstDayOfWeek)                        \
     P(fixed)                                 \
     P(flags)                                 \
     P(flat)                                  \
