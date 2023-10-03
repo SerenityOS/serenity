@@ -23,7 +23,7 @@ CardPainter& CardPainter::the()
 
 CardPainter::CardPainter()
 {
-    m_background_image_path = MUST(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/graphics/cards/backs/buggie-deck.png"sv)));
+    m_back_image_path = MUST(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/graphics/cards/backs/buggie-deck.png"sv)));
     set_front_images_set_name(MUST(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardFrontImages"sv, "Classic"sv))));
 }
 
@@ -146,12 +146,12 @@ NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back_inverted()
     return *m_card_back_inverted;
 }
 
-void CardPainter::set_background_image_path(StringView path)
+void CardPainter::set_back_image_path(StringView path)
 {
-    if (m_background_image_path == path)
+    if (m_back_image_path == path)
         return;
 
-    m_background_image_path = MUST(String::from_utf8(path));
+    m_back_image_path = MUST(String::from_utf8(path));
     if (!m_card_back.is_null())
         paint_card_back(*m_card_back);
     if (!m_card_back_inverted.is_null())
@@ -440,7 +440,7 @@ void CardPainter::paint_card_back(Gfx::Bitmap& bitmap)
     auto inner_paint_rect = paint_rect.shrunken(2, 2);
     painter.fill_rect_with_rounded_corners(inner_paint_rect, Color::White, Card::card_radius - 1);
 
-    auto image = Gfx::Bitmap::load_from_file(m_background_image_path).release_value_but_fixme_should_propagate_errors();
+    auto image = Gfx::Bitmap::load_from_file(m_back_image_path).release_value_but_fixme_should_propagate_errors();
     painter.blit({ (bitmap.width() - image->width()) / 2, (bitmap.height() - image->height()) / 2 }, image, image->rect());
 }
 
