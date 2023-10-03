@@ -21,6 +21,11 @@ ReadonlySpan<SeekPoint> SeekTable::seek_points() const
     return m_seek_points.span();
 }
 
+Vector<SeekPoint>& SeekTable::seek_points()
+{
+    return m_seek_points;
+}
+
 Optional<SeekPoint const&> SeekTable::seek_point_before(u64 sample_index) const
 {
     if (m_seek_points.is_empty())
