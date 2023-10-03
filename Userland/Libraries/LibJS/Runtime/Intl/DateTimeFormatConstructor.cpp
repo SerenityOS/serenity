@@ -170,7 +170,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
 
     // Non-standard, default_hour_cycle will be empty if Unicode data generation is disabled.
     if (!default_hour_cycle.has_value()) {
-        date_time_format->set_time_zone(MUST(String::from_utf8(default_time_zone())));
+        date_time_format->set_time_zone(MUST(String::from_utf8(system_time_zone_identifier())));
         return date_time_format;
     }
 
@@ -217,7 +217,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
     // 31. If timeZone is undefined, then
     if (time_zone_value.is_undefined()) {
         // a. Set timeZone to DefaultTimeZone().
-        time_zone = MUST(String::from_utf8(default_time_zone()));
+        time_zone = MUST(String::from_utf8(system_time_zone_identifier()));
     }
     // 32. Else,
     else {

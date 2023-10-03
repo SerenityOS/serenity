@@ -31,6 +31,12 @@ private:
     double m_date_value { 0 }; // [[DateValue]]
 };
 
+// 21.4.1.22 Time Zone Identifier Record, https://tc39.es/ecma262/#sec-time-zone-identifier-record
+struct TimeZoneIdentifier {
+    StringView identifier;         // [[Identifier]]
+    StringView primary_identifier; // [[PrimaryIdentifier]]
+};
+
 // https://tc39.es/ecma262/#eqn-HoursPerDay
 constexpr inline double hours_per_day = 24;
 // https://tc39.es/ecma262/#eqn-MinutesPerHour
@@ -67,7 +73,8 @@ u16 ms_from_time(double);
 Crypto::SignedBigInteger get_utc_epoch_nanoseconds(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 Vector<Crypto::SignedBigInteger> get_named_time_zone_epoch_nanoseconds(StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Crypto::SignedBigInteger const& epoch_nanoseconds);
-StringView default_time_zone();
+Vector<TimeZoneIdentifier> available_named_time_zone_identifiers();
+StringView system_time_zone_identifier();
 double local_time(double time);
 double utc_time(double time);
 double make_time(double hour, double min, double sec, double ms);
