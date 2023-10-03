@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -62,97 +62,78 @@ ErrorOr<String> Date::iso_date_string() const
     return builder.to_string();
 }
 
-// DayWithinYear(t), https://tc39.es/ecma262/#eqn-DayWithinYear
-u16 day_within_year(double t)
+// 21.4.1.3 Day ( t ), https://tc39.es/ecma262/#sec-day
+double day(double time_value)
 {
-    if (!Value(t).is_finite_number())
-        return 0;
-
-    // Day(t) - DayFromYear(YearFromTime(t))
-    return static_cast<u16>(day(t) - day_from_year(year_from_time(t)));
+    // 1. Return 𝔽(floor(ℝ(t / msPerDay))).
+    return floor(time_value / ms_per_day);
 }
 
-// DateFromTime(t), https://tc39.es/ecma262/#sec-date-number
-u8 date_from_time(double t)
+// 21.4.1.4 TimeWithinDay ( t ), https://tc39.es/ecma262/#sec-timewithinday
+double time_within_day(double time)
 {
-    switch (month_from_time(t)) {
-    // DayWithinYear(t) + 1𝔽 if MonthFromTime(t) = +0𝔽
-    case 0:
-        return day_within_year(t) + 1;
-    // DayWithinYear(t) - 30𝔽 if MonthFromTime(t) = 1𝔽
-    case 1:
-        return day_within_year(t) - 30;
-    // DayWithinYear(t) - 58𝔽 - InLeapYear(t) if MonthFromTime(t) = 2𝔽
-    case 2:
-        return day_within_year(t) - 58 - in_leap_year(t);
-    // DayWithinYear(t) - 89𝔽 - InLeapYear(t) if MonthFromTime(t) = 3𝔽
-    case 3:
-        return day_within_year(t) - 89 - in_leap_year(t);
-    // DayWithinYear(t) - 119𝔽 - InLeapYear(t) if MonthFromTime(t) = 4𝔽
-    case 4:
-        return day_within_year(t) - 119 - in_leap_year(t);
-    // DayWithinYear(t) - 150𝔽 - InLeapYear(t) if MonthFromTime(t) = 5𝔽
-    case 5:
-        return day_within_year(t) - 150 - in_leap_year(t);
-    // DayWithinYear(t) - 180𝔽 - InLeapYear(t) if MonthFromTime(t) = 6𝔽
-    case 6:
-        return day_within_year(t) - 180 - in_leap_year(t);
-    // DayWithinYear(t) - 211𝔽 - InLeapYear(t) if MonthFromTime(t) = 7𝔽
-    case 7:
-        return day_within_year(t) - 211 - in_leap_year(t);
-    // DayWithinYear(t) - 242𝔽 - InLeapYear(t) if MonthFromTime(t) = 8𝔽
-    case 8:
-        return day_within_year(t) - 242 - in_leap_year(t);
-    // DayWithinYear(t) - 272𝔽 - InLeapYear(t) if MonthFromTime(t) = 9𝔽
-    case 9:
-        return day_within_year(t) - 272 - in_leap_year(t);
-    // DayWithinYear(t) - 303𝔽 - InLeapYear(t) if MonthFromTime(t) = 10𝔽
-    case 10:
-        return day_within_year(t) - 303 - in_leap_year(t);
-    // DayWithinYear(t) - 333𝔽 - InLeapYear(t) if MonthFromTime(t) = 11𝔽
-    case 11:
-        return day_within_year(t) - 333 - in_leap_year(t);
-    default:
-        VERIFY_NOT_REACHED();
-    }
+    // 1. Return 𝔽(ℝ(t) modulo ℝ(msPerDay)).
+    return modulo(time, ms_per_day);
 }
 
-// DaysInYear(y), https://tc39.es/ecma262/#eqn-DaysInYear
+// 21.4.1.5 DaysInYear ( y ), https://tc39.es/ecma262/#sec-daysinyear
 u16 days_in_year(i32 y)
 {
-    // 365𝔽 if (ℝ(y) modulo 4) ≠ 0
-    if (y % 4 != 0)
-        return 365;
-    // 366𝔽 if (ℝ(y) modulo 4) = 0 and (ℝ(y) modulo 100) ≠ 0
-    if (y % 4 == 0 && y % 100 != 0)
+    // 1. Let ry be ℝ(y).
+    auto ry = static_cast<double>(y);
+
+    // 2. If (ry modulo 400) = 0, return 366𝔽.
+    if (modulo(ry, 400.0) == 0)
         return 366;
-    // 365𝔽 if (ℝ(y) modulo 100) = 0 and (ℝ(y) modulo 400) ≠ 0
-    if (y % 100 == 0 && y % 400 != 0)
+
+    // 3. If (ry modulo 100) = 0, return 365𝔽.
+    if (modulo(ry, 100.0) == 0)
         return 365;
-    // 366𝔽 if (ℝ(y) modulo 400) = 0
-    if (y % 400 == 0)
+
+    // 4. If (ry modulo 4) = 0, return 366𝔽.
+    if (modulo(ry, 4.0) == 0)
         return 366;
-    VERIFY_NOT_REACHED();
+
+    // 5. Return 365𝔽.
+    return 365;
 }
 
-// DayFromYear(y), https://tc39.es/ecma262/#eqn-DaysFromYear
+// 21.4.1.6 DayFromYear ( y ), https://tc39.es/ecma262/#sec-dayfromyear
 double day_from_year(i32 y)
 {
-    // 𝔽(365 × (ℝ(y) - 1970) + floor((ℝ(y) - 1969) / 4) - floor((ℝ(y) - 1901) / 100) + floor((ℝ(y) - 1601) / 400))
-    return 365.0 * (y - 1970) + floor((y - 1969) / 4.0) - floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
+    // 1. Let ry be ℝ(y).
+    auto ry = static_cast<double>(y);
+
+    // 2. NOTE: In the following steps, each _numYearsN_ is the number of years divisible by N that occur between the
+    //    epoch and the start of year y. (The number is negative if y is before the epoch.)
+
+    // 3. Let numYears1 be (ry - 1970).
+    auto num_years_1 = ry - 1970;
+
+    // 4. Let numYears4 be floor((ry - 1969) / 4).
+    auto num_years_4 = floor((ry - 1969) / 4.0);
+
+    // 5. Let numYears100 be floor((ry - 1901) / 100).
+    auto num_years_100 = floor((ry - 1901) / 100.0);
+
+    // 6. Let numYears400 be floor((ry - 1601) / 400).
+    auto num_years_400 = floor((ry - 1601) / 400.0);
+
+    // 7. Return 𝔽(365 × numYears1 + numYears4 - numYears100 + numYears400).
+    return 365.0 * num_years_1 + num_years_4 - num_years_100 + num_years_400;
 }
 
-// TimeFromYear(y), https://tc39.es/ecma262/#eqn-TimeFromYear
+// 21.4.1.7 TimeFromYear ( y ), https://tc39.es/ecma262/#sec-timefromyear
 double time_from_year(i32 y)
 {
-    // msPerDay × DayFromYear(y)
+    // 1. Return msPerDay × DayFromYear(y).
     return ms_per_day * day_from_year(y);
 }
 
-// YearFromTime(t), https://tc39.es/ecma262/#eqn-YearFromTime
+// 21.4.1.8 YearFromTime ( t ), https://tc39.es/ecma262/#sec-yearfromtime
 i32 year_from_time(double t)
 {
-    // the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t
+    // 1. Return the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t.
     if (!Value(t).is_finite_number())
         return NumericLimits<i32>::max();
 
@@ -168,110 +149,197 @@ i32 year_from_time(double t)
     return year;
 }
 
-// InLeapYear(t), https://tc39.es/ecma262/#eqn-InLeapYear
+// 21.4.1.9 DayWithinYear ( t ), https://tc39.es/ecma262/#sec-daywithinyear
+u16 day_within_year(double t)
+{
+    if (!Value(t).is_finite_number())
+        return 0;
+
+    // 1. Return Day(t) - DayFromYear(YearFromTime(t)).
+    return static_cast<u16>(day(t) - day_from_year(year_from_time(t)));
+}
+
+// 21.4.1.10 InLeapYear ( t ), https://tc39.es/ecma262/#sec-inleapyear
 bool in_leap_year(double t)
 {
-    // +0𝔽 if DaysInYear(YearFromTime(t)) = 365𝔽
-    // 1𝔽 if DaysInYear(YearFromTime(t)) = 366𝔽
+    // 1. If DaysInYear(YearFromTime(t)) is 366𝔽, return 1𝔽; else return +0𝔽.
     return days_in_year(year_from_time(t)) == 366;
 }
 
-// MonthFromTime(t), https://tc39.es/ecma262/#eqn-MonthFromTime
+// 21.4.1.11 MonthFromTime ( t ), https://tc39.es/ecma262/#sec-monthfromtime
 u8 month_from_time(double t)
 {
-    auto in_leap_year = JS::in_leap_year(t);
+    // 1. Let inLeapYear be InLeapYear(t).
+    auto in_leap_year = static_cast<unsigned>(JS::in_leap_year(t));
+
+    // 2. Let dayWithinYear be DayWithinYear(t).
     auto day_within_year = JS::day_within_year(t);
 
-    // +0𝔽 if +0𝔽 ≤ DayWithinYear(t) < 31𝔽
+    // 3. If dayWithinYear < 31𝔽, return +0𝔽.
     if (day_within_year < 31)
         return 0;
-    // 1𝔽 if 31𝔽 ≤ DayWithinYear(t) < 59𝔽 + InLeapYear(t)
-    if (31 <= day_within_year && day_within_year < 59 + in_leap_year)
+
+    // 4. If dayWithinYear < 59𝔽 + inLeapYear, return 1𝔽.
+    if (day_within_year < (59 + in_leap_year))
         return 1;
-    // 2𝔽 if 59𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 90𝔽 + InLeapYear(t)
-    if (59 + in_leap_year <= day_within_year && day_within_year < 90 + in_leap_year)
+
+    // 5. If dayWithinYear < 90𝔽 + inLeapYear, return 2𝔽.
+    if (day_within_year < (90 + in_leap_year))
         return 2;
-    // 3𝔽 if 90𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 120𝔽 + InLeapYear(t)
-    if (90 + in_leap_year <= day_within_year && day_within_year < 120 + in_leap_year)
+
+    // 6. If dayWithinYear < 120𝔽 + inLeapYear, return 3𝔽.
+    if (day_within_year < (120 + in_leap_year))
         return 3;
-    // 4𝔽 if 120𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 151𝔽 + InLeapYear(t)
-    if (120 + in_leap_year <= day_within_year && day_within_year < 151 + in_leap_year)
+
+    // 7. If dayWithinYear < 151𝔽 + inLeapYear, return 4𝔽.
+    if (day_within_year < (151 + in_leap_year))
         return 4;
-    // 5𝔽 if 151𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 181𝔽 + InLeapYear(t)
-    if (151 + in_leap_year <= day_within_year && day_within_year < 181 + in_leap_year)
+
+    // 8. If dayWithinYear < 181𝔽 + inLeapYear, return 5𝔽.
+    if (day_within_year < (181 + in_leap_year))
         return 5;
-    // 6𝔽 if 181𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 212𝔽 + InLeapYear(t)
-    if (181 + in_leap_year <= day_within_year && day_within_year < 212 + in_leap_year)
+
+    // 9. If dayWithinYear < 212𝔽 + inLeapYear, return 6𝔽.
+    if (day_within_year < (212 + in_leap_year))
         return 6;
-    // 7𝔽 if 212𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 243𝔽 + InLeapYear(t)
-    if (212 + in_leap_year <= day_within_year && day_within_year < 243 + in_leap_year)
+
+    // 10. If dayWithinYear < 243𝔽 + inLeapYear, return 7𝔽.
+    if (day_within_year < (243 + in_leap_year))
         return 7;
-    // 8𝔽 if 243𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 273𝔽 + InLeapYear(t)
-    if (243 + in_leap_year <= day_within_year && day_within_year < 273 + in_leap_year)
+
+    // 11. If dayWithinYear < 273𝔽 + inLeapYear, return 8𝔽.
+    if (day_within_year < (273 + in_leap_year))
         return 8;
-    // 9𝔽 if 273𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 304𝔽 + InLeapYear(t)
-    if (273 + in_leap_year <= day_within_year && day_within_year < 304 + in_leap_year)
+
+    // 12. If dayWithinYear < 304𝔽 + inLeapYear, return 9𝔽.
+    if (day_within_year < (304 + in_leap_year))
         return 9;
-    // 10𝔽 if 304𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 334𝔽 + InLeapYear(t)
-    if (304 + in_leap_year <= day_within_year && day_within_year < 334 + in_leap_year)
+
+    // 13. If dayWithinYear < 334𝔽 + inLeapYear, return 10𝔽.
+    if (day_within_year < (334 + in_leap_year))
         return 10;
-    // 11𝔽 if 334𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 365𝔽 + InLeapYear(t)
-    if (334 + in_leap_year <= day_within_year && day_within_year < 365 + in_leap_year)
-        return 11;
-    VERIFY_NOT_REACHED();
+
+    // 14. Assert: dayWithinYear < 365𝔽 + inLeapYear.
+    VERIFY(day_within_year < (365 + in_leap_year));
+
+    // 15. Return 11𝔽.
+    return 11;
 }
 
-// HourFromTime(t), https://tc39.es/ecma262/#eqn-HourFromTime
-u8 hour_from_time(double t)
+// 21.4.1.12 DateFromTime ( t ), https://tc39.es/ecma262/#sec-datefromtime
+u8 date_from_time(double t)
 {
-    if (!Value(t).is_finite_number())
-        return 0;
+    // 1. Let inLeapYear be InLeapYear(t).
+    auto in_leap_year = static_cast<unsigned>(JS::in_leap_year(t));
 
-    // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
-    return static_cast<u8>(modulo(floor(t / ms_per_hour), hours_per_day));
+    // 2. Let dayWithinYear be DayWithinYear(t).
+    auto day_within_year = JS::day_within_year(t);
+
+    // 3. Let month be MonthFromTime(t).
+    auto month = month_from_time(t);
+
+    // 4. If month is +0𝔽, return dayWithinYear + 1𝔽.
+    if (month == 0)
+        return day_within_year + 1;
+
+    // 5. If month is 1𝔽, return dayWithinYear - 30𝔽.
+    if (month == 1)
+        return day_within_year - 30;
+
+    // 6. If month is 2𝔽, return dayWithinYear - 58𝔽 - inLeapYear.
+    if (month == 2)
+        return day_within_year - 58 - in_leap_year;
+
+    // 7. If month is 3𝔽, return dayWithinYear - 89𝔽 - inLeapYear.
+    if (month == 3)
+        return day_within_year - 89 - in_leap_year;
+
+    // 8. If month is 4𝔽, return dayWithinYear - 119𝔽 - inLeapYear.
+    if (month == 4)
+        return day_within_year - 119 - in_leap_year;
+
+    // 9. If month is 5𝔽, return dayWithinYear - 150𝔽 - inLeapYear.
+    if (month == 5)
+        return day_within_year - 150 - in_leap_year;
+
+    // 10. If month is 6𝔽, return dayWithinYear - 180𝔽 - inLeapYear.
+    if (month == 6)
+        return day_within_year - 180 - in_leap_year;
+
+    // 11. If month is 7𝔽, return dayWithinYear - 211𝔽 - inLeapYear.
+    if (month == 7)
+        return day_within_year - 211 - in_leap_year;
+
+    // 12. If month is 8𝔽, return dayWithinYear - 242𝔽 - inLeapYear.
+    if (month == 8)
+        return day_within_year - 242 - in_leap_year;
+
+    // 13. If month is 9𝔽, return dayWithinYear - 272𝔽 - inLeapYear.
+    if (month == 9)
+        return day_within_year - 272 - in_leap_year;
+
+    // 14. If month is 10𝔽, return dayWithinYear - 303𝔽 - inLeapYear.
+    if (month == 10)
+        return day_within_year - 303 - in_leap_year;
+
+    // 15. Assert: month is 11𝔽.
+    VERIFY(month == 11);
+
+    // 16. Return dayWithinYear - 333𝔽 - inLeapYear.
+    return day_within_year - 333 - in_leap_year;
 }
 
-// MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
-u8 min_from_time(double t)
-{
-    if (!Value(t).is_finite_number())
-        return 0;
-
-    // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
-    return static_cast<u8>(modulo(floor(t / ms_per_minute), minutes_per_hour));
-}
-
-// SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
-u8 sec_from_time(double t)
-{
-    if (!Value(t).is_finite_number())
-        return 0;
-
-    // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
-    return static_cast<u8>(modulo(floor(t / ms_per_second), seconds_per_minute));
-}
-
-// msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
-u16 ms_from_time(double t)
-{
-    if (!Value(t).is_finite_number())
-        return 0;
-
-    // 𝔽(ℝ(t) modulo ℝ(msPerSecond))
-    return static_cast<u16>(modulo(t, ms_per_second));
-}
-
-// 21.4.1.6 Week Day, https://tc39.es/ecma262/#sec-week-day
+// 21.4.1.13 WeekDay ( t ), https://tc39.es/ecma262/#sec-weekday
 u8 week_day(double t)
 {
     if (!Value(t).is_finite_number())
         return 0;
 
-    // 𝔽(ℝ(Day(t) + 4𝔽) modulo 7)
+    // 1. Return 𝔽(ℝ(Day(t) + 4𝔽) modulo 7).
     return static_cast<u8>(modulo(day(t) + 4, 7));
 }
 
-// 21.4.1.7 GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/ecma262/#sec-getutcepochnanoseconds
+// 21.4.1.14 HourFromTime ( t ), https://tc39.es/ecma262/#sec-hourfromtime
+u8 hour_from_time(double t)
+{
+    if (!Value(t).is_finite_number())
+        return 0;
+
+    // 1. Return 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay).
+    return static_cast<u8>(modulo(floor(t / ms_per_hour), hours_per_day));
+}
+
+// 21.4.1.15 MinFromTime ( t ), https://tc39.es/ecma262/#sec-minfromtime
+u8 min_from_time(double t)
+{
+    if (!Value(t).is_finite_number())
+        return 0;
+
+    // 1. Return 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour).
+    return static_cast<u8>(modulo(floor(t / ms_per_minute), minutes_per_hour));
+}
+
+// 21.4.1.16 SecFromTime ( t ), https://tc39.es/ecma262/#sec-secfromtime
+u8 sec_from_time(double t)
+{
+    if (!Value(t).is_finite_number())
+        return 0;
+
+    // 1. Return 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute).
+    return static_cast<u8>(modulo(floor(t / ms_per_second), seconds_per_minute));
+}
+
+// 21.4.1.17 msFromTime ( t ), https://tc39.es/ecma262/#sec-msfromtime
+u16 ms_from_time(double t)
+{
+    if (!Value(t).is_finite_number())
+        return 0;
+
+    // 1. Return 𝔽(ℝ(t) modulo ℝ(msPerSecond)).
+    return static_cast<u16>(modulo(t, ms_per_second));
+}
+
+// 21.4.1.18 GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/ecma262/#sec-getutcepochnanoseconds
 Crypto::SignedBigInteger get_utc_epoch_nanoseconds(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     // 1. Let date be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
@@ -310,7 +378,7 @@ static i64 clip_bigint_to_sane_time(Crypto::SignedBigInteger const& value)
     return value.to_base_deprecated(10).to_int<i64>().value();
 }
 
-// 21.4.1.8 GetNamedTimeZoneEpochNanoseconds ( timeZoneIdentifier, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/ecma262/#sec-getnamedtimezoneepochnanoseconds
+// 21.4.1.20 GetNamedTimeZoneEpochNanoseconds ( timeZoneIdentifier, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/ecma262/#sec-getnamedtimezoneepochnanoseconds
 Vector<Crypto::SignedBigInteger> get_named_time_zone_epoch_nanoseconds(StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     auto local_nanoseconds = get_utc_epoch_nanoseconds(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
@@ -325,7 +393,7 @@ Vector<Crypto::SignedBigInteger> get_named_time_zone_epoch_nanoseconds(StringVie
     return { local_nanoseconds.minus(Crypto::SignedBigInteger { offset->seconds }.multiplied_by(s_one_billion_bigint)) };
 }
 
-// 21.4.1.9 GetNamedTimeZoneOffsetNanoseconds ( timeZoneIdentifier, epochNanoseconds ), https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds
+// 21.4.1.21 GetNamedTimeZoneOffsetNanoseconds ( timeZoneIdentifier, epochNanoseconds ), https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds
 i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Crypto::SignedBigInteger const& epoch_nanoseconds)
 {
     // Only called with validated time zone identifier as argument.
@@ -343,14 +411,14 @@ i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Cryp
     return offset->seconds * 1'000'000'000;
 }
 
-// 21.4.1.10 DefaultTimeZone ( ), https://tc39.es/ecma262/#sec-defaulttimezone
+// 21.4.1.24 DefaultTimeZone ( ), https://tc39.es/ecma262/#sec-defaulttimezone
 // 6.4.3 DefaultTimeZone ( ), https://tc39.es/ecma402/#sup-defaulttimezone
 StringView default_time_zone()
 {
     return TimeZone::current_time_zone();
 }
 
-// 21.4.1.11 LocalTime ( t ), https://tc39.es/ecma262/#sec-localtime
+// 21.4.1.25 LocalTime ( t ), https://tc39.es/ecma262/#sec-localtime
 double local_time(double time)
 {
     // 1. Let localTimeZone be DefaultTimeZone().
@@ -377,7 +445,7 @@ double local_time(double time)
     return time + offset_milliseconds;
 }
 
-// 21.4.1.12 UTC ( t ), https://tc39.es/ecma262/#sec-utc-t
+// 21.4.1.26 UTC ( t ), https://tc39.es/ecma262/#sec-utc-t
 double utc_time(double time)
 {
     // 1. Let localTimeZone be DefaultTimeZone().
@@ -425,7 +493,7 @@ double utc_time(double time)
     return time - offset_milliseconds;
 }
 
-// 21.4.1.14 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
+// 21.4.1.27 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
 double make_time(double hour, double min, double sec, double ms)
 {
     // 1. If hour is not finite or min is not finite or sec is not finite or ms is not finite, return NaN.
@@ -447,20 +515,7 @@ double make_time(double hour, double min, double sec, double ms)
     return t;
 }
 
-// Day(t), https://tc39.es/ecma262/#eqn-Day
-double day(double time_value)
-{
-    return floor(time_value / ms_per_day);
-}
-
-// TimeWithinDay(t), https://tc39.es/ecma262/#eqn-TimeWithinDay
-double time_within_day(double time)
-{
-    // 𝔽(ℝ(t) modulo ℝ(msPerDay))
-    return modulo(time, ms_per_day);
-}
-
-// 21.4.1.15 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
+// 21.4.1.28 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
 double make_day(double year, double month, double date)
 {
     // 1. If year is not finite or month is not finite or date is not finite, return NaN.
@@ -490,7 +545,7 @@ double make_day(double year, double month, double date)
     return day(static_cast<double>(t)) + dt - 1;
 }
 
-// 21.4.1.16 MakeDate ( day, time ), https://tc39.es/ecma262/#sec-makedate
+// 21.4.1.29 MakeDate ( day, time ), https://tc39.es/ecma262/#sec-makedate
 double make_date(double day, double time)
 {
     // 1. If day is not finite or time is not finite, return NaN.
@@ -508,7 +563,7 @@ double make_date(double day, double time)
     return tv;
 }
 
-// 21.4.1.17 TimeClip ( time ), https://tc39.es/ecma262/#sec-timeclip
+// 21.4.1.31 TimeClip ( time ), https://tc39.es/ecma262/#sec-timeclip
 double time_clip(double time)
 {
     // 1. If time is not finite, return NaN.
@@ -523,7 +578,7 @@ double time_clip(double time)
     return to_integer_or_infinity(time);
 }
 
-// 21.4.1.19.1 IsTimeZoneOffsetString ( offsetString ), https://tc39.es/ecma262/#sec-istimezoneoffsetstring
+// 21.4.1.33.1 IsTimeZoneOffsetString ( offsetString ), https://tc39.es/ecma262/#sec-istimezoneoffsetstring
 bool is_time_zone_offset_string(StringView offset_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(offsetString), UTCOffset).
@@ -534,7 +589,7 @@ bool is_time_zone_offset_string(StringView offset_string)
     return parse_result.has_value();
 }
 
-// 21.4.1.19.2 ParseTimeZoneOffsetString ( offsetString ), https://tc39.es/ecma262/#sec-parsetimezoneoffsetstring
+// 21.4.1.33.2 ParseTimeZoneOffsetString ( offsetString ), https://tc39.es/ecma262/#sec-parsetimezoneoffsetstring
 double parse_time_zone_offset_string(StringView offset_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(offsetString), UTCOffset).
