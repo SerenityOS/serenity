@@ -39,6 +39,7 @@ void LocalePrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.caseFirst, case_first, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.collation, collation, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.collations, collations, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.firstDayOfWeek, first_day_of_week, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.hourCycles, hour_cycles, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
@@ -141,6 +142,17 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::base_name)
 JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES
 #undef __JS_ENUMERATE
 
+// 1.4.10 get Intl.Locale.prototype.firstDayOfWeek, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.firstDayOfWeek
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::first_day_of_week)
+{
+    // 1. Let loc be the this value.
+    // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
+    auto locale_object = TRY(typed_this_object(vm));
+
+    // 3. Return loc.[[FirstDayOfWeek]].
+    return locale_object->has_first_day_of_week() ? Value { locale_object->first_day_of_week() } : js_undefined();
+}
+
 // 14.3.11 get Intl.Locale.prototype.numeric, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.numeric
 JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::numeric)
 {
@@ -217,10 +229,10 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
     __JS_ENUMERATE(hour_cycles)             \
     __JS_ENUMERATE(numbering_systems)
 
-// 1.4.16 get Intl.Locale.prototype.calendars, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.calendars
-// 1.4.17 get Intl.Locale.prototype.collations, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.collations
-// 1.4.18 get Intl.Locale.prototype.hourCycles, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.hourCycles
-// 1.4.19 get Intl.Locale.prototype.numberingSystems, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.numberingSystems
+// 1.4.17 get Intl.Locale.prototype.calendars, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.calendars
+// 1.4.18 get Intl.Locale.prototype.collations, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.collations
+// 1.4.19 get Intl.Locale.prototype.hourCycles, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.hourCycles
+// 1.4.20 get Intl.Locale.prototype.numberingSystems, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.numberingSystems
 #define __JS_ENUMERATE(keyword)                          \
     JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)  \
     {                                                    \
@@ -230,7 +242,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
 JS_ENUMERATE_LOCALE_INFO_PROPERTIES
 #undef __JS_ENUMERATE
 
-// 1.4.20 get Intl.Locale.prototype.timeZones, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.timeZones
+// 1.4.21 get Intl.Locale.prototype.timeZones, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.timeZones
 JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
 {
     // 1. Let loc be the this value.
@@ -248,7 +260,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
     return time_zones_of_locale(vm, locale->language_id.region.value());
 }
 
-// 1.4.21 get Intl.Locale.prototype.textInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.textInfo
+// 1.4.22 get Intl.Locale.prototype.textInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.textInfo
 JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
 {
     auto& realm = *vm.current_realm();
@@ -270,7 +282,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
     return info;
 }
 
-// 1.4.22 get Intl.Locale.prototype.weekInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.weekInfo
+// 1.4.23 get Intl.Locale.prototype.weekInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.weekInfo
 JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::week_info)
 {
     auto& realm = *vm.current_realm();

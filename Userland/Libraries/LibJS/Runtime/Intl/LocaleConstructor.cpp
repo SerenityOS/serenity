@@ -20,6 +20,7 @@ struct LocaleAndKeys {
     String locale;
     Optional<String> ca;
     Optional<String> co;
+    Optional<String> fw;
     Optional<String> hc;
     Optional<String> kf;
     Optional<String> kn;
@@ -139,6 +140,8 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
             return value.ca;
         if (key == "co"sv)
             return value.co;
+        if (key == "fw"sv)
+            return value.fw;
         if (key == "hc"sv)
             return value.hc;
         if (key == "kf"sv)
@@ -241,6 +244,7 @@ ThrowCompletionOr<Value> LocaleConstructor::call()
 }
 
 // 14.1.1 Intl.Locale ( tag [ , options ] ), https://tc39.es/ecma402/#sec-Intl.Locale
+// 1.2.3 Intl.Locale ( tag [ , options ] ), https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale
 ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
@@ -251,7 +255,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     // 2. Let relevantExtensionKeys be %Locale%.[[RelevantExtensionKeys]].
     auto relevant_extension_keys = Locale::relevant_extension_keys();
 
-    // 3. Let internalSlotsList be « [[InitializedLocale]], [[Locale]], [[Calendar]], [[Collation]], [[HourCycle]], [[NumberingSystem]] ».
+    // 3. Let internalSlotsList be « [[InitializedLocale]], [[Locale]], [[Calendar]], [[Collation]], [[FirstDayOfWeek]], [[HourCycle]], [[NumberingSystem]] ».
     // 4. If relevantExtensionKeys contains "kf", then
     //     a. Append [[CaseFirst]] as the last element of internalSlotsList.
     // 5. If relevantExtensionKeys contains "kn", then
@@ -299,51 +303,82 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     // 18. Set opt.[[co]] to collation.
     opt.co = TRY(get_string_option(vm, *options, vm.names.collation, ::Locale::is_type_identifier));
 
-    // 19. Let hc be ? GetOption(options, "hourCycle", string, « "h11", "h12", "h23", "h24" », undefined).
-    // 20. Set opt.[[hc]] to hc.
+    // 19. Let fw be ? GetOption(options, "firstDayOfWeek", "string", « "mon", "tue", "wed", "thu", "fri", "sat", "sun", "0", "1", "2", "3", "4", "5", "6", "7" », undefined).
+    auto first_day_of_week = TRY(get_string_option(vm, *options, vm.names.firstDayOfWeek, nullptr, AK::Array { "mon"sv, "tue"sv, "wed"sv, "thu"sv, "fri"sv, "sat"sv, "sun"sv, "0"sv, "1"sv, "2"sv, "3"sv, "4"sv, "5"sv, "6"sv, "7"sv }));
+
+    // 20. Let firstDay be undefined.
+    Optional<String> first_day_string;
+
+    // 21. If fw is not undefined, then
+    if (first_day_of_week.has_value()) {
+        // a. Set firstDay to !WeekdayToString(fw).
+        first_day_string = MUST(String::from_utf8(weekday_to_string(*first_day_of_week)));
+    }
+
+    // 22. Set opt.[[fw]] to firstDay.
+    opt.fw = move(first_day_string);
+
+    // 23. Let hc be ? GetOption(options, "hourCycle", string, « "h11", "h12", "h23", "h24" », undefined).
+    // 24. Set opt.[[hc]] to hc.
     opt.hc = TRY(get_string_option(vm, *options, vm.names.hourCycle, nullptr, AK::Array { "h11"sv, "h12"sv, "h23"sv, "h24"sv }));
 
-    // 21. Let kf be ? GetOption(options, "caseFirst", string, « "upper", "lower", "false" », undefined).
-    // 22. Set opt.[[kf]] to kf.
+    // 25. Let kf be ? GetOption(options, "caseFirst", string, « "upper", "lower", "false" », undefined).
+    // 26. Set opt.[[kf]] to kf.
     opt.kf = TRY(get_string_option(vm, *options, vm.names.caseFirst, nullptr, AK::Array { "upper"sv, "lower"sv, "false"sv }));
 
-    // 23. Let kn be ? GetOption(options, "numeric", boolean, empty, undefined).
+    // 27. Let kn be ? GetOption(options, "numeric", boolean, empty, undefined).
     auto kn = TRY(get_option(vm, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
 
-    // 24. If kn is not undefined, set kn to ! ToString(kn).
-    // 25. Set opt.[[kn]] to kn.
+    // 28. If kn is not undefined, set kn to ! ToString(kn).
+    // 29. Set opt.[[kn]] to kn.
     if (!kn.is_undefined())
         opt.kn = TRY(kn.to_string(vm));
 
-    // 26. Let numberingSystem be ? GetOption(options, "numberingSystem", string, empty, undefined).
-    // 27. If numberingSystem is not undefined, then
+    // 30. Let numberingSystem be ? GetOption(options, "numberingSystem", string, empty, undefined).
+    // 31. If numberingSystem is not undefined, then
     //     a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-    // 28. Set opt.[[nu]] to numberingSystem.
+    // 32. Set opt.[[nu]] to numberingSystem.
     opt.nu = TRY(get_string_option(vm, *options, vm.names.numberingSystem, ::Locale::is_type_identifier));
 
-    // 29. Let r be ! ApplyUnicodeExtensionToTag(tag, opt, relevantExtensionKeys).
+    // 33. Let r be ! ApplyUnicodeExtensionToTag(tag, opt, relevantExtensionKeys).
     auto result = apply_unicode_extension_to_tag(tag, move(opt), relevant_extension_keys);
 
-    // 30. Set locale.[[Locale]] to r.[[locale]].
+    // 34. Set locale.[[Locale]] to r.[[locale]].
     locale->set_locale(move(result.locale));
-    // 31. Set locale.[[Calendar]] to r.[[ca]].
+
+    // 35. Set locale.[[Calendar]] to r.[[ca]].
     if (result.ca.has_value())
         locale->set_calendar(result.ca.release_value());
-    // 32. Set locale.[[Collation]] to r.[[co]].
+
+    // 36. Set locale.[[Collation]] to r.[[co]].
     if (result.co.has_value())
         locale->set_collation(result.co.release_value());
-    // 33. Set locale.[[HourCycle]] to r.[[hc]].
+
+    // 37. Let firstDay be undefined.
+    Optional<u8> first_day_numeric;
+
+    // 38. If r.[[fw]] is not undefined, then
+    if (result.fw.has_value()) {
+        // a. Set firstDay to ! WeekdayToNumber(r.[[fw]]).
+        first_day_numeric = weekday_to_number(*result.fw);
+    }
+
+    // 39. Set locale.[[FirstDayOfWeek]] to firstDay.
+    if (first_day_numeric.has_value())
+        locale->set_first_day_of_week(*first_day_numeric);
+
+    // 40. Set locale.[[HourCycle]] to r.[[hc]].
     if (result.hc.has_value())
         locale->set_hour_cycle(result.hc.release_value());
 
-    // 34. If relevantExtensionKeys contains "kf", then
+    // 41. If relevantExtensionKeys contains "kf", then
     if (relevant_extension_keys.span().contains_slow("kf"sv)) {
         // a. Set locale.[[CaseFirst]] to r.[[kf]].
         if (result.kf.has_value())
             locale->set_case_first(result.kf.release_value());
     }
 
-    // 35. If relevantExtensionKeys contains "kn", then
+    // 42. If relevantExtensionKeys contains "kn", then
     if (relevant_extension_keys.span().contains_slow("kn"sv)) {
         // a. If SameValue(r.[[kn]], "true") is true or r.[[kn]] is the empty String, then
         if (result.kn.has_value() && (result.kn == "true"sv || result.kn->is_empty())) {
@@ -357,11 +392,11 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
         }
     }
 
-    // 36. Set locale.[[NumberingSystem]] to r.[[nu]].
+    // 43. Set locale.[[NumberingSystem]] to r.[[nu]].
     if (result.nu.has_value())
         locale->set_numbering_system(result.nu.release_value());
 
-    // 37. Return locale.
+    // 44. Return locale.
     return locale;
 }
 

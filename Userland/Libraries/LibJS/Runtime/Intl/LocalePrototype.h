@@ -31,6 +31,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(case_first);
     JS_DECLARE_NATIVE_FUNCTION(collation);
     JS_DECLARE_NATIVE_FUNCTION(collations);
+    JS_DECLARE_NATIVE_FUNCTION(first_day_of_week);
     JS_DECLARE_NATIVE_FUNCTION(hour_cycle);
     JS_DECLARE_NATIVE_FUNCTION(hour_cycles);
     JS_DECLARE_NATIVE_FUNCTION(numbering_system);
