@@ -32,6 +32,11 @@
     window.contentView = _pdfView;
     [_pdfView setDelegate:self];
 
+    NSToolbar* toolbar = [[NSToolbar alloc] initWithIdentifier:@"MacPDFToolbar"];
+    toolbar.delegate = self;
+    toolbar.displayMode = NSToolbarDisplayModeIconOnly;
+    [window setToolbar:toolbar];
+
     _pdfDocument = document;
     return self;
 }
@@ -71,6 +76,27 @@
 {
     [self.window setSubtitle:
                      [NSString stringWithFormat:@"Page %d of %d", [_pdfView page], _pdfDocument.pdf->get_page_count()]];
+}
+
+#pragma mark - NSToolbarDelegate
+
+- (NSArray<NSToolbarItemIdentifier>*)toolbarAllowedItemIdentifiers:(NSToolbar*)toolbar
+{
+    return [self toolbarDefaultItemIdentifiers:toolbar];
+}
+
+- (NSArray<NSToolbarItemIdentifier>*)toolbarDefaultItemIdentifiers:(NSToolbar*)toolbar
+{
+    return @[ NSToolbarToggleSidebarItemIdentifier ];
+}
+
+- (NSToolbarItem*)toolbar:(NSToolbar*)toolbar
+        itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier
+    willBeInsertedIntoToolbar:(BOOL)flag
+{
+    // Not called for standard identifiers, but the implementation of the method must exist, or else:
+    // ERROR: invalid delegate <MacPDFWindowController: 0x600003054c80> (does not implement all required methods)
+    return nil;
 }
 
 @end
