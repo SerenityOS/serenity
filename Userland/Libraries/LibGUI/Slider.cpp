@@ -6,6 +6,7 @@
  */
 
 #include <AK/StdLibExtras.h>
+#include <LibGUI/HorizontalSlider.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
 #include <LibGfx/Palette.h>

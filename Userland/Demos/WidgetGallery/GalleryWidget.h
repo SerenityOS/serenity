@@ -8,6 +8,7 @@
 
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/HorizontalSlider.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/OpacitySlider.h>

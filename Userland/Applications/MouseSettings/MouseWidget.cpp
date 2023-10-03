@@ -8,6 +8,7 @@
 
 #include <Applications/MouseSettings/MouseWidgetGML.h>
 #include <LibGUI/ConnectionToWindowServer.h>
+#include <LibGUI/HorizontalSlider.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Slider.h>

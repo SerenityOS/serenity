@@ -13,6 +13,7 @@
 #include <AK/FixedArray.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibAudio/ConnectionToServer.h>
+#include <LibGUI/HorizontalSlider.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
