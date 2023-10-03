@@ -29,7 +29,7 @@ public:
     {
         auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CardGamePreview()));
 
-        Gfx::IntPoint point { 25, 30 };
+        Gfx::IntPoint point { 25, 24 };
         TRY(preview->add_stack(point, Cards::CardStack::Type::Stock));
 
         point.translate_by(Cards::Card::width + 30, 0);
