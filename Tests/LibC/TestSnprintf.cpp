@@ -275,7 +275,22 @@ TEST_CASE(inttypes_macros)
     EXPECT(test_single<uint16_t>({ LITERAL("xxxxxxx"), "|%" PRIX16 "|", 0xC0DE, 6, LITERAL("|C0DE|\0") }));
 }
 
-TEST_CASE(float_values)
+TEST_CASE(float_value_precision)
+{
+    // An empty precision value implies a precision of 0.
+    EXPECT(test_single<double>({ LITERAL("xxx\0"), "|%.f|", 0, 3, LITERAL("|0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxx\0"), "|%.f|", 1.23456789, 3, LITERAL("|1|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxx\0"), "|%.0f|", 0, 3, LITERAL("|0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxx\0"), "|%.0f|", 1.23456789, 3, LITERAL("|1|\0") }));
+
+    // The default value for the precision is 6.
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxx\0"), "|%f|", 0, 10, LITERAL("|0.000000|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxx\0"), "|%f|", 1.23456789, 10, LITERAL("|1.234567|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxx\0"), "|%.6f|", 0, 10, LITERAL("|0.000000|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxx\0"), "|%.6f|", 1.23456789, 10, LITERAL("|1.234567|\0") }));
+}
+
+TEST_CASE(float_value_special)
 {
     union {
         float f;
@@ -289,6 +304,19 @@ TEST_CASE(float_values)
     v.i = 0x7f800000;
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| inf|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-inf|\0") }));
+}
+
+TEST_CASE(string_precision)
+{
+    // Print the entire string by default.
+    EXPECT(test_single<char const*>({ LITERAL("xxxxxx\0"), "|%s|", "WHF!", 6, LITERAL("|WHF!|\0") }));
+
+    // Precision limits the number of characters that are printed.
+    EXPECT(test_single<char const*>({ LITERAL("xxxx\0"), "|%.2s|", "WHF!", 4, LITERAL("|WH|\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("xxxxxx\0"), "|%.7s|", "WHF!", 6, LITERAL("|WHF!|\0") }));
+
+    // An empty precision value implies a precision of 0.
+    EXPECT(test_single<char const*>({ LITERAL("xx\0"), "|%.s|", "WHF!", 2, LITERAL("||\0") }));
 }
 
 TEST_CASE(truncation)
