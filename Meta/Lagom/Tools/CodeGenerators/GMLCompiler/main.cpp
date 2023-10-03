@@ -179,6 +179,7 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
         { "button_style"sv, "Gfx::ButtonStyle"sv },
         { "opportunistic_resizee"sv, "GUI::Splitter::OpportunisticResizee"sv },
         { "checkbox_position"sv, "GUI::CheckBox::CheckBoxPosition"sv },
+        { "button_style"sv, "Gfx::ButtonStyle"sv }
     };
 
     auto const& enum_type_name = enum_properties.get(property_name);
