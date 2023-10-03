@@ -8,16 +8,14 @@
 
 #include "CocoaWrapper.h"
 
-#import "MacPDFView.h"
+#import "MacPDFWindowController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MacPDFDocument : NSDocument <MacPDFViewDelegate>
-{
-    IBOutlet MacPDFView* _pdfView;
-}
+@interface MacPDFDocument : NSDocument
 
-- (IBAction)showGoToPageDialog:(id)sender;
+- (PDF::Document*)pdf;
+- (void)windowIsReady;
 
 @end
 

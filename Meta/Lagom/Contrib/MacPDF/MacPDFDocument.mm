@@ -15,10 +15,16 @@
 {
     NSData* _data; // Strong, _doc refers to it.
     RefPtr<PDF::Document> _doc;
+    MacPDFWindowController* _windowController;
 }
 @end
 
 @implementation MacPDFDocument
+
+- (PDF::Document*)pdf
+{
+    return _doc;
+}
 
 - (void)promptForPassword:(NSWindow*)window
 {
@@ -67,25 +73,21 @@
         // FIXME: show error?
         NSLog(@"failed to load 2: %@", @(err.error().message().characters()));
     } else {
-        [_pdfView setDocument:_doc->make_weak_ptr()];
-        [self pageChanged];
+        [_windowController pdfDidInitialize];
     }
 }
 
 - (void)makeWindowControllers
 {
-    [self addWindowController:[[MacPDFWindowController alloc] initWithDocument:self]];
+    _windowController = [[MacPDFWindowController alloc] initWithDocument:self];
+    [self addWindowController:_windowController];
 }
 
-- (void)windowControllerDidLoadNib:(NSWindowController*)aController
+- (void)windowIsReady
 {
-    [super windowControllerDidLoadNib:aController];
-
-    [_pdfView setDelegate:self];
-
     if (_doc) {
         if (auto handler = _doc->security_handler(); handler && !handler->has_user_password()) {
-            [self promptForPassword:aController.window];
+            [self promptForPassword:_windowController.window];
             return;
         }
         [self initializePDF];
@@ -140,36 +142,6 @@
 - (BOOL)isEntireFileLoaded
 {
     return NO;
-}
-
-- (IBAction)showGoToPageDialog:(id)sender
-{
-    auto alert = [[NSAlert alloc] init];
-    alert.messageText = @"Page Number";
-    [alert addButtonWithTitle:@"Go"];
-    [alert addButtonWithTitle:@"Cancel"];
-
-    auto textField = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 100, 24)];
-    NSNumberFormatter* formatter = [[NSNumberFormatter alloc] init];
-    formatter.numberStyle = NSNumberFormatterNoStyle; // Integers only.
-    [textField setFormatter:formatter];
-    [textField setIntValue:[_pdfView page]];
-
-    alert.accessoryView = textField;
-    alert.window.initialFirstResponder = textField;
-
-    NSWindow* window = _pdfView.window;
-    [alert beginSheetModalForWindow:window
-                  completionHandler:^(NSModalResponse response) {
-                      if (response == NSAlertFirstButtonReturn)
-                          [self->_pdfView goToPage:[textField intValue]];
-                  }];
-}
-
-- (void)pageChanged
-{
-    [_pdfView.window setSubtitle:
-                         [NSString stringWithFormat:@"Page %d of %d", [_pdfView page], _doc -> get_page_count()]];
 }
 
 @end
