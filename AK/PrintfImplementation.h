@@ -503,6 +503,8 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
             ++p;
             if (*p == '.') {
                 state.dot = true;
+                state.has_precision = true;
+                state.precision = 0;
                 if (*(p + 1))
                     goto one_more;
             }
@@ -528,10 +530,6 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
                     if (*(p + 1))
                         goto one_more;
                 } else {
-                    if (!state.has_precision) {
-                        state.has_precision = true;
-                        state.precision = 0;
-                    }
                     state.precision *= 10;
                     state.precision += *p - '0';
                     if (*(p + 1))
@@ -540,7 +538,6 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
             }
             if (*p == '*') {
                 if (state.dot) {
-                    state.has_precision = true;
                     state.zero_pad = true;
                     state.precision = NextArgument<int>()(ap);
                 } else {
