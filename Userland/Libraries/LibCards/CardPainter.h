@@ -24,7 +24,7 @@ public:
     NonnullRefPtr<Gfx::Bitmap> card_back_inverted();
     NonnullRefPtr<Gfx::Bitmap> card_front_highlighted(Suit, Rank);
 
-    void set_background_image_path(StringView path);
+    void set_back_image_path(StringView path);
     void set_front_images_set_name(StringView path);
     void set_background_color(Color);
 
@@ -45,7 +45,7 @@ private:
     RefPtr<Gfx::Bitmap> m_card_back;
     RefPtr<Gfx::Bitmap> m_card_back_inverted;
 
-    String m_background_image_path;
+    String m_back_image_path;
     String m_front_images_set_name;
     Color m_background_color;
 };

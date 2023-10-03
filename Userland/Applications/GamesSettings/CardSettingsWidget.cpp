@@ -122,7 +122,7 @@ ErrorOr<void> CardSettingsWidget::initialize()
             return;
         m_last_selected_card_back = card_back_selection.first();
         set_modified(true);
-        Cards::CardPainter::the().set_background_image_path(card_back_image_path());
+        Cards::CardPainter::the().set_back_image_path(card_back_image_path());
         m_preview_frame->update();
     };
 
@@ -154,7 +154,7 @@ bool CardSettingsWidget::set_card_back_image_path(StringView path)
     auto index = static_cast<GUI::FileSystemModel*>(m_card_back_image_view->model())->index(path.to_deprecated_string(), m_card_back_image_view->model_column());
     if (index.is_valid()) {
         m_card_back_image_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
-        Cards::CardPainter::the().set_background_image_path(path);
+        Cards::CardPainter::the().set_back_image_path(path);
         m_preview_frame->update();
         return true;
     }
