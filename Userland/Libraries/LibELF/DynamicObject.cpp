@@ -377,6 +377,12 @@ DynamicObject::InitializationFunction DynamicObject::init_section_function() con
     return (InitializationFunction)init_section().address().as_ptr();
 }
 
+DynamicObject::FinalizationFunction DynamicObject::fini_section_function() const
+{
+    VERIFY(has_fini_section());
+    return (FinalizationFunction)fini_section().address().as_ptr();
+}
+
 char const* DynamicObject::name_for_dtag(ElfW(Sword) d_tag)
 {
     switch (d_tag) {

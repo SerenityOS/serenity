@@ -345,6 +345,8 @@ static T c_str_to_floating_point(char const* str, char** endptr)
 
 extern "C" {
 
+void (*__call_fini_functions)();
+
 void exit(int status)
 {
     __cxa_finalize(nullptr);
@@ -352,8 +354,7 @@ void exit(int status)
     if (secure_getenv("LIBC_DUMP_MALLOC_STATS"))
         serenity_dump_malloc_stats();
 
-    extern void _fini();
-    _fini();
+    __call_fini_functions();
     fflush(nullptr);
 
 #ifndef _DYNAMIC_LOADER

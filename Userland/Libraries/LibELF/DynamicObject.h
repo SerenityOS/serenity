@@ -245,14 +245,19 @@ public:
     Symbol symbol(unsigned) const;
 
     typedef void (*InitializationFunction)();
+    typedef void (*FinalizationFunction)();
     typedef ElfW(Addr) (*IfuncResolver)();
 
     bool has_init_section() const { return m_init_offset != 0; }
     bool has_init_array_section() const { return m_init_array_offset != 0; }
     Section init_section() const;
     InitializationFunction init_section_function() const;
-    Section fini_section() const;
     Section init_array_section() const;
+
+    bool has_fini_section() const { return m_fini_offset != 0; }
+    bool has_fini_array_section() const { return m_fini_array_offset != 0; }
+    Section fini_section() const;
+    FinalizationFunction fini_section_function() const;
     Section fini_array_section() const;
 
     HashSection hash_section() const
