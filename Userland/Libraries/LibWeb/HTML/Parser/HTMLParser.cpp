@@ -579,8 +579,13 @@ DOM::Element& HTMLParser::current_node()
     return m_stack_of_open_elements.current_node();
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#adjusted-current-node
 DOM::Element& HTMLParser::adjusted_current_node()
 {
+    // The adjusted current node is the context element if the parser was created as part of the
+    // HTML fragment parsing algorithm and the stack of open elements has only one element in it
+    // (fragment case); otherwise, the adjusted current node is the current node.
+
     if (m_parsing_fragment && m_stack_of_open_elements.elements().size() == 1)
         return *m_context_element;
 
