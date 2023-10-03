@@ -125,6 +125,11 @@ void CardGame::config_string_did_change(StringView domain, StringView group, Str
             update();
             return;
         }
+        if (key == "CardFrontImages") {
+            CardPainter::the().set_front_images_set_name(String::from_utf8(value).release_value_but_fixme_should_propagate_errors());
+            update();
+            return;
+        }
     }
 }
 

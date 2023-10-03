@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/ColorInput.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/ImageWidget.h>
@@ -32,9 +33,13 @@ private:
 
     bool set_card_back_image_path(StringView);
     String card_back_image_path() const;
+    String card_front_images_set_name() const;
+
+    Vector<DeprecatedString> m_card_front_sets;
 
     RefPtr<CardGamePreview> m_preview_frame;
     RefPtr<GUI::ColorInput> m_background_color_input;
+    RefPtr<GUI::ComboBox> m_card_front_images_combo_box;
     RefPtr<GUI::IconView> m_card_back_image_view;
 
     GUI::ModelIndex m_last_selected_card_back;

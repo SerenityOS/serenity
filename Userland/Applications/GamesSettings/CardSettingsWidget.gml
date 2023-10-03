@@ -24,9 +24,31 @@
     }
 
     @GUI::GroupBox {
-        title: "Card back"
+        title: "Cards"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
+        }
+
+        @GUI::Widget {
+            max_height: "shrink"
+            layout: @GUI::HorizontalBoxLayout {
+                margins: [0]
+            }
+
+            @GUI::Label {
+                text: "Card fronts:"
+                text_alignment: "CenterLeft"
+            }
+
+            @GUI::ComboBox {
+                name: "cards_front_image_set"
+                model_only: true
+            }
+        }
+
+        @GUI::Label {
+            text: "Card backs:"
+            text_alignment: "CenterLeft"
         }
 
         @GUI::IconView {
