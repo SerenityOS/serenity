@@ -182,6 +182,93 @@ StringView character_direction_of_locale(Locale const& locale_object)
     return "ltr"sv;
 }
 
+// 1.1.8 WeekdayToNumber ( fw ), https://tc39.es/proposal-intl-locale-info/#sec-weekday-to-number
+// FIXME: Spec issue: The spec definitions of WeekdayToNumber and WeekdayToString are backwards.
+//        https://github.com/tc39/proposal-intl-locale-info/issues/78
+Optional<u8> weekday_to_number(StringView weekday)
+{
+    struct WeekdayToNumber {
+        StringView type;
+        u8 number { 0 };
+    };
+
+    // Table 2: First Day Type and Number, https://tc39.es/proposal-intl-locale-info/#table-locale-first-day-type-number
+    static constexpr auto weekday_to_number_table = AK::Array {
+        WeekdayToNumber { "mon"sv, 1 },
+        WeekdayToNumber { "tue"sv, 2 },
+        WeekdayToNumber { "wed"sv, 3 },
+        WeekdayToNumber { "thu"sv, 4 },
+        WeekdayToNumber { "fri"sv, 5 },
+        WeekdayToNumber { "sat"sv, 6 },
+        WeekdayToNumber { "sun"sv, 7 },
+    };
+
+    // 1. For each row of Table 2, except the header row, in table order, do
+    for (auto const& row : weekday_to_number_table) {
+        // a. Let t be the name given in the Type column of the row.
+        auto type = row.type;
+
+        // b. Let n be the name given in the Number column of the row.
+        auto number = row.number;
+
+        // c. If fw is equal to t, return n.
+        if (weekday == type)
+            return number;
+    }
+
+    // 2. Assert: Should not reach here.
+    // FIXME: Spec issue: This is currently reachable if an invalid value is provided as a locale extension,
+    //        for example "en-u-fw-100". We return "undefined" for now to avoid crashing.
+    //        https://github.com/tc39/proposal-intl-locale-info/issues/78
+    return {};
+}
+
+// 1.1.9 WeekdayToString ( fw ), https://tc39.es/proposal-intl-locale-info/#sec-weekday-to-string
+// FIXME: Spec issue: The spec definitions of WeekdayToNumber and WeekdayToString are backwards.
+//        https://github.com/tc39/proposal-intl-locale-info/issues/78
+StringView weekday_to_string(StringView weekday)
+{
+    struct WeekdayToString {
+        StringView value;
+        StringView type;
+    };
+
+    // Table 1: First Day Value and Type, https://tc39.es/proposal-intl-locale-info/#table-locale-first-day-option-type
+    static constexpr auto weekday_to_string_table = AK::Array {
+        WeekdayToString { "mon"sv, "mon"sv },
+        WeekdayToString { "tue"sv, "tue"sv },
+        WeekdayToString { "wed"sv, "wed"sv },
+        WeekdayToString { "thu"sv, "thu"sv },
+        WeekdayToString { "fri"sv, "fri"sv },
+        WeekdayToString { "sat"sv, "sat"sv },
+        WeekdayToString { "sun"sv, "sun"sv },
+        WeekdayToString { "0"sv, "sun"sv },
+        WeekdayToString { "1"sv, "mon"sv },
+        WeekdayToString { "2"sv, "tue"sv },
+        WeekdayToString { "3"sv, "wed"sv },
+        WeekdayToString { "4"sv, "thu"sv },
+        WeekdayToString { "5"sv, "fri"sv },
+        WeekdayToString { "6"sv, "sat"sv },
+        WeekdayToString { "7"sv, "sun"sv },
+    };
+
+    // 1. For each row of Table 1, except the header row, in table order, do
+    for (auto const& row : weekday_to_string_table) {
+        // a. Let v be the name given in the Value column of the row.
+        auto value = row.value;
+
+        // b. Let t be the name given in the Type column of the row.
+        auto type = row.type;
+
+        // c. If fw is equal to v, return t.
+        if (weekday == value)
+            return type;
+    }
+
+    // 2. Assert: Should not reach here.
+    VERIFY_NOT_REACHED();
+}
+
 static u8 weekday_to_integer(Optional<::Locale::Weekday> weekday, ::Locale::Weekday falllback)
 {
     // NOTE: This fallback will be used if LibUnicode data generation is disabled. Its value should
@@ -224,7 +311,7 @@ static Vector<u8> weekend_of_locale(StringView locale)
     return weekend;
 }
 
-// 1.1.8 WeekInfoOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-week-info-of-locale
+// 1.1.10 WeekInfoOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-week-info-of-locale
 WeekInfo week_info_of_locale(Locale const& locale_object)
 {
     // 1. Let locale be loc.[[Locale]].
@@ -233,12 +320,20 @@ WeekInfo week_info_of_locale(Locale const& locale_object)
     // 2. Assert: locale matches the unicode_locale_id production.
     VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
-    // 3. Return a record whose fields are defined by Table 1, with values based on locale.
+    // 3. Let r be a record whose fields are defined by Table 3, with values based on locale.
     WeekInfo week_info {};
     week_info.minimal_days = ::Locale::get_locale_minimum_days(locale).value_or(1);
     week_info.first_day = weekday_to_integer(::Locale::get_locale_first_day(locale), ::Locale::Weekday::Monday);
     week_info.weekend = weekend_of_locale(locale);
 
+    // 4. Let fw be loc.[[FirstDayOfWeek]].
+    // 5. If fw is not undefined, then
+    if (locale_object.has_first_day_of_week()) {
+        // a. Set r.[[FirstDay]] to fw.
+        week_info.first_day = locale_object.first_day_of_week();
+    }
+
+    // 6. Return r.
     return week_info;
 }
 
