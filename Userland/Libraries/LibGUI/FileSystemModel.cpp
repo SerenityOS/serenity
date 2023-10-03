@@ -707,8 +707,8 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
     auto const action = [path](auto&) {
         return render_thumbnail(path);
     };
-
     auto const update_progress = [weak_this](bool with_success) {
+        using namespace AK::TimeLiterals;
         if (auto strong_this = weak_this.strong_ref(); !strong_this.is_null()) {
             strong_this->m_thumbnail_progress++;
             if (strong_this->on_thumbnail_progress)
@@ -718,16 +718,23 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
                 strong_this->m_thumbnail_progress_total = 0;
             }
 
-            if (with_success)
+            if (with_success && (!strong_this->m_ui_update_timer.is_valid() || strong_this->m_ui_update_timer.elapsed_time() > 100_ms)) {
                 strong_this->did_update(UpdateFlag::DontInvalidateIndices);
+                strong_this->m_ui_update_timer.start();
+            }
         }
     };
 
-    auto const on_complete = [path, update_progress](auto thumbnail) -> ErrorOr<void> {
-        s_thumbnail_cache.with_locked([path, thumbnail](auto& cache) {
+    auto const on_complete = [weak_this, path, update_progress](auto thumbnail) -> ErrorOr<void> {
+        auto finished_generating_thumbnails = false;
+        s_thumbnail_cache.with_locked([path, thumbnail, &finished_generating_thumbnails](auto& cache) {
             cache.thumbnail_cache.set(path, thumbnail);
             cache.loading_thumbnails.remove(path);
+            finished_generating_thumbnails = cache.loading_thumbnails.is_empty();
         });
+
+        if (auto strong_this = weak_this.strong_ref(); finished_generating_thumbnails && !strong_this.is_null())
+            strong_this->m_ui_update_timer.reset();
 
         update_progress(true);
 

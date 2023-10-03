@@ -9,6 +9,7 @@
 
 #include <AK/HashMap.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/FileWatcher.h>
 #include <LibGUI/Model.h>
 #include <string.h>
@@ -173,6 +174,8 @@ private:
 
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };
+
+    Core::ElapsedTimer m_ui_update_timer;
 
     Optional<Vector<DeprecatedString>> m_allowed_file_extensions;
 
