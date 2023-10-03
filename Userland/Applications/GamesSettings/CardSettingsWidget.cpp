@@ -11,12 +11,15 @@
 #include <LibCards/CardPainter.h>
 #include <LibCards/CardStack.h>
 #include <LibConfig/Client.h>
+#include <LibCore/Directory.h>
 #include <LibGUI/FileSystemModel.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGfx/Palette.h>
 
 namespace GamesSettings {
 
 static constexpr StringView default_card_back_image_path = "/res/graphics/cards/backs/buggie-deck.png"sv;
+static constexpr StringView default_card_front_image_set = "Classic"sv;
 
 class CardGamePreview final : public Cards::CardGame {
     C_OBJECT_ABSTRACT(CardGamePreview)
@@ -90,6 +93,24 @@ ErrorOr<void> CardSettingsWidget::initialize()
         m_preview_frame->set_background_color(m_background_color_input->color());
     };
 
+    m_card_front_images_combo_box = find_descendant_of_type_named<GUI::ComboBox>("cards_front_image_set");
+    m_card_front_sets.append("None");
+    TRY(Core::Directory::for_each_entry("/res/graphics/cards/fronts/"sv, Core::DirIterator::SkipParentAndBaseDir, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
+        TRY(m_card_front_sets.try_append(entry.name));
+        return IterationDecision::Continue;
+    }));
+    auto piece_set_model = GUI::ItemListModel<DeprecatedString>::create(m_card_front_sets);
+    m_card_front_images_combo_box->set_model(piece_set_model);
+    auto card_front_set = Config::read_string("Games"sv, "Cards"sv, "CardFrontImages"sv, default_card_front_image_set);
+    if (card_front_set.is_empty())
+        card_front_set = "None";
+    m_card_front_images_combo_box->set_text(card_front_set, GUI::AllowCallback::No);
+    m_card_front_images_combo_box->on_change = [&](auto&, auto&) {
+        set_modified(true);
+        Cards::CardPainter::the().set_front_images_set_name(card_front_images_set_name());
+        m_preview_frame->update();
+    };
+
     m_card_back_image_view = find_descendant_of_type_named<GUI::IconView>("cards_back_image");
     m_card_back_image_view->set_model(GUI::FileSystemModel::create("/res/graphics/cards/backs"));
     m_card_back_image_view->set_model_column(GUI::FileSystemModel::Column::Name);
@@ -113,6 +134,7 @@ ErrorOr<void> CardSettingsWidget::initialize()
 void CardSettingsWidget::apply_settings()
 {
     Config::write_string("Games"sv, "Cards"sv, "BackgroundColor"sv, m_background_color_input->text());
+    Config::write_string("Games"sv, "Cards"sv, "CardFrontImages"sv, card_front_images_set_name());
     Config::write_string("Games"sv, "Cards"sv, "CardBackImage"sv, card_back_image_path());
 }
 
@@ -120,6 +142,11 @@ void CardSettingsWidget::reset_default_values()
 {
     m_background_color_input->set_color(Gfx::Color::from_rgb(0x008000));
     set_card_back_image_path(default_card_back_image_path);
+    // FIXME: `set_text()` on a combobox doesn't trigger the `on_change` callback, but it probably should!
+    //        Until then, we have to manually tell the preview to update.
+    m_card_front_images_combo_box->set_text(default_card_front_image_set);
+    Cards::CardPainter::the().set_front_images_set_name(card_front_images_set_name());
+    m_preview_frame->update();
 }
 
 bool CardSettingsWidget::set_card_back_image_path(StringView path)
@@ -141,6 +168,14 @@ String CardSettingsWidget::card_back_image_path() const
     if (!card_back_selection.is_empty())
         card_back_image_index = card_back_selection.first();
     return String::from_deprecated_string(static_cast<GUI::FileSystemModel const*>(m_card_back_image_view->model())->full_path(card_back_image_index)).release_value_but_fixme_should_propagate_errors();
+}
+
+String CardSettingsWidget::card_front_images_set_name() const
+{
+    auto selected_set_name = m_card_front_images_combo_box->text();
+    if (selected_set_name == "None")
+        return {};
+    return MUST(String::from_deprecated_string(selected_set_name));
 }
 
 }
