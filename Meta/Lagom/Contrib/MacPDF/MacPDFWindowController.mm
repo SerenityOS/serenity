@@ -29,8 +29,21 @@
         return nil;
 
     _pdfView = [[MacPDFView alloc] initWithFrame:NSZeroRect];
-    window.contentView = _pdfView;
     [_pdfView setDelegate:self];
+
+    NSSplitViewController* split_view = [[NSSplitViewController alloc] initWithNibName:nil bundle:nil];
+    [split_view addSplitViewItem:[self makeSidebarSplitItem]];
+    [split_view addSplitViewItem:[NSSplitViewItem splitViewItemWithViewController:[self viewControllerForView:_pdfView]]];
+
+    // Autosave if the sidebar is open or not, and how far.
+    // autosaveName only works if identifier is set too.
+    // identifier docs: "For programmatically created views, you typically set this value
+    // after creating the item but before adding it to a window. [...] For views and controls
+    // in a window, the value you specify for this string must be unique on a per-window basis."
+    split_view.splitView.autosaveName = @"MacPDFSplitView";
+    split_view.splitView.identifier = @"MacPDFSplitViewId";
+
+    window.contentViewController = split_view;
 
     NSToolbar* toolbar = [[NSToolbar alloc] initWithIdentifier:@"MacPDFToolbar"];
     toolbar.delegate = self;
@@ -39,6 +52,27 @@
 
     _pdfDocument = document;
     return self;
+}
+
+- (NSViewController*)viewControllerForView:(NSView*)view
+{
+    NSViewController* view_controller = [[NSViewController alloc] initWithNibName:nil bundle:nil];
+    view_controller.view = view;
+    return view_controller;
+}
+
+- (NSSplitViewItem*)makeSidebarSplitItem
+{
+    // FIXME: Use an NSOutlineView with the document's outline.
+    NSView* side_view = [[NSView alloc] initWithFrame:NSZeroRect];
+    NSSplitViewItem* item = [NSSplitViewItem sidebarWithViewController:[self viewControllerForView:side_view]];
+    item.collapseBehavior = NSSplitViewItemCollapseBehaviorPreferResizingSplitViewWithFixedSiblings;
+
+    // This only has an effect on the very first run.
+    // Later, the collapsed state is loaded from the sidebar's autosave data.
+    item.collapsed = YES;
+
+    return item;
 }
 
 - (void)pdfDidInitialize
@@ -87,6 +121,8 @@
 
 - (NSArray<NSToolbarItemIdentifier>*)toolbarDefaultItemIdentifiers:(NSToolbar*)toolbar
 {
+    // NSToolbarToggleSidebarItemIdentifier sends toggleSidebar: along the responder chain,
+    // which NSSplitViewController conveniently implements.
     return @[ NSToolbarToggleSidebarItemIdentifier ];
 }
 
