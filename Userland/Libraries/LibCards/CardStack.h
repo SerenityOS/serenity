@@ -79,7 +79,7 @@ private:
         case Type::Waste:
             return { 0, 0, 1, 0 };
         case Type::Play:
-            return { 20, 0, 1, 0 };
+            return { 15, 0, 1, 0 };
         default:
             return {};
         }
