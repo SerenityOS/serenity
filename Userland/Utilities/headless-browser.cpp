@@ -23,6 +23,7 @@
 #include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/ResourceImplementationFile.h>
 #include <LibCore/Timer.h>
 #include <LibDiff/Format.h>
 #include <LibDiff/Generator.h>
@@ -426,8 +427,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Gfx::FontDatabase::set_window_title_font_query("Katica 10 700 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
-    auto fonts_path = LexicalPath::join(resources_folder, "fonts"sv);
-    Gfx::FontDatabase::set_default_fonts_lookup_path(fonts_path.string());
+    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::from_utf8(resources_folder))));
 
     auto theme_path = LexicalPath::join(resources_folder, "themes"sv, "Default.ini"sv);
     auto theme = TRY(Gfx::load_system_theme(theme_path.string()));
