@@ -6,7 +6,7 @@
 
 #import "AppDelegate.h"
 
-#include <LibGfx/Font/FontDatabase.h>
+#include <LibCore/ResourceImplementationFile.h>
 
 @interface AppDelegate ()
 @property (strong) IBOutlet NSWindow* window;
@@ -23,7 +23,7 @@
     for (int i = 0; i < 7; ++i)
         source_root = [source_root stringByDeletingLastPathComponent];
     auto source_root_string = DeprecatedString([source_root UTF8String]);
-    Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root_string));
+    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/Base/res", source_root_string))));
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification
