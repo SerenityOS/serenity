@@ -58,8 +58,7 @@
     alert.accessoryView = textField;
     alert.window.initialFirstResponder = textField;
 
-    NSWindow* window = _pdfView.window;
-    [alert beginSheetModalForWindow:window
+    [alert beginSheetModalForWindow:self.window
                   completionHandler:^(NSModalResponse response) {
                       if (response == NSAlertFirstButtonReturn)
                           [self->_pdfView goToPage:[textField intValue]];
@@ -70,7 +69,7 @@
 
 - (void)pageChanged
 {
-    [_pdfView.window setSubtitle:
+    [self.window setSubtitle:
                      [NSString stringWithFormat:@"Page %d of %d", [_pdfView page], _pdfDocument.pdf->get_page_count()]];
 }
 
