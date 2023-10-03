@@ -25,8 +25,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool all_ok = true;
 
     for (auto& url_or_path : urls_or_paths) {
-        auto path = FileSystem::real_path(url_or_path);
-        auto url = URL::create_with_url_or_path(path.is_error() ? url_or_path : path.value());
+        auto path_or_error = FileSystem::real_path(url_or_path);
+        URL url;
+        if (path_or_error.is_error()) {
+            url = url_or_path;
+            if (!url.is_valid()) {
+                warnln("Failed to open: '{}': {}", url_or_path, strerror(path_or_error.error().code()));
+                continue;
+            }
+        } else {
+            url = URL::create_with_url_or_path(path_or_error.value().to_deprecated_string());
+        }
 
         if (!Desktop::Launcher::open(url)) {
             warnln("Failed to open '{}'", url);
