@@ -165,34 +165,33 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
     date_time_format->set_data_locale(data_locale);
 
     // 24. Let dataLocaleData be localeData.[[<dataLocale>]].
-    // 25. Let hcDefault be dataLocaleData.[[hourCycle]].
-    auto default_hour_cycle = ::Locale::get_default_regional_hour_cycle(data_locale);
-
-    // Non-standard, default_hour_cycle will be empty if Unicode data generation is disabled.
-    if (!default_hour_cycle.has_value()) {
-        date_time_format->set_time_zone(MUST(String::from_utf8(system_time_zone_identifier())));
-        return date_time_format;
-    }
-
     Optional<::Locale::HourCycle> hour_cycle_value;
 
-    // 26. If hour12 is true, then
+    auto set_locale_hour_cycle = [&](auto... candidate_hour_cycles) {
+        // Locale hour cycles (parsed from timeData.json) are stored in preference order. Use the
+        // first hour cycle that matches any of the provided candidates. There may be no matches if
+        // e.g. Unicode data generation is disabled.
+        auto locale_hour_cycles = ::Locale::get_locale_hour_cycles(data_locale);
+
+        auto index = locale_hour_cycles.find_first_index_if([&](auto hour_cycle) {
+            return ((hour_cycle == candidate_hour_cycles) || ...);
+        });
+
+        if (index.has_value())
+            hour_cycle_value = locale_hour_cycles[*index];
+    };
+
+    // 25. If hour12 is true, then
     if (hour12.is_boolean() && hour12.as_bool()) {
-        // a. If hcDefault is "h11" or "h23", let hc be "h11". Otherwise, let hc be "h12".
-        if ((default_hour_cycle == ::Locale::HourCycle::H11) || (default_hour_cycle == ::Locale::HourCycle::H23))
-            hour_cycle_value = ::Locale::HourCycle::H11;
-        else
-            hour_cycle_value = ::Locale::HourCycle::H12;
+        // a. Let hc be dataLocaleData.[[hourCycle12]].
+        set_locale_hour_cycle(::Locale::HourCycle::H11, ::Locale::HourCycle::H12);
     }
-    // 27. Else if hour12 is false, then
+    // 26. Else if hour12 is false, then
     else if (hour12.is_boolean() && !hour12.as_bool()) {
-        // a. If hcDefault is "h11" or "h23", let hc be "h23". Otherwise, let hc be "h24".
-        if ((default_hour_cycle == ::Locale::HourCycle::H11) || (default_hour_cycle == ::Locale::HourCycle::H23))
-            hour_cycle_value = ::Locale::HourCycle::H23;
-        else
-            hour_cycle_value = ::Locale::HourCycle::H24;
+        // a. Let hc be dataLocaleData.[[hourCycle24]].
+        set_locale_hour_cycle(::Locale::HourCycle::H23, ::Locale::HourCycle::H24);
     }
-    // 28. Else,
+    // 27. Else,
     else {
         // a. Assert: hour12 is undefined.
         VERIFY(hour12.is_undefined());
@@ -201,31 +200,31 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         if (result.hc.has_value())
             hour_cycle_value = ::Locale::hour_cycle_from_string(*result.hc);
 
-        // c. If hc is null, set hc to hcDefault.
+        // c. If hc is null, set hc to dataLocaleData.[[hourCycle]].
         if (!hour_cycle_value.has_value())
-            hour_cycle_value = default_hour_cycle;
+            hour_cycle_value = ::Locale::get_default_regional_hour_cycle(data_locale);
     }
 
-    // 29. Set dateTimeFormat.[[HourCycle]] to hc.
+    // 28. Set dateTimeFormat.[[HourCycle]] to hc.
     if (hour_cycle_value.has_value())
         date_time_format->set_hour_cycle(*hour_cycle_value);
 
-    // 30. Let timeZone be ? Get(options, "timeZone").
+    // 29. Let timeZone be ? Get(options, "timeZone").
     auto time_zone_value = TRY(options->get(vm.names.timeZone));
     String time_zone;
 
-    // 31. If timeZone is undefined, then
+    // 30. If timeZone is undefined, then
     if (time_zone_value.is_undefined()) {
         // a. Set timeZone to DefaultTimeZone().
         time_zone = MUST(String::from_utf8(system_time_zone_identifier()));
     }
-    // 32. Else,
+    // 31. Else,
     else {
         // a. Set timeZone to ? ToString(timeZone).
         time_zone = TRY(time_zone_value.to_string(vm));
     }
 
-    // 33. If IsTimeZoneOffsetString(timeZone) is true, then
+    // 32. If IsTimeZoneOffsetString(timeZone) is true, then
     if (is_time_zone_offset_string(time_zone)) {
         // a. Let parseResult be ParseText(StringToCodePoints(timeZone), UTCOffset).
         auto parse_result = Temporal::parse_iso8601(Temporal::Production::TimeZoneNumericUTCOffset, time_zone);
@@ -249,31 +248,31 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         // g. Set timeZone to FormatOffsetTimeZoneIdentifier(offsetMinutes).
         time_zone = format_offset_time_zone_identifier(offset_minutes);
     }
-    // 34. Else if IsValidTimeZoneName(timeZone) is true, then
+    // 33. Else if IsValidTimeZoneName(timeZone) is true, then
     else if (Temporal::is_available_time_zone_name(time_zone)) {
         // a. Set timeZone to CanonicalizeTimeZoneName(timeZone).
         time_zone = MUST(Temporal::canonicalize_time_zone_name(vm, time_zone));
     }
-    // 35. Else,
+    // 34. Else,
     else {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
     }
 
-    // 36. Set dateTimeFormat.[[TimeZone]] to timeZone.
+    // 35. Set dateTimeFormat.[[TimeZone]] to timeZone.
     date_time_format->set_time_zone(move(time_zone));
 
-    // 37. Let formatOptions be a new Record.
+    // 36. Let formatOptions be a new Record.
     ::Locale::CalendarPattern format_options {};
 
-    // 38. Set formatOptions.[[hourCycle]] to hc.
+    // 37. Set formatOptions.[[hourCycle]] to hc.
     format_options.hour_cycle = hour_cycle_value;
 
-    // 39. Let hasExplicitFormatComponents be false.
+    // 38. Let hasExplicitFormatComponents be false.
     // NOTE: Instead of using a boolean, we track any explicitly provided component name for nicer exception messages.
     PropertyKey const* explicit_format_component = nullptr;
 
-    // 40. For each row of Table 6, except the header row, in table order, do
+    // 39. For each row of Table 6, except the header row, in table order, do
     TRY(for_each_calendar_field(vm, format_options, [&](auto& option, auto const& property, auto const& values) -> ThrowCompletionOr<void> {
         using ValueType = typename RemoveReference<decltype(option)>::ValueType;
 
@@ -312,26 +311,26 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         return {};
     }));
 
-    // 41. Let matcher be ? GetOption(options, "formatMatcher", string, « "basic", "best fit" », "best fit").
+    // 40. Let matcher be ? GetOption(options, "formatMatcher", string, « "basic", "best fit" », "best fit").
     matcher = TRY(get_option(vm, *options, vm.names.formatMatcher, OptionType::String, AK::Array { "basic"sv, "best fit"sv }, "best fit"sv));
 
-    // 42. Let dateStyle be ? GetOption(options, "dateStyle", string, « "full", "long", "medium", "short" », undefined).
+    // 41. Let dateStyle be ? GetOption(options, "dateStyle", string, « "full", "long", "medium", "short" », undefined).
     auto date_style = TRY(get_option(vm, *options, vm.names.dateStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
 
-    // 43. Set dateTimeFormat.[[DateStyle]] to dateStyle.
+    // 42. Set dateTimeFormat.[[DateStyle]] to dateStyle.
     if (!date_style.is_undefined())
         date_time_format->set_date_style(date_style.as_string().utf8_string_view());
 
-    // 44. Let timeStyle be ? GetOption(options, "timeStyle", string, « "full", "long", "medium", "short" », undefined).
+    // 43. Let timeStyle be ? GetOption(options, "timeStyle", string, « "full", "long", "medium", "short" », undefined).
     auto time_style = TRY(get_option(vm, *options, vm.names.timeStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
 
-    // 45. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
+    // 44. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
     if (!time_style.is_undefined())
         date_time_format->set_time_style(time_style.as_string().utf8_string_view());
 
     Optional<::Locale::CalendarPattern> best_format {};
 
-    // 46. If dateStyle is not undefined or timeStyle is not undefined, then
+    // 45. If dateStyle is not undefined or timeStyle is not undefined, then
     if (date_time_format->has_date_style() || date_time_format->has_time_style()) {
         // a. If hasExplicitFormatComponents is true, then
         if (explicit_format_component != nullptr) {
@@ -355,7 +354,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         // e. Let bestFormat be DateTimeStyleFormat(dateStyle, timeStyle, styles).
         best_format = date_time_style_format(data_locale, date_time_format);
     }
-    // 47. Else,
+    // 46. Else,
     else {
         // a. Let needDefaults be true.
         bool needs_defaults = true;
@@ -434,7 +433,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         }
     }
 
-    // 48. For each row in Table 6, except the header row, in table order, do
+    // 47. For each row in Table 6, except the header row, in table order, do
     date_time_format->for_each_calendar_field_zipped_with(*best_format, [&](auto& date_time_format_field, auto const& best_format_field, auto) {
         // a. Let prop be the name given in the Property column of the row.
         // b. If bestFormat has a field [[<prop>]], then
@@ -448,13 +447,13 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
     String pattern;
     Vector<::Locale::CalendarRangePattern> range_patterns;
 
-    // 49. If dateTimeFormat.[[Hour]] is undefined, then
+    // 48. If dateTimeFormat.[[Hour]] is undefined, then
     if (!date_time_format->has_hour()) {
         // a. Set dateTimeFormat.[[HourCycle]] to undefined.
         date_time_format->clear_hour_cycle();
     }
 
-    // 50. If dateTimeFormat.[[HourCycle]] is "h11" or "h12", then
+    // 49. If dateTimeFormat.[[HourCycle]] is "h11" or "h12", then
     if ((hour_cycle_value == ::Locale::HourCycle::H11) || (hour_cycle_value == ::Locale::HourCycle::H12)) {
         // a. Let pattern be bestFormat.[[pattern12]].
         if (best_format->pattern12.has_value()) {
@@ -468,7 +467,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         // b. Let rangePatterns be bestFormat.[[rangePatterns12]].
         range_patterns = ::Locale::get_calendar_range12_formats(data_locale, date_time_format->calendar(), best_format->skeleton);
     }
-    // 51. Else,
+    // 50. Else,
     else {
         // a. Let pattern be bestFormat.[[pattern]].
         pattern = move(best_format->pattern);
@@ -477,13 +476,13 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         range_patterns = ::Locale::get_calendar_range_formats(data_locale, date_time_format->calendar(), best_format->skeleton);
     }
 
-    // 52. Set dateTimeFormat.[[Pattern]] to pattern.
+    // 51. Set dateTimeFormat.[[Pattern]] to pattern.
     date_time_format->set_pattern(move(pattern));
 
-    // 53. Set dateTimeFormat.[[RangePatterns]] to rangePatterns.
+    // 52. Set dateTimeFormat.[[RangePatterns]] to rangePatterns.
     date_time_format->set_range_patterns(move(range_patterns));
 
-    // 54. Return dateTimeFormat.
+    // 53. Return dateTimeFormat.
     return date_time_format;
 }
 
