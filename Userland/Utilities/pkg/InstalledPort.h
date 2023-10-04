@@ -11,6 +11,8 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
+constexpr StringView ports_database = "/usr/Ports/installed.db"sv;
+
 class InstalledPort {
 public:
     enum class Type {

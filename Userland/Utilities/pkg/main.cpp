@@ -54,8 +54,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     HashMap<String, InstalledPort> installed_ports;
     HashMap<String, AvailablePort> available_ports;
     if (show_all_installed_ports || show_all_dependency_ports || !query_package.is_null()) {
-        if (Core::System::access("/usr/Ports/installed.md"sv, R_OK).is_error()) {
-            warnln("pkg: /usr/Ports/installed.md isn't accessible, did you install a package in the past?");
+        if (Core::System::access(ports_database, R_OK).is_error()) {
+            warnln("pkg: {} isn't accessible, did you install a package in the past?", ports_database);
             return 1;
         }
         installed_ports = TRY(InstalledPort::read_ports_database());
