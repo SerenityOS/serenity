@@ -270,6 +270,12 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<String> const& name
     return {};
 }
 
+// https://dom.spec.whatwg.org/#concept-element-attributes-append
+void Element::append_attribute(Attr& attribute)
+{
+    m_attributes->append_attribute(attribute);
+}
+
 // https://dom.spec.whatwg.org/#concept-element-attributes-set-value
 void Element::set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix, DeprecatedFlyString const& namespace_)
 {
