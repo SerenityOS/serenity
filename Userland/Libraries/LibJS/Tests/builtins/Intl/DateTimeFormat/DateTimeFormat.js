@@ -48,9 +48,14 @@ describe("errors", () => {
     });
 
     test("timeZone option is invalid", () => {
-        expect(() => {
-            new Intl.DateTimeFormat("en", { timeZone: "hello!" });
-        }).toThrowWithMessage(RangeError, "hello! is not a valid value for option timeZone");
+        ["hello!", "+1", "+1:02", "+01:02:03"].forEach(timeZone => {
+            expect(() => {
+                new Intl.DateTimeFormat("en", { timeZone: timeZone });
+            }).toThrowWithMessage(
+                RangeError,
+                `${timeZone} is not a valid value for option timeZone`
+            );
+        });
     });
 
     test("era option is invalid", () => {
@@ -273,9 +278,11 @@ describe("normal behavior", () => {
     });
 
     test("valid timeZone options", () => {
-        expect(() => {
-            new Intl.DateTimeFormat("en", { timeZone: "UTC" });
-        }).not.toThrow();
+        ["UTC", "EST", "+01:02", "-20:30", "+00:00"].forEach(timeZone => {
+            expect(() => {
+                new Intl.DateTimeFormat("en", { timeZone: timeZone });
+            }).not.toThrow();
+        });
     });
 
     test("all valid weekday options", () => {

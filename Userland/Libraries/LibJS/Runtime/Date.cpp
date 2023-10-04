@@ -460,7 +460,6 @@ Vector<TimeZoneIdentifier> available_named_time_zone_identifiers()
 }
 
 // 21.4.1.24 SystemTimeZoneIdentifier ( ), https://tc39.es/ecma262/#sec-systemtimezoneidentifier
-// 6.4.3 DefaultTimeZone ( ), https://tc39.es/ecma402/#sup-defaulttimezone
 StringView system_time_zone_identifier()
 {
     return TimeZone::current_time_zone();

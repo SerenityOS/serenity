@@ -41,5 +41,6 @@ enum class OptionDefaults {
 };
 
 ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM&, FunctionObject& new_target, Value locales_value, Value options_value, OptionRequired, OptionDefaults);
+String format_offset_time_zone_identifier(double offset_minutes);
 
 }

@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibLocale/Locale.h>
 #include <LibLocale/NumberFormat.h>
@@ -1124,20 +1125,33 @@ ThrowCompletionOr<NonnullGCPtr<Array>> format_date_time_range_to_parts(VM& vm, D
     return result;
 }
 
-// 11.5.12 ToLocalTime ( epochNs, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime
-ThrowCompletionOr<LocalTime> to_local_time(VM& vm, Crypto::SignedBigInteger const& epoch_ns, StringView calendar, StringView time_zone)
+// 11.5.12 ToLocalTime ( epochNs, calendar, timeZoneIdentifier ), https://tc39.es/ecma402/#sec-tolocaltime
+ThrowCompletionOr<LocalTime> to_local_time(VM& vm, Crypto::SignedBigInteger const& epoch_ns, StringView calendar, StringView time_zone_identifier)
 {
-    // 1. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(timeZone, epochNs).
-    auto offset_ns = get_named_time_zone_offset_nanoseconds(time_zone, epoch_ns);
+    double offset_ns { 0 };
+
+    // 1. If IsTimeZoneOffsetString(timeZoneIdentifier) is true, then
+    if (is_time_zone_offset_string(time_zone_identifier)) {
+        // a. Let offsetNs be ParseTimeZoneOffsetString(timeZoneIdentifier).
+        offset_ns = parse_time_zone_offset_string(time_zone_identifier);
+    }
+    // 2. Else,
+    else {
+        // a. Assert: IsValidTimeZoneName(timeZoneIdentifier) is true.
+        VERIFY(Temporal::is_available_time_zone_name(time_zone_identifier));
+
+        // b. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(timeZoneIdentifier, epochNs).
+        offset_ns = get_named_time_zone_offset_nanoseconds(time_zone_identifier, epoch_ns);
+    }
 
     // NOTE: Unlike the spec, we still perform the below computations with BigInts until we are ready
     //       to divide the number by 10^6. The spec expects an MV here. If we try to use i64, we will
     //       overflow; if we try to use a double, we lose quite a bit of accuracy.
 
-    // 2. Let tz be ℝ(epochNs) + offsetNs.
+    // 3. Let tz be ℝ(epochNs) + offsetNs.
     auto zoned_time_ns = epoch_ns.plus(Crypto::SignedBigInteger { offset_ns });
 
-    // 3. If calendar is "gregory", then
+    // 4. If calendar is "gregory", then
     if (calendar == "gregory"sv) {
         auto zoned_time_ms = zoned_time_ns.divided_by(s_one_million_bigint).quotient;
         auto zoned_time = floor(zoned_time_ms.to_double(Crypto::UnsignedBigInteger::RoundingMode::ECMAScriptNumberValueFor));
@@ -1171,7 +1185,7 @@ ThrowCompletionOr<LocalTime> to_local_time(VM& vm, Crypto::SignedBigInteger cons
         };
     }
 
-    // 4. Else,
+    // 5. Else,
     //     a. Return a record with the fields of Column 1 of Table 8 calculated from tz for the given calendar. The calculations should use best available information about the specified calendar.
     // FIXME: Implement this when non-Gregorian calendars are supported by LibUnicode.
     return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Non-Gregorian calendars"sv);
