@@ -1818,6 +1818,14 @@ ThrowCompletionOr<Value> sub(VM& vm, Value lhs, Value rhs)
 // MultiplicativeExpression : MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
 ThrowCompletionOr<Value> mul(VM& vm, Value lhs, Value rhs)
 {
+    // OPTIMIZATION: Fast path for multiplication of two Int32 values.
+    if (lhs.is_int32() && rhs.is_int32()) {
+        Checked<i32> result = lhs.as_i32();
+        result *= rhs.as_i32();
+        if (!result.has_overflow())
+            return result.value();
+    }
+
     // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
     // 1-2, 6. N/A.
 
