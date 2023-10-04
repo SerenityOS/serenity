@@ -224,6 +224,12 @@ function(lagom_lib target_name fs_name)
     if (NOT ${target_name} STREQUAL "LibCore")
         target_link_libraries(${target_name} PRIVATE LibCore)
     endif()
+    # FIXME: Clean these up so that we don't need so many include dirs
+    target_include_directories(${target_name} INTERFACE
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Services>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Userland/Libraries>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Userland/Services>
+    )
     install(
         TARGETS ${target_name}
         EXPORT LagomTargets
