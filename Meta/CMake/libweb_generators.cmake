@@ -110,6 +110,7 @@ function (generate_css_implementation)
         "CSS/MathFunctions.h"
         "CSS/MediaFeatureID.h"
         "CSS/PropertyID.h"
+        "CSS/PseudoClass.h"
         "CSS/TransformFunctions.h"
         "CSS/ValueID.h"
     )
