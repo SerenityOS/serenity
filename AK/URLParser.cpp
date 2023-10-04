@@ -21,10 +21,17 @@ namespace AK {
 // NOTE: This is similar to the LibC macro EOF = -1.
 constexpr u32 end_of_file = 0xFFFFFFFF;
 
+// https://url.spec.whatwg.org/#url-code-points
 static bool is_url_code_point(u32 code_point)
 {
-    // FIXME: [...] and code points in the range U+00A0 to U+10FFFD, inclusive, excluding surrogates and noncharacters.
-    return is_ascii_alphanumeric(code_point) || code_point >= 0xA0 || "!$&'()*+,-./:;=?@_~"sv.contains(code_point);
+    // The URL code points are ASCII alphanumeric, U+0021 (!), U+0024 ($), U+0026 (&),
+    // U+0027 ('), U+0028 LEFT PARENTHESIS, U+0029 RIGHT PARENTHESIS, U+002A (*),
+    // U+002B (+), U+002C (,), U+002D (-), U+002E (.), U+002F (/), U+003A (:),
+    // U+003B (;), U+003D (=), U+003F (?), U+0040 (@), U+005F (_), U+007E (~), and code
+    // points in the range U+00A0 to U+10FFFD, inclusive, excluding surrogates and
+    // noncharacters.
+    return is_ascii_alphanumeric(code_point) || "!$&'()*+,-./:;=?@_~"sv.contains(code_point)
+        || (code_point >= 0x00A0 && code_point <= 0x10FFFD && !is_unicode_surrogate(code_point) && !is_unicode_noncharacter(code_point));
 }
 
 static void report_validation_error(SourceLocation const& location = SourceLocation::current())
