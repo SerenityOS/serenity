@@ -19,7 +19,7 @@ interface HTMLInputElement : HTMLElement {
     // FIXME: [CEReactions] attribute USVString formAction;
     // FIXME: [CEReactions] attribute DOMString formEnctype;
     // FIXME: [CEReactions] attribute DOMString formMethod;
-   [CEReactions, Reflect=formnovalidate] attribute boolean formNoValidate;
+    [CEReactions, Reflect=formnovalidate] attribute boolean formNoValidate;
     [CEReactions, Reflect=formtarget] attribute DOMString formTarget;
     // FIXME: [CEReactions] attribute unsigned long height;
     attribute boolean indeterminate;
@@ -41,7 +41,7 @@ interface HTMLInputElement : HTMLElement {
     [CEReactions, Reflect=value] attribute DOMString defaultValue;
     [CEReactions, LegacyNullToEmptyString] attribute DOMString value;
     // FIXME: attribute object? valueAsDate;
-    // FIXME: attribute unrestricted double valueAsNumber;
+    attribute unrestricted double valueAsNumber;
     // FIXME: [CEReactions] attribute unsigned long width;
 
     // FIXME: undefined stepUp(optional long n = 1);
