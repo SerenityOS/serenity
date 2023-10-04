@@ -94,6 +94,9 @@ public:
     // https://html.spec.whatwg.org/multipage/input.html#update-the-file-selection
     void update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileList>);
 
+    WebIDL::ExceptionOr<double> value_as_number() const;
+    WebIDL::ExceptionOr<void> set_value_as_number(double value);
+
     WebIDL::ExceptionOr<bool> check_validity();
     WebIDL::ExceptionOr<bool> report_validity();
     void set_custom_validity(String const&);
