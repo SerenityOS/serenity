@@ -189,12 +189,12 @@ CodeGenerationErrorOr<Generator::ReferenceRegisters> Generator::emit_super_refer
     };
 }
 
-CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode const& node)
+CodeGenerationErrorOr<Optional<Generator::ReferenceRegisters>> Generator::emit_load_from_reference(JS::ASTNode const& node)
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
         TRY(identifier.generate_bytecode(*this));
-        return {};
+        return Optional<ReferenceRegisters> {};
     }
     if (is<MemberExpression>(node)) {
         auto& expression = static_cast<MemberExpression const&>(node);
@@ -213,15 +213,24 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
                 emit_get_by_id_with_this(identifier_table_ref, super_reference.this_value);
             }
+
+            return super_reference;
         } else {
             TRY(expression.object().generate_bytecode(*this));
-
             if (expression.is_computed()) {
                 auto object_reg = allocate_register();
                 emit<Bytecode::Op::Store>(object_reg);
 
                 TRY(expression.property().generate_bytecode(*this));
+                auto property_reg = allocate_register();
+                emit<Bytecode::Op::Store>(property_reg);
+
                 emit<Bytecode::Op::GetByValue>(object_reg);
+                return ReferenceRegisters {
+                    .base = object_reg,
+                    .referenced_name = property_reg,
+                    .this_value = object_reg,
+                };
             } else if (expression.property().is_identifier()) {
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
                 emit_get_by_id(identifier_table_ref);
@@ -235,7 +244,7 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
                 };
             }
         }
-        return {};
+        return Optional<ReferenceRegisters> {};
     }
     VERIFY_NOT_REACHED();
 }
@@ -304,6 +313,15 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
         &node,
         "Unimplemented/invalid node used a reference"sv
     };
+}
+
+CodeGenerationErrorOr<void> Generator::emit_store_to_reference(ReferenceRegisters const& reference_registers)
+{
+    if (reference_registers.base == reference_registers.this_value)
+        emit<Bytecode::Op::PutByValue>(reference_registers.base, reference_registers.referenced_name.value());
+    else
+        emit<Bytecode::Op::PutByValueWithThis>(reference_registers.base, reference_registers.referenced_name.value(), reference_registers.this_value);
+    return {};
 }
 
 CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& node)
