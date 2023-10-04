@@ -232,21 +232,21 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
     // 6. Set intlObj.[[MinimumIntegerDigits]] to mnid.
     intl_object.set_min_integer_digits(*min_integer_digits);
 
-    // 7. Let roundingPriority be ? GetOption(options, "roundingPriority", string, « "auto", "morePrecision", "lessPrecision" », "auto").
-    auto rounding_priority_option = TRY(get_option(vm, options, vm.names.roundingPriority, OptionType::String, { "auto"sv, "morePrecision"sv, "lessPrecision"sv }, "auto"sv));
-    auto rounding_priority = rounding_priority_option.as_string().utf8_string_view();
-
-    // 8. Let roundingIncrement be ? GetNumberOption(options, "roundingIncrement", 1, 5000, 1).
+    // 7. Let roundingIncrement be ? GetNumberOption(options, "roundingIncrement", 1, 5000, 1).
     auto rounding_increment = TRY(get_number_option(vm, options, vm.names.roundingIncrement, 1, 5000, 1));
 
-    // 9. If roundingIncrement is not in « 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 », throw a RangeError exception.
+    // 8. If roundingIncrement is not in « 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 », throw a RangeError exception.
     static constexpr auto sanctioned_rounding_increments = AK::Array { 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 };
 
     if (!sanctioned_rounding_increments.span().contains_slow(*rounding_increment))
         return vm.throw_completion<RangeError>(ErrorType::IntlInvalidRoundingIncrement, *rounding_increment);
 
-    // 10. Let roundingMode be ? GetOption(options, "roundingMode", string, « "ceil", "floor", "expand", "trunc", "halfCeil", "halfFloor", "halfExpand", "halfTrunc", "halfEven" », "halfExpand").
+    // 9. Let roundingMode be ? GetOption(options, "roundingMode", string, « "ceil", "floor", "expand", "trunc", "halfCeil", "halfFloor", "halfExpand", "halfTrunc", "halfEven" », "halfExpand").
     auto rounding_mode = TRY(get_option(vm, options, vm.names.roundingMode, OptionType::String, { "ceil"sv, "floor"sv, "expand"sv, "trunc"sv, "halfCeil"sv, "halfFloor"sv, "halfExpand"sv, "halfTrunc"sv, "halfEven"sv }, "halfExpand"sv));
+
+    // 10. Let roundingPriority be ? GetOption(options, "roundingPriority", string, « "auto", "morePrecision", "lessPrecision" », "auto").
+    auto rounding_priority_option = TRY(get_option(vm, options, vm.names.roundingPriority, OptionType::String, { "auto"sv, "morePrecision"sv, "lessPrecision"sv }, "auto"sv));
+    auto rounding_priority = rounding_priority_option.as_string().utf8_string_view();
 
     // 11. Let trailingZeroDisplay be ? GetOption(options, "trailingZeroDisplay", string, « "auto", "stripIfInteger" », "auto").
     auto trailing_zero_display = TRY(get_option(vm, options, vm.names.trailingZeroDisplay, OptionType::String, { "auto"sv, "stripIfInteger"sv }, "auto"sv));

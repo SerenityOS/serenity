@@ -87,10 +87,20 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto options = Object::create(realm, realm.intrinsics().object_prototype());
 
-    // 4. For each row of Table 13, except the header row, in table order, do
+    // 4. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
+    auto available_categories = ::Locale::available_plural_categories(plural_rules->locale(), plural_rules->type());
+
+    auto plural_categories = Array::create_from<::Locale::PluralCategory>(realm, available_categories, [&](auto category) {
+        return PrimitiveString::create(vm, ::Locale::plural_category_to_string(category));
+    });
+
+    // 5. For each row of Table 16, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.
-    //     b. Let v be the value of pr's internal slot whose name is the Internal Slot value of the current row.
-    //     c. If v is not undefined, then
+    //     b. If p is "pluralCategories", then
+    //         i. Let v be CreateArrayFromList(pluralCategories).
+    //     c. Else,
+    //         i. Let v be the value of pr's internal slot whose name is the Internal Slot value of the current row.
+    //     d. If v is not undefined, then
     //         i. Perform ! CreateDataPropertyOrThrow(options, p, v).
     MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, plural_rules->locale())));
     MUST(options->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, plural_rules->type_string())));
@@ -103,37 +113,11 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(plural_rules->min_significant_digits())));
     if (plural_rules->has_max_significant_digits())
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(plural_rules->max_significant_digits())));
-    MUST(options->create_data_property_or_throw(vm.names.roundingMode, PrimitiveString::create(vm, plural_rules->rounding_mode_string())));
-    MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(plural_rules->rounding_increment())));
-    MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, PrimitiveString::create(vm, plural_rules->trailing_zero_display_string())));
-
-    // 5. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
-    auto available_categories = ::Locale::available_plural_categories(plural_rules->locale(), plural_rules->type());
-
-    auto plural_categories = Array::create_from<::Locale::PluralCategory>(realm, available_categories, [&](auto category) {
-        return PrimitiveString::create(vm, ::Locale::plural_category_to_string(category));
-    });
-
-    // 6. Perform ! CreateDataProperty(options, "pluralCategories", CreateArrayFromList(pluralCategories)).
     MUST(options->create_data_property_or_throw(vm.names.pluralCategories, plural_categories));
-
-    switch (plural_rules->rounding_type()) {
-    // 7. If pr.[[RoundingType]] is morePrecision, then
-    case NumberFormatBase::RoundingType::MorePrecision:
-        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "morePrecision").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "morePrecision"_string)));
-        break;
-    // 8. Else if pr.[[RoundingType]] is lessPrecision, then
-    case NumberFormatBase::RoundingType::LessPrecision:
-        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "lessPrecision").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "lessPrecision"_string)));
-        break;
-    // 9. Else,
-    default:
-        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "auto").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "auto"_string)));
-        break;
-    }
+    MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(plural_rules->rounding_increment())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingMode, PrimitiveString::create(vm, plural_rules->rounding_mode_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, plural_rules->computed_rounding_priority_string())));
+    MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, PrimitiveString::create(vm, plural_rules->trailing_zero_display_string())));
 
     // 10. Return options.
     return options;
