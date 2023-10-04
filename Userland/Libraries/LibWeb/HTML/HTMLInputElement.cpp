@@ -514,6 +514,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         return;
 
     switch (type_state()) {
+    case TypeAttributeState::Hidden:
     case TypeAttributeState::RadioButton:
     case TypeAttributeState::Checkbox:
     case TypeAttributeState::Button:
