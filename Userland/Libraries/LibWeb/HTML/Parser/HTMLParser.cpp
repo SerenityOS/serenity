@@ -658,7 +658,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
     JS::NonnullGCPtr<DOM::Document> document = intended_parent.document();
 
     // 4. Let local name be the tag name of the token.
-    auto local_name = token.tag_name();
+    auto const& local_name = token.tag_name();
 
     // 5. Let is be the value of the "is" attribute in the given token, if such an attribute exists, or null otherwise.
     auto is_value_deprecated_string = token.attribute(AttributeNames::is);
