@@ -263,7 +263,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
     auto input_string = TRY(string.to_string(vm));
 
     // 2. Let trimmedString be ! TrimString(inputString, start).
-    auto trimmed_string = MUST_OR_THROW_OOM(trim_string(vm, PrimitiveString::create(vm, move(input_string)), TrimMode::Left));
+    auto trimmed_string = MUST(trim_string(vm, PrimitiveString::create(vm, move(input_string)), TrimMode::Left));
     if (trimmed_string.is_empty())
         return js_nan();
 
@@ -301,8 +301,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     auto input_string = TRY(string.to_string(vm));
 
     // 2. Let S be ! TrimString(inputString, start).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    auto trimmed_string = TRY(trim_string(vm, PrimitiveString::create(vm, move(input_string)), TrimMode::Left));
+    auto trimmed_string = MUST(trim_string(vm, PrimitiveString::create(vm, move(input_string)), TrimMode::Left));
 
     // 3. Let sign be 1.
     auto sign = 1;
