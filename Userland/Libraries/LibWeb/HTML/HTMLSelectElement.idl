@@ -4,21 +4,40 @@
 // https://html.spec.whatwg.org/multipage/form-elements.html#htmlselectelement
 [Exposed=Window]
 interface HTMLSelectElement : HTMLElement {
-
     [HTMLConstructor] constructor();
 
+    [CEReactions, Reflect] attribute DOMString autocomplete;
     [CEReactions, Reflect] attribute boolean disabled;
+    readonly attribute HTMLFormElement? form;
     [CEReactions, Reflect] attribute boolean multiple;
+    [CEReactions, Reflect] attribute DOMString name;
     [CEReactions, Reflect] attribute boolean required;
-    [SameObject] readonly attribute HTMLOptionsCollection options;
+    // FIXME: [CEReactions] attribute unsigned long size;
 
     readonly attribute DOMString type;
 
-    readonly attribute unsigned long length;
+    [SameObject] readonly attribute HTMLOptionsCollection options;
+    // FIXME: This isn't readonly
+    [CEReactions] readonly attribute unsigned long length;
+    // FIXME: Element is really HTMLOptionElement
     getter Element? item(unsigned long index);
-    getter Element? namedItem(DOMString name);
+    // FIXME: Element is really HTMLOptionElement
+    Element? namedItem(DOMString name);
     [CEReactions] undefined add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
+    // FIXME: [CEReactions] undefined remove(); // ChildNode overload
+    // FIXME: [CEReactions] undefined remove(long index);
+    // FIXME: [CEReactions] setter undefined (unsigned long index, HTMLOptionElement? option);
 
+    // FIXME: [SameObject] readonly attribute HTMLCollection selectedOptions;
     attribute long selectedIndex;
+    // FIXME: attribute DOMString value;
 
+    // FIXME: readonly attribute boolean willValidate;
+    // FIXME: readonly attribute ValidityState validity;
+    // FIXME: readonly attribute DOMString validationMessage;
+    // FIXME: boolean checkValidity();
+    // FIXME: boolean reportValidity();
+    // FIXME: undefined setCustomValidity(DOMString error);
+
+    // FIXME: readonly attribute NodeList labels;
 };
