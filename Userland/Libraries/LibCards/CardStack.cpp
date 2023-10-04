@@ -34,6 +34,8 @@ void CardStack::clear()
 
 void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
 {
+    auto background_markings_color = (background_color.luminosity() > 64) ? Color(0, 0, 0, 128) : Color(255, 255, 255, 128);
+
     auto draw_background_if_empty = [&]() {
         size_t number_of_moving_cards = 0;
         for (auto const& card : m_stack)
@@ -45,7 +47,7 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
             return false;
 
         auto paint_rect = m_base;
-        painter.fill_rect_with_rounded_corners(paint_rect, background_color.darkened(0.5), Card::card_radius);
+        painter.fill_rect_with_rounded_corners(paint_rect, background_markings_color, Card::card_radius);
         paint_rect.shrink(2, 2);
 
         if (m_highlighted) {
@@ -61,7 +63,8 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
     switch (m_type) {
     case Type::Stock:
         if (draw_background_if_empty()) {
-            painter.fill_rect(m_base.shrunken(Card::width / 4, Card::height / 4), background_color.lightened(1.5));
+            auto stock_highlight_color = (background_color.luminosity() < 196) ? Color(255, 255, 255, 128) : Color(0, 0, 0, 64);
+            painter.fill_rect(m_base.shrunken(Card::width / 4, Card::height / 4), stock_highlight_color);
             painter.fill_rect(m_base.shrunken(Card::width / 2, Card::height / 2), background_color);
         }
         break;
@@ -69,7 +72,7 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
         if (draw_background_if_empty()) {
             for (int y = 0; y < (m_base.height() - 4) / 8; ++y) {
                 for (int x = 0; x < (m_base.width() - 4) / 5; ++x) {
-                    painter.draw_rect({ 4 + m_base.x() + x * 5, 4 + m_base.y() + y * 8, 1, 1 }, background_color.darkened(0.5));
+                    painter.draw_rect({ 4 + m_base.x() + x * 5, 4 + m_base.y() + y * 8, 1, 1 }, background_markings_color);
                 }
             }
         }
