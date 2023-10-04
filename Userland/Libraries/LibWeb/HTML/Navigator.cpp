@@ -50,15 +50,11 @@ bool Navigator::webdriver() const
     // NOTE: The NavigatorAutomationInformation interface should not be exposed on WorkerNavigator.
     auto const& window = verify_cast<HTML::Window>(HTML::current_global_object());
     if(window && window.page())
-    {
         return window.page()->is_webdriver_active();
-    }
     else
-    {
         // Handle the case where window or page is null
         // You can return false or throw an exception based on your requirements.
         return false;
-    }
 }
 
 void Navigator::visit_edges(Cell::Visitor& visitor)
