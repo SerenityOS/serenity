@@ -5,7 +5,7 @@ pkg - Package Manager
 ## Synopsis
 
 ```**sh
-$ pkg [-l] [-d] [-u] [-v] [-q package]
+$ pkg [-l] [-u] [-v] [-q package]
 ```
 
 ## Description
@@ -17,7 +17,6 @@ It does not currently support installing and uninstalling packages. To install t
 ## Options
 
 * `-l`, `--list-manual-ports`: Show all manually-installed ports
-* `-d`, `--list-dependency-ports`: Show all dependencies' ports
 * `-u`, `--update-ports-database`: Sync/Update ports database
 * `-v`, `--verbose`: Verbose output
 * `-q`, `--query-package`: Query the ports database for package name

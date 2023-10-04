@@ -14,11 +14,13 @@
 static void print_port_details(InstalledPort const& port)
 {
     outln("{}, installed as {}, version {}", port.name(), port.type_as_string_view(), port.version());
-}
 
-static void print_port_details_without_version(InstalledPort const& port)
-{
-    outln("{}, installed as {}", port.name(), port.type_as_string_view());
+    if (!port.dependencies().is_empty()) {
+        out("    Dependencies:");
+        for (auto const& dependency : port.dependencies())
+            out(" {}", dependency);
+        outln();
+    }
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -34,26 +36,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool verbose = false;
     bool show_all_installed_ports = false;
-    bool show_all_dependency_ports = false;
     bool update_packages_db = false;
     StringView query_package {};
 
     Core::ArgsParser args_parser;
     args_parser.add_option(show_all_installed_ports, "Show all manually-installed ports", "list-manual-ports", 'l');
-    args_parser.add_option(show_all_dependency_ports, "Show all dependencies' ports", "list-dependency-ports", 'd');
     args_parser.add_option(update_packages_db, "Sync/Update ports database", "update-ports-database", 'u');
     args_parser.add_option(query_package, "Query ports database for package name", "query-package", 'q', "Package name to query");
     args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.parse(arguments);
 
-    if (!update_packages_db && !show_all_installed_ports && !show_all_dependency_ports && query_package.is_null()) {
+    if (!update_packages_db && !show_all_installed_ports && query_package.is_null()) {
         outln("pkg: No action to be performed was specified.");
         return 0;
     }
 
     HashMap<String, InstalledPort> installed_ports;
     HashMap<String, AvailablePort> available_ports;
-    if (show_all_installed_ports || show_all_dependency_ports || !query_package.is_null()) {
+    if (show_all_installed_ports || !query_package.is_null()) {
         if (Core::System::access(ports_database, R_OK).is_error()) {
             warnln("pkg: {} isn't accessible, did you install a package in the past?", ports_database);
             return 1;
@@ -82,16 +82,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("Manually-installed ports:");
         TRY(InstalledPort::for_each_by_type(installed_ports, InstalledPort::Type::Manual, [](auto& port) -> ErrorOr<void> {
             print_port_details(port);
-            return {};
-        }));
-    }
-
-    if (show_all_dependency_ports) {
-        outln("Dependencies-installed ports:");
-        TRY(InstalledPort::for_each_by_type(installed_ports, InstalledPort::Type::Dependency, [](auto& port) -> ErrorOr<void> {
-            // NOTE: Dependency entries don't specify versions, so we don't
-            // try to print it.
-            print_port_details_without_version(port);
             return {};
         }));
     }
