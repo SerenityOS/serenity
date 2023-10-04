@@ -13,12 +13,14 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
+#include <LibWeb/DOM/QualifiedName.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -649,6 +651,7 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
     return adjusted_insertion_location;
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#create-an-element-for-the-token
 JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, Optional<FlyString> const& namespace_, DOM::Node& intended_parent)
 {
     // FIXME: 1. If the active speculative HTML parser is not null, then return the result of creating a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
@@ -692,9 +695,10 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
     auto element = create_element(*document, local_name, namespace_, {}, is_value, will_execute_script).release_value_but_fixme_should_propagate_errors();
 
     // 10. Append each attribute in the given token to element.
-    // FIXME: This isn't the exact `append` the spec is talking about.
-    token.for_each_attribute([&](auto& attribute) {
-        MUST(element->set_attribute(attribute.local_name, attribute.value));
+    token.for_each_attribute([&](auto const& attribute) {
+        DOM::QualifiedName qualified_name { attribute.local_name, attribute.prefix, attribute.namespace_ };
+        auto dom_attribute = realm().heap().allocate<DOM::Attr>(realm(), *document, move(qualified_name), attribute.value, element);
+        element->append_attribute(dom_attribute);
         return IterationDecision::Continue;
     });
 
