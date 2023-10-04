@@ -39,8 +39,10 @@ static void report_validation_error(SourceLocation const& location = SourceLocat
     dbgln_if(URL_PARSER_DEBUG, "URLParser::basic_parse: Validation error! {}", location);
 }
 
+// https://url.spec.whatwg.org/#concept-opaque-host-parser
 static Optional<URL::Host> parse_opaque_host(StringView input)
 {
+    // 1. If input contains a forbidden host code point, host-invalid-code-point validation error, return failure.
     auto forbidden_host_characters_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
     for (auto character : forbidden_host_characters_excluding_percent) {
         if (input.contains(character)) {
@@ -48,8 +50,13 @@ static Optional<URL::Host> parse_opaque_host(StringView input)
             return {};
         }
     }
-    // FIXME: If input contains a code point that is not a URL code point and not U+0025 (%), validation error.
-    // FIXME: If input contains a U+0025 (%) and the two code points following it are not ASCII hex digits, validation error.
+
+    // 2. If input contains a code point that is not a URL code point and not U+0025 (%), invalid-URL-unit validation error.
+    // 3. If input contains a U+0025 (%) and the two code points following it are not ASCII hex digits, invalid-URL-unit validation error.
+    // NOTE: These steps are not implemented because they are not cheap checks and exist just to report validation errors. With how we
+    //       currently report validation errors, they are only useful for debugging efforts in the URL parsing code.
+
+    // 4. Return the result of running UTF-8 percent-encode on input using the C0 control percent-encode set.
     return String::from_deprecated_string(URL::percent_encode(input, URL::PercentEncodeSet::C0Control)).release_value_but_fixme_should_propagate_errors();
 }
 
