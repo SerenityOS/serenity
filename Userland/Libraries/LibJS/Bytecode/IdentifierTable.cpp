@@ -10,10 +10,6 @@ namespace JS::Bytecode {
 
 IdentifierTableIndex IdentifierTable::insert(DeprecatedFlyString string)
 {
-    for (size_t i = 0; i < m_identifiers.size(); i++) {
-        if (m_identifiers[i] == string)
-            return i;
-    }
     m_identifiers.append(move(string));
     return m_identifiers.size() - 1;
 }
