@@ -177,8 +177,8 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     if (number_format->has_compact_display())
         MUST(options->create_data_property_or_throw(vm.names.compactDisplay, PrimitiveString::create(vm, number_format->compact_display_string())));
     MUST(options->create_data_property_or_throw(vm.names.signDisplay, PrimitiveString::create(vm, number_format->sign_display_string())));
-    MUST(options->create_data_property_or_throw(vm.names.roundingMode, PrimitiveString::create(vm, number_format->rounding_mode_string())));
     MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(number_format->rounding_increment())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingMode, PrimitiveString::create(vm, number_format->rounding_mode_string())));
     MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, number_format->computed_rounding_priority_string())));
     MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, PrimitiveString::create(vm, number_format->trailing_zero_display_string())));
 
