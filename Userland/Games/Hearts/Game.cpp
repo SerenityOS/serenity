@@ -892,7 +892,8 @@ void Game::paint_event(GUI::PaintEvent& event)
 
     for (auto& player : m_players) {
         auto& font = painter.font().bold_variant();
-        painter.draw_text(player.name_position, player.name, font, player.name_alignment, Color::Black, Gfx::TextElision::None);
+        Gfx::Color text_color = background_color.luminosity() > 80 ? Color::Black : Color::White;
+        painter.draw_text(player.name_position, player.name, font, player.name_alignment, text_color, Gfx::TextElision::None);
 
         if (!game_ended()) {
             for (auto& card : player.hand)
