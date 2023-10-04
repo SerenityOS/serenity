@@ -223,31 +223,57 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
     else {
         // a. Set timeZone to ? ToString(timeZone).
         time_zone = TRY(time_zone_value.to_string(vm));
-
-        // b. If IsAvailableTimeZoneName(timeZone) is false, then
-        if (!Temporal::is_available_time_zone_name(time_zone)) {
-            // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
-        }
-
-        // c. Set timeZone to CanonicalizeTimeZoneName(timeZone).
-        time_zone = MUST(Temporal::canonicalize_time_zone_name(vm, time_zone));
     }
 
-    // 33. Set dateTimeFormat.[[TimeZone]] to timeZone.
+    // 33. If IsTimeZoneOffsetString(timeZone) is true, then
+    if (is_time_zone_offset_string(time_zone)) {
+        // a. Let parseResult be ParseText(StringToCodePoints(timeZone), UTCOffset).
+        auto parse_result = Temporal::parse_iso8601(Temporal::Production::TimeZoneNumericUTCOffset, time_zone);
+
+        // b. Assert: parseResult is a Parse Node.
+        VERIFY(parse_result.has_value());
+
+        // c. If parseResult contains more than one MinuteSecond Parse Node, throw a RangeError exception.
+        if (parse_result->time_zone_utc_offset_second.has_value())
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
+
+        // d. Let offsetNanoseconds be ParseTimeZoneOffsetString(timeZone).
+        auto offset_nanoseconds = parse_time_zone_offset_string(time_zone);
+
+        // e. Let offsetMinutes be offsetNanoseconds / (6 × 10^10).
+        auto offset_minutes = offset_nanoseconds / 60'000'000'000;
+
+        // f. Assert: offsetMinutes is an integer.
+        VERIFY(trunc(offset_minutes) == offset_minutes);
+
+        // g. Set timeZone to FormatOffsetTimeZoneIdentifier(offsetMinutes).
+        time_zone = format_offset_time_zone_identifier(offset_minutes);
+    }
+    // 34. Else if IsValidTimeZoneName(timeZone) is true, then
+    else if (Temporal::is_available_time_zone_name(time_zone)) {
+        // a. Set timeZone to CanonicalizeTimeZoneName(timeZone).
+        time_zone = MUST(Temporal::canonicalize_time_zone_name(vm, time_zone));
+    }
+    // 35. Else,
+    else {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
+    }
+
+    // 36. Set dateTimeFormat.[[TimeZone]] to timeZone.
     date_time_format->set_time_zone(move(time_zone));
 
-    // 34. Let formatOptions be a new Record.
+    // 37. Let formatOptions be a new Record.
     ::Locale::CalendarPattern format_options {};
 
-    // 35. Set formatOptions.[[hourCycle]] to hc.
+    // 38. Set formatOptions.[[hourCycle]] to hc.
     format_options.hour_cycle = hour_cycle_value;
 
-    // 36. Let hasExplicitFormatComponents be false.
+    // 39. Let hasExplicitFormatComponents be false.
     // NOTE: Instead of using a boolean, we track any explicitly provided component name for nicer exception messages.
     PropertyKey const* explicit_format_component = nullptr;
 
-    // 37. For each row of Table 6, except the header row, in table order, do
+    // 40. For each row of Table 6, except the header row, in table order, do
     TRY(for_each_calendar_field(vm, format_options, [&](auto& option, auto const& property, auto const& values) -> ThrowCompletionOr<void> {
         using ValueType = typename RemoveReference<decltype(option)>::ValueType;
 
@@ -286,26 +312,26 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         return {};
     }));
 
-    // 38. Let matcher be ? GetOption(options, "formatMatcher", string, « "basic", "best fit" », "best fit").
+    // 41. Let matcher be ? GetOption(options, "formatMatcher", string, « "basic", "best fit" », "best fit").
     matcher = TRY(get_option(vm, *options, vm.names.formatMatcher, OptionType::String, AK::Array { "basic"sv, "best fit"sv }, "best fit"sv));
 
-    // 39. Let dateStyle be ? GetOption(options, "dateStyle", string, « "full", "long", "medium", "short" », undefined).
+    // 42. Let dateStyle be ? GetOption(options, "dateStyle", string, « "full", "long", "medium", "short" », undefined).
     auto date_style = TRY(get_option(vm, *options, vm.names.dateStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
 
-    // 40. Set dateTimeFormat.[[DateStyle]] to dateStyle.
+    // 43. Set dateTimeFormat.[[DateStyle]] to dateStyle.
     if (!date_style.is_undefined())
         date_time_format->set_date_style(date_style.as_string().utf8_string_view());
 
-    // 41. Let timeStyle be ? GetOption(options, "timeStyle", string, « "full", "long", "medium", "short" », undefined).
+    // 44. Let timeStyle be ? GetOption(options, "timeStyle", string, « "full", "long", "medium", "short" », undefined).
     auto time_style = TRY(get_option(vm, *options, vm.names.timeStyle, OptionType::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
 
-    // 42. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
+    // 45. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
     if (!time_style.is_undefined())
         date_time_format->set_time_style(time_style.as_string().utf8_string_view());
 
     Optional<::Locale::CalendarPattern> best_format {};
 
-    // 43. If dateStyle is not undefined or timeStyle is not undefined, then
+    // 46. If dateStyle is not undefined or timeStyle is not undefined, then
     if (date_time_format->has_date_style() || date_time_format->has_time_style()) {
         // a. If hasExplicitFormatComponents is true, then
         if (explicit_format_component != nullptr) {
@@ -329,7 +355,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         // e. Let bestFormat be DateTimeStyleFormat(dateStyle, timeStyle, styles).
         best_format = date_time_style_format(data_locale, date_time_format);
     }
-    // 44. Else,
+    // 47. Else,
     else {
         // a. Let needDefaults be true.
         bool needs_defaults = true;
@@ -408,7 +434,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         }
     }
 
-    // 45. For each row in Table 6, except the header row, in table order, do
+    // 48. For each row in Table 6, except the header row, in table order, do
     date_time_format->for_each_calendar_field_zipped_with(*best_format, [&](auto& date_time_format_field, auto const& best_format_field, auto) {
         // a. Let prop be the name given in the Property column of the row.
         // b. If bestFormat has a field [[<prop>]], then
@@ -422,13 +448,13 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
     String pattern;
     Vector<::Locale::CalendarRangePattern> range_patterns;
 
-    // 46. If dateTimeFormat.[[Hour]] is undefined, then
+    // 49. If dateTimeFormat.[[Hour]] is undefined, then
     if (!date_time_format->has_hour()) {
         // a. Set dateTimeFormat.[[HourCycle]] to undefined.
         date_time_format->clear_hour_cycle();
     }
 
-    // 47. If dateTimeFormat.[[HourCycle]] is "h11" or "h12", then
+    // 50. If dateTimeFormat.[[HourCycle]] is "h11" or "h12", then
     if ((hour_cycle_value == ::Locale::HourCycle::H11) || (hour_cycle_value == ::Locale::HourCycle::H12)) {
         // a. Let pattern be bestFormat.[[pattern12]].
         if (best_format->pattern12.has_value()) {
@@ -442,7 +468,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         // b. Let rangePatterns be bestFormat.[[rangePatterns12]].
         range_patterns = ::Locale::get_calendar_range12_formats(data_locale, date_time_format->calendar(), best_format->skeleton);
     }
-    // 48. Else,
+    // 51. Else,
     else {
         // a. Let pattern be bestFormat.[[pattern]].
         pattern = move(best_format->pattern);
@@ -451,14 +477,33 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         range_patterns = ::Locale::get_calendar_range_formats(data_locale, date_time_format->calendar(), best_format->skeleton);
     }
 
-    // 49. Set dateTimeFormat.[[Pattern]] to pattern.
+    // 52. Set dateTimeFormat.[[Pattern]] to pattern.
     date_time_format->set_pattern(move(pattern));
 
-    // 50. Set dateTimeFormat.[[RangePatterns]] to rangePatterns.
+    // 53. Set dateTimeFormat.[[RangePatterns]] to rangePatterns.
     date_time_format->set_range_patterns(move(range_patterns));
 
-    // 51. Return dateTimeFormat.
+    // 54. Return dateTimeFormat.
     return date_time_format;
+}
+
+// 11.1.3 FormatOffsetTimeZoneIdentifier ( offsetMinutes ), https://tc39.es/ecma402/#sec-formatoffsettimezoneidentifier
+String format_offset_time_zone_identifier(double offset_minutes)
+{
+    // 1. If offsetMinutes ≥ 0, let sign be the code unit 0x002B (PLUS SIGN); otherwise, let sign be the code unit 0x002D (HYPHEN-MINUS).
+    auto sign = offset_minutes >= 0.0 ? '+' : '-';
+
+    // 2. Let absoluteMinutes be abs(offsetMinutes).
+    auto absolute_minutes = fabs(offset_minutes);
+
+    // 3. Let hours be floor(absoluteMinutes / 60).
+    auto hours = static_cast<i64>(floor(absolute_minutes / 60.0));
+
+    // 4. Let minutes be absoluteMinutes modulo 60.
+    auto minutes = static_cast<i64>(modulo(absolute_minutes, 60.0));
+
+    // 5. Return the string-concatenation of sign, ToZeroPaddedDecimalString(hours, 2), the code unit 0x003A (COLON), and ToZeroPaddedDecimalString(minutes, 2).
+    return MUST(String::formatted("{}{:02}:{:02}", sign, hours, minutes));
 }
 
 }

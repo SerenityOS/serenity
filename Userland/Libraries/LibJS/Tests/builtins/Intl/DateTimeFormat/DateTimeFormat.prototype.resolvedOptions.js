@@ -91,6 +91,14 @@ describe("correct behavior", () => {
 
         const el = new Intl.DateTimeFormat("el", { timeZone: "UTC" });
         expect(el.resolvedOptions().timeZone).toBe("UTC");
+
+        ["UTC", "EST", "+01:02", "-20:30", "+00:00"].forEach(timeZone => {
+            const en = new Intl.DateTimeFormat("en", { timeZone: timeZone });
+            expect(en.resolvedOptions().timeZone).toBe(timeZone);
+
+            const el = new Intl.DateTimeFormat("el", { timeZone: timeZone });
+            expect(el.resolvedOptions().timeZone).toBe(timeZone);
+        });
     });
 
     test("dateStyle", () => {
