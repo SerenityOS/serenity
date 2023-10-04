@@ -525,7 +525,7 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
     VERIFY(m_lhs.has<NonnullRefPtr<Expression const>>());
     auto& lhs = m_lhs.get<NonnullRefPtr<Expression const>>();
 
-    TRY(generator.emit_load_from_reference(lhs));
+    auto reference_registers = TRY(generator.emit_load_from_reference(lhs));
 
     Bytecode::BasicBlock* rhs_block_ptr { nullptr };
     Bytecode::BasicBlock* end_block_ptr { nullptr };
@@ -615,7 +615,10 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
         };
     }
 
-    TRY(generator.emit_store_to_reference(lhs));
+    if (reference_registers.has_value())
+        TRY(generator.emit_store_to_reference(*reference_registers));
+    else
+        TRY(generator.emit_store_to_reference(lhs));
 
     if (end_block_ptr) {
         generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *end_block_ptr });
@@ -1049,7 +1052,8 @@ Bytecode::CodeGenerationErrorOr<void> ArrayExpression::generate_bytecode(Bytecod
 Bytecode::CodeGenerationErrorOr<void> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    return generator.emit_load_from_reference(*this);
+    (void)TRY(generator.emit_load_from_reference(*this));
+    return {};
 }
 
 Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Bytecode::Generator& generator) const
@@ -2249,7 +2253,7 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
 Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    TRY(generator.emit_load_from_reference(*m_argument));
+    auto reference_registers = TRY(generator.emit_load_from_reference(*m_argument));
 
     Optional<Bytecode::Register> previous_value_for_postfix_reg;
     if (!m_prefixed) {
@@ -2263,7 +2267,10 @@ Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Byteco
     else
         generator.emit<Bytecode::Op::Decrement>();
 
-    TRY(generator.emit_store_to_reference(*m_argument));
+    if (reference_registers.has_value())
+        TRY(generator.emit_store_to_reference(*reference_registers));
+    else
+        TRY(generator.emit_store_to_reference(*m_argument));
 
     if (!m_prefixed)
         generator.emit<Bytecode::Op::Load>(*previous_value_for_postfix_reg);
