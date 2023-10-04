@@ -79,8 +79,14 @@ void MathObject::initialize(Realm& realm)
 // 21.3.2.1 Math.abs ( x ), https://tc39.es/ecma262/#sec-math.abs
 JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
 {
+    auto x = vm.argument(0);
+
+    // OPTIMIZATION: Fast path for Int32 values.
+    if (x.is_int32())
+        return Value(AK::abs(x.as_i32()));
+
     // Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(vm));
+    auto number = TRY(x.to_number(vm));
 
     // 2. If n is NaN, return NaN.
     if (number.is_nan())
