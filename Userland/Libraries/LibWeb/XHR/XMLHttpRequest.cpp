@@ -144,6 +144,8 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> XMLHttpRequest::response_xml()
     set_document_response();
 
     // 6. Return this’s response object.
+    if (m_response_object.has<Empty>())
+        return nullptr;
     return &verify_cast<DOM::Document>(m_response_object.get<JS::Value>().as_object());
 }
 
