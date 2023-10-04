@@ -192,16 +192,25 @@ WebIDL::ExceptionOr<void> CanvasPath::arc_to(double x1, double y1, double x2, do
     return {};
 }
 
-void CanvasPath::rect(float x, float y, float width, float height)
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-rect
+void CanvasPath::rect(double x, double y, double w, double h)
 {
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(x) || !isfinite(y) || !isfinite(w) || !isfinite(h))
+        return;
+
+    // 2. Create a new subpath containing just the four points (x, y), (x+w, y), (x+w, y+h), (x, y+h), in that order, with those four points connected by straight lines.
     auto transform = active_transform();
     m_path.move_to(transform.map(Gfx::FloatPoint { x, y }));
-    if (width == 0 || height == 0)
-        return;
-    m_path.line_to(transform.map(Gfx::FloatPoint { x + width, y }));
-    m_path.line_to(transform.map(Gfx::FloatPoint { x + width, y + height }));
-    m_path.line_to(transform.map(Gfx::FloatPoint { x, y + height }));
+    m_path.line_to(transform.map(Gfx::FloatPoint { x + w, y }));
+    m_path.line_to(transform.map(Gfx::FloatPoint { x + w, y + h }));
+    m_path.line_to(transform.map(Gfx::FloatPoint { x, y + h }));
+
+    // 3. Mark the subpath as closed.
     m_path.close();
+
+    // 4. Create a new subpath with the point (x, y) as the only point in the subpath.
+    m_path.move_to(transform.map(Gfx::FloatPoint { x, y }));
 }
 
 }
