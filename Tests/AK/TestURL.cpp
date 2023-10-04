@@ -535,4 +535,10 @@ TEST_CASE(ipv4_address)
         EXPECT(url.is_valid());
         EXPECT_EQ(MUST(url.serialized_host()), "52.251.94.56"sv);
     }
+
+    {
+        constexpr auto ipv4_url = "http://9111111111"sv;
+        URL url(ipv4_url);
+        EXPECT(!url.is_valid());
+    }
 }
