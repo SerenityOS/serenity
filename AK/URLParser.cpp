@@ -120,18 +120,22 @@ static Optional<ParsedIPv4Number> parse_ipv4_number(StringView input)
     }
 
     // 8. Let output be the mathematical integer value that is represented by input in radix-R notation, using ASCII hex digits for digits with values 0 through 15.
-    u32 output;
+    Optional<u32> maybe_output;
     if (radix == 8)
-        output = StringUtils::convert_to_uint_from_octal(input).release_value();
+        maybe_output = StringUtils::convert_to_uint_from_octal(input);
     else if (radix == 10)
-        output = input.to_uint().release_value();
+        maybe_output = input.to_uint();
     else if (radix == 16)
-        output = StringUtils::convert_to_uint_from_hex(input).release_value();
+        maybe_output = StringUtils::convert_to_uint_from_hex(input);
     else
         VERIFY_NOT_REACHED();
 
+    // NOTE: Parsing may have failed due to overflow.
+    if (!maybe_output.has_value())
+        return {};
+
     // 9. Return (output, validationError).
-    return ParsedIPv4Number { output, validation_error };
+    return ParsedIPv4Number { maybe_output.value(), validation_error };
 }
 
 // https://url.spec.whatwg.org/#concept-ipv4-parser
