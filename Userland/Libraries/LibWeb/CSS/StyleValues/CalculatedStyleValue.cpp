@@ -2371,7 +2371,17 @@ Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout
 
 Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
 {
-    auto result = m_calculation->resolve(Length::ResolutionContext::for_layout_node(layout_node), percentage_basis);
+    return resolve_length_percentage(Length::ResolutionContext::for_layout_node(layout_node), percentage_basis);
+}
+
+Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, CSSPixels percentage_basis) const
+{
+    return resolve_length_percentage(Length::ResolutionContext::for_layout_node(layout_node), Length::make_px(percentage_basis));
+}
+
+Optional<Length> CalculatedStyleValue::resolve_length_percentage(Length::ResolutionContext const& resolution_context, Length const& percentage_basis) const
+{
+    auto result = m_calculation->resolve(resolution_context, percentage_basis);
 
     return result.value().visit(
         [&](Length const& length) -> Optional<Length> {
@@ -2379,22 +2389,6 @@ Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node co
         },
         [&](Percentage const& percentage) -> Optional<Length> {
             return percentage_basis.percentage_of(percentage);
-        },
-        [&](auto const&) -> Optional<Length> {
-            return {};
-        });
-}
-
-Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, CSSPixels percentage_basis) const
-{
-    auto result = m_calculation->resolve(Length::ResolutionContext::for_layout_node(layout_node), Length::make_px(percentage_basis));
-
-    return result.value().visit(
-        [&](Length const& length) -> Optional<Length> {
-            return length;
-        },
-        [&](Percentage const& percentage) -> Optional<Length> {
-            return Length::make_px(CSSPixels(percentage.value() * percentage_basis) / 100);
         },
         [&](auto const&) -> Optional<Length> {
             return {};

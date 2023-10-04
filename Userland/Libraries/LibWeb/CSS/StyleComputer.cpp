@@ -1764,7 +1764,11 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         } else if (font_size.is_length()) {
             maybe_length = font_size.as_length().length();
         } else if (font_size.is_calculated()) {
-            maybe_length = font_size.as_calculated().resolve_length(length_resolution_context);
+            if (font_size.as_calculated().contains_percentage()) {
+                maybe_length = font_size.as_calculated().resolve_length_percentage(length_resolution_context, Length::make_px(parent_font_size()));
+            } else {
+                maybe_length = font_size.as_calculated().resolve_length(length_resolution_context);
+            }
         }
         if (maybe_length.has_value()) {
             font_size_in_px = maybe_length.value().to_px(length_resolution_context);
