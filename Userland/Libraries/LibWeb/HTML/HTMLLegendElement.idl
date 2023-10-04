@@ -3,9 +3,10 @@
 // https://html.spec.whatwg.org/multipage/form-elements.html#htmllegendelement
 [Exposed=Window]
 interface HTMLLegendElement : HTMLElement {
-
     [HTMLConstructor] constructor();
 
-    [CEReactions, Reflect] attribute DOMString align;
+    // FIXME: readonly attribute HTMLFormElement? form;
 
+    // Obsolete
+    [CEReactions, Reflect] attribute DOMString align;
 };

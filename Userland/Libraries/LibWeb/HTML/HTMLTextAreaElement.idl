@@ -1,18 +1,44 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/HTMLFormElement.idl>
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#htmltextareaelement
 [Exposed=Window]
 interface HTMLTextAreaElement : HTMLElement {
-
     [HTMLConstructor] constructor();
 
-    [CEReactions, Reflect] attribute DOMString placeholder;
-    [CEReactions, Reflect] attribute DOMString name;
-    [CEReactions, Reflect] attribute DOMString wrap;
-    readonly attribute DOMString type;
-
+    [CEReactions, Reflect] attribute DOMString autocomplete;
+    // FIXME: [CEReactions] attribute unsigned long cols;
+    [CEReactions, Reflect=dirname] attribute DOMString dirName;
     [CEReactions, Reflect] attribute boolean disabled;
+    readonly attribute HTMLFormElement? form;
+    // FIXME: [CEReactions] attribute long maxLength;
+    // FIXME: [CEReactions] attribute long minLength;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString placeholder;
     [CEReactions, Reflect=readonly] attribute boolean readOnly;
     [CEReactions, Reflect] attribute boolean required;
+    // FIXME: [CEReactions] attribute unsigned long rows;
+    [CEReactions, Reflect] attribute DOMString wrap;
 
+    readonly attribute DOMString type;
+    // FIXME: [CEReactions] attribute DOMString defaultValue;
+    // FIXME: attribute [LegacyNullToEmptyString] DOMString value;
+    // FIXME: readonly attribute unsigned long textLength;
+
+    // FIXME: readonly attribute boolean willValidate;
+    // FIXME: readonly attribute ValidityState validity;
+    // FIXME: readonly attribute DOMString validationMessage;
+    // FIXME: boolean checkValidity();
+    // FIXME: boolean reportValidity();
+    // FIXME: undefined setCustomValidity(DOMString error);
+
+    // FIXME: readonly attribute NodeList labels;
+
+    // FIXME: undefined select();
+    // FIXME: attribute unsigned long selectionStart;
+    // FIXME: attribute unsigned long selectionEnd;
+    // FIXME: attribute DOMString selectionDirection;
+    // FIXME: undefined setRangeText(DOMString replacement);
+    // FIXME: undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
+    // FIXME: undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 };
