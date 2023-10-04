@@ -122,6 +122,8 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
 
+    void append_attribute(Attr&);
+
     // FIXME: This should take a 'FlyString cosnt&'
     void remove_attribute(StringView name);
 
