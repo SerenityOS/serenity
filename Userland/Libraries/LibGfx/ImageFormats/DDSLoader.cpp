@@ -330,7 +330,7 @@ static ErrorOr<void> decode_color_block(Stream& stream, DDSLoadingContext& conte
     auto codes_2 = TRY(stream.read_value<LittleEndian<u8>>());
     auto codes_3 = TRY(stream.read_value<LittleEndian<u8>>());
 
-    u64 code = codes_0 + 256 * (codes_1 + 256 * (codes_2 + 256 * codes_3));
+    u64 code = codes_0 + 256ul * (codes_1 + 256ul * (codes_2 + 256ul * codes_3));
     u32 color_0 = c0_low + (c0_high * 256);
     u32 color_1 = c1_low + (c1_high * 256);
 
