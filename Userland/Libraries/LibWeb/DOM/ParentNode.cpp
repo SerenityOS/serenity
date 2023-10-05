@@ -146,20 +146,20 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(Deprecated
 
     // 2. Otherwise, if root’s node document is an HTML document, return a HTMLCollection rooted at root, whose filter matches the following descendant elements:
     if (root().document().document_type() == Document::Type::HTML) {
-        auto qualified_name_in_ascii_lowercase = qualified_name.to_lowercase();
+        auto qualified_name_in_ascii_lowercase = MUST(FlyString::from_deprecated_fly_string(qualified_name.to_lowercase()));
         return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [qualified_name, qualified_name_in_ascii_lowercase](Element const& element) {
             // - Whose namespace is the HTML namespace and whose qualified name is qualifiedName, in ASCII lowercase.
             if (element.namespace_() == Namespace::HTML)
                 return element.qualified_name() == qualified_name_in_ascii_lowercase;
 
             // - Whose namespace is not the HTML namespace and whose qualified name is qualifiedName.
-            return element.qualified_name() == qualified_name;
+            return element.qualified_name().to_deprecated_fly_string() == qualified_name;
         });
     }
 
     // 3. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose qualified name is qualifiedName.
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [qualified_name](Element const& element) {
-        return element.qualified_name() == qualified_name;
+        return element.qualified_name().to_deprecated_fly_string() == qualified_name;
     });
 }
 

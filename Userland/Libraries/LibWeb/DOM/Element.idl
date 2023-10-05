@@ -21,14 +21,14 @@ dictionary ScrollIntoViewOptions : ScrollOptions {
 };
 
 // https://dom.spec.whatwg.org/#element
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
-    [ImplementedAs=deprecated_prefix] readonly attribute DOMString? prefix;
-    [ImplementedAs=deprecated_local_name] readonly attribute DOMString localName;
-    [ImplementedAs=deprecated_tag_name] readonly attribute DOMString tagName;
+    readonly attribute DOMString? prefix;
+    readonly attribute DOMString localName;
+    readonly attribute DOMString tagName;
 
-    [ImplementedAs=deprecated_get_attribute] DOMString? getAttribute(DOMString qualifiedName);
+    DOMString? getAttribute(DOMString qualifiedName);
     [CEReactions] undefined setAttribute(DOMString qualifiedName, DOMString value);
     [CEReactions] undefined setAttributeNS(DOMString? namespace , DOMString qualifiedName , DOMString value);
     [CEReactions] Attr? setAttributeNode(Attr attr);

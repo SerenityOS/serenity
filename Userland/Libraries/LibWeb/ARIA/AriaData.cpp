@@ -9,9 +9,16 @@
 
 namespace Web::ARIA {
 
+static DeprecatedString to_deprecated_string(Optional<String> const& value)
+{
+    if (!value.has_value())
+        return {};
+    return value->to_deprecated_string();
+}
+
 AriaData::AriaData(Web::ARIA::ARIAMixin const& source)
 {
-    m_aria_active_descendant = source.aria_active_descendant();
+    m_aria_active_descendant = to_deprecated_string(source.aria_active_descendant());
     m_aria_atomic = AriaData::parse_optional_true_false(source.aria_atomic());
     m_aria_auto_complete = AriaData::parse_aria_autocomplete(source.aria_auto_complete());
     m_aria_busy = AriaData::parse_true_false(source.aria_busy());
@@ -19,36 +26,36 @@ AriaData::AriaData(Web::ARIA::ARIAMixin const& source)
     m_aria_col_count = AriaData::parse_integer(source.aria_col_count());
     m_aria_col_index = AriaData::parse_integer(source.aria_col_index());
     m_aria_col_span = AriaData::parse_integer(source.aria_col_span());
-    m_aria_controls = source.parse_id_reference_list(source.aria_controls());
+    m_aria_controls = source.parse_id_reference_list(to_deprecated_string(source.aria_controls()));
     m_aria_current = AriaData::parse_aria_current(source.aria_current());
-    m_aria_described_by = source.parse_id_reference_list(source.aria_described_by());
-    m_aria_details = source.parse_id_reference(source.aria_details());
+    m_aria_described_by = source.parse_id_reference_list(to_deprecated_string(source.aria_described_by()));
+    m_aria_details = source.parse_id_reference(to_deprecated_string(source.aria_details()));
     m_aria_disabled = AriaData::parse_true_false(source.aria_disabled());
     m_aria_drop_effect = AriaData::parse_aria_drop_effect(source.aria_drop_effect());
-    m_aria_error_message = source.parse_id_reference(source.aria_error_message());
+    m_aria_error_message = source.parse_id_reference(to_deprecated_string(source.aria_error_message()));
     m_aria_expanded = AriaData::parse_true_false_undefined(source.aria_expanded());
-    m_aria_flow_to = source.parse_id_reference_list(source.aria_flow_to());
+    m_aria_flow_to = source.parse_id_reference_list(to_deprecated_string(source.aria_flow_to()));
     m_aria_grabbed = AriaData::parse_true_false_undefined(source.aria_grabbed());
     m_aria_has_popup = AriaData::parse_aria_has_popup(source.aria_has_popup());
     m_aria_hidden = AriaData::parse_true_false_undefined(source.aria_hidden());
     m_aria_invalid = AriaData::parse_aria_invalid(source.aria_invalid());
-    m_aria_key_shortcuts = source.aria_key_shortcuts();
-    m_aria_label = source.aria_label();
-    m_aria_labelled_by = source.parse_id_reference_list(source.aria_labelled_by());
+    m_aria_key_shortcuts = to_deprecated_string(source.aria_key_shortcuts());
+    m_aria_label = to_deprecated_string(source.aria_label());
+    m_aria_labelled_by = source.parse_id_reference_list(to_deprecated_string(source.aria_labelled_by()));
     m_aria_level = AriaData::parse_integer(source.aria_level());
     m_aria_live = AriaData::parse_aria_live(source.aria_live());
     m_aria_modal = AriaData::parse_true_false(source.aria_modal());
     m_aria_multi_line = AriaData::parse_true_false(source.aria_multi_line());
     m_aria_multi_selectable = AriaData::parse_true_false(source.aria_multi_selectable());
     m_aria_orientation = AriaData::parse_aria_orientation(source.aria_orientation());
-    m_aria_owns = source.parse_id_reference_list(source.aria_owns());
-    m_aria_placeholder = source.aria_placeholder();
+    m_aria_owns = source.parse_id_reference_list(to_deprecated_string(source.aria_owns()));
+    m_aria_placeholder = to_deprecated_string(source.aria_placeholder());
     m_aria_pos_in_set = AriaData::parse_integer(source.aria_pos_in_set());
     m_aria_pressed = AriaData::parse_tristate(source.aria_pressed());
     m_aria_read_only = AriaData::parse_true_false(source.aria_read_only());
     m_aria_relevant = AriaData::parse_aria_relevant(source.aria_relevant());
     m_aria_required = AriaData::parse_true_false(source.aria_required());
-    m_aria_role_description = source.aria_role_description();
+    m_aria_role_description = to_deprecated_string(source.aria_role_description());
     m_aria_row_count = AriaData::parse_integer(source.aria_row_count());
     m_aria_row_index = AriaData::parse_integer(source.aria_row_index());
     m_aria_row_span = AriaData::parse_integer(source.aria_row_span());
@@ -58,10 +65,10 @@ AriaData::AriaData(Web::ARIA::ARIAMixin const& source)
     m_aria_value_max = AriaData::parse_number(source.aria_value_max());
     m_aria_value_min = AriaData::parse_number(source.aria_value_min());
     m_aria_value_now = AriaData::parse_number(source.aria_value_now());
-    m_aria_value_text = source.aria_value_text();
+    m_aria_value_text = to_deprecated_string(source.aria_value_text());
 }
 
-bool AriaData::parse_true_false(StringView value)
+bool AriaData::parse_true_false(Optional<String> const& value)
 {
     if (value == "true"sv)
         return true;
@@ -70,7 +77,7 @@ bool AriaData::parse_true_false(StringView value)
     return false;
 }
 
-Tristate AriaData::parse_tristate(StringView value)
+Tristate AriaData::parse_tristate(Optional<String> const& value)
 {
     if (value == "true"sv)
         return Tristate::True;
@@ -83,7 +90,7 @@ Tristate AriaData::parse_tristate(StringView value)
     return Tristate::Undefined;
 }
 
-Optional<bool> AriaData::parse_true_false_undefined(StringView value)
+Optional<bool> AriaData::parse_true_false_undefined(Optional<String> const& value)
 {
     if (value == "true"sv)
         return true;
@@ -94,14 +101,18 @@ Optional<bool> AriaData::parse_true_false_undefined(StringView value)
     return {};
 }
 
-Optional<i32> AriaData::parse_integer(StringView value)
+Optional<i32> AriaData::parse_integer(Optional<String> const& value)
 {
-    return value.to_int();
+    if (!value.has_value())
+        return {};
+    return value->bytes_as_string_view().to_int();
 }
 
-Optional<f64> AriaData::parse_number(StringView value)
+Optional<f64> AriaData::parse_number(Optional<String> const& value)
 {
-    return value.to_double(TrimWhitespace::Yes);
+    if (!value.has_value())
+        return {};
+    return value->bytes_as_string_view().to_double(TrimWhitespace::Yes);
 }
 
 Optional<DeprecatedString> AriaData::aria_active_descendant_or_default() const
@@ -361,7 +372,7 @@ DeprecatedString AriaData::aria_value_text_or_default() const
     return m_aria_value_text;
 }
 
-AriaAutocomplete AriaData::parse_aria_autocomplete(StringView value)
+AriaAutocomplete AriaData::parse_aria_autocomplete(Optional<String> const& value)
 {
     if (value == "inline"sv)
         return AriaAutocomplete::Inline;
@@ -374,7 +385,7 @@ AriaAutocomplete AriaData::parse_aria_autocomplete(StringView value)
     return AriaAutocomplete::None;
 }
 
-AriaCurrent AriaData::parse_aria_current(StringView value)
+AriaCurrent AriaData::parse_aria_current(Optional<String> const& value)
 {
     if (value == "page"sv)
         return AriaCurrent::Page;
@@ -393,11 +404,14 @@ AriaCurrent AriaData::parse_aria_current(StringView value)
     return AriaCurrent::False;
 }
 
-Vector<AriaDropEffect> AriaData::parse_aria_drop_effect(StringView value)
+Vector<AriaDropEffect> AriaData::parse_aria_drop_effect(Optional<String> const& value)
 {
+    if (!value.has_value())
+        return {};
+
     Vector<AriaDropEffect> result;
 
-    for (auto token : value.split_view_if(Infra::is_ascii_whitespace)) {
+    for (auto token : value->bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace)) {
         if (token == "copy"sv)
             result.append(AriaDropEffect::Copy);
         else if (token == "execute"sv)
@@ -417,7 +431,7 @@ Vector<AriaDropEffect> AriaData::parse_aria_drop_effect(StringView value)
     return result;
 }
 
-AriaHasPopup AriaData::parse_aria_has_popup(StringView value)
+AriaHasPopup AriaData::parse_aria_has_popup(Optional<String> const& value)
 {
     if (value == "false"sv)
         return AriaHasPopup::False;
@@ -436,7 +450,7 @@ AriaHasPopup AriaData::parse_aria_has_popup(StringView value)
     return AriaHasPopup::False;
 }
 
-AriaInvalid AriaData::parse_aria_invalid(StringView value)
+AriaInvalid AriaData::parse_aria_invalid(Optional<String> const& value)
 {
     if (value == "grammar"sv)
         return AriaInvalid::Grammar;
@@ -449,7 +463,7 @@ AriaInvalid AriaData::parse_aria_invalid(StringView value)
     return AriaInvalid::False;
 }
 
-Optional<AriaLive> AriaData::parse_aria_live(StringView value)
+Optional<AriaLive> AriaData::parse_aria_live(Optional<String> const& value)
 {
     if (value == "assertive"sv)
         return AriaLive::Assertive;
@@ -460,7 +474,7 @@ Optional<AriaLive> AriaData::parse_aria_live(StringView value)
     return {};
 }
 
-Optional<AriaOrientation> AriaData::parse_aria_orientation(StringView value)
+Optional<AriaOrientation> AriaData::parse_aria_orientation(Optional<String> const& value)
 {
     if (value == "horizontal"sv)
         return AriaOrientation::Horizontal;
@@ -471,10 +485,13 @@ Optional<AriaOrientation> AriaData::parse_aria_orientation(StringView value)
     return {};
 }
 
-Vector<AriaRelevant> AriaData::parse_aria_relevant(StringView value)
+Vector<AriaRelevant> AriaData::parse_aria_relevant(Optional<String> const& value)
 {
+    if (!value.has_value())
+        return {};
+
     Vector<AriaRelevant> result;
-    auto tokens = value.split_view_if(Infra::is_ascii_whitespace);
+    auto tokens = value->bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
     for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i] == "additions"sv) {
             if (i + 1 < tokens.size()) {
@@ -504,7 +521,7 @@ Vector<AriaRelevant> AriaData::parse_aria_relevant(StringView value)
     return result;
 }
 
-AriaSort AriaData::parse_aria_sort(StringView value)
+AriaSort AriaData::parse_aria_sort(Optional<String> const& value)
 {
     if (value == "ascending"sv)
         return AriaSort::Ascending;
@@ -517,7 +534,7 @@ AriaSort AriaData::parse_aria_sort(StringView value)
     return AriaSort::None;
 }
 
-Optional<bool> AriaData::parse_optional_true_false(StringView value)
+Optional<bool> AriaData::parse_optional_true_false(Optional<String> const& value)
 {
     if (value == "true"sv)
         return true;
