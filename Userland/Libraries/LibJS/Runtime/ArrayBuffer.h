@@ -135,7 +135,7 @@ ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM&, F
 
 // 25.1.2.9 RawBytesToNumeric ( type, rawBytes, isLittleEndian ), https://tc39.es/ecma262/#sec-rawbytestonumeric
 template<typename T>
-static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_endian)
+static Value raw_bytes_to_numeric(VM& vm, Bytes raw_value, bool is_little_endian)
 {
     // 1. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
     //    NOTE: Used in step 6, but not needed with our implementation of that step.
@@ -152,7 +152,7 @@ static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_e
     if constexpr (IsSame<UnderlyingBufferDataType, float>) {
         // a. Let value be the byte elements of rawBytes concatenated and interpreted as a little-endian bit string encoding of an IEEE 754-2019 binary32 value.
         float value;
-        raw_value.span().copy_to({ &value, sizeof(float) });
+        raw_value.copy_to({ &value, sizeof(float) });
 
         // b. If value is an IEEE 754-2019 binary32 NaN value, return the NaN Number value.
         if (isnan(value))
@@ -166,7 +166,7 @@ static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_e
     if constexpr (IsSame<UnderlyingBufferDataType, double>) {
         // a. Let value be the byte elements of rawBytes concatenated and interpreted as a little-endian bit string encoding of an IEEE 754-2019 binary64 value.
         double value;
-        raw_value.span().copy_to({ &value, sizeof(double) });
+        raw_value.copy_to({ &value, sizeof(double) });
 
         // b. If value is an IEEE 754-2019 binary64 NaN value, return the NaN Number value.
         if (isnan(value))
@@ -187,7 +187,7 @@ static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_e
     //
     // NOTE: The signed/unsigned logic above is implemented in step 7 by the IsSigned<> check, and in step 8 by JS::Value constructor overloads.
     UnderlyingBufferDataType int_value = 0;
-    raw_value.span().copy_to({ &int_value, sizeof(UnderlyingBufferDataType) });
+    raw_value.copy_to({ &int_value, sizeof(UnderlyingBufferDataType) });
 
     // 7. If IsBigIntElementType(type) is true, return the BigInt value that corresponds to intValue.
     if constexpr (sizeof(UnderlyingBufferDataType) == 8) {
@@ -222,7 +222,7 @@ ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unuse
     // 4. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
     auto element_size = sizeof(T);
 
-    ByteBuffer raw_value;
+    AK::Array<u8, sizeof(T)> raw_value {};
 
     // FIXME: 5. If IsSharedArrayBuffer(arrayBuffer) is true, then
     if (false) {
@@ -238,7 +238,7 @@ ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unuse
     // 6. Else,
     else {
         // a. Let rawValue be a List whose elements are bytes from block at indices in the interval from byteIndex (inclusive) to byteIndex + elementSize (exclusive).
-        raw_value = TRY_OR_THROW_OOM(vm, block.slice(byte_index, element_size));
+        block.bytes().slice(byte_index, element_size).copy_to(raw_value);
     }
 
     // 7. Assert: The number of elements in rawValue is elementSize.
@@ -248,7 +248,7 @@ ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unuse
     //    NOTE: Done by default parameter at declaration of this function.
 
     // 9. Return RawBytesToNumeric(type, rawValue, isLittleEndian).
-    return raw_bytes_to_numeric<T>(vm, move(raw_value), is_little_endian);
+    return raw_bytes_to_numeric<T>(vm, raw_value, is_little_endian);
 }
 
 // 25.1.2.11 NumericToRawBytes ( type, value, isLittleEndian ), https://tc39.es/ecma262/#sec-numerictorawbytes
