@@ -228,10 +228,12 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(VM& vm, TypedArrayB
     constexpr bool is_little_endian = AK::HostIsLittleEndian;
 
     // 11. Let expectedBytes be NumericToRawBytes(elementType, expected, isLittleEndian).
-    auto expected_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, expected, is_little_endian));
+    auto expected_bytes = MUST(ByteBuffer::create_uninitialized(sizeof(T)));
+    numeric_to_raw_bytes<T>(vm, expected, is_little_endian, expected_bytes);
 
     // 12. Let replacementBytes be NumericToRawBytes(elementType, replacement, isLittleEndian).
-    auto replacement_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, replacement, is_little_endian));
+    auto replacement_bytes = MUST(ByteBuffer::create_uninitialized(sizeof(T)));
+    numeric_to_raw_bytes<T>(vm, replacement, is_little_endian, replacement_bytes);
 
     // FIXME: Implement SharedArrayBuffer case.
     // 13. If IsSharedArrayBuffer(buffer) is true, then

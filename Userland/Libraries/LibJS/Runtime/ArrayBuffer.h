@@ -253,11 +253,11 @@ ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unuse
 
 // 25.1.2.11 NumericToRawBytes ( type, value, isLittleEndian ), https://tc39.es/ecma262/#sec-numerictorawbytes
 template<typename T>
-static ThrowCompletionOr<ByteBuffer> numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endian)
+static void numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endian, Bytes raw_bytes)
 {
     VERIFY(value.is_number() || value.is_bigint());
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
-    ByteBuffer raw_bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)));
+    VERIFY(raw_bytes.size() == sizeof(UnderlyingBufferDataType));
     auto flip_if_needed = [&]() {
         if (is_little_endian)
             return;
@@ -269,13 +269,13 @@ static ThrowCompletionOr<ByteBuffer> numeric_to_raw_bytes(VM& vm, Value value, b
         float raw_value = MUST(value.to_double(vm));
         ReadonlyBytes { &raw_value, sizeof(float) }.copy_to(raw_bytes);
         flip_if_needed();
-        return raw_bytes;
+        return;
     }
     if constexpr (IsSame<UnderlyingBufferDataType, double>) {
         double raw_value = MUST(value.to_double(vm));
         ReadonlyBytes { &raw_value, sizeof(double) }.copy_to(raw_bytes);
         flip_if_needed();
-        return raw_bytes;
+        return;
     }
     if constexpr (!IsIntegral<UnderlyingBufferDataType>)
         VERIFY_NOT_REACHED();
@@ -289,7 +289,7 @@ static ThrowCompletionOr<ByteBuffer> numeric_to_raw_bytes(VM& vm, Value value, b
 
         ReadonlyBytes { &int_value, sizeof(UnderlyingBufferDataType) }.copy_to(raw_bytes);
         flip_if_needed();
-        return raw_bytes;
+        return;
     } else {
         UnderlyingBufferDataType int_value;
         if constexpr (IsSigned<UnderlyingBufferDataType>) {
@@ -312,7 +312,7 @@ static ThrowCompletionOr<ByteBuffer> numeric_to_raw_bytes(VM& vm, Value value, b
         ReadonlyBytes { &int_value, sizeof(UnderlyingBufferDataType) }.copy_to(raw_bytes);
         if constexpr (sizeof(UnderlyingBufferDataType) % 2 == 0)
             flip_if_needed();
-        return raw_bytes;
+        return;
     }
 }
 
@@ -343,7 +343,8 @@ ThrowCompletionOr<void> ArrayBuffer::set_value(size_t byte_index, Value value, [
     //    NOTE: Done by default parameter at declaration of this function.
 
     // 7. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
-    auto raw_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, value, is_little_endian));
+    AK::Array<u8, sizeof(T)> raw_bytes;
+    numeric_to_raw_bytes<T>(vm, value, is_little_endian, raw_bytes);
 
     // FIXME 8. If IsSharedArrayBuffer(arrayBuffer) is true, then
     if (false) {
@@ -368,11 +369,13 @@ ThrowCompletionOr<Value> ArrayBuffer::get_modify_set_value(size_t byte_index, Va
 {
     auto& vm = this->vm();
 
-    auto raw_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, value, is_little_endian));
+    auto raw_bytes = MUST(ByteBuffer::create_uninitialized(sizeof(T)));
+    numeric_to_raw_bytes<T>(vm, value, is_little_endian, raw_bytes);
 
     // FIXME: Check for shared buffer
 
-    auto raw_bytes_read = TRY_OR_THROW_OOM(vm, m_data_block.buffer().slice(byte_index, sizeof(T)));
+    auto raw_bytes_read = MUST(ByteBuffer::create_uninitialized(sizeof(T)));
+    m_data_block.buffer().bytes().slice(byte_index, sizeof(T)).copy_to(raw_bytes_read);
     auto raw_bytes_modified = operation(raw_bytes_read, raw_bytes);
     raw_bytes_modified.span().copy_to(m_data_block.buffer().span().slice(byte_index));
 
