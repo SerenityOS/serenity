@@ -766,6 +766,9 @@ Device::Device(Gfx::IntSize size)
 {
     m_options.scissor_box = m_frame_buffer->rect();
     m_options.viewport = m_frame_buffer->rect();
+
+    // Ensure we can always append 3 vertices unchecked
+    m_clipped_vertices.ensure_capacity(3);
 }
 
 GPU::DeviceInfo Device::info() const
@@ -1112,9 +1115,9 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vert
     // Clip triangles
     for (auto& triangle : m_triangle_list) {
         m_clipped_vertices.clear_with_capacity();
-        m_clipped_vertices.append(triangle.vertices[0]);
-        m_clipped_vertices.append(triangle.vertices[1]);
-        m_clipped_vertices.append(triangle.vertices[2]);
+        m_clipped_vertices.unchecked_append(triangle.vertices[0]);
+        m_clipped_vertices.unchecked_append(triangle.vertices[1]);
+        m_clipped_vertices.unchecked_append(triangle.vertices[2]);
         m_clipper.clip_triangle_against_frustum(m_clipped_vertices);
 
         if (m_clip_planes.size() > 0)
