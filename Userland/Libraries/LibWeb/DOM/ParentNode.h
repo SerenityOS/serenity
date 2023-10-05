@@ -38,10 +38,6 @@ public:
     WebIDL::ExceptionOr<void> append(Vector<Variant<JS::Handle<Node>, String>> const& nodes);
     WebIDL::ExceptionOr<void> replace_children(Vector<Variant<JS::Handle<Node>, String>> const& nodes);
 
-    WebIDL::ExceptionOr<void> prepend(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes);
-    WebIDL::ExceptionOr<void> append(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes);
-    WebIDL::ExceptionOr<void> replace_children(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes);
-
 protected:
     ParentNode(JS::Realm& realm, Document& document, NodeType type)
         : Node(realm, document, type)
