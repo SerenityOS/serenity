@@ -113,21 +113,6 @@ public:
         node->remove();
     }
 
-    WebIDL::ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
-    {
-        return before(from_deprecated_nodes(nodes));
-    }
-
-    WebIDL::ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
-    {
-        return after(from_deprecated_nodes(nodes));
-    }
-
-    WebIDL::ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
-    {
-        return replace_with(from_deprecated_nodes(nodes));
-    }
-
 protected:
     ChildNode() = default;
 

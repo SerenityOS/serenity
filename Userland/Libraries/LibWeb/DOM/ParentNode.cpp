@@ -213,21 +213,6 @@ WebIDL::ExceptionOr<void> ParentNode::prepend(Vector<Variant<JS::Handle<Node>, S
     return {};
 }
 
-WebIDL::ExceptionOr<void> ParentNode::prepend(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
-{
-    return prepend(from_deprecated_nodes(nodes));
-}
-
-WebIDL::ExceptionOr<void> ParentNode::append(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
-{
-    return append(from_deprecated_nodes(nodes));
-}
-
-WebIDL::ExceptionOr<void> ParentNode::replace_children(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
-{
-    return replace_children(from_deprecated_nodes(nodes));
-}
-
 WebIDL::ExceptionOr<void> ParentNode::append(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.

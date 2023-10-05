@@ -42,20 +42,4 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> convert_nodes_to_single_node(Vector<
     return document_fragment;
 }
 
-Vector<Variant<JS::Handle<Node>, String>> from_deprecated_nodes(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& deprecated_nodes)
-{
-    Vector<Variant<JS::Handle<Node>, String>> nodes;
-    nodes.ensure_capacity(deprecated_nodes.size());
-    for (auto const& deprecated_node : deprecated_nodes) {
-        deprecated_node.visit(
-            [&nodes](JS::Handle<Node> node) {
-                nodes.unchecked_append(node);
-            },
-            [&nodes](DeprecatedString const& deprecated_node) {
-                nodes.unchecked_append(MUST(String::from_deprecated_string(deprecated_node)));
-            });
-    }
-    return nodes;
-}
-
 }
