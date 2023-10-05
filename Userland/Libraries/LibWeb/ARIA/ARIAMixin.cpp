@@ -14,10 +14,13 @@ namespace Web::ARIA {
 Optional<Role> ARIAMixin::role_or_default() const
 {
     // 1. Use the rules of the host language to detect that an element has a role attribute and to identify the attribute value string for it.
-    auto role_string = role();
+    auto maybe_role_string = role();
+    if (!maybe_role_string.has_value())
+        return default_role();
 
     // 2. Separate the attribute value string for that attribute into a sequence of whitespace-free substrings by separating on whitespace.
-    auto role_list = role_string.split_view(Infra::is_ascii_whitespace);
+    auto role_string = maybe_role_string.value();
+    auto role_list = role_string.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
 
     // 3. Compare the substrings to all the names of the non-abstract WAI-ARIA roles. Case-sensitivity of the comparison inherits from the case-sensitivity of the host language.
     for (auto const& role_name : role_list) {
@@ -38,27 +41,27 @@ Optional<Role> ARIAMixin::role_or_default() const
 // https://www.w3.org/TR/wai-aria-1.2/#global_states
 bool ARIAMixin::has_global_aria_attribute() const
 {
-    return !aria_atomic().is_null()
-        || !aria_busy().is_null()
-        || !aria_controls().is_null()
-        || !aria_current().is_null()
-        || !aria_described_by().is_null()
-        || !aria_details().is_null()
-        || !aria_disabled().is_null()
-        || !aria_drop_effect().is_null()
-        || !aria_error_message().is_null()
-        || !aria_flow_to().is_null()
-        || !aria_grabbed().is_null()
-        || !aria_has_popup().is_null()
-        || !aria_hidden().is_null()
-        || !aria_invalid().is_null()
-        || !aria_key_shortcuts().is_null()
-        || !aria_label().is_null()
-        || !aria_labelled_by().is_null()
-        || !aria_live().is_null()
-        || !aria_owns().is_null()
-        || !aria_relevant().is_null()
-        || !aria_role_description().is_null();
+    return aria_atomic().has_value()
+        || aria_busy().has_value()
+        || aria_controls().has_value()
+        || aria_current().has_value()
+        || aria_described_by().has_value()
+        || aria_details().has_value()
+        || aria_disabled().has_value()
+        || aria_drop_effect().has_value()
+        || aria_error_message().has_value()
+        || aria_flow_to().has_value()
+        || aria_grabbed().has_value()
+        || aria_has_popup().has_value()
+        || aria_hidden().has_value()
+        || aria_invalid().has_value()
+        || aria_key_shortcuts().has_value()
+        || aria_label().has_value()
+        || aria_labelled_by().has_value()
+        || aria_live().has_value()
+        || aria_owns().has_value()
+        || aria_relevant().has_value()
+        || aria_role_description().has_value();
 }
 
 Optional<DeprecatedString> ARIAMixin::parse_id_reference(DeprecatedString const& id_reference) const

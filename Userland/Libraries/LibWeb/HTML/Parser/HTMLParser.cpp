@@ -3895,10 +3895,10 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
 
             // 1. If current node is an element in the HTML namespace, the MathML namespace, or the SVG namespace, then let tagname be current node's local name.
             //    Otherwise, let tagname be current node's qualified name.
-            DeprecatedString tag_name;
+            FlyString tag_name;
 
             if (element.namespace_().is_one_of(Namespace::HTML, Namespace::MathML, Namespace::SVG))
-                tag_name = element.local_name().to_deprecated_fly_string();
+                tag_name = element.local_name();
             else
                 tag_name = element.qualified_name();
 

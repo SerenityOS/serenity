@@ -74,30 +74,30 @@ class Element
 public:
     virtual ~Element() override;
 
-    DeprecatedFlyString qualified_name() const { return m_qualified_name.as_string().to_deprecated_fly_string(); }
-    DeprecatedString const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
+    FlyString const& qualified_name() const { return m_qualified_name.as_string(); }
+    FlyString const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
 
-    virtual FlyString node_name() const final { return MUST(FlyString::from_deprecated_fly_string(html_uppercased_qualified_name())); }
+    virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
     DeprecatedFlyString deprecated_local_name() const { return m_qualified_name.local_name().to_deprecated_fly_string(); }
     FlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
-    FlyString tag_name() const { return MUST(FlyString::from_deprecated_fly_string(html_uppercased_qualified_name())); }
-    DeprecatedString const& deprecated_tag_name() const { return html_uppercased_qualified_name(); }
+    FlyString const& tag_name() const { return html_uppercased_qualified_name(); }
+    DeprecatedString deprecated_tag_name() const { return html_uppercased_qualified_name().to_deprecated_fly_string(); }
 
     Optional<FlyString> const& prefix() const { return m_qualified_name.prefix(); }
     DeprecatedFlyString deprecated_prefix() const { return m_qualified_name.deprecated_prefix(); }
 
-    void set_prefix(DeprecatedFlyString const& value);
+    void set_prefix(Optional<FlyString> value);
 
     DeprecatedFlyString namespace_() const { return m_qualified_name.deprecated_namespace_(); }
 
     // NOTE: This is for the JS bindings
-    DeprecatedFlyString namespace_uri() const { return namespace_(); }
+    Optional<FlyString> const& namespace_uri() const { return m_qualified_name.namespace_(); }
 
-    // FIXME: This should be taking a 'FlyString const&'
+    // FIXME: This should be taking a 'FlyString const&' / 'Optional<FlyString> const&'
     bool has_attribute(StringView name) const;
-    bool has_attribute_ns(StringView namespace_, StringView name) const;
+    bool has_attribute_ns(Optional<String> const& namespace_, StringView name) const;
     bool has_attributes() const;
 
     // FIXME: This should be taking a 'FlyString const&'
@@ -111,7 +111,13 @@ public:
 
     WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
     WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, Optional<String> const& value);
-    WebIDL::ExceptionOr<void> set_attribute_ns(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& qualified_name, DeprecatedString const& value);
+    WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, Optional<String> const& value)
+    {
+        return set_attribute(name.to_deprecated_fly_string(), value);
+    }
+
+    // FIXME: This should be taking an Optional<FlyString>
+    WebIDL::ExceptionOr<void> set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value);
     void set_attribute_value(DeprecatedFlyString const& local_name, DeprecatedString const& value, DeprecatedFlyString const& prefix = {}, DeprecatedFlyString const& namespace_ = {});
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
@@ -119,12 +125,12 @@ public:
     // FIXME: This should take a 'FlyString cosnt&'
     void remove_attribute(StringView name);
 
-    WebIDL::ExceptionOr<bool> toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force);
+    WebIDL::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const;
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
-    Vector<DeprecatedString> get_attribute_names() const;
+    Vector<String> get_attribute_names() const;
 
-    JS::GCPtr<Attr> get_attribute_node(DeprecatedFlyString const& name) const;
+    JS::GCPtr<Attr> get_attribute_node(FlyString const& name) const;
 
     DOMTokenList* class_list();
 
@@ -189,10 +195,10 @@ public:
 
     CSS::CSSStyleDeclaration* style_for_bindings();
 
-    WebIDL::ExceptionOr<DeprecatedString> inner_html() const;
+    WebIDL::ExceptionOr<String> inner_html() const;
     WebIDL::ExceptionOr<void> set_inner_html(StringView);
 
-    WebIDL::ExceptionOr<void> insert_adjacent_html(DeprecatedString position, DeprecatedString text);
+    WebIDL::ExceptionOr<void> insert_adjacent_html(String const& position, String const& text);
 
     bool is_focused() const;
     bool is_active() const;
@@ -244,20 +250,20 @@ public:
 
     bool is_actually_disabled() const;
 
-    WebIDL::ExceptionOr<JS::GCPtr<Element>> insert_adjacent_element(DeprecatedString const& where, JS::NonnullGCPtr<Element> element);
-    WebIDL::ExceptionOr<void> insert_adjacent_text(DeprecatedString const& where, DeprecatedString const& data);
+    WebIDL::ExceptionOr<JS::GCPtr<Element>> insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element);
+    WebIDL::ExceptionOr<void> insert_adjacent_text(String const& where, String const& data);
 
     // https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview
     ErrorOr<void> scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> = {});
 
     // https://www.w3.org/TR/wai-aria-1.2/#ARIAMixin
 #define ARIA_IMPL(name, attribute)                                               \
-    DeprecatedString name() const override                                       \
+    Optional<String> name() const override                                       \
     {                                                                            \
-        return deprecated_get_attribute(attribute);                              \
+        return get_attribute(attribute);                                         \
     }                                                                            \
                                                                                  \
-    WebIDL::ExceptionOr<void> set_##name(DeprecatedString const& value) override \
+    WebIDL::ExceptionOr<void> set_##name(Optional<String> const& value) override \
     {                                                                            \
         TRY(set_attribute(attribute, value));                                    \
         return {};                                                               \
@@ -387,7 +393,7 @@ private:
     void enqueue_an_element_on_the_appropriate_element_queue();
 
     QualifiedName m_qualified_name;
-    DeprecatedString m_html_uppercased_qualified_name;
+    FlyString m_html_uppercased_qualified_name;
 
     JS::GCPtr<NamedNodeMap> m_attributes;
     Vector<AttributeChangeSteps> m_attribute_change_steps;

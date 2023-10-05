@@ -170,7 +170,7 @@ DeprecatedString Element::get_attribute_value(StringView local_name, DeprecatedF
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattributenode
-JS::GCPtr<Attr> Element::get_attribute_node(DeprecatedFlyString const& name) const
+JS::GCPtr<Attr> Element::get_attribute_node(FlyString const& name) const
 {
     // The getAttributeNode(qualifiedName) method steps are to return the result of getting an attribute given qualifiedName and this.
     return m_attributes->get_attribute(name);
@@ -258,13 +258,17 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Deprec
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributens
-WebIDL::ExceptionOr<void> Element::set_attribute_ns(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& qualified_name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value)
 {
+    DeprecatedFlyString deprecated_namespace;
+    if (namespace_.has_value())
+        deprecated_namespace = namespace_->to_deprecated_string();
+
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), deprecated_namespace, qualified_name.to_deprecated_fly_string()));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
-    set_attribute_value(extracted_qualified_name.local_name().to_deprecated_fly_string(), value, extracted_qualified_name.deprecated_prefix(), extracted_qualified_name.deprecated_namespace_());
+    set_attribute_value(extracted_qualified_name.local_name().to_deprecated_fly_string(), value.to_deprecated_fly_string(), extracted_qualified_name.deprecated_prefix(), extracted_qualified_name.deprecated_namespace_());
 
     return {};
 }
@@ -319,18 +323,22 @@ bool Element::has_attribute(StringView name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattributens
-bool Element::has_attribute_ns(StringView namespace_, StringView name) const
+bool Element::has_attribute_ns(Optional<String> const& namespace_, StringView name) const
 {
+    StringView namespace_view;
+    if (namespace_.has_value())
+        namespace_view = namespace_->bytes_as_string_view();
+
     // 1. If namespace is the empty string, then set it to null.
-    if (namespace_.is_empty())
-        namespace_ = {};
+    if (namespace_view.is_empty())
+        namespace_view = {};
 
     // 2. Return true if this has an attribute whose namespace is namespace and local name is localName; otherwise false.
-    return m_attributes->get_attribute_ns(namespace_, name) != nullptr;
+    return m_attributes->get_attribute_ns(namespace_view, name) != nullptr;
 }
 
 // https://dom.spec.whatwg.org/#dom-element-toggleattribute
-WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force)
+WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional<bool> force)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
@@ -349,7 +357,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
         // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty
         //    string, and node document is this’s node document, then append this attribute to this, and then return true.
         if (!force.has_value() || force.value()) {
-            auto new_attribute = Attr::create(document(), MUST(String::from_deprecated_string(insert_as_lowercase ? name.to_lowercase() : name)), String {});
+            auto new_attribute = Attr::create(document(), insert_as_lowercase ? MUST(Infra::to_ascii_lowercase(name)) : name.to_string(), String {});
             m_attributes->append_attribute(new_attribute);
 
             return true;
@@ -370,13 +378,13 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattributenames
-Vector<DeprecatedString> Element::get_attribute_names() const
+Vector<String> Element::get_attribute_names() const
 {
     // The getAttributeNames() method steps are to return the qualified names of the attributes in this’s attribute list, in order; otherwise a new list.
-    Vector<DeprecatedString> names;
+    Vector<String> names;
     for (size_t i = 0; i < m_attributes->length(); ++i) {
         auto const* attribute = m_attributes->item(i);
-        names.append(attribute->name().to_deprecated_fly_string());
+        names.append(attribute->name().to_string());
     }
     return names;
 }
@@ -733,9 +741,10 @@ WebIDL::ExceptionOr<void> Element::set_inner_html(StringView markup)
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-WebIDL::ExceptionOr<DeprecatedString> Element::inner_html() const
+WebIDL::ExceptionOr<String> Element::inner_html() const
 {
-    return serialize_fragment(DOMParsing::RequireWellFormed::Yes);
+    auto inner_html = TRY(serialize_fragment(DOMParsing::RequireWellFormed::Yes));
+    return MUST(String::from_deprecated_string(inner_html));
 }
 
 bool Element::is_focused() const
@@ -805,7 +814,7 @@ void Element::make_html_uppercased_qualified_name()
 {
     // This is allowed by the spec: "User agents could optimize qualified name and HTML-uppercased qualified name by storing them in internal slots."
     if (namespace_() == Namespace::HTML && document().document_type() == Document::Type::HTML)
-        m_html_uppercased_qualified_name = DeprecatedString(qualified_name()).to_uppercase();
+        m_html_uppercased_qualified_name = MUST(Infra::to_ascii_uppercase(qualified_name()));
     else
         m_html_uppercased_qualified_name = qualified_name();
 }
@@ -1359,7 +1368,7 @@ bool Element::is_actually_disabled() const
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
-WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString position, DeprecatedString text)
+WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, String const& text)
 {
     JS::GCPtr<Node> context;
     // 1. Use the first matching item from this list:
@@ -1475,24 +1484,24 @@ WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(DeprecatedString c
 }
 
 // https://dom.spec.whatwg.org/#dom-element-insertadjacentelement
-WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(DeprecatedString const& where, JS::NonnullGCPtr<Element> element)
+WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element)
 {
     // The insertAdjacentElement(where, element) method steps are to return the result of running insert adjacent, give this, where, and element.
-    auto returned_node = TRY(insert_adjacent(where, move(element)));
+    auto returned_node = TRY(insert_adjacent(where.to_deprecated_string(), move(element)));
     if (!returned_node)
         return JS::GCPtr<Element> { nullptr };
     return JS::GCPtr<Element> { verify_cast<Element>(*returned_node) };
 }
 
 // https://dom.spec.whatwg.org/#dom-element-insertadjacenttext
-WebIDL::ExceptionOr<void> Element::insert_adjacent_text(DeprecatedString const& where, DeprecatedString const& data)
+WebIDL::ExceptionOr<void> Element::insert_adjacent_text(String const& where, String const& data)
 {
     // 1. Let text be a new Text node whose data is data and node document is this’s node document.
-    auto text = heap().allocate<DOM::Text>(realm(), document(), MUST(String::from_deprecated_string(data)));
+    auto text = heap().allocate<DOM::Text>(realm(), document(), data);
 
     // 2. Run insert adjacent, given this, where, and text.
     // Spec Note: This method returns nothing because it existed before we had a chance to design it.
-    (void)TRY(insert_adjacent(where, text));
+    (void)TRY(insert_adjacent(where.to_deprecated_string(), text));
     return {};
 }
 
@@ -1859,9 +1868,9 @@ void Element::setup_custom_element_from_constructor(HTML::CustomElementDefinitio
     m_is_value = is_value;
 }
 
-void Element::set_prefix(DeprecatedFlyString const& value)
+void Element::set_prefix(Optional<FlyString> value)
 {
-    m_qualified_name.set_prefix(MUST(FlyString::from_deprecated_fly_string(value)));
+    m_qualified_name.set_prefix(move(value));
 }
 
 void Element::for_each_attribute(Function<void(DeprecatedFlyString const&, DeprecatedString const&)> callback) const

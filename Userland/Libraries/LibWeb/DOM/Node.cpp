@@ -1786,17 +1786,19 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
         //   process its IDREFs in the order they occur:
         // - or, if computing a description, and the current node has an aria-describedby attribute that contains at least one valid IDREF, and the current node is not already part of an aria-describedby traversal,
         //   process its IDREFs in the order they occur:
-        if ((target == NameOrDescription::Name && Node::first_valid_id(element->aria_labelled_by(), document).has_value())
-            || (target == NameOrDescription::Description && Node::first_valid_id(element->aria_described_by(), document).has_value())) {
+        auto aria_labelled_by = element->aria_labelled_by();
+        auto aria_described_by = element->aria_described_by();
+        if ((target == NameOrDescription::Name && aria_labelled_by.has_value() && Node::first_valid_id(aria_labelled_by->to_deprecated_string(), document).has_value())
+            || (target == NameOrDescription::Description && aria_described_by.has_value() && Node::first_valid_id(aria_described_by->to_deprecated_string(), document).has_value())) {
 
             // i. Set the accumulated text to the empty string.
             total_accumulated_text.clear();
 
             Vector<StringView> id_list;
             if (target == NameOrDescription::Name) {
-                id_list = element->aria_labelled_by().split_view(Infra::is_ascii_whitespace);
+                id_list = aria_labelled_by->bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
             } else {
-                id_list = element->aria_described_by().split_view(Infra::is_ascii_whitespace);
+                id_list = aria_described_by->bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
             }
             // ii. For each IDREF:
             for (auto const& id_ref : id_list) {
@@ -1817,10 +1819,10 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
             return total_accumulated_text.to_string();
         }
         // C. Otherwise, if computing a name, and if the current node has an aria-label attribute whose value is not the empty string, nor, when trimmed of white space, is not the empty string:
-        if (target == NameOrDescription::Name && !element->aria_label().is_empty() && !element->aria_label().trim_whitespace().is_empty()) {
+        if (target == NameOrDescription::Name && element->aria_label().has_value() && !element->aria_label()->is_empty() && !element->aria_label()->bytes_as_string_view().is_whitespace()) {
             // TODO: - If traversal of the current node is due to recursion and the current node is an embedded control as defined in step 2E, ignore aria-label and skip to rule 2E.
             // - Otherwise, return the value of aria-label.
-            return String::from_deprecated_string(element->aria_label());
+            return element->aria_label().value();
         }
         // TODO: D. Otherwise, if the current node's native markup provides an attribute (e.g. title) or element (e.g. HTML label) that defines a text alternative,
         //      return that alternative in the form of a flat string as defined by the host language, unless the element is marked as presentational (role="presentation" or role="none").
@@ -1908,29 +1910,33 @@ ErrorOr<String> Node::accessible_description(Document const& document) const
 {
     // If aria-describedby is present, user agents MUST compute the accessible description by concatenating the text alternatives for elements referenced by an aria-describedby attribute on the current element.
     // The text alternatives for the referenced elements are computed using a number of methods, outlined below in the section titled Accessible Name and Description Computation.
-    if (is_element()) {
-        HashTable<i32> visited_nodes;
-        StringBuilder builder;
-        auto const* element = static_cast<Element const*>(this);
-        auto id_list = element->aria_described_by().split_view(Infra::is_ascii_whitespace);
-        for (auto const& id : id_list) {
-            if (auto description_element = document.get_element_by_id(id)) {
-                auto description = TRY(
-                    description_element->name_or_description(NameOrDescription::Description, document,
-                        visited_nodes));
-                if (!description.is_empty()) {
-                    if (builder.is_empty()) {
-                        builder.append(description);
-                    } else {
-                        builder.append(" "sv);
-                        builder.append(description);
-                    }
+    if (!is_element())
+        return String {};
+
+    auto const* element = static_cast<Element const*>(this);
+    auto described_by = element->aria_described_by();
+    if (!described_by.has_value())
+        return String {};
+
+    HashTable<i32> visited_nodes;
+    StringBuilder builder;
+    auto id_list = described_by->bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
+    for (auto const& id : id_list) {
+        if (auto description_element = document.get_element_by_id(id)) {
+            auto description = TRY(
+                description_element->name_or_description(NameOrDescription::Description, document,
+                    visited_nodes));
+            if (!description.is_empty()) {
+                if (builder.is_empty()) {
+                    builder.append(description);
+                } else {
+                    builder.append(" "sv);
+                    builder.append(description);
                 }
             }
         }
-        return builder.to_string();
     }
-    return String {};
+    return builder.to_string();
 }
 
 Optional<StringView> Node::first_valid_id(DeprecatedString const& value, Document const& document)

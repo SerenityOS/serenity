@@ -205,32 +205,32 @@ private:
 
     // https://www.w3.org/TR/wai-aria-1.2/#valuetype_true-false
     // The default value for this value type is false unless otherwise specified.
-    static bool parse_true_false(StringView);
+    static bool parse_true_false(Optional<String> const&);
 
     // https://www.w3.org/TR/wai-aria-1.2/#valuetype_tristate
     // The default value for this value type is undefined unless otherwise specified.
-    static Tristate parse_tristate(StringView);
+    static Tristate parse_tristate(Optional<String> const&);
 
     // https://www.w3.org/TR/wai-aria-1.2/#valuetype_true-false-undefined
     // The default value for this value type is undefined unless otherwise specified.
-    static Optional<bool> parse_true_false_undefined(StringView);
+    static Optional<bool> parse_true_false_undefined(Optional<String> const&);
 
     // https://www.w3.org/TR/wai-aria-1.2/#valuetype_integer
-    static Optional<i32> parse_integer(StringView);
+    static Optional<i32> parse_integer(Optional<String> const&);
 
     // https://www.w3.org/TR/wai-aria-1.2/#valuetype_number
-    static Optional<f64> parse_number(StringView);
+    static Optional<f64> parse_number(Optional<String> const&);
 
-    static AriaAutocomplete parse_aria_autocomplete(StringView);
-    static AriaCurrent parse_aria_current(StringView);
-    static Vector<AriaDropEffect> parse_aria_drop_effect(StringView);
-    static AriaHasPopup parse_aria_has_popup(StringView);
-    static AriaInvalid parse_aria_invalid(StringView);
-    static Optional<AriaLive> parse_aria_live(StringView);
-    static Optional<AriaOrientation> parse_aria_orientation(StringView);
-    static Vector<AriaRelevant> parse_aria_relevant(StringView);
-    static AriaSort parse_aria_sort(StringView);
-    static Optional<bool> parse_optional_true_false(StringView);
+    static AriaAutocomplete parse_aria_autocomplete(Optional<String> const&);
+    static AriaCurrent parse_aria_current(Optional<String> const&);
+    static Vector<AriaDropEffect> parse_aria_drop_effect(Optional<String> const&);
+    static AriaHasPopup parse_aria_has_popup(Optional<String> const&);
+    static AriaInvalid parse_aria_invalid(Optional<String> const&);
+    static Optional<AriaLive> parse_aria_live(Optional<String> const&);
+    static Optional<AriaOrientation> parse_aria_orientation(Optional<String> const&);
+    static Vector<AriaRelevant> parse_aria_relevant(Optional<String> const&);
+    static AriaSort parse_aria_sort(Optional<String> const&);
+    static Optional<bool> parse_optional_true_false(Optional<String> const&);
 
     Optional<DeprecatedString> m_aria_active_descendant;
     Optional<bool> m_aria_atomic;

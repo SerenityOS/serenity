@@ -581,7 +581,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
                     return JS::throw_completion(WebIDL::NotSupportedError::create(realm, "Synchronously created custom element must have the same local name that element creation was invoked with"_fly_string));
 
                 // 10. Set result’s namespace prefix to prefix.
-                element->set_prefix(prefix);
+                if (prefix.is_null())
+                    element->set_prefix({});
+                else
+                    element->set_prefix(MUST(FlyString::from_deprecated_fly_string(prefix)));
 
                 // 11. Set result’s is value to null.
                 element->set_is_value(Optional<String> {});
