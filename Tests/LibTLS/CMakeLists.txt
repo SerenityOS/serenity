@@ -1,4 +1,5 @@
 set(TEST_SOURCES
+    TestTLSCertificateParser.cpp
     TestTLSHandshake.cpp
 )
 
