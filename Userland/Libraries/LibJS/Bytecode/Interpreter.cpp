@@ -1530,6 +1530,19 @@ ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpre
 
     auto base_value = interpreter.reg(m_base);
     auto object = TRY(base_object_for_get(interpreter, base_value));
+
+    // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
+    if (property_key_value.is_int32()
+        && property_key_value.as_i32() >= 0
+        && !object->may_interfere_with_indexed_property_access()
+        && object->indexed_properties().has_index(property_key_value.as_i32())) {
+        auto value = object->indexed_properties().get(property_key_value.as_i32())->value;
+        if (!value.is_accessor()) {
+            interpreter.accumulator() = value;
+            return {};
+        }
+    }
+
     auto property_key = TRY(property_key_value.to_property_key(vm));
 
     if (base_value.is_string()) {
