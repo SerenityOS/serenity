@@ -61,7 +61,7 @@ private:
         m_context = MUST(GL::create_context(*m_bitmap));
         m_framerate_timer = Core::ElapsedTimer::start_new();
 
-        start_timer(20);
+        start_timer(15);
 
         GL::make_context_current(m_context);
         glFrontFace(GL_CCW);
