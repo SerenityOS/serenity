@@ -59,6 +59,7 @@ private:
         constexpr u16 RENDER_HEIGHT = 480;
         m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT }).release_value_but_fixme_should_propagate_errors();
         m_context = MUST(GL::create_context(*m_bitmap));
+        m_framerate_timer = Core::ElapsedTimer::start_new();
 
         start_timer(20);
 
@@ -100,10 +101,13 @@ private:
     virtual void keydown_event(GUI::KeyEvent&) override;
 
 private:
+    static constexpr u32 UPDATE_FRAMERATE_EVERY_FRAMES = 30;
+
     RefPtr<Mesh> m_mesh;
     RefPtr<Gfx::Bitmap> m_bitmap;
     OwnPtr<GL::GLContext> m_context;
     NonnullOwnPtr<WavefrontOBJLoader> m_mesh_loader;
+    Core::ElapsedTimer m_framerate_timer;
     GLuint m_init_list { 0 };
     bool m_rotate_x = true;
     bool m_rotate_y = false;
@@ -115,7 +119,6 @@ private:
     float m_rotation_speed = 60.f;
     bool m_show_frame_rate = false;
     int m_cycles = 0;
-    Duration m_accumulated_time = {};
     RefPtr<GUI::Label> m_stats;
     GLint m_wrap_s_mode = GL_REPEAT;
     GLint m_wrap_t_mode = GL_REPEAT;
@@ -203,7 +206,6 @@ void GLContextWidget::keydown_event(GUI::KeyEvent& event)
 
 void GLContextWidget::timer_event(Core::TimerEvent&)
 {
-    auto timer = Core::ElapsedTimer::start_new();
     static unsigned int light_counter = 0;
 
     glCallList(m_init_list);
@@ -263,11 +265,11 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 
     m_context->present();
 
-    if ((m_cycles % 30) == 0) {
-        auto render_time = static_cast<double>(m_accumulated_time.to_milliseconds()) / 30.0;
+    if ((m_cycles % UPDATE_FRAMERATE_EVERY_FRAMES) == 0) {
+        auto render_time = static_cast<double>(m_framerate_timer.elapsed_milliseconds()) / UPDATE_FRAMERATE_EVERY_FRAMES;
         auto frame_rate = render_time > 0 ? 1000 / render_time : 0;
         m_stats->set_text(String::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time).release_value_but_fixme_should_propagate_errors());
-        m_accumulated_time = {};
+        m_framerate_timer = Core::ElapsedTimer::start_new();
 
         glEnable(GL_LIGHT0);
         glEnable(GL_LIGHT1);
@@ -283,8 +285,6 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     }
 
     update();
-
-    m_accumulated_time += timer.elapsed_time();
     m_cycles++;
 }
 
