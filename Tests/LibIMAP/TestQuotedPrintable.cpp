@@ -46,4 +46,17 @@ TEST_CASE(test_decode)
 
     auto illegal_character_decode = MUST(IMAP::decode_quoted_printable(illegal_character_builder.to_deprecated_string()));
     EXPECT(illegal_character_decode.is_empty());
+
+    // If an escape sequence is invalid the characters are output unaltered. Illegal characters are ignored as usual.
+    decode_equal("="sv, "="sv);
+    decode_equal("=Z"sv, "=Z"sv);
+    decode_equal("=\x7F"sv, "="sv);
+    decode_equal("=\x7F\x7F"sv, "="sv);
+    decode_equal("=A\x7F"sv, "=A"sv);
+    decode_equal("=A"sv, "=A"sv);
+    decode_equal("=AZ"sv, "=AZ"sv);
+    decode_equal("=\r"sv, "=\r"sv);
+    decode_equal("=\r\r"sv, "=\r\r"sv);
+    decode_equal("=\n\r"sv, "=\n\r"sv);
+    decode_equal("=\rA"sv, "=\rA"sv);
 }

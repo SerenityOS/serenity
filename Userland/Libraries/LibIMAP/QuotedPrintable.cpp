@@ -22,6 +22,18 @@ ErrorOr<ByteBuffer> decode_quoted_printable(StringView input)
     GenericLexer lexer(input);
     StringBuilder output;
 
+    // For any invalid escape sequence. RFC 2045 says a reasonable solution is just to append '=' followed by the unaltered escape characters.
+    auto append_invalid_escape_sequence = [&](Optional<char> first = {}, Optional<char> second = {}) -> ErrorOr<void> {
+        TRY(output.try_append('='));
+        if (first.has_value() && !is_illegal_character(first.value()))
+            TRY(output.try_append(first.value()));
+
+        if (second.has_value() && !is_illegal_character(second.value()))
+            TRY(output.try_append(second.value()));
+
+        return {};
+    };
+
     // NOTE: The RFC says that encoded lines must not be longer than 76 characters.
     //       However, the RFC says implementations can ignore this and parse as is,
     //       which is the approach we're taking.
@@ -34,7 +46,8 @@ ErrorOr<ByteBuffer> decode_quoted_printable(StringView input)
 
         if (potential_character == '=') {
             if (lexer.is_eof()) {
-                TODO();
+                TRY(append_invalid_escape_sequence());
+                continue;
             }
 
             char first_escape_character = lexer.consume();
@@ -43,7 +56,8 @@ ErrorOr<ByteBuffer> decode_quoted_printable(StringView input)
             // Thus we can use is_ascii_hex_digit.
             if (is_ascii_hex_digit(first_escape_character)) {
                 if (lexer.is_eof()) {
-                    TODO();
+                    TRY(append_invalid_escape_sequence(first_escape_character));
+                    continue;
                 }
 
                 char second_escape_character = lexer.consume();
@@ -52,11 +66,13 @@ ErrorOr<ByteBuffer> decode_quoted_printable(StringView input)
                     u8 actual_character = (parse_ascii_hex_digit(first_escape_character) << 4) | parse_ascii_hex_digit(second_escape_character);
                     TRY(output.try_append(actual_character));
                 } else {
-                    TODO();
+                    TRY(append_invalid_escape_sequence(first_escape_character, second_escape_character));
+                    continue;
                 }
             } else if (first_escape_character == '\r') {
                 if (lexer.is_eof()) {
-                    TODO();
+                    TRY(append_invalid_escape_sequence(first_escape_character));
+                    continue;
                 }
 
                 char second_escape_character = lexer.consume();
@@ -64,16 +80,12 @@ ErrorOr<ByteBuffer> decode_quoted_printable(StringView input)
                 if (second_escape_character == '\n') {
                     // This is a soft line break. Don't append anything to the output.
                 } else {
-                    TODO();
+                    TRY(append_invalid_escape_sequence(first_escape_character, second_escape_character));
+                    continue;
                 }
             } else {
-                if (is_illegal_character(first_escape_character)) {
-                    TODO();
-                }
-
-                // Invalid escape sequence. RFC 2045 says a reasonable solution is just to append '=' followed by the character.
-                TRY(output.try_append('='));
-                TRY(output.try_append(first_escape_character));
+                TRY(append_invalid_escape_sequence(first_escape_character));
+                continue;
             }
         } else {
             TRY(output.try_append(potential_character));
