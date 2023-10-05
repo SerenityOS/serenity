@@ -135,6 +135,12 @@ public:
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&);
     virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const;
 
+    // NOTE: Any subclass of Object that overrides property access slots ([[Get]], [[Set]] etc)
+    //       to customize access to indexed properties (properties where the name is a positive integer)
+    //       must return true for this, to opt out of optimizations that rely on assumptions that
+    //       might not hold when property access behaves differently.
+    virtual bool may_interfere_with_indexed_property_access() const { return false; }
+
     ThrowCompletionOr<bool> ordinary_set_with_own_descriptor(PropertyKey const&, Value, Value, Optional<PropertyDescriptor>);
 
     // 10.4.7 Immutable Prototype Exotic Objects, https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects

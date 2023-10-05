@@ -414,6 +414,8 @@ public:
         return { move(keys) };
     }
 
+    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
+
     ReadonlySpan<UnderlyingBufferDataType> data() const
     {
         return { reinterpret_cast<UnderlyingBufferDataType const*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
