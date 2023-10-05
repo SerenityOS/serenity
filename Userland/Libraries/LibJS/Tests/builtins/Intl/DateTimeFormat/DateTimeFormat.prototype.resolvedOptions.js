@@ -109,6 +109,18 @@ describe("correct behavior", () => {
         const ja3 = Intl.DateTimeFormat("ja", { hour: "numeric", hour12: false });
         expect(ja3.resolvedOptions().hourCycle).toBe("h23");
         expect(ja3.resolvedOptions().hour12).toBeFalse();
+
+        const fr1 = Intl.DateTimeFormat("fr", { hour: "numeric" });
+        expect(fr1.resolvedOptions().hourCycle).toBe("h23");
+        expect(fr1.resolvedOptions().hour12).toBeFalse();
+
+        const fr2 = Intl.DateTimeFormat("fr", { hour: "numeric", hour12: true });
+        expect(fr2.resolvedOptions().hourCycle).toBe("h12");
+        expect(fr2.resolvedOptions().hour12).toBeTrue();
+
+        const fr3 = Intl.DateTimeFormat("fr", { hour: "numeric", hour12: false });
+        expect(fr3.resolvedOptions().hourCycle).toBe("h23");
+        expect(fr3.resolvedOptions().hour12).toBeFalse();
     });
 
     test("timeZone", () => {
