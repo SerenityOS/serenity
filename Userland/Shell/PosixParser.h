@@ -21,8 +21,13 @@ public:
         (void)fill_token_buffer(starting_reduction);
     }
 
+    enum class AllowNewlines {
+        No,
+        Yes,
+    };
+
     RefPtr<AST::Node> parse();
-    RefPtr<AST::Node> parse_word_list();
+    RefPtr<AST::Node> parse_word_list(AllowNewlines = AllowNewlines::No);
 
     struct Error {
         DeprecatedString message;
@@ -94,6 +99,7 @@ private:
     ErrorOr<RefPtr<AST::Node>> parse_io_file(AST::Position, Optional<int> fd);
     ErrorOr<RefPtr<AST::Node>> parse_io_here(AST::Position, Optional<int> fd);
     ErrorOr<RefPtr<AST::Node>> parse_word();
+    ErrorOr<RefPtr<AST::Node>> parse_bash_like_list();
     ErrorOr<CaseItemsResult> parse_case_list();
 
     template<typename... Ts>

@@ -451,6 +451,7 @@ public:
     virtual bool should_override_execution_in_current_process() const { return false; }
 
     Position const& position() const { return m_position; }
+    Position& position() { return m_position; }
     virtual void clear_syntax_error();
     virtual void set_is_syntax_error(SyntaxError& error_node);
     virtual SyntaxError& syntax_error_node()

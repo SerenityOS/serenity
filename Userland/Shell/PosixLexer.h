@@ -242,6 +242,7 @@ struct Token {
 
         // Not produced by this lexer, but generated in later stages.
         AssignmentWord,
+        ListAssignmentWord,
         Bang,
         Case,
         CloseBrace,

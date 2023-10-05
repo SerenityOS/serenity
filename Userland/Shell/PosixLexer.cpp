@@ -961,6 +961,8 @@ StringView Token::type_name() const
         return "HeredocContents"sv;
     case Type::AssignmentWord:
         return "AssignmentWord"sv;
+    case Type::ListAssignmentWord:
+        return "ListAssignmentWord"sv;
     case Type::Bang:
         return "Bang"sv;
     case Type::Case:
