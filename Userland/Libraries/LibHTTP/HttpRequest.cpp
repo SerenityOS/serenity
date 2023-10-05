@@ -226,11 +226,22 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
     request.m_headers = move(headers);
     auto url_parts = resource.split_limit('?', 2, SplitBehavior::KeepEmpty);
 
+    auto url_part_to_string = [](DeprecatedString const& url_part) -> ErrorOr<String, ParseError> {
+        auto query_string_or_error = String::from_deprecated_string(url_part);
+        if (!query_string_or_error.is_error())
+            return query_string_or_error.release_value();
+
+        if (query_string_or_error.error().code() == ENOMEM)
+            return ParseError::OutOfMemory;
+
+        return ParseError::InvalidURL;
+    };
+
     request.m_url.set_cannot_be_a_base_url(true);
     if (url_parts.size() == 2) {
         request.m_resource = url_parts[0];
         request.m_url.set_paths({ url_parts[0] });
-        request.m_url.set_query(String::from_deprecated_string(url_parts[1]).release_value_but_fixme_should_propagate_errors());
+        request.m_url.set_query(TRY(url_part_to_string(url_parts[1])));
     } else {
         request.m_resource = resource;
         request.m_url.set_paths({ resource });
