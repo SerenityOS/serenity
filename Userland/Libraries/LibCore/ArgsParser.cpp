@@ -743,6 +743,21 @@ void ArgsParser::add_positional_argument(Vector<StringView>& values, char const*
     add_positional_argument(move(arg));
 }
 
+void ArgsParser::add_positional_argument(Vector<String>& values, char const* help_string, char const* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        INT_MAX,
+        [&values](StringView s) -> ErrorOr<bool> {
+            TRY_OR_ERROR_IF_NOT_OOM(values.try_append(TRY(String::from_utf8(s))), s);
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
 void ArgsParser::autocomplete(FILE* file, StringView program_name, ReadonlySpan<StringView> remaining_arguments)
 {
     // We expect the full invocation of the program to be available as positional args,
