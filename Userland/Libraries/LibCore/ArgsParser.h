@@ -123,6 +123,7 @@ public:
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<DeprecatedString>& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
+    void add_positional_argument(Vector<String>& value, char const* help_string, char const* name, Required required = Required::Yes);
 
 private:
     void autocomplete(FILE*, StringView program_name, ReadonlySpan<StringView> remaining_arguments);
