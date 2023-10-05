@@ -27,6 +27,8 @@ public:
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver) override;
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
 
+    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
+
     // [[ParameterMap]]
     Object& parameter_map() { return *m_parameter_map; }
 
