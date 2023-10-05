@@ -193,7 +193,7 @@ void Device::encode_constant_buffer(Gfx::FloatMatrix4x4 const& matrix, Vector<fl
     }
 }
 
-void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 const& modelview_matrix, FloatMatrix4x4 const& projection_matrix, Vector<GPU::Vertex>& vertices)
+void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vertex>& vertices)
 {
     // Transform incoming vertices to our own format.
     m_vertices.clear_with_capacity();
@@ -211,7 +211,7 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
     // Compute combined transform matrix
     // Flip the y axis. This is done because OpenGLs coordinate space has a Y-axis of
     // Opposite direction to that of LibGfx
-    auto combined_matrix = (Gfx::scale_matrix(FloatVector3 { 1, -1, 1 }) * projection_matrix * modelview_matrix).transpose();
+    auto combined_matrix = (Gfx::scale_matrix(FloatVector3 { 1, -1, 1 }) * m_projection_transform * m_model_view_transform).transpose();
     encode_constant_buffer(combined_matrix, m_constant_buffer_data);
 
     // Create command buffer
@@ -372,6 +372,16 @@ ErrorOr<NonnullRefPtr<GPU::Shader>> Device::create_shader(GPU::IR::Shader const&
     return adopt_ref(*new Shader(this));
 }
 
+void Device::set_model_view_transform(Gfx::FloatMatrix4x4 const& model_view_transform)
+{
+    m_model_view_transform = model_view_transform;
+}
+
+void Device::set_projection_transform(Gfx::FloatMatrix4x4 const& projection_transform)
+{
+    m_projection_transform = projection_transform;
+}
+
 void Device::set_sampler_config(unsigned, GPU::SamplerConfig const&)
 {
     dbgln("VirtGPU::Device::set_sampler_config(): unimplemented");
@@ -413,7 +423,7 @@ void Device::set_raster_position(GPU::RasterPosition const&)
     dbgln("VirtGPU::Device::set_raster_position(): unimplemented");
 }
 
-void Device::set_raster_position(FloatVector4 const&, FloatMatrix4x4 const&, FloatMatrix4x4 const&)
+void Device::set_raster_position(FloatVector4 const&)
 {
     dbgln("VirtGPU::Device::set_raster_position(): unimplemented");
 }

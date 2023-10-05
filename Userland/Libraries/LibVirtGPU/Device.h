@@ -26,7 +26,7 @@ public:
 
     virtual GPU::DeviceInfo info() const override;
 
-    virtual void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, Vector<GPU::Vertex>& vertices) override;
+    virtual void draw_primitives(GPU::PrimitiveType, Vector<GPU::Vertex>& vertices) override;
     virtual void resize(Gfx::IntSize min_size) override;
     virtual void clear_color(FloatVector4 const&) override;
     virtual void clear_depth(GPU::DepthType) override;
@@ -46,6 +46,8 @@ public:
     virtual NonnullRefPtr<GPU::Image> create_image(GPU::PixelFormat const&, u32 width, u32 height, u32 depth, u32 max_levels) override;
     virtual ErrorOr<NonnullRefPtr<GPU::Shader>> create_shader(GPU::IR::Shader const&) override;
 
+    virtual void set_model_view_transform(FloatMatrix4x4 const&) override;
+    virtual void set_projection_transform(FloatMatrix4x4 const&) override;
     virtual void set_sampler_config(unsigned, GPU::SamplerConfig const&) override;
     virtual void set_light_state(unsigned, GPU::Light const&) override;
     virtual void set_material_state(GPU::Face, GPU::Material const&) override;
@@ -55,7 +57,7 @@ public:
 
     virtual GPU::RasterPosition raster_position() const override;
     virtual void set_raster_position(GPU::RasterPosition const& raster_position) override;
-    virtual void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform) override;
+    virtual void set_raster_position(FloatVector4 const& position) override;
 
     virtual void bind_fragment_shader(RefPtr<GPU::Shader>) override;
 
@@ -66,6 +68,9 @@ private:
     ErrorOr<void> upload_command_buffer(Vector<u32> const&);
 
     NonnullOwnPtr<Core::File> m_gpu_file;
+
+    FloatMatrix4x4 m_model_view_transform;
+    FloatMatrix4x4 m_projection_transform;
 
     Protocol::ResourceID m_vbo_resource_id { 0 };
     Protocol::ResourceID m_drawtarget { 0 };

@@ -242,12 +242,13 @@ public:
     void gl_get_program(GLuint program, GLenum pname, GLint* params);
 
 private:
+    void sync_clip_planes();
     void sync_device_config();
     void sync_device_sampler_config();
     void sync_device_texture_units();
     void sync_light_state();
+    void sync_matrices();
     void sync_stencil_configuration();
-    void sync_clip_planes();
 
     ErrorOr<ByteBuffer> build_extension_string();
 
@@ -298,10 +299,12 @@ private:
     Vector<FloatMatrix4x4> m_model_view_matrix_stack { FloatMatrix4x4::identity() };
     Vector<FloatMatrix4x4>* m_current_matrix_stack { &m_model_view_matrix_stack };
     FloatMatrix4x4* m_current_matrix { &m_current_matrix_stack->last() };
+    bool m_matrices_dirty { true };
 
     ALWAYS_INLINE void update_current_matrix(FloatMatrix4x4 const& new_matrix)
     {
         *m_current_matrix = new_matrix;
+        m_matrices_dirty = true;
 
         if (m_current_matrix_mode == GL_TEXTURE)
             m_texture_units_dirty = true;

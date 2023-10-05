@@ -125,6 +125,7 @@ void GLContext::gl_pop_matrix()
 
     m_current_matrix_stack->take_last();
     m_current_matrix = &m_current_matrix_stack->last();
+    m_matrices_dirty = true;
 }
 
 void GLContext::gl_push_matrix()
@@ -135,6 +136,7 @@ void GLContext::gl_push_matrix()
 
     m_current_matrix_stack->append(*m_current_matrix);
     m_current_matrix = &m_current_matrix_stack->last();
+    m_matrices_dirty = true;
 }
 
 void GLContext::gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
@@ -165,6 +167,17 @@ void GLContext::gl_translate(GLfloat x, GLfloat y, GLfloat z)
 
     auto translation_matrix = Gfx::translation_matrix(FloatVector3 { x, y, z });
     update_current_matrix(*m_current_matrix * translation_matrix);
+}
+
+void GLContext::sync_matrices()
+{
+    if (!m_matrices_dirty)
+        return;
+
+    m_rasterizer->set_model_view_transform(model_view_matrix());
+    m_rasterizer->set_projection_transform(projection_matrix());
+
+    m_matrices_dirty = false;
 }
 
 }
