@@ -138,6 +138,9 @@ public:
     size_t array_like_size() const { return m_storage ? m_storage->array_like_size() : 0; }
     bool set_array_like_size(size_t);
 
+    IndexedPropertyStorage* storage() { return m_storage; }
+    IndexedPropertyStorage const* storage() const { return m_storage; }
+
     size_t real_size() const;
 
     Vector<u32> indices() const;
