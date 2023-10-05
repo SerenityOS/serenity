@@ -295,7 +295,10 @@ void GLContext::gl_vertex(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
         vertex.tex_coords[i] = m_current_vertex_tex_coord[i];
     vertex.normal = m_current_vertex_normal;
 
-    m_vertex_list.append(vertex);
+    // Optimization: by pulling in the Vector size vs. capacity check, we can always perform an unchecked append
+    if (m_vertex_list.size() == m_vertex_list.capacity())
+        m_vertex_list.grow_capacity(m_vertex_list.size() + 1);
+    m_vertex_list.unchecked_append(vertex);
 }
 
 void GLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
