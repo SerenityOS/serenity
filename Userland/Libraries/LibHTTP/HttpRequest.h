@@ -22,7 +22,8 @@ public:
         RequestTooLarge,
         RequestIncomplete,
         OutOfMemory,
-        UnsupportedMethod
+        UnsupportedMethod,
+        InvalidURL
     };
 
     static StringView parse_error_to_string(ParseError error)
