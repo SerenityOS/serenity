@@ -4,6 +4,7 @@
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -139,12 +140,8 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (interface.callback_functions.contains(type.name()))
         return { .name = "JS::Handle<WebIDL::CallbackType>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
-    if (type.is_string()) {
-        if (interface.extended_attributes.contains("UseDeprecatedAKString"))
-            return { .name = "DeprecatedString", .sequence_storage_type = SequenceStorageType::Vector };
-
+    if (type.is_string())
         return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
-    }
 
     if (type.name() == "double" && !type.is_nullable())
         return { .name = "double", .sequence_storage_type = SequenceStorageType::Vector };
@@ -426,10 +423,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
     // FIXME: Add support for optional, variadic, nullable and default values to all types
     if (parameter.type->is_string()) {
-        if (interface.extended_attributes.contains("UseDeprecatedAKString"))
-            generate_to_deprecated_string(scoped_generator, parameter, variadic, optional, optional_default_value);
-        else
-            generate_to_new_string(scoped_generator, parameter, variadic, optional, optional_default_value);
+        generate_to_new_string(scoped_generator, parameter, variadic, optional, optional_default_value);
     } else if (parameter.type->name().is_one_of("EventListener", "NodeFilter")) {
         // FIXME: Replace this with support for callback interfaces. https://webidl.spec.whatwg.org/#idl-callback-interface
 
@@ -828,7 +822,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
                 bool may_be_null = !optional_default_value.has_value() || parameter.type->is_nullable() || optional_default_value.value() == "null";
 
-                if (member.type->is_string() && optional && !interface.extended_attributes.contains("UseDeprecatedAKString") && may_be_null) {
+                if (member.type->is_string() && optional && may_be_null) {
                     dictionary_generator.append(R"~~~(
     if (@member_value_name@.has_value())
         @cpp_name@.@member_name@ = @member_value_name@.release_value();
@@ -1347,15 +1341,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (includes_string) {
             // 14. If types includes a string type, then return the result of converting V to that type.
             // NOTE: Currently all string types are converted to String.
-            if (!interface.extended_attributes.contains("UseDeprecatedAKString")) {
-                union_generator.append(R"~~~(
+            union_generator.append(R"~~~(
         return TRY(@js_name@@js_suffix@.to_string(vm));
 )~~~");
-            } else {
-                union_generator.append(R"~~~(
-        return TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
-)~~~");
-            }
         } else if (numeric_type && includes_bigint) {
             // 15. If types includes a numeric type and bigint, then return the result of converting V to either that numeric type or bigint.
             // https://webidl.spec.whatwg.org/#converted-to-a-numeric-type-or-bigint
@@ -1435,15 +1423,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
                 } else {
                     if (optional_default_value == "\"\"") {
-                        if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
-                            union_generator.append(R"~~~(
-    @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? DeprecatedString::empty() : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
-)~~~");
-                        } else {
-                            union_generator.append(R"~~~(
+                        union_generator.append(R"~~~(
     @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? String {} : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
 )~~~");
-                        }
                     } else if (optional_default_value == "{}") {
                         VERIFY(dictionary_type);
                         union_generator.append(R"~~~(
@@ -1621,19 +1603,11 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 
     if (type.is_nullable() && !is<UnionType>(type)) {
         if (type.is_string()) {
-            if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
-                scoped_generator.append(R"~~~(
-    if (@value@.is_null()) {
-        @result_expression@ JS::js_null();
-    } else {
-)~~~");
-            } else {
-                scoped_generator.append(R"~~~(
+            scoped_generator.append(R"~~~(
     if (!@value@.has_value()) {
         @result_expression@ JS::js_null();
     } else {
 )~~~");
-            }
         } else if (type.name() == "sequence") {
             scoped_generator.append(R"~~~(
     if (!@value@.has_value()) {
@@ -1656,7 +1630,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
     }
 
     if (type.is_string()) {
-        if (type.is_nullable() && !interface.extended_attributes.contains("UseDeprecatedAKString")) {
+        if (type.is_nullable()) {
             scoped_generator.append(R"~~~(
     @result_expression@ JS::PrimitiveString::create(vm, @value@.release_value());
 )~~~");
@@ -1786,15 +1760,9 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
         // Handle Enum? values, which were null-checked above
         if (type.is_nullable())
             scoped_generator.set("value", DeprecatedString::formatted("{}.value()", value));
-        if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
-            scoped_generator.append(R"~~~(
-    @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_deprecated_string(@value@));
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
+        scoped_generator.append(R"~~~(
     @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_string(@value@));
 )~~~");
-        }
     } else if (interface.callback_functions.contains(type.name())) {
         // https://webidl.spec.whatwg.org/#es-callback-function
 
@@ -2342,41 +2310,22 @@ enum class @enum.type.name@ {
 };
 )~~~");
 
-        if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
-            enum_generator.append(R"~~~(
-inline DeprecatedString idl_enum_to_deprecated_string(@enum.type.name@ value) {
-    switch(value) {
-)~~~");
-            for (auto& entry : it.value.translated_cpp_names) {
-                enum_generator.set("enum.entry", entry.value);
-                enum_generator.set("enum.string", entry.key);
-                enum_generator.append(R"~~~(
-    case @enum.type.name@::@enum.entry@: return "@enum.string@";
-)~~~");
-            }
-            enum_generator.append(R"~~~(
-    default: return "<unknown>";
-    };
-}
-)~~~");
-        } else {
-            enum_generator.append(R"~~~(
+        enum_generator.append(R"~~~(
 inline String idl_enum_to_string(@enum.type.name@ value) {
     switch(value) {
 )~~~");
-            for (auto& entry : it.value.translated_cpp_names) {
-                enum_generator.set("enum.entry", entry.value);
-                enum_generator.set("enum.string", entry.key);
-                enum_generator.append(R"~~~(
+        for (auto& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.set("enum.string", entry.key);
+            enum_generator.append(R"~~~(
     case @enum.type.name@::@enum.entry@: return "@enum.string@"_string;
 )~~~");
-            }
-            enum_generator.append(R"~~~(
+        }
+        enum_generator.append(R"~~~(
     default: return "<unknown>"_string;
     };
 }
 )~~~");
-        }
     }
 }
 
@@ -2468,21 +2417,15 @@ static void collect_attribute_values_of_an_inheritance_stack(SourceGenerator& fu
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name() != "boolean") {
-                    if (interface_in_chain.extended_attributes.contains("UseDeprecatedAKString")) {
+                    // FIXME: This should be calling Element::get_attribute_value: https://dom.spec.whatwg.org/#concept-element-attributes-get-value
+                    if (attribute.type->is_nullable()) {
                         attribute_generator.append(R"~~~(
-    auto @attribute.return_value_name@ = impl->deprecated_attribute(HTML::AttributeNames::@attribute.reflect_name@);
-)~~~");
-                    } else {
-                        // FIXME: This should be calling Element::get_attribute_value: https://dom.spec.whatwg.org/#concept-element-attributes-get-value
-                        if (attribute.type->is_nullable()) {
-                            attribute_generator.append(R"~~~(
     auto @attribute.return_value_name@ = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
-                        } else {
-                            attribute_generator.append(R"~~~(
+                    } else {
+                        attribute_generator.append(R"~~~(
     auto @attribute.return_value_name@ = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@).value_or(String {});
 )~~~");
-                        }
                     }
                 } else {
                     attribute_generator.append(R"~~~(
@@ -2978,21 +2921,15 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
 
         if (attribute.extended_attributes.contains("Reflect")) {
             if (attribute.type->name() != "boolean") {
-                if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
+                // FIXME: This should be calling Element::get_attribute_value: https://dom.spec.whatwg.org/#concept-element-attributes-get-value
+                if (attribute.type->is_nullable()) {
                     attribute_generator.append(R"~~~(
-    auto retval = impl->deprecated_attribute(HTML::AttributeNames::@attribute.reflect_name@);
-)~~~");
-                } else {
-                    // FIXME: This should be calling Element::get_attribute_value: https://dom.spec.whatwg.org/#concept-element-attributes-get-value
-                    if (attribute.type->is_nullable()) {
-                        attribute_generator.append(R"~~~(
     auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
-                    } else {
-                        attribute_generator.append(R"~~~(
+                } else {
+                    attribute_generator.append(R"~~~(
     auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@).value_or(String {});
 )~~~");
-                    }
                 }
             } else {
                 attribute_generator.append(R"~~~(
@@ -3186,15 +3123,9 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
     auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_getter_name@(); }));
 )~~~");
         } else {
-            if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
-                stringifier_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_deprecated_string(); }));
-)~~~");
-            } else {
-                stringifier_generator.append(R"~~~(
+            stringifier_generator.append(R"~~~(
     auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_string(); }));
 )~~~");
-            }
         }
         stringifier_generator.append(R"~~~(
 
