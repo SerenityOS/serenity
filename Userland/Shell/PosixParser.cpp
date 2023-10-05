@@ -141,6 +141,27 @@ ErrorOr<void> Parser::fill_token_buffer(Optional<Reduction> starting_reduction)
     }
     m_token_index = 0;
 
+    // Detect Assignment words, bash-like lists extension
+    for (size_t i = 1; i < m_token_buffer.size(); ++i) {
+        // Treat 'ASSIGNMENT_WORD OPEN_PAREN' where ASSIGNMENT_WORD is `word=' and OPEN_PAREN has no preceding trivia as a bash-like list assignment.
+        auto& token = m_token_buffer[i - 1];
+        auto& next_token = m_token_buffer[i];
+
+        if (token.type != Token::Type::AssignmentWord)
+            continue;
+
+        if (!token.value.ends_with('='))
+            continue;
+
+        if (next_token.type != Token::Type::OpenParen)
+            continue;
+
+        if (token.position.map([](auto& x) { return x.end_offset + 1; }) != next_token.position.map([](auto& x) { return x.start_offset; }))
+            continue;
+
+        token.type = Token::Type::ListAssignmentWord;
+    }
+
     return {};
 }
 
@@ -1437,15 +1458,24 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_for_clause()
         Optional<AST::Position> {});
 }
 
-RefPtr<AST::Node> Parser::parse_word_list()
+RefPtr<AST::Node> Parser::parse_word_list(AllowNewlines allow_newlines)
 {
     Vector<NonnullRefPtr<AST::Node>> nodes;
 
     auto start_position = peek().position.value_or(empty_position());
 
+    if (allow_newlines == AllowNewlines::Yes) {
+        while (peek().type == Token::Type::Newline)
+            skip();
+    }
+
     for (; peek().type == Token::Type::Word;) {
         auto word = TRY_OR_THROW_PARSE_ERROR_AT(parse_word(), start_position);
         nodes.append(word.release_nonnull());
+        if (allow_newlines == AllowNewlines::Yes) {
+            while (peek().type == Token::Type::Newline)
+                skip();
+        }
     }
 
     return make_ref_counted<AST::ListConcatenate>(
@@ -1857,6 +1887,32 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
     return word;
 }
 
+ErrorOr<RefPtr<AST::Node>> Parser::parse_bash_like_list()
+{
+    if (peek().type != Token::Type::OpenParen)
+        return nullptr;
+
+    auto start_position = peek().position.value_or(empty_position());
+    consume();
+
+    auto list = parse_word_list(AllowNewlines::Yes);
+
+    if (peek().type != Token::Type::CloseParen) {
+        return make_ref_counted<AST::SyntaxError>(
+            peek().position.value_or(empty_position()),
+            TRY(String::formatted("Expected ')', not {}", peek().type_name())));
+    }
+
+    consume();
+
+    if (list)
+        list->position() = start_position.with_end(peek().position.value_or(empty_position()));
+    else
+        list = make_ref_counted<AST::ListConcatenate>(start_position.with_end(peek().position.value_or(empty_position())), Vector<NonnullRefPtr<AST::Node>> {});
+
+    return list;
+}
+
 ErrorOr<RefPtr<AST::Node>> Parser::parse_do_group()
 {
     if (peek().type != Token::Type::Do) {
@@ -1893,6 +1949,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
     auto start_position = peek().position.value_or(empty_position());
 
     Vector<String> definitions;
+    HashMap<String, NonnullRefPtr<AST::Node>> list_assignments;
     Vector<NonnullRefPtr<AST::Node>> nodes;
 
     for (;;) {
@@ -1902,7 +1959,19 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
             break;
     }
 
-    while (peek().type == Token::Type::AssignmentWord) {
+    while (is_one_of(peek().type, Token::Type::ListAssignmentWord, Token::Type::AssignmentWord)) {
+        if (peek().type == Token::Type::ListAssignmentWord) {
+            auto token = consume();
+            auto value = TRY(parse_bash_like_list());
+            if (!value)
+                return make_ref_counted<AST::SyntaxError>(
+                    token.position.value_or(empty_position()),
+                    TRY(String::formatted("Expected a list literal after '{}', not {}", token.value, peek().type_name())));
+
+            list_assignments.set(token.value, value.release_nonnull());
+            continue;
+        }
+
         definitions.append(peek().value);
 
         if (nodes.is_empty()) {
@@ -1939,7 +2008,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
             Token::Type::Word, Token::Type::IoNumber,
             Token::Type::Less, Token::Type::LessAnd, Token::Type::Great, Token::Type::GreatAnd,
             Token::Type::DoubleGreat, Token::Type::LessGreat, Token::Type::Clobber)) {
-        if (!nodes.is_empty()) {
+        if (!definitions.is_empty() || !list_assignments.is_empty()) {
             Vector<AST::VariableDeclarations::Variable> variables;
             for (auto& definition : definitions) {
                 auto equal_offset = definition.find_byte_offset('=');
@@ -1965,10 +2034,25 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
 
                 variables.append({ move(name), move(expanded_value) });
             }
+            for (auto& [key, value] : list_assignments) {
+                auto equal_offset = key.find_byte_offset('=');
+                auto split_offset = equal_offset.value_or(key.bytes().size());
+                auto name = make_ref_counted<AST::BarewordLiteral>(
+                    empty_position(),
+                    TRY(key.substring_from_byte_offset_with_shared_superstring(0, split_offset)));
+
+                variables.append({ move(name), move(value) });
+            }
 
             return make_ref_counted<AST::VariableDeclarations>(empty_position(), move(variables));
         }
         return nullptr;
+    }
+
+    if (!list_assignments.is_empty()) {
+        return make_ref_counted<AST::SyntaxError>(
+            peek().position.value_or(empty_position()),
+            "List assignments are not allowed as a command prefix"_string);
     }
 
     // auto first = true;
