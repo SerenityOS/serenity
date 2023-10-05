@@ -575,9 +575,9 @@ static ErrorOr<void> parse_hour_cycles(DeprecatedString core_path, CLDR& cldr)
     auto const& time_data_object = supplemental_object.get_object("timeData"sv).value();
 
     auto parse_hour_cycle = [](StringView hour_cycle) -> Optional<Locale::HourCycle> {
-        if (hour_cycle == "h"sv)
+        if (hour_cycle.is_one_of("h"sv, "hb"sv, "hB"sv))
             return Locale::HourCycle::H12;
-        if (hour_cycle == "H"sv)
+        if (hour_cycle.is_one_of("H"sv, "Hb"sv, "HB"sv))
             return Locale::HourCycle::H23;
         if (hour_cycle == "K"sv)
             return Locale::HourCycle::H11;
