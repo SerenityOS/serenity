@@ -169,7 +169,7 @@ void GLContext::gl_end()
         VERIFY_NOT_REACHED();
     }
 
-    m_rasterizer->draw_primitives(primitive_type, model_view_matrix(), projection_matrix(), m_vertex_list);
+    m_rasterizer->draw_primitives(primitive_type, m_vertex_list);
     m_vertex_list.clear_with_capacity();
 }
 
@@ -837,7 +837,8 @@ void GLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_raster_pos, x, y, z, w);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_rasterizer->set_raster_position({ x, y, z, w }, model_view_matrix(), projection_matrix());
+    sync_matrices();
+    m_rasterizer->set_raster_position({ x, y, z, w });
 }
 
 void GLContext::gl_line_width(GLfloat width)
@@ -917,11 +918,12 @@ void GLContext::present()
 
 void GLContext::sync_device_config()
 {
+    sync_clip_planes();
     sync_device_sampler_config();
     sync_device_texture_units();
     sync_light_state();
+    sync_matrices();
     sync_stencil_configuration();
-    sync_clip_planes();
 }
 
 ErrorOr<ByteBuffer> GLContext::build_extension_string()

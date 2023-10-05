@@ -952,7 +952,7 @@ void Device::calculate_vertex_lighting(GPU::Vertex& vertex) const
     vertex.color.clamp(0.0f, 1.0f);
 }
 
-void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, Vector<GPU::Vertex>& vertices)
+void Device::draw_primitives(GPU::PrimitiveType primitive_type, Vector<GPU::Vertex>& vertices)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -967,21 +967,17 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
     if (vertices.is_empty())
         return;
 
-    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
-    // See section 2.11.3 of the OpenGL 1.5 spec
-    auto const normal_transform = model_view_transform.submatrix_from_topleft<3>().transpose().inverse();
-
     // First, transform all vertices
     for (auto& vertex : vertices) {
-        vertex.eye_coordinates = model_view_transform * vertex.position;
+        vertex.eye_coordinates = m_model_view_transform * vertex.position;
 
-        vertex.normal = normal_transform * vertex.normal;
+        vertex.normal = m_normal_transform * vertex.normal;
         if (m_options.normalization_enabled)
             vertex.normal.normalize();
 
         calculate_vertex_lighting(vertex);
 
-        vertex.clip_coordinates = projection_transform * vertex.eye_coordinates;
+        vertex.clip_coordinates = m_projection_transform * vertex.eye_coordinates;
 
         for (GPU::TextureUnitIndex i = 0; i < GPU::NUM_TEXTURE_UNITS; ++i) {
             auto const& texture_unit_configuration = m_texture_unit_configuration[i];
@@ -1581,6 +1577,20 @@ ErrorOr<NonnullRefPtr<GPU::Shader>> Device::create_shader(GPU::IR::Shader const&
     return shader;
 }
 
+void Device::set_model_view_transform(Gfx::FloatMatrix4x4 const& model_view_transform)
+{
+    m_model_view_transform = model_view_transform;
+
+    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
+    // See section 2.11.3 of the OpenGL 1.5 spec
+    m_normal_transform = model_view_transform.submatrix_from_topleft<3>().transpose().inverse();
+}
+
+void Device::set_projection_transform(Gfx::FloatMatrix4x4 const& projection_transform)
+{
+    m_projection_transform = projection_transform;
+}
+
 void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)
 {
     VERIFY(config.bound_image.is_null() || config.bound_image->ownership_token() == this);
@@ -1626,10 +1636,10 @@ void Device::set_clip_planes(Vector<FloatVector4> const& clip_planes)
     m_clip_planes = clip_planes;
 }
 
-void Device::set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform)
+void Device::set_raster_position(FloatVector4 const& position)
 {
-    auto const eye_coordinates = model_view_transform * position;
-    auto const clip_coordinates = projection_transform * eye_coordinates;
+    auto const eye_coordinates = m_model_view_transform * position;
+    auto const clip_coordinates = m_projection_transform * eye_coordinates;
 
     // FIXME: implement clipping
     m_raster_position.valid = true;
