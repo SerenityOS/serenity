@@ -655,6 +655,7 @@ if (BUILD_LAGOM)
 
         # LibTLS needs a special working directory to find cacert.pem
         lagom_test(../../Tests/LibTLS/TestTLSHandshake.cpp LibTLS LIBS LibTLS LibCrypto)
+        lagom_test(../../Tests/LibTLS/TestTLSCertificateParser.cpp LibTLS LIBS LibTLS)
 
         # The FLAC tests need a special working directory to find the test files
         lagom_test(../../Tests/LibAudio/TestFLACSpec.cpp LIBS LibAudio WORKING_DIRECTORY "${FLAC_TEST_PATH}/..")

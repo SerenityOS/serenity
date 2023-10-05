@@ -691,10 +691,11 @@ static ErrorOr<Certificate> parse_tbs_certificate(Crypto::ASN1::Decoder& decoder
     ENTER_TYPED_SCOPE(Sequence, "TBSCertificate"sv);
 
     auto post_cert_buffer = TRY(decoder.peek_entry_bytes());
-    auto asn1_data = TRY(ByteBuffer::copy(pre_cert_buffer.slice(0, post_cert_buffer.size() + entry_length_byte_count)));
+    if (pre_cert_buffer.size() < post_cert_buffer.size() + entry_length_byte_count) {
+        ERROR_WITH_SCOPE("Unexpected end of file");
+    }
 
     Certificate certificate;
-    certificate.tbs_asn1 = asn1_data;
     certificate.version = TRY(parse_certificate_version(decoder, current_scope)).to_u64();
     certificate.serial_number = TRY(parse_serial_number(decoder, current_scope));
     certificate.algorithm = TRY(parse_algorithm_identifier(decoder, current_scope));
@@ -702,6 +703,7 @@ static ErrorOr<Certificate> parse_tbs_certificate(Crypto::ASN1::Decoder& decoder
     certificate.validity = TRY(parse_validity(decoder, current_scope));
     certificate.subject = TRY(parse_name(decoder, current_scope));
     certificate.public_key = TRY(parse_subject_public_key_info(decoder, current_scope));
+    certificate.tbs_asn1 = TRY(ByteBuffer::copy(pre_cert_buffer.slice(0, post_cert_buffer.size() + entry_length_byte_count)));
 
     if (!decoder.eof()) {
         auto tag = TRY(decoder.peek());
