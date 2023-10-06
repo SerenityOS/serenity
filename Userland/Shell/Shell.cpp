@@ -615,7 +615,8 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
         return 1;
     }
 
-    tcgetattr(0, &termios);
+    if (m_is_interactive)
+        tcgetattr(0, &termios);
 
     (void)command->run(*this);
 
@@ -1132,7 +1133,8 @@ void Shell::restore_ios()
 {
     if (m_is_subshell)
         return;
-    tcsetattr(0, TCSANOW, &termios);
+    if (m_is_interactive)
+        tcsetattr(0, TCSANOW, &termios);
     tcsetpgrp(STDOUT_FILENO, m_pid);
     tcsetpgrp(STDIN_FILENO, m_pid);
 }
