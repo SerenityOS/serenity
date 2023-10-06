@@ -280,4 +280,6 @@ char** environment();
 
 ErrorOr<String> current_executable_path();
 
+ErrorOr<Bytes> allocate(size_t count, size_t size);
+
 }
