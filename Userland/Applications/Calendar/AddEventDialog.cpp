@@ -24,7 +24,7 @@ namespace Calendar {
 
 AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window)
     : Dialog(parent_window)
-    , m_date_time(date_time)
+    , m_start_date_time(date_time)
     , m_event_manager(event_manager)
 {
     resize(158, 130);
@@ -32,7 +32,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     set_resizable(false);
     set_icon(parent_window->icon());
 
-    m_date_time = Core::DateTime::create(m_date_time.year(), m_date_time.month(), m_date_time.day(), 12, 0);
+    m_start_date_time = Core::DateTime::create(m_start_date_time.year(), m_start_date_time.month(), m_start_date_time.day(), 12, 0);
 
     auto widget = set_main_widget<GUI::Widget>();
     widget->load_from_gml(add_event_dialog_gml).release_value_but_fixme_should_propagate_errors();
@@ -42,19 +42,19 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
 
     auto starting_month_input = widget->find_descendant_of_type_named<GUI::ComboBox>("start_month");
     starting_month_input->set_model(MonthListModel::create());
-    starting_month_input->set_selected_index(m_date_time.month() - 1);
+    starting_month_input->set_selected_index(m_start_date_time.month() - 1);
 
     auto starting_day_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_day");
-    starting_day_input->set_value(m_date_time.day());
+    starting_day_input->set_value(m_start_date_time.day());
 
     auto starting_year_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_year");
-    starting_year_input->set_value(m_date_time.year());
+    starting_year_input->set_value(m_start_date_time.year());
 
     auto starting_hour_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_hour");
-    starting_hour_input->set_value(m_date_time.hour());
+    starting_hour_input->set_value(m_start_date_time.hour());
 
     auto starting_minute_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_minute");
-    starting_minute_input->set_value(m_date_time.minute());
+    starting_minute_input->set_value(m_start_date_time.minute());
 
     auto starting_meridiem_input = widget->find_descendant_of_type_named<GUI::ComboBox>("start_meridiem");
     starting_meridiem_input->set_model(MeridiemListModel::create());
@@ -80,7 +80,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
         auto hour = starting_hour_input->value();
         auto minute = starting_minute_input->value();
 
-        m_date_time = Core::DateTime::create(year, month, day, hour, minute);
+        m_start_date_time = Core::DateTime::create(year, month, day, hour, minute);
     };
     starting_year_input->on_change = [update_input_values, update_starting_day_range](auto) {
         update_input_values();
@@ -98,8 +98,8 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
 ErrorOr<void> AddEventDialog::add_event_to_calendar()
 {
     JsonObject event;
-    auto start_date = TRY(String::formatted("{}-{:0>2d}-{:0>2d}", m_date_time.year(), m_date_time.month(), m_date_time.day()));
-    auto start_time = TRY(String::formatted("{}:{:0>2d}", m_date_time.hour(), m_date_time.minute()));
+    auto start_date = TRY(String::formatted("{}-{:0>2d}-{:0>2d}", m_start_date_time.year(), m_start_date_time.month(), m_start_date_time.day()));
+    auto start_time = TRY(String::formatted("{}:{:0>2d}", m_start_date_time.hour(), m_start_date_time.minute()));
     auto summary = find_descendant_of_type_named<GUI::TextBox>("event_title_textbox")->get_text();
     event.set("start_date", JsonValue(start_date));
     event.set("start_time", JsonValue(start_time));
