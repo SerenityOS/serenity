@@ -21,7 +21,7 @@ namespace WindowServer {
 EventLoop::EventLoop()
 {
     m_keyboard_fd = open("/dev/input/keyboard/0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    m_mouse_fd = open("/dev/input/mouse/0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    m_mice_fd = open("/dev/input/mice", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
     m_window_server = MUST(IPC::MultiServer<ConnectionFromClient>::try_create("/tmp/portal/window"));
     m_wm_server = MUST(IPC::MultiServer<WMConnectionFromClient>::try_create("/tmp/portal/wm"));
@@ -33,11 +33,11 @@ EventLoop::EventLoop()
         dbgln("Couldn't open /dev/input/keyboard/0");
     }
 
-    if (m_mouse_fd >= 0) {
-        m_mouse_notifier = Core::Notifier::construct(m_mouse_fd, Core::Notifier::Type::Read);
+    if (m_mice_fd >= 0) {
+        m_mouse_notifier = Core::Notifier::construct(m_mice_fd, Core::Notifier::Type::Read);
         m_mouse_notifier->on_activation = [this] { drain_mouse(); };
     } else {
-        dbgln("Couldn't open /dev/input/mouse/0");
+        dbgln("Couldn't open /dev/input/mice");
     }
 }
 
@@ -48,7 +48,7 @@ void EventLoop::drain_mouse()
     state.buttons = screen_input.mouse_button_state();
     MousePacket packets[32];
 
-    ssize_t nread = read(m_mouse_fd, &packets, sizeof(packets));
+    ssize_t nread = read(m_mice_fd, &packets, sizeof(packets));
     if (nread < 0) {
         perror("EventLoop::drain_mouse read");
         return;
