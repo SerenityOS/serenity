@@ -560,7 +560,7 @@ static ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_
     if (offset_to_beginning_of_tag_data_element % 4 != 0)
         return Error::from_string_literal("ICC::Profile: Tag data not aligned");
 
-    if (offset_to_beginning_of_tag_data_element + size_of_tag_data_element > bytes.size())
+    if (static_cast<u64>(offset_to_beginning_of_tag_data_element) + size_of_tag_data_element > bytes.size())
         return Error::from_string_literal("ICC::Profile: Tag data out of bounds");
 
     auto tag_bytes = bytes.slice(offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
