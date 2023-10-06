@@ -38,7 +38,7 @@ public:
 
     ~BitmapFont();
 
-    u8* rows() { return m_rows; }
+    u8* rows() { return m_rows.data(); }
     u8* widths() { return m_glyph_widths; }
 
     virtual float point_size() const override { return m_presentation_size; }
@@ -131,7 +131,7 @@ public:
     virtual RefPtr<Font> with_size(float point_size) const override;
 
 private:
-    BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width,
+    BitmapFont(String name, String family, Bytes rows, u8* widths, bool is_fixed_width,
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, Bytes range_mask,
         u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays = false);
 
@@ -151,7 +151,7 @@ private:
     Bytes m_range_mask;
     Vector<Optional<size_t>> m_range_indices;
 
-    u8* m_rows { nullptr };
+    Bytes m_rows;
     u8* m_glyph_widths { nullptr };
     OwnPtr<Core::MappedFile> m_mapped_file;
 
