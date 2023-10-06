@@ -40,25 +40,25 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     auto event_title_textbox = widget->find_descendant_of_type_named<GUI::TextBox>("event_title_textbox");
     event_title_textbox->set_focus(true);
 
-    auto starting_month_combo = widget->find_descendant_of_type_named<GUI::ComboBox>("start_month");
-    starting_month_combo->set_model(MonthListModel::create());
-    starting_month_combo->set_selected_index(m_date_time.month() - 1);
+    auto starting_month_input = widget->find_descendant_of_type_named<GUI::ComboBox>("start_month");
+    starting_month_input->set_model(MonthListModel::create());
+    starting_month_input->set_selected_index(m_date_time.month() - 1);
 
-    auto starting_day_combo = widget->find_descendant_of_type_named<GUI::SpinBox>("start_day");
-    starting_day_combo->set_value(m_date_time.day());
+    auto starting_day_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_day");
+    starting_day_input->set_value(m_date_time.day());
 
-    auto starting_year_combo = widget->find_descendant_of_type_named<GUI::SpinBox>("start_year");
-    starting_year_combo->set_value(m_date_time.year());
+    auto starting_year_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_year");
+    starting_year_input->set_value(m_date_time.year());
 
-    auto starting_hour_combo = widget->find_descendant_of_type_named<GUI::SpinBox>("start_hour");
-    starting_hour_combo->set_value(m_date_time.hour());
+    auto starting_hour_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_hour");
+    starting_hour_input->set_value(m_date_time.hour());
 
-    auto starting_minute_combo = widget->find_descendant_of_type_named<GUI::SpinBox>("start_minute");
-    starting_minute_combo->set_value(m_date_time.minute());
+    auto starting_minute_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_minute");
+    starting_minute_input->set_value(m_date_time.minute());
 
-    auto starting_meridiem_combo = widget->find_descendant_of_type_named<GUI::ComboBox>("start_meridiem");
-    starting_meridiem_combo->set_model(MeridiemListModel::create());
-    starting_meridiem_combo->set_selected_index(0);
+    auto starting_meridiem_input = widget->find_descendant_of_type_named<GUI::ComboBox>("start_meridiem");
+    starting_meridiem_input->set_model(MeridiemListModel::create());
+    starting_meridiem_input->set_selected_index(0);
 
     auto ok_button = widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button->on_click = [&](auto) {
@@ -68,31 +68,31 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     };
 
     auto update_starting_day_range = [=]() {
-        auto year = starting_year_combo->value();
-        auto month = starting_month_combo->selected_index();
+        auto year = starting_year_input->value();
+        auto month = starting_month_input->selected_index();
 
-        starting_day_combo->set_range(1, days_in_month(year, month + 1));
+        starting_day_input->set_range(1, days_in_month(year, month + 1));
     };
-    auto update_combo_values = [=, this]() {
-        auto year = starting_year_combo->value();
-        auto month = starting_month_combo->selected_index() + 1;
-        auto day = starting_day_combo->value();
-        auto hour = starting_hour_combo->value();
-        auto minute = starting_minute_combo->value();
+    auto update_input_values = [=, this]() {
+        auto year = starting_year_input->value();
+        auto month = starting_month_input->selected_index() + 1;
+        auto day = starting_day_input->value();
+        auto hour = starting_hour_input->value();
+        auto minute = starting_minute_input->value();
 
         m_date_time = Core::DateTime::create(year, month, day, hour, minute);
     };
-    starting_year_combo->on_change = [update_combo_values, update_starting_day_range](auto) {
-        update_combo_values();
+    starting_year_input->on_change = [update_input_values, update_starting_day_range](auto) {
+        update_input_values();
         update_starting_day_range();
     };
-    starting_month_combo->on_change = [update_combo_values, update_starting_day_range](auto, auto) {
-        update_combo_values();
+    starting_month_input->on_change = [update_input_values, update_starting_day_range](auto, auto) {
+        update_input_values();
         update_starting_day_range();
     };
-    starting_day_combo->on_change = [update_combo_values](auto) { update_combo_values(); };
-    starting_hour_combo->on_change = [update_combo_values](auto) { update_combo_values(); };
-    starting_minute_combo->on_change = [update_combo_values](auto) { update_combo_values(); };
+    starting_day_input->on_change = [update_input_values](auto) { update_input_values(); };
+    starting_hour_input->on_change = [update_input_values](auto) { update_input_values(); };
+    starting_minute_input->on_change = [update_input_values](auto) { update_input_values(); };
 }
 
 ErrorOr<void> AddEventDialog::add_event_to_calendar()
