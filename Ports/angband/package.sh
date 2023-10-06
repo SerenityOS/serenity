@@ -1,22 +1,25 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=angband
-version=4.2.4
+port='angband'
+version='4.2.5'
 workdir="Angband-${version}"
-useconfigure=true
-use_fresh_config_sub=true
+useconfigure='true'
 files=(
-    "https://github.com/angband/angband/releases/download/${version}/Angband-${version}.tar.gz#a07c78c1dd05e48ddbe4d8ef5d1880fcdeab55fd05f1336d9cba5dd110b15ff3"
+    "https://github.com/angband/angband/releases/download/${version}/Angband-${version}.tar.gz#c4cacbdf28f726fcb1a0b30b8763100fb06f88dbb570e955232e41d83e0718a6"
 )
-depends=("ncurses" "SDL2" "SDL2_image" "SDL2_ttf" "SDL2_mixer")
+depends=(
+    'ncurses'
+    'SDL2'
+    'SDL2_image'
+    'SDL2_mixer'
+    'SDL2_ttf'
+)
 configopts=(
-    "--prefix=/usr/local"
-    "--bindir=/usr/local/bin"
-    "--disable-x11"
-    "--enable-curses"
-    "--enable-sdl2"
-    "--enable-sdl2-mixer"
+    '--prefix=/usr/local'
+    '--bindir=/usr/local/bin'
+    '--disable-x11'
+    '--enable-curses'
+    '--enable-sdl2'
+    '--enable-sdl2-mixer'
     "--with-ncurses-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
     "--with-sdl2-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
-    "CFLAGS=--sysroot=${SERENITY_INSTALL_ROOT} -I${SERENITY_INSTALL_ROOT}/usr/local/include/ncursesw"
-    "LIBS=-lncursesw"
 )
