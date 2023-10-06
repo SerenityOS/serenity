@@ -332,9 +332,9 @@ public:
     bool was_interrupted { false };
     bool was_resized { false };
 
-    DeprecatedString cwd;
-    DeprecatedString username;
-    DeprecatedString home;
+    DeprecatedString cwd { "" };
+    DeprecatedString username { "" };
+    DeprecatedString home { "" };
 
     constexpr static auto TTYNameSize = 32;
     constexpr static auto HostNameSize = 64;
