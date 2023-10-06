@@ -243,3 +243,30 @@ TEST_CASE(fixed_memory_truncate)
 
     EXPECT(stream.truncate(999).is_error());
 }
+
+TEST_CASE(fixed_memory_read_in_place)
+{
+    constexpr auto some_words = "These are some words"sv;
+
+    FixedMemoryStream readonly_stream { ReadonlyBytes { some_words.bytes() } };
+
+    // Trying to read mutable values from a read-only stream should fail.
+    EXPECT(readonly_stream.read_in_place<u8>(1).is_error());
+    EXPECT_EQ(readonly_stream.offset(), 0u);
+
+    // Reading const values should succeed.
+    auto characters = TRY_OR_FAIL(readonly_stream.read_in_place<u8 const>(20));
+    EXPECT_EQ(characters, some_words.bytes());
+    EXPECT(readonly_stream.is_eof());
+
+    FixedMemoryStream mutable_stream { Bytes { const_cast<u8*>(some_words.bytes().data()), some_words.bytes().size() }, true };
+    // Trying to read mutable values from a mutable stream should succeed.
+    TRY_OR_FAIL(mutable_stream.read_in_place<u8>(1));
+    EXPECT_EQ(mutable_stream.offset(), 1u);
+    TRY_OR_FAIL(mutable_stream.seek(0));
+
+    // Reading const values should succeed.
+    auto characters_again = TRY_OR_FAIL(mutable_stream.read_in_place<u8 const>(20));
+    EXPECT_EQ(characters_again, some_words.bytes());
+    EXPECT(mutable_stream.is_eof());
+}

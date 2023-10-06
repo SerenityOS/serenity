@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/OwnPtr.h>
 #include <AK/Stream.h>
 #include <AK/Vector.h>
@@ -33,6 +35,39 @@ public:
 
     size_t offset() const;
     size_t remaining() const;
+
+    /// Read a value, but referring to the stream's underlying data instead of copying it.
+    /// Of course, only use this if you know the lifetime of the data will exceed the value's.
+    // FIXME: Would be nicer to be able to return T& but Variant (and thus ErrorOr) can't hold references.
+    template<typename T>
+    requires(Traits<T>::is_trivially_serializable())
+    ErrorOr<T*> read_in_place()
+    {
+        if constexpr (!IsConst<T>) {
+            if (!m_writing_enabled)
+                return Error::from_string_view_or_print_error_and_return_errno("Tried to obtain a non-const reference from a read-only FixedMemoryStream"sv, EINVAL);
+        }
+
+        T* value = reinterpret_cast<T*>(m_bytes.offset_pointer(m_offset));
+        TRY(discard(sizeof(T)));
+        return value;
+    }
+
+    /// Read a span of values, referring to the stream's underlying data instead of copying it.
+    /// Of course, only use this if you know the lifetime of the data will exceed the span's.
+    template<typename T>
+    requires(Traits<T>::is_trivially_serializable())
+    ErrorOr<Span<T>> read_in_place(size_t count)
+    {
+        if constexpr (!IsConst<T>) {
+            if (!m_writing_enabled)
+                return Error::from_string_view_or_print_error_and_return_errno("Tried to obtain a non-const span from a read-only FixedMemoryStream"sv, EINVAL);
+        }
+
+        Span<T> span { m_bytes.offset_pointer(m_offset), count };
+        TRY(discard(sizeof(T) * count));
+        return span;
+    }
 
 private:
     Bytes m_bytes;
