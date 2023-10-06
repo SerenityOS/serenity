@@ -32,6 +32,7 @@ set(AK_TEST_SOURCES
     TestFloatingPointParsing.cpp
     TestFlyString.cpp
     TestFormat.cpp
+    TestFuzzyMatch.cpp
     TestGenericLexer.cpp
     TestHashFunctions.cpp
     TestHashMap.cpp
