@@ -15,6 +15,12 @@
 
 namespace Web::Encoding {
 
+// https://encoding.spec.whatwg.org/#dictdef-textencoderencodeintoresult
+struct TextEncoderEncodeIntoResult {
+    unsigned long long read;
+    unsigned long long written;
+};
+
 // https://encoding.spec.whatwg.org/#textencoder
 class TextEncoder final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TextEncoder, Bindings::PlatformObject);
@@ -24,7 +30,8 @@ public:
 
     virtual ~TextEncoder() override;
 
-    JS::Uint8Array* encode(String const& input) const;
+    JS::NonnullGCPtr<JS::Uint8Array> encode(String const& input) const;
+    TextEncoderEncodeIntoResult encode_into(String const& source, JS::Handle<JS::Object> const& destination) const;
 
     static FlyString const& encoding();
 

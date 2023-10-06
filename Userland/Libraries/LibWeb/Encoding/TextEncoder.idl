@@ -1,9 +1,20 @@
-[Exposed=(Window,Worker)]
+// https://encoding.spec.whatwg.org/#textencodercommon
+interface mixin TextEncoderCommon {
+    readonly attribute DOMString encoding;
+};
+
+// https://encoding.spec.whatwg.org/#dictdef-textencoderencodeintoresult
+dictionary TextEncoderEncodeIntoResult {
+    unsigned long long read;
+    unsigned long long written;
+};
+
+// https://encoding.spec.whatwg.org/#textencoder
+[Exposed=*]
 interface TextEncoder {
     constructor();
 
     [NewObject] Uint8Array encode(optional USVString input = "");
-    // TextEncoderEncodeIntoResult encodeInto(USVString source, [AllowShared] Uint8Array destination);
-
-    readonly attribute DOMString encoding;
+    TextEncoderEncodeIntoResult encodeInto(USVString source, [AllowShared] Uint8Array destination);
 };
+TextEncoder includes TextEncoderCommon;
