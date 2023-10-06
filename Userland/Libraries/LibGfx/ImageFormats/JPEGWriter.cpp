@@ -326,6 +326,10 @@ private:
     static u8 csize(i16 coefficient)
     {
         VERIFY(coefficient >= -2047 && coefficient <= 2047);
+
+        if (coefficient == 0)
+            return 0;
+
         return floor(log2(abs(coefficient))) + 1;
     }
 
