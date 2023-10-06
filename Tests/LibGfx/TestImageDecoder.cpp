@@ -8,6 +8,7 @@
 #include <AK/DeprecatedString.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
+#include <LibGfx/ImageFormats/DDSLoader.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
 #include <LibGfx/ImageFormats/ICOLoader.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
@@ -615,5 +616,20 @@ TEST_CASE(test_jxl_modular_property_8)
             else
                 EXPECT_EQ(color, Gfx::Color::Yellow);
         }
+    }
+}
+
+TEST_CASE(test_dds)
+{
+    Array file_names = {
+        TEST_INPUT("dds/catdog-alert-29x29.dds"sv),
+        TEST_INPUT("dds/catdog-alert-32x32.dds"sv)
+    };
+
+    for (auto file_name : file_names) {
+        auto file = MUST(Core::MappedFile::map(file_name));
+        EXPECT(Gfx::DDSImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = MUST(Gfx::DDSImageDecoderPlugin::create(file->bytes()));
+        expect_single_frame(*plugin_decoder);
     }
 }

@@ -253,8 +253,8 @@ static ErrorOr<void> decode_dx5_alpha_block(Stream& stream, DDSLoadingContext& c
         color[7] = 255;
     }
 
-    for (size_t y = 0; y < 4; y++) {
-        for (size_t x = 0; x < 4; x++) {
+    for (size_t y = 0; y < 4 && bitmap_y + y < static_cast<u64>(context.bitmap->height()); y++) {
+        for (size_t x = 0; x < 4 && bitmap_x + x < static_cast<u64>(context.bitmap->width()); x++) {
             u8 index = 3 * (4 * y + x);
             u8 bit_location = floor(index / 8.0);
             u8 adjusted_index = index - (bit_location * 8);
@@ -284,8 +284,8 @@ static ErrorOr<void> decode_dx3_alpha_block(Stream& stream, DDSLoadingContext& c
     u64 alpha_0 = a0 + 256u * (a1 + 256u * (a2 + 256u * (a3 + 256u)));
     u64 alpha_1 = a4 + 256u * (a5 + 256u * (a6 + 256u * a7));
 
-    for (size_t y = 0; y < 4; y++) {
-        for (size_t x = 0; x < 4; x++) {
+    for (size_t y = 0; y < 4 && bitmap_y + y < static_cast<u64>(context.bitmap->height()); y++) {
+        for (size_t x = 0; x < 4 && bitmap_x + x < static_cast<u64>(context.bitmap->width()); x++) {
             u8 code = 4 * (4 * y + x);
 
             if (code >= 32) {
@@ -357,8 +357,8 @@ static ErrorOr<void> decode_color_block(Stream& stream, DDSLoadingContext& conte
     }
 
     size_t i = 0;
-    for (size_t y = 0; y < 4; y++) {
-        for (size_t x = 0; x < 4; x++) {
+    for (size_t y = 0; y < 4 && bitmap_y + y < static_cast<u64>(context.bitmap->height()); y++) {
+        for (size_t x = 0; x < 4 && bitmap_x + x < static_cast<u64>(context.bitmap->width()); x++) {
             u8 code_byte = (code >> (i * 2)) & 3;
             u8 r = rgba[code_byte][0];
             u8 g = rgba[code_byte][1];
