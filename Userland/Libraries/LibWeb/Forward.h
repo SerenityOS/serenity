@@ -258,6 +258,7 @@ struct TextDecodeOptions;
 class TextDecoder;
 struct TextDecoderOptions;
 class TextEncoder;
+struct TextEncoderEncodeIntoResult;
 }
 
 namespace Web::Fetch {
