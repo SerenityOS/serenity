@@ -249,6 +249,9 @@ class XMLSerializer;
 }
 
 namespace Web::Encoding {
+struct TextDecodeOptions;
+class TextDecoder;
+struct TextDecoderOptions;
 class TextEncoder;
 }
 

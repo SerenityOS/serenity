@@ -12,7 +12,7 @@
 
 namespace Web::Encoding {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(JS::Realm& realm, FlyString encoding)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(JS::Realm& realm, FlyString encoding, Optional<TextDecoderOptions> const& options)
 {
     auto& vm = realm.vm();
 
@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(J
     if (!decoder.has_value())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Invalid encoding {}", encoding)) };
 
-    return realm.heap().allocate<TextDecoder>(realm, realm, *decoder, move(encoding), false, false);
+    return realm.heap().allocate<TextDecoder>(realm, realm, *decoder, move(encoding), options.value_or({}).fatal, options.value_or({}).ignore_bom);
 }
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder
@@ -42,7 +42,7 @@ void TextDecoder::initialize(JS::Realm& realm)
 }
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder-decode
-WebIDL::ExceptionOr<String> TextDecoder::decode(Optional<JS::Handle<JS::Object>> const& input) const
+WebIDL::ExceptionOr<String> TextDecoder::decode(Optional<JS::Handle<JS::Object>> const& input, Optional<TextDecodeOptions> const&) const
 {
     if (!input.has_value())
         return TRY_OR_THROW_OOM(vm(), m_decoder.to_utf8({}));
