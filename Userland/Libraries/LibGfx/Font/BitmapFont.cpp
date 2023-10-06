@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Painter.h>
@@ -45,20 +47,14 @@ NonnullRefPtr<Font> BitmapFont::clone() const
 
 ErrorOr<NonnullRefPtr<Font>> BitmapFont::try_clone() const
 {
-    auto* new_range_mask = static_cast<u8*>(malloc(m_range_mask_size));
-    if (!new_range_mask)
-        return Error::from_errno(errno);
-    memcpy(new_range_mask, m_range_mask, m_range_mask_size);
+    auto new_range_mask = TRY(Core::System::allocate(m_range_mask_size, 1));
+    memcpy(new_range_mask.data(), m_range_mask, m_range_mask_size);
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
-    auto* new_rows = static_cast<u8*>(kmalloc_array(m_glyph_count, bytes_per_glyph));
-    if (!new_rows)
-        return Error::from_errno(errno);
-    memcpy(new_rows, m_rows, bytes_per_glyph * m_glyph_count);
-    auto* new_widths = static_cast<u8*>(malloc(m_glyph_count));
-    if (!new_widths)
-        return Error::from_errno(errno);
-    memcpy(new_widths, m_glyph_widths, m_glyph_count);
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true)));
+    auto new_rows = TRY(Core::System::allocate(m_glyph_count, bytes_per_glyph));
+    memcpy(new_rows.data(), m_rows, bytes_per_glyph * m_glyph_count);
+    auto new_widths = TRY(Core::System::allocate(m_glyph_count, 1));
+    memcpy(new_widths.data(), m_glyph_widths, m_glyph_count);
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows.data(), new_widths.data(), m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_range_mask_size, new_range_mask.data(), m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true)));
 }
 
 ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count)
@@ -67,36 +63,24 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::create(u8 glyph_height, u8 glyph_
     glyph_count = min(glyph_count, s_max_glyph_count);
     size_t glyphs_per_range = 8 * 256;
     u16 range_mask_size = ceil_div(glyph_count, glyphs_per_range);
-    auto* new_range_mask = static_cast<u8*>(calloc(range_mask_size, 1));
-    if (!new_range_mask)
-        return Error::from_errno(errno);
+    auto new_range_mask = TRY(Core::System::allocate(range_mask_size, 1));
     for (size_t i = 0; i < glyph_count; i += 256) {
         new_range_mask[i / 256 / 8] |= 1 << (i / 256 % 8);
     }
     size_t bytes_per_glyph = sizeof(u32) * glyph_height;
-    auto* new_rows = static_cast<u8*>(calloc(glyph_count, bytes_per_glyph));
-    if (!new_rows)
-        return Error::from_errno(errno);
-    auto* new_widths = static_cast<u8*>(calloc(glyph_count, 1));
-    if (!new_widths)
-        return Error::from_errno(errno);
-    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont("Untitled"_string, "Untitled"_string, new_rows, new_widths, fixed, glyph_width, glyph_height, 1, range_mask_size, new_range_mask, 0, 0, 0, 400, 0, true));
+    auto new_rows = TRY(Core::System::allocate(glyph_count, bytes_per_glyph));
+    auto new_widths = TRY(Core::System::allocate(glyph_count, 1));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont("Untitled"_string, "Untitled"_string, new_rows.data(), new_widths.data(), fixed, glyph_width, glyph_height, 1, range_mask_size, new_range_mask.data(), 0, 0, 0, 400, 0, true));
 }
 
 ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::unmasked_character_set() const
 {
-    auto* new_range_mask = static_cast<u8*>(malloc(s_max_range_mask_size));
-    if (!new_range_mask)
-        return Error::from_errno(errno);
+    auto new_range_mask = TRY(Core::System::allocate(s_max_range_mask_size, 1));
     constexpr u8 max_bits { 0b1111'1111 };
-    memset(new_range_mask, max_bits, s_max_range_mask_size);
+    memset(new_range_mask.data(), max_bits, s_max_range_mask_size);
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
-    auto* new_rows = static_cast<u8*>(kmalloc_array(s_max_glyph_count, bytes_per_glyph));
-    if (!new_rows)
-        return Error::from_errno(errno);
-    auto* new_widths = static_cast<u8*>(calloc(s_max_glyph_count, 1));
-    if (!new_widths)
-        return Error::from_errno(errno);
+    auto new_rows = TRY(Core::System::allocate(s_max_glyph_count, bytes_per_glyph));
+    auto new_widths = TRY(Core::System::allocate(s_max_glyph_count, 1));
     for (size_t code_point = 0; code_point < s_max_glyph_count; ++code_point) {
         auto index = glyph_index(code_point);
         if (index.has_value()) {
@@ -104,14 +88,12 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::unmasked_character_set() const
             memcpy(&new_rows[code_point * bytes_per_glyph], &m_rows[index.value() * bytes_per_glyph], bytes_per_glyph);
         }
     }
-    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, s_max_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows.data(), new_widths.data(), m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, s_max_range_mask_size, new_range_mask.data(), m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
 }
 
 ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::masked_character_set() const
 {
-    auto* new_range_mask = static_cast<u8*>(calloc(s_max_range_mask_size, 1));
-    if (!new_range_mask)
-        return Error::from_errno(errno);
+    auto new_range_mask = TRY(Core::System::allocate(s_max_range_mask_size, 1));
     u16 new_range_mask_size { 0 };
     for (size_t i = 0; i < m_glyph_count; ++i) {
         if (m_glyph_widths[i] > 0) {
@@ -125,12 +107,8 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::masked_character_set() const
         new_glyph_count += 256 * popcount(new_range_mask[i]);
     }
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
-    auto* new_rows = static_cast<u8*>(calloc(new_glyph_count, bytes_per_glyph));
-    if (!new_rows)
-        return Error::from_errno(errno);
-    auto* new_widths = static_cast<u8*>(calloc(new_glyph_count, 1));
-    if (!new_widths)
-        return Error::from_errno(errno);
+    auto new_rows = TRY(Core::System::allocate(new_glyph_count, bytes_per_glyph));
+    auto new_widths = TRY(Core::System::allocate(new_glyph_count, 1));
     for (size_t i = 0, j = 0; i < m_glyph_count; ++i) {
         if (!(new_range_mask[i / 256 / 8] & 1 << (i / 256 % 8))) {
             j++;
@@ -140,7 +118,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::masked_character_set() const
         memcpy(&new_widths[i - j * 256], &m_glyph_widths[i], 1);
         memcpy(&new_rows[(i - j * 256) * bytes_per_glyph], &m_rows[i * bytes_per_glyph], bytes_per_glyph);
     }
-    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, new_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows.data(), new_widths.data(), m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, new_range_mask_size, new_range_mask.data(), m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
 }
 
 BitmapFont::BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays)
