@@ -31,7 +31,7 @@ private:
     Core::EventLoop m_event_loop;
     int m_keyboard_fd { -1 };
     RefPtr<Core::Notifier> m_keyboard_notifier;
-    int m_mouse_fd { -1 };
+    int m_mice_fd { -1 };
     RefPtr<Core::Notifier> m_mouse_notifier;
     OwnPtr<IPC::MultiServer<ConnectionFromClient>> m_window_server;
     OwnPtr<IPC::MultiServer<WMConnectionFromClient>> m_wm_server;
