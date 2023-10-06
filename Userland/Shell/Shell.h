@@ -414,7 +414,7 @@ public:
 
 private:
     Shell(Line::Editor&, bool attempt_interactive, bool posix_mode = false);
-    Shell();
+    Shell(bool posix_mode = false);
     virtual ~Shell() override;
 
     void destroy();

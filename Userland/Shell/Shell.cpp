@@ -2231,8 +2231,9 @@ void Shell::notify_child_event()
     }
 }
 
-Shell::Shell()
+Shell::Shell(bool posix_mode)
     : m_is_interactive(false)
+    , m_in_posix_mode(posix_mode)
 {
     push_frame("main", LocalFrameKind::FunctionOrGlobal).leak_frame();
 
