@@ -79,6 +79,11 @@ static constexpr Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
 };
 // clang-format on
 
+void HIDManagement::enqueue_mouse_packet(Badge<MouseDevice>, MousePacket packet)
+{
+    m_all_mice_device->enqueue_mouse_packet(packet);
+}
+
 void HIDManagement::set_client(KeyboardClient* client)
 {
     SpinlockLocker locker(m_client_lock);
@@ -103,6 +108,7 @@ UNMAP_AFTER_INIT HIDManagement::KeymapData::KeymapData()
 }
 
 UNMAP_AFTER_INIT HIDManagement::HIDManagement()
+    : m_all_mice_device(AllMiceDevice::must_create())
 {
 }
 
