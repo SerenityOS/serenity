@@ -70,6 +70,7 @@ private:
     };
 
     Core::DateTime m_start_date_time;
+    Core::DateTime m_end_date_time;
     EventManager& m_event_manager;
 };
 
