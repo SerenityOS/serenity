@@ -67,16 +67,13 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
         done(ExecResult::OK);
     };
 
-    auto update_starting_day_range = [&starting_day_combo, &starting_year_combo, &starting_month_combo]() {
+    auto update_starting_day_range = [=]() {
         auto year = starting_year_combo->value();
         auto month = starting_month_combo->selected_index();
 
         starting_day_combo->set_range(1, days_in_month(year, month + 1));
     };
-    starting_year_combo->on_change = [update_starting_day_range](auto) { update_starting_day_range(); };
-    starting_month_combo->on_change = [update_starting_day_range](auto, auto) { update_starting_day_range(); };
-
-    auto update_combo_values = [&]() {
+    auto update_combo_values = [=, this]() {
         auto year = starting_year_combo->value();
         auto month = starting_month_combo->selected_index() + 1;
         auto day = starting_day_combo->value();
@@ -85,8 +82,14 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
 
         m_date_time = Core::DateTime::create(year, month, day, hour, minute);
     };
-    starting_year_combo->on_change = [update_combo_values](auto) { update_combo_values(); };
-    starting_month_combo->on_change = [update_combo_values](auto, auto) { update_combo_values(); };
+    starting_year_combo->on_change = [update_combo_values, update_starting_day_range](auto) {
+        update_combo_values();
+        update_starting_day_range();
+    };
+    starting_month_combo->on_change = [update_combo_values, update_starting_day_range](auto, auto) {
+        update_combo_values();
+        update_starting_day_range();
+    };
     starting_day_combo->on_change = [update_combo_values](auto) { update_combo_values(); };
     starting_hour_combo->on_change = [update_combo_values](auto) { update_combo_values(); };
     starting_minute_combo->on_change = [update_combo_values](auto) { update_combo_values(); };
