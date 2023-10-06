@@ -25,6 +25,8 @@ static void print_port_details(InstalledPort const& port)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    // It is particularly important to prevent pkg from having exec permissions and a large veil,
+    // since it partially executes untrusted package.sh scripts.
     TRY(Core::System::pledge("stdio recvfd thread unix rpath cpath wpath"));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
@@ -32,6 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/usr/Ports"sv, "rwc"sv));
     TRY(Core::System::unveil("/res"sv, "r"sv));
     TRY(Core::System::unveil("/usr/lib"sv, "r"sv));
+    TRY(Core::System::unveil("/etc/passwd"sv, "r"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool verbose = false;
