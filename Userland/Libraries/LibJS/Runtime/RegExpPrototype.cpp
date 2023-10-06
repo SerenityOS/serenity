@@ -19,6 +19,7 @@
 #include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Runtime/RegExpStringIterator.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

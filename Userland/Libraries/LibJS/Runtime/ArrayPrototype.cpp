@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

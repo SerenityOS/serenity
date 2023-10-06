@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/Iterator.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibWeb/Bindings/CustomElementRegistryPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>

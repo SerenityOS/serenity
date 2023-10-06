@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibTest/TestCase.h>
 
 using namespace JS;

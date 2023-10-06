@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Utf16String.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

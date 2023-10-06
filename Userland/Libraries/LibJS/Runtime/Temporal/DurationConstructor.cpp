@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationConstructor.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Temporal {
 

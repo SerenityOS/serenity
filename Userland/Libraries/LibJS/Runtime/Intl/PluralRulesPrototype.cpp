@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/PluralRulesPrototype.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibLocale/PluralRules.h>
 
 namespace JS::Intl {

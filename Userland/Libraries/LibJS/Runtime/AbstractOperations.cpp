@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/SuppressedError.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

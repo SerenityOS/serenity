@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/ProxyObject.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

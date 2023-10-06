@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/SetIterator.h>
 #include <LibJS/Runtime/SetPrototype.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

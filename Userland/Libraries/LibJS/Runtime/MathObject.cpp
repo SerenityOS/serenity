@@ -12,6 +12,7 @@
 #include <AK/Random.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MathObject.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <math.h>
 
 namespace JS {

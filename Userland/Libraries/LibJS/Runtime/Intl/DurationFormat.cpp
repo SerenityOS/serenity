@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Intl {
 

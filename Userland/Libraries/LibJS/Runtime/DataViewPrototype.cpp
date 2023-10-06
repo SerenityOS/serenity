@@ -7,6 +7,7 @@
 #include <AK/Checked.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/DataViewPrototype.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

@@ -19,6 +19,7 @@
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Temporal {
 

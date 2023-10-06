@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantConstructor.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Temporal {
 

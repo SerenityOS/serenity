@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <typeinfo>
 
 namespace JS {

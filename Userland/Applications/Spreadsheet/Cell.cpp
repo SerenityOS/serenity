@@ -8,6 +8,7 @@
 #include "Spreadsheet.h"
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace Spreadsheet {
 

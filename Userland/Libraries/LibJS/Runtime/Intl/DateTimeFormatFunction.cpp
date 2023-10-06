@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatFunction.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Intl {
 

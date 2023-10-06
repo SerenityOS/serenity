@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLOptionElementPrototype.h>
 #include <LibWeb/Bindings/OptionConstructor.h>

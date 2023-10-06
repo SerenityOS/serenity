@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

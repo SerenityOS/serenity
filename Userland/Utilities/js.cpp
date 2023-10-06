@@ -24,6 +24,7 @@
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>

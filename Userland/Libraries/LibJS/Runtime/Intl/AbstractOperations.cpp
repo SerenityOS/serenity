@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/Locale.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibLocale/Locale.h>
 
 namespace JS::Intl {

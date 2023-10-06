@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

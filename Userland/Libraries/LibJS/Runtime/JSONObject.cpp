@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

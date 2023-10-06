@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/BooleanConstructor.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 
