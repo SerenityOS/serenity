@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorHelper.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

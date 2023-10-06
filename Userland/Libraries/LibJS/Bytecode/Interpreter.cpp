@@ -29,6 +29,7 @@
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/SourceTextModule.h>
 
 namespace JS::Bytecode {

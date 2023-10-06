@@ -18,6 +18,7 @@
 #include <LibGUI/FileIconProvider.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/Script.h>
 #include <errno.h>
 #include <fcntl.h>

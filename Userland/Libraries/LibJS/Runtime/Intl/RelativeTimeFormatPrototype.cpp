@@ -7,6 +7,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatPrototype.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Intl {
 

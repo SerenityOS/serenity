@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibLocale/DateTimeFormat.h>
 #include <LibLocale/Locale.h>
 #include <LibTimeZone/TimeZone.h>

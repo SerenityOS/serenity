@@ -19,6 +19,7 @@
 #include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/Script.h>
 #include <LibJS/SourceTextModule.h>
 #include <fcntl.h>

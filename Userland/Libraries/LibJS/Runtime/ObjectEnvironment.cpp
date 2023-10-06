@@ -7,6 +7,7 @@
 
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 

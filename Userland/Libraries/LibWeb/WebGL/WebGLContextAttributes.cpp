@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibWeb/WebGL/WebGLContextAttributes.h>
 
 namespace Web::WebGL {

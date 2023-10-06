@@ -26,6 +26,7 @@
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibLocale/Locale.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Normalize.h>

@@ -80,6 +80,7 @@
 #include <LibJS/Runtime/Temporal/ZonedDateTimeConstructor.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/Runtime/WeakMapConstructor.h>
 #include <LibJS/Runtime/WeakRefConstructor.h>
 #include <LibJS/Runtime/WeakSetConstructor.h>

@@ -9,6 +9,7 @@
 #include "../Spreadsheet.h"
 #include "Format.h"
 #include <AK/ScopeGuard.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace Spreadsheet {
 

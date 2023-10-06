@@ -3252,6 +3252,7 @@ void generate_namespace_implementation(IDL::Interface const& interface, StringBu
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibWeb/Bindings/@namespace_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
@@ -3415,6 +3416,7 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Iterator.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
@@ -3807,6 +3809,7 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
@@ -4121,6 +4124,7 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <LibWeb/Bindings/@class_name@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>

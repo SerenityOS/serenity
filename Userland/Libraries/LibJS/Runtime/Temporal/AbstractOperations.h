@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/ISO8601.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Temporal {
 

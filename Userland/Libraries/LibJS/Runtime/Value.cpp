@@ -39,6 +39,7 @@
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 #include <math.h>
 
 namespace JS {
@@ -453,7 +454,7 @@ ThrowCompletionOr<Utf16String> Value::to_utf16_string(VM& vm) const
 }
 
 // 7.1.2 ToBoolean ( argument ), https://tc39.es/ecma262/#sec-toboolean
-bool Value::to_boolean() const
+bool Value::to_boolean_slow_case() const
 {
     if (is_double()) {
         if (is_nan())
@@ -490,7 +491,7 @@ bool Value::to_boolean() const
 }
 
 // 7.1.1 ToPrimitive ( input [ , preferredType ] ), https://tc39.es/ecma262/#sec-toprimitive
-ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_type) const
+ThrowCompletionOr<Value> Value::to_primitive_slow_case(VM& vm, PreferredType preferred_type) const
 {
     // 1. If input is an Object, then
     if (is_object()) {
@@ -585,12 +586,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> Value::to_object(VM& vm) const
 }
 
 // 7.1.3 ToNumeric ( value ), https://tc39.es/ecma262/#sec-tonumeric
-FLATTEN ThrowCompletionOr<Value> Value::to_numeric(VM& vm) const
+FLATTEN ThrowCompletionOr<Value> Value::to_numeric_slow_case(VM& vm) const
 {
-    // OPTIMIZATION: Fast path for when this value is already a number.
-    if (is_number())
-        return *this;
-
     // 1. Let primValue be ? ToPrimitive(value, number).
     auto primitive_value = TRY(to_primitive(vm, Value::PreferredType::Number));
 
@@ -688,7 +685,7 @@ double string_to_number(StringView string)
 }
 
 // 7.1.4 ToNumber ( argument ), https://tc39.es/ecma262/#sec-tonumber
-ThrowCompletionOr<Value> Value::to_number(VM& vm) const
+ThrowCompletionOr<Value> Value::to_number_slow_case(VM& vm) const
 {
     VERIFY(!is_empty());
 

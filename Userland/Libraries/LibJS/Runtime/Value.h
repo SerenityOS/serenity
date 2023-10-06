@@ -440,6 +440,11 @@ public:
     }
 
 private:
+    bool to_boolean_slow_case() const;
+    ThrowCompletionOr<Value> to_number_slow_case(VM&) const;
+    ThrowCompletionOr<Value> to_numeric_slow_case(VM&) const;
+    ThrowCompletionOr<Value> to_primitive_slow_case(VM&, PreferredType) const;
+
     Value(u64 tag, u64 val)
     {
         VERIFY(!(tag & val));
