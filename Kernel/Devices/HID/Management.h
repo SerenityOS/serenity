@@ -16,6 +16,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Bus/SerialIO/Controller.h>
+#include <Kernel/Devices/HID/AllMiceDevice.h>
 #include <Kernel/Devices/HID/Device.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Locking/SpinlockProtected.h>
@@ -32,6 +33,7 @@ class KeyboardClient;
 class HIDManagement {
     friend class KeyboardDevice;
     friend class MouseDevice;
+    friend class AllMiceDevice;
 
 public:
     HIDManagement();
@@ -56,6 +58,8 @@ public:
     void attach_standalone_hid_device(HIDDevice&);
     void detach_standalone_hid_device(HIDDevice&);
 
+    void enqueue_mouse_packet(Badge<MouseDevice>, MousePacket);
+
 private:
     size_t generate_minor_device_number_for_mouse();
     size_t generate_minor_device_number_for_keyboard();
@@ -64,6 +68,8 @@ private:
     size_t m_mouse_minor_number { 0 };
     size_t m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
+
+    NonnullRefPtr<AllMiceDevice> m_all_mice_device;
 
     SpinlockProtected<IntrusiveList<&SerialIOController::m_list_node>, LockRank::None> m_hid_serial_io_controllers;
     // NOTE: This list is used for standalone devices, like USB HID devices

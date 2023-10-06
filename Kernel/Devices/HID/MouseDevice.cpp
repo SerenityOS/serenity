@@ -23,6 +23,7 @@ MouseDevice::MouseDevice()
 void MouseDevice::handle_mouse_packet_input_event(MousePacket packet)
 {
     m_entropy_source.add_random_event(packet);
+    HIDManagement::the().enqueue_mouse_packet({}, packet);
     {
         SpinlockLocker lock(m_queue_lock);
         m_queue.enqueue(packet);
