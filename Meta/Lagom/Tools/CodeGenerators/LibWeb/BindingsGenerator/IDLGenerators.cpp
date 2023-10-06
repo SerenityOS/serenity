@@ -87,6 +87,7 @@ static bool is_javascript_builtin(Type const& type)
         "ArrayBuffer"sv,
         "Float32Array"sv,
         "Float64Array"sv,
+        "Uint8Array"sv
     };
 
     return types.span().contains_slow(type.name());
@@ -602,7 +603,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = JS::make_handle(TRY(@js_name@@js_suffix@.to_object(vm)));
 )~~~");
         }
-    } else if (parameter.type->name() == "BufferSource" || parameter.type->name() == "Float32Array" || parameter.type->name() == "Float64Array") {
+    } else if (parameter.type->name() == "BufferSource" || parameter.type->name() == "Float32Array" || parameter.type->name() == "Float64Array" || parameter.type->name() == "Uint8Array") {
         if (optional) {
             scoped_generator.append(R"~~~(
     Optional<JS::Handle<JS::Object>> @cpp_name@;
