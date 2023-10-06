@@ -1837,4 +1837,12 @@ ErrorOr<String> current_executable_path()
     return String::from_utf8({ path, strlen(path) });
 }
 
+ErrorOr<Bytes> allocate(size_t count, size_t size)
+{
+    auto* data = static_cast<u8*>(calloc(count, size));
+    if (!data)
+        return Error::from_errno(errno);
+    return Bytes { data, size * count };
+}
+
 }
