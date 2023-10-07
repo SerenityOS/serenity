@@ -8,6 +8,7 @@
 #include <LibWeb/Painting/SVGGraphicsPaintable.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/SVG/SVGMaskElement.h>
+#include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web::Painting {
 
@@ -35,9 +36,20 @@ Layout::SVGGraphicsBox const& SVGGraphicsPaintable::layout_box() const
 Optional<CSSPixelRect> SVGGraphicsPaintable::get_masking_area() const
 {
     auto const& graphics_element = verify_cast<SVG::SVGGraphicsElement const>(*dom_node());
-    if (auto mask = graphics_element.mask())
-        return mask->resolve_masking_area(absolute_border_box_rect());
-    return {};
+    auto mask = graphics_element.mask();
+    if (!mask)
+        return {};
+    auto target_area = [&] {
+        auto mask_units = mask->mask_units();
+        if (mask_units == SVG::MaskUnits::UserSpaceOnUse) {
+            auto const* svg_element = graphics_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
+            return svg_element->paintable_box()->absolute_border_box_rect();
+        } else {
+            VERIFY(mask_units == SVG::MaskUnits::ObjectBoundingBox);
+            return absolute_border_box_rect();
+        }
+    }();
+    return mask->resolve_masking_area(target_area);
 }
 
 static Gfx::Bitmap::MaskKind mask_type_to_gfx_mask_kind(CSS::MaskType mask_type)

@@ -53,10 +53,6 @@ MaskUnits SVGMaskElement::mask_units() const
 
 CSSPixelRect SVGMaskElement::resolve_masking_area(CSSPixelRect const& mask_target) const
 {
-    if (mask_units() == SVG::MaskUnits::UserSpaceOnUse) {
-        dbgln("SVG: maskUnits=userSpaceOnUse is not supported");
-        return {};
-    }
     // TODO: Resolve this based on the x, y, width, and height of the mask.
     return mask_target.inflated(mask_target.size().scaled(CSSPixels(2) / 10));
 }
