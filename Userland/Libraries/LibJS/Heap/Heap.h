@@ -134,4 +134,40 @@ private:
     bool m_collecting_garbage { false };
 };
 
+inline void Heap::did_create_handle(Badge<HandleImpl>, HandleImpl& impl)
+{
+    VERIFY(!m_handles.contains(impl));
+    m_handles.append(impl);
+}
+
+inline void Heap::did_destroy_handle(Badge<HandleImpl>, HandleImpl& impl)
+{
+    VERIFY(m_handles.contains(impl));
+    m_handles.remove(impl);
+}
+
+inline void Heap::did_create_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase& vector)
+{
+    VERIFY(!m_marked_vectors.contains(vector));
+    m_marked_vectors.append(vector);
+}
+
+inline void Heap::did_destroy_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase& vector)
+{
+    VERIFY(m_marked_vectors.contains(vector));
+    m_marked_vectors.remove(vector);
+}
+
+inline void Heap::did_create_weak_container(Badge<WeakContainer>, WeakContainer& set)
+{
+    VERIFY(!m_weak_containers.contains(set));
+    m_weak_containers.append(set);
+}
+
+inline void Heap::did_destroy_weak_container(Badge<WeakContainer>, WeakContainer& set)
+{
+    VERIFY(m_weak_containers.contains(set));
+    m_weak_containers.remove(set);
+}
+
 }
