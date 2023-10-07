@@ -2714,12 +2714,11 @@ void Document::destroy()
 
     // When a frame element stops being an active frame element, the user agent must destroy a child navigable given the element.
     // A frame element is said to be an active frame element when it is in a document tree and its node document's browsing context is non-null.
-    for_each_shadow_including_descendant([&](DOM::Node& node) {
-        if (is<HTML::NavigableContainer>(node)) {
-            verify_cast<HTML::NavigableContainer>(node).destroy_the_child_navigable();
+    for (auto& navigable_container : HTML::NavigableContainer::all_instances()) {
+        if (&navigable_container->document() == this) {
+            navigable_container->destroy_the_child_navigable();
         }
-        return IterationDecision::Continue;
-    });
+    }
 
     // 7. Set document's node navigable's active session history entry's document state's document to null.
     if (navigable()) {
