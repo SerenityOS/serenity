@@ -89,7 +89,7 @@ void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_response);
     visitor.visit(m_fetch_controller);
 
-    if (auto* value = m_response_object.get_pointer<JS::Value>())
+    if (auto* value = m_response_object.get_pointer<JS::NonnullGCPtr<JS::Object>>())
         visitor.visit(*value);
 }
 
@@ -138,7 +138,7 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> XMLHttpRequest::response_xml()
 
     // 4. If this’s response object is non-null, then return it.
     if (!m_response_object.has<Empty>())
-        return &verify_cast<DOM::Document>(m_response_object.get<JS::Value>().as_object());
+        return &verify_cast<DOM::Document>(*m_response_object.get<JS::NonnullGCPtr<JS::Object>>());
 
     // 5. Set a document response for this.
     set_document_response();
@@ -146,7 +146,7 @@ WebIDL::ExceptionOr<JS::GCPtr<DOM::Document>> XMLHttpRequest::response_xml()
     // 6. Return this’s response object.
     if (m_response_object.has<Empty>())
         return nullptr;
-    return &verify_cast<DOM::Document>(m_response_object.get<JS::Value>().as_object());
+    return &verify_cast<DOM::Document>(*m_response_object.get<JS::NonnullGCPtr<JS::Object>>());
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetype
@@ -193,7 +193,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
 
     // 4. If this’s response object is non-null, then return it.
     if (!m_response_object.has<Empty>())
-        return m_response_object.get<JS::Value>();
+        return m_response_object.get<JS::NonnullGCPtr<JS::Object>>();
 
     // 5. If this’s response type is "arraybuffer",
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Arraybuffer) {
@@ -206,18 +206,21 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
 
         auto buffer = buffer_result.release_value();
         buffer->buffer().overwrite(0, m_received_bytes.data(), m_received_bytes.size());
-        m_response_object = JS::Value(buffer);
+        m_response_object = JS::NonnullGCPtr<JS::Object> { buffer };
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
         auto mime_type_as_string = TRY_OR_THROW_OOM(vm, TRY_OR_THROW_OOM(vm, get_final_mime_type()).serialized());
         auto blob_part = FileAPI::Blob::create(realm(), m_received_bytes, move(mime_type_as_string));
         auto blob = FileAPI::Blob::create(realm(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) });
-        m_response_object = JS::Value(blob.ptr());
+        m_response_object = JS::NonnullGCPtr<JS::Object> { blob };
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
         set_document_response();
+
+        if (m_response_object.has<Empty>())
+            return JS::js_null();
     }
     // 8. Otherwise:
     else {
@@ -234,11 +237,11 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
             return JS::js_null();
 
         // 4. Set this’s response object to jsonObject.
-        m_response_object = json_object_result.release_value();
+        m_response_object = JS::NonnullGCPtr<JS::Object> { json_object_result.release_value().as_object() };
     }
 
     // 9. Return this’s response object.
-    return m_response_object.get<JS::Value>();
+    return m_response_object.get<JS::NonnullGCPtr<JS::Object>>();
 }
 
 // https://xhr.spec.whatwg.org/#text-response
@@ -316,7 +319,7 @@ void XMLHttpRequest::set_document_response()
     else {
         document = DOM::Document::create(realm());
         if (!Web::build_xml_document(*document, m_received_bytes)) {
-            m_response_object = JS::js_null();
+            m_response_object = Empty {};
             return;
         }
     }
@@ -338,7 +341,7 @@ void XMLHttpRequest::set_document_response()
     document->set_origin(HTML::relevant_settings_object(*this).origin());
 
     // 12. Set xhr’s response object to document.
-    m_response_object = JS::Value(document);
+    m_response_object = JS::NonnullGCPtr<JS::Object> { *document };
 }
 
 // https://xhr.spec.whatwg.org/#final-mime-type

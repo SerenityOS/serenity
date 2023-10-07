@@ -183,7 +183,7 @@ private:
     // response object
     //     An object, failure, or null, initially null.
     //     NOTE: This needs to be a JS::Value as the JSON response might not actually be an object.
-    Variant<JS::Value, Failure, Empty> m_response_object;
+    Variant<JS::NonnullGCPtr<JS::Object>, Failure, Empty> m_response_object;
 
     // https://xhr.spec.whatwg.org/#xmlhttprequest-fetch-controller
     // fetch controller
