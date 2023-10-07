@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <LibWeb/DOM/CharacterData.h>
 #include <LibWeb/DOM/Slottable.h>
 

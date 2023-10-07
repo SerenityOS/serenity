@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/WeakPtr.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/QualifiedName.h>
