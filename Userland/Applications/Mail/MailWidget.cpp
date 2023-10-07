@@ -317,33 +317,33 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
         auto seen = !response_data.flags().find_if([](StringView value) { return value.equals_ignoring_ascii_case("\\Seen"sv); }).is_end();
 
         DeprecatedString date = internal_date.to_deprecated_string();
-        DeprecatedString subject = envelope.subject.value_or("(No subject)");
+        DeprecatedString subject = envelope.subject.is_empty() ? "(No subject)" : envelope.subject;
         if (subject.contains("=?"sv) && subject.contains("?="sv)) {
             subject = MUST(IMAP::decode_rfc2047_encoded_words(subject)).span();
         }
 
         StringBuilder sender_builder;
-        if (envelope.from.has_value()) {
+        if (!envelope.from.is_empty()) {
             bool first { true };
-            for (auto const& address : *envelope.from) {
+            for (auto const& address : envelope.from) {
                 if (!first)
                     sender_builder.append(", "sv);
 
-                if (address.name.has_value()) {
-                    if (address.name->contains("=?"sv) && address.name->contains("?="sv))
-                        sender_builder.append(MUST(IMAP::decode_rfc2047_encoded_words(*address.name)));
+                if (!address.name.is_empty()) {
+                    if (address.name.contains("=?"sv) && address.name.contains("?="sv))
+                        sender_builder.append(MUST(IMAP::decode_rfc2047_encoded_words(address.name)));
                     else
-                        sender_builder.append(*address.name);
+                        sender_builder.append(address.name);
 
                     sender_builder.append(" <"sv);
-                    sender_builder.append(address.mailbox.value_or({}));
+                    sender_builder.append(address.mailbox);
                     sender_builder.append('@');
-                    sender_builder.append(address.host.value_or({}));
+                    sender_builder.append(address.host);
                     sender_builder.append('>');
                 } else {
-                    sender_builder.append(address.mailbox.value_or({}));
+                    sender_builder.append(address.mailbox);
                     sender_builder.append('@');
-                    sender_builder.append(address.host.value_or({}));
+                    sender_builder.append(address.host);
                 }
             }
         }
@@ -474,13 +474,13 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
     }
 
     auto& body_data = fetch_response_data.body_data();
-    auto body_text_part_iterator = body_data.find_if([](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
+    auto body_text_part_iterator = body_data.find_if([](Tuple<IMAP::FetchCommand::DataItem, DeprecatedString>& data) {
         const auto data_item = data.get<0>();
         return data_item.section.has_value() && data_item.section->type == IMAP::FetchCommand::DataItem::SectionType::Parts;
     });
     VERIFY(body_text_part_iterator != body_data.end());
 
-    auto& encoded_data = body_text_part_iterator->get<1>().value();
+    auto& encoded_data = body_text_part_iterator->get<1>();
 
     DeprecatedString decoded_data;
 

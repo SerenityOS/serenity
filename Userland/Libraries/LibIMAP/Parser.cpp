@@ -12,6 +12,16 @@ namespace IMAP {
 
 ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
 {
+    auto response_or_error = try_parse(move(buffer), expecting_tag);
+    if (response_or_error.is_error())
+        return { false, {} };
+
+    auto response = response_or_error.release_value();
+    return response;
+}
+
+ErrorOr<ParseStatus> Parser::try_parse(ByteBuffer&& buffer, bool expecting_tag)
+{
     dbgln_if(IMAP_PARSER_DEBUG, "Parser received {} bytes:\n\"{}\"", buffer.size(), StringView(buffer.data(), buffer.size()));
     if (m_incomplete) {
         m_buffer += buffer;
@@ -23,29 +33,25 @@ ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
     }
 
     if (consume_if("+"sv)) {
-        consume(" "sv);
+        TRY(consume(" "sv));
         auto data = consume_until_end_of_line();
-        consume("\r\n"sv);
-        return { true, { ContinueRequest { data } } };
+        TRY(consume(" "sv));
+        return ParseStatus { true, { ContinueRequest { data } } };
     }
 
     while (consume_if("*"sv)) {
-        parse_untagged();
+        TRY(parse_untagged());
     }
 
     if (expecting_tag) {
         if (at_end()) {
             m_incomplete = true;
-            return { true, {} };
+            return ParseStatus { true, {} };
         }
-        parse_response_done();
+        TRY(parse_response_done());
     }
 
-    if (m_parsing_failed) {
-        return { false, {} };
-    } else {
-        return { true, { { move(m_response) } } };
-    }
+    return ParseStatus { true, { move(m_response) } };
 }
 
 bool Parser::consume_if(StringView x)
@@ -68,14 +74,14 @@ bool Parser::consume_if(StringView x)
     return true;
 }
 
-void Parser::parse_response_done()
+ErrorOr<void> Parser::parse_response_done()
 {
-    consume("A"sv);
-    auto tag = MUST(parse_number());
-    consume(" "sv);
+    TRY(consume("A"sv));
+    auto tag = TRY(parse_number());
+    TRY(consume(" "sv));
 
-    ResponseStatus status = parse_status();
-    consume(" "sv);
+    ResponseStatus status = TRY(parse_status());
+    TRY(consume(" "sv));
 
     m_response.m_tag = tag;
     m_response.m_status = status;
@@ -87,17 +93,19 @@ void Parser::parse_response_done()
         m_position += 1;
     }
 
-    consume("\r\n"sv);
+    TRY(consume("\r\n"sv));
     m_response.m_response_text = response_data.to_deprecated_string();
+    return {};
 }
 
-void Parser::consume(StringView x)
+ErrorOr<void> Parser::consume(StringView x)
 {
     if (!consume_if(x)) {
         dbgln("\"{}\" not matched at {}, (buffer length {})", x, m_position, m_buffer.size());
-
-        m_parsing_failed = true;
+        return Error::from_string_literal("Token not matched");
     }
+
+    return {};
 }
 
 Optional<unsigned> Parser::try_parse_number()
@@ -123,108 +131,108 @@ ErrorOr<unsigned> Parser::parse_number()
 {
     auto number = try_parse_number();
     if (!number.has_value()) {
-        m_parsing_failed = true;
+        dbgln("Failed to parse number at {}, (buffer length {})", m_position, m_buffer.size());
         return Error::from_string_view("Failed to parse expected number"sv);
     }
 
     return number.value();
 }
 
-void Parser::parse_untagged()
+ErrorOr<void> Parser::parse_untagged()
 {
-    consume(" "sv);
+    TRY(consume(" "sv));
 
     // Certain messages begin with a number like:
     // * 15 EXISTS
     auto number = try_parse_number();
     if (number.has_value()) {
-        consume(" "sv);
+        TRY(consume(" "sv));
         auto data_type = parse_atom();
         if (data_type == "EXISTS"sv) {
             m_response.data().set_exists(number.value());
-            consume("\r\n"sv);
+            TRY(consume("\r\n"sv));
         } else if (data_type == "RECENT"sv) {
             m_response.data().set_recent(number.value());
-            consume("\r\n"sv);
+            TRY(consume("\r\n"sv));
         } else if (data_type == "FETCH"sv) {
-            auto fetch_response = parse_fetch_response();
+            auto fetch_response = TRY(parse_fetch_response());
             m_response.data().add_fetch_response(number.value(), move(fetch_response));
         } else if (data_type == "EXPUNGE"sv) {
             m_response.data().add_expunged(number.value());
-            consume("\r\n"sv);
+            TRY(consume("\r\n"sv));
         }
-        return;
+        return {};
     }
 
     if (consume_if("CAPABILITY"sv)) {
-        parse_capability_response();
+        TRY(parse_capability_response());
     } else if (consume_if("LIST"sv)) {
-        auto item = parse_list_item();
+        auto item = TRY(parse_list_item());
         m_response.data().add_list_item(move(item));
     } else if (consume_if("LSUB"sv)) {
-        auto item = parse_list_item();
+        auto item = TRY(parse_list_item());
         m_response.data().add_lsub_item(move(item));
     } else if (consume_if("FLAGS"sv)) {
-        consume(" "sv);
-        auto flags = parse_list(+[](StringView x) { return DeprecatedString(x); });
+        TRY(consume(" "sv));
+        auto flags = TRY(parse_list(+[](StringView x) { return DeprecatedString(x); }));
         m_response.data().set_flags(move(flags));
-        consume("\r\n"sv);
+        TRY(consume("\r\n"sv));
     } else if (consume_if("OK"sv)) {
-        consume(" "sv);
+        TRY(consume(" "sv));
         if (consume_if("["sv)) {
             auto actual_type = parse_atom();
             if (actual_type == "CLOSED"sv) {
                 // No-op.
             } else if (actual_type == "UIDNEXT"sv) {
-                consume(" "sv);
-                auto n = MUST(parse_number());
+                TRY(consume(" "sv));
+                auto n = TRY(parse_number());
                 m_response.data().set_uid_next(n);
             } else if (actual_type == "UIDVALIDITY"sv) {
-                consume(" "sv);
-                auto n = MUST(parse_number());
+                TRY(consume(" "sv));
+                auto n = TRY(parse_number());
                 m_response.data().set_uid_validity(n);
             } else if (actual_type == "UNSEEN"sv) {
-                consume(" "sv);
-                auto n = MUST(parse_number());
+                TRY(consume(" "sv));
+                auto n = TRY(parse_number());
                 m_response.data().set_unseen(n);
             } else if (actual_type == "PERMANENTFLAGS"sv) {
-                consume(" "sv);
-                auto flags = parse_list(+[](StringView x) { return DeprecatedString(x); });
+                TRY(consume(" "sv));
+                auto flags = TRY(parse_list(+[](StringView x) { return DeprecatedString(x); }));
                 m_response.data().set_permanent_flags(move(flags));
             } else if (actual_type == "HIGHESTMODSEQ"sv) {
-                consume(" "sv);
-                MUST(parse_number());
+                TRY(consume(" "sv));
+                TRY(parse_number());
                 // No-op for now.
             } else {
                 dbgln("Unknown: {}", actual_type);
                 consume_while([](u8 x) { return x != ']'; });
             }
-            consume("]"sv);
+            TRY(consume("]"sv));
         }
         consume_until_end_of_line();
-        consume("\r\n"sv);
+        TRY(consume("\r\n"sv));
     } else if (consume_if("SEARCH"sv)) {
         Vector<unsigned> ids;
         while (!consume_if("\r\n"sv)) {
-            consume(" "sv);
-            auto id = MUST(parse_number());
+            TRY(consume(" "sv));
+            auto id = TRY(parse_number());
             ids.append(id);
         }
         m_response.data().set_search_results(move(ids));
     } else if (consume_if("BYE"sv)) {
         auto message = consume_until_end_of_line();
-        consume("\r\n"sv);
+        TRY(consume("\r\n"sv));
         m_response.data().set_bye(message.is_empty() ? Optional<DeprecatedString>() : Optional<DeprecatedString>(message));
     } else if (consume_if("STATUS"sv)) {
-        consume(" "sv);
-        auto mailbox = parse_astring();
-        consume(" ("sv);
+        TRY(consume(" "sv));
+        auto mailbox = TRY(parse_astring());
+        TRY(consume(" ("sv));
         auto status_item = StatusItem();
         status_item.set_mailbox(mailbox);
         while (!consume_if(")"sv)) {
             auto status_att = parse_atom();
-            consume(" "sv);
-            auto value = MUST(parse_number());
+            TRY(consume(" "sv));
+            auto value = TRY(parse_number());
 
             auto type = StatusItemType::Recent;
             if (status_att == "MESSAGES"sv) {
@@ -239,177 +247,179 @@ void Parser::parse_untagged()
                 type = StatusItemType::Recent;
             } else {
                 dbgln("Unmatched status attribute: {}", status_att);
-                m_parsing_failed = true;
+                return Error::from_string_literal("Failed to parse status attribute");
             }
 
             status_item.set(type, value);
 
             if (!at_end() && m_buffer[m_position] != ')')
-                consume(" "sv);
+                TRY(consume(" "sv));
         }
         m_response.data().set_status(move(status_item));
         consume_if(" "sv); // Not in the spec but the Outlook server sends a space for some reason.
-        consume("\r\n"sv);
+        TRY(consume("\r\n"sv));
     } else {
         auto x = consume_until_end_of_line();
-        consume("\r\n"sv);
+        TRY(consume("\r\n"sv));
         dbgln("ignored {}", x);
     }
+
+    return {};
 }
 
-StringView Parser::parse_quoted_string()
+ErrorOr<StringView> Parser::parse_quoted_string()
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_quoted_string()", m_position);
     auto str = consume_while([](u8 x) { return x != '"'; });
-    consume("\""sv);
+    TRY(consume("\""sv));
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, str);
     return str;
 }
 
-StringView Parser::parse_string()
+ErrorOr<StringView> Parser::parse_string()
 {
-    if (consume_if("\""sv)) {
+    if (consume_if("\""sv))
         return parse_quoted_string();
-    } else {
-        return parse_literal_string();
-    }
+
+    return parse_literal_string();
 }
 
-Optional<StringView> Parser::parse_nstring()
+ErrorOr<StringView> Parser::parse_nstring()
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {} parse_nstring()", m_position);
     if (consume_if("NIL"sv))
-        return {};
-    else
-        return { parse_string() };
+        return StringView {};
+
+    return { TRY(parse_string()) };
 }
 
-FetchResponseData Parser::parse_fetch_response()
+ErrorOr<FetchResponseData> Parser::parse_fetch_response()
 {
-    consume(" ("sv);
+    TRY(consume(" ("sv));
     auto fetch_response = FetchResponseData();
 
     while (!consume_if(")"sv)) {
-        auto data_item = parse_fetch_data_item();
+        auto data_item = TRY(parse_fetch_data_item());
         switch (data_item.type) {
         case FetchCommand::DataItemType::BodyStructure: {
-            consume(" ("sv);
-            auto structure = parse_body_structure();
+            TRY(consume(" ("sv));
+            auto structure = TRY(parse_body_structure());
             fetch_response.set_body_structure(move(structure));
             break;
         }
         case FetchCommand::DataItemType::Envelope: {
-            consume(" "sv);
-            fetch_response.set_envelope(parse_envelope());
+            TRY(consume(" "sv));
+            fetch_response.set_envelope(TRY(parse_envelope()));
             break;
         }
         case FetchCommand::DataItemType::Flags: {
-            consume(" "sv);
-            auto flags = parse_list(+[](StringView x) { return DeprecatedString(x); });
+            TRY(consume(" "sv));
+            auto flags = TRY(parse_list(+[](StringView x) { return DeprecatedString(x); }));
             fetch_response.set_flags(move(flags));
             break;
         }
         case FetchCommand::DataItemType::InternalDate: {
-            consume(" \""sv);
+            TRY(consume(" \""sv));
             auto date_view = consume_while([](u8 x) { return x != '"'; });
-            consume("\""sv);
+            TRY(consume("\""sv));
             auto date = Core::DateTime::parse("%d-%b-%Y %H:%M:%S %z"sv, date_view).value();
             fetch_response.set_internal_date(date);
             break;
         }
         case FetchCommand::DataItemType::UID: {
-            consume(" "sv);
-            fetch_response.set_uid(MUST(parse_number()));
+            TRY(consume(" "sv));
+            fetch_response.set_uid(TRY(parse_number()));
             break;
         }
         case FetchCommand::DataItemType::PeekBody:
             // Spec doesn't allow for this in a response.
-            m_parsing_failed = true;
-            break;
+            return Error::from_string_literal("Unexpected fetch command type");
         case FetchCommand::DataItemType::BodySection: {
-            auto body = parse_nstring();
-            fetch_response.add_body_data(move(data_item), Optional<DeprecatedString>(move(body)));
+            auto body = TRY(parse_nstring());
+            fetch_response.add_body_data(move(data_item), body);
             break;
         }
         }
         if (!at_end() && m_buffer[m_position] != ')')
-            consume(" "sv);
+            TRY(consume(" "sv));
     }
-    consume("\r\n"sv);
+    TRY(consume("\r\n"sv));
     return fetch_response;
 }
-Envelope Parser::parse_envelope()
+
+ErrorOr<Envelope> Parser::parse_envelope()
 {
-    consume("("sv);
-    auto date = parse_nstring();
-    consume(" "sv);
-    auto subject = parse_nstring();
-    consume(" "sv);
-    auto from = parse_address_list();
-    consume(" "sv);
-    auto sender = parse_address_list();
-    consume(" "sv);
-    auto reply_to = parse_address_list();
-    consume(" "sv);
-    auto to = parse_address_list();
-    consume(" "sv);
-    auto cc = parse_address_list();
-    consume(" "sv);
-    auto bcc = parse_address_list();
-    consume(" "sv);
-    auto in_reply_to = parse_nstring();
-    consume(" "sv);
-    auto message_id = parse_nstring();
-    consume(")"sv);
+    TRY(consume("("sv));
+    auto date = TRY(parse_nstring());
+    TRY(consume(" "sv));
+    auto subject = TRY(parse_nstring());
+    TRY(consume(" "sv));
+    auto from = TRY(parse_address_list());
+    TRY(consume(" "sv));
+    auto sender = TRY(parse_address_list());
+    TRY(consume(" "sv));
+    auto reply_to = TRY(parse_address_list());
+    TRY(consume(" "sv));
+    auto to = TRY(parse_address_list());
+    TRY(consume(" "sv));
+    auto cc = TRY(parse_address_list());
+    TRY(consume(" "sv));
+    auto bcc = TRY(parse_address_list());
+    TRY(consume(" "sv));
+    auto in_reply_to = TRY(parse_nstring());
+    TRY(consume(" "sv));
+    auto message_id = TRY(parse_nstring());
+    TRY(consume(")"sv));
     Envelope envelope = {
-        date.has_value() ? AK::Optional<DeprecatedString>(date.value()) : AK::Optional<DeprecatedString>(),
-        subject.has_value() ? AK::Optional<DeprecatedString>(subject.value()) : AK::Optional<DeprecatedString>(),
+        date,
+        subject,
         from,
         sender,
         reply_to,
         to,
         cc,
         bcc,
-        in_reply_to.has_value() ? AK::Optional<DeprecatedString>(in_reply_to.value()) : AK::Optional<DeprecatedString>(),
-        message_id.has_value() ? AK::Optional<DeprecatedString>(message_id.value()) : AK::Optional<DeprecatedString>(),
+        in_reply_to,
+        message_id
     };
     return envelope;
 }
-BodyStructure Parser::parse_body_structure()
+
+ErrorOr<BodyStructure> Parser::parse_body_structure()
 {
     if (!at_end() && m_buffer[m_position] == '(') {
         auto data = MultiPartBodyStructureData();
         while (consume_if("("sv)) {
-            auto child = parse_body_structure();
+            auto child = TRY(parse_body_structure());
             data.bodies.append(make<BodyStructure>(move(child)));
         }
-        consume(" "sv);
-        data.multipart_subtype = parse_string();
+        TRY(consume(" "sv));
+        data.multipart_subtype = TRY(parse_string());
 
         if (!consume_if(")"sv)) {
-            consume(" "sv);
-            data.params = consume_if("NIL"sv) ? Optional<HashMap<DeprecatedString, DeprecatedString>>() : parse_body_fields_params();
+            TRY(consume(" "sv));
+            data.params = consume_if("NIL"sv) ? HashMap<DeprecatedString, DeprecatedString> {} : TRY(parse_body_fields_params());
             if (!consume_if(")"sv)) {
-                consume(" "sv);
+                TRY(consume(" "sv));
                 if (!consume_if("NIL"sv)) {
-                    data.disposition = { parse_disposition() };
+                    data.disposition = { TRY(parse_disposition()) };
                 }
 
                 if (!consume_if(")"sv)) {
-                    consume(" "sv);
+                    TRY(consume(" "sv));
                     if (!consume_if("NIL"sv)) {
-                        data.langs = { parse_langs() };
+                        data.langs = { TRY(parse_langs()) };
                     }
 
                     if (!consume_if(")"sv)) {
-                        consume(" "sv);
-                        data.location = consume_if("NIL"sv) ? Optional<DeprecatedString>() : Optional<DeprecatedString>(parse_string());
+                        TRY(consume(" "sv));
+                        data.location = consume_if("NIL"sv) ? DeprecatedString {} : DeprecatedString(TRY(parse_string()));
 
                         if (!consume_if(")"sv)) {
-                            consume(" "sv);
+                            TRY(consume(" "sv));
                             Vector<BodyExtension> extensions;
                             while (!consume_if(")"sv)) {
-                                extensions.append(parse_body_extension());
+                                extensions.append(TRY(parse_body_extension()));
                                 consume_if(" "sv);
                             }
                             data.extensions = { move(extensions) };
@@ -420,127 +430,129 @@ BodyStructure Parser::parse_body_structure()
         }
 
         return BodyStructure(move(data));
-    } else {
-        return parse_one_part_body();
     }
+
+    return parse_one_part_body();
 }
 
 // body-type-1part
-BodyStructure Parser::parse_one_part_body()
+ErrorOr<BodyStructure> Parser::parse_one_part_body()
 {
     // NOTE: We share common parts between body-type-basic, body-type-msg and body-type-text types for readability.
     BodyStructureData data;
 
     // media-basic / media-message / media-text
-    data.type = parse_string();
-    consume(" "sv);
-    data.subtype = parse_string();
-    consume(" "sv);
+    data.type = TRY(parse_string());
+    TRY(consume(" "sv));
+    data.subtype = TRY(parse_string());
+    TRY(consume(" "sv));
 
     // body-fields
-    data.fields = parse_body_fields_params();
-    consume(" "sv);
-    data.id = Optional<DeprecatedString>(parse_nstring());
-    consume(" "sv);
-    data.desc = Optional<DeprecatedString>(parse_nstring());
-    consume(" "sv);
-    data.encoding = parse_string();
-    consume(" "sv);
-    data.bytes = MUST(parse_number());
+    data.fields = TRY(parse_body_fields_params());
+    TRY(consume(" "sv));
+    data.id = TRY(parse_nstring());
+    TRY(consume(" "sv));
+    data.desc = TRY(parse_nstring());
+    TRY(consume(" "sv));
+    data.encoding = TRY(parse_string());
+    TRY(consume(" "sv));
+    data.bytes = TRY(parse_number());
 
     if (data.type.equals_ignoring_ascii_case("TEXT"sv)) {
         // body-type-text
         // NOTE: "media-text SP body-fields" part is already parsed.
-        consume(" "sv);
-        data.lines = MUST(parse_number());
+        TRY(consume(" "sv));
+        data.lines = TRY(parse_number());
     } else if (data.type.equals_ignoring_ascii_case("MESSAGE"sv) && data.subtype.is_one_of_ignoring_ascii_case("RFC822"sv, "GLOBAL"sv)) {
         // body-type-msg
         // NOTE: "media-message SP body-fields" part is already parsed.
-        consume(" "sv);
-        auto envelope = parse_envelope();
+        TRY(consume(" "sv));
+        auto envelope = TRY(parse_envelope());
 
-        consume(" ("sv);
-        auto body = parse_body_structure();
+        TRY(consume(" ("sv));
+        auto body = TRY(parse_body_structure());
         data.contanied_message = Tuple { move(envelope), make<BodyStructure>(move(body)) };
 
-        consume(" "sv);
-        data.lines = MUST(parse_number());
+        TRY(consume(" "sv));
+        data.lines = TRY(parse_number());
     } else {
         // body-type-basic
         // NOTE: "media-basic SP body-fields" is already parsed.
     }
 
     if (!consume_if(")"sv)) {
-        consume(" "sv);
+        TRY(consume(" "sv));
 
         // body-ext-1part
-        [&]() {
-            data.md5 = Optional<DeprecatedString>(parse_nstring());
+        TRY([&]() -> ErrorOr<void> {
+            data.md5 = TRY(parse_nstring());
 
             if (consume_if(")"sv))
-                return;
-            consume(" "sv);
+                return {};
+            TRY(consume(" "sv));
             if (!consume_if("NIL"sv)) {
-                auto disposition = parse_disposition();
-                data.disposition = { disposition };
+                data.disposition = { TRY(parse_disposition()) };
             }
 
             if (consume_if(")"sv))
-                return;
-            consume(" "sv);
+                return {};
+            TRY(consume(" "sv));
             if (!consume_if("NIL"sv)) {
-                data.langs = { parse_langs() };
+                data.langs = { TRY(parse_langs()) };
             }
 
             if (consume_if(")"sv))
-                return;
-            consume(" "sv);
-            data.location = Optional<DeprecatedString>(parse_nstring());
+                return {};
+            TRY(consume(" "sv));
+            data.location = TRY(parse_nstring());
 
             Vector<BodyExtension> extensions;
             while (!consume_if(")"sv)) {
-                extensions.append(parse_body_extension());
+                extensions.append(TRY(parse_body_extension()));
                 consume_if(" "sv);
             }
             data.extensions = { move(extensions) };
-        }();
+            return {};
+        }());
     }
 
     return BodyStructure(move(data));
 }
-Vector<DeprecatedString> Parser::parse_langs()
+
+ErrorOr<Vector<DeprecatedString>> Parser::parse_langs()
 {
     AK::Vector<DeprecatedString> langs;
     if (!consume_if("("sv)) {
-        langs.append(parse_string());
+        langs.append(TRY(parse_string()));
     } else {
         while (!consume_if(")"sv)) {
-            langs.append(parse_string());
+            langs.append(TRY(parse_string()));
             consume_if(" "sv);
         }
     }
     return langs;
 }
-Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> Parser::parse_disposition()
+
+ErrorOr<Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>>> Parser::parse_disposition()
 {
-    consume("("sv);
-    auto disposition_type = parse_string();
-    consume(" "sv);
-    auto disposition_vals = parse_body_fields_params();
-    consume(")"sv);
-    return { move(disposition_type), move(disposition_vals) };
+    TRY(consume("("sv));
+    auto disposition_type = TRY(parse_string());
+    TRY(consume(" "sv));
+    auto disposition_vals = TRY(parse_body_fields_params());
+    TRY(consume(")"sv));
+    return Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> { move(disposition_type), move(disposition_vals) };
 }
 
-StringView Parser::parse_literal_string()
+ErrorOr<StringView> Parser::parse_literal_string()
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_literal_string()", m_position);
-    consume("{"sv);
-    auto num_bytes = MUST(parse_number());
-    consume("}\r\n"sv);
+    TRY(consume("{"sv));
+    auto num_bytes = TRY(parse_number());
+    TRY(consume("}\r\n"sv));
 
     if (m_buffer.size() < m_position + num_bytes) {
-        m_parsing_failed = true;
-        return ""sv;
+        dbgln("Attempted to parse string with length: {} at position {} (buffer length {})", num_bytes, m_position, m_position);
+        return Error::from_string_literal("Failed to parse string");
     }
 
     m_position += num_bytes;
@@ -549,31 +561,32 @@ StringView Parser::parse_literal_string()
     return s;
 }
 
-ListItem Parser::parse_list_item()
+ErrorOr<ListItem> Parser::parse_list_item()
 {
-    consume(" "sv);
-    auto flags_vec = parse_list(parse_mailbox_flag);
+    TRY(consume(" "sv));
+    auto flags_vec = TRY(parse_list(parse_mailbox_flag));
     unsigned flags = 0;
     for (auto flag : flags_vec) {
         flags |= static_cast<unsigned>(flag);
     }
-    consume(" \""sv);
+    TRY(consume(" \""sv));
     auto reference = consume_while([](u8 x) { return x != '"'; });
-    consume("\" "sv);
-    auto mailbox = parse_astring();
-    consume("\r\n"sv);
+    TRY(consume("\" "sv));
+    auto mailbox = TRY(parse_astring());
+    TRY(consume("\r\n"sv));
     return ListItem { flags, DeprecatedString(reference), DeprecatedString(mailbox) };
 }
 
-void Parser::parse_capability_response()
+ErrorOr<void> Parser::parse_capability_response()
 {
     auto capability = AK::Vector<DeprecatedString>();
     while (!consume_if("\r\n"sv)) {
-        consume(" "sv);
+        TRY(consume(" "sv));
         auto x = DeprecatedString(parse_atom());
         capability.append(x);
     }
     m_response.data().add_capabilities(move(capability));
+    return {};
 }
 
 StringView Parser::parse_atom()
@@ -596,7 +609,7 @@ StringView Parser::parse_atom()
     return s;
 }
 
-ResponseStatus Parser::parse_status()
+ErrorOr<ResponseStatus> Parser::parse_status()
 {
     auto atom = parse_atom();
 
@@ -608,19 +621,19 @@ ResponseStatus Parser::parse_status()
         return ResponseStatus::No;
     }
 
-    m_parsing_failed = true;
-    return ResponseStatus::Bad;
+    dbgln("Invalid ResponseStatus value: {}", atom);
+    return Error::from_string_literal("Failed to parse status type");
 }
 
 template<typename T>
-Vector<T> Parser::parse_list(T converter(StringView))
+ErrorOr<Vector<T>> Parser::parse_list(T converter(StringView))
 {
-    consume("("sv);
+    TRY(consume("("sv));
     Vector<T> x;
     bool first = true;
     while (!consume_if(")"sv)) {
         if (!first)
-            consume(" "sv);
+            TRY(consume(" "sv));
         auto item = consume_while([](u8 x) {
             return x != ' ' && x != ')';
         });
@@ -683,7 +696,7 @@ StringView Parser::consume_until_end_of_line()
     return consume_while([](u8 x) { return x != '\r'; });
 }
 
-FetchCommand::DataItem Parser::parse_fetch_data_item()
+ErrorOr<FetchCommand::DataItem> Parser::parse_fetch_data_item()
 {
     auto msg_attr = consume_while([](u8 x) { return is_ascii_alpha(x) != 0; });
     if (msg_attr.equals_ignoring_ascii_case("BODY"sv) && consume_if("["sv)) {
@@ -695,21 +708,21 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
         if (section_type.equals_ignoring_ascii_case("HEADER.FIELDS"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFields;
             data_item.section->headers = Vector<DeprecatedString>();
-            consume(" "sv);
-            auto headers = parse_list(+[](StringView x) { return x; });
+            TRY(consume(" "sv));
+            auto headers = TRY(parse_list(+[](StringView x) { return x; }));
             for (auto& header : headers) {
                 data_item.section->headers->append(header);
             }
-            consume("]"sv);
+            TRY(consume("]"sv));
         } else if (section_type.equals_ignoring_ascii_case("HEADER.FIELDS.NOT"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFieldsNot;
             data_item.section->headers = Vector<DeprecatedString>();
-            consume(" ("sv);
-            auto headers = parse_list(+[](StringView x) { return x; });
+            TRY(consume(" ("sv));
+            auto headers = TRY(parse_list(+[](StringView x) { return x; }));
             for (auto& header : headers) {
                 data_item.section->headers->append(header);
             }
-            consume("]"sv);
+            TRY(consume("]"sv));
         } else if (is_ascii_digit(section_type[0])) {
             data_item.section->type = FetchCommand::DataItem::SectionType::Parts;
             data_item.section->parts = Vector<unsigned>();
@@ -732,13 +745,13 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
             data_item.section->type = FetchCommand::DataItem::SectionType::Header;
         } else {
             dbgln("Unmatched section type {}", section_type);
-            m_parsing_failed = true;
+            return Error::from_string_literal("Failed to parse section type");
         }
         if (consume_if("<"sv)) {
-            auto start = MUST(parse_number());
+            auto start = TRY(parse_number());
             data_item.partial_fetch = true;
             data_item.start = (int)start;
-            consume(">"sv);
+            TRY(consume(">"sv));
         }
         consume_if(" "sv);
         return data_item;
@@ -764,82 +777,88 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
         };
     } else {
         dbgln("msg_attr not matched: {}", msg_attr);
-        m_parsing_failed = true;
-        return FetchCommand::DataItem {};
+        return Error::from_string_literal("Failed to parse msg_attr");
     }
 }
-Optional<Vector<Address>> Parser::parse_address_list()
+
+ErrorOr<Vector<Address>> Parser::parse_address_list()
 {
     if (consume_if("NIL"sv))
-        return {};
+        return Vector<Address> {};
 
     auto addresses = Vector<Address>();
-    consume("("sv);
+    TRY(consume("("sv));
     while (!consume_if(")"sv)) {
-        addresses.append(parse_address());
+        addresses.append(TRY(parse_address()));
         if (!at_end() && m_buffer[m_position] != ')')
-            consume(" "sv);
+            TRY(consume(" "sv));
     }
     return { addresses };
 }
 
-Address Parser::parse_address()
+ErrorOr<Address> Parser::parse_address()
 {
-    consume("("sv);
+    TRY(consume("("sv));
     auto address = Address();
-    auto name = parse_nstring();
-    address.name = Optional<DeprecatedString>(move(name));
-    consume(" "sv);
-    auto source_route = parse_nstring();
-    address.source_route = Optional<DeprecatedString>(move(source_route));
-    consume(" "sv);
-    auto mailbox = parse_nstring();
-    address.mailbox = Optional<DeprecatedString>(move(mailbox));
-    consume(" "sv);
-    auto host = parse_nstring();
-    address.host = Optional<DeprecatedString>(move(host));
-    consume(")"sv);
+    auto name = TRY(parse_nstring());
+    address.name = name;
+    TRY(consume(" "sv));
+    auto source_route = TRY(parse_nstring());
+    address.source_route = source_route;
+    TRY(consume(" "sv));
+    auto mailbox = TRY(parse_nstring());
+    address.mailbox = mailbox;
+    TRY(consume(" "sv));
+    auto host = TRY(parse_nstring());
+    address.host = host;
+    TRY(consume(")"sv));
     return address;
 }
-StringView Parser::parse_astring()
+
+ErrorOr<StringView> Parser::parse_astring()
 {
     if (!at_end() && (m_buffer[m_position] == '{' || m_buffer[m_position] == '"'))
         return parse_string();
-    else
-        return parse_atom();
+
+    return parse_atom();
 }
-HashMap<DeprecatedString, DeprecatedString> Parser::parse_body_fields_params()
+
+ErrorOr<HashMap<DeprecatedString, DeprecatedString>> Parser::parse_body_fields_params()
 {
     if (consume_if("NIL"sv))
-        return {};
+        return HashMap<DeprecatedString, DeprecatedString> {};
 
     HashMap<DeprecatedString, DeprecatedString> fields;
-    consume("("sv);
+    TRY(consume("("sv));
     while (!consume_if(")"sv)) {
-        auto key = parse_string();
-        consume(" "sv);
-        auto value = parse_string();
+        auto key = TRY(parse_string());
+        TRY(consume(" "sv));
+        auto value = TRY(parse_string());
         fields.set(key, value);
         consume_if(" "sv);
     }
 
     return fields;
 }
-BodyExtension Parser::parse_body_extension()
+
+ErrorOr<BodyExtension> Parser::parse_body_extension()
 {
-    if (consume_if("NIL"sv)) {
+    if (consume_if("NIL"sv))
         return BodyExtension { Optional<DeprecatedString> {} };
-    } else if (consume_if("("sv)) {
+
+    if (consume_if("("sv)) {
         Vector<OwnPtr<BodyExtension>> extensions;
         while (!consume_if(")"sv)) {
-            extensions.append(make<BodyExtension>(parse_body_extension()));
+            extensions.append(make<BodyExtension>(TRY(parse_body_extension())));
             consume_if(" "sv);
         }
         return BodyExtension { move(extensions) };
-    } else if (!at_end() && (m_buffer[m_position] == '"' || m_buffer[m_position] == '{')) {
-        return BodyExtension { { parse_string() } };
-    } else {
-        return BodyExtension { MUST(parse_number()) };
     }
+
+    if (!at_end() && (m_buffer[m_position] == '"' || m_buffer[m_position] == '{'))
+        return BodyExtension { { TRY(parse_string()) } };
+
+    return BodyExtension { TRY(parse_number()) };
 }
+
 }
