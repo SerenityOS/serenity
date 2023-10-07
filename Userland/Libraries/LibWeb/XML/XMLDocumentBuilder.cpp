@@ -42,6 +42,7 @@ XMLDocumentBuilder::XMLDocumentBuilder(DOM::Document& document, XMLScriptingSupp
     , m_current_node(m_document)
     , m_scripting_support(scripting_support)
 {
+    m_namespace_stack.append({ m_namespace, 1 });
 }
 
 void XMLDocumentBuilder::set_source(DeprecatedString source)
@@ -54,21 +55,16 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
     if (m_has_error)
         return;
 
-    // FIXME: This should not live here at all.
     if (auto it = attributes.find("xmlns"); it != attributes.end()) {
-        if (name == HTML::TagNames::html.to_deprecated_fly_string() && it->value != Namespace::HTML) {
-            m_has_error = true;
-            return;
-        }
+        m_namespace_stack.append({ m_namespace, 1 });
+        m_namespace = it->value;
+    } else {
+        m_namespace_stack.last().depth += 1;
+    }
 
-        if (name == HTML::TagNames::svg.to_deprecated_fly_string()) {
-            if (it->value != Namespace::SVG) {
-                m_has_error = true;
-                return;
-            }
-
-            m_namespace = Namespace::SVG;
-        }
+    if (name == HTML::TagNames::html.to_deprecated_fly_string() && m_namespace != Namespace::HTML) {
+        m_has_error = true;
+        return;
     }
 
     auto node = DOM::create_element(m_document, MUST(FlyString::from_deprecated_fly_string(name)), m_namespace).release_value_but_fixme_should_propagate_errors();
@@ -98,6 +94,11 @@ void XMLDocumentBuilder::element_end(const XML::Name& name)
 {
     if (m_has_error)
         return;
+
+    if (--m_namespace_stack.last().depth == 0) {
+        m_namespace = m_namespace_stack.take_last().ns;
+    }
+
     VERIFY(m_current_node->node_name().equals_ignoring_ascii_case(name));
     // When an XML parser with XML scripting support enabled creates a script element, [...]
     // When the element's end tag is subsequently parsed,
