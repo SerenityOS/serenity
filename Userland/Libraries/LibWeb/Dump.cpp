@@ -138,13 +138,13 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     for (size_t i = 0; i < indent; ++i)
         builder.append("  "sv);
 
-    DeprecatedFlyString tag_name;
+    FlyString tag_name;
     if (layout_node.is_anonymous())
-        tag_name = "(anonymous)";
+        tag_name = "(anonymous)"_fly_string;
     else if (is<DOM::Element>(layout_node.dom_node()))
-        tag_name = verify_cast<DOM::Element>(*layout_node.dom_node()).local_name().to_deprecated_fly_string();
+        tag_name = verify_cast<DOM::Element>(*layout_node.dom_node()).local_name();
     else
-        tag_name = layout_node.dom_node()->node_name().to_deprecated_fly_string();
+        tag_name = layout_node.dom_node()->node_name();
 
     DeprecatedString identifier = "";
     if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
