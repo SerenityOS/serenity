@@ -565,42 +565,6 @@ void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measure
     }
 }
 
-void Heap::did_create_handle(Badge<HandleImpl>, HandleImpl& impl)
-{
-    VERIFY(!m_handles.contains(impl));
-    m_handles.append(impl);
-}
-
-void Heap::did_destroy_handle(Badge<HandleImpl>, HandleImpl& impl)
-{
-    VERIFY(m_handles.contains(impl));
-    m_handles.remove(impl);
-}
-
-void Heap::did_create_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase& vector)
-{
-    VERIFY(!m_marked_vectors.contains(vector));
-    m_marked_vectors.append(vector);
-}
-
-void Heap::did_destroy_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase& vector)
-{
-    VERIFY(m_marked_vectors.contains(vector));
-    m_marked_vectors.remove(vector);
-}
-
-void Heap::did_create_weak_container(Badge<WeakContainer>, WeakContainer& set)
-{
-    VERIFY(!m_weak_containers.contains(set));
-    m_weak_containers.append(set);
-}
-
-void Heap::did_destroy_weak_container(Badge<WeakContainer>, WeakContainer& set)
-{
-    VERIFY(m_weak_containers.contains(set));
-    m_weak_containers.remove(set);
-}
-
 void Heap::defer_gc()
 {
     ++m_gc_deferrals;
