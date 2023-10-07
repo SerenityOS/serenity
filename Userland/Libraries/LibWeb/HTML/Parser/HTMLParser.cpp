@@ -2189,7 +2189,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
 
 void HTMLParser::adjust_mathml_attributes(HTMLToken& token)
 {
-    token.adjust_attribute_name("definitionurl", "definitionURL");
+    token.adjust_attribute_name("definitionurl"_fly_string, "definitionURL"_fly_string);
 }
 
 void HTMLParser::adjust_svg_tag_names(HTMLToken& token)
@@ -2233,81 +2233,81 @@ void HTMLParser::adjust_svg_tag_names(HTMLToken& token)
 
 void HTMLParser::adjust_svg_attributes(HTMLToken& token)
 {
-    token.adjust_attribute_name("attributename", "attributeName");
-    token.adjust_attribute_name("attributetype", "attributeType");
-    token.adjust_attribute_name("basefrequency", "baseFrequency");
-    token.adjust_attribute_name("baseprofile", "baseProfile");
-    token.adjust_attribute_name("calcmode", "calcMode");
-    token.adjust_attribute_name("clippathunits", "clipPathUnits");
-    token.adjust_attribute_name("diffuseconstant", "diffuseConstant");
-    token.adjust_attribute_name("edgemode", "edgeMode");
-    token.adjust_attribute_name("filterunits", "filterUnits");
-    token.adjust_attribute_name("glyphref", "glyphRef");
-    token.adjust_attribute_name("gradienttransform", "gradientTransform");
-    token.adjust_attribute_name("gradientunits", "gradientUnits");
-    token.adjust_attribute_name("kernelmatrix", "kernelMatrix");
-    token.adjust_attribute_name("kernelunitlength", "kernelUnitLength");
-    token.adjust_attribute_name("keypoints", "keyPoints");
-    token.adjust_attribute_name("keysplines", "keySplines");
-    token.adjust_attribute_name("keytimes", "keyTimes");
-    token.adjust_attribute_name("lengthadjust", "lengthAdjust");
-    token.adjust_attribute_name("limitingconeangle", "limitingConeAngle");
-    token.adjust_attribute_name("markerheight", "markerHeight");
-    token.adjust_attribute_name("markerunits", "markerUnits");
-    token.adjust_attribute_name("markerwidth", "markerWidth");
-    token.adjust_attribute_name("maskcontentunits", "maskContentUnits");
-    token.adjust_attribute_name("maskunits", "maskUnits");
-    token.adjust_attribute_name("numoctaves", "numOctaves");
-    token.adjust_attribute_name("pathlength", "pathLength");
-    token.adjust_attribute_name("patterncontentunits", "patternContentUnits");
-    token.adjust_attribute_name("patterntransform", "patternTransform");
-    token.adjust_attribute_name("patternunits", "patternUnits");
-    token.adjust_attribute_name("pointsatx", "pointsAtX");
-    token.adjust_attribute_name("pointsaty", "pointsAtY");
-    token.adjust_attribute_name("pointsatz", "pointsAtZ");
-    token.adjust_attribute_name("preservealpha", "preserveAlpha");
-    token.adjust_attribute_name("preserveaspectratio", "preserveAspectRatio");
-    token.adjust_attribute_name("primitiveunits", "primitiveUnits");
-    token.adjust_attribute_name("refx", "refX");
-    token.adjust_attribute_name("refy", "refY");
-    token.adjust_attribute_name("repeatcount", "repeatCount");
-    token.adjust_attribute_name("repeatdur", "repeatDur");
-    token.adjust_attribute_name("requiredextensions", "requiredExtensions");
-    token.adjust_attribute_name("requiredfeatures", "requiredFeatures");
-    token.adjust_attribute_name("specularconstant", "specularConstant");
-    token.adjust_attribute_name("specularexponent", "specularExponent");
-    token.adjust_attribute_name("spreadmethod", "spreadMethod");
-    token.adjust_attribute_name("startoffset", "startOffset");
-    token.adjust_attribute_name("stddeviation", "stdDeviation");
-    token.adjust_attribute_name("stitchtiles", "stitchTiles");
-    token.adjust_attribute_name("surfacescale", "surfaceScale");
-    token.adjust_attribute_name("systemlanguage", "systemLanguage");
-    token.adjust_attribute_name("tablevalues", "tableValues");
-    token.adjust_attribute_name("targetx", "targetX");
-    token.adjust_attribute_name("targety", "targetY");
-    token.adjust_attribute_name("textlength", "textLength");
-    token.adjust_attribute_name("viewbox", "viewBox");
-    token.adjust_attribute_name("viewtarget", "viewTarget");
-    token.adjust_attribute_name("xchannelselector", "xChannelSelector");
-    token.adjust_attribute_name("ychannelselector", "yChannelSelector");
-    token.adjust_attribute_name("zoomandpan", "zoomAndPan");
+    token.adjust_attribute_name("attributename"_fly_string, "attributeName"_fly_string);
+    token.adjust_attribute_name("attributetype"_fly_string, "attributeType"_fly_string);
+    token.adjust_attribute_name("basefrequency"_fly_string, "baseFrequency"_fly_string);
+    token.adjust_attribute_name("baseprofile"_fly_string, "baseProfile"_fly_string);
+    token.adjust_attribute_name("calcmode"_fly_string, "calcMode"_fly_string);
+    token.adjust_attribute_name("clippathunits"_fly_string, "clipPathUnits"_fly_string);
+    token.adjust_attribute_name("diffuseconstant"_fly_string, "diffuseConstant"_fly_string);
+    token.adjust_attribute_name("edgemode"_fly_string, "edgeMode"_fly_string);
+    token.adjust_attribute_name("filterunits"_fly_string, "filterUnits"_fly_string);
+    token.adjust_attribute_name("glyphref"_fly_string, "glyphRef"_fly_string);
+    token.adjust_attribute_name("gradienttransform"_fly_string, "gradientTransform"_fly_string);
+    token.adjust_attribute_name("gradientunits"_fly_string, "gradientUnits"_fly_string);
+    token.adjust_attribute_name("kernelmatrix"_fly_string, "kernelMatrix"_fly_string);
+    token.adjust_attribute_name("kernelunitlength"_fly_string, "kernelUnitLength"_fly_string);
+    token.adjust_attribute_name("keypoints"_fly_string, "keyPoints"_fly_string);
+    token.adjust_attribute_name("keysplines"_fly_string, "keySplines"_fly_string);
+    token.adjust_attribute_name("keytimes"_fly_string, "keyTimes"_fly_string);
+    token.adjust_attribute_name("lengthadjust"_fly_string, "lengthAdjust"_fly_string);
+    token.adjust_attribute_name("limitingconeangle"_fly_string, "limitingConeAngle"_fly_string);
+    token.adjust_attribute_name("markerheight"_fly_string, "markerHeight"_fly_string);
+    token.adjust_attribute_name("markerunits"_fly_string, "markerUnits"_fly_string);
+    token.adjust_attribute_name("markerwidth"_fly_string, "markerWidth"_fly_string);
+    token.adjust_attribute_name("maskcontentunits"_fly_string, "maskContentUnits"_fly_string);
+    token.adjust_attribute_name("maskunits"_fly_string, "maskUnits"_fly_string);
+    token.adjust_attribute_name("numoctaves"_fly_string, "numOctaves"_fly_string);
+    token.adjust_attribute_name("pathlength"_fly_string, "pathLength"_fly_string);
+    token.adjust_attribute_name("patterncontentunits"_fly_string, "patternContentUnits"_fly_string);
+    token.adjust_attribute_name("patterntransform"_fly_string, "patternTransform"_fly_string);
+    token.adjust_attribute_name("patternunits"_fly_string, "patternUnits"_fly_string);
+    token.adjust_attribute_name("pointsatx"_fly_string, "pointsAtX"_fly_string);
+    token.adjust_attribute_name("pointsaty"_fly_string, "pointsAtY"_fly_string);
+    token.adjust_attribute_name("pointsatz"_fly_string, "pointsAtZ"_fly_string);
+    token.adjust_attribute_name("preservealpha"_fly_string, "preserveAlpha"_fly_string);
+    token.adjust_attribute_name("preserveaspectratio"_fly_string, "preserveAspectRatio"_fly_string);
+    token.adjust_attribute_name("primitiveunits"_fly_string, "primitiveUnits"_fly_string);
+    token.adjust_attribute_name("refx"_fly_string, "refX"_fly_string);
+    token.adjust_attribute_name("refy"_fly_string, "refY"_fly_string);
+    token.adjust_attribute_name("repeatcount"_fly_string, "repeatCount"_fly_string);
+    token.adjust_attribute_name("repeatdur"_fly_string, "repeatDur"_fly_string);
+    token.adjust_attribute_name("requiredextensions"_fly_string, "requiredExtensions"_fly_string);
+    token.adjust_attribute_name("requiredfeatures"_fly_string, "requiredFeatures"_fly_string);
+    token.adjust_attribute_name("specularconstant"_fly_string, "specularConstant"_fly_string);
+    token.adjust_attribute_name("specularexponent"_fly_string, "specularExponent"_fly_string);
+    token.adjust_attribute_name("spreadmethod"_fly_string, "spreadMethod"_fly_string);
+    token.adjust_attribute_name("startoffset"_fly_string, "startOffset"_fly_string);
+    token.adjust_attribute_name("stddeviation"_fly_string, "stdDeviation"_fly_string);
+    token.adjust_attribute_name("stitchtiles"_fly_string, "stitchTiles"_fly_string);
+    token.adjust_attribute_name("surfacescale"_fly_string, "surfaceScale"_fly_string);
+    token.adjust_attribute_name("systemlanguage"_fly_string, "systemLanguage"_fly_string);
+    token.adjust_attribute_name("tablevalues"_fly_string, "tableValues"_fly_string);
+    token.adjust_attribute_name("targetx"_fly_string, "targetX"_fly_string);
+    token.adjust_attribute_name("targety"_fly_string, "targetY"_fly_string);
+    token.adjust_attribute_name("textlength"_fly_string, "textLength"_fly_string);
+    token.adjust_attribute_name("viewbox"_fly_string, "viewBox"_fly_string);
+    token.adjust_attribute_name("viewtarget"_fly_string, "viewTarget"_fly_string);
+    token.adjust_attribute_name("xchannelselector"_fly_string, "xChannelSelector"_fly_string);
+    token.adjust_attribute_name("ychannelselector"_fly_string, "yChannelSelector"_fly_string);
+    token.adjust_attribute_name("zoomandpan"_fly_string, "zoomAndPan"_fly_string);
 }
 
 void HTMLParser::adjust_foreign_attributes(HTMLToken& token)
 {
-    token.adjust_foreign_attribute("xlink:actuate", "xlink", "actuate", Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:arcrole", "xlink", "arcrole", Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:href", "xlink", "href", Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:role", "xlink", "role", Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:show", "xlink", "show", Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:title", "xlink", "title", Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:type", "xlink", "type", Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:actuate"_fly_string, "xlink", "actuate"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:arcrole"_fly_string, "xlink", "arcrole"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:href"_fly_string, "xlink", "href"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:role"_fly_string, "xlink", "role"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:show"_fly_string, "xlink", "show"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:title"_fly_string, "xlink", "title"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:type"_fly_string, "xlink", "type"_fly_string, Namespace::XLink);
 
-    token.adjust_foreign_attribute("xml:lang", "xml", "lang", Namespace::XML);
-    token.adjust_foreign_attribute("xml:space", "xml", "space", Namespace::XML);
+    token.adjust_foreign_attribute("xml:lang"_fly_string, "xml", "lang"_fly_string, Namespace::XML);
+    token.adjust_foreign_attribute("xml:space"_fly_string, "xml", "space"_fly_string, Namespace::XML);
 
-    token.adjust_foreign_attribute("xmlns", "", "xmlns", Namespace::XMLNS);
-    token.adjust_foreign_attribute("xmlns:xlink", "xmlns", "xlink", Namespace::XMLNS);
+    token.adjust_foreign_attribute("xmlns"_fly_string, "", "xmlns"_fly_string, Namespace::XMLNS);
+    token.adjust_foreign_attribute("xmlns:xlink"_fly_string, "xmlns", "xlink"_fly_string, Namespace::XMLNS);
 }
 
 void HTMLParser::increment_script_nesting_level()

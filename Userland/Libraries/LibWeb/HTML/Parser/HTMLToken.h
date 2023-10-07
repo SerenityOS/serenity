@@ -43,9 +43,9 @@ public:
 
     struct Attribute {
         DeprecatedString prefix;
-        DeprecatedString local_name { "" };
+        FlyString local_name;
         DeprecatedString namespace_;
-        DeprecatedString value { "" };
+        String value;
         Position name_start_position;
         Position value_start_position;
         Position name_end_position;
@@ -258,12 +258,11 @@ public:
     {
         VERIFY(is_start_tag() || is_end_tag());
 
-        auto deprecated_attribute_name = attribute_name.to_deprecated_fly_string();
         auto* ptr = tag_attributes();
         if (!ptr)
             return {};
-        for (auto& attribute : *ptr) {
-            if (deprecated_attribute_name == attribute.local_name)
+        for (auto const& attribute : *ptr) {
+            if (attribute_name == attribute.local_name)
                 return attribute;
         }
         return {};
@@ -281,7 +280,7 @@ public:
             set_tag_name(new_name);
     }
 
-    void adjust_attribute_name(DeprecatedFlyString const& old_name, DeprecatedFlyString const& new_name)
+    void adjust_attribute_name(FlyString const& old_name, FlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
         for_each_attribute([&](Attribute& attribute) {
@@ -291,7 +290,7 @@ public:
         });
     }
 
-    void adjust_foreign_attribute(DeprecatedFlyString const& old_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_)
+    void adjust_foreign_attribute(FlyString const& old_name, DeprecatedFlyString const& prefix, FlyString const& local_name, DeprecatedFlyString const& namespace_)
     {
         VERIFY(is_start_tag() || is_end_tag());
         for_each_attribute([&](Attribute& attribute) {
