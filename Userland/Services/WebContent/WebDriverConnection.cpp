@@ -1064,18 +1064,16 @@ Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_
     // 4. Let result be the result of the first matching condition:
     Optional<DeprecatedString> result;
 
-    auto deprecated_name = name.to_deprecated_string();
-
     // -> If name is a boolean attribute
-    if (Web::HTML::is_boolean_attribute(deprecated_name)) {
+    if (Web::HTML::is_boolean_attribute(name)) {
         // "true" (string) if the element has the attribute, otherwise null.
-        if (element->has_attribute(deprecated_name))
+        if (element->has_attribute(name))
             result = "true"sv;
     }
     // -> Otherwise
     else {
         // The result of getting an attribute by name name.
-        result = element->deprecated_get_attribute(deprecated_name);
+        result = element->deprecated_get_attribute(name);
     }
 
     // 5. Return success with data result.

@@ -22,7 +22,7 @@ void SVGPolylineElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolylineElementPrototype>(realm, "SVGPolylineElement"));
 }
 
-void SVGPolylineElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGPolylineElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 

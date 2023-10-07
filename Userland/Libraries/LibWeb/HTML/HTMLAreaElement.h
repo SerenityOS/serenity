@@ -26,13 +26,13 @@ private:
     virtual void initialize(JS::Realm&) override;
 
     // ^DOM::Element
-    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(FlyString const& name, DeprecatedString const& value) override;
     virtual i32 default_tab_index_value() const override;
 
     // ^HTML::HTMLHyperlinkElementUtils
     virtual DOM::Document& hyperlink_element_utils_document() override { return document(); }
     virtual DeprecatedString hyperlink_element_utils_href() const override;
-    virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(DeprecatedString) override;
+    virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(String) override;
     virtual bool hyperlink_element_utils_is_html_anchor_element() const override { return false; }
     virtual bool hyperlink_element_utils_is_connected() const override { return is_connected(); }
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) override

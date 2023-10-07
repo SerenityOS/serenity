@@ -55,7 +55,7 @@ void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) co
     });
 }
 
-void HTMLBodyElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLBodyElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name.equals_ignoring_ascii_case("link"sv)) {

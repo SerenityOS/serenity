@@ -3013,7 +3013,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     if (!cpp_value)
         impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
     else
-        MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, DeprecatedString::empty()));
+        MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, String {}));
 )~~~");
                 }
 

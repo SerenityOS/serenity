@@ -83,7 +83,7 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_fetch_controller);
 }
 
-void HTMLMediaElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLMediaElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     Base::attribute_changed(name, value);
 

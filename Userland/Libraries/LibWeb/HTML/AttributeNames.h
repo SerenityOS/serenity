@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/Error.h>
+#include <AK/FlyString.h>
 
 namespace Web::HTML {
 namespace AttributeNames {
@@ -240,7 +240,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(width)                      \
     __ENUMERATE_HTML_ATTRIBUTE(wrap)
 
-#define __ENUMERATE_HTML_ATTRIBUTE(name) extern DeprecatedFlyString name;
+#define __ENUMERATE_HTML_ATTRIBUTE(name) extern FlyString name;
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
@@ -248,6 +248,6 @@ void initialize_strings();
 
 }
 
-bool is_boolean_attribute(DeprecatedFlyString const& attribute);
+bool is_boolean_attribute(FlyString const& attribute);
 
 }

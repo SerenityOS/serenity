@@ -28,7 +28,7 @@ void SVGTextPositioningElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextPositioningElementPrototype>(realm, "SVGTextPositioningElement"));
 }
 
-void SVGTextPositioningElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGTextPositioningElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGraphicsElement::attribute_changed(name, value);
 

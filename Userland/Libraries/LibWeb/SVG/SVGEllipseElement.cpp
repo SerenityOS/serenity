@@ -22,7 +22,7 @@ void SVGEllipseElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGEllipseElementPrototype>(realm, "SVGEllipseElement"));
 }
 
-void SVGEllipseElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGEllipseElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 

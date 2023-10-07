@@ -31,7 +31,7 @@ void HTMLOptionElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionElementPrototype>(realm, "HTMLOptionElement"));
 }
 
-void HTMLOptionElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLOptionElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::attribute_changed(name, value);
 

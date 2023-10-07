@@ -39,7 +39,7 @@ void SVGSymbolElement::apply_presentational_hints(CSS::StyleProperties& style) c
     }
 }
 
-void SVGSymbolElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGSymbolElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox))
         m_view_box = try_parse_view_box(value);

@@ -27,7 +27,7 @@ void HTMLAnchorElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAnchorElementPrototype>(realm, "HTMLAnchorElement"));
 }
 
-void HTMLAnchorElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLAnchorElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::href) {
@@ -40,7 +40,7 @@ DeprecatedString HTMLAnchorElement::hyperlink_element_utils_href() const
     return deprecated_attribute(HTML::AttributeNames::href);
 }
 
-WebIDL::ExceptionOr<void> HTMLAnchorElement::set_hyperlink_element_utils_href(DeprecatedString href)
+WebIDL::ExceptionOr<void> HTMLAnchorElement::set_hyperlink_element_utils_href(String href)
 {
     return set_attribute(HTML::AttributeNames::href, move(href));
 }

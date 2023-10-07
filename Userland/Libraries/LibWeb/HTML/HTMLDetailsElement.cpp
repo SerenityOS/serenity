@@ -41,7 +41,7 @@ void HTMLDetailsElement::initialize(JS::Realm& realm)
     create_shadow_tree(realm).release_value_but_fixme_should_propagate_errors();
 }
 
-void HTMLDetailsElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLDetailsElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     Base::attribute_changed(name, value);
 
@@ -160,13 +160,13 @@ void HTMLDetailsElement::update_shadow_tree_style()
     if (has_attribute(HTML::AttributeNames::open)) {
         MUST(m_descendants_slot->set_attribute(HTML::AttributeNames::style, R"~~~(
             display: block;
-        )~~~"));
+        )~~~"_string));
     } else {
         // FIXME: Should be `display: block` but we do not support `content-visibility: hidden`.
         MUST(m_descendants_slot->set_attribute(HTML::AttributeNames::style, R"~~~(
             display: none;
             content-visibility: hidden;
-        )~~~"));
+        )~~~"_string));
     }
 }
 

@@ -27,7 +27,7 @@ HTMLSummaryElement::HTMLSummaryElement(DOM::Document& document, DOM::QualifiedNa
         if (parent->has_attribute(HTML::AttributeNames::open))
             parent->remove_attribute(HTML::AttributeNames::open);
         else
-            parent->set_attribute(HTML::AttributeNames::open, "").release_value_but_fixme_should_propagate_errors();
+            parent->set_attribute(HTML::AttributeNames::open, String {}).release_value_but_fixme_should_propagate_errors();
     };
 }
 

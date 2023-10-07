@@ -16,7 +16,7 @@ class SVGTextPositioningElement : public SVGTextContentElement {
     WEB_PLATFORM_OBJECT(SVGTextPositioningElement, SVGTextContentElement);
 
 public:
-    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(FlyString const& name, DeprecatedString const& value) override;
 
     Gfx::FloatPoint get_offset() const;
 

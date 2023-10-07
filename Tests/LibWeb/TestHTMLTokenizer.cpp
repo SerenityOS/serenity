@@ -61,7 +61,7 @@ using Token = Web::HTML::HTMLToken;
 
 #define EXPECT_TAG_TOKEN_ATTRIBUTE(name, attribute_value, name_start_column, name_end_column, value_start_column, value_end_column) \
     VERIFY(last_token);                                                                                                             \
-    auto name##_attr = last_token->raw_attribute(#name);                                                                            \
+    auto name##_attr = last_token->raw_attribute(#name##_fly_string);                                                               \
     VERIFY(name##_attr.has_value());                                                                                                \
     EXPECT_EQ(name##_attr->value, attribute_value);                                                                                 \
     EXPECT_EQ(name##_attr->name_start_position.column, name_start_column);                                                          \

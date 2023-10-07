@@ -131,7 +131,7 @@ const HTML::HTMLElement* Node::enclosing_html_element() const
     return first_ancestor_of_type<HTML::HTMLElement>();
 }
 
-const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(DeprecatedFlyString const& attribute) const
+const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(FlyString const& attribute) const
 {
     for (auto* node = this; node; node = node->parent()) {
         if (is<HTML::HTMLElement>(*node) && verify_cast<HTML::HTMLElement>(*node).has_attribute(attribute))
@@ -815,7 +815,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         element.for_each_attribute([&](auto& name, auto& value) {
             // 1. Let copyAttribute be a clone of attribute.
             // 2. Append copyAttribute to copy.
-            MUST(element_copy->set_attribute(name, value));
+            MUST(element_copy->set_attribute(name, MUST(String::from_deprecated_string(value))));
         });
         copy = move(element_copy);
 

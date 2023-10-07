@@ -247,28 +247,29 @@ public:
         }
     }
 
-    StringView attribute(DeprecatedFlyString const& attribute_name) const
+    StringView attribute(FlyString const& attribute_name) const
     {
         if (auto result = raw_attribute(attribute_name); result.has_value())
             return result->value;
         return {};
     }
 
-    Optional<Attribute const&> raw_attribute(DeprecatedFlyString const& attribute_name) const
+    Optional<Attribute const&> raw_attribute(FlyString const& attribute_name) const
     {
         VERIFY(is_start_tag() || is_end_tag());
 
+        auto deprecated_attribute_name = attribute_name.to_deprecated_fly_string();
         auto* ptr = tag_attributes();
         if (!ptr)
             return {};
         for (auto& attribute : *ptr) {
-            if (attribute_name == attribute.local_name)
+            if (deprecated_attribute_name == attribute.local_name)
                 return attribute;
         }
         return {};
     }
 
-    bool has_attribute(DeprecatedFlyString const& attribute_name)
+    bool has_attribute(FlyString const& attribute_name) const
     {
         return !attribute(attribute_name).is_null();
     }

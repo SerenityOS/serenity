@@ -116,7 +116,7 @@ unsigned int HTMLTableCellElement::col_span() const
 
 WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
 {
-    return set_attribute(HTML::AttributeNames::colspan, DeprecatedString::number(value));
+    return set_attribute(HTML::AttributeNames::colspan, MUST(String::number(value)));
 }
 
 // This implements step 9 in the spec here:
@@ -136,7 +136,7 @@ unsigned int HTMLTableCellElement::row_span() const
 
 WebIDL::ExceptionOr<void> HTMLTableCellElement::set_row_span(unsigned int value)
 {
-    return set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value));
+    return set_attribute(HTML::AttributeNames::rowspan, MUST(String::number(value)));
 }
 
 Optional<ARIA::Role> HTMLTableCellElement::default_role() const

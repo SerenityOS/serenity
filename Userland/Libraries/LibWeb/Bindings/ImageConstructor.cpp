@@ -48,13 +48,13 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> ImageConstructor::construct(
     // 3. If width is given, then set an attribute value for img using "width" and width.
     if (vm.argument_count() > 0) {
         u32 width = TRY(vm.argument(0).to_u32(vm));
-        MUST(image_element->set_attribute(HTML::AttributeNames::width, DeprecatedString::formatted("{}", width)));
+        MUST(image_element->set_attribute(HTML::AttributeNames::width, MUST(String::formatted("{}", width))));
     }
 
     // 4. If height is given, then set an attribute value for img using "height" and height.
     if (vm.argument_count() > 1) {
         u32 height = TRY(vm.argument(1).to_u32(vm));
-        MUST(image_element->set_attribute(HTML::AttributeNames::height, DeprecatedString::formatted("{}", height)));
+        MUST(image_element->set_attribute(HTML::AttributeNames::height, MUST(String::formatted("{}", height))));
     }
 
     // 5. Return img.

@@ -23,7 +23,7 @@ void HTMLFrameSetElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFrameSetElementPrototype>(realm, "HTMLFrameSetElement"));
 }
 
-void HTMLFrameSetElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLFrameSetElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::attribute_changed(name, value);
 

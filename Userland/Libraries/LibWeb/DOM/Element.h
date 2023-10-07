@@ -145,7 +145,7 @@ public:
     int client_width() const;
     int client_height() const;
 
-    void for_each_attribute(Function<void(DeprecatedFlyString const&, DeprecatedString const&)>) const;
+    void for_each_attribute(Function<void(FlyString const&, DeprecatedString const&)>) const;
 
     bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     Vector<FlyString> const& class_names() const { return m_classes; }
@@ -153,11 +153,11 @@ public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
 
     // https://dom.spec.whatwg.org/#concept-element-attributes-change-ext
-    using AttributeChangeSteps = Function<void(DeprecatedFlyString const& /*local_name*/, DeprecatedString const& /*old_value*/, DeprecatedString const& /*value*/, DeprecatedFlyString const& /*namespace_*/)>;
+    using AttributeChangeSteps = Function<void(FlyString const& /*local_name*/, DeprecatedString const& /*old_value*/, DeprecatedString const& /*value*/, DeprecatedFlyString const& /*namespace_*/)>;
 
     void add_attribute_change_steps(AttributeChangeSteps steps);
-    void run_attribute_change_steps(DeprecatedFlyString const& local_name, DeprecatedString const& old_value, DeprecatedString const& value, DeprecatedFlyString const& namespace_);
-    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value);
+    void run_attribute_change_steps(FlyString const& local_name, DeprecatedString const& old_value, DeprecatedString const& value, DeprecatedFlyString const& namespace_);
+    virtual void attribute_changed(FlyString const& name, DeprecatedString const& value);
 
     struct [[nodiscard]] RequiredInvalidationAfterStyleChange {
         bool repaint { false };
@@ -386,7 +386,7 @@ protected:
 private:
     void make_html_uppercased_qualified_name();
 
-    void invalidate_style_after_attribute_change(DeprecatedFlyString const& attribute_name);
+    void invalidate_style_after_attribute_change(FlyString const& attribute_name);
 
     WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node);
 

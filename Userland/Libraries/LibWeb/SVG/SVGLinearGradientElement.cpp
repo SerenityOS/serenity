@@ -24,7 +24,7 @@ void SVGLinearGradientElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLinearGradientElementPrototype>(realm, "SVGLinearGradientElement"));
 }
 
-void SVGLinearGradientElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGLinearGradientElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGradientElement::attribute_changed(name, value);
 

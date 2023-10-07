@@ -61,7 +61,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
     }
 }
 
-void SVGSVGElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGSVGElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGraphicsElement::attribute_changed(name, value);
 

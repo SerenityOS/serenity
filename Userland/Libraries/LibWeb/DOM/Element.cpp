@@ -468,7 +468,7 @@ void Element::add_attribute_change_steps(AttributeChangeSteps steps)
     m_attribute_change_steps.append(move(steps));
 }
 
-void Element::run_attribute_change_steps(DeprecatedFlyString const& local_name, DeprecatedString const& old_value, DeprecatedString const& value, DeprecatedFlyString const& namespace_)
+void Element::run_attribute_change_steps(FlyString const& local_name, DeprecatedString const& old_value, DeprecatedString const& value, DeprecatedFlyString const& namespace_)
 {
     for (auto const& attribute_change_steps : m_attribute_change_steps)
         attribute_change_steps(local_name, old_value, value, namespace_);
@@ -478,7 +478,7 @@ void Element::run_attribute_change_steps(DeprecatedFlyString const& local_name, 
     invalidate_style_after_attribute_change(local_name);
 }
 
-void Element::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void Element::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     if (name == HTML::AttributeNames::class_) {
         auto new_classes = value.split_view(Infra::is_ascii_whitespace);
@@ -614,7 +614,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 DOMTokenList* Element::class_list()
 {
     if (!m_class_list)
-        m_class_list = DOMTokenList::create(*this, FlyString::from_deprecated_fly_string(HTML::AttributeNames::class_).release_value());
+        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_);
     return m_class_list;
 }
 
@@ -1026,7 +1026,7 @@ i32 Element::tab_index() const
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
 void Element::set_tab_index(i32 tab_index)
 {
-    MUST(set_attribute(HTML::AttributeNames::tabindex, DeprecatedString::number(tab_index)));
+    MUST(set_attribute(HTML::AttributeNames::tabindex, MUST(String::number(tab_index))));
 }
 
 // https://drafts.csswg.org/cssom-view/#potentially-scrollable
@@ -1583,7 +1583,7 @@ ErrorOr<void> Element::scroll_into_view(Optional<Variant<bool, ScrollIntoViewOpt
     // FIXME: 8. Optionally perform some other action that brings the element to the user’s attention.
 }
 
-void Element::invalidate_style_after_attribute_change(DeprecatedFlyString const& attribute_name)
+void Element::invalidate_style_after_attribute_change(FlyString const& attribute_name)
 {
     // FIXME: Only invalidate if the attribute can actually affect style.
     (void)attribute_name;
@@ -1873,11 +1873,11 @@ void Element::set_prefix(Optional<FlyString> value)
     m_qualified_name.set_prefix(move(value));
 }
 
-void Element::for_each_attribute(Function<void(DeprecatedFlyString const&, DeprecatedString const&)> callback) const
+void Element::for_each_attribute(Function<void(FlyString const&, DeprecatedString const&)> callback) const
 {
     for (size_t i = 0; i < m_attributes->length(); ++i) {
         auto const* attribute = m_attributes->item(i);
-        callback(attribute->name().to_deprecated_fly_string(), attribute->value().to_deprecated_string());
+        callback(attribute->name(), attribute->value().to_deprecated_string());
     }
 }
 

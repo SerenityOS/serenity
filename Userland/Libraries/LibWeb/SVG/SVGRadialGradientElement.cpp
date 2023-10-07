@@ -21,7 +21,7 @@ void SVGRadialGradientElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGRadialGradientElementPrototype>(realm, "SVGRadialGradientElement"));
 }
 
-void SVGRadialGradientElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGRadialGradientElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGradientElement::attribute_changed(name, value);
 
