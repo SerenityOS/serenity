@@ -71,7 +71,7 @@ WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
     if (value < 0)
         return {};
 
-    TRY(set_attribute(HTML::AttributeNames::value, DeprecatedString::number(value)));
+    TRY(set_attribute(HTML::AttributeNames::value, MUST(String::number(value))));
     progress_position_updated();
     return {};
 }
@@ -98,7 +98,7 @@ WebIDL::ExceptionOr<void> HTMLProgressElement::set_max(double value)
     if (value <= 0)
         return {};
 
-    TRY(set_attribute(HTML::AttributeNames::max, DeprecatedString::number(value)));
+    TRY(set_attribute(HTML::AttributeNames::max, MUST(String::number(value))));
     progress_position_updated();
     return {};
 }

@@ -17,7 +17,7 @@ SVGGradientElement::SVGGradientElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-void SVGGradientElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGGradientElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGElement::attribute_changed(name, value);
     if (name == AttributeNames::gradientUnits) {

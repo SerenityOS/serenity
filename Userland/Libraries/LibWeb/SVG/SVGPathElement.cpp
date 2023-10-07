@@ -95,7 +95,7 @@ void SVGPathElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPathElementPrototype>(realm, "SVGPathElement"));
 }
 
-void SVGPathElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGPathElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 

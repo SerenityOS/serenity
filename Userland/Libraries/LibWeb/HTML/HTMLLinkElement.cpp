@@ -77,7 +77,7 @@ bool HTMLLinkElement::has_loaded_icon() const
     return m_relationship & Relationship::Icon && resource() && resource()->is_loaded() && resource()->has_encoded_data();
 }
 
-void HTMLLinkElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLLinkElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::attribute_changed(name, value);
 

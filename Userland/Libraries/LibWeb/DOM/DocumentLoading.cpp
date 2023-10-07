@@ -126,7 +126,7 @@ static bool build_image_document(DOM::Document& document, ByteBuffer const& data
     MUST(html_element->append_child(body_element));
 
     auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(image_element->set_attribute(HTML::AttributeNames::src, document.url().to_deprecated_string()));
+    MUST(image_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
     MUST(body_element->append_child(image_element));
 
     return true;
@@ -170,9 +170,9 @@ static bool build_video_document(DOM::Document& document)
     MUST(html_element->append_child(body_element));
 
     auto video_element = DOM::create_element(document, HTML::TagNames::video, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(video_element->set_attribute(HTML::AttributeNames::src, document.url().to_deprecated_string()));
-    MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, DeprecatedString::empty()));
-    MUST(video_element->set_attribute(HTML::AttributeNames::controls, DeprecatedString::empty()));
+    MUST(video_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
+    MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, String {}));
+    MUST(video_element->set_attribute(HTML::AttributeNames::controls, String {}));
     MUST(body_element->append_child(video_element));
 
     return true;
@@ -190,9 +190,9 @@ static bool build_audio_document(DOM::Document& document)
     MUST(html_element->append_child(body_element));
 
     auto video_element = DOM::create_element(document, HTML::TagNames::audio, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(video_element->set_attribute(HTML::AttributeNames::src, document.url().to_deprecated_string()));
-    MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, DeprecatedString::empty()));
-    MUST(video_element->set_attribute(HTML::AttributeNames::controls, DeprecatedString::empty()));
+    MUST(video_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
+    MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, String {}));
+    MUST(video_element->set_attribute(HTML::AttributeNames::controls, String {}));
     MUST(body_element->append_child(video_element));
 
     return true;

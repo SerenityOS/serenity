@@ -532,7 +532,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         white-space: pre;
         border: none;
         padding: 1px 2px;
-)~~~"));
+)~~~"_string));
 
     m_placeholder_element = heap().allocate<PlaceholderElement>(realm(), document());
     MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
@@ -586,7 +586,7 @@ void HTMLInputElement::did_lose_focus()
     });
 }
 
-void HTMLInputElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLInputElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::checked) {

@@ -95,7 +95,7 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
-void HTMLImageElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLImageElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::attribute_changed(name, value);
 
@@ -190,7 +190,7 @@ unsigned HTMLImageElement::width() const
 
 WebIDL::ExceptionOr<void> HTMLImageElement::set_width(unsigned width)
 {
-    return set_attribute(HTML::AttributeNames::width, DeprecatedString::number(width));
+    return set_attribute(HTML::AttributeNames::width, MUST(String::number(width)));
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-height
@@ -218,7 +218,7 @@ unsigned HTMLImageElement::height() const
 
 WebIDL::ExceptionOr<void> HTMLImageElement::set_height(unsigned height)
 {
-    return set_attribute(HTML::AttributeNames::height, DeprecatedString::number(height));
+    return set_attribute(HTML::AttributeNames::height, MUST(String::number(height)));
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-naturalwidth

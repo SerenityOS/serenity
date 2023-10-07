@@ -22,7 +22,7 @@ void SVGLineElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLineElementPrototype>(realm, "SVGLineElement"));
 }
 
-void SVGLineElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGLineElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 

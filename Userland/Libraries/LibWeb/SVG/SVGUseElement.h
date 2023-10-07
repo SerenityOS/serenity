@@ -19,7 +19,7 @@ class SVGUseElement final : public SVGGraphicsElement {
 public:
     virtual ~SVGUseElement() override = default;
 
-    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(FlyString const& name, DeprecatedString const& value) override;
 
     virtual void inserted() override;
 

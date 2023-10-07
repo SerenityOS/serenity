@@ -48,10 +48,10 @@ Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const
     //    in the order that those attributes are listed in the element's attribute list, add a name-value pair to list whose name is the attribute's name with the first five characters removed and whose value
     //    is the attribute's value.
     m_associated_element->for_each_attribute([&](auto& name, auto& value) {
-        if (!name.starts_with("data-"sv))
+        if (!name.bytes_as_string_view().starts_with("data-"sv))
             return;
 
-        auto name_after_starting_data = name.view().substring_view(5);
+        auto name_after_starting_data = name.bytes_as_string_view().substring_view(5);
 
         for (auto character : name_after_starting_data) {
             if (is_ascii_upper_alpha(character))

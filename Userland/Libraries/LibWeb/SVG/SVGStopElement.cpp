@@ -19,7 +19,7 @@ SVGStopElement::SVGStopElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-void SVGStopElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGStopElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGElement::attribute_changed(name, value);
     if (name == SVG::AttributeNames::offset) {

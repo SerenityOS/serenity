@@ -183,7 +183,7 @@ void ElementInlineCSSStyleDeclaration::update_style_attribute()
     m_updating = true;
 
     // 5. Set an attribute value for owner node using "style" and the result of serializing declaration block.
-    MUST(m_element->set_attribute(HTML::AttributeNames::style, serialized()));
+    MUST(m_element->set_attribute(HTML::AttributeNames::style, MUST(String::from_deprecated_string(serialized()))));
 
     // 6. Unset declaration block’s updating flag.
     m_updating = false;

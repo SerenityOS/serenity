@@ -32,7 +32,7 @@ class HTMLImageElement final
 public:
     virtual ~HTMLImageElement() override;
 
-    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(FlyString const& name, DeprecatedString const& value) override;
 
     DeprecatedString alt() const { return deprecated_attribute(HTML::AttributeNames::alt); }
     DeprecatedString src() const { return deprecated_attribute(HTML::AttributeNames::src); }

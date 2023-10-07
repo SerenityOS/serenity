@@ -45,7 +45,7 @@ void HTMLObjectElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_image_request);
 }
 
-void HTMLObjectElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLObjectElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     NavigableContainer::attribute_changed(name, value);
 

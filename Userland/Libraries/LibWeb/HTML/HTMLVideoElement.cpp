@@ -40,7 +40,7 @@ void HTMLVideoElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_fetch_controller);
 }
 
-void HTMLVideoElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLVideoElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     Base::attribute_changed(name, value);
 

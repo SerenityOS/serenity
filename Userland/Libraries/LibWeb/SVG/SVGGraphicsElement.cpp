@@ -32,7 +32,7 @@ void SVGGraphicsElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGGraphicsElementPrototype>(realm, "SVGGraphicsElement"));
 }
 
-void SVGGraphicsElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGGraphicsElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGElement::attribute_changed(name, value);
     if (name == "transform"sv) {

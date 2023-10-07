@@ -31,7 +31,7 @@ JS::GCPtr<Layout::Node> SVGMaskElement::create_layout_node(NonnullRefPtr<CSS::St
     return heap().allocate_without_realm<Layout::SVGGraphicsBox>(document(), *this, move(style));
 }
 
-void SVGMaskElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGMaskElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGraphicsElement::attribute_changed(name, value);
     if (name == AttributeNames::maskUnits) {

@@ -40,7 +40,7 @@ private:
 
     virtual void initialize(JS::Realm&) override;
 
-    void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    void attribute_changed(FlyString const& name, DeprecatedString const& value) override;
 
     void ask_for_a_reset();
 

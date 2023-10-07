@@ -24,7 +24,7 @@ void SVGRectElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGRectElementPrototype>(realm, "SVGRectElement"));
 }
 
-void SVGRectElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGRectElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 

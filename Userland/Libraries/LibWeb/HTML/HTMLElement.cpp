@@ -112,11 +112,11 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(StringView content_e
         return {};
     }
     if (content_editable.equals_ignoring_ascii_case("true"sv)) {
-        MUST(set_attribute(HTML::AttributeNames::contenteditable, "true"));
+        MUST(set_attribute(HTML::AttributeNames::contenteditable, "true"_string));
         return {};
     }
     if (content_editable.equals_ignoring_ascii_case("false"sv)) {
-        MUST(set_attribute(HTML::AttributeNames::contenteditable, "false"));
+        MUST(set_attribute(HTML::AttributeNames::contenteditable, "false"_string));
         return {};
     }
     return WebIDL::SyntaxError::create(realm(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'"_fly_string);
@@ -224,7 +224,7 @@ bool HTMLElement::cannot_navigate() const
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
-void HTMLElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     Element::attribute_changed(name, value);
 

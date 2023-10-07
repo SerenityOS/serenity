@@ -22,7 +22,7 @@ void SVGCircleElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGCircleElementPrototype>(realm, "SVGCircleElement"));
 }
 
-void SVGCircleElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGCircleElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 

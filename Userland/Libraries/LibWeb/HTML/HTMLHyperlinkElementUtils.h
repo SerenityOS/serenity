@@ -20,7 +20,7 @@ public:
     DeprecatedString origin() const;
 
     DeprecatedString href() const;
-    WebIDL::ExceptionOr<void> set_href(StringView);
+    WebIDL::ExceptionOr<void> set_href(String);
 
     DeprecatedString protocol() const;
     void set_protocol(StringView);
@@ -52,7 +52,7 @@ public:
 protected:
     virtual DOM::Document& hyperlink_element_utils_document() = 0;
     virtual DeprecatedString hyperlink_element_utils_href() const = 0;
-    virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(DeprecatedString) = 0;
+    virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(String) = 0;
     virtual bool hyperlink_element_utils_is_html_anchor_element() const = 0;
     virtual bool hyperlink_element_utils_is_connected() const = 0;
     virtual DeprecatedString hyperlink_element_utils_get_an_elements_target() const = 0;

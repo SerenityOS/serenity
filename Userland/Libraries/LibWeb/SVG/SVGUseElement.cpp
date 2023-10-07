@@ -45,7 +45,7 @@ void SVGUseElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_document_observer);
 }
 
-void SVGUseElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGUseElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
 {
     Base::attribute_changed(name, value);
 

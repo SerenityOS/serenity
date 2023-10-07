@@ -39,7 +39,7 @@ private:
     HTMLLinkElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
-    void attribute_changed(DeprecatedFlyString const&, DeprecatedString const&) override;
+    void attribute_changed(FlyString const&, DeprecatedString const&) override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;

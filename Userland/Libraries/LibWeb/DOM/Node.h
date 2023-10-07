@@ -158,7 +158,7 @@ public:
 
     const HTML::HTMLAnchorElement* enclosing_link_element() const;
     const HTML::HTMLElement* enclosing_html_element() const;
-    const HTML::HTMLElement* enclosing_html_element_with_attribute(DeprecatedFlyString const&) const;
+    const HTML::HTMLElement* enclosing_html_element_with_attribute(FlyString const&) const;
 
     DeprecatedString child_text_content() const;
 
