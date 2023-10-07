@@ -1237,8 +1237,12 @@ static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& contex
     }
     dbgln_if(PNG_DEBUG, "Chunk type: '{}', size: {}, crc: {:x}", chunk_type, chunk_size, chunk_crc);
 
-    if (chunk_type == "IHDR"sv)
+    if (chunk_type == "IHDR"sv) {
+        if (context.state >= PNGLoadingContext::IHDRDecoded)
+            return Error::from_string_literal("Multiple IHDR chunks");
+
         return process_IHDR(chunk_data, context);
+    }
 
     if (context.state < PNGLoadingContext::IHDRDecoded)
         return Error::from_string_literal("IHDR is not the first chunk of the file");
