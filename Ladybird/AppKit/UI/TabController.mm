@@ -24,6 +24,7 @@ static NSString* const TOOLBAR_NAVIGATE_BACK_IDENTIFIER = @"ToolbarNavigateBackI
 static NSString* const TOOLBAR_NAVIGATE_FORWARD_IDENTIFIER = @"ToolbarNavigateForwardIdentifier";
 static NSString* const TOOLBAR_RELOAD_IDENTIFIER = @"ToolbarReloadIdentifier";
 static NSString* const TOOLBAR_LOCATION_IDENTIFIER = @"ToolbarLocationIdentifier";
+static NSString* const TOOLBAR_ZOOM_IDENTIFIER = @"ToolbarZoomIdentifier";
 static NSString* const TOOLBAR_NEW_TAB_IDENTIFIER = @"ToolbarNewTabIdentifier";
 static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIdentifer";
 
@@ -49,6 +50,7 @@ enum class IsHistoryNavigation {
 @property (nonatomic, strong) NSToolbarItem* navigate_forward_toolbar_item;
 @property (nonatomic, strong) NSToolbarItem* reload_toolbar_item;
 @property (nonatomic, strong) NSToolbarItem* location_toolbar_item;
+@property (nonatomic, strong) NSToolbarItem* zoom_toolbar_item;
 @property (nonatomic, strong) NSToolbarItem* new_tab_toolbar_item;
 @property (nonatomic, strong) NSToolbarItem* tab_overview_toolbar_item;
 
@@ -63,6 +65,7 @@ enum class IsHistoryNavigation {
 @synthesize navigate_forward_toolbar_item = _navigate_forward_toolbar_item;
 @synthesize reload_toolbar_item = _reload_toolbar_item;
 @synthesize location_toolbar_item = _location_toolbar_item;
+@synthesize zoom_toolbar_item = _zoom_toolbar_item;
 @synthesize new_tab_toolbar_item = _new_tab_toolbar_item;
 @synthesize tab_overview_toolbar_item = _tab_overview_toolbar_item;
 
@@ -117,6 +120,24 @@ enum class IsHistoryNavigation {
 {
     m_title = title;
     m_history.update_title(m_title);
+}
+
+- (void)zoomIn:(id)sender
+{
+    [[[self tab] web_view] zoomIn];
+    [self updateZoomButton];
+}
+
+- (void)zoomOut:(id)sender
+{
+    [[[self tab] web_view] zoomOut];
+    [self updateZoomButton];
+}
+
+- (void)resetZoom:(id)sender
+{
+    [[[self tab] web_view] resetZoom];
+    [self updateZoomButton];
 }
 
 - (void)navigateBack:(id)sender
@@ -219,6 +240,17 @@ enum class IsHistoryNavigation {
     self.tab.titlebarAppearsTransparent = NO;
     [self.window toggleTabOverview:sender];
     self.tab.titlebarAppearsTransparent = YES;
+}
+
+- (void)updateZoomButton
+{
+    auto zoom_level = [[[self tab] web_view] zoomLevel];
+
+    auto* zoom_level_text = [NSString stringWithFormat:@"%d%%", round_to<int>(zoom_level * 100.0f)];
+    [self.zoom_toolbar_item setTitle:zoom_level_text];
+
+    auto zoom_button_hidden = zoom_level == 1.0 ? YES : NO;
+    [[self.zoom_toolbar_item view] setHidden:zoom_button_hidden];
 }
 
 - (void)dumpDOMTree:(id)sender
@@ -392,6 +424,22 @@ enum class IsHistoryNavigation {
     return _location_toolbar_item;
 }
 
+- (NSToolbarItem*)zoom_toolbar_item
+{
+    if (!_zoom_toolbar_item) {
+        auto* button = [NSButton buttonWithTitle:@"100%"
+                                          target:self
+                                          action:@selector(resetZoom:)];
+        [button setToolTip:@"Reset zoom level"];
+        [button setHidden:YES];
+
+        _zoom_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_ZOOM_IDENTIFIER];
+        [_zoom_toolbar_item setView:button];
+    }
+
+    return _zoom_toolbar_item;
+}
+
 - (NSToolbarItem*)new_tab_toolbar_item
 {
     if (!_new_tab_toolbar_item) {
@@ -429,6 +477,7 @@ enum class IsHistoryNavigation {
             NSToolbarFlexibleSpaceItemIdentifier,
             TOOLBAR_RELOAD_IDENTIFIER,
             TOOLBAR_LOCATION_IDENTIFIER,
+            TOOLBAR_ZOOM_IDENTIFIER,
             NSToolbarFlexibleSpaceItemIdentifier,
             TOOLBAR_NEW_TAB_IDENTIFIER,
             TOOLBAR_TAB_OVERVIEW_IDENTIFIER,
@@ -517,6 +566,9 @@ enum class IsHistoryNavigation {
     }
     if ([identifier isEqual:TOOLBAR_LOCATION_IDENTIFIER]) {
         return self.location_toolbar_item;
+    }
+    if ([identifier isEqual:TOOLBAR_ZOOM_IDENTIFIER]) {
+        return self.zoom_toolbar_item;
     }
     if ([identifier isEqual:TOOLBAR_NEW_TAB_IDENTIFIER]) {
         return self.new_tab_toolbar_item;
