@@ -146,8 +146,10 @@ void XMLDocumentBuilder::text(StringView data)
         auto string = DeprecatedString::empty();
         if (!data.is_null())
             string = data.to_deprecated_string();
-        auto node = m_document->create_text_node(MUST(String::from_deprecated_string(string)));
-        MUST(m_current_node->append_child(node));
+        if (!string.is_empty()) {
+            auto node = m_document->create_text_node(MUST(String::from_deprecated_string(string)));
+            MUST(m_current_node->append_child(node));
+        }
     }
 }
 
