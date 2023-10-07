@@ -169,23 +169,23 @@ private:
 };
 
 struct Address {
-    Optional<DeprecatedString> name;
-    Optional<DeprecatedString> source_route;
-    Optional<DeprecatedString> mailbox;
-    Optional<DeprecatedString> host;
+    DeprecatedString name;
+    DeprecatedString source_route;
+    DeprecatedString mailbox;
+    DeprecatedString host;
 };
 
 struct Envelope {
-    Optional<DeprecatedString> date; // Format of date not specified.
-    Optional<DeprecatedString> subject;
-    Optional<Vector<Address>> from;
-    Optional<Vector<Address>> sender;
-    Optional<Vector<Address>> reply_to;
-    Optional<Vector<Address>> to;
-    Optional<Vector<Address>> cc;
-    Optional<Vector<Address>> bcc;
-    Optional<DeprecatedString> in_reply_to;
-    Optional<DeprecatedString> message_id;
+    DeprecatedString date; // Format of date not specified.
+    DeprecatedString subject;
+    Vector<Address> from;
+    Vector<Address> sender;
+    Vector<Address> reply_to;
+    Vector<Address> to;
+    Vector<Address> cc;
+    Vector<Address> bcc;
+    DeprecatedString in_reply_to;
+    DeprecatedString message_id;
 };
 
 class BodyStructure;
@@ -199,28 +199,28 @@ struct MultiPartBodyStructureData {
     Vector<OwnPtr<BodyStructure>> bodies;
     Vector<DeprecatedString> langs;
     DeprecatedString multipart_subtype;
-    Optional<HashMap<DeprecatedString, DeprecatedString>> params;
-    Optional<DeprecatedString> location;
-    Optional<Vector<BodyExtension>> extensions;
+    HashMap<DeprecatedString, DeprecatedString> params;
+    DeprecatedString location;
+    Vector<BodyExtension> extensions;
 };
 
 struct BodyStructureData {
     DeprecatedString type;
     DeprecatedString subtype;
-    Optional<DeprecatedString> id {};
-    Optional<DeprecatedString> desc {};
+    DeprecatedString id {};
+    DeprecatedString desc {};
     DeprecatedString encoding;
     HashMap<DeprecatedString, DeprecatedString> fields;
     unsigned bytes { 0 };
     unsigned lines { 0 };
     Optional<Tuple<Envelope, NonnullOwnPtr<BodyStructure>>> contanied_message;
 
-    Optional<DeprecatedString> md5 {};
+    DeprecatedString md5 {};
     Optional<Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>>> disposition {};
     Optional<Vector<DeprecatedString>> langs {};
-    Optional<DeprecatedString> location {};
+    DeprecatedString location {};
 
-    Optional<Vector<BodyExtension>> extensions {};
+    Vector<BodyExtension> extensions {};
 };
 
 class BodyStructure {
@@ -332,13 +332,13 @@ public:
         m_response_type |= static_cast<unsigned>(type);
     }
 
-    void add_body_data(FetchCommand::DataItem&& data_item, Optional<DeprecatedString>&& body)
+    void add_body_data(FetchCommand::DataItem&& data_item, DeprecatedString&& body)
     {
         add_response_type(FetchResponseType::Body);
         m_bodies.append({ move(data_item), move(body) });
     }
 
-    Vector<Tuple<FetchCommand::DataItem, Optional<DeprecatedString>>>& body_data()
+    Vector<Tuple<FetchCommand::DataItem, DeprecatedString>>& body_data()
     {
         VERIFY(contains_response_type(FetchResponseType::Body));
         return m_bodies;
@@ -411,7 +411,7 @@ public:
 
 private:
     Vector<DeprecatedString> m_flags;
-    Vector<Tuple<FetchCommand::DataItem, Optional<DeprecatedString>>> m_bodies;
+    Vector<Tuple<FetchCommand::DataItem, DeprecatedString>> m_bodies;
     Core::DateTime m_internal_date;
     Envelope m_envelope;
     unsigned m_uid { 0 };

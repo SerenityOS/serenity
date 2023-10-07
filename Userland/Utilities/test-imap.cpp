@@ -125,12 +125,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 .first()
                 .get<IMAP::FetchResponseData>()
                 .body_data()
-                .find_if([](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
+                .find_if([](Tuple<IMAP::FetchCommand::DataItem, DeprecatedString>& data) {
                     const auto data_item = data.get<0>();
                     return data_item.section.has_value() && data_item.section->type == IMAP::FetchCommand::DataItem::SectionType::HeaderFields;
                 })
-                ->get<1>()
-                .value());
+                ->get<1>());
     }
 
     // FIXME: There is a discrepancy between IMAP::Sequence wanting signed ints
