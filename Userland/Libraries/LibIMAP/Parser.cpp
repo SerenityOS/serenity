@@ -22,14 +22,14 @@ ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
         m_response = SolidResponse();
     }
 
-    if (try_consume("+"sv)) {
+    if (consume_if("+"sv)) {
         consume(" "sv);
         auto data = consume_until_end_of_line();
         consume("\r\n"sv);
         return { true, { ContinueRequest { data } } };
     }
 
-    while (try_consume("*"sv)) {
+    while (consume_if("*"sv)) {
         parse_untagged();
     }
 
@@ -48,7 +48,7 @@ ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
     }
 }
 
-bool Parser::try_consume(StringView x)
+bool Parser::consume_if(StringView x)
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, consume({})", m_position, x);
     size_t i = 0;
@@ -93,7 +93,7 @@ void Parser::parse_response_done()
 
 void Parser::consume(StringView x)
 {
-    if (!try_consume(x)) {
+    if (!consume_if(x)) {
         dbgln("\"{}\" not matched at {}, (buffer length {})", x, m_position, m_buffer.size());
 
         m_parsing_failed = true;
@@ -156,22 +156,22 @@ void Parser::parse_untagged()
         return;
     }
 
-    if (try_consume("CAPABILITY"sv)) {
+    if (consume_if("CAPABILITY"sv)) {
         parse_capability_response();
-    } else if (try_consume("LIST"sv)) {
+    } else if (consume_if("LIST"sv)) {
         auto item = parse_list_item();
         m_response.data().add_list_item(move(item));
-    } else if (try_consume("LSUB"sv)) {
+    } else if (consume_if("LSUB"sv)) {
         auto item = parse_list_item();
         m_response.data().add_lsub_item(move(item));
-    } else if (try_consume("FLAGS"sv)) {
+    } else if (consume_if("FLAGS"sv)) {
         consume(" "sv);
         auto flags = parse_list(+[](StringView x) { return DeprecatedString(x); });
         m_response.data().set_flags(move(flags));
         consume("\r\n"sv);
-    } else if (try_consume("OK"sv)) {
+    } else if (consume_if("OK"sv)) {
         consume(" "sv);
-        if (try_consume("["sv)) {
+        if (consume_if("["sv)) {
             auto actual_type = parse_atom();
             if (actual_type == "CLOSED"sv) {
                 // No-op.
@@ -203,25 +203,25 @@ void Parser::parse_untagged()
         }
         consume_until_end_of_line();
         consume("\r\n"sv);
-    } else if (try_consume("SEARCH"sv)) {
+    } else if (consume_if("SEARCH"sv)) {
         Vector<unsigned> ids;
-        while (!try_consume("\r\n"sv)) {
+        while (!consume_if("\r\n"sv)) {
             consume(" "sv);
             auto id = MUST(parse_number());
             ids.append(id);
         }
         m_response.data().set_search_results(move(ids));
-    } else if (try_consume("BYE"sv)) {
+    } else if (consume_if("BYE"sv)) {
         auto message = consume_until_end_of_line();
         consume("\r\n"sv);
         m_response.data().set_bye(message.is_empty() ? Optional<DeprecatedString>() : Optional<DeprecatedString>(message));
-    } else if (try_consume("STATUS"sv)) {
+    } else if (consume_if("STATUS"sv)) {
         consume(" "sv);
         auto mailbox = parse_astring();
         consume(" ("sv);
         auto status_item = StatusItem();
         status_item.set_mailbox(mailbox);
-        while (!try_consume(")"sv)) {
+        while (!consume_if(")"sv)) {
             auto status_att = parse_atom();
             consume(" "sv);
             auto value = MUST(parse_number());
@@ -248,7 +248,7 @@ void Parser::parse_untagged()
                 consume(" "sv);
         }
         m_response.data().set_status(move(status_item));
-        try_consume(" "sv); // Not in the spec but the Outlook server sends a space for some reason.
+        consume_if(" "sv); // Not in the spec but the Outlook server sends a space for some reason.
         consume("\r\n"sv);
     } else {
         auto x = consume_until_end_of_line();
@@ -268,7 +268,7 @@ StringView Parser::parse_quoted_string()
 
 StringView Parser::parse_string()
 {
-    if (try_consume("\""sv)) {
+    if (consume_if("\""sv)) {
         return parse_quoted_string();
     } else {
         return parse_literal_string();
@@ -278,7 +278,7 @@ StringView Parser::parse_string()
 Optional<StringView> Parser::parse_nstring()
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {} parse_nstring()", m_position);
-    if (try_consume("NIL"sv))
+    if (consume_if("NIL"sv))
         return {};
     else
         return { parse_string() };
@@ -289,7 +289,7 @@ FetchResponseData Parser::parse_fetch_response()
     consume(" ("sv);
     auto fetch_response = FetchResponseData();
 
-    while (!try_consume(")"sv)) {
+    while (!consume_if(")"sv)) {
         auto data_item = parse_fetch_data_item();
         switch (data_item.type) {
         case FetchCommand::DataItemType::BodyStructure: {
@@ -379,38 +379,38 @@ BodyStructure Parser::parse_body_structure()
 {
     if (!at_end() && m_buffer[m_position] == '(') {
         auto data = MultiPartBodyStructureData();
-        while (try_consume("("sv)) {
+        while (consume_if("("sv)) {
             auto child = parse_body_structure();
             data.bodies.append(make<BodyStructure>(move(child)));
         }
         consume(" "sv);
         data.multipart_subtype = parse_string();
 
-        if (!try_consume(")"sv)) {
+        if (!consume_if(")"sv)) {
             consume(" "sv);
-            data.params = try_consume("NIL"sv) ? Optional<HashMap<DeprecatedString, DeprecatedString>>() : parse_body_fields_params();
-            if (!try_consume(")"sv)) {
+            data.params = consume_if("NIL"sv) ? Optional<HashMap<DeprecatedString, DeprecatedString>>() : parse_body_fields_params();
+            if (!consume_if(")"sv)) {
                 consume(" "sv);
-                if (!try_consume("NIL"sv)) {
+                if (!consume_if("NIL"sv)) {
                     data.disposition = { parse_disposition() };
                 }
 
-                if (!try_consume(")"sv)) {
+                if (!consume_if(")"sv)) {
                     consume(" "sv);
-                    if (!try_consume("NIL"sv)) {
+                    if (!consume_if("NIL"sv)) {
                         data.langs = { parse_langs() };
                     }
 
-                    if (!try_consume(")"sv)) {
+                    if (!consume_if(")"sv)) {
                         consume(" "sv);
-                        data.location = try_consume("NIL"sv) ? Optional<DeprecatedString>() : Optional<DeprecatedString>(parse_string());
+                        data.location = consume_if("NIL"sv) ? Optional<DeprecatedString>() : Optional<DeprecatedString>(parse_string());
 
-                        if (!try_consume(")"sv)) {
+                        if (!consume_if(")"sv)) {
                             consume(" "sv);
                             Vector<BodyExtension> extensions;
-                            while (!try_consume(")"sv)) {
+                            while (!consume_if(")"sv)) {
                                 extensions.append(parse_body_extension());
-                                try_consume(" "sv);
+                                consume_if(" "sv);
                             }
                             data.extensions = { move(extensions) };
                         }
@@ -470,37 +470,37 @@ BodyStructure Parser::parse_one_part_body()
         // NOTE: "media-basic SP body-fields" is already parsed.
     }
 
-    if (!try_consume(")"sv)) {
+    if (!consume_if(")"sv)) {
         consume(" "sv);
 
         // body-ext-1part
         [&]() {
             data.md5 = Optional<DeprecatedString>(parse_nstring());
 
-            if (try_consume(")"sv))
+            if (consume_if(")"sv))
                 return;
             consume(" "sv);
-            if (!try_consume("NIL"sv)) {
+            if (!consume_if("NIL"sv)) {
                 auto disposition = parse_disposition();
                 data.disposition = { disposition };
             }
 
-            if (try_consume(")"sv))
+            if (consume_if(")"sv))
                 return;
             consume(" "sv);
-            if (!try_consume("NIL"sv)) {
+            if (!consume_if("NIL"sv)) {
                 data.langs = { parse_langs() };
             }
 
-            if (try_consume(")"sv))
+            if (consume_if(")"sv))
                 return;
             consume(" "sv);
             data.location = Optional<DeprecatedString>(parse_nstring());
 
             Vector<BodyExtension> extensions;
-            while (!try_consume(")"sv)) {
+            while (!consume_if(")"sv)) {
                 extensions.append(parse_body_extension());
-                try_consume(" "sv);
+                consume_if(" "sv);
             }
             data.extensions = { move(extensions) };
         }();
@@ -511,12 +511,12 @@ BodyStructure Parser::parse_one_part_body()
 Vector<DeprecatedString> Parser::parse_langs()
 {
     AK::Vector<DeprecatedString> langs;
-    if (!try_consume("("sv)) {
+    if (!consume_if("("sv)) {
         langs.append(parse_string());
     } else {
-        while (!try_consume(")"sv)) {
+        while (!consume_if(")"sv)) {
             langs.append(parse_string());
-            try_consume(" "sv);
+            consume_if(" "sv);
         }
     }
     return langs;
@@ -568,7 +568,7 @@ ListItem Parser::parse_list_item()
 void Parser::parse_capability_response()
 {
     auto capability = AK::Vector<DeprecatedString>();
-    while (!try_consume("\r\n"sv)) {
+    while (!consume_if("\r\n"sv)) {
         consume(" "sv);
         auto x = DeprecatedString(parse_atom());
         capability.append(x);
@@ -618,7 +618,7 @@ Vector<T> Parser::parse_list(T converter(StringView))
     consume("("sv);
     Vector<T> x;
     bool first = true;
-    while (!try_consume(")"sv)) {
+    while (!consume_if(")"sv)) {
         if (!first)
             consume(" "sv);
         auto item = consume_while([](u8 x) {
@@ -686,7 +686,7 @@ StringView Parser::consume_until_end_of_line()
 FetchCommand::DataItem Parser::parse_fetch_data_item()
 {
     auto msg_attr = consume_while([](u8 x) { return is_ascii_alpha(x) != 0; });
-    if (msg_attr.equals_ignoring_ascii_case("BODY"sv) && try_consume("["sv)) {
+    if (msg_attr.equals_ignoring_ascii_case("BODY"sv) && consume_if("["sv)) {
         auto data_item = FetchCommand::DataItem {
             .type = FetchCommand::DataItemType::BodySection,
             .section = { {} }
@@ -714,7 +714,7 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
             data_item.section->type = FetchCommand::DataItem::SectionType::Parts;
             data_item.section->parts = Vector<unsigned>();
 
-            while (!try_consume("]"sv)) {
+            while (!consume_if("]"sv)) {
                 auto num = try_parse_number();
                 if (num.has_value()) {
                     data_item.section->parts->append(num.value());
@@ -734,13 +734,13 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
             dbgln("Unmatched section type {}", section_type);
             m_parsing_failed = true;
         }
-        if (try_consume("<"sv)) {
+        if (consume_if("<"sv)) {
             auto start = MUST(parse_number());
             data_item.partial_fetch = true;
             data_item.start = (int)start;
             consume(">"sv);
         }
-        try_consume(" "sv);
+        consume_if(" "sv);
         return data_item;
     } else if (msg_attr.equals_ignoring_ascii_case("FLAGS"sv)) {
         return FetchCommand::DataItem {
@@ -770,12 +770,12 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
 }
 Optional<Vector<Address>> Parser::parse_address_list()
 {
-    if (try_consume("NIL"sv))
+    if (consume_if("NIL"sv))
         return {};
 
     auto addresses = Vector<Address>();
     consume("("sv);
-    while (!try_consume(")"sv)) {
+    while (!consume_if(")"sv)) {
         addresses.append(parse_address());
         if (!at_end() && m_buffer[m_position] != ')')
             consume(" "sv);
@@ -810,30 +810,30 @@ StringView Parser::parse_astring()
 }
 HashMap<DeprecatedString, DeprecatedString> Parser::parse_body_fields_params()
 {
-    if (try_consume("NIL"sv))
+    if (consume_if("NIL"sv))
         return {};
 
     HashMap<DeprecatedString, DeprecatedString> fields;
     consume("("sv);
-    while (!try_consume(")"sv)) {
+    while (!consume_if(")"sv)) {
         auto key = parse_string();
         consume(" "sv);
         auto value = parse_string();
         fields.set(key, value);
-        try_consume(" "sv);
+        consume_if(" "sv);
     }
 
     return fields;
 }
 BodyExtension Parser::parse_body_extension()
 {
-    if (try_consume("NIL"sv)) {
+    if (consume_if("NIL"sv)) {
         return BodyExtension { Optional<DeprecatedString> {} };
-    } else if (try_consume("("sv)) {
+    } else if (consume_if("("sv)) {
         Vector<OwnPtr<BodyExtension>> extensions;
-        while (!try_consume(")"sv)) {
+        while (!consume_if(")"sv)) {
             extensions.append(make<BodyExtension>(parse_body_extension()));
-            try_consume(" "sv);
+            consume_if(" "sv);
         }
         return BodyExtension { move(extensions) };
     } else if (!at_end() && (m_buffer[m_position] == '"' || m_buffer[m_position] == '{')) {
