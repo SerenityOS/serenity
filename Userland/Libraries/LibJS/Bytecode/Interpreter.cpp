@@ -812,26 +812,23 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
 {
     auto& vm = interpreter.vm();
 
-    auto get_reference = [&]() -> ThrowCompletionOr<Reference> {
-        auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-        if (m_cached_environment_coordinate.has_value()) {
-            auto environment = vm.running_execution_context().lexical_environment;
-            for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
-                environment = environment->outer_environment();
-            VERIFY(environment);
-            VERIFY(environment->is_declarative_environment());
-            if (!environment->is_permanently_screwed_by_eval()) {
-                return Reference { *environment, string, vm.in_strict_mode(), m_cached_environment_coordinate };
-            }
-            m_cached_environment_coordinate = {};
+    if (m_cached_environment_coordinate.has_value()) {
+        auto environment = vm.running_execution_context().lexical_environment;
+        for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
+            environment = environment->outer_environment();
+        VERIFY(environment);
+        VERIFY(environment->is_declarative_environment());
+        if (!environment->is_permanently_screwed_by_eval()) {
+            interpreter.accumulator() = TRY(verify_cast<DeclarativeEnvironment>(*environment).get_binding_value_direct(vm, m_cached_environment_coordinate.value().index, vm.in_strict_mode()));
+            return {};
         }
+        m_cached_environment_coordinate = {};
+    }
 
-        auto reference = TRY(vm.resolve_binding(string));
-        if (reference.environment_coordinate().has_value())
-            m_cached_environment_coordinate = reference.environment_coordinate();
-        return reference;
-    };
-    auto reference = TRY(get_reference());
+    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+    auto reference = TRY(vm.resolve_binding(string));
+    if (reference.environment_coordinate().has_value())
+        m_cached_environment_coordinate = reference.environment_coordinate();
     interpreter.accumulator() = TRY(reference.get_value(vm));
     return {};
 }
@@ -840,26 +837,28 @@ ThrowCompletionOr<void> GetCalleeAndThisFromEnvironment::execute_impl(Bytecode::
 {
     auto& vm = interpreter.vm();
 
-    auto get_reference = [&]() -> ThrowCompletionOr<Reference> {
-        auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-        if (m_cached_environment_coordinate.has_value()) {
-            auto environment = vm.running_execution_context().lexical_environment;
-            for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
-                environment = environment->outer_environment();
-            VERIFY(environment);
-            VERIFY(environment->is_declarative_environment());
-            if (!environment->is_permanently_screwed_by_eval()) {
-                return Reference { *environment, string, vm.in_strict_mode(), m_cached_environment_coordinate };
-            }
-            m_cached_environment_coordinate = {};
+    if (m_cached_environment_coordinate.has_value()) {
+        auto environment = vm.running_execution_context().lexical_environment;
+        for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
+            environment = environment->outer_environment();
+        VERIFY(environment);
+        VERIFY(environment->is_declarative_environment());
+        if (!environment->is_permanently_screwed_by_eval()) {
+            interpreter.reg(m_callee_reg) = TRY(verify_cast<DeclarativeEnvironment>(*environment).get_binding_value_direct(vm, m_cached_environment_coordinate.value().index, vm.in_strict_mode()));
+            Value this_value = js_undefined();
+            if (auto base_object = environment->with_base_object())
+                this_value = base_object;
+            interpreter.reg(m_this_reg) = this_value;
+            return {};
         }
+        m_cached_environment_coordinate = {};
+    }
 
-        auto reference = TRY(vm.resolve_binding(string));
-        if (reference.environment_coordinate().has_value())
-            m_cached_environment_coordinate = reference.environment_coordinate();
-        return reference;
-    };
-    auto reference = TRY(get_reference());
+    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+    auto reference = TRY(vm.resolve_binding(string));
+    if (reference.environment_coordinate().has_value())
+        m_cached_environment_coordinate = reference.environment_coordinate();
+
     interpreter.reg(m_callee_reg) = TRY(reference.get_value(vm));
 
     Value this_value = js_undefined();
