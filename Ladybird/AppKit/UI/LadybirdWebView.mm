@@ -149,6 +149,26 @@ struct HideCursor {
     m_web_view_bridge->set_system_visibility_state(is_visible);
 }
 
+- (void)zoomIn
+{
+    m_web_view_bridge->zoom_in();
+}
+
+- (void)zoomOut
+{
+    m_web_view_bridge->zoom_out();
+}
+
+- (void)resetZoom
+{
+    m_web_view_bridge->reset_zoom();
+}
+
+- (float)zoomLevel
+{
+    return m_web_view_bridge->zoom_level();
+}
+
 - (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme
 {
     m_web_view_bridge->set_preferred_color_scheme(color_scheme);
@@ -342,6 +362,10 @@ struct HideCursor {
         default:
             break;
         }
+    };
+
+    m_web_view_bridge->on_zoom_level_changed = [self]() {
+        [self updateViewportRect:Ladybird::WebViewBridge::ForResize::Yes];
     };
 
     m_web_view_bridge->on_navigate_back = [self]() {

@@ -303,7 +303,24 @@
                                                        keyEquivalent:@""];
     [color_scheme_menu_item setSubmenu:color_scheme_menu];
 
+    auto* zoom_menu = [[NSMenu alloc] init];
+    [zoom_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Zoom In"
+                                                  action:@selector(zoomIn:)
+                                           keyEquivalent:@"+"]];
+    [zoom_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Zoom Out"
+                                                  action:@selector(zoomOut:)
+                                           keyEquivalent:@"-"]];
+    [zoom_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Actual Size"
+                                                  action:@selector(resetZoom:)
+                                           keyEquivalent:@"0"]];
+
+    auto* zoom_menu_item = [[NSMenuItem alloc] initWithTitle:@"Zoom"
+                                                      action:nil
+                                               keyEquivalent:@""];
+    [zoom_menu_item setSubmenu:zoom_menu];
+
     [submenu addItem:color_scheme_menu_item];
+    [submenu addItem:zoom_menu_item];
     [submenu addItem:[NSMenuItem separatorItem]];
 
     [menu setSubmenu:submenu];

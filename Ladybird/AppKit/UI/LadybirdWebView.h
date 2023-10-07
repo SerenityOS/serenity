@@ -54,6 +54,11 @@
 
 - (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme;
 
+- (void)zoomIn;
+- (void)zoomOut;
+- (void)resetZoom;
+- (float)zoomLevel;
+
 - (void)debugRequest:(DeprecatedString const&)request argument:(DeprecatedString const&)argument;
 
 - (void)viewSource;

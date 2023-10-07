@@ -70,7 +70,7 @@ WebViewBridge::~WebViewBridge() = default;
 void WebViewBridge::set_device_pixel_ratio(float device_pixel_ratio)
 {
     m_device_pixel_ratio = device_pixel_ratio;
-    client().async_set_device_pixels_per_css_pixel(device_pixel_ratio);
+    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
 }
 
 void WebViewBridge::set_system_visibility_state(bool is_visible)
@@ -158,6 +158,10 @@ Optional<WebViewBridge::Paintable> WebViewBridge::paintable()
 
 void WebViewBridge::update_zoom()
 {
+    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
+
+    if (on_zoom_level_changed)
+        on_zoom_level_changed();
 }
 
 Gfx::IntRect WebViewBridge::viewport_rect() const
