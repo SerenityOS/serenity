@@ -190,6 +190,18 @@ public:
         __builtin_memmove(this->data() + offset, data, data_size);
     }
 
+    ALWAYS_INLINE constexpr void move_to(Span<RemoveConst<T>> other)
+    {
+        VERIFY(other.size() >= size());
+        TypedTransfer<RemoveConst<T>>::move(other.data(), data(), size());
+    }
+
+    ALWAYS_INLINE constexpr void move_trimmed_to(Span<RemoveConst<T>> other)
+    {
+        auto const count = min(size(), other.size());
+        TypedTransfer<RemoveConst<T>>::move(other.data(), data(), count);
+    }
+
     ALWAYS_INLINE constexpr size_t copy_to(Span<RemoveConst<T>> other) const
     {
         VERIFY(other.size() >= size());
