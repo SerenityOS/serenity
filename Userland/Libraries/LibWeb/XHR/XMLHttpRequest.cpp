@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
@@ -22,6 +22,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/IDLEventListener.h>
+#include <LibWeb/DOM/XMLDocument.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
@@ -317,7 +318,7 @@ void XMLHttpRequest::set_document_response()
 
     // 6. Otherwise, let document be a document that represents the result of running the XML parser with XML scripting support disabled on xhr’s received bytes. If that fails (unsupported character encoding, namespace well-formedness error, etc.), then return null.
     else {
-        document = DOM::Document::create(realm());
+        document = DOM::XMLDocument::create(realm(), m_response->url().value_or({}));
         if (!Web::build_xml_document(*document, m_received_bytes)) {
             m_response_object = Empty {};
             return;

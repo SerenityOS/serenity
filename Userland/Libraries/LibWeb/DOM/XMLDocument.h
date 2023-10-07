@@ -14,6 +14,7 @@ class XMLDocument final : public Document {
     WEB_PLATFORM_OBJECT(XMLDocument, Document);
 
 public:
+    static JS::NonnullGCPtr<XMLDocument> create(JS::Realm&, AK::URL const&);
     virtual ~XMLDocument() override = default;
 
 private:
