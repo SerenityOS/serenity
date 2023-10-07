@@ -9,6 +9,11 @@
 
 namespace Web::DOM {
 
+JS::NonnullGCPtr<XMLDocument> XMLDocument::create(JS::Realm& realm, AK::URL const& url)
+{
+    return realm.heap().allocate<XMLDocument>(realm, realm, url);
+}
+
 XMLDocument::XMLDocument(JS::Realm& realm, AK::URL const& url)
     : Document(realm, url)
 {
