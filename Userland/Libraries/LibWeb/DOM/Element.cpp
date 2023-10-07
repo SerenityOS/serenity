@@ -1085,8 +1085,16 @@ double Element::scroll_top() const
     if (!layout_node() || !is<Layout::Box>(layout_node()))
         return 0.0;
 
+    // FIXME: Ideally we would stop creating a layout node for column group so that a layout node would always have
+    //        a paintable, but in the meantime, special case this node.
+    if (layout_node()->display().is_table_column_group()) {
+        VERIFY(!paintable_box());
+        return 0.0;
+    }
+
     // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
     // FIXME: Is this correct?
+    VERIFY(paintable_box());
     return paintable_box()->scroll_offset().y().to_double();
 }
 
@@ -1125,8 +1133,16 @@ double Element::scroll_left() const
     if (!layout_node() || !is<Layout::Box>(layout_node()))
         return 0.0;
 
+    // FIXME: Ideally we would stop creating a layout node for column group so that a layout node would always have
+    //        a paintable, but in the meantime, special case this node.
+    if (layout_node()->display().is_table_column_group()) {
+        VERIFY(!paintable_box());
+        return 0.0;
+    }
+
     // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
     // FIXME: Is this correct?
+    VERIFY(paintable_box());
     return paintable_box()->scroll_offset().x().to_double();
 }
 
