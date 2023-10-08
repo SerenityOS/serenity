@@ -70,10 +70,10 @@ public:
         return token;
     }
 
-    static HTMLToken make_start_tag(DeprecatedFlyString const& tag_name)
+    static HTMLToken make_start_tag(FlyString const& tag_name)
     {
         HTMLToken token { Type::StartTag };
-        token.set_tag_name(tag_name);
+        token.set_tag_name(tag_name.to_deprecated_fly_string());
         return token;
     }
 

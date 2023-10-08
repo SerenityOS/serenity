@@ -813,7 +813,7 @@ void HTMLParser::handle_before_head(HTMLToken& token)
     }
 
 AnythingElse:
-    m_head_element = JS::make_handle(verify_cast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head.to_deprecated_fly_string()))));
+    m_head_element = JS::make_handle(verify_cast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head))));
     m_insertion_mode = InsertionMode::InHead;
     process_using_the_rules_for(InsertionMode::InHead, token);
     return;
@@ -1107,7 +1107,7 @@ void HTMLParser::handle_after_head(HTMLToken& token)
     }
 
 AnythingElse:
-    (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::body.to_deprecated_fly_string()));
+    (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::body));
     m_insertion_mode = InsertionMode::InBody;
     process_using_the_rules_for(m_insertion_mode, token);
 }
@@ -1242,7 +1242,7 @@ Create:
     VERIFY(!entry->is_marker());
 
     // FIXME: Hold on to the real token!
-    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->element->local_name().to_deprecated_fly_string()));
+    auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->element->local_name()));
 
     // 9. Replace the entry for entry in the list with an entry for new element.
     m_list_of_active_formatting_elements.entries().at(index).element = JS::make_handle(new_element);
@@ -1383,7 +1383,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
             // 6. Create an element for the token for which the element node was created,
             //    in the HTML namespace, with common ancestor as the intended parent;
             // FIXME: hold onto the real token
-            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name().to_deprecated_fly_string()), Namespace::HTML, *common_ancestor);
+            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name()), Namespace::HTML, *common_ancestor);
             // replace the entry for node in the list of active formatting elements with an entry for the new element,
             m_list_of_active_formatting_elements.replace(*node, *element);
             // replace the entry for node in the stack of open elements with an entry for the new element,
@@ -1412,7 +1412,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
         // 15. Create an element for the token for which formatting element was created,
         //     in the HTML namespace, with furthest block as the intended parent.
         // FIXME: hold onto the real token
-        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name().to_deprecated_fly_string()), Namespace::HTML, *furthest_block);
+        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name()), Namespace::HTML, *furthest_block);
 
         // 16. Take all of the child nodes of furthest block and append them to the element created in the last step.
         for (auto& child : furthest_block->children_as_vector())
@@ -1846,7 +1846,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::p) {
         if (!m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p)) {
             log_parse_error();
-            (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::p.to_deprecated_fly_string()));
+            (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::p));
         }
         close_a_p_element();
         return;
@@ -2708,7 +2708,7 @@ void HTMLParser::handle_in_table_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::th, HTML::TagNames::td)) {
         log_parse_error();
         clear_the_stack_back_to_a_table_body_context();
-        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tr.to_deprecated_fly_string()));
+        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tr));
         m_insertion_mode = InsertionMode::InRow;
         process_using_the_rules_for(m_insertion_mode, token);
         return;
@@ -2811,7 +2811,7 @@ void HTMLParser::handle_in_table(HTMLToken& token)
         clear_the_stack_back_to_a_table_context();
 
         // Insert an HTML element for a "colgroup" start tag token with no attributes, then switch the insertion mode to "in column group".
-        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::colgroup.to_deprecated_fly_string()));
+        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::colgroup));
         m_insertion_mode = InsertionMode::InColumnGroup;
 
         // Reprocess the current token.
@@ -2836,7 +2836,7 @@ void HTMLParser::handle_in_table(HTMLToken& token)
         clear_the_stack_back_to_a_table_context();
 
         // Insert an HTML element for a "tbody" start tag token with no attributes, then switch the insertion mode to "in table body".
-        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tbody.to_deprecated_fly_string()));
+        (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::tbody));
         m_insertion_mode = InsertionMode::InTableBody;
 
         // Reprocess the current token.
