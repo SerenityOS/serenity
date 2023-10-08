@@ -46,7 +46,7 @@ void HTMLIFrameElement::inserted()
     HTMLElement::inserted();
 
     // When an iframe element element is inserted into a document whose browsing context is non-null, the user agent must run these steps:
-    if (document().browsing_context()) {
+    if (in_a_document_tree() && document().browsing_context()) {
         // 1. Create a new child navigable for element.
         MUST(create_new_child_navigable());
 
