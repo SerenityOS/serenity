@@ -35,6 +35,8 @@ TEST_CASE(format_integers)
     EXPECT_EQ(DeprecatedString::formatted("{:08x}", 4096), "00001000");
     EXPECT_EQ(DeprecatedString::formatted("{:x}", 0x1111222233334444ull), "1111222233334444");
     EXPECT_EQ(DeprecatedString::formatted("{:4}", 12345678), "12345678");
+    EXPECT_EQ(DeprecatedString::formatted("{}", AK::NumericLimits<i64>::min()), "-9223372036854775808");
+    EXPECT_EQ(DeprecatedString::formatted("{:x}", AK::NumericLimits<i64>::min()), "-8000000000000000");
     EXPECT_EQ(DeprecatedString::formatted("{:'}", 0), "0");
     EXPECT_EQ(DeprecatedString::formatted("{:'}", 4096), "4,096");
     EXPECT_EQ(DeprecatedString::formatted("{:'}", 16777216), "16,777,216");
