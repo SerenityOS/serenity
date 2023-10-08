@@ -3514,7 +3514,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         if (token.is_self_closing()) {
 
             // -> If the token's tag name is "script", and the new current node is in the SVG namespace
-            if (token.tag_name().to_deprecated_fly_string() == SVG::TagNames::script && current_node().namespace_() == Namespace::SVG) {
+            if (token.tag_name() == SVG::TagNames::script && current_node().namespace_() == Namespace::SVG) {
                 // Acknowledge the token's self-closing flag, and then act as described in the steps for a "script" end tag below.
                 token.acknowledge_self_closing_flag_if_set();
                 goto ScriptEndTag;
@@ -3531,7 +3531,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
     }
 
     // -> An end tag whose tag name is "script", if the current node is an SVG script element
-    if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name().to_deprecated_fly_string() == SVG::TagNames::script) {
+    if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
     ScriptEndTag:
         // Pop the current node off the stack of open elements.
         (void)m_stack_of_open_elements.pop();

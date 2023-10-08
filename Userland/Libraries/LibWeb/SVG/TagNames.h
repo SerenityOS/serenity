@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/Error.h>
+#include <AK/FlyString.h>
 
 namespace Web::SVG::TagNames {
 
@@ -40,7 +40,7 @@ namespace Web::SVG::TagNames {
     __ENUMERATE_SVG_TAG(title)          \
     __ENUMERATE_SVG_TAG(use)
 
-#define __ENUMERATE_SVG_TAG(name) extern DeprecatedFlyString name;
+#define __ENUMERATE_SVG_TAG(name) extern FlyString name;
 ENUMERATE_SVG_TAGS
 #undef __ENUMERATE_SVG_TAG
 
