@@ -2240,14 +2240,6 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         break;
     }
 
-    // NOTE: Next, we add the flex container's padding since abspos boxes are placed relative to the padding edge
-    //       of their abspos containing block.
-    if (pack_from_end) {
-        main_offset += is_row_layout() ? m_flex_container_state.padding_right : m_flex_container_state.padding_bottom;
-    } else {
-        main_offset += is_row_layout() ? m_flex_container_state.padding_left : m_flex_container_state.padding_top;
-    }
-
     if (pack_from_end)
         main_offset += inner_main_size(flex_container()) - inner_main_size(box) - main_border_before - main_border_after;
 
