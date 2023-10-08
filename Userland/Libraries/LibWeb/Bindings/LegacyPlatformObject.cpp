@@ -62,7 +62,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LegacyPlatformObject::le
         // 1. If the result of running the named property visibility algorithm with property name P and object O is true, then:
         if (TRY(WebIDL::is_named_property_exposed_on_object({ this }, property_name))) {
             // FIXME: It's unfortunate that this is done twice, once in is_named_property_exposed_on_object and here.
-            auto property_name_string = property_name.to_string();
+            auto property_name_string = MUST(FlyString::from_deprecated_fly_string(property_name.to_string()));
 
             // 1. Let operation be the operation used to declare the named property getter.
             // 2. Let value be an uninitialized variable.
@@ -376,7 +376,7 @@ WebIDL::ExceptionOr<JS::Value> LegacyPlatformObject::item_value(size_t) const
     return JS::js_undefined();
 }
 
-WebIDL::ExceptionOr<JS::Value> LegacyPlatformObject::named_item_value(DeprecatedFlyString const&) const
+WebIDL::ExceptionOr<JS::Value> LegacyPlatformObject::named_item_value(FlyString const&) const
 {
     return JS::js_undefined();
 }

@@ -20,7 +20,7 @@ public:
     void refresh() const;
     size_t length() const;
     JS::GCPtr<Plugin> item(u32 index) const;
-    JS::GCPtr<Plugin> named_item(String const& name) const;
+    JS::GCPtr<Plugin> named_item(FlyString const& name) const;
 
 private:
     PluginArray(JS::Realm&);
@@ -30,7 +30,7 @@ private:
     // ^Bindings::LegacyPlatformObject
     virtual Vector<DeprecatedString> supported_property_names() const override;
     virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
-    virtual WebIDL::ExceptionOr<JS::Value> named_item_value(DeprecatedFlyString const& name) const override;
+    virtual WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const& name) const override;
     virtual bool is_supported_property_index(u32) const override;
 
     virtual bool supports_indexed_properties() const override { return true; }

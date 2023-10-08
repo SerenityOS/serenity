@@ -75,7 +75,7 @@ JS::GCPtr<MimeType> MimeTypeArray::item(u32 index) const
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-mimetypearray-nameditem
-JS::GCPtr<MimeType> MimeTypeArray::named_item(String const& name) const
+JS::GCPtr<MimeType> MimeTypeArray::named_item(FlyString const& name) const
 {
     // 1. For each MimeType mimeType of this's relevant global object's PDF viewer mime type objects: if mimeType's type is name, then return mimeType.
     auto& window = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
@@ -98,10 +98,9 @@ WebIDL::ExceptionOr<JS::Value> MimeTypeArray::item_value(size_t index) const
     return return_value.ptr();
 }
 
-WebIDL::ExceptionOr<JS::Value> MimeTypeArray::named_item_value(DeprecatedFlyString const& name) const
+WebIDL::ExceptionOr<JS::Value> MimeTypeArray::named_item_value(FlyString const& name) const
 {
-    auto converted_name = TRY_OR_THROW_OOM(vm(), String::from_deprecated_string(name));
-    auto return_value = named_item(converted_name);
+    auto return_value = named_item(name);
     if (!return_value)
         return JS::js_null();
     return return_value.ptr();

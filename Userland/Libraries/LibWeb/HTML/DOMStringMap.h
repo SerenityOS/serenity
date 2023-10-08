@@ -35,7 +35,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     // ^LegacyPlatformObject
-    virtual WebIDL::ExceptionOr<JS::Value> named_item_value(DeprecatedFlyString const&) const override;
+    virtual WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const&) const override;
     virtual Vector<DeprecatedString> supported_property_names() const override;
 
     virtual bool supports_indexed_properties() const override { return false; }

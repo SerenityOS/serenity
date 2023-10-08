@@ -193,9 +193,9 @@ WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> DOMStringMa
     return DidDeletionFail::No;
 }
 
-WebIDL::ExceptionOr<JS::Value> DOMStringMap::named_item_value(DeprecatedFlyString const& name) const
+WebIDL::ExceptionOr<JS::Value> DOMStringMap::named_item_value(FlyString const& name) const
 {
-    return JS::PrimitiveString::create(vm(), determine_value_of_named_property(name));
+    return JS::PrimitiveString::create(vm(), determine_value_of_named_property(name.to_deprecated_fly_string()));
 }
 
 }

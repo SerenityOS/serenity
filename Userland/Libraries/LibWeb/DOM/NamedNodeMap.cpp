@@ -327,7 +327,7 @@ WebIDL::ExceptionOr<JS::Value> NamedNodeMap::item_value(size_t index) const
     return node;
 }
 
-WebIDL::ExceptionOr<JS::Value> NamedNodeMap::named_item_value(DeprecatedFlyString const& name) const
+WebIDL::ExceptionOr<JS::Value> NamedNodeMap::named_item_value(FlyString const& name) const
 {
     auto const* node = get_named_item(name);
     if (!node)

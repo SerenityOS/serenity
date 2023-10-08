@@ -147,9 +147,9 @@ WebIDL::ExceptionOr<JS::Value> HTMLCollection::item_value(size_t index) const
     return const_cast<Element*>(element);
 }
 
-WebIDL::ExceptionOr<JS::Value> HTMLCollection::named_item_value(DeprecatedFlyString const& index) const
+WebIDL::ExceptionOr<JS::Value> HTMLCollection::named_item_value(FlyString const& index) const
 {
-    auto* element = named_item(FlyString::from_deprecated_fly_string(index).release_value());
+    auto* element = named_item(index);
     if (!element)
         return JS::js_undefined();
     return const_cast<Element*>(element);
