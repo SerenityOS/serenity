@@ -306,6 +306,7 @@ class Executable;
 class Generator;
 class Instruction;
 class Interpreter;
+class RegexTable;
 class Register;
 }
 

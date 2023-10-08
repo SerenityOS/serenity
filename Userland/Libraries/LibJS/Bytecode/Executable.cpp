@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Executable.h>
+#include <LibJS/Bytecode/RegexTable.h>
 #include <LibJS/SourceCode.h>
 
 namespace JS::Bytecode {
