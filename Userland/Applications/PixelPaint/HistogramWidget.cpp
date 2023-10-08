@@ -48,49 +48,41 @@ ErrorOr<void> HistogramWidget::rebuild_histogram_data()
             m_data.brightness[pixel_color.luminosity()]++;
         }
     }
-    int max_brightness_frequency = 0;
-    int max_color_frequency = 0;
+    m_data.max_brightness_frequency = 0;
+    m_data.max_color_frequency = 0;
     for (int i = 0; i < 256; i++) {
-        if (m_data.red[i] > max_color_frequency)
-            max_color_frequency = m_data.red[i];
-        if (m_data.green[i] > max_color_frequency)
-            max_color_frequency = m_data.green[i];
-        if (m_data.blue[i] > max_color_frequency)
-            max_color_frequency = m_data.blue[i];
-        if (m_data.brightness[i] > max_brightness_frequency)
-            max_brightness_frequency = m_data.brightness[i];
+        if (m_data.red[i] > m_data.max_color_frequency)
+            m_data.max_color_frequency = m_data.red[i];
+        if (m_data.green[i] > m_data.max_color_frequency)
+            m_data.max_color_frequency = m_data.green[i];
+        if (m_data.blue[i] > m_data.max_color_frequency)
+            m_data.max_color_frequency = m_data.blue[i];
+        if (m_data.brightness[i] > m_data.max_brightness_frequency)
+            m_data.max_brightness_frequency = m_data.brightness[i];
     }
-
-    // Scale the frequency values to fit the widgets height.
-    auto widget_height = height();
-
-    for (int i = 0; i < 256; i++) {
-        m_data.red[i] = m_data.red[i] != 0 ? (static_cast<float>(m_data.red[i]) / max_color_frequency) * widget_height : 0;
-        m_data.green[i] = m_data.green[i] != 0 ? (static_cast<float>(m_data.green[i]) / max_color_frequency) * widget_height : 0;
-        m_data.blue[i] = m_data.blue[i] != 0 ? (static_cast<float>(m_data.blue[i]) / max_color_frequency) * widget_height : 0;
-        m_data.brightness[i] = m_data.brightness[i] != 0 ? (static_cast<float>(m_data.brightness[i]) / max_brightness_frequency) * widget_height : 0;
-    }
-
     return {};
 }
 
 void HistogramWidget::paint_event(GUI::PaintEvent& event)
 {
-    if (!should_process_data())
+    if (!should_process_data() || m_data.max_color_frequency == 0)
         return;
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     int bottom_line = height() - 1;
     float step_width = static_cast<float>(width()) / 256;
+    auto scale_height_value = [this, bottom_line](int color_count, int max_value_count) {
+        return bottom_line - (color_count * this->height() / max_value_count);
+    };
 
     Gfx::Path brightness_path;
     Gfx::Path red_channel_path;
     Gfx::Path green_channel_path;
     Gfx::Path blue_channel_path;
-    red_channel_path.move_to({ 0, bottom_line - m_data.red[0] });
-    green_channel_path.move_to({ 0, bottom_line - m_data.green[0] });
-    blue_channel_path.move_to({ 0, bottom_line - m_data.blue[0] });
+    red_channel_path.move_to({ 0, scale_height_value(m_data.red[0], m_data.max_color_frequency) });
+    green_channel_path.move_to({ 0, scale_height_value(m_data.green[0], m_data.max_color_frequency) });
+    blue_channel_path.move_to({ 0, scale_height_value(m_data.blue[0], m_data.max_color_frequency) });
     brightness_path.move_to({ 0, bottom_line });
     brightness_path.line_to({ 0, bottom_line });
 
@@ -106,10 +98,11 @@ void HistogramWidget::paint_event(GUI::PaintEvent& event)
             continue;
         }
 
-        red_channel_path.line_to({ current_x_as_int, bottom_line - m_data.red[data_column] });
-        green_channel_path.line_to({ current_x_as_int, bottom_line - m_data.green[data_column] });
-        blue_channel_path.line_to({ current_x_as_int, bottom_line - m_data.blue[data_column] });
-        brightness_path.line_to({ current_x_as_int, bottom_line - m_data.brightness[data_column] });
+        // Scale the frequency values to fit the widgets height as this is probably changed when the widget gets detached.
+        red_channel_path.line_to({ current_x_as_int, scale_height_value(m_data.red[data_column], m_data.max_color_frequency) });
+        green_channel_path.line_to({ current_x_as_int, scale_height_value(m_data.green[data_column], m_data.max_color_frequency) });
+        blue_channel_path.line_to({ current_x_as_int, scale_height_value(m_data.blue[data_column], m_data.max_color_frequency) });
+        brightness_path.line_to({ current_x_as_int, scale_height_value(m_data.brightness[data_column], m_data.max_brightness_frequency) });
 
         current_x_as_float += step_width;
         last_drawn_x = current_x_as_int;

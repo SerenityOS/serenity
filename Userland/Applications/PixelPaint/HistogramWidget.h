@@ -32,6 +32,8 @@ private:
         Vector<int> green;
         Vector<int> blue;
         Vector<int> brightness;
+        int max_brightness_frequency;
+        int max_color_frequency;
     };
     HistogramData m_data;
 };
