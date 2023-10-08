@@ -1733,7 +1733,7 @@ Document::IndicatedPart Document::determine_the_indicated_part() const
         return Document::TopOfTheDocument {};
 
     // 3. Let potentialIndicatedElement be the result of finding a potential indicated element given document and fragment.
-    auto* potential_indicated_element = find_a_potential_indicated_element(fragment.to_deprecated_string());
+    auto* potential_indicated_element = find_a_potential_indicated_element(fragment);
 
     // 4. If potentialIndicatedElement is not null, then return potentialIndicatedElement.
     if (potential_indicated_element)
@@ -1744,7 +1744,7 @@ Document::IndicatedPart Document::determine_the_indicated_part() const
     auto decoded_fragment = AK::URL::percent_decode(fragment);
 
     // 7. Set potentialIndicatedElement to the result of finding a potential indicated element given document and decodedFragment.
-    potential_indicated_element = find_a_potential_indicated_element(decoded_fragment);
+    potential_indicated_element = find_a_potential_indicated_element(MUST(FlyString::from_deprecated_fly_string(decoded_fragment)));
 
     // 8. If potentialIndicatedElement is not null, then return potentialIndicatedElement.
     if (potential_indicated_element)
@@ -1759,7 +1759,7 @@ Document::IndicatedPart Document::determine_the_indicated_part() const
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#find-a-potential-indicated-element
-Element* Document::find_a_potential_indicated_element(DeprecatedString fragment) const
+Element* Document::find_a_potential_indicated_element(FlyString const& fragment) const
 {
     // To find a potential indicated element given a Document document and a string fragment, run these steps:
 
@@ -1772,7 +1772,7 @@ Element* Document::find_a_potential_indicated_element(DeprecatedString fragment)
     //    whose value is equal to fragment, then return the first such element in tree order.
     Element* element_with_name;
     root().for_each_in_subtree_of_type<Element>([&](Element const& element) {
-        if (element.name() == fragment) {
+        if (element.attribute(HTML::AttributeNames::name) == fragment) {
             element_with_name = const_cast<Element*>(&element);
             return IterationDecision::Break;
         }

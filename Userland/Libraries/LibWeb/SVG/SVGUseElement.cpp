@@ -115,7 +115,7 @@ JS::GCPtr<DOM::Element> SVGUseElement::referenced_element()
     }
 
     // FIXME: Support loading of external svg documents
-    return document().get_element_by_id(m_referenced_id.value());
+    return document().get_element_by_id(MUST(FlyString::from_utf8(m_referenced_id.value())));
 }
 
 // https://svgwg.org/svg2-draft/struct.html#UseShadowTree

@@ -1802,7 +1802,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
             }
             // ii. For each IDREF:
             for (auto const& id_ref : id_list) {
-                auto node = document.get_element_by_id(id_ref);
+                auto node = document.get_element_by_id(MUST(FlyString::from_utf8(id_ref)));
                 if (!node)
                     continue;
 
@@ -1922,7 +1922,7 @@ ErrorOr<String> Node::accessible_description(Document const& document) const
     StringBuilder builder;
     auto id_list = described_by->bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
     for (auto const& id : id_list) {
-        if (auto description_element = document.get_element_by_id(id)) {
+        if (auto description_element = document.get_element_by_id(MUST(FlyString::from_utf8(id)))) {
             auto description = TRY(
                 description_element->name_or_description(NameOrDescription::Description, document,
                     visited_nodes));
@@ -1943,7 +1943,7 @@ Optional<StringView> Node::first_valid_id(DeprecatedString const& value, Documen
 {
     auto id_list = value.split_view(Infra::is_ascii_whitespace);
     for (auto const& id : id_list) {
-        if (document.get_element_by_id(id))
+        if (document.get_element_by_id(MUST(FlyString::from_utf8(id))))
             return id;
     }
     return {};
