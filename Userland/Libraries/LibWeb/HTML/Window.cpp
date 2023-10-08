@@ -1481,7 +1481,7 @@ Vector<DeprecatedString> Window::supported_property_names()
 }
 
 // https://html.spec.whatwg.org/#named-access-on-the-window-object
-WebIDL::ExceptionOr<JS::Value> Window::named_item_value(DeprecatedFlyString const& name)
+WebIDL::ExceptionOr<JS::Value> Window::named_item_value(FlyString const& name)
 {
     // To determine the value of a named property name in a Window object window, the user agent must return the value obtained using the following steps:
 
@@ -1515,9 +1515,9 @@ WebIDL::ExceptionOr<JS::Value> Window::named_item_value(DeprecatedFlyString cons
     //    whose filter matches only named objects of window with the name name. (By definition, these will all be elements.)
     return DOM::HTMLCollection::create(associated_document(), DOM::HTMLCollection::Scope::Descendants, [name](auto& element) -> bool {
         if ((is<HTMLEmbedElement>(element) || is<HTMLFormElement>(element) || is<HTMLImageElement>(element) || is<HTMLObjectElement>(element))
-            && (element.attribute(AttributeNames::name) == name.view()))
+            && (element.attribute(AttributeNames::name) == name))
             return true;
-        return element.attribute(AttributeNames::id) == name.view();
+        return element.attribute(AttributeNames::id) == name;
     });
 }
 

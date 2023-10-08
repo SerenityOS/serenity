@@ -2589,7 +2589,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @named_properties_class@
 
     // 4. If the result of running the named property visibility algorithm with property name P and object object is true, then:
     if (TRY(is_named_property_exposed_on_object({ &object }, property_name))) {
-        auto property_name_string = property_name.to_string();
+        auto property_name_string = MUST(FlyString::from_deprecated_fly_string(property_name.to_string()));
 
         // 1. Let operation be the operation used to declare the named property getter.
         // 2. Let value be an uninitialized variable.
