@@ -832,7 +832,17 @@ static ErrorOr<void> decode_bmp_dib(BMPLoadingContext& context)
 
     // NOTE: If this is a headless BMP (embedded on ICO files), then we can only infer the data_offset after we know the data table size.
     // We are also assuming that no Extra bit masks are present
-    u32 dib_offset = context.is_included_in_ico ? dib_size : context.data_offset - header_size - 4;
+    u32 dib_offset = dib_size;
+    if (!context.is_included_in_ico) {
+        if (context.data_offset < header_size + 4u)
+            return Error::from_string_literal("Data offset too small");
+
+        dib_offset = context.data_offset - header_size - 4;
+    }
+
+    if (dib_offset >= context.file_size)
+        return Error::from_string_literal("DIB too large");
+
     streamer = InputStreamer(context.file_bytes + header_size + 4, dib_offset);
 
     dbgln_if(BMP_DEBUG, "BMP dib size: {}", dib_size);
