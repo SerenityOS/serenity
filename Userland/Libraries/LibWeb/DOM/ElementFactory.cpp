@@ -427,7 +427,7 @@ static JS::NonnullGCPtr<Element> create_html_element(JS::Realm& realm, Document&
 
 static JS::GCPtr<SVG::SVGElement> create_svg_element(JS::Realm& realm, Document& document, QualifiedName qualified_name)
 {
-    auto const& local_name = qualified_name.local_name().to_deprecated_fly_string();
+    auto const& local_name = qualified_name.local_name();
 
     if (local_name == SVG::TagNames::svg)
         return realm.heap().allocate<SVG::SVGSVGElement>(realm, document, move(qualified_name));
