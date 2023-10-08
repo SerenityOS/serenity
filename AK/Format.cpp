@@ -363,9 +363,14 @@ ErrorOr<void> FormatBuilder::put_i64(
     SignMode sign_mode)
 {
     auto const is_negative = value < 0;
-    value = is_negative ? -value : value;
+    u64 positive_value;
+    if (value == NumericLimits<i64>::min()) {
+        positive_value = static_cast<u64>(NumericLimits<i64>::max()) + 1;
+    } else {
+        positive_value = is_negative ? -value : value;
+    }
 
-    TRY(put_u64(static_cast<u64>(value), base, prefix, upper_case, zero_pad, use_separator, align, min_width, fill, sign_mode, is_negative));
+    TRY(put_u64(positive_value, base, prefix, upper_case, zero_pad, use_separator, align, min_width, fill, sign_mode, is_negative));
     return {};
 }
 
