@@ -1502,6 +1502,14 @@
     ],
     "initial": "none"
   },
+  "mask-type": {
+    "inherited": false,
+    "affects-layout": false,
+    "valid-types": [
+      "mask-type"
+    ],
+    "initial": "luminance"
+  },
   "math-depth": {
     "inherited": true,
     "initial": "0",

@@ -1015,6 +1015,12 @@ Optional<CSS::TableLayout> StyleProperties::table_layout() const
     return value_id_to_table_layout(value->to_identifier());
 }
 
+Optional<CSS::MaskType> StyleProperties::mask_type() const
+{
+    auto value = property(CSS::PropertyID::MaskType);
+    return value_id_to_mask_type(value->to_identifier());
+}
+
 Color StyleProperties::stop_color() const
 {
     auto value = property(CSS::PropertyID::StopColor);

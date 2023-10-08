@@ -122,6 +122,7 @@ public:
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;
 
+    Optional<CSS::MaskType> mask_type() const;
     Color stop_color() const;
     float stop_opacity() const;
     float fill_opacity() const;
