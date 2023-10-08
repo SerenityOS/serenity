@@ -18,6 +18,7 @@
 #include <LibWeb/HTML/NavigateEvent.h>
 #include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationDestination.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/XHR/FormData.h>
 
 namespace Web::HTML {

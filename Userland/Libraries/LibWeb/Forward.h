@@ -449,6 +449,8 @@ struct NavigationParams;
 struct NavigationParams;
 struct PolicyContainer;
 struct POSTResource;
+struct ScrollOptions;
+struct ScrollToOptions;
 struct SerializedFormData;
 struct SessionHistoryEntry;
 struct ToggleTaskTracker;

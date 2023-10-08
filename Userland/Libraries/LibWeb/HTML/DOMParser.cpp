@@ -10,6 +10,7 @@
 #include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 namespace Web::HTML {
