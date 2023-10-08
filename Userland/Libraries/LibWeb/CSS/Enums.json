@@ -276,6 +276,10 @@
     "inside",
     "outside"
   ],
+  "mask-type": [
+    "luminance",
+    "alpha"
+  ],
   "math-shift": [
     "normal",
     "compact"

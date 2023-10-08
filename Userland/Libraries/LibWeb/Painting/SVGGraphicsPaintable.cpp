@@ -40,6 +40,18 @@ Optional<CSSPixelRect> SVGGraphicsPaintable::get_masking_area() const
     return {};
 }
 
+static Gfx::Bitmap::MaskKind mask_type_to_gfx_mask_kind(CSS::MaskType mask_type)
+{
+    switch (mask_type) {
+    case CSS::MaskType::Alpha:
+        return Gfx::Bitmap::MaskKind::Alpha;
+    case CSS::MaskType::Luminance:
+        return Gfx::Bitmap::MaskKind::Luminance;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void SVGGraphicsPaintable::apply_mask(PaintContext& context, Gfx::Bitmap& target, CSSPixelRect const& masking_area) const
 {
     auto const& graphics_element = verify_cast<SVG::SVGGraphicsElement const>(*dom_node());
@@ -65,9 +77,9 @@ void SVGGraphicsPaintable::apply_mask(PaintContext& context, Gfx::Bitmap& target
             StackingContext::paint_node_as_stacking_context(mask_paintable, paint_context);
         }
     }
-    // TODO: Follow mask-type attribute to select between alpha/luminance masks.
     if (mask_bitmap)
-        target.apply_mask(*mask_bitmap, Gfx::Bitmap::MaskKind::Luminance);
+        target.apply_mask(*mask_bitmap,
+            mask_type_to_gfx_mask_kind(mask->layout_node()->computed_values().mask_type()));
     return;
 }
 

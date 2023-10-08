@@ -778,6 +778,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     else if (stroke_width->is_percentage())
         computed_values.set_stroke_width(CSS::LengthPercentage { stroke_width->as_percentage().percentage() });
 
+    if (auto mask_type = computed_style.mask_type(); mask_type.has_value())
+        computed_values.set_mask_type(*mask_type);
+
     if (auto mask = computed_style.property(CSS::PropertyID::Mask); mask->is_url())
         computed_values.set_mask(mask->as_url().url());
 

@@ -104,6 +104,7 @@ margin-left: 8px
 margin-right: 8px
 margin-top: 8px
 mask: none
+mask-type: luminance
 math-depth: 0
 math-shift: normal
 math-style: normal
