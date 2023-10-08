@@ -880,8 +880,6 @@ ThrowCompletionOr<void> GetGlobal::execute_impl(Bytecode::Interpreter& interpret
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
-    auto const& name = interpreter.current_executable().get_identifier(m_identifier);
-
     auto& cache = interpreter.current_executable().global_variable_caches[m_cache_index];
     auto& binding_object = realm.global_environment().object_record().binding_object();
     auto& declarative_record = realm.global_environment().declarative_record();
@@ -898,6 +896,7 @@ ThrowCompletionOr<void> GetGlobal::execute_impl(Bytecode::Interpreter& interpret
 
     cache.environment_serial_number = declarative_record.environment_serial_number();
 
+    auto const& name = interpreter.current_executable().get_identifier(m_identifier);
     if (vm.running_execution_context().script_or_module.has<NonnullGCPtr<Module>>()) {
         // NOTE: GetGlobal is used to access variables stored in the module environment and global environment.
         //       The module environment is checked first since it precedes the global environment in the environment chain.
