@@ -9,10 +9,9 @@
 #include <AK/DeprecatedFlyString.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/WeakPtr.h>
-#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
-#include <LibJS/Bytecode/RegexTable.h>
 #include <LibJS/Bytecode/StringTable.h>
+#include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
 
