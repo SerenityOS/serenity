@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Scripting/WorkerEnvironmentSettingsObject.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
