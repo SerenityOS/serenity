@@ -17,6 +17,7 @@ add_executable(MacPDF MACOSX_BUNDLE
     main.mm
     AppDelegate.mm
     MacPDFDocument.mm
+    MacPDFOutlineViewDataSource.mm
     MacPDFView.mm
     MacPDFWindowController.mm
 )
