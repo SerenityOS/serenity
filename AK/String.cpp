@@ -30,13 +30,12 @@ ErrorOr<String> String::from_utf8(StringView view)
 {
     if (!Utf8View { view }.validate())
         return Error::from_string_literal("String::from_utf8: Input was not valid UTF-8");
+    return from_utf8_without_validation(view.bytes());
+}
 
-    String result;
-    TRY(result.replace_with_new_string(view.length(), [&](Bytes buffer) {
-        view.bytes().copy_to(buffer);
-        return ErrorOr<void> {};
-    }));
-    return result;
+ErrorOr<String> String::from_view(Utf8View view)
+{
+    return String::from_utf8_without_validation(view.as_string().bytes());
 }
 
 ErrorOr<String> String::from_stream(Stream& stream, size_t byte_count)

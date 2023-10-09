@@ -53,6 +53,7 @@ public:
     template<typename T>
     requires(IsOneOf<RemoveCVReference<T>, ByteString, DeprecatedFlyString, FlyString, String>)
     static ErrorOr<String> from_utf8(T&&) = delete;
+    static ErrorOr<String> from_view(Utf8View view);
 
     [[nodiscard]] static String from_utf8_without_validation(ReadonlyBytes);
 
