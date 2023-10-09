@@ -116,6 +116,7 @@
     // FIXME: Only set data source when sidebar is open.
     _outlineDataSource = [[MacPDFOutlineViewDataSource alloc] initWithOutline:_pdfDocument.pdf->outline()];
     _outlineView.dataSource = _outlineDataSource;
+    _outlineView.delegate = self;
 }
 
 - (IBAction)showGoToPageDialog:(id)sender
@@ -173,6 +174,19 @@
     // Not called for standard identifiers, but the implementation of the method must exist, or else:
     // ERROR: invalid delegate <MacPDFWindowController: 0x600003054c80> (does not implement all required methods)
     return nil;
+}
+
+#pragma mark - NSOutlineViewDelegate
+
+- (void)outlineViewSelectionDidChange:(NSNotification*)notification
+{
+    NSInteger row = _outlineView.selectedRow;
+    if (row == -1)
+        return;
+
+    OutlineItemWrapper* item = [_outlineView itemAtRow:row];
+    if (auto page = [item page]; page.has_value())
+        [_pdfView goToPage:page.value()];
 }
 
 @end
