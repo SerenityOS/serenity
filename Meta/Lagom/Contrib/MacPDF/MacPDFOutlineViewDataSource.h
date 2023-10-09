@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 // Objective-C wrapper of PDF::OutlineItem, to launder it through the NSOutlineViewDataSource protocol.
 @interface OutlineItemWrapper : NSObject
 
+- (BOOL)isGroupItem;
 - (Optional<u32>)page;
 
 @end

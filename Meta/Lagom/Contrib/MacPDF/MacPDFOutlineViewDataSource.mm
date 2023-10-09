@@ -8,7 +8,9 @@
 
 @interface OutlineItemWrapper ()
 {
+    // Only one of those two is set.
     RefPtr<PDF::OutlineItem> _item;
+    NSString* _groupName;
 }
 @end
 
@@ -18,11 +20,27 @@
     if (self = [super init]; !self)
         return nil;
     _item = move(item);
+    _groupName = nil;
     return self;
+}
+
+- (instancetype)initWithGroupName:(nonnull NSString*)groupName
+{
+    if (self = [super init]; !self)
+        return nil;
+    _groupName = groupName;
+    return self;
+}
+
+- (BOOL)isGroupItem
+{
+    return _groupName != nil;
 }
 
 - (Optional<u32>)page
 {
+    if ([self isGroupItem])
+        return {};
     return _item->dest.page.map([](u32 page_index) { return page_index + 1; });
 }
 
@@ -33,11 +51,15 @@
 
 - (NSInteger)numberOfChildren
 {
+    if ([self isGroupItem])
+        return 0;
     return _item->children.size();
 }
 
 - (NSString*)objectValue
 {
+    if (_groupName)
+        return _groupName;
     return [NSString stringWithFormat:@"%s", _item->title.characters()]; // FIXME: encoding?
 }
 @end
@@ -65,7 +87,12 @@
     if (item)
         return [(OutlineItemWrapper*)item child:index];
 
-    return [[OutlineItemWrapper alloc] initWithItem:_outline->children[index]];
+    if (index == 0) {
+        bool has_outline = _outline && !_outline->children.is_empty();
+        // FIXME: Maybe put filename here instead?
+        return [[OutlineItemWrapper alloc] initWithGroupName:has_outline ? @"Outline" : @"(No outline)"];
+    }
+    return [[OutlineItemWrapper alloc] initWithItem:_outline->children[index - 1]];
 }
 
 - (BOOL)outlineView:(NSOutlineView*)outlineView isItemExpandable:(id)item
@@ -78,7 +105,7 @@
     if (item)
         return [(OutlineItemWrapper*)item numberOfChildren];
 
-    return _outline ? _outline->children.size() : 0;
+    return 1 + (_outline ? _outline->children.size() : 0);
 }
 
 - (id)outlineView:(NSOutlineView*)outlineView objectValueForTableColumn:(nullable NSTableColumn*)tableColumn byItem:(nullable id)item

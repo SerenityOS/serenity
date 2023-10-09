@@ -69,6 +69,7 @@
 {
     _outlineView = [[NSOutlineView alloc] initWithFrame:NSZeroRect];
 
+    _outlineView.floatsGroupRows = NO;
     _outlineView.focusRingType = NSFocusRingTypeNone;
     _outlineView.headerView = nil;
 
@@ -178,6 +179,16 @@
 }
 
 #pragma mark - NSOutlineViewDelegate
+
+- (BOOL)outlineView:(NSOutlineView*)outlineView isGroupItem:(id)item
+{
+    return [item isGroupItem];
+}
+
+- (BOOL)outlineView:(NSOutlineView*)outlineView shouldSelectItem:(id)item
+{
+    return ![self outlineView:outlineView isGroupItem:item];
+}
 
 // "This method is required if you wish to turn on the use of NSViews instead of NSCells."
 - (NSView*)outlineView:(NSOutlineView*)outlineView viewForTableColumn:(NSTableColumn*)tableColumn item:(id)item
