@@ -270,10 +270,10 @@ ErrorOr<Bytes> DeflateDecompressor::read_some(Bytes bytes)
         auto slice = bytes.slice(total_read);
 
         if (m_state == State::Idle) {
-            if (m_read_final_bock)
+            if (m_read_final_block)
                 break;
 
-            m_read_final_bock = TRY(m_input_stream->read_bit());
+            m_read_final_block = TRY(m_input_stream->read_bit());
             auto const block_type = TRY(m_input_stream->read_bits(2));
 
             if (block_type == 0b00) {
@@ -352,7 +352,7 @@ ErrorOr<Bytes> DeflateDecompressor::read_some(Bytes bytes)
     return bytes.slice(0, total_read);
 }
 
-bool DeflateDecompressor::is_eof() const { return m_state == State::Idle && m_read_final_bock; }
+bool DeflateDecompressor::is_eof() const { return m_state == State::Idle && m_read_final_block; }
 
 ErrorOr<size_t> DeflateDecompressor::write_some(ReadonlyBytes)
 {
