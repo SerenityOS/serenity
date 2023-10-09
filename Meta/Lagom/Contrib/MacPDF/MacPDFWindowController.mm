@@ -69,8 +69,8 @@
 {
     _outlineView = [[NSOutlineView alloc] initWithFrame:NSZeroRect];
 
-    _outlineView.style = NSTableViewStyleSourceList;
     _outlineView.focusRingType = NSFocusRingTypeNone;
+    _outlineView.headerView = nil;
 
     // FIXME: Implement data source support for autosaveExpandedItems and use that.
 
@@ -83,6 +83,7 @@
 
     NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSZeroRect];
     scrollView.hasVerticalScroller = YES;
+    scrollView.drawsBackground = NO;
     scrollView.documentView = _outlineView;
 
     // The scroll view knows to put things only in the safe area, but it doesn't clip to it.
