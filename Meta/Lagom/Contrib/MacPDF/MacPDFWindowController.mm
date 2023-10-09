@@ -7,11 +7,15 @@
 #import "MacPDFWindowController.h"
 
 #import "MacPDFDocument.h"
+#import "MacPDFOutlineViewDataSource.h"
 
 @interface MacPDFWindowController ()
 {
     MacPDFDocument* _pdfDocument;
     IBOutlet MacPDFView* _pdfView;
+
+    MacPDFOutlineViewDataSource* _outlineDataSource;
+    NSOutlineView* _outlineView;
 }
 @end
 
@@ -63,9 +67,38 @@
 
 - (NSSplitViewItem*)makeSidebarSplitItem
 {
-    // FIXME: Use an NSOutlineView with the document's outline.
-    NSView* side_view = [[NSView alloc] initWithFrame:NSZeroRect];
-    NSSplitViewItem* item = [NSSplitViewItem sidebarWithViewController:[self viewControllerForView:side_view]];
+    _outlineView = [[NSOutlineView alloc] initWithFrame:NSZeroRect];
+
+    _outlineView.style = NSTableViewStyleSourceList;
+    _outlineView.focusRingType = NSFocusRingTypeNone;
+
+    // FIXME: Implement data source support for autosaveExpandedItems and use that.
+
+    // rowSizeStyle does not default to NSTableViewRowSizeStyleDefault, but needs to be set to it for outline views in sourcelist style.
+    _outlineView.rowSizeStyle = NSTableViewRowSizeStyleDefault;
+
+    NSTableColumn* column = [[NSTableColumn alloc] initWithIdentifier:@"OutlineColumn"];
+    column.editable = NO;
+    [_outlineView addTableColumn:column];
+
+    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSZeroRect];
+    scrollView.hasVerticalScroller = YES;
+    scrollView.documentView = _outlineView;
+
+    // The scroll view knows to put things only in the safe area, but it doesn't clip to it.
+    // So momentum scrolling would let things draw above it, which looks weird.
+    // Put the scroll view in a containing view and make the containing view limit the scroll view to
+    // the safe area, so that it gets clipped.
+    NSView* view = [[NSView alloc] initWithFrame:NSZeroRect];
+    [view addSubview:scrollView];
+
+    [scrollView.topAnchor constraintEqualToAnchor:view.safeAreaLayoutGuide.topAnchor].active = YES;
+    [scrollView.leftAnchor constraintEqualToAnchor:view.safeAreaLayoutGuide.leftAnchor].active = YES;
+    [scrollView.rightAnchor constraintEqualToAnchor:view.safeAreaLayoutGuide.rightAnchor].active = YES;
+    [scrollView.bottomAnchor constraintEqualToAnchor:view.safeAreaLayoutGuide.bottomAnchor].active = YES;
+    scrollView.translatesAutoresizingMaskIntoConstraints = NO;
+
+    NSSplitViewItem* item = [NSSplitViewItem sidebarWithViewController:[self viewControllerForView:view]];
     item.collapseBehavior = NSSplitViewItemCollapseBehaviorPreferResizingSplitViewWithFixedSiblings;
 
     // This only has an effect on the very first run.
@@ -79,6 +112,10 @@
 {
     [_pdfView setDocument:_pdfDocument.pdf->make_weak_ptr()];
     [self pageChanged];
+
+    // FIXME: Only set data source when sidebar is open.
+    _outlineDataSource = [[MacPDFOutlineViewDataSource alloc] initWithOutline:_pdfDocument.pdf->outline()];
+    _outlineView.dataSource = _outlineDataSource;
 }
 
 - (IBAction)showGoToPageDialog:(id)sender
