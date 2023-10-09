@@ -835,9 +835,6 @@ void WindowFrame::handle_mouse_event(MouseEvent const& event)
 
 void WindowFrame::handle_border_mouse_event(MouseEvent const& event)
 {
-    if (!m_window.is_resizable())
-        return;
-
     auto& wm = WindowManager::the();
 
     constexpr ResizeDirection direction_for_hot_area[3][3] = {
@@ -867,6 +864,9 @@ void WindowFrame::handle_border_mouse_event(MouseEvent const& event)
         Compositor::the().invalidate_cursor();
         return;
     }
+
+    if (!m_window.is_resizable())
+        return;
 
     if (event.type() == Event::MouseDown && event.button() == MouseButton::Primary)
         wm.start_window_resize(m_window, event.translated(rect().location()), resize_direction);

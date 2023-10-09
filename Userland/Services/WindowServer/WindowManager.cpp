@@ -1327,7 +1327,7 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
             start_window_move(window, event);
             return;
         }
-        if (window.is_resizable() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Secondary && !window.blocking_modal_window()) {
+        if (m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Secondary && !window.blocking_modal_window()) {
             constexpr ResizeDirection direction_for_hot_area[3][3] = {
                 { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
                 { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
@@ -1343,6 +1343,11 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
             int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
             int hot_area_column = min(2, window_relative_x / (outer_rect.width() / 3));
             ResizeDirection resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
+            if (!window.is_resizable()) {
+                set_resize_candidate(window, resize_direction);
+                Compositor::the().invalidate_cursor();
+                return;
+            }
             start_window_resize(window, event, resize_direction);
             return;
         }
@@ -1995,6 +2000,10 @@ Cursor const& WindowManager::active_cursor() const
         return *m_move_cursor;
 
     if (m_resize_window || m_resize_candidate) {
+        if (m_resize_candidate && !m_resize_candidate->is_resizable()) {
+            return *m_disallowed_cursor;
+        }
+
         switch (m_resize_direction) {
         case ResizeDirection::Up:
         case ResizeDirection::Down:
