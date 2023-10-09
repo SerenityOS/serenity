@@ -44,7 +44,7 @@ You can watch videos of the system being developed on YouTube:
 
 ... and all of the above are right in this repository, no extra dependencies, built from-scratch by us :^)
 
-Additionally, there are [over two hundred ports of popular open-source software](Ports/AvailablePorts.md), including games, compilers, Unix tools, multimedia apps and more.
+Additionally, there are [over three hundred ports of popular open-source software](Ports/AvailablePorts.md), including games, compilers, Unix tools, multimedia apps and more.
 
 ## How do I read the documentation?
 
