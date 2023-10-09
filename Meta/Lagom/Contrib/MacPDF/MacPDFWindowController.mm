@@ -179,6 +179,49 @@
 
 #pragma mark - NSOutlineViewDelegate
 
+// "This method is required if you wish to turn on the use of NSViews instead of NSCells."
+- (NSView*)outlineView:(NSOutlineView*)outlineView viewForTableColumn:(NSTableColumn*)tableColumn item:(id)item
+{
+    // "The implementation of this method will usually call -[tableView makeViewWithIdentifier:[tableColumn identifier] owner:self]
+    //  in order to reuse a previous view, or automatically unarchive an associated prototype view for that identifier."
+
+    // Figure 1-5 in "Understanding Table Views" at
+    // https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/TableView/TableViewOverview/TableViewOverview.html
+    // describes what makeViewWithIdentifier:owner: does: It tries to cache views, so that if an item scrolls out of view
+    // and then back in again, the old view can be reused, without having to allocate a new one.
+    // It also tries to load the view from a xib if it doesn't exist. We don't use a xib though, so we have
+    // to create the view in code if it's not already cached.
+
+    // After calling this method to create a view, the framework assigns its objectValue to what's
+    // returned by outlineView:objectValueForTableColumn:byItem: from the data source.
+    // NSTableCellView implements objectValue, but it doesn't do anything with it. We have to manually
+    // bind assignment to its objectValue field to update concrete views.
+    // This is done here using Cocoa bindings.
+    // Alternatively, we could also get the data from the data model directly and assign it to
+    // the text field's stringValue, but then we'd call outlineView:objectValueForTableColumn:byItem:
+    // twice, and this somewhat roundabout method here seems to be how the framework wants to be used.
+
+    NSTableCellView* cellView = [outlineView makeViewWithIdentifier:tableColumn.identifier owner:self];
+    if (!cellView) {
+        cellView = [[NSTableCellView alloc] init];
+        cellView.identifier = tableColumn.identifier;
+
+        NSTextField* textField = [NSTextField labelWithString:@""];
+        textField.lineBreakMode = NSLineBreakByTruncatingTail;
+
+        // https://stackoverflow.com/a/29725553/551986
+        // "If your cell view is an NSTableCellView, that class also responds to -setObjectValue:. [...]
+        //  However, an NSTableCellView does not inherently do anything with the object value. It just holds it.
+        //  What you can then do is have the subviews bind to it through the objectValue property."
+        [textField bind:@"objectValue" toObject:cellView withKeyPath:@"objectValue" options:nil];
+
+        [cellView addSubview:textField];
+        cellView.textField = textField;
+    }
+
+    return cellView;
+}
+
 - (void)outlineViewSelectionDidChange:(NSNotification*)notification
 {
     NSInteger row = _outlineView.selectedRow;
