@@ -108,7 +108,7 @@ private:
 
     static constexpr u16 max_back_reference_length = 258;
 
-    bool m_read_final_bock { false };
+    bool m_read_final_block { false };
 
     State m_state { State::Idle };
     union {
