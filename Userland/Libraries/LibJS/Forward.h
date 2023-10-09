@@ -297,7 +297,7 @@ class ThrowCompletionOr;
 template<class T>
 class Handle;
 
-template<class T, size_t inline_capacity = 32>
+template<class T, size_t inline_capacity = 0>
 class MarkedVector;
 
 namespace Bytecode {
