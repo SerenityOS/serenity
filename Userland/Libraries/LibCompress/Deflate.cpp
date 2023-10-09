@@ -100,6 +100,9 @@ ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
                 return Error::from_string_literal("Failed to decode code lengths");
 
             if (code_length <= CanonicalCode::max_allowed_prefixed_code_length) {
+                if (number_of_prefix_codes >= prefix_codes.size())
+                    return Error::from_string_literal("Invalid canonical Huffman code");
+
                 auto& prefix_code = prefix_codes[number_of_prefix_codes++];
                 prefix_code.symbol_code = next_code;
                 prefix_code.symbol_value = symbol;

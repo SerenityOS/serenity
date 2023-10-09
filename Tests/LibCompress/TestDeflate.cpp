@@ -55,6 +55,13 @@ TEST_CASE(canonical_code_complex)
         EXPECT_EQ(MUST(huffman.read_symbol(bit_stream)), output[idx]);
 }
 
+TEST_CASE(invalid_canonical_code)
+{
+    Array<u8, 257> code;
+    code.fill(0x08);
+    EXPECT(Compress::CanonicalCode::from_bytes(code).is_error());
+}
+
 TEST_CASE(deflate_decompress_compressed_block)
 {
     Array<u8, 28> const compressed {
