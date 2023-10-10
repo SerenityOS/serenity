@@ -70,6 +70,7 @@
 {
     _outlineView = [[NSOutlineView alloc] initWithFrame:NSZeroRect];
 
+    _outlineView.doubleAction = @selector(onOutlineViewDoubleClick:);
     _outlineView.floatsGroupRows = NO;
     _outlineView.focusRingType = NSFocusRingTypeNone;
     _outlineView.headerView = nil;
@@ -143,6 +144,18 @@
                       if (response == NSAlertFirstButtonReturn)
                           [self->_pdfView goToPage:[textField intValue]];
                   }];
+}
+
+- (void)onOutlineViewDoubleClick:(id)sender
+{
+    NSOutlineView* view = sender;
+    id item = [view itemAtRow:[view clickedRow]];
+
+    if ([view isItemExpanded:item]) {
+        [view collapseItem:item];
+    } else {
+        [view expandItem:item];
+    }
 }
 
 #pragma mark - MacPDFViewDelegate
