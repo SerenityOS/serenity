@@ -99,6 +99,13 @@ class Renderer {
 public:
     static PDFErrorsOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences preferences);
 
+    struct FontCacheKey {
+        DeprecatedString font_dictionary_key;
+        float font_size;
+
+        bool operator==(FontCacheKey const&) const = default;
+    };
+
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences);
 
@@ -139,6 +146,8 @@ private:
     Gfx::AffineTransform const& calculate_text_rendering_matrix();
     Gfx::AffineTransform calculate_image_space_transformation(int width, int height);
 
+    PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&, Optional<NonnullRefPtr<DictObject>> extra_resources);
+
     RefPtr<Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
     Page const& m_page;
@@ -153,11 +162,21 @@ private:
 
     bool m_text_rendering_matrix_is_dirty { true };
     Gfx::AffineTransform m_text_rendering_matrix;
+
+    HashMap<FontCacheKey, NonnullRefPtr<PDFFont>> m_font_cache;
 };
 
 }
 
 namespace AK {
+
+template<>
+struct Traits<PDF::Renderer::FontCacheKey> : public GenericTraits<PDF::Renderer::FontCacheKey> {
+    static unsigned hash(PDF::Renderer::FontCacheKey const& key)
+    {
+        return pair_int_hash(key.font_dictionary_key.hash(), int_hash(bit_cast<u32>(key.font_size)));
+    }
+};
 
 template<>
 struct Formatter<PDF::LineCapStyle> : Formatter<StringView> {
