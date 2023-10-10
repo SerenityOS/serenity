@@ -60,9 +60,11 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& do
     return bitmap;
 }
 
-static PDF::PDFErrorOr<void> save_rendered_page(PDF::Document& document, int page_index, StringView out_path)
+static PDF::PDFErrorOr<void> save_rendered_page(PDF::Document& document, int page_index, int repeats, StringView out_path)
 {
     auto bitmap = TRY(render_page(document, page_index));
+    for (int i = 0; i < repeats - 1; ++i)
+        (void)TRY(render_page(document, page_index));
 
     if (!out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive))
         return Error::from_string_view("can only save to .png files"sv);
@@ -159,6 +161,9 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     StringView render_path;
     args_parser.add_option(render_path, "Path to render PDF page to", "render", {}, "FILE.png");
 
+    u32 render_repeats = 1;
+    args_parser.add_option(render_repeats, "Number of times to render page (for profiling)", "render-repeats", {}, "N");
+
     args_parser.parse(arguments);
 
     auto file = TRY(Core::MappedFile::map(in_path));
@@ -211,7 +216,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     }
 
     if (!render_path.is_empty()) {
-        TRY(save_rendered_page(document, page_index, render_path));
+        TRY(save_rendered_page(document, page_index, render_repeats, render_path));
         return 0;
     }
 
