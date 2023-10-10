@@ -1347,9 +1347,9 @@ inline void Decoder::butterfly_rotation_in_place(Span<Intermediate> data, size_t
     auto cos = cos64(angle);
     auto sin = sin64(angle);
     // 1. The variable x is set equal to T[ a ] * cos64( angle ) - T[ b ] * sin64( angle ).
-    i64 rotated_a = data[index_a] * cos - data[index_b] * sin;
+    i64 rotated_a = static_cast<i64>(data[index_a]) * cos - static_cast<i64>(data[index_b]) * sin;
     // 2. The variable y is set equal to T[ a ] * sin64( angle ) + T[ b ] * cos64( angle ).
-    i64 rotated_b = data[index_a] * sin + data[index_b] * cos;
+    i64 rotated_b = static_cast<i64>(data[index_a]) * sin + static_cast<i64>(data[index_b]) * cos;
     // 3. T[ a ] is set equal to Round2( x, 14 ).
     data[index_a] = rounded_right_shift(rotated_a, 14);
     // 4. T[ b ] is set equal to Round2( y, 14 ).
