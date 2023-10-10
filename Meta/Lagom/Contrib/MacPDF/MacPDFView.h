@@ -23,4 +23,7 @@
 
 - (void)setDelegate:(id<MacPDFViewDelegate>)delegate;
 
+- (IBAction)goToNextPage:(id)sender;
+- (IBAction)goToPreviousPage:(id)sender;
+
 @end
