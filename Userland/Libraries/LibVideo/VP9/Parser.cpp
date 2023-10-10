@@ -1409,6 +1409,9 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
         auto plane_subsampling_x = (plane > 0) ? block_context.frame_context.color_config.subsampling_x : false;
         auto plane_subsampling_y = (plane > 0) ? block_context.frame_context.color_config.subsampling_y : false;
         auto plane_size = get_subsampled_block_size(block_context.size, plane_subsampling_x, plane_subsampling_y);
+        if (plane_size == Block_Invalid) {
+            return DecoderError::corrupted("Invalid block size"sv);
+        }
         auto transform_size = get_uv_transform_size(block_context.transform_size, plane_size);
         auto transform_size_in_sub_blocks = transform_size_to_sub_blocks(transform_size);
         auto block_size_in_sub_blocks = block_size_to_sub_blocks(plane_size);
