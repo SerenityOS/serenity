@@ -4,8 +4,7 @@ ShortcutsWindow shortcuts_dialog {
   modal: true;
 
   ShortcutsSection {
-    section-name: "shortcuts";
-    title: _("Shortcuts");
+    max-height: 12;
     ShortcutsGroup {
       title: _("General");
 
@@ -90,11 +89,7 @@ ShortcutsWindow shortcuts_dialog {
         accelerator: "<Primary>0";
       }
     }
-  }
 
-  ShortcutsSection {
-    section-name: "shortcuts-development";
-    title: _("Developer Tools");
     ShortcutsGroup {
       title: _("Developer Tools");
 

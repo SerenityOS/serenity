@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-24 23:32+0300\n"
+"POT-Creation-Date: 2023-10-10 01:57+0200\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -37,7 +37,7 @@ msgstr "Avbryt"
 msgid "Close _Other Tabs"
 msgstr "Stäng _övriga flikar"
 
-#: shortcuts-dialog.blp:63
+#: shortcuts-dialog.blp:62
 msgid "Close current tab"
 msgstr "Stäng flik"
 
@@ -45,14 +45,13 @@ msgstr "Stäng flik"
 msgid "Confirm"
 msgstr "Bekräfta"
 
-#: shortcuts-dialog.blp:97 shortcuts-dialog.blp:99
-#, fuzzy
+#: shortcuts-dialog.blp:94
 msgid "Developer Tools"
 msgstr "Verktyg för webbutvecklare"
 
 #: Tab.cpp:240
 msgid "Enter"
-msgstr "Ok"
+msgstr "Ange"
 
 #: js-console.blp:12
 msgid "Enter a JavaScript expression to evaluate"
@@ -62,15 +61,15 @@ msgstr "Ange ett JavaScript-uttryck att utvärdera"
 msgid "Failed to pick file"
 msgstr "Misslyckades med att öppna filen"
 
-#: shortcuts-dialog.blp:50
+#: shortcuts-dialog.blp:49
 msgid "Focus location entry"
 msgstr "Fokusera adressfältet"
 
-#: shortcuts-dialog.blp:10
+#: shortcuts-dialog.blp:9
 msgid "General"
 msgstr "Allmänt"
 
-#: Tab.cpp:48 shortcuts-dialog.blp:102 window.blp:16
+#: Tab.cpp:48 shortcuts-dialog.blp:97 window.blp:16
 msgid "JavaScript Console"
 msgstr "JavaScript-konsol"
 
@@ -95,15 +94,15 @@ msgstr "Navigera bakåt"
 msgid "Navigate Forward"
 msgstr "Navigera framåt"
 
-#: shortcuts-dialog.blp:38
+#: shortcuts-dialog.blp:37
 msgid "Navigate back"
 msgstr "Navigera bakåt"
 
-#: shortcuts-dialog.blp:42
+#: shortcuts-dialog.blp:41
 msgid "Navigate forward"
 msgstr "Navigera framåt"
 
-#: shortcuts-dialog.blp:35
+#: shortcuts-dialog.blp:34
 msgid "Navigation"
 msgstr "Navigation"
 
@@ -115,19 +114,19 @@ msgstr "Ny flik"
 msgid "New _Incognito Window"
 msgstr "Nytt _privat fönster"
 
-#: shortcuts-dialog.blp:17
+#: shortcuts-dialog.blp:16
 msgid "New incognito window"
 msgstr "Nytt privat fönster"
 
-#: Window.cpp:101 shortcuts-dialog.blp:59
+#: Window.cpp:101 shortcuts-dialog.blp:58
 msgid "New tab"
 msgstr "Ny flik"
 
-#: shortcuts-dialog.blp:13
+#: shortcuts-dialog.blp:12
 msgid "New window"
 msgstr "Nytt fönster"
 
-#: shortcuts-dialog.blp:67
+#: shortcuts-dialog.blp:66
 msgid "Next tab"
 msgstr "Nästa flik"
 
@@ -135,7 +134,7 @@ msgstr "Nästa flik"
 msgid "OK"
 msgstr "Ok"
 
-#: shortcuts-dialog.blp:21
+#: shortcuts-dialog.blp:20
 msgid "Open file"
 msgstr "Öppna fil"
 
@@ -144,11 +143,11 @@ msgstr "Öppna fil"
 msgid "P_in"
 msgstr "_Nåla"
 
-#: shortcuts-dialog.blp:71
+#: shortcuts-dialog.blp:70
 msgid "Previous tab"
 msgstr "Föregående flik"
 
-#: shortcuts-dialog.blp:29
+#: shortcuts-dialog.blp:28
 msgid "Quit"
 msgstr "Avsluta"
 
@@ -156,11 +155,11 @@ msgstr "Avsluta"
 msgid "Reload Page"
 msgstr "Ladda om sidan"
 
-#: shortcuts-dialog.blp:46
+#: shortcuts-dialog.blp:45
 msgid "Reload current page"
 msgstr "Ladda om aktuell sida"
 
-#: shortcuts-dialog.blp:89
+#: shortcuts-dialog.blp:88
 msgid "Reset zoom"
 msgstr "Återställ zoom"
 
@@ -190,11 +189,7 @@ msgstr "SerenityOS webbsida"
 msgid "Sergey Bugaev"
 msgstr "Sergey Bugaev"
 
-#: shortcuts-dialog.blp:8
-msgid "Shortcuts"
-msgstr "Genvägar"
-
-#: shortcuts-dialog.blp:25
+#: shortcuts-dialog.blp:24
 msgid "Show shortcuts"
 msgstr "Visa genvägar"
 
@@ -202,7 +197,7 @@ msgstr "Visa genvägar"
 msgid "Tab Overview"
 msgstr "Flikar översikt"
 
-#: shortcuts-dialog.blp:56
+#: shortcuts-dialog.blp:55
 msgid "Tabs"
 msgstr "Flikar"
 
@@ -223,7 +218,7 @@ msgstr "Webbsidan frågar om indata:"
 msgid "Web page asks you to confirm:"
 msgstr "Webbsidan ber dig bekräfta:"
 
-#: shortcuts-dialog.blp:77
+#: shortcuts-dialog.blp:76
 msgid "Zoom"
 msgstr "Zoom"
 
@@ -235,11 +230,11 @@ msgstr "Zooma in"
 msgid "Zoom Out"
 msgstr "Zooma ut"
 
-#: shortcuts-dialog.blp:80
+#: shortcuts-dialog.blp:79
 msgid "Zoom in"
 msgstr "Zooma in"
 
-#: shortcuts-dialog.blp:85
+#: shortcuts-dialog.blp:84
 msgid "Zoom out"
 msgstr "Zooma ut"
 
@@ -294,3 +289,6 @@ msgstr "© 2023 SerenityOS utvecklarna"
 #: window.blp:55
 msgid "…will appear here, once we implement them :^)"
 msgstr "…kommer visas här, när de är implementerade :^)"
+
+#~ msgid "Shortcuts"
+#~ msgstr "Genvägar"
