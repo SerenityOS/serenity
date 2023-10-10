@@ -319,7 +319,7 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
         DeprecatedString date = internal_date.to_deprecated_string();
         DeprecatedString subject = envelope.subject.value_or("(No subject)");
         if (subject.contains("=?"sv) && subject.contains("?="sv)) {
-            subject = MUST(IMAP::decode_rfc2047_encoded_words(subject));
+            subject = MUST(IMAP::decode_rfc2047_encoded_words(subject)).span();
         }
 
         StringBuilder sender_builder;
@@ -491,9 +491,9 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
     } else if (selected_alternative_encoding.equals_ignoring_ascii_case("base64"sv)) {
         auto decoded_base64 = decode_base64(encoded_data);
         if (!decoded_base64.is_error())
-            decoded_data = decoded_base64.release_value();
+            decoded_data = decoded_base64.release_value().span();
     } else if (selected_alternative_encoding.equals_ignoring_ascii_case("quoted-printable"sv)) {
-        decoded_data = IMAP::decode_quoted_printable(encoded_data).release_value_but_fixme_should_propagate_errors();
+        decoded_data = IMAP::decode_quoted_printable(encoded_data).release_value_but_fixme_should_propagate_errors().span();
     } else {
         dbgln("Mail: Unimplemented decoder for encoding: {}", selected_alternative_encoding);
         GUI::MessageBox::show(window(), DeprecatedString::formatted("The e-mail encoding '{}' is currently unsupported.", selected_alternative_encoding), "Unsupported"sv, GUI::MessageBox::Type::Information);

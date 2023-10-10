@@ -523,8 +523,6 @@ void HTMLInputElement::create_shadow_tree_if_needed()
 
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
     auto initial_value = m_value;
-    if (initial_value.is_null())
-        initial_value = DeprecatedString::empty();
     auto element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(element->set_attribute(HTML::AttributeNames::style, R"~~~(
         display: flex;
@@ -552,7 +550,11 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         // NOTE: file upload state is mutable, but we don't allow the text node to be modifed
         m_text_node->set_always_editable(false);
     } else {
-        handle_readonly_attribute(deprecated_attribute(HTML::AttributeNames::readonly));
+        auto readonly = attribute(HTML::AttributeNames::readonly);
+        if (readonly.has_value())
+            handle_readonly_attribute(readonly->to_deprecated_string());
+        else
+            handle_readonly_attribute({});
     }
 
     m_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
@@ -587,11 +589,11 @@ void HTMLInputElement::did_lose_focus()
     });
 }
 
-void HTMLInputElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLInputElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::checked) {
-        if (value.is_null()) {
+        if (!value.has_value()) {
             // When the checked content attribute is removed, if the control does not have dirty checkedness,
             // the user agent must set the checkedness of the element to false.
             if (!m_dirty_checkedness)
@@ -603,24 +605,27 @@ void HTMLInputElement::attribute_changed(FlyString const& name, DeprecatedString
                 set_checked(true, ChangeSource::Programmatic);
         }
     } else if (name == HTML::AttributeNames::type) {
-        m_type = parse_type_attribute(value);
+        m_type = parse_type_attribute(value.value_or(""));
     } else if (name == HTML::AttributeNames::value) {
-        if (value.is_null()) {
+        if (!value.has_value()) {
             if (!m_dirty_value) {
                 m_value = DeprecatedString::empty();
                 update_placeholder_visibility();
             }
         } else {
             if (!m_dirty_value) {
-                m_value = value_sanitization_algorithm(value);
+                m_value = value_sanitization_algorithm(*value);
                 update_placeholder_visibility();
             }
         }
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
-            m_placeholder_text_node->set_data(MUST(String::from_deprecated_string(value)));
+            m_placeholder_text_node->set_data(MUST(String::from_deprecated_string(value.value_or(""))));
     } else if (name == HTML::AttributeNames::readonly) {
-        handle_readonly_attribute(value);
+        if (value.has_value())
+            handle_readonly_attribute(*value);
+        else
+            handle_readonly_attribute({});
     }
 }
 

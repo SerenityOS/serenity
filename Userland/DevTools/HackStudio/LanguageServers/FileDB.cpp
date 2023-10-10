@@ -68,9 +68,9 @@ DeprecatedString FileDB::to_absolute_path(DeprecatedString const& filename) cons
     if (LexicalPath { filename }.is_absolute()) {
         return filename;
     }
-    if (m_project_root.is_null())
+    if (!m_project_root.has_value())
         return filename;
-    return LexicalPath { DeprecatedString::formatted("{}/{}", m_project_root, filename) }.string();
+    return LexicalPath { DeprecatedString::formatted("{}/{}", *m_project_root, filename) }.string();
 }
 
 ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_filesystem(DeprecatedString const& filename) const

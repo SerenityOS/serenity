@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         clipboard.on_change = [&](DeprecatedString const&) {
             // Technically there's a race here...
             auto data_and_type = clipboard.fetch_data_and_type();
-            if (data_and_type.mime_type.is_null()) {
+            if (data_and_type.mime_type.is_empty()) {
                 spawn_command(watch_command, {}, "clear");
             } else {
                 spawn_command(watch_command, data_and_type.data, "data");
@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto data_and_type = clipboard.fetch_data_and_type();
 
-    if (data_and_type.mime_type.is_null()) {
+    if (data_and_type.mime_type.is_empty()) {
         warnln("Nothing copied");
         return 1;
     }

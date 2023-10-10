@@ -881,17 +881,17 @@ void sync()
     syscall(SC_sync);
 }
 
-static DeprecatedString getlogin_buffer;
+static Optional<DeprecatedString> getlogin_buffer {};
 
 char* getlogin()
 {
-    if (getlogin_buffer.is_null()) {
+    if (!getlogin_buffer.has_value()) {
         if (auto* passwd = getpwuid(getuid())) {
             getlogin_buffer = DeprecatedString(passwd->pw_name);
         }
         endpwent();
     }
-    return const_cast<char*>(getlogin_buffer.characters());
+    return const_cast<char*>(getlogin_buffer->characters());
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/ftruncate.html

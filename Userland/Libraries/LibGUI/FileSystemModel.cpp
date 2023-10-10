@@ -68,7 +68,7 @@ bool FileSystemModel::Node::fetch_data(DeprecatedString const& full_path, bool i
             perror("readlink");
         else {
             symlink_target = sym_link_target_or_error.release_value().to_deprecated_string();
-            if (symlink_target.is_null())
+            if (symlink_target.is_empty())
                 perror("readlink");
         }
     }
@@ -364,7 +364,7 @@ void FileSystemModel::update_node_on_selection(ModelIndex const& index, bool con
 
 void FileSystemModel::set_root_path(DeprecatedString root_path)
 {
-    if (root_path.is_null())
+    if (root_path.is_empty())
         m_root_path = {};
     else
         m_root_path = LexicalPath::canonicalized_path(move(root_path));
@@ -382,7 +382,7 @@ void FileSystemModel::invalidate()
 {
     m_root = adopt_own(*new Node(*this));
 
-    if (m_root_path.is_null())
+    if (m_root_path.is_empty())
         m_root->m_parent_of_root = true;
 
     m_root->reify_if_needed();

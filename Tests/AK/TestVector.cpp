@@ -44,14 +44,12 @@ TEST_CASE(strings)
 
     int loop_counter = 0;
     for (DeprecatedString const& string : strings) {
-        EXPECT(!string.is_null());
         EXPECT(!string.is_empty());
         ++loop_counter;
     }
 
     loop_counter = 0;
     for (auto& string : (const_cast<Vector<DeprecatedString> const&>(strings))) {
-        EXPECT(!string.is_null());
         EXPECT(!string.is_empty());
         ++loop_counter;
     }

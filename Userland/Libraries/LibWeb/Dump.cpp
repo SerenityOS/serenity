@@ -821,7 +821,7 @@ ErrorOr<void> dump_namespace_rule(StringBuilder& builder, CSS::CSSNamespaceRule 
 {
     indent(builder, indent_levels);
     TRY(builder.try_appendff("  Namespace: {}\n", namespace_.namespace_uri()));
-    if (!namespace_.prefix().is_null() && !namespace_.prefix().is_empty())
+    if (!namespace_.prefix().is_empty())
         TRY(builder.try_appendff("  Prefix: {}\n", namespace_.prefix()));
 
     return {};

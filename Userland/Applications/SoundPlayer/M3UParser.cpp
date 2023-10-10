@@ -26,7 +26,7 @@ NonnullOwnPtr<M3UParser> M3UParser::from_file(StringView path)
 NonnullOwnPtr<M3UParser> M3UParser::from_memory(DeprecatedString const& m3u_contents, bool utf8)
 {
     auto parser = make<M3UParser>();
-    VERIFY(!m3u_contents.is_null() && !m3u_contents.is_empty() && !m3u_contents.is_whitespace());
+    VERIFY(!m3u_contents.is_empty() && !m3u_contents.is_whitespace());
     parser->m_m3u_raw_data = m3u_contents;
     parser->m_use_utf8 = utf8;
     return parser;

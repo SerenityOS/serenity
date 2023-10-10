@@ -23,7 +23,7 @@ void HTMLAreaElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAreaElementPrototype>(realm, "HTMLAreaElement"));
 }
 
-void HTMLAreaElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLAreaElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::href) {
@@ -31,9 +31,9 @@ void HTMLAreaElement::attribute_changed(FlyString const& name, DeprecatedString 
     }
 }
 
-DeprecatedString HTMLAreaElement::hyperlink_element_utils_href() const
+Optional<String> HTMLAreaElement::hyperlink_element_utils_href() const
 {
-    return deprecated_attribute(HTML::AttributeNames::href);
+    return attribute(HTML::AttributeNames::href);
 }
 
 WebIDL::ExceptionOr<void> HTMLAreaElement::set_hyperlink_element_utils_href(String href)
@@ -51,7 +51,7 @@ i32 HTMLAreaElement::default_tab_index_value() const
 Optional<ARIA::Role> HTMLAreaElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-area-no-href
-    if (!href().is_null())
+    if (!href().is_empty())
         return ARIA::Role::link;
     // https://www.w3.org/TR/html-aria/#el-area
     return ARIA::Role::generic;

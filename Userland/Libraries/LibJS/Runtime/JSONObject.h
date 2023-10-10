@@ -19,7 +19,7 @@ public:
 
     // The base implementation of stringify is exposed because it is used by
     // test-js to communicate between the JS tests and the C++ test runner.
-    static ThrowCompletionOr<DeprecatedString> stringify_impl(VM&, Value value, Value replacer, Value space);
+    static ThrowCompletionOr<Optional<DeprecatedString>> stringify_impl(VM&, Value value, Value replacer, Value space);
 
     static Value parse_json_value(VM&, JsonValue const&);
 
@@ -35,7 +35,7 @@ private:
     };
 
     // Stringify helpers
-    static ThrowCompletionOr<DeprecatedString> serialize_json_property(VM&, StringifyState&, PropertyKey const& key, Object* holder);
+    static ThrowCompletionOr<Optional<DeprecatedString>> serialize_json_property(VM&, StringifyState&, PropertyKey const& key, Object* holder);
     static ThrowCompletionOr<DeprecatedString> serialize_json_object(VM&, StringifyState&, Object&);
     static ThrowCompletionOr<DeprecatedString> serialize_json_array(VM&, StringifyState&, Object&);
     static DeprecatedString quote_json_string(DeprecatedString);

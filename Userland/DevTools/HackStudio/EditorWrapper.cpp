@@ -113,7 +113,7 @@ void EditorWrapper::set_project_root(DeprecatedString const& project_root)
 void EditorWrapper::update_title()
 {
     StringBuilder title;
-    if (m_filename.is_null())
+    if (m_filename.is_empty())
         title.append(untitled_label);
     else
         title.append(m_filename);

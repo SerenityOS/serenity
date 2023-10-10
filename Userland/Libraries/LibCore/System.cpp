@@ -189,29 +189,40 @@ static ErrorOr<void> unveil_dynamic_loader()
 
 ErrorOr<void> unveil(StringView path, StringView permissions)
 {
-    auto const parsed_path = TRY(Core::SessionManagement::parse_path_with_sid(path));
-
     if (permissions.contains('x'))
         TRY(unveil_dynamic_loader());
 
     Syscall::SC_unveil_params params {
         static_cast<int>(UnveilFlags::CurrentProgram),
-        { parsed_path.characters(), parsed_path.length() },
-        { permissions.characters_without_null_termination(), permissions.length() },
+        { nullptr, 0 },
+        { nullptr, 0 },
     };
+
+    DeprecatedString parsed_path;
+    if (!path.is_null()) {
+        parsed_path = TRY(Core::SessionManagement::parse_path_with_sid(path));
+        params.path = { parsed_path.characters(), parsed_path.length() };
+        params.permissions = { permissions.characters_without_null_termination(), permissions.length() };
+    }
+
     int rc = syscall(SC_unveil, &params);
     HANDLE_SYSCALL_RETURN_VALUE("unveil", rc, {});
 }
 
 ErrorOr<void> unveil_after_exec(StringView path, StringView permissions)
 {
-    auto const parsed_path = TRY(Core::SessionManagement::parse_path_with_sid(path));
-
+    DeprecatedString parsed_path;
     Syscall::SC_unveil_params params {
         static_cast<int>(UnveilFlags::AfterExec),
-        { parsed_path.characters(), parsed_path.length() },
+        { nullptr, 0 },
         { permissions.characters_without_null_termination(), permissions.length() },
     };
+
+    if (!path.is_null()) {
+        parsed_path = TRY(Core::SessionManagement::parse_path_with_sid(path));
+        params.path = { parsed_path.characters(), parsed_path.length() };
+    }
+
     int rc = syscall(SC_unveil, &params);
     HANDLE_SYSCALL_RETURN_VALUE("unveil", rc, {});
 }

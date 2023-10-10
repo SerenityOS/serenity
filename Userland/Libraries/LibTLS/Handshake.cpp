@@ -44,7 +44,7 @@ ByteBuffer TLSv12::build_hello()
     size_t alpn_negotiated_length = 0;
 
     // ALPN
-    if (!m_context.negotiated_alpn.is_null()) {
+    if (!m_context.negotiated_alpn.is_empty()) {
         alpn_negotiated_length = m_context.negotiated_alpn.length();
         alpn_length = alpn_negotiated_length + 1;
         extension_length += alpn_length + 6;
@@ -69,7 +69,7 @@ ByteBuffer TLSv12::build_hello()
 
     // set SNI if we have one, and the user hasn't explicitly asked us to omit it.
     auto sni_length = 0;
-    if (!m_context.extensions.SNI.is_null() && m_context.options.use_sni)
+    if (!m_context.extensions.SNI.is_empty() && m_context.options.use_sni)
         sni_length = m_context.extensions.SNI.length();
 
     auto elliptic_curves_length = 2 * m_context.options.elliptic_curves.size();

@@ -53,23 +53,23 @@ DeprecatedString CSSStyleRule::serialized() const
     builder.append(" {"sv);
 
     // 2. Let decls be the result of performing serialize a CSS declaration block on the rule’s associated declarations, or null if there are no such declarations.
-    auto decls = declaration().serialized();
+    auto decls = declaration().length() > 0 ? declaration().serialized() : Optional<DeprecatedString>();
 
     // FIXME: 3. Let rules be the result of performing serialize a CSS rule on each rule in the rule’s cssRules list, or null if there are no such rules.
-    DeprecatedString rules;
+    Optional<DeprecatedString> rules;
 
     // 4. If decls and rules are both null, append " }" to s (i.e. a single SPACE (U+0020) followed by RIGHT CURLY BRACKET (U+007D)) and return s.
-    if (decls.is_null() && rules.is_null()) {
+    if (!decls.has_value() && !rules.has_value()) {
         builder.append(" }"sv);
         return builder.to_deprecated_string();
     }
 
     // 5. If rules is null:
-    if (rules.is_null()) {
+    if (!rules.has_value()) {
         //    1. Append a single SPACE (U+0020) to s
         builder.append(' ');
         //    2. Append decls to s
-        builder.append(decls);
+        builder.append(*decls);
         //    3. Append " }" to s (i.e. a single SPACE (U+0020) followed by RIGHT CURLY BRACKET (U+007D)).
         builder.append(" }"sv);
         //    4. Return s.

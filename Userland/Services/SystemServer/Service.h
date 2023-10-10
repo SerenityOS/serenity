@@ -54,7 +54,7 @@ private:
     // Extra arguments, starting from argv[1], to pass when exec'ing.
     DeprecatedString m_extra_arguments;
     // File path to open as stdio fds.
-    DeprecatedString m_stdio_file_path;
+    Optional<DeprecatedString> m_stdio_file_path;
     int m_priority { 1 };
     // Whether we should re-launch it if it exits.
     bool m_keep_alive { false };
@@ -65,9 +65,9 @@ private:
     // Whether we should only spawn this service once somebody connects to the socket.
     bool m_lazy;
     // The name of the user we should run this service as.
-    DeprecatedString m_user;
+    Optional<DeprecatedString> m_user;
     // The working directory in which to spawn the service.
-    DeprecatedString m_working_directory;
+    Optional<DeprecatedString> m_working_directory;
     // System modes in which to run this service. By default, this is the graphical mode.
     Vector<DeprecatedString> m_system_modes;
     // Whether several instances of this service can run at once.

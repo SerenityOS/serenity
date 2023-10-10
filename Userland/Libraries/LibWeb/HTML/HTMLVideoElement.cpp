@@ -40,15 +40,15 @@ void HTMLVideoElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_fetch_controller);
 }
 
-void HTMLVideoElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLVideoElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     Base::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::poster) {
-        if (value.is_null())
+        if (!value.has_value())
             determine_element_poster_frame({}).release_value_but_fixme_should_propagate_errors();
         else
-            determine_element_poster_frame(value).release_value_but_fixme_should_propagate_errors();
+            determine_element_poster_frame(*value).release_value_but_fixme_should_propagate_errors();
     }
 }
 

@@ -102,7 +102,7 @@ void Preprocessor::handle_preprocessor_statement(StringView line)
     consume_whitespace(lexer);
     auto keyword = lexer.consume_until(' ');
     lexer.ignore();
-    if (keyword.is_empty() || keyword.is_null() || keyword.is_whitespace())
+    if (keyword.is_empty() || keyword.is_whitespace())
         return;
 
     handle_preprocessor_keyword(keyword, lexer);
@@ -243,7 +243,7 @@ void Preprocessor::handle_preprocessor_keyword(StringView keyword, GenericLexer&
 
 size_t Preprocessor::do_substitution(Vector<Token> const& tokens, size_t token_index, Definition const& defined_value)
 {
-    if (defined_value.value.is_null())
+    if (defined_value.value.is_empty())
         return token_index;
 
     Substitution sub;

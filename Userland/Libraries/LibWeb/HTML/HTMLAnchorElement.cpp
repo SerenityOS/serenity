@@ -27,7 +27,7 @@ void HTMLAnchorElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAnchorElementPrototype>(realm, "HTMLAnchorElement"));
 }
 
-void HTMLAnchorElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLAnchorElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::href) {
@@ -35,9 +35,9 @@ void HTMLAnchorElement::attribute_changed(FlyString const& name, DeprecatedStrin
     }
 }
 
-DeprecatedString HTMLAnchorElement::hyperlink_element_utils_href() const
+Optional<String> HTMLAnchorElement::hyperlink_element_utils_href() const
 {
-    return deprecated_attribute(HTML::AttributeNames::href);
+    return attribute(HTML::AttributeNames::href);
 }
 
 WebIDL::ExceptionOr<void> HTMLAnchorElement::set_hyperlink_element_utils_href(String href)
@@ -98,7 +98,7 @@ i32 HTMLAnchorElement::default_tab_index_value() const
 Optional<ARIA::Role> HTMLAnchorElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-a-no-href
-    if (!href().is_null())
+    if (!href().is_empty())
         return ARIA::Role::link;
     // https://www.w3.org/TR/html-aria/#el-a
     return ARIA::Role::generic;

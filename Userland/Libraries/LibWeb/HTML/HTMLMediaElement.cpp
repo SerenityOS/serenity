@@ -83,17 +83,17 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_fetch_controller);
 }
 
-void HTMLMediaElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLMediaElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     Base::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::src) {
         load_element().release_value_but_fixme_should_propagate_errors();
     } else if (name == HTML::AttributeNames::crossorigin) {
-        if (value.is_null())
+        if (!value.has_value())
             m_crossorigin = cors_setting_attribute_from_keyword({});
         else
-            m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+            m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(*value).release_value_but_fixme_should_propagate_errors());
     } else if (name == HTML::AttributeNames::muted) {
         set_muted(true);
     }

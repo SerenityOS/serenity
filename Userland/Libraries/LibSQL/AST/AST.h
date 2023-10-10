@@ -186,8 +186,8 @@ public:
 
     ResultType type() const { return m_type; }
 
-    bool select_from_table() const { return !m_table_name.is_null(); }
-    DeprecatedString const& table_name() const { return m_table_name; }
+    bool select_from_table() const { return m_table_name.has_value(); }
+    Optional<DeprecatedString> const& table_name() const { return m_table_name; }
 
     bool select_from_expression() const { return !m_expression.is_null(); }
     RefPtr<Expression> const& expression() const { return m_expression; }
@@ -196,7 +196,7 @@ public:
 private:
     ResultType m_type { ResultType::All };
 
-    DeprecatedString m_table_name {};
+    Optional<DeprecatedString> m_table_name {};
 
     RefPtr<Expression> m_expression {};
     DeprecatedString m_column_alias {};

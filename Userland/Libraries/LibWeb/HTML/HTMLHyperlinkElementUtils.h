@@ -51,7 +51,7 @@ public:
 
 protected:
     virtual DOM::Document& hyperlink_element_utils_document() = 0;
-    virtual DeprecatedString hyperlink_element_utils_href() const = 0;
+    virtual Optional<String> hyperlink_element_utils_href() const = 0;
     virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(String) = 0;
     virtual bool hyperlink_element_utils_is_html_anchor_element() const = 0;
     virtual bool hyperlink_element_utils_is_connected() const = 0;

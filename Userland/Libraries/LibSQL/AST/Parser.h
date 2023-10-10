@@ -74,7 +74,7 @@ private:
     bool match_secondary_expression() const;
     RefPtr<Expression> parse_literal_value_expression();
     RefPtr<Expression> parse_bind_parameter_expression();
-    RefPtr<Expression> parse_column_name_expression(DeprecatedString with_parsed_identifier = {}, bool with_parsed_period = false);
+    RefPtr<Expression> parse_column_name_expression(Optional<DeprecatedString> with_parsed_identifier = {}, bool with_parsed_period = false);
     RefPtr<Expression> parse_unary_operator_expression();
     RefPtr<Expression> parse_binary_operator_expression(NonnullRefPtr<Expression> lhs);
     RefPtr<Expression> parse_chained_expression(bool surrounded_by_parentheses = true);

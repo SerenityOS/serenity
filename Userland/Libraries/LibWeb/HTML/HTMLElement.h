@@ -27,7 +27,7 @@ class HTMLElement
 public:
     virtual ~HTMLElement() override;
 
-    DeprecatedString title() const { return deprecated_attribute(HTML::AttributeNames::title); }
+    Optional<String> title() const { return attribute(HTML::AttributeNames::title); }
 
     StringView dir() const;
     void set_dir(String const&);
@@ -70,7 +70,7 @@ protected:
 
     virtual void initialize(JS::Realm&) override;
 
-    virtual void attribute_changed(FlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 

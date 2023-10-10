@@ -174,7 +174,7 @@ DeprecatedString Token::string_value(StringValueStatus& status) const
 
         // In non-strict mode LegacyOctalEscapeSequence is allowed in strings:
         // https://tc39.es/ecma262/#sec-additional-syntax-string-literals
-        DeprecatedString octal_str;
+        Optional<DeprecatedString> octal_str;
 
         auto is_octal_digit = [](char ch) { return ch >= '0' && ch <= '7'; };
         auto is_zero_to_three = [](char ch) { return ch >= '0' && ch <= '3'; };
@@ -193,9 +193,9 @@ DeprecatedString Token::string_value(StringValueStatus& status) const
         else if (is_zero_to_three(lexer.peek()) && is_octal_digit(lexer.peek(1)) && is_octal_digit(lexer.peek(2)))
             octal_str = lexer.consume(3);
 
-        if (!octal_str.is_null()) {
+        if (octal_str.has_value()) {
             status = StringValueStatus::LegacyOctalEscapeSequence;
-            auto code_point = strtoul(octal_str.characters(), nullptr, 8);
+            auto code_point = strtoul(octal_str->characters(), nullptr, 8);
             VERIFY(code_point <= 255);
             builder.append_code_point(code_point);
             continue;

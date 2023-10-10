@@ -98,7 +98,7 @@ Result Client::save_file(GUI::Window* parent_window, DeprecatedString const& nam
         GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    async_prompt_save_file(id, parent_window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), requested_access);
+    async_prompt_save_file(id, parent_window_server_client_id, parent_window_id, name.is_empty() ? "Untitled" : name, ext.is_empty() ? "txt" : ext, Core::StandardPaths::home_directory(), requested_access);
 
     return handle_promise(id);
 }

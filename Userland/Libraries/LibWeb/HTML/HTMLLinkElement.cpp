@@ -77,7 +77,7 @@ bool HTMLLinkElement::has_loaded_icon() const
     return m_relationship & Relationship::Icon && resource() && resource()->is_loaded() && resource()->has_encoded_data();
 }
 
-void HTMLLinkElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     HTMLElement::attribute_changed(name, value);
 
@@ -85,7 +85,7 @@ void HTMLLinkElement::attribute_changed(FlyString const& name, DeprecatedString 
     if (name == HTML::AttributeNames::rel) {
         m_relationship = 0;
         // Keywords are always ASCII case-insensitive, and must be compared as such.
-        auto lowercased_value = value.to_lowercase();
+        auto lowercased_value = value.value_or("").to_lowercase();
         // To determine which link types apply to a link, a, area, or form element,
         // the element's rel attribute must be split on ASCII whitespace.
         // The resulting tokens are the keywords for the link types that apply to that element.
@@ -341,13 +341,14 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
         //     1. If the element has a charset attribute, get an encoding from that attribute's value. If that succeeds, return the resulting encoding. [ENCODING]
         //     2. Otherwise, return the document's character encoding. [DOM]
 
-        DeprecatedString encoding;
-        if (auto charset = deprecated_attribute(HTML::AttributeNames::charset); !charset.is_null())
-            encoding = charset;
-        else
-            encoding = document().encoding_or_default().to_deprecated_string();
+        Optional<String> encoding;
+        if (auto charset = attribute(HTML::AttributeNames::charset); charset.has_value())
+            encoding = charset.release_value();
 
-        auto decoder = TextCodec::decoder_for(encoding);
+        if (!encoding.has_value())
+            encoding = document().encoding_or_default();
+
+        auto decoder = TextCodec::decoder_for(*encoding);
 
         if (!decoder.has_value()) {
             // If we don't support the encoding yet, let's error out instead of trying to decode it as something it's most likely not.

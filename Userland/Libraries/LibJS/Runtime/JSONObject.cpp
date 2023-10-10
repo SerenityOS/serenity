@@ -45,7 +45,7 @@ void JSONObject::initialize(Realm& realm)
 }
 
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
-ThrowCompletionOr<DeprecatedString> JSONObject::stringify_impl(VM& vm, Value value, Value replacer, Value space)
+ThrowCompletionOr<Optional<DeprecatedString>> JSONObject::stringify_impl(VM& vm, Value value, Value replacer, Value space)
 {
     auto& realm = *vm.current_realm();
 
@@ -62,7 +62,7 @@ ThrowCompletionOr<DeprecatedString> JSONObject::stringify_impl(VM& vm, Value val
                 Vector<DeprecatedString> list;
                 for (size_t i = 0; i < replacer_length; ++i) {
                     auto replacer_value = TRY(replacer_object.get(i));
-                    DeprecatedString item;
+                    Optional<DeprecatedString> item;
                     if (replacer_value.is_string()) {
                         item = replacer_value.as_string().deprecated_string();
                     } else if (replacer_value.is_number()) {
@@ -72,8 +72,8 @@ ThrowCompletionOr<DeprecatedString> JSONObject::stringify_impl(VM& vm, Value val
                         if (is<StringObject>(value_object) || is<NumberObject>(value_object))
                             item = TRY(replacer_value.to_deprecated_string(vm));
                     }
-                    if (!item.is_null() && !list.contains_slow(item)) {
-                        list.append(item);
+                    if (item.has_value() && !list.contains_slow(*item)) {
+                        list.append(*item);
                     }
                 }
                 state.property_list = list;
@@ -118,15 +118,15 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
     auto replacer = vm.argument(1);
     auto space = vm.argument(2);
 
-    auto string = TRY(stringify_impl(vm, value, replacer, space));
-    if (string.is_null())
+    auto maybe_string = TRY(stringify_impl(vm, value, replacer, space));
+    if (!maybe_string.has_value())
         return js_undefined();
 
-    return PrimitiveString::create(vm, string);
+    return PrimitiveString::create(vm, maybe_string.release_value());
 }
 
 // 25.5.2.1 SerializeJSONProperty ( state, key, holder ), https://tc39.es/ecma262/#sec-serializejsonproperty
-ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_property(VM& vm, StringifyState& state, PropertyKey const& key, Object* holder)
+ThrowCompletionOr<Optional<DeprecatedString>> JSONObject::serialize_json_property(VM& vm, StringifyState& state, PropertyKey const& key, Object* holder)
 {
     // 1. Let value be ? Get(holder, key).
     auto value = TRY(holder->get(key));
@@ -209,14 +209,14 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_property(VM& vm, 
 
         // b. If isArray is true, return ? SerializeJSONArray(state, value).
         if (is_array)
-            return serialize_json_array(vm, state, value.as_object());
+            return TRY(serialize_json_array(vm, state, value.as_object()));
 
         // c. Return ? SerializeJSONObject(state, value).
-        return serialize_json_object(vm, state, value.as_object());
+        return TRY(serialize_json_object(vm, state, value.as_object()));
     }
 
     // 12. Return undefined.
-    return DeprecatedString {};
+    return Optional<DeprecatedString> {};
 }
 
 // 25.5.2.4 SerializeJSONObject ( state, value ), https://tc39.es/ecma262/#sec-serializejsonobject
@@ -234,7 +234,7 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_object(VM& vm, St
         if (key.is_symbol())
             return {};
         auto serialized_property_string = TRY(serialize_json_property(vm, state, key, &object));
-        if (!serialized_property_string.is_null()) {
+        if (serialized_property_string.has_value()) {
             property_strings.append(DeprecatedString::formatted(
                 "{}:{}{}",
                 quote_json_string(key.to_string()),
@@ -305,10 +305,10 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_array(VM& vm, Str
 
     for (size_t i = 0; i < length; ++i) {
         auto serialized_property_string = TRY(serialize_json_property(vm, state, i, &object));
-        if (serialized_property_string.is_null()) {
+        if (!serialized_property_string.has_value()) {
             property_strings.append("null"sv);
         } else {
-            property_strings.append(serialized_property_string);
+            property_strings.append(serialized_property_string.release_value());
         }
     }
 

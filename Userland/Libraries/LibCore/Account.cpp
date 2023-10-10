@@ -162,16 +162,17 @@ ErrorOr<Vector<Account>> Account::all([[maybe_unused]] Read options)
 bool Account::authenticate(SecretString const& password) const
 {
     // If there was no shadow entry for this account, authentication always fails.
-    if (m_password_hash.is_null())
+    if (!m_password_hash.has_value())
         return false;
 
     // An empty passwd field indicates that no password is required to log in.
-    if (m_password_hash.is_empty())
+    if (m_password_hash->is_empty())
         return true;
 
     // FIXME: Use crypt_r if it can be built in lagom.
-    char* hash = crypt(password.characters(), m_password_hash.characters());
-    return hash != nullptr && AK::timing_safe_compare(hash, m_password_hash.characters(), m_password_hash.length());
+    auto const bytes = m_password_hash->characters();
+    char* hash = crypt(password.characters(), bytes);
+    return hash != nullptr && AK::timing_safe_compare(hash, bytes, m_password_hash->length());
 }
 
 ErrorOr<void> Account::login() const
@@ -190,24 +191,25 @@ void Account::set_password(SecretString const& password)
 
 void Account::set_password_enabled(bool enabled)
 {
-    if (enabled && m_password_hash != "" && m_password_hash[0] == '!') {
-        m_password_hash = m_password_hash.substring(1, m_password_hash.length() - 1);
-    } else if (!enabled && (m_password_hash == "" || m_password_hash[0] != '!')) {
+    auto flattened_password_hash = m_password_hash.value_or(DeprecatedString::empty());
+    if (enabled && !flattened_password_hash.is_empty() && flattened_password_hash[0] == '!') {
+        m_password_hash = flattened_password_hash.substring(1, flattened_password_hash.length() - 1);
+    } else if (!enabled && (flattened_password_hash.is_empty() || flattened_password_hash[0] != '!')) {
         StringBuilder builder;
         builder.append('!');
-        builder.append(m_password_hash);
+        builder.append(flattened_password_hash);
         m_password_hash = builder.to_deprecated_string();
     }
 }
 
 void Account::delete_password()
 {
-    m_password_hash = "";
+    m_password_hash = DeprecatedString::empty();
 }
 
 Account::Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids)
     : m_username(pwd.pw_name)
-    , m_password_hash(spwd.sp_pwdp)
+    , m_password_hash(spwd.sp_pwdp ? Optional<DeprecatedString>(spwd.sp_pwdp) : OptionalNone {})
     , m_uid(pwd.pw_uid)
     , m_gid(pwd.pw_gid)
     , m_gecos(pwd.pw_gecos)
@@ -300,7 +302,7 @@ ErrorOr<DeprecatedString> Account::generate_shadow_file() const
         if (p->sp_namp == m_username) {
             if (m_deleted)
                 continue;
-            builder.appendff("{}:{}", m_username, m_password_hash);
+            builder.appendff("{}:{}", m_username, m_password_hash.value_or(DeprecatedString::empty()));
         } else
             builder.appendff("{}:{}", p->sp_namp, p->sp_pwdp);
 

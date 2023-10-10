@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool show_all = false;
     bool show_current = false;
     bool set_random = false;
-    DeprecatedString path;
+    StringView path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(show_all, "Show all wallpapers", "show-all", 'a');

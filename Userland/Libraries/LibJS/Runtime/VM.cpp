@@ -910,7 +910,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
     VERIFY(module_request.assertions.is_empty() || (module_request.assertions.size() == 1 && module_request.assertions.first().key == "type"));
     auto module_type = module_request.assertions.is_empty() ? DeprecatedString {} : module_request.assertions.first().value;
 
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {} [is_null={}]", module_request.module_specifier, module_type, module_type.is_null());
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] module at {} has type {}", module_request.module_specifier, module_type);
 
     StringView base_filename = referencing_script_or_module.visit(
         [&](Empty) {

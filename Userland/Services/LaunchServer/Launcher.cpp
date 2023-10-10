@@ -188,7 +188,7 @@ Optional<StringView> Launcher::mime_type_for_file(DeprecatedString path)
 
 bool Launcher::open_url(const URL& url, DeprecatedString const& handler_name)
 {
-    if (!handler_name.is_null())
+    if (!handler_name.is_empty())
         return open_with_handler_name(url, handler_name);
 
     if (url.scheme() == "file")

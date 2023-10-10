@@ -76,8 +76,8 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
     Optional<String> target_name;
 
     // 5. If element has a name content attribute, then set targetName to the value of that attribute.
-    if (auto value = deprecated_attribute(HTML::AttributeNames::name); !value.is_null())
-        target_name = String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors();
+    if (auto value = attribute(HTML::AttributeNames::name); value.has_value())
+        target_name = move(value);
 
     // 6. Let documentState be a new document state, with
     //  - document: document
@@ -195,7 +195,7 @@ Optional<AK::URL> NavigableContainer::shared_attribute_processing_steps_for_ifra
     //    then parse the value of that attribute relative to element's node document.
     //    If this is successful, then set url to the resulting URL record.
     auto src_attribute_value = deprecated_attribute(HTML::AttributeNames::src);
-    if (!src_attribute_value.is_null() && !src_attribute_value.is_empty()) {
+    if (!src_attribute_value.is_empty()) {
         auto parsed_src = document().parse_url(src_attribute_value);
         if (parsed_src.is_valid())
             url = parsed_src;

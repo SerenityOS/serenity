@@ -161,7 +161,7 @@ Optional<Packet> Packet::from_raw_packet(u8 const* raw_data, size_t raw_size)
         case RecordType::AAAA:
             // Fall through
         case RecordType::SRV:
-            data = { record.data(), record.data_length() };
+            data = ReadonlyBytes { record.data(), record.data_length() };
             break;
         default:
             // FIXME: Parse some other record types perhaps?

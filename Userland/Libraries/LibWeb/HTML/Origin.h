@@ -16,7 +16,7 @@ namespace Web::HTML {
 class Origin {
 public:
     Origin() = default;
-    Origin(DeprecatedString const& scheme, AK::URL::Host const& host, u16 port)
+    Origin(Optional<DeprecatedString> const& scheme, AK::URL::Host const& host, u16 port)
         : m_scheme(scheme)
         , m_host(host)
         , m_port(port)
@@ -24,9 +24,12 @@ public:
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque
-    bool is_opaque() const { return m_scheme.is_null() && m_host.has<Empty>() && m_port == 0; }
+    bool is_opaque() const { return !m_scheme.has_value() && m_host.has<Empty>() && m_port == 0; }
 
-    DeprecatedString const& scheme() const { return m_scheme; }
+    StringView scheme() const
+    {
+        return m_scheme.map([](auto& str) { return str.view(); }).value_or(StringView {});
+    }
     AK::URL::Host const& host() const { return m_host; }
     u16 port() const { return m_port; }
 
@@ -110,7 +113,7 @@ public:
     bool operator==(Origin const& other) const { return is_same_origin(other); }
 
 private:
-    DeprecatedString m_scheme;
+    Optional<DeprecatedString> m_scheme;
     AK::URL::Host m_host;
     u16 m_port { 0 };
 };

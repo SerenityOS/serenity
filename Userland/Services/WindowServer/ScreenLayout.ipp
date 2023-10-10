@@ -31,7 +31,7 @@ bool ScreenLayout::is_valid(DeprecatedString* error_msg) const
     int smallest_y = 0;
     for (size_t i = 0; i < screens.size(); i++) {
         auto& screen = screens[i];
-        if (screen.mode == Screen::Mode::Device && (screen.device->is_empty() || screen.device->is_null())) {
+        if (screen.mode == Screen::Mode::Device && screen.device->is_empty()) {
             if (error_msg)
                 *error_msg = DeprecatedString::formatted("Screen #{} has no path", i);
             return false;

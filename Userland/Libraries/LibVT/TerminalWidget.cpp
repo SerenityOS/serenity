@@ -292,7 +292,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
     // Pass: Compute the rect(s) of the currently hovered link, if any.
     Vector<Gfx::IntRect> hovered_href_rects;
-    if (!m_hovered_href_id.is_null()) {
+    if (m_hovered_href_id.has_value()) {
         for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
             auto& line = m_terminal.line(first_row_from_history + visual_row);
             for (size_t column = 0; column < line.length(); ++column) {
@@ -415,7 +415,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
             auto character_rect = glyph_rect(visual_row, column);
 
-            if (!m_hovered_href_id.is_null() && attribute.href_id == m_hovered_href_id) {
+            if (m_hovered_href_id.has_value() && attribute.href_id == m_hovered_href_id) {
                 text_color = palette().base_text();
             }
 
@@ -754,7 +754,7 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Primary) {
         auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
-        if (!attribute.href_id.is_null()) {
+        if (attribute.href_id.has_value()) {
             dbgln("Open hyperlinked URL: '{}'", attribute.href);
             Desktop::Launcher::open(attribute.href);
             return;
@@ -806,7 +806,7 @@ void TerminalWidget::copy()
 void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Primary) {
-        if (!m_active_href_id.is_null()) {
+        if (m_active_href_id.has_value()) {
             m_active_href = {};
             m_active_href_id = {};
             update();
@@ -862,7 +862,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     auto attribute = m_terminal.attribute_at(position);
 
     if (attribute.href_id != m_hovered_href_id) {
-        if (!attribute.href_id.is_null()) {
+        if (attribute.href_id.has_value()) {
             m_hovered_href_id = attribute.href_id;
             m_hovered_href = attribute.href;
 
@@ -902,7 +902,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     if (!(event.buttons() & GUI::MouseButton::Primary))
         return;
 
-    if (!m_active_href_id.is_null()) {
+    if (m_active_href_id.has_value()) {
         auto diff = event.position() - m_left_mousedown_position;
         auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
         constexpr int drag_distance_threshold = 5;
@@ -1111,7 +1111,7 @@ void TerminalWidget::set_cursor_shape(CursorShape shape)
 
 void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 {
-    if (m_hovered_href_id.is_null()) {
+    if (!m_hovered_href_id.has_value()) {
         m_context_menu->popup(event.screen_position());
     } else {
         m_context_menu_href = m_hovered_href;

@@ -169,7 +169,7 @@ static DeprecatedString sanitize_entry_name(DeprecatedString const& name)
 ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry>&& entry)
 {
     auto file_name_to_watch = entry->file_name_to_watch();
-    if (!file_name_to_watch.is_null()) {
+    if (!file_name_to_watch.is_empty()) {
         if (!m_watcher) {
             m_watcher = TRY(Core::FileWatcher::create());
             m_watcher->on_change = [this](Core::FileWatcherEvent const& event) {

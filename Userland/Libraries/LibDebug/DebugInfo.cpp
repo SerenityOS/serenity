@@ -95,7 +95,7 @@ ErrorOr<void> DebugInfo::prepare_lines()
     auto compute_full_path = [&](DeprecatedFlyString const& file_path) -> Optional<DeprecatedString> {
         if (file_path.view().contains("Toolchain/"sv) || file_path.view().contains("libgcc"sv))
             return {};
-        if (file_path.view().starts_with("./"sv) && !m_source_root.is_null())
+        if (file_path.view().starts_with("./"sv) && !m_source_root.is_empty())
             return LexicalPath::join(m_source_root, file_path).string();
         if (auto index_of_serenity_slash = file_path.view().find("serenity/"sv); index_of_serenity_slash.has_value()) {
             auto start_index = index_of_serenity_slash.value() + "serenity/"sv.length();

@@ -22,7 +22,7 @@ namespace Spreadsheet {
 
 void SpreadsheetView::EditingDelegate::set_value(GUI::Variant const& value, GUI::ModelEditingDelegate::SelectionBehavior selection_behavior)
 {
-    if (value.as_string().is_null()) {
+    if (!value.is_valid()) {
         StringModelEditingDelegate::set_value("", selection_behavior);
         commit();
         return;

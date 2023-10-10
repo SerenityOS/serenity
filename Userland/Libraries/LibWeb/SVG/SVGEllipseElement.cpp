@@ -22,21 +22,21 @@ void SVGEllipseElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGEllipseElementPrototype>(realm, "SVGEllipseElement"));
 }
 
-void SVGEllipseElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void SVGEllipseElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::cx) {
-        m_center_x = AttributeParser::parse_coordinate(value);
+        m_center_x = AttributeParser::parse_coordinate(value.value_or(""));
         m_path.clear();
     } else if (name == SVG::AttributeNames::cy) {
-        m_center_y = AttributeParser::parse_coordinate(value);
+        m_center_y = AttributeParser::parse_coordinate(value.value_or(""));
         m_path.clear();
     } else if (name == SVG::AttributeNames::rx) {
-        m_radius_x = AttributeParser::parse_positive_length(value);
+        m_radius_x = AttributeParser::parse_positive_length(value.value_or(""));
         m_path.clear();
     } else if (name == SVG::AttributeNames::ry) {
-        m_radius_y = AttributeParser::parse_positive_length(value);
+        m_radius_y = AttributeParser::parse_positive_length(value.value_or(""));
         m_path.clear();
     }
 }

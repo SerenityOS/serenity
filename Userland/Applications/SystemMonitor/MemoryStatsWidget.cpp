@@ -74,7 +74,7 @@ void MemoryStatsWidget::set_graph_widget(GraphWidget& graph)
 void MemoryStatsWidget::set_graph_widget_via_name(DeprecatedString name)
 {
     m_graph_widget_name = move(name);
-    if (!m_graph_widget_name.is_null()) {
+    if (!m_graph_widget_name.is_empty()) {
         // FIXME: We assume here that the graph widget is a sibling or descendant of a sibling. This prevents more complex hierarchies.
         auto* maybe_graph = parent_widget()->find_descendant_of_type_named<GraphWidget>(m_graph_widget_name);
         if (maybe_graph) {

@@ -44,7 +44,7 @@ public:
 
     virtual ~FilePicker() override;
 
-    DeprecatedString const& selected_file() const { return m_selected_file; }
+    Optional<DeprecatedString> const& selected_file() const { return m_selected_file; }
 
 private:
     void on_file_return();
@@ -77,7 +77,7 @@ private:
 
     RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
-    DeprecatedString m_selected_file;
+    Optional<DeprecatedString> m_selected_file;
 
     Vector<DeprecatedString> m_allowed_file_types_names;
     Optional<Vector<FileTypeFilter>> m_allowed_file_types;

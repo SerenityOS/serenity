@@ -1533,7 +1533,7 @@ Painting::PaintableBox* Node::paintable_box()
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
-void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling) const
+void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedString> attribute_name, Optional<DeprecatedString> attribute_namespace, Optional<DeprecatedString> old_value, Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling) const
 {
     // NOTE: We defer garbage collection until the end of the scope, since we can't safely use MutationObserver* as a hashmap key otherwise.
     // FIXME: This is a total hack.
@@ -1541,7 +1541,7 @@ void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribu
 
     // 1. Let interestedObservers be an empty map.
     // mutationObserver -> mappedOldValue
-    OrderedHashMap<MutationObserver*, DeprecatedString> interested_observers;
+    OrderedHashMap<MutationObserver*, Optional<DeprecatedString>> interested_observers;
 
     // 2. Let nodes be the inclusive ancestors of target.
     Vector<JS::Handle<Node const>> nodes;
@@ -1565,7 +1565,7 @@ void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribu
             //    then:
             if (!(node.ptr() != this && !options.subtree)
                 && !(type == MutationType::attributes && (!options.attributes.has_value() || !options.attributes.value()))
-                && !(type == MutationType::attributes && options.attribute_filter.has_value() && (!attribute_namespace.is_null() || !options.attribute_filter->contains_slow(attribute_name.view())))
+                && !(type == MutationType::attributes && options.attribute_filter.has_value() && (attribute_namespace.has_value() || !options.attribute_filter->contains_slow(attribute_name.value_or("").view())))
                 && !(type == MutationType::characterData && (!options.character_data.has_value() || !options.character_data.value()))
                 && !(type == MutationType::childList && !options.child_list)) {
                 // 1. Let mo be registered’s observer.
@@ -1593,17 +1593,9 @@ void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribu
     for (auto& interested_observer : interested_observers) {
         // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
         //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
-        Optional<String> maybe_attribute_name;
-        if (!attribute_name.is_null())
-            maybe_attribute_name = MUST(String::from_deprecated_string(attribute_name));
-
-        Optional<String> maybe_attribute_namespace;
-        if (!attribute_namespace.is_null())
-            maybe_attribute_namespace = MUST(String::from_deprecated_string(attribute_namespace));
-
-        Optional<String> maybe_interested_observer;
-        if (!interested_observer.value.is_null())
-            maybe_interested_observer = MUST(String::from_deprecated_string(interested_observer.value));
+        auto maybe_attribute_name = attribute_name.map([](auto& name) { return MUST(String::from_deprecated_string(name)); });
+        auto maybe_attribute_namespace = attribute_namespace.map([](auto& ns) { return MUST(String::from_deprecated_string(ns)); });
+        auto maybe_interested_observer = interested_observer.value.map([](auto& value) { return MUST(String::from_deprecated_string(value)); });
 
         auto record = MutationRecord::create(realm(), type, *this, added_nodes_list, removed_nodes_list, previous_sibling, next_sibling, maybe_attribute_name, maybe_attribute_namespace, /* mappedOldValue */ maybe_interested_observer);
 
@@ -1888,8 +1880,8 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
     if (is<HTML::HTMLElement>(this)) {
         auto const* element = static_cast<HTML::HTMLElement const*>(this);
         auto tooltip = element->title();
-        if (!tooltip.is_empty() && !tooltip.is_null())
-            return String::from_deprecated_string(tooltip);
+        if (!tooltip.has_value() && !tooltip->is_empty())
+            return tooltip.release_value();
     }
     // Append the result of each step above, with a space, to the total accumulated text.
     //

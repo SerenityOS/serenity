@@ -119,7 +119,7 @@ public:
     StringView consume_until(StringView);
     StringView consume_quoted_string(char escape_char = 0);
 #ifndef KERNEL
-    DeprecatedString consume_and_unescape_string(char escape_char = '\\');
+    Optional<DeprecatedString> consume_and_unescape_string(char escape_char = '\\');
 #endif
 
     enum class UnicodeEscapeError {

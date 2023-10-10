@@ -256,8 +256,6 @@ NonnullRefPtr<StringObject> Parser::parse_string()
         is_binary_string = true;
     }
 
-    VERIFY(!string.is_null());
-
     auto string_object = make_object<StringObject>(string, is_binary_string);
 
     if (m_document->security_handler() && m_enable_encryption)

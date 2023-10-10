@@ -55,7 +55,7 @@ public:
 private:
     virtual bool is_text_node() const final { return true; }
 
-    DeprecatedString m_text_for_rendering;
+    Optional<DeprecatedString> m_text_for_rendering;
 };
 
 template<>

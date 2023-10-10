@@ -40,7 +40,7 @@ DeprecatedString CSSNamespaceRule::serialized() const
     builder.append("@namespace "sv);
 
     // followed by the serialization as an identifier of the prefix attribute (if any),
-    if (!m_prefix.is_empty() && !m_prefix.is_null()) {
+    if (!m_prefix.is_empty()) {
         serialize_an_identifier(builder, m_prefix);
         // followed by a single SPACE (U+0020) if there is a prefix,
         builder.append(" "sv);

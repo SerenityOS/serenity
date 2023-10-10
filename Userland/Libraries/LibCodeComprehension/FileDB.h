@@ -19,15 +19,21 @@ public:
     virtual ~FileDB() = default;
 
     virtual Optional<DeprecatedString> get_or_read_from_filesystem(StringView filename) const = 0;
-    void set_project_root(StringView project_root) { m_project_root = project_root; }
-    DeprecatedString const& project_root() const { return m_project_root; }
+    void set_project_root(StringView project_root)
+    {
+        if (project_root.is_null())
+            m_project_root.clear();
+        else
+            m_project_root = project_root;
+    }
+    Optional<DeprecatedString> const& project_root() const { return m_project_root; }
     DeprecatedString to_absolute_path(StringView filename) const;
 
 protected:
     FileDB() = default;
 
 private:
-    DeprecatedString m_project_root;
+    Optional<DeprecatedString> m_project_root;
 };
 
 }

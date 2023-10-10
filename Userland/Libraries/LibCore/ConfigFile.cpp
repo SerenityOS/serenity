@@ -140,11 +140,10 @@ ErrorOr<void> ConfigFile::reparse()
     return {};
 }
 
-DeprecatedString ConfigFile::read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value) const
+Optional<DeprecatedString> ConfigFile::read_entry_optional(const AK::DeprecatedString& group, const AK::DeprecatedString& key) const
 {
-    if (!has_key(group, key)) {
-        return default_value;
-    }
+    if (!has_key(group, key))
+        return {};
     auto it = m_groups.find(group);
     auto jt = it->value.find(key);
     return jt->value;

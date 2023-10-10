@@ -41,7 +41,7 @@ public:
     // Always returns true: https://dom.spec.whatwg.org/#dom-attr-specified
     constexpr bool specified() const { return true; }
 
-    void handle_attribute_changes(Element&, DeprecatedString const& old_value, DeprecatedString const& new_value);
+    void handle_attribute_changes(Element&, Optional<DeprecatedString> old_value, Optional<DeprecatedString> new_value);
 
 private:
     Attr(Document&, QualifiedName, String value, Element*);

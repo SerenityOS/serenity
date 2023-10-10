@@ -134,7 +134,7 @@ void Debugger::start()
 
 Debugger::CreateDebugSessionResult Debugger::create_debug_session()
 {
-    if (!m_executable_path.is_null()) {
+    if (!m_executable_path.is_empty()) {
         auto child_setup_callback = [this]() {
             if (m_child_setup_callback)
                 return m_child_setup_callback();

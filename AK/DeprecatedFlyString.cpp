@@ -38,8 +38,6 @@ void DeprecatedFlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
 
 DeprecatedFlyString::DeprecatedFlyString(DeprecatedString const& string)
 {
-    if (string.is_null())
-        return;
     if (string.impl()->is_fly()) {
         m_impl = string.impl();
         return;
@@ -60,7 +58,7 @@ DeprecatedFlyString::DeprecatedFlyString(StringView string)
     if (string.is_null())
         return;
     auto it = fly_impls().find(string.hash(), [&](auto& candidate) {
-        return string == candidate;
+        return string == *candidate;
     });
     if (it == fly_impls().end()) {
         auto new_string = string.to_deprecated_string();

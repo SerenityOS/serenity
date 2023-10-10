@@ -41,7 +41,7 @@ ErrorOr<NonnullOwnPtr<Core::LocalSocket>> take_over_socket_from_system_server(De
         parse_sockets_from_system_server();
 
     int fd;
-    if (socket_path.is_null()) {
+    if (socket_path.is_empty()) {
         // We want the first (and only) socket.
         VERIFY(s_overtaken_sockets.size() == 1);
         fd = s_overtaken_sockets.begin()->value;

@@ -224,18 +224,18 @@ bool HTMLElement::cannot_navigate() const
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
-void HTMLElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     Element::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::contenteditable) {
-        if (value.is_null()) {
+        if (!value.has_value()) {
             m_content_editable_state = ContentEditableState::Inherit;
         } else {
-            if (value.is_empty() || value.equals_ignoring_ascii_case("true"sv)) {
+            if (value->is_empty() || value->equals_ignoring_ascii_case("true"sv)) {
                 // "true", an empty string or a missing value map to the "true" state.
                 m_content_editable_state = ContentEditableState::True;
-            } else if (value.equals_ignoring_ascii_case("false"sv)) {
+            } else if (value->equals_ignoring_ascii_case("false"sv)) {
                 // "false" maps to the "false" state.
                 m_content_editable_state = ContentEditableState::False;
             } else {
@@ -248,9 +248,9 @@ void HTMLElement::attribute_changed(FlyString const& name, DeprecatedString cons
     // 1. If namespace is not null, or localName is not the name of an event handler content attribute on element, then return.
     // FIXME: Add the namespace part once we support attribute namespaces.
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                                                                     \
-    if (name == HTML::AttributeNames::attribute_name) {                                                             \
-        element_event_handler_attribute_changed(event_name, String::from_deprecated_string(value).release_value()); \
+#define __ENUMERATE(attribute_name, event_name)                                                                                          \
+    if (name == HTML::AttributeNames::attribute_name) {                                                                                  \
+        element_event_handler_attribute_changed(event_name, value.map([](auto& v) { return MUST(String::from_deprecated_string(v)); })); \
     }
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

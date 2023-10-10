@@ -455,7 +455,7 @@ DeprecatedString Image::symbolicate(FlatPtr address, u32* out_offset) const
     }
 
     auto& demangled_name = symbol->demangled_name;
-    if (demangled_name.is_null())
+    if (demangled_name.is_empty())
         demangled_name = demangle(symbol->name);
 
     if (out_offset) {

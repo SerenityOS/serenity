@@ -311,7 +311,7 @@ void do_message(SourceGenerator message_generator, DeprecatedString const& name,
 class @message.pascal_name@ final : public IPC::Message {
 public:)~~~");
 
-    if (!response_type.is_null())
+    if (!response_type.is_empty())
         message_generator.appendln(R"~~~(
    typedef class @message.response_type@ ResponseType;)~~~");
 

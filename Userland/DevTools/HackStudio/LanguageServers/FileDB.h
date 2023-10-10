@@ -38,7 +38,7 @@ private:
 
 private:
     HashMap<DeprecatedString, NonnullRefPtr<GUI::TextDocument>> m_open_files;
-    DeprecatedString m_project_root;
+    Optional<DeprecatedString> m_project_root;
 };
 
 }

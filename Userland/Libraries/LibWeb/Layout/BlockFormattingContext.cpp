@@ -1092,10 +1092,11 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
 
     CSSPixels default_marker_width = max(4, marker.font().pixel_size_rounded_up() - 4);
 
-    if (marker.text().is_empty()) {
+    auto marker_text = marker.text().value_or("");
+    if (marker_text.is_empty()) {
         marker_state.set_content_width(image_width + default_marker_width);
     } else {
-        auto text_width = marker.font().width(marker.text());
+        auto text_width = marker.font().width(marker_text);
         marker_state.set_content_width(image_width + CSSPixels::nearest_value_for(text_width));
     }
 

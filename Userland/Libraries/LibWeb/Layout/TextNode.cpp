@@ -306,9 +306,9 @@ void TextNode::invalidate_text_for_rendering()
 
 DeprecatedString const& TextNode::text_for_rendering() const
 {
-    if (m_text_for_rendering.is_null())
+    if (!m_text_for_rendering.has_value())
         const_cast<TextNode*>(this)->compute_text_for_rendering();
-    return m_text_for_rendering;
+    return *m_text_for_rendering;
 }
 
 // NOTE: This collapses whitespace into a single ASCII space if the CSS white-space property tells us to.

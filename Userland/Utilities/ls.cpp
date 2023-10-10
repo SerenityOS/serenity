@@ -248,15 +248,15 @@ static int print_escaped(StringView name)
 
 static DeprecatedString& hostname()
 {
-    static DeprecatedString s_hostname;
-    if (s_hostname.is_null()) {
+    static Optional<DeprecatedString> s_hostname;
+    if (!s_hostname.has_value()) {
         char buffer[HOST_NAME_MAX];
         if (gethostname(buffer, sizeof(buffer)) == 0)
             s_hostname = buffer;
         else
             s_hostname = "localhost";
     }
-    return s_hostname;
+    return *s_hostname;
 }
 
 static size_t print_name(const struct stat& st, DeprecatedString const& name, Optional<StringView> path_for_link_resolution, StringView path_for_hyperlink)
@@ -470,7 +470,6 @@ static int do_file_system_object_long(DeprecatedString const& path)
         builder.append('/');
         builder.append(metadata.name);
         metadata.path = builder.to_deprecated_string();
-        VERIFY(!metadata.path.is_null());
         int rc = lstat(metadata.path.characters(), &metadata.stat);
         if (rc < 0)
             perror("lstat");
@@ -595,7 +594,6 @@ int do_file_system_object_short(DeprecatedString const& path)
         builder.append('/');
         builder.append(metadata.name);
         metadata.path = builder.to_deprecated_string();
-        VERIFY(!metadata.path.is_null());
         int rc = lstat(metadata.path.characters(), &metadata.stat);
         if (rc < 0)
             perror("lstat");

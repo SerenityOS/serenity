@@ -257,14 +257,14 @@ static Optional<DeprecatedString> record_namespace_information(DOM::Element cons
             auto const& prefix_definition = attribute->local_name().to_deprecated_fly_string();
 
             // 2. Let namespace definition be the value of attr's value.
-            auto namespace_definition = attribute->value().to_deprecated_string();
+            DeprecatedFlyString namespace_definition = attribute->value().to_deprecated_string();
 
             // 3. If namespace definition is the XML namespace, then stop running these steps, and return to Main to visit the next attribute.
             if (namespace_definition == Namespace::XML)
                 continue;
 
             // 4. If namespace definition is the empty string (the declarative form of having no namespace), then let namespace definition be null instead.
-            if (namespace_definition.is_empty())
+            if (namespace_definition == ""sv)
                 namespace_definition = {};
 
             // 5. If prefix definition is found in map given the namespace namespace definition, then stop running these steps, and return to Main to visit the next attribute.
@@ -284,17 +284,19 @@ static Optional<DeprecatedString> record_namespace_information(DOM::Element cons
 }
 
 // https://w3c.github.io/DOM-Parsing/#dfn-serializing-an-attribute-value
-static WebIDL::ExceptionOr<DeprecatedString> serialize_an_attribute_value(DeprecatedString const& attribute_value, [[maybe_unused]] RequireWellFormed require_well_formed)
+static WebIDL::ExceptionOr<DeprecatedString> serialize_an_attribute_value(OneOf<DeprecatedString, DeprecatedFlyString> auto const& attribute_value, [[maybe_unused]] RequireWellFormed require_well_formed)
 {
     // FIXME: 1. If the require well-formed flag is set (its value is true), and attribute value contains characters that are not matched by the XML Char production,
     //           then throw an exception; the serialization of this attribute value would fail to produce a well-formed element serialization.
 
     // 2. If attribute value is null, then return the empty string.
-    if (attribute_value.is_null())
-        return DeprecatedString::empty();
+    if constexpr (requires { attribute_value.is_null(); }) {
+        if (attribute_value.is_null())
+            return DeprecatedString::empty();
+    }
 
     // 3. Otherwise, attribute value is a string. Return the value of attribute value, first replacing any occurrences of the following:
-    auto final_attribute_value = attribute_value;
+    DeprecatedString final_attribute_value = attribute_value;
 
     // 1. "&" with "&amp;"
     final_attribute_value = final_attribute_value.replace("&"sv, "&amp;"sv, ReplaceMode::All);

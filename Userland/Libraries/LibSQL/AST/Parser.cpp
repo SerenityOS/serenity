@@ -566,16 +566,16 @@ RefPtr<Expression> Parser::parse_bind_parameter_expression()
     return {};
 }
 
-RefPtr<Expression> Parser::parse_column_name_expression(DeprecatedString with_parsed_identifier, bool with_parsed_period)
+RefPtr<Expression> Parser::parse_column_name_expression(Optional<DeprecatedString> with_parsed_identifier, bool with_parsed_period)
 {
-    if (with_parsed_identifier.is_null() && !match(TokenType::Identifier))
+    if (!with_parsed_identifier.has_value() && !match(TokenType::Identifier))
         return {};
 
     DeprecatedString first_identifier;
-    if (with_parsed_identifier.is_null())
+    if (!with_parsed_identifier.has_value())
         first_identifier = consume(TokenType::Identifier).value();
     else
-        first_identifier = move(with_parsed_identifier);
+        first_identifier = with_parsed_identifier.release_value();
 
     DeprecatedString schema_name;
     DeprecatedString table_name;
@@ -1010,17 +1010,17 @@ NonnullRefPtr<ResultColumn> Parser::parse_result_column()
     // If we match an identifier now, we don't know whether it is a table-name of the form "table-name.*", or if it is the start of a
     // column-name-expression, until we try to parse the asterisk. So if we consume an identifier and a period, but don't find an
     // asterisk, hold onto that information to form a column-name-expression later.
-    DeprecatedString table_name;
+    Optional<DeprecatedString> table_name;
     bool parsed_period = false;
 
     if (match(TokenType::Identifier)) {
         table_name = consume().value();
         parsed_period = consume_if(TokenType::Period);
         if (parsed_period && consume_if(TokenType::Asterisk))
-            return create_ast_node<ResultColumn>(move(table_name));
+            return create_ast_node<ResultColumn>(table_name.release_value());
     }
 
-    auto expression = table_name.is_null()
+    auto expression = !table_name.has_value()
         ? parse_expression()
         : static_cast<NonnullRefPtr<Expression>>(*parse_column_name_expression(move(table_name), parsed_period));
 

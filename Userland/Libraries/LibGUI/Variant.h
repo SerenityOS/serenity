@@ -98,7 +98,6 @@ public:
         return visit(
             [](Empty) { return false; },
             [](Detail::Boolean v) { return v.value; },
-            [](DeprecatedString const& v) { return !v.is_null(); },
             [](Integral auto v) { return v != 0; },
             [](Gfx::IntPoint const& v) { return !v.is_zero(); },
             [](OneOf<Gfx::IntRect, Gfx::IntSize> auto const& v) { return !v.is_empty(); },
