@@ -33,6 +33,7 @@
         return nil;
 
     _pdfView = [[MacPDFView alloc] initWithFrame:NSZeroRect];
+    _pdfView.identifier = @"PDFView"; // To make state restoration work.
     [_pdfView setDelegate:self];
 
     NSSplitViewController* split_view = [[NSSplitViewController alloc] initWithNibName:nil bundle:nil];
