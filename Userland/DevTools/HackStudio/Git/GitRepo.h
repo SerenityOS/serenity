@@ -45,7 +45,7 @@ private:
     static bool git_is_installed();
     static bool git_repo_exists(DeprecatedString const& repo_root);
 
-    static DeprecatedString command_wrapper(Vector<DeprecatedString> const& command_parts, DeprecatedString const& chdir);
+    static Optional<DeprecatedString> command_wrapper(Vector<DeprecatedString> const& command_parts, DeprecatedString const& chdir);
     static Vector<DeprecatedString> parse_files_list(DeprecatedString const&);
 
     explicit GitRepo(DeprecatedString const& repository_root)
@@ -56,7 +56,7 @@ private:
     Vector<DeprecatedString> modified_files() const;
     Vector<DeprecatedString> untracked_files() const;
 
-    DeprecatedString command(Vector<DeprecatedString> const& command_parts) const;
+    Optional<DeprecatedString> command(Vector<DeprecatedString> const& command_parts) const;
 
     DeprecatedString m_repository_root;
 };

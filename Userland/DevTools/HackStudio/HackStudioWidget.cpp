@@ -909,15 +909,15 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
 
         auto suggested_path = FileSystem::absolute_path(old_path.string()).release_value_but_fixme_should_propagate_errors();
         Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(),
-            old_filename.is_null() ? "Untitled"sv : old_path.title(),
-            old_filename.is_null() ? "txt"sv : old_path.extension(),
+            old_filename.is_empty() ? "Untitled"sv : old_path.title(),
+            old_filename.is_empty() ? "txt"sv : old_path.extension(),
             suggested_path);
         if (!save_path.has_value()) {
             return;
         }
 
         DeprecatedString const relative_file_path = LexicalPath::relative_path(save_path.value(), m_project->root_path());
-        if (current_editor_wrapper().filename().is_null()) {
+        if (current_editor_wrapper().filename().is_empty()) {
             current_editor_wrapper().set_filename(relative_file_path);
         } else {
             for (auto& editor_wrapper : m_all_editor_wrappers) {
@@ -1729,7 +1729,7 @@ void HackStudioWidget::update_current_editor_title()
 void HackStudioWidget::on_cursor_change()
 {
     update_statusbar();
-    if (current_editor_wrapper().filename().is_null())
+    if (current_editor_wrapper().filename().is_empty())
         return;
 
     auto current_location = current_project_location();

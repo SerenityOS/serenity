@@ -49,7 +49,7 @@ TEST_CASE(range_loop)
 
     int loop_counter = 0;
     for (auto& it : number_to_string) {
-        EXPECT_EQ(it.value.is_null(), false);
+        EXPECT_EQ(it.value.is_empty(), false);
         ++loop_counter;
     }
     EXPECT_EQ(loop_counter, 3);

@@ -168,10 +168,10 @@ private:
     VT::Range m_selection;
 
     DeprecatedString m_hovered_href;
-    DeprecatedString m_hovered_href_id;
+    Optional<DeprecatedString> m_hovered_href_id;
 
     DeprecatedString m_active_href;
-    DeprecatedString m_active_href_id;
+    Optional<DeprecatedString> m_active_href_id;
 
     // Snapshot of m_hovered_href when opening a context menu for a hyperlink.
     DeprecatedString m_context_menu_href;

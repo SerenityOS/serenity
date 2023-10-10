@@ -247,9 +247,10 @@ inline AK::Result<JS::NonnullGCPtr<JS::SourceTextModule>, ParserError> parse_mod
 inline ErrorOr<JsonValue> get_test_results(JS::Realm& realm)
 {
     auto results = MUST(realm.global_object().get("__TestResults__"));
-    auto json_string = MUST(JS::JSONObject::stringify_impl(*g_vm, results, JS::js_undefined(), JS::js_undefined()));
-
-    return JsonValue::from_string(json_string);
+    auto maybe_json_string = MUST(JS::JSONObject::stringify_impl(*g_vm, results, JS::js_undefined(), JS::js_undefined()));
+    if (maybe_json_string.has_value())
+        return JsonValue::from_string(*maybe_json_string);
+    return JsonValue();
 }
 
 inline void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t, size_t)

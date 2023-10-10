@@ -38,7 +38,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
 {
     Base::apply_presentational_hints(style);
 
-    auto width_attribute = deprecated_attribute(SVG::AttributeNames::width);
+    auto width_attribute = attribute(SVG::AttributeNames::width);
     auto parsing_context = CSS::Parser::ParsingContext { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
     if (auto width_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width)) {
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
@@ -50,7 +50,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
     }
 
     // Height defaults to 100%
-    auto height_attribute = deprecated_attribute(SVG::AttributeNames::height);
+    auto height_attribute = attribute(SVG::AttributeNames::height);
     if (auto height_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height)) {
         style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
     } else if (height_attribute == "") {
@@ -61,14 +61,14 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
     }
 }
 
-void SVGSVGElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void SVGSVGElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     SVGGraphicsElement::attribute_changed(name, value);
 
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox))
-        m_view_box = try_parse_view_box(value);
+        m_view_box = try_parse_view_box(value.value_or(""));
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::preserveAspectRatio))
-        m_preserve_aspect_ratio = AttributeParser::parse_preserve_aspect_ratio(value);
+        m_preserve_aspect_ratio = AttributeParser::parse_preserve_aspect_ratio(value.value_or(""));
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::width) || name.equals_ignoring_ascii_case(SVG::AttributeNames::height))
         update_fallback_view_box_for_svg_as_image();
 }

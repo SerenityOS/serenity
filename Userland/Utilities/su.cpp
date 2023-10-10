@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView first_positional;
     StringView second_positional;
-    DeprecatedString command;
+    StringView command;
     bool simulate_login = false;
 
     Core::ArgsParser args_parser;
@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (command.is_null()) {
         TRY(Core::System::exec(account.shell(), Array<StringView, 1> { account.shell().view() }, Core::System::SearchInPath::No));
     } else {
-        TRY(Core::System::exec(account.shell(), Array<StringView, 3> { account.shell().view(), "-c"sv, command.view() }, Core::System::SearchInPath::No));
+        TRY(Core::System::exec(account.shell(), Array<StringView, 3> { account.shell().view(), "-c"sv, command }, Core::System::SearchInPath::No));
     }
 
     return 1;

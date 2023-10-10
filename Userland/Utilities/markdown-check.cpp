@@ -179,10 +179,11 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Heading const& heading)
 RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_node)
 {
     DeprecatedString const& href = link_node.href;
-    if (href.is_null()) {
+    if (href.is_empty()) {
         // Nothing to do here.
         return RecursionDecision::Recurse;
     }
+
     auto url = URL::create_with_url_or_path(href);
     if (url.is_valid()) {
         if (url.scheme() == "https" || url.scheme() == "http") {

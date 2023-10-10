@@ -17,15 +17,15 @@ SVGGradientElement::SVGGradientElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-void SVGGradientElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void SVGGradientElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     SVGElement::attribute_changed(name, value);
     if (name == AttributeNames::gradientUnits) {
-        m_gradient_units = AttributeParser::parse_units(value);
+        m_gradient_units = AttributeParser::parse_units(value.value_or(""));
     } else if (name == AttributeNames::spreadMethod) {
-        m_spread_method = AttributeParser::parse_spread_method(value);
+        m_spread_method = AttributeParser::parse_spread_method(value.value_or(""));
     } else if (name == AttributeNames::gradientTransform) {
-        if (auto transform_list = AttributeParser::parse_transform(value); transform_list.has_value()) {
+        if (auto transform_list = AttributeParser::parse_transform(value.value_or("")); transform_list.has_value()) {
             m_gradient_transform = transform_from_transform_list(*transform_list);
         } else {
             m_gradient_transform = {};

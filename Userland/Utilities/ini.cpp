@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView path;
     DeprecatedString group;
     DeprecatedString key;
-    DeprecatedString value_to_write;
+    StringView value_to_write;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to INI file", "path");

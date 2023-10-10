@@ -40,10 +40,13 @@ class DeprecatedString {
 public:
     ~DeprecatedString() = default;
 
-    DeprecatedString() = default;
+    DeprecatedString()
+        : m_impl(StringImpl::the_empty_stringimpl())
+    {
+    }
 
     DeprecatedString(StringView view)
-        : m_impl(StringImpl::create(view.characters_without_null_termination(), view.length()))
+        : m_impl(*StringImpl::create(view.characters_without_null_termination(), view.length()))
     {
     }
 
@@ -55,20 +58,21 @@ public:
     DeprecatedString(DeprecatedString&& other)
         : m_impl(move(other.m_impl))
     {
+        other.m_impl = StringImpl::the_empty_stringimpl();
     }
 
     DeprecatedString(char const* cstring, ShouldChomp shouldChomp = NoChomp)
-        : m_impl(StringImpl::create(cstring, shouldChomp))
+        : m_impl(*StringImpl::create(cstring, shouldChomp))
     {
     }
 
     DeprecatedString(char const* cstring, size_t length, ShouldChomp shouldChomp = NoChomp)
-        : m_impl(StringImpl::create(cstring, length, shouldChomp))
+        : m_impl(*StringImpl::create(cstring, length, shouldChomp))
     {
     }
 
     explicit DeprecatedString(ReadonlyBytes bytes, ShouldChomp shouldChomp = NoChomp)
-        : m_impl(StringImpl::create(bytes, shouldChomp))
+        : m_impl(*StringImpl::create(bytes, shouldChomp))
     {
     }
 
@@ -77,18 +81,8 @@ public:
     {
     }
 
-    DeprecatedString(StringImpl const* impl)
-        : m_impl(impl)
-    {
-    }
-
-    DeprecatedString(RefPtr<StringImpl const>&& impl)
-        : m_impl(move(impl))
-    {
-    }
-
     DeprecatedString(NonnullRefPtr<StringImpl const>&& impl)
-        : m_impl(move(impl))
+        : m_impl(*move(impl))
     {
     }
 
@@ -174,31 +168,25 @@ public:
     [[nodiscard]] StringView substring_view(size_t start, size_t length) const;
     [[nodiscard]] StringView substring_view(size_t start) const;
 
-    [[nodiscard]] bool is_null() const { return !m_impl; }
     [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return length() == 0; }
-    [[nodiscard]] ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
-    // Includes NUL-terminator, if non-nullptr.
-    [[nodiscard]] ALWAYS_INLINE char const* characters() const { return m_impl ? m_impl->characters() : nullptr; }
+    [[nodiscard]] ALWAYS_INLINE size_t length() const { return m_impl->length(); }
+    // Includes NUL-terminator.
+    [[nodiscard]] ALWAYS_INLINE char const* characters() const { return m_impl->characters(); }
 
     [[nodiscard]] bool copy_characters_to_buffer(char* buffer, size_t buffer_size) const;
 
     [[nodiscard]] ALWAYS_INLINE ReadonlyBytes bytes() const
     {
-        if (m_impl) {
-            return m_impl->bytes();
-        }
-        return {};
+        return m_impl->bytes();
     }
 
     [[nodiscard]] ALWAYS_INLINE char const& operator[](size_t i) const
     {
-        VERIFY(!is_null());
         return (*m_impl)[i];
     }
 
     [[nodiscard]] ALWAYS_INLINE u8 byte_at(size_t i) const
     {
-        VERIFY(!is_null());
         return bit_cast<u8>((*m_impl)[i]);
     }
 
@@ -251,22 +239,15 @@ public:
         return *this;
     }
 
-    DeprecatedString& operator=(nullptr_t)
+    template<OneOf<ReadonlyBytes, Bytes> T>
+    DeprecatedString& operator=(T bytes)
     {
-        m_impl = nullptr;
-        return *this;
-    }
-
-    DeprecatedString& operator=(ReadonlyBytes bytes)
-    {
-        m_impl = StringImpl::create(bytes);
+        m_impl = *StringImpl::create(bytes);
         return *this;
     }
 
     [[nodiscard]] u32 hash() const
     {
-        if (!m_impl)
-            return 0;
         return m_impl->hash();
     }
 
@@ -323,7 +304,7 @@ public:
     }
 
 private:
-    RefPtr<StringImpl const> m_impl;
+    NonnullRefPtr<StringImpl const> m_impl;
 };
 
 template<>

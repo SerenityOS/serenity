@@ -116,7 +116,7 @@ public:
     void setup_keybinds();
 
     struct SourcePosition {
-        DeprecatedString source_file;
+        Optional<DeprecatedString> source_file;
         DeprecatedString literal_source_text;
         Optional<AST::Position> position;
     };
@@ -183,7 +183,7 @@ public:
     static Vector<DeprecatedString> expand_globs(Vector<StringView> path_segments, StringView base);
     ErrorOr<Vector<AST::Command>> expand_aliases(Vector<AST::Command>);
     DeprecatedString resolve_path(DeprecatedString) const;
-    DeprecatedString resolve_alias(StringView) const;
+    Optional<DeprecatedString> resolve_alias(StringView) const;
 
     static bool has_history_event(StringView);
 

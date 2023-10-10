@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil("/tmp/portal/window", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    DeprecatedString adapter;
+    StringView adapter;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(adapter, "Adapter to display settings for", "adapter", Core::ArgsParser::Required::No);

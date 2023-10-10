@@ -47,7 +47,7 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(Debug::Proces
         if (frame_index > 0)
             --current_instruction;
         DeprecatedString name = lib->debug_info->elf().symbolicate(current_instruction - lib->base_address);
-        if (name.is_null()) {
+        if (name.is_empty()) {
             dbgln("BacktraceModel: couldn't find containing function for address: {:p} (library={})", current_instruction, lib->name);
             name = "<missing>";
         }

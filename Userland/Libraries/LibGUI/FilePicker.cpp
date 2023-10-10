@@ -48,9 +48,10 @@ ErrorOr<Optional<String>> FilePicker::get_filepath(Badge<FileSystemAccessServer:
     ConnectionToWindowServer::the().set_window_parent_from_client(window_server_client_id, parent_window_id, picker->window_id());
 
     if (picker->exec() == ExecResult::OK) {
-        auto file_path = TRY(String::from_deprecated_string(picker->selected_file()));
-        if (file_path.is_empty())
+        auto file_path = TRY(picker->selected_file().map([](auto& v) { return String::from_deprecated_string(v); }));
+        if (file_path.has_value() && file_path->is_empty())
             return Optional<String> {};
+
         return file_path;
     }
     return Optional<String> {};
@@ -60,17 +61,12 @@ Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, 
 {
     auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position, move(allowed_file_types));
 
-    if (!window_title.is_null())
+    if (!window_title.is_empty())
         picker->set_title(window_title);
 
-    if (picker->exec() == ExecResult::OK) {
-        DeprecatedString file_path = picker->selected_file();
+    if (picker->exec() == ExecResult::OK)
+        return picker->selected_file();
 
-        if (file_path.is_null())
-            return {};
-
-        return file_path;
-    }
     return {};
 }
 
@@ -78,14 +74,8 @@ Optional<DeprecatedString> FilePicker::get_save_filepath(Window* parent_window, 
 {
     auto picker = FilePicker::construct(parent_window, Mode::Save, DeprecatedString::formatted("{}.{}", title, extension), path, screen_position);
 
-    if (picker->exec() == ExecResult::OK) {
-        DeprecatedString file_path = picker->selected_file();
-
-        if (file_path.is_null())
-            return {};
-
-        return file_path;
-    }
+    if (picker->exec() == ExecResult::OK)
+        return picker->selected_file();
     return {};
 }
 

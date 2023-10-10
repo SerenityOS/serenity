@@ -89,9 +89,11 @@ void AbstractView::model_did_update(unsigned int flags)
             m_drop_candidate_index = {};
         selection().remove_all_matching([this](auto& index) { return !model()->is_within_range(index); });
 
-        auto index = find_next_search_match(m_highlighted_search.view());
-        if (index.is_valid())
-            highlight_search(index);
+        if (m_highlighted_search.has_value()) {
+            auto index = find_next_search_match(m_highlighted_search->view());
+            if (index.is_valid())
+                highlight_search(index);
+        }
     }
     m_selection_start_index = {};
 }
@@ -592,11 +594,11 @@ void AbstractView::keydown_event(KeyEvent& event)
 
     if (is_searchable()) {
         if (event.key() == KeyCode::Key_Backspace) {
-            if (!m_highlighted_search.is_null()) {
+            if (m_highlighted_search.has_value()) {
                 // if (event.modifiers() == Mod_Ctrl) {
                 //  TODO: delete last word
                 // }
-                Utf8View view(m_highlighted_search);
+                Utf8View view(*m_highlighted_search);
                 size_t n_code_points = view.length();
                 if (n_code_points > 1) {
                     n_code_points--;
@@ -621,7 +623,7 @@ void AbstractView::keydown_event(KeyEvent& event)
                 return;
             }
         } else if (event.key() == KeyCode::Key_Escape) {
-            if (!m_highlighted_search.is_null()) {
+            if (m_highlighted_search.has_value()) {
                 stop_highlighted_search_timer();
 
                 event.accept();
@@ -629,7 +631,8 @@ void AbstractView::keydown_event(KeyEvent& event)
             }
         } else if (event.key() != KeyCode::Key_Tab && !event.ctrl() && !event.alt() && event.code_point() != 0) {
             StringBuilder sb;
-            sb.append(m_highlighted_search);
+            if (m_highlighted_search.has_value())
+                sb.append(*m_highlighted_search);
             sb.append_code_point(event.code_point());
 
             auto index = find_next_search_match(sb.string_view());
@@ -650,7 +653,7 @@ void AbstractView::keydown_event(KeyEvent& event)
 
 void AbstractView::stop_highlighted_search_timer()
 {
-    m_highlighted_search = nullptr;
+    m_highlighted_search.clear();
     if (m_highlighted_search_timer)
         m_highlighted_search_timer->stop();
     if (m_highlighted_search_index.is_valid()) {
@@ -723,8 +726,8 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index
         text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
 
     if (index == m_highlighted_search_index) {
-        auto const byte_offset = search_highlighting_offset < m_highlighted_search.length() ? 0 : item_text.length();
-        auto const byte_length = min(item_text.length() - byte_offset, m_highlighted_search.length() - search_highlighting_offset);
+        auto const byte_offset = search_highlighting_offset < m_highlighted_search.value_or("").length() ? 0 : item_text.length();
+        auto const byte_length = min(item_text.length() - byte_offset, m_highlighted_search.value_or("").length() - search_highlighting_offset);
         Utf8View const searching_text(item_text.substring_view(byte_offset, byte_length));
 
         // Highlight the text background first

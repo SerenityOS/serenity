@@ -129,7 +129,7 @@ StringView GenericLexer::consume_quoted_string(char escape_char)
 }
 
 #ifndef KERNEL
-DeprecatedString GenericLexer::consume_and_unescape_string(char escape_char)
+Optional<DeprecatedString> GenericLexer::consume_and_unescape_string(char escape_char)
 {
     auto view = consume_quoted_string(escape_char);
     if (view.is_null())

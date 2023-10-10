@@ -69,7 +69,7 @@ Link::Link(DeprecatedString text, Document const& document)
         m_name = url_string.substring_view(offset, url_string.length() - offset);
     }
     m_url = document.url().complete_url(url);
-    if (m_name.is_null())
+    if (m_name.is_empty())
         m_name = m_url.to_deprecated_string();
 }
 

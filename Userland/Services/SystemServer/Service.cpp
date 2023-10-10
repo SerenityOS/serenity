@@ -156,8 +156,8 @@ ErrorOr<void> Service::spawn(int socket_fd)
 
     if (pid == 0) {
         // We are the child.
-        if (!m_working_directory.is_null())
-            TRY(Core::System::chdir(m_working_directory));
+        if (m_working_directory.has_value())
+            TRY(Core::System::chdir(*m_working_directory));
 
         struct sched_param p;
         p.sched_priority = m_priority;
@@ -167,9 +167,9 @@ ErrorOr<void> Service::spawn(int socket_fd)
             VERIFY_NOT_REACHED();
         }
 
-        if (!m_stdio_file_path.is_null()) {
+        if (m_stdio_file_path.has_value()) {
             close(STDIN_FILENO);
-            auto const fd = TRY(Core::System::open(m_stdio_file_path, O_RDWR, 0));
+            auto const fd = TRY(Core::System::open(*m_stdio_file_path, O_RDWR, 0));
             VERIFY(fd == 0);
 
             dup2(STDIN_FILENO, STDOUT_FILENO);
@@ -288,13 +288,13 @@ Service::Service(Core::ConfigFile const& config, StringView name)
 
     set_name(name);
     m_executable_path = config.read_entry(name, "Executable", DeprecatedString::formatted("/bin/{}", this->name()));
-    m_extra_arguments = config.read_entry(name, "Arguments", "");
-    m_stdio_file_path = config.read_entry(name, "StdIO");
+    m_extra_arguments = config.read_entry(name, "Arguments");
+    m_stdio_file_path = config.read_entry_optional(name, "StdIO");
 
-    DeprecatedString prio = config.read_entry(name, "Priority");
+    auto prio = config.read_entry_optional(name, "Priority");
     if (prio == "low")
         m_priority = 10;
-    else if (prio == "normal" || prio.is_null())
+    else if (prio == "normal" || !prio.has_value())
         m_priority = 30;
     else if (prio == "high")
         m_priority = 50;
@@ -304,9 +304,9 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     m_keep_alive = config.read_bool_entry(name, "KeepAlive");
     m_lazy = config.read_bool_entry(name, "Lazy");
 
-    m_user = config.read_entry(name, "User");
-    if (!m_user.is_null()) {
-        auto result = Core::Account::from_name(m_user, Core::Account::Read::PasswdOnly);
+    m_user = config.read_entry_optional(name, "User");
+    if (m_user.has_value()) {
+        auto result = Core::Account::from_name(*m_user, Core::Account::Read::PasswdOnly);
         if (result.is_error()) {
             warnln("Failed to resolve user {}: {}", m_user, result.error());
         } else {
@@ -315,7 +315,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
         }
     }
 
-    m_working_directory = config.read_entry(name, "WorkingDirectory");
+    m_working_directory = config.read_entry_optional(name, "WorkingDirectory");
     m_environment = config.read_entry(name, "Environment");
     m_system_modes = config.read_entry(name, "SystemModes", "graphical").split(',');
     m_multi_instance = config.read_bool_entry(name, "MultiInstance");
@@ -324,7 +324,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     DeprecatedString socket_entry = config.read_entry(name, "Socket");
     DeprecatedString socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
 
-    if (!socket_entry.is_null()) {
+    if (!socket_entry.is_empty()) {
         Vector<DeprecatedString> socket_paths = socket_entry.split(',');
         Vector<DeprecatedString> socket_perms = socket_permissions_entry.split(',');
         m_sockets.ensure_capacity(socket_paths.size());

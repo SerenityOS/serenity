@@ -178,12 +178,12 @@ bool StringView::equals_ignoring_ascii_case(StringView other) const
 #ifndef KERNEL
 DeprecatedString StringView::to_lowercase_string() const
 {
-    return StringImpl::create_lowercased(characters_without_null_termination(), length());
+    return StringImpl::create_lowercased(characters_without_null_termination(), length()).release_nonnull();
 }
 
 DeprecatedString StringView::to_uppercase_string() const
 {
-    return StringImpl::create_uppercased(characters_without_null_termination(), length());
+    return StringImpl::create_uppercased(characters_without_null_termination(), length()).release_nonnull();
 }
 
 DeprecatedString StringView::to_titlecase_string() const

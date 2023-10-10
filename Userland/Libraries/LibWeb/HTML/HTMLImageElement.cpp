@@ -95,15 +95,15 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
-void HTMLImageElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLImageElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     HTMLElement::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::crossorigin) {
-        if (value.is_null()) {
+        if (!value.has_value()) {
             m_cors_setting = CORSSettingAttribute::NoCORS;
         } else {
-            m_cors_setting = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+            m_cors_setting = cors_setting_attribute_from_keyword(String::from_deprecated_string(*value).release_value_but_fixme_should_propagate_errors());
         }
     }
 
@@ -255,7 +255,7 @@ bool HTMLImageElement::complete() const
         return true;
 
     // - The srcset attribute is omitted and the src attribute's value is the empty string.
-    if (!has_attribute(HTML::AttributeNames::srcset) && deprecated_attribute(HTML::AttributeNames::src) == ""sv)
+    if (!has_attribute(HTML::AttributeNames::srcset) && attribute(HTML::AttributeNames::src).value().is_empty())
         return true;
 
     // - The img element's current request's state is completely available and its pending request is null.
@@ -273,7 +273,7 @@ Optional<ARIA::Role> HTMLImageElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-img
     // https://www.w3.org/TR/html-aria/#el-img-no-alt
-    if (alt().is_null() || !alt().is_empty())
+    if (!alt().is_empty())
         return ARIA::Role::img;
     // https://www.w3.org/TR/html-aria/#el-img-empty-alt
     return ARIA::Role::presentation;
@@ -870,38 +870,38 @@ static void update_the_source_set(DOM::Element& element)
 
             // 4. If el is an img element that has a srcset attribute, then set srcset to that attribute's value.
             if (is<HTMLImageElement>(element)) {
-                if (auto srcset_value = element.deprecated_attribute(HTML::AttributeNames::srcset); !srcset_value.is_null())
-                    srcset = String::from_deprecated_string(srcset_value).release_value_but_fixme_should_propagate_errors();
+                if (auto srcset_value = element.attribute(HTML::AttributeNames::srcset); srcset_value.has_value())
+                    srcset = srcset_value.release_value();
             }
 
             // 5. Otherwise, if el is a link element that has an imagesrcset attribute, then set srcset to that attribute's value.
             else if (is<HTMLLinkElement>(element)) {
-                if (auto imagesrcset_value = element.deprecated_attribute(HTML::AttributeNames::imagesrcset); !imagesrcset_value.is_null())
-                    srcset = String::from_deprecated_string(imagesrcset_value).release_value_but_fixme_should_propagate_errors();
+                if (auto imagesrcset_value = element.attribute(HTML::AttributeNames::imagesrcset); imagesrcset_value.has_value())
+                    srcset = imagesrcset_value.release_value();
             }
 
             // 6. If el is an img element that has a sizes attribute, then set sizes to that attribute's value.
             if (is<HTMLImageElement>(element)) {
-                if (auto sizes_value = element.deprecated_attribute(HTML::AttributeNames::sizes); !sizes_value.is_null())
-                    sizes = String::from_deprecated_string(sizes_value).release_value_but_fixme_should_propagate_errors();
+                if (auto sizes_value = element.attribute(HTML::AttributeNames::sizes); sizes_value.has_value())
+                    sizes = sizes_value.release_value();
             }
 
             // 7. Otherwise, if el is a link element that has an imagesizes attribute, then set sizes to that attribute's value.
             else if (is<HTMLLinkElement>(element)) {
-                if (auto imagesizes_value = element.deprecated_attribute(HTML::AttributeNames::imagesizes); !imagesizes_value.is_null())
-                    sizes = String::from_deprecated_string(imagesizes_value).release_value_but_fixme_should_propagate_errors();
+                if (auto imagesizes_value = element.attribute(HTML::AttributeNames::imagesizes); imagesizes_value.has_value())
+                    sizes = imagesizes_value.release_value();
             }
 
             // 8. If el is an img element that has a src attribute, then set default source to that attribute's value.
             if (is<HTMLImageElement>(element)) {
-                if (auto src_value = element.deprecated_attribute(HTML::AttributeNames::src); !src_value.is_null())
-                    default_source = String::from_deprecated_string(src_value).release_value_but_fixme_should_propagate_errors();
+                if (auto src_value = element.attribute(HTML::AttributeNames::src); src_value.has_value())
+                    default_source = src_value.release_value();
             }
 
             // 9. Otherwise, if el is a link element that has an href attribute, then set default source to that attribute's value.
             else if (is<HTMLLinkElement>(element)) {
-                if (auto href_value = element.deprecated_attribute(HTML::AttributeNames::href); !href_value.is_null())
-                    default_source = String::from_deprecated_string(href_value).release_value_but_fixme_should_propagate_errors();
+                if (auto href_value = element.attribute(HTML::AttributeNames::href); href_value.has_value())
+                    default_source = href_value.release_value();
             }
 
             // 10. Let el's source set be the result of creating a source set given default source, srcset, and sizes.

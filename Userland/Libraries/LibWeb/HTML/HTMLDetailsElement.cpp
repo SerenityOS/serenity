@@ -41,14 +41,14 @@ void HTMLDetailsElement::initialize(JS::Realm& realm)
     create_shadow_tree(realm).release_value_but_fixme_should_propagate_errors();
 }
 
-void HTMLDetailsElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLDetailsElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     Base::attribute_changed(name, value);
 
     // https://html.spec.whatwg.org/multipage/interactive-elements.html#details-notification-task-steps
     if (name == HTML::AttributeNames::open) {
         // 1. If the open attribute is added, queue a details toggle event task given the details element, "closed", and "open".
-        if (!value.is_null()) {
+        if (value.has_value()) {
             queue_a_details_toggle_event_task("closed"_string, "open"_string);
         }
         // 2. Otherwise, queue a details toggle event task given the details element, "open", and "closed".

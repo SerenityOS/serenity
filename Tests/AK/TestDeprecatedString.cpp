@@ -14,11 +14,9 @@
 
 TEST_CASE(construct_empty)
 {
-    EXPECT(DeprecatedString().is_null());
     EXPECT(DeprecatedString().is_empty());
-    EXPECT(!DeprecatedString().characters());
+    EXPECT(DeprecatedString().characters() != nullptr);
 
-    EXPECT(!DeprecatedString("").is_null());
     EXPECT(DeprecatedString("").is_empty());
     EXPECT(DeprecatedString("").characters() != nullptr);
 
@@ -29,7 +27,6 @@ TEST_CASE(construct_contents)
 {
     DeprecatedString test_string = "ABCDEF";
     EXPECT(!test_string.is_empty());
-    EXPECT(!test_string.is_null());
     EXPECT_EQ(test_string.length(), 6u);
     EXPECT_EQ(test_string.length(), strlen(test_string.characters()));
     EXPECT(test_string.characters() != nullptr);
@@ -42,7 +39,7 @@ TEST_CASE(construct_contents)
 
 TEST_CASE(equal)
 {
-    EXPECT_NE(DeprecatedString::empty(), DeprecatedString {});
+    EXPECT_EQ(DeprecatedString::empty(), DeprecatedString {});
 }
 
 TEST_CASE(compare)
@@ -116,7 +113,7 @@ TEST_CASE(move_string)
     auto test_string_copy = test_string;
     auto test_string_move = move(test_string_copy);
     EXPECT_EQ(test_string, test_string_move);
-    EXPECT(test_string_copy.is_null());
+    EXPECT(test_string_copy.is_empty());
 }
 
 TEST_CASE(repeated)
@@ -253,7 +250,6 @@ TEST_CASE(builder_zero_initial_capacity)
     StringBuilder builder(0);
     builder.append(""sv);
     auto built = builder.to_deprecated_string();
-    EXPECT_EQ(built.is_null(), false);
     EXPECT_EQ(built.length(), 0u);
 }
 

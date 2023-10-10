@@ -30,7 +30,7 @@ static DeprecatedString generate_random_filename(DeprecatedString const& pattern
     return new_filename.to_deprecated_string();
 }
 
-static ErrorOr<DeprecatedString> make_temp(DeprecatedString const& pattern, bool directory, bool dry_run)
+static ErrorOr<Optional<DeprecatedString>> make_temp(DeprecatedString const& pattern, bool directory, bool dry_run)
 {
     for (int i = 0; i < 100; ++i) {
         auto path = generate_random_filename(pattern);
@@ -49,7 +49,7 @@ static ErrorOr<DeprecatedString> make_temp(DeprecatedString const& pattern, bool
             }
         }
     }
-    return DeprecatedString {};
+    return OptionalNone {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -100,7 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto target_path = LexicalPath::join(final_target_directory->to_deprecated_string(), final_file_template->to_deprecated_string()).string();
 
     auto final_path = TRY(make_temp(target_path, create_directory, dry_run));
-    if (final_path.is_null()) {
+    if (!final_path.has_value()) {
         if (!quiet) {
             if (create_directory)
                 warnln("Failed to create directory via template {}", target_path.characters());
@@ -110,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    outln("{}", final_path);
+    outln("{}", *final_path);
 
     return 0;
 }

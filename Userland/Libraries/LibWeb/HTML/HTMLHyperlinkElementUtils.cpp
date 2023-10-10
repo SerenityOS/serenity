@@ -29,14 +29,14 @@ void HTMLHyperlinkElementUtils::set_the_url()
 {
     // 1. If this element's href content attribute is absent, set this element's url to null.
     auto href_content_attribute = hyperlink_element_utils_href();
-    if (href_content_attribute.is_null()) {
+    if (!href_content_attribute.has_value()) {
         m_url = {};
         return;
     }
 
     // 2. Otherwise, parse this element's href content attribute value relative to this element's node document.
     //    If parsing is successful, set this element's url to the result; otherwise, set this element's url to null.
-    m_url = hyperlink_element_utils_document().parse_url(href_content_attribute);
+    m_url = hyperlink_element_utils_document().parse_url(*href_content_attribute);
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-origin
@@ -429,12 +429,12 @@ DeprecatedString HTMLHyperlinkElementUtils::href() const
 
     // 3. If url is null and this element has no href content attribute, return the empty string.
     auto href_content_attribute = hyperlink_element_utils_href();
-    if (!url.has_value() && href_content_attribute.is_null())
+    if (!url.has_value() && !href_content_attribute.has_value())
         return DeprecatedString::empty();
 
     // 4. Otherwise, if url is null, return this element's href content attribute's value.
     if (!url->is_valid())
-        return href_content_attribute;
+        return href_content_attribute->to_deprecated_string();
 
     // 5. Return url, serialized.
     return url->serialize();

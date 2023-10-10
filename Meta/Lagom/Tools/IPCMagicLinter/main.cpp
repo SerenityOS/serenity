@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (!line.starts_with("endpoint "sv))
                     continue;
                 auto line_endpoint_name = line.substring_view("endpoint "sv.length());
-                if (!endpoint_name.is_null()) {
+                if (!endpoint_name.is_empty()) {
                     // Note: If there are three or more endpoints defined in a file, these errors will look a bit wonky.
                     // However, that's fine, because it shouldn't happen in the first place.
                     warnln("Error: Multiple endpoints in file '{}': Found {} and {}", filename, endpoint_name, line_endpoint_name);
@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             had_errors = true;
             continue; // next file
         }
-        if (endpoint_name.is_null()) {
+        if (endpoint_name.is_empty()) {
             // If this happens, this file probably needs to parse the endpoint name more carefully.
             warnln("Error: Could not detect endpoint name in file '{}'", filename);
             had_errors = true;

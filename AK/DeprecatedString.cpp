@@ -28,6 +28,9 @@ bool DeprecatedString::operator==(DeprecatedString const& other) const
 
 bool DeprecatedString::operator==(StringView other) const
 {
+    if (other.is_null())
+        return is_empty();
+
     return view() == other;
 }
 
@@ -55,9 +58,7 @@ bool DeprecatedString::copy_characters_to_buffer(char* buffer, size_t buffer_siz
 
 DeprecatedString DeprecatedString::isolated_copy() const
 {
-    if (!m_impl)
-        return {};
-    if (!m_impl->length())
+    if (m_impl->length() == 0)
         return empty();
     char* buffer;
     auto impl = StringImpl::create_uninitialized(length(), buffer);
@@ -69,7 +70,6 @@ DeprecatedString DeprecatedString::substring(size_t start, size_t length) const
 {
     if (!length)
         return DeprecatedString::empty();
-    VERIFY(m_impl);
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
     return { characters() + start, length };
@@ -77,14 +77,12 @@ DeprecatedString DeprecatedString::substring(size_t start, size_t length) const
 
 DeprecatedString DeprecatedString::substring(size_t start) const
 {
-    VERIFY(m_impl);
     VERIFY(start <= length());
     return { characters() + start, length() - start };
 }
 
 StringView DeprecatedString::substring_view(size_t start, size_t length) const
 {
-    VERIFY(m_impl);
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
     return { characters() + start, length };
@@ -92,7 +90,6 @@ StringView DeprecatedString::substring_view(size_t start, size_t length) const
 
 StringView DeprecatedString::substring_view(size_t start) const
 {
-    VERIFY(m_impl);
     VERIFY(start <= length());
     return { characters() + start, length() - start };
 }
@@ -157,8 +154,6 @@ Vector<StringView> DeprecatedString::split_view(char const separator, SplitBehav
 
 ByteBuffer DeprecatedString::to_byte_buffer() const
 {
-    if (!m_impl)
-        return {};
     // FIXME: Handle OOM failure.
     return ByteBuffer::copy(bytes()).release_value_but_fixme_should_propagate_errors();
 }
@@ -379,21 +374,17 @@ DeprecatedString escape_html_entities(StringView html)
 }
 
 DeprecatedString::DeprecatedString(DeprecatedFlyString const& string)
-    : m_impl(string.impl())
+    : m_impl(*string.impl())
 {
 }
 
 DeprecatedString DeprecatedString::to_lowercase() const
 {
-    if (!m_impl)
-        return {};
     return m_impl->to_lowercase();
 }
 
 DeprecatedString DeprecatedString::to_uppercase() const
 {
-    if (!m_impl)
-        return {};
     return m_impl->to_uppercase();
 }
 
@@ -414,6 +405,9 @@ DeprecatedString DeprecatedString::invert_case() const
 
 bool DeprecatedString::operator==(char const* cstring) const
 {
+    if (!cstring)
+        return is_empty();
+
     return view() == cstring;
 }
 
@@ -438,7 +432,7 @@ ErrorOr<DeprecatedString> DeprecatedString::from_utf8(ReadonlyBytes bytes)
 {
     if (!Utf8View(bytes).validate())
         return Error::from_string_literal("DeprecatedString::from_utf8: Input was not valid UTF-8");
-    return DeprecatedString { StringImpl::create(bytes) };
+    return DeprecatedString { *StringImpl::create(bytes) };
 }
 
 }

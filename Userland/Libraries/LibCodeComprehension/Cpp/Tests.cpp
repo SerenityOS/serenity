@@ -52,8 +52,8 @@ public:
     virtual Optional<DeprecatedString> get_or_read_from_filesystem(StringView filename) const override
     {
         DeprecatedString target_filename = filename;
-        if (!project_root().is_null() && filename.starts_with(project_root())) {
-            target_filename = LexicalPath::relative_path(filename, project_root());
+        if (project_root().has_value() && filename.starts_with(*project_root())) {
+            target_filename = LexicalPath::relative_path(filename, *project_root());
         }
         return m_map.get(target_filename);
     }

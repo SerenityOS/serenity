@@ -202,10 +202,10 @@ void TableView::keydown_event(KeyEvent& event)
                 if (selection().size() > 1) {
                     selection().for_each_index([&](GUI::ModelIndex& index) {
                         begin_editing(index);
-                        m_editing_delegate->set_value(DeprecatedString {});
+                        m_editing_delegate->set_value(GUI::Variant {});
                     });
                 } else {
-                    m_editing_delegate->set_value(DeprecatedString {});
+                    m_editing_delegate->set_value(GUI::Variant {});
                 }
             } else if (is_backspace) {
                 m_editing_delegate->set_value(DeprecatedString::empty());

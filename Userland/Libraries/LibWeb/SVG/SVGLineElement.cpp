@@ -22,21 +22,21 @@ void SVGLineElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLineElementPrototype>(realm, "SVGLineElement"));
 }
 
-void SVGLineElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void SVGLineElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::x1) {
-        m_x1 = AttributeParser::parse_coordinate(value);
+        m_x1 = AttributeParser::parse_coordinate(value.value_or(""));
         m_path.clear();
     } else if (name == SVG::AttributeNames::y1) {
-        m_y1 = AttributeParser::parse_coordinate(value);
+        m_y1 = AttributeParser::parse_coordinate(value.value_or(""));
         m_path.clear();
     } else if (name == SVG::AttributeNames::x2) {
-        m_x2 = AttributeParser::parse_coordinate(value);
+        m_x2 = AttributeParser::parse_coordinate(value.value_or(""));
         m_path.clear();
     } else if (name == SVG::AttributeNames::y2) {
-        m_y2 = AttributeParser::parse_coordinate(value);
+        m_y2 = AttributeParser::parse_coordinate(value.value_or(""));
         m_path.clear();
     }
 }

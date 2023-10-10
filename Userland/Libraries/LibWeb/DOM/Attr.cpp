@@ -92,7 +92,7 @@ void Attr::change_attribute(String value)
 }
 
 // https://dom.spec.whatwg.org/#handle-attribute-changes
-void Attr::handle_attribute_changes(Element& element, DeprecatedString const& old_value, DeprecatedString const& new_value)
+void Attr::handle_attribute_changes(Element& element, Optional<DeprecatedString> old_value, Optional<DeprecatedString> new_value)
 {
     DeprecatedString deprecated_namespace_uri;
     if (namespace_uri().has_value())
@@ -107,8 +107,8 @@ void Attr::handle_attribute_changes(Element& element, DeprecatedString const& ol
 
         JS::MarkedVector<JS::Value> arguments { vm.heap() };
         arguments.append(JS::PrimitiveString::create(vm, local_name()));
-        arguments.append(old_value.is_null() ? JS::js_null() : JS::PrimitiveString::create(vm, old_value));
-        arguments.append(new_value.is_null() ? JS::js_null() : JS::PrimitiveString::create(vm, new_value));
+        arguments.append(!old_value.has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, old_value.release_value()));
+        arguments.append(!new_value.has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, new_value.release_value()));
         arguments.append(!namespace_uri().has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, namespace_uri().value()));
 
         element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::attributeChangedCallback, move(arguments));

@@ -64,7 +64,7 @@ TEST_CASE(range_loop)
 
     int loop_counter = 0;
     for (auto& it : strings) {
-        EXPECT_EQ(it.is_null(), false);
+        EXPECT_EQ(it.is_empty(), false);
         ++loop_counter;
     }
     EXPECT_EQ(loop_counter, 3);

@@ -90,9 +90,6 @@ bool LexicalPath::is_child_of(LexicalPath const& possible_parent) const
 
 DeprecatedString LexicalPath::canonicalized_path(DeprecatedString path)
 {
-    if (path.is_null())
-        return {};
-
     // NOTE: We never allow an empty m_string, if it's empty, we just set it to '.'.
     if (path.is_empty())
         return ".";

@@ -249,10 +249,6 @@ void Job::on_socket_connected()
             auto line = maybe_line.release_value();
 
             dbgln_if(JOB_DEBUG, "Job {} read line of length {}", m_request.url(), line.length());
-            if (line.is_null()) {
-                dbgln("Job: Expected HTTP status");
-                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
-            }
             auto parts = line.split_view(' ');
             if (parts.size() < 2) {
                 dbgln("Job: Expected 2-part or 3-part HTTP status line, got '{}'", line);
@@ -302,16 +298,6 @@ void Job::on_socket_connected()
             }
             auto line = maybe_line.release_value();
 
-            if (line.is_null()) {
-                if (m_state == State::Trailers) {
-                    // Some servers like to send two ending chunks
-                    // use this fact as an excuse to ignore anything after the last chunk
-                    // that is not a valid trailing header.
-                    return finish_up();
-                }
-                dbgln("Job: Expected HTTP header");
-                return did_fail(Core::NetworkJob::Error::ProtocolFailed);
-            }
             if (line.is_empty()) {
                 if (m_state == State::Trailers) {
                     return finish_up();

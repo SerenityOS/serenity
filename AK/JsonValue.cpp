@@ -174,13 +174,9 @@ JsonValue::JsonValue(double value)
 
 JsonValue::JsonValue(DeprecatedString const& value)
 {
-    if (value.is_null()) {
-        m_type = Type::Null;
-    } else {
-        m_type = Type::String;
-        m_value.as_string = const_cast<StringImpl*>(value.impl());
-        m_value.as_string->ref();
-    }
+    m_type = Type::String;
+    m_value.as_string = const_cast<StringImpl*>(value.impl());
+    m_value.as_string->ref();
 }
 
 JsonValue::JsonValue(StringView value)

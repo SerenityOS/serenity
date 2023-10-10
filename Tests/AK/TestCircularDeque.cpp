@@ -41,7 +41,7 @@ TEST_CASE(enqueue_begin_being_moved_from)
 
     DeprecatedString str { "test" };
     strings.enqueue_begin(move(str));
-    EXPECT(str.is_null());
+    EXPECT(str.is_empty());
 }
 
 TEST_CASE(deque_end)

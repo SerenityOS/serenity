@@ -38,7 +38,7 @@ struct Attribute {
 
 #ifndef KERNEL
     DeprecatedString href;
-    DeprecatedString href_id;
+    Optional<DeprecatedString> href_id;
 #endif
 
     enum class Flags : u8 {

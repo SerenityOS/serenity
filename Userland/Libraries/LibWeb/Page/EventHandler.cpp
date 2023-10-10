@@ -533,8 +533,8 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
 
         if (hovered_node_changed) {
             JS::GCPtr<HTML::HTMLElement const> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
-            if (hovered_html_element && !hovered_html_element->title().is_null()) {
-                page->client().page_did_enter_tooltip_area(m_browsing_context->to_top_level_position(position), hovered_html_element->title());
+            if (hovered_html_element && hovered_html_element->title().has_value()) {
+                page->client().page_did_enter_tooltip_area(m_browsing_context->to_top_level_position(position), hovered_html_element->title()->to_deprecated_string());
             } else {
                 page->client().page_did_leave_tooltip_area();
             }

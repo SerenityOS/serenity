@@ -210,7 +210,7 @@ Vector<CodeComprehension::AutocompleteResultEntry> CppComprehensionEngine::autoc
 {
     VERIFY(parent.object());
     auto type = type_of(document, *parent.object());
-    if (type.is_null()) {
+    if (type.is_empty()) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "Could not infer type of object");
         return {};
     }
@@ -385,7 +385,7 @@ DeprecatedString CppComprehensionEngine::document_path_from_include_path(StringV
     };
 
     auto result = document_path_for_library_include(include_path);
-    if (result.is_null())
+    if (result.is_empty())
         result = document_path_for_user_defined_include(include_path);
 
     return result;
@@ -703,7 +703,7 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
             partial_include = partial_include.substring_view(0, partial_include.length() - 1).trim_whitespace();
         }
     } else if (partial_include.starts_with('"')) {
-        include_root = filedb().project_root();
+        include_root = filedb().project_root().value_or("");
         if (partial_include.length() > 1 && partial_include.ends_with('\"')) {
             already_has_suffix = true;
             partial_include = partial_include.substring_view(0, partial_include.length() - 1).trim_whitespace();

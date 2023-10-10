@@ -191,13 +191,11 @@ URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString 
 
     URL url;
     url.set_scheme("file"_string);
-    // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
-    //       This is because a file URL always needs a non-null hostname.
-    url.set_host(hostname.is_null() || hostname == "localhost" ? String {} : String::from_deprecated_string(hostname).release_value_but_fixme_should_propagate_errors());
+    url.set_host(hostname == "localhost" ? String {} : String::from_deprecated_string(hostname).release_value_but_fixme_should_propagate_errors());
     url.set_paths(lexical_path.parts());
     if (path.ends_with('/'))
         url.append_slash();
-    if (!fragment.is_null())
+    if (!fragment.is_empty())
         url.set_fragment(String::from_deprecated_string(fragment).release_value_but_fixme_should_propagate_errors());
     return url;
 }
@@ -208,14 +206,12 @@ URL URL::create_with_help_scheme(DeprecatedString const& path, DeprecatedString 
 
     URL url;
     url.set_scheme("help"_string);
-    // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
-    //       This is because a file URL always needs a non-null hostname.
-    url.set_host(hostname.is_null() || hostname == "localhost" ? String {} : String::from_deprecated_string(hostname).release_value_but_fixme_should_propagate_errors());
+    url.set_host(hostname == "localhost" ? String {} : String::from_deprecated_string(hostname).release_value_but_fixme_should_propagate_errors());
 
     url.set_paths(lexical_path.parts());
     if (path.ends_with('/'))
         url.append_slash();
-    if (!fragment.is_null())
+    if (!fragment.is_empty())
         url.set_fragment(String::from_deprecated_string(fragment).release_value_but_fixme_should_propagate_errors());
     return url;
 }

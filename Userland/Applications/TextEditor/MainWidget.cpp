@@ -279,7 +279,7 @@ MainWidget::MainWidget()
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         auto extension = m_extension;
-        if (extension.is_null() && m_editor->syntax_highlighter())
+        if (extension.is_empty() && m_editor->syntax_highlighter())
             extension = Syntax::common_language_extension(m_editor->syntax_highlighter()->language());
 
         auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, extension);

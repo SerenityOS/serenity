@@ -42,7 +42,11 @@ public:
 
     size_t num_groups() const { return m_groups.size(); }
 
-    DeprecatedString read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value = DeprecatedString()) const;
+    DeprecatedString read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value = {}) const
+    {
+        return read_entry_optional(group, key).value_or(default_value);
+    }
+    Optional<DeprecatedString> read_entry_optional(DeprecatedString const& group, DeprecatedString const& key) const;
     bool read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value = false) const;
 
     template<Integral T = int>
@@ -52,9 +56,9 @@ public:
             return default_value;
 
         if constexpr (IsSigned<T>)
-            return read_entry(group, key).to_int<T>().value_or(default_value);
+            return read_entry(group, key, "").to_int<T>().value_or(default_value);
         else
-            return read_entry(group, key).to_uint<T>().value_or(default_value);
+            return read_entry(group, key, "").to_uint<T>().value_or(default_value);
     }
 
     void write_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value);

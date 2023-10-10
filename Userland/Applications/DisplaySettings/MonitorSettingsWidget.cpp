@@ -141,7 +141,7 @@ static ErrorOr<String> display_name_from_edid(EDID::Parser const& edid)
     auto product_name = edid.display_product_name();
 
     auto build_manufacturer_product_name = [&]() -> ErrorOr<String> {
-        if (product_name.is_null() || product_name.is_empty())
+        if (product_name.is_empty())
             return TRY(String::from_deprecated_string(manufacturer_name));
         return String::formatted("{} {}", manufacturer_name, product_name);
     };

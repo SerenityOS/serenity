@@ -337,7 +337,7 @@ static Result<TestMetadata, DeprecatedString> extract_metadata(StringView source
                     failed_message = "Failed to find phase in negative attributes";
                     break;
                 }
-                if (metadata.type.is_null()) {
+                if (metadata.type.is_empty()) {
                     failed_message = "Failed to find type in negative attributes";
                     break;
                 }
@@ -640,7 +640,7 @@ int main(int argc, char** argv)
     auto collect_output = [&] {
         fflush(stdout);
         auto nread = read(stdout_pipe[0], buffer, BUFFER_SIZE);
-        DeprecatedString value;
+        Optional<DeprecatedString> value;
 
         if (nread > 0) {
             value = DeprecatedString { buffer, static_cast<size_t>(nread) };
@@ -743,15 +743,16 @@ int main(int argc, char** argv)
             auto result = run_test(original_contents, path, metadata);
             DISARM_TIMER();
 
-            DeprecatedString first_output = collect_output();
-            if (!first_output.is_null())
-                result_object.set("output", first_output);
+            auto first_output = collect_output();
+            if (first_output.has_value())
+                result_object.set("output", *first_output);
 
             passed = verify_test(result, metadata, result_object);
+            auto output = first_output.value_or("");
             if (metadata.is_async && !s_parse_only) {
-                if (!first_output.contains("Test262:AsyncTestComplete"sv) || first_output.contains("Test262:AsyncTestFailure"sv)) {
+                if (!output.contains("Test262:AsyncTestComplete"sv) || output.contains("Test262:AsyncTestFailure"sv)) {
                     result_object.set("async_fail", true);
-                    if (first_output.is_null())
+                    if (!first_output.has_value())
                         result_object.set("output", JsonValue { AK::JsonValue::Type::Null });
 
                     passed = false;
@@ -766,15 +767,17 @@ int main(int argc, char** argv)
             auto result = run_test(with_strict, path, metadata);
             DISARM_TIMER();
 
-            DeprecatedString first_output = collect_output();
-            if (!first_output.is_null())
-                result_object.set("strict_output", first_output);
+            auto first_output = collect_output();
+            if (first_output.has_value())
+                result_object.set("strict_output", *first_output);
 
             passed = verify_test(result, metadata, result_object);
+            auto output = first_output.value_or("");
+
             if (metadata.is_async && !s_parse_only) {
-                if (!first_output.contains("Test262:AsyncTestComplete"sv) || first_output.contains("Test262:AsyncTestFailure"sv)) {
+                if (!output.contains("Test262:AsyncTestComplete"sv) || output.contains("Test262:AsyncTestFailure"sv)) {
                     result_object.set("async_fail", true);
-                    if (first_output.is_null())
+                    if (!first_output.has_value())
                         result_object.set("output", JsonValue { AK::JsonValue::Type::Null });
 
                     passed = false;

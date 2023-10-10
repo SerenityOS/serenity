@@ -199,7 +199,7 @@ private:
 
     RefPtr<Model> m_model;
     ModelSelection m_selection;
-    DeprecatedString m_highlighted_search;
+    Optional<DeprecatedString> m_highlighted_search;
     RefPtr<Core::Timer> m_highlighted_search_timer;
     SelectionBehavior m_selection_behavior { SelectionBehavior::SelectItems };
     SelectionMode m_selection_mode { SelectionMode::SingleSelection };

@@ -21,7 +21,7 @@ static constexpr char PATH_LOREM_250[] = "This-is-an-annoyingly-long-name-that-s
 
 static constexpr size_t ITERATION_DEPTH = 17;
 
-static void check_result(char const* what, DeprecatedString const& expected, char const* actual)
+static void check_result(char const* what, StringView expected, char const* actual)
 {
     if (expected != actual)
         FAIL(DeprecatedString::formatted("Expected {} to be \"{}\" ({} characters)", what, actual, actual ? strlen(actual) : 0));

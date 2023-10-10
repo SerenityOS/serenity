@@ -60,7 +60,7 @@ public:
         }
         if (suggestion.is_symbol_declaration()) {
             if (index.column() == Column::Name) {
-                if (suggestion.as_symbol_declaration.value().scope.is_null())
+                if (!suggestion.as_symbol_declaration.value().scope.is_empty())
                     return suggestion.as_symbol_declaration.value().name;
                 return DeprecatedString::formatted("{}::{}", suggestion.as_symbol_declaration.value().scope, suggestion.as_symbol_declaration.value().name);
             }

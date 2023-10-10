@@ -43,8 +43,8 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
         return;
 
     // 4. If element's type attribute is present and its value is neither the empty string nor an ASCII case-insensitive match for "text/css", then return.
-    auto type_attribute = style_element.deprecated_attribute(HTML::AttributeNames::type);
-    if (!type_attribute.is_null() && !type_attribute.is_empty() && !Infra::is_ascii_case_insensitive_match(type_attribute, "text/css"sv))
+    auto type_attribute = style_element.attribute(HTML::AttributeNames::type);
+    if (type_attribute.has_value() && !type_attribute->is_empty() && !Infra::is_ascii_case_insensitive_match(type_attribute->bytes_as_string_view(), "text/css"sv))
         return;
 
     // FIXME: 5. If the Should element's inline behavior be blocked by Content Security Policy? algorithm returns "Blocked" when executed upon the style element, "style", and the style element's child text content, then return. [CSP]
@@ -86,7 +86,7 @@ void StyleElementUtils::remove_a_css_style_sheet(DOM::Document& document, CSS::C
 }
 
 // https://www.w3.org/TR/cssom/#create-a-css-style-sheet
-void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, DeprecatedString type, DOM::Element* owner_node, DeprecatedString media, DeprecatedString title, bool alternate, bool origin_clean, DeprecatedString location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
+void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, DeprecatedString type, DOM::Element* owner_node, DeprecatedString media, DeprecatedString title, bool alternate, bool origin_clean, Optional<DeprecatedString> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
 {
     // 1. Create a new CSS style sheet object and set its properties as specified.
     // FIXME: We receive `sheet` from the caller already. This is weird.
@@ -96,16 +96,13 @@ void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, Deprec
     sheet.set_owner_node(owner_node);
     sheet.set_type(MUST(String::from_deprecated_string(type)));
     sheet.set_media(move(media));
-    if (title.is_null())
-        sheet.set_title({});
-    else
-        sheet.set_title(MUST(String::from_deprecated_string(title)));
+    sheet.set_title(MUST(String::from_deprecated_string(title)));
     sheet.set_alternate(alternate);
     sheet.set_origin_clean(origin_clean);
-    if (location.is_null())
+    if (!location.has_value())
         sheet.set_location({});
     else
-        sheet.set_location(MUST(String::from_deprecated_string(location)));
+        sheet.set_location(MUST(String::from_deprecated_string(*location)));
 
     // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
     add_a_css_style_sheet(document, sheet);

@@ -132,8 +132,6 @@ ErrorOr<JsonValue> JsonParser::parse_object()
             break;
         ignore_while(is_space);
         auto name = TRY(consume_and_unescape_string());
-        if (name.is_null())
-            return Error::from_string_literal("JsonParser: Expected object property name");
         ignore_while(is_space);
         if (!consume_specific(':'))
             return Error::from_string_literal("JsonParser: Expected ':'");

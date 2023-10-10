@@ -785,7 +785,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 }
                 i++;
             }
-            if (current_dictionary->parent_name.is_null())
+            if (current_dictionary->parent_name.is_empty())
                 break;
             VERIFY(interface.dictionaries.contains(current_dictionary->parent_name));
             current_dictionary = &interface.dictionaries.find(current_dictionary->parent_name)->value;
@@ -1755,7 +1755,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 )~~~");
             }
 
-            if (current_dictionary->parent_name.is_null())
+            if (current_dictionary->parent_name.is_empty())
                 break;
             VERIFY(interface.dictionaries.contains(current_dictionary->parent_name));
             current_dictionary = &interface.dictionaries.find(current_dictionary->parent_name)->value;
@@ -2352,7 +2352,7 @@ static void collect_attribute_values_of_an_inheritance_stack(SourceGenerator& fu
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 auto attribute_name = attribute.extended_attributes.get("Reflect").value();
-                if (attribute_name.is_null())
+                if (attribute_name.is_empty())
                     attribute_name = attribute.name;
                 attribute_name = make_input_acceptable_cpp(attribute_name);
 
@@ -2837,7 +2837,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 
         if (attribute.extended_attributes.contains("Reflect")) {
             auto attribute_name = attribute.extended_attributes.get("Reflect").value();
-            if (attribute_name.is_null())
+            if (attribute_name.is_empty())
                 attribute_name = attribute.name;
             attribute_name = make_input_acceptable_cpp(attribute_name);
 

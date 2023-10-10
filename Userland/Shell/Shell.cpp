@@ -300,9 +300,9 @@ ErrorOr<Vector<AST::Command>> Shell::expand_aliases(Vector<AST::Command> initial
     Function<ErrorOr<void>(AST::Command&)> resolve_aliases_and_append = [&](auto& command) -> ErrorOr<void> {
         if (!command.argv.is_empty()) {
             auto alias = resolve_alias(command.argv[0]);
-            if (!alias.is_null()) {
+            if (alias.has_value()) {
                 auto argv0 = command.argv.take_first();
-                auto subcommand_ast = parse(alias, false);
+                auto subcommand_ast = parse(*alias, false);
                 if (subcommand_ast) {
                     while (subcommand_ast->is_execute()) {
                         auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
@@ -527,9 +527,9 @@ Shell::Frame::~Frame()
     (void)frames.take_last();
 }
 
-DeprecatedString Shell::resolve_alias(StringView name) const
+Optional<DeprecatedString> Shell::resolve_alias(StringView name) const
 {
-    return m_aliases.get(name).value_or({});
+    return m_aliases.get(name);
 }
 
 Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
@@ -562,7 +562,7 @@ Optional<DeprecatedString> Shell::help_path_for(Vector<RunnablePath> visited, Sh
         if (visited.contains_slow(runnable_path))
             return {}; // Break out of an alias loop
 
-        auto resolved = resolve_alias(runnable_path.path);
+        auto resolved = resolve_alias(runnable_path.path).value_or("");
         auto* runnable = binary_search(cached_path.span(), resolved, nullptr, RunnablePathComparator {});
         if (!runnable)
             return {};
@@ -2038,9 +2038,8 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
 
     // Black with Cyan background.
     constexpr auto default_mark = "\e[30;46m%\e[0m";
-    DeprecatedString eol_mark = getenv("PROMPT_EOL_MARK");
-    if (eol_mark.is_null())
-        eol_mark = default_mark;
+    auto eol_mark_ptr = getenv("PROMPT_EOL_MARK");
+    DeprecatedString eol_mark = eol_mark_ptr ?: default_mark;
     size_t eol_mark_length = Line::Editor::actual_rendered_string_metrics(eol_mark).line_metrics.last().total_length();
     if (eol_mark_length >= ws.ws_col) {
         eol_mark = default_mark;
@@ -2477,10 +2476,10 @@ void Shell::possibly_print_error() const
         StringView current_line;
         i64 line_to_skip_to = max(source_position.position->start_line.line_number, 2ul) - 2;
 
-        if (!source_position.source_file.is_null()) {
-            auto file_or_error = Core::File::open(source_position.source_file, Core::File::OpenMode::Read);
+        if (source_position.source_file.has_value()) {
+            auto file_or_error = Core::File::open(*source_position.source_file, Core::File::OpenMode::Read);
             if (file_or_error.is_error()) {
-                warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file_or_error.error(), source_position.source_file);
+                warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file_or_error.error(), *source_position.source_file);
                 return;
             }
             auto file = Core::InputBufferedFile::create(file_or_error.release_value());

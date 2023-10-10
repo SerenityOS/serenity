@@ -82,19 +82,19 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
                 return;
 
             // 2. If value is null and oldValue is the empty string, then return.
-            if (value.is_null() && old_value == DeprecatedString::empty())
+            if (!value.has_value() && old_value == DeprecatedString::empty())
                 return;
 
             // 3. If value is the empty string and oldValue is null, then return.
-            if (value == DeprecatedString::empty() && old_value.is_null())
+            if (value == DeprecatedString::empty() && !old_value.has_value())
                 return;
 
             // 4. If value is null or the empty string, then set element’s name to the empty string.
-            if (value.is_empty())
+            if (!value.has_value() || value->is_empty())
                 set_slottable_name({});
             // 5. Otherwise, set element’s name to value.
             else
-                set_slottable_name(MUST(String::from_deprecated_string(value)));
+                set_slottable_name(MUST(String::from_deprecated_string(*value)));
 
             // 6. If element is assigned, then run assign slottables for element’s assigned slot.
             if (auto assigned_slot = assigned_slot_internal())
@@ -468,7 +468,7 @@ void Element::add_attribute_change_steps(AttributeChangeSteps steps)
     m_attribute_change_steps.append(move(steps));
 }
 
-void Element::run_attribute_change_steps(FlyString const& local_name, DeprecatedString const& old_value, DeprecatedString const& value, DeprecatedFlyString const& namespace_)
+void Element::run_attribute_change_steps(FlyString const& local_name, Optional<DeprecatedString> const& old_value, Optional<DeprecatedString> const& value, DeprecatedFlyString const& namespace_)
 {
     for (auto const& attribute_change_steps : m_attribute_change_steps)
         attribute_change_steps(local_name, old_value, value, namespace_);
@@ -478,19 +478,21 @@ void Element::run_attribute_change_steps(FlyString const& local_name, Deprecated
     invalidate_style_after_attribute_change(local_name);
 }
 
-void Element::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void Element::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
+    auto value_or_empty = value.value_or("");
+
     if (name == HTML::AttributeNames::class_) {
-        auto new_classes = value.split_view(Infra::is_ascii_whitespace);
+        auto new_classes = value_or_empty.split_view(Infra::is_ascii_whitespace);
         m_classes.clear();
         m_classes.ensure_capacity(new_classes.size());
         for (auto& new_class : new_classes) {
             m_classes.unchecked_append(FlyString::from_utf8(new_class).release_value_but_fixme_should_propagate_errors());
         }
         if (m_class_list)
-            m_class_list->associated_attribute_changed(value);
+            m_class_list->associated_attribute_changed(value_or_empty);
     } else if (name == HTML::AttributeNames::style) {
-        if (value.is_null()) {
+        if (!value.has_value()) {
             if (!m_inline_style) {
                 m_inline_style = nullptr;
                 set_needs_style_update(true);
@@ -499,16 +501,16 @@ void Element::attribute_changed(FlyString const& name, DeprecatedString const& v
             // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
             if (m_inline_style && m_inline_style->is_updating())
                 return;
-            m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
+            m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), *value, *this);
             set_needs_style_update(true);
         }
     } else if (name == HTML::AttributeNames::dir) {
         // https://html.spec.whatwg.org/multipage/dom.html#attr-dir
-        if (value.equals_ignoring_ascii_case("ltr"sv))
+        if (value_or_empty.equals_ignoring_ascii_case("ltr"sv))
             m_dir = Dir::Ltr;
-        else if (value.equals_ignoring_ascii_case("rtl"sv))
+        else if (value_or_empty.equals_ignoring_ascii_case("rtl"sv))
             m_dir = Dir::Rtl;
-        else if (value.equals_ignoring_ascii_case("auto"sv))
+        else if (value_or_empty.equals_ignoring_ascii_case("auto"sv))
             m_dir = Dir::Auto;
         else
             m_dir = {};

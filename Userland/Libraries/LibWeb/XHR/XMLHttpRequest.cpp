@@ -512,7 +512,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
     // Unset this’s upload listener flag.
     m_upload_listener = false;
     // Set this’s request method to method.
-    m_request_method = move(normalized_method);
+    m_request_method = normalized_method.span();
     // Set this’s request URL to parsedURL.
     m_request_url = parsed_url;
     // Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.

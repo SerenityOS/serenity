@@ -31,12 +31,12 @@ void HTMLOptionElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionElementPrototype>(realm, "HTMLOptionElement"));
 }
 
-void HTMLOptionElement::attribute_changed(FlyString const& name, DeprecatedString const& value)
+void HTMLOptionElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
 {
     HTMLElement::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::selected) {
-        if (value.is_null()) {
+        if (!value.has_value()) {
             // Whenever an option element's selected attribute is removed, if its dirtiness is false, its selectedness must be set to false.
             if (!m_dirty)
                 m_selected = false;
