@@ -799,7 +799,13 @@ void HTMLFormElement::plan_to_navigate_to(AK::URL url, Variant<Empty, String, PO
 
         // 2. Navigate targetNavigable to url using the form element's node document, with historyHandling set to historyHandling,
         //    referrerPolicy set to referrerPolicy, documentResource set to postResource, and cspNavigationType set to "form-submission".
-        MUST(target_navigable->navigate(url, this->document(), post_resource, nullptr, false, to_navigation_history_behavior(history_handling), {}, {}, referrer_policy));
+        MUST(target_navigable->navigate({ .url = url,
+            .source_document = this->document(),
+            .document_resource = post_resource,
+            .response = nullptr,
+            .exceptions_enabled = false,
+            .history_handling = to_navigation_history_behavior(history_handling),
+            .referrer_policy = referrer_policy }));
     });
 
     // 5. Set the form's planned navigation to the just-queued task.

@@ -3492,7 +3492,7 @@ void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML
             return;
 
         VERIFY(navigable());
-        MUST(navigable()->navigate(url_record, *this));
+        MUST(navigable()->navigate({ .url = url_record, .source_document = *this }));
     }).release_value_but_fixme_should_propagate_errors();
 
     // For the purposes of the previous paragraph, a refresh is said to have come due as soon as the later of the

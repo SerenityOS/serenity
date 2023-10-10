@@ -122,17 +122,20 @@ public:
         bool allow_POST = false,
         Function<void()> completion_steps = [] {});
 
-    WebIDL::ExceptionOr<void> navigate(
-        AK::URL const&,
-        JS::NonnullGCPtr<DOM::Document> source_document,
-        Variant<Empty, String, POSTResource> document_resource = Empty {},
-        JS::GCPtr<Fetch::Infrastructure::Response> = nullptr,
-        bool exceptions_enabled = false,
-        Bindings::NavigationHistoryBehavior = Bindings::NavigationHistoryBehavior::Auto,
-        Optional<SerializationRecord> navigation_api_state = {},
-        Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list = {},
-        ReferrerPolicy::ReferrerPolicy = ReferrerPolicy::ReferrerPolicy::EmptyString,
-        UserNavigationInvolvement = UserNavigationInvolvement::None);
+    struct NavigateParams {
+        AK::URL const& url;
+        JS::NonnullGCPtr<DOM::Document> source_document;
+        Variant<Empty, String, POSTResource> document_resource = Empty {};
+        JS::GCPtr<Fetch::Infrastructure::Response> response = nullptr;
+        bool exceptions_enabled = false;
+        Bindings::NavigationHistoryBehavior history_handling = Bindings::NavigationHistoryBehavior::Auto;
+        Optional<SerializationRecord> navigation_api_state = {};
+        Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list = {};
+        ReferrerPolicy::ReferrerPolicy referrer_policy = ReferrerPolicy::ReferrerPolicy::EmptyString;
+        UserNavigationInvolvement user_involvement = UserNavigationInvolvement::None;
+    };
+
+    WebIDL::ExceptionOr<void> navigate(NavigateParams);
 
     WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
 

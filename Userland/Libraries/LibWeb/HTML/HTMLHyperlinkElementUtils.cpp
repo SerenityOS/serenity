@@ -519,7 +519,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
     // FIXME: 12. If subject's link types includes the noreferrer keyword, then set referrerPolicy to "no-referrer".
 
     // 13. Navigate targetNavigable to url using subject's node document, with referrerPolicy set to referrerPolicy.
-    MUST(target_navigable->navigate(url, hyperlink_element_utils_document()));
+    MUST(target_navigable->navigate({ .url = url, .source_document = hyperlink_element_utils_document() }));
 }
 
 }
