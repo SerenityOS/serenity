@@ -6476,8 +6476,14 @@ OwnPtr<CalculationNode> Parser::parse_a_calculation(Vector<ComponentValue> const
             // FIXME: Resolutions, once calc() supports them.
             else if (dimension->is_time())
                 values.append({ NumericCalculationNode::create(dimension->time()) });
-            else
+            else if (dimension->is_flex()) {
+                // https://www.w3.org/TR/css3-grid-layout/#fr-unit
+                // NOTE: <flex> values are not <length>s (nor are they compatible with <length>s, like some <percentage> values),
+                //       so they cannot be represented in or combined with other unit types in calc() expressions.
+                return nullptr;
+            } else {
                 VERIFY_NOT_REACHED();
+            }
             continue;
         }
 
