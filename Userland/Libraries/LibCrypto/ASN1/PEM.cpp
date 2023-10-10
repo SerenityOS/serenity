@@ -24,12 +24,12 @@ ByteBuffer decode_pem(ReadonlyBytes data)
     while (!lexer.is_eof()) {
         switch (state) {
         case PreStartData:
-            if (lexer.consume_specific("-----BEGIN"))
+            if (lexer.consume_specific("-----BEGIN"sv))
                 state = Started;
             lexer.consume_line();
             break;
         case Started: {
-            if (lexer.consume_specific("-----END")) {
+            if (lexer.consume_specific("-----END"sv)) {
                 state = Ended;
                 lexer.consume_line();
                 break;
@@ -69,12 +69,12 @@ ErrorOr<Vector<ByteBuffer>> decode_pems(ReadonlyBytes data)
     while (!lexer.is_eof()) {
         switch (state) {
         case Junk:
-            if (lexer.consume_specific("-----BEGIN"))
+            if (lexer.consume_specific("-----BEGIN"sv))
                 state = Parsing;
             lexer.consume_line();
             break;
         case Parsing: {
-            if (lexer.consume_specific("-----END")) {
+            if (lexer.consume_specific("-----END"sv)) {
                 state = Junk;
                 lexer.consume_line();
                 TRY(pems.try_append(decoded));

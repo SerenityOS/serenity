@@ -67,7 +67,7 @@ void XSV::parse()
 
     // Read and drop any extra lines at the end.
     while (!m_lexer.is_eof()) {
-        if (!m_lexer.consume_specific("\r\n") && !m_lexer.consume_specific('\n'))
+        if (!m_lexer.consume_specific("\r\n"sv) && !m_lexer.consume_specific('\n'))
             break;
     }
 
@@ -89,13 +89,13 @@ Vector<XSV::Field> XSV::read_row(bool header_row)
 {
     Vector<Field> row;
     bool first = true;
-    while (!(m_lexer.is_eof() || m_lexer.next_is('\n') || m_lexer.next_is("\r\n")) && (first || m_lexer.consume_specific(m_traits.separator))) {
+    while (!(m_lexer.is_eof() || m_lexer.next_is('\n') || m_lexer.next_is("\r\n")) && (first || m_lexer.consume_specific(m_traits.separator.view()))) {
         first = false;
         row.append(read_one_field());
     }
 
     if (!m_lexer.is_eof()) {
-        auto crlf_ok = m_lexer.consume_specific("\r\n");
+        auto crlf_ok = m_lexer.consume_specific("\r\n"sv);
         if (!crlf_ok) {
             auto lf_ok = m_lexer.consume_specific('\n');
             if (!lf_ok)
@@ -176,7 +176,7 @@ XSV::Field XSV::read_one_field()
 
 XSV::Field XSV::read_one_quoted_field()
 {
-    if (!m_lexer.consume_specific(m_traits.quote))
+    if (!m_lexer.consume_specific(m_traits.quote.view()))
         set_error(ReadError::InternalError);
 
     size_t start = m_lexer.tell(), end = start;
@@ -188,7 +188,7 @@ XSV::Field XSV::read_one_quoted_field()
         char ch;
         switch (m_traits.quote_escape) {
         case ParserTraits::Backslash:
-            if (m_lexer.consume_specific('\\') && m_lexer.consume_specific(m_traits.quote)) {
+            if (m_lexer.consume_specific('\\') && m_lexer.consume_specific(m_traits.quote.view())) {
                 // If there is an escaped quote, we have no choice but to make a copy.
                 if (!is_copy) {
                     is_copy = true;
@@ -200,8 +200,8 @@ XSV::Field XSV::read_one_quoted_field()
             }
             break;
         case ParserTraits::Repeat:
-            if (m_lexer.consume_specific(m_traits.quote)) {
-                if (m_lexer.consume_specific(m_traits.quote)) {
+            if (m_lexer.consume_specific(m_traits.quote.view())) {
+                if (m_lexer.consume_specific(m_traits.quote.view())) {
                     // If there is an escaped quote, we have no choice but to make a copy.
                     if (!is_copy) {
                         is_copy = true;
@@ -236,7 +236,7 @@ XSV::Field XSV::read_one_quoted_field()
         break;
     }
 
-    if (!m_lexer.consume_specific(m_traits.quote))
+    if (!m_lexer.consume_specific(m_traits.quote.view()))
         set_error(ReadError::QuoteFailure);
 
     if (is_copy)
@@ -257,7 +257,7 @@ XSV::Field XSV::read_one_unquoted_field()
         if (m_lexer.next_is("\r\n") || m_lexer.next_is("\n"))
             break;
 
-        if (m_lexer.consume_specific(m_traits.quote)) {
+        if (m_lexer.consume_specific(m_traits.quote.view())) {
             if (!allow_quote_in_field)
                 set_error(ReadError::QuoteFailure);
             end = m_lexer.tell();

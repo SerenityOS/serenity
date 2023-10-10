@@ -26,7 +26,7 @@ Optional<HunkLocation> Parser::consume_unified_location()
         return true;
     };
 
-    if (!consume_specific("@@ -"))
+    if (!consume_specific("@@ -"sv))
         return {};
 
     HunkLocation location;
@@ -34,13 +34,13 @@ Optional<HunkLocation> Parser::consume_unified_location()
     if (!consume_range(location.old_range))
         return {};
 
-    if (!consume_specific(" +"))
+    if (!consume_specific(" +"sv))
         return {};
 
     if (!consume_range(location.new_range))
         return {};
 
-    if (!consume_specific(" @@"))
+    if (!consume_specific(" @@"sv))
         return {};
 
     return location;
@@ -101,12 +101,12 @@ ErrorOr<Header> Parser::parse_header(Optional<size_t> const& strip_count)
 
     while (!is_eof()) {
 
-        if (consume_specific("+++ ")) {
+        if (consume_specific("+++ "sv)) {
             header.new_file_path = TRY(parse_file_line(strip_count));
             continue;
         }
 
-        if (consume_specific("--- ")) {
+        if (consume_specific("--- "sv)) {
             header.old_file_path = TRY(parse_file_line(strip_count));
             continue;
         }
