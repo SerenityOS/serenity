@@ -116,7 +116,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable
     auto traversable = TRY(create_a_new_top_level_traversable(page, nullptr, {}));
 
     // 2. Navigate traversable to initialNavigationURL using traversable's active document, with documentResource set to initialNavigationPostResource.
-    TRY(traversable->navigate(initial_navigation_url, *traversable->active_document(), initial_navigation_post_resource));
+    TRY(traversable->navigate({ .url = initial_navigation_url,
+        .source_document = *traversable->active_document(),
+        .document_resource = initial_navigation_post_resource }));
 
     // 3. Return traversable.
     return traversable;

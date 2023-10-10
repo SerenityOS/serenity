@@ -1075,18 +1075,18 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
 // and an optional user navigation involvement userInvolvement (default "none"):
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-WebIDL::ExceptionOr<void> Navigable::navigate(
-    AK::URL const& url,
-    JS::NonnullGCPtr<DOM::Document> source_document,
-    Variant<Empty, String, POSTResource> document_resource,
-    JS::GCPtr<Fetch::Infrastructure::Response> response,
-    bool exceptions_enabled,
-    Bindings::NavigationHistoryBehavior history_handling,
-    Optional<SerializationRecord> navigation_api_state,
-    Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list,
-    ReferrerPolicy::ReferrerPolicy referrer_policy,
-    UserNavigationInvolvement user_involvement)
+WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
 {
+    auto const& url = params.url;
+    auto source_document = params.source_document;
+    auto const& document_resource = params.document_resource;
+    auto response = params.response;
+    auto exceptions_enabled = params.exceptions_enabled;
+    auto history_handling = params.history_handling;
+    auto const& navigation_api_state = params.navigation_api_state;
+    auto const& form_data_entry_list = params.form_data_entry_list;
+    auto referrer_policy = params.referrer_policy;
+    auto user_involvement = params.user_involvement;
     auto& active_document = *this->active_document();
     auto& realm = active_document.realm();
     auto& vm = this->vm();

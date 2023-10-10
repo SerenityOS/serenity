@@ -376,7 +376,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         // FIXME: 5. If urlRecord matches about:blank, then perform the URL and history update steps given target browsing context's active document and urlRecord.
 
         // 6. Otherwise, navigate targetNavigable to urlRecord using sourceDocument, with referrerPolicy set to referrerPolicy and exceptionsEnabled set to true.
-        TRY(target_navigable->navigate(url_record, source_document));
+        TRY(target_navigable->navigate({ .url = url_record, .source_document = source_document }));
     }
 
     // 13. Otherwise:
@@ -392,7 +392,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
                 return WebIDL::SyntaxError::create(realm(), "URL is not valid"_fly_string);
 
             // 3. Navigate targetNavigable to urlRecord using sourceDocument, with referrerPolicy set to referrerPolicy and exceptionsEnabled set to true.
-            TRY(target_navigable->navigate(url_record, source_document));
+            TRY(target_navigable->navigate({ .url = url_record, .source_document = source_document }));
         }
 
         // 2. If noopener is false, then set target browsing context's opener browsing context to source browsing context.

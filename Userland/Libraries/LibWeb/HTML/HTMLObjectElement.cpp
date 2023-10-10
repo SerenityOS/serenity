@@ -258,7 +258,9 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<Depreca
 
         // If the URL of the given resource does not match about:blank, then navigate the element's nested browsing context to that resource, with historyHandling set to "replace" and the source browsing context set to the object element's node document's browsing context. (The data attribute of the object element doesn't get updated if the browsing context gets further navigated to other locations.)
         if (auto const& url = resource()->url(); url != "about:blank"sv)
-            MUST(m_content_navigable->navigate(url, document(), Empty {}, nullptr, false, Bindings::NavigationHistoryBehavior::Replace));
+            MUST(m_content_navigable->navigate({ .url = url,
+                .source_document = document(),
+                .history_handling = Bindings::NavigationHistoryBehavior::Replace }));
 
         // The object element represents its nested browsing context.
         run_object_representation_completed_steps(Representation::NestedBrowsingContext);

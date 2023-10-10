@@ -242,7 +242,11 @@ void NavigableContainer::navigate_an_iframe_or_frame(AK::URL url, ReferrerPolicy
     Variant<Empty, String, POSTResource> document_resource = Empty {};
     if (srcdoc_string.has_value())
         document_resource = srcdoc_string.value();
-    MUST(m_content_navigable->navigate(url, document(), document_resource, nullptr, false, history_handling, {}, {}, referrer_policy));
+    MUST(m_content_navigable->navigate({ .url = url,
+        .source_document = document(),
+        .document_resource = document_resource,
+        .history_handling = history_handling,
+        .referrer_policy = referrer_policy }));
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#destroy-a-child-navigable

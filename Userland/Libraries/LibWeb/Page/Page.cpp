@@ -45,12 +45,14 @@ void Page::set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingConte
 
 void Page::load(const AK::URL& url)
 {
-    (void)top_level_traversable()->navigate(url, *top_level_traversable()->active_document());
+    (void)top_level_traversable()->navigate({ .url = url, .source_document = *top_level_traversable()->active_document() });
 }
 
 void Page::load_html(StringView html)
 {
-    (void)top_level_traversable()->navigate("about:srcdoc"sv, *top_level_traversable()->active_document(), String::from_utf8(html).release_value_but_fixme_should_propagate_errors());
+    (void)top_level_traversable()->navigate({ .url = "about:srcdoc"sv,
+        .source_document = *top_level_traversable()->active_document(),
+        .document_resource = String::from_utf8(html).release_value_but_fixme_should_propagate_errors() });
 }
 
 Gfx::Palette Page::palette() const

@@ -86,7 +86,10 @@ WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, HistoryHandlingBehavio
     }
 
     // 4. Navigate navigable to url using sourceDocument, with exceptionsEnabled set to true and historyHandling set to historyHandling.
-    TRY(navigable->navigate(url, source_document, {}, nullptr, true, to_navigation_history_behavior(history_handling)));
+    TRY(navigable->navigate({ .url = url,
+        .source_document = source_document,
+        .exceptions_enabled = true,
+        .history_handling = to_navigation_history_behavior(history_handling) }));
 
     return {};
 }
