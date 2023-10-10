@@ -33,18 +33,18 @@ public:
 
         lexer.ignore_while(is_ascii_space);
 
-        if (lexer.consume_specific("inline")) {
+        if (lexer.consume_specific("inline"sv)) {
             m_kind = Kind::Inline;
             if (!lexer.is_eof())
                 m_might_be_wrong = true;
             return;
         }
 
-        if (lexer.consume_specific("attachment")) {
+        if (lexer.consume_specific("attachment"sv)) {
             m_kind = Kind::Attachment;
-            if (lexer.consume_specific(";")) {
+            if (lexer.consume_specific(";"sv)) {
                 lexer.ignore_while(is_ascii_space);
-                if (lexer.consume_specific("filename=")) {
+                if (lexer.consume_specific("filename="sv)) {
                     // RFC 2183: "A short (length <= 78 characters)
                     //            parameter value containing only non-`tspecials' characters SHOULD be
                     //            represented as a single `token'."
@@ -62,13 +62,13 @@ public:
             return;
         }
 
-        if (lexer.consume_specific("form-data")) {
+        if (lexer.consume_specific("form-data"sv)) {
             m_kind = Kind::FormData;
-            while (lexer.consume_specific(";")) {
+            while (lexer.consume_specific(";"sv)) {
                 lexer.ignore_while(is_ascii_space);
-                if (lexer.consume_specific("name=")) {
+                if (lexer.consume_specific("name="sv)) {
                     m_name = lexer.consume_quoted_string();
-                } else if (lexer.consume_specific("filename=")) {
+                } else if (lexer.consume_specific("filename="sv)) {
                     if (lexer.next_is('"'))
                         m_filename = lexer.consume_quoted_string();
                     else

@@ -1145,23 +1145,23 @@ ErrorOr<AttributeListDeclaration::Definition, ParseError> Parser::parse_attribut
     // EnumeratedType ::= NotationType | Enumeration
     // NotationType ::= 'NOTATION' S '(' S? Name (S? '|' S? Name)* S? ')'
     // Enumeration ::= '(' S? Nmtoken (S? '|' S? Nmtoken)* S? ')'
-    if (m_lexer.consume_specific("CDATA")) {
+    if (m_lexer.consume_specific("CDATA"sv)) {
         type = AttributeListDeclaration::StringType::CData;
-    } else if (m_lexer.consume_specific("IDREFS")) {
+    } else if (m_lexer.consume_specific("IDREFS"sv)) {
         type = AttributeListDeclaration::TokenizedType::IDRefs;
-    } else if (m_lexer.consume_specific("IDREF")) {
+    } else if (m_lexer.consume_specific("IDREF"sv)) {
         type = AttributeListDeclaration::TokenizedType::IDRef;
-    } else if (m_lexer.consume_specific("ID")) {
+    } else if (m_lexer.consume_specific("ID"sv)) {
         type = AttributeListDeclaration::TokenizedType::ID;
-    } else if (m_lexer.consume_specific("ENTITIES")) {
+    } else if (m_lexer.consume_specific("ENTITIES"sv)) {
         type = AttributeListDeclaration::TokenizedType::Entities;
-    } else if (m_lexer.consume_specific("ENTITY")) {
+    } else if (m_lexer.consume_specific("ENTITY"sv)) {
         type = AttributeListDeclaration::TokenizedType::Entity;
-    } else if (m_lexer.consume_specific("NMTOKENS")) {
+    } else if (m_lexer.consume_specific("NMTOKENS"sv)) {
         type = AttributeListDeclaration::TokenizedType::NMTokens;
-    } else if (m_lexer.consume_specific("NMTOKEN")) {
+    } else if (m_lexer.consume_specific("NMTOKEN"sv)) {
         type = AttributeListDeclaration::TokenizedType::NMToken;
-    } else if (m_lexer.consume_specific("NOTATION")) {
+    } else if (m_lexer.consume_specific("NOTATION"sv)) {
         HashTable<Name> names;
         TRY(skip_whitespace(Required::Yes));
         TRY(expect("("sv));
@@ -1198,13 +1198,13 @@ ErrorOr<AttributeListDeclaration::Definition, ParseError> Parser::parse_attribut
 
     // DefaultDecl ::= '#REQUIRED' | '#IMPLIED'
     //               | (('#FIXED' S)? AttValue)
-    if (m_lexer.consume_specific("#REQUIRED")) {
+    if (m_lexer.consume_specific("#REQUIRED"sv)) {
         default_ = AttributeListDeclaration::Required {};
-    } else if (m_lexer.consume_specific("#IMPLIED")) {
+    } else if (m_lexer.consume_specific("#IMPLIED"sv)) {
         default_ = AttributeListDeclaration::Implied {};
     } else {
         bool fixed = false;
-        if (m_lexer.consume_specific("#FIXED")) {
+        if (m_lexer.consume_specific("#FIXED"sv)) {
             TRY(skip_whitespace(Required::Yes));
             fixed = true;
         }
@@ -1273,19 +1273,19 @@ ErrorOr<ElementDeclaration::ContentSpec, ParseError> Parser::parse_content_spec(
     Optional<ElementDeclaration::ContentSpec> content_spec;
 
     // contentspec ::= 'EMPTY' | 'ANY' | Mixed | children
-    if (m_lexer.consume_specific("EMPTY")) {
+    if (m_lexer.consume_specific("EMPTY"sv)) {
         content_spec = ElementDeclaration::Empty {};
-    } else if (m_lexer.consume_specific("ANY")) {
+    } else if (m_lexer.consume_specific("ANY"sv)) {
         content_spec = ElementDeclaration::Any {};
     } else {
         TRY(expect("("sv));
         TRY(skip_whitespace());
-        if (m_lexer.consume_specific("#PCDATA")) {
+        if (m_lexer.consume_specific("#PCDATA"sv)) {
             HashTable<Name> names;
             // Mixed ::= '(' S? '#PCDATA' (S? '|' S? Name)* S? ')*'
             //         | '(' S? '#PCDATA' S? ')'
             TRY(skip_whitespace());
-            if (m_lexer.consume_specific(")*")) {
+            if (m_lexer.consume_specific(")*"sv)) {
                 content_spec = ElementDeclaration::Mixed { .types = {}, .many = true };
             } else if (m_lexer.consume_specific(')')) {
                 content_spec = ElementDeclaration::Mixed { .types = {}, .many = false };
@@ -1599,7 +1599,7 @@ ErrorOr<ExternalID, ParseError> Parser::parse_external_id()
     Optional<PublicID> public_id;
     SystemID system_id;
 
-    if (m_lexer.consume_specific("SYSTEM")) {
+    if (m_lexer.consume_specific("SYSTEM"sv)) {
         auto accept = accept_rule();
         TRY(skip_whitespace(Required::Yes));
         system_id = SystemID { TRY(parse_system_id_literal()) };

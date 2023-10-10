@@ -56,7 +56,7 @@ parse_state_machine(StringView input)
         bool consumed = true;
         while (consumed) {
             consumed = lexer.consume_while(isspace).length() > 0;
-            if (lexer.consume_specific("//")) {
+            if (lexer.consume_specific("//"sv)) {
                 lexer.consume_line();
                 consumed = true;
             }
@@ -78,7 +78,7 @@ parse_state_machine(StringView input)
     auto consume_number = [&] {
         int num = 0;
         consume_whitespace();
-        if (lexer.consume_specific("0x")) {
+        if (lexer.consume_specific("0x"sv)) {
             auto hex_digits = lexer.consume_while([](char c) {
                 if (isdigit(c)) return true;
             else {
@@ -107,7 +107,7 @@ parse_state_machine(StringView input)
             consume_whitespace();
             condition.begin = consume_number();
             consume_whitespace();
-            lexer.consume_specific("..");
+            lexer.consume_specific(".."sv);
             consume_whitespace();
             condition.end = consume_number();
             consume_whitespace();
@@ -123,16 +123,16 @@ parse_state_machine(StringView input)
     auto consume_action = [&]() {
         StateTransition action;
         consume_whitespace();
-        lexer.consume_specific("=>");
+        lexer.consume_specific("=>"sv);
         consume_whitespace();
         lexer.consume_specific('(');
         consume_whitespace();
-        if (!lexer.consume_specific("_"))
+        if (!lexer.consume_specific("_"sv))
             action.new_state = consume_identifier();
         consume_whitespace();
         lexer.consume_specific(',');
         consume_whitespace();
-        if (!lexer.consume_specific("_"))
+        if (!lexer.consume_specific("_"sv))
             action.action = consume_identifier();
         consume_whitespace();
         lexer.consume_specific(')');
@@ -152,10 +152,10 @@ parse_state_machine(StringView input)
                   if (lexer.consume_specific('}')) {
                       break;
                   }
-                  if (lexer.consume_specific("@entry")) {
+                  if (lexer.consume_specific("@entry"sv)) {
                       consume_whitespace();
                       state.entry_action = consume_identifier();
-                  } else if (lexer.consume_specific("@exit")) {
+                  } else if (lexer.consume_specific("@exit"sv)) {
                       consume_whitespace();
                       state.exit_action = consume_identifier();
                   } else if (lexer.next_is('@')) {
@@ -176,13 +176,13 @@ parse_state_machine(StringView input)
         consume_whitespace();
         if (lexer.is_eof())
             break;
-        if (lexer.consume_specific("@namespace")) {
+        if (lexer.consume_specific("@namespace"sv)) {
             consume_whitespace();
             state_machine->namespaces = lexer.consume_while([](char c) { return isalpha(c) || c == ':'; });
-        } else if (lexer.consume_specific("@begin")) {
+        } else if (lexer.consume_specific("@begin"sv)) {
             consume_whitespace();
             state_machine->initial_state = consume_identifier();
-        } else if (lexer.consume_specific("@name")) {
+        } else if (lexer.consume_specific("@name"sv)) {
             consume_whitespace();
             state_machine->name = consume_identifier();
         } else if (lexer.next_is("@anywhere")) {

@@ -125,10 +125,10 @@ StringView FormatParser::consume_literal()
     auto const begin = tell();
 
     while (!is_eof()) {
-        if (consume_specific("{{"))
+        if (consume_specific("{{"sv))
             continue;
 
-        if (consume_specific("}}"))
+        if (consume_specific("}}"sv))
             continue;
 
         if (next_is(is_any_of("{}"sv)))
@@ -858,7 +858,7 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
         m_mode = Mode::Hexfloat;
     else if (parser.consume_specific('A'))
         m_mode = Mode::HexfloatUppercase;
-    else if (parser.consume_specific("hex-dump"))
+    else if (parser.consume_specific("hex-dump"sv))
         m_mode = Mode::HexDump;
 
     if (!parser.is_eof())

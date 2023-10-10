@@ -144,7 +144,7 @@ private:
 
         GenericLexer lexer(string);
         while (!lexer.is_eof()) {
-            if (lexer.consume_specific(m_traits.quote)) {
+            if (lexer.consume_specific(m_traits.quote.view())) {
                 switch (m_traits.quote_escape) {
                 case WriterTraits::Repeat:
                     TRY(m_output.write_until_depleted(m_traits.quote.bytes()));

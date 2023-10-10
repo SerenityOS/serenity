@@ -94,7 +94,7 @@ TEST_CASE(should_constexpr_consume_specific_cstring)
 {
     constexpr auto sut = [] {
         GenericLexer sut("abcdef"sv);
-        sut.consume_specific("abcd");
+        sut.consume_specific("abcd"sv);
         return sut;
     }();
     static_assert(sut.peek() == 'e');

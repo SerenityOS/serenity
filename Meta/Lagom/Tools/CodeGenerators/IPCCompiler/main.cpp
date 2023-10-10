@@ -231,7 +231,7 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
         consume_whitespace();
         parse_includes();
         consume_whitespace();
-        lexer.consume_specific("endpoint");
+        lexer.consume_specific("endpoint"sv);
         consume_whitespace();
         endpoints.last().name = lexer.consume_while([](char ch) { return !isspace(ch); });
         endpoints.last().magic = Traits<ByteString>::hash(endpoints.last().name);

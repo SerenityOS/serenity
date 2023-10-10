@@ -28,7 +28,7 @@ static void consume_whitespace(GenericLexer& lexer)
     while (consumed) {
         consumed = lexer.consume_while(is_ascii_space).length() > 0;
 
-        if (lexer.consume_specific("//")) {
+        if (lexer.consume_specific("//"sv)) {
             lexer.consume_until('\n');
             lexer.ignore();
             consumed = true;

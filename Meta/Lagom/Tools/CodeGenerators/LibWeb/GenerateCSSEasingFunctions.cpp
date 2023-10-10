@@ -166,7 +166,7 @@ EasingFunctionMetadata easing_function_metadata(EasingFunction easing_function)
                 auto parameter_type_name = lexer.consume_until([](char ch) { return ch == ' ' || ch == '>'; });
                 auto has_bounds = false;
                 auto is_optional = false;
-                if (lexer.consume_specific(" [")) {
+                if (lexer.consume_specific(" ["sv)) {
                     has_bounds = true;
                     auto contents = lexer.consume_until(']');
                     VERIFY(contents == "0, 1"sv);

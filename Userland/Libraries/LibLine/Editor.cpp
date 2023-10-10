@@ -89,19 +89,19 @@ Configuration Configuration::from_config(StringView libname)
                 escape = false;
             } else {
                 if (key_lexer.next_is("alt+")) {
-                    alt = key_lexer.consume_specific("alt+");
+                    alt = key_lexer.consume_specific("alt+"sv);
                     continue;
                 }
                 if (key_lexer.next_is("^[")) {
-                    alt = key_lexer.consume_specific("^[");
+                    alt = key_lexer.consume_specific("^["sv);
                     continue;
                 }
                 if (key_lexer.next_is("^")) {
-                    has_ctrl = key_lexer.consume_specific("^");
+                    has_ctrl = key_lexer.consume_specific("^"sv);
                     continue;
                 }
                 if (key_lexer.next_is("ctrl+")) {
-                    has_ctrl = key_lexer.consume_specific("ctrl+");
+                    has_ctrl = key_lexer.consume_specific("ctrl+"sv);
                     continue;
                 }
                 if (key_lexer.next_is("\\")) {

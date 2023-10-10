@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Result.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace AK {
@@ -92,9 +93,11 @@ public:
     }
 
 #ifndef KERNEL
-    bool consume_specific(ByteString const& next)
+    bool consume_specific(ByteString next) = delete;
+
+    bool consume_specific(String const& next)
     {
-        return consume_specific(StringView { next });
+        return consume_specific(next.bytes_as_string_view());
     }
 #endif
 
