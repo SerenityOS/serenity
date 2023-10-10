@@ -111,6 +111,7 @@ private:
     int m_vertical_spacing { 4 };
     Selection m_selection;
     int m_active_glyph { 0 };
+    int m_tooltip_glyph { 0 };
     int m_visible_glyphs { 0 };
     bool m_in_drag_select { false };
     bool m_highlight_modifications { false };

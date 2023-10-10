@@ -247,6 +247,17 @@ void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
 {
     m_last_mousemove_position = event.position();
+    if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value() && maybe_glyph != m_tooltip_glyph) {
+        m_tooltip_glyph = maybe_glyph.value();
+        auto draw_tooltip = [this]() -> ErrorOr<void> {
+            StringBuilder builder;
+            TRY(builder.try_appendff("U+{:04X}", m_tooltip_glyph));
+            set_tooltip(TRY(builder.to_string()));
+            return {};
+        }();
+        if (draw_tooltip.is_error())
+            warnln("Failed to draw tooltip");
+    }
     if (m_in_drag_select) {
         auto constrained = event.position().constrained(widget_inner_rect());
         auto glyph = glyph_at_position_clamped(constrained);
