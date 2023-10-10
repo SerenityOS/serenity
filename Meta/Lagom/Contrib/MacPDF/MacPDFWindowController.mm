@@ -122,6 +122,16 @@
     _outlineView.delegate = self;
 }
 
+- (IBAction)goToNextPage:(id)sender
+{
+    [_pdfView goToNextPage:sender];
+}
+
+- (IBAction)goToPreviousPage:(id)sender
+{
+    [_pdfView goToPreviousPage:sender];
+}
+
 - (IBAction)showGoToPageDialog:(id)sender
 {
     auto alert = [[NSAlert alloc] init];

@@ -18,7 +18,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MacPDFWindowController : NSWindowController <MacPDFViewDelegate, NSOutlineViewDelegate, NSToolbarDelegate>
 
 - (instancetype)initWithDocument:(MacPDFDocument*)document;
+
+- (IBAction)goToNextPage:(id)sender;
+- (IBAction)goToPreviousPage:(id)sender;
 - (IBAction)showGoToPageDialog:(id)sender;
+
 - (void)pdfDidInitialize;
 
 @end

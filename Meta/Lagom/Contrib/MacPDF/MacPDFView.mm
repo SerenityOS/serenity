@@ -146,6 +146,18 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     return YES;
 }
 
+- (IBAction)goToNextPage:(id)sender
+{
+    int current_page = _page_index + 1;
+    [self goToPage:current_page + 1];
+}
+
+- (IBAction)goToPreviousPage:(id)sender
+{
+    int current_page = _page_index + 1;
+    [self goToPage:current_page - 1];
+}
+
 - (void)keyDown:(NSEvent*)event
 {
     // Calls moveLeft: or moveRight: below.
@@ -155,15 +167,13 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 // Called on left arrow.
 - (IBAction)moveLeft:(id)sender
 {
-    int current_page = _page_index + 1;
-    [self goToPage:current_page - 1];
+    [self goToPreviousPage:self];
 }
 
 // Called on right arrow.
 - (IBAction)moveRight:(id)sender
 {
-    int current_page = _page_index + 1;
-    [self goToPage:current_page + 1];
+    [self goToNextPage:self];
 }
 
 #pragma mark - State restoration

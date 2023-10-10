@@ -639,10 +639,22 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Go" id="u8F-oH-oMu">
                         <items>
-                            <menuItem title="Go to Page…" keyEquivalent="g" id="Ou1-5M-LzJ">
+                            <menuItem title="Previous Page" keyEquivalent="" id="Ou1-5M-LzJ">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                <connections>
+                                    <action selector="goToPreviousPage:" target="-1" id="e1c-zc-WR6"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Next Page" keyEquivalent="" id="mfm-mG-pLT">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                <connections>
+                                    <action selector="goToNextPage:" target="-1" id="lt2-m9-Iyp"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Go to Page…" keyEquivalent="g" id="pzP-g1-BeT">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
-                                    <action selector="showGoToPageDialog:" target="-1" id="hmq-Sy-pJC"/>
+                                    <action selector="showGoToPageDialog:" target="-1" id="fPI-BN-18g"/>
                                 </connections>
                             </menuItem>
                         </items>
