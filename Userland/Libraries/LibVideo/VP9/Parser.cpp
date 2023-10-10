@@ -355,7 +355,7 @@ DecoderErrorOr<ColorConfig> Parser::parse_color_config(BigEndianInputBitStream& 
                 return DecoderError::corrupted("color_config: RGB reserved zero was set"sv);
         } else {
             // FIXME: Spec does not specify the subsampling value here. Is this an error or should we set a default?
-            VERIFY_NOT_REACHED();
+            return DecoderError::corrupted("color_config: Invalid subsampling value for profile 0 or 2"sv);
         }
     }
 
