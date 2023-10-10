@@ -294,61 +294,7 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
 }
 
 template<typename ParameterType>
-static void generate_to_deprecated_string(SourceGenerator& scoped_generator, ParameterType const& parameter, bool variadic, bool optional, Optional<DeprecatedString> const& optional_default_value)
-{
-    if (variadic) {
-        scoped_generator.append(R"~~~(
-    Vector<DeprecatedString> @cpp_name@;
-
-    if (vm.argument_count() > @js_suffix@) {
-        @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
-
-        for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-            auto to_string_result = TRY(vm.argument(i).to_deprecated_string(vm));
-            @cpp_name@.unchecked_append(move(to_string_result));
-        }
-    }
-)~~~");
-    } else if (!optional) {
-        if (!parameter.type->is_nullable()) {
-            scoped_generator.append(R"~~~(
-    DeprecatedString @cpp_name@;
-    if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
-        @cpp_name@ = DeprecatedString::empty();
-    } else {
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
-    }
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    DeprecatedString @cpp_name@;
-    if (!@js_name@@js_suffix@.is_nullish())
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
-)~~~");
-        }
-    } else {
-        scoped_generator.append(R"~~~(
-    DeprecatedString @cpp_name@;
-    if (!@js_name@@js_suffix@.is_undefined()) {
-        if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@)
-            @cpp_name@ = DeprecatedString::empty();
-        else
-            @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
-    })~~~");
-        if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
-            scoped_generator.append(R"~~~( else {
-        @cpp_name@ = @parameter.optional_default_value@;
-    }
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-)~~~");
-        }
-    }
-}
-
-template<typename ParameterType>
-static void generate_to_new_string(SourceGenerator& scoped_generator, ParameterType const& parameter, bool variadic, bool optional, Optional<DeprecatedString> const& optional_default_value)
+static void generate_to_string(SourceGenerator& scoped_generator, ParameterType const& parameter, bool variadic, bool optional, Optional<DeprecatedString> const& optional_default_value)
 {
     if (variadic) {
         scoped_generator.append(R"~~~(
@@ -423,7 +369,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
     // FIXME: Add support for optional, variadic, nullable and default values to all types
     if (parameter.type->is_string()) {
-        generate_to_new_string(scoped_generator, parameter, variadic, optional, optional_default_value);
+        generate_to_string(scoped_generator, parameter, variadic, optional, optional_default_value);
     } else if (parameter.type->name().is_one_of("EventListener", "NodeFilter")) {
         // FIXME: Replace this with support for callback interfaces. https://webidl.spec.whatwg.org/#idl-callback-interface
 
