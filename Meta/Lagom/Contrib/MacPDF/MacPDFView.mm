@@ -164,6 +164,12 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     [self interpretKeyEvents:@[ event ]];
 }
 
+// Called on down arrow.
+- (IBAction)moveDown:(id)sender
+{
+    [self goToNextPage:self];
+}
+
 // Called on left arrow.
 - (IBAction)moveLeft:(id)sender
 {
@@ -174,6 +180,12 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 - (IBAction)moveRight:(id)sender
 {
     [self goToNextPage:self];
+}
+
+// Called on up arrow.
+- (IBAction)moveUp:(id)sender
+{
+    [self goToPreviousPage:self];
 }
 
 #pragma mark - State restoration
