@@ -44,14 +44,6 @@ static StringView bpp_for_format_resilient(DeprecatedString format)
     unsigned format_uint = format.to_uint().value_or(static_cast<unsigned>(Gfx::BitmapFormat::Invalid));
     // Cannot use Gfx::Bitmap::bpp_for_format here, as we have to accept invalid enum values.
     switch (static_cast<Gfx::BitmapFormat>(format_uint)) {
-    case Gfx::BitmapFormat::Indexed1:
-        return "1"sv;
-    case Gfx::BitmapFormat::Indexed2:
-        return "2"sv;
-    case Gfx::BitmapFormat::Indexed4:
-        return "4"sv;
-    case Gfx::BitmapFormat::Indexed8:
-        return "8"sv;
     case Gfx::BitmapFormat::BGRx8888:
     case Gfx::BitmapFormat::BGRA8888:
         return "32"sv;

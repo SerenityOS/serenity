@@ -1025,7 +1025,7 @@ ErrorOr<NonnullOwnPtr<WindowBackingStore>> Window::create_backing_store(Gfx::Int
     auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes, PAGE_SIZE)));
 
     // FIXME: Plumb scale factor here eventually.
-    auto bitmap = TRY(Gfx::Bitmap::create_with_anonymous_buffer(format, buffer, size, 1, {}));
+    auto bitmap = TRY(Gfx::Bitmap::create_with_anonymous_buffer(format, buffer, size, 1));
     return make<WindowBackingStore>(bitmap);
 }
 

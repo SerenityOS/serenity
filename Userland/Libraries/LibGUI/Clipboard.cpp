@@ -102,10 +102,6 @@ RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
     if (!Gfx::is_valid_bitmap_format(format.value()))
         return nullptr;
     auto bitmap_format = (Gfx::BitmapFormat)format.value();
-    // We cannot handle indexed bitmaps, as the palette would be lost.
-    // Thankfully, everything that copies bitmaps also transforms them to RGB beforehand.
-    if (Gfx::determine_storage_format(bitmap_format) == Gfx::StorageFormat::Indexed8)
-        return nullptr;
 
     // We won't actually write to the clipping_bitmap, so casting away the const is okay.
     auto clipping_data = const_cast<u8*>(data.data());

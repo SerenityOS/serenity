@@ -38,23 +38,18 @@ namespace Gfx {
 
 enum class BitmapFormat {
     Invalid,
-    Indexed1,
-    Indexed2,
-    Indexed4,
-    Indexed8,
     BGRx8888,
     BGRA8888,
     RGBA8888,
+
+    FirstValid = BGRx8888,
+    LastValid = RGBA8888,
 };
 
 inline bool is_valid_bitmap_format(unsigned format)
 {
     switch (format) {
     case (unsigned)BitmapFormat::Invalid:
-    case (unsigned)BitmapFormat::Indexed1:
-    case (unsigned)BitmapFormat::Indexed2:
-    case (unsigned)BitmapFormat::Indexed4:
-    case (unsigned)BitmapFormat::Indexed8:
     case (unsigned)BitmapFormat::BGRx8888:
     case (unsigned)BitmapFormat::BGRA8888:
     case (unsigned)BitmapFormat::RGBA8888:
@@ -64,7 +59,6 @@ inline bool is_valid_bitmap_format(unsigned format)
 }
 
 enum class StorageFormat {
-    Indexed8,
     BGRx8888,
     BGRA8888,
     RGBA8888,
@@ -79,11 +73,6 @@ inline StorageFormat determine_storage_format(BitmapFormat format)
         return StorageFormat::BGRA8888;
     case BitmapFormat::RGBA8888:
         return StorageFormat::RGBA8888;
-    case BitmapFormat::Indexed1:
-    case BitmapFormat::Indexed2:
-    case BitmapFormat::Indexed4:
-    case BitmapFormat::Indexed8:
-        return StorageFormat::Indexed8;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -104,7 +93,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(StringView path, int scale_factor = 1, Optional<IntSize> ideal_size = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(NonnullOwnPtr<Core::File>, StringView path, Optional<IntSize> ideal_size = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_bytes(ReadonlyBytes, Optional<IntSize> ideal_size = {}, Optional<DeprecatedString> mine_type = {});
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale, Vector<ARGB32> const& palette);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_bytes(ReadonlyBytes);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_byte_buffer(ByteBuffer&&);
 
@@ -162,46 +151,9 @@ public:
     [[nodiscard]] int physical_height() const { return physical_size().height(); }
     [[nodiscard]] size_t pitch() const { return m_pitch; }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_indexed() const
-    {
-        return is_indexed(m_format);
-    }
-
-    [[nodiscard]] ALWAYS_INLINE static bool is_indexed(BitmapFormat format)
-    {
-        return format == BitmapFormat::Indexed8 || format == BitmapFormat::Indexed4
-            || format == BitmapFormat::Indexed2 || format == BitmapFormat::Indexed1;
-    }
-
-    [[nodiscard]] static size_t palette_size(BitmapFormat format)
-    {
-        switch (format) {
-        case BitmapFormat::Indexed1:
-            return 2;
-        case BitmapFormat::Indexed2:
-            return 4;
-        case BitmapFormat::Indexed4:
-            return 16;
-        case BitmapFormat::Indexed8:
-            return 256;
-        default:
-            return 0;
-        }
-    }
-
-    [[nodiscard]] Vector<ARGB32> palette_to_vector() const;
-
     [[nodiscard]] static unsigned bpp_for_format(BitmapFormat format)
     {
         switch (format) {
-        case BitmapFormat::Indexed1:
-            return 1;
-        case BitmapFormat::Indexed2:
-            return 2;
-        case BitmapFormat::Indexed4:
-            return 4;
-        case BitmapFormat::Indexed8:
-            return 8;
         case BitmapFormat::BGRx8888:
         case BitmapFormat::BGRA8888:
             return 32;
@@ -231,9 +183,6 @@ public:
 
     [[nodiscard]] static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
     [[nodiscard]] size_t size_in_bytes() const { return size_in_bytes(m_pitch, physical_height()); }
-
-    [[nodiscard]] Color palette_color(u8 index) const { return Color::from_argb(m_palette[index]); }
-    void set_palette_color(u8 index, Color color) { m_palette[index] = color.value(); }
 
     template<StorageFormat>
     [[nodiscard]] Color get_pixel(int physical_x, int physical_y) const;
@@ -270,16 +219,13 @@ public:
 private:
     Bitmap(BitmapFormat, IntSize, int, BackingStore const&);
     Bitmap(BitmapFormat, IntSize, int, size_t pitch, void*);
-    Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize, int, Vector<ARGB32> const& palette);
+    Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize, int);
 
     static ErrorOr<BackingStore> allocate_backing_store(BitmapFormat format, IntSize size, int scale_factor);
-
-    void allocate_palette_from_format(BitmapFormat, Vector<ARGB32> const& source_palette);
 
     IntSize m_size;
     int m_scale;
     void* m_data { nullptr };
-    ARGB32* m_palette { nullptr };
     size_t m_pitch { 0 };
     BitmapFormat m_format { BitmapFormat::Invalid };
     bool m_needs_munmap { false };
@@ -337,14 +283,6 @@ ALWAYS_INLINE Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) con
     return Color::from_argb(scanline(y)[x]);
 }
 
-template<>
-ALWAYS_INLINE Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
-{
-    VERIFY(x >= 0);
-    VERIFY(x < physical_width());
-    return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
-}
-
 ALWAYS_INLINE Color Bitmap::get_pixel(int x, int y) const
 {
     switch (determine_storage_format(m_format)) {
@@ -352,8 +290,6 @@ ALWAYS_INLINE Color Bitmap::get_pixel(int x, int y) const
         return get_pixel<StorageFormat::BGRx8888>(x, y);
     case StorageFormat::BGRA8888:
         return get_pixel<StorageFormat::BGRA8888>(x, y);
-    case StorageFormat::Indexed8:
-        return get_pixel<StorageFormat::Indexed8>(x, y);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -398,8 +334,6 @@ ALWAYS_INLINE void Bitmap::set_pixel(int x, int y, Color color)
     case StorageFormat::RGBA8888:
         set_pixel<StorageFormat::RGBA8888>(x, y, color);
         break;
-    case StorageFormat::Indexed8:
-        VERIFY_NOT_REACHED();
     default:
         VERIFY_NOT_REACHED();
     }

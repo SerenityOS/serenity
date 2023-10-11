@@ -71,11 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (move_alpha_to_rgb) {
         switch (frame->format()) {
         case Gfx::BitmapFormat::Invalid:
-        case Gfx::BitmapFormat::Indexed1:
-        case Gfx::BitmapFormat::Indexed2:
-        case Gfx::BitmapFormat::Indexed4:
-        case Gfx::BitmapFormat::Indexed8:
-            warnln("Can't --strip-alpha with indexed or invalid bitmaps");
+            warnln("Can't --strip-alpha with invalid bitmaps");
             return 1;
         case Gfx::BitmapFormat::RGBA8888:
             // No image decoder currently produces bitmaps with this format.
@@ -96,11 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (strip_alpha) {
         switch (frame->format()) {
         case Gfx::BitmapFormat::Invalid:
-        case Gfx::BitmapFormat::Indexed1:
-        case Gfx::BitmapFormat::Indexed2:
-        case Gfx::BitmapFormat::Indexed4:
-        case Gfx::BitmapFormat::Indexed8:
-            warnln("Can't --strip-alpha with indexed or invalid bitmaps");
+            warnln("Can't --strip-alpha with invalid bitmaps");
             return 1;
         case Gfx::BitmapFormat::RGBA8888:
             // No image decoder currently produces bitmaps with this format.

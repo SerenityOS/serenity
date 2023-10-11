@@ -778,8 +778,7 @@ void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unuse
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
             buffer_or_error.release_value(),
             size,
-            1,
-            {});
+            1);
         if (backing_store_or_error.is_error()) {
             did_misbehave("");
         }
