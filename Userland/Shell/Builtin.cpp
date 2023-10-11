@@ -2099,6 +2099,56 @@ ErrorOr<int> Shell::builtin_shell_set_active_prompt(Main::Arguments arguments)
     return 0;
 }
 
+ErrorOr<int> Shell::builtin_in_parallel(Main::Arguments arguments)
+{
+    unsigned max_jobs = 1;
+    Vector<StringView> command_and_arguments;
+
+#ifdef _SC_NPROCESSORS_ONLN
+    max_jobs = sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+
+    Core::ArgsParser parser;
+    parser.set_general_help("Run the given command in the background, allowing at most <N> jobs running at once.");
+    parser.add_option(max_jobs, "Maximum number of jobs to run in parallel", "max-jobs", 'j', "N");
+    parser.add_positional_argument(command_and_arguments, "Command and arguments to run", "argument", Core::ArgsParser::Required::Yes);
+    parser.set_stop_on_first_non_option(true);
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
+        return 1;
+
+    if (command_and_arguments.is_empty()) {
+        warnln("in_parallel: No command to run");
+        return 1;
+    }
+
+    AST::Command command;
+    TRY(command.argv.try_ensure_capacity(command_and_arguments.size()));
+    for (auto& arg : command_and_arguments)
+        command.argv.append(TRY(String::from_utf8(arg)));
+
+    auto commands = TRY(expand_aliases({ move(command) }));
+
+    Vector<AST::Command> commands_to_run;
+    for (auto& command : commands) {
+        if (command.argv.is_empty())
+            continue;
+        command.should_notify_if_in_background = false;
+        command.should_wait = false;
+        commands_to_run.append(move(command));
+    }
+
+    if (commands_to_run.is_empty()) {
+        warnln("in_parallel: No command to run");
+        return 1;
+    }
+
+    Core::EventLoop loop;
+    loop.spin_until([&] { return jobs.size() + commands_to_run.size() <= max_jobs; });
+    run_commands(commands_to_run);
+    return 0;
+}
+
 bool Shell::has_builtin(StringView name) const
 {
     if (name == ":"sv || (m_in_posix_mode && name == "."sv))
