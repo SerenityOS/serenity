@@ -20,3 +20,8 @@ private:                      \
 public:                            \
     c(c&&) = default;              \
     c& operator=(c&&) = default
+
+#define AK_MAKE_DEFAULT_COPYABLE(c) \
+public:                             \
+    c(c const&) = default;          \
+    c& operator=(c const&) = default
