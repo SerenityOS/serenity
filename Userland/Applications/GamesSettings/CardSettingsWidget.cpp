@@ -18,7 +18,7 @@
 
 namespace GamesSettings {
 
-static constexpr StringView default_card_back_image_path = "/res/graphics/cards/backs/buggie-deck.png"sv;
+static constexpr StringView default_card_back_image_path = "/res/graphics/cards/backs/Red.png"sv;
 static constexpr StringView default_card_front_image_set = "Classic"sv;
 
 class CardGamePreview final : public Cards::CardGame {
