@@ -74,8 +74,6 @@
     _outlineView.focusRingType = NSFocusRingTypeNone;
     _outlineView.headerView = nil;
 
-    // FIXME: Implement data source support for autosaveExpandedItems and use that.
-
     // rowSizeStyle does not default to NSTableViewRowSizeStyleDefault, but needs to be set to it for outline views in sourcelist style.
     _outlineView.rowSizeStyle = NSTableViewRowSizeStyleDefault;
 
@@ -120,6 +118,8 @@
     _outlineDataSource = [[MacPDFOutlineViewDataSource alloc] initWithOutline:_pdfDocument.pdf->outline()];
     _outlineView.dataSource = _outlineDataSource;
     _outlineView.delegate = self;
+    _outlineView.autosaveName = @"OutlineView";
+    _outlineView.autosaveExpandedItems = YES;
 }
 
 - (IBAction)showGoToPageDialog:(id)sender
