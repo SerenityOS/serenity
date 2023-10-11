@@ -94,7 +94,7 @@ public:
     Optional<size_t> find_one_anywhere(size_t hint = 0) const
     {
         VERIFY(hint < m_size);
-        u8 const* end = &m_data[m_size / 8];
+        u8 const* end = &m_data[size_in_bytes()];
 
         for (;;) {
             // We will use hint as what it is: a hint. Because we try to
@@ -128,7 +128,7 @@ public:
                 // We didn't find anything, check the remaining few bytes (if any)
                 u8 byte = VALUE ? 0x00 : 0xff;
                 size_t i = reinterpret_cast<u8 const*>(ptr_large) - &m_data[0];
-                size_t byte_count = m_size / 8;
+                size_t byte_count = size_in_bytes();
                 VERIFY(i <= byte_count);
                 while (i < byte_count && m_data[i] == byte)
                     i++;
@@ -171,7 +171,7 @@ public:
     template<bool VALUE>
     Optional<size_t> find_first() const
     {
-        size_t byte_count = m_size / 8;
+        size_t byte_count = size_in_bytes();
         size_t i = 0;
 
         u8 byte = VALUE ? 0x00 : 0xff;
