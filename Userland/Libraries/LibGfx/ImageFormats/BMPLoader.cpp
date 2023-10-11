@@ -518,6 +518,11 @@ static ErrorOr<void> decode_bmp_header(BMPLoadingContext& context)
     // Ignore reserved bytes
     streamer.drop_bytes(4);
     context.data_offset = streamer.read_u32();
+    if (context.data_offset >= context.file_size) {
+        dbgln_if(BMP_DEBUG, "BMP has invalid data offset: {}", context.data_offset);
+        context.state = BMPLoadingContext::State::Error;
+        return Error::from_string_literal("BMP has invalid data offset");
+    }
 
     if constexpr (BMP_DEBUG) {
         dbgln("BMP file size: {}", context.file_size);
@@ -921,6 +926,12 @@ static ErrorOr<void> decode_bmp_dib(BMPLoadingContext& context)
             auto size_of_color_table = (context.dib.info.number_of_palette_colors > 0 ? context.dib.info.number_of_palette_colors : max_colors) * bytes_per_color;
             context.data_offset = dib_size + size_of_color_table;
         }
+    }
+
+    if (context.data_offset >= context.file_size) {
+        dbgln_if(BMP_DEBUG, "BMP has invalid data offset: {}", context.data_offset);
+        context.state = BMPLoadingContext::State::Error;
+        return Error::from_string_literal("BMP has invalid data offset");
     }
 
     context.state = BMPLoadingContext::State::DIBDecoded;
