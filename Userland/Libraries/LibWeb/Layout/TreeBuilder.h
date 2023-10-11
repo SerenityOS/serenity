@@ -25,6 +25,8 @@ private:
         bool has_svg_root = false;
     };
 
+    i32 calculate_list_item_index(DOM::Node&);
+
     ErrorOr<void> create_layout_tree(DOM::Node&, Context&);
 
     void push_parent(Layout::NodeWithStyle& node) { m_ancestor_stack.append(node); }
