@@ -276,3 +276,21 @@ TEST_CASE(byte_aligned_access)
         EXPECT_EQ(bitmap.count_in_range(4, 4, true), 1u);
     }
 }
+
+TEST_CASE(find_one_anywhere_edge_case)
+{
+    {
+        auto bitmap = MUST(Bitmap::create(1, false));
+        bitmap.set(0, false);
+        EXPECT_EQ(bitmap.find_one_anywhere_unset(0).value(), 0UL);
+    }
+}
+
+TEST_CASE(find_first_edge_case)
+{
+    {
+        auto bitmap = MUST(Bitmap::create(1, false));
+        bitmap.set(0, false);
+        EXPECT_EQ(bitmap.find_first_unset().value(), 0UL);
+    }
+}
