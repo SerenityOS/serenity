@@ -258,6 +258,7 @@ source_set("all_generated") {
     ":generate_default_stylesheet_source",
     ":generate_mathml_stylesheet_source",
     ":generate_quirks_mode_stylesheet_source",
+    ":generate_svg_stylesheet_source",
     ":generate_window_or_worker_interfaces",
   ]
   configs += [ ":configs" ]

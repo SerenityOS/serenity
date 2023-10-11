@@ -52,5 +52,6 @@ source_set("DOM") {
     "StyleElementUtils.cpp",
     "Text.cpp",
     "TreeWalker.cpp",
+    "XMLDocument.cpp",
   ]
 }

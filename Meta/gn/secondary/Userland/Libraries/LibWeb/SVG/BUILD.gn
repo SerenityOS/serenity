@@ -27,6 +27,7 @@ source_set("SVG") {
     "SVGRadialGradientElement.cpp",
     "SVGRectElement.cpp",
     "SVGSVGElement.cpp",
+    "SVGScriptElement.cpp",
     "SVGStopElement.cpp",
     "SVGStyleElement.cpp",
     "SVGSymbolElement.cpp",

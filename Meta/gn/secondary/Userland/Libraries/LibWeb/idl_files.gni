@@ -254,6 +254,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/SVG/SVGRadialGradientElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGRectElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGSVGElement.idl",
+  "//Userland/Libraries/LibWeb/SVG/SVGScriptElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGStopElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGStyleElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGSymbolElement.idl",
