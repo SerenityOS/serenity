@@ -330,6 +330,9 @@ DecoderErrorOr<ColorConfig> Parser::parse_color_config(BigEndianInputBitStream& 
     }
 
     auto color_space = static_cast<ColorSpace>(TRY_READ(bit_stream.read_bits(3)));
+    if (color_space == ColorSpace::Reserved)
+        return DecoderError::corrupted("color_config: Color space reserved value was set"sv);
+
     VERIFY(color_space <= ColorSpace::RGB);
 
     VideoFullRangeFlag video_full_range_flag;
