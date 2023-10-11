@@ -20,6 +20,7 @@
 #include <LibProtocol/RequestClient.h>
 
 #include "AvailablePort.h"
+#include "BuildablePort.h"
 #include "MarkdownTableFinder.h"
 
 #include <Shell/AST.h>
@@ -59,7 +60,16 @@ ErrorOr<int> AvailablePort::query_details_for_package(HashMap<String, AvailableP
             outln("Yes");
         else
             outln("No");
+
+        auto result = BuildablePort::from_available_port(available_port);
+        if (result.is_error()) {
+            warnln("pkg: error in port script: {}", result.release_error());
+        } else {
+            auto buildable_port = result.release_value();
+            outln("    Dependencies: {}", buildable_port.dependencies());
+        }
     }
+
     return 0;
 }
 

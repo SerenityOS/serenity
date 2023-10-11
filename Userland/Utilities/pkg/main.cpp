@@ -35,6 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res"sv, "r"sv));
     TRY(Core::System::unveil("/usr/lib"sv, "r"sv));
     TRY(Core::System::unveil("/etc/passwd"sv, "r"sv));
+    TRY(Core::System::unveil("/dev/null"sv, "rw"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool verbose = false;

@@ -8,6 +8,7 @@
 
 #include "InstalledPort.h"
 #include <AK/HashMap.h>
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -19,7 +20,7 @@ public:
     static ErrorOr<int> update_available_ports_list_file();
 
     AvailablePort(String name, String version, String website)
-        : m_name(name)
+        : m_name(move(name))
         , m_website(move(website))
         , m_version(move(version))
     {
@@ -28,6 +29,7 @@ public:
     StringView name() const { return m_name.bytes_as_string_view(); }
     StringView version() const { return m_version.bytes_as_string_view(); }
     StringView website() const { return m_website.bytes_as_string_view(); }
+    LexicalPath local_port_root() const { return { LexicalPath::join("/usr/Ports"sv, m_name) }; }
 
 private:
     String m_name;
