@@ -64,6 +64,7 @@
     __ENUMERATE_SHELL_BUILTIN(read, OnlyInPOSIXMode)         \
     __ENUMERATE_SHELL_BUILTIN(run_with_env, OnlyInPOSIXMode) \
     __ENUMERATE_SHELL_BUILTIN(argsparser_parse, InAllModes)  \
+    __ENUMERATE_SHELL_BUILTIN(in_parallel, InAllModes)       \
     __ENUMERATE_SHELL_BUILTIN(shell_set_active_prompt, InAllModes)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
