@@ -47,6 +47,34 @@ struct QuotesData {
     Vector<Array<String, 2>> strings {};
 };
 
+struct ResolvedBackdropFilter {
+    struct Blur {
+        float radius;
+    };
+
+    struct DropShadow {
+        double offset_x;
+        double offset_y;
+        double radius;
+        Color color;
+    };
+
+    struct HueRotate {
+        float angle_degrees;
+    };
+
+    struct ColorOperation {
+        Filter::Color::Operation operation;
+        float amount;
+    };
+
+    using FilterFunction = Variant<Blur, DropShadow, HueRotate, ColorOperation>;
+
+    bool is_none() const { return filters.size() == 0; }
+
+    Vector<FilterFunction> filters;
+};
+
 class InitialValues {
 public:
     static AspectRatio aspect_ratio() { return AspectRatio { true, {} }; }
@@ -71,7 +99,7 @@ public:
     static CSS::Display display() { return CSS::Display { CSS::DisplayOutside::Inline, CSS::DisplayInside::Flow }; }
     static Color color() { return Color::Black; }
     static Color stop_color() { return Color::Black; }
-    static CSS::BackdropFilter backdrop_filter() { return BackdropFilter::make_none(); }
+    static CSS::ResolvedBackdropFilter backdrop_filter() { return ResolvedBackdropFilter { .filters = {} }; }
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::ListStylePosition list_style_position() { return CSS::ListStylePosition::Outside; }
@@ -302,7 +330,7 @@ public:
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     CSS::JustifySelf justify_self() const { return m_noninherited.justify_self; }
     CSS::JustifyItems justify_items() const { return m_noninherited.justify_items; }
-    CSS::BackdropFilter const& backdrop_filter() const { return m_noninherited.backdrop_filter; }
+    CSS::ResolvedBackdropFilter const& backdrop_filter() const { return m_noninherited.backdrop_filter; }
     Vector<ShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
     CSS::Size const& width() const { return m_noninherited.width; }
@@ -452,7 +480,7 @@ protected:
         CSS::LengthBox inset { InitialValues::inset() };
         CSS::LengthBox margin { InitialValues::margin() };
         CSS::LengthBox padding { InitialValues::padding() };
-        CSS::BackdropFilter backdrop_filter { InitialValues::backdrop_filter() };
+        CSS::ResolvedBackdropFilter backdrop_filter { InitialValues::backdrop_filter() };
         BorderData border_left;
         BorderData border_top;
         BorderData border_right;
@@ -565,7 +593,7 @@ public:
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
     void set_list_style_position(CSS::ListStylePosition value) { m_inherited.list_style_position = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
-    void set_backdrop_filter(CSS::BackdropFilter backdrop_filter) { m_noninherited.backdrop_filter = move(backdrop_filter); }
+    void set_backdrop_filter(CSS::ResolvedBackdropFilter backdrop_filter) { m_noninherited.backdrop_filter = move(backdrop_filter); }
     void set_border_bottom_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_left_radius = move(value); }
     void set_border_bottom_right_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_right_radius = move(value); }
     void set_border_top_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_top_left_radius = move(value); }

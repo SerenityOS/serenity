@@ -29,13 +29,6 @@ struct DropShadow {
     Length offset_y;
     Optional<Length> radius {};
     Optional<Color> color {};
-    struct Resolved {
-        double offset_x;
-        double offset_y;
-        double radius;
-        Color color;
-    };
-    Resolved resolved(Layout::Node const&) const;
     bool operator==(DropShadow const&) const = default;
 };
 

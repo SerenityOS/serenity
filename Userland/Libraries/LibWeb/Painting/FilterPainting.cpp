@@ -19,7 +19,7 @@
 
 namespace Web::Painting {
 
-void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, ReadonlySpan<CSS::FilterFunction> filter_list)
+void apply_filter_list(Gfx::Bitmap& target_bitmap, ReadonlySpan<CSS::ResolvedBackdropFilter::FilterFunction> filter_list)
 {
     auto apply_color_filter = [&](Gfx::ColorFilter const& filter) {
         const_cast<Gfx::ColorFilter&>(filter).apply(target_bitmap, target_bitmap.rect(), target_bitmap, target_bitmap.rect());
@@ -27,14 +27,14 @@ void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, Rea
     for (auto& filter_function : filter_list) {
         // See: https://drafts.fxtf.org/filter-effects-1/#supported-filter-functions
         filter_function.visit(
-            [&](CSS::Filter::Blur const& blur) {
+            [&](CSS::ResolvedBackdropFilter::Blur const& blur_filter) {
                 // Applies a Gaussian blur to the input image.
                 // The passed parameter defines the value of the standard deviation to the Gaussian function.
                 Gfx::StackBlurFilter filter { target_bitmap };
-                filter.process_rgba(blur.resolved_radius(node), Color::Transparent);
+                filter.process_rgba(blur_filter.radius, Color::Transparent);
             },
-            [&](CSS::Filter::Color const& color) {
-                auto amount = color.resolved_amount();
+            [&](CSS::ResolvedBackdropFilter::ColorOperation const& color) {
+                auto amount = color.amount;
                 auto amount_clamped = clamp(amount, 0.0f, 1.0f);
                 switch (color.operation) {
                 case CSS::Filter::Color::Operation::Grayscale: {
@@ -86,19 +86,19 @@ void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, Rea
                     break;
                 }
             },
-            [&](CSS::Filter::HueRotate const& hue_rotate) {
+            [&](CSS::ResolvedBackdropFilter::HueRotate const& hue_rotate) {
                 // Applies a hue rotation on the input image.
                 // The passed parameter defines the number of degrees around the color circle the input samples will be adjusted.
                 // A value of 0deg leaves the input unchanged. Implementations must not normalize this value in order to allow animations beyond 360deg.
-                apply_color_filter(Gfx::HueRotateFilter { hue_rotate.angle_degrees() });
+                apply_color_filter(Gfx::HueRotateFilter { hue_rotate.angle_degrees });
             },
-            [&](CSS::Filter::DropShadow const&) {
+            [&](CSS::ResolvedBackdropFilter::DropShadow const&) {
                 dbgln("TODO: Implement drop-shadow() filter function!");
             });
     }
 }
 
-void apply_backdrop_filter(PaintContext& context, Layout::Node const& node, CSSPixelRect const& backdrop_rect, BorderRadiiData const& border_radii_data, CSS::BackdropFilter const& backdrop_filter)
+void apply_backdrop_filter(PaintContext& context, CSSPixelRect const& backdrop_rect, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter)
 {
     // This performs the backdrop filter operation: https://drafts.fxtf.org/filter-effects-2/#backdrop-filter-operation
 
@@ -121,7 +121,7 @@ void apply_backdrop_filter(PaintContext& context, Layout::Node const& node, CSSP
     }
     auto backdrop_bitmap = maybe_backdrop_bitmap.release_value();
     // 2. Apply the backdrop-filter’s filter operations to the entire contents of T'.
-    apply_filter_list(*backdrop_bitmap, node, backdrop_filter.filters());
+    apply_filter_list(*backdrop_bitmap, backdrop_filter.filters);
 
     // FIXME: 3. If element B has any transforms (between B and the Backdrop Root), apply the inverse of those transforms to the contents of T’.
 
