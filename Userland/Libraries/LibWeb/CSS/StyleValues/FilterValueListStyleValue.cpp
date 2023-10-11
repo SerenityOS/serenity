@@ -23,18 +23,6 @@ float Filter::Blur::resolved_radius(Layout::Node const& node) const
     return sigma * 2;
 }
 
-Filter::DropShadow::Resolved Filter::DropShadow::resolved(Layout::Node const& node) const
-{
-    // The default value for omitted values is missing length values set to 0
-    // and the missing used color is taken from the color property.
-    return Resolved {
-        offset_x.to_px(node).to_double(),
-        offset_y.to_px(node).to_double(),
-        radius.has_value() ? radius->to_px(node).to_double() : 0.0,
-        color.has_value() ? *color : node.computed_values().color()
-    };
-}
-
 float Filter::HueRotate::angle_degrees() const
 {
     // Default value when omitted is 0deg.
