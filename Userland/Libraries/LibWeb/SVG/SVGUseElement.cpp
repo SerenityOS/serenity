@@ -62,14 +62,15 @@ void SVGUseElement::attribute_changed(FlyString const& name, DeprecatedString co
     }
 }
 
-Optional<StringView> SVGUseElement::parse_id_from_href(DeprecatedString const& href)
+Optional<FlyString> SVGUseElement::parse_id_from_href(DeprecatedString const& href)
 {
     auto id_seperator = href.find('#');
     if (!id_seperator.has_value()) {
         return {};
     }
 
-    return href.substring_view(id_seperator.value() + 1);
+    auto id = href.substring_view(id_seperator.value() + 1);
+    return MUST(FlyString::from_utf8(id));
 }
 
 Gfx::AffineTransform SVGUseElement::element_transform() const
@@ -115,7 +116,7 @@ JS::GCPtr<DOM::Element> SVGUseElement::referenced_element()
     }
 
     // FIXME: Support loading of external svg documents
-    return document().get_element_by_id(MUST(FlyString::from_utf8(m_referenced_id.value())));
+    return document().get_element_by_id(m_referenced_id.value());
 }
 
 // https://svgwg.org/svg2-draft/struct.html#UseShadowTree
