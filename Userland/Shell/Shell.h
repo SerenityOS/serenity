@@ -507,8 +507,6 @@ private:
 
     RefPtr<Line::Editor> m_editor;
 
-    bool m_default_constructed { false };
-
     mutable bool m_last_continuation_state { false }; // false == not needed.
 
     Optional<size_t> m_history_autosave_time;

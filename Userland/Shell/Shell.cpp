@@ -578,10 +578,6 @@ Optional<DeprecatedString> Shell::help_path_for(Vector<RunnablePath> visited, Sh
 
 int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_override)
 {
-    // The default-constructed mode of the shell
-    // should not be used for execution!
-    VERIFY(!m_default_constructed);
-
     take_error();
 
     if (!last_return_code.has_value())
@@ -2236,7 +2232,7 @@ void Shell::notify_child_event()
 }
 
 Shell::Shell()
-    : m_default_constructed(true)
+    : m_is_interactive(false)
 {
     push_frame("main", LocalFrameKind::FunctionOrGlobal).leak_frame();
 
@@ -2336,9 +2332,6 @@ Shell::~Shell()
 
 void Shell::destroy()
 {
-    if (m_default_constructed)
-        return;
-
     stop_all_jobs();
     if (!m_is_interactive)
         return;
