@@ -20,6 +20,8 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/HTMLLIElement.h>
+#include <LibWeb/HTML/HTMLOListElement.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
 #include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/Layout/ListItemBox.h>
@@ -251,6 +253,30 @@ static bool is_ignorable_whitespace(Layout::Node const& node)
     return false;
 }
 
+i32 TreeBuilder::calculate_list_item_index(DOM::Node& dom_node)
+{
+    if (is<HTML::HTMLLIElement>(dom_node)) {
+        auto& li = static_cast<HTML::HTMLLIElement&>(dom_node);
+        if (li.value() != 0)
+            return li.value();
+    }
+
+    if (dom_node.previous_sibling() != nullptr) {
+        DOM::Node* current = dom_node.previous_sibling();
+        while (current != nullptr) {
+            if (is<HTML::HTMLLIElement>(*current))
+                return calculate_list_item_index(*current) + 1;
+            current = current->previous_sibling();
+        }
+    }
+
+    if (is<HTML::HTMLOListElement>(*dom_node.parent())) {
+        auto& ol = static_cast<HTML::HTMLOListElement&>(*dom_node.parent());
+        return ol.start();
+    }
+    return 1;
+}
+
 ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
 {
     JS::GCPtr<Layout::Node> layout_node;
@@ -349,9 +375,8 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
     if (is<ListItemBox>(*layout_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
-        int child_index = layout_node->parent()->index_of_child<ListItemBox>(*layout_node).value();
         auto marker_style = TRY(style_computer.compute_style(element, CSS::Selector::PseudoElement::Marker));
-        auto list_item_marker = document.heap().allocate_without_realm<ListItemMarkerBox>(document, layout_node->computed_values().list_style_type(), layout_node->computed_values().list_style_position(), child_index + 1, *marker_style);
+        auto list_item_marker = document.heap().allocate_without_realm<ListItemMarkerBox>(document, layout_node->computed_values().list_style_type(), layout_node->computed_values().list_style_position(), calculate_list_item_index(dom_node), *marker_style);
         static_cast<ListItemBox&>(*layout_node).set_marker(list_item_marker);
         element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Marker, list_item_marker);
         layout_node->append_child(*list_item_marker);

@@ -7,7 +7,7 @@ interface HTMLOListElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     [CEReactions, Reflect] attribute boolean reversed;
-    // FIXME: [CEReactions] attribute long start;
+    [CEReactions] attribute long start;
     [CEReactions, Reflect] attribute DOMString type;
 
     // Obsolete
