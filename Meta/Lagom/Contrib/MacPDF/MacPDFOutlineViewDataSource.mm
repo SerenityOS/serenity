@@ -67,6 +67,7 @@
 @interface MacPDFOutlineViewDataSource ()
 {
     RefPtr<PDF::OutlineDict> _outline;
+    HashMap<PDF::OutlineItem*, OutlineItemWrapper*> _wrappers;
 }
 @end
 
@@ -84,15 +85,24 @@
 
 - (id)outlineView:(NSOutlineView*)outlineView child:(NSInteger)index ofItem:(nullable id)item
 {
-    if (item)
-        return [[OutlineItemWrapper alloc] initWithItem:[(OutlineItemWrapper*)item child:index]];
+    if (item) {
+        auto item_wrapper = (OutlineItemWrapper*)item;
+        return _wrappers.ensure([item_wrapper child:index].ptr(), [&]() {
+            return [[OutlineItemWrapper alloc] initWithItem:[item_wrapper child:index]];
+        });
+    }
 
     if (index == 0) {
-        bool has_outline = _outline && !_outline->children.is_empty();
-        // FIXME: Maybe put filename here instead?
-        return [[OutlineItemWrapper alloc] initWithGroupName:has_outline ? @"Outline" : @"(No outline)"];
+        return _wrappers.ensure(nullptr, [&]() {
+            bool has_outline = _outline && !_outline->children.is_empty();
+            // FIXME: Maybe put filename here instead?
+            return [[OutlineItemWrapper alloc] initWithGroupName:has_outline ? @"Outline" : @"(No outline)"];
+        });
     }
-    return [[OutlineItemWrapper alloc] initWithItem:_outline->children[index - 1]];
+
+    return _wrappers.ensure(_outline->children[index - 1].ptr(), [&]() {
+        return [[OutlineItemWrapper alloc] initWithItem:_outline->children[index - 1]];
+    });
 }
 
 - (BOOL)outlineView:(NSOutlineView*)outlineView isItemExpandable:(id)item
