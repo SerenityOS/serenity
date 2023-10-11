@@ -223,6 +223,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(srclang)                    \
     __ENUMERATE_HTML_ATTRIBUTE(srcset)                     \
     __ENUMERATE_HTML_ATTRIBUTE(standby)                    \
+    __ENUMERATE_HTML_ATTRIBUTE(start)                      \
     __ENUMERATE_HTML_ATTRIBUTE(step)                       \
     __ENUMERATE_HTML_ATTRIBUTE(style)                      \
     __ENUMERATE_HTML_ATTRIBUTE(summary)                    \
