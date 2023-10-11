@@ -128,9 +128,10 @@ inline constexpr int count_leading_zeroes_safe(IntType value)
     return count_leading_zeroes(value);
 }
 
-// The function will return the number of leading zeroes in the type. If
-// the given number is zero, this function will return the number of bits
-// in the IntType.
+// Returns one plus the index of the least significant 1-bit of x, or if x is
+// zero, returns zero. (See __builtin_ffs.)
+//
+// For numbers above zero, bit_scan_forward(n) == count_trailing_zeroes(n) + 1.
 template<Integral IntType>
 inline constexpr int bit_scan_forward(IntType value)
 {
