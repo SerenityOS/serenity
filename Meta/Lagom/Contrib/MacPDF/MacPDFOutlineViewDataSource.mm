@@ -44,9 +44,9 @@
     return _item->dest.page.map([](u32 page_index) { return page_index + 1; });
 }
 
-- (OutlineItemWrapper*)child:(NSInteger)index
+- (NonnullRefPtr<PDF::OutlineItem>)child:(NSInteger)index
 {
-    return [[OutlineItemWrapper alloc] initWithItem:_item->children[index]];
+    return _item->children[index];
 }
 
 - (NSInteger)numberOfChildren
@@ -85,7 +85,7 @@
 - (id)outlineView:(NSOutlineView*)outlineView child:(NSInteger)index ofItem:(nullable id)item
 {
     if (item)
-        return [(OutlineItemWrapper*)item child:index];
+        return [[OutlineItemWrapper alloc] initWithItem:[(OutlineItemWrapper*)item child:index]];
 
     if (index == 0) {
         bool has_outline = _outline && !_outline->children.is_empty();
