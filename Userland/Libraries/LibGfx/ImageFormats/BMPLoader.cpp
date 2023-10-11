@@ -1247,13 +1247,10 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
 
         switch (bits_per_pixel) {
         case 1:
-            return BitmapFormat::Indexed1;
         case 2:
-            return BitmapFormat::Indexed2;
         case 4:
-            return BitmapFormat::Indexed4;
         case 8:
-            return BitmapFormat::Indexed8;
+            return BitmapFormat::BGRx8888;
         case 16:
             if (context.dib.info.masks.size() == 4)
                 return BitmapFormat::BGRA8888;
@@ -1314,14 +1311,10 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
                 while (column < width && mask > 0) {
                     mask -= 1;
                     size_t color_idx = (byte >> mask) & 0x1;
-                    if (context.is_included_in_ico) {
-                        if (color_idx >= context.color_table.size())
-                            return Error::from_string_literal("Invalid color table index");
-                        auto color = context.color_table[color_idx];
-                        context.bitmap->scanline(row)[column++] = color;
-                    } else {
-                        context.bitmap->scanline_u8(row)[column++] = color_idx;
-                    }
+                    if (color_idx >= context.color_table.size())
+                        return Error::from_string_literal("Invalid color table index");
+                    auto color = context.color_table[color_idx];
+                    context.bitmap->scanline(row)[column++] = color;
                 }
                 break;
             }
@@ -1333,14 +1326,10 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
                 while (column < width && mask > 0) {
                     mask -= 2;
                     size_t color_idx = (byte >> mask) & 0x3;
-                    if (context.is_included_in_ico) {
-                        if (color_idx >= context.color_table.size())
-                            return Error::from_string_literal("Invalid color table index");
-                        auto color = context.color_table[color_idx];
-                        context.bitmap->scanline(row)[column++] = color;
-                    } else {
-                        context.bitmap->scanline_u8(row)[column++] = color_idx;
-                    }
+                    if (color_idx >= context.color_table.size())
+                        return Error::from_string_literal("Invalid color table index");
+                    auto color = context.color_table[color_idx];
+                    context.bitmap->scanline(row)[column++] = color;
                 }
                 break;
             }
@@ -1353,19 +1342,13 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
                 u32 high_color_idx = (byte >> 4) & 0xf;
                 u32 low_color_idx = byte & 0xf;
 
-                if (context.is_included_in_ico) {
-                    if (high_color_idx >= context.color_table.size() || low_color_idx >= context.color_table.size())
-                        return Error::from_string_literal("Invalid color table index");
-                    auto high_color = context.color_table[high_color_idx];
-                    auto low_color = context.color_table[low_color_idx];
-                    context.bitmap->scanline(row)[column++] = high_color;
-                    if (column < width) {
-                        context.bitmap->scanline(row)[column++] = low_color;
-                    }
-                } else {
-                    context.bitmap->scanline_u8(row)[column++] = high_color_idx;
-                    if (column < width)
-                        context.bitmap->scanline_u8(row)[column++] = low_color_idx;
+                if (high_color_idx >= context.color_table.size() || low_color_idx >= context.color_table.size())
+                    return Error::from_string_literal("Invalid color table index");
+                auto high_color = context.color_table[high_color_idx];
+                auto low_color = context.color_table[low_color_idx];
+                context.bitmap->scanline(row)[column++] = high_color;
+                if (column < width) {
+                    context.bitmap->scanline(row)[column++] = low_color;
                 }
                 break;
             }
@@ -1374,14 +1357,10 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
                     return Error::from_string_literal("Cannot read 8 bits");
 
                 u8 byte = streamer.read_u8();
-                if (context.is_included_in_ico) {
-                    if (byte >= context.color_table.size())
-                        return Error::from_string_literal("Invalid color table index");
-                    auto color = context.color_table[byte];
-                    context.bitmap->scanline(row)[column++] = color;
-                } else {
-                    context.bitmap->scanline_u8(row)[column++] = byte;
-                }
+                if (byte >= context.color_table.size())
+                    return Error::from_string_literal("Invalid color table index");
+                auto color = context.color_table[byte];
+                context.bitmap->scanline(row)[column++] = color;
                 break;
             }
             case 16: {
@@ -1465,12 +1444,6 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
             for (i32 row = height - 1; row >= 0; --row) {
                 TRY(process_mask_row(row));
             }
-        }
-    }
-
-    if (!context.is_included_in_ico) {
-        for (size_t i = 0; i < context.color_table.size(); ++i) {
-            context.bitmap->set_palette_color(i, Color::from_rgb(context.color_table[i]));
         }
     }
 
