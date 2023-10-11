@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/DocumentObserver.h>
 #include <LibWeb/SVG/SVGAnimatedLength.h>
@@ -46,7 +47,7 @@ private:
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    Optional<StringView> parse_id_from_href(DeprecatedString const& href);
+    Optional<FlyString> parse_id_from_href(DeprecatedString const& href);
 
     JS::GCPtr<DOM::Element> referenced_element();
 
@@ -56,7 +57,7 @@ private:
     Optional<float> m_x;
     Optional<float> m_y;
 
-    Optional<StringView> m_referenced_id;
+    Optional<FlyString> m_referenced_id;
 
     JS::GCPtr<DOM::DocumentObserver> m_document_observer;
 };
