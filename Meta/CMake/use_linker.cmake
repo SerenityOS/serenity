@@ -4,21 +4,21 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-if (NOT APPLE AND "${LAGOM_USE_LINKER}" STREQUAL "")
+if (NOT APPLE AND NOT LAGOM_USE_LINKER)
     find_program(LLD_LINKER NAMES "ld.lld")
     if (LLD_LINKER)
-        message("Using LLD to link Lagom.")
-        set(LAGOM_USE_LINKER "lld" CACHE STRING "")
+        message(STATUS "Using LLD to link Lagom.")
+        set(LAGOM_USE_LINKER "lld" CACHE STRING "" FORCE)
     else()
         find_program(MOLD_LINKER NAMES "ld.mold")
         if (MOLD_LINKER)
-            message("Using mold to link Lagom.")
-            set(LAGOM_USE_LINKER "mold" CACHE STRING "")
+            message(STATUS "Using mold to link Lagom.")
+            set(LAGOM_USE_LINKER "mold" CACHE STRING "" FORCE)
         endif()
     endif()
 endif()
 
-if (NOT "${LAGOM_USE_LINKER}" STREQUAL "")
+if (LAGOM_USE_LINKER)
     set(LINKER_FLAG "-fuse-ld=${LAGOM_USE_LINKER}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAG}")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAG}")
