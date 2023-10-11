@@ -34,11 +34,6 @@ ErrorOr<void> encode(Encoder& encoder, Gfx::ShareableBitmap const& shareable_bit
     TRY(encoder.encode(bitmap.size()));
     TRY(encoder.encode(static_cast<u32>(bitmap.scale())));
     TRY(encoder.encode(static_cast<u32>(bitmap.format())));
-    if (bitmap.is_indexed()) {
-        auto palette = bitmap.palette_to_vector();
-        TRY(encoder.encode(palette));
-    }
-
     return {};
 }
 
@@ -57,12 +52,8 @@ ErrorOr<Gfx::ShareableBitmap> decode(Decoder& decoder)
 
     auto bitmap_format = static_cast<Gfx::BitmapFormat>(raw_bitmap_format);
 
-    Vector<Gfx::ARGB32> palette;
-    if (Gfx::Bitmap::is_indexed(bitmap_format))
-        palette = TRY(decoder.decode<decltype(palette)>());
-
     auto buffer = TRY(Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), Gfx::Bitmap::size_in_bytes(Gfx::Bitmap::minimum_pitch(size.width() * scale, bitmap_format), size.height() * scale)));
-    auto bitmap = TRY(Gfx::Bitmap::create_with_anonymous_buffer(bitmap_format, move(buffer), size, scale, palette));
+    auto bitmap = TRY(Gfx::Bitmap::create_with_anonymous_buffer(bitmap_format, move(buffer), size, scale));
 
     return Gfx::ShareableBitmap { move(bitmap), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
 }

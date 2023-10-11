@@ -63,14 +63,6 @@ ALWAYS_INLINE static Color color_for_format(BitmapFormat format, ARGB32 value)
 template<BitmapFormat format = BitmapFormat::Invalid>
 ALWAYS_INLINE Color get_pixel(Gfx::Bitmap const& bitmap, int x, int y)
 {
-    if constexpr (format == BitmapFormat::Indexed8)
-        return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
-    if constexpr (format == BitmapFormat::Indexed4)
-        return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
-    if constexpr (format == BitmapFormat::Indexed2)
-        return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
-    if constexpr (format == BitmapFormat::Indexed1)
-        return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
     if constexpr (format == BitmapFormat::BGRx8888)
         return Color::from_rgb(bitmap.scanline(y)[x]);
     if constexpr (format == BitmapFormat::BGRA8888)
@@ -1126,18 +1118,6 @@ void Painter::blit(IntPoint position, Gfx::Bitmap const& source, IntRect const& 
         return;
     }
 
-    if (Bitmap::is_indexed(source.format())) {
-        u8 const* src = source.scanline_u8(src_rect.top() + first_row) + src_rect.left() + first_column;
-        size_t const src_skip = source.pitch();
-        for (int row = first_row; row <= last_row; ++row) {
-            for (int i = 0; i < clipped_rect.width(); ++i)
-                dst[i] = source.palette_color(src[i]).value();
-            dst += dst_skip;
-            src += src_skip;
-        }
-        return;
-    }
-
     VERIFY_NOT_REACHED();
 }
 
@@ -1373,18 +1353,6 @@ void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& s
         case BitmapFormat::BGRA8888:
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::BGRA8888>, opacity, scaling_mode);
             break;
-        case BitmapFormat::Indexed8:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed8>, opacity, scaling_mode);
-            break;
-        case BitmapFormat::Indexed4:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed4>, opacity, scaling_mode);
-            break;
-        case BitmapFormat::Indexed2:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed2>, opacity, scaling_mode);
-            break;
-        case BitmapFormat::Indexed1:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed1>, opacity, scaling_mode);
-            break;
         default:
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Invalid>, opacity, scaling_mode);
             break;
@@ -1393,9 +1361,6 @@ void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& s
         switch (source.format()) {
         case BitmapFormat::BGRx8888:
             do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::BGRx8888>, opacity, scaling_mode);
-            break;
-        case BitmapFormat::Indexed8:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Indexed8>, opacity, scaling_mode);
             break;
         default:
             do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, Gfx::get_pixel<BitmapFormat::Invalid>, opacity, scaling_mode);

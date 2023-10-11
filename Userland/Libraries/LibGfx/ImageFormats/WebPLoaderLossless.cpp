@@ -888,8 +888,6 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(Litt
 
 ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<Bitmap> bitmap)
 {
-    // FIXME: If this is the last transform, consider returning an Indexed8 bitmap here?
-
     if (pixels_per_pixel() == 1) {
         for (ARGB32& pixel : *bitmap) {
             // "The inverse transform for the image is simply replacing the pixel values (which are indices to the color table)
