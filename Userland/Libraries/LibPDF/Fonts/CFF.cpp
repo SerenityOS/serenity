@@ -115,7 +115,19 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 auto encoding_offset = 0;
                 if (!operands.is_empty())
                     encoding_offset = operands[0].get<int>();
-                encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(encoding_offset))));
+
+                // CFF spec, "Table 16 Encoding ID"
+                switch (encoding_offset) {
+                case 0:
+                    dbgln("CFF: Built-in Standard Encoding not yet implemented");
+                    break;
+                case 1:
+                    dbgln("CFF: Built-in Expert Encoding not yet implemented");
+                    break;
+                default:
+                    encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(encoding_offset))));
+                    break;
+                }
                 break;
             }
             case TopDictOperator::Charset: {
@@ -704,7 +716,7 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
     // CFF spec, "12 Encodings"
     Vector<u8> encoding_codes;
     auto format_raw = TRY(reader.try_read<Card8>());
-    // TODO: support encoding supplements when highest bit is set
+
     auto format = format_raw & 0x7f;
     if (format == 0) {
         auto n_codes = TRY(reader.try_read<Card8>());
@@ -722,6 +734,11 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
         }
     } else
         return error(DeprecatedString::formatted("Invalid encoding format: {}", format));
+
+    // TODO: support encoding supplements when highest bit is set (tables 14 and 15).
+    if (format_raw & 0x80)
+        dbgln("CFF: Support for multiply-encoded glyphs not yet implemented");
+
     return encoding_codes;
 }
 
