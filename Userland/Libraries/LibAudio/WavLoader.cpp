@@ -185,16 +185,12 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         }                                                                                                                              \
     } while (0)
 
-    auto riff = TRY(m_stream->read_value<RIFF::ChunkID>());
-    CHECK(riff == RIFF::riff_magic, LoaderError::Category::Format, "RIFF header magic invalid");
+    auto file_header = TRY(m_stream->read_value<RIFF::FileHeader>());
+    CHECK(file_header.magic() == RIFF::riff_magic, LoaderError::Category::Format, "RIFF header magic invalid");
+    CHECK(file_header.subformat == Wav::wave_subformat_id, LoaderError::Category::Format, "WAVE subformat id invalid");
 
-    TRY(m_stream->read_value<LittleEndian<u32>>()); // File size header
-
-    auto wave = TRY(m_stream->read_value<RIFF::ChunkID>());
-    CHECK(wave == Wav::wave_subformat_id, LoaderError::Category::Format, "WAVE subformat id invalid");
-
-    auto format_chunk = TRY(m_stream->read_value<RIFF::Chunk>());
-    CHECK(format_chunk.id.as_ascii_string() == Wav::format_chunk_id, LoaderError::Category::Format, "FMT chunk id invalid");
+    auto format_chunk = TRY(m_stream->read_value<RIFF::OwnedChunk>());
+    CHECK(format_chunk.id().as_ascii_string() == Wav::format_chunk_id, LoaderError::Category::Format, "FMT chunk id invalid");
 
     auto format_stream = format_chunk.data_stream();
     u16 audio_format = TRY(format_stream.read_value<LittleEndian<u16>>());
@@ -212,7 +208,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
     u16 bits_per_sample = TRY(format_stream.read_value<LittleEndian<u16>>());
 
     if (audio_format == to_underlying(Wav::WaveFormat::Extensible)) {
-        CHECK(format_chunk.size == 40, LoaderError::Category::Format, "Extensible fmt size is not 40 bytes");
+        CHECK(format_chunk.size() == 40, LoaderError::Category::Format, "Extensible fmt size is not 40 bytes");
 
         // Discard everything until the GUID.
         // We've already read 16 bytes from the stream. The GUID starts in another 8 bytes.
@@ -260,9 +256,9 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
             found_data = true;
         } else {
             TRY(m_stream->seek(-RIFF::chunk_id_size, SeekMode::FromCurrentPosition));
-            auto chunk = TRY(m_stream->read_value<RIFF::Chunk>());
-            if (chunk.id == RIFF::list_chunk_id) {
-                auto maybe_list = chunk.data_stream().read_value<RIFF::List>();
+            auto chunk = TRY(m_stream->read_value<RIFF::OwnedChunk>());
+            if (chunk.id() == RIFF::list_chunk_id) {
+                auto maybe_list = chunk.data_stream().read_value<RIFF::OwnedList>();
                 if (maybe_list.is_error()) {
                     dbgln("WAV Warning: LIST chunk invalid, error: {}", maybe_list.release_error());
                     continue;
@@ -278,7 +274,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
                     dbgln("Unhandled WAV list of type {} with {} subchunks", list.type.as_ascii_string(), list.chunks.size());
                 }
             } else {
-                dbgln_if(AWAVLOADER_DEBUG, "Unhandled WAV chunk of type {}, size {} bytes", chunk.id.as_ascii_string(), chunk.size);
+                dbgln_if(AWAVLOADER_DEBUG, "Unhandled WAV chunk of type {}, size {} bytes", chunk.id().as_ascii_string(), chunk.size());
             }
         }
     }
@@ -299,12 +295,12 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
 
 // http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf page 23 (LIST type)
 // We only recognize the relevant official metadata types; types added in later errata of RIFF are not relevant for audio.
-MaybeLoaderError WavLoaderPlugin::load_wav_info_block(Vector<RIFF::Chunk> info_chunks)
+MaybeLoaderError WavLoaderPlugin::load_wav_info_block(Vector<RIFF::OwnedChunk> info_chunks)
 {
     for (auto const& chunk : info_chunks) {
-        auto metadata_name = chunk.id.as_ascii_string();
+        auto metadata_name = chunk.id().as_ascii_string();
         // Chunk contents are zero-terminated strings "ZSTR", so we just drop the null terminator.
-        StringView metadata_text { chunk.data.span().trim(chunk.data.size() - 1) };
+        StringView metadata_text { chunk.data().trim(chunk.size() - 1) };
         // Note that we assume chunks to be unique, since that seems to almost always be the case.
         // Worst case we just drop some metadata.
         if (metadata_name == "IART"sv) {

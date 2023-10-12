@@ -1,5 +1,6 @@
 set(SOURCES
-    Types.cpp
+    Decoding.cpp
+    Details.cpp
 )
 
 serenity_lib(LibRIFF riff)
