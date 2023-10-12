@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "RIFFTypes.h"
+#include "Types.h"
 #include <AK/Endian.h>
 #include <AK/Stream.h>
 #include <AK/Try.h>
 #include <AK/TypeCasts.h>
 
-namespace Audio::RIFF {
+namespace RIFF {
 
 ErrorOr<ChunkID> ChunkID::read_from_stream(Stream& stream)
 {

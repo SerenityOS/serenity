@@ -436,6 +436,7 @@ if (BUILD_LAGOM)
         PDF
         Protocol
         Regex
+        RIFF
         SoftGPU
         SQL
         Syntax
