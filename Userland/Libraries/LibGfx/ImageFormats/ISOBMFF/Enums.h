@@ -8,6 +8,7 @@
 
 #include <AK/Endian.h>
 #include <AK/Types.h>
+#include <LibRIFF/ChunkID.h>
 
 namespace Gfx::ISOBMFF {
 
@@ -19,35 +20,23 @@ namespace Gfx::ISOBMFF {
     ENUMERATE_ONE(MediaDataBox, mdat) \
     ENUMERATE_ONE(FreeBox, free)
 
-constexpr u32 fourcc_to_number(char const fourcc[4])
-{
-    return AK::convert_between_host_and_big_endian((fourcc[0] << 24) | (fourcc[1] << 16) | (fourcc[2] << 8) | fourcc[3]);
-}
-
 enum class BoxType : u32 {
     None = 0,
 
-#define ENUMERATE_ONE(box_name, box_4cc) box_name = fourcc_to_number(#box_4cc),
+#define ENUMERATE_ONE(box_name, box_4cc) box_name = RIFF::ChunkID(#box_4cc).as_big_endian_number(),
 
     ENUMERATE_ALL()
 
 #undef ENUMERATE_ONE
 };
 
-static Optional<StringView> box_type_to_string(BoxType type)
+static bool is_valid_box_type(BoxType type)
 {
-    switch (type) {
-#define ENUMERATE_ONE(box_name, box_4cc) \
-    case BoxType::box_name:              \
-        return #box_name " ('" #box_4cc "')"sv;
-
+    return (
+#define ENUMERATE_ONE(box_name, _) type == BoxType::box_name ||
         ENUMERATE_ALL()
-
 #undef ENUMERATE_ONE
-
-    default:
-        return {};
-    }
+            false);
 }
 
 #undef ENUMERATE_ALL
@@ -65,28 +54,12 @@ static Optional<StringView> box_type_to_string(BoxType type)
 enum class BrandIdentifier : u32 {
     None = 0,
 
-#define ENUMERATE_ONE(brand_4cc) brand_4cc = fourcc_to_number(#brand_4cc),
+#define ENUMERATE_ONE(brand_4cc) brand_4cc = RIFF::ChunkID(#brand_4cc).as_big_endian_number(),
 
     ENUMERATE_ALL()
 
 #undef ENUMERATE_ONE
 };
-
-static Optional<StringView> brand_identifier_to_string(BrandIdentifier type)
-{
-    switch (type) {
-#define ENUMERATE_ONE(brand_4cc)     \
-    case BrandIdentifier::brand_4cc: \
-        return #brand_4cc##sv;
-
-        ENUMERATE_ALL()
-
-#undef ENUMERATE_ONE
-
-    default:
-        return {};
-    }
-}
 
 #undef ENUMERATE_ALL
 
@@ -96,11 +69,8 @@ template<>
 struct AK::Formatter<Gfx::ISOBMFF::BoxType> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::ISOBMFF::BoxType const& box_type)
     {
-        auto string = Gfx::ISOBMFF::box_type_to_string(box_type);
-        if (string.has_value()) {
-            return Formatter<FormatString>::format(builder, "{}"sv, string.release_value());
-        }
-        return Formatter<FormatString>::format(builder, "Unknown Box ('{}')"sv, StringView((char const*)&box_type, 4));
+        StringView format_string = Gfx::ISOBMFF::is_valid_box_type(box_type) ? "('{}')"sv : "Unknown Box ('{}')"sv;
+        return Formatter<FormatString>::format(builder, format_string, RIFF::ChunkID::from_big_endian_number(to_underlying(box_type)));
     }
 };
 
@@ -108,10 +78,6 @@ template<>
 struct AK::Formatter<Gfx::ISOBMFF::BrandIdentifier> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::ISOBMFF::BrandIdentifier const& brand_identifier)
     {
-        auto string = Gfx::ISOBMFF::brand_identifier_to_string(brand_identifier);
-        if (string.has_value()) {
-            return Formatter<FormatString>::format(builder, "{}"sv, string.release_value());
-        }
-        return Formatter<FormatString>::format(builder, "{}"sv, StringView((char const*)&brand_identifier, 4));
+        return Formatter<FormatString>::format(builder, "{}"sv, RIFF::ChunkID::from_big_endian_number(to_underlying(brand_identifier)));
     }
 };
