@@ -429,6 +429,7 @@ if (BUILD_LAGOM)
         Protocol
         PublicSuffix
         Regex
+        RIFF
         SoftGPU
         SQL
         Syntax

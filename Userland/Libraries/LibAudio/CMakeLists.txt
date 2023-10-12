@@ -2,7 +2,6 @@ set(SOURCES
     GenericTypes.cpp
     SampleFormats.cpp
     Loader.cpp
-    RIFFTypes.cpp
     WavLoader.cpp
     FlacLoader.cpp
     FlacWriter.cpp
@@ -36,7 +35,7 @@ if (HAVE_PULSEAUDIO)
 endif()
 
 serenity_lib(LibAudio audio)
-target_link_libraries(LibAudio PRIVATE LibCore LibIPC LibThreading LibUnicode LibCrypto)
+target_link_libraries(LibAudio PRIVATE LibCore LibRIFF LibIPC LibThreading LibUnicode LibCrypto)
 
 if (HAVE_PULSEAUDIO)
     target_link_libraries(LibAudio PRIVATE pulse)

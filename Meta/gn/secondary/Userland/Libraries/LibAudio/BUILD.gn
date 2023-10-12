@@ -13,7 +13,6 @@ shared_library("LibAudio") {
     "PlaybackStream.cpp",
     "QOALoader.cpp",
     "QOATypes.cpp",
-    "RIFFTypes.cpp",
     "SampleFormats.cpp",
     "UserSampleQueue.cpp",
     "VorbisComment.cpp",
