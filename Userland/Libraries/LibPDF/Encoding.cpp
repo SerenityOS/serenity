@@ -19,6 +19,7 @@ NonnullRefPtr<Encoding> Encoding::create()
 PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, NonnullRefPtr<Object> const& obj)
 {
     if (obj->is<NameObject>()) {
+        // PDF 1.7 spec, 5.5.5 "Character Encoding"
         auto name = obj->cast<NameObject>()->name();
         if (name == "StandardEncoding")
             return standard_encoding();
