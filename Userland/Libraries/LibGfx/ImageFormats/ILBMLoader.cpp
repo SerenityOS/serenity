@@ -300,6 +300,9 @@ static ErrorOr<void> decode_bmhd_chunk(ILBMLoadingContext& context)
     if (first_chunk.type != FourCC("BMHD"))
         return Error::from_string_literal("IFFImageDecoderPlugin: Invalid chunk type, expected BMHD");
 
+    if (first_chunk.data.size() < sizeof(BMHDHeader))
+        return Error::from_string_literal("IFFImageDecoderPlugin: Not enough data for header chunk");
+
     context.bm_header = *bit_cast<BMHDHeader const*>(first_chunk.data.data());
     context.pitch = ceil_div((u16)context.bm_header.width, (u16)16) * 2;
 
