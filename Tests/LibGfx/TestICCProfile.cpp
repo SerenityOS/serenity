@@ -262,6 +262,7 @@ TEST_CASE(to_lab)
 TEST_CASE(malformed_profile)
 {
     Array test_inputs = {
+        TEST_INPUT("icc/oss-fuzz-testcase-57426.icc"sv),
         TEST_INPUT("icc/oss-fuzz-testcase-59551.icc"sv),
         TEST_INPUT("icc/oss-fuzz-testcase-60281.icc"sv)
     };

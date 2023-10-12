@@ -1054,7 +1054,9 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
         return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for ASCII size");
     u32 ascii_description_length = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
 
-    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length)
+    Checked<u32> ascii_description_end = 3 * sizeof(u32);
+    ascii_description_end += ascii_description_length;
+    if (ascii_description_end.has_overflow() || bytes.size() < ascii_description_end.value())
         return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for ASCII description");
 
     u8 const* ascii_description_data = bytes.data() + 3 * sizeof(u32);
@@ -1073,7 +1075,9 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
 
     // Unicode
 
-    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length + 2 * sizeof(u32))
+    Checked<u32> unicode_metadata_end = ascii_description_end;
+    unicode_metadata_end += 2 * sizeof(u32);
+    if (unicode_metadata_end.has_overflow() || bytes.size() < unicode_metadata_end.value())
         return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for Unicode metadata");
 
     // "Because the Unicode language code and Unicode count immediately follow the ASCII description,
@@ -1088,7 +1092,10 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
     u32 unicode_description_length = (u32)(cursor[0] << 24) | (u32)(cursor[1] << 16) | (u32)(cursor[2] << 8) | (u32)cursor[3];
     cursor += 4;
 
-    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length + 2 * sizeof(u32) + 2 * unicode_description_length)
+    Checked<u32> unicode_desciption_end = unicode_description_length;
+    unicode_desciption_end *= 2;
+    unicode_desciption_end += unicode_metadata_end;
+    if (unicode_desciption_end.has_overflow() || bytes.size() < unicode_desciption_end.value())
         return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for Unicode description");
 
     u8 const* unicode_description_data = cursor;
