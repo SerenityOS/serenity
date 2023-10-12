@@ -14,7 +14,7 @@
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <LibAudio/Loader.h>
-#include <LibAudio/RIFFTypes.h>
+#include <LibRIFF/Types.h>
 
 namespace Audio {
 

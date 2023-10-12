@@ -7,7 +7,7 @@
 
 #include "WavLoader.h"
 #include "LoaderError.h"
-#include "RIFFTypes.h"
+#include "WavTypes.h"
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
@@ -36,7 +36,7 @@ bool WavLoaderPlugin::sniff(SeekableStream& stream)
         return false;
 
     auto wave = stream.read_value<RIFF::ChunkID>();
-    return !wave.is_error() && wave.value() == RIFF::wave_subformat_id;
+    return !wave.is_error() && wave.value() == Wav::wave_subformat_id;
 }
 
 ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> WavLoaderPlugin::create(NonnullOwnPtr<SeekableStream> stream)
@@ -191,14 +191,14 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
     TRY(m_stream->read_value<LittleEndian<u32>>()); // File size header
 
     auto wave = TRY(m_stream->read_value<RIFF::ChunkID>());
-    CHECK(wave == RIFF::wave_subformat_id, LoaderError::Category::Format, "WAVE subformat id invalid");
+    CHECK(wave == Wav::wave_subformat_id, LoaderError::Category::Format, "WAVE subformat id invalid");
 
     auto format_chunk = TRY(m_stream->read_value<RIFF::Chunk>());
-    CHECK(format_chunk.id.as_ascii_string() == RIFF::format_chunk_id, LoaderError::Category::Format, "FMT chunk id invalid");
+    CHECK(format_chunk.id.as_ascii_string() == Wav::format_chunk_id, LoaderError::Category::Format, "FMT chunk id invalid");
 
     auto format_stream = format_chunk.data_stream();
     u16 audio_format = TRY(format_stream.read_value<LittleEndian<u16>>());
-    CHECK(audio_format == to_underlying(RIFF::WaveFormat::Pcm) || audio_format == to_underlying(RIFF::WaveFormat::IEEEFloat) || audio_format == to_underlying(RIFF::WaveFormat::Extensible),
+    CHECK(audio_format == to_underlying(Wav::WaveFormat::Pcm) || audio_format == to_underlying(Wav::WaveFormat::IEEEFloat) || audio_format == to_underlying(Wav::WaveFormat::Extensible),
         LoaderError::Category::Unimplemented, "Audio format not supported");
 
     m_num_channels = TRY(format_stream.read_value<LittleEndian<u16>>());
@@ -211,7 +211,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
 
     u16 bits_per_sample = TRY(format_stream.read_value<LittleEndian<u16>>());
 
-    if (audio_format == to_underlying(RIFF::WaveFormat::Extensible)) {
+    if (audio_format == to_underlying(Wav::WaveFormat::Extensible)) {
         CHECK(format_chunk.size == 40, LoaderError::Category::Format, "Extensible fmt size is not 40 bytes");
 
         // Discard everything until the GUID.
@@ -220,12 +220,12 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
 
         // Get the underlying audio format from the first two bytes of GUID
         u16 guid_subformat = TRY(format_stream.read_value<LittleEndian<u16>>());
-        CHECK(guid_subformat == to_underlying(RIFF::WaveFormat::Pcm) || guid_subformat == to_underlying(RIFF::WaveFormat::IEEEFloat), LoaderError::Category::Unimplemented, "GUID SubFormat not supported");
+        CHECK(guid_subformat == to_underlying(Wav::WaveFormat::Pcm) || guid_subformat == to_underlying(Wav::WaveFormat::IEEEFloat), LoaderError::Category::Unimplemented, "GUID SubFormat not supported");
 
         audio_format = guid_subformat;
     }
 
-    if (audio_format == to_underlying(RIFF::WaveFormat::Pcm)) {
+    if (audio_format == to_underlying(Wav::WaveFormat::Pcm)) {
         CHECK(bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24, LoaderError::Category::Unimplemented, "PCM bits per sample not supported");
 
         // We only support 8-24 bit audio right now because other formats are uncommon
@@ -236,7 +236,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         } else if (bits_per_sample == 24) {
             m_sample_format = PcmSampleFormat::Int24;
         }
-    } else if (audio_format == to_underlying(RIFF::WaveFormat::IEEEFloat)) {
+    } else if (audio_format == to_underlying(Wav::WaveFormat::IEEEFloat)) {
         CHECK(bits_per_sample == 32 || bits_per_sample == 64, LoaderError::Category::Unimplemented, "Float bits per sample not supported");
 
         // Again, only the common 32 and 64 bit
@@ -256,7 +256,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
     bool found_data = false;
     while (!found_data) {
         auto chunk_header = TRY(m_stream->read_value<RIFF::ChunkID>());
-        if (chunk_header == RIFF::data_chunk_id) {
+        if (chunk_header == Wav::data_chunk_id) {
             found_data = true;
         } else {
             TRY(m_stream->seek(-RIFF::chunk_id_size, SeekMode::FromCurrentPosition));
@@ -269,7 +269,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
                 }
 
                 auto list = maybe_list.release_value();
-                if (list.type == RIFF::info_chunk_id) {
+                if (list.type == Wav::info_chunk_id) {
                     auto maybe_error = load_wav_info_block(move(list.chunks));
                     if (maybe_error.is_error())
                         dbgln("WAV Warning: INFO chunk invalid, error: {}", maybe_error.release_error());

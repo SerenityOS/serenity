@@ -7,6 +7,7 @@
 
 #include <AK/Endian.h>
 #include <LibAudio/WavLoader.h>
+#include <LibAudio/WavTypes.h>
 #include <LibAudio/WavWriter.h>
 
 namespace Audio {
@@ -111,7 +112,7 @@ ErrorOr<void> WavWriter::write_header()
     static u32 fmt_size = 16;
     TRY(m_file->write_value(fmt_size));
 
-    static u16 audio_format = to_underlying(RIFF::WaveFormat::Pcm);
+    static u16 audio_format = to_underlying(Wav::WaveFormat::Pcm);
     TRY(m_file->write_value(audio_format));
 
     TRY(m_file->write_value(m_num_channels));
