@@ -41,8 +41,8 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     Vector<u8> encoding_codes;
     auto charstrings_offset = 0;
     Vector<ByteBuffer> subroutines;
-    int defaultWidthX = 0;
-    int nominalWidthX = 0;
+    float defaultWidthX = 0;
+    float nominalWidthX = 0;
     TRY(parse_index(reader, [&](ReadonlyBytes const& element_data) {
         Reader element_reader { element_data };
         return parse_dict<TopDictOperator>(element_reader, [&](TopDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
@@ -80,10 +80,12 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                         break;
                     }
                     case PrivDictOperator::DefaultWidthX:
-                        defaultWidthX = operands[0].get<int>();
+                        if (!operands.is_empty())
+                            defaultWidthX = to_number(operands[0]);
                         break;
                     case PrivDictOperator::NominalWidthX:
-                        nominalWidthX = operands[0].get<int>();
+                        if (!operands.is_empty())
+                            nominalWidthX = to_number(operands[0]);
                         break;
                     }
                     return {};
@@ -103,9 +105,9 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     // Adjust glyphs' widths as they are deltas from nominalWidthX
     for (auto& glyph : glyphs) {
         if (!glyph.has_width())
-            glyph.set_width(float(defaultWidthX));
+            glyph.set_width(defaultWidthX);
         else
-            glyph.set_width(glyph.width() + float(nominalWidthX));
+            glyph.set_width(glyph.width() + nominalWidthX);
     }
 
     for (size_t i = 0; i < glyphs.size(); i++) {
