@@ -85,9 +85,12 @@ public:
     template<typename OperatorT>
     static PDFErrorOr<OperatorT> parse_dict_operator(u8, Reader&);
 
+    static PDFErrorOr<Vector<StringView>> parse_strings(Reader&);
+
     static PDFErrorOr<Vector<CFF::Glyph>> parse_charstrings(Reader&&, Vector<ByteBuffer> const& subroutines);
 
-    static PDFErrorOr<Vector<DeprecatedFlyString>> parse_charset(Reader&&, size_t);
+    static DeprecatedFlyString resolve_sid(SID, Vector<StringView> const&);
+    static PDFErrorOr<Vector<DeprecatedFlyString>> parse_charset(Reader&&, size_t, Vector<StringView> const&);
     static PDFErrorOr<Vector<u8>> parse_encoding(Reader&&);
 };
 
