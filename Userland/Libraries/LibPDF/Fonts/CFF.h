@@ -56,6 +56,13 @@ public:
     using SID = u16;
     using DictOperand = Variant<int, float>;
 
+    static float to_number(DictOperand operand)
+    {
+        if (operand.has<int>())
+            return operand.get<int>();
+        return operand.get<float>();
+    }
+
     static int load_int_dict_operand(u8 b0, Reader&);
     static float load_float_dict_operand(Reader&);
     static PDFErrorOr<DictOperand> load_dict_operand(u8, Reader&);
