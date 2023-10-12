@@ -81,6 +81,36 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
         Reader element_reader { element_data };
         return parse_dict<TopDictOperator>(element_reader, [&](TopDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
             switch (op) {
+            case TopDictOperator::Version:
+            case TopDictOperator::Notice:
+            case TopDictOperator::FullName:
+            case TopDictOperator::FamilyName:
+            case TopDictOperator::Weight:
+            case TopDictOperator::FontBBox:
+            case TopDictOperator::UniqueID:
+            case TopDictOperator::XUID:
+            case TopDictOperator::IsFixedPitch:
+            case TopDictOperator::ItalicAngle:
+            case TopDictOperator::UnderlinePosition:
+            case TopDictOperator::UnderlineThickness:
+            case TopDictOperator::PaintType:
+            case TopDictOperator::FontMatrix:
+            case TopDictOperator::StrokeWidth:
+            case TopDictOperator::PostScript:
+            case TopDictOperator::BaseFontName:
+            case TopDictOperator::BaseFontBlend:
+                break;
+            case TopDictOperator::CharstringType: {
+                int charstring_type = 2;
+                if (!operands.is_empty())
+                    charstring_type = operands[0].get<int>();
+                if (charstring_type != 2)
+                    dbgln("CFF: has unimplemented CharstringType, might not look right");
+                break;
+            }
+            case TopDictOperator::SyntheticBase:
+                dbgln("CFF: has unimplemented SyntheticBase, might not look right");
+                break;
             case TopDictOperator::Encoding: {
                 auto encoding_offset = 0;
                 if (!operands.is_empty())
@@ -128,7 +158,8 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 }));
                 break;
             }
-            default:;
+            default:
+                dbgln("CFF: Unhandled top dict entry {}", static_cast<int>(op));
             }
             return {};
         });
