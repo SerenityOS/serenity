@@ -14,6 +14,8 @@
 #include <LibGfx/ImageFormats/WebPLoaderLossless.h>
 #include <LibGfx/ImageFormats/WebPLoaderLossy.h>
 #include <LibGfx/Painter.h>
+#include <LibRIFF/ChunkID.h>
+#include <LibRIFF/RIFF.h>
 
 // Overview: https://developers.google.com/speed/webp/docs/compression
 // Container: https://developers.google.com/speed/webp/docs/riff_container
@@ -21,25 +23,6 @@
 namespace Gfx {
 
 namespace {
-
-// https://developers.google.com/speed/webp/docs/riff_container#webp_file_header
-struct WebPFileHeader {
-    FourCC riff;
-    LittleEndian<u32> file_size;
-    FourCC webp;
-};
-static_assert(AssertSize<WebPFileHeader, 12>());
-
-struct ChunkHeader {
-    FourCC chunk_type;
-    LittleEndian<u32> chunk_size;
-};
-static_assert(AssertSize<ChunkHeader, 8>());
-
-struct Chunk {
-    FourCC type;
-    ReadonlyBytes data;
-};
 
 struct VP8XHeader {
     bool has_icc;
@@ -83,8 +66,8 @@ struct ANMFChunk {
 //     A bitstream subchunk."
 struct ImageData {
     // "This optional chunk contains encoded alpha data for this frame. A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
-    Optional<Chunk> alpha_chunk; // 'ALPH'
-    Chunk image_data_chunk;      // Either 'VP8 ' or 'VP8L'. For 'VP8L', alpha_chunk will not have a value.
+    Optional<RIFF::Chunk> alpha_chunk; // 'ALPH'
+    RIFF::Chunk image_data_chunk;      // Either 'VP8 ' or 'VP8L'. For 'VP8L', alpha_chunk will not have a value.
 };
 
 }
@@ -110,7 +93,7 @@ struct WebPLoadingContext {
     RefPtr<Gfx::Bitmap> bitmap;
 
     // Either 'VP8 ' (simple lossy file), 'VP8L' (simple lossless file), or 'VP8X' (extended file).
-    Optional<Chunk> first_chunk;
+    Optional<RIFF::Chunk> first_chunk;
 
     // Only valid if first_chunk->type == 'VP8X'.
     VP8XHeader vp8x_header;
@@ -119,17 +102,17 @@ struct WebPLoadingContext {
     // Once state is >= ChunksDecoded, for non-animated images, this will have a value, or decoding will have failed.
     Optional<ImageData> image_data;
 
-    Optional<Chunk> animation_header_chunk; // 'ANIM'
-    Vector<Chunk> animation_frame_chunks;   // 'ANMF'
+    Optional<RIFF::Chunk> animation_header_chunk; // 'ANIM'
+    Vector<RIFF::Chunk> animation_frame_chunks;   // 'ANMF'
 
     // These are set in state >= AnimationFrameChunksDecoded, if first_chunk.type == 'VP8X' && vp8x_header.has_animation.
     Optional<ANIMChunk> animation_header_chunk_data;
     Optional<Vector<ANMFChunk>> animation_frame_chunks_data;
     size_t current_frame { 0 };
 
-    Optional<Chunk> iccp_chunk; // 'ICCP'
-    Optional<Chunk> exif_chunk; // 'EXIF'
-    Optional<Chunk> xmp_chunk;  // 'XMP '
+    Optional<RIFF::Chunk> iccp_chunk; // 'ICCP'
+    Optional<RIFF::Chunk> exif_chunk; // 'EXIF'
+    Optional<RIFF::Chunk> xmp_chunk;  // 'XMP '
 };
 
 // https://developers.google.com/speed/webp/docs/riff_container#webp_file_header
@@ -138,87 +121,48 @@ static ErrorOr<void> decode_webp_header(WebPLoadingContext& context)
     if (context.state >= WebPLoadingContext::HeaderDecoded)
         return {};
 
-    if (context.data.size() < sizeof(WebPFileHeader))
-        return Error::from_string_literal("Missing WebP header");
-
-    auto& header = *bit_cast<WebPFileHeader const*>(context.data.data());
-    if (header.riff != FourCC("RIFF") || header.webp != FourCC("WEBP"))
+    FixedMemoryStream header_stream { context.data };
+    auto header = TRY(header_stream.read_value<RIFF::FileHeader>());
+    if (header.magic() != RIFF::riff_magic || header.subformat != "WEBP"sv)
         return Error::from_string_literal("Invalid WebP header");
 
     // "File Size: [...] The size of the file in bytes starting at offset 8. The maximum value of this field is 2^32 minus 10 bytes."
     u32 const maximum_webp_file_size = 0xffff'ffff - 9;
-    if (header.file_size > maximum_webp_file_size)
+    if (header.file_size() > maximum_webp_file_size)
         return Error::from_string_literal("WebP header file size over maximum");
 
-    // "The file size in the header is the total size of the chunks that follow plus 4 bytes for the 'WEBP' FourCC.
+    // "The file size in the header is the total size of the chunks that follow plus 4 bytes for the 'WEBP' RIFF::ChunkID.
     //  The file SHOULD NOT contain any data after the data specified by File Size.
     //  Readers MAY parse such files, ignoring the trailing data."
-    if (context.data.size() - 8 < header.file_size)
+    if (context.data.size() - 8 < header.file_size())
         return Error::from_string_literal("WebP data too small for size in header");
-    if (header.file_size < 4) // Need at least 4 bytes for 'WEBP', else we'll trim to less than the header size below.
+    if (header.file_size() < 4) // Need at least 4 bytes for 'WEBP', else we'll trim to less than the header size below.
         return Error::from_string_literal("WebP stored file size too small for header it's stored in");
-    if (context.data.size() - 8 > header.file_size) {
-        dbgln_if(WEBP_DEBUG, "WebP has {} bytes of data, but header needs only {}. Trimming.", context.data.size(), header.file_size + 8);
-        context.data = context.data.trim(header.file_size + 8);
+    if (context.data.size() - 8 > header.file_size()) {
+        dbgln_if(WEBP_DEBUG, "WebP has {} bytes of data, but header needs only {}. Trimming.", context.data.size(), header.file_size() + 8);
+        context.data = context.data.trim(header.file_size() + 8);
     }
 
     context.state = WebPLoadingContext::HeaderDecoded;
     return {};
 }
 
-// https://developers.google.com/speed/webp/docs/riff_container#riff_file_format
-static ErrorOr<Chunk> decode_webp_chunk_header(ReadonlyBytes chunks)
-{
-    if (chunks.size() < sizeof(ChunkHeader))
-        return Error::from_string_literal("Not enough data for WebP chunk header");
-
-    auto const& header = *bit_cast<ChunkHeader const*>(chunks.data());
-    dbgln_if(WEBP_DEBUG, "chunk {} size {}", header.chunk_type, header.chunk_size);
-
-    if (chunks.size() < sizeof(ChunkHeader) + header.chunk_size)
-        return Error::from_string_literal("Not enough data for WebP chunk");
-
-    return Chunk { header.chunk_type, { chunks.data() + sizeof(ChunkHeader), header.chunk_size } };
-}
-
-// https://developers.google.com/speed/webp/docs/riff_container#riff_file_format
-static ErrorOr<Chunk> decode_webp_advance_chunk(ReadonlyBytes& chunks)
-{
-    auto chunk = TRY(decode_webp_chunk_header(chunks));
-
-    // "Chunk Size: 32 bits (uint32)
-    //      The size of the chunk in bytes, not including this field, the chunk identifier or padding.
-    //  Chunk Payload: Chunk Size bytes
-    //      The data payload. If Chunk Size is odd, a single padding byte -- that MUST be 0 to conform with RIFF -- is added."
-    chunks = chunks.slice(sizeof(ChunkHeader) + chunk.data.size());
-
-    if (chunk.data.size() % 2 != 0) {
-        if (chunks.is_empty())
-            return Error::from_string_literal("Missing data for padding byte");
-        if (*chunks.data() != 0)
-            return Error::from_string_literal("Padding byte is not 0");
-        chunks = chunks.slice(1);
-    }
-
-    return chunk;
-}
-
 // https://developers.google.com/speed/webp/docs/riff_container#alpha
-static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bitmap)
+static ErrorOr<void> decode_webp_chunk_ALPH(RIFF::Chunk const& alph_chunk, Bitmap& bitmap)
 {
-    VERIFY(alph_chunk.type == FourCC("ALPH"));
+    VERIFY(alph_chunk.id() == "ALPH"sv);
 
-    if (alph_chunk.data.size() < 1)
+    if (alph_chunk.size() < 1)
         return Error::from_string_literal("WebPImageDecoderPlugin: ALPH chunk too small");
 
-    u8 flags = alph_chunk.data.data()[0];
+    u8 flags = alph_chunk[0];
     u8 preprocessing = (flags >> 4) & 3;
     u8 filtering_method = (flags >> 2) & 3;
     u8 compression_method = flags & 3;
 
     dbgln_if(WEBP_DEBUG, "preprocessing {} filtering_method {} compression_method {}", preprocessing, filtering_method, compression_method);
 
-    ReadonlyBytes alpha_data = alph_chunk.data.slice(1);
+    ReadonlyBytes alpha_data = alph_chunk.data().slice(1);
 
     size_t pixel_count = bitmap.width() * bitmap.height();
 
@@ -319,16 +263,14 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
     return {};
 }
 
-static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(Chunk const& vp8x_chunk)
+static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(RIFF::Chunk const& vp8x_chunk)
 {
-    VERIFY(vp8x_chunk.type == FourCC("VP8X"));
+    VERIFY(vp8x_chunk.id() == "VP8X"sv);
 
     // The VP8X chunk is documented at "Extended WebP file header:" at the end of
     // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
-    if (vp8x_chunk.data.size() < 10)
+    if (vp8x_chunk.size() < 10)
         return Error::from_string_literal("WebPImageDecoderPlugin: VP8X chunk too small");
-
-    u8 const* data = vp8x_chunk.data.data();
 
     // 1 byte flags
     // "Reserved (Rsv): 2 bits   MUST be 0. Readers MUST ignore this field.
@@ -338,7 +280,7 @@ static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(Chunk const& vp8x_chunk)
     //  XMP metadata (X): 1 bit  Set if the file contains XMP metadata.
     //  Animation (A): 1 bit     Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be used to control the animation.
     //  Reserved (R): 1 bit      MUST be 0. Readers MUST ignore this field."
-    u8 flags = data[0];
+    u8 flags = vp8x_chunk[0];
     bool has_icc = flags & 0x20;
     bool has_alpha = flags & 0x10;
     bool has_exif = flags & 0x8;
@@ -347,10 +289,10 @@ static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(Chunk const& vp8x_chunk)
 
     // 3 bytes reserved
     // 3 bytes width minus one
-    u32 width = (data[4] | (data[5] << 8) | (data[6] << 16)) + 1;
+    u32 width = (vp8x_chunk[4] | (vp8x_chunk[5] << 8) | (vp8x_chunk[6] << 16)) + 1;
 
     // 3 bytes height minus one
-    u32 height = (data[7] | (data[8] << 8) | (data[9] << 16)) + 1;
+    u32 height = (vp8x_chunk[7] | (vp8x_chunk[8] << 8) | (vp8x_chunk[9] << 16)) + 1;
 
     dbgln_if(WEBP_DEBUG, "flags 0x{:x} --{}{}{}{}{}{}, width {}, height {}",
         flags,
@@ -366,15 +308,14 @@ static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(Chunk const& vp8x_chunk)
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#animation
-static ErrorOr<ANIMChunk> decode_webp_chunk_ANIM(Chunk const& anim_chunk)
+static ErrorOr<ANIMChunk> decode_webp_chunk_ANIM(RIFF::Chunk const& anim_chunk)
 {
-    VERIFY(anim_chunk.type == FourCC("ANIM"));
-    if (anim_chunk.data.size() < 6)
+    VERIFY(anim_chunk.id() == "ANIM"sv);
+    if (anim_chunk.size() < 6)
         return Error::from_string_literal("WebPImageDecoderPlugin: ANIM chunk too small");
 
-    u8 const* data = anim_chunk.data.data();
-    u32 background_color = (u32)data[0] | ((u32)data[1] << 8) | ((u32)data[2] << 16) | ((u32)data[3] << 24);
-    u16 loop_count = data[4] | (data[5] << 8);
+    u32 background_color = (u32)anim_chunk[0] | ((u32)anim_chunk[1] << 8) | ((u32)anim_chunk[2] << 16) | ((u32)anim_chunk[3] << 24);
+    u16 loop_count = anim_chunk[4] | (anim_chunk[5] << 8);
 
     dbgln_if(WEBP_DEBUG, "background_color {:x} loop_count {}", background_color, loop_count);
 
@@ -382,36 +323,34 @@ static ErrorOr<ANIMChunk> decode_webp_chunk_ANIM(Chunk const& anim_chunk)
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#animation
-static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, Chunk const& anmf_chunk)
+static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, RIFF::Chunk const& anmf_chunk)
 {
-    VERIFY(anmf_chunk.type == FourCC("ANMF"));
-    if (anmf_chunk.data.size() < 16)
+    VERIFY(anmf_chunk.id() == "ANMF"sv);
+    if (anmf_chunk.size() < 16)
         return Error::from_string_literal("WebPImageDecoderPlugin: ANMF chunk too small");
 
-    u8 const* data = anmf_chunk.data.data();
-
     // "The X coordinate of the upper left corner of the frame is Frame X * 2."
-    u32 frame_x = ((u32)data[0] | ((u32)data[1] << 8) | ((u32)data[2] << 16)) * 2;
+    u32 frame_x = ((u32)anmf_chunk[0] | ((u32)anmf_chunk[1] << 8) | ((u32)anmf_chunk[2] << 16)) * 2;
 
     // "The Y coordinate of the upper left corner of the frame is Frame Y * 2."
-    u32 frame_y = ((u32)data[3] | ((u32)data[4] << 8) | ((u32)data[5] << 16)) * 2;
+    u32 frame_y = ((u32)anmf_chunk[3] | ((u32)anmf_chunk[4] << 8) | ((u32)anmf_chunk[5] << 16)) * 2;
 
     // "The frame width is 1 + Frame Width Minus One."
-    u32 frame_width = ((u32)data[6] | ((u32)data[7] << 8) | ((u32)data[8] << 16)) + 1;
+    u32 frame_width = ((u32)anmf_chunk[6] | ((u32)anmf_chunk[7] << 8) | ((u32)anmf_chunk[8] << 16)) + 1;
 
     // "The frame height is 1 + Frame Height Minus One."
-    u32 frame_height = ((u32)data[9] | ((u32)data[10] << 8) | ((u32)data[11] << 16)) + 1;
+    u32 frame_height = ((u32)anmf_chunk[9] | ((u32)anmf_chunk[10] << 8) | ((u32)anmf_chunk[11] << 16)) + 1;
 
     // "The time to wait before displaying the next frame, in 1 millisecond units.
     //  Note the interpretation of frame duration of 0 (and often <= 10) is implementation defined.
     //  Many tools and browsers assign a minimum duration similar to GIF."
-    u32 frame_duration = (u32)data[12] | ((u32)data[13] << 8) | ((u32)data[14] << 16);
+    u32 frame_duration = (u32)anmf_chunk[12] | ((u32)anmf_chunk[13] << 8) | ((u32)anmf_chunk[14] << 16);
 
-    u8 flags = data[15];
+    u8 flags = anmf_chunk[15];
     auto blending_method = static_cast<ANMFChunk::BlendingMethod>((flags >> 1) & 1);
     auto disposal_method = static_cast<ANMFChunk::DisposalMethod>(flags & 1);
 
-    ReadonlyBytes frame_data = anmf_chunk.data.slice(16);
+    ReadonlyBytes frame_data = anmf_chunk.data().slice(16);
 
     dbgln_if(WEBP_DEBUG, "frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
         frame_x, frame_y, frame_width, frame_height, frame_duration, (int)blending_method, (int)disposal_method);
@@ -419,21 +358,21 @@ static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, Ch
     // https://developers.google.com/speed/webp/docs/riff_container#assembling_the_canvas_from_frames
     // "assert VP8X.canvasWidth >= frame_right
     //  assert VP8X.canvasHeight >= frame_bottom"
-    VERIFY(context.first_chunk->type == FourCC("VP8X"));
+    VERIFY(context.first_chunk->id() == "VP8X"sv);
     if (frame_x + frame_width > context.vp8x_header.width || frame_y + frame_height > context.vp8x_header.height)
         return Error::from_string_literal("WebPImageDecoderPlugin: ANMF dimensions out of bounds");
 
     return ANMFChunk { frame_x, frame_y, frame_width, frame_height, frame_duration, blending_method, disposal_method, frame_data };
 }
 
-static ErrorOr<ImageData> decode_webp_set_image_data(Optional<Chunk> alpha, Optional<Chunk> image_data)
+static ErrorOr<ImageData> decode_webp_set_image_data(Optional<RIFF::Chunk> alpha, Optional<RIFF::Chunk> image_data)
 {
     if (!image_data.has_value())
         return Error::from_string_literal("WebPImageDecoderPlugin: missing image data");
 
     // https://developers.google.com/speed/webp/docs/riff_container#alpha
     // "A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
-    if (alpha.has_value() && image_data->type == FourCC("VP8L")) {
+    if (alpha.has_value() && image_data->id() == "VP8L"sv) {
         dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: VP8L frames should not have ALPH chunks. Ignoring ALPH chunk.");
         alpha.clear();
     }
@@ -444,33 +383,33 @@ static ErrorOr<ImageData> decode_webp_set_image_data(Optional<Chunk> alpha, Opti
 // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
 static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyBytes chunks)
 {
-    VERIFY(context.first_chunk->type == FourCC("VP8X"));
+    VERIFY(context.first_chunk->id() == "VP8X"sv);
 
-    Optional<Chunk> alpha, image_data;
+    Optional<RIFF::Chunk> alpha, image_data;
 
     // FIXME: This isn't quite to spec, which says
     // "All chunks SHOULD be placed in the same order as listed above.
     //  If a chunk appears in the wrong place, the file is invalid, but readers MAY parse the file, ignoring the chunks that are out of order."
-    auto store = [](auto& field, Chunk const& chunk) {
+    auto store = [](auto& field, RIFF::Chunk const& chunk) {
         if (!field.has_value())
             field = chunk;
     };
     while (!chunks.is_empty()) {
-        auto chunk = TRY(decode_webp_advance_chunk(chunks));
+        auto chunk = TRY(RIFF::Chunk::decode_and_advance(chunks));
 
-        if (chunk.type == FourCC("ICCP"))
+        if (chunk.id() == "ICCP"sv)
             store(context.iccp_chunk, chunk);
-        else if (chunk.type == FourCC("ALPH"))
+        else if (chunk.id() == "ALPH"sv)
             store(alpha, chunk);
-        else if (chunk.type == FourCC("ANIM"))
+        else if (chunk.id() == "ANIM"sv)
             store(context.animation_header_chunk, chunk);
-        else if (chunk.type == FourCC("ANMF"))
+        else if (chunk.id() == "ANMF"sv)
             TRY(context.animation_frame_chunks.try_append(chunk));
-        else if (chunk.type == FourCC("EXIF"))
+        else if (chunk.id() == "EXIF"sv)
             store(context.exif_chunk, chunk);
-        else if (chunk.type == FourCC("XMP "))
+        else if (chunk.id() == "XMP "sv)
             store(context.xmp_chunk, chunk);
-        else if (chunk.type == FourCC("VP8 ") || chunk.type == FourCC("VP8L"))
+        else if (chunk.id() == "VP8 "sv || chunk.id() == "VP8L"sv)
             store(image_data, chunk);
     }
 
@@ -500,9 +439,9 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
     // "This chunk MUST appear before the image data."
     if (context.iccp_chunk.has_value()
         && ((context.image_data.has_value()
-                && (context.iccp_chunk->data.data() > context.image_data->image_data_chunk.data.data()
-                    || (context.image_data->alpha_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data->alpha_chunk->data.data())))
-            || (!context.animation_frame_chunks.is_empty() && context.iccp_chunk->data.data() > context.animation_frame_chunks[0].data.data()))) {
+                && (context.iccp_chunk->data().data() > context.image_data->image_data_chunk.data().data()
+                    || (context.image_data->alpha_chunk.has_value() && context.iccp_chunk->data().data() > context.image_data->alpha_chunk->data().data())))
+            || (!context.animation_frame_chunks.is_empty() && context.iccp_chunk->data().data() > context.animation_frame_chunks[0].data().data()))) {
         return Error::from_string_literal("WebPImageDecoderPlugin: ICCP chunk is after image data");
     }
 
@@ -515,16 +454,16 @@ static ErrorOr<void> read_webp_first_chunk(WebPLoadingContext& context)
     if (context.state >= WebPLoadingContext::State::FirstChunkRead)
         return {};
 
-    context.chunks_cursor = context.data.slice(sizeof(WebPFileHeader));
-    auto first_chunk = TRY(decode_webp_advance_chunk(context.chunks_cursor));
+    context.chunks_cursor = context.data.slice(sizeof(RIFF::FileHeader));
+    auto first_chunk = TRY(RIFF::Chunk::decode_and_advance(context.chunks_cursor));
 
-    if (first_chunk.type != FourCC("VP8 ") && first_chunk.type != FourCC("VP8L") && first_chunk.type != FourCC("VP8X"))
+    if (first_chunk.id() != "VP8 "sv && first_chunk.id() != "VP8L"sv && first_chunk.id() != "VP8X"sv)
         return Error::from_string_literal("WebPImageDecoderPlugin: Invalid first chunk type");
 
     context.first_chunk = first_chunk;
     context.state = WebPLoadingContext::State::FirstChunkRead;
 
-    if (first_chunk.type == FourCC("VP8 ") || first_chunk.type == FourCC("VP8L"))
+    if (first_chunk.id() == "VP8 "sv || first_chunk.id() == "VP8L"sv)
         context.image_data = TRY(decode_webp_set_image_data(OptionalNone {}, first_chunk));
 
     return {};
@@ -538,19 +477,19 @@ static ErrorOr<void> decode_webp_first_chunk(WebPLoadingContext& context)
     if (context.state < WebPLoadingContext::FirstChunkRead)
         TRY(read_webp_first_chunk(context));
 
-    if (context.first_chunk->type == FourCC("VP8 ")) {
-        auto vp8_header = TRY(decode_webp_chunk_VP8_header(context.first_chunk->data));
+    if (context.first_chunk->id() == "VP8 "sv) {
+        auto vp8_header = TRY(decode_webp_chunk_VP8_header(context.first_chunk->data()));
         context.size = IntSize { vp8_header.width, vp8_header.height };
         context.state = WebPLoadingContext::State::FirstChunkDecoded;
         return {};
     }
-    if (context.first_chunk->type == FourCC("VP8L")) {
-        auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context.first_chunk->data));
+    if (context.first_chunk->id() == "VP8L"sv) {
+        auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context.first_chunk->data()));
         context.size = IntSize { vp8l_header.width, vp8l_header.height };
         context.state = WebPLoadingContext::State::FirstChunkDecoded;
         return {};
     }
-    VERIFY(context.first_chunk->type == FourCC("VP8X"));
+    VERIFY(context.first_chunk->id() == "VP8X"sv);
     context.vp8x_header = TRY(decode_webp_chunk_VP8X(context.first_chunk.value()));
     context.size = IntSize { context.vp8x_header.width, context.vp8x_header.height };
     context.state = WebPLoadingContext::State::FirstChunkDecoded;
@@ -564,7 +503,7 @@ static ErrorOr<void> decode_webp_chunks(WebPLoadingContext& context)
 
     VERIFY(context.state >= WebPLoadingContext::FirstChunkDecoded);
 
-    if (context.first_chunk->type == FourCC("VP8X"))
+    if (context.first_chunk->id() == "VP8X"sv)
         return decode_webp_extended(context, context.chunks_cursor);
 
     context.state = WebPLoadingContext::State::ChunksDecoded;
@@ -591,14 +530,14 @@ static ErrorOr<void> decode_webp_animation_frame_chunks(WebPLoadingContext& cont
 static ErrorOr<ImageData> decode_webp_animation_frame_image_data(ANMFChunk const& frame)
 {
     ReadonlyBytes chunks = frame.frame_data;
-    auto chunk = TRY(decode_webp_advance_chunk(chunks));
+    auto chunk = TRY(RIFF::Chunk::decode_and_advance(chunks));
 
-    Optional<Chunk> alpha, image_data;
-    if (chunk.type == FourCC("ALPH")) {
+    Optional<RIFF::Chunk> alpha, image_data;
+    if (chunk.id() == "ALPH"sv) {
         alpha = chunk;
-        chunk = TRY(decode_webp_advance_chunk(chunks));
+        chunk = TRY(RIFF::Chunk::decode_and_advance(chunks));
     }
-    if (chunk.type == FourCC("VP8 ") || chunk.type == FourCC("VP8L"))
+    if (chunk.id() == "VP8 "sv || chunk.id() == "VP8L"sv)
         image_data = chunk;
 
     return decode_webp_set_image_data(move(alpha), move(image_data));
@@ -606,14 +545,14 @@ static ErrorOr<ImageData> decode_webp_animation_frame_image_data(ANMFChunk const
 
 static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(ImageData const& image_data)
 {
-    if (image_data.image_data_chunk.type == FourCC("VP8L")) {
+    if (image_data.image_data_chunk.id() == "VP8L"sv) {
         VERIFY(!image_data.alpha_chunk.has_value());
-        auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(image_data.image_data_chunk.data));
+        auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(image_data.image_data_chunk.data()));
         return decode_webp_chunk_VP8L_contents(vp8l_header);
     }
 
-    VERIFY(image_data.image_data_chunk.type == FourCC("VP8 "));
-    auto vp8_header = TRY(decode_webp_chunk_VP8_header(image_data.image_data_chunk.data));
+    VERIFY(image_data.image_data_chunk.id() == "VP8 "sv);
+    auto vp8_header = TRY(decode_webp_chunk_VP8_header(image_data.image_data_chunk.data()));
     auto bitmap = TRY(decode_webp_chunk_VP8_contents(vp8_header, image_data.alpha_chunk.has_value()));
 
     if (image_data.alpha_chunk.has_value())
@@ -628,7 +567,7 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
     if (frame_index >= context.animation_frame_chunks_data->size())
         return Error::from_string_literal("frame_index size too high");
 
-    VERIFY(context.first_chunk->type == FourCC("VP8X"));
+    VERIFY(context.first_chunk->id() == "VP8X"sv);
     VERIFY(context.vp8x_header.has_animation);
 
     Color clear_color = Color::from_argb(context.animation_header_chunk_data->background_color);
@@ -716,7 +655,7 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> WebPImageDecoderPlugin::create(Readon
 
 bool WebPImageDecoderPlugin::is_animated()
 {
-    return m_context->first_chunk->type == FourCC("VP8X") && m_context->vp8x_header.has_animation;
+    return m_context->first_chunk->id() == "VP8X"sv && m_context->vp8x_header.has_animation;
 }
 
 size_t WebPImageDecoderPlugin::loop_count()
@@ -773,7 +712,7 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index, Option
             auto bitmap = TRY(decode_webp_image_data(m_context->image_data.value()));
 
             // Check that size in VP8X chunk matches dimensions in VP8 or VP8L chunk if both are present.
-            if (m_context->first_chunk->type == FourCC("VP8X")) {
+            if (m_context->first_chunk->id() == "VP8X") {
                 if (static_cast<u32>(bitmap->width()) != m_context->vp8x_header.width || static_cast<u32>(bitmap->height()) != m_context->vp8x_header.height)
                     return Error::from_string_literal("WebPImageDecoderPlugin: VP8X and VP8/VP8L chunks store different dimensions");
             }
@@ -803,21 +742,7 @@ ErrorOr<Optional<ReadonlyBytes>> WebPImageDecoderPlugin::icc_data()
 
     // FIXME: "If this chunk is not present, sRGB SHOULD be assumed."
 
-    return m_context->iccp_chunk.map([](auto iccp_chunk) { return iccp_chunk.data; });
+    return m_context->iccp_chunk.map([](auto iccp_chunk) { return iccp_chunk.data(); });
 }
 
 }
-
-template<>
-struct AK::Formatter<Gfx::FourCC> : StandardFormatter {
-    ErrorOr<void> format(FormatBuilder& builder, Gfx::FourCC const& four_cc)
-    {
-        TRY(builder.put_padding('\'', 1));
-        TRY(builder.put_padding(four_cc.cc[0], 1));
-        TRY(builder.put_padding(four_cc.cc[1], 1));
-        TRY(builder.put_padding(four_cc.cc[2], 1));
-        TRY(builder.put_padding(four_cc.cc[3], 1));
-        TRY(builder.put_padding('\'', 1));
-        return {};
-    }
-};
