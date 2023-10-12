@@ -388,6 +388,7 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
     auto resolve = [](SID sid) {
         if (sid < s_cff_builtin_names.size())
             return DeprecatedFlyString(s_cff_builtin_names[sid]);
+        // FIXME: Read from String INDEX instead.
         dbgln("Cound't find string for SID {}, going with space", sid);
         return DeprecatedFlyString("space");
     };
