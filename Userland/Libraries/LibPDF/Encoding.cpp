@@ -23,6 +23,9 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
         auto name = obj->cast<NameObject>()->name();
         if (name == "StandardEncoding")
             return standard_encoding();
+
+        // FIXME: MacExpertEncoding
+
         if (name == "MacRomanEncoding")
             return mac_encoding();
         if (name == "WinAnsiEncoding")
