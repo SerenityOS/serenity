@@ -7,6 +7,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/StringUtils.h>
+#include <Shell/Parser.h>
 #include <Shell/PosixParser.h>
 
 #define TRY_OR_THROW_PARSE_ERROR_AT(expr, position) ({                                                     \
@@ -22,6 +23,13 @@
     }                                                                                                      \
     _value_or_error.release_value();                                                                       \
 })
+
+static RefPtr<Shell::AST::Node> strip_execute(RefPtr<Shell::AST::Node> node)
+{
+    while (node && node->is_execute())
+        node = static_ptr_cast<Shell::AST::Execute>(node)->command();
+    return node;
+}
 
 static Shell::AST::Position empty_position()
 {
@@ -1674,9 +1682,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
                 '?');
             break;
         case ResolvedParameterExpansion::Op::GetPositionalParameterListAsString:
-            node = make_ref_counted<AST::SyntaxError>(
-                token.position.value_or(empty_position()),
-                "$* not implemented"_string);
+            node = strip_execute(::Shell::Parser { "${join \"${defined_value_or_default IFS ' '}\" $*}"sv }.parse());
             break;
         case ResolvedParameterExpansion::Op::GetShellProcessId:
             node = make_ref_counted<AST::SpecialVariable>(
