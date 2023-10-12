@@ -104,13 +104,14 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
         });
     }));
 
-    // FIXME: CFF spec "10 String Index"
+    auto strings = TRY(parse_strings(reader));
+
     // FIXME: CFF spec "16 Local/Global Subrs INDEXes"
     //        "Global subrs are stored in an INDEX structure which follows the String INDEX."
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
     auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), subroutines));
-    auto charset = TRY(parse_charset(Reader { cff_bytes.slice(charset_offset) }, glyphs.size()));
+    auto charset = TRY(parse_charset(Reader { cff_bytes.slice(charset_offset) }, glyphs.size(), strings));
 
     // Adjust glyphs' widths as they are deltas from nominalWidthX
     for (auto& glyph : glyphs) {
@@ -385,30 +386,44 @@ static constexpr Array s_cff_builtin_names {
     "zcaron"sv,
 };
 
-PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size_t glyph_count)
+PDFErrorOr<Vector<StringView>> CFF::parse_strings(Reader& reader)
+{
+    // CFF spec "10 String Index"
+    Vector<StringView> strings;
+    TRY(parse_index(reader, [&](ReadonlyBytes const& string) -> PDFErrorOr<void> {
+        return TRY(strings.try_append(string));
+    }));
+    return strings;
+}
+
+DeprecatedFlyString CFF::resolve_sid(SID sid, Vector<StringView> const& strings)
+{
+    if (sid < s_cff_builtin_names.size())
+        return DeprecatedFlyString(s_cff_builtin_names[sid]);
+
+    if (sid - s_cff_builtin_names.size() < strings.size())
+        return DeprecatedFlyString(strings[sid - s_cff_builtin_names.size()]);
+
+    dbgln("Couldn't find string for SID {}, going with space", sid);
+    return DeprecatedFlyString("space");
+}
+
+PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size_t glyph_count, Vector<StringView> const& strings)
 {
     // CFF spec, "13 Charsets"
     Vector<DeprecatedFlyString> names;
-    auto resolve = [](SID sid) {
-        if (sid < s_cff_builtin_names.size())
-            return DeprecatedFlyString(s_cff_builtin_names[sid]);
-        // FIXME: Read from String INDEX instead.
-        dbgln("Cound't find string for SID {}, going with space", sid);
-        return DeprecatedFlyString("space");
-    };
-
     auto format = TRY(reader.try_read<Card8>());
     if (format == 0) {
         for (u8 i = 0; i < glyph_count - 1; i++) {
             SID sid = TRY(reader.try_read<BigEndian<SID>>());
-            TRY(names.try_append(resolve(sid)));
+            TRY(names.try_append(resolve_sid(sid, strings)));
         }
     } else if (format == 1) {
         while (names.size() < glyph_count - 1) {
             auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
             int left = TRY(reader.try_read<Card8>());
             for (u8 sid = first_sid; left >= 0; left--, sid++)
-                TRY(names.try_append(resolve(sid)));
+                TRY(names.try_append(resolve_sid(sid, strings)));
         }
     }
     return names;
