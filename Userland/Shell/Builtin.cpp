@@ -332,6 +332,26 @@ ErrorOr<int> Shell::builtin_bg(Main::Arguments arguments)
     return 0;
 }
 
+ErrorOr<String> Shell::serialize_function_definition(ShellFunction const& fn) const
+{
+    StringBuilder builder;
+    builder.append(fn.name);
+    builder.append('(');
+    for (size_t i = 0; i < fn.arguments.size(); i++) {
+        builder.append(fn.arguments[i]);
+        if (i != fn.arguments.size() - 1)
+            builder.append(' ');
+    }
+    builder.append(") {\n"sv);
+    if (fn.body) {
+        auto formatter = Formatter(*fn.body);
+        builder.append(formatter.format());
+    }
+    builder.append("\n}"sv);
+
+    return builder.to_string();
+}
+
 ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
 {
     Vector<DeprecatedString> commands;
@@ -359,22 +379,8 @@ ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
             auto fn = function.value();
             printf("%s is a function\n", command.characters());
             if (!dont_show_function_source) {
-                StringBuilder builder;
-                builder.append(fn.name);
-                builder.append('(');
-                for (size_t i = 0; i < fn.arguments.size(); i++) {
-                    builder.append(fn.arguments[i]);
-                    if (!(i == fn.arguments.size() - 1))
-                        builder.append(' ');
-                }
-                builder.append(") {\n"sv);
-                if (fn.body) {
-                    auto formatter = Formatter(*fn.body);
-                    builder.append(formatter.format());
-                    printf("%s\n}\n", builder.to_deprecated_string().characters());
-                } else {
-                    printf("%s\n}\n", builder.to_deprecated_string().characters());
-                }
+                auto source = TRY(serialize_function_definition(fn));
+                outln("{}", source);
             }
             continue;
         }
@@ -1285,6 +1291,68 @@ ErrorOr<int> Shell::builtin_unset(Main::Arguments arguments)
 
     if (did_touch_path)
         cache_path();
+
+    return 0;
+}
+
+ErrorOr<int> Shell::builtin_set(Main::Arguments arguments)
+{
+    if (arguments.strings.size() == 1) {
+        HashMap<String, String> vars;
+
+        StringBuilder builder;
+        for (auto& frame : m_local_frames) {
+            for (auto& var : frame->local_variables) {
+                builder.join(" "sv, TRY(var.value->resolve_as_list(*this)));
+                vars.set(TRY(String::from_deprecated_string(var.key)), TRY(builder.to_string()));
+                builder.clear();
+            }
+        }
+
+        struct Variable {
+            StringView name;
+            String value;
+        };
+
+        Vector<Variable> variables;
+        variables.ensure_capacity(vars.size());
+
+        for (auto& var : vars)
+            variables.unchecked_append({ var.key, var.value });
+
+        Vector<String> functions;
+        functions.ensure_capacity(m_functions.size());
+        for (auto& function : m_functions)
+            functions.unchecked_append(TRY(serialize_function_definition(function.value)));
+
+        quick_sort(variables, [](auto& a, auto& b) { return a.name < b.name; });
+        quick_sort(functions, [](auto& a, auto& b) { return a < b; });
+
+        for (auto& var : variables)
+            outln("{}={}", var.name, escape_token(var.value));
+
+        for (auto& fn : functions)
+            outln("{}", fn);
+
+        return 0;
+    }
+
+    Vector<StringView> argv_to_set;
+
+    Core::ArgsParser parser;
+    parser.set_stop_on_first_non_option(true);
+    parser.add_positional_argument(argv_to_set, "List of arguments", "arg", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+        return 1;
+
+    if (!argv_to_set.is_empty() || arguments.strings.last() == "--"sv) {
+        Vector<String> argv;
+        argv.ensure_capacity(argv_to_set.size());
+        for (auto& arg : argv_to_set)
+            argv.unchecked_append(TRY(String::from_utf8(arg)));
+        set_local_variable("ARGV", AST::make_ref_counted<AST::ListValue>(move(argv)));
+    }
 
     return 0;
 }

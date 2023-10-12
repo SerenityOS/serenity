@@ -38,6 +38,7 @@
     __ENUMERATE_SHELL_BUILTIN(glob, InAllModes)              \
     __ENUMERATE_SHELL_BUILTIN(unalias, InAllModes)           \
     __ENUMERATE_SHELL_BUILTIN(unset, InAllModes)             \
+    __ENUMERATE_SHELL_BUILTIN(set, InAllModes)               \
     __ENUMERATE_SHELL_BUILTIN(history, InAllModes)           \
     __ENUMERATE_SHELL_BUILTIN(umask, InAllModes)             \
     __ENUMERATE_SHELL_BUILTIN(not, InAllModes)               \
@@ -479,14 +480,16 @@ private:
         // clang-format on
     };
 
-    bool m_should_ignore_jobs_on_next_exit { false };
-    pid_t m_pid { 0 };
-
     struct ShellFunction {
         DeprecatedString name;
         Vector<DeprecatedString> arguments;
         RefPtr<AST::Node> body;
     };
+
+    ErrorOr<String> serialize_function_definition(ShellFunction const&) const;
+
+    bool m_should_ignore_jobs_on_next_exit { false };
+    pid_t m_pid { 0 };
 
     HashMap<DeprecatedString, ShellFunction> m_functions;
     Vector<NonnullOwnPtr<LocalFrame>> m_local_frames;
