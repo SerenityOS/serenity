@@ -340,41 +340,85 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         // -> A resolved value special case property defined in another specification
         //    As defined in the relevant specification.
     case PropertyID::Transform: {
-        // NOTE: The computed value for `transform` serializes as a single `matrix(...)` value, instead of
-        //       the original list of transform functions. So, we produce a StyleValue for that.
-        //       https://www.w3.org/TR/css-transforms-1/#serialization-of-the-computed-value
-        // FIXME: Computing values should happen in the StyleComputer!
         auto transformations = layout_node.computed_values().transformations();
         if (transformations.is_empty())
             return IdentifierStyleValue::create(ValueID::None);
 
-        // The transform matrix is held by the StackingContext, so we need to make sure we have one first.
-        auto const* viewport = layout_node.document().paintable();
-        VERIFY(viewport);
-        const_cast<Painting::ViewportPaintable&>(*viewport).build_stacking_context_tree_if_needed();
+        // https://drafts.csswg.org/css-transforms-2/#serialization-of-the-computed-value
+        // The transform property is a resolved value special case property. [CSSOM]
+        // When the computed value is a <transform-list>, the resolved value is one <matrix()> function or one <matrix3d()> function computed by the following algorithm:
+        // 1. Let transform be a 4x4 matrix initialized to the identity matrix.
+        //    The elements m11, m22, m33 and m44 of transform must be set to 1; all other elements of transform must be set to 0.
+        auto transform = FloatMatrix4x4::identity();
 
+        // 2. Post-multiply all <transform-function>s in <transform-list> to transform.
         VERIFY(layout_node.paintable());
-        auto const& paintable_box = verify_cast<Painting::PaintableBox const>(layout_node.paintable());
-        VERIFY(paintable_box->stacking_context());
+        auto const& paintable_box = verify_cast<Painting::PaintableBox const>(*layout_node.paintable());
+        for (auto transformation : transformations) {
+            transform = transform * transformation.to_matrix(paintable_box);
+        }
 
-        // FIXME: This needs to serialize to matrix3d if the transformation matrix is a 3D matrix.
-        //        https://w3c.github.io/csswg-drafts/css-transforms-2/#serialization-of-the-computed-value
-        auto affine_matrix = paintable_box->stacking_context()->affine_transform_matrix();
+        // https://drafts.csswg.org/css-transforms-1/#2d-matrix
+        auto is_2d_matrix = [](Gfx::FloatMatrix4x4 const& matrix) -> bool {
+            // A 3x2 transformation matrix,
+            // or a 4x4 matrix where the items m31, m32, m13, m23, m43, m14, m24, m34 are equal to 0
+            // and m33, m44 are equal to 1.
+            // NOTE: We only care about 4x4 matrices here.
+            // NOTE: Our elements are 0-indexed not 1-indexed, and in the opposite order.
+            if (matrix.elements()[0][2] != 0     // m31
+                || matrix.elements()[1][2] != 0  // m32
+                || matrix.elements()[2][0] != 0  // m13
+                || matrix.elements()[2][1] != 0  // m23
+                || matrix.elements()[2][3] != 0  // m43
+                || matrix.elements()[3][0] != 0  // m14
+                || matrix.elements()[3][1] != 0  // m24
+                || matrix.elements()[3][2] != 0) // m34
+                return false;
 
-        StyleValueVector parameters;
-        parameters.ensure_capacity(6);
-        parameters.unchecked_append(NumberStyleValue::create(affine_matrix.a()));
-        parameters.unchecked_append(NumberStyleValue::create(affine_matrix.b()));
-        parameters.unchecked_append(NumberStyleValue::create(affine_matrix.c()));
-        parameters.unchecked_append(NumberStyleValue::create(affine_matrix.d()));
-        parameters.unchecked_append(NumberStyleValue::create(affine_matrix.e()));
-        parameters.unchecked_append(NumberStyleValue::create(affine_matrix.f()));
+            if (matrix.elements()[2][2] != 1     // m33
+                || matrix.elements()[3][3] != 1) // m44
+                return false;
 
-        NonnullRefPtr<StyleValue> matrix_function = TransformationStyleValue::create(TransformFunction::Matrix, move(parameters));
-        // Elsewhere we always store the transform property's value as a StyleValueList of TransformationStyleValues,
-        // so this is just for consistency.
-        StyleValueVector matrix_functions { matrix_function };
-        return StyleValueList::create(move(matrix_functions), StyleValueList::Separator::Space);
+            return true;
+        };
+
+        // 3. Chose between <matrix()> or <matrix3d()> serialization:
+        // -> If transform is a 2D matrix
+        //        Serialize transform to a <matrix()> function.
+        if (is_2d_matrix(transform)) {
+            StyleValueVector parameters {
+                NumberStyleValue::create(transform.elements()[0][0]),
+                NumberStyleValue::create(transform.elements()[1][0]),
+                NumberStyleValue::create(transform.elements()[0][1]),
+                NumberStyleValue::create(transform.elements()[1][1]),
+                NumberStyleValue::create(transform.elements()[0][3]),
+                NumberStyleValue::create(transform.elements()[1][3]),
+            };
+            return TransformationStyleValue::create(TransformFunction::Matrix, move(parameters));
+        }
+        // -> Otherwise
+        //        Serialize transform to a <matrix3d()> function.
+        else {
+            StyleValueVector parameters {
+                NumberStyleValue::create(transform.elements()[0][0]),
+                NumberStyleValue::create(transform.elements()[1][0]),
+                NumberStyleValue::create(transform.elements()[2][0]),
+                NumberStyleValue::create(transform.elements()[3][0]),
+                NumberStyleValue::create(transform.elements()[0][1]),
+                NumberStyleValue::create(transform.elements()[1][1]),
+                NumberStyleValue::create(transform.elements()[2][1]),
+                NumberStyleValue::create(transform.elements()[3][1]),
+                NumberStyleValue::create(transform.elements()[0][2]),
+                NumberStyleValue::create(transform.elements()[1][2]),
+                NumberStyleValue::create(transform.elements()[2][2]),
+                NumberStyleValue::create(transform.elements()[3][2]),
+                NumberStyleValue::create(transform.elements()[0][3]),
+                NumberStyleValue::create(transform.elements()[1][3]),
+                NumberStyleValue::create(transform.elements()[2][3]),
+                NumberStyleValue::create(transform.elements()[3][3]),
+            };
+            return TransformationStyleValue::create(TransformFunction::Matrix3d, move(parameters));
+        }
     }
 
         // -> Any other property
