@@ -64,6 +64,9 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
         return TRY(font_names.try_append(font_name));
     }));
 
+    if (font_names.size() != 1)
+        return error("CFFs with more than one font not yet implemented");
+
     auto cff = adopt_ref(*new CFF());
     cff->set_font_matrix({ 0.001f, 0.0f, 0.0f, 0.001f, 0.0f, 0.0f });
 
