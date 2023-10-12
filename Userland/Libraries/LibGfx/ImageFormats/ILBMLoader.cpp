@@ -8,22 +8,11 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
+#include <AK/MemoryStream.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
+#include <LibRIFF/IFF.h>
 
 namespace Gfx {
-
-struct IFFHeader {
-    FourCC form;
-    BigEndian<u32> file_size;
-    FourCC format;
-};
-
-static_assert(AssertSize<IFFHeader, 12>());
-
-struct Chunk {
-    FourCC type;
-    ReadonlyBytes data;
-};
 
 enum class CompressionType : u8 {
     None = 0,
@@ -43,11 +32,6 @@ enum class ViewportMode : u32 {
 };
 
 AK_ENUM_BITWISE_OPERATORS(ViewportMode);
-
-struct ChunkHeader {
-    FourCC chunk_type;
-    BigEndian<u32> chunk_size;
-};
 
 struct BMHDHeader {
     BigEndian<u16> width;
@@ -96,24 +80,22 @@ static ErrorOr<void> decode_iff_ilbm_header(ILBMLoadingContext& context)
     if (context.state >= ILBMLoadingContext::State::HeaderDecoded)
         return {};
 
-    if (context.data.size() < sizeof(IFFHeader))
-        return Error::from_string_literal("Missing IFF header");
-
-    auto& header = *bit_cast<IFFHeader const*>(context.data.data());
-    if (header.form != FourCC("FORM") || header.format != FourCC("ILBM"))
+    auto header_stream = FixedMemoryStream { context.data };
+    auto header = TRY(IFF::FileHeader::read_from_stream(header_stream));
+    if (header.magic() != "FORM"sv || header.subformat != "ILBM"sv)
         return Error::from_string_literal("Invalid IFF-ILBM header");
 
     return {};
 }
 
-static ErrorOr<Vector<Color>> decode_cmap_chunk(Chunk cmap_chunk)
+static ErrorOr<Vector<Color>> decode_cmap_chunk(IFF::Chunk cmap_chunk)
 {
-    size_t const size = cmap_chunk.data.size() / 3;
+    size_t const size = cmap_chunk.size() / 3;
     Vector<Color> color_table;
     TRY(color_table.try_ensure_capacity(size));
 
     for (size_t i = 0; i < size; ++i) {
-        color_table.unchecked_append(Color(cmap_chunk.data[i * 3], cmap_chunk.data[(i * 3) + 1], cmap_chunk.data[(i * 3) + 2]));
+        color_table.unchecked_append(Color(cmap_chunk[i * 3], cmap_chunk[(i * 3) + 1], cmap_chunk[(i * 3) + 2]));
     }
 
     return color_table;
@@ -211,17 +193,17 @@ static ErrorOr<void> extend_ehb_palette(ILBMLoadingContext& context)
     return {};
 }
 
-static ErrorOr<void> decode_body_chunk(Chunk body_chunk, ILBMLoadingContext& context)
+static ErrorOr<void> decode_body_chunk(IFF::Chunk body_chunk, ILBMLoadingContext& context)
 {
-    dbgln_if(ILBM_DEBUG, "decode_body_chunk {}", body_chunk.data.size());
+    dbgln_if(ILBM_DEBUG, "decode_body_chunk {}", body_chunk.size());
 
     ByteBuffer pixel_data;
 
     if (context.bm_header.compression == CompressionType::ByteRun) {
-        auto plane_data = TRY(uncompress_byte_run(body_chunk.data, context));
+        auto plane_data = TRY(uncompress_byte_run(body_chunk.data(), context));
         pixel_data = TRY(planar_to_chunky(plane_data, context));
     } else {
-        pixel_data = TRY(planar_to_chunky(body_chunk.data, context));
+        pixel_data = TRY(planar_to_chunky(body_chunk.data(), context));
     }
 
     // Some files already have 64 colours defined in the palette,
@@ -237,37 +219,6 @@ static ErrorOr<void> decode_body_chunk(Chunk body_chunk, ILBMLoadingContext& con
     return {};
 }
 
-static ErrorOr<Chunk> decode_iff_chunk_header(ReadonlyBytes chunks)
-{
-    if (chunks.size() < sizeof(ChunkHeader))
-        return Error::from_string_literal("Not enough data for IFF chunk header");
-
-    auto const& header = *bit_cast<ChunkHeader const*>(chunks.data());
-
-    if (chunks.size() < sizeof(ChunkHeader) + header.chunk_size)
-        return Error::from_string_literal("Not enough data for IFF chunk");
-
-    return Chunk { header.chunk_type, { chunks.data() + sizeof(ChunkHeader), header.chunk_size } };
-}
-
-static ErrorOr<Chunk> decode_iff_advance_chunk(ReadonlyBytes& chunks)
-{
-    auto chunk = TRY(decode_iff_chunk_header(chunks));
-
-    chunks = chunks.slice(sizeof(ChunkHeader) + chunk.data.size());
-
-    // add padding if needed
-    if (chunk.data.size() % 2 != 0) {
-        if (chunks.is_empty())
-            return Error::from_string_literal("Missing data for padding byte");
-        if (*chunks.data() != 0)
-            return Error::from_string_literal("Padding byte is not 0");
-        chunks = chunks.slice(1);
-    }
-
-    return chunk;
-}
-
 static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
 {
     auto& chunks = context.chunks_cursor;
@@ -275,16 +226,16 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
     dbgln_if(ILBM_DEBUG, "decode_iff_chunks");
 
     while (!chunks.is_empty()) {
-        auto chunk = TRY(decode_iff_advance_chunk(chunks));
-        if (chunk.type == FourCC("CMAP")) {
+        auto chunk = TRY(IFF::Chunk::decode_and_advance(chunks));
+        if (chunk.id() == "CMAP"sv) {
             context.color_table = TRY(decode_cmap_chunk(chunk));
-        } else if (chunk.type == FourCC("BODY")) {
+        } else if (chunk.id() == "BODY"sv) {
             TRY(decode_body_chunk(chunk, context));
             context.state = ILBMLoadingContext::State::BitmapDecoded;
-        } else if (chunk.type == FourCC("CRNG")) {
+        } else if (chunk.id() == "CRNG"sv) {
             dbgln_if(ILBM_DEBUG, "Chunk:CRNG");
-        } else if (chunk.type == FourCC("CAMG")) {
-            context.viewport_mode = static_cast<ViewportMode>(AK::convert_between_host_and_big_endian(ByteReader::load32(chunk.data.data())));
+        } else if (chunk.id() == "CAMG"sv) {
+            context.viewport_mode = static_cast<ViewportMode>(AK::convert_between_host_and_big_endian(ByteReader::load32(chunk.data().data())));
             dbgln_if(ILBM_DEBUG, "Chunk:CAMG, Viewport={}, EHB={}, HAM={}", (u32)context.viewport_mode, has_flag(context.viewport_mode, ViewportMode::EHB), has_flag(context.viewport_mode, ViewportMode::HAM));
         }
     }
@@ -294,13 +245,13 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
 
 static ErrorOr<void> decode_bmhd_chunk(ILBMLoadingContext& context)
 {
-    context.chunks_cursor = context.data.slice(sizeof(IFFHeader));
-    auto first_chunk = TRY(decode_iff_advance_chunk(context.chunks_cursor));
+    context.chunks_cursor = context.data.slice(sizeof(IFF::FileHeader));
+    auto first_chunk = TRY(IFF::Chunk::decode_and_advance(context.chunks_cursor));
 
-    if (first_chunk.type != FourCC("BMHD"))
+    if (first_chunk.id() != "BMHD"sv)
         return Error::from_string_literal("IFFImageDecoderPlugin: Invalid chunk type, expected BMHD");
 
-    context.bm_header = *bit_cast<BMHDHeader const*>(first_chunk.data.data());
+    context.bm_header = *bit_cast<BMHDHeader const*>(first_chunk.data().data());
     context.pitch = ceil_div((u16)context.bm_header.width, (u16)16) * 2;
 
     context.state = ILBMLoadingContext::State::HeaderDecoded;
