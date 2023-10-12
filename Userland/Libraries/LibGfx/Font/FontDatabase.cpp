@@ -214,6 +214,11 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     return it->value;
 }
 
+Vector<FlyString> FontDatabase::get_typeface_family_names()
+{
+    return m_private->typefaces.keys();
+}
+
 RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     auto it = m_private->typefaces.find(family);

@@ -22,6 +22,7 @@
 #include <LibGfx/Font/VectorFont.h>
 #include <LibGfx/Font/WOFF/Font.h>
 #include <LibGfx/Font/WOFF2/Font.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
@@ -1565,8 +1566,8 @@ RefPtr<Gfx::Font const> StyleComputer::find_matching_font_weight_descending(Vect
 // FIXME: This should be replaced by the full CSS font selection algorithm.
 RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const& key, float font_size_in_pt) const
 {
-    // If a font family match occurs, the user agent assembles the set of font faces in that family and then
-    // narrows the set to a single face using other font properties in the order given below.
+    // 3. For other family names, the user agent attempts to find the family name among fonts defined via
+    // @font-face rules and then among available installed fonts (this may include font aliases)
     Vector<MatchingFontCandidate> matching_family_fonts;
     for (auto const& font_key_and_loader : m_loaded_fonts) {
         if (font_key_and_loader.key.family_name.equals_ignoring_ascii_case(key.family_name))
@@ -1584,8 +1585,10 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
     quick_sort(matching_family_fonts, [](auto const& a, auto const& b) {
         return a.key.weight < b.key.weight;
     });
-    // FIXME: 1. font-stretch is tried first.
-    // FIXME: 2. font-style is tried next.
+    // 4. If a font family match occurs, the user agent assembles the set of font faces in that family and then
+    // narrows the set to a single face using other font properties in the order given below.
+    // FIXME: 4.1 font-stretch is tried first.
+    // FIXME: 4.2 font-style is tried next.
     // We don't have complete support of italic and oblique fonts, so matching on font-style can be simplified to:
     // If a matching slope is found, all faces which don't have that matching slope are excluded from the matching set.
     auto style_it = find_if(matching_family_fonts.begin(), matching_family_fonts.end(),
@@ -1595,7 +1598,7 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
             return matching_font_candidate.key.slope != key.slope;
         });
     }
-    // 3. font-weight is matched next.
+    // 4.3 font-weight is matched next.
     // If the desired weight is inclusively between 400 and 500, weights greater than or equal to the target weight
     // are checked in ascending order until 500 is hit and checked, followed by weights less than the target weight
     // in descending order, followed by weights greater than 500, until a match is found.
@@ -1603,6 +1606,10 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
         auto it = find_if(matching_family_fonts.begin(), matching_family_fonts.end(),
             [&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight >= key.weight; });
         for (; it != matching_family_fonts.end() && it->key.weight <= 500; ++it) {
+            // 4.4 font-size must be matched within a UA-dependent margin of tolerance. (Typically, sizes for scalable
+            // fonts are rounded to the nearest whole pixel, while the tolerance for bitmapped fonts could be as large as 20%.)
+            // Further computations, e.g., by em values in other properties, are based on the font-size value that is used,
+            // not the one that is specified.
             if (auto found_font = it->font_with_point_size(font_size_in_pt))
                 return found_font;
         }
@@ -1629,6 +1636,7 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
         if (auto found_font = find_matching_font_weight_descending(matching_family_fonts, key.weight, font_size_in_pt, false))
             return found_font;
     }
+    // FIXME: 5. font selection for @font-face rules, including loading and character map support check. Apply in reverse order for composite faces.
     return {};
 }
 
@@ -1785,6 +1793,10 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
 
     float const font_size_in_pt = font_size_in_px * 0.75f;
 
+    // FIXME: 5.1 Localized name matching
+    // 5.2 Matching font styles
+    // 1. Using the computed font property values for a given element,
+    // the user agent starts with the first family name specified by the font-family property.
     auto find_font = [&](FlyString const& family) -> RefPtr<Gfx::Font const> {
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
@@ -1803,6 +1815,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         if (auto found_font = m_font_cache.get(font_selector))
             return found_font;
 
+        // 3, 4, 5 are in StyleComputer::font_matching_algorithm
         if (auto found_font = font_matching_algorithm(key, font_size_in_pt))
             return found_font;
 
@@ -1812,6 +1825,9 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         return {};
     };
 
+    // 2. If the family name is a generic family keyword, the user agent looks up the appropriate
+    // font family name to be used. User agents may choose the generic font family to use based on the
+    // language of the containing element or the Unicode range of the character.
     auto find_generic_font = [&](ValueID font_id) -> RefPtr<Gfx::Font const> {
         Platform::GenericFont generic_font {};
         switch (font_id) {
@@ -1870,6 +1886,45 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         found_font = find_font(font_family.as_custom_ident().custom_ident());
     }
 
+    // 6. If no matching face exists or the matched face does not contain a glyph for the character to be
+    // rendered, the next family name is selected and the previous three steps repeated. Glyphs from other
+    // faces in the family are not considered. The only exception is that user agents may optionally substitute
+    // a synthetically obliqued version of the default face if that face supports a given glyph and synthesis
+    // of these faces is permitted by the value of the font-synthesis property. For example, a synthetic italic version
+    // of the regular face might be used if the italic face doesn’t support glyphs for Arabic.
+    auto face_contains_glyphs = [&](Gfx::Font const& font, FlyString const& text) -> bool {
+        for (auto code_point : text.code_points()) {
+            static auto control_general_category = Unicode::general_category_from_string("Control"sv);
+            if (!(control_general_category.has_value() && Unicode::code_point_has_general_category(code_point, *control_general_category)) && !font.contains_glyph(code_point))
+                return false;
+        }
+        return true;
+    };
+    if (element) {
+        if (auto text = element->child_text_content(); !text.is_empty()) {
+            auto text_content = MUST(String::from_deprecated_string(text));
+            if (!found_font || (found_font && !face_contains_glyphs(*found_font, text_content))) {
+                for (auto const& family : Gfx::FontDatabase::the().get_typeface_family_names()) {
+                    if (found_font && (family == found_font->family()))
+                        continue;
+                    FontFaceKey key {
+                        .family_name = family,
+                        .weight = weight,
+                        .slope = slope,
+                    };
+                    auto font = font_matching_algorithm(key, font_size_in_pt);
+                    if (font && face_contains_glyphs(*font, text_content)) {
+                        found_font = font;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // 7. If there are no more font families to be evaluated and no matching face has been found,
+    // then the user agent performs a installed font fallback procedure to find the best match for
+    // the character to be rendered. The result of this procedure can vary across user agents.
     if (!found_font) {
         found_font = StyleProperties::font_fallback(monospace, bold);
         if (found_font) {
