@@ -229,11 +229,7 @@ static bool is_xml_mime_type(StringView resource_type)
     if (!mime_type.has_value())
         return false;
 
-    // An XML MIME type is any MIME type whose subtype ends in "+xml" or whose essence is "text/xml" or "application/xml". [RFC7303]
-    if (mime_type->subtype().ends_with_bytes("+xml"sv))
-        return true;
-
-    return mime_type->essence().is_one_of("text/xml"sv, "application/xml"sv);
+    return mime_type->is_xml();
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:plugin-11
