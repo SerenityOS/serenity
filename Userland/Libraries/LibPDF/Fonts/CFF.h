@@ -15,10 +15,12 @@ namespace PDF {
 
 class Reader;
 
+// CFF spec: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5176.CFF.pdf
+
 class CFF : public Type1FontProgram {
 
 private:
-    // Table 9: Top DICT Operator Entries
+    // CFF spec, "Table 9 Top DICT Operator Entries"
     enum class TopDictOperator {
         Version = 0,
         Notice,
@@ -39,6 +41,7 @@ private:
         // PaintType,
     };
 
+    // CFF spec, "Table 23 Private DICT Operators"
     enum class PrivDictOperator {
         Subrs = 19,
         DefaultWidthX,

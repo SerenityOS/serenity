@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+// CFF spec: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5176.CFF.pdf
+
 #include <AK/Endian.h>
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
@@ -18,7 +20,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 {
     Reader reader(cff_bytes);
 
-    // Header
+    // CFF spec, "6 Header"
     // skip major, minor version
     reader.consume(2);
     auto header_size = TRY(reader.try_read<Card8>());
@@ -26,7 +28,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     reader.consume(1);
     reader.move_to(header_size);
 
-    // Name INDEX
+    // CFF spec, "7 Name INDEX"
     Vector<String> font_names;
     TRY(parse_index(reader, [&](ReadonlyBytes const& data) -> PDFErrorOr<void> {
         auto string = TRY(String::from_utf8(data));
@@ -36,7 +38,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     auto cff = adopt_ref(*new CFF());
     cff->set_font_matrix({ 0.001f, 0.0f, 0.0f, 0.001f, 0.0f, 0.0f });
 
-    // Top DICT INDEX
+    // CFF spec, "8 Top DICT INDEX"
     int charset_offset = 0;
     Vector<u8> encoding_codes;
     auto charstrings_offset = 0;
@@ -71,6 +73,8 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 TRY(parse_dict<PrivDictOperator>(priv_dict_reader, [&](PrivDictOperator op, Vector<DictOperand> const& operands) -> PDFErrorOr<void> {
                     switch (op) {
                     case PrivDictOperator::Subrs: {
+                        // CFF spec, "16 Local/Global Subrs INDEXes"
+                        // "Local subrs are stored in an INDEX structure which is located via the offset operand of the Subrs operator in the Private DICT."
                         auto subrs_offset = operands[0].get<int>();
                         Reader subrs_reader { cff_bytes.slice(private_dict_offset + subrs_offset) };
                         dbgln("Parsing Subrs INDEX");
@@ -97,6 +101,10 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
             return {};
         });
     }));
+
+    // FIXME: CFF spec "10 String Index"
+    // FIXME: CFF spec "16 Local/Global Subrs INDEXes"
+    //        "Global subrs are stored in an INDEX structure which follows the String INDEX."
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
     auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), subroutines));
@@ -375,6 +383,7 @@ static constexpr Array s_cff_builtin_names {
 
 PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size_t glyph_count)
 {
+    // CFF spec, "13 Charsets"
     Vector<DeprecatedFlyString> names;
     auto resolve = [](SID sid) {
         if (sid < s_cff_builtin_names.size())
@@ -402,6 +411,7 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
 
 PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<ByteBuffer> const& subroutines)
 {
+    // CFF spec, "14 CharStrings INDEX"
     Vector<Glyph> glyphs;
     TRY(parse_index(reader, [&](ReadonlyBytes const& charstring_data) -> PDFErrorOr<void> {
         GlyphParserState state;
@@ -413,6 +423,7 @@ PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<By
 
 PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
 {
+    // CFF spec, "12 Encodings"
     Vector<u8> encoding_codes;
     auto format_raw = TRY(reader.try_read<Card8>());
     // TODO: support encoding supplements when highest bit is set
@@ -425,6 +436,7 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
     } else if (format == 1) {
         auto n_ranges = TRY(reader.try_read<Card8>());
         for (u8 i = 0; i < n_ranges; i++) {
+            // CFF spec, "Table 13 Range1 Format (Encoding)"
             auto first_code = TRY(reader.try_read<Card8>());
             int left = TRY(reader.try_read<Card8>());
             for (u8 code = first_code; left >= 0; left--, code++)
@@ -438,10 +450,11 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
 template<typename OperatorT>
 PDFErrorOr<void> CFF::parse_dict(Reader& reader, DictEntryHandler<OperatorT>&& handler)
 {
+    // CFF spec, "4 DICT data"
     Vector<DictOperand> operands;
     while (reader.remaining() > 0) {
         auto b0 = reader.read<u8>();
-        // A command
+        // "Operators and operands may be distinguished by inspection of their first byte: 0-21 specify operators"
         if (b0 <= 21) {
             auto op = TRY(parse_dict_operator<OperatorT>(b0, reader));
             TRY(handler(op, operands));
@@ -460,7 +473,10 @@ template PDFErrorOr<void> CFF::parse_dict<CFF::PrivDictOperator>(Reader&, DictEn
 template<typename OperatorT>
 PDFErrorOr<OperatorT> CFF::parse_dict_operator(u8 b0, Reader& reader)
 {
+    // CFF spec, "4 DICT data"
     VERIFY(b0 <= 21);
+
+    // "Two-byte operators have an initial escape byte of 12."
     if (b0 != 12)
         return OperatorT { (int)b0 };
     auto b1 = TRY(reader.try_read<u8>());
@@ -471,6 +487,7 @@ template PDFErrorOr<CFF::TopDictOperator> CFF::parse_dict_operator(u8, Reader&);
 
 PDFErrorOr<void> CFF::parse_index(Reader& reader, IndexDataHandler&& data_handler)
 {
+    // CFF spec, "5 INDEX Data"
     Card16 count = TRY(reader.try_read<BigEndian<Card16>>());
     if (count == 0)
         return {};
@@ -487,6 +504,7 @@ PDFErrorOr<void> CFF::parse_index(Reader& reader, IndexDataHandler&& data_handle
 template<typename OffsetType>
 PDFErrorOr<void> CFF::parse_index_data(Card16 count, Reader& reader, IndexDataHandler& handler)
 {
+    // CFF spec, "5 INDEX Data"
     OffsetType last_data_end = 1;
     auto offset_refpoint = reader.offset() + sizeof(OffsetType) * (count + 1) - 1;
     for (u16 i = 0; i < count; i++) {
@@ -507,9 +525,9 @@ template PDFErrorOr<void> CFF::parse_index_data<u8>(Card16, Reader&, IndexDataHa
 template PDFErrorOr<void> CFF::parse_index_data<u16>(Card16, Reader&, IndexDataHandler&);
 template PDFErrorOr<void> CFF::parse_index_data<u32>(Card16, Reader&, IndexDataHandler&);
 
-// 4 DICT DATA, Table 3 Operand Encoding
 int CFF::load_int_dict_operand(u8 b0, Reader& reader)
 {
+    // CFF spec, "Table 3 Operand Encoding"
     if (b0 >= 32 && b0 <= 246) {
         return b0 - 139;
     }
@@ -538,6 +556,7 @@ int CFF::load_int_dict_operand(u8 b0, Reader& reader)
 
 float CFF::load_float_dict_operand(Reader& reader)
 {
+    // CFF spec, "Table 5 Nibble Definitions"
     StringBuilder sb;
     auto add_nibble = [&](char nibble) {
         if (nibble < 0xa)
@@ -568,6 +587,7 @@ float CFF::load_float_dict_operand(Reader& reader)
 
 PDFErrorOr<CFF::DictOperand> CFF::load_dict_operand(u8 b0, Reader& reader)
 {
+    // CFF spec, "4 DICT data"
     if (b0 == 30)
         return load_float_dict_operand(reader);
     if (b0 >= 28)
