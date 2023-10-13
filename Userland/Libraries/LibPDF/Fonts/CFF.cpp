@@ -17,6 +17,33 @@
 
 namespace PDF {
 
+// CFF spec, "Appendix C Predefined Charsets, Expert"
+// clang-format off
+static constexpr Array s_predefined_charset_expert {
+    1, 229, 230, 231, 232,
+    233, 234, 235, 236, 237,
+    238, 13, 14, 15, 99,
+    239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 27, 28, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 109, 110,
+    267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298,
+    299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 158, 155, 163, 319, 320, 321, 322, 323, 324, 325, 326, 150,
+    164, 169, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342,
+    343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360,
+    361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378,
+};
+// clang-format on
+
+// CFF spec, "Appendix C Predefined Charsets, Expert Subset"
+// clang-format off
+static constexpr Array s_predefined_charset_expert_subset {
+    1, 231, 232, 235, 236, 237, 238, 13, 14, 15, 99,
+    239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 27,
+    28, 249, 250, 251, 253, 254, 255, 256, 257, 258, 259,
+    260, 261, 262, 263, 264, 265, 266, 109, 110, 267, 268, 269, 270, 272, 300, 301, 302, 305,
+    314, 315, 158, 155, 163, 320, 321, 322, 323, 324, 325, 326, 150, 164, 169, 327, 328, 329,
+    330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346,
+};
+// clang-format on
+
 PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPtr<Encoding> encoding)
 {
     Reader reader(cff_bytes);
@@ -111,7 +138,27 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
     auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), subroutines));
-    auto charset = TRY(parse_charset(Reader { cff_bytes.slice(charset_offset) }, glyphs.size(), strings));
+
+    // CFF spec, "Table 22 Charset ID"
+    Vector<DeprecatedFlyString> charset;
+    switch (charset_offset) {
+    case 0:
+        // CFF spec, "Appendix C Predefined Charsets, ISOAdobe"
+        for (SID sid = 1; sid <= 228; sid++)
+            TRY(charset.try_append(resolve_sid(sid, strings)));
+        break;
+    case 1:
+        for (SID sid : s_predefined_charset_expert)
+            TRY(charset.try_append(resolve_sid(sid, strings)));
+        break;
+    case 2:
+        for (SID sid : s_predefined_charset_expert_subset)
+            TRY(charset.try_append(resolve_sid(sid, strings)));
+        break;
+    default:
+        charset = TRY(parse_charset(Reader { cff_bytes.slice(charset_offset) }, glyphs.size(), strings));
+        break;
+    }
 
     // Adjust glyphs' widths as they are deltas from nominalWidthX
     for (auto& glyph : glyphs) {
