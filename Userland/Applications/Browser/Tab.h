@@ -45,7 +45,8 @@ public:
         HistoryNavigation,
     };
 
-    void load(const URL&, LoadType = LoadType::Normal);
+    void load(URL const&, LoadType = LoadType::Normal);
+
     void reload();
     void go_back(int steps = 1);
     void go_forward(int steps = 1);
@@ -115,13 +116,6 @@ private:
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
-    enum class MayAppendTLD {
-        No,
-        Yes
-    };
-
-    Optional<URL> url_from_location_bar(MayAppendTLD = MayAppendTLD::No);
-
     WebView::History m_history;
 
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;
@@ -166,7 +160,5 @@ private:
     bool m_loaded { false };
     bool m_is_history_navigation { false };
 };
-
-URL url_from_user_input(DeprecatedString const& input);
 
 }

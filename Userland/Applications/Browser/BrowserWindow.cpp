@@ -57,7 +57,7 @@ static DeprecatedString search_engines_file_path()
     return builder.to_deprecated_string();
 }
 
-BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, URL url)
+BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL> const& initial_urls)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
 {
@@ -102,7 +102,7 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, URL url)
     };
 
     m_window_actions.on_create_new_tab = [this] {
-        create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), Web::HTML::ActivateTab::Yes);
+        create_new_tab(Browser::g_new_tab_url, Web::HTML::ActivateTab::Yes);
     };
 
     m_window_actions.on_create_new_window = [this] {
@@ -148,7 +148,8 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, URL url)
 
     build_menus();
 
-    create_new_tab(move(url), Web::HTML::ActivateTab::Yes);
+    for (size_t i = 0; i < initial_urls.size(); ++i)
+        create_new_tab(initial_urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
 }
 
 void BrowserWindow::build_menus()
@@ -214,7 +215,7 @@ void BrowserWindow::build_menus()
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { active_tab().go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { active_tab().go_forward(); }, this);
-    m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { active_tab().load(Browser::url_from_user_input(g_home_url)); }, this);
+    m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { active_tab().load(g_home_url); }, this);
     m_go_home_action->set_status_tip("Go to home page"_string);
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { active_tab().reload(); }, this);
     m_reload_action->set_status_tip("Reload current page"_string);
@@ -558,7 +559,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
     set_title(DeprecatedString::formatted("{} - Ladybird", title.is_empty() ? url.to_deprecated_string() : title));
 }
 
-Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
+Tab& BrowserWindow::create_new_tab(URL const& url, Web::HTML::ActivateTab activate)
 {
     auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_string, *this);
 
@@ -649,7 +650,7 @@ Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
     return new_tab;
 }
 
-void BrowserWindow::create_new_window(URL url)
+void BrowserWindow::create_new_window(URL const& url)
 {
     GUI::Process::spawn_or_show_error(this, "/bin/Browser"sv, Array { url.to_deprecated_string() });
 }

@@ -17,7 +17,6 @@
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
-#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
@@ -28,6 +27,7 @@
 #include <LibWebView/Database.h>
 #include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/RequestServerAdapter.h>
+#include <LibWebView/URL.h>
 #include <unistd.h>
 
 namespace Browser {
@@ -95,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
 
-    Vector<DeprecatedString> specified_urls;
+    Vector<StringView> specified_urls;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
@@ -158,19 +158,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    auto url_from_argument_string = [](DeprecatedString const& string) -> ErrorOr<URL> {
-        if (FileSystem::exists(string)) {
-            return URL::create_with_file_scheme(TRY(FileSystem::real_path(string)).to_deprecated_string());
-        }
-        return Browser::url_from_user_input(string);
-    };
+    Vector<URL> initial_urls;
 
-    URL first_url = Browser::url_from_user_input(Browser::g_home_url);
-    if (!specified_urls.is_empty())
-        first_url = TRY(url_from_argument_string(specified_urls.first()));
+    for (auto specified_url : specified_urls) {
+        if (auto url = WebView::sanitize_url(specified_url); url.has_value())
+            initial_urls.append(url.release_value());
+    }
+
+    if (initial_urls.is_empty())
+        initial_urls.append(Browser::g_home_url);
 
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
-    auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
+    auto window = Browser::BrowserWindow::construct(cookie_jar, initial_urls);
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
     content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {
@@ -212,9 +211,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             tab->action_left(action);
         }
     };
-
-    for (size_t i = 1; i < specified_urls.size(); ++i)
-        window->create_new_tab(TRY(url_from_argument_string(specified_urls[i])), Web::HTML::ActivateTab::No);
 
     window->show();
 
