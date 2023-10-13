@@ -61,7 +61,6 @@ public:
 
     ErrorOr<void> get_search_suggestions(StringView);
     void clear_suggestions();
-    static ErrorOr<String> search_url_from_query(StringView query);
     static ErrorOr<String> auto_complete_url_from_query(StringView query);
 
 signals:
