@@ -2951,9 +2951,18 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name() != "boolean") {
-                    attribute_generator.append(R"~~~(
+                    if (attribute.type->is_nullable()) {
+                        attribute_generator.append(R"~~~(
+    if (!cpp_value.has_value())
+        impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    else
+        MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value.value()));
+)~~~");
+                    } else {
+                        attribute_generator.append(R"~~~(
     MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value));
 )~~~");
+                    }
                 } else {
                     attribute_generator.append(R"~~~(
     if (!cpp_value)

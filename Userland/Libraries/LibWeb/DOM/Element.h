@@ -110,8 +110,8 @@ public:
     DeprecatedString get_attribute_value(StringView local_name, DeprecatedFlyString const& namespace_ = {}) const;
 
     WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
-    WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, Optional<String> const& value);
-    WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, Optional<String> const& value)
+    WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, String const& value);
+    WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, String const& value)
     {
         return set_attribute(name.to_deprecated_fly_string(), value);
     }
@@ -265,7 +265,10 @@ public:
                                                                                  \
     WebIDL::ExceptionOr<void> set_##name(Optional<String> const& value) override \
     {                                                                            \
-        TRY(set_attribute(attribute, value));                                    \
+        if (value.has_value())                                                   \
+            TRY(set_attribute(attribute, *value));                               \
+        else                                                                     \
+            remove_attribute(attribute);                                         \
         return {};                                                               \
     }
 
