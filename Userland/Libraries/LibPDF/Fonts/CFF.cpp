@@ -637,6 +637,18 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
             for (SID sid = first_sid; left >= 0; left--, sid++)
                 TRY(names.try_append(resolve_sid(sid, strings)));
         }
+    } else if (format == 2) {
+        // CFF spec, "Table 20 Format 2"
+        // "Format 2 differs from format 1 only in the size of the Left field in each range."
+        while (names.size() < glyph_count - 1) {
+            // CFF spec, "Table 21 Range2 Format"
+            auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
+            int left = TRY(reader.try_read<Card16>());
+            for (SID sid = first_sid; left >= 0; left--, sid++)
+                TRY(names.try_append(resolve_sid(sid, strings)));
+        }
+    } else {
+        dbgln("CFF: Unknown charset format {}", format);
     }
     return names;
 }
