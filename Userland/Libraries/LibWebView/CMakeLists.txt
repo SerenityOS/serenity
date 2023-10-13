@@ -9,6 +9,7 @@ set(SOURCES
     RequestServerAdapter.cpp
     SourceHighlighter.cpp
     StylePropertiesModel.cpp
+    URL.cpp
     UserAgent.cpp
     ViewImplementation.cpp
     WebContentClient.cpp
@@ -40,7 +41,7 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWebView webview)
-target_link_libraries(LibWebView PRIVATE LibCore LibGfx LibGUI LibIPC LibProtocol LibJS LibWeb LibSQL)
+target_link_libraries(LibWebView PRIVATE LibCore LibFileSystem LibGfx LibGUI LibIPC LibProtocol LibPublicSuffix LibJS LibWeb LibSQL)
 
 if (SERENITYOS)
     target_link_libraries(LibWebView PRIVATE LibFileSystemAccessClient)
