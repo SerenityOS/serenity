@@ -631,7 +631,7 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
         while (names.size() < glyph_count - 1) {
             auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
             int left = TRY(reader.try_read<Card8>());
-            for (u8 sid = first_sid; left >= 0; left--, sid++)
+            for (SID sid = first_sid; left >= 0; left--, sid++)
                 TRY(names.try_append(resolve_sid(sid, strings)));
         }
     }
