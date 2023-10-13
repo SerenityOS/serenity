@@ -1963,7 +1963,7 @@ DeprecatedString Document::cookie(Cookie::Source source)
 {
     if (auto* page = this->page())
         return page->client().page_did_request_cookie(m_url, source);
-    return {};
+    return DeprecatedString::empty();
 }
 
 void Document::set_cookie(StringView cookie_string, Cookie::Source source)
