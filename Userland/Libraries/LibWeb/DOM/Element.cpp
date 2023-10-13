@@ -150,7 +150,7 @@ DeprecatedString Element::deprecated_get_attribute(StringView name) const
 {
     auto maybe_attribute = get_attribute(name);
     if (!maybe_attribute.has_value())
-        return {};
+        return DeprecatedString::empty();
 
     return maybe_attribute->to_deprecated_string();
 }

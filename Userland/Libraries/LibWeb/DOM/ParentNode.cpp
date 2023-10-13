@@ -170,9 +170,9 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(Depreca
     auto local_name = MUST(FlyString::from_deprecated_fly_string(deprecated_local_name));
 
     // 1. If namespace is the empty string, set it to null.
-    DeprecatedString namespace_ = nullable_namespace;
-    if (namespace_.is_empty())
-        namespace_ = {};
+    DeprecatedFlyString namespace_;
+    if (!nullable_namespace.is_null() && !nullable_namespace.is_empty())
+        namespace_ = nullable_namespace;
 
     // 2. If both namespace and localName are "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements.
     if (namespace_ == "*" && local_name == "*") {
