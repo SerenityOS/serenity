@@ -860,9 +860,10 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 m_move_window_origin = m_move_window->position();
             }
         } else {
+            bool has_fixed_aspect_ratio = m_move_window->resize_aspect_ratio().has_value();
             bool is_resizable = m_move_window->is_resizable();
             auto tile_window = m_system_effects.tile_window();
-            bool allow_tile = is_resizable && tile_window != TileWindow::Never;
+            bool allow_tile = !has_fixed_aspect_ratio && is_resizable && tile_window != TileWindow::Never;
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
 
             auto apply_window_tile = [&](WindowTileType tile_type) {
