@@ -166,6 +166,7 @@ private:
 
     static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();
+    void create_text_input_shadow_tree();
     WebIDL::ExceptionOr<void> run_input_activation_behavior();
     void set_checked_within_group();
 

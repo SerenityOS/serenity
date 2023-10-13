@@ -507,7 +507,6 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     if (shadow_root_internal())
         return;
 
-    // FIXME: This could be better factored. Everything except the below types becomes a text input.
     switch (type_state()) {
     case TypeAttributeState::RadioButton:
     case TypeAttributeState::Checkbox:
@@ -516,11 +515,16 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     case TypeAttributeState::ResetButton:
     case TypeAttributeState::ImageButton:
     case TypeAttributeState::Color:
-        return;
+        break;
+    // FIXME: This could be better factored. Everything except the above types becomes a text input.
     default:
+        create_text_input_shadow_tree();
         break;
     }
+}
 
+void HTMLInputElement::create_text_input_shadow_tree()
+{
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
     auto initial_value = m_value;
     auto element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
