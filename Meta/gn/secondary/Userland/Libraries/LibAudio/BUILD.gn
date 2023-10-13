@@ -26,6 +26,10 @@ shared_library("LibAudio") {
       "PulseAudioWrappers.cpp",
     ]
   }
+  if (current_os == "mac") {
+    sources += [ "PlaybackStreamAudioUnit.cpp" ]
+    frameworks = [ "AudioUnit.framework" ]
+  }
   deps = [
     "//AK",
     "//Meta/gn/build/libs/pulse",
