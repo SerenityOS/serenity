@@ -15,11 +15,11 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
-#include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
+#include <LibWebView/URL.h>
 #include <QApplication>
 
 namespace Ladybird {
@@ -85,15 +85,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "enable-lagom-networking", 0);
     args_parser.parse(arguments);
 
-    auto get_formatted_url = [&](StringView const& raw_url) -> ErrorOr<URL> {
-        URL url = raw_url;
-        if (FileSystem::exists(raw_url))
-            url = URL::create_with_file_scheme(TRY(FileSystem::real_path(raw_url)).to_deprecated_string());
-        else if (!url.is_valid())
-            url = DeprecatedString::formatted("https://{}", raw_url);
-        return url;
-    };
-
     RefPtr<WebView::Database> database;
 
     if (enable_sql_database) {
@@ -106,8 +97,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<URL> initial_urls;
 
     for (auto const& raw_url : raw_urls) {
-        if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid())
-            initial_urls.append(move(url));
+        if (auto url = WebView::sanitize_url(raw_url); url.has_value())
+            initial_urls.append(url.release_value());
+    }
+
+    if (initial_urls.is_empty()) {
+        auto new_tab_page = Ladybird::Settings::the()->new_tab_page();
+        initial_urls.append(MUST(ak_string_from_qstring(new_tab_page)));
     }
 
     Ladybird::BrowserWindow window(initial_urls, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);

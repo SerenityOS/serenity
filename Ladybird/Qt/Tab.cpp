@@ -14,6 +14,7 @@
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
 #include <LibWebView/SourceHighlighter.h>
+#include <LibWebView/URL.h>
 #include <QClipboard>
 #include <QColorDialog>
 #include <QCoreApplication>
@@ -556,13 +557,9 @@ void Tab::focus_location_editor()
     m_location_edit->selectAll();
 }
 
-void Tab::navigate(QString url_qstring)
+void Tab::navigate(QString const& url_qstring)
 {
-    auto url_string = ak_deprecated_string_from_qstring(url_qstring);
-    if (url_string.starts_with('/'))
-        url_string = DeprecatedString::formatted("file://{}", url_string);
-    else if (URL url = url_string; !url.is_valid())
-        url_string = DeprecatedString::formatted("https://{}", url_string);
+    auto url_string = MUST(ak_string_from_qstring(url_qstring));
     view().load(url_string);
 }
 
@@ -625,7 +622,7 @@ void Tab::open_file()
 {
     auto filename = QFileDialog::getOpenFileName(this, "Open file", QDir::homePath(), "All Files (*.*)");
     if (!filename.isNull())
-        navigate("file://" + filename);
+        navigate(filename);
 }
 
 int Tab::tab_index()

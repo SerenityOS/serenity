@@ -423,15 +423,9 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
         m_tabs_container->setCurrentIndex(m_tabs_container->count() - 1);
     });
 
-    if (!initial_urls.is_empty()) {
-        bool is_first_tab = true;
-        for (auto const& url : initial_urls) {
-            auto initial_url_string = qstring_from_ak_deprecated_string(url.serialize());
-            new_tab(initial_url_string, is_first_tab ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
-            is_first_tab = false;
-        }
-    } else {
-        new_tab(Settings::the()->new_tab_page(), Web::HTML::ActivateTab::Yes);
+    for (size_t i = 0; i < initial_urls.size(); ++i) {
+        auto url_string = qstring_from_ak_deprecated_string(initial_urls[i].serialize());
+        new_tab(url_string, (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
     }
 
     setCentralWidget(m_tabs_container);

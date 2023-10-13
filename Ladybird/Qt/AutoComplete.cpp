@@ -121,12 +121,6 @@ ErrorOr<void> AutoComplete::got_network_response(QNetworkReply* reply)
     return Error::from_string_view("Invalid engine name"sv);
 }
 
-ErrorOr<String> AutoComplete::search_url_from_query(StringView query)
-{
-    auto search_engine = TRY(ak_string_from_qstring(Settings::the()->search_engine().url));
-    return search_engine.replace("{}"sv, AK::URL::percent_encode(query), ReplaceMode::FirstOnly);
-}
-
 ErrorOr<String> AutoComplete::auto_complete_url_from_query(StringView query)
 {
     auto autocomplete_engine = TRY(ak_string_from_qstring(Settings::the()->autocomplete_engine().url));

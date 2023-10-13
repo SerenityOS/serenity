@@ -8,7 +8,7 @@
 #include "Settings.h"
 #include "StringUtils.h"
 #include <AK/URL.h>
-#include <LibPublicSuffix/URL.h>
+#include <LibWebView/URL.h>
 #include <QApplication>
 #include <QPalette>
 #include <QTextLayout>
@@ -29,21 +29,17 @@ LocationEdit::LocationEdit(QWidget* parent)
 
     connect(this, &QLineEdit::returnPressed, [&] {
         clearFocus();
-        if (!Settings::the()->enable_search())
-            return;
 
-        auto query = ak_deprecated_string_from_qstring(text());
-        if (auto result = PublicSuffix::absolute_url(query); !result.is_error())
-            return;
-
-        auto search_url_or_error = AutoComplete::search_url_from_query(query);
-        if (search_url_or_error.is_error()) {
-            dbgln("LocationEdit::returnPressed: search_url_from_query failed: {}", search_url_or_error.error());
-            return;
+        Optional<String> search_engine_url;
+        if (Settings::the()->enable_search()) {
+            auto search_engine = Settings::the()->search_engine();
+            search_engine_url = MUST(ak_string_from_qstring(search_engine.url));
         }
-        auto search_url = search_url_or_error.release_value();
 
-        setText(qstring_from_ak_string(search_url));
+        auto query = MUST(ak_string_from_qstring(text()));
+
+        if (auto url = WebView::sanitize_url(query, search_engine_url.map([](auto& value) { return value.bytes_as_string_view(); })); url.has_value())
+            setText(qstring_from_ak_deprecated_string(url->serialize()));
     });
 
     connect(this, &QLineEdit::textEdited, [this] {
