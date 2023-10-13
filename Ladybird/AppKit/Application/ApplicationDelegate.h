@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/URL.h>
+#include <AK/Vector.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/CookieJar.h>
@@ -20,7 +21,8 @@
 
 @interface ApplicationDelegate : NSObject <NSApplicationDelegate>
 
-- (nullable instancetype)init:(Optional<URL>)initial_url
+- (nullable instancetype)init:(Vector<URL>)initial_urls
+                newTabPageURL:(URL)new_tab_page_url
                 withCookieJar:(WebView::CookieJar)cookie_jar
       webdriverContentIPCPath:(StringView)webdriver_content_ipc_path;
 
