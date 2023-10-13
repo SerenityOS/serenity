@@ -623,12 +623,15 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
     Vector<DeprecatedFlyString> names;
     auto format = TRY(reader.try_read<Card8>());
     if (format == 0) {
+        // CFF spec, "Table 17 Format 0"
         for (u8 i = 0; i < glyph_count - 1; i++) {
             SID sid = TRY(reader.try_read<BigEndian<SID>>());
             TRY(names.try_append(resolve_sid(sid, strings)));
         }
     } else if (format == 1) {
+        // CFF spec, "Table 18 Format 1"
         while (names.size() < glyph_count - 1) {
+            // CFF spec, "Table 19 Range1 Format (Charset)"
             auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
             int left = TRY(reader.try_read<Card8>());
             for (SID sid = first_sid; left >= 0; left--, sid++)
