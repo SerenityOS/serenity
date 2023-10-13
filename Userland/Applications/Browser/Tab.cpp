@@ -23,7 +23,6 @@
 #include <Applications/Browser/TabGML.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
-#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -39,32 +38,19 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
-#include <LibPublicSuffix/URL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWebView/OutOfProcessWebView.h>
+#include <LibWebView/URL.h>
 
 namespace Browser {
 
 Tab::~Tab()
 {
     close_sub_widgets();
-}
-
-URL url_from_user_input(DeprecatedString const& input)
-{
-    URL url_with_http_schema = URL(DeprecatedString::formatted("https://{}", input));
-    if (url_with_http_schema.is_valid() && url_with_http_schema.port().has_value())
-        return url_with_http_schema;
-
-    URL url = URL(input);
-    if (url.is_valid())
-        return url;
-
-    return url_with_http_schema;
 }
 
 void Tab::start_download(const URL& url)
@@ -166,7 +152,7 @@ Tab::Tab(BrowserWindow& window)
     auto& go_home_button = toolbar.add_action(window.go_home_action());
     go_home_button.set_allowed_mouse_buttons_for_pressing(GUI::MouseButton::Primary | GUI::MouseButton::Middle);
     go_home_button.on_middle_mouse_click = [&](auto) {
-        on_tab_open_request(Browser::url_from_user_input(g_home_url));
+        on_tab_open_request(g_home_url);
     };
 
     toolbar.add_action(window.reload_action());
@@ -175,15 +161,13 @@ Tab::Tab(BrowserWindow& window)
     m_location_box->set_placeholder("Search or enter address"sv);
 
     m_location_box->on_return_pressed = [this] {
-        auto url = url_from_location_bar();
-        if (url.has_value())
-            load(url.release_value());
+        if (auto url = WebView::sanitize_url(m_location_box->text(), g_search_engine, WebView::AppendTLD::No); url.has_value())
+            load(*url);
     };
 
     m_location_box->on_ctrl_return_pressed = [this] {
-        auto url = url_from_location_bar(MayAppendTLD::Yes);
-        if (url.has_value())
-            load(url.release_value());
+        if (auto url = WebView::sanitize_url(m_location_box->text(), g_search_engine, WebView::AppendTLD::Yes); url.has_value())
+            load(*url);
     };
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
@@ -700,42 +684,7 @@ void Tab::update_reset_zoom_button()
     }
 }
 
-Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
-{
-    DeprecatedString text = m_location_box->text();
-    if (text.starts_with('/') && FileSystem::is_regular_file(text)) {
-        auto real_path = FileSystem::real_path(text);
-        if (real_path.is_error()) {
-            return {};
-        }
-
-        return URL::create_with_file_scheme(real_path.value().to_deprecated_string());
-    }
-
-    StringBuilder builder;
-    builder.append(text);
-    if (may_append_tld == MayAppendTLD::Yes) {
-        // FIXME: Expand the list of top level domains.
-        if (!(text.ends_with(".com"sv) || text.ends_with(".net"sv) || text.ends_with(".org"sv))) {
-            builder.append(".com"sv);
-        }
-    }
-    auto final_text = builder.to_deprecated_string();
-
-    auto error_or_absolute_url = PublicSuffix::absolute_url(final_text);
-    if (error_or_absolute_url.is_error()) {
-        if (g_search_engine.is_empty()) {
-            GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching."sv, "No search engine selected"sv, GUI::MessageBox::Type::Information);
-            return {};
-        }
-
-        return URL(g_search_engine.replace("{}"sv, URL::percent_encode(final_text), ReplaceMode::FirstOnly));
-    }
-
-    return URL(error_or_absolute_url.release_value());
-}
-
-void Tab::load(const URL& url, LoadType load_type)
+void Tab::load(URL const& url, LoadType load_type)
 {
     m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
     m_web_content_view->load(url);
