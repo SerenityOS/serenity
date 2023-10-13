@@ -59,8 +59,8 @@ bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    auto expected_machines = Array { EM_X86_64, EM_AARCH64 };
-    auto expected_machine_names = Array { "x86-64"sv, "aarch64"sv };
+    auto expected_machines = Array { EM_X86_64, EM_AARCH64, EM_RISCV };
+    auto expected_machine_names = Array { "x86-64"sv, "aarch64"sv, "riscv64"sv };
 
     if (!expected_machines.span().contains_slow(elf_header.e_machine)) {
         if (verbose)
@@ -117,9 +117,21 @@ bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool ve
     }
 
     if (0 != elf_header.e_flags) {
-        if (verbose)
-            dbgln("File has incorrect ELF header flags...? ({}), expected ({}).", elf_header.e_flags, 0);
-        return false;
+        // TODO: Refuse to run C ABI binaries on system without the C extension.
+        // TODO: Refuse to run TSO ABI binaries on system without the Ztso extension.
+        if (elf_header.e_machine == EM_RISCV) {
+            auto float_abi = elf_header.e_flags & EF_RISCV_FLOAT_ABI;
+            // TODO: Support 32-bit hardware float ABI somehow?
+            if (float_abi != EF_RISCV_FLOAT_ABI_DOUBLE) {
+                if (verbose)
+                    dbgln("File has unsupported float ABI ({}), only double ({}) is supported.", float_abi, EF_RISCV_FLOAT_ABI_DOUBLE);
+                return false;
+            }
+        } else {
+            if (verbose)
+                dbgln("File has incorrect ELF header flags...? ({}), expected ({}).", elf_header.e_flags, 0);
+            return false;
+        }
     }
 
     if (0 != elf_header.e_phnum && sizeof(ElfW(Phdr)) != elf_header.e_phentsize) {

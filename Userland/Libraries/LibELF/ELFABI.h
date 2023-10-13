@@ -204,6 +204,7 @@ typedef struct {
 #define EM_X86_64 EM_AMD64
 #define EM_VAX 75      /* DEC VAX */
 #define EM_AARCH64 183 /* ARM 64-bit architecture (AArch64) */
+#define EM_RISCV 243   /* RISC-V */
 
 /* Non-standard */
 #define EM_ALPHA_EXP 0x9026 /* DEC ALPHA */
@@ -218,6 +219,17 @@ typedef struct {
 
 /* Magic for e_phnum: get real value from sh_info of first section header */
 #define PN_XNUM 0xffff
+
+/* RISC-V specific e_flags */
+/* See: RISC-V ABI Specification 1.0, Section 8.1: File Header */
+#define EF_RISCV_RVC 0x0001              /* Binary targets the Compressed ABI */
+#define EF_RISCV_FLOAT_ABI_SOFT 0x0000   /* No hardware float ABI in use */
+#define EF_RISCV_FLOAT_ABI_SINGLE 0x0002 /* 32-bit hardware float ABI */
+#define EF_RISCV_FLOAT_ABI_DOUBLE 0x0004 /* 64-bit hardware float ABI */
+#define EF_RISCV_FLOAT_ABI_QUAD 0x0006   /* 128-bit hardware float ABI */
+#define EF_RISCV_FLOAT_ABI 0x0006        /* Test mask for float ABIs */
+#define EF_RISCV_RVE 0x0008              /* Binary targets the Embedded ABI */
+#define EF_RISCV_TSO 0x0010              /* Binary requires Ztso extension */
 
 /* Section Header */
 typedef struct {
