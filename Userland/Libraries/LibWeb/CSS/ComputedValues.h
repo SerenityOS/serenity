@@ -21,7 +21,7 @@
 #include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
-#include <LibWeb/CSS/TransformFunctions.h>
+#include <LibWeb/CSS/Transformation.h>
 
 namespace Web::CSS {
 
@@ -230,13 +230,6 @@ public:
     CSSPixels width { 0 };
 
     bool operator==(BorderData const&) const = default;
-};
-
-using TransformValue = Variant<CSS::AngleOrCalculated, CSS::LengthPercentage, double>;
-
-struct Transformation {
-    CSS::TransformFunction function;
-    Vector<TransformValue> values;
 };
 
 struct TransformOrigin {

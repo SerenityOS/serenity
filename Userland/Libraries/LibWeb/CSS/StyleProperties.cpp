@@ -438,8 +438,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         if (!it->is_transformation())
             return {};
         auto& transformation_style_value = it->as_transformation();
-        CSS::Transformation transformation;
-        transformation.function = transformation_style_value.transform_function();
+        auto function = transformation_style_value.transform_function();
         Vector<TransformValue> values;
         for (auto& transformation_value : transformation_style_value.values()) {
             if (transformation_value->is_calculated()) {
@@ -467,8 +466,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
                 dbgln("FIXME: Unsupported value in transform! {}", transformation_value->to_string());
             }
         }
-        transformation.values = move(values);
-        transformations.append(move(transformation));
+        transformations.empend(function, move(values));
     }
     return transformations;
 }
