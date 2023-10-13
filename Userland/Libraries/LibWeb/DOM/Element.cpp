@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibUnicode/CharacterTypes.h>
-#include <LibUnicode/UnicodeData.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
@@ -1966,6 +1965,14 @@ Element::Directionality Element::directionality() const
     // The directionality of an element (any element, not just an HTML element) is either 'ltr' or 'rtl',
     // and is determined as per the first appropriate set of steps from the following list:
 
+    static auto bidirectional_class_L = Unicode::bidirectional_class_from_string("L"sv);
+    static auto bidirectional_class_AL = Unicode::bidirectional_class_from_string("AL"sv);
+    static auto bidirectional_class_R = Unicode::bidirectional_class_from_string("R"sv);
+
+    // AD-HOC: Assume 'ltr' if Unicode data generation is disabled.
+    if (!bidirectional_class_L.has_value())
+        return Directionality::Ltr;
+
     auto dir = this->dir();
 
     // -> If the element's dir attribute is in the ltr state
@@ -2008,11 +2015,12 @@ Element::Directionality Element::directionality() const
         // value, then the directionality of the element is 'rtl'. [BIDI]
         for (auto code_point : Utf8View(value)) {
             auto bidi_class = Unicode::bidirectional_class(code_point);
-            if (bidi_class == Unicode::BidirectionalClass::L)
+            if (bidi_class == bidirectional_class_L)
                 break;
-            if (bidi_class == Unicode::BidirectionalClass::AL || bidi_class == Unicode::BidirectionalClass::R)
+            if (bidi_class == bidirectional_class_AL || bidi_class == bidirectional_class_R)
                 return Directionality::Rtl;
         }
+
         // Otherwise, if the element's value is not the empty string, or if the element is a document element,
         // the directionality of the element is 'ltr'.
         if (!value.is_empty() || is_document_element()) {
@@ -2055,7 +2063,7 @@ Element::Directionality Element::directionality() const
             // Look for matching characters
             for (auto code_point : Utf8View(text_node.data())) {
                 auto bidi_class = Unicode::bidirectional_class(code_point);
-                if (first_is_one_of(bidi_class, Unicode::BidirectionalClass::L, Unicode::BidirectionalClass::AL, Unicode::BidirectionalClass::R)) {
+                if (first_is_one_of(bidi_class, bidirectional_class_L, bidirectional_class_AL, bidirectional_class_R)) {
                     found_character = code_point;
                     found_character_bidi_class = bidi_class;
                     return IterationDecision::Break;
@@ -2068,12 +2076,12 @@ Element::Directionality Element::directionality() const
         // If such a character is found and it is of bidirectional character type AL or R,
         // the directionality of the element is 'rtl'.
         if (found_character.has_value()
-            && first_is_one_of(found_character_bidi_class.value(), Unicode::BidirectionalClass::AL, Unicode::BidirectionalClass::R)) {
+            && first_is_one_of(found_character_bidi_class.value(), bidirectional_class_AL, bidirectional_class_R)) {
             return Directionality::Rtl;
         }
         // If such a character is found and it is of bidirectional character type L,
         // the directionality of the element is 'ltr'.
-        if (found_character.has_value() && found_character_bidi_class.value() == Unicode::BidirectionalClass::L) {
+        if (found_character.has_value() && found_character_bidi_class.value() == bidirectional_class_L) {
             return Directionality::Ltr;
         }
         // Otherwise, if the element is a document element, the directionality of the element is 'ltr'.
