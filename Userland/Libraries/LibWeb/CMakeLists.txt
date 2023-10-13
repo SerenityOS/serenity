@@ -115,6 +115,7 @@ set(SOURCES
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/SystemColor.cpp
     CSS/Time.cpp
+    CSS/Transformation.cpp
     CSS/VisualViewport.cpp
     Cookie/Cookie.cpp
     Cookie/ParsedCookie.cpp

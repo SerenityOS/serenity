@@ -166,6 +166,7 @@ class Time;
 class TimeOrCalculated;
 class TimePercentage;
 class TimeStyleValue;
+class Transformation;
 class TransformationStyleValue;
 class URLStyleValue;
 class UnicodeRange;
