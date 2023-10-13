@@ -4,15 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <BrowserSettings/Defaults.h>
-
 #import <Application/ApplicationDelegate.h>
 #import <LibWebView/UserAgent.h>
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
 #import <Utilities/Conversions.h>
-#import <Utilities/URL.h>
 
 #if !__has_feature(objc_arc)
 #    error "This project requires ARC"
@@ -20,7 +17,7 @@
 
 @interface ApplicationDelegate ()
 {
-    Optional<URL> m_initial_url;
+    Vector<URL> m_initial_urls;
     URL m_new_tab_page_url;
 
     // This will always be populated, but we cannot have a non-default constructible instance variable.
@@ -47,7 +44,8 @@
 
 @implementation ApplicationDelegate
 
-- (instancetype)init:(Optional<URL>)initial_url
+- (instancetype)init:(Vector<URL>)initial_urls
+              newTabPageURL:(URL)new_tab_page_url
               withCookieJar:(WebView::CookieJar)cookie_jar
     webdriverContentIPCPath:(StringView)webdriver_content_ipc_path
 {
@@ -66,8 +64,8 @@
 
         self.managed_tabs = [[NSMutableArray alloc] init];
 
-        m_initial_url = move(initial_url);
-        m_new_tab_page_url = Ladybird::rebase_url_on_serenity_resource_root(Browser::default_new_tab_url);
+        m_initial_urls = move(initial_urls);
+        m_new_tab_page_url = move(new_tab_page_url);
 
         m_cookie_jar = move(cookie_jar);
 
@@ -481,9 +479,19 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification
 {
-    [self createNewTab:m_initial_url
-               fromTab:nil
-           activateTab:Web::HTML::ActivateTab::Yes];
+    Tab* tab = nil;
+
+    for (auto const& url : m_initial_urls) {
+        auto activate_tab = tab == nil ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No;
+
+        auto* controller = [self createNewTab:url
+                                      fromTab:tab
+                                  activateTab:activate_tab];
+
+        tab = (Tab*)[controller window];
+    }
+
+    m_initial_urls.clear();
 }
 
 - (void)applicationWillTerminate:(NSNotification*)notification

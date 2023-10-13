@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <BrowserSettings/Defaults.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -11,17 +12,33 @@
 #include <LibMain/Main.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
+#include <LibWebView/URL.h>
 
 #import <Application/Application.h>
 #import <Application/ApplicationDelegate.h>
 #import <Application/EventLoopImplementation.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
-#import <Utilities/URL.h>
 
 #if !__has_feature(objc_arc)
 #    error "This project requires ARC"
 #endif
+
+static URL rebase_url_on_serenity_resource_root(StringView url_string)
+{
+    URL url { url_string };
+    Vector<DeprecatedString> paths;
+
+    for (auto segment : s_serenity_resource_root.split('/'))
+        paths.append(move(segment));
+
+    for (size_t i = 0; i < url.path_segment_count(); ++i)
+        paths.append(url.path_segment_at_index(i));
+
+    url.set_paths(move(paths));
+
+    return url;
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -36,12 +53,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
-    StringView url;
+    Vector<StringView> raw_urls;
     StringView webdriver_content_ipc_path;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser");
-    args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(raw_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
     args_parser.parse(arguments);
 
@@ -49,12 +66,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto database = TRY(WebView::Database::create(move(sql_server_paths)));
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
 
-    Optional<URL> initial_url;
-    if (auto parsed_url = Ladybird::sanitize_url(url); parsed_url.is_valid()) {
-        initial_url = move(parsed_url);
+    auto new_tab_page_url = rebase_url_on_serenity_resource_root(Browser::default_new_tab_url);
+    Vector<URL> initial_urls;
+
+    for (auto const& raw_url : raw_urls) {
+        if (auto url = WebView::sanitize_url(raw_url); url.has_value())
+            initial_urls.append(url.release_value());
     }
 
-    auto* delegate = [[ApplicationDelegate alloc] init:move(initial_url)
+    if (initial_urls.is_empty())
+        initial_urls.append(new_tab_page_url);
+
+    auto* delegate = [[ApplicationDelegate alloc] init:move(initial_urls)
+                                         newTabPageURL:move(new_tab_page_url)
                                          withCookieJar:move(cookie_jar)
                                webdriverContentIPCPath:webdriver_content_ipc_path];
 

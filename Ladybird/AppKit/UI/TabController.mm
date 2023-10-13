@@ -5,6 +5,7 @@
  */
 
 #include <LibWebView/History.h>
+#include <LibWebView/URL.h>
 
 #import <Application/ApplicationDelegate.h>
 #import <LibWeb/Loader/ResourceLoader.h>
@@ -13,7 +14,6 @@
 #import <UI/Tab.h>
 #import <UI/TabController.h>
 #import <Utilities/Conversions.h>
-#import <Utilities/URL.h>
 
 #if !__has_feature(objc_arc)
 #    error "This project requires ARC"
@@ -600,9 +600,11 @@ enum class IsHistoryNavigation {
         return NO;
     }
 
-    auto* url_string = [[text_view textStorage] string];
-    auto url = Ladybird::sanitize_url(url_string);
-    [self loadURL:url];
+    auto url_string = Ladybird::ns_string_to_string([[text_view textStorage] string]);
+
+    if (auto url = WebView::sanitize_url(url_string); url.has_value()) {
+        [self loadURL:*url];
+    }
 
     [self.window makeFirstResponder:nil];
     return YES;

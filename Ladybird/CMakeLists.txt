@@ -145,7 +145,6 @@ elseif (APPLE)
         AppKit/UI/TabController.mm
         AppKit/Utilities/Conversions.mm
         AppKit/Utilities/NSString+Ladybird.mm
-        AppKit/Utilities/URL.mm
     )
     target_include_directories(ladybird PRIVATE AppKit)
     target_link_libraries(ladybird PRIVATE ${COCOA_LIBRARY} LibUnicode)
