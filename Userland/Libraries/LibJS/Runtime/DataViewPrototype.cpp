@@ -53,7 +53,7 @@ void DataViewPrototype::initialize(Realm& realm)
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.DataView.as_string()), Attribute::Configurable);
 }
 
-// 25.3.1.1 GetViewValue ( view, requestIndex, isLittleEndian, type ), https://tc39.es/ecma262/#sec-getviewvalue
+// 25.3.1.5 GetViewValue ( view, requestIndex, isLittleEndian, type ), https://tc39.es/ecma262/#sec-getviewvalue
 template<typename T>
 static ThrowCompletionOr<Value> get_view_value(VM& vm, Value request_index, Value is_little_endian)
 {
@@ -98,7 +98,7 @@ static ThrowCompletionOr<Value> get_view_value(VM& vm, Value request_index, Valu
     return buffer->get_value<T>(buffer_index.value(), false, ArrayBuffer::Order::Unordered, little_endian);
 }
 
-// 25.3.1.2 SetViewValue ( view, requestIndex, isLittleEndian, type, value ), https://tc39.es/ecma262/#sec-setviewvalue
+// 25.3.1.6 SetViewValue ( view, requestIndex, isLittleEndian, type, value ), https://tc39.es/ecma262/#sec-setviewvalue
 template<typename T>
 static ThrowCompletionOr<Value> set_view_value(VM& vm, Value request_index, Value is_little_endian, Value value)
 {

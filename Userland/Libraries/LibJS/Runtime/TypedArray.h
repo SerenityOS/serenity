@@ -58,15 +58,15 @@ public:
     virtual size_t element_size() const = 0;
     virtual DeprecatedFlyString const& element_name() const = 0;
 
-    // 25.1.2.6 IsUnclampedIntegerElementType ( type ), https://tc39.es/ecma262/#sec-isunclampedintegerelementtype
+    // 25.1.3.10 IsUnclampedIntegerElementType ( type ), https://tc39.es/ecma262/#sec-isunclampedintegerelementtype
     virtual bool is_unclamped_integer_element_type() const = 0;
-    // 25.1.2.7 IsBigIntElementType ( type ), https://tc39.es/ecma262/#sec-isbigintelementtype
+    // 25.1.3.11 IsBigIntElementType ( type ), https://tc39.es/ecma262/#sec-isbigintelementtype
     virtual bool is_bigint_element_type() const = 0;
-    // 25.1.2.10 GetValueFromBuffer ( arrayBuffer, byteIndex, type, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getvaluefrombuffer
+    // 25.1.3.15 GetValueFromBuffer ( arrayBuffer, byteIndex, type, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getvaluefrombuffer
     virtual Value get_value_from_buffer(size_t byte_index, ArrayBuffer::Order, bool is_little_endian = true) const = 0;
-    // 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
+    // 25.1.3.17 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
     virtual void set_value_in_buffer(size_t byte_index, Value, ArrayBuffer::Order, bool is_little_endian = true) = 0;
-    // 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer
+    // 25.1.3.18 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer
     virtual Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) = 0;
 
 protected:
@@ -90,7 +90,7 @@ private:
     virtual void visit_edges(Visitor&) override;
 };
 
-// 10.4.5.9 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
+// 10.4.5.14 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
 inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
     // 1. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return false.
@@ -110,7 +110,7 @@ inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalI
     return true;
 }
 
-// 10.4.5.10 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
+// 10.4.5.15 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
 template<typename T>
 inline ThrowCompletionOr<Value> integer_indexed_element_get(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
@@ -138,7 +138,7 @@ inline ThrowCompletionOr<Value> integer_indexed_element_get(TypedArrayBase const
     return typed_array.viewed_array_buffer()->template get_value<T>(indexed_position.value(), true, ArrayBuffer::Order::Unordered);
 }
 
-// 10.4.5.11 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
+// 10.4.5.16 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
 // NOTE: In error cases, the function will return as if it succeeded.
 template<typename T>
 inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed_array, CanonicalIndex property_index, Value value)
