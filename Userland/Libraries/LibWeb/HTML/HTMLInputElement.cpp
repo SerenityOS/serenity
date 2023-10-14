@@ -61,6 +61,7 @@ void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_text_node);
     visitor.visit(m_placeholder_element);
     visitor.visit(m_placeholder_text_node);
+    visitor.visit(m_color_well_element);
     visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group.ptr());
     visitor.visit(m_selected_files);
 }
@@ -70,7 +71,7 @@ JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::
     if (type_state() == TypeAttributeState::Hidden)
         return nullptr;
 
-    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::FileUpload || type_state() == TypeAttributeState::Color)
+    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::FileUpload)
         return heap().allocate_without_realm<Layout::ButtonBox>(document(), *this, move(style));
 
     if (type_state() == TypeAttributeState::Checkbox)
@@ -317,6 +318,9 @@ void HTMLInputElement::did_pick_color(Optional<Color> picked_color)
         m_value = value_sanitization_algorithm(picked_color.value().to_deprecated_string_without_alpha());
         m_dirty_value = true;
 
+        if (m_color_well_element)
+            MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
+
         // the user agent must queue an element task on the user interaction task source
         queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
             // given the input element to fire an event named input at the input element, with the bubbles and composed attributes initialized to true
@@ -387,7 +391,9 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
     auto old_value = move(m_value);
 
     // 2. Set the element's value to the new value.
-    // NOTE: This is done as part of step 4 below.
+    // NOTE: For the TextNode this is done as part of step 4 below.
+    if (type_state() == TypeAttributeState::Color && m_color_well_element)
+        MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
 
     // 3. Set the element's dirty value flag to true.
     m_dirty_value = true;
@@ -514,7 +520,9 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     case TypeAttributeState::SubmitButton:
     case TypeAttributeState::ResetButton:
     case TypeAttributeState::ImageButton:
+        break;
     case TypeAttributeState::Color:
+        create_color_input_shadow_tree();
         break;
     // FIXME: This could be better factored. Everything except the above types becomes a text input.
     default:
@@ -572,6 +580,35 @@ void HTMLInputElement::create_text_input_shadow_tree()
     set_shadow_root(shadow_root);
 }
 
+void HTMLInputElement::create_color_input_shadow_tree()
+{
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
+
+    auto color = value_sanitization_algorithm(m_value);
+
+    auto border = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(border->set_attribute(HTML::AttributeNames::style, R"~~~(
+        width: fit-content;
+        height: fit-content;
+        padding: 4px;
+        border: 1px solid ButtonBorder;
+        background-color: ButtonFace;
+)~~~"_string));
+
+    m_color_well_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(m_color_well_element->set_attribute(HTML::AttributeNames::style, R"~~~(
+        width: 24px;
+        height: 24px;
+        border: 1px solid ButtonBorder;
+        box-sizing: border-box;
+)~~~"_string));
+    MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, color));
+
+    MUST(border->append_child(*m_color_well_element));
+    MUST(shadow_root->append_child(border));
+    set_shadow_root(shadow_root);
+}
+
 void HTMLInputElement::did_receive_focus()
 {
     auto* browsing_context = document().browsing_context();
@@ -615,11 +652,17 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<Depreca
             if (!m_dirty_value) {
                 m_value = DeprecatedString::empty();
                 update_placeholder_visibility();
+
+                if (type_state() == TypeAttributeState::Color && m_color_well_element)
+                    MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
             }
         } else {
             if (!m_dirty_value) {
                 m_value = value_sanitization_algorithm(*value);
                 update_placeholder_visibility();
+
+                if (type_state() == TypeAttributeState::Color && m_color_well_element)
+                    MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
             }
         }
     } else if (name == HTML::AttributeNames::placeholder) {
@@ -954,10 +997,14 @@ void HTMLInputElement::reset_algorithm()
 
     // and then invoke the value sanitization algorithm, if the type attribute's current state defines one.
     m_value = value_sanitization_algorithm(m_value);
+
     if (m_text_node) {
         m_text_node->set_data(MUST(String::from_deprecated_string(m_value)));
         update_placeholder_visibility();
     }
+
+    if (type_state() == TypeAttributeState::Color && m_color_well_element)
+        MUST(m_color_well_element->style_for_bindings()->set_property(CSS::PropertyID::BackgroundColor, m_value));
 }
 
 void HTMLInputElement::form_associated_element_was_inserted()
