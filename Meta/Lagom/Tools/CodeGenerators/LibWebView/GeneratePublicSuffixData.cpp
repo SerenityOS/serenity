@@ -48,7 +48,7 @@ ErrorOr<void> generate_header_file(Core::InputBufferedFile&, Core::File& file)
 #include <AK/Forward.h>
 #include <AK/Trie.h>
 
-namespace PublicSuffix {
+namespace WebView {
 
 class PublicSuffixData {
 protected:
@@ -72,7 +72,7 @@ private:
     Trie<char, DeprecatedString> m_dictionary;
 };
 
-} // namespace PublicSuffix
+}
 
 )~~~");
 
@@ -85,11 +85,11 @@ ErrorOr<void> generate_implementation_file(Core::InputBufferedFile& input, Core:
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.append(R"~~~(
-#include <LibPublicSuffix/PublicSuffixData.h>
-#include <AK/Vector.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
+#include <LibWebView/PublicSuffixData.h>
 
-namespace PublicSuffix {
+namespace WebView {
 
 static Vector<StringView> s_public_suffixes {)~~~");
 
@@ -121,7 +121,7 @@ PublicSuffixData::PublicSuffixData()
 {
     // FIXME: Reduce the depth of this trie
     for (auto str : s_public_suffixes) {
-        MUST(m_dictionary.insert(str.begin(), str.end(), str, [](auto& parent, auto& it) -> Optional<DeprecatedString> { 
+        MUST(m_dictionary.insert(str.begin(), str.end(), str, [](auto& parent, auto& it) -> Optional<DeprecatedString> {
             return DeprecatedString::formatted("{}{}", parent.metadata_value(), *it);
         }));
     }
@@ -176,7 +176,7 @@ ErrorOr<Optional<String>> PublicSuffixData::get_public_suffix(StringView string)
     return Optional<String> {};
 }
 
-} // namespace PublicSuffix
+}
 
 )~~~");
 
