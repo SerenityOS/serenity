@@ -139,21 +139,62 @@ void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer const&
 }
 
 // 25.1.3.1 AllocateArrayBuffer ( constructor, byteLength [ , maxByteLength ] ), https://tc39.es/ecma262/#sec-allocatearraybuffer
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length, Optional<size_t> const& max_byte_length)
 {
-    // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
+    // 1. Let slots be « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] ».
+
+    // 2. If maxByteLength is present and maxByteLength is not empty, let allocatingResizableBuffer be true; otherwise let allocatingResizableBuffer be false.
+    auto allocating_resizable_buffer = max_byte_length.has_value();
+
+    // 3. If allocatingResizableBuffer is true, then
+    if (allocating_resizable_buffer) {
+        // a. If byteLength > maxByteLength, throw a RangeError exception.
+        if (byte_length > *max_byte_length)
+            return vm.throw_completion<RangeError>(ErrorType::ByteLengthExceedsMaxByteLength, byte_length, *max_byte_length);
+
+        // b. Append [[ArrayBufferMaxByteLength]] to slots.
+    }
+
+    // 4. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", slots).
     auto obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::array_buffer_prototype, nullptr));
 
-    // 2. Let block be ? CreateByteDataBlock(byteLength).
+    // 5. Let block be ? CreateByteDataBlock(byteLength).
     auto block = TRY(create_byte_data_block(vm, byte_length));
 
-    // 3. Set obj.[[ArrayBufferData]] to block.
+    // 6. Set obj.[[ArrayBufferData]] to block.
     obj->set_data_block(move(block));
 
-    // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
+    // 7. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
-    // 5. Return obj.
+    // 8. If allocatingResizableBuffer is true, then
+    if (allocating_resizable_buffer) {
+        // a. If it is not possible to create a Data Block block consisting of maxByteLength bytes, throw a RangeError exception.
+        // b. NOTE: Resizable ArrayBuffers are designed to be implementable with in-place growth. Implementations may throw if, for example, virtual memory cannot be reserved up front.
+        if (auto result = obj->buffer().try_ensure_capacity(*max_byte_length); result.is_error())
+            return vm.throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, *max_byte_length);
+
+        // c. Set obj.[[ArrayBufferMaxByteLength]] to maxByteLength.
+        obj->set_max_byte_length(*max_byte_length);
+    }
+
+    // 9. Return obj.
     return obj.ptr();
+}
+
+// 25.1.3.2 ArrayBufferByteLength ( arrayBuffer, order ), https://tc39.es/ecma262/#sec-arraybufferbytelength
+size_t array_buffer_byte_length(ArrayBuffer const& array_buffer, ArrayBuffer::Order)
+{
+    // FIXME: 1. If IsSharedArrayBuffer(arrayBuffer) is true and arrayBuffer has an [[ArrayBufferByteLengthData]] internal slot, then
+    // FIXME:     a. Let bufferByteLengthBlock be arrayBuffer.[[ArrayBufferByteLengthData]].
+    // FIXME:     b. Let rawLength be GetRawBytesFromSharedBlock(bufferByteLengthBlock, 0, biguint64, true, order).
+    // FIXME:     c. Let isLittleEndian be the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+    // FIXME:     d. Return ℝ(RawBytesToNumeric(biguint64, rawLength, isLittleEndian)).
+
+    // 2. Assert: IsDetachedBuffer(arrayBuffer) is false.
+    VERIFY(!array_buffer.is_detached());
+
+    // 3. Return arrayBuffer.[[ArrayBufferByteLength]].
+    return array_buffer.byte_length();
 }
 
 // 25.1.3.4 DetachArrayBuffer ( arrayBuffer [ , key ] ), https://tc39.es/ecma262/#sec-detacharraybuffer
@@ -200,6 +241,24 @@ ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_b
 
     // 6. Return targetBuffer.
     return target_buffer;
+}
+
+// 25.1.3.6 GetArrayBufferMaxByteLengthOption ( options ), https://tc39.es/ecma262/#sec-getarraybuffermaxbytelengthoption
+ThrowCompletionOr<Optional<size_t>> get_array_buffer_max_byte_length_option(VM& vm, Value options)
+{
+    // 1. If options is not an Object, return empty.
+    if (!options.is_object())
+        return OptionalNone {};
+
+    // 2. Let maxByteLength be ? Get(options, "maxByteLength").
+    auto max_byte_length = TRY(options.as_object().get(vm.names.maxByteLength));
+
+    // 3. If maxByteLength is undefined, return empty.
+    if (max_byte_length.is_undefined())
+        return OptionalNone {};
+
+    // 4. Return ? ToIndex(maxByteLength).
+    return TRY(max_byte_length.to_index(vm));
 }
 
 // 25.1.2.14 ArrayBufferCopyAndDetach ( arrayBuffer, newLength, preserveResizability ), https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfertofixedlength

@@ -18,6 +18,7 @@
 #include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
@@ -133,6 +134,25 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
         // This abstract operation is only invoked by ECMAScript hosts that are web browsers.
         // NOTE: Since LibJS has no way of knowing whether the current environment is a browser we always
         //       call HostEnsureCanAddPrivateElement when needed.
+    };
+
+    // 25.1.3.7 HostResizeArrayBuffer ( buffer, newByteLength ), https://tc39.es/ecma262/#sec-hostresizearraybuffer
+    host_resize_array_buffer = [this](ArrayBuffer& buffer, size_t new_byte_length) -> ThrowCompletionOr<HandledByHost> {
+        // The host-defined abstract operation HostResizeArrayBuffer takes arguments buffer (an ArrayBuffer) and
+        // newByteLength (a non-negative integer) and returns either a normal completion containing either handled or
+        // unhandled, or a throw completion. It gives the host an opportunity to perform implementation-defined resizing
+        // of buffer. If the host chooses not to handle resizing of buffer, it may return unhandled for the default behaviour.
+
+        // The implementation of HostResizeArrayBuffer must conform to the following requirements:
+        // - The abstract operation does not detach buffer.
+        // - If the abstract operation completes normally with handled, buffer.[[ArrayBufferByteLength]] is newByteLength.
+
+        // The default implementation of HostResizeArrayBuffer is to return NormalCompletion(unhandled).
+
+        if (auto result = buffer.buffer().try_resize(new_byte_length); result.is_error())
+            return throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, new_byte_length);
+
+        return HandledByHost::Handled;
     };
 }
 

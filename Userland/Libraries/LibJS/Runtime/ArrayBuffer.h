@@ -69,6 +69,10 @@ public:
     ByteBuffer& buffer() { return m_data_block.buffer(); }
     ByteBuffer const& buffer() const { return m_data_block.buffer(); }
 
+    // [[ArrayBufferMaxByteLength]]
+    size_t max_byte_length() const { return m_max_byte_length.value(); }
+    void set_max_byte_length(size_t max_byte_length) { m_max_byte_length = max_byte_length; }
+
     // Used by allocate_array_buffer() to attach the data block after construction
     void set_data_block(DataBlock block) { m_data_block = move(block); }
 
@@ -85,6 +89,17 @@ public:
             return true;
         // 2. Return false.
         return false;
+    }
+
+    // 25.1.3.8 IsFixedLengthArrayBuffer ( arrayBuffer ), https://tc39.es/ecma262/#sec-isfixedlengtharraybuffer
+    bool is_fixed_length() const
+    {
+        // 1. If arrayBuffer has an [[ArrayBufferMaxByteLength]] internal slot, return false.
+        if (m_max_byte_length.has_value())
+            return false;
+
+        // 2. Return true.
+        return true;
     }
 
     // 25.2.2.2 IsSharedArrayBuffer ( obj ), https://tc39.es/ecma262/#sec-issharedarraybuffer
@@ -121,6 +136,8 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     DataBlock m_data_block;
+    Optional<size_t> m_max_byte_length;
+
     // The various detach related members of ArrayBuffer are not used by any ECMA262 functionality,
     // but are required to be available for the use of various harnesses like the Test262 test runner.
     Value m_detach_key;
@@ -128,8 +145,10 @@ private:
 
 ThrowCompletionOr<DataBlock> create_byte_data_block(VM& vm, size_t size);
 void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer const& from_block, u64 from_index, u64 count);
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length, Optional<size_t> const& max_byte_length = {});
+size_t array_buffer_byte_length(ArrayBuffer const&, ArrayBuffer::Order);
 ThrowCompletionOr<void> detach_array_buffer(VM&, ArrayBuffer& array_buffer, Optional<Value> key = {});
+ThrowCompletionOr<Optional<size_t>> get_array_buffer_max_byte_length_option(VM&, Value options);
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);
 ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM&, ArrayBuffer& array_buffer, Value new_length, PreserveResizability preserve_resizability);
 ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);

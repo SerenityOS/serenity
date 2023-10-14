@@ -52,8 +52,11 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(Functi
 {
     auto& vm = this->vm();
 
+    auto length = vm.argument(0);
+    auto options = vm.argument(1);
+
     // 2. Let byteLength be ? ToIndex(length).
-    auto byte_length_or_error = vm.argument(0).to_index(vm);
+    auto byte_length_or_error = length.to_index(vm);
 
     if (byte_length_or_error.is_error()) {
         auto error = byte_length_or_error.release_error();
@@ -64,8 +67,11 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(Functi
         return error;
     }
 
-    // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength).
-    return *TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value()));
+    // 3. Let requestedMaxByteLength be ? GetArrayBufferMaxByteLengthOption(options).
+    auto requested_max_byte_length = TRY(get_array_buffer_max_byte_length_option(vm, options));
+
+    // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength, requestedMaxByteLength).
+    return *TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value(), requested_max_byte_length));
 }
 
 // 25.1.5.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview

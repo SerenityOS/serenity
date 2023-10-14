@@ -17,3 +17,18 @@ test("ArrayBuffer size limit", () => {
         new ArrayBuffer(2 ** 53);
     }).toThrowWithMessage(RangeError, "Invalid array buffer length");
 });
+
+test("invalid ArrayBuffer maximum size option", () => {
+    expect(() => {
+        new ArrayBuffer(10, { maxByteLength: -1 });
+    }).toThrowWithMessage(RangeError, "Index must be a positive integer");
+});
+
+test("ArrayBuffer size exceeds maximum size", () => {
+    expect(() => {
+        new ArrayBuffer(10, { maxByteLength: 5 });
+    }).toThrowWithMessage(
+        RangeError,
+        "ArrayBuffer byte length of 10 exceeds the max byte length of 5"
+    );
+});
