@@ -1880,7 +1880,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
     if (is<HTML::HTMLElement>(this)) {
         auto const* element = static_cast<HTML::HTMLElement const*>(this);
         auto tooltip = element->title();
-        if (!tooltip.has_value() && !tooltip->is_empty())
+        if (tooltip.has_value() && !tooltip->is_empty())
             return tooltip.release_value();
     }
     // Append the result of each step above, with a space, to the total accumulated text.
