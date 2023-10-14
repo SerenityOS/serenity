@@ -138,7 +138,7 @@ void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer const&
     // 7. Return unused.
 }
 
-// 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatearraybuffer
+// 25.1.3.1 AllocateArrayBuffer ( constructor, byteLength [ , maxByteLength ] ), https://tc39.es/ecma262/#sec-allocatearraybuffer
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
 {
     // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
@@ -156,7 +156,7 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& co
     return obj.ptr();
 }
 
-// 25.1.2.3 DetachArrayBuffer ( arrayBuffer [ , key ] ), https://tc39.es/ecma262/#sec-detacharraybuffer
+// 25.1.3.4 DetachArrayBuffer ( arrayBuffer [ , key ] ), https://tc39.es/ecma262/#sec-detacharraybuffer
 ThrowCompletionOr<void> detach_array_buffer(VM& vm, ArrayBuffer& array_buffer, Optional<Value> key)
 {
     // 1. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
@@ -178,7 +178,7 @@ ThrowCompletionOr<void> detach_array_buffer(VM& vm, ArrayBuffer& array_buffer, O
     return {};
 }
 
-// 25.1.2.4 CloneArrayBuffer ( srcBuffer, srcByteOffset, srcLength, cloneConstructor ), https://tc39.es/ecma262/#sec-clonearraybuffer
+// 25.1.3.5 CloneArrayBuffer ( srcBuffer, srcByteOffset, srcLength, cloneConstructor ), https://tc39.es/ecma262/#sec-clonearraybuffer
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length)
 {
     auto& realm = *vm.current_realm();
@@ -249,7 +249,7 @@ ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer
     return new_buffer;
 }
 
-// 25.2.1.1 AllocateSharedArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatesharedarraybuffer
+// 25.2.2.1 AllocateSharedArrayBuffer ( constructor, byteLength [ , maxByteLength ] ), https://tc39.es/ecma262/#sec-allocatesharedarraybuffer
 ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
 {
     // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%SharedArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]] »).

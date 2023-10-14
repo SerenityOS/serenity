@@ -83,7 +83,7 @@ static ThrowCompletionOr<size_t> validate_atomic_access(VM& vm, TypedArrayBase& 
     return (access_index * element_size) + offset;
 }
 
-// 25.4.2.11 AtomicReadModifyWrite ( typedArray, index, value, op ), https://tc39.es/ecma262/#sec-atomicreadmodifywrite
+// 25.4.2.17 AtomicReadModifyWrite ( typedArray, index, value, op ), https://tc39.es/ecma262/#sec-atomicreadmodifywrite
 static ThrowCompletionOr<Value> atomic_read_modify_write(VM& vm, TypedArrayBase& typed_array, Value index, Value value, ReadWriteModifyFunction operation)
 {
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
@@ -216,11 +216,11 @@ void AtomicsObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.notify, notify, 3, attr);
     define_native_function(realm, vm.names.xor_, xor_, 3, attr);
 
-    // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
+    // 25.4.17 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Atomics"_string), Attribute::Configurable);
 }
 
-// 25.4.3 Atomics.add ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.add
+// 25.4.4 Atomics.add ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.add
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
 {
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
@@ -236,7 +236,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
     VERIFY_NOT_REACHED();
 }
 
-// 25.4.4 Atomics.and ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.and
+// 25.4.5 Atomics.and ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.and
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
 {
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
@@ -252,7 +252,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
     VERIFY_NOT_REACHED();
 }
 
-// Implementation of 25.4.5 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
+// 25.4.6 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
 template<typename T>
 static ThrowCompletionOr<Value> atomic_compare_exchange_impl(VM& vm, TypedArrayBase& typed_array)
 {
@@ -331,7 +331,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(VM& vm, TypedArrayB
     return raw_bytes_to_numeric<T>(vm, raw_bytes_read, is_little_endian);
 }
 
-// 25.4.5 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
+// 25.4.6 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
 {
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
@@ -345,7 +345,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
     VERIFY_NOT_REACHED();
 }
 
-// 25.4.6 Atomics.exchange ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.exchange
+// 25.4.7 Atomics.exchange ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.exchange
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
 {
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
@@ -361,7 +361,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
     VERIFY_NOT_REACHED();
 }
 
-// 25.4.7 Atomics.isLockFree ( size ), https://tc39.es/ecma262/#sec-atomics.islockfree
+// 25.4.8 Atomics.isLockFree ( size ), https://tc39.es/ecma262/#sec-atomics.islockfree
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
 {
     auto size = TRY(vm.argument(0).to_integer_or_infinity(vm));
@@ -376,7 +376,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
     return Value(false);
 }
 
-// 25.4.8 Atomics.load ( typedArray, index ), https://tc39.es/ecma262/#sec-atomics.load
+// 25.4.9 Atomics.load ( typedArray, index ), https://tc39.es/ecma262/#sec-atomics.load
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
 {
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
@@ -397,7 +397,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
     return typed_array->get_value_from_buffer(indexed_position, ArrayBuffer::Order::SeqCst, true);
 }
 
-// 25.4.9 Atomics.or ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.or
+// 25.4.10 Atomics.or ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.or
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
 {
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
@@ -413,7 +413,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
     VERIFY_NOT_REACHED();
 }
 
-// 25.4.10 Atomics.store ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.store
+// 25.4.11 Atomics.store ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.store
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 {
     // 1. Let buffer be ? ValidateIntegerTypedArray(typedArray).
@@ -447,7 +447,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
     return value_to_set;
 }
 
-// 25.4.11 Atomics.sub ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.sub
+// 25.4.12 Atomics.sub ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.sub
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
 {
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
@@ -532,7 +532,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::notify)
     return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "SharedArrayBuffer"sv);
 }
 
-// 25.4.14 Atomics.xor ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.xor
+// 25.4.16 Atomics.xor ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.xor
 JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::xor_)
 {
     auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));

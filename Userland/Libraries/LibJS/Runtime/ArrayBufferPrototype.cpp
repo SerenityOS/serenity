@@ -26,17 +26,35 @@ void ArrayBufferPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
     define_native_function(realm, vm.names.slice, slice, 2, attr);
+    define_native_accessor(realm, vm.names.detached, detached_getter, {}, Attribute::Configurable);
     define_native_function(realm, vm.names.transfer, transfer, 0, attr);
     define_native_function(realm, vm.names.transferToFixedLength, transfer_to_fixed_length, 0, attr);
-    define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
-    define_native_accessor(realm, vm.names.detached, detached_getter, {}, Attribute::Configurable);
 
-    // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
+    // 25.1.6.7 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.ArrayBuffer.as_string()), Attribute::Configurable);
 }
 
-// 25.1.5.3 ArrayBuffer.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
+// 25.1.6.1 get ArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
+    auto array_buffer_object = TRY(typed_this_value(vm));
+
+    // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
+    if (array_buffer_object->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
+
+    // NOTE: These steps are done in byte_length()
+    // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
+    // 5. Let length be O.[[ArrayBufferByteLength]].
+    // 6. Return 𝔽(length).
+    return Value(array_buffer_object->byte_length());
+}
+
+// 25.1.6.6 ArrayBuffer.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 {
     auto& realm = *vm.current_realm();
@@ -131,24 +149,6 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 
     // 27. Return new.
     return new_array_buffer_object;
-}
-
-// 25.1.5.1 get ArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength
-JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
-{
-    // 1. Let O be the this value.
-    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
-    auto array_buffer_object = TRY(typed_this_value(vm));
-
-    // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-    if (array_buffer_object->is_shared_array_buffer())
-        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
-
-    // NOTE: These steps are done in byte_length()
-    // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
-    // 5. Let length be O.[[ArrayBufferByteLength]].
-    // 6. Return 𝔽(length).
-    return Value(array_buffer_object->byte_length());
 }
 
 // 25.1.5.4 get ArrayBuffer.prototype.detached, https://tc39.es/proposal-arraybuffer-transfer/#sec-get-arraybuffer.prototype.detached

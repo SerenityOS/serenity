@@ -26,16 +26,16 @@ void SharedArrayBufferConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
 
-    // 25.2.4.2 SharedArrayBuffer.prototype, https://tc39.es/ecma262/#sec-sharedarraybuffer.prototype
+    // 25.2.4.1 SharedArrayBuffer.prototype, https://tc39.es/ecma262/#sec-sharedarraybuffer.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().shared_array_buffer_prototype(), 0);
 
-    // 25.2.4.4 SharedArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-sharedarraybuffer.prototype.toString
+    // 25.2.5.7 SharedArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-sharedarraybuffer.prototype.toString
     define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-// 25.2.2.1 SharedArrayBuffer ( length ), https://tc39.es/ecma262/#sec-sharedarraybuffer-length
+// 25.2.3.1 SharedArrayBuffer ( length [ , options ] ), https://tc39.es/ecma262/#sec-sharedarraybuffer-length
 ThrowCompletionOr<Value> SharedArrayBufferConstructor::call()
 {
     auto& vm = this->vm();
@@ -44,7 +44,7 @@ ThrowCompletionOr<Value> SharedArrayBufferConstructor::call()
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.SharedArrayBuffer);
 }
 
-// 25.2.2.1 SharedArrayBuffer ( length ), https://tc39.es/ecma262/#sec-sharedarraybuffer-length
+// 25.2.3.1 SharedArrayBuffer ( length [ , options ] ), https://tc39.es/ecma262/#sec-sharedarraybuffer-length
 ThrowCompletionOr<NonnullGCPtr<Object>> SharedArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
@@ -65,7 +65,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SharedArrayBufferConstructor::construct(
     return *TRY(allocate_shared_array_buffer(vm, new_target, byte_length_or_error.release_value()));
 }
 
-// 25.2.3.2 get SharedArrayBuffer [ @@species ], https://tc39.es/ecma262/#sec-sharedarraybuffer-@@species
+// 25.2.4.2 get SharedArrayBuffer [ @@species ], https://tc39.es/ecma262/#sec-sharedarraybuffer-@@species
 JS_DEFINE_NATIVE_FUNCTION(SharedArrayBufferConstructor::symbol_species_getter)
 {
     // 1. Return the this value.
