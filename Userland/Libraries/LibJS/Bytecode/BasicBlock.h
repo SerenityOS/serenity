@@ -43,6 +43,16 @@ public:
 
     DeprecatedString const& name() const { return m_name; }
 
+    // ==============================================================
+    // FIXME: This is JIT state and shouldn't be part of BasicBlock itself.
+
+    // Offset into the instruction stream where this code block starts.
+    size_t offset { 0 };
+
+    // Offsets into the instruction stream where we have RIP-relative jump offsets to here that need patching.
+    Vector<size_t> jumps_to_here;
+    // ==============================================================
+
 private:
     explicit BasicBlock(DeprecatedString name);
 

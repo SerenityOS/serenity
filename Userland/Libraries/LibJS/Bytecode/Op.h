@@ -115,6 +115,8 @@ private:
         ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;            \
         DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const; \
                                                                                        \
+        Register lhs() const { return m_lhs_reg; }                                     \
+                                                                                       \
     private:                                                                           \
         Register m_lhs_reg;                                                            \
     };

@@ -80,6 +80,9 @@ public:
 
     void visit_edges(Cell::Visitor&);
 
+    Span<Value> registers() { return m_current_call_frame; }
+    ReadonlySpan<Value> registers() const { return m_current_call_frame; }
+
 private:
     void run_bytecode();
 
@@ -92,9 +95,6 @@ private:
     {
         return const_cast<Interpreter*>(this)->call_frame();
     }
-
-    Span<Value> registers() { return m_current_call_frame; }
-    ReadonlySpan<Value> registers() const { return m_current_call_frame; }
 
     void push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*>, size_t register_count);
     [[nodiscard]] Variant<NonnullOwnPtr<CallFrame>, CallFrame*> pop_call_frame();

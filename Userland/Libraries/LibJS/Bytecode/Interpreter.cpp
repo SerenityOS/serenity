@@ -13,6 +13,7 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
+#include <LibJS/JIT/Compiler.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -349,7 +350,16 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
     else
         push_call_frame(make<CallFrame>(), executable.number_of_registers);
 
-    run_bytecode();
+    if (auto native_executable = JIT::Compiler::compile(executable)) {
+        native_executable->run(vm());
+
+        for (size_t i = 0; i < vm().running_execution_context().local_variables.size(); ++i) {
+            dbgln("%{}: {}", i, vm().running_execution_context().local_variables[i]);
+        }
+
+    } else {
+        run_bytecode();
+    }
 
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &executable);
 
