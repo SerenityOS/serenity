@@ -319,6 +319,13 @@ TEST_CASE(convert_to_uint_from_octal)
     EXPECT_EQ(actual.value(), 0177777u);
 }
 
+TEST_CASE(convert_to_floating_point)
+{
+    auto number_string = "  123.45  "sv;
+    auto maybe_number = AK::StringUtils::convert_to_floating_point<float>(number_string, TrimWhitespace::Yes);
+    EXPECT_APPROXIMATE(maybe_number.value(), 123.45f);
+}
+
 TEST_CASE(ends_with)
 {
     DeprecatedString test_string = "ABCDEF";
