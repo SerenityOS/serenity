@@ -6,6 +6,7 @@
 
 // CFF spec: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5176.CFF.pdf
 
+#include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
@@ -31,8 +32,9 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     // CFF spec, "7 Name INDEX"
     Vector<String> font_names;
     TRY(parse_index(reader, [&](ReadonlyBytes const& data) -> PDFErrorOr<void> {
-        auto string = TRY(String::from_utf8(data));
-        return TRY(font_names.try_append(string));
+        auto font_name = TRY(String::from_utf8(data));
+        dbgln_if(CFF_DEBUG, "CFF font name '{}'", font_name);
+        return TRY(font_names.try_append(font_name));
     }));
 
     auto cff = adopt_ref(*new CFF());
@@ -130,8 +132,10 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     // Encoding given or read
     if (encoding) {
+        dbgln_if(CFF_DEBUG, "CFF using external encoding");
         cff->set_encoding(move(encoding));
     } else {
+        dbgln_if(CFF_DEBUG, "CFF using embedded encoding");
         auto encoding = Encoding::create();
         for (size_t i = 0; i < glyphs.size(); i++) {
             if (i == 0) {
