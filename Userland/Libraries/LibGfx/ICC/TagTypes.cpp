@@ -760,8 +760,15 @@ ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(Readon
 
     auto& header = *bit_cast<NamedColorHeader const*>(bytes.data() + 8);
 
-    unsigned const record_byte_size = 32 + sizeof(u16) * (3 + header.number_of_device_coordinates_of_each_named_color);
-    if (bytes.size() < 2 * sizeof(u32) + sizeof(NamedColorHeader) + header.count_of_named_colors * record_byte_size)
+    Checked<u32> record_byte_size = 3;
+    record_byte_size += header.number_of_device_coordinates_of_each_named_color;
+    record_byte_size *= sizeof(u16);
+    record_byte_size += 32;
+
+    Checked<u32> end_of_record = record_byte_size;
+    end_of_record *= header.count_of_named_colors;
+    end_of_record += 2 * sizeof(u32) + sizeof(NamedColorHeader);
+    if (end_of_record.has_overflow() || bytes.size() < end_of_record.value())
         return Error::from_string_literal("ICC::Profile: namedColor2Type has not enough color data");
 
     auto buffer_to_string = [](u8 const* buffer) -> ErrorOr<String> {
@@ -786,7 +793,7 @@ ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(Readon
     TRY(device_coordinates.try_resize(header.count_of_named_colors * header.number_of_device_coordinates_of_each_named_color));
 
     for (size_t i = 0; i < header.count_of_named_colors; ++i) {
-        u8 const* root_name = bytes.data() + 8 + sizeof(NamedColorHeader) + i * record_byte_size;
+        u8 const* root_name = bytes.data() + 8 + sizeof(NamedColorHeader) + i * record_byte_size.value();
         auto* components = bit_cast<BigEndian<u16> const*>(root_name + 32);
 
         root_names[i] = TRY(buffer_to_string(root_name));
