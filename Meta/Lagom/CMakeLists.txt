@@ -427,7 +427,6 @@ if (BUILD_LAGOM)
         Markdown
         PDF
         Protocol
-        PublicSuffix
         Regex
         SoftGPU
         SQL

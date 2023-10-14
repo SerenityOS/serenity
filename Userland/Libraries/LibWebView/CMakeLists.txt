@@ -1,3 +1,5 @@
+include(${SerenityOS_SOURCE_DIR}/Meta/CMake/public_suffix.cmake)
+
 set(SOURCES
     AccessibilityTreeModel.cpp
     AriaPropertiesStateModel.cpp
@@ -14,7 +16,10 @@ set(SOURCES
     ViewImplementation.cpp
     WebContentClient.cpp
     WebSocketClientAdapter.cpp
+    ${PUBLIC_SUFFIX_SOURCES}
 )
+
+set(GENERATED_SOURCES ${CURRENT_LIB_GENERATED})
 
 if (SERENITYOS)
     list(APPEND SOURCES OutOfProcessWebView.cpp)
@@ -41,7 +46,8 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWebView webview)
-target_link_libraries(LibWebView PRIVATE LibCore LibFileSystem LibGfx LibGUI LibIPC LibProtocol LibPublicSuffix LibJS LibWeb LibSQL)
+target_link_libraries(LibWebView PRIVATE LibCore LibFileSystem LibGfx LibGUI LibIPC LibProtocol LibJS LibWeb LibSQL)
+target_compile_definitions(LibWebView PRIVATE ENABLE_PUBLIC_SUFFIX=$<BOOL:${ENABLE_PUBLIC_SUFFIX_DOWNLOAD}>)
 
 if (SERENITYOS)
     target_link_libraries(LibWebView PRIVATE LibFileSystemAccessClient)
