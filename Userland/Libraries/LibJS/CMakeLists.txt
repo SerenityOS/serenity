@@ -23,6 +23,9 @@ set(SOURCES
     Heap/Heap.cpp
     Heap/HeapBlock.cpp
     Heap/MarkedVector.cpp
+    JIT/Assembler.cpp
+    JIT/Compiler.cpp
+    JIT/NativeExecutable.cpp
     Lexer.cpp
     MarkupGenerator.cpp
     Module.cpp
