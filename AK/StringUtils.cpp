@@ -247,7 +247,7 @@ Optional<T> convert_to_floating_point(StringView str, TrimWhitespace trim_whites
         : str;
 
     char const* start = string.characters_without_null_termination();
-    return parse_floating_point_completely<T>(start, start + str.length());
+    return parse_floating_point_completely<T>(start, start + string.length());
 }
 
 template Optional<double> convert_to_floating_point(StringView str, TrimWhitespace);
