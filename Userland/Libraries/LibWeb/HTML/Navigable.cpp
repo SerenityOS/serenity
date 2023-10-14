@@ -583,7 +583,7 @@ static WebIDL::ExceptionOr<Variant<Empty, NavigationParams, NonFetchSchemeNaviga
     // 4. If documentResource is a POST resource, then:
     if (document_resource.has<POSTResource>()) {
         // 1. Set request's method to `POST`.
-        request->set_method(TRY_OR_THROW_OOM(vm, ByteBuffer::copy("post"sv.bytes())));
+        request->set_method(TRY_OR_THROW_OOM(vm, ByteBuffer::copy("POST"sv.bytes())));
 
         // 2. Set request's body to documentResource's request body.
         request->set_body(document_resource.get<POSTResource>().request_body.value());
