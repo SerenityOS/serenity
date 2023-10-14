@@ -167,6 +167,7 @@ private:
     static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();
     void create_text_input_shadow_tree();
+    void create_color_input_shadow_tree();
     WebIDL::ExceptionOr<void> run_input_activation_behavior();
     void set_checked_within_group();
 
@@ -180,6 +181,7 @@ private:
     JS::GCPtr<DOM::Text> m_placeholder_text_node;
 
     JS::GCPtr<DOM::Element> m_inner_text_element;
+    JS::GCPtr<DOM::Element> m_color_well_element;
     JS::GCPtr<DOM::Text> m_text_node;
     bool m_checked { false };
 
