@@ -262,12 +262,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     }
     dmesgln("Starting SerenityOS...");
 
-    DeviceManagement::initialize();
-    SysFSComponentRegistry::initialize();
-    DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
-    DeviceManagement::the().attach_console_device(*ConsoleDevice::must_create());
-    DeviceManagement::the().attach_device_control_device(*DeviceControlDevice::must_create());
-
     MM.unmap_prekernel();
 
 #if ARCH(X86_64)
@@ -286,6 +280,12 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
 
     // Initialize TimeManagement before using randomness!
     TimeManagement::initialize(0);
+
+    DeviceManagement::initialize();
+    SysFSComponentRegistry::initialize();
+    DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
+    DeviceManagement::the().attach_console_device(*ConsoleDevice::must_create());
+    DeviceManagement::the().attach_device_control_device(*DeviceControlDevice::must_create());
 
     __stack_chk_guard = get_fast_random<uintptr_t>();
 
