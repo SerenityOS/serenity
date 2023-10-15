@@ -31,6 +31,21 @@ describe("correct behavior", () => {
     });
 });
 
+describe("large number of digits", () => {
+    test("maximum", () => {
+        expect((1).toFixed(100)).toBe(
+            "1.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        );
+        expect((-3).toFixed(100)).toBe(
+            "-3.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        );
+    });
+
+    test("fractional values", () => {
+        expect((1.5).toFixed(30)).toBe("1.500000000000000000000000000000");
+    });
+});
+
 describe("errors", () => {
     test("must be called with numeric |this|", () => {
         [true, [], {}, Symbol("foo"), "bar", 1n].forEach(value => {
