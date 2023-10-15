@@ -368,9 +368,8 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     ExecutionContext callee_context(heap());
 
-    callee_context.local_variables.resize(m_local_variables_names.size());
-
     // Non-standard
+    callee_context.local_variable_count = m_local_variables_names.size();
     callee_context.arguments.extend(move(arguments_list));
     callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
@@ -438,9 +437,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
 
     ExecutionContext callee_context(heap());
 
-    callee_context.local_variables.resize(m_local_variables_names.size());
-
     // Non-standard
+    callee_context.local_variable_count = m_local_variables_names.size();
     callee_context.arguments.extend(move(arguments_list));
     callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
@@ -547,10 +545,13 @@ void ECMAScriptFunctionObject::make_method(Object& home_object)
 }
 
 // 10.2.11 FunctionDeclarationInstantiation ( func, argumentsList ), https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
-ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantiation()
+//  Note: We return a CallFrame as we store the local variables in it
+ThrowCompletionOr<NonnullOwnPtr<Bytecode::CallFrame>> ECMAScriptFunctionObject::function_declaration_instantiation()
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
+    auto frame = make<Bytecode::CallFrame>();
+    frame->registers.resize(Bytecode::Register::reserved_register_count + m_local_variables_names.size());
 
     // 1. Let calleeContext be the running execution context.
     auto& callee_context = vm.running_execution_context();
@@ -692,7 +693,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
                     argument_value = execution_context_arguments[i];
                 } else if (parameter.default_value) {
-                    auto value_and_frame = vm.bytecode_interpreter().run_and_return_frame(*m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
+                    auto value_and_frame = vm.bytecode_interpreter().run_with_local_variables(*m_default_parameter_bytecode_executables[default_parameter_index - 1], frame->registers, m_local_variables_names.size());
                     if (value_and_frame.value.is_error())
                         return value_and_frame.value.release_error();
                     // Resulting value is in the accumulator.
@@ -705,7 +706,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
                 if constexpr (IsSame<NonnullRefPtr<Identifier const> const&, decltype(param)>) {
                     if (param->is_local()) {
-                        callee_context.local_variables[param->local_variable_index()] = argument_value;
+                        frame->local_variable(param->local_variable_index()) = argument_value;
                         return {};
                     }
                     Reference reference = TRY(vm.resolve_binding(param->string(), used_environment));
@@ -716,7 +717,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 }
                 if constexpr (IsSame<NonnullRefPtr<BindingPattern const> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
-                    return vm.binding_initialization(param, argument_value, used_environment);
+                    return vm.binding_initialization(param, argument_value, used_environment, *frame);
                 }
             }));
     }
@@ -741,7 +742,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 //       i. If instantiatedVarNames does not contain n, then
                 //       1. Append n to instantiatedVarNames.
                 if (id.is_local()) {
-                    callee_context.local_variables[id.local_variable_index()] = js_undefined();
+                    frame->local_variable(id.local_variable_index()) = js_undefined();
                 } else {
                     // 2. Perform ! env.CreateMutableBinding(n, false).
                     // 3. Perform ! env.InitializeBinding(n, undefined).
@@ -796,7 +797,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 else {
                     // a. Let initialValue be ! env.GetBindingValue(n, false).
                     if (id.is_local()) {
-                        initial_value = callee_context.local_variables[id.local_variable_index()];
+                        initial_value = frame->local_variable(id.local_variable_index());
                     } else {
                         initial_value = MUST(environment->get_binding_value(vm, id.string(), false));
                     }
@@ -805,7 +806,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 // 5. Perform ! varEnv.InitializeBinding(n, initialValue).
                 if (id.is_local()) {
                     // NOTE: Local variables are supported only in bytecode interpreter
-                    callee_context.local_variables[id.local_variable_index()] = initial_value;
+                    frame->local_variable(id.local_variable_index()) = initial_value;
                 } else {
                     MUST(var_environment->initialize_binding(vm, id.string(), initial_value, Environment::InitializeBindingHint::Normal));
                 }
@@ -856,7 +857,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     callee_context.lexical_environment = lex_environment;
 
     if (!scope_body)
-        return {};
+        return frame;
 
     // 33. Let lexDeclarations be the LexicallyScopedDeclarations of code.
     // 34. For each element d of lexDeclarations, do
@@ -898,7 +899,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
         // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
         if (declaration.name_identifier()->is_local()) {
-            callee_context.local_variables[declaration.name_identifier()->local_variable_index()] = function;
+            frame->local_variable(declaration.name_identifier()->local_variable_index()) = function;
         } else {
             MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
         }
@@ -910,7 +911,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         static_cast<DeclarativeEnvironment*>(var_environment.ptr())->shrink_to_fit();
 
     // 37. Return unused.
-    return {};
+    return frame;
 }
 
 // 10.2.1.1 PrepareForOrdinaryCall ( F, newTarget ), https://tc39.es/ecma262/#sec-prepareforordinarycall
@@ -1172,32 +1173,36 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         for (auto& parameter : m_formal_parameters) {
             if (!parameter.default_value)
                 continue;
-            auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
+            auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal,
+                DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name),
+                m_local_variables_names.size()));
             m_default_parameter_bytecode_executables.append(move(executable));
         }
     }
 
-    auto declaration_result = function_declaration_instantiation();
+    auto call_frame_or_declaration_result = function_declaration_instantiation();
 
     if (m_kind == FunctionKind::Normal || m_kind == FunctionKind::Generator || m_kind == FunctionKind::AsyncGenerator) {
-        if (declaration_result.is_error())
-            return declaration_result.release_error();
+        if (call_frame_or_declaration_result.is_error())
+            return call_frame_or_declaration_result.release_error();
     }
 
     if (!m_bytecode_executable)
-        m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
+        m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name, m_local_variables_names.size()));
 
     if (m_kind == FunctionKind::Async) {
-        if (declaration_result.is_throw_completion()) {
+        if (call_frame_or_declaration_result.is_throw_completion()) {
             auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
-            MUST(call(vm, *promise_capability->reject(), js_undefined(), *declaration_result.throw_completion().value()));
+            MUST(call(vm, *promise_capability->reject(), js_undefined(), *call_frame_or_declaration_result.throw_completion().value()));
             return Completion { Completion::Type::Return, promise_capability->promise(), {} };
         }
     }
 
-    auto result_and_frame = vm.bytecode_interpreter().run_and_return_frame(*m_bytecode_executable, nullptr);
+    auto call_frame = call_frame_or_declaration_result.release_value();
+    auto result_and_frame = vm.bytecode_interpreter().run_and_return_frame(*m_bytecode_executable, nullptr, call_frame);
 
-    VERIFY(result_and_frame.frame != nullptr);
+    VERIFY(result_and_frame.frame == nullptr);
+
     if (result_and_frame.value.is_error())
         return result_and_frame.value.release_error();
 
@@ -1209,11 +1214,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
     if (m_kind == FunctionKind::AsyncGenerator) {
-        auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
+        auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy(), move(*call_frame)));
         return { Completion::Type::Return, async_generator_object, {} };
     }
 
-    auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
+    auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy(), move(*call_frame)));
 
     // NOTE: Async functions are entirely transformed to generator functions, and wrapped in a custom driver that returns a promise
     //       See AwaitExpression::generate_bytecode() for the transformation.

@@ -28,6 +28,9 @@ namespace JS {
 
 class Identifier;
 struct BindingPattern;
+namespace Bytecode {
+struct CallFrame;
+}
 
 class VM : public RefCounted<VM> {
 public:
@@ -210,9 +213,13 @@ public:
     CustomData* custom_data() { return m_custom_data; }
 
     ThrowCompletionOr<void> binding_initialization(DeprecatedFlyString const& target, Value value, Environment* environment);
-    ThrowCompletionOr<void> binding_initialization(NonnullRefPtr<BindingPattern const> const& target, Value value, Environment* environment);
+    // FIXME: Avoid passing a CallFrame,
+    //        for this we need to bind the call frame earlier in a functions call preparation, than at the beginning of the actual evaluation
+    ThrowCompletionOr<void> binding_initialization(NonnullRefPtr<BindingPattern const> const& target, Value value, Environment* environment, Bytecode::CallFrame&);
 
-    ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name);
+    // FIXME: Avoid passing a CallFrame,
+    //        for this we need to bind the call frame earlier in a functions call preparation, than at the beginning of the actual evaluation
+    ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name, Bytecode::CallFrame&);
 
     void save_execution_context_stack();
     void restore_execution_context_stack();
@@ -243,7 +250,7 @@ public:
 
     // Execute a specific AST node either in AST or BC interpreter, depending on which one is enabled by default.
     // NOTE: This is meant as a temporary stopgap until everything is bytecode.
-    ThrowCompletionOr<Value> execute_ast_node(ASTNode const&);
+    ThrowCompletionOr<Value> execute_ast_node(ASTNode const&, Bytecode::CallFrame&);
 
 private:
     using ErrorMessages = AK::Array<String, to_underlying(ErrorMessage::__Count)>;
@@ -257,8 +264,8 @@ private:
 
     VM(OwnPtr<CustomData>, ErrorMessages);
 
-    ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment);
-    ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment);
+    ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, Bytecode::CallFrame&);
+    ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment, Bytecode::CallFrame&);
 
     ThrowCompletionOr<NonnullGCPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request);
     ThrowCompletionOr<void> link_and_eval_module(Module& module);

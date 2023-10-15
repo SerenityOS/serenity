@@ -20,12 +20,17 @@ Generator::Generator()
 {
 }
 
-CodeGenerationErrorOr<NonnullRefPtr<Executable>> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
+CodeGenerationErrorOr<NonnullRefPtr<Executable>> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind, size_t local_register_count)
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());
     SourceLocationScope scope(generator, node);
     generator.m_enclosing_function_kind = enclosing_function_kind;
+    // Pre-allocate registers for all local variables
+    // The runtime equivalent is done in `ECMAScriptFunctionObject::function_declaration_instantiation()`
+    // FIXME: Maybe keep a copy of the local variable names as debug info
+    generator.m_next_register += local_register_count;
+
     if (generator.is_in_generator_or_async_function()) {
         // Immediately yield with no value.
         auto& start_block = generator.make_block();

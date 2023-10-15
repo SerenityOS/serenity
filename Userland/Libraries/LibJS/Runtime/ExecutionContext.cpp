@@ -13,19 +13,17 @@ namespace JS {
 
 ExecutionContext::ExecutionContext(Heap& heap)
     : arguments(heap)
-    , local_variables(heap)
 {
 }
 
-ExecutionContext::ExecutionContext(MarkedVector<Value> existing_arguments, MarkedVector<Value> existing_local_variables)
+ExecutionContext::ExecutionContext(MarkedVector<Value> existing_arguments)
     : arguments(move(existing_arguments))
-    , local_variables(move(existing_local_variables))
 {
 }
 
 ExecutionContext ExecutionContext::copy() const
 {
-    ExecutionContext copy { arguments, local_variables };
+    ExecutionContext copy { arguments };
 
     copy.function = function;
     copy.realm = realm;
@@ -36,6 +34,7 @@ ExecutionContext ExecutionContext::copy() const
     copy.instruction_stream_iterator = instruction_stream_iterator;
     copy.function_name = function_name;
     copy.this_value = this_value;
+    copy.local_variable_count = local_variable_count;
     copy.is_strict_mode = is_strict_mode;
 
     return copy;

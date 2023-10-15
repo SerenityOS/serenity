@@ -15,6 +15,7 @@
 #include <AK/TemporaryChange.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -136,7 +137,7 @@ static ThrowCompletionOr<ClassElementName> class_key_to_property_name(VM& vm, Ex
         return ClassElementName { private_environment->resolve_private_identifier(private_identifier.string()) };
     }
 
-    auto prop_key = TRY(vm.execute_ast_node(key));
+    auto prop_key = TRY(vm.execute_ast_node(key, vm.bytecode_interpreter().call_frame()));
 
     if (prop_key.is_object())
         prop_key = TRY(prop_key.to_primitive(vm, Value::PreferredType::String));
@@ -150,7 +151,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
 {
     auto property_key_or_private_name = TRY(class_key_to_property_name(vm, *m_key));
 
-    auto method_value = TRY(vm.execute_ast_node(*m_function));
+    auto method_value = TRY(vm.execute_ast_node(*m_function, vm.bytecode_interpreter().call_frame()));
 
     auto function_handle = make_handle(&method_value.as_function());
 
@@ -463,7 +464,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 
     if (!m_super_class.is_null()) {
         vm.running_execution_context().lexical_environment = class_environment;
-        super_class = TRY(vm.execute_ast_node(*m_super_class));
+        super_class = TRY(vm.execute_ast_node(*m_super_class, vm.bytecode_interpreter().call_frame()));
         vm.running_execution_context().lexical_environment = environment;
     }
 
@@ -1666,7 +1667,7 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
 
             // iii. Perform ! env.InitializeBinding(fn, fo). NOTE: This step is replaced in section B.3.2.6.
             if (function_declaration.name_identifier()->is_local()) {
-                vm.running_execution_context().local_variables[function_declaration.name_identifier()->local_variable_index()] = function;
+                vm.bytecode_interpreter().local_variable(function_declaration.name_identifier()->local_variable_index()) = function;
             } else {
                 VERIFY(is<DeclarativeEnvironment>(*environment));
                 static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, vm, function_declaration.name(), function);

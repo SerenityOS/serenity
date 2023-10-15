@@ -179,7 +179,6 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
 
 void Interpreter::run_bytecode()
 {
-    auto* locals = vm().running_execution_context().local_variables.data();
     auto* registers = this->registers().data();
     auto& accumulator = this->accumulator();
     for (;;) {
@@ -197,7 +196,7 @@ void Interpreter::run_bytecode()
 
             switch (instruction.type()) {
             case Instruction::Type::GetLocal: {
-                auto& local = locals[static_cast<Op::GetLocal const&>(instruction).index()];
+                auto& local = local_variable(static_cast<Op::GetLocal const&>(instruction).index());
                 if (local.is_empty()) {
                     auto const& variable_name = vm().running_execution_context().function->local_variables_names()[static_cast<Op::GetLocal const&>(instruction).index()];
                     result = vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, variable_name);
@@ -207,7 +206,7 @@ void Interpreter::run_bytecode()
                 break;
             }
             case Instruction::Type::SetLocal:
-                locals[static_cast<Op::SetLocal const&>(instruction).index()] = accumulator;
+                local_variable(static_cast<Op::SetLocal const&>(instruction).index()) = accumulator;
                 break;
             case Instruction::Type::Load:
                 accumulator = registers[static_cast<Op::Load const&>(instruction).src().index()];
@@ -333,6 +332,28 @@ void Interpreter::run_bytecode()
     }
 }
 
+Interpreter::ValueAndFrame Interpreter::run_with_local_variables(Executable& executable, Span<Value> register_file, size_t local_variable_count)
+{
+    // FIXME: This is quite a dance with copying around registers, maybe theres a better method
+    // FIXME: Maybe we could even inline all calls to this during the initial compilation
+    auto call_frame = make<Bytecode::CallFrame>();
+    call_frame->registers.resize(executable.number_of_registers);
+    register_file.slice(
+                     Bytecode::Register::reserved_register_count, local_variable_count)
+        .copy_to(call_frame->registers.span().slice(Bytecode::Register::reserved_register_count));
+
+    auto result_or_error = run_and_return_frame(executable, nullptr, call_frame);
+
+    VERIFY(result_or_error.frame == nullptr);
+
+    call_frame->registers.span().slice(
+                                    Bytecode::Register::reserved_register_count, local_variable_count)
+        .copy_to(register_file.slice(Bytecode::Register::reserved_register_count));
+
+    result_or_error.frame = move(call_frame);
+    return result_or_error;
+}
+
 Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executable, BasicBlock const* entry_point, CallFrame* in_frame)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
@@ -408,9 +429,9 @@ void Interpreter::leave_unwind_context()
     unwind_contexts().take_last();
 }
 
-ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
+ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name, size_t local_register_count)
 {
-    auto executable_result = Bytecode::Generator::generate(node, kind);
+    auto executable_result = Bytecode::Generator::generate(node, kind, local_register_count);
     if (executable_result.is_error())
         return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 
@@ -1859,7 +1880,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 ThrowCompletionOr<void> TypeofLocal::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto const& value = vm.running_execution_context().local_variables[m_index];
+    auto const& value = interpreter.local_variable(m_index);
     interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
     return {};
 }

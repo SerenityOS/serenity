@@ -31,7 +31,7 @@ struct ExecutionContext {
     void visit_edges(Cell::Visitor&);
 
 private:
-    explicit ExecutionContext(MarkedVector<Value> existing_arguments, MarkedVector<Value> existing_local_variables);
+    explicit ExecutionContext(MarkedVector<Value> existing_arguments);
 
 public:
     GCPtr<FunctionObject> function;                // [[Function]]
@@ -48,7 +48,7 @@ public:
     DeprecatedFlyString function_name;
     Value this_value;
     MarkedVector<Value> arguments;
-    MarkedVector<Value> local_variables;
+    size_t local_variable_count { 0 };
     bool is_strict_mode { false };
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#skip-when-determining-incumbent-counter

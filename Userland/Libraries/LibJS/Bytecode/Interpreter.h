@@ -29,6 +29,10 @@ struct CallFrame {
             visitor.visit(context.lexical_environment);
         }
     }
+    Value& local_variable(size_t index)
+    {
+        return registers[Register::reserved_register_count + index];
+    }
     Vector<Value> registers;
     Vector<GCPtr<Environment>> saved_lexical_environments;
     Vector<UnwindInfo> unwind_contexts;
@@ -55,11 +59,25 @@ public:
         ThrowCompletionOr<Value> value;
         OwnPtr<CallFrame> frame;
     };
+    ValueAndFrame run_with_local_variables(Bytecode::Executable&, Span<Value> register_file, size_t local_variable_count);
     ValueAndFrame run_and_return_frame(Bytecode::Executable&, Bytecode::BasicBlock const* entry_point, CallFrame* = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     ALWAYS_INLINE Value& saved_return_value() { return reg(Register::saved_return_value()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
+    Span<Value> registers() { return m_current_call_frame; }
+    ReadonlySpan<Value> registers() const { return m_current_call_frame; }
+    Value& local_variable(size_t index) { return call_frame().local_variable(index); }
+
+    CallFrame& call_frame()
+    {
+        return m_call_frames.last().visit([](auto& x) -> CallFrame& { return *x; });
+    }
+
+    CallFrame const& call_frame() const
+    {
+        return const_cast<Interpreter*>(this)->call_frame();
+    }
 
     auto& saved_lexical_environment_stack() { return call_frame().saved_lexical_environments; }
     auto& unwind_contexts() { return call_frame().unwind_contexts; }
@@ -83,19 +101,6 @@ public:
 private:
     void run_bytecode();
 
-    CallFrame& call_frame()
-    {
-        return m_call_frames.last().visit([](auto& x) -> CallFrame& { return *x; });
-    }
-
-    CallFrame const& call_frame() const
-    {
-        return const_cast<Interpreter*>(this)->call_frame();
-    }
-
-    Span<Value> registers() { return m_current_call_frame; }
-    ReadonlySpan<Value> registers() const { return m_current_call_frame; }
-
     void push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*>, size_t register_count);
     [[nodiscard]] Variant<NonnullOwnPtr<CallFrame>, CallFrame*> pop_call_frame();
 
@@ -110,6 +115,6 @@ private:
 
 extern bool g_dump_bytecode;
 
-ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name);
+ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name, size_t local_register_count = 0);
 
 }

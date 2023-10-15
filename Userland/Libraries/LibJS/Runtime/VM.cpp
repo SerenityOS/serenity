@@ -235,7 +235,7 @@ void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
         roots.set(finalization_registry, HeapRoot { .type = HeapRoot::Type::VM });
 }
 
-ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name)
+ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name, Bytecode::CallFrame& call_frame)
 {
     // 8.3.3 Static Semantics: IsAnonymousFunctionDefinition ( expr ), https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition
     // And 8.3.5 Runtime Semantics: NamedEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-namedevaluation
@@ -251,7 +251,7 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
         }
     }
 
-    return execute_ast_node(expression);
+    return execute_ast_node(expression, call_frame);
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
@@ -263,7 +263,7 @@ ThrowCompletionOr<void> VM::binding_initialization(DeprecatedFlyString const& ta
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
-ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern const> const& target, Value value, Environment* environment)
+ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern const> const& target, Value value, Environment* environment, Bytecode::CallFrame& call_frame)
 {
     auto& vm = *this;
 
@@ -276,7 +276,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
 
         // BindingInitialization of ObjectBindingPattern
         // 1. Perform ? PropertyBindingInitialization of BindingPropertyList with arguments value and environment.
-        TRY(property_binding_initialization(*target, value, environment));
+        TRY(property_binding_initialization(*target, value, environment, call_frame));
 
         // 2. Return unused.
         return {};
@@ -287,7 +287,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
         auto iterator_record = TRY(get_iterator(vm, value, IteratorHint::Sync));
 
         // 2. Let result be Completion(IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment).
-        auto result = iterator_binding_initialization(*target, iterator_record, environment);
+        auto result = iterator_binding_initialization(*target, iterator_record, environment, call_frame);
 
         // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
         if (!iterator_record.done) {
@@ -303,10 +303,11 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
     }
 }
 
-ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
+ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node, Bytecode::CallFrame& callframe)
 {
-    auto executable = TRY(Bytecode::compile(*this, node, FunctionKind::Normal, ""sv));
-    auto result_or_error = bytecode_interpreter().run_and_return_frame(*executable, nullptr);
+    auto executable = TRY(Bytecode::compile(*this, node, FunctionKind::Normal, DeprecatedString::empty(), running_execution_context().local_variable_count));
+    auto result_or_error = bytecode_interpreter().run_with_local_variables(*executable, callframe.registers, running_execution_context().local_variable_count);
+
     if (result_or_error.value.is_error())
         return result_or_error.value.release_error();
     return result_or_error.frame->registers[0];
@@ -314,7 +315,7 @@ ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
 
 // 13.15.5.3 Runtime Semantics: PropertyDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-propertydestructuringassignmentevaluation
 // 14.3.3.1 Runtime Semantics: PropertyBindingInitialization, https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
-ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment)
+ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, Bytecode::CallFrame& call_frame)
 {
     auto& vm = *this;
     auto& realm = *vm.current_realm();
@@ -350,7 +351,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 return identifier->string();
             },
             [&](NonnullRefPtr<Expression const> const& expression) -> ThrowCompletionOr<PropertyKey> {
-                auto result = TRY(execute_ast_node(*expression));
+                auto result = TRY(execute_ast_node(*expression, call_frame));
                 return result.to_property_key(vm);
             }));
 
@@ -363,7 +364,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
             auto value_to_assign = TRY(object->get(name));
             if (property.initializer && value_to_assign.is_undefined()) {
-                value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, identifier.string()));
+                value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, identifier.string(), call_frame));
             }
 
             if (!environment)
@@ -386,13 +387,13 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
         auto value_to_assign = TRY(object->get(name));
         if (property.initializer && value_to_assign.is_undefined()) {
             if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier const>>())
-                value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, (*identifier_ptr)->string()));
+                value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, (*identifier_ptr)->string(), call_frame));
             else
-                value_to_assign = TRY(execute_ast_node(*property.initializer));
+                value_to_assign = TRY(execute_ast_node(*property.initializer, call_frame));
         }
 
         if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern const>>()) {
-            TRY(binding_initialization(*binding_ptr, value_to_assign, environment));
+            TRY(binding_initialization(*binding_ptr, value_to_assign, environment, call_frame));
         } else {
             VERIFY(reference_to_assign_to.has_value());
             if (!environment)
@@ -407,7 +408,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
 // 13.15.5.5 Runtime Semantics: IteratorDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-iteratordestructuringassignmentevaluation
 // 8.5.3 Runtime Semantics: IteratorBindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization
-ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment)
+ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment, Bytecode::CallFrame& call_frame)
 {
     auto& vm = *this;
     auto& realm = *vm.current_realm();
@@ -523,13 +524,13 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
         if (value.is_undefined() && entry.initializer) {
             VERIFY(!entry.is_rest);
             if (auto* identifier_ptr = entry.alias.get_pointer<NonnullRefPtr<Identifier const>>())
-                value = TRY(named_evaluation_if_anonymous_function(*entry.initializer, (*identifier_ptr)->string()));
+                value = TRY(named_evaluation_if_anonymous_function(*entry.initializer, (*identifier_ptr)->string(), call_frame));
             else
-                value = TRY(execute_ast_node(*entry.initializer));
+                value = TRY(execute_ast_node(*entry.initializer, call_frame));
         }
 
         if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern const>>()) {
-            TRY(binding_initialization(*binding_ptr, value, environment));
+            TRY(binding_initialization(*binding_ptr, value, environment, call_frame));
         } else if (!entry.alias.has<Empty>()) {
             VERIFY(assignment_target.has_value());
             if (!environment)
