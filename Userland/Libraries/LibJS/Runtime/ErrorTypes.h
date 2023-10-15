@@ -18,6 +18,7 @@
     M(BigIntFromNonIntegral, "Cannot convert non-integral number to BigInt")                                                            \
     M(BigIntInvalidValue, "Invalid value for BigInt: {}")                                                                               \
     M(BindingNotInitialized, "Binding {} is not initialized")                                                                           \
+    M(BufferOutOfBounds, "{} contains a property which references a value at an index not contained within its buffer's bounds")        \
     M(ByteLengthExceedsMaxByteLength, "ArrayBuffer byte length of {} exceeds the max byte length of {}")                                \
     M(CallStackSizeExceeded, "Call stack size limit exceeded")                                                                          \
     M(CannotDeclareGlobalFunction, "Cannot declare global function of name '{}'")                                                       \
