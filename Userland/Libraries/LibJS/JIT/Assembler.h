@@ -37,6 +37,8 @@ struct Assembler {
     struct Operand {
         enum class Type {
             Reg,
+            Imm8,
+            Imm32,
             Imm64,
             Mem64BaseAndOffset,
         };
@@ -51,6 +53,22 @@ struct Assembler {
             Operand operand;
             operand.type = Type::Reg;
             operand.reg = reg;
+            return operand;
+        }
+
+        static Operand Imm8(u8 imm8)
+        {
+            Operand operand;
+            operand.type = Type::Imm8;
+            operand.offset_or_immediate = imm8;
+            return operand;
+        }
+
+        static Operand Imm32(u32 imm32)
+        {
+            Operand operand;
+            operand.type = Type::Imm32;
+            operand.offset_or_immediate = imm32;
             return operand;
         }
 
@@ -75,6 +93,16 @@ struct Assembler {
     static constexpr u8 encode_reg(Reg reg)
     {
         return to_underlying(reg) & 0x7;
+    }
+
+    void shift_right(Operand dst, Operand count)
+    {
+        VERIFY(dst.type == Operand::Type::Reg);
+        VERIFY(count.type == Operand::Type::Imm8);
+        emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+        emit8(0xc1);
+        emit8(0xe8 | encode_reg(dst.reg));
+        emit8(count.offset_or_immediate);
     }
 
     void mov(Operand dst, Operand src)
@@ -176,6 +204,33 @@ struct Assembler {
         emit8(0xc0 | (to_underlying(dst) << 3) | to_underlying(dst));
     }
 
+    struct Label {
+        size_t offset_in_instruction_stream { 0 };
+
+        void link(Assembler& assembler)
+        {
+            auto offset = assembler.m_output.size() - offset_in_instruction_stream;
+            auto jump_slot = offset_in_instruction_stream - 4;
+            assembler.m_output[jump_slot + 0] = (offset >> 0) & 0xff;
+            assembler.m_output[jump_slot + 1] = (offset >> 8) & 0xff;
+            assembler.m_output[jump_slot + 2] = (offset >> 16) & 0xff;
+            assembler.m_output[jump_slot + 3] = (offset >> 24) & 0xff;
+        }
+    };
+
+    [[nodiscard]] Label make_label()
+    {
+        return { .offset_in_instruction_stream = m_output.size() };
+    }
+
+    [[nodiscard]] Label jump()
+    {
+        // jmp target (RIP-relative 32-bit offset)
+        emit8(0xe9);
+        emit32(0xdeadbeef);
+        return make_label();
+    }
+
     void jump(Bytecode::BasicBlock& target)
     {
         // jmp target (RIP-relative 32-bit offset)
@@ -201,6 +256,50 @@ struct Assembler {
 
         // jmp true_target (RIP-relative 32-bit offset)
         jump(true_target);
+    }
+
+    void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
+    {
+        // cmp lhs, rhs
+        if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Reg) {
+            emit8(0x48
+                | ((to_underlying(lhs.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(rhs.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x39);
+            emit8(0xc0 | (encode_reg(lhs.reg) << 3) | encode_reg(rhs.reg));
+        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm32) {
+            emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x81);
+            emit8(0xf8 | encode_reg(lhs.reg));
+            emit32(rhs.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        // jne label (RIP-relative 32-bit offset)
+        emit8(0x0f);
+        emit8(0x85);
+        emit32(0xdeadbeef);
+        label.offset_in_instruction_stream = m_output.size();
+    }
+
+    void bitwise_and(Operand dst, Operand src)
+    {
+        // and dst,src
+        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+            emit8(0x48
+                | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x21);
+            emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm32) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x81);
+            emit8(0xe0 | encode_reg(dst.reg));
+            emit32(src.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
     }
 
     void exit()
