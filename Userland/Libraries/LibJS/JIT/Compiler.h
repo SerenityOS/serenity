@@ -34,7 +34,7 @@ private:
     void store_vm_local(size_t, Assembler::Reg);
     void load_vm_local(Assembler::Reg, size_t);
 
-    void compile_to_boolean(Assembler::Reg);
+    void compile_to_boolean(Assembler::Reg dst, Assembler::Reg src);
 
     Vector<u8> m_output;
     Assembler m_assembler { m_output };
