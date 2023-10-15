@@ -156,6 +156,52 @@ ErrorOr<Optional<MimeType>> match_an_image_type_pattern(ReadonlyBytes input)
     return OptionalNone {};
 }
 
+// https://mimesniff.spec.whatwg.org/#matching-an-audio-or-video-type-pattern
+ErrorOr<Optional<MimeType>> match_an_audio_or_video_type_pattern(ReadonlyBytes input)
+{
+    // 1. Execute the following steps for each row row in the following table:
+    static Array<BytePatternTableRow, 6> pattern_table {
+        // The string "FORM" followed by four bytes followed by the string "AIFF", the AIFF signature.
+        BytePatternTableRow { "\x46\x4F\x52\x4D\x00\x00\x00\x00\x41\x49\x46\x46"sv.bytes(),
+            "\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF"sv.bytes(), no_ignored_bytes, "audio/aiff"sv },
+
+        //  The string "ID3", the ID3v2-tagged MP3 signature.
+        BytePatternTableRow { "\x49\x44\x33"sv.bytes(), "\xFF\xFF\xFF"sv.bytes(), no_ignored_bytes, "audio/mpeg"sv },
+
+        // The string "OggS" followed by NUL, the Ogg container signature.
+        BytePatternTableRow { "\x4F\x67\x67\x53\x00"sv.bytes(), "\xFF\xFF\xFF\xFF\xFF"sv.bytes(), no_ignored_bytes, "application/ogg"sv },
+
+        // The string "MThd" followed by four bytes representing the number 6 in 32 bits (big-endian), the MIDI signature.
+        BytePatternTableRow { "\x4D\x54\x68\x64\x00\x00\x00\x06"sv.bytes(), "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"sv.bytes(), no_ignored_bytes, "audio/midi"sv },
+
+        // The string "RIFF" followed by four bytes followed by the string "AVI ", the AVI signature.
+        BytePatternTableRow { "\x52\x49\x46\x46\x00\x00\x00\x00\x41\x56\x49\x20"sv.bytes(),
+            "\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF"sv.bytes(), no_ignored_bytes, "video/avi"sv },
+
+        // The string "RIFF" followed by four bytes followed by the string "WAVE", the WAVE signature.
+        BytePatternTableRow { "\x52\x49\x46\x46\x00\x00\x00\x00\x57\x41\x56\x45"sv.bytes(),
+            "\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF"sv.bytes(), no_ignored_bytes, "audio/wave"sv }
+    };
+
+    for (auto const& row : pattern_table) {
+        // 1. Let patternMatched be the result of the pattern matching algorithm given input, the
+        //    value in the first column of row, the value in the second column of row, and the
+        //    value in the third column of row.
+        auto pattern_matched = pattern_matching_algorithm(input, row.byte_pattern(), row.pattern_mask(), row.ignored_leading_bytes());
+
+        // 2. If patternMatched is true, return the value in the fourth column of row.
+        if (pattern_matched)
+            return MimeType::parse(row.mime_type());
+    }
+
+    // FIXME: 2. If input matches the signature for MP4, return "video/mp4".
+    // FIXME: 3. If input matches the signature for WebM, return "video/webm".
+    // FIXME: 4. If input matches the signature for MP3 without ID3, return "audio/mpeg".
+
+    // 5. Return undefined.
+    return OptionalNone {};
+}
+
 // https://mimesniff.spec.whatwg.org/#rules-for-identifying-an-unknown-mime-type
 ErrorOr<MimeType> rules_for_identifying_an_unknown_mime_type(Resource const& resource, bool sniff_scriptable = false)
 {
@@ -281,7 +327,8 @@ ErrorOr<MimeType> rules_for_identifying_an_unknown_mime_type(Resource const& res
     if (matched_type.has_value())
         return matched_type.release_value();
 
-    // FIXME: 5. Set matchedType to the result of executing the audio or video type pattern matching algorithm given resource’s resource header.
+    // 5. Set matchedType to the result of executing the audio or video type pattern matching algorithm given resource’s resource header.
+    matched_type = TRY(match_an_audio_or_video_type_pattern(resource.resource_header()));
 
     // 6. If matchedType is not undefined, return matchedType.
     if (matched_type.has_value())

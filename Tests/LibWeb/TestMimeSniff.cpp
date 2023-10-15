@@ -47,6 +47,12 @@ TEST_CASE(compute_unknown_mime_type)
     mime_type_to_headers_map.set("image/webp"sv, { "RIFF\x00\x00\x00\x00WEBPVP"sv });
     mime_type_to_headers_map.set("image/png"sv, { "\x89PNG\x0D\x0A\x1A\x0A"sv });
     mime_type_to_headers_map.set("image/jpeg"sv, { "\xFF\xD8\xFF"sv });
+    mime_type_to_headers_map.set("audio/aiff"sv, { "FORM\x00\x00\x00\x00\x41IFF"sv });
+    mime_type_to_headers_map.set("audio/mpeg"sv, { "ID3"sv });
+    mime_type_to_headers_map.set("application/ogg"sv, { "OggS\x00"sv });
+    mime_type_to_headers_map.set("audio/midi"sv, { "MThd\x00\x00\x00\x06"sv });
+    mime_type_to_headers_map.set("video/avi"sv, { "RIFF\x00\x00\x00\x00\x41\x56\x49\x20"sv });
+    mime_type_to_headers_map.set("audio/wave"sv, { "RIFF\x00\x00\x00\x00WAVE"sv });
 
     for (auto const& mime_type_to_headers : mime_type_to_headers_map) {
         auto mime_type = mime_type_to_headers.key;
