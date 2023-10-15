@@ -82,22 +82,59 @@ static bool cxx_to_boolean(VM&, Value value)
     return value.to_boolean();
 }
 
-void Compiler::compile_to_boolean(Assembler::Reg reg)
+void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
 {
+    // dst = src;
+    m_assembler.mov(
+        Assembler::Operand::Register(dst),
+        Assembler::Operand::Register(src));
+
+    // dst >>= 48;
+    m_assembler.shift_right(
+        Assembler::Operand::Register(dst),
+        Assembler::Operand::Imm8(48));
+
+    // if (dst != BOOLEAN_TAG) goto slow_case;
+    auto slow_case = m_assembler.make_label();
+    m_assembler.jump_if_not_equal(
+        Assembler::Operand::Register(dst),
+        Assembler::Operand::Imm32(BOOLEAN_TAG),
+        slow_case);
+
+    // Fast path for JS::Value booleans.
+
+    // dst = src;
+    m_assembler.mov(
+        Assembler::Operand::Register(dst),
+        Assembler::Operand::Register(src));
+
+    // dst &= 1;
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(dst),
+        Assembler::Operand::Imm32(1));
+
+    // goto end;
+    auto end = m_assembler.jump();
+
+    // slow_case: // call C++ helper
+    slow_case.link(m_assembler);
     m_assembler.mov(
         Assembler::Operand::Register(Assembler::Reg::Arg1),
-        Assembler::Operand::Register(reg));
+        Assembler::Operand::Register(src));
     m_assembler.native_call((void*)cxx_to_boolean);
     m_assembler.mov(
-        Assembler::Operand::Register(reg),
+        Assembler::Operand::Register(dst),
         Assembler::Operand::Register(Assembler::Reg::Ret));
+
+    // end:
+    end.link(m_assembler);
 }
 
 void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 {
-    load_vm_register(Assembler::Reg::GPR0, Bytecode::Register::accumulator());
+    load_vm_register(Assembler::Reg::GPR1, Bytecode::Register::accumulator());
 
-    compile_to_boolean(Assembler::Reg::GPR0);
+    compile_to_boolean(Assembler::Reg::GPR0, Assembler::Reg::GPR1);
 
     m_assembler.jump_conditional(Assembler::Reg::GPR0,
         const_cast<Bytecode::BasicBlock&>(op.true_target()->block()),
