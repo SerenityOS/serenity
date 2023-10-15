@@ -52,21 +52,17 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    // FIXME: This should be done at a different level.
-    if (is_out_of_view(context))
-        return;
-
     Base::paint(context, phase);
 
     if (phase != PaintPhase::Foreground)
         return;
 
-    Gfx::PainterStateSaver saver { context.painter() };
+    RecordingPainterStateSaver saver { context.painter() };
 
     auto video_rect = context.rounded_device_rect(absolute_rect());
     context.painter().add_clip_rect(video_rect.to_type<int>());
 
-    ScopedCornerRadiusClip corner_clip { context, context.painter(), video_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
+    ScopedCornerRadiusClip corner_clip { context, video_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
     auto const& video_element = layout_box().dom_node();
     auto mouse_position = MediaPaintable::mouse_position(context, video_element);
@@ -214,8 +210,7 @@ void VideoPaintable::paint_placeholder_video_controls(PaintContext& context, Dev
     auto playback_button_is_hovered = mouse_position.has_value() && control_box_rect.contains(*mouse_position);
     auto playback_button_color = control_button_color(playback_button_is_hovered);
 
-    Gfx::AntiAliasingPainter painter { context.painter() };
-    painter.fill_ellipse(control_box_rect.to_type<int>(), control_box_color);
+    context.painter().fill_ellipse(control_box_rect.to_type<int>(), control_box_color);
     fill_triangle(context.painter(), playback_button_location.to_type<int>(), play_button_coordinates, playback_button_color);
 }
 

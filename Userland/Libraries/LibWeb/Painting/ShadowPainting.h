@@ -9,22 +9,13 @@
 #include <LibGfx/Color.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Painting/PaintContext.h>
+#include <LibWeb/Painting/PaintOuterBoxShadowParams.h>
+#include <LibWeb/Painting/ShadowData.h>
 
 namespace Web::Painting {
 
-enum class ShadowPlacement {
-    Outer,
-    Inner,
-};
-
-struct ShadowData {
-    Gfx::Color color;
-    CSSPixels offset_x;
-    CSSPixels offset_y;
-    CSSPixels blur_radius;
-    CSSPixels spread_distance;
-    ShadowPlacement placement;
-};
+void paint_outer_box_shadow(Gfx::Painter&, PaintOuterBoxShadowParams params);
+void paint_inner_box_shadow(Gfx::Painter&, PaintOuterBoxShadowParams params);
 
 void paint_box_shadow(
     PaintContext&,

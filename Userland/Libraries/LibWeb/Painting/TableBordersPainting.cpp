@@ -284,8 +284,7 @@ static void paint_collected_edges(PaintContext& context, Vector<BorderEdgePainti
             : border_edge_painting_info.rect.bottom_left();
 
         if (border_style == CSS::LineStyle::Dotted) {
-            Gfx::AntiAliasingPainter aa_painter { context.painter() };
-            aa_painter.draw_line(p1.to_type<int>(), p2.to_type<int>(), color, width.value(), Gfx::Painter::LineStyle::Dotted);
+            context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, width.value(), Gfx::Painter::LineStyle::Dotted);
         } else if (border_style == CSS::LineStyle::Dashed) {
             context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, width.value(), Gfx::Painter::LineStyle::Dashed);
         } else {

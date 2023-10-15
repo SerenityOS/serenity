@@ -45,10 +45,6 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    // FIXME: This should be done at a different level.
-    if (is_out_of_view(context))
-        return;
-
     PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
@@ -57,13 +53,13 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto& image_element = verify_cast<HTML::HTMLImageElement>(*dom_node());
             auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
             context.painter().set_font(Platform::FontPlugin::the().default_font());
-            Gfx::StylePainter::paint_frame(context.painter(), enclosing_rect, context.palette(), Gfx::FrameStyle::SunkenContainer);
+            context.painter().paint_frame(enclosing_rect, context.palette(), Gfx::FrameStyle::SunkenContainer);
             auto alt = image_element.alt();
             if (alt.is_empty())
                 alt = image_element.src();
             context.painter().draw_text(enclosing_rect, alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
         } else if (auto bitmap = layout_box().image_provider().current_image_bitmap(image_rect.size().to_type<int>())) {
-            ScopedCornerRadiusClip corner_clip { context, context.painter(), image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
+            ScopedCornerRadiusClip corner_clip { context, image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
             auto image_int_rect = image_rect.to_type<int>();
             auto bitmap_rect = bitmap->rect();
             auto scaling_mode = to_gfx_scaling_mode(computed_values().image_rendering(), bitmap_rect, image_int_rect);

@@ -106,10 +106,12 @@ void SVGDecodedImageData::render(Gfx::IntSize size) const
     m_document->navigable()->set_viewport_rect({ 0, 0, size.width(), size.height() });
     m_document->update_layout();
 
-    Gfx::Painter painter(*m_bitmap);
-    PaintContext context(painter, m_page_client->palette(), m_page_client->device_pixels_per_css_pixel());
+    Painting::RecordingPainter recording_painter;
+    PaintContext context(recording_painter, m_page_client->palette(), m_page_client->device_pixels_per_css_pixel());
 
     m_document->paintable()->paint_all_phases(context);
+
+    recording_painter.execute(*m_bitmap);
 }
 
 RefPtr<Gfx::Bitmap const> SVGDecodedImageData::bitmap(size_t, Gfx::IntSize size) const

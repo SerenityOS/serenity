@@ -7,7 +7,6 @@
  */
 
 #include <LibGfx/AntiAliasingPainter.h>
-#include <LibGfx/Painter.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
@@ -15,6 +14,7 @@
 #include <LibWeb/Painting/GradientPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/RecordingPainter.h>
 
 namespace Web::Painting {
 
@@ -76,9 +76,13 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
     }
 
-    Gfx::AntiAliasingPainter aa_painter { painter };
-    aa_painter.fill_rect_with_rounded_corners(context.rounded_device_rect(color_box.rect).to_type<int>(),
-        background_color, color_box.radii.top_left.as_corner(context), color_box.radii.top_right.as_corner(context), color_box.radii.bottom_right.as_corner(context), color_box.radii.bottom_left.as_corner(context));
+    context.painter().fill_rect_with_rounded_corners(
+        context.rounded_device_rect(color_box.rect).to_type<int>(),
+        background_color,
+        color_box.radii.top_left.as_corner(context),
+        color_box.radii.top_right.as_corner(context),
+        color_box.radii.bottom_right.as_corner(context),
+        color_box.radii.bottom_left.as_corner(context));
 
     if (!has_paintable_layers)
         return;
@@ -107,7 +111,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     for (auto& layer : background_layers->in_reverse()) {
         if (!layer_is_paintable(layer))
             continue;
-        Gfx::PainterStateSaver state { painter };
+        RecordingPainterStateSaver state { painter };
 
         // Clip
         auto clip_box = get_box(layer.clip);
@@ -115,7 +119,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         CSSPixelRect const& css_clip_rect = clip_box.rect;
         auto clip_rect = context.rounded_device_rect(css_clip_rect);
         painter.add_clip_rect(clip_rect.to_type<int>());
-        ScopedCornerRadiusClip corner_clip { context, painter, clip_rect, clip_box.radii };
+        ScopedCornerRadiusClip corner_clip { context, clip_rect, clip_box.radii };
 
         if (layer.clip == CSS::BackgroundBox::BorderBox) {
             // Shrink the effective clip rect if to account for the bits the borders will definitely paint over
@@ -326,7 +330,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             while (image_x < css_clip_rect.right()) {
                 image_rect.set_x(image_x);
                 auto image_device_rect = context.rounded_device_rect(image_rect);
-                if (image_device_rect != last_image_device_rect && !context.would_be_fully_clipped_by_painter(image_device_rect))
+                if (image_device_rect != last_image_device_rect)
                     image.paint(context, image_device_rect, image_rendering);
                 last_image_device_rect = image_device_rect;
                 if (!repeat_x)

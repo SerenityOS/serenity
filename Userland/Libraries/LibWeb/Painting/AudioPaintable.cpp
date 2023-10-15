@@ -43,21 +43,17 @@ void AudioPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    // FIXME: This should be done at a different level.
-    if (is_out_of_view(context))
-        return;
-
     Base::paint(context, phase);
 
     if (phase != PaintPhase::Foreground)
         return;
 
-    Gfx::PainterStateSaver saver { context.painter() };
+    RecordingPainterStateSaver saver { context.painter() };
 
     auto audio_rect = context.rounded_device_rect(absolute_rect());
     context.painter().add_clip_rect(audio_rect.to_type<int>());
 
-    ScopedCornerRadiusClip corner_clip { context, context.painter(), audio_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
+    ScopedCornerRadiusClip corner_clip { context, audio_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
     auto const& audio_element = layout_box().dom_node();
     auto mouse_position = MediaPaintable::mouse_position(context, audio_element);

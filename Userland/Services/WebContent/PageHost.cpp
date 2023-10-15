@@ -7,7 +7,6 @@
 
 #include "PageHost.h"
 #include "ConnectionFromClient.h"
-#include <LibGfx/Painter.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/CSS/SystemColor.h>
@@ -121,7 +120,6 @@ Gfx::Color PageHost::background_color() const
 
 void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target)
 {
-    Gfx::Painter painter(target);
     Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
 
     auto document = page().top_level_browsing_context().active_document();
@@ -131,18 +129,22 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
 
     auto background_color = this->background_color();
 
+    Web::Painting::RecordingPainter recording_painter;
+    Web::PaintContext context(recording_painter, palette(), device_pixels_per_css_pixel());
+
     if (background_color.alpha() < 255)
-        painter.clear_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
-    painter.fill_rect(bitmap_rect, background_color);
+        recording_painter.clear_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
+    recording_painter.fill_rect(bitmap_rect, background_color);
 
     if (!document->paintable())
         return;
 
-    Web::PaintContext context(painter, palette(), device_pixels_per_css_pixel());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_device_viewport_rect(content_rect);
     context.set_has_focus(m_has_focus);
     document->paintable()->paint_all_phases(context);
+
+    recording_painter.execute(target);
 }
 
 void PageHost::set_viewport_rect(Web::DevicePixelRect const& rect)

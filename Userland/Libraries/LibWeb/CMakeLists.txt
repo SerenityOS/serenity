@@ -469,6 +469,7 @@ set(SOURCES
     Page/Page.cpp
     Painting/AudioPaintable.cpp
     Painting/BackgroundPainting.cpp
+    Painting/BorderRadiiData.cpp
     Painting/BorderPainting.cpp
     Painting/BorderRadiusCornerClipper.cpp
     Painting/ButtonPaintable.cpp
@@ -487,6 +488,7 @@ set(SOURCES
     Painting/PaintableBox.cpp
     Painting/ProgressPaintable.cpp
     Painting/RadioButtonPaintable.cpp
+    Painting/RecordingPainter.cpp
     Painting/SVGGeometryPaintable.cpp
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGPaintable.cpp

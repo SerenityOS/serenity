@@ -32,11 +32,7 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     if (phase == PaintPhase::Foreground) {
         auto canvas_rect = context.rounded_device_rect(absolute_rect());
-        ScopedCornerRadiusClip corner_clip { context, context.painter(), canvas_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
-
-        // FIXME: This should be done at a different level.
-        if (is_out_of_view(context))
-            return;
+        ScopedCornerRadiusClip corner_clip { context, canvas_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
         if (layout_box().dom_node().bitmap()) {
             // FIXME: Remove this const_cast.

@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/ImageRequest.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
 #include <LibWeb/Painting/PaintContext.h>
+#include <LibWeb/Painting/RecordingPainter.h>
 #include <LibWeb/Platform/Timer.h>
 
 namespace Web::CSS {

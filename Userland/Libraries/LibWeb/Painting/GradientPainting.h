@@ -11,30 +11,10 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Gradients.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Painting/GradientData.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
-
-using ColorStopList = Vector<Gfx::ColorStop, 4>;
-
-struct ColorStopData {
-    ColorStopList list;
-    Optional<float> repeat_length;
-};
-
-struct LinearGradientData {
-    float gradient_angle;
-    ColorStopData color_stops;
-};
-
-struct ConicGradientData {
-    float start_angle;
-    ColorStopData color_stops;
-};
-
-struct RadialGradientData {
-    ColorStopData color_stops;
-};
 
 LinearGradientData resolve_linear_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize, CSS::LinearGradientStyleValue const&);
 ConicGradientData resolve_conic_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const&, CSS::ConicGradientStyleValue const&);

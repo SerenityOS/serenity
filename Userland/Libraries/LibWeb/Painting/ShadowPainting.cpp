@@ -9,29 +9,26 @@
 #include <AK/NumericLimits.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Filters/StackBlurFilter.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/PaintContext.h>
+#include <LibWeb/Painting/PaintOuterBoxShadowParams.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
 
-static void paint_inner_box_shadow(PaintContext& context, CSSPixelRect const& content_rect,
-    BordersData const& borders_data, BorderRadiiData const& border_radii, ShadowData const& box_shadow_data)
+void paint_inner_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams params)
 {
-    auto& painter = context.painter();
-    auto device_content_rect = context.rounded_device_rect(content_rect);
+    auto device_content_rect = params.device_content_rect;
 
-    auto border_radii_shrunken = border_radii;
-    border_radii_shrunken.shrink(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
-    ScopedCornerRadiusClip corner_clipper { context, painter, device_content_rect, border_radii_shrunken, CornerClip::Outside };
-    DevicePixels offset_x = context.rounded_device_pixels(box_shadow_data.offset_x);
-    DevicePixels offset_y = context.rounded_device_pixels(box_shadow_data.offset_y);
-    DevicePixels blur_radius = context.rounded_device_pixels(box_shadow_data.blur_radius);
-    DevicePixels spread_distance = context.rounded_device_pixels(box_shadow_data.spread_distance);
+    DevicePixels offset_x = params.offset_x;
+    DevicePixels offset_y = params.offset_y;
+    DevicePixels blur_radius = params.blur_radius;
+    DevicePixels spread_distance = params.spread_distance;
     auto shadows_bitmap_rect = device_content_rect.inflated(
         blur_radius.value() + offset_y.value(),
         blur_radius.value() + abs(offset_x.value()),
@@ -55,43 +52,42 @@ static void paint_inner_box_shadow(PaintContext& context, CSSPixelRect const& co
         blur_radius.value() + abs(offset_x.value()),
         blur_radius.value() + abs(offset_y.value()),
         blur_radius.value() + offset_x.value());
-    auto top_left_corner = border_radii_shrunken.top_left.as_corner(context);
-    auto top_right_corner = border_radii_shrunken.top_right.as_corner(context);
-    auto bottom_right_corner = border_radii_shrunken.bottom_right.as_corner(context);
-    auto bottom_left_corner = border_radii_shrunken.bottom_left.as_corner(context);
-    shadow_painter.fill_rect(outer_shadow_rect, box_shadow_data.color.with_alpha(0xff));
-    if (border_radii_shrunken.has_any_radius()) {
-        shadow_aa_painter.fill_rect_with_rounded_corners(inner_shadow_rect, box_shadow_data.color.with_alpha(0xff),
+    auto top_left_corner = params.corner_radii.top_left;
+    auto top_right_corner = params.corner_radii.top_right;
+    auto bottom_right_corner = params.corner_radii.bottom_right;
+    auto bottom_left_corner = params.corner_radii.bottom_left;
+    shadow_painter.fill_rect(outer_shadow_rect, params.box_shadow_data.color.with_alpha(0xff));
+    if (params.border_radii.has_any_radius()) {
+        shadow_aa_painter.fill_rect_with_rounded_corners(inner_shadow_rect, params.box_shadow_data.color.with_alpha(0xff),
             top_left_corner, top_right_corner, bottom_right_corner, bottom_left_corner,
             Gfx::AntiAliasingPainter::BlendMode::AlphaSubtract);
     } else {
         shadow_painter.clear_rect(inner_shadow_rect, Color::Transparent);
     }
     Gfx::StackBlurFilter filter(*shadow_bitmap);
-    filter.process_rgba(blur_radius.value(), box_shadow_data.color);
+    filter.process_rgba(blur_radius.value(), params.box_shadow_data.color);
     Gfx::PainterStateSaver save { painter };
     painter.add_clip_rect(device_content_rect_int);
     painter.blit({ device_content_rect_int.left() - blur_radius.value(), device_content_rect_int.top() - blur_radius.value() },
-        *shadow_bitmap, shadow_bitmap->rect(), box_shadow_data.color.alpha() / 255.);
+        *shadow_bitmap, shadow_bitmap->rect(), params.box_shadow_data.color.alpha() / 255.);
 }
 
-static void paint_outer_box_shadow(PaintContext& context, CSSPixelRect const& content_rect,
-    BorderRadiiData const& border_radii, ShadowData const& box_shadow_data)
+void paint_outer_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams params)
 {
-    auto& painter = context.painter();
-    auto device_content_rect = context.rounded_device_rect(content_rect);
+    auto const& border_radii = params.border_radii;
+    auto const& box_shadow_data = params.box_shadow_data;
 
-    auto top_left_corner = border_radii.top_left.as_corner(context);
-    auto top_right_corner = border_radii.top_right.as_corner(context);
-    auto bottom_right_corner = border_radii.bottom_right.as_corner(context);
-    auto bottom_left_corner = border_radii.bottom_left.as_corner(context);
+    auto device_content_rect = params.device_content_rect;
 
-    ScopedCornerRadiusClip corner_clipper { context, painter, device_content_rect, border_radii, CornerClip::Inside };
+    auto top_left_corner = params.corner_radii.top_left;
+    auto top_right_corner = params.corner_radii.top_right;
+    auto bottom_right_corner = params.corner_radii.bottom_right;
+    auto bottom_left_corner = params.corner_radii.bottom_left;
 
-    DevicePixels offset_x = context.rounded_device_pixels(box_shadow_data.offset_x);
-    DevicePixels offset_y = context.rounded_device_pixels(box_shadow_data.offset_y);
-    DevicePixels blur_radius = context.rounded_device_pixels(box_shadow_data.blur_radius);
-    DevicePixels spread_distance = context.rounded_device_pixels(box_shadow_data.spread_distance);
+    DevicePixels offset_x = params.offset_x;
+    DevicePixels offset_y = params.offset_y;
+    DevicePixels blur_radius = params.blur_radius;
+    DevicePixels spread_distance = params.spread_distance;
 
     auto fill_rect_masked = [](auto& painter, auto fill_rect, auto mask_rect, auto color) {
         Gfx::DisjointRectSet<DevicePixels> rect_set;
@@ -233,7 +229,7 @@ static void paint_outer_box_shadow(PaintContext& context, CSSPixelRect const& co
     filter.process_rgba(blur_radius.value(), box_shadow_data.color);
 
     auto paint_shadow_infill = [&] {
-        if (!border_radii.has_any_radius())
+        if (!params.border_radii.has_any_radius())
             return painter.fill_rect(inner_bounding_rect.to_type<int>(), box_shadow_data.color);
 
         auto top_left_inner_width = top_left_corner_rect.width() - blurred_edge_thickness;
@@ -395,10 +391,43 @@ void paint_box_shadow(PaintContext& context,
 {
     // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
     for (auto& box_shadow_data : box_shadow_layers.in_reverse()) {
+        DevicePixels offset_x = context.rounded_device_pixels(box_shadow_data.offset_x);
+        DevicePixels offset_y = context.rounded_device_pixels(box_shadow_data.offset_y);
+        DevicePixels blur_radius = context.rounded_device_pixels(box_shadow_data.blur_radius);
+        DevicePixels spread_distance = context.rounded_device_pixels(box_shadow_data.spread_distance);
+
+        DevicePixelRect device_content_rect;
         if (box_shadow_data.placement == ShadowPlacement::Inner) {
-            paint_inner_box_shadow(context, borderless_content_rect, borders_data, border_radii, box_shadow_data);
+            device_content_rect = context.rounded_device_rect(borderless_content_rect);
         } else {
-            paint_outer_box_shadow(context, bordered_content_rect, border_radii, box_shadow_data);
+            device_content_rect = context.rounded_device_rect(bordered_content_rect);
+        }
+
+        auto params = PaintOuterBoxShadowParams {
+            .painter = context.painter(),
+            .content_rect = bordered_content_rect,
+            .border_radii = border_radii,
+            .box_shadow_data = box_shadow_data,
+            .corner_radii = CornerRadii {
+                .top_left = border_radii.top_left.as_corner(context),
+                .top_right = border_radii.top_right.as_corner(context),
+                .bottom_right = border_radii.bottom_right.as_corner(context),
+                .bottom_left = border_radii.bottom_left.as_corner(context) },
+            .offset_x = offset_x,
+            .offset_y = offset_y,
+            .blur_radius = blur_radius,
+            .spread_distance = spread_distance,
+            .device_content_rect = device_content_rect,
+        };
+
+        params.border_radii.shrink(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
+
+        if (box_shadow_data.placement == ShadowPlacement::Inner) {
+            ScopedCornerRadiusClip corner_clipper { context, device_content_rect, border_radii, CornerClip::Outside };
+            context.painter().paint_inner_box_shadow_params(params);
+        } else {
+            ScopedCornerRadiusClip corner_clipper { context, device_content_rect, params.border_radii, CornerClip::Inside };
+            context.painter().paint_outer_box_shadow_params(params);
         }
     }
 }
@@ -408,15 +437,18 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
     if (shadow_layers.is_empty() || fragment.text().is_empty())
         return;
 
-    auto& painter = context.painter();
+    auto fragment_width = context.enclosing_device_pixels(fragment.width());
+    auto fragment_height = context.enclosing_device_pixels(fragment.height());
+    auto draw_rect = context.enclosing_device_rect(fragment.absolute_rect());
+    auto text = Utf8View(fragment.text());
+    auto& font = fragment.layout_node().scaled_font(context);
+    auto fragment_baseline = context.rounded_device_pixels(fragment.baseline());
 
     // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
     for (auto& layer : shadow_layers.in_reverse()) {
         DevicePixels offset_x = context.rounded_device_pixels(layer.offset_x);
         DevicePixels offset_y = context.rounded_device_pixels(layer.offset_y);
         DevicePixels blur_radius = context.rounded_device_pixels(layer.blur_radius);
-        DevicePixels fragment_width = context.enclosing_device_pixels(fragment.width());
-        DevicePixels fragment_height = context.enclosing_device_pixels(fragment.height());
 
         // Space around the painted text to allow it to blur.
         // FIXME: Include spread in this once we use that.
@@ -430,29 +462,12 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
             text_rect.width() + margin + margin,
             text_rect.height() + margin + margin
         };
-        // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
-        auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, bounding_rect.size().to_type<int>());
-        if (maybe_shadow_bitmap.is_error()) {
-            dbgln("Unable to allocate temporary bitmap {} for text-shadow rendering: {}", bounding_rect.size(), maybe_shadow_bitmap.error());
-            return;
-        }
-        auto shadow_bitmap = maybe_shadow_bitmap.release_value();
-
-        Gfx::Painter shadow_painter { *shadow_bitmap };
-        // FIXME: "Spread" the shadow somehow.
-        DevicePixelPoint baseline_start(text_rect.x(), text_rect.y() + context.rounded_device_pixels(fragment.baseline()));
-        shadow_painter.draw_text_run(baseline_start.to_type<int>(), Utf8View(fragment.text()), fragment.layout_node().scaled_font(context), layer.color);
-
-        // Blur
-        Gfx::StackBlurFilter filter(*shadow_bitmap);
-        filter.process_rgba(blur_radius.value(), layer.color);
-
-        auto draw_rect = context.enclosing_device_rect(fragment.absolute_rect());
         DevicePixelPoint draw_location {
             draw_rect.x() + offset_x - margin,
             draw_rect.y() + offset_y - margin
         };
-        painter.blit(draw_location.to_type<int>(), *shadow_bitmap, bounding_rect.to_type<int>());
+
+        context.painter().paint_text_shadow(blur_radius, bounding_rect, text_rect, text, font, layer.color, fragment_baseline, draw_location);
     }
 }
 

@@ -103,7 +103,6 @@ void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto const& checkbox = static_cast<HTML::HTMLInputElement const&>(layout_box().dom_node());
     bool enabled = layout_box().dom_node().enabled();
-    Gfx::AntiAliasingPainter painter { context.painter() };
     auto checkbox_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
     auto checkbox_radius = checkbox_rect.width() / 5;
 
@@ -135,7 +134,7 @@ void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
     float smoothness = 1.0f / (max(checkbox_rect.width(), checkbox_rect.height()) / 2);
     if (checkbox.checked() && !checkbox.indeterminate()) {
         auto background_color = enabled ? input_colors.accent : input_colors.mid_gray;
-        painter.fill_rect_with_rounded_corners(checkbox_rect, modify_color(background_color), checkbox_radius);
+        context.painter().fill_rect_with_rounded_corners(checkbox_rect, modify_color(background_color), checkbox_radius);
         auto tick_color = increase_contrast(input_colors.base, background_color);
         if (!enabled)
             tick_color = shade(tick_color, 0.5f);
@@ -143,8 +142,8 @@ void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
     } else {
         auto background_color = input_colors.background_color(enabled);
         auto border_thickness = max(1, checkbox_rect.width() / 10);
-        painter.fill_rect_with_rounded_corners(checkbox_rect, modify_color(input_colors.border_color(enabled)), checkbox_radius);
-        painter.fill_rect_with_rounded_corners(checkbox_rect.shrunken(border_thickness, border_thickness, border_thickness, border_thickness),
+        context.painter().fill_rect_with_rounded_corners(checkbox_rect, modify_color(input_colors.border_color(enabled)), checkbox_radius);
+        context.painter().fill_rect_with_rounded_corners(checkbox_rect.shrunken(border_thickness, border_thickness, border_thickness, border_thickness),
             background_color, max(0, checkbox_radius - border_thickness));
         if (checkbox.indeterminate()) {
             auto dash_color = increase_contrast(input_colors.dark_gray, background_color);
