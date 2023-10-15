@@ -6,7 +6,6 @@
 
 #include <AK/Math.h>
 #include <LibGfx/Gradients.h>
-#include <LibGfx/Painter.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
@@ -148,17 +147,17 @@ RadialGradientData resolve_radial_gradient_data(Layout::NodeWithStyleAndBoxModel
 
 void paint_linear_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, LinearGradientData const& data)
 {
-    context.painter().fill_rect_with_linear_gradient(gradient_rect.to_type<int>(), data.color_stops.list, data.gradient_angle, data.color_stops.repeat_length);
+    context.painter().fill_rect_with_linear_gradient(gradient_rect.to_type<int>(), data);
 }
 
 void paint_conic_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, ConicGradientData const& data, DevicePixelPoint position)
 {
-    context.painter().fill_rect_with_conic_gradient(gradient_rect.to_type<int>(), data.color_stops.list, position.to_type<int>(), data.start_angle, data.color_stops.repeat_length);
+    context.painter().fill_rect_with_conic_gradient(gradient_rect.to_type<int>(), data, position.to_type<int>());
 }
 
 void paint_radial_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, RadialGradientData const& data, DevicePixelPoint center, DevicePixelSize size)
 {
-    context.painter().fill_rect_with_radial_gradient(gradient_rect.to_type<int>(), data.color_stops.list, center.to_type<int>(), size.to_type<int>(), data.color_stops.repeat_length);
+    context.painter().fill_rect_with_radial_gradient(gradient_rect.to_type<int>(), data, center, size);
 }
 
 }

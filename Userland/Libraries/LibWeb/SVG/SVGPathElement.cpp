@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <AK/ExtraMathConstants.h>
 #include <AK/Optional.h>
-#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>

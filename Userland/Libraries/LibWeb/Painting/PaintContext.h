@@ -11,15 +11,16 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
+#include <LibWeb/Painting/RecordingPainter.h>
 #include <LibWeb/PixelUnits.h>
 
 namespace Web {
 
 class PaintContext {
 public:
-    PaintContext(Gfx::Painter& painter, Palette const& palette, double device_pixels_per_css_pixel);
+    PaintContext(Painting::RecordingPainter& painter, Palette const& palette, double device_pixels_per_css_pixel);
 
-    Gfx::Painter& painter() const { return m_painter; }
+    Painting::RecordingPainter& painter() const { return m_painter; }
     Palette const& palette() const { return m_palette; }
 
     bool should_show_line_box_borders() const { return m_should_show_line_box_borders; }
@@ -28,8 +29,6 @@ public:
     DevicePixelRect device_viewport_rect() const { return m_device_viewport_rect; }
     void set_device_viewport_rect(DevicePixelRect const& rect) { m_device_viewport_rect = rect; }
     CSSPixelRect css_viewport_rect() const;
-
-    [[nodiscard]] bool would_be_fully_clipped_by_painter(DevicePixelRect) const;
 
     bool has_focus() const { return m_focus; }
     void set_has_focus(bool focus) { m_focus = focus; }
@@ -58,7 +57,7 @@ public:
     CSSPixelSize scale_to_css_size(DevicePixelSize) const;
     CSSPixelRect scale_to_css_rect(DevicePixelRect) const;
 
-    PaintContext clone(Gfx::Painter& painter) const
+    PaintContext clone(Painting::RecordingPainter& painter) const
     {
         auto clone = PaintContext(painter, m_palette, m_device_pixels_per_css_pixel);
         clone.m_device_viewport_rect = m_device_viewport_rect;
@@ -73,7 +72,7 @@ public:
     void translate_scroll_offset_by(CSSPixelPoint offset) { m_scroll_offset.translate_by(offset); }
 
 private:
-    Gfx::Painter& m_painter;
+    Painting::RecordingPainter& m_painter;
     Palette m_palette;
     double m_device_pixels_per_css_pixel { 0 };
     DevicePixelRect m_device_viewport_rect;

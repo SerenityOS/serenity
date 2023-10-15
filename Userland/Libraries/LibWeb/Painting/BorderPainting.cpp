@@ -200,8 +200,7 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
             break;
         }
         if (border_style == CSS::LineStyle::Dotted) {
-            Gfx::AntiAliasingPainter aa_painter { context.painter() };
-            aa_painter.draw_line(p1.to_type<int>(), p2.to_type<int>(), color, device_pixel_width.value(), gfx_line_style);
+            context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, device_pixel_width.value(), gfx_line_style);
             return;
         }
         context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, device_pixel_width.value(), gfx_line_style);
@@ -245,9 +244,8 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
 
         // If joined borders have the same color, combine them to draw together.
         if (ready_to_draw) {
-            Gfx::AntiAliasingPainter aa_painter { context.painter() };
             path.close_all_subpaths();
-            aa_painter.fill_path(path, color, Gfx::Painter::WindingRule::EvenOdd);
+            context.painter().fill_path({ .path = path, .color = color, .winding_rule = Gfx::Painter::WindingRule::EvenOdd });
             path.clear();
         }
     };

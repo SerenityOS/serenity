@@ -22,6 +22,10 @@ class ResourceLoader;
 class XMLDocumentBuilder;
 }
 
+namespace Web::Painting {
+class RecordingPainter;
+}
+
 namespace Web::ARIA {
 class AriaData;
 class ARIAMixin;

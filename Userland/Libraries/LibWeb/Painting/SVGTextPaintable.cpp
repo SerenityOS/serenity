@@ -50,7 +50,7 @@ void SVGTextPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto const* svg_element = text_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
     auto svg_element_rect = svg_element->paintable_box()->absolute_rect();
 
-    Gfx::PainterStateSaver save_painter { painter };
+    RecordingPainterStateSaver save_painter { painter };
     auto svg_context_offset = context.floored_device_point(svg_element_rect.location()).to_type<int>();
     painter.translate(svg_context_offset);
 
@@ -95,7 +95,7 @@ void SVGTextPaintable::paint(PaintContext& context, PaintPhase phase) const
         VERIFY_NOT_REACHED();
     }
 
-    painter.draw_text_run(text_offset.to_type<int>(), text_content, scaled_font, layout_node().computed_values().fill()->as_color());
+    painter.draw_text_run(text_offset.to_type<int>(), text_content, scaled_font, layout_node().computed_values().fill()->as_color(), context.enclosing_device_rect(svg_element_rect).to_type<int>());
 }
 
 }

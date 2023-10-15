@@ -100,40 +100,10 @@ void apply_filter_list(Gfx::Bitmap& target_bitmap, ReadonlySpan<CSS::ResolvedBac
 
 void apply_backdrop_filter(PaintContext& context, CSSPixelRect const& backdrop_rect, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter)
 {
-    // This performs the backdrop filter operation: https://drafts.fxtf.org/filter-effects-2/#backdrop-filter-operation
-
     auto backdrop_region = context.rounded_device_rect(backdrop_rect);
 
-    // Note: The region bitmap can be smaller than the backdrop_region if it's at the edge of canvas.
-    // Note: This is in DevicePixels, but we use an IntRect because `get_region_bitmap()` below writes to it.
-    Gfx::IntRect actual_region {};
-
-    // FIXME: Go through the steps to find the "Backdrop Root Image"
-    // https://drafts.fxtf.org/filter-effects-2/#BackdropRoot
-
-    // 1. Copy the Backdrop Root Image into a temporary buffer, such as a raster image. Call this buffer T’.
-    auto maybe_backdrop_bitmap = context.painter().get_region_bitmap(backdrop_region.to_type<int>(), Gfx::BitmapFormat::BGRA8888, actual_region);
-    if (actual_region.is_empty())
-        return;
-    if (maybe_backdrop_bitmap.is_error()) {
-        dbgln("Failed get region bitmap for backdrop-filter");
-        return;
-    }
-    auto backdrop_bitmap = maybe_backdrop_bitmap.release_value();
-    // 2. Apply the backdrop-filter’s filter operations to the entire contents of T'.
-    apply_filter_list(*backdrop_bitmap, backdrop_filter.filters);
-
-    // FIXME: 3. If element B has any transforms (between B and the Backdrop Root), apply the inverse of those transforms to the contents of T’.
-
-    // 4. Apply a clip to the contents of T’, using the border box of element B, including border-radius if specified. Note that the children of B are not considered for the sizing or location of this clip.
-    ScopedCornerRadiusClip corner_clipper { context, context.painter(), backdrop_region, border_radii_data };
-
-    // FIXME: 5. Draw all of element B, including its background, border, and any children elements, into T’.
-
-    // FXIME: 6. If element B has any transforms, effects, or clips, apply those to T’.
-
-    // 7. Composite the contents of T’ into element B’s parent, using source-over compositing.
-    context.painter().blit(actual_region.location(), *backdrop_bitmap, backdrop_bitmap->rect());
+    ScopedCornerRadiusClip corner_clipper { context, backdrop_region, border_radii_data };
+    context.painter().apply_backdrop_filter(backdrop_region, border_radii_data, backdrop_filter);
 }
 
 }

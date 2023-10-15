@@ -44,15 +44,18 @@ Optional<DevicePixelPoint> MediaPaintable::mouse_position(PaintContext& context,
     return {};
 }
 
-void MediaPaintable::fill_triangle(Gfx::Painter& painter, Gfx::IntPoint location, Array<Gfx::IntPoint, 3> coordinates, Color color)
+void MediaPaintable::fill_triangle(RecordingPainter& painter, Gfx::IntPoint location, Array<Gfx::IntPoint, 3> coordinates, Color color)
 {
-    Gfx::AntiAliasingPainter aa_painter { painter };
     Gfx::Path path;
     path.move_to((coordinates[0] + location).to_type<float>());
     path.line_to((coordinates[1] + location).to_type<float>());
     path.line_to((coordinates[2] + location).to_type<float>());
     path.close();
-    aa_painter.fill_path(path, color, Gfx::Painter::WindingRule::EvenOdd);
+    painter.fill_path({
+        .path = path,
+        .color = color,
+        .winding_rule = Gfx::Painter::WindingRule::EvenOdd,
+    });
 }
 
 void MediaPaintable::paint_media_controls(PaintContext& context, HTML::HTMLMediaElement const& media_element, DevicePixelRect media_rect, Optional<DevicePixelPoint> const& mouse_position) const
@@ -214,7 +217,6 @@ void MediaPaintable::paint_control_bar_speaker(PaintContext& context, HTML::HTML
     auto speaker_button_is_hovered = rect_is_hovered(media_element, components.speaker_button_rect, mouse_position);
     auto speaker_button_color = control_button_color(speaker_button_is_hovered);
 
-    Gfx::AntiAliasingPainter painter { context.painter() };
     Gfx::Path path;
 
     path.move_to(device_point(0, 4));
@@ -225,18 +227,18 @@ void MediaPaintable::paint_control_bar_speaker(PaintContext& context, HTML::HTML
     path.line_to(device_point(0, 11));
     path.line_to(device_point(0, 4));
     path.close();
-    painter.fill_path(path, speaker_button_color, Gfx::Painter::WindingRule::EvenOdd);
+    context.painter().fill_path({ .path = path, .color = speaker_button_color, .winding_rule = Gfx::Painter::WindingRule::EvenOdd });
 
     path.clear();
     path.move_to(device_point(13, 3));
     path.quadratic_bezier_curve_to(device_point(16, 7.5), device_point(13, 12));
     path.move_to(device_point(14, 0));
     path.quadratic_bezier_curve_to(device_point(20, 7.5), device_point(14, 15));
-    painter.stroke_path(path, speaker_button_color, 1);
+    context.painter().stroke_path({ .path = path, .color = speaker_button_color, .thickness = 1 });
 
     if (media_element.muted()) {
-        painter.draw_line(device_point(0, 0), device_point(20, 15), Color::Red, 2);
-        painter.draw_line(device_point(0, 15), device_point(20, 0), Color::Red, 2);
+        context.painter().draw_line(device_point(0, 0).to_type<int>(), device_point(20, 15).to_type<int>(), Color::Red, 2);
+        context.painter().draw_line(device_point(0, 15).to_type<int>(), device_point(20, 0).to_type<int>(), Color::Red, 2);
     }
 }
 
@@ -248,15 +250,13 @@ void MediaPaintable::paint_control_bar_volume(PaintContext& context, HTML::HTMLM
     auto volume_position = static_cast<double>(static_cast<int>(components.volume_scrub_rect.width())) * media_element.volume();
     auto volume_button_offset_x = static_cast<DevicePixels>(round(volume_position));
 
-    Gfx::AntiAliasingPainter painter { context.painter() };
-
     auto volume_lower_rect = components.volume_scrub_rect;
     volume_lower_rect.set_width(volume_button_offset_x);
-    painter.fill_rect_with_rounded_corners(volume_lower_rect.to_type<int>(), control_highlight_color.lightened(), 4);
+    context.painter().fill_rect_with_rounded_corners(volume_lower_rect.to_type<int>(), control_highlight_color.lightened(), 4);
 
     auto volume_higher_rect = components.volume_scrub_rect;
     volume_higher_rect.take_from_left(volume_button_offset_x);
-    painter.fill_rect_with_rounded_corners(volume_higher_rect.to_type<int>(), Color::Black, 4);
+    context.painter().fill_rect_with_rounded_corners(volume_higher_rect.to_type<int>(), Color::Black, 4);
 
     auto volume_button_rect = components.volume_scrub_rect;
     volume_button_rect.shrink(components.volume_scrub_rect.width() - components.volume_button_size, components.volume_scrub_rect.height() - components.volume_button_size);
@@ -264,7 +264,7 @@ void MediaPaintable::paint_control_bar_volume(PaintContext& context, HTML::HTMLM
 
     auto volume_is_hovered = rect_is_hovered(media_element, components.volume_rect, mouse_position, HTML::HTMLMediaElement::MouseTrackingComponent::Volume);
     auto volume_color = control_button_color(volume_is_hovered);
-    painter.fill_ellipse(volume_button_rect.to_type<int>(), volume_color);
+    context.painter().fill_ellipse(volume_button_rect.to_type<int>(), volume_color);
 }
 
 MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousedown(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)

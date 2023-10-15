@@ -64,14 +64,23 @@ static Gfx::Bitmap::MaskKind mask_type_to_gfx_mask_kind(CSS::MaskType mask_type)
     }
 }
 
-void SVGGraphicsPaintable::apply_mask(PaintContext& context, Gfx::Bitmap& target, CSSPixelRect const& masking_area) const
+Optional<Gfx::Bitmap::MaskKind> SVGGraphicsPaintable::get_mask_type() const
+{
+    auto const& graphics_element = verify_cast<SVG::SVGGraphicsElement const>(*dom_node());
+    auto mask = graphics_element.mask();
+    if (!mask)
+        return {};
+    return mask_type_to_gfx_mask_kind(mask->layout_node()->computed_values().mask_type());
+}
+
+RefPtr<Gfx::Bitmap> SVGGraphicsPaintable::calculate_mask(PaintContext& context, CSSPixelRect const& masking_area) const
 {
     auto const& graphics_element = verify_cast<SVG::SVGGraphicsElement const>(*dom_node());
     auto mask = graphics_element.mask();
     VERIFY(mask);
     if (mask->mask_content_units() != SVG::MaskContentUnits::UserSpaceOnUse) {
         dbgln("SVG: maskContentUnits=objectBoundingBox is not supported");
-        return;
+        return {};
     }
     auto mask_rect = context.enclosing_device_rect(masking_area);
     RefPtr<Gfx::Bitmap> mask_bitmap = {};
@@ -79,20 +88,18 @@ void SVGGraphicsPaintable::apply_mask(PaintContext& context, Gfx::Bitmap& target
         auto& mask_paintable = static_cast<PaintableBox const&>(*mask->layout_node()->paintable());
         auto mask_bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, mask_rect.size().to_type<int>());
         if (mask_bitmap_or_error.is_error())
-            return;
+            return {};
         mask_bitmap = mask_bitmap_or_error.release_value();
         {
-            Gfx::Painter painter(*mask_bitmap);
+            RecordingPainter painter;
             painter.translate(-mask_rect.location().to_type<int>());
             auto paint_context = context.clone(painter);
             paint_context.set_svg_transform(graphics_element.get_transform());
             StackingContext::paint_node_as_stacking_context(mask_paintable, paint_context);
+            painter.execute(*mask_bitmap);
         }
     }
-    if (mask_bitmap)
-        target.apply_mask(*mask_bitmap,
-            mask_type_to_gfx_mask_kind(mask->layout_node()->computed_values().mask_type()));
-    return;
+    return mask_bitmap;
 }
 
 }

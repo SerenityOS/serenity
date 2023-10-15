@@ -66,17 +66,15 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto color = computed_values().color();
 
-    Gfx::AntiAliasingPainter aa_painter { context.painter() };
-
     switch (layout_box().list_style_type()) {
     case CSS::ListStyleType::Square:
         context.painter().fill_rect(device_marker_rect.to_type<int>(), color);
         break;
     case CSS::ListStyleType::Circle:
-        aa_painter.draw_ellipse(device_marker_rect.to_type<int>(), color, 1);
+        context.painter().draw_ellipse(device_marker_rect.to_type<int>(), color, 1);
         break;
     case CSS::ListStyleType::Disc:
-        aa_painter.fill_ellipse(device_marker_rect.to_type<int>(), color);
+        context.painter().fill_ellipse(device_marker_rect.to_type<int>(), color);
         break;
     case CSS::ListStyleType::DisclosureClosed: {
         // https://drafts.csswg.org/css-counter-styles-3/#disclosure-closed
@@ -89,7 +87,7 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
         path.line_to({ left + sin_60_deg * (right - left), (top + bottom) / 2 });
         path.line_to({ left, bottom });
         path.close();
-        aa_painter.fill_path(path, color);
+        context.painter().fill_path({ .path = path, .color = color, .winding_rule = Gfx::Painter::WindingRule::EvenOdd });
         break;
     }
     case CSS::ListStyleType::DisclosureOpen: {
@@ -103,7 +101,7 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
         path.line_to({ right, top });
         path.line_to({ (left + right) / 2, top + sin_60_deg * (bottom - top) });
         path.close();
-        aa_painter.fill_path(path, color);
+        context.painter().fill_path({ .path = path, .color = color, .winding_rule = Gfx::Painter::WindingRule::EvenOdd });
         break;
     }
     case CSS::ListStyleType::Decimal:

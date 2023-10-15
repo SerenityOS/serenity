@@ -28,7 +28,8 @@ public:
     [[nodiscard]] bool is_visible() const;
 
     virtual Optional<CSSPixelRect> get_masking_area() const { return {}; }
-    virtual void apply_mask(PaintContext&, Gfx::Bitmap&, CSSPixelRect const&) const {};
+    virtual Optional<Gfx::Bitmap::MaskKind> get_mask_type() const { return {}; }
+    virtual RefPtr<Gfx::Bitmap> calculate_mask(PaintContext&, CSSPixelRect const&) const { return {}; }
 
     Layout::Box& layout_box() { return static_cast<Layout::Box&>(Paintable::layout_node()); }
     Layout::Box const& layout_box() const { return static_cast<Layout::Box const&>(Paintable::layout_node()); }
@@ -144,8 +145,6 @@ public:
 
     void invalidate_stacking_context();
 
-    bool is_out_of_view(PaintContext&) const;
-
     enum class ConflictingElementKind {
         Cell,
         Row,
@@ -220,7 +219,7 @@ private:
     Optional<CSSPixelRect> mutable m_clip_rect;
 
     mutable bool m_clipping_overflow { false };
-    Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
+    RefPtr<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
 
     Optional<BordersDataWithElementKind> m_override_borders_data;
     Optional<TableCellCoordinates> m_table_cell_coordinates;
