@@ -135,6 +135,9 @@ void Type1FontProgram::consolidate_glyphs()
 
 PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& subroutines, GlyphParserState& state, bool is_type2)
 {
+    // Type 1 Font Format: https://adobe-type-tools.github.io/font-tech-notes/pdfs/T1_SPEC.pdf (Chapter 6: CharStrings dictionary)
+    // Type 2 Charstring Format: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5177.Type2.pdf
+
     auto push = [&](float value) -> PDFErrorOr<void> {
         if (state.sp >= state.stack.size())
             return error("Operand stack overflow");
@@ -250,16 +253,17 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
         int v = data[i];
         if (v == 255) {
             TRY(require(4));
-            int a = data[++i];
-            int b = data[++i];
-            int c = data[++i];
-            int d = data[++i];
+            // Both Type 1 and Type 2 spec:
+            // "If the charstring byte contains the value 255, the next four bytes indicate a two’s complement signed number.
+            //  The first of these four bytes contains the highest order bits [...]"
+            i32 a = static_cast<i32>((data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | data[i + 4]);
+            i += 4;
             if (is_type2) {
-                auto integer = float((a << 8) | b);
-                auto fraction = float((c << 8) | d) / AK::NumericLimits<u16>::max();
-                TRY(push(integer + fraction));
-            } else
-                TRY(push((a << 24) + (b << 16) + (c << 8) + d));
+                // Just in the Type 2 spec: "This number is interpreted as a Fixed; that is, a signed number with 16 bits of fraction."
+                TRY(push(a / (float)0x1'0000));
+            } else {
+                TRY(push(a));
+            }
         } else if (v >= 251) {
             TRY(require(1));
             auto w = data[++i];
