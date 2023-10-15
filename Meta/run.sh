@@ -256,6 +256,11 @@ if [ -n "${SERENITY_USE_SDCARD}" ] && [ "${SERENITY_USE_SDCARD}" -eq 1 ]; then
     SERENITY_BOOT_DRIVE="-device sdhci-pci -device sd-card,drive=sd-boot-drive -drive id=sd-boot-drive,if=none,format=raw,file=${SERENITY_DISK_IMAGE}"
     SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE root=sd2:0:0"
 fi
+if [ -n "${SERENITY_USE_USBDRIVE}" ] && [ "${SERENITY_USE_USBDRIVE}" -eq 1 ]; then
+    SERENITY_BOOT_DRIVE="-device usb-storage,drive=usbstick -drive if=none,id=usbstick,format=raw,file=${SERENITY_DISK_IMAGE}"
+    # FIXME: Find a better way to address the usb drive
+    SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE root=block3:0"
+fi
 
 if [ -z "$SERENITY_HOST_IP" ]; then
     SERENITY_HOST_IP="127.0.0.1"
