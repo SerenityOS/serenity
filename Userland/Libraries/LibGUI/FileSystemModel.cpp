@@ -232,8 +232,8 @@ Optional<FileSystemModel::Node const&> FileSystemModel::node_for_path(Deprecated
     DeprecatedString resolved_path;
     if (path == m_root_path)
         resolved_path = "/";
-    else if (!m_root_path.is_empty() && path.starts_with(m_root_path))
-        resolved_path = LexicalPath::relative_path(path, m_root_path);
+    else if (m_root_path.has_value() && !m_root_path->is_empty() && path.starts_with(*m_root_path))
+        resolved_path = LexicalPath::relative_path(path, *m_root_path);
     else
         resolved_path = path;
     LexicalPath lexical_path(resolved_path);
@@ -269,8 +269,8 @@ DeprecatedString FileSystemModel::full_path(ModelIndex const& index) const
     return node.full_path();
 }
 
-FileSystemModel::FileSystemModel(DeprecatedString root_path, Mode mode)
-    : m_root_path(LexicalPath::canonicalized_path(move(root_path)))
+FileSystemModel::FileSystemModel(Optional<DeprecatedString> root_path, Mode mode)
+    : m_root_path(root_path.map(LexicalPath::canonicalized_path))
     , m_mode(mode)
 {
     setpwent();
@@ -362,12 +362,12 @@ void FileSystemModel::update_node_on_selection(ModelIndex const& index, bool con
     node.set_selected(selected);
 }
 
-void FileSystemModel::set_root_path(DeprecatedString root_path)
+void FileSystemModel::set_root_path(Optional<DeprecatedString> root_path)
 {
-    if (root_path.is_empty())
+    if (!root_path.has_value())
         m_root_path = {};
     else
-        m_root_path = LexicalPath::canonicalized_path(move(root_path));
+        m_root_path = LexicalPath::canonicalized_path(move(*root_path));
     invalidate();
 
     if (m_root->has_error()) {
@@ -382,7 +382,7 @@ void FileSystemModel::invalidate()
 {
     m_root = adopt_own(*new Node(*this));
 
-    if (m_root_path.is_empty())
+    if (!m_root_path.has_value())
         m_root->m_parent_of_root = true;
 
     m_root->reify_if_needed();

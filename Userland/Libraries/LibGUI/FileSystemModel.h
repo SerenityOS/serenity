@@ -102,14 +102,14 @@ public:
         OwnPtr<Node> create_child(DeprecatedString const& child_name);
     };
 
-    static NonnullRefPtr<FileSystemModel> create(DeprecatedString root_path = "/", Mode mode = Mode::FilesAndDirectories)
+    static NonnullRefPtr<FileSystemModel> create(Optional<DeprecatedString> root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
         return adopt_ref(*new FileSystemModel(root_path, mode));
     }
     virtual ~FileSystemModel() override = default;
 
-    DeprecatedString root_path() const { return m_root_path; }
-    void set_root_path(DeprecatedString);
+    DeprecatedString root_path() const { return m_root_path.value_or(""); }
+    void set_root_path(Optional<DeprecatedString>);
     DeprecatedString full_path(ModelIndex const&) const;
     ModelIndex index(DeprecatedString path, int column) const;
 
@@ -153,7 +153,7 @@ public:
     void set_allowed_file_extensions(Optional<Vector<DeprecatedString>> const& allowed_file_extensions);
 
 private:
-    FileSystemModel(DeprecatedString root_path, Mode);
+    FileSystemModel(Optional<DeprecatedString> root_path, Mode);
 
     DeprecatedString name_for_uid(uid_t) const;
     DeprecatedString name_for_gid(gid_t) const;
@@ -168,7 +168,7 @@ private:
 
     void handle_file_event(Core::FileWatcherEvent const& event);
 
-    DeprecatedString m_root_path;
+    Optional<DeprecatedString> m_root_path;
     Mode m_mode { Invalid };
     OwnPtr<Node> m_root { nullptr };
 
