@@ -237,7 +237,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_from_serialized_bytes(ReadonlyByte
 
 ErrorOr<ByteBuffer> Bitmap::serialize_to_byte_buffer() const
 {
-    auto buffer = TRY(ByteBuffer::create_uninitialized(sizeof(size_t) + 4 * sizeof(unsigned) + sizeof(BitmapFormat) + size_in_bytes()));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(sizeof(size_t) + 3 * sizeof(unsigned) + sizeof(BitmapFormat) + size_in_bytes()));
     FixedMemoryStream stream { buffer.span() };
 
     TRY(stream.write_value(size_in_bytes()));
