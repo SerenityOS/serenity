@@ -447,6 +447,29 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
 }
 
 #ifndef KERNEL
+static ErrorOr<void> round_up_digits(StringBuilder& digits_builder)
+{
+    auto digits_buffer = TRY(digits_builder.to_byte_buffer());
+    int current_position = digits_buffer.size() - 1;
+
+    while (current_position >= 0) {
+        if (digits_buffer[current_position] == '.') {
+            --current_position;
+            continue;
+        }
+        ++digits_buffer[current_position];
+        if (digits_buffer[current_position] <= '9')
+            break;
+        digits_buffer[current_position] = '0';
+        --current_position;
+    }
+
+    digits_builder.clear();
+    if (current_position < 0)
+        TRY(digits_builder.try_append('1'));
+    return digits_builder.try_append(digits_buffer);
+}
+
 ErrorOr<void> FormatBuilder::put_f64(
     double value,
     u8 base,
@@ -484,37 +507,40 @@ ErrorOr<void> FormatBuilder::put_f64(
         value = -value;
 
     TRY(format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, false, use_separator, Align::Right, 0, ' ', sign_mode, is_negative));
+    value -= static_cast<i64>(value);
 
     if (precision > 0) {
         // FIXME: This is a terrible approximation but doing it properly would be a lot of work. If someone is up for that, a good
         // place to start would be the following video from CppCon 2019:
         // https://youtu.be/4P_kbF0EbZM (Stephan T. Lavavej “Floating-Point <charconv>: Making Your Code 10x Faster With C++17's Final Boss”)
-        value -= static_cast<i64>(value);
-
         double epsilon = 0.5;
-        for (size_t i = 0; i < precision; ++i)
-            epsilon /= 10.0;
-
-        size_t visible_precision = 0;
-        for (; visible_precision < precision; ++visible_precision) {
-            if (value - static_cast<i64>(value) < epsilon && display_mode != RealNumberDisplayMode::FixedPoint)
-                break;
-            value *= 10.0;
-            epsilon *= 10.0;
+        if (!zero_pad && display_mode != RealNumberDisplayMode::FixedPoint) {
+            for (size_t i = 0; i < precision; ++i)
+                epsilon /= 10.0;
         }
 
-        if (zero_pad || visible_precision > 0)
-            TRY(string_builder.try_append('.'));
+        for (size_t digit = 0; digit < precision; ++digit) {
+            if (!zero_pad && display_mode != RealNumberDisplayMode::FixedPoint && value - static_cast<i64>(value) < epsilon)
+                break;
 
-        if (visible_precision > 0)
-            TRY(format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, true, false, Align::Right, visible_precision));
+            value *= 10.0;
+            epsilon *= 10.0;
 
-        if (zero_pad && (precision - visible_precision) > 0)
-            TRY(format_builder.put_u64(0, base, false, false, true, false, Align::Right, precision - visible_precision));
+            if (value > NumericLimits<u32>::max())
+                value -= static_cast<u64>(value) - (static_cast<u64>(value) % 10);
+
+            if (digit == 0)
+                TRY(string_builder.try_append('.'));
+
+            TRY(string_builder.try_append('0' + (static_cast<u32>(value) % 10)));
+        }
     }
 
-    TRY(put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill));
-    return {};
+    // Round up if the following decimal is 5 or higher
+    if (static_cast<u64>(value * 10.0) % 10 >= 5)
+        TRY(round_up_digits(string_builder));
+
+    return put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
 }
 
 ErrorOr<void> FormatBuilder::put_f80(
@@ -553,30 +579,38 @@ ErrorOr<void> FormatBuilder::put_f80(
         value = -value;
 
     TRY(format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, false, use_separator, Align::Right, 0, ' ', sign_mode, is_negative));
+    value -= static_cast<i64>(value);
 
     if (precision > 0) {
         // FIXME: This is a terrible approximation but doing it properly would be a lot of work. If someone is up for that, a good
         // place to start would be the following video from CppCon 2019:
         // https://youtu.be/4P_kbF0EbZM (Stephan T. Lavavej “Floating-Point <charconv>: Making Your Code 10x Faster With C++17's Final Boss”)
-        value -= static_cast<i64>(value);
-
         long double epsilon = 0.5l;
-        for (size_t i = 0; i < precision; ++i)
-            epsilon /= 10.0l;
+        if (display_mode != RealNumberDisplayMode::FixedPoint) {
+            for (size_t i = 0; i < precision; ++i)
+                epsilon /= 10.0l;
+        }
 
-        size_t visible_precision = 0;
-        for (; visible_precision < precision; ++visible_precision) {
-            if (value - static_cast<i64>(value) < epsilon && display_mode != RealNumberDisplayMode::FixedPoint)
+        for (size_t digit = 0; digit < precision; ++digit) {
+            if (display_mode != RealNumberDisplayMode::FixedPoint && value - static_cast<i64>(value) < epsilon)
                 break;
+
             value *= 10.0l;
             epsilon *= 10.0l;
-        }
 
-        if (visible_precision > 0) {
-            string_builder.append('.');
-            TRY(format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, true, false, Align::Right, visible_precision));
+            if (value > NumericLimits<u32>::max())
+                value -= static_cast<u64>(value) - (static_cast<u64>(value) % 10);
+
+            if (digit == 0)
+                TRY(string_builder.try_append('.'));
+
+            TRY(string_builder.try_append('0' + (static_cast<u32>(value) % 10)));
         }
     }
+
+    // Round up if the following decimal is 5 or higher
+    if (static_cast<u64>(value * 10.0l) % 10 >= 5)
+        TRY(round_up_digits(string_builder));
 
     TRY(put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill));
     return {};
