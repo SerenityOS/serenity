@@ -262,6 +262,18 @@ TEST_CASE(floating_point_numbers)
     EXPECT_EQ(DeprecatedString::formatted("{:'.4}", 1234.5678), "1,234.5678");
     EXPECT_EQ(DeprecatedString::formatted("{:'.4}", -1234.5678), "-1,234.5678");
 
+    EXPECT_EQ(DeprecatedString::formatted("{:.30f}", 1.0), "1.000000000000000000000000000000");
+    EXPECT_EQ(DeprecatedString::formatted("{:.30f}", 1.5), "1.500000000000000000000000000000");
+    EXPECT_EQ(DeprecatedString::formatted("{:.30f}", -2.0), "-2.000000000000000000000000000000");
+
+    EXPECT_EQ(DeprecatedString::formatted("{:.0f}", 1.4), "1");
+    EXPECT_EQ(DeprecatedString::formatted("{:.0f}", 1.5), "2");
+    EXPECT_EQ(DeprecatedString::formatted("{:.0f}", -1.9), "-2");
+
+    EXPECT_EQ(DeprecatedString::formatted("{:.1f}", 1.4), "1.4");
+    EXPECT_EQ(DeprecatedString::formatted("{:.1f}", 1.99), "2.0");
+    EXPECT_EQ(DeprecatedString::formatted("{:.1f}", 9.999), "10.0");
+
     EXPECT_EQ(DeprecatedString::formatted("{}", NAN), "nan");
     EXPECT_EQ(DeprecatedString::formatted("{}", INFINITY), "inf");
     EXPECT_EQ(DeprecatedString::formatted("{}", -INFINITY), "-inf");
@@ -274,11 +286,6 @@ TEST_CASE(floating_point_numbers)
 TEST_CASE(no_precision_no_trailing_number)
 {
     EXPECT_EQ(DeprecatedString::formatted("{:.0}", 0.1), "0");
-}
-
-TEST_CASE(yay_this_implementation_sucks)
-{
-    EXPECT_EQ(DeprecatedString::formatted("{:.0}", .99999999999), "0");
 }
 
 TEST_CASE(precision_with_trailing_zeros)
