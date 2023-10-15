@@ -480,14 +480,22 @@ ErrorOr<void> print_typed_array(JS::PrintContext& print_context, JS::TypedArrayB
 
 ErrorOr<void> print_data_view(JS::PrintContext& print_context, JS::DataView const& data_view, HashTable<JS::Object*>& seen_objects)
 {
+    auto view_record = JS::make_data_view_with_buffer_witness_record(data_view, JS::ArrayBuffer::Order::SeqCst);
     TRY(print_type(print_context, "DataView"sv));
-    TRY(js_out(print_context, "\n  byteLength: "));
-    TRY(print_value(print_context, JS::Value(data_view.byte_length()), seen_objects));
-    TRY(js_out(print_context, "\n  byteOffset: "));
-    TRY(print_value(print_context, JS::Value(data_view.byte_offset()), seen_objects));
+
     TRY(js_out(print_context, "\n  buffer: "));
     TRY(print_type(print_context, "ArrayBuffer"sv));
     TRY(js_out(print_context, " @ {:p}", data_view.viewed_array_buffer()));
+
+    if (JS::is_view_out_of_bounds(view_record)) {
+        TRY(js_out(print_context, "\n  <out of bounds>"));
+        return {};
+    }
+
+    TRY(js_out(print_context, "\n  byteLength: "));
+    TRY(print_value(print_context, JS::Value(JS::get_view_byte_length(view_record)), seen_objects));
+    TRY(js_out(print_context, "\n  byteOffset: "));
+    TRY(print_value(print_context, JS::Value(data_view.byte_offset()), seen_objects));
     return {};
 }
 

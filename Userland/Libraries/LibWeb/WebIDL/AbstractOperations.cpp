@@ -49,6 +49,12 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
     } else if (is<JS::DataView>(buffer_source)) {
         auto const& es_buffer_source = static_cast<JS::DataView const&>(buffer_source);
 
+        auto view_record = JS::make_data_view_with_buffer_witness_record(es_buffer_source, JS::ArrayBuffer::Order::SeqCst);
+
+        // AD-HOC: The WebIDL spec has not been updated for resizable ArrayBuffer objects. This check follows the behavior of step 7.
+        if (JS::is_view_out_of_bounds(view_record))
+            return ByteBuffer {};
+
         // 1. Set esArrayBuffer to esBufferSource.[[ViewedArrayBuffer]].
         es_array_buffer = es_buffer_source.viewed_array_buffer();
 
@@ -56,13 +62,13 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
         offset = es_buffer_source.byte_offset();
 
         // 3. Set length to esBufferSource.[[ByteLength]].
-        length = es_buffer_source.byte_length();
+        length = JS::get_view_byte_length(view_record);
     }
     // 6. Otherwise:
     else {
         // 1. Assert: esBufferSource is an ArrayBuffer or SharedArrayBuffer object.
         auto const& es_buffer_source = static_cast<JS::ArrayBuffer const&>(buffer_source);
-        es_array_buffer = &const_cast<JS ::ArrayBuffer&>(es_buffer_source);
+        es_array_buffer = &const_cast<JS::ArrayBuffer&>(es_buffer_source);
 
         // 2. Set length to esBufferSource.[[ArrayBufferByteLength]].
         length = es_buffer_source.byte_length();

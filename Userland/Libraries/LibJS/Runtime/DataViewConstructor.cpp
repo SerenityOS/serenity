@@ -63,42 +63,71 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DataViewConstructor::construct(FunctionO
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-    auto buffer_byte_length = array_buffer.byte_length();
+    // 5. Let bufferByteLength be ArrayBufferByteLength(buffer, seq-cst).
+    auto buffer_byte_length = array_buffer_byte_length(array_buffer, ArrayBuffer::Order::SeqCst);
 
     // 6. If offset > bufferByteLength, throw a RangeError exception.
     if (offset > buffer_byte_length)
         return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, offset, buffer_byte_length);
 
-    size_t view_byte_length;
+    // 7. Let bufferIsFixedLength be IsFixedLengthArrayBuffer(buffer).
+    auto buffer_is_fixed_length = array_buffer.is_fixed_length();
 
-    // 7. If byteLength is undefined, then
+    ByteLength view_byte_length { 0 };
+
+    // 8. If byteLength is undefined, then
     if (byte_length.is_undefined()) {
-        // a. Let viewByteLength be bufferByteLength - offset.
-        view_byte_length = buffer_byte_length - offset;
+        // a. If bufferIsFixedLength is true, then
+        if (buffer_is_fixed_length) {
+            // i. Let viewByteLength be bufferByteLength - offset.
+            view_byte_length = buffer_byte_length - offset;
+        }
+        // b. Else,
+        else {
+            // i. Let viewByteLength be auto.
+            view_byte_length = ByteLength::auto_();
+        }
     }
-    // 8. Else,
+    // 9. Else,
     else {
         // a. Let viewByteLength be ? ToIndex(byteLength).
         view_byte_length = TRY(byte_length.to_index(vm));
 
         // b. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
-        auto const checked_add = AK::make_checked(view_byte_length) + AK::make_checked(offset);
+        auto checked_add = AK::make_checked(offset) + AK::make_checked(static_cast<size_t>(view_byte_length.length()));
+
         if (checked_add.has_overflow() || checked_add.value() > buffer_byte_length)
             return vm.throw_completion<RangeError>(ErrorType::InvalidLength, vm.names.DataView);
     }
 
-    // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
-    // 11. Set O.[[ViewedArrayBuffer]] to buffer.
-    // 12. Set O.[[ByteLength]] to viewByteLength.
-    // 13. Set O.[[ByteOffset]] to offset.
-    auto data_view = TRY(ordinary_create_from_constructor<DataView>(vm, new_target, &Intrinsics::data_view_prototype, &array_buffer, view_byte_length, offset));
+    // 10. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
+    auto data_view = TRY(ordinary_create_from_constructor<DataView>(vm, new_target, &Intrinsics::data_view_prototype, &array_buffer, move(view_byte_length), offset));
 
-    // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    // 11. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    // 14. Return O.
+    // 12. Set bufferByteLength to ArrayBufferByteLength(buffer, seq-cst).
+    buffer_byte_length = array_buffer_byte_length(array_buffer, ArrayBuffer::Order::SeqCst);
+
+    // 13. If offset > bufferByteLength, throw a RangeError exception.
+    if (offset > buffer_byte_length)
+        return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, offset, buffer_byte_length);
+
+    // 14. If byteLength is not undefined, then
+    if (!byte_length.is_undefined()) {
+        // a. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
+        auto checked_add = AK::make_checked(offset) + AK::make_checked(static_cast<size_t>(view_byte_length.length()));
+
+        if (checked_add.has_overflow() || checked_add.value() > buffer_byte_length)
+            return vm.throw_completion<RangeError>(ErrorType::InvalidLength, vm.names.DataView);
+    }
+
+    // 15. Set O.[[ViewedArrayBuffer]] to buffer.
+    // 16. Set O.[[ByteLength]] to viewByteLength.
+    // 17. Set O.[[ByteOffset]] to offset.
+
+    // 18. Return O.
     return data_view;
 }
 

@@ -312,7 +312,12 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
         data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.byte_length());
     } else if (is<JS::DataView>(buffer_object)) {
         auto& buffer = static_cast<JS::DataView&>(*buffer_object);
-        data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.byte_length());
+
+        auto view_record = JS::make_data_view_with_buffer_witness_record(buffer, JS::ArrayBuffer::Order::SeqCst);
+        if (JS::is_view_out_of_bounds(view_record))
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::BufferOutOfBounds, "DataView"sv);
+
+        data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), JS::get_view_byte_length(view_record));
     } else {
         return vm.throw_completion<JS::TypeError>("Not a BufferSource"sv);
     }

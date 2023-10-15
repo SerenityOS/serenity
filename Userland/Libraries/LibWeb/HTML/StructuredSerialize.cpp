@@ -522,7 +522,23 @@ private:
     {
         // 14. Otherwise, if value has a [[ViewedArrayBuffer]] internal slot, then:
 
-        // FIXME: 1. If IsArrayBufferViewOutOfBounds(value) is true, then throw a "DataCloneError" DOMException.
+        auto view_record = [&]() {
+            if constexpr (IsSame<ViewType, JS::DataView>) {
+                return JS::make_data_view_with_buffer_witness_record(view, JS::ArrayBuffer::Order::SeqCst);
+            } else {
+                // FIXME: Create a TypedArray record when TypedArray supports resizable ArrayBuffer objects.
+                TODO();
+                return 0;
+            }
+        }();
+
+        // 1. If IsArrayBufferViewOutOfBounds(value) is true, then throw a "DataCloneError" DOMException.
+        if constexpr (IsSame<ViewType, JS::DataView>) {
+            if (JS::is_view_out_of_bounds(view_record))
+                return WebIDL::DataCloneError::create(*m_vm.current_realm(), MUST(String::formatted(JS::ErrorType::BufferOutOfBounds.message(), "DataView"sv)));
+        } else {
+            // FIXME: Check TypedArray bounds when TypedArray supports resizable ArrayBuffer objects.
+        }
 
         // 2. Let buffer be the value of value's [[ViewedArrayBuffer]] internal slot.
         auto* buffer = view.viewed_array_buffer();
@@ -540,7 +556,7 @@ private:
             vector.append(ValueTag::ArrayBufferView);
             vector.extend(move(buffer_serialized));           // [[ArrayBufferSerialized]]
             TRY(serialize_string(vector, "DataView"_string)); // [[Constructor]]
-            vector.append(view.byte_length());
+            vector.append(JS::get_view_byte_length(view_record));
             vector.append(view.byte_offset());
         }
 
