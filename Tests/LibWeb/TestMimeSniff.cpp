@@ -53,6 +53,9 @@ TEST_CASE(compute_unknown_mime_type)
     mime_type_to_headers_map.set("audio/midi"sv, { "MThd\x00\x00\x00\x06"sv });
     mime_type_to_headers_map.set("video/avi"sv, { "RIFF\x00\x00\x00\x00\x41\x56\x49\x20"sv });
     mime_type_to_headers_map.set("audio/wave"sv, { "RIFF\x00\x00\x00\x00WAVE"sv });
+    mime_type_to_headers_map.set("application/x-gzip"sv, { "\x1F\x8B\x08"sv });
+    mime_type_to_headers_map.set("application/zip"sv, { "PK\x03\x04"sv });
+    mime_type_to_headers_map.set("application/x-rar-compressed"sv, { "Rar\x20\x1A\x07\x00"sv });
 
     for (auto const& mime_type_to_headers : mime_type_to_headers_map) {
         auto mime_type = mime_type_to_headers.key;
