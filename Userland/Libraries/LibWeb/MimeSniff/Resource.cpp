@@ -182,6 +182,36 @@ ErrorOr<Optional<MimeType>> match_an_audio_or_video_type_pattern(ReadonlyBytes i
     return OptionalNone {};
 }
 
+// https://mimesniff.spec.whatwg.org/#matching-an-archive-type-pattern
+ErrorOr<Optional<MimeType>> match_an_archive_type_pattern(ReadonlyBytes input)
+{
+    // 1. Execute the following steps for each row row in the following table:
+    static Array<BytePatternTableRow, 3> constexpr pattern_table {
+        // The GZIP archive signature.
+        BytePatternTableRow { "\x1F\x8B\x08"sv, "\xFF\xFF\xFF"sv, no_ignored_bytes, "application/x-gzip"sv },
+
+        // The string "PK" followed by ETX EOT, the ZIP archive signature.
+        BytePatternTableRow { "\x50\x4B\x03\x04"sv, "\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "application/zip"sv },
+
+        // The string "Rar " followed by SUB BEL NUL, the RAR archive signature.
+        BytePatternTableRow { "\x52\x61\x72\x20\x1A\x07\x00"sv, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "application/x-rar-compressed"sv },
+    };
+
+    for (auto const& row : pattern_table) {
+        // 1. Let patternMatched be the result of the pattern matching algorithm given input, the
+        //    value in the first column of row, the value in the second column of row, and the
+        //    value in the third column of row.
+        auto pattern_matched = pattern_matching_algorithm(input, row.byte_pattern.bytes(), row.pattern_mask.bytes(), row.ignored_leading_bytes);
+
+        // 2. If patternMatched is true, return the value in the fourth column of row.
+        if (pattern_matched)
+            return MimeType::parse(row.mime_type);
+    }
+
+    // 2. Return undefined.
+    return OptionalNone {};
+}
+
 // https://mimesniff.spec.whatwg.org/#rules-for-identifying-an-unknown-mime-type
 ErrorOr<MimeType> rules_for_identifying_an_unknown_mime_type(Resource const& resource, bool sniff_scriptable = false)
 {
@@ -314,7 +344,8 @@ ErrorOr<MimeType> rules_for_identifying_an_unknown_mime_type(Resource const& res
     if (matched_type.has_value())
         return matched_type.release_value();
 
-    // FIXME: 7. Set matchedType to the result of executing the archive type pattern matching algorithm given resource’s resource header.
+    // 7. Set matchedType to the result of executing the archive type pattern matching algorithm given resource’s resource header.
+    matched_type = TRY(match_an_archive_type_pattern(resource.resource_header()));
 
     // 8. If matchedType is not undefined, return matchedType.
     if (matched_type.has_value())
