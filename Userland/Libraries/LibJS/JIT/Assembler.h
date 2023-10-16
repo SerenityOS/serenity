@@ -396,10 +396,10 @@ struct Assembler {
         // align the stack to 16-byte boundary
         sub(Operand::Register(Reg::RSP), Operand::Imm8(8));
 
-        // load callee into RAX and make indirect call
-        emit8(0x48);
-        emit8(0xb8);
-        emit64((u64)callee);
+        // load callee into RAX
+        mov(Operand::Register(Reg::RAX), Operand::Imm64(bit_cast<u64>(callee)));
+
+        // call RAX
         emit8(0xff);
         emit8(0xd0);
 
