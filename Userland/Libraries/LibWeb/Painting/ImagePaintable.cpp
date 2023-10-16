@@ -5,6 +5,9 @@
  */
 
 #include <LibGfx/StylePainter.h>
+#include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/ImageRequest.h>
@@ -81,7 +84,6 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             case CSS::ObjectFit::Fill:
                 scale_x = (float)image_int_rect.width() / bitmap_rect.width();
                 scale_y = (float)image_int_rect.height() / bitmap_rect.height();
-                bitmap_intersect = bitmap_rect;
                 break;
             case CSS::ObjectFit::Contain:
                 if (bitmap_aspect_ratio >= image_aspect_ratio) {
@@ -111,17 +113,70 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
                 bitmap_intersect.set_size(image_int_rect.size());
             }
 
+            auto scaled_bitmap_width = bitmap_rect.width() * scale_x;
+            auto scaled_bitmap_height = bitmap_rect.height() * scale_y;
+
+            auto residual_horizontal = image_int_rect.width() - scaled_bitmap_width;
+            auto residual_vertical = image_int_rect.height() - scaled_bitmap_height;
+
             bitmap_intersect.set_x((bitmap_rect.width() - bitmap_intersect.width()) / 2);
             bitmap_intersect.set_y((bitmap_rect.height() - bitmap_intersect.height()) / 2);
 
-            auto offset_x = (image_int_rect.width() - bitmap_rect.width() * scale_x) / 2;
-            auto offset_y = (image_int_rect.height() - bitmap_rect.height() * scale_y) / 2;
+            CSS::PositionStyleValue const& object_position = dom_element.computed_css_values()->object_position();
+
+            auto offset_x = 0;
+            auto const& horizontal = object_position.edge_x();
+            if (horizontal->is_edge()) {
+                auto const& horizontal_edge = horizontal->as_edge();
+                if (horizontal_edge.edge() == CSS::PositionEdge::Left) {
+                    auto const& offset = horizontal_edge.offset();
+                    if (horizontal_edge.offset().is_percentage())
+                        offset_x = (double)(residual_horizontal)*offset.percentage().as_fraction();
+                    else
+                        offset_x = offset.length().to_px(layout_node()).to_int();
+
+                    bitmap_intersect.set_x(0);
+                } else if (horizontal_edge.edge() == CSS::PositionEdge::Right) {
+                    auto const& offset = horizontal_edge.offset();
+                    if (horizontal_edge.offset().is_percentage())
+                        offset_x = (double)residual_horizontal - (double)(residual_horizontal)*offset.percentage().as_fraction();
+                    else
+                        offset_x = residual_horizontal - offset.length().to_px(layout_node()).to_int();
+
+                    if (image_int_rect.width() < scaled_bitmap_width)
+                        bitmap_intersect.set_x(-(offset_x / scale_x));
+                }
+            }
+
+            auto offset_y = 0;
+            auto const& vertical = object_position.edge_y();
+            if (vertical->is_edge()) {
+                auto const& vertical_edge = vertical->as_edge();
+                if (vertical_edge.edge() == CSS::PositionEdge::Top) {
+                    auto const& offset = vertical_edge.offset();
+                    if (vertical_edge.offset().is_percentage())
+                        offset_y = (double)(residual_vertical)*offset.percentage().as_fraction();
+                    else
+                        offset_y = offset.length().to_px(layout_node()).to_int();
+
+                    bitmap_intersect.set_y(0);
+                } else if (vertical_edge.edge() == CSS::PositionEdge::Bottom) {
+                    auto const& offset = vertical_edge.offset();
+                    if (vertical_edge.offset().is_percentage())
+                        offset_y = (double)residual_vertical - (double)(residual_vertical)*offset.percentage().as_fraction();
+                    else
+                        offset_y = residual_vertical - offset.length().to_px(layout_node()).to_int();
+
+                    if (image_int_rect.height() < scaled_bitmap_height)
+                        bitmap_intersect.set_y(-(offset_y / scale_y));
+                }
+            }
 
             Gfx::IntRect draw_rect = {
                 image_int_rect.x() + offset_x,
                 image_int_rect.y() + offset_y,
-                bitmap_rect.width() * scale_x,
-                bitmap_rect.height() * scale_y
+                (int)scaled_bitmap_width,
+                (int)scaled_bitmap_height
             };
 
             context.painter().draw_scaled_bitmap(draw_rect.intersected(image_int_rect), *bitmap, bitmap_rect.intersected(bitmap_intersect), 1.f, scaling_mode);
