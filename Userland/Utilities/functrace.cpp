@@ -13,7 +13,7 @@
 #include <LibCore/System.h>
 #include <LibDebug/DebugSession.h>
 #include <LibDisassembly/Disassembler.h>
-#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <LibELF/Image.h>
 #include <LibMain/Main.h>
 #include <signal.h>
@@ -80,8 +80,8 @@ static NonnullOwnPtr<HashMap<FlatPtr, Disassembly::X86::Instruction>> instrument
             if (section.name() != ".text")
                 return IterationDecision::Continue;
 
-            Disassembly::X86::SimpleInstructionStream stream((u8 const*)((uintptr_t)lib.file->data() + section.offset()), section.size());
-            Disassembly::X86::Disassembler disassembler(stream);
+            Disassembly::SimpleInstructionStream stream((u8 const*)((uintptr_t)lib.file->data() + section.offset()), section.size());
+            Disassembly::Disassembler disassembler(stream);
             for (;;) {
                 auto offset = stream.offset();
                 auto instruction_address = section.address() + offset + lib.base_address;

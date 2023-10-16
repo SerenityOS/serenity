@@ -6,8 +6,8 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibDisassembly/Instruction.h>
-#include <LibDisassembly/Interpreter.h>
+#include <LibDisassembly/x86/Instruction.h>
+#include <LibDisassembly/x86/Interpreter.h>
 
 #if defined(AK_COMPILER_GCC)
 #    pragma GCC optimize("O3")
