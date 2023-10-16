@@ -1254,7 +1254,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             generate_to_cpp(union_generator, parameter, js_name, js_suffix, DeprecatedString::formatted("{}{}_number", js_name, js_suffix), interface, false, false, {}, false, recursion_depth + 1);
 
             union_generator.append(R"~~~(
-            return @js_name@@js_suffix@_number;
+            return { @js_name@@js_suffix@_number };
         }
 )~~~");
         }
@@ -1330,7 +1330,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             generate_to_cpp(union_generator, parameter, js_name, js_suffix, DeprecatedString::formatted("{}{}_number", js_name, js_suffix), interface, false, false, {}, false, recursion_depth + 1);
 
             union_generator.append(R"~~~(
-        return @js_name@@js_suffix@_number;
+        return { @js_name@@js_suffix@_number };
 )~~~");
         } else if (includes_boolean) {
             // 17. If types includes boolean, then return the result of converting V to boolean.
