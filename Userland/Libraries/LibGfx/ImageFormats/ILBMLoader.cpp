@@ -289,6 +289,9 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
         }
     }
 
+    if (context.state != ILBMLoadingContext::State::BitmapDecoded)
+        return Error::from_string_literal("Missing body chunk");
+
     return {};
 }
 
