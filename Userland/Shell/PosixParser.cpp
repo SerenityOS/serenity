@@ -429,6 +429,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                             .argument = {},
                             .range = expansion.range,
                             .op = ResolvedParameterExpansion::Op::GetPositionalParameter,
+                            .expand = ResolvedParameterExpansion::Expand::Word,
                         };
                     }
 
@@ -475,6 +476,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                             .argument = {},
                             .range = expansion.range,
                             .op = op,
+                            .expand = ResolvedParameterExpansion::Expand::Word,
                         };
                     }
 
