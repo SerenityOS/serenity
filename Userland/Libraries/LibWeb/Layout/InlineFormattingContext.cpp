@@ -144,6 +144,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
                 - box_state.margin_right;
 
             unconstrained_width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
+        } else if (m_available_space->width.is_min_content()) {
+            unconstrained_width = result.preferred_minimum_width;
         } else {
             unconstrained_width = result.preferred_width;
         }
