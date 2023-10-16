@@ -26,7 +26,8 @@ configure() {
         -DCURL_DISABLE_NTLM='ON' \
         -DCURL_DISABLE_SOCKETPAIR='ON' \
         -DCURL_DISABLE_TESTS='ON' \
-        -DCURL_HIDDEN_SYMBOLS='OFF'
+        -DCURL_HIDDEN_SYMBOLS='OFF' \
+        -DHAVE_GETADDRINFO_THREADSAFE=1
 }
 
 build() {
