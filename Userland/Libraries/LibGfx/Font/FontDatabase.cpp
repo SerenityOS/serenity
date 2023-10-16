@@ -6,6 +6,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/FlyString.h>
+#include <AK/LexicalPath.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <LibCore/Resource.h>
@@ -119,23 +120,23 @@ void FontDatabase::load_all_fonts_from_uri(StringView uri)
     root->for_each_descendant_file([this](Core::Resource const& resource) -> IterationDecision {
         // FIXME: Use Resources and their bytes/streams throughout so we don't have to use the path here
         auto path_string = resource.filesystem_path().release_value();
-        auto path = path_string.bytes_as_string_view();
-        if (path.ends_with(".font"sv)) {
-            if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
+        auto path = LexicalPath(path_string.bytes_as_string_view());
+        if (path.has_extension(".font"sv)) {
+            if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path.string()); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
                 m_private->full_name_to_font_map.set(font->qualified_name().to_deprecated_string(), *font);
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->add_bitmap_font(font);
             }
-        } else if (path.ends_with(".ttf"sv)) {
+        } else if (path.has_extension(".ttf"sv)) {
             // FIXME: What about .otf
-            if (auto font_or_error = OpenType::Font::try_load_from_file(path); !font_or_error.is_error()) {
+            if (auto font_or_error = OpenType::Font::try_load_from_file(path.string()); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->set_vector_font(move(font));
             }
-        } else if (path.ends_with(".woff"sv)) {
-            if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
+        } else if (path.has_extension(".woff"sv)) {
+            if (auto font_or_error = WOFF::Font::try_load_from_file(path.string()); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->set_vector_font(move(font));
