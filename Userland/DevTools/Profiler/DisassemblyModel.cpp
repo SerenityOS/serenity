@@ -93,9 +93,9 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     auto symbol_offset_from_function_start = node.address() - base_address - symbol->value();
     auto view = symbol.value().raw_data().substring_view(symbol_offset_from_function_start);
 
-    Disassembly::X86::ELFSymbolProvider symbol_provider(*elf, base_address);
-    Disassembly::X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
-    Disassembly::X86::Disassembler disassembler(stream);
+    Disassembly::ELFSymbolProvider symbol_provider(*elf, base_address);
+    Disassembly::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
+    Disassembly::Disassembler disassembler(stream);
 
     size_t offset_into_symbol = 0;
     FlatPtr last_instruction_offset = 0;

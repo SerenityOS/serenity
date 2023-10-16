@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <LibGUI/Model.h>
 #include <sys/arch/regs.h>
 

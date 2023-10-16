@@ -8,7 +8,7 @@
 #pragma once
 
 #include <LibDebug/DebugInfo.h>
-#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <LibGUI/Model.h>
 
 namespace Profiler {

@@ -13,8 +13,9 @@
 #include "ValueWithShadow.h"
 #include <AK/ByteReader.h>
 #include <AK/Debug.h>
-#include <LibDisassembly/Instruction.h>
-#include <LibDisassembly/Interpreter.h>
+#include <LibDisassembly/InstructionStream.h>
+#include <LibDisassembly/x86/Instruction.h>
+#include <LibDisassembly/x86/Interpreter.h>
 
 namespace UserspaceEmulator {
 
@@ -38,7 +39,7 @@ union PartAddressableRegister {
 
 class SoftCPU final
     : public Disassembly::X86::Interpreter
-    , public Disassembly::X86::InstructionStream {
+    , public Disassembly::InstructionStream {
     friend SoftFPU;
 
 public:

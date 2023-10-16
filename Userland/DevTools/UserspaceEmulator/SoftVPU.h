@@ -9,7 +9,7 @@
 #include <AK/FPControl.h>
 #include <AK/SIMD.h>
 #include <AK/Types.h>
-#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <math.h>
 
 namespace UserspaceEmulator {

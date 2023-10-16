@@ -16,7 +16,7 @@
 #include <LibDebug/DebugInfo.h>
 #include <LibDebug/DebugSession.h>
 #include <LibDisassembly/Disassembler.h>
-#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <signal.h>
@@ -79,8 +79,8 @@ static bool handle_disassemble_command(ByteString const& command, FlatPtr first_
             break;
     }
 
-    Disassembly::X86::SimpleInstructionStream stream(code.data(), code.size());
-    Disassembly::X86::Disassembler disassembler(stream);
+    Disassembly::SimpleInstructionStream stream(code.data(), code.size());
+    Disassembly::Disassembler disassembler(stream);
 
     for (size_t i = 0; i < number_of_instructions_to_disassemble; ++i) {
         auto offset = stream.offset();

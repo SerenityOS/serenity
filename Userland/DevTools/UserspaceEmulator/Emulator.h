@@ -14,7 +14,7 @@
 #include <AK/Types.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
-#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibLine/Editor.h>

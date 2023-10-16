@@ -7,6 +7,7 @@
 
 #include <AK/BinarySearch.h>
 #include <LibDisassembly/Disassembler.h>
+#include <LibDisassembly/SymbolProvider.h>
 #include <LibJIT/GDB.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/JIT/NativeExecutable.h>
@@ -58,7 +59,7 @@ void NativeExecutable::run(VM& vm, size_t entry_point) const
 }
 
 #if ARCH(X86_64)
-class JITSymbolProvider : public Disassembly::X86::SymbolProvider {
+class JITSymbolProvider : public Disassembly::SymbolProvider {
 public:
     JITSymbolProvider(NativeExecutable const& executable)
         : m_executable(executable)
@@ -97,8 +98,8 @@ void NativeExecutable::dump_disassembly([[maybe_unused]] Bytecode::Executable co
 {
 #if ARCH(X86_64)
     auto const* code_bytes = static_cast<u8 const*>(m_code);
-    auto stream = Disassembly::X86::SimpleInstructionStream { code_bytes, m_size };
-    auto disassembler = Disassembly::X86::Disassembler(stream, Disassembly::Architecture::X86);
+    auto stream = Disassembly::SimpleInstructionStream { code_bytes, m_size };
+    auto disassembler = Disassembly::Disassembler(stream, Disassembly::Architecture::X86);
     auto symbol_provider = JITSymbolProvider(*this);
     auto mapping = m_mapping.begin();
 

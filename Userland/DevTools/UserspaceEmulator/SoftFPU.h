@@ -10,8 +10,8 @@
 #include <AK/Concepts.h>
 #include <AK/FPControl.h>
 #include <AK/SIMD.h>
-#include <LibDisassembly/Instruction.h>
 #include <LibDisassembly/Interpreter.h>
+#include <LibDisassembly/x86/Instruction.h>
 
 #include <math.h>
 #include <string.h>

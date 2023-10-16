@@ -220,8 +220,8 @@ bool Emulator::load_elf()
 
 int Emulator::exec()
 {
-    // Disassembly::X86::ELFSymbolProvider symbol_provider(*m_elf);
-    Disassembly::X86::ELFSymbolProvider* symbol_provider = nullptr;
+    // Disassembly::ELFSymbolProvider symbol_provider(*m_elf);
+    Disassembly::ELFSymbolProvider* symbol_provider = nullptr;
 
     constexpr bool trace = false;
 
