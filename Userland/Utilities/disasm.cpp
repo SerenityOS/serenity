@@ -15,6 +15,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
+#include <LibDisassembly/Architecture.h>
 #include <LibDisassembly/Disassembler.h>
 #include <LibDisassembly/ELFSymbolProvider.h>
 #include <LibELF/Image.h>
@@ -69,9 +70,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     size_t file_offset = 0;
     OwnPtr<Disassembly::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
     OwnPtr<ELF::Image> elf;
+    auto architecture = Disassembly::host_architecture();
     if (asm_size >= 4 && strncmp(reinterpret_cast<char const*>(asm_data), "\u007fELF", 4) == 0) {
         elf = make<ELF::Image>(asm_data, asm_size);
         if (elf->is_valid()) {
+            if (auto elf_architecture = Disassembly::architecture_from_elf_machine(elf->machine()); elf_architecture.has_value())
+                architecture = elf_architecture.release_value();
+
             symbol_provider = make<Disassembly::ELFSymbolProvider>(*elf);
             elf->for_each_section_of_type(SHT_PROGBITS, [&](ELF::Image::Section const& section) {
                 // FIXME: Disassemble all SHT_PROGBITS sections, not just .text.
@@ -117,7 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     }
 
     Disassembly::SimpleInstructionStream stream(asm_data, asm_size);
-    Disassembly::Disassembler disassembler(stream);
+    Disassembly::Disassembler disassembler(stream, architecture);
 
     Vector<Symbol>::Iterator current_ranged_symbol = ranged_symbols.begin();
     Vector<Symbol>::Iterator current_zero_size_symbol = zero_size_symbols.begin();
