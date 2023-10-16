@@ -60,11 +60,12 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
         if (!insn.has_value())
             break;
         FlatPtr address_in_profiled_program = symbol.value().value() + offset_into_symbol;
-        auto disassembly = insn.value().to_byte_string(address_in_profiled_program, symbol_provider);
-        StringView instruction_bytes = view.substring_view(offset_into_symbol, insn.value().length());
-        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program });
+        auto disassembly = insn.value()->to_byte_string(address_in_profiled_program, symbol_provider);
+        auto length = insn.value()->length();
+        StringView instruction_bytes = view.substring_view(offset_into_symbol, length);
+        m_instructions.append({ insn.release_value(), disassembly, instruction_bytes, address_in_profiled_program });
 
-        offset_into_symbol += insn.value().length();
+        offset_into_symbol += length;
     }
 }
 
