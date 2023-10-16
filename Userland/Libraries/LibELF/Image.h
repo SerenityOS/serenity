@@ -209,6 +209,7 @@ public:
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
     bool is_dynamic() const { return header().e_type == ET_DYN; }
+    Elf64_Quarter machine() const { return header().e_machine; }
 
     VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
