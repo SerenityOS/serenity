@@ -72,7 +72,8 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     // CFF spec, "8 Top DICT INDEX"
     int charset_offset = 0;
-    Vector<u8> encoding_codes;
+    Vector<u8> encoding_codes; // Maps GID to its codepoint.
+    HashMap<Card8, SID> encoding_supplemental; // Maps codepoint to SID.
     auto charstrings_offset = 0;
     Vector<ByteBuffer> subroutines;
     float defaultWidthX = 0;
@@ -125,7 +126,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                     dbgln("CFF: Built-in Expert Encoding not yet implemented");
                     break;
                 default:
-                    encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(encoding_offset))));
+                    encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(encoding_offset)), encoding_supplemental));
                     break;
                 }
                 break;
@@ -236,10 +237,14 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 encoding->set(0, ".notdef");
                 continue;
             }
+            if (i >= encoding_codes.size() || i >= charset.size())
+                break;
             auto code = encoding_codes[i - 1];
             auto char_name = charset[i - 1];
             encoding->set(code, char_name);
         }
+        for (auto const& entry : encoding_supplemental)
+            encoding->set(entry.key, resolve_sid(entry.value, strings));
         cff->set_encoding(move(encoding));
     }
 
@@ -711,7 +716,7 @@ PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<By
     return glyphs;
 }
 
-PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
+PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader, HashMap<Card8, SID>& supplemental)
 {
     // CFF spec, "12 Encodings"
     Vector<u8> encoding_codes;
@@ -739,9 +744,17 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
     } else
         return error(DeprecatedString::formatted("Invalid encoding format: {}", format));
 
-    // TODO: support encoding supplements when highest bit is set (tables 14 and 15).
-    if (format_raw & 0x80)
-        dbgln("CFF: Support for multiply-encoded glyphs not yet implemented");
+    if (format_raw & 0x80) {
+        // CFF spec, "Table 14 Supplemental Encoding Data"
+        auto n_sups = TRY(reader.try_read<Card8>());
+        dbgln_if(CFF_DEBUG, "CFF encoding, {} supplemental entries", n_sups);
+        for (u8 i = 0; i < n_sups; i++) {
+            // CFF spec, "Table 15 Supplement Format"
+            auto code = TRY(reader.try_read<Card8>());
+            SID name = TRY(reader.try_read<SID>());
+            TRY(supplemental.try_set(code, name));
+        }
+    }
 
     return encoding_codes;
 }
