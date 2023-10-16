@@ -177,37 +177,6 @@ struct Assembler {
         m_output.append((value >> 56) & 0xff);
     }
 
-    void load_immediate64(Reg dst, u64 imm)
-    {
-        mov(Operand::Register(dst), Operand::Imm64(imm));
-    }
-
-    void increment(Reg dst)
-    {
-        emit8(0x48);
-        emit8(0xff);
-        emit8(0xc0 | to_underlying(dst));
-    }
-
-    void less_than(Reg dst, Reg src)
-    {
-        // cmp src, dst
-        emit8(0x48);
-        emit8(0x39);
-        emit8(0xc0 | (to_underlying(src) << 3) | to_underlying(dst));
-
-        // setl dst
-        emit8(0x0f);
-        emit8(0x9c);
-        emit8(0xc0 | to_underlying(dst));
-
-        // movzx dst, dst
-        emit8(0x48);
-        emit8(0x0f);
-        emit8(0xb6);
-        emit8(0xc0 | (to_underlying(dst) << 3) | to_underlying(dst));
-    }
-
     struct Label {
         size_t offset_in_instruction_stream { 0 };
 
