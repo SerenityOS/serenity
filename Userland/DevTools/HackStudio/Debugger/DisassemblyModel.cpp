@@ -50,9 +50,9 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
 
     auto view = symbol.value().raw_data();
 
-    Disassembly::X86::ELFSymbolProvider symbol_provider(*elf);
-    Disassembly::X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
-    Disassembly::X86::Disassembler disassembler(stream);
+    Disassembly::ELFSymbolProvider symbol_provider(*elf);
+    Disassembly::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
+    Disassembly::Disassembler disassembler(stream);
 
     size_t offset_into_symbol = 0;
     for (;;) {

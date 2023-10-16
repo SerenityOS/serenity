@@ -67,12 +67,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Vector<Symbol> zero_size_symbols;
 
     size_t file_offset = 0;
-    OwnPtr<Disassembly::X86::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
+    OwnPtr<Disassembly::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
     OwnPtr<ELF::Image> elf;
     if (asm_size >= 4 && strncmp(reinterpret_cast<char const*>(asm_data), "\u007fELF", 4) == 0) {
         elf = make<ELF::Image>(asm_data, asm_size);
         if (elf->is_valid()) {
-            symbol_provider = make<Disassembly::X86::ELFSymbolProvider>(*elf);
+            symbol_provider = make<Disassembly::ELFSymbolProvider>(*elf);
             elf->for_each_section_of_type(SHT_PROGBITS, [&](ELF::Image::Section const& section) {
                 // FIXME: Disassemble all SHT_PROGBITS sections, not just .text.
                 if (section.name() != ".text")
@@ -116,8 +116,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         }
     }
 
-    Disassembly::X86::SimpleInstructionStream stream(asm_data, asm_size);
-    Disassembly::X86::Disassembler disassembler(stream);
+    Disassembly::SimpleInstructionStream stream(asm_data, asm_size);
+    Disassembly::Disassembler disassembler(stream);
 
     Vector<Symbol>::Iterator current_ranged_symbol = ranged_symbols.begin();
     Vector<Symbol>::Iterator current_zero_size_symbol = zero_size_symbols.begin();

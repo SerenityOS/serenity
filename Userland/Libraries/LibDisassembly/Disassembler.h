@@ -7,9 +7,10 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/InstructionStream.h>
+#include <LibDisassembly/x86/Instruction.h>
 
-namespace Disassembly::X86 {
+namespace Disassembly {
 
 class Disassembler {
 public:
@@ -18,12 +19,12 @@ public:
     {
     }
 
-    Optional<Instruction> next()
+    Optional<X86::Instruction> next()
     {
         if (!m_stream.can_read())
             return {};
 #if ARCH(X86_64)
-        return Instruction::from_stream(m_stream, ProcessorMode::Long);
+        return X86::Instruction::from_stream(m_stream, X86::ProcessorMode::Long);
 #else
         dbgln("Unsupported platform");
         return {};
