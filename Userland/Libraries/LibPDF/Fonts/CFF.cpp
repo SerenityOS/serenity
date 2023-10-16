@@ -719,12 +719,16 @@ PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
 
     auto format = format_raw & 0x7f;
     if (format == 0) {
+        // CFF spec, "Table 11 Format 0"
         auto n_codes = TRY(reader.try_read<Card8>());
+        dbgln_if(CFF_DEBUG, "CFF encoding format 0, {} codes", n_codes);
         for (u8 i = 0; i < n_codes; i++) {
             TRY(encoding_codes.try_append(TRY(reader.try_read<Card8>())));
         }
     } else if (format == 1) {
+        // CFF spec, "Table 12 Format 1"
         auto n_ranges = TRY(reader.try_read<Card8>());
+        dbgln_if(CFF_DEBUG, "CFF encoding format 1, {} ranges", n_ranges);
         for (u8 i = 0; i < n_ranges; i++) {
             // CFF spec, "Table 13 Range1 Format (Encoding)"
             auto first_code = TRY(reader.try_read<Card8>());
