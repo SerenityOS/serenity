@@ -12,10 +12,10 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDebug/DebugSession.h>
+#include <LibDisassembly/Disassembler.h>
+#include <LibDisassembly/Instruction.h>
 #include <LibELF/Image.h>
 #include <LibMain/Main.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/Instruction.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,16 +72,16 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
 #endif
 }
 
-static NonnullOwnPtr<HashMap<FlatPtr, X86::Instruction>> instrument_code()
+static NonnullOwnPtr<HashMap<FlatPtr, Disassembly::X86::Instruction>> instrument_code()
 {
-    auto instrumented = make<HashMap<FlatPtr, X86::Instruction>>();
+    auto instrumented = make<HashMap<FlatPtr, Disassembly::X86::Instruction>>();
     g_debug_session->for_each_loaded_library([&](Debug::LoadedLibrary const& lib) {
         lib.debug_info->elf().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
             if (section.name() != ".text")
                 return IterationDecision::Continue;
 
-            X86::SimpleInstructionStream stream((u8 const*)((uintptr_t)lib.file->data() + section.offset()), section.size());
-            X86::Disassembler disassembler(stream);
+            Disassembly::X86::SimpleInstructionStream stream((u8 const*)((uintptr_t)lib.file->data() + section.offset()), section.size());
+            Disassembly::X86::Disassembler disassembler(stream);
             for (;;) {
                 auto offset = stream.offset();
                 auto instruction_address = section.address() + offset + lib.base_address;

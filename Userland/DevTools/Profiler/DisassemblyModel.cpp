@@ -12,10 +12,10 @@
 #include "Profile.h"
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
+#include <LibDisassembly/Disassembler.h>
+#include <LibDisassembly/ELFSymbolProvider.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/ELFSymbolProvider.h>
 #include <stdio.h>
 
 namespace Profiler {
@@ -93,9 +93,9 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     auto symbol_offset_from_function_start = node.address() - base_address - symbol->value();
     auto view = symbol.value().raw_data().substring_view(symbol_offset_from_function_start);
 
-    X86::ELFSymbolProvider symbol_provider(*elf, base_address);
-    X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
-    X86::Disassembler disassembler(stream);
+    Disassembly::X86::ELFSymbolProvider symbol_provider(*elf, base_address);
+    Disassembly::X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
+    Disassembly::X86::Disassembler disassembler(stream);
 
     size_t offset_into_symbol = 0;
     FlatPtr last_instruction_offset = 0;
