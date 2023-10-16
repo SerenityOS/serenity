@@ -72,8 +72,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     // CFF spec, "8 Top DICT INDEX"
     int charset_offset = 0;
-    Vector<u8> encoding_codes; // Maps GID to its codepoint.
-    HashMap<Card8, SID> encoding_supplemental; // Maps codepoint to SID.
+    int encoding_offset = 0;
     auto charstrings_offset = 0;
     Vector<ByteBuffer> subroutines;
     float defaultWidthX = 0;
@@ -113,22 +112,8 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                 dbgln("CFF: has unimplemented SyntheticBase, might not look right");
                 break;
             case TopDictOperator::Encoding: {
-                auto encoding_offset = 0;
                 if (!operands.is_empty())
                     encoding_offset = operands[0].get<int>();
-
-                // CFF spec, "Table 16 Encoding ID"
-                switch (encoding_offset) {
-                case 0:
-                    dbgln("CFF: Built-in Standard Encoding not yet implemented");
-                    break;
-                case 1:
-                    dbgln("CFF: Built-in Expert Encoding not yet implemented");
-                    break;
-                default:
-                    encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(encoding_offset)), encoding_supplemental));
-                    break;
-                }
                 break;
             }
             case TopDictOperator::Charset: {
@@ -185,6 +170,22 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
     auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), subroutines));
+
+    // CFF spec, "Table 16 Encoding ID"
+    // FIXME: Only read this if the built-in encoding is actually needed? (ie. `if (!encoding)`)
+    Vector<u8> encoding_codes;                 // Maps GID to its codepoint.
+    HashMap<Card8, SID> encoding_supplemental; // Maps codepoint to SID.
+    switch (encoding_offset) {
+    case 0:
+        dbgln("CFF: Built-in Standard Encoding not yet implemented");
+        break;
+    case 1:
+        dbgln("CFF: Built-in Expert Encoding not yet implemented");
+        break;
+    default:
+        encoding_codes = TRY(parse_encoding(Reader(cff_bytes.slice(encoding_offset)), encoding_supplemental));
+        break;
+    }
 
     // CFF spec, "Table 22 Charset ID"
     Vector<DeprecatedFlyString> charset;
