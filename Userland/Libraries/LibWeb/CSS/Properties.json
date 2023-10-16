@@ -1624,6 +1624,18 @@
       "object-fit"
     ]
   },
+  "object-position": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "50% 50%",
+    "max-values": 2,
+    "valid-types": [
+      "length [-∞,∞]",
+      "percentage [-∞,∞]",
+      "position"
+    ],
+    "percentages-resolve-to": "length"
+  },
   "opacity": {
     "affects-layout": false,
     "affects-stacking-context": true,
