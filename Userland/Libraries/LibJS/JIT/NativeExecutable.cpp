@@ -147,7 +147,7 @@ void NativeExecutable::dump_disassembly([[maybe_unused]] Bytecode::Executable co
                 builder.append("   "sv);
         }
         builder.append(" "sv);
-        builder.append(insn.value().to_byte_string(virtual_offset, &symbol_provider));
+        builder.append(insn.value().to_byte_string(virtual_offset, symbol_provider));
         dbgln("{}", builder.string_view());
 
         for (size_t bytes_printed = 7; bytes_printed < length; bytes_printed += 7) {
