@@ -312,24 +312,40 @@ struct Assembler {
         emit8(0xc3);
     }
 
+    void push(Operand op)
+    {
+        if (op.type == Operand::Type::Reg) {
+            if (to_underlying(op.reg) >= 8)
+                emit8(0x49);
+            emit8(0x50 | encode_reg(op.reg));
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    void pop(Operand op)
+    {
+        if (op.type == Operand::Type::Reg) {
+            if (to_underlying(op.reg) >= 8)
+                emit8(0x49);
+            emit8(0x58 | encode_reg(op.reg));
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
     void native_call(void* callee)
     {
         // push caller-saved registers on the stack
         // (callee-saved registers: RBX, RSP, RBP, and R12–R15)
-
-        // push RCX, RDX, RSI, RDI, R8, R9, R10, R11
-        emit8(0x51);
-        emit8(0x52);
-        emit8(0x56);
-        emit8(0x57);
-        emit8(0x41);
-        emit8(0x50);
-        emit8(0x41);
-        emit8(0x51);
-        emit8(0x41);
-        emit8(0x52);
-        emit8(0x41);
-        emit8(0x53);
+        push(Operand::Register(Reg::RCX));
+        push(Operand::Register(Reg::RDX));
+        push(Operand::Register(Reg::RSI));
+        push(Operand::Register(Reg::RDI));
+        push(Operand::Register(Reg::R8));
+        push(Operand::Register(Reg::R9));
+        push(Operand::Register(Reg::R10));
+        push(Operand::Register(Reg::R11));
 
         // align the stack to 16-byte boundary
         emit8(0x48);
@@ -351,19 +367,14 @@ struct Assembler {
         emit8(0x08);
 
         // restore caller-saved registers from the stack
-        // pop R11, R10, R9, R8, RDI, RSI, RDX, RCX
-        emit8(0x41);
-        emit8(0x5b);
-        emit8(0x41);
-        emit8(0x5a);
-        emit8(0x41);
-        emit8(0x59);
-        emit8(0x41);
-        emit8(0x58);
-        emit8(0x5f);
-        emit8(0x5e);
-        emit8(0x5a);
-        emit8(0x59);
+        pop(Operand::Register(Reg::R11));
+        pop(Operand::Register(Reg::R10));
+        pop(Operand::Register(Reg::R9));
+        pop(Operand::Register(Reg::R8));
+        pop(Operand::Register(Reg::RDI));
+        pop(Operand::Register(Reg::RSI));
+        pop(Operand::Register(Reg::RDX));
+        pop(Operand::Register(Reg::RCX));
     }
 };
 
