@@ -374,7 +374,7 @@ DeprecatedString escape_html_entities(StringView html)
 }
 
 DeprecatedString::DeprecatedString(DeprecatedFlyString const& string)
-    : m_impl(*string.impl())
+    : m_impl(*(string.impl() ?: &StringImpl::the_empty_stringimpl()))
 {
 }
 
