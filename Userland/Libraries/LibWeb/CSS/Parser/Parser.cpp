@@ -5952,6 +5952,12 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = parse_math_depth_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
+    case PropertyID::ObjectPosition:
+        // FIXME: This should use a parse_position compatible to VALUES-4
+        //        and not the background position, which is almost the same.
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_position_value(tokens); }))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
     case PropertyID::Overflow:
         if (auto parsed_value = parse_overflow_value(component_values))
             return parsed_value.release_nonnull();
