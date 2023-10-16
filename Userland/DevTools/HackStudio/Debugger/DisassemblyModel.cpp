@@ -52,7 +52,7 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
 
     Disassembly::ELFSymbolProvider symbol_provider(*elf);
     Disassembly::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
-    Disassembly::Disassembler disassembler(stream);
+    Disassembly::Disassembler disassembler(stream, Disassembly::architecture_from_elf_machine(elf->machine()).value_or(Disassembly::host_architecture()));
 
     size_t offset_into_symbol = 0;
     for (;;) {

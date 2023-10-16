@@ -81,7 +81,7 @@ static NonnullOwnPtr<HashMap<FlatPtr, NonnullOwnPtr<Disassembly::Instruction>>> 
                 return IterationDecision::Continue;
 
             Disassembly::SimpleInstructionStream stream((u8 const*)((uintptr_t)lib.file->data() + section.offset()), section.size());
-            Disassembly::Disassembler disassembler(stream);
+            Disassembly::Disassembler disassembler(stream, Disassembly::architecture_from_elf_machine(lib.debug_info->elf().machine()).value_or(Disassembly::host_architecture()));
             for (;;) {
                 auto offset = stream.offset();
                 auto instruction_address = section.address() + offset + lib.base_address;
