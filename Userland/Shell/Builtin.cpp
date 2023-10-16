@@ -268,6 +268,23 @@ ErrorOr<int> Shell::builtin_continue(Main::Arguments arguments)
     return 0;
 }
 
+ErrorOr<int> Shell::builtin_return(Main::Arguments arguments)
+{
+    int return_code = last_return_code.value_or(0);
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(return_code, "Return code to return to the parent shell", "return-code", Core::ArgsParser::Required::No);
+    parser.set_general_help("Return from a function or source file");
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+        return 1;
+
+    last_return_code = return_code & 0xff;
+    raise_error(ShellError::InternalControlFlowReturn, "POSIX return");
+
+    return 0;
+}
+
 ErrorOr<int> Shell::builtin_bg(Main::Arguments arguments)
 {
     int job_id = -1;

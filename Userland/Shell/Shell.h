@@ -60,6 +60,7 @@
     __ENUMERATE_SHELL_BUILTIN(noop, InAllModes)              \
     __ENUMERATE_SHELL_BUILTIN(break, OnlyInPOSIXMode)        \
     __ENUMERATE_SHELL_BUILTIN(continue, OnlyInPOSIXMode)     \
+    __ENUMERATE_SHELL_BUILTIN(return, InAllModes)            \
     __ENUMERATE_SHELL_BUILTIN(read, OnlyInPOSIXMode)         \
     __ENUMERATE_SHELL_BUILTIN(run_with_env, OnlyInPOSIXMode) \
     __ENUMERATE_SHELL_BUILTIN(argsparser_parse, InAllModes)  \
@@ -360,6 +361,7 @@ public:
         None,
         InternalControlFlowBreak,
         InternalControlFlowContinue,
+        InternalControlFlowReturn,
         InternalControlFlowInterrupted,
         InternalControlFlowKilled,
         EvaluatedSyntaxError,
@@ -396,6 +398,7 @@ public:
         switch (error) {
         case ShellError::InternalControlFlowBreak:
         case ShellError::InternalControlFlowContinue:
+        case ShellError::InternalControlFlowReturn:
         case ShellError::InternalControlFlowInterrupted:
         case ShellError::InternalControlFlowKilled:
             return true;

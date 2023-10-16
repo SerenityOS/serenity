@@ -487,6 +487,9 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
     (void)function.body->run(*this);
 
+    if (has_error(ShellError::InternalControlFlowReturn))
+        take_error();
+
     retval = last_return_code.value_or(0);
     return true;
 }
@@ -2435,6 +2438,7 @@ void Shell::possibly_print_error() const
         break;
     case ShellError::InternalControlFlowBreak:
     case ShellError::InternalControlFlowContinue:
+    case ShellError::InternalControlFlowReturn:
     case ShellError::InternalControlFlowInterrupted:
     case ShellError::InternalControlFlowKilled:
         return;
