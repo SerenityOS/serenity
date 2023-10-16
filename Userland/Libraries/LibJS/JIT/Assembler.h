@@ -334,6 +334,52 @@ struct Assembler {
         }
     }
 
+    void add(Operand dst, Operand src)
+    {
+        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+            emit8(0x48
+                | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x01);
+            emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm32) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x81);
+            emit8(0xc0 | encode_reg(dst.reg));
+            emit32(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm8) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x83);
+            emit8(0xc0 | encode_reg(dst.reg));
+            emit8(src.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    void sub(Operand dst, Operand src)
+    {
+        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+            emit8(0x48
+                | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x29);
+            emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm32) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x81);
+            emit8(0xe8 | encode_reg(dst.reg));
+            emit32(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm8) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x83);
+            emit8(0xe8 | encode_reg(dst.reg));
+            emit8(src.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
     void native_call(void* callee)
     {
         // push caller-saved registers on the stack
@@ -348,10 +394,7 @@ struct Assembler {
         push(Operand::Register(Reg::R11));
 
         // align the stack to 16-byte boundary
-        emit8(0x48);
-        emit8(0x83);
-        emit8(0xec);
-        emit8(0x08);
+        sub(Operand::Register(Reg::RSP), Operand::Imm8(8));
 
         // load callee into RAX and make indirect call
         emit8(0x48);
@@ -361,10 +404,7 @@ struct Assembler {
         emit8(0xd0);
 
         // adjust stack pointer
-        emit8(0x48);
-        emit8(0x83);
-        emit8(0xc4);
-        emit8(0x08);
+        add(Operand::Register(Reg::RSP), Operand::Imm8(8));
 
         // restore caller-saved registers from the stack
         pop(Operand::Register(Reg::R11));
