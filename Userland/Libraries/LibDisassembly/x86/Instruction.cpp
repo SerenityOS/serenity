@@ -1570,7 +1570,7 @@ static ByteString relative_address(u32 origin, bool x32, i32 imm)
     return ByteString::formatted("{:x}", w + si);
 }
 
-ByteString Instruction::to_byte_string(u32 origin, SymbolProvider const* symbol_provider, bool x32) const
+ByteString Instruction::to_byte_string(u32 origin, Optional<SymbolProvider const&> symbol_provider) const
 {
     StringBuilder builder;
     if (has_segment_prefix())
@@ -1606,11 +1606,11 @@ ByteString Instruction::to_byte_string(u32 origin, SymbolProvider const* symbol_
     // Note: SSE instructions use these to toggle between packed and single data
     if (has_rep_prefix() && !(m_descriptor->format > __SSE && m_descriptor->format < __EndFormatsWithRMByte))
         builder.append(m_rep_prefix == Prefix::REPNZ ? "repnz "sv : "repz "sv);
-    to_byte_string_internal(builder, origin, symbol_provider, x32);
+    to_byte_string_internal(builder, origin, symbol_provider, true);
     return builder.to_byte_string();
 }
 
-void Instruction::to_byte_string_internal(StringBuilder& builder, u32 origin, SymbolProvider const* symbol_provider, bool x32) const
+void Instruction::to_byte_string_internal(StringBuilder& builder, u32 origin, Optional<SymbolProvider const&> symbol_provider, bool x32) const
 {
     if (!m_descriptor) {
         builder.appendff("db {:02x}", m_op);
@@ -1625,7 +1625,7 @@ void Instruction::to_byte_string_internal(StringBuilder& builder, u32 origin, Sy
 
     auto formatted_address = [&](FlatPtr origin, bool x32, auto offset) {
         builder.append(relative_address(origin, x32, offset));
-        if (symbol_provider) {
+        if (symbol_provider.has_value()) {
             u32 symbol_offset = 0;
             auto symbol = symbol_provider->symbolicate(origin + offset, &symbol_offset);
             builder.append(" <"sv);
