@@ -18,6 +18,15 @@ public:
     static OwnPtr<NativeExecutable> compile(Bytecode::Executable const&);
 
 private:
+    static constexpr auto GPR0 = Assembler::Reg::RAX;
+    static constexpr auto GPR1 = Assembler::Reg::RCX;
+    static constexpr auto ARG0 = Assembler::Reg::RDI;
+    static constexpr auto ARG1 = Assembler::Reg::RSI;
+    static constexpr auto ARG2 = Assembler::Reg::RDX;
+    static constexpr auto RET = Assembler::Reg::RAX;
+    static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::R8;
+    static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R9;
+
     void compile_load_immediate(Bytecode::Op::LoadImmediate const&);
     void compile_load(Bytecode::Op::Load const&);
     void compile_store(Bytecode::Op::Store const&);

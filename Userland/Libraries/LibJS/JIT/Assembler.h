@@ -20,18 +20,22 @@ struct Assembler {
     Vector<u8>& m_output;
 
     enum class Reg {
-        GPR0 = 0, // RAX
-        GPR1 = 1, // RCX
-
-        Arg0 = 7, // RDI
-        Arg1 = 6, // RSI
-        Arg2 = 2, // RDX
-
-        Ret = 0, // RAX
-
-        // FIXME: These are LibJS specific.
-        RegisterArrayBase = 8, // R8
-        LocalsArrayBase = 9,   // R9
+        RAX = 0,
+        RCX = 1,
+        RDX = 2,
+        RBX = 3,
+        RSP = 4,
+        RBP = 5,
+        RSI = 6,
+        RDI = 7,
+        R8 = 8,
+        R9 = 9,
+        R10 = 10,
+        R11 = 11,
+        R12 = 12,
+        R13 = 13,
+        R14 = 14,
+        R15 = 15,
     };
 
     struct Operand {
