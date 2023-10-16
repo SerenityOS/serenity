@@ -481,9 +481,14 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
         break;
     }
     case Core::FileWatcherEvent::Type::MetadataModified: {
-        // FIXME: Do we do anything in case the metadata is modified?
-        //        Perhaps re-stat'ing the modified node would make sense
-        //        here, but let's leave that to when we actually need it.
+        auto child = node_for_path(event.event_path);
+        if (!child.has_value()) {
+            dbgln("Got a MetadataModified on '{}' but the child does not exist?!", event.event_path);
+            break;
+        }
+
+        auto& mutable_child = const_cast<Node&>(child.value());
+        mutable_child.fetch_data(mutable_child.full_path(), &mutable_child == m_root);
         break;
     }
     default:
