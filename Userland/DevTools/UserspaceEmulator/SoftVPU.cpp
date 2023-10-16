@@ -10,12 +10,12 @@
 
 namespace UserspaceEmulator {
 
-void SoftVPU::PREFETCHTNTA(X86::Instruction const&) { TODO(); }
-void SoftVPU::PREFETCHT0(X86::Instruction const&) { TODO(); }
-void SoftVPU::PREFETCHT1(X86::Instruction const&) { TODO(); }
-void SoftVPU::PREFETCHT2(X86::Instruction const&) { TODO(); }
+void SoftVPU::PREFETCHTNTA(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PREFETCHT0(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PREFETCHT1(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PREFETCHT2(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::LDMXCSR(X86::Instruction const& insn)
+void SoftVPU::LDMXCSR(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Shadows
     m_mxcsr.mxcsr = insn.modrm().read32(m_cpu, insn).value();
@@ -43,13 +43,13 @@ void SoftVPU::LDMXCSR(X86::Instruction const& insn)
     AK::set_cw_x87(cw);
 #endif
 }
-void SoftVPU::STMXCSR(X86::Instruction const& insn)
+void SoftVPU::STMXCSR(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Shadows
     insn.modrm().write32(m_cpu, insn, ValueWithShadow<u32>::create_initialized(m_mxcsr.mxcsr));
 }
 
-void SoftVPU::MOVUPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::MOVUPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm1 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -59,7 +59,7 @@ void SoftVPU::MOVUPS_xmm1_xmm2m128(X86::Instruction const& insn)
         m_xmm[xmm1].ps = bit_cast<f32x4>(insn.modrm().read128(m_cpu, insn).value());
     }
 }
-void SoftVPU::MOVSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::MOVSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm1 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -69,7 +69,7 @@ void SoftVPU::MOVSS_xmm1_xmm2m32(X86::Instruction const& insn)
         m_xmm[xmm1].ps[0] = bit_cast<float>(insn.modrm().read32(m_cpu, insn).value());
     }
 }
-void SoftVPU::MOVUPS_xmm1m128_xmm2(X86::Instruction const& insn)
+void SoftVPU::MOVUPS_xmm1m128_xmm2(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm2 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -80,7 +80,7 @@ void SoftVPU::MOVUPS_xmm1m128_xmm2(X86::Instruction const& insn)
         insn.modrm().write128(m_cpu, insn, ValueWithShadow<u128>::create_initialized(temp));
     }
 }
-void SoftVPU::MOVSS_xmm1m32_xmm2(X86::Instruction const& insn)
+void SoftVPU::MOVSS_xmm1m32_xmm2(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm2 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -91,7 +91,7 @@ void SoftVPU::MOVSS_xmm1m32_xmm2(X86::Instruction const& insn)
         insn.modrm().write32(m_cpu, insn, ValueWithShadow<u32>::create_initialized(temp));
     }
 }
-void SoftVPU::MOVLPS_xmm1_xmm2m64(X86::Instruction const& insn)
+void SoftVPU::MOVLPS_xmm1_xmm2m64(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm1 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -103,7 +103,7 @@ void SoftVPU::MOVLPS_xmm1_xmm2m64(X86::Instruction const& insn)
         m_xmm[xmm1].puqw[0] = insn.modrm().read64(m_cpu, insn).value();
     }
 }
-void SoftVPU::MOVLPS_m64_xmm2(X86::Instruction const& insn)
+void SoftVPU::MOVLPS_m64_xmm2(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm2 = insn.modrm().reg();
     // FIXME: This might not hold true for SSE2 or later
@@ -112,7 +112,7 @@ void SoftVPU::MOVLPS_m64_xmm2(X86::Instruction const& insn)
     insn.modrm().write64(m_cpu, insn, ValueWithShadow<u64>::create_initialized(m_xmm[xmm2].puqw[0]));
 }
 
-void SoftVPU::UNPCKLPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::UNPCKLPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     f32x4& xmm1 = m_xmm[insn.modrm().reg()].ps;
     f32x4 xmm2m128;
@@ -138,7 +138,7 @@ void SoftVPU::UNPCKLPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps = dest;
 }
-void SoftVPU::UNPCKHPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::UNPCKHPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     f32x4 xmm1 = m_xmm[insn.modrm().reg()].ps;
     f32x4 xmm2m128;
@@ -158,7 +158,7 @@ void SoftVPU::UNPCKHPS_xmm1_xmm2m128(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps = dest;
 }
 
-void SoftVPU::MOVHPS_xmm1_xmm2m64(X86::Instruction const& insn)
+void SoftVPU::MOVHPS_xmm1_xmm2m64(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm1 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -170,14 +170,14 @@ void SoftVPU::MOVHPS_xmm1_xmm2m64(X86::Instruction const& insn)
         m_xmm[xmm1].puqw[1] = insn.modrm().read64(m_cpu, insn).value();
     }
 }
-void SoftVPU::MOVHPS_m64_xmm2(X86::Instruction const& insn)
+void SoftVPU::MOVHPS_m64_xmm2(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm1 = insn.modrm().reg();
     VERIFY(!insn.modrm().is_register());
     // Note: Technically we are transferring two packed floats not a quad word
     insn.modrm().write64(m_cpu, insn, ValueWithShadow<u64>::create_initialized(m_xmm[xmm1].puqw[1]));
 }
-void SoftVPU::MOVAPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::MOVAPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm1 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -188,7 +188,7 @@ void SoftVPU::MOVAPS_xmm1_xmm2m128(X86::Instruction const& insn)
         m_xmm[xmm1].ps = bit_cast<f32x4>(temp.value());
     }
 }
-void SoftVPU::MOVAPS_xmm1m128_xmm2(X86::Instruction const& insn)
+void SoftVPU::MOVAPS_xmm1m128_xmm2(Disassembly::X86::Instruction const& insn)
 {
     u8 xmm2 = insn.modrm().reg();
     if (insn.modrm().is_register()) {
@@ -200,7 +200,7 @@ void SoftVPU::MOVAPS_xmm1m128_xmm2(X86::Instruction const& insn)
     }
 }
 
-void SoftVPU::CVTPI2PS_xmm1_mm2m64(X86::Instruction const& insn)
+void SoftVPU::CVTPI2PS_xmm1_mm2m64(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Precision
     // FIXME: Honor Rounding control
@@ -216,7 +216,7 @@ void SoftVPU::CVTPI2PS_xmm1_mm2m64(X86::Instruction const& insn)
         m_xmm[xmm1].ps[1] = m64[1];
     }
 }
-void SoftVPU::CVTSI2SS_xmm1_rm32(X86::Instruction const& insn)
+void SoftVPU::CVTSI2SS_xmm1_rm32(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Precision
     // FIXME: Shadows
@@ -224,10 +224,10 @@ void SoftVPU::CVTSI2SS_xmm1_rm32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] = (i32)insn.modrm().read32(m_cpu, insn).value();
 }
 
-void SoftVPU::MOVNTPS_xmm1m128_xmm2(X86::Instruction const&) { TODO(); }
+void SoftVPU::MOVNTPS_xmm1m128_xmm2(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::CVTTPS2PI_mm1_xmm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::CVTTSS2SI_r32_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::CVTTPS2PI_mm1_xmm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::CVTTSS2SI_r32_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid, Precision
     float value;
@@ -238,15 +238,15 @@ void SoftVPU::CVTTSS2SI_r32_xmm2m32(X86::Instruction const& insn)
 
     m_cpu.gpr32(insn.reg32()) = ValueWithShadow<u32>::create_initialized((u32)(i32)truncf(value));
 }
-void SoftVPU::CVTPS2PI_xmm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::CVTSS2SI_r32_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::CVTPS2PI_xmm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::CVTSS2SI_r32_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid, Precision
     insn.modrm().write32(m_cpu, insn,
         ValueWithShadow<u32>::create_initialized(static_cast<i32>(m_xmm[insn.modrm().reg()].ps[0])));
 }
 
-void SoftVPU::UCOMISS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::UCOMISS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     float xmm1 = m_xmm[insn.modrm().reg()].ps[0];
     float xmm2m32;
@@ -268,13 +268,13 @@ void SoftVPU::UCOMISS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_cpu.set_af(false);
     m_cpu.set_sf(false);
 }
-void SoftVPU::COMISS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::COMISS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise on QNaN
     UCOMISS_xmm1_xmm2m32(insn);
 }
 
-void SoftVPU::MOVMSKPS_reg_xmm(X86::Instruction const& insn)
+void SoftVPU::MOVMSKPS_reg_xmm(Disassembly::X86::Instruction const& insn)
 {
     VERIFY(insn.modrm().is_register());
     u8 mask = 0;
@@ -287,7 +287,7 @@ void SoftVPU::MOVMSKPS_reg_xmm(X86::Instruction const& insn)
     m_cpu.gpr32(insn.reg32()) = ValueWithShadow<u32>::create_initialized(mask);
 }
 
-void SoftVPU::SQRTPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::SQRTPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid, Precision, Denormal
     f32x4 xmm2m128;
@@ -301,7 +301,7 @@ void SoftVPU::SQRTPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps = sqrt(xmm2m128);
 }
-void SoftVPU::SQRTSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::SQRTSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid, Precision, Denormal
     float xmm2m32;
@@ -315,7 +315,7 @@ void SoftVPU::SQRTSS_xmm1_xmm2m32(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps[0] = AK::sqrt(xmm2m32);
 }
-void SoftVPU::RSQRTPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::RSQRTPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     f32x4 xmm2m128;
     if (insn.modrm().is_register()) {
@@ -327,7 +327,7 @@ void SoftVPU::RSQRTPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps = rsqrt(xmm2m128);
 }
-void SoftVPU::RSQRTSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::RSQRTSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     float xmm2m32;
     if (insn.modrm().is_register()) {
@@ -340,7 +340,7 @@ void SoftVPU::RSQRTSS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] = AK::rsqrt(xmm2m32);
 }
 
-void SoftVPU::RCPPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::RCPPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     f32x4 xmm2m128;
     if (insn.modrm().is_register()) {
@@ -352,7 +352,7 @@ void SoftVPU::RCPPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps = 1.f / xmm2m128;
 }
-void SoftVPU::RCPSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::RCPSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     float xmm2m32;
     if (insn.modrm().is_register()) {
@@ -365,7 +365,7 @@ void SoftVPU::RCPSS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] = 1.f / xmm2m32;
 }
 
-void SoftVPU::ANDPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::ANDPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     u32x4 xmm2m128;
     if (insn.modrm().is_register()) {
@@ -377,7 +377,7 @@ void SoftVPU::ANDPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].pudw &= xmm2m128;
 }
-void SoftVPU::ANDNPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::ANDNPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     u32x4 xmm2m128;
     if (insn.modrm().is_register()) {
@@ -390,7 +390,7 @@ void SoftVPU::ANDNPS_xmm1_xmm2m128(X86::Instruction const& insn)
     u32x4& xmm1 = m_xmm[insn.modrm().reg()].pudw;
     xmm1 = ~xmm1 & xmm2m128;
 }
-void SoftVPU::ORPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::ORPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     u32x4 xmm2m128;
     if (insn.modrm().is_register()) {
@@ -402,7 +402,7 @@ void SoftVPU::ORPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].pudw |= xmm2m128;
 }
-void SoftVPU::XORPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::XORPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     u32x4 xmm2m128;
     if (insn.modrm().is_register()) {
@@ -415,7 +415,7 @@ void SoftVPU::XORPS_xmm1_xmm2m128(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].pudw ^= xmm2m128;
 }
 
-void SoftVPU::ADDPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::ADDPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     // Raise Overflow, Underflow, Invalid, Precision, Denormal
     f32x4 xmm2m128;
@@ -428,7 +428,7 @@ void SoftVPU::ADDPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps += xmm2m128;
 }
-void SoftVPU::ADDSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::ADDSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // Raise Overflow, Underflow, Invalid, Precision, Denormal
     float xmm2m32;
@@ -442,7 +442,7 @@ void SoftVPU::ADDSS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] += xmm2m32;
 }
 
-void SoftVPU::MULPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::MULPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     // Raise Overflow, Underflow, Invalid, Precision, Denormal
     f32x4 xmm2m128;
@@ -455,7 +455,7 @@ void SoftVPU::MULPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps *= xmm2m128;
 }
-void SoftVPU::MULSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::MULSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // Raise Overflow, Underflow, Invalid, Precision, Denormal
     float xmm1 = m_xmm[insn.modrm().reg()].ps[0];
@@ -472,7 +472,7 @@ void SoftVPU::MULSS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] *= xmm1;
 }
 
-void SoftVPU::SUBPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::SUBPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     // Raise Overflow, Underflow, Invalid, Precision, Denormal
     f32x4 xmm2m128;
@@ -486,7 +486,7 @@ void SoftVPU::SUBPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps -= xmm2m128;
 }
-void SoftVPU::SUBSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::SUBSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // Raise Overflow, Underflow, Invalid, Precision, Denormal
     float xmm2m32;
@@ -501,7 +501,7 @@ void SoftVPU::SUBSS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] -= xmm2m32;
 }
 
-void SoftVPU::MINPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::MINPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid (including QNaN Source Operand), Denormal
     f32x4 xmm1 = m_xmm[insn.modrm().reg()].ps;
@@ -526,7 +526,7 @@ void SoftVPU::MINPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps = xmm1;
 }
-void SoftVPU::MINSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::MINSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid (Including QNaN Source Operand), Denormal
     float xmm1 = m_xmm[insn.modrm().reg()].ps[0];
@@ -549,7 +549,7 @@ void SoftVPU::MINSS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] = xmm1;
 }
 
-void SoftVPU::DIVPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::DIVPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     // Raise Overflow, Underflow, Invalid, Divide-by-Zero, Precision, Denormal
     f32x4 xmm2m128;
@@ -562,7 +562,7 @@ void SoftVPU::DIVPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps /= xmm2m128;
 }
-void SoftVPU::DIVSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::DIVSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // Raise Overflow, Underflow, Invalid, Divide-by-Zero, Precision, Denormal
     float xmm2m32;
@@ -576,7 +576,7 @@ void SoftVPU::DIVSS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] /= xmm2m32;
 }
 
-void SoftVPU::MAXPS_xmm1_xmm2m128(X86::Instruction const& insn)
+void SoftVPU::MAXPS_xmm1_xmm2m128(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid (including QNaN Source Operand), Denormal
     f32x4 xmm1 = m_xmm[insn.modrm().reg()].ps;
@@ -601,7 +601,7 @@ void SoftVPU::MAXPS_xmm1_xmm2m128(X86::Instruction const& insn)
 
     m_xmm[insn.modrm().reg()].ps = xmm1;
 }
-void SoftVPU::MAXSS_xmm1_xmm2m32(X86::Instruction const& insn)
+void SoftVPU::MAXSS_xmm1_xmm2m32(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid (Including QNaN Source Operand), Denormal
     float xmm1 = m_xmm[insn.modrm().reg()].ps[0];
@@ -624,7 +624,7 @@ void SoftVPU::MAXSS_xmm1_xmm2m32(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps[0] = xmm1;
 }
 
-void SoftVPU::PSHUFW_mm1_mm2m64_imm8(X86::Instruction const& insn)
+void SoftVPU::PSHUFW_mm1_mm2m64_imm8(Disassembly::X86::Instruction const& insn)
 {
     MMX src;
     if (insn.modrm().is_register()) {
@@ -645,7 +645,7 @@ void SoftVPU::PSHUFW_mm1_mm2m64_imm8(X86::Instruction const& insn)
     m_cpu.mmx_set(insn.modrm().reg(), dest);
 }
 
-void SoftVPU::CMPPS_xmm1_xmm2m128_imm8(X86::Instruction const& insn)
+void SoftVPU::CMPPS_xmm1_xmm2m128_imm8(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Denormal, Invalid Operation (QNaN dependent on imm8)
     XMM& xmm1 = m_xmm[insn.modrm().reg()];
@@ -687,7 +687,7 @@ void SoftVPU::CMPPS_xmm1_xmm2m128_imm8(X86::Instruction const& insn)
         break;
     }
 }
-void SoftVPU::CMPSS_xmm1_xmm2m32_imm8(X86::Instruction const& insn)
+void SoftVPU::CMPSS_xmm1_xmm2m32_imm8(Disassembly::X86::Instruction const& insn)
 {
     // FIXME: Raise Denormal, Invalid Operation (QNaN dependent on imm8)
     float xmm1 = m_xmm[insn.modrm().reg()].ps[0];
@@ -731,12 +731,12 @@ void SoftVPU::CMPSS_xmm1_xmm2m32_imm8(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].pudw[0] = 0xFFFF'FFFF * res;
 }
 
-void SoftVPU::PINSRW_mm1_r32m16_imm8(X86::Instruction const&) { TODO(); }
-void SoftVPU::PINSRW_xmm1_r32m16_imm8(X86::Instruction const&) { TODO(); }
-void SoftVPU::PEXTRW_reg_mm1_imm8(X86::Instruction const&) { TODO(); }
-void SoftVPU::PEXTRW_reg_xmm1_imm8(X86::Instruction const&) { TODO(); }
+void SoftVPU::PINSRW_mm1_r32m16_imm8(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PINSRW_xmm1_r32m16_imm8(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PEXTRW_reg_mm1_imm8(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PEXTRW_reg_xmm1_imm8(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::SHUFPS_xmm1_xmm2m128_imm8(X86::Instruction const& insn)
+void SoftVPU::SHUFPS_xmm1_xmm2m128_imm8(Disassembly::X86::Instruction const& insn)
 {
     f32x4 src;
     if (insn.modrm().is_register()) {
@@ -756,8 +756,8 @@ void SoftVPU::SHUFPS_xmm1_xmm2m128_imm8(X86::Instruction const& insn)
     m_xmm[insn.modrm().reg()].ps = dest;
 }
 
-void SoftVPU::PMOVMSKB_reg_mm1(X86::Instruction const&) { TODO(); }
-void SoftVPU::PMOVMSKB_reg_xmm1(X86::Instruction const& insn)
+void SoftVPU::PMOVMSKB_reg_mm1(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PMOVMSKB_reg_xmm1(Disassembly::X86::Instruction const& insn)
 {
     VERIFY(insn.modrm().is_register());
     XMM src = m_xmm[insn.modrm().rm()];
@@ -769,31 +769,31 @@ void SoftVPU::PMOVMSKB_reg_xmm1(X86::Instruction const& insn)
     m_cpu.gpr32(insn.reg32()) = ValueWithShadow<u32>::create_initialized(dest);
 }
 
-void SoftVPU::PMINUB_mm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::PMINUB_xmm1_xmm2m128(X86::Instruction const&) { TODO(); }
+void SoftVPU::PMINUB_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PMINUB_xmm1_xmm2m128(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::PMAXUB_mm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::PMAXUB_xmm1_xmm2m128(X86::Instruction const&) { TODO(); }
+void SoftVPU::PMAXUB_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PMAXUB_xmm1_xmm2m128(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::PAVGB_mm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::PAVGB_xmm1_xmm2m128(X86::Instruction const&) { TODO(); }
+void SoftVPU::PAVGB_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PAVGB_xmm1_xmm2m128(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::PAVGW_mm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::PAVGW_xmm1_xmm2m128(X86::Instruction const&) { TODO(); }
+void SoftVPU::PAVGW_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PAVGW_xmm1_xmm2m128(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::PMULHUW_mm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::PMULHUW_xmm1_xmm2m64(X86::Instruction const&) { TODO(); }
+void SoftVPU::PMULHUW_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PMULHUW_xmm1_xmm2m64(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::MOVNTQ_m64_mm1(X86::Instruction const&) { TODO(); }
+void SoftVPU::MOVNTQ_m64_mm1(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::PMINSB_mm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::PMINSB_xmm1_xmm2m128(X86::Instruction const&) { TODO(); }
+void SoftVPU::PMINSB_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PMINSB_xmm1_xmm2m128(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::PMAXSB_mm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::PMAXSB_xmm1_xmm2m128(X86::Instruction const&) { TODO(); }
+void SoftVPU::PMAXSB_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PMAXSB_xmm1_xmm2m128(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::PSADBB_mm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::PSADBB_xmm1_xmm2m128(X86::Instruction const&) { TODO(); }
+void SoftVPU::PSADBB_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
+void SoftVPU::PSADBB_xmm1_xmm2m128(Disassembly::X86::Instruction const&) { TODO(); }
 
-void SoftVPU::MASKMOVQ_mm1_mm2m64(X86::Instruction const&) { TODO(); }
+void SoftVPU::MASKMOVQ_mm1_mm2m64(Disassembly::X86::Instruction const&) { TODO(); }
 }

@@ -14,11 +14,11 @@
 #include <AK/StringUtils.h>
 #include <Kernel/API/MemoryLayout.h>
 #include <LibCore/MappedFile.h>
+#include <LibDisassembly/ELFSymbolProvider.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 #include <LibFileSystem/FileSystem.h>
-#include <LibX86/ELFSymbolProvider.h>
 #include <fcntl.h>
 #include <syscall.h>
 #include <unistd.h>
@@ -220,8 +220,8 @@ bool Emulator::load_elf()
 
 int Emulator::exec()
 {
-    // X86::ELFSymbolProvider symbol_provider(*m_elf);
-    X86::ELFSymbolProvider* symbol_provider = nullptr;
+    // Disassembly::X86::ELFSymbolProvider symbol_provider(*m_elf);
+    Disassembly::X86::ELFSymbolProvider* symbol_provider = nullptr;
 
     constexpr bool trace = false;
 
@@ -232,7 +232,7 @@ int Emulator::exec()
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
             m_cpu->save_base_eip();
-            auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
+            auto insn = Disassembly::X86::Instruction::from_stream(*m_cpu, Disassembly::X86::ProcessorMode::Protected);
             // Exec cycle
             if constexpr (trace) {
                 outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_eip(), insn.to_byte_string(m_cpu->base_eip(), symbol_provider));
@@ -299,7 +299,7 @@ void Emulator::handle_repl()
     // FIXME: Function names (base, call, jump)
     auto saved_eip = m_cpu->eip();
     m_cpu->save_base_eip();
-    auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
+    auto insn = Disassembly::X86::Instruction::from_stream(*m_cpu, Disassembly::X86::ProcessorMode::Protected);
     // FIXME: This does not respect inlining
     //        another way of getting the current function is at need
     if (auto symbol = symbol_at(m_cpu->base_eip()); symbol.has_value()) {
@@ -309,7 +309,7 @@ void Emulator::handle_repl()
     outln("==> {}", create_instruction_line(m_cpu->base_eip(), insn));
     for (int i = 0; i < 7; ++i) {
         m_cpu->save_base_eip();
-        insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
+        insn = Disassembly::X86::Instruction::from_stream(*m_cpu, Disassembly::X86::ProcessorMode::Protected);
         outln("    {}", create_instruction_line(m_cpu->base_eip(), insn));
     }
     // We don't want to increase EIP here, we just want the instructions
@@ -523,7 +523,7 @@ void Emulator::emit_profile_event(Stream& output, StringView event_name, ByteStr
     output.write_until_depleted(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
-ByteString Emulator::create_instruction_line(FlatPtr address, X86::Instruction const& insn)
+ByteString Emulator::create_instruction_line(FlatPtr address, Disassembly::X86::Instruction const& insn)
 {
     auto symbol = symbol_at(address);
     if (!symbol.has_value() || !symbol->source_position.has_value())

@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace X86 {
+namespace Disassembly::X86 {
 
 class Instruction;
 
@@ -777,8 +777,8 @@ public:
     virtual void CVTDQ2PS_xmm1_xmm2m128(Instruction const&) = 0;
     virtual void CVTPS2DQ_xmm1_xmm2m128(Instruction const&) = 0;
     virtual void CVTTPS2DQ_xmm1_xmm2m128(Instruction const&) = 0;
-    virtual void SUBPD_xmm1_xmm2m128(X86::Instruction const&) = 0;
-    virtual void SUBSD_xmm1_xmm2m32(X86::Instruction const&) = 0;
+    virtual void SUBPD_xmm1_xmm2m128(Disassembly::X86::Instruction const&) = 0;
+    virtual void SUBSD_xmm1_xmm2m32(Disassembly::X86::Instruction const&) = 0;
     virtual void MINPD_xmm1_xmm2m128(Instruction const&) = 0;
     virtual void MINSD_xmm1_xmm2m32(Instruction const&) = 0;
     virtual void DIVPD_xmm1_xmm2m128(Instruction const&) = 0;

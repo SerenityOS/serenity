@@ -9,10 +9,10 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugSession.h>
+#include <LibDisassembly/Disassembler.h>
+#include <LibDisassembly/ELFSymbolProvider.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/ELFSymbolProvider.h>
 #include <stdio.h>
 
 namespace HackStudio {
@@ -50,9 +50,9 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
 
     auto view = symbol.value().raw_data();
 
-    X86::ELFSymbolProvider symbol_provider(*elf);
-    X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
-    X86::Disassembler disassembler(stream);
+    Disassembly::X86::ELFSymbolProvider symbol_provider(*elf);
+    Disassembly::X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
+    Disassembly::X86::Disassembler disassembler(stream);
 
     size_t offset_into_symbol = 0;
     for (;;) {

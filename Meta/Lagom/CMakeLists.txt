@@ -483,7 +483,7 @@ if (BUILD_LAGOM)
         lagom_lib(LibELF elf
             SOURCES ${LIBELF_SOURCES}
         )
-        list(APPEND lagom_standard_libraries X86)
+        list(APPEND lagom_standard_libraries Disassembly)
     endif()
 
     foreach(lib IN LISTS lagom_standard_libraries)
@@ -531,7 +531,7 @@ if (BUILD_LAGOM)
         # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
         #        for Lagom on Apple M1
         if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" AND NOT EMSCRIPTEN)
-            lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibX86 LibMain)
+            lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibDisassembly LibMain)
         endif()
 
         if (NOT EMSCRIPTEN)

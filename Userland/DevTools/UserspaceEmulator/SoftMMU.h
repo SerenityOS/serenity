@@ -12,7 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
-#include <LibX86/Instruction.h>
+#include <LibDisassembly/Instruction.h>
 
 namespace UserspaceEmulator {
 
@@ -22,17 +22,17 @@ class SoftMMU {
 public:
     explicit SoftMMU(Emulator&);
 
-    ValueWithShadow<u8> read8(X86::LogicalAddress);
-    ValueWithShadow<u16> read16(X86::LogicalAddress);
-    ValueWithShadow<u32> read32(X86::LogicalAddress);
-    ValueWithShadow<u64> read64(X86::LogicalAddress);
-    ValueWithShadow<u128> read128(X86::LogicalAddress);
-    ValueWithShadow<u256> read256(X86::LogicalAddress);
+    ValueWithShadow<u8> read8(Disassembly::X86::LogicalAddress);
+    ValueWithShadow<u16> read16(Disassembly::X86::LogicalAddress);
+    ValueWithShadow<u32> read32(Disassembly::X86::LogicalAddress);
+    ValueWithShadow<u64> read64(Disassembly::X86::LogicalAddress);
+    ValueWithShadow<u128> read128(Disassembly::X86::LogicalAddress);
+    ValueWithShadow<u256> read256(Disassembly::X86::LogicalAddress);
 
     void dump_backtrace();
 
     template<typename T>
-    ValueWithShadow<T> read(X86::LogicalAddress address)
+    ValueWithShadow<T> read(Disassembly::X86::LogicalAddress address)
     requires(IsTriviallyConstructible<T>)
     {
         auto* region = find_region(address);
@@ -63,14 +63,14 @@ public:
         };
     }
 
-    void write8(X86::LogicalAddress, ValueWithShadow<u8>);
-    void write16(X86::LogicalAddress, ValueWithShadow<u16>);
-    void write32(X86::LogicalAddress, ValueWithShadow<u32>);
-    void write64(X86::LogicalAddress, ValueWithShadow<u64>);
-    void write128(X86::LogicalAddress, ValueWithShadow<u128>);
-    void write256(X86::LogicalAddress, ValueWithShadow<u256>);
+    void write8(Disassembly::X86::LogicalAddress, ValueWithShadow<u8>);
+    void write16(Disassembly::X86::LogicalAddress, ValueWithShadow<u16>);
+    void write32(Disassembly::X86::LogicalAddress, ValueWithShadow<u32>);
+    void write64(Disassembly::X86::LogicalAddress, ValueWithShadow<u64>);
+    void write128(Disassembly::X86::LogicalAddress, ValueWithShadow<u128>);
+    void write256(Disassembly::X86::LogicalAddress, ValueWithShadow<u256>);
 
-    ALWAYS_INLINE Region* find_region(X86::LogicalAddress address)
+    ALWAYS_INLINE Region* find_region(Disassembly::X86::LogicalAddress address)
     {
         if (address.selector() == 0x2b)
             return m_tls_region.ptr();
@@ -81,12 +81,12 @@ public:
 
     void add_region(NonnullOwnPtr<Region>);
     void remove_region(Region&);
-    void ensure_split_at(X86::LogicalAddress);
+    void ensure_split_at(Disassembly::X86::LogicalAddress);
 
     void set_tls_region(NonnullOwnPtr<Region>);
 
-    bool fast_fill_memory8(X86::LogicalAddress, size_t size, ValueWithShadow<u8>);
-    bool fast_fill_memory32(X86::LogicalAddress, size_t size, ValueWithShadow<u32>);
+    bool fast_fill_memory8(Disassembly::X86::LogicalAddress, size_t size, ValueWithShadow<u8>);
+    bool fast_fill_memory32(Disassembly::X86::LogicalAddress, size_t size, ValueWithShadow<u32>);
 
     void copy_to_vm(FlatPtr destination, void const* source, size_t);
     void copy_from_vm(void* destination, const FlatPtr source, size_t);
@@ -116,10 +116,10 @@ public:
     }
 
     template<typename Callback>
-    void for_regions_in(X86::LogicalAddress address, size_t size, Callback callback)
+    void for_regions_in(Disassembly::X86::LogicalAddress address, size_t size, Callback callback)
     {
         VERIFY(size > 0);
-        X86::LogicalAddress address_end = address;
+        Disassembly::X86::LogicalAddress address_end = address;
         address_end.set_offset(address_end.offset() + size);
         ensure_split_at(address);
         ensure_split_at(address_end);

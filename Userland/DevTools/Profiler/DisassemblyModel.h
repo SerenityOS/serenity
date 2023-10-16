@@ -8,8 +8,8 @@
 #pragma once
 
 #include <LibDebug/DebugInfo.h>
+#include <LibDisassembly/Instruction.h>
 #include <LibGUI/Model.h>
-#include <LibX86/Instruction.h>
 
 namespace Profiler {
 
@@ -17,7 +17,7 @@ class Profile;
 class ProfileNode;
 
 struct InstructionData {
-    X86::Instruction insn;
+    Disassembly::X86::Instruction insn;
     ByteString disassembly;
     StringView bytes;
     FlatPtr address { 0 };

@@ -10,8 +10,8 @@
 #include <AK/Concepts.h>
 #include <AK/FPControl.h>
 #include <AK/SIMD.h>
-#include <LibX86/Instruction.h>
-#include <LibX86/Interpreter.h>
+#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/Interpreter.h>
 
 #include <math.h>
 #include <string.h>
@@ -335,253 +335,253 @@ private:
     // Instructions
 
     // DATA TRANSFER
-    void FLD_RM32(const X86::Instruction&);
-    void FLD_RM64(const X86::Instruction&);
-    void FLD_RM80(const X86::Instruction&);
+    void FLD_RM32(Disassembly::X86::Instruction const&);
+    void FLD_RM64(Disassembly::X86::Instruction const&);
+    void FLD_RM80(Disassembly::X86::Instruction const&);
 
-    void FST_RM32(const X86::Instruction&);
-    void FST_RM64(const X86::Instruction&);
-    void FSTP_RM32(const X86::Instruction&);
-    void FSTP_RM64(const X86::Instruction&);
-    void FSTP_RM80(const X86::Instruction&);
+    void FST_RM32(Disassembly::X86::Instruction const&);
+    void FST_RM64(Disassembly::X86::Instruction const&);
+    void FSTP_RM32(Disassembly::X86::Instruction const&);
+    void FSTP_RM64(Disassembly::X86::Instruction const&);
+    void FSTP_RM80(Disassembly::X86::Instruction const&);
 
-    void FILD_RM32(const X86::Instruction&);
-    void FILD_RM16(const X86::Instruction&);
-    void FILD_RM64(const X86::Instruction&);
+    void FILD_RM32(Disassembly::X86::Instruction const&);
+    void FILD_RM16(Disassembly::X86::Instruction const&);
+    void FILD_RM64(Disassembly::X86::Instruction const&);
 
-    void FIST_RM16(const X86::Instruction&);
-    void FIST_RM32(const X86::Instruction&);
-    void FISTP_RM16(const X86::Instruction&);
-    void FISTP_RM32(const X86::Instruction&);
-    void FISTP_RM64(const X86::Instruction&);
-    void FISTTP_RM16(const X86::Instruction&);
-    void FISTTP_RM32(const X86::Instruction&);
-    void FISTTP_RM64(const X86::Instruction&);
+    void FIST_RM16(Disassembly::X86::Instruction const&);
+    void FIST_RM32(Disassembly::X86::Instruction const&);
+    void FISTP_RM16(Disassembly::X86::Instruction const&);
+    void FISTP_RM32(Disassembly::X86::Instruction const&);
+    void FISTP_RM64(Disassembly::X86::Instruction const&);
+    void FISTTP_RM16(Disassembly::X86::Instruction const&);
+    void FISTTP_RM32(Disassembly::X86::Instruction const&);
+    void FISTTP_RM64(Disassembly::X86::Instruction const&);
 
-    void FBLD_M80(const X86::Instruction&);
-    void FBSTP_M80(const X86::Instruction&);
+    void FBLD_M80(Disassembly::X86::Instruction const&);
+    void FBSTP_M80(Disassembly::X86::Instruction const&);
 
-    void FXCH(const X86::Instruction&);
+    void FXCH(Disassembly::X86::Instruction const&);
 
-    void FCMOVE(const X86::Instruction&);
-    void FCMOVNE(const X86::Instruction&);
-    void FCMOVB(const X86::Instruction&);
-    void FCMOVBE(const X86::Instruction&);
-    void FCMOVNB(const X86::Instruction&);
-    void FCMOVNBE(const X86::Instruction&);
-    void FCMOVU(const X86::Instruction&);
-    void FCMOVNU(const X86::Instruction&);
+    void FCMOVE(Disassembly::X86::Instruction const&);
+    void FCMOVNE(Disassembly::X86::Instruction const&);
+    void FCMOVB(Disassembly::X86::Instruction const&);
+    void FCMOVBE(Disassembly::X86::Instruction const&);
+    void FCMOVNB(Disassembly::X86::Instruction const&);
+    void FCMOVNBE(Disassembly::X86::Instruction const&);
+    void FCMOVU(Disassembly::X86::Instruction const&);
+    void FCMOVNU(Disassembly::X86::Instruction const&);
 
     // BASIC ARITHMETIC
-    void FADD_RM32(const X86::Instruction&);
-    void FADD_RM64(const X86::Instruction&);
-    void FADDP(const X86::Instruction&);
+    void FADD_RM32(Disassembly::X86::Instruction const&);
+    void FADD_RM64(Disassembly::X86::Instruction const&);
+    void FADDP(Disassembly::X86::Instruction const&);
 
-    void FIADD_RM16(const X86::Instruction&);
-    void FIADD_RM32(const X86::Instruction&);
+    void FIADD_RM16(Disassembly::X86::Instruction const&);
+    void FIADD_RM32(Disassembly::X86::Instruction const&);
 
-    void FSUB_RM32(const X86::Instruction&);
-    void FSUB_RM64(const X86::Instruction&);
-    void FSUBP(const X86::Instruction&);
-    void FSUBR_RM32(const X86::Instruction&);
-    void FSUBR_RM64(const X86::Instruction&);
-    void FSUBRP(const X86::Instruction&);
+    void FSUB_RM32(Disassembly::X86::Instruction const&);
+    void FSUB_RM64(Disassembly::X86::Instruction const&);
+    void FSUBP(Disassembly::X86::Instruction const&);
+    void FSUBR_RM32(Disassembly::X86::Instruction const&);
+    void FSUBR_RM64(Disassembly::X86::Instruction const&);
+    void FSUBRP(Disassembly::X86::Instruction const&);
 
-    void FISUB_RM16(const X86::Instruction&);
-    void FISUB_RM32(const X86::Instruction&);
-    void FISUBR_RM16(const X86::Instruction&);
-    void FISUBR_RM32(const X86::Instruction&);
+    void FISUB_RM16(Disassembly::X86::Instruction const&);
+    void FISUB_RM32(Disassembly::X86::Instruction const&);
+    void FISUBR_RM16(Disassembly::X86::Instruction const&);
+    void FISUBR_RM32(Disassembly::X86::Instruction const&);
 
-    void FMUL_RM32(const X86::Instruction&);
-    void FMUL_RM64(const X86::Instruction&);
-    void FMULP(const X86::Instruction&);
+    void FMUL_RM32(Disassembly::X86::Instruction const&);
+    void FMUL_RM64(Disassembly::X86::Instruction const&);
+    void FMULP(Disassembly::X86::Instruction const&);
 
-    void FIMUL_RM16(const X86::Instruction&);
-    void FIMUL_RM32(const X86::Instruction&);
+    void FIMUL_RM16(Disassembly::X86::Instruction const&);
+    void FIMUL_RM32(Disassembly::X86::Instruction const&);
 
-    void FDIV_RM32(const X86::Instruction&);
-    void FDIV_RM64(const X86::Instruction&);
-    void FDIVP(const X86::Instruction&);
-    void FDIVR_RM32(const X86::Instruction&);
-    void FDIVR_RM64(const X86::Instruction&);
-    void FDIVRP(const X86::Instruction&);
+    void FDIV_RM32(Disassembly::X86::Instruction const&);
+    void FDIV_RM64(Disassembly::X86::Instruction const&);
+    void FDIVP(Disassembly::X86::Instruction const&);
+    void FDIVR_RM32(Disassembly::X86::Instruction const&);
+    void FDIVR_RM64(Disassembly::X86::Instruction const&);
+    void FDIVRP(Disassembly::X86::Instruction const&);
 
-    void FIDIV_RM16(const X86::Instruction&);
-    void FIDIV_RM32(const X86::Instruction&);
-    void FIDIVR_RM16(const X86::Instruction&);
-    void FIDIVR_RM32(const X86::Instruction&);
+    void FIDIV_RM16(Disassembly::X86::Instruction const&);
+    void FIDIV_RM32(Disassembly::X86::Instruction const&);
+    void FIDIVR_RM16(Disassembly::X86::Instruction const&);
+    void FIDIVR_RM32(Disassembly::X86::Instruction const&);
 
-    void FPREM(const X86::Instruction&);
-    void FPREM1(const X86::Instruction&);
+    void FPREM(Disassembly::X86::Instruction const&);
+    void FPREM1(Disassembly::X86::Instruction const&);
 
-    void FABS(const X86::Instruction&);
-    void FCHS(const X86::Instruction&);
+    void FABS(Disassembly::X86::Instruction const&);
+    void FCHS(Disassembly::X86::Instruction const&);
 
-    void FRNDINT(const X86::Instruction&);
+    void FRNDINT(Disassembly::X86::Instruction const&);
 
-    void FSCALE(const X86::Instruction&);
+    void FSCALE(Disassembly::X86::Instruction const&);
 
-    void FSQRT(const X86::Instruction&);
+    void FSQRT(Disassembly::X86::Instruction const&);
 
-    void FXTRACT(const X86::Instruction&);
+    void FXTRACT(Disassembly::X86::Instruction const&);
 
     // COMPARISON
-    void FCOM_RM32(const X86::Instruction&);
-    void FCOM_RM64(const X86::Instruction&);
-    void FCOMP_RM32(const X86::Instruction&);
-    void FCOMP_RM64(const X86::Instruction&);
-    void FCOMPP(const X86::Instruction&);
-    void FCOMI(const X86::Instruction&);
-    void FCOMIP(const X86::Instruction&);
+    void FCOM_RM32(Disassembly::X86::Instruction const&);
+    void FCOM_RM64(Disassembly::X86::Instruction const&);
+    void FCOMP_RM32(Disassembly::X86::Instruction const&);
+    void FCOMP_RM64(Disassembly::X86::Instruction const&);
+    void FCOMPP(Disassembly::X86::Instruction const&);
+    void FCOMI(Disassembly::X86::Instruction const&);
+    void FCOMIP(Disassembly::X86::Instruction const&);
 
-    void FUCOM(const X86::Instruction&);
-    void FUCOMP(const X86::Instruction&);
-    void FUCOMPP(const X86::Instruction&);
-    void FUCOMI(const X86::Instruction&);
-    void FUCOMIP(const X86::Instruction&);
+    void FUCOM(Disassembly::X86::Instruction const&);
+    void FUCOMP(Disassembly::X86::Instruction const&);
+    void FUCOMPP(Disassembly::X86::Instruction const&);
+    void FUCOMI(Disassembly::X86::Instruction const&);
+    void FUCOMIP(Disassembly::X86::Instruction const&);
 
-    void FICOM_RM16(const X86::Instruction&);
-    void FICOM_RM32(const X86::Instruction&);
-    void FICOMP_RM16(const X86::Instruction&);
-    void FICOMP_RM32(const X86::Instruction&);
+    void FICOM_RM16(Disassembly::X86::Instruction const&);
+    void FICOM_RM32(Disassembly::X86::Instruction const&);
+    void FICOMP_RM16(Disassembly::X86::Instruction const&);
+    void FICOMP_RM32(Disassembly::X86::Instruction const&);
 
-    void FTST(const X86::Instruction&);
-    void FXAM(const X86::Instruction&);
+    void FTST(Disassembly::X86::Instruction const&);
+    void FXAM(Disassembly::X86::Instruction const&);
 
     // TRANSCENDENTAL
-    void FSIN(const X86::Instruction&);
-    void FCOS(const X86::Instruction&);
-    void FSINCOS(const X86::Instruction&);
-    void FPTAN(const X86::Instruction&);
-    void FPATAN(const X86::Instruction&);
+    void FSIN(Disassembly::X86::Instruction const&);
+    void FCOS(Disassembly::X86::Instruction const&);
+    void FSINCOS(Disassembly::X86::Instruction const&);
+    void FPTAN(Disassembly::X86::Instruction const&);
+    void FPATAN(Disassembly::X86::Instruction const&);
 
-    void F2XM1(const X86::Instruction&);
-    void FYL2X(const X86::Instruction&);
-    void FYL2XP1(const X86::Instruction&);
+    void F2XM1(Disassembly::X86::Instruction const&);
+    void FYL2X(Disassembly::X86::Instruction const&);
+    void FYL2XP1(Disassembly::X86::Instruction const&);
 
     // CONSTANT LOAD
-    void FLD1(const X86::Instruction&);
-    void FLDZ(const X86::Instruction&);
-    void FLDPI(const X86::Instruction&);
-    void FLDL2E(const X86::Instruction&);
-    void FLDLN2(const X86::Instruction&);
-    void FLDL2T(const X86::Instruction&);
-    void FLDLG2(const X86::Instruction&);
+    void FLD1(Disassembly::X86::Instruction const&);
+    void FLDZ(Disassembly::X86::Instruction const&);
+    void FLDPI(Disassembly::X86::Instruction const&);
+    void FLDL2E(Disassembly::X86::Instruction const&);
+    void FLDLN2(Disassembly::X86::Instruction const&);
+    void FLDL2T(Disassembly::X86::Instruction const&);
+    void FLDLG2(Disassembly::X86::Instruction const&);
 
     // CONTROL
-    void FINCSTP(const X86::Instruction&);
-    void FDECSTP(const X86::Instruction&);
-    void FFREE(const X86::Instruction&);
-    void FFREEP(const X86::Instruction&); // undocumented
+    void FINCSTP(Disassembly::X86::Instruction const&);
+    void FDECSTP(Disassembly::X86::Instruction const&);
+    void FFREE(Disassembly::X86::Instruction const&);
+    void FFREEP(Disassembly::X86::Instruction const&); // undocumented
 
     // FIXME: Non N- versions?
-    void FNINIT(const X86::Instruction&);
-    void FNCLEX(const X86::Instruction&);
+    void FNINIT(Disassembly::X86::Instruction const&);
+    void FNCLEX(Disassembly::X86::Instruction const&);
 
-    void FNSTCW(const X86::Instruction&);
-    void FLDCW(const X86::Instruction&);
+    void FNSTCW(Disassembly::X86::Instruction const&);
+    void FLDCW(Disassembly::X86::Instruction const&);
 
-    void FNSTENV(const X86::Instruction&);
-    void FLDENV(const X86::Instruction&);
+    void FNSTENV(Disassembly::X86::Instruction const&);
+    void FLDENV(Disassembly::X86::Instruction const&);
 
-    void FNSAVE(const X86::Instruction&);
-    void FRSTOR(const X86::Instruction&);
+    void FNSAVE(Disassembly::X86::Instruction const&);
+    void FRSTOR(Disassembly::X86::Instruction const&);
 
-    void FNSTSW(const X86::Instruction&);
-    void FNSTSW_AX(const X86::Instruction&);
+    void FNSTSW(Disassembly::X86::Instruction const&);
+    void FNSTSW_AX(Disassembly::X86::Instruction const&);
 
     // FIXME: WAIT && FWAIT
-    void FNOP(const X86::Instruction&);
+    void FNOP(Disassembly::X86::Instruction const&);
 
     // FPU & SIMD MANAGEMENT
     // FIXME: FXSAVE && FXRSTOR
 
     // DO NOTHING?
     // FIXME: FENI, FDISI, FSETPM
-    void FNENI(const X86::Instruction&);
-    void FNDISI(const X86::Instruction&);
-    void FNSETPM(const X86::Instruction&);
+    void FNENI(Disassembly::X86::Instruction const&);
+    void FNDISI(Disassembly::X86::Instruction const&);
+    void FNSETPM(Disassembly::X86::Instruction const&);
 
     // MMX
     // ARITHMETIC
-    void PADDB_mm1_mm2m64(const X86::Instruction&);
-    void PADDW_mm1_mm2m64(const X86::Instruction&);
-    void PADDD_mm1_mm2m64(const X86::Instruction&);
-    void PADDSB_mm1_mm2m64(const X86::Instruction&);
-    void PADDSW_mm1_mm2m64(const X86::Instruction&);
-    void PADDUSB_mm1_mm2m64(const X86::Instruction&);
-    void PADDUSW_mm1_mm2m64(const X86::Instruction&);
+    void PADDB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PADDW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PADDD_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PADDSB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PADDSW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PADDUSB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PADDUSW_mm1_mm2m64(Disassembly::X86::Instruction const&);
 
-    void PSUBB_mm1_mm2m64(const X86::Instruction&);
-    void PSUBW_mm1_mm2m64(const X86::Instruction&);
-    void PSUBD_mm1_mm2m64(const X86::Instruction&);
-    void PSUBSB_mm1_mm2m64(const X86::Instruction&);
-    void PSUBSW_mm1_mm2m64(const X86::Instruction&);
-    void PSUBUSB_mm1_mm2m64(const X86::Instruction&);
-    void PSUBUSW_mm1_mm2m64(const X86::Instruction&);
+    void PSUBB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSUBW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSUBD_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSUBSB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSUBSW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSUBUSB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSUBUSW_mm1_mm2m64(Disassembly::X86::Instruction const&);
 
-    void PMULHW_mm1_mm2m64(const X86::Instruction&);
-    void PMULLW_mm1_mm2m64(const X86::Instruction&);
+    void PMULHW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PMULLW_mm1_mm2m64(Disassembly::X86::Instruction const&);
 
-    void PMADDWD_mm1_mm2m64(const X86::Instruction&);
+    void PMADDWD_mm1_mm2m64(Disassembly::X86::Instruction const&);
 
     // COMPARISON
-    void PCMPEQB_mm1_mm2m64(const X86::Instruction&);
-    void PCMPEQW_mm1_mm2m64(const X86::Instruction&);
-    void PCMPEQD_mm1_mm2m64(const X86::Instruction&);
+    void PCMPEQB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PCMPEQW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PCMPEQD_mm1_mm2m64(Disassembly::X86::Instruction const&);
 
-    void PCMPGTB_mm1_mm2m64(const X86::Instruction&);
-    void PCMPGTW_mm1_mm2m64(const X86::Instruction&);
-    void PCMPGTD_mm1_mm2m64(const X86::Instruction&);
+    void PCMPGTB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PCMPGTW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PCMPGTD_mm1_mm2m64(Disassembly::X86::Instruction const&);
 
     // CONVERSION
-    void PACKSSDW_mm1_mm2m64(const X86::Instruction&);
-    void PACKSSWB_mm1_mm2m64(const X86::Instruction&);
-    void PACKUSWB_mm1_mm2m64(const X86::Instruction&);
+    void PACKSSDW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PACKSSWB_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PACKUSWB_mm1_mm2m64(Disassembly::X86::Instruction const&);
 
     // UNPACK
-    void PUNPCKHBW_mm1_mm2m64(const X86::Instruction&);
-    void PUNPCKHWD_mm1_mm2m64(const X86::Instruction&);
-    void PUNPCKHDQ_mm1_mm2m64(const X86::Instruction&);
-    void PUNPCKLBW_mm1_mm2m32(const X86::Instruction&);
-    void PUNPCKLWD_mm1_mm2m32(const X86::Instruction&);
-    void PUNPCKLDQ_mm1_mm2m32(const X86::Instruction&);
+    void PUNPCKHBW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PUNPCKHWD_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PUNPCKHDQ_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PUNPCKLBW_mm1_mm2m32(Disassembly::X86::Instruction const&);
+    void PUNPCKLWD_mm1_mm2m32(Disassembly::X86::Instruction const&);
+    void PUNPCKLDQ_mm1_mm2m32(Disassembly::X86::Instruction const&);
 
     // LOGICAL
-    void PAND_mm1_mm2m64(const X86::Instruction&);
-    void PANDN_mm1_mm2m64(const X86::Instruction&);
-    void POR_mm1_mm2m64(const X86::Instruction&);
-    void PXOR_mm1_mm2m64(const X86::Instruction&);
+    void PAND_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PANDN_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void POR_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PXOR_mm1_mm2m64(Disassembly::X86::Instruction const&);
 
     // SHIFT
-    void PSLLW_mm1_mm2m64(const X86::Instruction&);
-    void PSLLW_mm1_imm8(const X86::Instruction&);
-    void PSLLD_mm1_mm2m64(const X86::Instruction&);
-    void PSLLD_mm1_imm8(const X86::Instruction&);
-    void PSLLQ_mm1_mm2m64(const X86::Instruction&);
-    void PSLLQ_mm1_imm8(const X86::Instruction&);
-    void PSRAW_mm1_mm2m64(const X86::Instruction&);
-    void PSRAW_mm1_imm8(const X86::Instruction&);
-    void PSRAD_mm1_mm2m64(const X86::Instruction&);
-    void PSRAD_mm1_imm8(const X86::Instruction&);
-    void PSRLW_mm1_mm2m64(const X86::Instruction&);
-    void PSRLW_mm1_imm8(const X86::Instruction&);
-    void PSRLD_mm1_mm2m64(const X86::Instruction&);
-    void PSRLD_mm1_imm8(const X86::Instruction&);
-    void PSRLQ_mm1_mm2m64(const X86::Instruction&);
-    void PSRLQ_mm1_imm8(const X86::Instruction&);
+    void PSLLW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSLLW_mm1_imm8(Disassembly::X86::Instruction const&);
+    void PSLLD_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSLLD_mm1_imm8(Disassembly::X86::Instruction const&);
+    void PSLLQ_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSLLQ_mm1_imm8(Disassembly::X86::Instruction const&);
+    void PSRAW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSRAW_mm1_imm8(Disassembly::X86::Instruction const&);
+    void PSRAD_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSRAD_mm1_imm8(Disassembly::X86::Instruction const&);
+    void PSRLW_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSRLW_mm1_imm8(Disassembly::X86::Instruction const&);
+    void PSRLD_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSRLD_mm1_imm8(Disassembly::X86::Instruction const&);
+    void PSRLQ_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void PSRLQ_mm1_imm8(Disassembly::X86::Instruction const&);
 
     // DATA TRANSFER
-    void MOVD_mm1_rm32(const X86::Instruction&);
-    void MOVD_rm32_mm2(const X86::Instruction&);
+    void MOVD_mm1_rm32(Disassembly::X86::Instruction const&);
+    void MOVD_rm32_mm2(Disassembly::X86::Instruction const&);
 
-    void MOVQ_mm1_mm2m64(const X86::Instruction&);
-    void MOVQ_mm1m64_mm2(const X86::Instruction&);
-    void MOVQ_mm1_rm64(const X86::Instruction&); // long mode
-    void MOVQ_rm64_mm2(const X86::Instruction&); // long mode
+    void MOVQ_mm1_mm2m64(Disassembly::X86::Instruction const&);
+    void MOVQ_mm1m64_mm2(Disassembly::X86::Instruction const&);
+    void MOVQ_mm1_rm64(Disassembly::X86::Instruction const&); // long mode
+    void MOVQ_rm64_mm2(Disassembly::X86::Instruction const&); // long mode
 
     // EMPTY MMX STATE
-    void EMMS(const X86::Instruction&);
+    void EMMS(Disassembly::X86::Instruction const&);
 };
 
 }

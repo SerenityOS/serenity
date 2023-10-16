@@ -6,14 +6,14 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibX86/Instruction.h>
-#include <LibX86/Interpreter.h>
+#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/Interpreter.h>
 
 #if defined(AK_COMPILER_GCC)
 #    pragma GCC optimize("O3")
 #endif
 
-namespace X86 {
+namespace Disassembly::X86 {
 
 InstructionDescriptor s_table[3][256];
 InstructionDescriptor s_0f_table[3][256];

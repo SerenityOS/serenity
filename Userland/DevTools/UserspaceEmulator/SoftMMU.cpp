@@ -43,7 +43,7 @@ void SoftMMU::remove_region(Region& region)
     m_regions.remove_first_matching([&](auto& entry) { return entry.ptr() == &region; });
 }
 
-void SoftMMU::ensure_split_at(X86::LogicalAddress address)
+void SoftMMU::ensure_split_at(Disassembly::X86::LogicalAddress address)
 {
     // FIXME: If this fails, call Emulator::dump_backtrace
     VERIFY(address.selector() != 0x2b);
@@ -90,7 +90,7 @@ void SoftMMU::set_tls_region(NonnullOwnPtr<Region> region)
     m_tls_region = move(region);
 }
 
-ValueWithShadow<u8> SoftMMU::read8(X86::LogicalAddress address)
+ValueWithShadow<u8> SoftMMU::read8(Disassembly::X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -108,7 +108,7 @@ ValueWithShadow<u8> SoftMMU::read8(X86::LogicalAddress address)
     return region->read8(address.offset() - region->base());
 }
 
-ValueWithShadow<u16> SoftMMU::read16(X86::LogicalAddress address)
+ValueWithShadow<u16> SoftMMU::read16(Disassembly::X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -126,7 +126,7 @@ ValueWithShadow<u16> SoftMMU::read16(X86::LogicalAddress address)
     return region->read16(address.offset() - region->base());
 }
 
-ValueWithShadow<u32> SoftMMU::read32(X86::LogicalAddress address)
+ValueWithShadow<u32> SoftMMU::read32(Disassembly::X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -144,7 +144,7 @@ ValueWithShadow<u32> SoftMMU::read32(X86::LogicalAddress address)
     return region->read32(address.offset() - region->base());
 }
 
-ValueWithShadow<u64> SoftMMU::read64(X86::LogicalAddress address)
+ValueWithShadow<u64> SoftMMU::read64(Disassembly::X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -162,7 +162,7 @@ ValueWithShadow<u64> SoftMMU::read64(X86::LogicalAddress address)
     return region->read64(address.offset() - region->base());
 }
 
-ValueWithShadow<u128> SoftMMU::read128(X86::LogicalAddress address)
+ValueWithShadow<u128> SoftMMU::read128(Disassembly::X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -180,7 +180,7 @@ ValueWithShadow<u128> SoftMMU::read128(X86::LogicalAddress address)
     return region->read128(address.offset() - region->base());
 }
 
-ValueWithShadow<u256> SoftMMU::read256(X86::LogicalAddress address)
+ValueWithShadow<u256> SoftMMU::read256(Disassembly::X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -198,7 +198,7 @@ ValueWithShadow<u256> SoftMMU::read256(X86::LogicalAddress address)
     return region->read256(address.offset() - region->base());
 }
 
-void SoftMMU::write8(X86::LogicalAddress address, ValueWithShadow<u8> value)
+void SoftMMU::write8(Disassembly::X86::LogicalAddress address, ValueWithShadow<u8> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -215,7 +215,7 @@ void SoftMMU::write8(X86::LogicalAddress address, ValueWithShadow<u8> value)
     region->write8(address.offset() - region->base(), value);
 }
 
-void SoftMMU::write16(X86::LogicalAddress address, ValueWithShadow<u16> value)
+void SoftMMU::write16(Disassembly::X86::LogicalAddress address, ValueWithShadow<u16> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -233,7 +233,7 @@ void SoftMMU::write16(X86::LogicalAddress address, ValueWithShadow<u16> value)
     region->write16(address.offset() - region->base(), value);
 }
 
-void SoftMMU::write32(X86::LogicalAddress address, ValueWithShadow<u32> value)
+void SoftMMU::write32(Disassembly::X86::LogicalAddress address, ValueWithShadow<u32> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -251,7 +251,7 @@ void SoftMMU::write32(X86::LogicalAddress address, ValueWithShadow<u32> value)
     region->write32(address.offset() - region->base(), value);
 }
 
-void SoftMMU::write64(X86::LogicalAddress address, ValueWithShadow<u64> value)
+void SoftMMU::write64(Disassembly::X86::LogicalAddress address, ValueWithShadow<u64> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -269,7 +269,7 @@ void SoftMMU::write64(X86::LogicalAddress address, ValueWithShadow<u64> value)
     region->write64(address.offset() - region->base(), value);
 }
 
-void SoftMMU::write128(X86::LogicalAddress address, ValueWithShadow<u128> value)
+void SoftMMU::write128(Disassembly::X86::LogicalAddress address, ValueWithShadow<u128> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -287,7 +287,7 @@ void SoftMMU::write128(X86::LogicalAddress address, ValueWithShadow<u128> value)
     region->write128(address.offset() - region->base(), value);
 }
 
-void SoftMMU::write256(X86::LogicalAddress address, ValueWithShadow<u256> value)
+void SoftMMU::write256(Disassembly::X86::LogicalAddress address, ValueWithShadow<u256> value)
 {
     auto* region = find_region(address);
     if (!region) {
@@ -326,7 +326,7 @@ ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)
     return buffer;
 }
 
-bool SoftMMU::fast_fill_memory8(X86::LogicalAddress address, size_t size, ValueWithShadow<u8> value)
+bool SoftMMU::fast_fill_memory8(Disassembly::X86::LogicalAddress address, size_t size, ValueWithShadow<u8> value)
 {
     if (!size)
         return true;
@@ -351,7 +351,7 @@ bool SoftMMU::fast_fill_memory8(X86::LogicalAddress address, size_t size, ValueW
     return true;
 }
 
-bool SoftMMU::fast_fill_memory32(X86::LogicalAddress address, size_t count, ValueWithShadow<u32> value)
+bool SoftMMU::fast_fill_memory32(Disassembly::X86::LogicalAddress address, size_t count, ValueWithShadow<u32> value)
 {
     if (!count)
         return true;

@@ -13,7 +13,7 @@
 #include <AK/Types.h>
 #include <stdio.h>
 
-namespace X86 {
+namespace Disassembly::X86 {
 
 class Instruction;
 class Interpreter;
