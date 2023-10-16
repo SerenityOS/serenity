@@ -22,6 +22,7 @@
 #include <LibWeb/CSS/StyleValues/MathDepthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
@@ -1005,6 +1006,12 @@ Optional<CSS::ObjectFit> StyleProperties::object_fit() const
 {
     auto value = property(CSS::PropertyID::ObjectFit);
     return value_id_to_object_fit(value->to_identifier());
+}
+
+CSS::PositionStyleValue const& StyleProperties::object_position() const
+{
+    auto value = property(CSS::PropertyID::ObjectPosition);
+    return value->as_position();
 }
 
 Optional<CSS::TableLayout> StyleProperties::table_layout() const

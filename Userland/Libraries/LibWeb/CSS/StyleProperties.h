@@ -117,6 +117,7 @@ public:
     Vector<Vector<String>> grid_template_areas() const;
     String grid_area() const;
     Optional<CSS::ObjectFit> object_fit() const;
+    CSS::PositionStyleValue const& object_position() const;
     Optional<CSS::TableLayout> table_layout() const;
 
     Vector<CSS::Transformation> transformations() const;
