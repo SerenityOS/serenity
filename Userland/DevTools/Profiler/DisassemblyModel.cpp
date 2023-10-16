@@ -12,6 +12,7 @@
 #include "Profile.h"
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
+#include <LibDisassembly/Architecture.h>
 #include <LibDisassembly/Disassembler.h>
 #include <LibDisassembly/ELFSymbolProvider.h>
 #include <LibELF/Image.h>
@@ -95,7 +96,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
 
     Disassembly::ELFSymbolProvider symbol_provider(*elf, base_address);
     Disassembly::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
-    Disassembly::Disassembler disassembler(stream);
+    Disassembly::Disassembler disassembler(stream, Disassembly::architecture_from_elf_machine(elf->machine()).value_or(Disassembly::host_architecture()));
 
     size_t offset_into_symbol = 0;
     FlatPtr last_instruction_offset = 0;
