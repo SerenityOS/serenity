@@ -1,5 +1,5 @@
 set(SOURCES
-    Instruction.cpp
+    x86/Instruction.cpp
 )
 
 serenity_lib(LibDisassembly disassembly)
