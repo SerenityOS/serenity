@@ -81,22 +81,29 @@ UNMAP_AFTER_INIT void USBManagement::initialize()
 
 void USBManagement::register_driver(NonnullLockRefPtr<Driver> driver)
 {
+    if (!initialized())
+        return;
     dbgln_if(USB_DEBUG, "Registering driver {}", driver->name());
-    m_available_drivers.append(driver);
+    the().m_available_drivers.append(driver);
 }
 
 LockRefPtr<Driver> USBManagement::get_driver_by_name(StringView name)
 {
-    auto it = m_available_drivers.find_if([name](auto driver) { return driver->name() == name; });
+    if (!initialized())
+        return nullptr;
+    auto it = the().m_available_drivers.find_if([name](auto driver) { return driver->name() == name; });
     return it.is_end() ? nullptr : LockRefPtr { *it };
 }
 
 void USBManagement::unregister_driver(NonnullLockRefPtr<Driver> driver)
 {
+    if (!initialized())
+        return;
+    auto& the_instance = the();
     dbgln_if(USB_DEBUG, "Unregistering driver {}", driver->name());
-    auto const& found_driver = m_available_drivers.find(driver);
+    auto const& found_driver = the_instance.m_available_drivers.find(driver);
     if (!found_driver.is_end())
-        m_available_drivers.remove(found_driver.index());
+        the_instance.m_available_drivers.remove(found_driver.index());
 }
 
 USBManagement& USBManagement::the()

@@ -24,7 +24,7 @@ USB_DEVICE_DRIVER(MassStorageDriver);
 void MassStorageDriver::init()
 {
     auto driver = MUST(adopt_nonnull_lock_ref_or_enomem(new MassStorageDriver()));
-    USBManagement::the().register_driver(driver);
+    USBManagement::register_driver(driver);
 }
 
 ErrorOr<void> MassStorageDriver::checkout_interface(USB::Device& device, USBInterface const& interface)

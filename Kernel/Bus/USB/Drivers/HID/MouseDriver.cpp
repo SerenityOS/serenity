@@ -20,7 +20,7 @@ USB_DEVICE_DRIVER(MouseDriver);
 void MouseDriver::init()
 {
     auto driver = MUST(adopt_nonnull_lock_ref_or_enomem(new MouseDriver()));
-    USBManagement::the().register_driver(driver);
+    USBManagement::register_driver(driver);
 }
 
 ErrorOr<void> MouseDriver::checkout_interface(USB::Device& device, USBInterface const& interface)
