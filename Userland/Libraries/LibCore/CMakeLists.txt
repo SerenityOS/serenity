@@ -19,6 +19,7 @@ set(SOURCES
     MimeData.cpp
     NetworkJob.cpp
     Notifier.cpp
+    Path.cpp
     Process.cpp
     ProcessStatisticsReader.cpp
     SecretString.cpp

@@ -12,30 +12,22 @@
 namespace Core {
 
 // We assume that the fd is a valid directory.
+Directory::Directory(NonnullRefPtr<Detail::FileDescriptorOwner> directory_fd)
+    : m_directory_fd(move(directory_fd))
+{
+}
+
 Directory::Directory(int fd, LexicalPath path)
     : m_path(move(path))
-    , m_directory_fd(fd)
+    , m_directory_fd(make_ref_counted<Detail::FileDescriptorOwner>(fd, true))
 {
-}
-
-Directory::Directory(Directory&& other)
-    : m_path(move(other.m_path))
-    , m_directory_fd(other.m_directory_fd)
-{
-    other.m_directory_fd = -1;
-}
-
-Directory::~Directory()
-{
-    if (m_directory_fd != -1)
-        MUST(System::close(m_directory_fd));
 }
 
 ErrorOr<void> Directory::chown(uid_t uid, gid_t gid)
 {
-    if (m_directory_fd == -1)
+    if (fd() == -1)
         return Error::from_syscall("fchown"sv, -EBADF);
-    TRY(Core::System::fchown(m_directory_fd, uid, gid));
+    TRY(Core::System::fchown(fd(), uid, gid));
     return {};
 }
 
@@ -51,6 +43,14 @@ ErrorOr<Directory> Directory::adopt_fd(int fd, LexicalPath path)
     if (!TRY(Directory::is_valid_directory(fd)))
         return Error::from_errno(ENOTDIR);
     return Directory { fd, move(path) };
+}
+
+Directory Directory::initial_working_directory()
+{
+    // FIXME: Properly save WD on Core::System::chdir!
+    // FIXME: Would be nice to not allocate in the next line.
+    static NonnullRefPtr current_working_directory = make_ref_counted<Detail::FileDescriptorOwner>(AT_FDCWD, false);
+    return Directory(current_working_directory);
 }
 
 ErrorOr<Directory> Directory::create(DeprecatedString path, CreateDirectories create_directories, mode_t creation_mode)
@@ -84,18 +84,18 @@ ErrorOr<void> Directory::ensure_directory(LexicalPath const& path, mode_t creati
 
 ErrorOr<NonnullOwnPtr<File>> Directory::open(StringView filename, File::OpenMode mode) const
 {
-    auto fd = TRY(System::openat(m_directory_fd, filename, File::open_mode_to_options(mode)));
-    return File::adopt_fd(fd, mode);
+    auto file_fd = TRY(System::openat(fd(), filename, File::open_mode_to_options(mode)));
+    return File::adopt_fd(file_fd, mode);
 }
 
 ErrorOr<struct stat> Directory::stat(StringView filename, int flags) const
 {
-    return System::fstatat(m_directory_fd, filename, flags);
+    return System::fstatat(fd(), filename, flags);
 }
 
 ErrorOr<struct stat> Directory::stat() const
 {
-    return System::fstat(m_directory_fd);
+    return System::fstat(fd());
 }
 
 ErrorOr<void> Directory::for_each_entry(DirIterator::Flags flags, Core::Directory::ForEachEntryCallback callback)

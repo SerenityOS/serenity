@@ -17,8 +17,9 @@ class ChildEvent;
 class ConfigFile;
 class CustomEvent;
 class DateTime;
-class DirIterator;
 class DeferredInvocationContext;
+class Directory;
+class DirIterator;
 class ElapsedTimer;
 class Event;
 class EventLoop;
@@ -33,6 +34,7 @@ class NetworkResponse;
 class Notifier;
 class ProcessStatisticsReader;
 class Socket;
+class Path;
 template<typename Result, typename TError = AK::Error>
 class Promise;
 template<typename Result, typename TError = AK::Error>

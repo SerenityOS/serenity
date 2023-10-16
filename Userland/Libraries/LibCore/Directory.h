@@ -17,6 +17,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/DirectoryEntry.h>
 #include <LibCore/File.h>
+#include <LibCore/Path.h>
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -24,17 +25,17 @@ namespace Core {
 
 // Deal with real system directories. Any Directory instance always refers to a valid existing directory.
 class Directory {
-    AK_MAKE_NONCOPYABLE(Directory);
+    AK_MAKE_DEFAULT_MOVABLE(Directory);
+    AK_MAKE_DEFAULT_COPYABLE(Directory);
 
 public:
-    Directory(Directory&&);
-    ~Directory();
-
     // When this flag is set, both the directory attempted to instantiate as well as all of its parents are created with mode 0755 if necessary.
     enum class CreateDirectories : bool {
         No,
         Yes,
     };
+
+    static Directory initial_working_directory();
 
     static ErrorOr<Directory> create(LexicalPath path, CreateDirectories, mode_t creation_mode = 0755);
     static ErrorOr<Directory> create(DeprecatedString path, CreateDirectories, mode_t creation_mode = 0755);
@@ -43,9 +44,11 @@ public:
     ErrorOr<NonnullOwnPtr<File>> open(StringView filename, File::OpenMode mode) const;
     ErrorOr<struct stat> stat(StringView filename, int flags) const;
     ErrorOr<struct stat> stat() const;
-    int fd() const { return m_directory_fd; }
 
-    LexicalPath const& path() const { return m_path; }
+    int fd() const { return m_directory_fd->fd(); }
+    NonnullRefPtr<Detail::FileDescriptorOwner> fd_owner(Badge<Path>) const { return m_directory_fd; }
+
+    LexicalPath const& path() const { return m_path.value(); }
 
     using ForEachEntryCallback = Function<ErrorOr<IterationDecision>(DirectoryEntry const&, Directory const& parent)>;
     static ErrorOr<void> for_each_entry(StringView path, DirIterator::Flags, ForEachEntryCallback);
@@ -56,11 +59,12 @@ public:
     static ErrorOr<bool> is_valid_directory(int fd);
 
 private:
+    Directory(NonnullRefPtr<Detail::FileDescriptorOwner> directory_fd);
     Directory(int directory_fd, LexicalPath path);
     static ErrorOr<void> ensure_directory(LexicalPath const& path, mode_t creation_mode = 0755);
 
-    LexicalPath m_path;
-    int m_directory_fd;
+    Optional<LexicalPath> m_path;
+    NonnullRefPtr<Detail::FileDescriptorOwner> m_directory_fd;
 };
 
 }
