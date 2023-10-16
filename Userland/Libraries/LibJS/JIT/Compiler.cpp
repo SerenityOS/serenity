@@ -15,7 +15,7 @@ namespace JS::JIT {
 void Compiler::store_vm_register(Bytecode::Register dst, Assembler::Reg src)
 {
     m_assembler.mov(
-        Assembler::Operand::Mem64BaseAndOffset(Assembler::Reg::RegisterArrayBase, dst.index() * sizeof(Value)),
+        Assembler::Operand::Mem64BaseAndOffset(REGISTER_ARRAY_BASE, dst.index() * sizeof(Value)),
         Assembler::Operand::Register(src));
 }
 
@@ -23,13 +23,13 @@ void Compiler::load_vm_register(Assembler::Reg dst, Bytecode::Register src)
 {
     m_assembler.mov(
         Assembler::Operand::Register(dst),
-        Assembler::Operand::Mem64BaseAndOffset(Assembler::Reg::RegisterArrayBase, src.index() * sizeof(Value)));
+        Assembler::Operand::Mem64BaseAndOffset(REGISTER_ARRAY_BASE, src.index() * sizeof(Value)));
 }
 
 void Compiler::store_vm_local(size_t dst, Assembler::Reg src)
 {
     m_assembler.mov(
-        Assembler::Operand::Mem64BaseAndOffset(Assembler::Reg::LocalsArrayBase, dst * sizeof(Value)),
+        Assembler::Operand::Mem64BaseAndOffset(LOCALS_ARRAY_BASE, dst * sizeof(Value)),
         Assembler::Operand::Register(src));
 }
 
@@ -37,39 +37,39 @@ void Compiler::load_vm_local(Assembler::Reg dst, size_t src)
 {
     m_assembler.mov(
         Assembler::Operand::Register(dst),
-        Assembler::Operand::Mem64BaseAndOffset(Assembler::Reg::LocalsArrayBase, src * sizeof(Value)));
+        Assembler::Operand::Mem64BaseAndOffset(LOCALS_ARRAY_BASE, src * sizeof(Value)));
 }
 
 void Compiler::compile_load_immediate(Bytecode::Op::LoadImmediate const& op)
 {
     m_assembler.mov(
-        Assembler::Operand::Register(Assembler::Reg::GPR0),
+        Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm64(op.value().encoded()));
-    store_vm_register(Bytecode::Register::accumulator(), Assembler::Reg::GPR0);
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
 }
 
 void Compiler::compile_load(Bytecode::Op::Load const& op)
 {
-    load_vm_register(Assembler::Reg::GPR0, op.src());
-    store_vm_register(Bytecode::Register::accumulator(), Assembler::Reg::GPR0);
+    load_vm_register(GPR0, op.src());
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
 }
 
 void Compiler::compile_store(Bytecode::Op::Store const& op)
 {
-    load_vm_register(Assembler::Reg::GPR0, Bytecode::Register::accumulator());
-    store_vm_register(op.dst(), Assembler::Reg::GPR0);
+    load_vm_register(GPR0, Bytecode::Register::accumulator());
+    store_vm_register(op.dst(), GPR0);
 }
 
 void Compiler::compile_get_local(Bytecode::Op::GetLocal const& op)
 {
-    load_vm_local(Assembler::Reg::GPR0, op.index());
-    store_vm_register(Bytecode::Register::accumulator(), Assembler::Reg::GPR0);
+    load_vm_local(GPR0, op.index());
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
 }
 
 void Compiler::compile_set_local(Bytecode::Op::SetLocal const& op)
 {
-    load_vm_register(Assembler::Reg::GPR0, Bytecode::Register::accumulator());
-    store_vm_local(op.index(), Assembler::Reg::GPR0);
+    load_vm_register(GPR0, Bytecode::Register::accumulator());
+    store_vm_local(op.index(), GPR0);
 }
 
 void Compiler::compile_jump(Bytecode::Op::Jump const& op)
@@ -119,12 +119,12 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
     // slow_case: // call C++ helper
     slow_case.link(m_assembler);
     m_assembler.mov(
-        Assembler::Operand::Register(Assembler::Reg::Arg1),
+        Assembler::Operand::Register(ARG1),
         Assembler::Operand::Register(src));
     m_assembler.native_call((void*)cxx_to_boolean);
     m_assembler.mov(
         Assembler::Operand::Register(dst),
-        Assembler::Operand::Register(Assembler::Reg::Ret));
+        Assembler::Operand::Register(RET));
 
     // end:
     end.link(m_assembler);
@@ -132,11 +132,11 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
 
 void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 {
-    load_vm_register(Assembler::Reg::GPR1, Bytecode::Register::accumulator());
+    load_vm_register(GPR1, Bytecode::Register::accumulator());
 
-    compile_to_boolean(Assembler::Reg::GPR0, Assembler::Reg::GPR1);
+    compile_to_boolean(GPR0, GPR1);
 
-    m_assembler.jump_conditional(Assembler::Reg::GPR0,
+    m_assembler.jump_conditional(GPR0,
         const_cast<Bytecode::BasicBlock&>(op.true_target()->block()),
         const_cast<Bytecode::BasicBlock&>(op.false_target()->block()));
 }
@@ -149,10 +149,10 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 
 void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
 {
-    load_vm_register(Assembler::Reg::Arg1, op.lhs());
-    load_vm_register(Assembler::Reg::Arg2, Bytecode::Register::accumulator());
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
     m_assembler.native_call((void*)cxx_less_than);
-    store_vm_register(Bytecode::Register::accumulator(), Assembler::Reg::Ret);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
 [[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
@@ -166,9 +166,9 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
 
 void Compiler::compile_increment(Bytecode::Op::Increment const&)
 {
-    load_vm_register(Assembler::Reg::Arg1, Bytecode::Register::accumulator());
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
     m_assembler.native_call((void*)cxx_increment);
-    store_vm_register(Bytecode::Register::accumulator(), Assembler::Reg::Ret);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_executable)
@@ -179,12 +179,12 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
     Compiler compiler;
 
     compiler.m_assembler.mov(
-        Assembler::Operand::Register(Assembler::Reg::RegisterArrayBase),
-        Assembler::Operand::Register(Assembler::Reg::Arg1));
+        Assembler::Operand::Register(REGISTER_ARRAY_BASE),
+        Assembler::Operand::Register(ARG1));
 
     compiler.m_assembler.mov(
-        Assembler::Operand::Register(Assembler::Reg::LocalsArrayBase),
-        Assembler::Operand::Register(Assembler::Reg::Arg2));
+        Assembler::Operand::Register(LOCALS_ARRAY_BASE),
+        Assembler::Operand::Register(ARG2));
 
     for (auto& block : bytecode_executable.basic_blocks) {
         block->offset = compiler.m_output.size();
