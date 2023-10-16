@@ -213,4 +213,164 @@ void CanvasPath::rect(double x, double y, double w, double h)
     m_path.move_to(transform.map(Gfx::FloatPoint { x, y }));
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-roundrect
+WebIDL::ExceptionOr<void> CanvasPath::round_rect(double x, double y, double w, double h, Variant<double, Geometry::DOMPointInit, Vector<Variant<double, Geometry::DOMPointInit>>> radii)
+{
+    using Radius = Variant<double, Geometry::DOMPointInit>;
+
+    // 1. If any of x, y, w, or h are infinite or NaN, then return.
+    if (!isfinite(x) || !isfinite(y) || !isfinite(w) || !isfinite(h))
+        return {};
+
+    // 2. If radii is an unrestricted double or DOMPointInit, then set radii to « radii ».
+    if (radii.has<double>() || radii.has<Geometry::DOMPointInit>()) {
+        Vector<Radius> radii_list;
+        if (radii.has<double>())
+            radii_list.append(radii.get<double>());
+        else
+            radii_list.append(radii.get<Geometry::DOMPointInit>());
+        radii = radii_list;
+    }
+
+    // 3. If radii is not a list of size one, two, three, or four, then throw a RangeError.
+    if (radii.get<Vector<Radius>>().is_empty() || radii.get<Vector<Radius>>().size() > 4)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "roundRect: Can have between 1 and 4 radii"sv };
+
+    // 4. Let normalizedRadii be an empty list.
+    Vector<Geometry::DOMPointInit> normalized_radii;
+
+    // 5. For each radius of radii:
+    for (auto const& radius : radii.get<Vector<Radius>>()) {
+        // 5.1. If radius is a DOMPointInit:
+        if (radius.has<Geometry::DOMPointInit>()) {
+            auto const& radius_as_dom_point = radius.get<Geometry::DOMPointInit>();
+
+            // 5.1.1. If radius["x"] or radius["y"] is infinite or NaN, then return.
+            if (!isfinite(radius_as_dom_point.x) || !isfinite(radius_as_dom_point.y))
+                return {};
+
+            // 5.1.2. If radius["x"] or radius["y"] is negative, then throw a RangeError.
+            if (radius_as_dom_point.x < 0 || radius_as_dom_point.y < 0)
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "roundRect: Radius can't be negative"sv };
+
+            // 5.1.3. Otherwise, append radius to normalizedRadii.
+            normalized_radii.append(radius_as_dom_point);
+        }
+
+        // 5.2. If radius is a unrestricted double:
+        if (radius.has<double>()) {
+            auto radius_as_double = radius.get<double>();
+
+            // 5.2.1. If radius is infinite or NaN, then return.
+            if (!isfinite(radius_as_double))
+                return {};
+
+            // 5.2.2. If radius is negative, then throw a RangeError.
+            if (radius_as_double < 0)
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "roundRect: Radius can't be negative"sv };
+
+            // 5.2.3. Otherwise append «[ "x" → radius, "y" → radius ]» to normalizedRadii.
+            normalized_radii.append(Geometry::DOMPointInit { radius_as_double, radius_as_double });
+        }
+    }
+
+    // 6. Let upperLeft, upperRight, lowerRight, and lowerLeft be null.
+    Geometry::DOMPointInit upper_left {};
+    Geometry::DOMPointInit upper_right {};
+    Geometry::DOMPointInit lower_right {};
+    Geometry::DOMPointInit lower_left {};
+
+    // 7. If normalizedRadii's size is 4, then set upperLeft to normalizedRadii[0], set upperRight to normalizedRadii[1], set lowerRight to normalizedRadii[2], and set lowerLeft to normalizedRadii[3].
+    if (normalized_radii.size() == 4) {
+        upper_left = normalized_radii.at(0);
+        upper_right = normalized_radii.at(1);
+        lower_right = normalized_radii.at(2);
+        lower_left = normalized_radii.at(3);
+    }
+
+    // 8. If normalizedRadii's size is 3, then set upperLeft to normalizedRadii[0], set upperRight and lowerLeft to normalizedRadii[1], and set lowerRight to normalizedRadii[2].
+    if (normalized_radii.size() == 3) {
+        upper_left = normalized_radii.at(0);
+        upper_right = lower_left = normalized_radii.at(1);
+        lower_right = normalized_radii.at(2);
+    }
+
+    // 9. If normalizedRadii's size is 2, then set upperLeft and lowerRight to normalizedRadii[0] and set upperRight and lowerLeft to normalizedRadii[1].
+    if (normalized_radii.size() == 2) {
+        upper_left = lower_right = normalized_radii.at(0);
+        upper_right = lower_left = normalized_radii.at(1);
+    }
+
+    // 10. If normalizedRadii's size is 1, then set upperLeft, upperRight, lowerRight, and lowerLeft to normalizedRadii[0].
+    if (normalized_radii.size() == 1)
+        upper_left = upper_right = lower_right = lower_left = normalized_radii.at(0);
+
+    // 11. Corner curves must not overlap. Scale all radii to prevent this:
+    // 11.1. Let top be upperLeft["x"] + upperRight["x"].
+    double top = upper_left.x + upper_right.x;
+
+    // 11.2. Let right be upperRight["y"] + lowerRight["y"].
+    double right = upper_right.y + lower_right.y;
+
+    // 11.3. Let bottom be lowerRight["x"] + lowerLeft["x"].
+    double bottom = lower_right.x + lower_left.x;
+
+    // 11.4. Let left be upperLeft["y"] + lowerLeft["y"].
+    double left = upper_left.y + lower_left.y;
+
+    // 11.5. Let scale be the minimum value of the ratios w / top, h / right, w / bottom, h / left.
+    double scale = AK::min(AK::min(w / top, h / right), AK::min(w / bottom, h / left));
+
+    // 11.6. If scale is less than 1, then set the x and y members of upperLeft, upperRight, lowerLeft, and lowerRight to their current values multiplied by scale.
+    if (scale < 1) {
+        upper_left.x *= scale;
+        upper_left.y *= scale;
+        upper_right.x *= scale;
+        upper_right.y *= scale;
+        lower_left.x *= scale;
+        lower_left.y *= scale;
+        lower_right.x *= scale;
+        lower_right.y *= scale;
+    }
+
+    // 12. Create a new subpath:
+    auto transform = active_transform();
+    bool large_arc = false;
+    bool sweep = true;
+
+    // 12.1. Move to the point (x + upperLeft["x"], y).
+    m_path.move_to(transform.map(Gfx::FloatPoint { x + upper_left.x, y }));
+
+    // 12.2. Draw a straight line to the point (x + w − upperRight["x"], y).
+    m_path.line_to(transform.map(Gfx::FloatPoint { x + w - upper_right.x, y }));
+
+    // 12.3. Draw an arc to the point (x + w, y + upperRight["y"]).
+    m_path.elliptical_arc_to(transform.map(Gfx::FloatPoint { x + w, y + upper_right.y }), { upper_right.x, upper_right.y }, transform.rotation(), large_arc, sweep);
+
+    // 12.4. Draw a straight line to the point (x + w, y + h − lowerRight["y"]).
+    m_path.line_to(transform.map(Gfx::FloatPoint { x + w, y + h - lower_right.y }));
+
+    // 12.5. Draw an arc to the point (x + w − lowerRight["x"], y + h).
+    m_path.elliptical_arc_to(transform.map(Gfx::FloatPoint { x + w - lower_right.x, y + h }), { lower_right.x, lower_right.y }, transform.rotation(), large_arc, sweep);
+
+    // 12.6. Draw a straight line to the point (x + lowerLeft["x"], y + h).
+    m_path.line_to(transform.map(Gfx::FloatPoint { x + lower_left.x, y + h }));
+
+    // 12.7. Draw an arc to the point (x, y + h − lowerLeft["y"]).
+    m_path.elliptical_arc_to(transform.map(Gfx::FloatPoint { x, y + h - lower_left.y }), { lower_left.x, lower_left.y }, transform.rotation(), large_arc, sweep);
+
+    // 12.8. Draw a straight line to the point (x, y + upperLeft["y"]).
+    m_path.line_to(transform.map(Gfx::FloatPoint { x, y + upper_left.y }));
+
+    // 12.9. Draw an arc to the point (x + upperLeft["x"], y).
+    m_path.elliptical_arc_to(transform.map(Gfx::FloatPoint { x + upper_left.x, y }), { upper_left.x, upper_left.y }, transform.rotation(), large_arc, sweep);
+
+    // 13. Mark the subpath as closed.
+    m_path.close();
+
+    // 14. Create a new subpath with the point (x, y) as the only point in the subpath.
+    m_path.move_to(transform.map(Gfx::FloatPoint { x, y }));
+    return {};
+}
+
 }
