@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <LibX86/Instruction.h>
+#include <LibDisassembly/Instruction.h>
 
-namespace X86 {
+namespace Disassembly::X86 {
 
 class Disassembler {
 public:
