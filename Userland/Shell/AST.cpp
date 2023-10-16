@@ -1230,7 +1230,7 @@ ErrorOr<RefPtr<Value>> ForLoop::run(RefPtr<Shell> shell)
 
     size_t consecutive_interruptions = 0;
     auto run = [&](auto& block_value) {
-        if (shell->has_error(Shell::ShellError::InternalControlFlowBreak)) {
+        if (shell->has_error(Shell::ShellError::InternalControlFlowBreak) || shell->has_error(Shell::ShellError::InternalControlFlowReturn)) {
             shell->take_error();
             return IterationDecision::Break;
         }
