@@ -415,18 +415,33 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
             break;
         }
 
-        int child_count = parent->m_children.size();
-
         auto& mutable_parent = const_cast<Node&>(*parent);
         auto maybe_child = mutable_parent.create_child(child_name);
         if (!maybe_child)
             break;
 
-        begin_insert_rows(parent->index(0), child_count, child_count);
-
         auto child = maybe_child.release_nonnull();
+
+        bool const is_new_child_dir = S_ISDIR(child->mode);
+        int insert_index = 0;
+        for (auto const& other_child : mutable_parent.m_children) {
+            bool const is_other_child_dir = S_ISDIR(other_child->mode);
+            if (!is_new_child_dir && is_other_child_dir) {
+                ++insert_index;
+                continue;
+            }
+            if (is_new_child_dir && !is_other_child_dir)
+                break;
+
+            if (other_child->name.view() > child_name)
+                break;
+            ++insert_index;
+        }
+
+        begin_insert_rows(parent->index(0), insert_index, insert_index);
+
         mutable_parent.total_size += child->size;
-        mutable_parent.m_children.append(move(child));
+        mutable_parent.m_children.insert(insert_index, move(child));
 
         end_insert_rows();
         break;
