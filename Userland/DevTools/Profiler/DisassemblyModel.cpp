@@ -114,16 +114,17 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
             break;
         FlatPtr address_in_profiled_program = node.address() + offset_into_symbol;
 
-        auto disassembly = insn.value().to_byte_string(address_in_profiled_program, symbol_provider);
+        auto disassembly = insn.value()->to_byte_string(address_in_profiled_program, symbol_provider);
 
-        StringView instruction_bytes = view.substring_view(offset_into_symbol, insn.value().length());
+        auto length = insn.value()->length();
+        StringView instruction_bytes = view.substring_view(offset_into_symbol, length);
         u32 samples_at_this_instruction = m_node.events_per_address().get(address_in_profiled_program).value_or(0);
         float percent = ((float)samples_at_this_instruction / (float)m_node.event_count()) * 100.0f;
         auto source_position = debug_info->get_source_position_with_inlines(address_in_profiled_program - base_address).release_value_but_fixme_should_propagate_errors();
 
-        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent, source_position });
+        m_instructions.append({ insn.release_value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent, source_position });
 
-        offset_into_symbol += insn.value().length();
+        offset_into_symbol += length;
     }
 }
 

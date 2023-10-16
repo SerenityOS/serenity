@@ -21,7 +21,7 @@ class DebugSession;
 namespace HackStudio {
 
 struct InstructionData {
-    Disassembly::X86::Instruction insn;
+    NonnullOwnPtr<Disassembly::Instruction> insn;
     ByteString disassembly;
     StringView bytes;
     FlatPtr address { 0 };

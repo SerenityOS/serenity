@@ -88,7 +88,7 @@ static bool handle_disassemble_command(ByteString const& command, FlatPtr first_
         if (!insn.has_value())
             break;
 
-        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value().to_byte_string(offset));
+        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value()->to_byte_string(offset));
     }
 
     return true;

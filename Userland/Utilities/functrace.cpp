@@ -72,9 +72,9 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
 #endif
 }
 
-static NonnullOwnPtr<HashMap<FlatPtr, Disassembly::X86::Instruction>> instrument_code()
+static NonnullOwnPtr<HashMap<FlatPtr, NonnullOwnPtr<Disassembly::Instruction>>> instrument_code()
 {
-    auto instrumented = make<HashMap<FlatPtr, Disassembly::X86::Instruction>>();
+    auto instrumented = make<HashMap<FlatPtr, NonnullOwnPtr<Disassembly::Instruction>>>();
     g_debug_session->for_each_loaded_library([&](Debug::LoadedLibrary const& lib) {
         lib.debug_info->elf().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
             if (section.name() != ".text")
@@ -88,9 +88,9 @@ static NonnullOwnPtr<HashMap<FlatPtr, Disassembly::X86::Instruction>> instrument
                 auto insn = disassembler.next();
                 if (!insn.has_value())
                     break;
-                if (insn.value().mnemonic() == "RET" || insn.value().mnemonic() == "CALL") {
+                if (insn.value()->mnemonic() == "RET" || insn.value()->mnemonic() == "CALL") {
                     g_debug_session->insert_breakpoint(instruction_address);
-                    instrumented->set(instruction_address, insn.value());
+                    instrumented->set(instruction_address, insn.release_value());
                 }
             }
             return IterationDecision::Continue;
@@ -162,14 +162,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         auto instruction = instrumented->get(ip).value();
 
-        if (instruction.mnemonic() == "RET") {
+        if (instruction->mnemonic() == "RET") {
             if (depth != 0)
                 --depth;
             return Debug::DebugSession::ContinueBreakAtSyscall;
         }
 
         // FIXME: we could miss some leaf functions that were called with a jump
-        VERIFY(instruction.mnemonic() == "CALL");
+        VERIFY(instruction->mnemonic() == "CALL");
 
         ++depth;
         new_function = true;

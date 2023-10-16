@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
+#include <LibDisassembly/Instruction.h>
 #include <LibDisassembly/InstructionStream.h>
 #include <LibDisassembly/x86/Instruction.h>
 
@@ -19,12 +21,12 @@ public:
     {
     }
 
-    Optional<X86::Instruction> next()
+    Optional<NonnullOwnPtr<Instruction>> next()
     {
         if (!m_stream.can_read())
             return {};
 #if ARCH(X86_64)
-        return X86::Instruction::from_stream(m_stream, X86::ProcessorMode::Long);
+        return make<X86::Instruction>(X86::Instruction::from_stream(m_stream, X86::ProcessorMode::Long));
 #else
         dbgln("Unsupported platform");
         return {};
