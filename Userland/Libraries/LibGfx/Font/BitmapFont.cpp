@@ -250,17 +250,6 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_uri(StringView uri)
     return try_load_from_resource(TRY(Core::Resource::load_from_uri(uri)));
 }
 
-RefPtr<BitmapFont> BitmapFont::load_from_file(DeprecatedString const& path)
-{
-    return MUST(try_load_from_file(move(path)));
-}
-
-ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(DeprecatedString const& path)
-{
-    auto mapped_file = TRY(Core::MappedFile::map(path));
-    return try_load_from_mapped_file(move(mapped_file));
-}
-
 ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
 {
     auto stream = TRY(Core::File::open(path, Core::File::OpenMode::Write));

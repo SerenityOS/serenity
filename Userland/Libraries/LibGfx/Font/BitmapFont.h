@@ -31,10 +31,8 @@ public:
     ErrorOr<NonnullRefPtr<BitmapFont>> unmasked_character_set() const;
 
     static NonnullRefPtr<BitmapFont> load_from_uri(StringView);
-    static RefPtr<BitmapFont> load_from_file(DeprecatedString const& path);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_uri(StringView);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_resource(NonnullRefPtr<Core::Resource>);
-    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(DeprecatedString const& path);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_mapped_file(NonnullOwnPtr<Core::MappedFile>);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_stream(FixedMemoryStream&);
 
