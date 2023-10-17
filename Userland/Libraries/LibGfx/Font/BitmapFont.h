@@ -32,6 +32,7 @@ public:
     static RefPtr<BitmapFont> load_from_file(DeprecatedString const& path);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(DeprecatedString const& path);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_mapped_file(NonnullOwnPtr<Core::MappedFile>);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_stream(FixedMemoryStream&);
 
     ErrorOr<void> write_to_file(DeprecatedString const& path);
     ErrorOr<void> write_to_file(NonnullOwnPtr<Core::File> file);
