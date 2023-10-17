@@ -204,6 +204,25 @@ struct Assembler {
         return make_label();
     }
 
+    void jump(Operand op)
+    {
+        if (op.type == Operand::Type::Reg) {
+            if (to_underlying(op.reg) >= 8)
+                emit8(0x41);
+            emit8(0xff);
+            emit8(0xe0 | encode_reg(op.reg));
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    void verify_not_reached()
+    {
+        // ud2
+        emit8(0x0f);
+        emit8(0x0b);
+    }
+
     void jump(Bytecode::BasicBlock& target)
     {
         // jmp target (RIP-relative 32-bit offset)
