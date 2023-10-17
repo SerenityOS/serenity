@@ -312,6 +312,9 @@ struct Assembler {
             if (to_underlying(op.reg) >= 8)
                 emit8(0x49);
             emit8(0x50 | encode_reg(op.reg));
+        } else if (op.type == Operand::Type::Imm32) {
+            emit8(0x68);
+            emit32(op.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
         }
