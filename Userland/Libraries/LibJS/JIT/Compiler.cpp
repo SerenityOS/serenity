@@ -9,6 +9,7 @@
 #include <LibJS/JIT/Compiler.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 namespace JS::JIT {
 
