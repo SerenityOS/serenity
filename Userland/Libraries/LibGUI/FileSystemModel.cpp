@@ -82,7 +82,7 @@ bool FileSystemModel::Node::fetch_data(DeprecatedString const& full_path, bool i
 
 void FileSystemModel::Node::traverse_if_needed()
 {
-    if (!is_directory() || m_has_traversed)
+    if (m_has_traversed)
         return;
 
     m_has_traversed = true;
@@ -96,9 +96,24 @@ void FileSystemModel::Node::traverse_if_needed()
         return;
     }
 
+    auto full_path = this->full_path();
+
+    if (!is_directory()) {
+        if (m_model.m_mode != DirectoriesOnly && !m_model.m_file_watcher->is_watching(full_path)) {
+            // We are not already watching this file, watch it
+            auto result = m_model.m_file_watcher->add_watch(full_path, Core::FileWatcherEvent::Type::MetadataModified);
+
+            if (result.is_error()) {
+                dbgln("Couldn't watch '{}': {}", full_path, result.error());
+            } else if (!result.value()) {
+                dbgln("Couldn't watch '{}', probably already watching", full_path);
+            }
+        }
+        return;
+    }
+
     total_size = 0;
 
-    auto full_path = this->full_path();
     Core::DirIterator di(full_path, m_model.should_show_dotfiles() ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
     if (di.has_error()) {
         auto error = di.error();
@@ -144,7 +159,7 @@ void FileSystemModel::Node::traverse_if_needed()
     m_children.extend(move(file_children));
 
     if (!m_model.m_file_watcher->is_watching(full_path)) {
-        // We are not already watching this file, watch it
+        // We are not already watching this directory, watch it
         auto result = m_model.m_file_watcher->add_watch(full_path,
             Core::FileWatcherEvent::Type::MetadataModified
                 | Core::FileWatcherEvent::Type::ChildCreated
@@ -153,7 +168,7 @@ void FileSystemModel::Node::traverse_if_needed()
 
         if (result.is_error()) {
             dbgln("Couldn't watch '{}': {}", full_path, result.error());
-        } else if (result.value() == false) {
+        } else if (!result.value()) {
             dbgln("Couldn't watch '{}', probably already watching", full_path);
         }
     }
