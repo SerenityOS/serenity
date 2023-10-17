@@ -8,6 +8,7 @@
 #include <Applications/Browser/URLBox.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextAttributes.h>
+#include <LibWebView/URL.h>
 
 namespace Browser {
 
@@ -53,44 +54,32 @@ void URLBox::mousedown_event(GUI::MouseEvent& event)
 
 void URLBox::highlight_url()
 {
-    auto url = URL::create_with_url_or_path(text());
     Vector<GUI::TextDocumentSpan> spans;
 
-    if (url.is_valid() && !is_focused()) {
-        if (url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "gemini") {
-            auto serialized_host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
-            auto host_start = url.scheme().bytes_as_string_view().length() + 3;
-            auto host_length = serialized_host.length();
+    if (auto url_parts = WebView::break_url_into_parts(text()); url_parts.has_value()) {
+        Gfx::TextAttributes dark_attributes;
+        dark_attributes.color = palette().color(Gfx::ColorRole::PlaceholderText);
 
-            // FIXME: Maybe add a generator to use https://publicsuffix.org/list/public_suffix_list.dat
-            //        for now just highlight the whole host
+        Gfx::TextAttributes highlight_attributes;
+        highlight_attributes.color = palette().color(Gfx::ColorRole::BaseText);
 
-            Gfx::TextAttributes default_format;
-            default_format.color = palette().color(Gfx::ColorRole::PlaceholderText);
-            spans.append({
-                { { 0, 0 }, { 0, host_start } },
-                default_format,
-            });
+        spans.append({
+            { { 0, 0 }, { 0, url_parts->scheme_and_subdomain.length() } },
+            dark_attributes,
+        });
 
-            Gfx::TextAttributes host_format;
-            host_format.color = palette().color(Gfx::ColorRole::BaseText);
-            spans.append({
-                { { 0, host_start }, { 0, host_start + host_length } },
-                host_format,
-            });
+        spans.append({
+            { { 0, url_parts->scheme_and_subdomain.length() }, { 0, url_parts->scheme_and_subdomain.length() + url_parts->effective_tld_plus_one.length() } },
+            highlight_attributes,
+        });
 
-            spans.append({
-                { { 0, host_start + host_length }, { 0, text().length() } },
-                default_format,
-            });
-        } else if (url.scheme() == "file") {
-            Gfx::TextAttributes scheme_format;
-            scheme_format.color = palette().color(Gfx::ColorRole::PlaceholderText);
-            spans.append({
-                { { 0, 0 }, { 0, url.scheme().bytes_as_string_view().length() + 3 } },
-                scheme_format,
-            });
-        }
+        spans.append({
+            {
+                { 0, url_parts->scheme_and_subdomain.length() + url_parts->effective_tld_plus_one.length() },
+                { 0, url_parts->scheme_and_subdomain.length() + url_parts->effective_tld_plus_one.length() + url_parts->remainder.length() },
+            },
+            dark_attributes,
+        });
     }
 
     document().set_spans(0, move(spans));
