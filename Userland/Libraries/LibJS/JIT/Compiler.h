@@ -38,6 +38,8 @@ private:
     void compile_jump_conditional(Bytecode::Op::JumpConditional const&);
     void compile_less_than(Bytecode::Op::LessThan const&);
     void compile_increment(Bytecode::Op::Increment const&);
+    void compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const&);
+    void compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&);
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);

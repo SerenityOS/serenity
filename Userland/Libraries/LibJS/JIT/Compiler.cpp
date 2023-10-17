@@ -214,6 +214,47 @@ void Compiler::check_exception()
     // handle_exception:
     handle_exception.link(m_assembler);
 
+    // if (unwind_context.handler) {
+    //     accumulator = exception;
+    //     exception = Value();
+    //     goto handler;
+    // }
+    auto no_handler = m_assembler.make_label();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 8));
+    m_assembler.jump_if_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm32(0),
+        no_handler);
+    load_vm_register(GPR1, Bytecode::Register::exception());
+    store_vm_register(Bytecode::Register::accumulator(), GPR1);
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm64(Value().encoded()));
+    store_vm_register(Bytecode::Register::exception(), GPR1);
+    m_assembler.jump(Assembler::Operand::Register(GPR0));
+
+    // no_handler:
+    no_handler.link(m_assembler);
+
+    // if (unwind_context.finalizer) goto finalizer;
+    auto no_finalizer = m_assembler.make_label();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 16));
+    m_assembler.jump_if_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm32(0),
+        no_finalizer);
+
+    m_assembler.jump(Assembler::Operand::Register(GPR0));
+
+    // no_finalizer:
+    // NOTE: No catch and no finally!? Crash.
+    no_finalizer.link(m_assembler);
+    m_assembler.verify_not_reached();
+
     // no_exception:
     no_exception.link(m_assembler);
 }
@@ -230,7 +271,7 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
     // push finalizer (patched later)
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm64(0xdeadbeef));
+        Assembler::Operand::Imm64(0));
     if (finalizer.has_value())
         const_cast<Bytecode::BasicBlock&>(finalizer.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
     m_assembler.push(Assembler::Operand::Register(GPR0));
@@ -238,7 +279,7 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
     // push handler (patched later)
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm64(0xdeadbeef));
+        Assembler::Operand::Imm64(0));
     if (handler.has_value())
         const_cast<Bytecode::BasicBlock&>(handler.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
     m_assembler.push(Assembler::Operand::Register(GPR0));
@@ -259,6 +300,18 @@ void Compiler::pop_unwind_context()
 {
     m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm8(32));
     m_assembler.add(Assembler::Operand::Register(UNWIND_CONTEXT_BASE), Assembler::Operand::Imm8(32));
+}
+
+void Compiler::compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const& op)
+{
+    push_unwind_context(true, op.handler_target(), op.finalizer_target());
+
+    m_assembler.jump(const_cast<Bytecode::BasicBlock&>(op.entry_point().block()));
+}
+
+void Compiler::compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&)
+{
+    pop_unwind_context();
 }
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_executable)
@@ -312,6 +365,12 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
                 break;
             case Bytecode::Instruction::Type::Increment:
                 compiler.compile_increment(static_cast<Bytecode::Op::Increment const&>(op));
+                break;
+            case Bytecode::Instruction::Type::EnterUnwindContext:
+                compiler.compile_enter_unwind_context(static_cast<Bytecode::Op::EnterUnwindContext const&>(op));
+                break;
+            case Bytecode::Instruction::Type::LeaveUnwindContext:
+                compiler.compile_leave_unwind_context(static_cast<Bytecode::Op::LeaveUnwindContext const&>(op));
                 break;
             default:
                 dbgln("JIT compilation failed: {}", bytecode_executable.name);
