@@ -103,9 +103,7 @@ enum class IsHistoryNavigation {
         m_history.replace_current(url, m_title);
     }
 
-    auto* url_string = Ladybird::string_to_ns_string(url.serialize());
-    auto* location_search_field = (NSSearchField*)[self.location_toolbar_item view];
-    [location_search_field setStringValue:url_string];
+    [self setLocationFieldText:url.serialize()];
 
     if (m_is_history_navigation == IsHistoryNavigation::Yes) {
         m_is_history_navigation = IsHistoryNavigation::No;
@@ -221,6 +219,45 @@ enum class IsHistoryNavigation {
                activateTab:Web::HTML::ActivateTab::Yes];
 
     self.tab.titlebarAppearsTransparent = YES;
+}
+
+- (void)setLocationFieldText:(StringView)url
+{
+    NSMutableAttributedString* attributed_url;
+
+    auto* dark_attributes = @{
+        NSForegroundColorAttributeName : [NSColor systemGrayColor],
+    };
+    auto* highlight_attributes = @{
+        NSForegroundColorAttributeName : [NSColor textColor],
+    };
+
+    if (auto url_parts = WebView::break_url_into_parts(url); url_parts.has_value()) {
+        attributed_url = [[NSMutableAttributedString alloc] init];
+
+        auto* attributed_scheme_and_subdomain = [[NSAttributedString alloc]
+            initWithString:Ladybird::string_to_ns_string(url_parts->scheme_and_subdomain)
+                attributes:dark_attributes];
+
+        auto* attributed_effective_tld_plus_one = [[NSAttributedString alloc]
+            initWithString:Ladybird::string_to_ns_string(url_parts->effective_tld_plus_one)
+                attributes:highlight_attributes];
+
+        auto* attributed_remainder = [[NSAttributedString alloc]
+            initWithString:Ladybird::string_to_ns_string(url_parts->remainder)
+                attributes:dark_attributes];
+
+        [attributed_url appendAttributedString:attributed_scheme_and_subdomain];
+        [attributed_url appendAttributedString:attributed_effective_tld_plus_one];
+        [attributed_url appendAttributedString:attributed_remainder];
+    } else {
+        attributed_url = [[NSMutableAttributedString alloc]
+            initWithString:Ladybird::string_to_ns_string(url)
+                attributes:highlight_attributes];
+    }
+
+    auto* location_search_field = (NSSearchField*)[self.location_toolbar_item view];
+    [location_search_field setAttributedStringValue:attributed_url];
 }
 
 - (void)updateNavigationButtonStates
@@ -608,6 +645,14 @@ enum class IsHistoryNavigation {
 
     [self.window makeFirstResponder:nil];
     return YES;
+}
+
+- (void)controlTextDidEndEditing:(NSNotification*)notification
+{
+    auto* location_search_field = (NSSearchField*)[self.location_toolbar_item view];
+
+    auto url_string = Ladybird::ns_string_to_string([location_search_field stringValue]);
+    [self setLocationFieldText:url_string];
 }
 
 @end
