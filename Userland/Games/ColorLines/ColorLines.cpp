@@ -56,7 +56,7 @@ ColorLines::ColorLines(StringView app_name)
     , m_board { make<MarbleBoard>() }
     , m_marble_bitmaps { build_marble_color_bitmaps() }
     , m_trace_bitmaps { build_marble_trace_bitmaps() }
-    , m_score_font { Gfx::BitmapFont::load_from_file("/res/fonts/MarietaBold24.font") }
+    , m_score_font { Gfx::BitmapFont::load_from_uri("resource://fonts/MarietaBold24.font"sv) }
 {
     VERIFY(m_marble_bitmaps.size() == Marble::number_of_colors);
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());

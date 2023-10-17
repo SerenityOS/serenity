@@ -154,7 +154,7 @@ void Canvas::draw()
     painter.draw_text(Gfx::IntRect { 520, 450, 240, 20 }, "Normal text (fixed width)"sv, Gfx::FontDatabase::default_fixed_width_font(), Gfx::TextAlignment::CenterLeft, Color::Blue);
     painter.draw_text(Gfx::IntRect { 520, 465, 240, 20 }, "Bold text (fixed width)"sv, Gfx::FontDatabase::default_fixed_width_font().bold_variant(), Gfx::TextAlignment::CenterLeft, Color::Yellow);
 
-    auto font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonBold14.font"sv);
+    auto font = Gfx::BitmapFont::load_from_uri("resource://fonts/PebbletonBold14.font"sv);
     painter.draw_rect({ 520, 510, 240, 30 }, Color::DarkGray);
     painter.draw_text(Gfx::IntRect { 520, 510, 240, 30 }, "Hello friends! :^)"sv, *font, Gfx::TextAlignment::Center, Color::White);
 

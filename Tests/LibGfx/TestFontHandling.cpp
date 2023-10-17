@@ -15,15 +15,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifdef AK_OS_SERENITY
-#    define TEST_INPUT(x) ("/usr/Tests/LibGfx/test-inputs/" x)
-#else
-#    define TEST_INPUT(x) ("test-inputs/" x)
-#endif
-
 static void init_font_database()
 {
-    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(TEST_INPUT(""_string)));
+#ifdef AK_OS_SERENITY
+    auto const test_file_root = "/usr/Tests/LibGfx/test-inputs/"_string;
+#else
+    auto const test_file_root = "test-inputs/"_string;
+#endif
+
+    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(test_file_root));
     Gfx::FontDatabase::the().load_all_fonts_from_uri("resource:///"sv);
 }
 
@@ -141,9 +141,10 @@ TEST_CASE(test_glyph_or_emoji_width)
     EXPECT(font->glyph_or_emoji_width(it));
 }
 
-TEST_CASE(test_load_from_file)
+TEST_CASE(test_load_from_uri)
 {
-    auto font = Gfx::BitmapFont::load_from_file(TEST_INPUT("TestFont.font"sv));
+    init_font_database();
+    auto font = Gfx::BitmapFont::load_from_uri("resource://TestFont.font"sv);
     EXPECT(!font->name().is_empty());
 }
 
@@ -161,7 +162,8 @@ TEST_CASE(test_write_to_file)
 
 TEST_CASE(test_character_set_masking)
 {
-    auto font = TRY_OR_FAIL(Gfx::BitmapFont::try_load_from_file(TEST_INPUT("TestFont.font"sv)));
+    init_font_database();
+    auto font = TRY_OR_FAIL(Gfx::BitmapFont::try_load_from_uri("resource://TestFont.font"sv));
 
     auto unmasked_font = TRY_OR_FAIL(font->unmasked_character_set());
     EXPECT(unmasked_font->glyph_index(0x0041).value() == 0x0041);
