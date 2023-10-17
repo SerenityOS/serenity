@@ -231,9 +231,8 @@ struct Assembler {
         jump(true_target);
     }
 
-    void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
+    void cmp(Operand lhs, Operand rhs)
     {
-        // cmp lhs, rhs
         if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Reg) {
             emit8(0x48
                 | ((to_underlying(lhs.reg) >= 8) ? 1 << 2 : 0)
@@ -248,6 +247,22 @@ struct Assembler {
         } else {
             VERIFY_NOT_REACHED();
         }
+    }
+
+    void jump_if_equal(Operand lhs, Operand rhs, Label& label)
+    {
+        cmp(lhs, rhs);
+
+        // je label (RIP-relative 32-bit offset)
+        emit8(0x0f);
+        emit8(0x84);
+        emit32(0xdeadbeef);
+        label.offset_in_instruction_stream = m_output.size();
+    }
+
+    void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
+    {
+        cmp(lhs, rhs);
 
         // jne label (RIP-relative 32-bit offset)
         emit8(0x0f);
