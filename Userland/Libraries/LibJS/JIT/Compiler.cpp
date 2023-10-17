@@ -6,10 +6,26 @@
 
 #include <AK/OwnPtr.h>
 #include <LibJS/Bytecode/Instruction.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/JIT/Compiler.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <sys/mman.h>
 #include <unistd.h>
+
+#define TRY_OR_SET_EXCEPTION(expression)                                                                                        \
+    ({                                                                                                                          \
+        /* Ignore -Wshadow to allow nesting the macro. */                                                                       \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                                                        \
+            auto&& _temporary_result = (expression));                                                                           \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>,                            \
+            "Do not return a reference from a fallible expression");                                                            \
+        if (_temporary_result.is_error()) [[unlikely]] {                                                                        \
+            vm.bytecode_interpreter().reg(Bytecode::Register::exception()) = _temporary_result.release_error().value().value(); \
+            return {};                                                                                                          \
+        }                                                                                                                       \
+        _temporary_result.release_value();                                                                                      \
+    })
 
 namespace JS::JIT {
 
@@ -154,12 +170,12 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
     load_vm_register(ARG2, Bytecode::Register::accumulator());
     m_assembler.native_call((void*)cxx_less_than);
     store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
 }
 
 [[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
 {
-    // FIXME: Handle exceptions!
-    auto old_value = MUST(value.to_numeric(vm));
+    auto old_value = TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
     if (old_value.is_number())
         return Value(old_value.as_double() + 1);
     return BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
@@ -170,6 +186,79 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
     load_vm_register(ARG1, Bytecode::Register::accumulator());
     m_assembler.native_call((void*)cxx_increment);
     store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
+void Compiler::check_exception()
+{
+    // if (exception.is_empty()) goto no_exception;
+    load_vm_register(GPR0, Bytecode::Register::exception());
+    m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm64(Value().encoded()));
+    auto no_exception = m_assembler.make_label();
+    m_assembler.jump_if_equal(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(GPR1), no_exception);
+
+    // We have an exception!
+
+    // if (!unwind_context.valid) return;
+    auto handle_exception = m_assembler.make_label();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
+    m_assembler.jump_if_not_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm32(0),
+        handle_exception);
+
+    m_assembler.exit();
+
+    // handle_exception:
+    handle_exception.link(m_assembler);
+
+    // no_exception:
+    no_exception.link(m_assembler);
+}
+
+void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer)
+{
+    // Put this on the stack, and then point UNWIND_CONTEXT_BASE at it.
+    // struct {
+    //     u64 valid;
+    //     u64 handler;
+    //     u64 finalizer;
+    // };
+
+    // push finalizer (patched later)
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm64(0xdeadbeef));
+    if (finalizer.has_value())
+        const_cast<Bytecode::BasicBlock&>(finalizer.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
+    m_assembler.push(Assembler::Operand::Register(GPR0));
+
+    // push handler (patched later)
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm64(0xdeadbeef));
+    if (handler.has_value())
+        const_cast<Bytecode::BasicBlock&>(handler.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
+    m_assembler.push(Assembler::Operand::Register(GPR0));
+
+    // push valid
+    m_assembler.push(Assembler::Operand::Imm32(valid));
+
+    // UNWIND_CONTEXT_BASE = STACK_POINTER
+    m_assembler.mov(
+        Assembler::Operand::Register(UNWIND_CONTEXT_BASE),
+        Assembler::Operand::Register(STACK_POINTER));
+
+    // align stack pointer
+    m_assembler.sub(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm8(8));
+}
+
+void Compiler::pop_unwind_context()
+{
+    m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm8(32));
+    m_assembler.add(Assembler::Operand::Register(UNWIND_CONTEXT_BASE), Assembler::Operand::Imm8(32));
 }
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_executable)
@@ -188,6 +277,8 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
     compiler.m_assembler.mov(
         Assembler::Operand::Register(LOCALS_ARRAY_BASE),
         Assembler::Operand::Register(ARG2));
+
+    compiler.push_unwind_context(false, {}, {});
 
     for (auto& block : bytecode_executable.basic_blocks) {
         block->offset = compiler.m_output.size();
