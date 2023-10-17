@@ -179,6 +179,8 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
 
     Compiler compiler;
 
+    compiler.m_assembler.enter();
+
     compiler.m_assembler.mov(
         Assembler::Operand::Register(REGISTER_ARRAY_BASE),
         Assembler::Operand::Register(ARG1));
