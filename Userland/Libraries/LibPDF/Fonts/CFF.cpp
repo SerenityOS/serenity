@@ -216,8 +216,14 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     auto strings = TRY(parse_strings(reader));
 
-    // FIXME: CFF spec "16 Local/Global Subrs INDEXes"
-    //        "Global subrs are stored in an INDEX structure which follows the String INDEX."
+    // CFF spec "16 Local/Global Subrs INDEXes"
+    // "Global subrs are stored in an INDEX structure which follows the String INDEX."
+    Vector<ByteBuffer> global_subroutines;
+    TRY(parse_index(reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
+        return TRY(global_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
+    }));
+    if (!global_subroutines.is_empty())
+        dbgln("CFF data contains Global subrs, which aren't implemented yet"); // FIXME
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
     auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), local_subroutines));
