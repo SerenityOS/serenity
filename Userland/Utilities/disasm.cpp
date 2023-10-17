@@ -41,12 +41,14 @@ struct Symbol {
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
     StringView path {};
+    StringView target_symbol;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
         "Disassemble an executable, and show human-readable "
         "assembly code for each function.");
-    args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
+    args_parser.add_positional_argument(path, "Path to binary file", "path");
+    args_parser.add_option(target_symbol, "Show disassembly only for a specific symbol", "symbol", 's', "symbol");
     args_parser.parse(args);
 
     OwnPtr<Core::MappedFile> file;
@@ -120,6 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Vector<Symbol>::Iterator current_zero_size_symbol = zero_size_symbols.begin();
     bool is_first_symbol = true;
     bool current_instruction_is_in_symbol = false;
+    bool found_symbol = false;
 
     for (;;) {
         auto offset = stream.offset();
@@ -181,6 +184,16 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
             is_first_symbol = false;
         }
+
+        // Past the target symbol now; no need to disassemble more.
+        if (found_symbol && current_ranged_symbol->name != target_symbol)
+            break;
+
+        found_symbol = !target_symbol.is_empty() && current_ranged_symbol->name == target_symbol;
+
+        // We have not found the target symbol yet; don't print anything.
+        if (!target_symbol.is_empty() && current_ranged_symbol->name != target_symbol)
+            continue;
 
         // Insert extra newline after the "dangling" symbols.
         if (needs_separator)
