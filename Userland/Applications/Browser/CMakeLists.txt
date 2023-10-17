@@ -25,6 +25,7 @@ set(SOURCES
     StorageModel.cpp
     StorageWidget.cpp
     Tab.cpp
+    URLBox.cpp
     WindowActions.cpp
     main.cpp
 )

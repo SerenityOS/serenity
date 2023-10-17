@@ -21,6 +21,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
+#include <Applications/Browser/URLBox.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
@@ -157,7 +158,7 @@ Tab::Tab(BrowserWindow& window)
 
     toolbar.add_action(window.reload_action());
 
-    m_location_box = toolbar.add<GUI::UrlBox>();
+    m_location_box = toolbar.add<URLBox>();
     m_location_box->set_placeholder("Search or enter address"sv);
 
     m_location_box->on_return_pressed = [this] {
