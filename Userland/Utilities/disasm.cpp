@@ -6,8 +6,11 @@
 
 #include <AK/Debug.h>
 #include <AK/Demangle.h>
+#include <AK/IterationDecision.h>
 #include <AK/OwnPtr.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
@@ -16,7 +19,24 @@
 #include <LibMain/Main.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
-#include <string.h>
+
+struct Symbol {
+    size_t value { 0 };
+    size_t size { 0 };
+    StringView name;
+
+    size_t address() const { return value; }
+    size_t address_end() const { return value + size; }
+
+    bool contains(size_t virtual_address) { return (address() <= virtual_address && virtual_address < address_end()) || (size == 0 && address() == virtual_address); }
+
+    String format_symbol_address() const
+    {
+        if (size > 0)
+            return MUST(String::formatted("{:p}-{:p}", address(), address_end()));
+        return MUST(String::formatted("{:p}", address()));
+    }
+};
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
@@ -38,20 +58,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         asm_size = MUST(file->size());
     }
 
-    struct Symbol {
-        size_t value;
-        size_t size;
-        StringView name;
-
-        size_t address() const { return value; }
-        size_t address_end() const { return value + size; }
-
-        bool contains(size_t virtual_address) { return address() <= virtual_address && virtual_address < address_end(); }
-    };
-    Vector<Symbol> symbols;
+    // Functions and similar symbols.
+    Vector<Symbol> ranged_symbols;
+    // Jump labels, relocation targets, etc.
+    Vector<Symbol> zero_size_symbols;
 
     size_t file_offset = 0;
-    Vector<Symbol>::Iterator current_symbol = symbols.begin();
     OwnPtr<X86::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
     OwnPtr<ELF::Image> elf;
     if (asm_size >= 4 && strncmp(reinterpret_cast<char const*>(asm_data), "\u007fELF", 4) == 0) {
@@ -67,22 +79,36 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 file_offset = section.address();
                 return IterationDecision::Break;
             });
-            symbols.ensure_capacity(elf->symbol_count() + 1);
-            symbols.append({ 0, 0, StringView() }); // Sentinel.
+            ranged_symbols.ensure_capacity(elf->symbol_count() + 1);
+            zero_size_symbols.ensure_capacity(elf->symbol_count() + 1);
+            // Sentinels:
+            ranged_symbols.append({ 0, 0, StringView() });
+            zero_size_symbols.append({ 0, 0, StringView() });
+
             elf->for_each_symbol([&](ELF::Image::Symbol const& symbol) {
-                symbols.append({ symbol.value(), symbol.size(), symbol.name() });
+                if (symbol.name().is_empty())
+                    return IterationDecision::Continue;
+
+                if (symbol.size() == 0)
+                    zero_size_symbols.append({ symbol.value(), symbol.size(), symbol.name() });
+                else
+                    ranged_symbols.append({ symbol.value(), symbol.size(), symbol.name() });
                 return IterationDecision::Continue;
             });
-            quick_sort(symbols, [](auto& a, auto& b) {
+            auto symbol_order = [](auto& a, auto& b) {
                 if (a.value != b.value)
                     return a.value < b.value;
                 if (a.size != b.size)
                     return a.size < b.size;
                 return a.name < b.name;
-            });
+            };
+            quick_sort(ranged_symbols, symbol_order);
+            quick_sort(zero_size_symbols, symbol_order);
             if constexpr (DISASM_DUMP_DEBUG) {
-                for (size_t i = 0; i < symbols.size(); ++i)
-                    dbgln("{}: {:p}, {}", symbols[i].name, symbols[i].value, symbols[i].size);
+                for (size_t i = 0; i < ranged_symbols.size(); ++i)
+                    dbgln("{}: {:p}, {}", ranged_symbols[i].name, ranged_symbols[i].value, ranged_symbols[i].size);
+                for (size_t i = 0; i < zero_size_symbols.size(); ++i)
+                    dbgln("{}: {:p}", zero_size_symbols[i].name, zero_size_symbols[i].value);
             }
         }
     }
@@ -90,6 +116,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     X86::SimpleInstructionStream stream(asm_data, asm_size);
     X86::Disassembler disassembler(stream);
 
+    Vector<Symbol>::Iterator current_ranged_symbol = ranged_symbols.begin();
+    Vector<Symbol>::Iterator current_zero_size_symbol = zero_size_symbols.begin();
     bool is_first_symbol = true;
     bool current_instruction_is_in_symbol = false;
 
@@ -99,37 +127,68 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         if (!insn.has_value())
             break;
 
+        size_t virtual_offset = file_offset + offset;
         // Prefix regions of instructions belonging to a symbol with the symbol's name.
         // Separate regions of instructions belonging to distinct symbols with newlines,
         // and separate regions of instructions not belonging to symbols from regions belonging to symbols with newlines.
         // Interesting cases:
         // - More than 1 symbol covering a region of instructions (ICF, D1/D2)
         // - Symbols of size 0 that don't cover any instructions but are at an address (want to print them, separated from instructions both before and after)
-        // Invariant: current_symbol is the largest instruction containing insn, or it is the largest instruction that has an address less than the instruction's address.
-        size_t virtual_offset = file_offset + offset;
-        if (current_symbol < symbols.end() && !current_symbol->contains(virtual_offset)) {
+        // Invariant: current_ranged_symbol is the largest instruction containing insn, or it is the largest instruction that has an address less than the instruction's address.
+        StringBuilder dangling_symbols;
+        StringBuilder instruction_symbols;
+        bool needs_separator = false;
+        if (current_zero_size_symbol < zero_size_symbols.end()) {
+            // Print "dangling" symbols preceding the current instruction.
+            while (current_zero_size_symbol + 1 < zero_size_symbols.end() && !(current_zero_size_symbol + 1)->contains(virtual_offset) && (current_zero_size_symbol + 1)->address() <= virtual_offset) {
+                ++current_zero_size_symbol;
+                if (!is_first_symbol)
+                    dangling_symbols.appendff("\n({} ({}))\n", demangle(current_zero_size_symbol->name), current_zero_size_symbol->format_symbol_address());
+            }
+            // Find and print all symbols covering the current instruction.
+            while (current_zero_size_symbol + 1 < zero_size_symbols.end() && (current_zero_size_symbol + 1)->contains(virtual_offset)) {
+                if (!is_first_symbol && !current_instruction_is_in_symbol)
+                    needs_separator = true;
+                ++current_zero_size_symbol;
+                current_instruction_is_in_symbol = true;
+
+                instruction_symbols.appendff("{} ({}):\n", demangle(current_zero_size_symbol->name), current_zero_size_symbol->format_symbol_address());
+            }
+        }
+        // Handle ranged symbols separately.
+        if (current_ranged_symbol < ranged_symbols.end() && !current_ranged_symbol->contains(virtual_offset)) {
             if (!is_first_symbol && current_instruction_is_in_symbol) {
                 // The previous instruction was part of a symbol that doesn't cover the current instruction, so separate it from the current instruction with a newline.
-                outln();
-                current_instruction_is_in_symbol = (current_symbol + 1 < symbols.end() && (current_symbol + 1)->contains(virtual_offset));
+                needs_separator = true;
+                current_instruction_is_in_symbol = (current_ranged_symbol + 1 < ranged_symbols.end() && (current_ranged_symbol + 1)->contains(virtual_offset));
             }
 
-            // Try to find symbol covering current instruction, if one exists.
-            while (current_symbol + 1 < symbols.end() && !(current_symbol + 1)->contains(virtual_offset) && (current_symbol + 1)->address() <= virtual_offset) {
-                ++current_symbol;
+            // Print "dangling" symbols preceding the current instruction.
+            while (current_ranged_symbol + 1 < ranged_symbols.end() && !(current_ranged_symbol + 1)->contains(virtual_offset) && (current_ranged_symbol + 1)->address() <= virtual_offset) {
+                ++current_ranged_symbol;
                 if (!is_first_symbol)
-                    outln("\n({} ({:p}-{:p}))\n", demangle(current_symbol->name), current_symbol->address(), current_symbol->address_end());
+                    dangling_symbols.appendff("\n({} ({}))\n", demangle(current_ranged_symbol->name), current_ranged_symbol->format_symbol_address());
             }
-            while (current_symbol + 1 < symbols.end() && (current_symbol + 1)->contains(virtual_offset)) {
+            // Find and print all symbols covering the current instruction.
+            while (current_ranged_symbol + 1 < ranged_symbols.end() && (current_ranged_symbol + 1)->contains(virtual_offset)) {
                 if (!is_first_symbol && !current_instruction_is_in_symbol)
-                    outln();
-                ++current_symbol;
+                    needs_separator = true;
+                ++current_ranged_symbol;
                 current_instruction_is_in_symbol = true;
-                outln("{} ({:p}-{:p}):", demangle(current_symbol->name), current_symbol->address(), current_symbol->address_end());
+
+                instruction_symbols.appendff("{} ({}):\n", demangle(current_ranged_symbol->name), current_ranged_symbol->format_symbol_address());
             }
 
             is_first_symbol = false;
         }
+
+        // Insert extra newline after the "dangling" symbols.
+        if (needs_separator)
+            outln();
+        if (auto dangling_symbols_text = TRY(dangling_symbols.to_string()); !dangling_symbols_text.is_empty())
+            outln("{}", dangling_symbols_text);
+        if (auto instruction_symbols_text = TRY(instruction_symbols.to_string()); !instruction_symbols_text.is_empty())
+            out("{}", instruction_symbols_text);
 
         size_t length = insn.value().length();
         StringBuilder builder;
