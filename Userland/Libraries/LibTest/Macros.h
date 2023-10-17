@@ -22,29 +22,6 @@ namespace Test {
 void current_test_case_did_fail();
 }
 
-#undef VERIFY
-#define VERIFY(x)                                                                                    \
-    do {                                                                                             \
-        if (!(x)) {                                                                                  \
-            ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: VERIFY({}) failed", __FILE__, __LINE__, #x); \
-            ::Test::current_test_case_did_fail();                                                    \
-        }                                                                                            \
-    } while (false)
-
-#undef VERIFY_NOT_REACHED
-#define VERIFY_NOT_REACHED()                                                                           \
-    do {                                                                                               \
-        ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: VERIFY_NOT_REACHED() called", __FILE__, __LINE__); \
-        ::abort();                                                                                     \
-    } while (false)
-
-#undef TODO
-#define TODO()                                                                           \
-    do {                                                                                 \
-        ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: TODO() called", __FILE__, __LINE__); \
-        ::abort();                                                                       \
-    } while (false)
-
 #define EXPECT_EQ(a, b)                                                                                                                                                                      \
     do {                                                                                                                                                                                     \
         auto lhs = (a);                                                                                                                                                                      \
