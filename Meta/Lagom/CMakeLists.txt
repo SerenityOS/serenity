@@ -667,6 +667,7 @@ if (BUILD_LAGOM)
         # LibCore
         if ((LINUX OR APPLE) AND NOT EMSCRIPTEN)
             lagom_test(../../Tests/LibCore/TestLibCoreFileWatcher.cpp)
+            lagom_test(../../Tests/LibCore/TestLibCorePath.cpp)
             lagom_test(../../Tests/LibCore/TestLibCorePromise.cpp LIBS LibThreading)
         endif()
 
