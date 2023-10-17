@@ -540,6 +540,22 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
     if (outline_item_dict->contains(CommonNames::Dest)) {
         auto dest_obj = TRY(outline_item_dict->get_object(this, CommonNames::Dest));
         outline_item->dest = TRY(create_destination_from_object(dest_obj, page_number_by_index_ref));
+    } else if (outline_item_dict->contains(CommonNames::A)) {
+        // PDF 1.7 spec, "8.5 Actions"
+        auto action_dict = TRY(outline_item_dict->get_dict(this, CommonNames::A));
+        if (action_dict->contains(CommonNames::S)) {
+            // PDF 1.7 spec, "TABLE 8.48 Action types"
+            auto action_type = TRY(action_dict->get_name(this, CommonNames::S))->name();
+            if (action_type == "GoTo") {
+                // PDF 1.7 spec, "Go-To Actions"
+                if (action_dict->contains(CommonNames::D)) {
+                    auto dest_obj = TRY(action_dict->get_object(this, CommonNames::D));
+                    outline_item->dest = TRY(create_destination_from_object(dest_obj, page_number_by_index_ref));
+                }
+            } else {
+                dbgln("Unhandled action type {}", action_type);
+            }
+        }
     }
 
     if (outline_item_dict->contains(CommonNames::C)) {
