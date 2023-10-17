@@ -400,6 +400,8 @@ void FileSystemModel::invalidate()
         m_root->m_parent_of_root = true;
 
     m_root->reify_if_needed();
+    for (auto const& child : m_root->m_children)
+        child->reify_if_needed();
 
     Model::invalidate();
 }
