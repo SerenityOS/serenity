@@ -11,6 +11,7 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
+#include <LibCore/Resource.h>
 #include <LibCore/System.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
@@ -224,11 +225,29 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_stream(FixedMemoryS
     return font;
 }
 
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_resource(NonnullRefPtr<Core::Resource> resource)
+{
+    auto stream = resource->stream();
+    auto font = TRY(try_load_from_stream(stream));
+    font->m_owned_data = move(resource);
+    return font;
+}
+
 ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_mapped_file(NonnullOwnPtr<Core::MappedFile> mapped_file)
 {
     auto font = TRY(try_load_from_stream(*mapped_file));
-    font->m_mapped_file = move(mapped_file);
+    font->m_owned_data = move(mapped_file);
     return font;
+}
+
+NonnullRefPtr<BitmapFont> BitmapFont::load_from_uri(StringView uri)
+{
+    return MUST(try_load_from_uri(uri));
+}
+
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_uri(StringView uri)
+{
+    return try_load_from_resource(TRY(Core::Resource::load_from_uri(uri)));
 }
 
 RefPtr<BitmapFont> BitmapFont::load_from_file(DeprecatedString const& path)

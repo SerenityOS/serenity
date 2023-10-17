@@ -13,6 +13,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/Resource.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Size.h>
 
@@ -29,7 +30,10 @@ public:
     ErrorOr<NonnullRefPtr<BitmapFont>> masked_character_set() const;
     ErrorOr<NonnullRefPtr<BitmapFont>> unmasked_character_set() const;
 
+    static NonnullRefPtr<BitmapFont> load_from_uri(StringView);
     static RefPtr<BitmapFont> load_from_file(DeprecatedString const& path);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_uri(StringView);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_resource(NonnullRefPtr<Core::Resource>);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(DeprecatedString const& path);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_mapped_file(NonnullOwnPtr<Core::MappedFile>);
     static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_stream(FixedMemoryStream&);
@@ -151,7 +155,7 @@ private:
 
     Bytes m_rows;
     Span<u8> m_glyph_widths;
-    OwnPtr<Core::MappedFile> m_mapped_file;
+    Variant<Empty, NonnullOwnPtr<Core::MappedFile>, NonnullRefPtr<Core::Resource>> m_owned_data = Empty {};
 
     u8 m_glyph_width { 0 };
     u8 m_glyph_height { 0 };
