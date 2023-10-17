@@ -77,47 +77,39 @@ void LocationEdit::focusOutEvent(QFocusEvent* event)
 
 void LocationEdit::highlight_location()
 {
-    auto url = AK::URL::create_with_url_or_path(ak_deprecated_string_from_qstring(text()));
-
-    auto darkened_text_color = QPalette().color(QPalette::Text);
-    darkened_text_color.setAlpha(127);
-
+    auto url = MUST(ak_string_from_qstring(text()));
     QList<QInputMethodEvent::Attribute> attributes;
-    if (url.is_valid() && !hasFocus()) {
-        if (url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "gemini") {
-            int host_start = (url.scheme().bytes_as_string_view().length() + 3) - cursorPosition();
-            auto host_length = url.serialized_host().release_value_but_fixme_should_propagate_errors().bytes().size();
 
-            // FIXME: Maybe add a generator to use https://publicsuffix.org/list/public_suffix_list.dat
-            //        for now just highlight the whole host
+    if (auto url_parts = WebView::break_url_into_parts(url); url_parts.has_value()) {
+        auto darkened_text_color = QPalette().color(QPalette::Text);
+        darkened_text_color.setAlpha(127);
 
-            QTextCharFormat defaultFormat;
-            defaultFormat.setForeground(darkened_text_color);
-            attributes.append({
-                QInputMethodEvent::TextFormat,
-                -cursorPosition(),
-                static_cast<int>(text().length()),
-                defaultFormat,
-            });
+        QTextCharFormat dark_attributes;
+        dark_attributes.setForeground(darkened_text_color);
 
-            QTextCharFormat hostFormat;
-            hostFormat.setForeground(QPalette().color(QPalette::Text));
-            attributes.append({
-                QInputMethodEvent::TextFormat,
-                host_start,
-                static_cast<int>(host_length),
-                hostFormat,
-            });
-        } else if (url.scheme() == "file") {
-            QTextCharFormat schemeFormat;
-            schemeFormat.setForeground(darkened_text_color);
-            attributes.append({
-                QInputMethodEvent::TextFormat,
-                -cursorPosition(),
-                static_cast<int>(url.scheme().bytes_as_string_view().length() + 3),
-                schemeFormat,
-            });
-        }
+        QTextCharFormat highlight_attributes;
+        highlight_attributes.setForeground(QPalette().color(QPalette::Text));
+
+        attributes.append({
+            QInputMethodEvent::TextFormat,
+            -cursorPosition(),
+            static_cast<int>(url_parts->scheme_and_subdomain.length()),
+            dark_attributes,
+        });
+
+        attributes.append({
+            QInputMethodEvent::TextFormat,
+            static_cast<int>(url_parts->scheme_and_subdomain.length() - cursorPosition()),
+            static_cast<int>(url_parts->effective_tld_plus_one.length()),
+            highlight_attributes,
+        });
+
+        attributes.append({
+            QInputMethodEvent::TextFormat,
+            static_cast<int>(url_parts->scheme_and_subdomain.length() + url_parts->effective_tld_plus_one.length() - cursorPosition()),
+            static_cast<int>(url_parts->remainder.length()),
+            dark_attributes,
+        });
     }
 
     QInputMethodEvent event(QString(), attributes);
