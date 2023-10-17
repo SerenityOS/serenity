@@ -40,6 +40,7 @@ private:
     void compile_increment(Bytecode::Op::Increment const&);
     void compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const&);
     void compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&);
+    void compile_throw(Bytecode::Op::Throw const&);
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);
