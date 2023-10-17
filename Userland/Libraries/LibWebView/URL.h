@@ -16,7 +16,13 @@ enum class AppendTLD {
     No,
     Yes,
 };
-
 Optional<URL> sanitize_url(StringView, Optional<StringView> search_engine = {}, AppendTLD = AppendTLD::No);
+
+struct URLParts {
+    StringView scheme_and_subdomain;
+    StringView effective_tld_plus_one;
+    StringView remainder;
+};
+Optional<URLParts> break_url_into_parts(StringView url);
 
 }

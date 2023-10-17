@@ -83,4 +83,51 @@ Optional<URL> sanitize_url(StringView url, Optional<StringView> search_engine, A
     return result.release_value();
 }
 
+static URLParts break_file_url_into_parts(URL const& url, StringView url_string)
+{
+    auto scheme = url_string.substring_view(0, url.scheme().bytes_as_string_view().length() + "://"sv.length());
+    auto path = url_string.substring_view(scheme.length());
+
+    return URLParts { scheme, path, {} };
+}
+
+static URLParts break_web_url_into_parts(URL const& url, StringView url_string)
+{
+    auto host = MUST(url.serialized_host());
+
+    auto public_suffix = MUST(PublicSuffixData::the()->get_public_suffix(host));
+    if (!public_suffix.has_value())
+        return {};
+
+    auto public_suffix_start = url_string.find(*public_suffix);
+    auto public_suffix_end = public_suffix_start.value() + public_suffix->bytes_as_string_view().length();
+
+    auto scheme_and_subdomain = url_string.substring_view(0, *public_suffix_start);
+    scheme_and_subdomain = scheme_and_subdomain.trim("."sv, TrimMode::Right);
+
+    if (auto index = scheme_and_subdomain.find_last('.'); index.has_value())
+        scheme_and_subdomain = scheme_and_subdomain.substring_view(0, *index + 1);
+    else
+        scheme_and_subdomain = scheme_and_subdomain.substring_view(0, url.scheme().bytes_as_string_view().length() + "://"sv.length());
+
+    auto effective_tld_plus_one = url_string.substring_view(scheme_and_subdomain.length(), public_suffix_end - scheme_and_subdomain.length());
+    auto remainder = url_string.substring_view(public_suffix_end);
+
+    return URLParts { scheme_and_subdomain, effective_tld_plus_one, remainder };
+}
+
+Optional<URLParts> break_url_into_parts(StringView url_string)
+{
+    auto url = URL::create_with_url_or_path(url_string);
+    if (!url.is_valid())
+        return {};
+
+    if (url.scheme() == "file"sv)
+        return break_file_url_into_parts(url, url_string);
+    if (url.scheme().is_one_of("http"sv, "https"sv, "gemini"sv))
+        return break_web_url_into_parts(url, url_string);
+
+    return {};
+}
+
 }
