@@ -110,7 +110,7 @@ public:
     template<typename T = char>
     void move_to(size_t offset)
     {
-        VERIFY(offset < m_bytes.size());
+        VERIFY(offset <= m_bytes.size());
         m_offset = static_cast<ssize_t>(offset);
     }
 
