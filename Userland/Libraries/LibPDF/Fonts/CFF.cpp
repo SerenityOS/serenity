@@ -125,7 +125,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     int charset_offset = 0;
     int encoding_offset = 0;
     auto charstrings_offset = 0;
-    Vector<ByteBuffer> subroutines;
+    Vector<ByteBuffer> local_subroutines;
     float defaultWidthX = 0;
     float nominalWidthX = 0;
     TRY(parse_index(reader, [&](ReadonlyBytes const& element_data) {
@@ -190,7 +190,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                         Reader subrs_reader { cff_bytes.slice(private_dict_offset + subrs_offset) };
                         dbgln("Parsing Subrs INDEX");
                         TRY(parse_index(subrs_reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
-                            return TRY(subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
+                            return TRY(local_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
                         }));
                         break;
                     }
@@ -220,7 +220,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     //        "Global subrs are stored in an INDEX structure which follows the String INDEX."
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
-    auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), subroutines));
+    auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), local_subroutines));
 
     // CFF spec, "Table 16 Encoding ID"
     // FIXME: Only read this if the built-in encoding is actually needed? (ie. `if (!encoding)`)
