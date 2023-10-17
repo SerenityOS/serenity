@@ -160,8 +160,7 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 
 [[maybe_unused]] static Value cxx_less_than(VM& vm, Value lhs, Value rhs)
 {
-    // FIXME: Handle exceptions!
-    return MUST(less_than(vm, lhs, rhs));
+    return TRY_OR_SET_EXCEPTION(less_than(vm, lhs, rhs));
 }
 
 void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
