@@ -9,6 +9,7 @@
 #include <AK/DeprecatedFlyString.h>
 
 #define ENUMERATE_COMMON_NAMES(X) \
+    X(A)                          \
     X(AIS)                        \
     X(Alternate)                  \
     X(ASCII85Decode)              \
@@ -134,6 +135,7 @@
     X(Root)                       \
     X(Rotate)                     \
     X(RunLengthDecode)            \
+    X(S)                          \
     X(SA)                         \
     X(SM)                         \
     X(SMask)                      \
