@@ -262,60 +262,39 @@ void Glyf::Glyph::rasterize_impl(Gfx::Painter& painter, Gfx::AffineTransform con
     u32 current_point_index = 0;
     for (u16 contour_index = 0; contour_index < m_num_contours; contour_index++) {
         u32 current_contour_last_point_index = be_u16(m_slice.offset(contour_index * 2));
-        Optional<Gfx::FloatPoint> start_off_curve_point;
-        Optional<Gfx::FloatPoint> start_on_curve_point;
-        Optional<Gfx::FloatPoint> unprocessed_off_curve_point;
+
+        Vector<PointIterator::Item> points;
         while (current_point_index <= current_contour_last_point_index) {
-            auto current_point = point_iterator.next();
+            points.append(*point_iterator.next());
             current_point_index++;
-            if (!current_point.has_value())
-                break;
-
-            if (current_point->on_curve) {
-                if (!start_on_curve_point.has_value()) {
-                    start_on_curve_point = current_point->point;
-                    path.move_to(current_point->point);
-                }
-
-                if (unprocessed_off_curve_point.has_value()) {
-                    path.quadratic_bezier_curve_to(unprocessed_off_curve_point.value(), current_point->point);
-                    unprocessed_off_curve_point = {};
-                } else {
-                    path.line_to(current_point->point);
-                }
-            } else {
-                if (!start_on_curve_point.has_value() && !start_off_curve_point.has_value()) {
-                    // If "off curve" point comes first it needs to be saved to use while closing the path
-                    start_off_curve_point = current_point->point;
-                }
-
-                if (unprocessed_off_curve_point.has_value()) {
-                    // Two subsequent "off curve" points create implied "on-curve" point lying between them
-                    auto implied_point = (unprocessed_off_curve_point.value() + current_point->point) * 0.5f;
-                    if (!start_on_curve_point.has_value()) {
-                        start_on_curve_point = implied_point;
-                        path.move_to(implied_point);
-                    }
-                    path.quadratic_bezier_curve_to(unprocessed_off_curve_point.value(), implied_point);
-                }
-                unprocessed_off_curve_point = current_point->point;
-            }
         }
 
-        if (start_off_curve_point.has_value()) {
-            // Close the path creating "implied" point if both first and last points were "off curve"
-            if (unprocessed_off_curve_point.has_value()) {
-                auto implied_point = (start_off_curve_point.value() + unprocessed_off_curve_point.value()) * 0.5f;
-                path.quadratic_bezier_curve_to(unprocessed_off_curve_point.value(), implied_point);
-            }
+        if (points.is_empty())
+            continue;
 
-            // Add bezier curve from new "implied point" to first "on curve" point in the path
-            path.quadratic_bezier_curve_to(start_off_curve_point.value(), start_on_curve_point.value());
-        } else if (unprocessed_off_curve_point.has_value()) {
-            // Add bezier curve to first "on curve" point using last "off curve" point
-            path.quadratic_bezier_curve_to(unprocessed_off_curve_point.value(), start_on_curve_point.value());
+        auto current = points.last();
+        auto next = points.first();
+
+        if (current.on_curve) {
+            path.move_to(current.point);
+        } else if (next.on_curve) {
+            path.move_to(next.point);
         } else {
-            path.line_to(start_on_curve_point.value());
+            auto implied_point = (current.point + next.point) * 0.5f;
+            path.move_to(implied_point);
+        }
+
+        for (size_t i = 0; i < points.size(); i++) {
+            current = next;
+            next = points[(i + 1) % points.size()];
+            if (current.on_curve) {
+                path.line_to(current.point);
+            } else if (next.on_curve) {
+                path.quadratic_bezier_curve_to(current.point, next.point);
+            } else {
+                auto implied_point = (current.point + next.point) * 0.5f;
+                path.quadratic_bezier_curve_to(current.point, implied_point);
+            }
         }
     }
 
