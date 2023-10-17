@@ -24,8 +24,10 @@ private:
     static constexpr auto ARG1 = Assembler::Reg::RSI;
     static constexpr auto ARG2 = Assembler::Reg::RDX;
     static constexpr auto RET = Assembler::Reg::RAX;
+    static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::R8;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R9;
+    static constexpr auto UNWIND_CONTEXT_BASE = Assembler::Reg::R10;
 
     void compile_load_immediate(Bytecode::Op::LoadImmediate const&);
     void compile_load(Bytecode::Op::Load const&);
@@ -44,6 +46,11 @@ private:
     void load_vm_local(Assembler::Reg, size_t);
 
     void compile_to_boolean(Assembler::Reg dst, Assembler::Reg src);
+
+    void check_exception();
+
+    void push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer);
+    void pop_unwind_context();
 
     Vector<u8> m_output;
     Assembler m_assembler { m_output };
