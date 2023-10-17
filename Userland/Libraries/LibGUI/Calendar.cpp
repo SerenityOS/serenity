@@ -20,10 +20,10 @@ REGISTER_WIDGET(GUI, Calendar);
 
 namespace GUI {
 
-static auto const extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular36.font");
-static auto const large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font");
-static auto const medium_font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonRegular14.font");
-static auto const small_font = Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular10.font");
+static auto const extra_large_font = Gfx::BitmapFont::load_from_uri("resource://fonts/MarietaRegular36.font"sv);
+static auto const large_font = Gfx::BitmapFont::load_from_uri("resource://fonts/MarietaRegular24.font"sv);
+static auto const medium_font = Gfx::BitmapFont::load_from_uri("resource://fonts/PebbletonRegular14.font"sv);
+static auto const small_font = Gfx::BitmapFont::load_from_uri("resource://fonts/KaticaRegular10.font"sv);
 
 Calendar::Calendar(Core::DateTime date_time, Mode mode)
     : m_selected_date(date_time)
@@ -451,7 +451,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     m_months[i].is_being_pressed,
                     m_months[i].is_hovered,
                     false, true, false);
-                set_font(small_font);
+                set_font(*small_font);
                 painter.draw_text(month_tile_rect, m_months[i].name, font(), Gfx::TextAlignment::Center, palette().base_text());
                 i++;
             }
@@ -623,15 +623,15 @@ void Calendar::paint_tile(GUI::Painter& painter, GUI::Calendar::Tile& tile, Gfx:
             font().pixel_size_rounded_up() + 4);
 
         if (width > 150 && height > 150) {
-            set_font(extra_large_font);
+            set_font(*extra_large_font);
         } else if (width > 100 && height > 100) {
-            set_font(large_font);
+            set_font(*large_font);
         } else if (width > 50 && height > 50) {
-            set_font(medium_font);
+            set_font(*medium_font);
         } else if (width >= 30 && height >= 30) {
-            set_font(small_font);
+            set_font(*small_font);
         } else {
-            set_font(small_font);
+            set_font(*small_font);
             text_alignment = Gfx::TextAlignment::Center;
             text_rect = Gfx::IntRect(tile_rect);
         }
@@ -654,9 +654,9 @@ void Calendar::paint_tile(GUI::Painter& painter, GUI::Calendar::Tile& tile, Gfx:
             painter.fill_rect(tile_rect, palette().base());
 
         if (width > 50 && height > 50) {
-            set_font(medium_font);
+            set_font(*medium_font);
         } else {
-            set_font(small_font);
+            set_font(*small_font);
         }
 
         auto display_date = DeprecatedString::number(tile.day);

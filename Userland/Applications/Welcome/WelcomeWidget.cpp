@@ -32,7 +32,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
     TRY(load_from_gml(welcome_window_gml));
 
     m_banner_widget = find_descendant_of_type_named<GUI::Widget>("welcome_banner");
-    m_banner_font = TRY(Gfx::BitmapFont::try_load_from_file("/res/fonts/MarietaRegular24.font"sv));
+    m_banner_font = TRY(Gfx::BitmapFont::try_load_from_uri("resource://fonts/MarietaRegular24.font"sv));
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->use_native_user_style_sheet();
