@@ -9,6 +9,7 @@
 #include <LibCore/ResourceImplementationFile.h>
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Font/FontDatabase.h>
+#include <LibGfx/Font/OpenType/Glyf.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -171,4 +172,22 @@ TEST_CASE(test_character_set_masking)
     EXPECT(masked_font->glyph_index(0x0041).value() == 0x0041);
     EXPECT(!masked_font->glyph_index(0x0100).has_value());
     EXPECT(masked_font->glyph_index(0xFFFD).value() == 0x1FD);
+}
+
+TEST_CASE(rasterize_glyph_containing_single_off_curve_point)
+{
+    Vector<u8> glyph_data {
+        0, 5, 0, 205, 255, 51, 7, 51, 6, 225, 0, 3, 0, 6, 0, 9, 0, 12, 0, 15, 0, 31, 64, 13, 13, 2, 15, 5, 7, 2, 8, 5, 10, 3, 0,
+        5, 3, 0, 47, 47, 51, 17, 51, 17, 51, 17, 51, 17, 51, 17, 51, 48, 49, 19, 33, 17, 33, 1, 33, 1, 1, 17, 1, 1, 33, 9, 3,
+        205, 6, 102, 249, 154, 5, 184, 250, 248, 2, 133, 2, 199, 253, 125, 253, 57, 5, 4, 253, 127, 253, 53, 2, 133, 253,
+        123, 6, 225, 248, 82, 7, 68, 252, 231, 252, 145, 6, 50, 252, 231, 252, 149, 3, 23, 253, 57, 3, 27, 3, 29, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 177, 2, 81, 43, 48, 49, 48, 0
+    };
+    OpenType::Glyf glyf(glyph_data.span());
+    auto glyph = glyf.glyph(118);
+    EXPECT(glyph.has_value());
+    EXPECT_NO_CRASH("rasterizing glyph containing single off-curve point should not crash", [&] {
+        (void)glyph->rasterize(0, 0, 1, 1, {}, [&](u16) -> Optional<OpenType::Glyf::Glyph> { VERIFY_NOT_REACHED(); });
+        return Test::Crash::Failure::DidNotCrash;
+    });
 }
