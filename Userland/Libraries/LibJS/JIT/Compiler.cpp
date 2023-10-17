@@ -234,8 +234,14 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
             compiler.m_assembler.exit();
     }
 
-    // Patch up all the jumps
+    auto* executable_memory = mmap(nullptr, compiler.m_output.size(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+    if (executable_memory == MAP_FAILED) {
+        perror("mmap");
+        return nullptr;
+    }
+
     for (auto& block : bytecode_executable.basic_blocks) {
+        // Patch up all the jumps
         for (auto& jump : block->jumps_to_here) {
             auto offset = block->offset - jump - 4;
             compiler.m_output[jump + 0] = (offset >> 0) & 0xff;
@@ -243,15 +249,22 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
             compiler.m_output[jump + 2] = (offset >> 16) & 0xff;
             compiler.m_output[jump + 3] = (offset >> 24) & 0xff;
         }
+
+        // Patch up all the absolute references
+        for (auto& absolute_reference : block->absolute_references_to_here) {
+            auto offset = bit_cast<u64>(executable_memory) + block->offset;
+            compiler.m_output[absolute_reference + 0] = (offset >> 0) & 0xff;
+            compiler.m_output[absolute_reference + 1] = (offset >> 8) & 0xff;
+            compiler.m_output[absolute_reference + 2] = (offset >> 16) & 0xff;
+            compiler.m_output[absolute_reference + 3] = (offset >> 24) & 0xff;
+            compiler.m_output[absolute_reference + 4] = (offset >> 32) & 0xff;
+            compiler.m_output[absolute_reference + 5] = (offset >> 40) & 0xff;
+            compiler.m_output[absolute_reference + 6] = (offset >> 48) & 0xff;
+            compiler.m_output[absolute_reference + 7] = (offset >> 56) & 0xff;
+        }
     }
 
     write(STDOUT_FILENO, compiler.m_output.data(), compiler.m_output.size());
-
-    auto* executable_memory = mmap(nullptr, compiler.m_output.size(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-    if (executable_memory == MAP_FAILED) {
-        perror("mmap");
-        return nullptr;
-    }
 
     memcpy(executable_memory, compiler.m_output.data(), compiler.m_output.size());
     mprotect(executable_memory, compiler.m_output.size(), PROT_READ | PROT_EXEC);

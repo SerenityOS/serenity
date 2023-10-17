@@ -51,6 +51,9 @@ public:
 
     // Offsets into the instruction stream where we have RIP-relative jump offsets to here that need patching.
     Vector<size_t> jumps_to_here;
+
+    // Offsets into the instruction stream where we have absolute 64-bit references to here that need patching.
+    Vector<size_t> absolute_references_to_here;
     // ==============================================================
 
 private:
