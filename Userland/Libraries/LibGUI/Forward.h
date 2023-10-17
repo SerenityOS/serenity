@@ -79,7 +79,6 @@ class Statusbar;
 class TabWidget;
 class TableView;
 class TextBox;
-class UrlBox;
 class TextDocument;
 class TextDocumentUndoCommand;
 class TextEditor;

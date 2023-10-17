@@ -61,24 +61,4 @@ private:
     bool m_show_reveal_button { false };
 };
 
-class UrlBox : public TextBox {
-    C_OBJECT(UrlBox)
-public:
-    virtual ~UrlBox() override = default;
-
-    void set_focus_transition(bool focus_transition) { m_focus_transition = focus_transition; }
-    bool is_focus_transition() const { return m_focus_transition; }
-
-private:
-    UrlBox();
-
-    void highlight_url();
-
-    virtual void mousedown_event(GUI::MouseEvent&) override;
-    virtual void focusout_event(GUI::FocusEvent&) override;
-    virtual void focusin_event(GUI::FocusEvent&) override;
-
-    bool m_focus_transition { true };
-};
-
 }

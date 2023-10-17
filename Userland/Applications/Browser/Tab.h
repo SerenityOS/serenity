@@ -28,6 +28,7 @@ class InspectorWidget;
 class ConsoleWidget;
 class HistoryWidget;
 class StorageWidget;
+class URLBox;
 
 class Tab final : public GUI::Widget {
     C_OBJECT(Tab);
@@ -120,7 +121,7 @@ private:
 
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;
 
-    RefPtr<GUI::UrlBox> m_location_box;
+    RefPtr<URLBox> m_location_box;
     RefPtr<GUI::Button> m_reset_zoom_button;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<InspectorWidget> m_dom_inspector_widget;
