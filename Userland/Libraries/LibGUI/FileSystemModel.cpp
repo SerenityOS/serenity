@@ -185,10 +185,9 @@ OwnPtr<FileSystemModel::Node> FileSystemModel::Node::create_child(DeprecatedStri
 
 void FileSystemModel::Node::reify_if_needed()
 {
+    if (mode == 0)
+        fetch_data(full_path(), m_parent == nullptr || m_parent->m_parent_of_root);
     traverse_if_needed();
-    if (mode != 0)
-        return;
-    fetch_data(full_path(), m_parent == nullptr || m_parent->m_parent_of_root);
 }
 
 bool FileSystemModel::Node::is_symlink_to_directory() const
