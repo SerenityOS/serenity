@@ -290,8 +290,18 @@ struct Assembler {
         }
     }
 
+    void enter()
+    {
+        push(Operand::Register(Reg::RBP));
+        mov(Operand::Register(Reg::RBP), Operand::Register(Reg::RSP));
+        sub(Operand::Register(Reg::RSP), Operand::Imm8(8));
+    }
+
     void exit()
     {
+        // leave
+        emit8(0xc9);
+
         // ret
         emit8(0xc3);
     }
