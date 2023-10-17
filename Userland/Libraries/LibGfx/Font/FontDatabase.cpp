@@ -122,7 +122,7 @@ void FontDatabase::load_all_fonts_from_uri(StringView uri)
         auto path_string = resource.filesystem_path().release_value();
         auto path = LexicalPath(path_string.bytes_as_string_view());
         if (path.has_extension(".font"sv)) {
-            if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path.string()); !font_or_error.is_error()) {
+            if (auto font_or_error = Gfx::BitmapFont::try_load_from_resource(resource); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
                 m_private->full_name_to_font_map.set(font->qualified_name().to_deprecated_string(), *font);
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
