@@ -3555,4 +3555,9 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     }
 }
 
+HashMap<AK::URL, HTML::SharedImageRequest*>& Document::shared_image_requests()
+{
+    return m_shared_image_requests;
+}
+
 }

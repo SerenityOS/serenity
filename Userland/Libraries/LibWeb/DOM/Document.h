@@ -30,6 +30,7 @@
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/SharedImageRequest.h>
 #include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -531,6 +532,8 @@ public:
 
     void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactive, size_t script_history_length, size_t script_history_index);
 
+    HashMap<AK::URL, HTML::SharedImageRequest*>& shared_image_requests();
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -735,6 +738,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#latest-entry
     JS::GCPtr<HTML::SessionHistoryEntry> m_latest_entry;
+
+    HashMap<AK::URL, HTML::SharedImageRequest*> m_shared_image_requests;
 };
 
 template<>

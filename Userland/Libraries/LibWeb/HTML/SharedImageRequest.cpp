@@ -18,36 +18,36 @@
 
 namespace Web::HTML {
 
-static HashMap<AK::URL, SharedImageRequest*>& shared_image_requests()
-{
-    static HashMap<AK::URL, SharedImageRequest*> requests;
-    return requests;
-}
-
 JS::NonnullGCPtr<SharedImageRequest> SharedImageRequest::get_or_create(JS::Realm& realm, Page& page, AK::URL const& url)
 {
-    if (auto it = shared_image_requests().find(url); it != shared_image_requests().end())
+    auto document = Bindings::host_defined_environment_settings_object(realm).responsible_document();
+    VERIFY(document);
+    auto& shared_image_requests = document->shared_image_requests();
+    if (auto it = shared_image_requests.find(url); it != shared_image_requests.end())
         return *it->value;
-    auto request = realm.heap().allocate<SharedImageRequest>(realm, page, url);
-    shared_image_requests().set(url, request);
+    auto request = realm.heap().allocate<SharedImageRequest>(realm, page, url, *document);
+    shared_image_requests.set(url, request);
     return request;
 }
 
-SharedImageRequest::SharedImageRequest(Page& page, AK::URL url)
+SharedImageRequest::SharedImageRequest(Page& page, AK::URL url, JS::NonnullGCPtr<DOM::Document> document)
     : m_page(page)
     , m_url(move(url))
+    , m_document(document)
 {
 }
 
 SharedImageRequest::~SharedImageRequest()
 {
-    shared_image_requests().remove(m_url);
+    auto& shared_image_requests = m_document->shared_image_requests();
+    shared_image_requests.remove(m_url);
 }
 
 void SharedImageRequest::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_fetch_controller);
+    visitor.visit(m_document);
     for (auto& callback : m_callbacks) {
         visitor.visit(callback.on_finish);
         visitor.visit(callback.on_fail);
