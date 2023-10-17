@@ -70,9 +70,9 @@ PDFErrorOr<void> PS1FontProgram::parse_encrypted_portion(ByteBuffer const& buffe
     if (seek_name(reader, "lenIV"))
         m_lenIV = TRY(parse_int(reader));
 
-    if (!seek_name(reader, "Subrs"))
-        return error("Missing subroutine array");
-    auto subroutines = TRY(parse_subroutines(reader));
+    Vector<ByteBuffer> subroutines;
+    if (seek_name(reader, "Subrs"))
+        subroutines = TRY(parse_subroutines(reader));
 
     if (!seek_name(reader, "CharStrings"))
         return error("Missing char strings array");
