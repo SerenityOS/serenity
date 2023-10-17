@@ -42,7 +42,7 @@ public:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
 private:
-    explicit SharedImageRequest(Page&, AK::URL);
+    explicit SharedImageRequest(Page&, AK::URL, JS::NonnullGCPtr<DOM::Document>);
 
     void handle_successful_fetch(AK::URL const&, StringView mime_type, ByteBuffer data);
     void handle_failed_fetch();
@@ -67,6 +67,8 @@ private:
     AK::URL m_url;
     RefPtr<DecodedImageData const> m_image_data;
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
+
+    JS::GCPtr<DOM::Document> m_document;
 };
 
 }
