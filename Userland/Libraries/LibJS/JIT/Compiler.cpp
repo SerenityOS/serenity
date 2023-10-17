@@ -313,6 +313,13 @@ void Compiler::compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext con
     pop_unwind_context();
 }
 
+void Compiler::compile_throw(Bytecode::Op::Throw const&)
+{
+    load_vm_register(GPR0, Bytecode::Register::accumulator());	
+    store_vm_register(Bytecode::Register::exception(), GPR0);
+    check_exception();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -371,6 +378,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
             case Bytecode::Instruction::Type::LeaveUnwindContext:
                 compiler.compile_leave_unwind_context(static_cast<Bytecode::Op::LeaveUnwindContext const&>(op));
                 break;
+            case Bytecode::Instruction::Type::Throw:
+                compiler.compile_throw(static_cast<Bytecode::Op::Throw const&>(op));
+                break;
             default:
                 dbgln("JIT compilation failed: {}", bytecode_executable.name);
                 dbgln("Unsupported bytecode op: {}", op.to_deprecated_string(bytecode_executable));
@@ -413,7 +423,8 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
         }
     }
 
-    write(STDOUT_FILENO, compiler.m_output.data(), compiler.m_output.size());
+    size_t res = write(STDOUT_FILENO, compiler.m_output.data(), compiler.m_output.size());
+    if (!res) {}
 
     memcpy(executable_memory, compiler.m_output.data(), compiler.m_output.size());
     mprotect(executable_memory, compiler.m_output.size(), PROT_READ | PROT_EXEC);
