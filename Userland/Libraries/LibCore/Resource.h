@@ -20,6 +20,7 @@
 namespace Core {
 class Resource : public RefCounted<Resource> {
 public:
+    static ErrorOr<NonnullRefPtr<Resource>> load_from_filesystem(StringView);
     static ErrorOr<NonnullRefPtr<Resource>> load_from_uri(StringView);
 
     [[nodiscard]] bool is_file() const { return !m_data.has<DirectoryTag>(); }
