@@ -72,11 +72,47 @@ void paint_inner_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams par
         *shadow_bitmap, shadow_bitmap->rect(), params.box_shadow_data.color.alpha() / 255.);
 }
 
-void paint_outer_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams params)
-{
-    auto const& border_radii = params.border_radii;
-    auto const& box_shadow_data = params.box_shadow_data;
+struct OuterBoxShadowMetrics {
+    DevicePixelRect shadow_bitmap_rect;
+    DevicePixelRect non_blurred_shadow_rect;
+    DevicePixelRect inner_bounding_rect;
+    DevicePixels blurred_edge_thickness;
+    DevicePixels double_radius;
+    DevicePixels blur_radius;
 
+    DevicePixelRect top_left_corner_rect;
+    DevicePixelRect top_right_corner_rect;
+    DevicePixelRect bottom_right_corner_rect;
+    DevicePixelRect bottom_left_corner_rect;
+
+    DevicePixelPoint top_left_corner_blit_pos;
+    DevicePixelPoint top_right_corner_blit_pos;
+    DevicePixelPoint bottom_right_corner_blit_pos;
+    DevicePixelPoint bottom_left_corner_blit_pos;
+
+    DevicePixelSize top_left_corner_size;
+    DevicePixelSize top_right_corner_size;
+    DevicePixelSize bottom_right_corner_size;
+    DevicePixelSize bottom_left_corner_size;
+
+    DevicePixels left_start;
+    DevicePixels top_start;
+    DevicePixels right_start;
+    DevicePixels bottom_start;
+
+    DevicePixelRect left_edge_rect;
+    DevicePixelRect right_edge_rect;
+    DevicePixelRect top_edge_rect;
+    DevicePixelRect bottom_edge_rect;
+
+    CornerRadius top_left_shadow_corner;
+    CornerRadius top_right_shadow_corner;
+    CornerRadius bottom_right_shadow_corner;
+    CornerRadius bottom_left_shadow_corner;
+};
+
+static OuterBoxShadowMetrics get_outer_box_shadow_configuration(PaintOuterBoxShadowParams params)
+{
     auto device_content_rect = params.device_content_rect;
 
     auto top_left_corner = params.corner_radii.top_left;
@@ -89,23 +125,8 @@ void paint_outer_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams par
     DevicePixels blur_radius = params.blur_radius;
     DevicePixels spread_distance = params.spread_distance;
 
-    auto fill_rect_masked = [](auto& painter, auto fill_rect, auto mask_rect, auto color) {
-        Gfx::DisjointRectSet<DevicePixels> rect_set;
-        rect_set.add(fill_rect);
-        auto shattered = rect_set.shatter(mask_rect);
-        for (auto& rect : shattered.rects())
-            painter.fill_rect(rect.template to_type<int>(), color);
-    };
-
     // Our blur cannot handle radii over 255 so there's no point trying (255 is silly big anyway)
     blur_radius = clamp(blur_radius, 0, 255);
-
-    // If there's no blurring, nor rounded corners, we can save a lot of effort.
-    auto non_blurred_shadow_rect = device_content_rect.inflated(spread_distance, spread_distance, spread_distance, spread_distance);
-    if (blur_radius == 0 && !border_radii.has_any_radius()) {
-        fill_rect_masked(painter, non_blurred_shadow_rect.translated(offset_x, offset_y), device_content_rect, box_shadow_data.color);
-        return;
-    }
 
     auto top_left_shadow_corner = top_left_corner;
     auto top_right_shadow_corner = top_right_corner;
@@ -144,6 +165,8 @@ void paint_outer_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams par
     auto top_right_corner_size = (top_right_shadow_corner ? top_right_shadow_corner.as_rect().size() : default_corner_size).to_type<DevicePixels>();
     auto bottom_left_corner_size = (bottom_left_shadow_corner ? bottom_left_shadow_corner.as_rect().size() : default_corner_size).to_type<DevicePixels>();
     auto bottom_right_corner_size = (bottom_right_shadow_corner ? bottom_right_shadow_corner.as_rect().size() : default_corner_size).to_type<DevicePixels>();
+
+    auto non_blurred_shadow_rect = device_content_rect.inflated(spread_distance, spread_distance, spread_distance, spread_distance);
 
     auto max_edge_width = non_blurred_shadow_rect.width() / 2;
     auto max_edge_height = non_blurred_shadow_rect.height() / 2;
@@ -213,20 +236,139 @@ void paint_outer_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams par
     DevicePixelRect top_edge_rect { top_left_corner_rect.width(), 0, 1, horizontal_top_edge_width };
     DevicePixelRect bottom_edge_rect { bottom_left_corner_rect.width(), shadow_bitmap_rect.height() - horizontal_edge_width, 1, horizontal_edge_width };
 
-    auto shadows_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, shadow_bitmap_rect.size().to_type<int>());
-    if (shadows_bitmap.is_error()) {
-        dbgln("Unable to allocate temporary bitmap {} for box-shadow rendering: {}", shadow_bitmap_rect, shadows_bitmap.error());
+    auto left_start = inner_bounding_rect.left() - blurred_edge_thickness;
+    auto right_start = inner_bounding_rect.left() + inner_bounding_rect.width() + (blurred_edge_thickness - vertical_edge_width);
+    auto top_start = inner_bounding_rect.top() - blurred_edge_thickness;
+    auto bottom_start = inner_bounding_rect.top() + inner_bounding_rect.height() + (blurred_edge_thickness - horizontal_edge_width);
+
+    auto top_left_corner_blit_pos = inner_bounding_rect.top_left().translated(-blurred_edge_thickness, -blurred_edge_thickness);
+    auto top_right_corner_blit_pos = inner_bounding_rect.top_right().translated(-top_right_corner_size.width() + double_radius, -blurred_edge_thickness);
+    auto bottom_left_corner_blit_pos = inner_bounding_rect.bottom_left().translated(-blurred_edge_thickness, -bottom_left_corner_size.height() + double_radius);
+    auto bottom_right_corner_blit_pos = inner_bounding_rect.bottom_right().translated(-bottom_right_corner_size.width() + double_radius, -bottom_right_corner_size.height() + double_radius);
+
+    return OuterBoxShadowMetrics {
+        .shadow_bitmap_rect = shadow_bitmap_rect,
+        .non_blurred_shadow_rect = non_blurred_shadow_rect,
+        .inner_bounding_rect = inner_bounding_rect,
+        .blurred_edge_thickness = blurred_edge_thickness,
+        .double_radius = double_radius,
+        .blur_radius = blur_radius,
+
+        .top_left_corner_rect = top_left_corner_rect,
+        .top_right_corner_rect = top_right_corner_rect,
+        .bottom_right_corner_rect = bottom_right_corner_rect,
+        .bottom_left_corner_rect = bottom_left_corner_rect,
+
+        .top_left_corner_blit_pos = top_left_corner_blit_pos,
+        .top_right_corner_blit_pos = top_right_corner_blit_pos,
+        .bottom_right_corner_blit_pos = bottom_right_corner_blit_pos,
+        .bottom_left_corner_blit_pos = bottom_left_corner_blit_pos,
+
+        .top_left_corner_size = top_left_corner_size,
+        .top_right_corner_size = top_right_corner_size,
+        .bottom_right_corner_size = bottom_right_corner_size,
+        .bottom_left_corner_size = bottom_left_corner_size,
+
+        .left_start = left_start,
+        .top_start = top_start,
+        .right_start = right_start,
+        .bottom_start = bottom_start,
+
+        .left_edge_rect = left_edge_rect,
+        .right_edge_rect = right_edge_rect,
+        .top_edge_rect = top_edge_rect,
+        .bottom_edge_rect = bottom_edge_rect,
+
+        .top_left_shadow_corner = top_left_shadow_corner,
+        .top_right_shadow_corner = top_right_shadow_corner,
+        .bottom_right_shadow_corner = bottom_right_shadow_corner,
+        .bottom_left_shadow_corner = bottom_left_shadow_corner,
+    };
+}
+
+Gfx::IntRect get_outer_box_shadow_bounding_rect(PaintOuterBoxShadowParams params)
+{
+    auto shadow_config = get_outer_box_shadow_configuration(params);
+
+    auto const& top_left_corner_blit_pos = shadow_config.top_left_corner_blit_pos;
+    auto const& top_right_corner_blit_pos = shadow_config.top_right_corner_blit_pos;
+    auto const& bottom_left_corner_blit_pos = shadow_config.bottom_left_corner_blit_pos;
+    auto const& top_right_corner_rect = shadow_config.top_right_corner_rect;
+    auto const& bottom_left_corner_rect = shadow_config.bottom_left_corner_rect;
+
+    return Gfx::IntRect {
+        top_left_corner_blit_pos,
+        { top_right_corner_blit_pos.x() - top_left_corner_blit_pos.x() + top_right_corner_rect.width(),
+            bottom_left_corner_blit_pos.y() - top_left_corner_blit_pos.y() + bottom_left_corner_rect.height() }
+    };
+}
+
+void paint_outer_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams params)
+{
+    auto const& box_shadow_data = params.box_shadow_data;
+    auto const& device_content_rect = params.device_content_rect;
+    auto const& border_radii = params.border_radii;
+
+    auto const& top_left_corner = params.corner_radii.top_left;
+    auto const& top_right_corner = params.corner_radii.top_right;
+    auto const& bottom_right_corner = params.corner_radii.bottom_right;
+    auto const& bottom_left_corner = params.corner_radii.bottom_left;
+
+    DevicePixels offset_x = params.offset_x;
+    DevicePixels offset_y = params.offset_y;
+
+    auto shadow_config = get_outer_box_shadow_configuration(params);
+
+    auto const& shadow_bitmap_rect = shadow_config.shadow_bitmap_rect;
+    auto const& non_blurred_shadow_rect = shadow_config.non_blurred_shadow_rect;
+    auto const& inner_bounding_rect = shadow_config.inner_bounding_rect;
+    auto const& blurred_edge_thickness = shadow_config.blurred_edge_thickness;
+    auto const& double_radius = shadow_config.double_radius;
+    auto const& blur_radius = shadow_config.blur_radius;
+
+    auto const& top_left_corner_rect = shadow_config.top_left_corner_rect;
+    auto const& top_right_corner_rect = shadow_config.top_right_corner_rect;
+    auto const& bottom_right_corner_rect = shadow_config.bottom_right_corner_rect;
+    auto const& bottom_left_corner_rect = shadow_config.bottom_left_corner_rect;
+
+    auto const& top_left_corner_blit_pos = shadow_config.top_left_corner_blit_pos;
+    auto const& top_right_corner_blit_pos = shadow_config.top_right_corner_blit_pos;
+    auto const& bottom_right_corner_blit_pos = shadow_config.bottom_right_corner_blit_pos;
+    auto const& bottom_left_corner_blit_pos = shadow_config.bottom_left_corner_blit_pos;
+
+    auto const& top_left_corner_size = shadow_config.top_left_corner_size;
+    auto const& top_right_corner_size = shadow_config.top_right_corner_size;
+    auto const& bottom_right_corner_size = shadow_config.bottom_right_corner_size;
+    auto const& bottom_left_corner_size = shadow_config.bottom_left_corner_size;
+
+    auto const& left_start = shadow_config.left_start;
+    auto const& top_start = shadow_config.top_start;
+    auto const& right_start = shadow_config.right_start;
+    auto const& bottom_start = shadow_config.bottom_start;
+
+    auto const& left_edge_rect = shadow_config.left_edge_rect;
+    auto const& right_edge_rect = shadow_config.right_edge_rect;
+    auto const& top_edge_rect = shadow_config.top_edge_rect;
+    auto const& bottom_edge_rect = shadow_config.bottom_edge_rect;
+
+    auto const& top_left_shadow_corner = shadow_config.top_left_shadow_corner;
+    auto const& top_right_shadow_corner = shadow_config.top_right_shadow_corner;
+    auto const& bottom_right_shadow_corner = shadow_config.bottom_right_shadow_corner;
+    auto const& bottom_left_shadow_corner = shadow_config.bottom_left_shadow_corner;
+
+    auto fill_rect_masked = [](auto& painter, auto fill_rect, auto mask_rect, auto color) {
+        Gfx::DisjointRectSet<DevicePixels> rect_set;
+        rect_set.add(fill_rect);
+        auto shattered = rect_set.shatter(mask_rect);
+        for (auto& rect : shattered.rects())
+            painter.fill_rect(rect.template to_type<int>(), color);
+    };
+
+    // If there's no blurring, nor rounded corners, we can save a lot of effort.
+    if (blur_radius == 0 && !border_radii.has_any_radius()) {
+        fill_rect_masked(painter, non_blurred_shadow_rect.translated(offset_x, offset_y), device_content_rect, box_shadow_data.color);
         return;
     }
-    auto shadow_bitmap = shadows_bitmap.release_value();
-    Gfx::Painter corner_painter { *shadow_bitmap };
-    Gfx::AntiAliasingPainter aa_corner_painter { corner_painter };
-
-    aa_corner_painter.fill_rect_with_rounded_corners(
-        shadow_bitmap_rect.shrunken(double_radius, double_radius, double_radius, double_radius).to_type<int>(),
-        box_shadow_data.color, top_left_shadow_corner, top_right_shadow_corner, bottom_right_shadow_corner, bottom_left_shadow_corner);
-    Gfx::StackBlurFilter filter(*shadow_bitmap);
-    filter.process_rgba(blur_radius.value(), box_shadow_data.color);
 
     auto paint_shadow_infill = [&] {
         if (!params.border_radii.has_any_radius())
@@ -279,15 +421,20 @@ void paint_outer_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams par
         painter.fill_rect(inner.to_type<int>(), box_shadow_data.color);
     };
 
-    auto left_start = inner_bounding_rect.left() - blurred_edge_thickness;
-    auto right_start = inner_bounding_rect.left() + inner_bounding_rect.width() + (blurred_edge_thickness - vertical_edge_width);
-    auto top_start = inner_bounding_rect.top() - blurred_edge_thickness;
-    auto bottom_start = inner_bounding_rect.top() + inner_bounding_rect.height() + (blurred_edge_thickness - horizontal_edge_width);
+    auto shadows_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, shadow_bitmap_rect.size().to_type<int>());
+    if (shadows_bitmap.is_error()) {
+        dbgln("Unable to allocate temporary bitmap {} for box-shadow rendering: {}", shadow_bitmap_rect, shadows_bitmap.error());
+        return;
+    }
+    auto shadow_bitmap = shadows_bitmap.release_value();
+    Gfx::Painter corner_painter { *shadow_bitmap };
+    Gfx::AntiAliasingPainter aa_corner_painter { corner_painter };
 
-    auto top_left_corner_blit_pos = inner_bounding_rect.top_left().translated(-blurred_edge_thickness, -blurred_edge_thickness);
-    auto top_right_corner_blit_pos = inner_bounding_rect.top_right().translated(-top_right_corner_size.width() + double_radius, -blurred_edge_thickness);
-    auto bottom_left_corner_blit_pos = inner_bounding_rect.bottom_left().translated(-blurred_edge_thickness, -bottom_left_corner_size.height() + double_radius);
-    auto bottom_right_corner_blit_pos = inner_bounding_rect.bottom_right().translated(-bottom_right_corner_size.width() + double_radius, -bottom_right_corner_size.height() + double_radius);
+    aa_corner_painter.fill_rect_with_rounded_corners(
+        shadow_bitmap_rect.shrunken(double_radius, double_radius, double_radius, double_radius).to_type<int>(),
+        box_shadow_data.color, top_left_shadow_corner, top_right_shadow_corner, bottom_right_shadow_corner, bottom_left_shadow_corner);
+    Gfx::StackBlurFilter filter(*shadow_bitmap);
+    filter.process_rgba(blur_radius.value(), box_shadow_data.color);
 
     auto paint_shadow = [&](DevicePixelRect clip_rect) {
         Gfx::PainterStateSaver save { painter };

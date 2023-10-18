@@ -14,8 +14,10 @@
 
 namespace Web::Painting {
 
-void paint_outer_box_shadow(Gfx::Painter&, PaintOuterBoxShadowParams params);
 void paint_inner_box_shadow(Gfx::Painter&, PaintOuterBoxShadowParams params);
+
+Gfx::IntRect get_outer_box_shadow_bounding_rect(PaintOuterBoxShadowParams params);
+void paint_outer_box_shadow(Gfx::Painter& painter, PaintOuterBoxShadowParams params);
 
 void paint_box_shadow(
     PaintContext&,

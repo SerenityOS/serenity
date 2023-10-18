@@ -328,6 +328,9 @@ CommandResult PaintConicGradient::execute(CommandExecutionState& state) const
 
 CommandResult PaintOuterBoxShadow::execute(CommandExecutionState& state) const
 {
+    auto bounding_rect = get_outer_box_shadow_bounding_rect(outer_box_shadow_params);
+    if (state.would_be_fully_clipped_by_painter(bounding_rect))
+        return CommandResult::Continue;
     auto& painter = state.painter();
     paint_outer_box_shadow(painter, outer_box_shadow_params);
     return CommandResult::Continue;
