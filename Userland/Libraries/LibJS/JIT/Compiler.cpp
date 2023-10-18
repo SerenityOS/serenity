@@ -158,20 +158,6 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
         const_cast<Bytecode::BasicBlock&>(op.false_target()->block()));
 }
 
-[[maybe_unused]] static Value cxx_less_than(VM& vm, Value lhs, Value rhs)
-{
-    return TRY_OR_SET_EXCEPTION(less_than(vm, lhs, rhs));
-}
-
-void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
-{
-    load_vm_register(ARG1, op.lhs());
-    load_vm_register(ARG2, Bytecode::Register::accumulator());
-    m_assembler.native_call((void*)cxx_less_than);
-    store_vm_register(Bytecode::Register::accumulator(), RET);
-    check_exception();
-}
-
 [[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
 {
     auto old_value = TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
@@ -320,61 +306,43 @@ void Compiler::compile_throw(Bytecode::Op::Throw const&)
     check_exception();
 }
 
-static Value cxx_add(VM& vm, Value lhs, Value rhs)
+static ThrowCompletionOr<Value> abstract_inequals(VM& vm, Value src1, Value src2)
 {
-    return TRY_OR_SET_EXCEPTION(add(vm, lhs, rhs));
+    return Value(!TRY(is_loosely_equal(vm, src1, src2)));
 }
 
-void Compiler::compile_add(Bytecode::Op::Add const& op)
+static ThrowCompletionOr<Value> abstract_equals(VM& vm, Value src1, Value src2)
 {
-    load_vm_register(ARG1, op.lhs());
-    load_vm_register(ARG2, Bytecode::Register::accumulator());
-    m_assembler.native_call((void*)cxx_add);
-    store_vm_register(Bytecode::Register::accumulator(), RET);
-    check_exception();
+    return Value(TRY(is_loosely_equal(vm, src1, src2)));
 }
 
-static Value cxx_sub(VM& vm, Value lhs, Value rhs)
+static ThrowCompletionOr<Value> typed_inequals(VM&, Value src1, Value src2)
 {
-    return TRY_OR_SET_EXCEPTION(sub(vm, lhs, rhs));
+    return Value(!is_strictly_equal(src1, src2));
 }
 
-void Compiler::compile_sub(Bytecode::Op::Sub const& op)
+static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
 {
-    load_vm_register(ARG1, op.lhs());
-    load_vm_register(ARG2, Bytecode::Register::accumulator());
-    m_assembler.native_call((void*)cxx_sub);
-    store_vm_register(Bytecode::Register::accumulator(), RET);
-    check_exception();
+    return Value(is_strictly_equal(src1, src2));
 }
 
-static Value cxx_mul(VM& vm, Value lhs, Value rhs)
-{
-    return TRY_OR_SET_EXCEPTION(mul(vm, lhs, rhs));
-}
+#define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                 \
+    static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                \
+    {                                                                               \
+        return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                 \
+    }                                                                               \
+                                                                                    \
+    void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op) \
+    {                                                                               \
+        load_vm_register(ARG1, op.lhs());                                           \
+        load_vm_register(ARG2, Bytecode::Register::accumulator());                  \
+        m_assembler.native_call((void*)cxx_##snake_case_name);                      \
+        store_vm_register(Bytecode::Register::accumulator(), RET);                  \
+        check_exception();                                                          \
+    }
 
-void Compiler::compile_mul(Bytecode::Op::Mul const& op)
-{
-    load_vm_register(ARG1, op.lhs());
-    load_vm_register(ARG2, Bytecode::Register::accumulator());
-    m_assembler.native_call((void*)cxx_mul);
-    store_vm_register(Bytecode::Register::accumulator(), RET);
-    check_exception();
-}
-
-static Value cxx_div(VM& vm, Value lhs, Value rhs)
-{
-    return TRY_OR_SET_EXCEPTION(div(vm, lhs, rhs));
-}
-
-void Compiler::compile_div(Bytecode::Op::Div const& op)
-{
-    load_vm_register(ARG1, op.lhs());
-    load_vm_register(ARG2, Bytecode::Register::accumulator());
-    m_assembler.native_call((void*)cxx_div);
-    store_vm_register(Bytecode::Register::accumulator(), RET);
-    check_exception();
-}
+JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
+#undef DO_COMPILE_COMMON_BINARY_OP
 
 void Compiler::compile_return(Bytecode::Op::Return const&)
 {
@@ -444,9 +412,6 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
             case Bytecode::Instruction::Type::JumpConditional:
                 compiler.compile_jump_conditional(static_cast<Bytecode::Op::JumpConditional const&>(op));
                 break;
-            case Bytecode::Instruction::Type::LessThan:
-                compiler.compile_less_than(static_cast<Bytecode::Op::LessThan const&>(op));
-                break;
             case Bytecode::Instruction::Type::Increment:
                 compiler.compile_increment(static_cast<Bytecode::Op::Increment const&>(op));
                 break;
@@ -459,24 +424,20 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
             case Bytecode::Instruction::Type::Throw:
                 compiler.compile_throw(static_cast<Bytecode::Op::Throw const&>(op));
                 break;
-            case Bytecode::Instruction::Type::Add:
-                compiler.compile_add(static_cast<Bytecode::Op::Add const&>(op));
-                break;
-            case Bytecode::Instruction::Type::Sub:
-                compiler.compile_sub(static_cast<Bytecode::Op::Sub const&>(op));
-                break;
-            case Bytecode::Instruction::Type::Mul:
-                compiler.compile_mul(static_cast<Bytecode::Op::Mul const&>(op));
-                break;
-            case Bytecode::Instruction::Type::Div:
-                compiler.compile_div(static_cast<Bytecode::Op::Div const&>(op));
-                break;
             case Bytecode::Instruction::Type::Return:
                 compiler.compile_return(static_cast<Bytecode::Op::Return const&>(op));
                 break;
             case Bytecode::Instruction::Type::NewString:
                 compiler.compile_new_string(static_cast<Bytecode::Op::NewString const&>(op));
                 break;
+
+#define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \
+    case Bytecode::Instruction::Type::TitleCaseName:                                             \
+        compiler.compile_##snake_case_name(static_cast<Bytecode::Op::TitleCaseName const&>(op)); \
+        break;
+                JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
+#undef DO_COMPILE_COMMON_BINARY_OP
+
             default:
                 dbgln("JIT compilation failed: {}", bytecode_executable.name);
                 dbgln("Unsupported bytecode op: {}", op.to_deprecated_string(bytecode_executable));
