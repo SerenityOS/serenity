@@ -644,7 +644,25 @@ RENDERER_HANDLER(paint_xobject)
         return {};
     }
 
-    MUST(handle_save_state({}));
+    // Use a RAII object to restore the graphics state, to make sure it gets restored even if
+    // a TRY(handle_operator()) causes us to exit the operators loop early.
+    class ScopedState {
+    public:
+        ScopedState(Renderer& renderer)
+            : m_renderer(renderer)
+        {
+            MUST(m_renderer.handle_save_state({}));
+        }
+        ~ScopedState()
+        {
+            MUST(m_renderer.handle_restore_state({}));
+        }
+
+    private:
+        Renderer& m_renderer;
+    };
+    ScopedState scoped_state { *this };
+
     Vector<Value> matrix;
     if (xobject->dict()->contains(CommonNames::Matrix)) {
         matrix = xobject->dict()->get_array(m_document, CommonNames::Matrix).value()->elements();
@@ -655,7 +673,6 @@ RENDERER_HANDLER(paint_xobject)
     auto operators = TRY(Parser::parse_operators(m_document, xobject->bytes()));
     for (auto& op : operators)
         TRY(handle_operator(op, xobject_resources));
-    MUST(handle_restore_state({}));
     return {};
 }
 
