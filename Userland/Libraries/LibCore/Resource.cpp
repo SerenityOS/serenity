@@ -7,6 +7,7 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/Resource.h>
 #include <LibCore/ResourceImplementation.h>
+#include <LibCore/System.h>
 
 namespace Core {
 
@@ -29,6 +30,17 @@ Resource::Resource(String path, Scheme scheme, DirectoryTag)
     , m_scheme(scheme)
     , m_data(DirectoryTag {})
 {
+}
+
+ErrorOr<NonnullRefPtr<Resource>> Resource::load_from_filesystem(StringView path)
+{
+    auto filepath = LexicalPath(path);
+
+    if (filepath.is_absolute())
+        return load_from_uri(TRY(String::formatted("file://{}", path)));
+
+    auto cwd = TRY(Core::System::getcwd());
+    return load_from_uri(TRY(String::formatted("file://{}", filepath.prepend(cwd).string())));
 }
 
 ErrorOr<NonnullRefPtr<Resource>> Resource::load_from_uri(StringView uri)
