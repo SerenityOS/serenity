@@ -6,24 +6,20 @@
 
 #pragma once
 
-#include <AK/AtomicRefCounted.h>
-#include <AK/Error.h>
-#include <AK/NonnullRefPtr.h>
+#include <Kernel/Driver.h>
 
 namespace Kernel::USB {
 
-using DriverInitFunction = void (*)();
-#define USB_DEVICE_DRIVER(driver_name) \
-    DriverInitFunction driver_init_function_ptr_##driver_name __attribute__((section(".driver_init"), used)) = &driver_name::init
+#define USB_DEVICE_DRIVER(driver_name) REGISTER_DRIVER(driver_name)
 
 class Device;
 struct USBDeviceDescriptor;
 class USBInterface;
 
-class Driver : public AtomicRefCounted<Driver> {
+class Driver : public Kernel::Driver {
 public:
     Driver(StringView name)
-        : m_driver_name(name)
+        : Kernel::Driver(name)
     {
     }
 
@@ -32,8 +28,6 @@ public:
     virtual ErrorOr<void> probe(USB::Device&) = 0;
     virtual void detach(USB::Device&) = 0;
     StringView name() const { return m_driver_name; }
-
-protected:
-    StringView const m_driver_name;
 };
+
 }

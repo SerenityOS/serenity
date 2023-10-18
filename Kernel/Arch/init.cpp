@@ -12,7 +12,6 @@
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/Bus/USB/Drivers/USBDriver.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
@@ -36,6 +35,7 @@
 #include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
+#include <Kernel/Driver.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -85,8 +85,8 @@ extern "C" u8 start_of_safemem_atomic_text[];
 extern "C" u8 end_of_safemem_atomic_text[];
 #endif
 
-extern "C" USB::DriverInitFunction driver_init_table_start[];
-extern "C" USB::DriverInitFunction driver_init_table_end[];
+extern "C" DriverInitFunction driver_init_table_start[];
+extern "C" DriverInitFunction driver_init_table_end[];
 
 extern "C" u8 end_of_kernel_image[];
 
@@ -416,7 +416,7 @@ void init_stage2(void*)
 
     AudioManagement::the().initialize();
 
-    // Initialize all USB Drivers
+    // Initialize all Drivers
     for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
         (*init_function)();
 
