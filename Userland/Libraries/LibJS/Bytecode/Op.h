@@ -559,6 +559,9 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    IdentifierTableIndex property() const { return m_property; }
+    u32 cache_index() const { return m_cache_index; }
+
 private:
     IdentifierTableIndex m_property;
     u32 m_cache_index { 0 };
