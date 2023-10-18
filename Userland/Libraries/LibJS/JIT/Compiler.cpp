@@ -383,12 +383,27 @@ void Compiler::compile_return(Bytecode::Op::Return const&)
     m_assembler.exit();
 }
 
-OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_executable)
+static Value cxx_new_string(VM& vm, DeprecatedString const& string)
+{
+    return PrimitiveString::create(vm, string);
+}
+
+void Compiler::compile_new_string(Bytecode::Op::NewString const& op)
+{
+    auto const& string = m_bytecode_executable.string_table->get(op.index());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(bit_cast<u64>(&string)));
+    m_assembler.native_call((void*)cxx_new_string);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
+OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
         return nullptr;
 
-    Compiler compiler;
+    Compiler compiler { bytecode_executable };
 
     compiler.m_assembler.enter();
 
@@ -458,6 +473,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
                 break;
             case Bytecode::Instruction::Type::Return:
                 compiler.compile_return(static_cast<Bytecode::Op::Return const&>(op));
+                break;
+            case Bytecode::Instruction::Type::NewString:
+                compiler.compile_new_string(static_cast<Bytecode::Op::NewString const&>(op));
                 break;
             default:
                 dbgln("JIT compilation failed: {}", bytecode_executable.name);

@@ -15,7 +15,7 @@ namespace JS::JIT {
 
 class Compiler {
 public:
-    static OwnPtr<NativeExecutable> compile(Bytecode::Executable const&);
+    static OwnPtr<NativeExecutable> compile(Bytecode::Executable&);
 
 private:
     static constexpr auto GPR0 = Assembler::Reg::RAX;
@@ -46,6 +46,7 @@ private:
     void compile_mul(Bytecode::Op::Mul const&);
     void compile_div(Bytecode::Op::Div const&);
     void compile_return(Bytecode::Op::Return const&);
+    void compile_new_string(Bytecode::Op::NewString const&);
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);
@@ -60,8 +61,14 @@ private:
     void push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer);
     void pop_unwind_context();
 
+    explicit Compiler(Bytecode::Executable& bytecode_executable)
+        : m_bytecode_executable(bytecode_executable)
+    {
+    }
+
     Vector<u8> m_output;
     Assembler m_assembler { m_output };
+    Bytecode::Executable& m_bytecode_executable;
 };
 
 }
