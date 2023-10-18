@@ -44,7 +44,6 @@ CommandResult FillRectWithRoundedCorners::execute(CommandExecutionState& state) 
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
 
     auto& painter = state.painter();
 
@@ -65,7 +64,6 @@ CommandResult DrawText::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
     auto& painter = state.painter();
     if (font.has_value()) {
         painter.draw_text(rect, raw_text, *font, alignment, color, elision, wrapping);
@@ -79,7 +77,6 @@ CommandResult DrawTextRun::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
     auto& painter = state.painter();
     painter.draw_text_run(baseline_start, Utf8View(string), font, color);
     return CommandResult::Continue;
@@ -275,7 +272,6 @@ CommandResult PushStackingContextWithMask::execute(CommandExecutionState& state)
     auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, paint_rect.size().to_type<int>());
     if (bitmap_or_error.is_error())
         return CommandResult::Continue;
-    ;
     auto bitmap = bitmap_or_error.release_value();
 
     Gfx::Painter stacking_context_painter(bitmap);
@@ -316,7 +312,6 @@ CommandResult PaintRadialGradient::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
     auto& painter = state.painter();
     painter.fill_rect_with_radial_gradient(rect, radial_gradient_data.color_stops.list, center, size, radial_gradient_data.color_stops.repeat_length);
     return CommandResult::Continue;
@@ -326,7 +321,6 @@ CommandResult PaintConicGradient::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
     auto& painter = state.painter();
     painter.fill_rect_with_conic_gradient(rect, conic_gradient_data.color_stops.list, position, conic_gradient_data.start_angle, conic_gradient_data.color_stops.repeat_length);
     return CommandResult::Continue;
@@ -350,14 +344,12 @@ CommandResult PaintTextShadow::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(text_rect.to_type<int>()))
         return CommandResult::Continue;
-    ;
 
     // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
     auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, bounding_rect.size().to_type<int>());
     if (maybe_shadow_bitmap.is_error()) {
         dbgln("Unable to allocate temporary bitmap {} for text-shadow rendering: {}", bounding_rect.size(), maybe_shadow_bitmap.error());
         return CommandResult::Continue;
-        ;
     }
     auto shadow_bitmap = maybe_shadow_bitmap.release_value();
 
@@ -379,7 +371,6 @@ CommandResult DrawEllipse::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     aa_painter.draw_ellipse(rect, color, thickness);
@@ -390,7 +381,6 @@ CommandResult FillElipse::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     aa_painter.fill_ellipse(rect, color, blend_mode);
@@ -412,7 +402,6 @@ CommandResult DrawSignedDistanceField::execute(CommandExecutionState& state) con
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
     auto& painter = state.painter();
     painter.draw_signed_distance_field(rect, color, sdf, smoothing);
     return CommandResult::Continue;
@@ -450,7 +439,6 @@ CommandResult ApplyBackdropFilter::execute(CommandExecutionState& state) const
     auto maybe_backdrop_bitmap = painter.get_region_bitmap(backdrop_region, Gfx::BitmapFormat::BGRA8888, actual_region);
     if (actual_region.is_empty())
         return CommandResult::Continue;
-    ;
     if (maybe_backdrop_bitmap.is_error()) {
         dbgln("Failed get region bitmap for backdrop-filter");
         return CommandResult::Continue;
@@ -475,7 +463,6 @@ CommandResult DrawRect::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(rect))
         return CommandResult::Continue;
-    ;
     auto& painter = state.painter();
     painter.draw_rect(rect, color, rough);
     return CommandResult::Continue;
