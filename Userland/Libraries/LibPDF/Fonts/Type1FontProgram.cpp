@@ -373,6 +373,21 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 
             case CallSubr: {
                 auto subr_number = pop();
+
+                if (is_type2) {
+                    // Type 2 spec:
+                    // "The numbering of subroutines is encoded more compactly by using the negative half of the number space, which effectively
+                    //  doubles the number of compactly encodable subroutine numbers. The bias applied depends on the number of subrs (gsubrs).
+                    //  If the number of subrs (gsubrs) is less than 1240, the bias is 107. Otherwise if it is less than 33900, it is 1131; otherwise
+                    //  it is 32768. This bias is added to the encoded subr (gsubr) number to find the appropriate entry in the subr (gsubr) array."
+                    if (subroutines.size() < 1240)
+                        subr_number += 107;
+                    else if (subroutines.size() < 33900)
+                        subr_number += 1131;
+                    else
+                        subr_number += 32768;
+                }
+
                 if (static_cast<size_t>(subr_number) >= subroutines.size())
                     return error("Subroutine index out of range");
 
