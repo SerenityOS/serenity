@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/Definitions.h>
+#include <Kernel/FileSystem/FileSystemDriver.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Library/KBuffer.h>
 #include <Kernel/UnixTypes.h>

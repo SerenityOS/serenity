@@ -138,24 +138,29 @@ set(KERNEL_SOURCES
     FileSystem/Custody.cpp
     FileSystem/DevPtsFS/FileSystem.cpp
     FileSystem/DevPtsFS/Inode.cpp
+    FileSystem/Ext2FS/Driver.cpp
     FileSystem/Ext2FS/FileSystem.cpp
     FileSystem/Ext2FS/Inode.cpp
+    FileSystem/FATFS/Driver.cpp
     FileSystem/FATFS/FileSystem.cpp
     FileSystem/FATFS/Inode.cpp
     FileSystem/FIFO.cpp
     FileSystem/File.cpp
     FileSystem/FileBackedFileSystem.cpp
     FileSystem/FileSystem.cpp
+    FileSystem/FileSystemDriver.cpp
     FileSystem/Inode.cpp
     FileSystem/InodeFile.cpp
     FileSystem/InodeMetadata.cpp
     FileSystem/InodeWatcher.cpp
     FileSystem/ISO9660FS/DirectoryIterator.cpp
+    FileSystem/ISO9660FS/Driver.cpp
     FileSystem/ISO9660FS/FileSystem.cpp
     FileSystem/ISO9660FS/Inode.cpp
     FileSystem/Mount.cpp
     FileSystem/MountFile.cpp
     FileSystem/OpenFileDescription.cpp
+    FileSystem/Plan9FS/Driver.cpp
     FileSystem/Plan9FS/FileSystem.cpp
     FileSystem/Plan9FS/Inode.cpp
     FileSystem/Plan9FS/Message.cpp

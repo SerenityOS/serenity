@@ -28,7 +28,7 @@
 #include <Kernel/Devices/Storage/SD/PCISDHostController.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
-#include <Kernel/FileSystem/Ext2FS/FileSystem.h>
+#include <Kernel/FileSystem/FileSystemDriver.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Library/Panic.h>
 #include <LibPartition/EBRPartitionTable.h>
@@ -467,13 +467,20 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
 
     Array<u8, PAGE_SIZE> mount_specific_data;
     mount_specific_data.fill(0);
-    auto file_system = Ext2FS::try_create(description_or_error.release_value(), mount_specific_data.span()).release_value();
-
-    if (auto result = file_system->initialize(); result.is_error()) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: Couldn't open root filesystem: {}", result.error());
+    RefPtr<FileSystem> file_system;
+    for (auto driver : *FS::file_system_drivers) {
+        auto maybe_file_system = driver->probe(description_or_error.value(), mount_specific_data.span());
+        if (maybe_file_system.is_error())
+            continue;
+        file_system = maybe_file_system.release_value();
+        break;
     }
-    return file_system;
+
+    if (file_system == nullptr) {
+        dump_storage_devices_and_partitions();
+        PANIC("StorageManagement: Couldn't open root filesystem");
+    }
+    return *file_system;
 }
 
 UNMAP_AFTER_INIT void StorageManagement::initialize(bool force_pio, bool poll)
