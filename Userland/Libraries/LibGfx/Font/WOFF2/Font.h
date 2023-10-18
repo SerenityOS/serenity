@@ -21,7 +21,7 @@ class Font : public Gfx::VectorFont {
     AK_MAKE_NONCOPYABLE(Font);
 
 public:
-    static ErrorOr<NonnullRefPtr<Font>> try_load_from_file(StringView path);
+    static ErrorOr<NonnullRefPtr<Font>> try_load_from_resource(Core::Resource const&);
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_externally_owned_memory(SeekableStream&);
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_externally_owned_memory(ReadonlyBytes);
 
