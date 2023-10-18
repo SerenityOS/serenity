@@ -53,7 +53,16 @@ static Gfx::ImageFrameDescriptor expect_single_frame_of_size(Gfx::ImageDecoderPl
 
 TEST_CASE(test_bmp)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("rgba32-1.bmp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("bmp/rgba32-1.bmp"sv)));
+    EXPECT(Gfx::BMPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::BMPImageDecoderPlugin::create(file->bytes()));
+
+    expect_single_frame(*plugin_decoder);
+}
+
+TEST_CASE(test_bmp_top_down)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("bmp/top-down.bmp"sv)));
     EXPECT(Gfx::BMPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::BMPImageDecoderPlugin::create(file->bytes()));
 
