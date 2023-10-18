@@ -315,8 +315,64 @@ void Compiler::compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext con
 
 void Compiler::compile_throw(Bytecode::Op::Throw const&)
 {
-    load_vm_register(GPR0, Bytecode::Register::accumulator());	
+    load_vm_register(GPR0, Bytecode::Register::accumulator());
     store_vm_register(Bytecode::Register::exception(), GPR0);
+    check_exception();
+}
+
+static Value cxx_add(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(add(vm, lhs, rhs));
+}
+
+void Compiler::compile_add(Bytecode::Op::Add const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.native_call((void*)cxx_add);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
+static Value cxx_sub(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(sub(vm, lhs, rhs));
+}
+
+void Compiler::compile_sub(Bytecode::Op::Sub const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.native_call((void*)cxx_sub);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
+static Value cxx_mul(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(mul(vm, lhs, rhs));
+}
+
+void Compiler::compile_mul(Bytecode::Op::Mul const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.native_call((void*)cxx_mul);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
+static Value cxx_div(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(div(vm, lhs, rhs));
+}
+
+void Compiler::compile_div(Bytecode::Op::Div const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.native_call((void*)cxx_div);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
 }
 
@@ -381,6 +437,18 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
             case Bytecode::Instruction::Type::Throw:
                 compiler.compile_throw(static_cast<Bytecode::Op::Throw const&>(op));
                 break;
+            case Bytecode::Instruction::Type::Add:
+                compiler.compile_add(static_cast<Bytecode::Op::Add const&>(op));
+                break;
+            case Bytecode::Instruction::Type::Sub:
+                compiler.compile_sub(static_cast<Bytecode::Op::Sub const&>(op));
+                break;
+            case Bytecode::Instruction::Type::Mul:
+                compiler.compile_mul(static_cast<Bytecode::Op::Mul const&>(op));
+                break;
+            case Bytecode::Instruction::Type::Div:
+                compiler.compile_div(static_cast<Bytecode::Op::Div const&>(op));
+                break;
             default:
                 dbgln("JIT compilation failed: {}", bytecode_executable.name);
                 dbgln("Unsupported bytecode op: {}", op.to_deprecated_string(bytecode_executable));
@@ -424,7 +492,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
     }
 
     size_t res = write(STDOUT_FILENO, compiler.m_output.data(), compiler.m_output.size());
-    if (!res) {}
+    if (!res) { }
 
     memcpy(executable_memory, compiler.m_output.data(), compiler.m_output.size());
     mprotect(executable_memory, compiler.m_output.size(), PROT_READ | PROT_EXEC);
