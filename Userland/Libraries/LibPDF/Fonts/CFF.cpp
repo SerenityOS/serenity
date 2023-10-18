@@ -222,11 +222,9 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     TRY(parse_index(reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
         return TRY(global_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
     }));
-    if (!global_subroutines.is_empty())
-        dbgln("CFF data contains Global subrs, which aren't implemented yet"); // FIXME
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
-    auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), local_subroutines));
+    auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), local_subroutines, global_subroutines));
 
     // CFF spec, "Table 16 Encoding ID"
     // FIXME: Only read this if the built-in encoding is actually needed? (ie. `if (!encoding)`)
@@ -766,13 +764,13 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
     return names;
 }
 
-PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<ByteBuffer> const& subroutines)
+PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines)
 {
     // CFF spec, "14 CharStrings INDEX"
     Vector<Glyph> glyphs;
     TRY(parse_index(reader, [&](ReadonlyBytes const& charstring_data) -> PDFErrorOr<void> {
         GlyphParserState state;
-        auto glyph = TRY(parse_glyph(charstring_data, subroutines, state, true));
+        auto glyph = TRY(parse_glyph(charstring_data, local_subroutines, global_subroutines, state, true));
         return TRY(glyphs.try_append(glyph));
     }));
     return glyphs;

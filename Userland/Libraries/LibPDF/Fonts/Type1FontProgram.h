@@ -81,7 +81,7 @@ protected:
         Array<float, 24> postscript_stack;
     };
 
-    static PDFErrorOr<Glyph> parse_glyph(ReadonlyBytes const&, Vector<ByteBuffer> const&, GlyphParserState&, bool is_type2);
+    static PDFErrorOr<Glyph> parse_glyph(ReadonlyBytes const&, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines, GlyphParserState&, bool is_type2);
 
     static Error error(
         DeprecatedString const& message
