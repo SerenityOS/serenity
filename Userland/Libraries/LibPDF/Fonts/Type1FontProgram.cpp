@@ -274,6 +274,17 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
             TRY(push(((v - 247) * 256) + w + 108));
         } else if (v >= 32) {
             TRY(push(v - 139));
+        } else if (v == 28) {
+            if (is_type2) {
+                // Type 2 spec: "In addition to the 32 to 255 range of values, a ShortInt value is specified by using the operator (28)
+                // followed by two bytes which represent numbers between –32768 and +32767. The most significant byte follows the (28)."
+                TRY(require(2));
+                i16 a = static_cast<i16>((data[i + 1] << 8) | data[i + 2]);
+                i += 2;
+                TRY(push(a));
+            } else {
+                return error(DeprecatedString::formatted("CFF Subr command 28 only valid in type2 data"));
+            }
         } else {
             // Not a parameter but a command byte.
             switch (v) {
