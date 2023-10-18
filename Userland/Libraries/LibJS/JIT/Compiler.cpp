@@ -376,6 +376,13 @@ void Compiler::compile_div(Bytecode::Op::Div const& op)
     check_exception();
 }
 
+void Compiler::compile_return(Bytecode::Op::Return const&)
+{
+    load_vm_register(GPR0, Bytecode::Register::accumulator());
+    store_vm_register(Bytecode::Register::return_value(), GPR0);
+    m_assembler.exit();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -448,6 +455,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable const& bytecode_
                 break;
             case Bytecode::Instruction::Type::Div:
                 compiler.compile_div(static_cast<Bytecode::Op::Div const&>(op));
+                break;
+            case Bytecode::Instruction::Type::Return:
+                compiler.compile_return(static_cast<Bytecode::Op::Return const&>(op));
                 break;
             default:
                 dbgln("JIT compilation failed: {}", bytecode_executable.name);

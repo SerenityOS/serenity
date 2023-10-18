@@ -45,6 +45,7 @@ private:
     void compile_sub(Bytecode::Op::Sub const&);
     void compile_mul(Bytecode::Op::Mul const&);
     void compile_div(Bytecode::Op::Div const&);
+    void compile_return(Bytecode::Op::Return const&);
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);
