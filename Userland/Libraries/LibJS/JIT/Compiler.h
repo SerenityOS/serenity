@@ -36,15 +36,17 @@ private:
     void compile_set_local(Bytecode::Op::SetLocal const&);
     void compile_jump(Bytecode::Op::Jump const&);
     void compile_jump_conditional(Bytecode::Op::JumpConditional const&);
-    void compile_less_than(Bytecode::Op::LessThan const&);
     void compile_increment(Bytecode::Op::Increment const&);
     void compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const&);
     void compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&);
     void compile_throw(Bytecode::Op::Throw const&);
-    void compile_add(Bytecode::Op::Add const&);
-    void compile_sub(Bytecode::Op::Sub const&);
-    void compile_mul(Bytecode::Op::Mul const&);
-    void compile_div(Bytecode::Op::Div const&);
+
+#define DO_COMPILE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
+    void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
+
+    JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
+#undef DO_COMPILE_COMMON_BINARY_OP
+
     void compile_return(Bytecode::Op::Return const&);
     void compile_new_string(Bytecode::Op::NewString const&);
 
