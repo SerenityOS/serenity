@@ -29,6 +29,7 @@ struct DuOption {
     bool human_readable_si = false;
     bool all = false;
     bool apparent_size = false;
+    bool one_file_system = false;
     i64 threshold = 0;
     TimeType time_type = TimeType::NotUsed;
     Vector<DeprecatedString> excluded_patterns;
@@ -57,7 +58,7 @@ struct AK::Traits<VisitedFile> : public GenericTraits<VisitedFile> {
 static HashTable<VisitedFile> s_visited_files;
 
 static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option);
-static u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth);
+static u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, Optional<dev_t> root_device = {});
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -124,6 +125,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
     args_parser.add_option(move(time_option));
     args_parser.add_option(pattern, "Exclude files that match pattern", "exclude", 0, "pattern");
     args_parser.add_option(exclude_from, "Exclude files that match any pattern in file", "exclude-from", 'X', "file");
+    args_parser.add_option(du_option.one_file_system, "Don't traverse directories on different file systems", "one-file-system", 'x');
     args_parser.add_option(du_option.block_size, "Outputs file sizes as the required blocks with the given size (defaults to 1024)", "block-size", 'B', "size");
     args_parser.add_option(move(block_size_1k_option));
     args_parser.add_positional_argument(files_to_process, "File to process", "file", Core::ArgsParser::Required::No);
@@ -154,7 +156,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
     return {};
 }
 
-u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth)
+u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, Optional<dev_t> root_device)
 {
     u64 size = 0;
     auto path_stat_or_error = Core::System::lstat(path);
@@ -164,6 +166,14 @@ u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, s
     }
 
     auto path_stat = path_stat_or_error.release_value();
+
+    if (!root_device.has_value()) {
+        root_device = path_stat.st_dev;
+    }
+
+    if (du_option.one_file_system && root_device.value() != path_stat.st_dev) {
+        return 0;
+    }
 
     VisitedFile visited_file { path_stat.st_dev, path_stat.st_ino };
     if (s_visited_files.contains(visited_file)) {
@@ -182,7 +192,7 @@ u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, s
 
         while (di.has_next()) {
             auto const child_path = di.next_full_path();
-            size += print_space_usage(child_path, du_option, current_depth + 1);
+            size += print_space_usage(child_path, du_option, current_depth + 1, root_device);
         }
     }
 
