@@ -437,6 +437,7 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
             break;
 
         auto child = maybe_child.release_nonnull();
+        child->reify_if_needed();
 
         bool const is_new_child_dir = S_ISDIR(child->mode);
         int insert_index = 0;
