@@ -57,6 +57,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Write the commit message subject line in the imperative mood ("Foo: Change the way dates work", not "Foo: Changed the way dates work").
 * Write your commit messages in proper English, with care and punctuation.
 * Amend your existing commits when adding changes after a review, where relevant.
+* Mark each review comment as "resolved" after pushing a fix with the requested changes.
 * Add your personal copyright line to files when making substantive changes. (Optional but encouraged!)
 * Check the spelling of your code, comments and commit messages.
 * If you have images that go along with your code, run `optipng -strip all` on them to optimize and strip away useless metadata - this can reduce file size from multiple kilobytes to a couple hundred bytes.
