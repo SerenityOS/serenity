@@ -9,7 +9,7 @@
 #include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
 #include <LibCompress/Brotli.h>
-#include <LibCore/File.h>
+#include <LibCore/Resource.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/WOFF2/Font.h>
@@ -831,10 +831,9 @@ static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transfo
     return GlyfAndLocaTableBuffers { .glyf_table = move(reconstructed_glyf_table), .loca_table = move(loca_table_buffer) };
 }
 
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(StringView path)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_resource(Core::Resource const& resource)
 {
-    auto woff2_file_stream = TRY(Core::File::open(path, Core::File::OpenMode::Read));
-    return try_load_from_externally_owned_memory(*woff2_file_stream);
+    return try_load_from_externally_owned_memory(resource.data());
 }
 
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes bytes)

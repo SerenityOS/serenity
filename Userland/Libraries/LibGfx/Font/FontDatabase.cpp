@@ -118,9 +118,7 @@ void FontDatabase::load_all_fonts_from_uri(StringView uri)
     auto root = root_or_error.release_value();
 
     root->for_each_descendant_file([this](Core::Resource const& resource) -> IterationDecision {
-        // FIXME: Use Resources and their bytes/streams throughout so we don't have to use the path here
-        auto path_string = resource.filesystem_path().release_value();
-        auto path = LexicalPath(path_string.bytes_as_string_view());
+        auto path = LexicalPath(resource.uri().bytes_as_string_view());
         if (path.has_extension(".font"sv)) {
             if (auto font_or_error = Gfx::BitmapFont::try_load_from_resource(resource); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
@@ -130,13 +128,13 @@ void FontDatabase::load_all_fonts_from_uri(StringView uri)
             }
         } else if (path.has_extension(".ttf"sv)) {
             // FIXME: What about .otf
-            if (auto font_or_error = OpenType::Font::try_load_from_file(path.string()); !font_or_error.is_error()) {
+            if (auto font_or_error = OpenType::Font::try_load_from_resource(resource); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->set_vector_font(move(font));
             }
         } else if (path.has_extension(".woff"sv)) {
-            if (auto font_or_error = WOFF::Font::try_load_from_file(path.string()); !font_or_error.is_error()) {
+            if (auto font_or_error = WOFF::Font::try_load_from_resource(resource); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->set_vector_font(move(font));

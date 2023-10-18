@@ -9,6 +9,7 @@
 #include <AK/IntegralMath.h>
 #include <AK/MemoryStream.h>
 #include <LibCompress/Zlib.h>
+#include <LibCore/Resource.h>
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/WOFF/Font.h>
 
@@ -68,10 +69,9 @@ static u16 pow_2_less_than_or_equal(u16 x)
     return 1 << (sizeof(u16) * 8 - count_leading_zeroes_safe<u16>(x - 1));
 }
 
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(DeprecatedString path, unsigned int index)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_resource(Core::Resource const& resource, unsigned index)
 {
-    auto file = TRY(Core::MappedFile::map(path));
-    return try_load_from_externally_owned_memory(file->bytes(), index);
+    return try_load_from_externally_owned_memory(resource.data(), index);
 }
 
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, unsigned int index)
