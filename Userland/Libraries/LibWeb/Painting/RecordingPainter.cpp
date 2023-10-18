@@ -87,6 +87,8 @@ CommandResult DrawTextRun::execute(CommandExecutionState& state) const
 
 CommandResult FillPathUsingColor::execute(CommandExecutionState& state) const
 {
+    if (state.would_be_fully_clipped_by_painter(bounding_rect))
+        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
@@ -97,6 +99,8 @@ CommandResult FillPathUsingColor::execute(CommandExecutionState& state) const
 
 CommandResult FillPathUsingPaintStyle::execute(CommandExecutionState& state) const
 {
+    if (state.would_be_fully_clipped_by_painter(bounding_rect))
+        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
@@ -107,6 +111,8 @@ CommandResult FillPathUsingPaintStyle::execute(CommandExecutionState& state) con
 
 CommandResult StrokePathUsingColor::execute(CommandExecutionState& state) const
 {
+    if (state.would_be_fully_clipped_by_painter(bounding_rect))
+        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
@@ -117,6 +123,8 @@ CommandResult StrokePathUsingColor::execute(CommandExecutionState& state) const
 
 CommandResult StrokePathUsingPaintStyle::execute(CommandExecutionState& state) const
 {
+    if (state.would_be_fully_clipped_by_painter(bounding_rect))
+        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
@@ -526,7 +534,9 @@ void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color)
 
 void RecordingPainter::fill_path(FillPathUsingColorParams params)
 {
+    auto bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
     push_command(FillPathUsingColor {
+        .bounding_rect = bounding_rect,
         .path = params.path,
         .color = params.color,
         .winding_rule = params.winding_rule,
@@ -536,7 +546,9 @@ void RecordingPainter::fill_path(FillPathUsingColorParams params)
 
 void RecordingPainter::fill_path(FillPathUsingPaintStyleParams params)
 {
+    auto bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
     push_command(FillPathUsingPaintStyle {
+        .bounding_rect = bounding_rect,
         .path = params.path,
         .paint_style = params.paint_style,
         .winding_rule = params.winding_rule,
@@ -547,7 +559,9 @@ void RecordingPainter::fill_path(FillPathUsingPaintStyleParams params)
 
 void RecordingPainter::stroke_path(StrokePathUsingColorParams params)
 {
+    auto bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
     push_command(StrokePathUsingColor {
+        .bounding_rect = bounding_rect,
         .path = params.path,
         .color = params.color,
         .thickness = params.thickness,
@@ -557,7 +571,9 @@ void RecordingPainter::stroke_path(StrokePathUsingColorParams params)
 
 void RecordingPainter::stroke_path(StrokePathUsingPaintStyleParams params)
 {
+    auto bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
     push_command(StrokePathUsingPaintStyle {
+        .bounding_rect = bounding_rect,
         .path = params.path,
         .paint_style = params.paint_style,
         .thickness = params.thickness,
