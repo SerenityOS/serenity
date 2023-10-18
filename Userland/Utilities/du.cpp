@@ -57,7 +57,7 @@ struct AK::Traits<VisitedFile> : public GenericTraits<VisitedFile> {
 static HashTable<VisitedFile> s_visited_files;
 
 static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option);
-static u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
+static u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -154,7 +154,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
     return {};
 }
 
-u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
+u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth)
 {
     u64 size = 0;
     auto path_stat_or_error = Core::System::lstat(path);
@@ -182,7 +182,7 @@ u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, s
 
         while (di.has_next()) {
             auto const child_path = di.next_full_path();
-            size += print_space_usage(child_path, du_option, current_depth + 1, true);
+            size += print_space_usage(child_path, du_option, current_depth + 1);
         }
     }
 
@@ -200,7 +200,7 @@ u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, s
     }
 
     bool is_beyond_depth = current_depth > du_option.max_depth;
-    bool is_inner_file = inside_dir && !is_directory;
+    bool is_inner_file = current_depth > 0 && !is_directory;
     bool is_outside_threshold = (du_option.threshold > 0 && size < static_cast<u64>(du_option.threshold)) || (du_option.threshold < 0 && size > static_cast<u64>(-du_option.threshold));
 
     // All of these still count towards the full size, they are just not reported on individually.
