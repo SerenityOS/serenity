@@ -188,7 +188,6 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                         // "Local subrs are stored in an INDEX structure which is located via the offset operand of the Subrs operator in the Private DICT."
                         auto subrs_offset = operands[0].get<int>();
                         Reader subrs_reader { cff_bytes.slice(private_dict_offset + subrs_offset) };
-                        dbgln("Parsing Subrs INDEX");
                         TRY(parse_index(subrs_reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
                             return TRY(local_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
                         }));
