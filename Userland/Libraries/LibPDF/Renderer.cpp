@@ -892,7 +892,12 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
     auto image_bitmap = TRY(load_image(image));
     if (image_dict->contains(CommonNames::SMask)) {
         auto smask_bitmap = TRY(load_image(TRY(image_dict->get_stream(m_document, CommonNames::SMask))));
-        VERIFY(smask_bitmap->rect() == image_bitmap->rect());
+
+        // Make softmask same size as image.
+        // FIXME: The smask code here is fairly ad-hoc and incomplete.
+        if (smask_bitmap->size() != image_bitmap->size())
+            smask_bitmap = TRY(smask_bitmap->scaled_to_size(image_bitmap->size()));
+
         for (int j = 0; j < image_bitmap->height(); ++j) {
             for (int i = 0; i < image_bitmap->width(); ++i) {
                 auto image_color = image_bitmap->get_pixel(i, j);
