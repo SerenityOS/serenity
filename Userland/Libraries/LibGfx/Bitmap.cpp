@@ -362,7 +362,6 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(int sx, int sy) const
     return new_bitmap;
 }
 
-// http://fourier.eng.hmc.edu/e161/lectures/resize/node3.html
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
 {
     VERIFY(sx >= 0.0f && sy >= 0.0f);
@@ -371,8 +370,13 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
 
     int scaled_width = (int)ceilf(sx * (float)width());
     int scaled_height = (int)ceilf(sy * (float)height());
+    return scaled_to_size({ scaled_width, scaled_height });
+}
 
-    auto new_bitmap = TRY(Gfx::Bitmap::create(format(), { scaled_width, scaled_height }, scale()));
+// http://fourier.eng.hmc.edu/e161/lectures/resize/node3.html
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled_to_size(Gfx::IntSize size) const
+{
+    auto new_bitmap = TRY(Gfx::Bitmap::create(format(), size, scale()));
 
     auto old_width = physical_width();
     auto old_height = physical_height();
