@@ -3,6 +3,7 @@ set(SOURCES
     Bytecode/ASTCodegen.cpp
     Bytecode/BasicBlock.cpp
     Bytecode/CodeGenerationError.cpp
+    Bytecode/CommonImplementations.cpp
     Bytecode/Executable.cpp
     Bytecode/Generator.cpp
     Bytecode/IdentifierTable.cpp
