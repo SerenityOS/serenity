@@ -92,7 +92,7 @@ PDFErrorOr<void> PS1FontProgram::parse_encrypted_portion(ByteBuffer const& buffe
                 reader.move_by(encrypted_size);
                 auto glyph_name = word.substring_view(1);
                 GlyphParserState state;
-                TRY(add_glyph(glyph_name, TRY(parse_glyph(line, subroutines, state, false))));
+                TRY(add_glyph(glyph_name, TRY(parse_glyph(line, subroutines, {}, state, false))));
             }
         }
     }

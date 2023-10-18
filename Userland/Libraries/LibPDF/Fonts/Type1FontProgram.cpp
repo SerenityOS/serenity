@@ -34,7 +34,8 @@ enum Command {
     RLineCurve,
     VVCurveTo,
     HHCurveTo,
-    VHCurveTo = 30,
+    CallGsubr = 29, // Type 2 only
+    VHCurveTo,
     HVCurveTo
 };
 
@@ -133,7 +134,7 @@ void Type1FontProgram::consolidate_glyphs()
     }
 }
 
-PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& subroutines, GlyphParserState& state, bool is_type2)
+PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines, GlyphParserState& state, bool is_type2)
 {
     // Type 1 Font Format: https://adobe-type-tools.github.io/font-tech-notes/pdfs/T1_SPEC.pdf (Chapter 6: CharStrings dictionary)
     // Type 2 Charstring Format: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5177.Type2.pdf
@@ -371,7 +372,12 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 state.sp = 0;
                 break;
 
+            case CallGsubr:
+                if (!is_type2)
+                    return error(DeprecatedString::formatted("CFF Gsubr only valid in type2 data"));
+                [[fallthrough]];
             case CallSubr: {
+                Vector<ByteBuffer> const& subroutines = v == CallSubr ? local_subroutines : global_subroutines;
                 auto subr_number = pop();
 
                 if (is_type2) {
@@ -420,7 +426,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     if (subr.is_empty())
                         return error("Empty subroutine");
 
-                    TRY(parse_glyph(subr, subroutines, state, is_type2));
+                    TRY(parse_glyph(subr, local_subroutines, global_subroutines, state, is_type2));
                 }
                 break;
             }
