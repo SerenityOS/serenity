@@ -41,10 +41,13 @@ public:
         DevicePixelSize corner_bitmap_size;
     } m_data;
 
-    BorderRadiusCornerClipper(CornerData corner_data, NonnullRefPtr<Gfx::Bitmap> corner_bitmap, CornerClip corner_clip)
+    DevicePixelRect border_rect() const { return m_border_rect; }
+
+    BorderRadiusCornerClipper(CornerData corner_data, NonnullRefPtr<Gfx::Bitmap> corner_bitmap, CornerClip corner_clip, DevicePixelRect const& border_rect)
         : m_data(move(corner_data))
         , m_corner_bitmap(corner_bitmap)
         , m_corner_clip(corner_clip)
+        , m_border_rect(border_rect)
     {
     }
 
@@ -52,6 +55,7 @@ private:
     NonnullRefPtr<Gfx::Bitmap> m_corner_bitmap;
     bool m_has_sampled { false };
     CornerClip m_corner_clip { false };
+    DevicePixelRect m_border_rect;
 };
 
 struct ScopedCornerRadiusClip {

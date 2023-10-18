@@ -53,7 +53,7 @@ ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::cre
         .corner_bitmap_size = corners_bitmap_size
     };
 
-    return try_make_ref_counted<BorderRadiusCornerClipper>(corner_data, corner_bitmap.release_nonnull(), corner_clip);
+    return try_make_ref_counted<BorderRadiusCornerClipper>(corner_data, corner_bitmap.release_nonnull(), corner_clip, border_rect);
 }
 
 void BorderRadiusCornerClipper::sample_under_corners(Gfx::Painter& page_painter)

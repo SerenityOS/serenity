@@ -482,6 +482,8 @@ CommandResult DrawTriangleWave::execute(CommandExecutionState& state) const
 
 CommandResult SampleUnderCorners::execute(CommandExecutionState& state) const
 {
+    if (state.would_be_fully_clipped_by_painter(corner_clipper->border_rect().to_type<int>()))
+        return CommandResult::Continue;
     auto& painter = state.painter();
     corner_clipper->sample_under_corners(painter);
     return CommandResult::Continue;
@@ -489,6 +491,8 @@ CommandResult SampleUnderCorners::execute(CommandExecutionState& state) const
 
 CommandResult BlitCornerClipping::execute(CommandExecutionState& state) const
 {
+    if (state.would_be_fully_clipped_by_painter(corner_clipper->border_rect().to_type<int>()))
+        return CommandResult::Continue;
     auto& painter = state.painter();
     corner_clipper->blit_corner_clipping(painter);
     return CommandResult::Continue;
