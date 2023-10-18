@@ -5,6 +5,7 @@
  */
 
 #include <AK/OwnPtr.h>
+#include <LibJS/Bytecode/CommonImplementations.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/JIT/Compiler.h>
@@ -366,6 +367,25 @@ void Compiler::compile_new_string(Bytecode::Op::NewString const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_get_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, u32 cache_index)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm.bytecode_interpreter(), property, base, base, cache_index));
+}
+
+void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(op.property().value()));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm64(op.cache_index()));
+    m_assembler.native_call((void*)cxx_get_by_id);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -429,6 +449,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::NewString:
                 compiler.compile_new_string(static_cast<Bytecode::Op::NewString const&>(op));
+                break;
+            case Bytecode::Instruction::Type::GetById:
+                compiler.compile_get_by_id(static_cast<Bytecode::Op::GetById const&>(op));
                 break;
 
 #define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \

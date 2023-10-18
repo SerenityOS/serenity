@@ -23,6 +23,7 @@ private:
     static constexpr auto ARG0 = Assembler::Reg::RDI;
     static constexpr auto ARG1 = Assembler::Reg::RSI;
     static constexpr auto ARG2 = Assembler::Reg::RDX;
+    static constexpr auto ARG3 = Assembler::Reg::RCX;
     static constexpr auto RET = Assembler::Reg::RAX;
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::R8;
@@ -49,6 +50,7 @@ private:
 
     void compile_return(Bytecode::Op::Return const&);
     void compile_new_string(Bytecode::Op::NewString const&);
+    void compile_get_by_id(Bytecode::Op::GetById const&);
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);
