@@ -168,7 +168,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(no_color, "Disable syntax highlighting", "no-color", 'n');
     args_parser.parse(arguments);
 
-    auto font = TRY(OpenType::Font::try_load_from_file(font_path));
+    auto resource = TRY(Core::Resource::load_from_filesystem(font_path));
+    auto font = TRY(OpenType::Font::try_load_from_resource(resource));
 
     if (dump_font_program)
         print_disassembly("Font program"sv, font->font_program(), !no_color);

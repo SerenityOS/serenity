@@ -13,6 +13,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/Resource.h>
 #include <LibGfx/Font/OpenType/Cmap.h>
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/OpenType/Glyf.h>
@@ -350,11 +351,10 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
     };
 }
 
-ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(DeprecatedString path, unsigned index)
+ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_resource(Core::Resource const& resource, unsigned index)
 {
-    auto file = TRY(Core::MappedFile::map(path));
-    auto font = TRY(try_load_from_externally_owned_memory(file->bytes(), index));
-    font->m_mapped_file = move(file);
+    auto font = TRY(try_load_from_externally_owned_memory(resource.data(), index));
+    font->m_resource = resource;
     return font;
 }
 
