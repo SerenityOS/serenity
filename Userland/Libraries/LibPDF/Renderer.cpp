@@ -842,6 +842,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
         color_rendering_intent = TRY(image_dict->get_name(m_document, CommonNames::Intent))->name();
     // FIXME: Do something with color_rendering_intent.
 
+    // "Valid values are 1, 2, 4, 8, and (in PDF 1.5) 16."
     auto bits_per_component = image_dict->get_value(CommonNames::BitsPerComponent).get<int>();
     if (bits_per_component != 8) {
         return Error(Error::Type::RenderingUnsupported, "Image's bit per component != 8");
