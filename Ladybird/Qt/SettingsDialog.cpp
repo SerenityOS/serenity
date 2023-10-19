@@ -9,6 +9,7 @@
 #include "Settings.h"
 #include "StringUtils.h"
 #include <AK/URL.h>
+#include <LibWebView/SearchEngine.h>
 #include <QLabel>
 #include <QMenu>
 
@@ -23,7 +24,7 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     m_enable_search->setChecked(Settings::the()->enable_search());
 
     m_search_engine_dropdown = make<QToolButton>(this);
-    m_search_engine_dropdown->setText(Settings::the()->search_engine().name);
+    m_search_engine_dropdown->setText(qstring_from_ak_deprecated_string(Settings::the()->search_engine().name));
 
     m_enable_autocomplete = make<QCheckBox>(this);
     m_enable_autocomplete->setChecked(Settings::the()->enable_autocomplete());
@@ -64,18 +65,7 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
 
 void SettingsDialog::setup_search_engines()
 {
-    // FIXME: These should be in a config file.
-    Vector<Settings::EngineProvider> search_engines = {
-        { "Bing", "https://www.bing.com/search?q={}" },
-        { "Brave", "https://search.brave.com/search?q={}" },
-        { "DuckDuckGo", "https://duckduckgo.com/?q={}" },
-        { "GitHub", "https://github.com/search?q={}" },
-        { "Google", "https://google.com/search?q={}" },
-        { "Mojeek", "https://www.mojeek.com/search?q={}" },
-        { "Yahoo", "https://search.yahoo.com/search?p={}" },
-        { "Yandex", "https://yandex.com/search/?text={}" },
-    };
-
+    // FIXME: These should be centralized in LibWebView.
     Vector<Settings::EngineProvider> autocomplete_engines = {
         { "DuckDuckGo", "https://duckduckgo.com/ac/?q={}" },
         { "Google", "https://www.google.com/complete/search?client=chrome&q={}" },
@@ -83,12 +73,15 @@ void SettingsDialog::setup_search_engines()
     };
 
     QMenu* search_engine_menu = new QMenu(this);
-    for (auto& search_engine : search_engines) {
-        QAction* action = new QAction(search_engine.name, this);
-        connect(action, &QAction::triggered, this, [&, search_engine] {
+    for (auto const& search_engine : WebView::search_engines()) {
+        auto search_engine_name = qstring_from_ak_deprecated_string(search_engine.name);
+        QAction* action = new QAction(search_engine_name, this);
+
+        connect(action, &QAction::triggered, this, [&, search_engine_name = std::move(search_engine_name)]() {
             Settings::the()->set_search_engine(search_engine);
-            m_search_engine_dropdown->setText(search_engine.name);
+            m_search_engine_dropdown->setText(search_engine_name);
         });
+
         search_engine_menu->addAction(action);
     }
     m_search_engine_dropdown->setMenu(search_engine_menu);
