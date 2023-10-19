@@ -70,7 +70,7 @@ public:
         reg(Register::exception()) = {};
     }
 
-    void enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target);
+    void enter_unwind_context();
     void leave_unwind_context();
 
     Executable& current_executable() { return *m_current_executable; }
