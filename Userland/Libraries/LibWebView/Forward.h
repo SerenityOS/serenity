@@ -19,6 +19,7 @@ class ViewImplementation;
 class WebContentClient;
 
 struct CookieStorageKey;
+struct SearchEngine;
 
 }
 
