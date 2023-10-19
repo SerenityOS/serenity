@@ -400,10 +400,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     view_menu->add_action(terminal->clear_including_history_action());
 
-    auto adjust_font_size = [&](float adjustment) {
+    auto adjust_font_size = [&](float adjustment, Gfx::Font::AllowInexactSizeMatch preference) {
         auto& font = terminal->font();
         auto new_size = max(5, font.presentation_size() + adjustment);
-        if (auto new_font = Gfx::FontDatabase::the().get(font.family(), new_size, font.weight(), font.width(), font.slope())) {
+        if (auto new_font = Gfx::FontDatabase::the().get(font.family(), new_size, font.weight(), font.width(), font.slope(), preference)) {
             terminal->set_font_and_resize_to_fit(*new_font);
             terminal->apply_size_increments_to_window(*window);
             window->resize(terminal->size());
@@ -412,10 +412,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     view_menu->add_separator();
     view_menu->add_action(GUI::CommonActions::make_zoom_in_action([&](auto&) {
-        adjust_font_size(1);
+        adjust_font_size(1, Gfx::Font::AllowInexactSizeMatch::Larger);
     }));
     view_menu->add_action(GUI::CommonActions::make_zoom_out_action([&](auto&) {
-        adjust_font_size(-1);
+        adjust_font_size(-1, Gfx::Font::AllowInexactSizeMatch::Smaller);
     }));
 
     auto help_menu = window->add_menu("&Help"_string);
