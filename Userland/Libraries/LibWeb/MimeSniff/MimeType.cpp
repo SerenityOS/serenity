@@ -49,6 +49,46 @@ MimeType::MimeType(String type, String subtype)
     VERIFY(contains_only_http_quoted_string_token_code_points(subtype));
 }
 
+MimeType::MimeType(MimeType const& other)
+    : m_type(other.m_type)
+    , m_subtype(other.m_subtype)
+    , m_parameters(other.m_parameters)
+    , m_cached_essence(other.m_cached_essence)
+{
+}
+
+MimeType& MimeType::operator=(MimeType const& other)
+{
+    if (this != &other) {
+        m_type = other.m_type;
+        m_subtype = other.m_subtype;
+        m_parameters = other.m_parameters;
+        m_cached_essence = other.m_cached_essence;
+    }
+
+    return *this;
+}
+
+MimeType::MimeType(MimeType&& other)
+    : m_type(move(other.m_type))
+    , m_subtype(move(other.m_subtype))
+    , m_parameters(move(other.m_parameters))
+    , m_cached_essence(move(other.m_cached_essence))
+{
+}
+
+MimeType& MimeType::operator=(MimeType&& other)
+{
+    if (this != &other) {
+        m_type = move(other.m_type);
+        m_subtype = move(other.m_subtype);
+        m_parameters = move(other.m_parameters);
+        m_cached_essence = move(other.m_cached_essence);
+    }
+
+    return *this;
+}
+
 MimeType::~MimeType() = default;
 
 static bool contains_only_http_token_code_points(StringView string)
