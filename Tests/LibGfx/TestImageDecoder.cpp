@@ -73,7 +73,8 @@ TEST_CASE(test_ico_malformed_frame)
 {
     Array test_inputs = {
         TEST_INPUT("ico/oss-fuzz-testcase-62541.ico"sv),
-        TEST_INPUT("ico/oss-fuzz-testcase-63177.ico"sv)
+        TEST_INPUT("ico/oss-fuzz-testcase-63177.ico"sv),
+        TEST_INPUT("ico/oss-fuzz-testcase-63357.ico"sv)
     };
 
     for (auto test_input : test_inputs) {

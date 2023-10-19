@@ -820,12 +820,12 @@ static ErrorOr<void> decode_bmp_dib(BMPLoadingContext& context)
 
     u8 header_size = context.is_included_in_ico ? 0 : bmp_header_size;
 
-    if (context.file_size < (u8)(header_size + 4))
+    if (context.file_size < header_size + 4u)
         return Error::from_string_literal("File size too short");
 
     InputStreamer streamer(context.file_bytes + header_size, 4);
 
-    u32 dib_size = streamer.read_u32();
+    u64 dib_size = streamer.read_u32();
 
     if (context.file_size < header_size + dib_size)
         return Error::from_string_literal("File size too short");
@@ -837,7 +837,7 @@ static ErrorOr<void> decode_bmp_dib(BMPLoadingContext& context)
 
     // NOTE: If this is a headless BMP (embedded on ICO files), then we can only infer the data_offset after we know the data table size.
     // We are also assuming that no Extra bit masks are present
-    u32 dib_offset = dib_size;
+    u64 dib_offset = dib_size;
     if (!context.is_included_in_ico) {
         if (context.data_offset < header_size + 4u)
             return Error::from_string_literal("Data offset too small");
