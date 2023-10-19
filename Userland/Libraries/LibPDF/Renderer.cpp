@@ -862,7 +862,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
     }
 
     if (TRY(is_filter(CommonNames::DCTDecode))) {
-        // TODO: stream objects could store Variant<bytes/Bitmap> to avoid seialisation/deserialisation here
+        // TODO: stream objects could store Variant<bytes/Bitmap> to avoid serialisation/deserialisation here
         return TRY(Gfx::Bitmap::create_from_serialized_bytes(image->bytes()));
     }
 
