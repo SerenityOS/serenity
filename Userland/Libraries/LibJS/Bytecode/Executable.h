@@ -7,10 +7,12 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
+#include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/JIT/NativeExecutable.h>
@@ -57,6 +59,7 @@ public:
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
     NonnullOwnPtr<RegexTable> regex_table;
+
     NonnullRefPtr<SourceCode const> source_code;
     size_t number_of_registers { 0 };
     bool is_strict_mode { false };

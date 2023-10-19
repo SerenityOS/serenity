@@ -44,6 +44,24 @@ public:
         ASTNode const* m_previous_node { nullptr };
     };
 
+    class UnwindContext {
+    public:
+        UnwindContext(Generator&, Optional<Label> finalizer);
+
+        UnwindContext const* previous() const { return m_previous_context; }
+        void set_handler(Label handler) { m_handler = handler; }
+        Optional<Label> handler() const { return m_handler; }
+        Optional<Label> finalizer() const { return m_finalizer; }
+
+        ~UnwindContext();
+
+    private:
+        Generator& m_generator;
+        Optional<Label> m_finalizer;
+        Optional<Label> m_handler {};
+        UnwindContext const* m_previous_context { nullptr };
+    };
+
     template<typename OpType, typename... Args>
     void emit(Args&&... args)
     {
@@ -114,7 +132,14 @@ public:
     {
         if (name.is_empty())
             name = DeprecatedString::number(m_next_block++);
-        m_root_basic_blocks.append(BasicBlock::create(name));
+        auto block = BasicBlock::create(name);
+        if (auto const* context = m_current_unwind_context) {
+            if (context->handler().has_value())
+                block->set_handler(context->handler().value().block());
+            if (m_current_unwind_context->finalizer().has_value())
+                block->set_finalizer(context->finalizer().value().block());
+        }
+        m_root_basic_blocks.append(move(block));
         return *m_root_basic_blocks.last();
     }
 
@@ -228,6 +253,8 @@ private:
 
     BasicBlock* m_current_basic_block { nullptr };
     ASTNode const* m_current_ast_node { nullptr };
+    UnwindContext const* m_current_unwind_context { nullptr };
+
     Vector<NonnullOwnPtr<BasicBlock>> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
     NonnullOwnPtr<IdentifierTable> m_identifier_table;

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TemporaryChange.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
@@ -93,6 +94,20 @@ Generator::SourceLocationScope::SourceLocationScope(Generator& generator, ASTNod
 Generator::SourceLocationScope::~SourceLocationScope()
 {
     m_generator.m_current_ast_node = m_previous_node;
+}
+
+Generator::UnwindContext::UnwindContext(Generator& generator, Optional<Label> finalizer)
+    : m_generator(generator)
+    , m_finalizer(finalizer)
+    , m_previous_context(m_generator.m_current_unwind_context)
+{
+    m_generator.m_current_unwind_context = this;
+}
+
+Generator::UnwindContext::~UnwindContext()
+{
+    VERIFY(m_generator.m_current_unwind_context == this);
+    m_generator.m_current_unwind_context = m_previous_context;
 }
 
 Label Generator::nearest_continuable_scope() const
@@ -400,6 +415,7 @@ void Generator::emit_set_variable(JS::Identifier const& identifier, Bytecode::Op
 
 void Generator::generate_scoped_jump(JumpType type)
 {
+    TemporaryChange temp { m_current_unwind_context, m_current_unwind_context };
     bool last_was_finally = false;
     for (size_t i = m_boundaries.size(); i > 0; --i) {
         auto boundary = m_boundaries[i - 1];
@@ -418,14 +434,20 @@ void Generator::generate_scoped_jump(JumpType type)
             }
             break;
         case Unwind:
-            if (!last_was_finally)
+            VERIFY(last_was_finally || !m_current_unwind_context->finalizer().has_value());
+            if (!last_was_finally) {
+                VERIFY(m_current_unwind_context && m_current_unwind_context->handler().has_value());
                 emit<Bytecode::Op::LeaveUnwindContext>();
+                m_current_unwind_context = m_current_unwind_context->previous();
+            }
             last_was_finally = false;
             break;
         case LeaveLexicalEnvironment:
             emit<Bytecode::Op::LeaveLexicalEnvironment>();
             break;
         case ReturnToFinally: {
+            VERIFY(m_current_unwind_context->finalizer().has_value());
+            m_current_unwind_context = m_current_unwind_context->previous();
             auto jump_type_name = type == JumpType::Break ? "break"sv : "continue"sv;
             auto& block = make_block(DeprecatedString::formatted("{}.{}", current_block().name(), jump_type_name));
             emit<Op::ScheduleJump>(Label { block });
@@ -440,6 +462,7 @@ void Generator::generate_scoped_jump(JumpType type)
 
 void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const& label)
 {
+    TemporaryChange temp { m_current_unwind_context, m_current_unwind_context };
     size_t current_boundary = m_boundaries.size();
     bool last_was_finally = false;
 
@@ -449,12 +472,18 @@ void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const&
         for (; current_boundary > 0; --current_boundary) {
             auto boundary = m_boundaries[current_boundary - 1];
             if (boundary == BlockBoundaryType::Unwind) {
-                if (!last_was_finally)
+                VERIFY(last_was_finally || !m_current_unwind_context->finalizer().has_value());
+                if (!last_was_finally) {
+                    VERIFY(m_current_unwind_context && m_current_unwind_context->handler().has_value());
                     emit<Bytecode::Op::LeaveUnwindContext>();
+                    m_current_unwind_context = m_current_unwind_context->previous();
+                }
                 last_was_finally = false;
             } else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment) {
                 emit<Bytecode::Op::LeaveLexicalEnvironment>();
             } else if (boundary == BlockBoundaryType::ReturnToFinally) {
+                VERIFY(m_current_unwind_context->finalizer().has_value());
+                m_current_unwind_context = m_current_unwind_context->previous();
                 auto jump_type_name = type == JumpType::Break ? "break"sv : "continue"sv;
                 auto& block = make_block(DeprecatedString::formatted("{}.{}", current_block().name(), jump_type_name));
                 emit<Op::ScheduleJump>(Label { block });
