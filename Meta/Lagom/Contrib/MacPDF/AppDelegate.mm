@@ -35,4 +35,13 @@
     return YES;
 }
 
+- (BOOL)application:(NSApplication*)sender openFile:(NSString*)filename
+{
+    [[NSDocumentController sharedDocumentController]
+        openDocumentWithContentsOfURL:[NSURL fileURLWithPath:filename]
+                              display:YES
+                    completionHandler:^(NSDocument*, BOOL, NSError*) {}];
+    return YES;
+}
+
 @end
