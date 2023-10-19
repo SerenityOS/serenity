@@ -9,6 +9,7 @@ set(SOURCES
     DOMTreeModel.cpp
     History.cpp
     RequestServerAdapter.cpp
+    SearchEngine.cpp
     SourceHighlighter.cpp
     StylePropertiesModel.cpp
     URL.cpp
