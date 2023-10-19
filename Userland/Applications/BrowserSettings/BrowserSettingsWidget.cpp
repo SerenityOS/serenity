@@ -9,10 +9,10 @@
 #include <Applications/BrowserSettings/BrowserSettingsWidgetGML.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
-#include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
+#include <LibWebView/SearchEngine.h>
 
 struct ColorScheme {
     DeprecatedString title;
@@ -20,7 +20,6 @@ struct ColorScheme {
 };
 
 class ColorSchemeModel final : public GUI::Model {
-
 public:
     ColorSchemeModel()
     {
@@ -50,6 +49,49 @@ public:
 
 private:
     Vector<ColorScheme> m_color_schemes;
+};
+
+class SearchEngineModel final : public GUI::Model {
+    enum class SearchEngineColumn : int {
+        Name,
+        QueryURL,
+    };
+
+public:
+    SearchEngineModel()
+    {
+        m_search_engines.ensure_capacity(WebView::search_engines().size() + 1);
+
+        for (auto const& engine : WebView::search_engines())
+            m_search_engines.append(engine);
+
+        m_search_engines.empend("Custom..."sv, StringView {});
+    }
+
+    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_search_engines.size(); }
+    virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 2; }
+
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
+    {
+        if (role == GUI::ModelRole::TextAlignment)
+            return Gfx::TextAlignment::CenterLeft;
+
+        if (role == GUI::ModelRole::Display) {
+            switch (static_cast<SearchEngineColumn>(index.row())) {
+            case SearchEngineColumn::Name:
+                return m_search_engines[index.row()].name;
+            case SearchEngineColumn::QueryURL:
+                return m_search_engines[index.row()].query_url;
+            }
+
+            VERIFY_NOT_REACHED();
+        }
+
+        return {};
+    }
+
+private:
+    Vector<WebView::SearchEngine> m_search_engines;
 };
 
 ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> BrowserSettingsWidget::create()
@@ -96,17 +138,7 @@ ErrorOr<void> BrowserSettingsWidget::setup()
         set_modified(true);
     };
 
-    Vector<GUI::JsonArrayModel::FieldSpec> search_engine_fields;
-    search_engine_fields.empend("title", "Title"_string, Gfx::TextAlignment::CenterLeft);
-    search_engine_fields.empend("url_format", "Url format"_string, Gfx::TextAlignment::CenterLeft);
-    auto search_engines_model = GUI::JsonArrayModel::create(DeprecatedString::formatted("{}/SearchEngines.json", Core::StandardPaths::config_directory()), move(search_engine_fields));
-    search_engines_model->invalidate();
-    Vector<JsonValue> custom_search_engine;
-    custom_search_engine.append("Custom...");
-    custom_search_engine.append("");
-    TRY(search_engines_model->add(move(custom_search_engine)));
-
-    m_search_engine_combobox->set_model(move(search_engines_model));
+    m_search_engine_combobox->set_model(adopt_ref(*new SearchEngineModel()));
     m_search_engine_combobox->set_only_allow_values_from_model(true);
     m_search_engine_combobox->on_change = [this](AK::DeprecatedString const&, GUI::ModelIndex const& cursor_index) {
         auto url_format = m_search_engine_combobox->model()->index(cursor_index.row(), 1).data().to_deprecated_string();
@@ -114,7 +146,7 @@ ErrorOr<void> BrowserSettingsWidget::setup()
         m_custom_search_engine_group->set_enabled(m_is_custom_search_engine);
         set_modified(true);
     };
-    set_search_engine_url(Config::read_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, Browser::default_search_engine));
+    set_search_engine_url(Config::read_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, WebView::default_search_engine().query_url));
 
     m_auto_close_download_windows_checkbox = find_descendant_of_type_named<GUI::CheckBox>("auto_close_download_windows_checkbox");
     m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, Browser::default_close_download_widget_on_finish), GUI::AllowCallback::No);
@@ -217,5 +249,5 @@ void BrowserSettingsWidget::reset_default_values()
     m_show_bookmarks_bar_checkbox->set_checked(Browser::default_show_bookmarks_bar);
     set_color_scheme(Browser::default_color_scheme);
     m_auto_close_download_windows_checkbox->set_checked(Browser::default_close_download_widget_on_finish);
-    set_search_engine_url(Browser::default_search_engine);
+    set_search_engine_url(WebView::default_search_engine().query_url);
 }

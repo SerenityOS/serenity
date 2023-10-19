@@ -36,6 +36,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/OutOfProcessWebView.h>
+#include <LibWebView/SearchEngine.h>
 #include <LibWebView/UserAgent.h>
 #include <LibWebView/WebContentClient.h>
 
@@ -46,14 +47,6 @@ static DeprecatedString bookmarks_file_path()
     StringBuilder builder;
     builder.append(Core::StandardPaths::config_directory());
     builder.append("/bookmarks.json"sv);
-    return builder.to_deprecated_string();
-}
-
-static DeprecatedString search_engines_file_path()
-{
-    StringBuilder builder;
-    builder.append(Core::StandardPaths::config_directory());
-    builder.append("/SearchEngines.json"sv);
     return builder.to_deprecated_string();
 }
 
@@ -481,36 +474,22 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     m_search_engine_actions.add_action(*m_disable_search_engine_action);
     m_disable_search_engine_action->set_checked(true);
 
-    auto search_engines_file = TRY(Core::File::open(Browser::search_engines_file_path(), Core::File::OpenMode::Read));
-    auto file_size = TRY(search_engines_file->size());
-    auto buffer = TRY(ByteBuffer::create_uninitialized(file_size));
-    if (!search_engines_file->read_until_filled(buffer).is_error()) {
-        StringView buffer_contents { buffer.bytes() };
-        if (auto json = TRY(JsonValue::from_string(buffer_contents)); json.is_array()) {
-            auto json_array = json.as_array();
-            for (auto& json_item : json_array.values()) {
-                if (!json_item.is_object())
-                    continue;
-                auto search_engine = json_item.as_object();
-                auto name = search_engine.get_deprecated_string("title"sv).value();
-                auto url_format = search_engine.get_deprecated_string("url_format"sv).value();
+    for (auto [name, url_format] : WebView::search_engines()) {
+        auto action = GUI::Action::create_checkable(
+            name, [&, url_format](auto&) {
+                g_search_engine = url_format;
+                Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
+            },
+            this);
+        search_engine_menu->add_action(action);
+        m_search_engine_actions.add_action(action);
 
-                auto action = GUI::Action::create_checkable(
-                    name, [&, url_format](auto&) {
-                        g_search_engine = url_format;
-                        Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
-                    },
-                    this);
-                search_engine_menu->add_action(action);
-                m_search_engine_actions.add_action(action);
-
-                if (g_search_engine == url_format) {
-                    action->set_checked(true);
-                    search_engine_set = true;
-                }
-                action->set_status_tip(TRY(String::from_deprecated_string(url_format)));
-            }
+        if (g_search_engine == url_format) {
+            action->set_checked(true);
+            search_engine_set = true;
         }
+
+        action->set_status_tip(TRY(String::from_utf8(url_format)));
     }
 
     auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
