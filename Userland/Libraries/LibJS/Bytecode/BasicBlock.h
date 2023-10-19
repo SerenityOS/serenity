@@ -43,10 +43,18 @@ public:
 
     DeprecatedString const& name() const { return m_name; }
 
+    void set_handler(BasicBlock const& handler) { m_handler = &handler; }
+    void set_finalizer(BasicBlock const& finalizer) { m_finalizer = &finalizer; }
+
+    BasicBlock const* handler() const { return m_handler; }
+    BasicBlock const* finalizer() const { return m_finalizer; }
+
 private:
     explicit BasicBlock(DeprecatedString name);
 
     Vector<u8> m_buffer;
+    BasicBlock const* m_handler { nullptr };
+    BasicBlock const* m_finalizer { nullptr };
     DeprecatedString m_name;
     bool m_terminated { false };
 };

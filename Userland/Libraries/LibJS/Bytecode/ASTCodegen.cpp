@@ -2308,6 +2308,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
 
     Optional<Bytecode::Label> handler_target;
     Optional<Bytecode::Label> finalizer_target;
+    Optional<Bytecode::Generator::UnwindContext> unwind_context;
 
     Bytecode::BasicBlock* next_block { nullptr };
 
@@ -2323,10 +2324,10 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
             generator.emit<Bytecode::Op::ContinuePendingUnwind>(next_target);
         }
         finalizer_target = Bytecode::Label { finalizer_block };
-    }
 
-    if (m_finalizer)
         generator.start_boundary(Bytecode::Generator::BlockBoundaryType::ReturnToFinally);
+        unwind_context.emplace(generator, finalizer_target);
+    }
     if (m_handler) {
         auto& handler_block = generator.make_block();
         generator.switch_to_basic_block(handler_block);
@@ -2374,6 +2375,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
                 generator.emit<Bytecode::Op::Jump>(*finalizer_target);
             } else {
                 VERIFY(!next_block);
+                VERIFY(!unwind_context.has_value());
                 next_block = &generator.make_block();
                 auto next_target = Bytecode::Label { *next_block };
                 generator.emit<Bytecode::Op::Jump>(next_target);
@@ -2382,6 +2384,11 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
     }
     if (m_finalizer)
         generator.end_boundary(Bytecode::Generator::BlockBoundaryType::ReturnToFinally);
+    if (m_handler) {
+        if (!m_finalizer)
+            unwind_context.emplace(generator, OptionalNone());
+        unwind_context->set_handler(handler_target.value());
+    }
 
     auto& target_block = generator.make_block();
     generator.switch_to_basic_block(saved_block);
@@ -2396,6 +2403,8 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
         if (m_finalizer) {
             generator.emit<Bytecode::Op::Jump>(*finalizer_target);
         } else {
+            VERIFY(unwind_context.has_value());
+            unwind_context.clear();
             if (!next_block)
                 next_block = &generator.make_block();
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
