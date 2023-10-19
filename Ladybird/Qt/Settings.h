@@ -9,6 +9,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/OwnPtr.h>
+#include <LibWebView/SearchEngine.h>
 #include <QPoint>
 #include <QSettings>
 #include <QSize>
@@ -38,13 +39,13 @@ public:
     QString new_tab_page();
     void set_new_tab_page(QString const& page);
 
+    WebView::SearchEngine search_engine() const { return m_search_engine; }
+    void set_search_engine(WebView::SearchEngine engine);
+
     struct EngineProvider {
         QString name;
         QString url;
     };
-
-    EngineProvider search_engine();
-    void set_search_engine(EngineProvider const& engine);
 
     EngineProvider autocomplete_engine();
     void set_autocomplete_engine(EngineProvider const& engine);
@@ -60,6 +61,7 @@ protected:
 
 private:
     OwnPtr<QSettings> m_qsettings;
+    WebView::SearchEngine m_search_engine;
 };
 
 }

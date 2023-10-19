@@ -30,15 +30,13 @@ LocationEdit::LocationEdit(QWidget* parent)
     connect(this, &QLineEdit::returnPressed, [&] {
         clearFocus();
 
-        Optional<String> search_engine_url;
-        if (Settings::the()->enable_search()) {
-            auto search_engine = Settings::the()->search_engine();
-            search_engine_url = MUST(ak_string_from_qstring(search_engine.url));
-        }
+        Optional<StringView> search_engine_url;
+        if (Settings::the()->enable_search())
+            search_engine_url = Settings::the()->search_engine().query_url;
 
         auto query = MUST(ak_string_from_qstring(text()));
 
-        if (auto url = WebView::sanitize_url(query, search_engine_url.map([](auto& value) { return value.bytes_as_string_view(); })); url.has_value())
+        if (auto url = WebView::sanitize_url(query, search_engine_url); url.has_value())
             setText(qstring_from_ak_deprecated_string(url->serialize()));
     });
 

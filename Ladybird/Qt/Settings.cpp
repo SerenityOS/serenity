@@ -30,8 +30,20 @@ static QString rebase_default_url_on_serenity_resource_root(StringView default_u
 }
 
 Settings::Settings()
+    : m_search_engine(WebView::default_search_engine())
 {
     m_qsettings = make<QSettings>("Serenity", "Ladybird", this);
+
+    auto default_search_engine = WebView::default_search_engine();
+    auto default_search_engine_name = qstring_from_ak_deprecated_string(default_search_engine.name);
+
+    auto search_engine_name = m_qsettings->value("search_engine_name", default_search_engine_name).toString();
+    auto search_engine = WebView::find_search_engine(MUST(ak_string_from_qstring(search_engine_name)));
+
+    if (search_engine.has_value())
+        m_search_engine = search_engine.release_value();
+    else
+        set_search_engine(move(default_search_engine));
 }
 
 Optional<QPoint> Settings::last_position()
@@ -66,18 +78,10 @@ void Settings::set_is_maximized(bool is_maximized)
     m_qsettings->setValue("is_maximized", is_maximized);
 }
 
-Settings::EngineProvider Settings::search_engine()
+void Settings::set_search_engine(WebView::SearchEngine search_engine)
 {
-    EngineProvider engine_provider;
-    engine_provider.name = m_qsettings->value("search_engine_name", "Google").toString();
-    engine_provider.url = m_qsettings->value("search_engine", "https://www.google.com/search?q={}").toString();
-    return engine_provider;
-}
-
-void Settings::set_search_engine(EngineProvider const& engine_provider)
-{
-    m_qsettings->setValue("search_engine_name", engine_provider.name);
-    m_qsettings->setValue("search_engine", engine_provider.url);
+    m_qsettings->setValue("search_engine_name", qstring_from_ak_deprecated_string(search_engine.name));
+    m_search_engine = move(search_engine);
 }
 
 Settings::EngineProvider Settings::autocomplete_engine()
