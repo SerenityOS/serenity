@@ -89,6 +89,7 @@
     X(Index)                      \
     X(Indexed)                    \
     X(Info)                       \
+    X(Intent)                     \
     X(JBIG2Decode)                \
     X(JPXDecode)                  \
     X(Keywords)                   \
