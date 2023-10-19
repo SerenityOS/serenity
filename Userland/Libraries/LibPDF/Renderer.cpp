@@ -180,7 +180,11 @@ RENDERER_HANDLER(set_dash_pattern)
     return {};
 }
 
-RENDERER_TODO(set_color_rendering_intent)
+RENDERER_HANDLER(set_color_rendering_intent)
+{
+    state().color_rendering_intent = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
+    return {};
+}
 
 RENDERER_HANDLER(set_flatness_tolerance)
 {
@@ -754,7 +758,9 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
         TRY(handle_set_dash_pattern(array->elements()));
     }
 
-    // FIXME: RI
+    if (dict->contains(CommonNames::RI))
+        TRY(handle_set_color_rendering_intent({ dict->get_value(CommonNames::RI) }));
+
     // FIXME: OP
     // FIXME: op
     // FIXME: OPM
