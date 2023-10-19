@@ -148,6 +148,8 @@ public:
     enum class AllowInexactSizeMatch {
         No,
         Yes,
+        Larger,
+        Smaller,
     };
 
     virtual NonnullRefPtr<Font> clone() const = 0;
