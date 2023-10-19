@@ -73,7 +73,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Font>> PDFFont::replacement_for(StringView name, f
     FlyString font_variant;
 
     if (is_bold && is_italic) {
-        font_variant = "BoldItalic"_fly_string;
+        font_variant = "Bold Italic"_fly_string;
     } else if (is_bold) {
         font_variant = "Bold"_fly_string;
     } else if (is_italic) {
