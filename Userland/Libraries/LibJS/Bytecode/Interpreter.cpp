@@ -13,6 +13,7 @@
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/JIT/Compiler.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -242,9 +243,7 @@ void Interpreter::run_bytecode()
                     m_current_block = &static_cast<Op::Jump const&>(instruction).false_target()->block();
                 goto start;
             case Instruction::Type::EnterUnwindContext:
-                enter_unwind_context(
-                    static_cast<Op::EnterUnwindContext const&>(instruction).handler_target(),
-                    static_cast<Op::EnterUnwindContext const&>(instruction).finalizer_target());
+                enter_unwind_context();
                 m_current_block = &static_cast<Op::EnterUnwindContext const&>(instruction).entry_point().block();
                 goto start;
             case Instruction::Type::ContinuePendingUnwind:
@@ -264,10 +263,13 @@ void Interpreter::run_bytecode()
                     m_current_block = &static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target().block();
                 }
                 goto start;
-            case Instruction::Type::ScheduleJump:
+            case Instruction::Type::ScheduleJump: {
                 m_scheduled_jump = &static_cast<Op::ScheduleJump const&>(instruction).target().block();
-                m_current_block = unwind_contexts().last().finalizer;
+                auto const* finalizer = m_current_block->finalizer();
+                VERIFY(finalizer);
+                m_current_block = finalizer;
                 goto start;
+            }
             default:
                 result = instruction.execute(*this);
                 break;
@@ -275,22 +277,26 @@ void Interpreter::run_bytecode()
 
             if (result.is_error()) [[unlikely]] {
                 reg(Register::exception()) = *result.throw_completion().value();
-                if (unwind_contexts().is_empty())
+                auto const* handler = m_current_block->handler();
+                auto const* finalizer = m_current_block->finalizer();
+                if (!handler && !finalizer)
                     return;
+
                 auto& unwind_context = unwind_contexts().last();
-                if (unwind_context.executable != m_current_executable)
-                    return;
-                if (unwind_context.handler && !unwind_context.handler_called) {
+                VERIFY(unwind_context.executable == m_current_executable);
+
+                if (handler) {
+                    VERIFY(!unwind_context.handler_called);
                     vm().running_execution_context().lexical_environment = unwind_context.lexical_environment;
-                    m_current_block = unwind_context.handler;
+                    m_current_block = handler;
                     unwind_context.handler_called = true;
 
                     accumulator = reg(Register::exception());
                     reg(Register::exception()) = {};
                     goto start;
                 }
-                if (unwind_context.finalizer) {
-                    m_current_block = unwind_context.finalizer;
+                if (finalizer) {
+                    m_current_block = finalizer;
                     // If an exception was thrown inside the corresponding `catch` block, we need to rethrow it
                     // from the `finally` block. But if the exception is from the `try` block, and has already been
                     // handled by `catch`, we swallow it.
@@ -316,15 +322,14 @@ void Interpreter::run_bytecode()
             ++pc;
         }
 
-        if (!unwind_contexts().is_empty() && !will_yield) {
+        if (auto const* finalizer = m_current_block->finalizer(); finalizer && !will_yield) {
             auto& unwind_context = unwind_contexts().last();
-            if (unwind_context.executable == m_current_executable && unwind_context.finalizer) {
-                reg(Register::saved_return_value()) = reg(Register::return_value());
-                reg(Register::return_value()) = {};
-                m_current_block = unwind_context.finalizer;
-                // the unwind_context will be pop'ed when entering the finally block
-                continue;
-            }
+            VERIFY(unwind_context.executable == m_current_executable);
+            reg(Register::saved_return_value()) = reg(Register::return_value());
+            reg(Register::return_value()) = {};
+            m_current_block = finalizer;
+            // the unwind_context will be pop'ed when entering the finally block
+            continue;
         }
 
         if (pc.at_end())
@@ -407,12 +412,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
     return { return_value, nullptr };
 }
 
-void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target)
+void Interpreter::enter_unwind_context()
 {
     unwind_contexts().empend(
         m_current_executable,
-        handler_target.has_value() ? &handler_target->block() : nullptr,
-        finalizer_target.has_value() ? &finalizer_target->block() : nullptr,
         vm().running_execution_context().lexical_environment);
 }
 
