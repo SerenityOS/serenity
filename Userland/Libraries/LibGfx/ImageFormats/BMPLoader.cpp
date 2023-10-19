@@ -845,7 +845,7 @@ static ErrorOr<void> decode_bmp_dib(BMPLoadingContext& context)
         dib_offset = context.data_offset - header_size - 4;
     }
 
-    if (dib_offset >= context.file_size)
+    if (dib_offset + header_size + 4 >= context.file_size)
         return Error::from_string_literal("DIB too large");
 
     streamer = InputStreamer(context.file_bytes + header_size + 4, dib_offset);
