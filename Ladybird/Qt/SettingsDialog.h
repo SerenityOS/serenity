@@ -12,7 +12,6 @@
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QPushButton>
-#include <QToolButton>
 
 #pragma once
 
@@ -30,9 +29,9 @@ private:
     QMainWindow* m_window { nullptr };
     OwnPtr<QLineEdit> m_new_tab_page;
     OwnPtr<QCheckBox> m_enable_search;
-    OwnPtr<QToolButton> m_search_engine_dropdown;
+    OwnPtr<QPushButton> m_search_engine_dropdown;
     OwnPtr<QCheckBox> m_enable_autocomplete;
-    OwnPtr<QToolButton> m_autocomplete_engine_dropdown;
+    OwnPtr<QPushButton> m_autocomplete_engine_dropdown;
 };
 
 }

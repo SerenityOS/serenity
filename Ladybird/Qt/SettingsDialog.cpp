@@ -23,14 +23,16 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     m_enable_search = make<QCheckBox>(this);
     m_enable_search->setChecked(Settings::the()->enable_search());
 
-    m_search_engine_dropdown = make<QToolButton>(this);
+    m_search_engine_dropdown = make<QPushButton>(this);
     m_search_engine_dropdown->setText(qstring_from_ak_deprecated_string(Settings::the()->search_engine().name));
+    m_search_engine_dropdown->setMaximumWidth(200);
 
     m_enable_autocomplete = make<QCheckBox>(this);
     m_enable_autocomplete->setChecked(Settings::the()->enable_autocomplete());
 
-    m_autocomplete_engine_dropdown = make<QToolButton>(this);
+    m_autocomplete_engine_dropdown = make<QPushButton>(this);
     m_autocomplete_engine_dropdown->setText(Settings::the()->autocomplete_engine().name);
+    m_autocomplete_engine_dropdown->setMaximumWidth(200);
 
     m_new_tab_page = make<QLineEdit>(this);
     m_new_tab_page->setText(Settings::the()->new_tab_page());
@@ -85,7 +87,6 @@ void SettingsDialog::setup_search_engines()
         search_engine_menu->addAction(action);
     }
     m_search_engine_dropdown->setMenu(search_engine_menu);
-    m_search_engine_dropdown->setPopupMode(QToolButton::InstantPopup);
     m_search_engine_dropdown->setEnabled(Settings::the()->enable_search());
 
     QMenu* autocomplete_engine_menu = new QMenu(this);
@@ -98,7 +99,6 @@ void SettingsDialog::setup_search_engines()
         autocomplete_engine_menu->addAction(action);
     }
     m_autocomplete_engine_dropdown->setMenu(autocomplete_engine_menu);
-    m_autocomplete_engine_dropdown->setPopupMode(QToolButton::InstantPopup);
     m_autocomplete_engine_dropdown->setEnabled(Settings::the()->enable_autocomplete());
 
     connect(m_enable_search, &QCheckBox::stateChanged, this, [&](int state) {
