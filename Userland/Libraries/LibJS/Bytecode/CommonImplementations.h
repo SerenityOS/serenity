@@ -19,5 +19,7 @@ ThrowCompletionOr<Value> get_global(Bytecode::Interpreter&, IdentifierTableIndex
 ThrowCompletionOr<void> put_by_property_key(VM&, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind);
 template<typename InstructionType>
 ThrowCompletionOr<Value> perform_call(Interpreter&, InstructionType const&, Value callee, MarkedVector<Value> argument_values);
+template<typename InstructionType>
+ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, InstructionType const&, Value callee);
 
 }
