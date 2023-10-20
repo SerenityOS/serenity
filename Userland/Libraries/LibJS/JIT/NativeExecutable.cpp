@@ -22,7 +22,7 @@ NativeExecutable::~NativeExecutable()
     munmap(m_code, m_size);
 }
 
-void NativeExecutable::run(VM& vm)
+void NativeExecutable::run(VM& vm) const
 {
     typedef void (*JITCode)(VM&, Value* registers, Value* locals);
     ((JITCode)m_code)(vm,
