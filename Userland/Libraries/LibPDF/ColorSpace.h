@@ -188,6 +188,8 @@ public:
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::ICCBased; }
 
+    static NonnullRefPtr<Gfx::ICC::Profile> sRGB();
+
 private:
     ICCBasedColorSpace(NonnullRefPtr<Gfx::ICC::Profile>);
 
