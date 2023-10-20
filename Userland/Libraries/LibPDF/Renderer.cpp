@@ -958,7 +958,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
     auto maybe_color_space_family = ColorSpaceFamily::get(color_space_name);
     if (!maybe_color_space_family.is_error()) {
         auto color_space_family = maybe_color_space_family.release_value();
-        if (color_space_family.never_needs_parameters()) {
+        if (color_space_family.may_be_specified_directly()) {
             return ColorSpace::create(color_space_name);
         }
     }

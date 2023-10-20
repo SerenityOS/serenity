@@ -29,23 +29,23 @@ namespace PDF {
 
 class ColorSpaceFamily {
 public:
-    ColorSpaceFamily(DeprecatedFlyString name, bool never_needs_paramaters_p)
+    ColorSpaceFamily(DeprecatedFlyString name, bool may_be_specified_directly)
         : m_name(move(name))
-        , m_never_needs_parameters(never_needs_paramaters_p)
+        , m_may_be_specified_directly(may_be_specified_directly)
     {
     }
 
     DeprecatedFlyString name() const { return m_name; }
-    bool never_needs_parameters() const { return m_never_needs_parameters; }
+    bool may_be_specified_directly() const { return m_may_be_specified_directly; }
     static PDFErrorOr<ColorSpaceFamily> get(DeprecatedFlyString const&);
 
-#define ENUMERATE(name, ever_needs_parameters) static ColorSpaceFamily name;
+#define ENUMERATE(name, may_be_specified_directly) static ColorSpaceFamily name;
     ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE)
 #undef ENUMERATE
 
 private:
     DeprecatedFlyString m_name;
-    bool m_never_needs_parameters;
+    bool m_may_be_specified_directly;
 };
 
 class ColorSpace : public RefCounted<ColorSpace> {
