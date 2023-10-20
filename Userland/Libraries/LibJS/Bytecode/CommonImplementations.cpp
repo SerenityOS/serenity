@@ -207,4 +207,28 @@ ThrowCompletionOr<Value> perform_call(Interpreter& interpreter, InstructionType 
 template ThrowCompletionOr<Value> perform_call(Interpreter&, Op::Call const&, Value, MarkedVector<Value>);
 template ThrowCompletionOr<Value> perform_call(Interpreter&, Op::CallWithArgumentArray const&, Value, MarkedVector<Value>);
 
+static Completion throw_type_error_for_callee(Bytecode::Interpreter& interpreter, auto& call, StringView callee_type)
+{
+    auto& vm = interpreter.vm();
+    auto callee = interpreter.reg(call.callee());
+
+    if (call.expression_string().has_value())
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(call.expression_string()->value()));
+
+    return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), callee_type);
+}
+
+template<typename InstructionType>
+ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter, InstructionType const& call, Value callee)
+{
+    if (call.call_type() == Op::CallType::Call && !callee.is_function())
+        return throw_type_error_for_callee(interpreter, call, "function"sv);
+    if (call.call_type() == Op::CallType::Construct && !callee.is_constructor())
+        return throw_type_error_for_callee(interpreter, call, "constructor"sv);
+    return {};
+}
+
+template ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, Op::Call const&, Value);
+template ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, Op::CallWithArgumentArray const&, Value);
+
 }

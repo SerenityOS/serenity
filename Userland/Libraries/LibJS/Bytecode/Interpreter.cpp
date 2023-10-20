@@ -1135,26 +1135,6 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     return argument_values;
 }
 
-static Completion throw_type_error_for_callee(Bytecode::Interpreter& interpreter, auto& call, StringView callee_type)
-{
-    auto& vm = interpreter.vm();
-    auto callee = interpreter.reg(call.callee());
-
-    if (call.expression_string().has_value())
-        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(call.expression_string()->value()));
-
-    return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), callee_type);
-}
-
-static ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter, auto& call, Value callee)
-{
-    if (call.call_type() == CallType::Call && !callee.is_function())
-        return throw_type_error_for_callee(interpreter, call, "function"sv);
-    if (call.call_type() == CallType::Construct && !callee.is_constructor())
-        return throw_type_error_for_callee(interpreter, call, "constructor"sv);
-    return {};
-}
-
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
