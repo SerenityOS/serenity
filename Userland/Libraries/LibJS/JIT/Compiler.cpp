@@ -492,6 +492,37 @@ void Compiler::compile_put_by_id(Bytecode::Op::PutById const& op)
     check_exception();
 }
 
+static Value cxx_call(VM& vm, Value callee, u32 first_argument_index, u32 argument_count, Value this_value, Bytecode::Op::CallType call_type)
+{
+    // FIXME: Uncomment this and deal with it.
+    // TRY_OR_SET_EXCEPTION(throw_if_needed_for_call(vm.bytecode_interpreter(), *this, callee));
+
+    MarkedVector<Value> argument_values(vm.heap());
+    argument_values.ensure_capacity(argument_count);
+    for (u32 i = 0; i < argument_count; ++i) {
+        argument_values.unchecked_append(vm.bytecode_interpreter().reg(Bytecode::Register { first_argument_index + i }));
+    }
+    return TRY_OR_SET_EXCEPTION(perform_call(vm.bytecode_interpreter(), this_value, call_type, callee, move(argument_values)));
+}
+
+void Compiler::compile_call(Bytecode::Op::Call const& op)
+{
+    load_vm_register(ARG1, op.callee());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(op.first_argument().index()));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm64(op.argument_count()));
+    load_vm_register(ARG4, op.this_value());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG5),
+        Assembler::Operand::Imm64(to_underlying(op.call_type())));
+    m_assembler.native_call((void*)cxx_call);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -579,6 +610,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::ResolveThisBinding:
                 compiler.compile_resolve_this_binding(static_cast<Bytecode::Op::ResolveThisBinding const&>(op));
+                break;
+            case Bytecode::Instruction::Type::Call:
+                compiler.compile_call(static_cast<Bytecode::Op::Call const&>(op));
                 break;
 
 #define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \
