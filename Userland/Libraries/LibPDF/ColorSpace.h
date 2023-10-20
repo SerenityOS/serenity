@@ -133,7 +133,7 @@ public:
     ~ICCBasedColorSpace() override = default;
 
     PDFErrorOr<Color> color(Vector<Value> const& arguments) const override;
-    int number_of_components() const override { VERIFY_NOT_REACHED(); }
+    int number_of_components() const override;
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::ICCBased; }
 
