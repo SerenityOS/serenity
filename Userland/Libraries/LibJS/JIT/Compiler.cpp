@@ -459,6 +459,27 @@ void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding con
     check_exception();
 }
 
+static Value cxx_put_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, Value value, Bytecode::Op::PropertyKind kind)
+{
+    PropertyKey name = vm.bytecode_interpreter().current_executable().get_identifier(property);
+    TRY_OR_SET_EXCEPTION(Bytecode::put_by_property_key(vm, base, base, value, name, kind));
+    return {};
+}
+
+void Compiler::compile_put_by_id(Bytecode::Op::PutById const& op)
+{
+    load_vm_register(ARG1, op.base());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(op.property().value()));
+    load_vm_register(ARG3, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Imm64(to_underlying(op.kind())));
+    m_assembler.native_call((void*)cxx_put_by_id);
+    check_exception();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -534,6 +555,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::GetGlobal:
                 compiler.compile_get_global(static_cast<Bytecode::Op::GetGlobal const&>(op));
+                break;
+            case Bytecode::Instruction::Type::PutById:
+                compiler.compile_put_by_id(static_cast<Bytecode::Op::PutById const&>(op));
                 break;
             case Bytecode::Instruction::Type::ToNumeric:
                 compiler.compile_to_numeric(static_cast<Bytecode::Op::ToNumeric const&>(op));
