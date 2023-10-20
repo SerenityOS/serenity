@@ -56,9 +56,9 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     m_layout->addRow(new QLabel("Autocomplete Engine", this), m_autocomplete_engine_dropdown);
 
     setWindowTitle("Settings");
-    setFixedWidth(300);
-    setFixedHeight(170);
     setLayout(m_layout);
+    resize(600, 250);
+
     show();
     setFocus();
 }
