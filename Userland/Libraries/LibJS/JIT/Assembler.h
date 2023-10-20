@@ -311,6 +311,8 @@ struct Assembler {
 
     void enter()
     {
+        push_callee_saved_registers();
+
         push(Operand::Register(Reg::RBP));
         mov(Operand::Register(Reg::RBP), Operand::Register(Reg::RSP));
         sub(Operand::Register(Reg::RSP), Operand::Imm8(8));
@@ -321,8 +323,33 @@ struct Assembler {
         // leave
         emit8(0xc9);
 
+        pop_callee_saved_registers();
+
         // ret
         emit8(0xc3);
+    }
+
+    void push_callee_saved_registers()
+    {
+        // FIXME: Don't push RBX twice :^)
+        push(Operand::Register(Reg::RBX));
+        push(Operand::Register(Reg::RBX));
+        push(Operand::Register(Reg::R12));
+        push(Operand::Register(Reg::R13));
+        push(Operand::Register(Reg::R14));
+        push(Operand::Register(Reg::R15));
+    }
+
+    void pop_callee_saved_registers()
+    {
+        pop(Operand::Register(Reg::R15));
+        pop(Operand::Register(Reg::R14));
+        pop(Operand::Register(Reg::R13));
+        pop(Operand::Register(Reg::R12));
+
+        // FIXME: Don't pop RBX twice :^)
+        pop(Operand::Register(Reg::RBX));
+        pop(Operand::Register(Reg::RBX));
     }
 
     void push(Operand op)
