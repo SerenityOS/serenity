@@ -6,7 +6,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/ExtraMathConstants.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/AffineTransform.h>

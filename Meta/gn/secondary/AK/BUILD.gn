@@ -58,7 +58,6 @@ source_set("AK") {
     "Endian.h",
     "EnumBits.h",
     "Error.h",
-    "ExtraMathConstants.h",
     "FPControl.h",
     "Find.h",
     "FixedArray.h",

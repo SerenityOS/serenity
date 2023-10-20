@@ -8,7 +8,6 @@
  */
 
 #include <AK/BuiltinWrappers.h>
-#include <AK/ExtraMathConstants.h>
 #include <AK/FloatingPoint.h>
 #if !ARCH(AARCH64)
 #    include <AK/FPControl.h>
@@ -569,7 +568,7 @@ float ldexpf(float x, int exp) NOEXCEPT
 
 [[maybe_unused]] static long double ampsin(long double angle) NOEXCEPT
 {
-    long double looped_angle = fmodl(M_PI + angle, M_TAU) - M_PI;
+    long double looped_angle = fmodl(M_PI + angle, M_PI * 2) - M_PI;
     long double looped_angle_squared = looped_angle * looped_angle;
 
     long double quadratic_term;
