@@ -53,6 +53,12 @@ private:
     JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
 #undef DO_COMPILE_COMMON_BINARY_OP
 
+#define DO_COMPILE_COMMON_UNARY_OP(OpTitleCase, op_snake_case) \
+    void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
+
+    JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
+#undef DO_COMPILE_COMMON_UNARY_OP
+
     void compile_return(Bytecode::Op::Return const&);
     void compile_new_string(Bytecode::Op::NewString const&);
     void compile_new_object(Bytecode::Op::NewObject const&);

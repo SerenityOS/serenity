@@ -361,6 +361,33 @@ static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
 JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
 #undef DO_COMPILE_COMMON_BINARY_OP
 
+static ThrowCompletionOr<Value> not_(VM&, Value value)
+{
+    return Value(!value.to_boolean());
+}
+
+static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
+{
+    return PrimitiveString::create(vm, value.typeof());
+}
+
+#define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)               \
+    static Value cxx_##snake_case_name(VM& vm, Value value)                      \
+    {                                                                            \
+        return TRY_OR_SET_EXCEPTION(snake_case_name(vm, value));                 \
+    }                                                                            \
+                                                                                 \
+    void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const&) \
+    {                                                                            \
+        load_vm_register(ARG1, Bytecode::Register::accumulator());               \
+        m_assembler.native_call((void*)cxx_##snake_case_name);                   \
+        store_vm_register(Bytecode::Register::accumulator(), RET);               \
+        check_exception();                                                       \
+    }
+
+JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
+#undef DO_COMPILE_COMMON_UNARY_OP
+
 void Compiler::compile_return(Bytecode::Op::Return const&)
 {
     load_vm_register(GPR0, Bytecode::Register::accumulator());
@@ -621,6 +648,13 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         break;
                 JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
 #undef DO_COMPILE_COMMON_BINARY_OP
+
+#define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)                               \
+    case Bytecode::Instruction::Type::TitleCaseName:                                             \
+        compiler.compile_##snake_case_name(static_cast<Bytecode::Op::TitleCaseName const&>(op)); \
+        break;
+                JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
+#undef DO_COMPILE_COMMON_UNARY_OP
 
             default:
                 dbgln("\033[31;1mJIT compilation failed\033[0m: {}", bytecode_executable.name);
