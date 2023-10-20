@@ -416,6 +416,24 @@ void Compiler::compile_get_by_value(Bytecode::Op::GetByValue const& op)
     check_exception();
 }
 
+static Value cxx_get_global(VM& vm, Bytecode::IdentifierTableIndex identifier, u32 cache_index)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_global(vm.bytecode_interpreter(), identifier, cache_index));
+}
+
+void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(op.identifier().value()));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(op.cache_index()));
+    m_assembler.native_call((void*)cxx_get_global);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 static Value cxx_to_numeric(VM& vm, Value value)
 {
     return TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
@@ -513,6 +531,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::GetByValue:
                 compiler.compile_get_by_value(static_cast<Bytecode::Op::GetByValue const&>(op));
+                break;
+            case Bytecode::Instruction::Type::GetGlobal:
+                compiler.compile_get_global(static_cast<Bytecode::Op::GetGlobal const&>(op));
                 break;
             case Bytecode::Instruction::Type::ToNumeric:
                 compiler.compile_to_numeric(static_cast<Bytecode::Op::ToNumeric const&>(op));

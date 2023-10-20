@@ -6,6 +6,9 @@
 
 #include <LibJS/Bytecode/CommonImplementations.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
+#include <LibJS/Runtime/ObjectEnvironment.h>
 
 namespace JS::Bytecode {
 
@@ -84,6 +87,56 @@ ThrowCompletionOr<Value> get_by_value(Bytecode::Interpreter& interpreter, Value 
     }
 
     return TRY(object->internal_get(property_key, base_value));
+}
+
+ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, IdentifierTableIndex identifier, u32 cache_index)
+{
+    auto& vm = interpreter.vm();
+    auto& realm = *vm.current_realm();
+
+    auto& cache = interpreter.current_executable().global_variable_caches[cache_index];
+    auto& binding_object = realm.global_environment().object_record().binding_object();
+    auto& declarative_record = realm.global_environment().declarative_record();
+
+    // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
+    // NOTE: Unique shapes don't change identity, so we compare their serial numbers instead.
+    auto& shape = binding_object.shape();
+    if (cache.environment_serial_number == declarative_record.environment_serial_number()
+        && &shape == cache.shape
+        && (!shape.is_unique() || shape.unique_shape_serial_number() == cache.unique_shape_serial_number)) {
+        return binding_object.get_direct(cache.property_offset.value());
+    }
+
+    cache.environment_serial_number = declarative_record.environment_serial_number();
+
+    auto const& name = interpreter.current_executable().get_identifier(identifier);
+    if (vm.running_execution_context().script_or_module.has<NonnullGCPtr<Module>>()) {
+        // NOTE: GetGlobal is used to access variables stored in the module environment and global environment.
+        //       The module environment is checked first since it precedes the global environment in the environment chain.
+        auto& module_environment = *vm.running_execution_context().script_or_module.get<NonnullGCPtr<Module>>()->environment();
+        if (TRY(module_environment.has_binding(name))) {
+            // TODO: Cache offset of binding value
+            return TRY(module_environment.get_binding_value(vm, name, vm.in_strict_mode()));
+        }
+    }
+
+    if (TRY(declarative_record.has_binding(name))) {
+        // TODO: Cache offset of binding value
+        return TRY(declarative_record.get_binding_value(vm, name, vm.in_strict_mode()));
+    }
+
+    if (TRY(binding_object.has_property(name))) {
+        CacheablePropertyMetadata cacheable_metadata;
+        auto value = TRY(binding_object.internal_get(name, js_undefined(), &cacheable_metadata));
+        if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
+            cache.shape = shape;
+            cache.property_offset = cacheable_metadata.property_offset.value();
+            cache.unique_shape_serial_number = shape.unique_shape_serial_number();
+        }
+        return value;
+    }
+
+    return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
 }
 
 }
