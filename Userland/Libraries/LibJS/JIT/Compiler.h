@@ -53,6 +53,7 @@ private:
     void compile_return(Bytecode::Op::Return const&);
     void compile_new_string(Bytecode::Op::NewString const&);
     void compile_get_by_id(Bytecode::Op::GetById const&);
+    void compile_get_by_value(Bytecode::Op::GetByValue const&);
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);

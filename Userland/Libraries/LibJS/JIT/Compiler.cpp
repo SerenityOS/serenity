@@ -386,6 +386,20 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
     check_exception();
 }
 
+static Value cxx_get_by_value(VM& vm, Value base, Value property)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_value(vm.bytecode_interpreter(), base, property));
+}
+
+void Compiler::compile_get_by_value(Bytecode::Op::GetByValue const& op)
+{
+    load_vm_register(ARG1, op.base());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.native_call((void*)cxx_get_by_value);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 static Value cxx_to_numeric(VM& vm, Value value)
 {
     return TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
@@ -477,6 +491,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::GetById:
                 compiler.compile_get_by_id(static_cast<Bytecode::Op::GetById const&>(op));
+                break;
+            case Bytecode::Instruction::Type::GetByValue:
+                compiler.compile_get_by_value(static_cast<Bytecode::Op::GetByValue const&>(op));
                 break;
             case Bytecode::Instruction::Type::ToNumeric:
                 compiler.compile_to_numeric(static_cast<Bytecode::Op::ToNumeric const&>(op));
