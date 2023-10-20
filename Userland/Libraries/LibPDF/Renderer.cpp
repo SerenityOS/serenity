@@ -507,7 +507,13 @@ RENDERER_HANDLER(text_next_line_show_string)
     return {};
 }
 
-RENDERER_TODO(text_next_line_show_string_set_spacing)
+RENDERER_HANDLER(text_next_line_show_string_set_spacing)
+{
+    TRY(handle_text_set_word_space(args.slice(0, 1)));
+    TRY(handle_text_set_char_space(args.slice(1, 1)));
+    TRY(handle_text_next_line_show_string(args.slice(2)));
+    return {};
+}
 
 RENDERER_HANDLER(text_show_string_array)
 {
