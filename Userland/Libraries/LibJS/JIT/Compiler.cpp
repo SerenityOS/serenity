@@ -386,6 +386,19 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
     check_exception();
 }
 
+static Value cxx_to_numeric(VM& vm, Value value)
+{
+    return TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
+}
+
+void Compiler::compile_to_numeric(Bytecode::Op::ToNumeric const&)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.native_call((void*)cxx_to_numeric);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -452,6 +465,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::GetById:
                 compiler.compile_get_by_id(static_cast<Bytecode::Op::GetById const&>(op));
+                break;
+            case Bytecode::Instruction::Type::ToNumeric:
+                compiler.compile_to_numeric(static_cast<Bytecode::Op::ToNumeric const&>(op));
                 break;
 
 #define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \
