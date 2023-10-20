@@ -499,9 +499,6 @@ ICCBasedColorSpace::ICCBasedColorSpace(NonnullRefPtr<Gfx::ICC::Profile> profile)
 
 PDFErrorOr<ColorOrStyle> ICCBasedColorSpace::style(ReadonlySpan<Value> arguments) const
 {
-    if (!s_srgb_profile)
-        s_srgb_profile = TRY(Gfx::ICC::sRGB());
-
     Vector<u8> bytes;
     for (size_t i = 0; i < arguments.size(); ++i) {
         auto const& arg = arguments[i];
@@ -522,7 +519,7 @@ PDFErrorOr<ColorOrStyle> ICCBasedColorSpace::style(ReadonlySpan<Value> arguments
 
     auto pcs = TRY(m_profile->to_pcs(bytes));
     Array<u8, 3> output;
-    TRY(s_srgb_profile->from_pcs(m_profile, pcs, output.span()));
+    TRY(sRGB()->from_pcs(m_profile, pcs, output.span()));
 
     return Color(output[0], output[1], output[2]);
 }
@@ -551,6 +548,13 @@ Vector<float> ICCBasedColorSpace::default_decode() const
         }
         return decoding_ranges;
     }
+}
+
+NonnullRefPtr<Gfx::ICC::Profile> ICCBasedColorSpace::sRGB()
+{
+    if (!s_srgb_profile)
+        s_srgb_profile = MUST(Gfx::ICC::sRGB());
+    return *s_srgb_profile;
 }
 
 PDFErrorOr<NonnullRefPtr<LabColorSpace>> LabColorSpace::create(Document* document, Vector<Value>&& parameters)
