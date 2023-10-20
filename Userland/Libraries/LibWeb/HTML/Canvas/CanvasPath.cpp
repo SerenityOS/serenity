@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ExtraMathConstants.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 
 namespace Web::HTML {
@@ -60,7 +59,7 @@ WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, 
     if (radius_y < 0)
         return WebIDL::IndexSizeError::create(m_self->realm(), MUST(String::formatted("The minor-axis radius provided ({}) is negative.", radius_y)));
 
-    if (constexpr float tau = M_TAU; (!counter_clockwise && (end_angle - start_angle) >= tau)
+    if (constexpr float tau = M_PI * 2; (!counter_clockwise && (end_angle - start_angle) >= tau)
         || (counter_clockwise && (start_angle - end_angle) >= tau)) {
         start_angle = 0;
         // FIXME: elliptical_arc_to() incorrectly handles the case where the start/end points are very close.

@@ -5,7 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/ExtraMathConstants.h>
 #include <AK/Optional.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Document.h>
@@ -162,7 +161,7 @@ Gfx::Path path_from_path_instructions(ReadonlySpan<PathInstruction> instructions
         case PathInstructionType::EllipticalArc: {
             double rx = data[0];
             double ry = data[1];
-            double x_axis_rotation = double { data[2] } * M_DEG2RAD;
+            double x_axis_rotation = AK::to_radians(static_cast<double>(data[2]));
             double large_arc_flag = data[3];
             double sweep_flag = data[4];
 
