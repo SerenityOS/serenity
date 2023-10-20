@@ -834,6 +834,8 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
         }
     }
 
+    // "(Required for images, except those that use the JPXDecode filter; not allowed for image masks) [...]
+    //  it can be any type of color space except Pattern."
     auto color_space_object = MUST(image_dict->get_object(m_document, CommonNames::ColorSpace));
     auto color_space = TRY(get_color_space_from_document(color_space_object));
 
