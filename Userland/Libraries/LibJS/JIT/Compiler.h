@@ -38,6 +38,7 @@ private:
     void compile_jump(Bytecode::Op::Jump const&);
     void compile_jump_conditional(Bytecode::Op::JumpConditional const&);
     void compile_increment(Bytecode::Op::Increment const&);
+    void compile_decrement(Bytecode::Op::Decrement const&);
     void compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const&);
     void compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&);
     void compile_throw(Bytecode::Op::Throw const&);
