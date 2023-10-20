@@ -14,16 +14,16 @@ namespace PDF {
 
 RefPtr<Gfx::ICC::Profile> ICCBasedColorSpace::s_srgb_profile;
 
-#define ENUMERATE(name, ever_needs_parameters) \
-    ColorSpaceFamily ColorSpaceFamily::name { #name, ever_needs_parameters };
+#define ENUMERATE(name, may_be_specified_directly) \
+    ColorSpaceFamily ColorSpaceFamily::name { #name, may_be_specified_directly };
 ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE);
 #undef ENUMERATE
 
 PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(DeprecatedFlyString const& family_name)
 {
-#define ENUMERATE(f_name, ever_needs_parameters) \
-    if (family_name == f_name.name()) {          \
-        return ColorSpaceFamily::f_name;         \
+#define ENUMERATE(f_name, may_be_specified_directly) \
+    if (family_name == f_name.name()) {              \
+        return ColorSpaceFamily::f_name;             \
     }
     ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE)
 #undef ENUMERATE
