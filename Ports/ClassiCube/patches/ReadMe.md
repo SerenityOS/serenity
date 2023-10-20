@@ -1,14 +1,7 @@
 # Patches for ClassiCube on SerenityOS
 
-## `0001-Add-support-for-SerenityOS.patch`
+## `0001-Ignore-warning-with-using-SDL-backend.patch`
 
-Add support for SerenityOS
+Ignore warning with using SDL backend
 
-
-## `0002-HACK-Disable-interrupt-hooks.patch`
-
-HACK: Disable interrupt hooks
-
-This allows crashes to be handled by Serenity's crash handler, which
-automatically displays debugging information such as the backtrace.
 

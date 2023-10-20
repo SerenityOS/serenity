@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='ClassiCube'
-version='1.3.3'
+version='1.3.6'
 files=(
-    "https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz#f90acfeb82fd440ead6e086694d99bd1583b0174da1801687c4c3d0fcb21d83d"
+    "https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz#fab780f4dcf0669a0f94683c9b6596f40cb83e09727a3b91aaae5e934a9740b0"
 )
-workdir="${port}-${version}/src/"
+workdir="${port}-${version}/"
 depends=(
     'SDL2'
     'curl'
@@ -15,11 +15,10 @@ launcher_name='ClassiCube'
 launcher_category='Games'
 launcher_workdir='/home/anon/Games/ClassiCube'
 launcher_command='/usr/local/bin/ClassiCube'
-icon_file='../misc/CCicon.ico'
+icon_file='misc/CCicon.ico'
 
 makeopts+=(
-    'ClassiCube'
-    'PLAT=serenity'
+    'PLAT=serenityos'
 )
 
 install() {
