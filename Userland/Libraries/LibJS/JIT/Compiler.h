@@ -54,6 +54,7 @@ private:
 
     void compile_return(Bytecode::Op::Return const&);
     void compile_new_string(Bytecode::Op::NewString const&);
+    void compile_new_object(Bytecode::Op::NewObject const&);
     void compile_get_by_id(Bytecode::Op::GetById const&);
     void compile_get_by_value(Bytecode::Op::GetByValue const&);
     void compile_get_global(Bytecode::Op::GetGlobal const&);

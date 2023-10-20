@@ -383,6 +383,18 @@ void Compiler::compile_new_string(Bytecode::Op::NewString const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_new_object(VM& vm)
+{
+    auto& realm = *vm.current_realm();
+    return Object::create(realm, realm.intrinsics().object_prototype());
+}
+
+void Compiler::compile_new_object(Bytecode::Op::NewObject const&)
+{
+    m_assembler.native_call((void*)cxx_new_object);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
 static Value cxx_get_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, u32 cache_index)
 {
     return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm.bytecode_interpreter(), property, base, base, cache_index));
@@ -546,6 +558,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::NewString:
                 compiler.compile_new_string(static_cast<Bytecode::Op::NewString const&>(op));
+                break;
+            case Bytecode::Instruction::Type::NewObject:
+                compiler.compile_new_object(static_cast<Bytecode::Op::NewObject const&>(op));
                 break;
             case Bytecode::Instruction::Type::GetById:
                 compiler.compile_get_by_id(static_cast<Bytecode::Op::GetById const&>(op));
