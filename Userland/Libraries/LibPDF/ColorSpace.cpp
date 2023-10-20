@@ -78,7 +78,7 @@ NonnullRefPtr<DeviceGrayColorSpace> DeviceGrayColorSpace::the()
     return instance;
 }
 
-PDFErrorOr<Color> DeviceGrayColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> DeviceGrayColorSpace::color(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 1);
     auto gray = static_cast<u8>(arguments[0].to_float() * 255.0f);
@@ -96,7 +96,7 @@ NonnullRefPtr<DeviceRGBColorSpace> DeviceRGBColorSpace::the()
     return instance;
 }
 
-PDFErrorOr<Color> DeviceRGBColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> DeviceRGBColorSpace::color(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto r = static_cast<u8>(arguments[0].to_float() * 255.0f);
@@ -116,7 +116,7 @@ NonnullRefPtr<DeviceCMYKColorSpace> DeviceCMYKColorSpace::the()
     return instance;
 }
 
-PDFErrorOr<Color> DeviceCMYKColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> DeviceCMYKColorSpace::color(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 4);
     auto c = arguments[0].to_float();
@@ -274,7 +274,7 @@ constexpr Array<float, 3> convert_to_srgb(Array<float, 3> xyz)
     return matrix_multiply(conversion_matrix, xyz);
 }
 
-PDFErrorOr<Color> CalRGBColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> CalRGBColorSpace::color(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto a = clamp(arguments[0].to_float(), 0.0f, 1.0f);
@@ -338,7 +338,7 @@ ICCBasedColorSpace::ICCBasedColorSpace(NonnullRefPtr<Gfx::ICC::Profile> profile)
 {
 }
 
-PDFErrorOr<Color> ICCBasedColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> ICCBasedColorSpace::color(ReadonlySpan<Value> arguments) const
 {
     if (!s_srgb_profile)
         s_srgb_profile = TRY(Gfx::ICC::sRGB());
@@ -389,7 +389,7 @@ PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Doc
     return color_space;
 }
 
-PDFErrorOr<Color> SeparationColorSpace::color(Vector<Value> const&) const
+PDFErrorOr<Color> SeparationColorSpace::color(ReadonlySpan<Value>) const
 {
     return Error::rendering_unsupported_error("Separation color spaces not yet implemented");
 }

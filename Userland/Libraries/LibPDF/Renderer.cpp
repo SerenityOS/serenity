@@ -11,7 +11,7 @@
 #include <LibPDF/Renderer.h>
 
 #define RENDERER_HANDLER(name) \
-    PDFErrorOr<void> Renderer::handle_##name([[maybe_unused]] Vector<Value> const& args, [[maybe_unused]] Optional<NonnullRefPtr<DictObject>> extra_resources)
+    PDFErrorOr<void> Renderer::handle_##name([[maybe_unused]] ReadonlySpan<Value> args, [[maybe_unused]] Optional<NonnullRefPtr<DictObject>> extra_resources)
 
 #define RENDERER_TODO(name)                                                        \
     RENDERER_HANDLER(name)                                                         \
@@ -489,7 +489,7 @@ RENDERER_HANDLER(text_set_matrix_and_line_matrix)
 
 RENDERER_HANDLER(text_next_line)
 {
-    TRY(handle_text_next_line_offset({ 0.0f, -text_state().leading }));
+    TRY(handle_text_next_line_offset(Array<Value, 2> { 0.0f, -text_state().leading }));
     return {};
 }
 
@@ -742,16 +742,16 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     // ISO 32000 (PDF 2.0), 8.4.5 Graphics state parameter dictionaries
 
     if (dict->contains(CommonNames::LW))
-        TRY(handle_set_line_width({ dict->get_value(CommonNames::LW) }));
+        TRY(handle_set_line_width(Array { dict->get_value(CommonNames::LW) }));
 
     if (dict->contains(CommonNames::LC))
-        TRY(handle_set_line_cap({ dict->get_value(CommonNames::LC) }));
+        TRY(handle_set_line_cap(Array { dict->get_value(CommonNames::LC) }));
 
     if (dict->contains(CommonNames::LJ))
-        TRY(handle_set_line_join({ dict->get_value(CommonNames::LJ) }));
+        TRY(handle_set_line_join(Array { dict->get_value(CommonNames::LJ) }));
 
     if (dict->contains(CommonNames::ML))
-        TRY(handle_set_miter_limit({ dict->get_value(CommonNames::ML) }));
+        TRY(handle_set_miter_limit(Array { dict->get_value(CommonNames::ML) }));
 
     if (dict->contains(CommonNames::D)) {
         auto array = MUST(dict->get_array(m_document, CommonNames::D));
@@ -759,7 +759,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     }
 
     if (dict->contains(CommonNames::RI))
-        TRY(handle_set_color_rendering_intent({ dict->get_value(CommonNames::RI) }));
+        TRY(handle_set_color_rendering_intent(Array { dict->get_value(CommonNames::RI) }));
 
     // FIXME: OP
     // FIXME: op
@@ -774,7 +774,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     // FIXME: HT
 
     if (dict->contains(CommonNames::FL))
-        TRY(handle_set_flatness_tolerance({ dict->get_value(CommonNames::FL) }));
+        TRY(handle_set_flatness_tolerance(Array { dict->get_value(CommonNames::FL) }));
 
     // FIXME: SM
     // FIXME: SA
