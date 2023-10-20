@@ -462,7 +462,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 #undef DO_COMPILE_COMMON_BINARY_OP
 
             default:
-                dbgln("JIT compilation failed: {}", bytecode_executable.name);
+                dbgln("\033[31;1mJIT compilation failed\033[0m: {}", bytecode_executable.name);
                 dbgln("Unsupported bytecode op: {}", op.to_deprecated_string(bytecode_executable));
                 return nullptr;
             }
@@ -508,6 +508,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 
     memcpy(executable_memory, compiler.m_output.data(), compiler.m_output.size());
     mprotect(executable_memory, compiler.m_output.size(), PROT_READ | PROT_EXEC);
+
+    dbgln("\033[32;1mJIT compilation succeeded!\033[0m {}", bytecode_executable.name);
+
     return make<NativeExecutable>(executable_memory, compiler.m_output.size());
 }
 
