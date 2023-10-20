@@ -49,9 +49,9 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document,
     if (descendant->contains(CommonNames::CIDToGIDMap)) {
         auto value = TRY(descendant->get_object(document, CommonNames::CIDToGIDMap));
         if (value->is<StreamObject>()) {
-            TODO();
+            return Error::rendering_unsupported_error("Type0 font subtype 2: support for stream cid maps not yet implemented");
         } else if (value->cast<NameObject>()->name() != "Identity") {
-            TODO();
+            return Error::rendering_unsupported_error("Type0 font: support for non-Identity named cid maps not yet implemented");
         }
     }
 
@@ -98,7 +98,7 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
     // FIXME: Support arbitrary CMaps
     auto cmap_value = TRY(dict->get_object(document, CommonNames::Encoding));
     if (!cmap_value->is<NameObject>() || cmap_value->cast<NameObject>()->name() != CommonNames::IdentityH)
-        TODO();
+        return Error::rendering_unsupported_error("Type0 font: support for general Encodings not yet implemented");
 
     auto descendant_font_value = TRY(dict->get_array(document, CommonNames::DescendantFonts));
     auto descendant_font = TRY(descendant_font_value->get_dict_at(document, 0));
