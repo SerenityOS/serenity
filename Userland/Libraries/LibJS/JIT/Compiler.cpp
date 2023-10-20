@@ -399,6 +399,18 @@ void Compiler::compile_to_numeric(Bytecode::Op::ToNumeric const&)
     check_exception();
 }
 
+static Value cxx_resolve_this_binding(VM& vm)
+{
+    return TRY_OR_SET_EXCEPTION(vm.resolve_this_binding());
+}
+
+void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding const&)
+{
+    m_assembler.native_call((void*)cxx_resolve_this_binding);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -468,6 +480,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::ToNumeric:
                 compiler.compile_to_numeric(static_cast<Bytecode::Op::ToNumeric const&>(op));
+                break;
+            case Bytecode::Instruction::Type::ResolveThisBinding:
+                compiler.compile_resolve_this_binding(static_cast<Bytecode::Op::ResolveThisBinding const&>(op));
                 break;
 
 #define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \
