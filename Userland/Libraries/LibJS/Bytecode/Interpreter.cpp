@@ -1147,7 +1147,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     for (u32 i = 0; i < m_argument_count; ++i) {
         argument_values.unchecked_append(interpreter.reg(Register { m_first_argument.index() + i }));
     }
-    interpreter.accumulator() = TRY(perform_call(interpreter, *this, callee, move(argument_values)));
+    interpreter.accumulator() = TRY(perform_call(interpreter, interpreter.reg(m_this_value), call_type(), callee, move(argument_values)));
     return {};
 }
 
@@ -1156,7 +1156,7 @@ ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interprete
     auto callee = interpreter.reg(m_callee);
     TRY(throw_if_needed_for_call(interpreter, *this, callee));
     auto argument_values = argument_list_evaluation(interpreter);
-    interpreter.accumulator() = TRY(perform_call(interpreter, *this, callee, move(argument_values)));
+    interpreter.accumulator() = TRY(perform_call(interpreter, interpreter.reg(m_this_value), call_type(), callee, move(argument_values)));
     return {};
 }
 
