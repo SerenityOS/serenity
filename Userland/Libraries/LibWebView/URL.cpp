@@ -45,6 +45,15 @@ static Optional<URL> query_public_suffix_list(StringView url_string)
     return {};
 }
 
+bool is_public_suffix([[maybe_unused]] StringView host)
+{
+#if defined(ENABLE_PUBLIC_SUFFIX)
+    return PublicSuffixData::the()->is_public_suffix(host);
+#else
+    return false;
+#endif
+}
+
 Optional<String> get_public_suffix([[maybe_unused]] StringView host)
 {
 #if defined(ENABLE_PUBLIC_SUFFIX)
