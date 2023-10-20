@@ -1374,8 +1374,11 @@ static TagSignature forward_transform_tag_for_rendering_intent(RenderingIntent r
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBytes) const
+ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBytes color) const
 {
+    // Assumes a "normal" device_class() (i.e. not DeviceLink).
+    VERIFY(number_of_components_in_color_space(connection_space()) == 3);
+
     switch (tag_data.type()) {
     case Lut16TagData::Type:
         // FIXME
@@ -1383,9 +1386,16 @@ ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBy
     case Lut8TagData::Type:
         // FIXME
         return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling for mft1 tags not yet implemented");
-    case LutAToBTagData::Type:
-        // FIXME
-        return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling for mAB tags not yet implemented");
+    case LutAToBTagData::Type: {
+        auto const& a_to_b = static_cast<LutAToBTagData const&>(tag_data);
+        if (a_to_b.number_of_input_channels() != number_of_components_in_color_space(data_color_space()))
+            return Error::from_string_literal("ICC::Profile::to_pcs_a_to_b: mAB input channel count does not match color space size");
+
+        if (a_to_b.number_of_output_channels() != number_of_components_in_color_space(connection_space()))
+            return Error::from_string_literal("ICC::Profile::to_pcs_a_to_b: mAB output channel count does not match profile connection space size");
+
+        return a_to_b.evaluate(color);
+    }
     }
     VERIFY_NOT_REACHED();
 }

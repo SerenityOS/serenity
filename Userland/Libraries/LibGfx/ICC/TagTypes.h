@@ -13,6 +13,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/ICC/DistinctFourCC.h>
+#include <LibGfx/Vector3.h>
 #include <math.h>
 
 namespace Gfx::ICC {
@@ -410,6 +411,9 @@ public:
     Optional<Vector<LutCurveType>> const& m_curves() const { return m_m_curves; }
     Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
     Vector<LutCurveType> const& b_curves() const { return m_b_curves; }
+
+    // Returns the result of the LUT pipeline for u8 inputs.
+    ErrorOr<FloatVector3> evaluate(ReadonlyBytes) const;
 
 private:
     u8 m_number_of_input_channels;
@@ -983,6 +987,70 @@ public:
 private:
     Vector<XYZ, 1> m_xyzs;
 };
+
+inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ReadonlyBytes color_u8) const
+{
+    VERIFY(number_of_input_channels() == color_u8.size());
+    VERIFY(number_of_output_channels() == 3);
+
+    // ICC v4, 10.12 lutAToBType
+    // "Data are processed using these elements via the following sequence:
+    //  (“A” curves) ⇨ (multi-dimensional lookup table, CLUT) ⇨ (“M” curves) ⇨ (matrix) ⇨ (“B” curves).
+
+    auto evaluate_curve = [](LutCurveType const& curve, float f) {
+        VERIFY(curve->type() == CurveTagData::Type || curve->type() == ParametricCurveTagData::Type);
+        if (curve->type() == CurveTagData::Type)
+            return static_cast<CurveTagData const&>(*curve).evaluate(f);
+        return static_cast<ParametricCurveTagData const&>(*curve).evaluate(f);
+    };
+
+    VERIFY(m_a_curves.has_value() == m_clut.has_value());
+    if (m_a_curves.has_value()) {
+        // FIXME
+        return Error::from_string_literal("mAB evaluation not yet implemented for A curve and CLUT");
+    }
+
+    FloatVector3 color { color_u8[0] / 255.f, color_u8[1] / 255.f, color_u8[2] / 255.f };
+
+    VERIFY(m_m_curves.has_value() == m_e.has_value());
+    if (m_m_curves.has_value()) {
+        auto const& m_curves = m_m_curves.value();
+        color = FloatVector3 {
+            evaluate_curve(m_curves[0], color[0]),
+            evaluate_curve(m_curves[1], color[1]),
+            evaluate_curve(m_curves[2], color[2])
+        };
+
+        // ICC v4, 10.12.5 Matrix
+        // "The resultant values Y1, Y2 and Y3 shall be clipped to the range 0,0 to 1,0 and used as inputs to the “B” curves."
+        EMatrix3x4 const& e = m_e.value();
+        FloatVector3 new_color = {
+            (float)e[0] * color[0] + (float)e[1] * color[1] + (float)e[2] * color[2] + (float)e[9],
+            (float)e[3] * color[0] + (float)e[4] * color[1] + (float)e[5] * color[2] + (float)e[10],
+            (float)e[6] * color[0] + (float)e[7] * color[1] + (float)e[8] * color[2] + (float)e[11]
+        };
+
+        // Mystery conversion factor!
+        // skcms, littlecms, and argyll all do this somewhere, but I don't understand why!
+        // skcms has a "TODO: understand" comment as well.
+        // littlecms and argyll have both comments which don't make sense to me.
+        // littlecms does this to the matrix profile matrices (i.e. it considers the lut pcs scale canonical).
+        // skcms does it to the mAB matrix (...which means it'll do something different if the matrix is missing,
+        //     and it'll also do something different if the b curve isn't the identity).
+        // argyll does it in Lut_Lut2XYZ(), but I'm not clear on when that's called.
+        // SampleICC does it in IccCmm.cpp, XYZScale() and in IccUtil.cpp, icXyzFromPcs().
+        // Without this, colors are too bright. So let's do it too, and maybe I'll understand it one day.
+        new_color *= 65535 / 32768.f; // ???
+
+        color = new_color.clamped(0.f, 1.f);
+    }
+
+    return FloatVector3 {
+        evaluate_curve(m_b_curves[0], color[0]),
+        evaluate_curve(m_b_curves[1], color[1]),
+        evaluate_curve(m_b_curves[2], color[2])
+    };
+}
 
 }
 
