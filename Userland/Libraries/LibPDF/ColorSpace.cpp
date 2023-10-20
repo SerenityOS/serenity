@@ -354,6 +354,11 @@ PDFErrorOr<Color> ICCBasedColorSpace::color(Vector<Value> const& arguments) cons
     return Color(output[0], output[1], output[2]);
 }
 
+int ICCBasedColorSpace::number_of_components() const
+{
+    return Gfx::ICC::number_of_components_in_color_space(m_profile->data_color_space());
+}
+
 Vector<float> ICCBasedColorSpace::default_decode() const
 {
     auto color_space = m_profile->data_color_space();
