@@ -89,7 +89,17 @@ extern "C" {
 
 void ak_verification_failed(char const* message)
 {
-    ERRORLN("VERIFICATION FAILED: {}", message);
+#    if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
+    bool colorize_output = true;
+#    else
+    bool colorize_output = isatty(STDERR_FILENO) == 1;
+#    endif
+
+    if (colorize_output)
+        ERRORLN("\033[31;1mVERIFICATION FAILED\033[0m: {}", message);
+    else
+        ERRORLN("VERIFICATION FAILED: {}", message);
+
 #    if defined(EXECINFO_BACKTRACE)
     dump_backtrace();
 #    endif
