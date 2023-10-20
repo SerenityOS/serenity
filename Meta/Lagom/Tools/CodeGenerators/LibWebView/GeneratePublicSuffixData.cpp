@@ -66,6 +66,7 @@ public:
         return s_the;
     }
 
+    bool is_public_suffix(StringView host);
     ErrorOr<Optional<String>> get_public_suffix(StringView string);
 
 private:
@@ -127,16 +128,17 @@ PublicSuffixData::PublicSuffixData()
     }
 }
 
+bool PublicSuffixData::is_public_suffix(StringView host)
+{
+    auto it = host.begin();
+    auto& node = m_dictionary.traverse_until_last_accessible_node(it, host.end());
+    return it.is_end() && node.metadata().has_value();
+}
+
 ErrorOr<Optional<String>> PublicSuffixData::get_public_suffix(StringView string)
 {
     auto input = string.split_view("."sv);
     input.reverse();
-
-    auto can_find = [&](StringView input) -> bool {
-        auto it = input.begin();
-        auto& node = m_dictionary.traverse_until_last_accessible_node(it, input.end());
-        return it.is_end() && node.metadata().has_value();
-    };
 
     StringBuilder overall_search_string;
     StringBuilder search_string;
@@ -145,7 +147,7 @@ ErrorOr<Optional<String>> PublicSuffixData::get_public_suffix(StringView string)
         TRY(search_string.try_append(TRY(overall_search_string.to_string())));
         TRY(search_string.try_append(part));
 
-        if (can_find(search_string.string_view())) {
+        if (is_public_suffix(search_string.string_view())) {
             overall_search_string.append(TRY(String::from_utf8(part)));
             overall_search_string.append("."sv);
             continue;
@@ -155,7 +157,7 @@ ErrorOr<Optional<String>> PublicSuffixData::get_public_suffix(StringView string)
         TRY(search_string.try_append(TRY(overall_search_string.to_string())));
         TRY(search_string.try_append("*"sv));
 
-        if (can_find(search_string.string_view())) {
+        if (is_public_suffix(search_string.string_view())) {
             overall_search_string.append(TRY(String::from_utf8(part)));
             overall_search_string.append("."sv);
             continue;

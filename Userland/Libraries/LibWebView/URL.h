@@ -12,6 +12,7 @@
 
 namespace WebView {
 
+bool is_public_suffix(StringView host);
 Optional<String> get_public_suffix(StringView host);
 
 enum class AppendTLD {
