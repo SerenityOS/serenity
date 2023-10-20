@@ -8,10 +8,12 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
+#include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 
 namespace JS::Bytecode {
@@ -63,6 +65,12 @@ public:
     DeprecatedFlyString const& get_identifier(IdentifierTableIndex index) const { return identifier_table->get(index); }
 
     void dump() const;
+
+    JIT::NativeExecutable const* get_or_create_native_executable();
+
+private:
+    OwnPtr<JIT::NativeExecutable> m_native_executable;
+    bool m_did_try_jitting { false };
 };
 
 }
