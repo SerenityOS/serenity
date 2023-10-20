@@ -39,6 +39,8 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString con
         return DeviceRGBColorSpace::the();
     if (name == CommonNames::DeviceCMYK)
         return DeviceCMYKColorSpace::the();
+    if (name == CommonNames::Pattern)
+        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     VERIFY_NOT_REACHED();
 }
 

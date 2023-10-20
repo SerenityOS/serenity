@@ -21,7 +21,7 @@
     V(Lab, false)                         \
     V(ICCBased, false)                    \
     V(Indexed, false)                     \
-    V(Pattern, false)                     \
+    V(Pattern, true)                      \
     V(Separation, false)                  \
     V(DeviceN, false)
 
