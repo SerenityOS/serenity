@@ -171,12 +171,12 @@ public:
         if (values().size() == 1)
             return powf(x, values()[0] / (float)0x100);
 
-        size_t i = static_cast<size_t>(x * (values().size() - 1));
+        size_t n = values().size() - 1;
+        size_t i = static_cast<size_t>(x * n);
         if (i == values().size() - 1)
             --i;
 
-        float f = x * (values().size() - 1) - i;
-        return mix(values()[i] / 65535.f, values()[i + 1] / 65535.f, f);
+        return mix(values()[i] / 65535.f, values()[i + 1] / 65535.f, x * n - i);
     }
 
     // y must be in [0..1].
