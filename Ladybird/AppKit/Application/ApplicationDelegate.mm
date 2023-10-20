@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWebView/SearchEngine.h>
+
 #import <Application/ApplicationDelegate.h>
 #import <LibWebView/UserAgent.h>
 #import <UI/LadybirdWebView.h>
@@ -26,6 +28,8 @@
     Optional<StringView> m_webdriver_content_ipc_path;
 
     Web::CSS::PreferredColorScheme m_preferred_color_scheme;
+
+    WebView::SearchEngine m_search_engine;
 }
 
 @property (nonatomic, strong) NSMutableArray<TabController*>* managed_tabs;
@@ -34,6 +38,7 @@
 - (NSMenuItem*)createFileMenu;
 - (NSMenuItem*)createEditMenu;
 - (NSMenuItem*)createViewMenu;
+- (NSMenuItem*)createSettingsMenu;
 - (NSMenuItem*)createHistoryMenu;
 - (NSMenuItem*)createInspectMenu;
 - (NSMenuItem*)createDebugMenu;
@@ -56,6 +61,7 @@
         [[NSApp mainMenu] addItem:[self createFileMenu]];
         [[NSApp mainMenu] addItem:[self createEditMenu]];
         [[NSApp mainMenu] addItem:[self createViewMenu]];
+        [[NSApp mainMenu] addItem:[self createSettingsMenu]];
         [[NSApp mainMenu] addItem:[self createHistoryMenu]];
         [[NSApp mainMenu] addItem:[self createInspectMenu]];
         [[NSApp mainMenu] addItem:[self createDebugMenu]];
@@ -74,6 +80,7 @@
         }
 
         m_preferred_color_scheme = Web::CSS::PreferredColorScheme::Auto;
+        m_search_engine = WebView::default_search_engine();
 
         // Reduce the tooltip delay, as the default delay feels quite long.
         [[NSUserDefaults standardUserDefaults] setObject:@100 forKey:@"NSInitialToolTipDelay"];
@@ -123,6 +130,11 @@
 - (Web::CSS::PreferredColorScheme)preferredColorScheme
 {
     return m_preferred_color_scheme;
+}
+
+- (WebView::SearchEngine const&)searchEngine
+{
+    return m_search_engine;
 }
 
 #pragma mark - Private methods
@@ -188,6 +200,17 @@
         auto* tab = (Tab*)[controller window];
         [[tab web_view] setPreferredColorScheme:m_preferred_color_scheme];
     }
+}
+
+- (void)setSearchEngine:(id)sender
+{
+    auto* item = (NSMenuItem*)sender;
+    auto title = Ladybird::ns_string_to_string([item title]);
+
+    if (auto search_engine = WebView::find_search_engine(title); search_engine.has_value())
+        m_search_engine = search_engine.release_value();
+    else
+        m_search_engine = WebView::default_search_engine();
 }
 
 - (void)clearHistory:(id)sender
@@ -320,6 +343,30 @@
     [submenu addItem:color_scheme_menu_item];
     [submenu addItem:zoom_menu_item];
     [submenu addItem:[NSMenuItem separatorItem]];
+
+    [menu setSubmenu:submenu];
+    return menu;
+}
+
+- (NSMenuItem*)createSettingsMenu
+{
+    auto* menu = [[NSMenuItem alloc] init];
+    auto* submenu = [[NSMenu alloc] initWithTitle:@"Settings"];
+
+    auto* search_engine_menu = [[NSMenu alloc] init];
+
+    for (auto const& search_engine : WebView::search_engines()) {
+        [search_engine_menu addItem:[[NSMenuItem alloc] initWithTitle:Ladybird::string_to_ns_string(search_engine.name)
+                                                               action:@selector(setSearchEngine:)
+                                                        keyEquivalent:@""]];
+    }
+
+    auto* search_engine_menu_item = [[NSMenuItem alloc] initWithTitle:@"Search Engine"
+                                                               action:nil
+                                                        keyEquivalent:@""];
+    [search_engine_menu_item setSubmenu:search_engine_menu];
+
+    [submenu addItem:search_engine_menu_item];
 
     [menu setSubmenu:submenu];
     return menu;
@@ -513,6 +560,9 @@
         [item setState:(m_preferred_color_scheme == Dark) ? NSControlStateValueOn : NSControlStateValueOff];
     } else if ([item action] == @selector(setLightPreferredColorScheme:)) {
         [item setState:(m_preferred_color_scheme == Light) ? NSControlStateValueOn : NSControlStateValueOff];
+    } else if ([item action] == @selector(setSearchEngine:)) {
+        auto title = Ladybird::ns_string_to_string([item title]);
+        [item setState:(m_search_engine.name == title) ? NSControlStateValueOn : NSControlStateValueOff];
     }
 
     return YES;

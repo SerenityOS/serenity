@@ -5,6 +5,7 @@
  */
 
 #include <LibWebView/History.h>
+#include <LibWebView/SearchEngine.h>
 #include <LibWebView/URL.h>
 
 #import <Application/ApplicationDelegate.h>
@@ -638,8 +639,9 @@ enum class IsHistoryNavigation {
     }
 
     auto url_string = Ladybird::ns_string_to_string([[text_view textStorage] string]);
+    auto* delegate = (ApplicationDelegate*)[NSApp delegate];
 
-    if (auto url = WebView::sanitize_url(url_string); url.has_value()) {
+    if (auto url = WebView::sanitize_url(url_string, [delegate searchEngine].query_url); url.has_value()) {
         [self loadURL:*url];
     }
 
