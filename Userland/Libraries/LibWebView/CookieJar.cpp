@@ -19,6 +19,7 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
+#include <LibWebView/URL.h>
 
 namespace WebView {
 
@@ -316,7 +317,18 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     }
 
     // 5. If the user agent is configured to reject "public suffixes" and the domain-attribute is a public suffix:
-    // FIXME: Support rejection of public suffixes. The full list is here: https://publicsuffix.org/list/public_suffix_list.dat
+    if (is_public_suffix(cookie.domain)) {
+        // If the domain-attribute is identical to the canonicalized request-host:
+        if (cookie.domain == canonicalized_domain) {
+            // Let the domain-attribute be the empty string.
+            cookie.domain = DeprecatedString::empty();
+        }
+        // Otherwise:
+        else {
+            // Ignore the cookie entirely and abort these steps.
+            return;
+        }
+    }
 
     // 6. If the domain-attribute is non-empty:
     if (!cookie.domain.is_empty()) {
