@@ -41,6 +41,7 @@ private:
     void compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const&);
     void compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&);
     void compile_throw(Bytecode::Op::Throw const&);
+    void compile_to_numeric(Bytecode::Op::ToNumeric const&);
 
 #define DO_COMPILE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
     void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
