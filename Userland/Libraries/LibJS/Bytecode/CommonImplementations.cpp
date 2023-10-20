@@ -6,7 +6,9 @@
 
 #include <LibJS/Bytecode/CommonImplementations.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Bytecode/Op.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 
@@ -137,6 +139,49 @@ ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, Identifi
     }
 
     return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
+}
+
+ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind)
+{
+    auto object = TRY(base.to_object(vm));
+    if (kind == Op::PropertyKind::Getter || kind == Op::PropertyKind::Setter) {
+        // The generator should only pass us functions for getters and setters.
+        VERIFY(value.is_function());
+    }
+    switch (kind) {
+    case Op::PropertyKind::Getter: {
+        auto& function = value.as_function();
+        if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
+            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(DeprecatedString::formatted("get {}", name));
+        object->define_direct_accessor(name, &function, nullptr, Attribute::Configurable | Attribute::Enumerable);
+        break;
+    }
+    case Op::PropertyKind::Setter: {
+        auto& function = value.as_function();
+        if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
+            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(DeprecatedString::formatted("set {}", name));
+        object->define_direct_accessor(name, nullptr, &function, Attribute::Configurable | Attribute::Enumerable);
+        break;
+    }
+    case Op::PropertyKind::KeyValue: {
+        bool succeeded = TRY(object->internal_set(name, value, this_value));
+        if (!succeeded && vm.in_strict_mode())
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, base.to_string_without_side_effects());
+        break;
+    }
+    case Op::PropertyKind::DirectKeyValue:
+        object->define_direct_property(name, value, Attribute::Enumerable | Attribute::Writable | Attribute::Configurable);
+        break;
+    case Op::PropertyKind::Spread:
+        TRY(object->copy_data_properties(vm, value, {}));
+        break;
+    case Op::PropertyKind::ProtoSetter:
+        if (value.is_object() || value.is_null())
+            MUST(object->internal_set_prototype_of(value.is_object() ? &value.as_object() : nullptr));
+        break;
+    }
+
+    return {};
 }
 
 }

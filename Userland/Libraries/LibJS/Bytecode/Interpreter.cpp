@@ -479,49 +479,6 @@ DeprecatedString Instruction::to_deprecated_string(Bytecode::Executable const& e
 
 namespace JS::Bytecode::Op {
 
-static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, PropertyKind kind)
-{
-    auto object = TRY(base.to_object(vm));
-    if (kind == PropertyKind::Getter || kind == PropertyKind::Setter) {
-        // The generator should only pass us functions for getters and setters.
-        VERIFY(value.is_function());
-    }
-    switch (kind) {
-    case PropertyKind::Getter: {
-        auto& function = value.as_function();
-        if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
-            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(DeprecatedString::formatted("get {}", name));
-        object->define_direct_accessor(name, &function, nullptr, Attribute::Configurable | Attribute::Enumerable);
-        break;
-    }
-    case PropertyKind::Setter: {
-        auto& function = value.as_function();
-        if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
-            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(DeprecatedString::formatted("set {}", name));
-        object->define_direct_accessor(name, nullptr, &function, Attribute::Configurable | Attribute::Enumerable);
-        break;
-    }
-    case PropertyKind::KeyValue: {
-        bool succeeded = TRY(object->internal_set(name, value, this_value));
-        if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, base.to_string_without_side_effects());
-        break;
-    }
-    case PropertyKind::DirectKeyValue:
-        object->define_direct_property(name, value, Attribute::Enumerable | Attribute::Writable | Attribute::Configurable);
-        break;
-    case PropertyKind::Spread:
-        TRY(object->copy_data_properties(vm, value, {}));
-        break;
-    case PropertyKind::ProtoSetter:
-        if (value.is_object() || value.is_null())
-            MUST(object->internal_set_prototype_of(value.is_object() ? &value.as_object() : nullptr));
-        break;
-    }
-
-    return {};
-}
-
 ThrowCompletionOr<void> Load::execute_impl(Bytecode::Interpreter&) const
 {
     // Handled in the interpreter loop.
