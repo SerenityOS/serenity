@@ -277,6 +277,7 @@ void Interpreter::run_bytecode()
 
             if (result.is_error()) [[unlikely]] {
                 reg(Register::exception()) = *result.throw_completion().value();
+                m_scheduled_jump = {};
                 auto const* handler = m_current_block->handler();
                 auto const* finalizer = m_current_block->finalizer();
                 if (!handler && !finalizer)
