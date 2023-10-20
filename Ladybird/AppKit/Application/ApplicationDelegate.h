@@ -40,5 +40,6 @@
 - (WebView::CookieJar&)cookieJar;
 - (Optional<StringView> const&)webdriverContentIPCPath;
 - (Web::CSS::PreferredColorScheme)preferredColorScheme;
+- (WebView::SearchEngine const&)searchEngine;
 
 @end
