@@ -354,9 +354,11 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
     if (auto native_executable = executable.get_or_create_native_executable()) {
         native_executable->run(vm());
 
+#if 0
         for (size_t i = 0; i < vm().running_execution_context().local_variables.size(); ++i) {
             dbgln("%{}: {}", i, vm().running_execution_context().local_variables[i]);
         }
+#endif
 
     } else {
         run_bytecode();

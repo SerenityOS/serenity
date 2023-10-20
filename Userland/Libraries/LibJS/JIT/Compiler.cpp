@@ -175,6 +175,22 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
     check_exception();
 }
 
+static Value cxx_decrement(VM& vm, Value value)
+{
+    auto old_value = TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
+    if (old_value.is_number())
+        return Value(old_value.as_double() - 1);
+    return BigInt::create(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+}
+
+void Compiler::compile_decrement(Bytecode::Op::Decrement const&)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.native_call((void*)cxx_decrement);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::check_exception()
 {
     // if (exception.is_empty()) goto no_exception;
@@ -473,6 +489,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::Increment:
                 compiler.compile_increment(static_cast<Bytecode::Op::Increment const&>(op));
+                break;
+            case Bytecode::Instruction::Type::Decrement:
+                compiler.compile_decrement(static_cast<Bytecode::Op::Decrement const&>(op));
                 break;
             case Bytecode::Instruction::Type::EnterUnwindContext:
                 compiler.compile_enter_unwind_context(static_cast<Bytecode::Op::EnterUnwindContext const&>(op));
