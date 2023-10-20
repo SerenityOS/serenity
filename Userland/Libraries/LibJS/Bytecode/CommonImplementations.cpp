@@ -184,4 +184,27 @@ ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value
     return {};
 }
 
+template<typename InstructionType>
+ThrowCompletionOr<Value> perform_call(Interpreter& interpreter, InstructionType const& call, Value callee, MarkedVector<Value> argument_values)
+{
+    auto& vm = interpreter.vm();
+    auto this_value = interpreter.reg(call.this_value());
+    auto& function = callee.as_function();
+    Value return_value;
+    if (call.call_type() == Op::CallType::DirectEval) {
+        if (callee == interpreter.realm().intrinsics().eval_function())
+            return_value = TRY(perform_eval(vm, !argument_values.is_empty() ? argument_values[0].value_or(JS::js_undefined()) : js_undefined(), vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
+        else
+            return_value = TRY(JS::call(vm, function, this_value, move(argument_values)));
+    } else if (call.call_type() == Op::CallType::Call)
+        return_value = TRY(JS::call(vm, function, this_value, move(argument_values)));
+    else
+        return_value = TRY(construct(vm, function, move(argument_values)));
+
+    return return_value;
+}
+
+template ThrowCompletionOr<Value> perform_call(Interpreter&, Op::Call const&, Value, MarkedVector<Value>);
+template ThrowCompletionOr<Value> perform_call(Interpreter&, Op::CallWithArgumentArray const&, Value, MarkedVector<Value>);
+
 }
