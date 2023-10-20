@@ -91,7 +91,7 @@ ErrorOr<void> generate_implementation_file(Core::InputBufferedFile& input, Core:
 
 namespace WebView {
 
-static Vector<StringView> s_public_suffixes {)~~~");
+static constexpr auto s_public_suffixes = Array {)~~~");
 
     Array<u8, 1024> buffer {};
 
@@ -110,7 +110,7 @@ static Vector<StringView> s_public_suffixes {)~~~");
 
         generator.set("line", val);
         generator.append(R"~~~(
-    {"@line@"sv},)~~~");
+    "@line@"sv,)~~~");
     }
 
     generator.append(R"~~~(
