@@ -1155,26 +1155,6 @@ static ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter
     return {};
 }
 
-static ThrowCompletionOr<void> perform_call(Interpreter& interpreter, auto& call, Value callee, MarkedVector<Value> argument_values)
-{
-    auto& vm = interpreter.vm();
-    auto this_value = interpreter.reg(call.this_value());
-    auto& function = callee.as_function();
-    Value return_value;
-    if (call.call_type() == CallType::DirectEval) {
-        if (callee == interpreter.realm().intrinsics().eval_function())
-            return_value = TRY(perform_eval(vm, !argument_values.is_empty() ? argument_values[0].value_or(JS::js_undefined()) : js_undefined(), vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
-        else
-            return_value = TRY(JS::call(vm, function, this_value, move(argument_values)));
-    } else if (call.call_type() == CallType::Call)
-        return_value = TRY(JS::call(vm, function, this_value, move(argument_values)));
-    else
-        return_value = TRY(construct(vm, function, move(argument_values)));
-
-    interpreter.accumulator() = return_value;
-    return {};
-}
-
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -1187,7 +1167,8 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     for (u32 i = 0; i < m_argument_count; ++i) {
         argument_values.unchecked_append(interpreter.reg(Register { m_first_argument.index() + i }));
     }
-    return perform_call(interpreter, *this, callee, move(argument_values));
+    interpreter.accumulator() = TRY(perform_call(interpreter, *this, callee, move(argument_values)));
+    return {};
 }
 
 ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1195,7 +1176,8 @@ ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interprete
     auto callee = interpreter.reg(m_callee);
     TRY(throw_if_needed_for_call(interpreter, *this, callee));
     auto argument_values = argument_list_evaluation(interpreter);
-    return perform_call(interpreter, *this, callee, move(argument_values));
+    interpreter.accumulator() = TRY(perform_call(interpreter, *this, callee, move(argument_values)));
+    return {};
 }
 
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
