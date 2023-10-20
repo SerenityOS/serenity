@@ -20,7 +20,7 @@ public:
     NativeExecutable(void* code, size_t size);
     ~NativeExecutable();
 
-    void run(VM&);
+    void run(VM&) const;
 
 private:
     void* m_code { nullptr };
