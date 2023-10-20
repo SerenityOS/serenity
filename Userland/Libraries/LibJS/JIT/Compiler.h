@@ -26,9 +26,9 @@ private:
     static constexpr auto ARG3 = Assembler::Reg::RCX;
     static constexpr auto RET = Assembler::Reg::RAX;
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
-    static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::R8;
-    static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R9;
-    static constexpr auto UNWIND_CONTEXT_BASE = Assembler::Reg::R10;
+    static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::R13;
+    static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
+    static constexpr auto UNWIND_CONTEXT_BASE = Assembler::Reg::R15;
 
     void compile_load_immediate(Bytecode::Op::LoadImmediate const&);
     void compile_load(Bytecode::Op::Load const&);
