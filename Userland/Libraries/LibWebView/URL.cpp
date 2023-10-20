@@ -26,7 +26,6 @@ static Optional<URL> query_public_suffix_list(StringView url_string)
     if (!url.is_valid())
         return {};
 
-#if defined(ENABLE_PUBLIC_SUFFIX)
     if (url.host().has<URL::IPv4Address>() || url.host().has<URL::IPv6Address>())
         return url;
 
@@ -36,7 +35,7 @@ static Optional<URL> query_public_suffix_list(StringView url_string)
     if (url.host().has<String>()) {
         auto const& host = url.host().get<String>();
 
-        if (auto public_suffix = MUST(PublicSuffixData::the()->get_public_suffix(host)); public_suffix.has_value())
+        if (auto public_suffix = get_public_suffix(host); public_suffix.has_value())
             return url;
 
         if (host.ends_with_bytes(".local"sv) || host.ends_with_bytes("localhost"sv))
@@ -44,8 +43,14 @@ static Optional<URL> query_public_suffix_list(StringView url_string)
     }
 
     return {};
+}
+
+Optional<String> get_public_suffix([[maybe_unused]] StringView host)
+{
+#if defined(ENABLE_PUBLIC_SUFFIX)
+    return MUST(PublicSuffixData::the()->get_public_suffix(host));
 #else
-    return url;
+    return {};
 #endif
 }
 
@@ -95,7 +100,7 @@ static URLParts break_web_url_into_parts(URL const& url, StringView url_string)
 {
     auto host = MUST(url.serialized_host());
 
-    auto public_suffix = MUST(PublicSuffixData::the()->get_public_suffix(host));
+    auto public_suffix = get_public_suffix(host);
     if (!public_suffix.has_value())
         return {};
 
