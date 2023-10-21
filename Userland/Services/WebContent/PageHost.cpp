@@ -133,7 +133,7 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     Web::PaintContext context(recording_painter, palette(), device_pixels_per_css_pixel());
 
     if (background_color.alpha() < 255)
-        recording_painter.clear_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
+        recording_painter.fill_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
     recording_painter.fill_rect(bitmap_rect, background_color);
 
     if (!document->paintable())

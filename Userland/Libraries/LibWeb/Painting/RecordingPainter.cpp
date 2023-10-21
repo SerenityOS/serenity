@@ -31,15 +31,6 @@ struct CommandExecutionState {
     Vector<StackingContext> stacking_contexts;
 };
 
-CommandResult ClearRect::execute(CommandExecutionState& state) const
-{
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
-
-    state.painter().clear_rect(rect, color);
-    return CommandResult::Continue;
-}
-
 CommandResult FillRectWithRoundedCorners::execute(CommandExecutionState& state) const
 {
     if (state.would_be_fully_clipped_by_painter(rect))
@@ -504,14 +495,6 @@ void RecordingPainter::sample_under_corners(NonnullRefPtr<BorderRadiusCornerClip
 void RecordingPainter::blit_corner_clipping(NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper)
 {
     push_command(BlitCornerClipping { corner_clipper });
-}
-
-void RecordingPainter::clear_rect(Gfx::IntRect const& rect, Color color)
-{
-    push_command(ClearRect {
-        .rect = rect,
-        .color = color,
-    });
 }
 
 void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color)
