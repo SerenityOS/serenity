@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/String.h>
 #include <LibDisassembly/riscv64/Encoding.h>
+#include <LibDisassembly/riscv64/FD.h>
 #include <LibDisassembly/riscv64/IM.h>
 #include <LibDisassembly/riscv64/Instruction.h>
 #include <LibDisassembly/riscv64/Zicsr.h>
@@ -349,48 +350,112 @@ struct AK::Formatter<Disassembly::RISCV64::ArithmeticInstruction::Operation> : A
 };
 
 template<>
+struct AK::Formatter<Disassembly::RISCV64::FloatArithmeticInstruction::Operation> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::FloatArithmeticInstruction::Operation op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+            using enum Disassembly::RISCV64::FloatArithmeticInstruction::Operation;
+        case Add:
+            op_name = "fadd"sv;
+            break;
+        case Subtract:
+            op_name = "fsub"sv;
+            break;
+        case Multiply:
+            op_name = "fmul"sv;
+            break;
+        case Divide:
+            op_name = "fdiv"sv;
+            break;
+        case Min:
+            op_name = "fmin"sv;
+            break;
+        case Max:
+            op_name = "fmax"sv;
+            break;
+        case SignInject:
+            op_name = "fsgnj"sv;
+            break;
+        case SignInjectNegate:
+            op_name = "fsgnjn"sv;
+            break;
+        case SignInjectXor:
+            op_name = "fsgnjx"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+            using enum Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation;
+        case MultiplyAdd:
+            op_name = "fmadd"sv;
+            break;
+        case MultiplySubtract:
+            op_name = "fmsub"sv;
+            break;
+        case NegatedMultiplyAdd:
+            op_name = "fnmadd"sv;
+            break;
+        case NegatedMultiplySubtract:
+            op_name = "fnmsub"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
+    }
+};
+
+template<>
 struct AK::Formatter<Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation> : AK::Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation op)
     {
         auto op_name = ""sv;
         switch (op) {
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::Add:
+            using enum Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation;
+        case Add:
             op_name = "addi"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::SetLessThan:
+        case SetLessThan:
             op_name = "slti"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::SetLessThanUnsigned:
+        case SetLessThanUnsigned:
             op_name = "sltiu"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::Xor:
+        case Xor:
             op_name = "xori"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::Or:
+        case Or:
             op_name = "ori"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::And:
+        case And:
             op_name = "andi"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftLeftLogical:
+        case ShiftLeftLogical:
             op_name = "slli"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftRightLogical:
+        case ShiftRightLogical:
             op_name = "srli"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftRightArithmetic:
+        case ShiftRightArithmetic:
             op_name = "srai"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::AddWord:
+        case AddWord:
             op_name = "addiw"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftLeftLogicalWord:
+        case ShiftLeftLogicalWord:
             op_name = "slliw"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftRightLogicalWord:
+        case ShiftRightLogicalWord:
             op_name = "srliw"sv;
             break;
-        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftRightArithmeticWord:
+        case ShiftRightArithmeticWord:
             op_name = "sraiw"sv;
             break;
         }
@@ -404,22 +469,23 @@ struct AK::Formatter<Disassembly::RISCV64::Branch::Condition> : AK::Formatter<St
     {
         auto op_name = ""sv;
         switch (op) {
-        case Disassembly::RISCV64::Branch::Condition::Equals:
+            using enum Disassembly::RISCV64::Branch::Condition;
+        case Equals:
             op_name = "beq"sv;
             break;
-        case Disassembly::RISCV64::Branch::Condition::NotEquals:
+        case NotEquals:
             op_name = "bne"sv;
             break;
-        case Disassembly::RISCV64::Branch::Condition::LessThan:
+        case LessThan:
             op_name = "blt"sv;
             break;
-        case Disassembly::RISCV64::Branch::Condition::GreaterEquals:
+        case GreaterEquals:
             op_name = "bge"sv;
             break;
-        case Disassembly::RISCV64::Branch::Condition::LessThanUnsigned:
+        case LessThanUnsigned:
             op_name = "bltu"sv;
             break;
-        case Disassembly::RISCV64::Branch::Condition::GreaterEqualsUnsigned:
+        case GreaterEqualsUnsigned:
             op_name = "bgeu"sv;
             break;
         }
@@ -452,17 +518,42 @@ template<>
 struct AK::Formatter<Disassembly::RISCV64::Fence::AccessType> : AK::Formatter<String> {
     ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::Fence::AccessType op)
     {
+        using namespace Disassembly::RISCV64;
         StringBuilder op_name;
-        if (Disassembly::RISCV64::has_flag(op, Disassembly::RISCV64::Fence::AccessType::Input))
+        if (has_flag(op, Fence::AccessType::Input))
             op_name.append_code_point('i');
-        if (Disassembly::RISCV64::has_flag(op, Disassembly::RISCV64::Fence::AccessType::Output))
+        if (has_flag(op, Fence::AccessType::Output))
             op_name.append_code_point('o');
-        if (Disassembly::RISCV64::has_flag(op, Disassembly::RISCV64::Fence::AccessType::Read))
+        if (has_flag(op, Fence::AccessType::Read))
             op_name.append_code_point('r');
-        if (Disassembly::RISCV64::has_flag(op, Disassembly::RISCV64::Fence::AccessType::Write))
+        if (has_flag(op, Fence::AccessType::Write))
             op_name.append_code_point('w');
 
         return AK::Formatter<String>::format(builder, MUST(op_name.to_string()));
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::FloatWidth> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::FloatWidth op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+            using enum Disassembly::RISCV64::FloatWidth;
+        case Single:
+            op_name = "s"sv;
+            break;
+        case Double:
+            op_name = "d"sv;
+            break;
+        case Half:
+            op_name = "h"sv;
+            break;
+        case Quad:
+            op_name = "q"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
     }
 };
 
@@ -472,19 +563,20 @@ struct AK::Formatter<Disassembly::RISCV64::MemoryAccessMode> : AK::Formatter<For
     {
         auto width_str = ""sv;
         switch (mode.width) {
-        case Disassembly::RISCV64::DataWidth::Byte:
+            using enum Disassembly::RISCV64::DataWidth;
+        case Byte:
             width_str = "b"sv;
             break;
-        case Disassembly::RISCV64::DataWidth::Halfword:
+        case Halfword:
             width_str = "h"sv;
             break;
-        case Disassembly::RISCV64::DataWidth::Word:
+        case Word:
             width_str = "w"sv;
             break;
-        case Disassembly::RISCV64::DataWidth::DoubleWord:
+        case DoubleWord:
             width_str = "d"sv;
             break;
-        case Disassembly::RISCV64::DataWidth::QuadWord:
+        case QuadWord:
             width_str = "q"sv;
             break;
         }
@@ -502,26 +594,27 @@ struct AK::Formatter<Disassembly::RISCV64::RoundingMode> : AK::Formatter<StringV
     {
         auto formatted = ""sv;
         switch (reg) {
-        case Disassembly::RISCV64::RoundingMode::RNE:
+            using enum Disassembly::RISCV64::RoundingMode;
+        case RNE:
             formatted = "rne"sv;
             break;
-        case Disassembly::RISCV64::RoundingMode::RTZ:
+        case RTZ:
             formatted = "rtz"sv;
             break;
-        case Disassembly::RISCV64::RoundingMode::RDN:
+        case RDN:
             formatted = "rdn"sv;
             break;
-        case Disassembly::RISCV64::RoundingMode::RUP:
+        case RUP:
             formatted = "rup"sv;
             break;
-        case Disassembly::RISCV64::RoundingMode::RMM:
+        case RMM:
             formatted = "rmm"sv;
             break;
-        case Disassembly::RISCV64::RoundingMode::Invalid1:
-        case Disassembly::RISCV64::RoundingMode::Invalid2:
+        case Invalid1:
+        case Invalid2:
             formatted = "invalid"sv;
             break;
-        case Disassembly::RISCV64::RoundingMode::DYN:
+        case DYN:
             formatted = "dyn"sv;
             break;
         }
