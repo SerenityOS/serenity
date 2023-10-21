@@ -127,6 +127,130 @@ String ArithmeticInstruction::mnemonic() const
     return MUST(String::formatted("{}", m_operation));
 }
 
+String FloatComputationInstruction::format_rounding_mode(DisplayStyle display_style) const
+{
+    if (display_style.use_pseudoinstructions == DisplayStyle::UsePseudoinstructions::Yes && rounding_mode() == RoundingMode::DYN)
+        return {};
+    return MUST(String::formatted(", {}", rounding_mode()));
+}
+
+String FloatArithmeticInstruction::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}, {}{}", mnemonic(), format_register(destination_register(), display_style), format_register(source_register_1(), display_style), format_register(source_register_2(), display_style), format_rounding_mode(display_style)));
+}
+
+String FloatArithmeticInstruction::mnemonic() const
+{
+    return MUST(String::formatted("{}.{}", m_operation, width()));
+}
+
+String FloatSquareRoot::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}{}", mnemonic(), format_register(m_rd, display_style), format_register(m_rs, display_style), format_rounding_mode(display_style)));
+}
+
+String FloatSquareRoot::mnemonic() const
+{
+    return MUST(String::formatted("fsqrt.{}", width()));
+}
+
+String FloatFusedMultiplyAdd::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}, {}, {}{}", mnemonic(), format_register(destination_register(), display_style), format_register(source_register_1(), display_style), format_register(source_register_2(), display_style), format_register(source_register_3(), display_style), format_rounding_mode(display_style)));
+}
+
+String FloatFusedMultiplyAdd::mnemonic() const
+{
+    return MUST(String::formatted("{}.{}", m_operation, width()));
+}
+
+String FloatCompare::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}, {}", mnemonic(), format_register(m_rd, display_style), format_register(source_register_1(), display_style), format_register(source_register_2(), display_style)));
+}
+
+String FloatCompare::mnemonic() const
+{
+    auto base_name = ""sv;
+    switch (m_operation) {
+    case Operation::Equals:
+        base_name = "feq"sv;
+        break;
+    case Operation::LessThan:
+        base_name = "flt"sv;
+        break;
+    case Operation::LessThanEquals:
+        base_name = "fle"sv;
+        break;
+    }
+    return MUST(String::formatted("{}.{}", base_name, width()));
+}
+
+String ConvertFloatAndInteger::integer_width_suffix() const
+{
+    return MUST(MUST(String::formatted("{}", integer_width())).replace("d"sv, "l"sv, ReplaceMode::FirstOnly));
+}
+
+String ConvertFloatToInteger::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}{}", mnemonic(), format_register(m_rd, display_style), format_register(m_rs, display_style), format_rounding_mode(display_style)));
+}
+
+String ConvertFloatToInteger::mnemonic() const
+{
+    return MUST(String::formatted("fcvt.{}.{}", integer_width_suffix(), width()));
+}
+
+String ConvertIntegerToFloat::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}{}", mnemonic(), format_register(m_rd, display_style), format_register(m_rs, display_style), format_rounding_mode(display_style)));
+}
+
+String ConvertIntegerToFloat::mnemonic() const
+{
+    return MUST(String::formatted("fcvt.{}.{}", width(), integer_width_suffix()));
+}
+
+String MoveFloatToInteger::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}", mnemonic(), format_register(m_rd, display_style), format_register(m_rs, display_style)));
+}
+
+String MoveFloatToInteger::mnemonic() const
+{
+    return MUST(String::formatted("fmv.x.{}", memory_width()));
+}
+
+String MoveIntegerToFloat::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}", mnemonic(), format_register(m_rd, display_style), format_register(m_rs, display_style)));
+}
+
+String MoveIntegerToFloat::mnemonic() const
+{
+    return MUST(String::formatted("fmv.{}.x", memory_width()));
+}
+
+String ConvertFloat::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}{}", mnemonic(), format_register(m_rd, display_style), format_register(m_rs, display_style), format_rounding_mode(display_style)));
+}
+
+String ConvertFloat::mnemonic() const
+{
+    return m_operation == ConvertFloat::Operation::DoubleToSingle ? "fcvt.s.d"_string : "fcvt.d.s"_string;
+}
+
+String FloatClassify::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}", mnemonic(), format_register(m_rd, display_style), format_register(m_rs, display_style)));
+}
+
+String FloatClassify::mnemonic() const
+{
+    return MUST(String::formatted("fclass.{}", width()));
+}
+
 String ArithmeticImmediateInstruction::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
 {
     return MUST(String::formatted("{:10} {}, {}, {:d}", m_operation, format_register(destination_register(), display_style), format_register(source_register(), display_style), immediate()));
@@ -139,12 +263,22 @@ String ArithmeticImmediateInstruction::mnemonic() const
 
 String MemoryLoad::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
 {
-    return MUST(String::formatted("l{:9} {}, {:#03x}({})", m_width, format_register(destination_register(), display_style), immediate(), format_register(source_register(), display_style)));
+    return MUST(String::formatted("{:10} {}, {:#03x}({})", mnemonic(), format_register(destination_register(), display_style), immediate(), format_register(source_register(), display_style)));
 }
 
 String MemoryLoad::mnemonic() const
 {
     return MUST(String::formatted("l{}", m_width));
+}
+
+String FloatMemoryLoad::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {:#03x}({})", mnemonic(), format_register(destination_register(), display_style), immediate(), format_register(base(), display_style)));
+}
+
+String FloatMemoryLoad::mnemonic() const
+{
+    return MUST(String::formatted("fl{}", memory_width()));
 }
 
 String MemoryStore::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
@@ -155,6 +289,16 @@ String MemoryStore::to_string(DisplayStyle display_style, u32, Optional<SymbolPr
 String MemoryStore::mnemonic() const
 {
     return MUST(String::formatted("s{}", m_width));
+}
+
+String FloatMemoryStore::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:8} {}, {:#03x}({})", mnemonic(), format_register(source_register(), display_style), immediate(), format_register(base(), display_style)));
+}
+
+String FloatMemoryStore::mnemonic() const
+{
+    return MUST(String::formatted("fs{}", memory_width()));
 }
 
 String EnvironmentBreak::mnemonic() const
