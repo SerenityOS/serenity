@@ -11,6 +11,7 @@
 #include <LibDisassembly/Architecture.h>
 #include <LibDisassembly/Instruction.h>
 #include <LibDisassembly/InstructionStream.h>
+#include <LibDisassembly/riscv64/Instruction.h>
 #include <LibDisassembly/x86/Instruction.h>
 
 namespace Disassembly {
@@ -28,6 +29,13 @@ public:
         if (!m_stream.can_read())
             return {};
         switch (m_arch) {
+        case Architecture::RISCV64:
+            return RISCV64::Instruction::from_stream(m_stream,
+                {
+                    .register_names = RISCV64::DisplayStyle::RegisterNames::ABIWithFramePointer,
+                    .use_pseudoinstructions = RISCV64::DisplayStyle::UsePseudoinstructions::Yes,
+                    .relative_address_style = RISCV64::DisplayStyle::RelativeAddressStyle::Symbol,
+                });
         case Architecture::X86:
             return make<X86::Instruction>(X86::Instruction::from_stream(m_stream, X86::ProcessorMode::Long));
         default:
