@@ -69,6 +69,7 @@ private:
     void compile_put_by_id(Bytecode::Op::PutById const&);
 
     void compile_call(Bytecode::Op::Call const&);
+    void compile_typeof_variable(Bytecode::Op::TypeofVariable const&);
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);

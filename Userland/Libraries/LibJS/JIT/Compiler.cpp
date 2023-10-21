@@ -550,6 +550,21 @@ void Compiler::compile_call(Bytecode::Op::Call const& op)
     check_exception();
 }
 
+static Value cxx_typeof_variable(VM& vm, DeprecatedFlyString const& identifier)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::typeof_variable(vm, identifier));
+}
+
+void Compiler::compile_typeof_variable(Bytecode::Op::TypeofVariable const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
+    m_assembler.native_call((void*)cxx_typeof_variable);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -640,6 +655,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::Call:
                 compiler.compile_call(static_cast<Bytecode::Op::Call const&>(op));
+                break;
+            case Bytecode::Instruction::Type::TypeofVariable:
+                compiler.compile_typeof_variable(static_cast<Bytecode::Op::TypeofVariable const&>(op));
                 break;
 
 #define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \
