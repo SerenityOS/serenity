@@ -34,14 +34,12 @@ public:
     {
         set_view();
         correct_aspect();
-        calculate();
     }
 
     void resize(Gfx::IntSize size)
     {
         m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size).release_value_but_fixme_should_propagate_errors();
         correct_aspect();
-        calculate();
     }
 
     void zoom(Gfx::IntRect const& rect)
@@ -52,7 +50,6 @@ public:
             rect.top() * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start,
             (rect.bottom() - 1) * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start);
         correct_aspect();
-        calculate();
     }
 
     void pan_by(Gfx::IntPoint delta)
@@ -289,6 +286,9 @@ void Mandelbrot::paint_event(GUI::PaintEvent& event)
 {
     Frame::paint_event(event);
 
+    if (!m_dragging && !m_panning)
+        m_set.calculate();
+
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
@@ -305,13 +305,11 @@ void Mandelbrot::mousedown_event(GUI::MouseEvent& event)
             m_selection_start = event.position();
             m_selection_end = event.position();
             m_dragging = true;
-            update();
         }
     } else if (event.button() == GUI::MouseButton::Middle) {
         if (!m_panning) {
             m_last_pan_position = event.position();
             m_panning = true;
-            update();
         }
     }
 
@@ -347,10 +345,11 @@ void Mandelbrot::mouseup_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Primary) {
         auto selection = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
-        if (selection.width() > 0 && selection.height() > 0)
+        if (selection.width() > 0 && selection.height() > 0) {
             m_set.zoom(selection);
+            update();
+        }
         m_dragging = false;
-        update();
     } else if (event.button() == GUI::MouseButton::Middle) {
         m_panning = false;
         update();
@@ -374,6 +373,7 @@ void Mandelbrot::resize_event(GUI::ResizeEvent& event)
 ErrorOr<void> Mandelbrot::export_image(Core::File& export_file, ImageType image_type)
 {
     m_set.resize(Gfx::IntSize { 1920, 1080 });
+    m_set.calculate();
     ByteBuffer encoded_data;
     switch (image_type) {
     case ImageType::BMP:
