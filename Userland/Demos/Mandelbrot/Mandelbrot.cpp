@@ -106,8 +106,13 @@ public:
         if (iteration == max_iterations)
             return iteration;
 
-        auto lz = sqrt(x * x + y * y) / 2;
-        return 1 + iteration + log(lz / log(2)) / log(2);
+        // Renormalized fractional iteration count from https://linas.org/art-gallery/escape/escape.html
+        // mu = n + 1 - log( log |Z(n)| ) / log(2)
+        auto lz = log(sqrt(x2 + y2));
+        auto mu = iteration + 1 - log(lz) / log(2);
+        if (mu < 0)
+            mu = 0;
+        return mu;
     }
 
     static double linear_interpolate(double v0, double v1, double t)
