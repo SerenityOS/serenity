@@ -23,5 +23,6 @@ ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, InstructionType c
 ThrowCompletionOr<Value> typeof_variable(VM&, DeprecatedFlyString const&);
 ThrowCompletionOr<void> set_variable(VM&, DeprecatedFlyString const&, Value, Op::EnvironmentMode, Op::SetVariable::InitializationMode);
 Value new_function(VM&, FunctionExpression const&, Optional<IdentifierTableIndex> const& lhs_name, Optional<Register> const& home_object);
+ThrowCompletionOr<void> put_by_value(VM&, Value base, Value property_key_value, Value value, Op::PropertyKind);
 
 }

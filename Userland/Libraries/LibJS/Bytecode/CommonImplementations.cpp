@@ -285,4 +285,28 @@ Value new_function(VM& vm, FunctionExpression const& function_node, Optional<Ide
     return value;
 }
 
+ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_key_value, Value value, Op::PropertyKind kind)
+{
+    // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
+    if (base.is_object() && property_key_value.is_int32() && property_key_value.as_i32() >= 0) {
+        auto& object = base.as_object();
+        auto* storage = object.indexed_properties().storage();
+        auto index = static_cast<u32>(property_key_value.as_i32());
+        if (storage
+            && storage->is_simple_storage()
+            && !object.may_interfere_with_indexed_property_access()
+            && storage->has_index(index)) {
+            auto existing_value = storage->get(index)->value;
+            if (!existing_value.is_accessor()) {
+                storage->put(index, value);
+                return {};
+            }
+        }
+    }
+
+    auto property_key = kind != Op::PropertyKind::Spread ? TRY(property_key_value.to_property_key(vm)) : PropertyKey {};
+    TRY(put_by_property_key(vm, base, base, value, property_key, kind));
+    return {};
+}
+
 }
