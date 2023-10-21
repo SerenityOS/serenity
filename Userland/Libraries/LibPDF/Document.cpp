@@ -507,7 +507,7 @@ PDFErrorOr<Destination> Document::create_destination_from_object(NonnullRefPtr<O
             return TRY(create_destination_from_dictionary_entry(entry, page_number_by_index_ref));
         }
         if (auto names_value = m_catalog->get(CommonNames::Names); names_value.has_value()) {
-            auto names = TRY(resolve(names_value.release_value())).get<NonnullRefPtr<Object>>()->cast<DictObject>();
+            auto names = TRY(resolve_to<DictObject>(names_value.release_value()));
             if (!names->contains(CommonNames::Dests))
                 return Error { Error::Type::MalformedPDF, "Missing Dests key in document catalogue's Names dictionary" };
             auto dest_obj = TRY(find_in_name_tree(TRY(names->get_dict(this, CommonNames::Dests)), dest_name));
