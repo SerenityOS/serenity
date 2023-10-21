@@ -11,6 +11,7 @@
 #include <LibDisassembly/riscv64/Encoding.h>
 #include <LibDisassembly/riscv64/IM.h>
 #include <LibDisassembly/riscv64/Instruction.h>
+#include <LibDisassembly/riscv64/Zicsr.h>
 
 template<>
 struct AK::Formatter<Disassembly::RISCV64::Register> : AK::Formatter<FormatString> {
@@ -420,6 +421,27 @@ struct AK::Formatter<Disassembly::RISCV64::Branch::Condition> : AK::Formatter<St
             break;
         case Disassembly::RISCV64::Branch::Condition::GreaterEqualsUnsigned:
             op_name = "bgeu"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::CSRInstruction::Operation> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::CSRInstruction::Operation op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+            using enum Disassembly::RISCV64::CSRInstruction::Operation;
+        case ReadWrite:
+            op_name = "csrrw"sv;
+            break;
+        case ReadClear:
+            op_name = "csrrc"sv;
+            break;
+        case ReadSet:
+            op_name = "csrrs"sv;
             break;
         }
         return AK::Formatter<StringView>::format(builder, op_name);

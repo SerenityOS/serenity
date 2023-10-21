@@ -7,6 +7,7 @@
 #include "Instruction.h"
 #include "Encoding.h"
 #include "IM.h"
+#include "Zicsr.h"
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StdLibExtras.h>
@@ -96,6 +97,9 @@ bool simple_instruction_equals(InstructionType const& self, InstructionImpl cons
     M(Branch)                            \
     M(EnvironmentCall)                   \
     M(EnvironmentBreak)                  \
+    M(CSRInstruction)                    \
+    M(CSRRegisterInstruction)            \
+    M(CSRImmediateInstruction)           \
     M(Fence)                             \
     M(InstructionFetchFence)
 
