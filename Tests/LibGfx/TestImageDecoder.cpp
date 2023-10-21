@@ -69,6 +69,21 @@ TEST_CASE(test_bmp_top_down)
     expect_single_frame(*plugin_decoder);
 }
 
+TEST_CASE(test_ico_malformed_frame)
+{
+    Array test_inputs = {
+        TEST_INPUT("ico/oss-fuzz-testcase-62541.ico"sv),
+        TEST_INPUT("ico/oss-fuzz-testcase-63177.ico"sv)
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
+        auto frame_or_error = plugin_decoder->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
+}
+
 TEST_CASE(test_gif)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("download-animation.gif"sv)));
@@ -119,6 +134,33 @@ TEST_CASE(test_ilbm_uncompressed)
     auto frame = expect_single_frame_of_size(*plugin_decoder, { 320, 200 });
 
     EXPECT_EQ(frame.image->get_pixel(8, 0), Gfx::Color(0xee, 0xbb, 0, 255));
+}
+
+TEST_CASE(test_ilbm_malformed_header)
+{
+    Array test_inputs = {
+        TEST_INPUT("ilbm/oss-fuzz-testcase-62033.iff"sv),
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto plugin_decoder_or_error = Gfx::ILBMImageDecoderPlugin::create(file->bytes());
+        EXPECT(plugin_decoder_or_error.is_error());
+    }
+}
+
+TEST_CASE(test_ilbm_malformed_frame)
+{
+    Array test_inputs = {
+        TEST_INPUT("ilbm/oss-fuzz-testcase-63296.iff"sv)
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+        auto frame_or_error = plugin_decoder->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
 }
 
 TEST_CASE(test_jpeg_sof0_one_scan)
@@ -211,6 +253,33 @@ TEST_CASE(test_jpeg_grayscale_with_app14)
     expect_single_frame_of_size(*plugin_decoder, { 80, 80 });
 }
 
+TEST_CASE(test_jpeg_malformed_header)
+{
+    Array test_inputs = {
+        TEST_INPUT("jpg/oss-fuzz-testcase-59785.jpg"sv)
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto plugin_decoder_or_error = Gfx::JPEGImageDecoderPlugin::create(file->bytes());
+        EXPECT(plugin_decoder_or_error.is_error());
+    }
+}
+
+TEST_CASE(test_jpeg_malformed_frame)
+{
+    Array test_inputs = {
+        TEST_INPUT("jpg/oss-fuzz-testcase-62584.jpg"sv)
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+        auto frame_or_error = plugin_decoder->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
+}
+
 TEST_CASE(test_pbm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.pbm"sv)));
@@ -236,6 +305,21 @@ TEST_CASE(test_png)
     auto plugin_decoder = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
+}
+
+TEST_CASE(test_png_malformed_frame)
+{
+    Array test_inputs = {
+        TEST_INPUT("png/oss-fuzz-testcase-62371.png"sv),
+        TEST_INPUT("png/oss-fuzz-testcase-63052.png"sv)
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
+        auto frame_or_error = plugin_decoder->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
 }
 
 TEST_CASE(test_ppm)
