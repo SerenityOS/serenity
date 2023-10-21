@@ -917,15 +917,15 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
     //        We use it as an initial size of the font buffer and extend it as necessary.
     auto font_buffer = TRY(ByteBuffer::create_zeroed(header.total_sfnt_size));
 
-    // ISO-IEC 14496-22:2019 4.5.1 Offset table
-    constexpr size_t OFFSET_TABLE_SIZE_IN_BYTES = 12;
-    TRY(font_buffer.try_ensure_capacity(OFFSET_TABLE_SIZE_IN_BYTES));
     u16 search_range = pow_2_less_than_or_equal(header.num_tables);
-    be_u32(font_buffer.data() + 0, header.flavor);
-    be_u16(font_buffer.data() + 4, header.num_tables);
-    be_u16(font_buffer.data() + 6, search_range * 16);
-    be_u16(font_buffer.data() + 8, log2(search_range));
-    be_u16(font_buffer.data() + 10, header.num_tables * 16 - search_range * 16);
+    OpenType::TableDirectory table_directory {
+        .sfnt_version = header.flavor,
+        .num_tables = header.num_tables,
+        .search_range = search_range * 16,
+        .entry_selector = log2(search_range),
+        .range_shift = header.num_tables * 16 - search_range * 16,
+    };
+    font_buffer.overwrite(0, &table_directory, sizeof(table_directory));
 
     Vector<TableDirectoryEntry> table_entries;
     TRY(table_entries.try_ensure_capacity(header.num_tables));
@@ -1042,12 +1042,13 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
                 if (font_buffer.size() < (font_buffer_offset + glyf_and_loca_buffer->glyf_table.size()))
                     TRY(font_buffer.try_resize(font_buffer_offset + glyf_and_loca_buffer->glyf_table.size()));
 
-                // ISO-IEC 14496-22:2019 4.5.2 Table directory
-                be_u32(font_buffer.data() + table_directory_offset, GLYF_TAG);
-                // FIXME: WOFF2 does not give us the original checksum.
-                be_u32(font_buffer.data() + table_directory_offset + 4, 0);
-                be_u32(font_buffer.data() + table_directory_offset + 8, font_buffer_offset);
-                be_u32(font_buffer.data() + table_directory_offset + 12, glyf_and_loca_buffer->glyf_table.size());
+                OpenType::TableRecord table_record {
+                    .table_tag = GLYF_TAG,
+                    .checksum = 0, // FIXME: WOFF2 does not give us the original checksum.
+                    .offset = font_buffer_offset,
+                    .length = glyf_and_loca_buffer->glyf_table.size(),
+                };
+                font_buffer.overwrite(table_directory_offset, &table_record, sizeof(table_record));
 
                 font_buffer.overwrite(font_buffer_offset, glyf_and_loca_buffer->glyf_table.data(), glyf_and_loca_buffer->glyf_table.size());
                 font_buffer_offset += glyf_and_loca_buffer->glyf_table.size();
@@ -1057,11 +1058,14 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
                 if (font_buffer.size() < (font_buffer_offset + glyf_and_loca_buffer->loca_table.size()))
                     TRY(font_buffer.try_resize(font_buffer_offset + glyf_and_loca_buffer->loca_table.size()));
                 constexpr u32 LOCA_TAG = 0x6C6F6361;
-                be_u32(font_buffer.data() + table_directory_offset, LOCA_TAG);
-                // FIXME: WOFF2 does not give us the original checksum.
-                be_u32(font_buffer.data() + table_directory_offset + 4, 0);
-                be_u32(font_buffer.data() + table_directory_offset + 8, font_buffer_offset);
-                be_u32(font_buffer.data() + table_directory_offset + 12, glyf_and_loca_buffer->loca_table.size());
+
+                OpenType::TableRecord table_record {
+                    .table_tag = LOCA_TAG,
+                    .checksum = 0, // FIXME: WOFF2 does not give us the original checksum.
+                    .offset = font_buffer_offset,
+                    .length = glyf_and_loca_buffer->loca_table.size(),
+                };
+                font_buffer.overwrite(table_directory_offset, &table_record, sizeof(table_record));
 
                 font_buffer.overwrite(font_buffer_offset, glyf_and_loca_buffer->loca_table.data(), glyf_and_loca_buffer->loca_table.size());
                 font_buffer_offset += glyf_and_loca_buffer->loca_table.size();
@@ -1071,12 +1075,13 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
                 return Error::from_string_literal("Unknown transformation");
             }
         } else {
-            // ISO-IEC 14496-22:2019 4.5.2 Table directory
-            be_u32(font_buffer.data() + table_directory_offset, table_entry.tag_to_u32());
-            // FIXME: WOFF2 does not give us the original checksum.
-            be_u32(font_buffer.data() + table_directory_offset + 4, 0);
-            be_u32(font_buffer.data() + table_directory_offset + 8, font_buffer_offset);
-            be_u32(font_buffer.data() + table_directory_offset + 12, length_to_read);
+            OpenType::TableRecord table_record {
+                .table_tag = table_entry.tag_to_u32(),
+                .checksum = 0, // FIXME: WOFF2 does not give us the original checksum.
+                .offset = font_buffer_offset,
+                .length = length_to_read,
+            };
+            font_buffer.overwrite(table_directory_offset, &table_record, sizeof(table_record));
 
             if (font_buffer.size() < (font_buffer_offset + length_to_read))
                 TRY(font_buffer.try_resize(font_buffer_offset + length_to_read));
