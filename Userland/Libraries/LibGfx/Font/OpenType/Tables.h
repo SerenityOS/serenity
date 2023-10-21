@@ -87,7 +87,7 @@ namespace OpenType {
 // head: Font Header Table
 class Head {
 public:
-    static Optional<Head> from_slice(ReadonlyBytes);
+    static ErrorOr<Head> from_slice(ReadonlyBytes);
     u16 units_per_em() const;
     i16 xmin() const;
     i16 ymin() const;
@@ -134,7 +134,7 @@ private:
 // hhea - Horizontal Header Table
 class Hhea {
 public:
-    static Optional<Hhea> from_slice(ReadonlyBytes);
+    static ErrorOr<Hhea> from_slice(ReadonlyBytes);
     i16 ascender() const;
     i16 descender() const;
     i16 line_gap() const;
@@ -175,7 +175,7 @@ private:
 // Maxp: Maximum Profile
 class Maxp {
 public:
-    static Optional<Maxp> from_slice(ReadonlyBytes);
+    static ErrorOr<Maxp> from_slice(ReadonlyBytes);
 
     u16 num_glyphs() const;
 
@@ -254,7 +254,7 @@ private:
 // hmtx: Horizontal Metrics Table
 class Hmtx {
 public:
-    static Optional<Hmtx> from_slice(ReadonlyBytes, u32 num_glyphs, u32 number_of_h_metrics);
+    static ErrorOr<Hmtx> from_slice(ReadonlyBytes, u32 num_glyphs, u32 number_of_h_metrics);
     GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
 
 private:
@@ -373,7 +373,7 @@ public:
     enum class WindowsLanguage : u16 {
         EnglishUnitedStates = 0x0409,
     };
-    static Optional<Name> from_slice(ReadonlyBytes);
+    static ErrorOr<Name> from_slice(ReadonlyBytes);
 
     String family_name() const { return string_for_id(NameId::FamilyName); }
     String subfamily_name() const { return string_for_id(NameId::SubfamilyName); }

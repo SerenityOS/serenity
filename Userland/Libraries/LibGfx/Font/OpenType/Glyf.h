@@ -23,7 +23,7 @@ namespace OpenType {
 // loca: Index to Location
 class Loca {
 public:
-    static Optional<Loca> from_slice(ReadonlyBytes, u32 num_glyphs, IndexToLocFormat);
+    static ErrorOr<Loca> from_slice(ReadonlyBytes, u32 num_glyphs, IndexToLocFormat);
     u32 get_glyph_offset(u32 glyph_id) const;
 
 private:
