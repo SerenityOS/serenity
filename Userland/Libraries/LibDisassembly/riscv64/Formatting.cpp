@@ -6,6 +6,7 @@
 
 #include "Formatting.h"
 #include "Instruction.h"
+#include "Priviledged.h"
 
 namespace Disassembly::RISCV64 {
 
@@ -314,6 +315,21 @@ String EnvironmentCall::mnemonic() const
 String InstructionFetchFence::mnemonic() const
 {
     return "fence.i"_string;
+}
+
+String MachineModeTrapReturn::mnemonic() const
+{
+    return "mret"_string;
+}
+
+String SupervisorModeTrapReturn::mnemonic() const
+{
+    return "sret"_string;
+}
+
+String WaitForInterrupt::mnemonic() const
+{
+    return "wfi"_string;
 }
 
 String CSRImmediateInstruction::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
