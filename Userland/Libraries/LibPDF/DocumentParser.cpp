@@ -525,21 +525,7 @@ PDFErrorOr<NonnullRefPtr<DictObject>> DocumentParser::parse_file_trailer()
         return error("Expected \"trailer\" keyword");
     m_reader.move_by(7);
     m_reader.consume_whitespace();
-    auto dict = TRY(parse_dict());
-
-    if (!m_reader.matches("startxref"))
-        return error("Expected \"startxref\"");
-    m_reader.move_by(9);
-    m_reader.consume_whitespace();
-
-    m_reader.move_until([&](auto) { return m_reader.matches_eol(); });
-    VERIFY(m_reader.consume_eol());
-    if (!m_reader.matches("%%EOF"))
-        return error("Expected \"%%EOF\"");
-
-    m_reader.move_by(5);
-    m_reader.consume_whitespace();
-    return dict;
+    return parse_dict();
 }
 
 PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
