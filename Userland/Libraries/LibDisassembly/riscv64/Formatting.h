@@ -9,6 +9,8 @@
 #include <AK/Format.h>
 #include <AK/String.h>
 #include <LibDisassembly/riscv64/Encoding.h>
+#include <LibDisassembly/riscv64/IM.h>
+#include <LibDisassembly/riscv64/Instruction.h>
 
 template<>
 struct AK::Formatter<Disassembly::RISCV64::Register> : AK::Formatter<FormatString> {
@@ -247,6 +249,228 @@ struct AK::Formatter<Disassembly::RISCV64::FloatRegisterABINames> : AK::Formatte
             break;
         }
         return AK::Formatter<StringView>::format(builder, formatted);
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::ArithmeticInstruction::Operation> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::ArithmeticInstruction::Operation op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::Add:
+            op_name = "add"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::Subtract:
+            op_name = "sub"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::SetLessThan:
+            op_name = "slt"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::SetLessThanUnsigned:
+            op_name = "sltu"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::Xor:
+            op_name = "xor"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::Or:
+            op_name = "or"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::And:
+            op_name = "and"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::ShiftLeftLogical:
+            op_name = "sll"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::ShiftRightLogical:
+            op_name = "srl"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::ShiftRightArithmetic:
+            op_name = "sra"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::AddWord:
+            op_name = "addw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::SubtractWord:
+            op_name = "subw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::ShiftLeftLogicalWord:
+            op_name = "sllw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::ShiftRightLogicalWord:
+            op_name = "srlw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::ShiftRightArithmeticWord:
+            op_name = "sraw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::Multiply:
+            op_name = "mul"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::MultiplyHigh:
+            op_name = "mulh"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::MultiplyHighSignedUnsigned:
+            op_name = "mulhsu"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::MultiplyHighUnsigned:
+            op_name = "mulhu"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::Divide:
+            op_name = "div"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::DivideUnsigned:
+            op_name = "divu"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::Remainder:
+            op_name = "rem"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::RemainderUnsigned:
+            op_name = "remu"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::MultiplyWord:
+            op_name = "mulw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::DivideWord:
+            op_name = "divw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::DivideUnsignedWord:
+            op_name = "divuw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::RemainderWord:
+            op_name = "remw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticInstruction::Operation::RemainderUnsignedWord:
+            op_name = "remuw"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::Add:
+            op_name = "addi"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::SetLessThan:
+            op_name = "slti"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::SetLessThanUnsigned:
+            op_name = "sltiu"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::Xor:
+            op_name = "xori"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::Or:
+            op_name = "ori"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::And:
+            op_name = "andi"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftLeftLogical:
+            op_name = "slli"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftRightLogical:
+            op_name = "srli"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftRightArithmetic:
+            op_name = "srai"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::AddWord:
+            op_name = "addiw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftLeftLogicalWord:
+            op_name = "slliw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftRightLogicalWord:
+            op_name = "srliw"sv;
+            break;
+        case Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation::ShiftRightArithmeticWord:
+            op_name = "sraiw"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::Branch::Condition> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::Branch::Condition op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+        case Disassembly::RISCV64::Branch::Condition::Equals:
+            op_name = "beq"sv;
+            break;
+        case Disassembly::RISCV64::Branch::Condition::NotEquals:
+            op_name = "bne"sv;
+            break;
+        case Disassembly::RISCV64::Branch::Condition::LessThan:
+            op_name = "blt"sv;
+            break;
+        case Disassembly::RISCV64::Branch::Condition::GreaterEquals:
+            op_name = "bge"sv;
+            break;
+        case Disassembly::RISCV64::Branch::Condition::LessThanUnsigned:
+            op_name = "bltu"sv;
+            break;
+        case Disassembly::RISCV64::Branch::Condition::GreaterEqualsUnsigned:
+            op_name = "bgeu"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::Fence::AccessType> : AK::Formatter<String> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::Fence::AccessType op)
+    {
+        StringBuilder op_name;
+        if (Disassembly::RISCV64::has_flag(op, Disassembly::RISCV64::Fence::AccessType::Input))
+            op_name.append_code_point('i');
+        if (Disassembly::RISCV64::has_flag(op, Disassembly::RISCV64::Fence::AccessType::Output))
+            op_name.append_code_point('o');
+        if (Disassembly::RISCV64::has_flag(op, Disassembly::RISCV64::Fence::AccessType::Read))
+            op_name.append_code_point('r');
+        if (Disassembly::RISCV64::has_flag(op, Disassembly::RISCV64::Fence::AccessType::Write))
+            op_name.append_code_point('w');
+
+        return AK::Formatter<String>::format(builder, MUST(op_name.to_string()));
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::MemoryAccessMode> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::MemoryAccessMode mode)
+    {
+        auto width_str = ""sv;
+        switch (mode.width) {
+        case Disassembly::RISCV64::DataWidth::Byte:
+            width_str = "b"sv;
+            break;
+        case Disassembly::RISCV64::DataWidth::Halfword:
+            width_str = "h"sv;
+            break;
+        case Disassembly::RISCV64::DataWidth::Word:
+            width_str = "w"sv;
+            break;
+        case Disassembly::RISCV64::DataWidth::DoubleWord:
+            width_str = "d"sv;
+            break;
+        case Disassembly::RISCV64::DataWidth::QuadWord:
+            width_str = "q"sv;
+            break;
+        }
+        auto signedness_str = ""sv;
+        if (mode.signedness == Disassembly::RISCV64::Signedness::Unsigned)
+            signedness_str = "u"sv;
+
+        return AK::Formatter<FormatString>::format(builder, "{}{}"sv, width_str, signedness_str);
     }
 };
 
