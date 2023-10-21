@@ -72,7 +72,6 @@ private:
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
 
     Font(
-        ReadonlyBytes bytes,
         Head&& head,
         Name&& name,
         Hhea&& hhea,
@@ -88,8 +87,7 @@ private:
         Optional<CBLC> cblc,
         Optional<CBDT> cbdt,
         Optional<GPOS> gpos)
-        : m_buffer(move(bytes))
-        , m_head(move(head))
+        : m_head(move(head))
         , m_name(move(name))
         , m_hhea(move(hhea))
         , m_maxp(move(maxp))
@@ -108,8 +106,6 @@ private:
     }
 
     RefPtr<Core::Resource> m_resource;
-
-    ReadonlyBytes m_buffer;
 
     // These are stateful wrappers around non-owning slices
     Head m_head;
