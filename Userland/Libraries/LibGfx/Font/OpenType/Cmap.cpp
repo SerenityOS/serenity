@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/Optional.h>
 #include <LibGfx/Font/OpenType/Cmap.h>
@@ -180,10 +181,11 @@ u32 Cmap::glyph_id_for_code_point(u32 code_point) const
     return subtable.glyph_id_for_code_point(code_point);
 }
 
-Optional<Cmap> Cmap::from_slice(ReadonlyBytes slice)
+ErrorOr<Cmap> Cmap::from_slice(ReadonlyBytes slice)
 {
     if (slice.size() < (size_t)Sizes::TableHeader)
-        return {};
+        return Error::from_string_literal("Could not load Cmap: Not enough data");
+
     return Cmap(slice);
 }
 

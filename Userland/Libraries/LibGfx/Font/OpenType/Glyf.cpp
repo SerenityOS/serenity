@@ -176,18 +176,16 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
     };
 }
 
-Optional<Loca> Loca::from_slice(ReadonlyBytes slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
+ErrorOr<Loca> Loca::from_slice(ReadonlyBytes slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
 {
     switch (index_to_loc_format) {
     case IndexToLocFormat::Offset16:
-        if (slice.size() < num_glyphs * 2) {
-            return {};
-        }
+        if (slice.size() < num_glyphs * 2)
+            return Error::from_string_literal("Could not load Loca: Not enough data");
         break;
     case IndexToLocFormat::Offset32:
-        if (slice.size() < num_glyphs * 4) {
-            return {};
-        }
+        if (slice.size() < num_glyphs * 4)
+            return Error::from_string_literal("Could not load Loca: Not enough data");
         break;
     }
     return Loca(slice, num_glyphs, index_to_loc_format);
