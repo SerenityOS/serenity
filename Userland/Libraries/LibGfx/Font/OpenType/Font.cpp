@@ -277,7 +277,6 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     }
 
     return adopt_ref(*new Font(
-        move(buffer),
         move(head),
         move(name),
         move(hhea),
