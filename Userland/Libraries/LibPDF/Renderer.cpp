@@ -563,8 +563,10 @@ RENDERER_HANDLER(set_stroking_color_extended)
 {
     // FIXME: Handle Pattern color spaces
     auto last_arg = args.last();
-    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>())
-        TODO();
+    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>()) {
+        dbgln("pattern space {}", last_arg.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name());
+        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
+    }
 
     state().stroke_color = TRY(state().stroke_color_space->color(args));
     return {};
