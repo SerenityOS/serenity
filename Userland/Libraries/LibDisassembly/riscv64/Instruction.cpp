@@ -5,6 +5,7 @@
  */
 
 #include "Instruction.h"
+#include "A.h"
 #include "Encoding.h"
 #include "FD.h"
 #include "IM.h"
@@ -116,7 +117,9 @@ bool simple_instruction_equals(InstructionType const& self, InstructionImpl cons
     M(CSRRegisterInstruction)            \
     M(CSRImmediateInstruction)           \
     M(Fence)                             \
-    M(InstructionFetchFence)
+    M(InstructionFetchFence)             \
+    M(AtomicMemoryOperation)             \
+    M(LoadReserveStoreConditional)
 
 ENUMERATE_INSTRUCTION_IMPLS(MAKE_INSTRUCTION_EQUALS)
 
