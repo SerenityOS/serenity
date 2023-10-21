@@ -8,6 +8,7 @@
 
 #include <AK/Format.h>
 #include <AK/String.h>
+#include <LibDisassembly/riscv64/A.h>
 #include <LibDisassembly/riscv64/Encoding.h>
 #include <LibDisassembly/riscv64/FD.h>
 #include <LibDisassembly/riscv64/IM.h>
@@ -577,6 +578,45 @@ struct AK::Formatter<Disassembly::RISCV64::MemoryAccessMode> : AK::Formatter<For
             signedness_str = "u"sv;
 
         return AK::Formatter<FormatString>::format(builder, "{}{}"sv, width_str, signedness_str);
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::AtomicMemoryOperation::Operation> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::AtomicMemoryOperation::Operation op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::Swap:
+            op_name = "swap"sv;
+            break;
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::Add:
+            op_name = "add"sv;
+            break;
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::Xor:
+            op_name = "xor"sv;
+            break;
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::And:
+            op_name = "and"sv;
+            break;
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::Or:
+            op_name = "or"sv;
+            break;
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::Min:
+            op_name = "min"sv;
+            break;
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::Max:
+            op_name = "max"sv;
+            break;
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::MinUnsigned:
+            op_name = "minu"sv;
+            break;
+        case Disassembly::RISCV64::AtomicMemoryOperation::Operation::MaxUnsigned:
+            op_name = "maxu"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
     }
 };
 
