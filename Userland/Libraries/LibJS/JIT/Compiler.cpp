@@ -565,6 +565,33 @@ void Compiler::compile_typeof_variable(Bytecode::Op::TypeofVariable const& op)
     check_exception();
 }
 
+static Value cxx_set_variable(
+    VM& vm,
+    DeprecatedFlyString const& identifier,
+    Value value,
+    Bytecode::Op::EnvironmentMode environment_mode,
+    Bytecode::Op::SetVariable::InitializationMode initialization_mode)
+{
+    TRY_OR_SET_EXCEPTION(Bytecode::set_variable(vm, identifier, value, environment_mode, initialization_mode));
+    return {};
+}
+
+void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm64(to_underlying(op.mode())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Imm64(to_underlying(op.initialization_mode())));
+    m_assembler.native_call((void*)cxx_set_variable);
+    check_exception();
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (getenv("LIBJS_NO_JIT"))
@@ -658,6 +685,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::TypeofVariable:
                 compiler.compile_typeof_variable(static_cast<Bytecode::Op::TypeofVariable const&>(op));
+                break;
+            case Bytecode::Instruction::Type::SetVariable:
+                compiler.compile_set_variable(static_cast<Bytecode::Op::SetVariable const&>(op));
                 break;
 
 #define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \
