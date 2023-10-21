@@ -26,11 +26,11 @@ static u32 tag_from_str(char const* str)
     return be_u32((u8 const*)str);
 }
 
-Optional<Head> Head::from_slice(ReadonlyBytes slice)
+ErrorOr<Head> Head::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < sizeof(FontHeaderTable)) {
-        return {};
-    }
+    if (slice.size() < sizeof(FontHeaderTable))
+        return Error::from_string_literal("Could not load Head: Not enough data");
+
     return Head(slice);
 }
 
@@ -81,11 +81,11 @@ IndexToLocFormat Head::index_to_loc_format() const
     }
 }
 
-Optional<Hhea> Hhea::from_slice(ReadonlyBytes slice)
+ErrorOr<Hhea> Hhea::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < sizeof(HorizontalHeaderTable)) {
-        return {};
-    }
+    if (slice.size() < sizeof(HorizontalHeaderTable))
+        return Error::from_string_literal("Could not load Hhea: Not enough data");
+
     return Hhea(slice);
 }
 
@@ -114,11 +114,11 @@ u16 Hhea::number_of_h_metrics() const
     return header().number_of_h_metrics;
 }
 
-Optional<Maxp> Maxp::from_slice(ReadonlyBytes slice)
+ErrorOr<Maxp> Maxp::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < sizeof(MaximumProfileVersion0_5)) {
-        return {};
-    }
+    if (slice.size() < sizeof(MaximumProfileVersion0_5))
+        return Error::from_string_literal("Could not load Maxp: Not enough data");
+
     return Maxp(slice);
 }
 
@@ -127,10 +127,10 @@ u16 Maxp::num_glyphs() const
     return header().num_glyphs;
 }
 
-Optional<Hmtx> Hmtx::from_slice(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
+ErrorOr<Hmtx> Hmtx::from_slice(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
 {
     if (slice.size() < number_of_h_metrics * sizeof(LongHorMetric) + (num_glyphs - number_of_h_metrics) * sizeof(u16)) {
-        return {};
+        return Error::from_string_literal("Could not load Hmtx: Not enough data");
     }
     return Hmtx(slice, num_glyphs, number_of_h_metrics);
 }
@@ -153,7 +153,7 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
     };
 }
 
-Optional<Name> Name::from_slice(ReadonlyBytes slice)
+ErrorOr<Name> Name::from_slice(ReadonlyBytes slice)
 {
     return Name(slice);
 }
