@@ -4,6 +4,7 @@ set(SOURCES
     riscv64/Formatting.cpp
     riscv64/Instruction.cpp
     riscv64/IM.cpp
+    riscv64/Zicsr.cpp
 )
 
 serenity_lib(LibDisassembly disassembly)
