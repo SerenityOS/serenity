@@ -925,16 +925,7 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
 {
     auto& vm = interpreter.vm();
     auto const& name = interpreter.current_executable().get_identifier(m_identifier);
-    auto environment = m_mode == EnvironmentMode::Lexical ? vm.running_execution_context().lexical_environment : vm.running_execution_context().variable_environment;
-    auto reference = TRY(vm.resolve_binding(name, environment));
-    switch (m_initialization_mode) {
-    case InitializationMode::Initialize:
-        TRY(reference.initialize_referenced_binding(vm, interpreter.accumulator()));
-        break;
-    case InitializationMode::Set:
-        TRY(reference.put_value(vm, interpreter.accumulator()));
-        break;
-    }
+    TRY(set_variable(vm, name, interpreter.accumulator(), m_mode, m_initialization_mode));
     return {};
 }
 

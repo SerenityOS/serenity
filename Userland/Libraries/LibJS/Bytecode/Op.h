@@ -428,6 +428,8 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
+    EnvironmentMode mode() const { return m_mode; }
+    InitializationMode initialization_mode() const { return m_initialization_mode; }
 
 private:
     IdentifierTableIndex m_identifier;

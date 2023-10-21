@@ -244,4 +244,24 @@ ThrowCompletionOr<Value> typeof_variable(VM& vm, DeprecatedFlyString const& stri
     return PrimitiveString::create(vm, value.typeof());
 }
 
+ThrowCompletionOr<void> set_variable(
+    VM& vm,
+    DeprecatedFlyString const& name,
+    Value value,
+    Op::EnvironmentMode mode,
+    Op::SetVariable::InitializationMode initialization_mode)
+{
+    auto environment = mode == Op::EnvironmentMode::Lexical ? vm.running_execution_context().lexical_environment : vm.running_execution_context().variable_environment;
+    auto reference = TRY(vm.resolve_binding(name, environment));
+    switch (initialization_mode) {
+    case Op::SetVariable::InitializationMode::Initialize:
+        TRY(reference.initialize_referenced_binding(vm, value));
+        break;
+    case Op::SetVariable::InitializationMode::Set:
+        TRY(reference.put_value(vm, value));
+        break;
+    }
+    return {};
+}
+
 }
