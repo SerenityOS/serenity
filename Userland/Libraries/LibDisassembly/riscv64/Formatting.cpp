@@ -352,4 +352,36 @@ String Fence::mnemonic() const
     VERIFY_NOT_REACHED();
 }
 
+String AtomicMemoryOperation::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}, ({})", mnemonic(), format_register(destination_register(), display_style), format_register(source_register_2(), display_style), format_register(source_register_1(), display_style)));
+}
+
+String AtomicMemoryOperation::mnemonic() const
+{
+    return MUST(String::formatted("amo{}.{}{}", m_operation, MemoryAccessMode { width(), Signedness::Signed },
+        is_acquire_release() ? ".aqrl"sv
+            : is_acquire()   ? ".aq"sv
+            : is_release()   ? ".rl"sv
+                             : ""sv));
+}
+
+String LoadReservedStoreConditional::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    if (m_operation == Operation::LoadReserved)
+        return MUST(String::formatted("{:10} {}, ({})", mnemonic(), format_register(destination_register(), display_style), format_register(source_register_1(), display_style)));
+    // Operation::StoreConditional
+    return MUST(String::formatted("{:10} {}, {}, ({})", mnemonic(), format_register(destination_register(), display_style), format_register(source_register_2(), display_style), format_register(source_register_1(), display_style)));
+}
+
+String LoadReservedStoreConditional::mnemonic() const
+{
+    auto operation = m_operation == Operation::LoadReserved ? "lr"sv : "sc"sv;
+    return MUST(String::formatted("{}.{}{}", operation, MemoryAccessMode { width(), Signedness::Signed },
+        is_acquire_release() ? ".aqrl"sv
+            : is_acquire()   ? ".aq"sv
+            : is_release()   ? ".rl"sv
+                             : ""sv));
+}
+
 }
