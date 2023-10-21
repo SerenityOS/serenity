@@ -172,6 +172,26 @@ String InstructionFetchFence::mnemonic() const
     return "fence.i"_string;
 }
 
+String CSRImmediateInstruction::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}, {:d}", mnemonic(), format_register(destination_register(), display_style), immediate(), csr()));
+}
+
+String CSRImmediateInstruction::mnemonic() const
+{
+    return MUST(String::formatted("{}i", operation()));
+}
+
+String CSRRegisterInstruction::to_string(DisplayStyle display_style, u32, Optional<SymbolProvider const&>) const
+{
+    return MUST(String::formatted("{:10} {}, {}, {:d}", mnemonic(), format_register(destination_register(), display_style), format_register(source_register(), display_style), csr()));
+}
+
+String CSRRegisterInstruction::mnemonic() const
+{
+    return MUST(String::formatted("{}", operation()));
+}
+
 String Fence::to_string(DisplayStyle, u32, Optional<SymbolProvider const&>) const
 {
     return MUST(String::formatted("{:10} {}, {}", mnemonic(), m_predecessor, m_successor));
