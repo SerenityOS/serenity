@@ -258,3 +258,16 @@ TEST_CASE(to_lab)
     EXPECT_APPROXIMATE_LAB(lab_from_sRGB(0, 255, 255), expected[6]);
     EXPECT_APPROXIMATE_LAB(lab_from_sRGB(255, 255, 255), expected[7]);
 }
+
+TEST_CASE(malformed_profile)
+{
+    Array test_inputs = {
+        TEST_INPUT("icc/oss-fuzz-testcase-60281.icc"sv)
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto profile_or_error = Gfx::ICC::Profile::try_load_from_externally_owned_memory(file->bytes());
+        EXPECT(profile_or_error.is_error());
+    }
+}
