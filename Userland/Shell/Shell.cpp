@@ -1042,17 +1042,17 @@ Vector<NonnullRefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
     for (auto& command : commands) {
         if constexpr (SH_DEBUG) {
             dbgln("Command");
-            for (auto& arg : command.argv)
+            for (auto const& arg : command.argv)
                 dbgln("argv: {}", arg);
-            for (auto& redir : command.redirections) {
+            for (auto const& redir : command.redirections) {
                 if (redir->is_path_redirection()) {
-                    auto path_redir = (const AST::PathRedirection*)&redir;
+                    auto path_redir = (const AST::PathRedirection*)redir.ptr();
                     dbgln("redir path '{}' <-({})-> {}", path_redir->path, (int)path_redir->direction, path_redir->fd);
                 } else if (redir->is_fd_redirection()) {
-                    auto* fdredir = (const AST::FdRedirection*)&redir;
+                    auto* fdredir = (const AST::FdRedirection*)redir.ptr();
                     dbgln("redir fd {} -> {}", fdredir->old_fd, fdredir->new_fd);
                 } else if (redir->is_close_redirection()) {
-                    auto close_redir = (const AST::CloseRedirection*)&redir;
+                    auto close_redir = (const AST::CloseRedirection*)redir.ptr();
                     dbgln("close fd {}", close_redir->fd);
                 } else {
                     VERIFY_NOT_REACHED();
