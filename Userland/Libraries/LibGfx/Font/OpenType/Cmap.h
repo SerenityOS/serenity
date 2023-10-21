@@ -93,7 +93,7 @@ public:
         u16 m_encoding_id { 0 };
     };
 
-    static Optional<Cmap> from_slice(ReadonlyBytes);
+    static ErrorOr<Cmap> from_slice(ReadonlyBytes);
     u32 num_subtables() const;
     Optional<Subtable> subtable(u32 index) const;
     void set_active_index(u32 index) { m_active_index = index; }

@@ -128,16 +128,6 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<ReadonlyBytes> opt_fpgm_slice = {};
     Optional<ReadonlyBytes> opt_prep_slice = {};
 
-    Optional<Head> opt_head = {};
-    Optional<Name> opt_name = {};
-    Optional<Hhea> opt_hhea = {};
-    Optional<Maxp> opt_maxp = {};
-    Optional<Hmtx> opt_hmtx = {};
-    Optional<Cmap> opt_cmap = {};
-    Optional<OS2> opt_os2 = {};
-    Optional<Kern> opt_kern = {};
-    Optional<Fpgm> opt_fpgm = {};
-    Optional<Prep> opt_prep = {};
     Optional<CBLC> cblc;
     Optional<CBDT> cbdt;
     Optional<GPOS> gpos;
@@ -187,36 +177,33 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         }
     }
 
-    if (!opt_head_slice.has_value() || !(opt_head = Head::from_slice(opt_head_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Head");
-    auto head = opt_head.value();
+    if (!opt_head_slice.has_value())
+        return Error::from_string_literal("Font is missing Head");
+    auto head = TRY(Head::from_slice(opt_head_slice.value()));
 
-    if (!opt_name_slice.has_value() || !(opt_name = Name::from_slice(opt_name_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Name");
-    auto name = opt_name.value();
+    if (!opt_name_slice.has_value())
+        return Error::from_string_literal("Font is missing Name");
+    auto name = TRY(Name::from_slice(opt_name_slice.value()));
 
-    if (!opt_hhea_slice.has_value() || !(opt_hhea = Hhea::from_slice(opt_hhea_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Hhea");
-    auto hhea = opt_hhea.value();
+    if (!opt_hhea_slice.has_value())
+        return Error::from_string_literal("Font is missing Hhea");
+    auto hhea = TRY(Hhea::from_slice(opt_hhea_slice.value()));
 
-    if (!opt_maxp_slice.has_value() || !(opt_maxp = Maxp::from_slice(opt_maxp_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Maxp");
-    auto maxp = opt_maxp.value();
+    if (!opt_maxp_slice.has_value())
+        return Error::from_string_literal("Font is missing Maxp");
+    auto maxp = TRY(Maxp::from_slice(opt_maxp_slice.value()));
 
-    if (!opt_hmtx_slice.has_value() || !(opt_hmtx = Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics())).has_value())
-        return Error::from_string_literal("Could not load Hmtx");
-    auto hmtx = opt_hmtx.value();
+    if (!opt_hmtx_slice.has_value())
+        return Error::from_string_literal("Font is missing Hmtx");
+    auto hmtx = TRY(Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics()));
 
-    if (!opt_cmap_slice.has_value() || !(opt_cmap = Cmap::from_slice(opt_cmap_slice.value())).has_value())
-        return Error::from_string_literal("Could not load Cmap");
-    auto cmap = opt_cmap.value();
+    if (!opt_cmap_slice.has_value())
+        return Error::from_string_literal("Font is missing Cmap");
+    auto cmap = TRY(Cmap::from_slice(opt_cmap_slice.value()));
 
     Optional<Loca> loca;
-    if (opt_loca_slice.has_value()) {
-        loca = Loca::from_slice(opt_loca_slice.value(), maxp.num_glyphs(), head.index_to_loc_format());
-        if (!loca.has_value())
-            return Error::from_string_literal("Could not load Loca");
-    }
+    if (opt_loca_slice.has_value())
+        loca = TRY(Loca::from_slice(opt_loca_slice.value(), maxp.num_glyphs(), head.index_to_loc_format()));
 
     Optional<Glyf> glyf;
     if (opt_glyf_slice.has_value()) {
