@@ -140,6 +140,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
             case TopDictOperator::FontBBox:
             case TopDictOperator::UniqueID:
             case TopDictOperator::XUID:
+            case TopDictOperator::Copyright:
             case TopDictOperator::IsFixedPitch:
             case TopDictOperator::ItalicAngle:
             case TopDictOperator::UnderlinePosition:
