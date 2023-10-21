@@ -30,9 +30,57 @@ MemoryAccessMode MemoryAccessMode::from_funct3(u8 funct3)
 
 static NonnullOwnPtr<InstructionImpl> parse_full_impl(MajorOpcode opcode, u32 instruction)
 {
-    (void)opcode;
-    (void)instruction;
-    TODO();
+    switch (opcode) {
+    case MajorOpcode::JAL:
+        return parse_jal(instruction);
+    case MajorOpcode::AUIPC:
+        return parse_auipc(instruction);
+    case MajorOpcode::LUI:
+        return parse_lui(instruction);
+    case MajorOpcode::JALR:
+        return parse_jalr(instruction);
+    case MajorOpcode::OP_IMM:
+        return parse_op_imm(instruction);
+    case MajorOpcode::OP:
+        return parse_op(instruction);
+    case MajorOpcode::LOAD:
+        return parse_load(instruction);
+    case MajorOpcode::STORE:
+        return parse_store(instruction);
+    case MajorOpcode::BRANCH:
+        return parse_branch(instruction);
+    case MajorOpcode::OP_IMM_32:
+        return parse_op_imm_32(instruction);
+    case MajorOpcode::OP_32:
+        return parse_op_32(instruction);
+    case MajorOpcode::LOAD_FP:
+        return parse_load_fp(instruction);
+    case MajorOpcode::STORE_FP:
+        return parse_store_fp(instruction);
+    case MajorOpcode::OP_FP:
+        return parse_op_fp(instruction);
+    case MajorOpcode::SYSTEM:
+        return parse_system(instruction);
+    case MajorOpcode::MADD:
+    case MajorOpcode::MSUB:
+    case MajorOpcode::NMSUB:
+    case MajorOpcode::NMADD:
+        return parse_fma(instruction);
+    case MajorOpcode::MISC_MEM:
+        return parse_misc_mem(instruction);
+    case MajorOpcode::AMO:
+        return parse_amo(instruction);
+
+    case MajorOpcode::custom_0:
+    case MajorOpcode::custom_1:
+    case MajorOpcode::reserved_0:
+    case MajorOpcode::reserved_1:
+    case MajorOpcode::reserved_2:
+    case MajorOpcode::custom_2_rv128:
+    case MajorOpcode::custom_3_rv128:
+        return make<UnknownInstruction>();
+    }
+    VERIFY_NOT_REACHED();
 }
 
 static NonnullOwnPtr<InstructionImpl> parse_compressed_impl(CompressedOpcode opcode, u16 instruction)
