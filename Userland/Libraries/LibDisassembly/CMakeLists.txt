@@ -1,6 +1,7 @@
 set(SOURCES
     x86/Instruction.cpp
     riscv64/Encoding.cpp
+    riscv64/FD.cpp
     riscv64/Formatting.cpp
     riscv64/Instruction.cpp
     riscv64/IM.cpp

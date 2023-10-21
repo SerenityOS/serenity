@@ -6,6 +6,7 @@
 
 #include "Instruction.h"
 #include "Encoding.h"
+#include "FD.h"
 #include "IM.h"
 #include "Zicsr.h"
 #include <AK/Assertions.h>
@@ -95,6 +96,20 @@ bool simple_instruction_equals(InstructionType const& self, InstructionImpl cons
     M(MemoryLoad)                        \
     M(MemoryStore)                       \
     M(Branch)                            \
+    M(FloatArithmeticInstruction)        \
+    M(FloatSquareRoot)                   \
+    M(FloatFusedMultiplyAdd)             \
+    M(ConvertFloatAndInteger)            \
+    M(ConvertFloatToInteger)             \
+    M(ConvertIntegerToFloat)             \
+    M(ConvertFloat)                      \
+    M(MoveFloatToInteger)                \
+    M(MoveIntegerToFloat)                \
+    M(FloatCompare)                      \
+    M(FloatClassify)                     \
+    M(FloatMemoryInstruction)            \
+    M(FloatMemoryLoad)                   \
+    M(FloatMemoryStore)                  \
     M(EnvironmentCall)                   \
     M(EnvironmentBreak)                  \
     M(CSRInstruction)                    \
