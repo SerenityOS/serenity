@@ -92,6 +92,7 @@ PDFErrorOr<Version> DocumentParser::parse_header()
         return error(DeprecatedString::formatted("Unknown minor version \"{}\"", minor_ver));
 
     m_reader.consume_eol();
+    m_reader.consume_whitespace();
 
     // Parse optional high-byte comment, which signifies a binary file
     // FIXME: Do something with this?
