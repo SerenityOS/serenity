@@ -513,6 +513,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         kprintf.cpp
 
         Arch/riscv64/boot.S
+        Arch/riscv64/Processor.cpp
         Arch/riscv64/SBI.cpp
     )
 

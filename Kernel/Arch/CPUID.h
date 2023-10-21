@@ -12,6 +12,8 @@
 #    include <Kernel/Arch/x86_64/CPUID.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/CPUID.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/CPUID.h>
 #else
 #    error "Unknown architecture"
 #endif

@@ -210,6 +210,8 @@ template class ProcessorBase<Processor>;
 #    include <Kernel/Arch/x86_64/Processor.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/Processor.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/Processor.h>
 #else
 #    error "Unknown architecture"
 #endif
