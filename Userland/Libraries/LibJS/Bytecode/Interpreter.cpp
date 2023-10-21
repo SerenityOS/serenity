@@ -1207,20 +1207,7 @@ ThrowCompletionOr<void> SuperCallWithArgumentArray::execute_impl(Bytecode::Inter
 ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-
-    if (!m_function_node.has_name()) {
-        DeprecatedFlyString name = {};
-        if (m_lhs_name.has_value())
-            name = interpreter.current_executable().get_identifier(m_lhs_name.value());
-        interpreter.accumulator() = m_function_node.instantiate_ordinary_function_expression(vm, name);
-    } else {
-        interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), m_function_node.local_variables_names(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
-    }
-
-    if (m_home_object.has_value()) {
-        auto home_object_value = interpreter.reg(m_home_object.value());
-        static_cast<ECMAScriptFunctionObject&>(interpreter.accumulator().as_function()).set_home_object(&home_object_value.as_object());
-    }
+    interpreter.accumulator() = new_function(vm, m_function_node, m_lhs_name, m_home_object);
     return {};
 }
 
