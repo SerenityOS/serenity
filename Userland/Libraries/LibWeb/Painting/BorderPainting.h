@@ -28,8 +28,6 @@ enum class BorderEdge {
 // Returns OptionalNone if there is no outline to paint.
 Optional<BordersData> borders_data_for_outline(Layout::Node const&, Color outline_color, CSS::OutlineStyle outline_style, CSSPixels outline_width);
 
-RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(DevicePixelSize corners_size);
-
 void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const& rect, Gfx::AntiAliasingPainter::CornerRadius const& radius, Gfx::AntiAliasingPainter::CornerRadius const& opposite_radius, BordersData const& borders_data, Gfx::Path& path, bool last);
 void paint_all_borders(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii_data, BordersData const&);
 

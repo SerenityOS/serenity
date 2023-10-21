@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::create(CornerRadii const& corner_radii, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip, UseCachedBitmap use_cached_bitmap)
+ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::create(CornerRadii const& corner_radii, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip)
 {
     VERIFY(border_radii.has_any_radius());
 
@@ -37,20 +37,12 @@ ErrorOr<NonnullRefPtr<BorderRadiusCornerClipper>> BorderRadiusCornerClipper::cre
                 top_right.vertical_radius + bottom_right.vertical_radius))
     };
 
-    RefPtr<Gfx::Bitmap> corner_bitmap;
-    if (use_cached_bitmap == UseCachedBitmap::Yes) {
-        corner_bitmap = get_cached_corner_bitmap(corners_bitmap_size);
-        if (!corner_bitmap)
-            return Error::from_errno(ENOMEM);
-    } else {
-        corner_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, corners_bitmap_size.to_type<int>()));
-    }
+    RefPtr<Gfx::Bitmap> corner_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, corners_bitmap_size.to_type<int>()));
 
     CornerData corner_data {
         .corner_radii = corner_radii,
         .page_locations = { .top_left = border_rect.top_left(), .top_right = border_rect.top_right().translated(-top_right.horizontal_radius, 0), .bottom_right = border_rect.bottom_right().translated(-bottom_right.horizontal_radius, -bottom_right.vertical_radius), .bottom_left = border_rect.bottom_left().translated(0, -bottom_left.vertical_radius) },
         .bitmap_locations = { .top_left = { 0, 0 }, .top_right = { corners_bitmap_size.width() - top_right.horizontal_radius, 0 }, .bottom_right = { corners_bitmap_size.width() - bottom_right.horizontal_radius, corners_bitmap_size.height() - bottom_right.vertical_radius }, .bottom_left = { 0, corners_bitmap_size.height() - bottom_left.vertical_radius } },
-        .corner_bitmap_size = corners_bitmap_size
     };
 
     return try_make_ref_counted<BorderRadiusCornerClipper>(corner_data, corner_bitmap.release_nonnull(), corner_clip, border_rect);
@@ -61,8 +53,7 @@ void BorderRadiusCornerClipper::sample_under_corners(Gfx::Painter& page_painter)
     // Generate a mask for the corners:
     Gfx::Painter corner_painter { *m_corner_bitmap };
     Gfx::AntiAliasingPainter corner_aa_painter { corner_painter };
-    Gfx::IntRect corner_rect { { 0, 0 }, m_data.corner_bitmap_size };
-    corner_aa_painter.fill_rect_with_rounded_corners(corner_rect, Color::NamedColor::Black,
+    corner_aa_painter.fill_rect_with_rounded_corners(m_corner_bitmap->rect(), Color::NamedColor::Black,
         m_data.corner_radii.top_left, m_data.corner_radii.top_right, m_data.corner_radii.bottom_right, m_data.corner_radii.bottom_left);
 
     auto copy_page_masked = [&](Gfx::IntRect const& mask_src, Gfx::IntPoint const& page_location) {
@@ -112,7 +103,7 @@ void BorderRadiusCornerClipper::blit_corner_clipping(Gfx::Painter& painter)
         painter.blit(m_data.page_locations.bottom_left.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left.to_type<int>()));
 }
 
-ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip, BorderRadiusCornerClipper::UseCachedBitmap use_cached_bitmap)
+ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip)
     : m_context(context)
 {
     if (border_radii.has_any_radius()) {
@@ -122,7 +113,7 @@ ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixe
             .bottom_right = border_radii.bottom_right.as_corner(context),
             .bottom_left = border_radii.bottom_left.as_corner(context)
         };
-        auto clipper = BorderRadiusCornerClipper::create(corner_radii, border_rect, border_radii, corner_clip, use_cached_bitmap);
+        auto clipper = BorderRadiusCornerClipper::create(corner_radii, border_rect, border_radii, corner_clip);
         if (!clipper.is_error()) {
             m_corner_clipper = clipper.release_value();
             m_context.painter().sample_under_corners(*m_corner_clipper);
