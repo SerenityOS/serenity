@@ -123,12 +123,6 @@ static i16 be_i16(u8 const* ptr)
     return (((i16)ptr[0]) << 8) | ((i16)ptr[1]);
 }
 
-static void be_i16(u8* ptr, i16 value)
-{
-    ptr[0] = (value >> 8) & 0xff;
-    ptr[1] = value & 0xff;
-}
-
 static u16 pow_2_less_than_or_equal(u16 x)
 {
     u16 result = 1;
@@ -580,33 +574,16 @@ static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transfo
     ByteBuffer reconstructed_glyf_table;
     Vector<u32> loca_indexes;
 
-    auto append_u16 = [&](u16 value) -> ErrorOr<void> {
-        auto end = reconstructed_glyf_table.size();
-        TRY(reconstructed_glyf_table.try_resize(reconstructed_glyf_table.size() + sizeof(value)));
-        auto* slot = reconstructed_glyf_table.offset_pointer(end);
-        be_u16(slot, value);
-        return {};
+    auto append_u16 = [&](BigEndian<u16> value) -> ErrorOr<void> {
+        return reconstructed_glyf_table.try_append(&value, sizeof(value));
     };
 
-    auto append_i16 = [&](i16 value) -> ErrorOr<void> {
-        auto end = reconstructed_glyf_table.size();
-        TRY(reconstructed_glyf_table.try_resize(reconstructed_glyf_table.size() + sizeof(value)));
-        auto* slot = reconstructed_glyf_table.offset_pointer(end);
-        be_i16(slot, value);
-        return {};
+    auto append_i16 = [&](BigEndian<i16> value) -> ErrorOr<void> {
+        return reconstructed_glyf_table.try_append(&value, sizeof(value));
     };
 
     auto append_bytes = [&](ReadonlyBytes bytes) -> ErrorOr<void> {
-        TRY(reconstructed_glyf_table.try_append(bytes));
-        return {};
-    };
-
-    auto transfer_bytes = [&](ByteBuffer& dst, FixedMemoryStream& src, size_t count) -> ErrorOr<void> {
-        auto end = dst.size();
-        TRY(dst.try_resize(dst.size() + count));
-        auto* slot = dst.offset_pointer(end);
-        TRY(src.read_until_filled(Bytes { slot, count }));
-        return {};
+        return reconstructed_glyf_table.try_append(bytes);
     };
 
     for (size_t glyph_index = 0; glyph_index < header.num_glyphs; ++glyph_index) {
@@ -682,18 +659,15 @@ static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transfo
                 }
 
                 TRY(append_u16(flags));
-                TRY(transfer_bytes(reconstructed_glyf_table, composite_stream, argument_byte_count));
+                TRY(reconstructed_glyf_table.try_append(TRY(composite_stream.read_in_place<u8>(argument_byte_count))));
             }
 
             if (have_instructions) {
                 auto number_of_instructions = TRY(read_255_u_short(glyph_stream));
                 TRY(append_u16(number_of_instructions));
 
-                if (number_of_instructions) {
-                    auto instructions = TRY(ByteBuffer::create_zeroed(number_of_instructions));
-                    TRY(instruction_stream.read_until_filled(instructions));
-                    TRY(reconstructed_glyf_table.try_append(instructions));
-                }
+                if (number_of_instructions)
+                    TRY(reconstructed_glyf_table.try_append(TRY(instruction_stream.read_in_place<u8>(number_of_instructions))));
             }
         } else if (number_of_contours > 0) {
             // Decoding of Simple Glyphs
