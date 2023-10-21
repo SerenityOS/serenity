@@ -561,47 +561,21 @@ static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transfo
     if (table_size < total_size_of_streams)
         return Error::from_string_literal("Not enough data to read in streams of transformed glyf table");
 
-    auto all_tables_buffer = TRY(ByteBuffer::create_zeroed(total_size_of_streams));
-    u64 all_tables_buffer_offset = 0;
-
-    auto number_of_contours_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, header.n_contour_stream_size)));
-    auto number_of_contours_stream = FixedMemoryStream(number_of_contours_stream_buffer);
-    all_tables_buffer_offset += header.n_contour_stream_size;
-
-    auto number_of_points_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, header.n_points_stream_size)));
-    auto number_of_points_stream = FixedMemoryStream(number_of_points_stream_buffer);
-    all_tables_buffer_offset += header.n_points_stream_size;
-
-    auto flag_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, header.flag_stream_size);
-    TRY(table_stream.read_until_filled(flag_stream_buffer));
-    auto flag_stream = FixedMemoryStream(flag_stream_buffer);
-    all_tables_buffer_offset += header.flag_stream_size;
-
-    auto glyph_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, header.glyph_stream_size);
-    TRY(table_stream.read_until_filled(glyph_stream_buffer));
-    auto glyph_stream = FixedMemoryStream(glyph_stream_buffer);
-    all_tables_buffer_offset += header.glyph_stream_size;
-
-    auto composite_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, header.composite_stream_size);
-    TRY(table_stream.read_until_filled(composite_stream_buffer));
-    auto composite_stream = FixedMemoryStream(composite_stream_buffer);
-    all_tables_buffer_offset += header.composite_stream_size;
+    auto number_of_contours_stream = FixedMemoryStream(TRY(table_stream.read_in_place<u8>(header.n_contour_stream_size)));
+    auto number_of_points_stream = FixedMemoryStream(TRY(table_stream.read_in_place<u8>(header.n_points_stream_size)));
+    auto flag_stream = FixedMemoryStream(TRY(table_stream.read_in_place<u8>(header.flag_stream_size)));
+    auto glyph_stream = FixedMemoryStream(TRY(table_stream.read_in_place<u8>(header.glyph_stream_size)));
+    auto composite_stream = FixedMemoryStream(TRY(table_stream.read_in_place<u8>(header.composite_stream_size)));
 
     size_t bounding_box_bitmap_length = ((header.num_glyphs + 31) >> 5) << 2;
-    auto bounding_box_bitmap_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, bounding_box_bitmap_length)));
-    auto bounding_box_bitmap_memory_stream = FixedMemoryStream(bounding_box_bitmap_stream_buffer);
+    auto bounding_box_bitmap_memory_stream = FixedMemoryStream(TRY(table_stream.read_in_place<u8>(bounding_box_bitmap_length)));
     auto bounding_box_bitmap_bit_stream = BigEndianInputBitStream { MaybeOwned<Stream>(bounding_box_bitmap_memory_stream) };
-    all_tables_buffer_offset += bounding_box_bitmap_length;
 
     if (header.bbox_stream_size < bounding_box_bitmap_length)
         return Error::from_string_literal("Not enough data to read bounding box stream of transformed glyf table");
-    auto bounding_box_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, header.bbox_stream_size - bounding_box_bitmap_length)));
-    auto bounding_box_stream = FixedMemoryStream(bounding_box_stream_buffer);
-    all_tables_buffer_offset += header.bbox_stream_size - bounding_box_bitmap_length;
+    auto bounding_box_stream = FixedMemoryStream(TRY(table_stream.read_in_place<u8>(header.bbox_stream_size - bounding_box_bitmap_length)));
 
-    auto instruction_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, header.instruction_stream_size);
-    TRY(table_stream.read_until_filled(instruction_buffer));
-    auto instruction_stream = FixedMemoryStream(instruction_buffer);
+    auto instruction_stream = FixedMemoryStream(TRY(table_stream.read_in_place<u8>(header.instruction_stream_size)));
 
     ByteBuffer reconstructed_glyf_table;
     Vector<u32> loca_indexes;
