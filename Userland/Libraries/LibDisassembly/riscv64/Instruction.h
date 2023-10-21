@@ -111,6 +111,14 @@ private:
     DisplayStyle m_display_style;
 };
 
+class UnknownInstruction : public InstructionImpl {
+public:
+    virtual String to_string(DisplayStyle display_style, u32 origin, Optional<SymbolProvider const&> symbol_provider) const override;
+    virtual i32 immediate() const override { return 0; }
+    virtual String mnemonic() const override;
+    virtual bool instruction_equals(InstructionImpl const&) const override;
+};
+
 class InstructionWithDestinationRegister {
 public:
     InstructionWithDestinationRegister(Register rd)

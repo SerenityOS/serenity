@@ -6,6 +6,7 @@
 
 #include "Instruction.h"
 #include "Encoding.h"
+#include "IM.h"
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StdLibExtras.h>
@@ -82,7 +83,21 @@ bool simple_instruction_equals(InstructionType const& self, InstructionImpl cons
 #define MAKE_INSTRUCTION_EQUALS(InstructionType) \
     bool InstructionType::instruction_equals(InstructionImpl const& instruction) const { return simple_instruction_equals<InstructionType>(*this, instruction); }
 
-#define ENUMERATE_INSTRUCTION_IMPLS(M)
+#define ENUMERATE_INSTRUCTION_IMPLS(M)   \
+    M(UnknownInstruction)                \
+    M(JumpAndLink)                       \
+    M(JumpAndLinkRegister)               \
+    M(LoadUpperImmediate)                \
+    M(AddUpperImmediateToProgramCounter) \
+    M(ArithmeticImmediateInstruction)    \
+    M(ArithmeticInstruction)             \
+    M(MemoryLoad)                        \
+    M(MemoryStore)                       \
+    M(Branch)                            \
+    M(EnvironmentCall)                   \
+    M(EnvironmentBreak)                  \
+    M(Fence)                             \
+    M(InstructionFetchFence)
 
 ENUMERATE_INSTRUCTION_IMPLS(MAKE_INSTRUCTION_EQUALS)
 
