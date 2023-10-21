@@ -975,12 +975,16 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
         dbgln("missing key {}", color_space_name);
         return Error::rendering_unsupported_error("Missing entry for color space name");
     }
-    auto color_space_array = TRY(color_space_resource_dict->get_array(m_document, color_space_name));
-    return ColorSpace::create(m_document, color_space_array);
+    return get_color_space_from_document(TRY(color_space_resource_dict->get_object(m_document, color_space_name)));
 }
 
 PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(NonnullRefPtr<Object> color_space_object)
 {
+    // "A color space is defined by an array object whose first element is a name object identifying the color space family.
+    //  The remaining array elements, if any, are parameters that further characterize the color space;
+    //  their number and types vary according to the particular family.
+    //  For families that do not require parameters, the color space can be specified simply by the family name itself instead of an array."
+
     // Pattern cannot be a name in these cases
     if (color_space_object->is<NameObject>()) {
         return ColorSpace::create(color_space_object->cast<NameObject>()->name());
