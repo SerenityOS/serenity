@@ -83,7 +83,7 @@ protected:
     WeakPtr<Document> m_document;
     Vector<Reference> m_current_reference_stack;
     bool m_enable_encryption { true };
-    bool m_enable_filters { false };
+    bool m_enable_filters { true };
 };
 
 };
