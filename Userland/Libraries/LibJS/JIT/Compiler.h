@@ -70,6 +70,7 @@ private:
     void compile_get_global(Bytecode::Op::GetGlobal const&);
 
     void compile_put_by_id(Bytecode::Op::PutById const&);
+    void compile_put_by_value(Bytecode::Op::PutByValue const&);
 
     void compile_call(Bytecode::Op::Call const&);
     void compile_typeof_variable(Bytecode::Op::TypeofVariable const&);

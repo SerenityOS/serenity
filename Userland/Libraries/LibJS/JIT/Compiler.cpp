@@ -567,6 +567,24 @@ void Compiler::compile_put_by_id(Bytecode::Op::PutById const& op)
     check_exception();
 }
 
+static Value cxx_put_by_value(VM& vm, Value base, Value property, Value value, Bytecode::Op::PropertyKind kind)
+{
+    TRY_OR_SET_EXCEPTION(Bytecode::put_by_value(vm, base, property, value, kind));
+    return {};
+}
+
+void Compiler::compile_put_by_value(Bytecode::Op::PutByValue const& op)
+{
+    load_vm_register(ARG1, op.base());
+    load_vm_register(ARG2, op.property());
+    load_vm_register(ARG3, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Imm64(to_underlying(op.kind())));
+    m_assembler.native_call((void*)cxx_put_by_value);
+    check_exception();
+}
+
 static Value cxx_call(VM& vm, Value callee, u32 first_argument_index, u32 argument_count, Value this_value, Bytecode::Op::CallType call_type)
 {
     // FIXME: Uncomment this and deal with it.
@@ -727,6 +745,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::PutById:
                 compiler.compile_put_by_id(static_cast<Bytecode::Op::PutById const&>(op));
+                break;
+            case Bytecode::Instruction::Type::PutByValue:
+                compiler.compile_put_by_value(static_cast<Bytecode::Op::PutByValue const&>(op));
                 break;
             case Bytecode::Instruction::Type::ToNumeric:
                 compiler.compile_to_numeric(static_cast<Bytecode::Op::ToNumeric const&>(op));
