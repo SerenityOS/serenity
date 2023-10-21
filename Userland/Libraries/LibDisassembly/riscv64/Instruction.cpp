@@ -9,6 +9,7 @@
 #include "Encoding.h"
 #include "FD.h"
 #include "IM.h"
+#include "Priviledged.h"
 #include "Zicsr.h"
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtr.h>
@@ -113,6 +114,9 @@ bool simple_instruction_equals(InstructionType const& self, InstructionImpl cons
     M(FloatMemoryStore)                  \
     M(EnvironmentCall)                   \
     M(EnvironmentBreak)                  \
+    M(MachineModeTrapReturn)             \
+    M(SupervisorModeTrapReturn)          \
+    M(WaitForInterrupt)                  \
     M(CSRInstruction)                    \
     M(CSRRegisterInstruction)            \
     M(CSRImmediateInstruction)           \
