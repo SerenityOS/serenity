@@ -246,7 +246,7 @@ void Interpreter::run_bytecode()
                 enter_unwind_context();
                 m_current_block = &static_cast<Op::EnterUnwindContext const&>(instruction).entry_point().block();
                 goto start;
-            case Instruction::Type::ContinuePendingUnwind:
+            case Instruction::Type::ContinuePendingUnwind: {
                 if (auto exception = reg(Register::exception()); !exception.is_empty()) {
                     result = throw_completion(exception);
                     break;
@@ -255,14 +255,20 @@ void Interpreter::run_bytecode()
                     do_return(saved_return_value());
                     break;
                 }
+                auto const* old_scheduled_jump = call_frame().previously_scheduled_jumps.take_last();
                 if (m_scheduled_jump) {
                     // FIXME: If we `break` or `continue` in the finally, we need to clear
                     //        this field
+                    //        Same goes for popping an old_scheduled_jump form the stack
                     m_current_block = exchange(m_scheduled_jump, nullptr);
                 } else {
                     m_current_block = &static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target().block();
+                    // set the scheduled jump to the old value if we continue
+                    // where we left it
+                    m_scheduled_jump = old_scheduled_jump;
                 }
                 goto start;
+            }
             case Instruction::Type::ScheduleJump: {
                 m_scheduled_jump = &static_cast<Op::ScheduleJump const&>(instruction).target().block();
                 auto const* finalizer = m_current_block->finalizer();
@@ -418,6 +424,8 @@ void Interpreter::enter_unwind_context()
     unwind_contexts().empend(
         m_current_executable,
         vm().running_execution_context().lexical_environment);
+    call_frame().previously_scheduled_jumps.append(m_scheduled_jump);
+    m_scheduled_jump = nullptr;
 }
 
 void Interpreter::leave_unwind_context()
