@@ -226,4 +226,22 @@ ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter, Instr
 template ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, Op::Call const&, Value);
 template ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, Op::CallWithArgumentArray const&, Value);
 
+ThrowCompletionOr<Value> typeof_variable(VM& vm, DeprecatedFlyString const& string)
+{
+    // 1. Let val be the result of evaluating UnaryExpression.
+    auto reference = TRY(vm.resolve_binding(string));
+
+    // 2. If val is a Reference Record, then
+    //    a. If IsUnresolvableReference(val) is true, return "undefined".
+    if (reference.is_unresolvable())
+        return PrimitiveString::create(vm, "undefined"_string);
+
+    // 3. Set val to ? GetValue(val).
+    auto value = TRY(reference.get_value(vm));
+
+    // 4. NOTE: This step is replaced in section B.3.6.3.
+    // 5. Return a String according to Table 41.
+    return PrimitiveString::create(vm, value.typeof());
+}
+
 }

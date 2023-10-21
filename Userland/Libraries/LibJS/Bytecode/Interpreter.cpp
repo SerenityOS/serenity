@@ -1639,24 +1639,7 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
 ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-
-    // 1. Let val be the result of evaluating UnaryExpression.
-    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-    auto reference = TRY(vm.resolve_binding(string));
-
-    // 2. If val is a Reference Record, then
-    //    a. If IsUnresolvableReference(val) is true, return "undefined".
-    if (reference.is_unresolvable()) {
-        interpreter.accumulator() = PrimitiveString::create(vm, "undefined"_string);
-        return {};
-    }
-
-    // 3. Set val to ? GetValue(val).
-    auto value = TRY(reference.get_value(vm));
-
-    // 4. NOTE: This step is replaced in section B.3.6.3.
-    // 5. Return a String according to Table 41.
-    interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
+    interpreter.accumulator() = TRY(typeof_variable(vm, interpreter.current_executable().get_identifier(m_identifier)));
     return {};
 }
 

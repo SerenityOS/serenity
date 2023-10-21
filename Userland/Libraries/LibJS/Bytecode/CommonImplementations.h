@@ -20,5 +20,6 @@ ThrowCompletionOr<void> put_by_property_key(VM&, Value base, Value this_value, V
 ThrowCompletionOr<Value> perform_call(Interpreter&, Value this_value, Op::CallType, Value callee, MarkedVector<Value> argument_values);
 template<typename InstructionType>
 ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, InstructionType const&, Value callee);
+ThrowCompletionOr<Value> typeof_variable(VM&, DeprecatedFlyString const&);
 
 }
