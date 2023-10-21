@@ -233,6 +233,8 @@ private:
     Mandelbrot() = default;
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent& event) override;
+    virtual void keyup_event(GUI::KeyEvent& event) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
     virtual void mousemove_event(GUI::MouseEvent& event) override;
     virtual void mouseup_event(GUI::MouseEvent& event) override;
@@ -296,6 +298,44 @@ void Mandelbrot::paint_event(GUI::PaintEvent& event)
 
     if (m_dragging)
         painter.draw_rect(Gfx::IntRect::from_two_points(m_selection_start, m_selection_end), Color::Blue);
+}
+
+void Mandelbrot::keydown_event(GUI::KeyEvent& event)
+{
+    switch (event.key()) {
+    case KeyCode::Key_Left:
+        m_set.pan_by(Gfx::IntPoint { 10, 0 });
+        break;
+    case KeyCode::Key_Right:
+        m_set.pan_by(Gfx::IntPoint { -10, 0 });
+        break;
+    case KeyCode::Key_Up:
+        m_set.pan_by(Gfx::IntPoint { 0, 10 });
+        break;
+    case KeyCode::Key_Down:
+        m_set.pan_by(Gfx::IntPoint { 0, -10 });
+        break;
+    default:
+        GUI::Widget::keydown_event(event);
+        return;
+    }
+
+    m_panning = true;
+    update();
+}
+
+void Mandelbrot::keyup_event(GUI::KeyEvent& event)
+{
+    switch (event.key()) {
+    case KeyCode::Key_Left:
+    case KeyCode::Key_Right:
+    case KeyCode::Key_Up:
+    case KeyCode::Key_Down:
+        m_panning = false;
+        break;
+    default:
+        GUI::Widget::keydown_event(event);
+    }
 }
 
 void Mandelbrot::mousedown_event(GUI::MouseEvent& event)
