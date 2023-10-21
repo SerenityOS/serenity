@@ -223,6 +223,7 @@ private:
     void determine_grid_container_height();
     void determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space);
 
+    void layout_absolutely_positioned_element(Box const&, AvailableSpace const&);
     virtual void parent_context_did_dimension_child_root_box() override;
 
     void resolve_grid_item_widths();

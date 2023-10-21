@@ -1879,6 +1879,95 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     }
 }
 
+void GridFormattingContext::layout_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space)
+{
+    auto& containing_block_state = m_state.get_mutable(*box.containing_block());
+    auto& box_state = m_state.get_mutable(box);
+    auto const& computed_values = box.computed_values();
+
+    // The border computed values are not changed by the compute_height & width calculations below.
+    // The spec only adjusts and computes sizes, insets and margins.
+    box_state.border_left = box.computed_values().border_left().width;
+    box_state.border_right = box.computed_values().border_right().width;
+    box_state.border_top = box.computed_values().border_top().width;
+    box_state.border_bottom = box.computed_values().border_bottom().width;
+
+    compute_width_for_absolutely_positioned_element(box, available_space);
+
+    // NOTE: We compute height before *and* after doing inside layout.
+    //       This is done so that inside layout can resolve percentage heights.
+    //       In some situations, e.g with non-auto top & bottom values, the height can be determined early.
+    compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::Before);
+
+    auto independent_formatting_context = layout_inside(box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(available_space));
+
+    compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::After);
+
+    if (computed_values.inset().left().is_auto() && computed_values.inset().right().is_auto()) {
+        auto containing_block_width = containing_block_state.content_width();
+        auto width_left_for_alignment = containing_block_width - box_state.margin_box_width();
+        switch (justification_for_item(box)) {
+        case CSS::JustifyItems::Normal:
+        case CSS::JustifyItems::Stretch:
+            break;
+        case CSS::JustifyItems::Center:
+            box_state.inset_left = width_left_for_alignment / 2;
+            box_state.inset_right = width_left_for_alignment / 2;
+            break;
+        case CSS::JustifyItems::Start:
+        case CSS::JustifyItems::FlexStart:
+            box_state.inset_right = width_left_for_alignment;
+            break;
+        case CSS::JustifyItems::End:
+        case CSS::JustifyItems::FlexEnd:
+            box_state.inset_left = width_left_for_alignment;
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (computed_values.inset().top().is_auto() && computed_values.inset().bottom().is_auto()) {
+        auto containing_block_height = containing_block_state.content_height();
+        auto height_left_for_alignment = containing_block_height - box_state.margin_box_height();
+        switch (alignment_for_item(box)) {
+        case CSS::AlignItems::Baseline:
+            // FIXME: Not implemented
+        case CSS::AlignItems::Stretch:
+        case CSS::AlignItems::Normal:
+            break;
+        case CSS::AlignItems::Start:
+        case CSS::AlignItems::FlexStart:
+        case CSS::AlignItems::SelfStart:
+            box_state.inset_bottom = height_left_for_alignment;
+            break;
+        case CSS::AlignItems::End:
+        case CSS::AlignItems::SelfEnd:
+        case CSS::AlignItems::FlexEnd: {
+            box_state.inset_top = height_left_for_alignment;
+            break;
+        }
+        case CSS::AlignItems::Center:
+            box_state.inset_top = height_left_for_alignment / 2;
+            box_state.inset_bottom = height_left_for_alignment / 2;
+            break;
+        default:
+            break;
+        }
+    }
+
+    CSSPixelPoint used_offset;
+    used_offset.set_x(box_state.inset_left + box_state.margin_box_left());
+    used_offset.set_y(box_state.inset_top + box_state.margin_box_top());
+
+    // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
+    used_offset.translate_by(-containing_block_state.padding_left, -containing_block_state.padding_top);
+    box_state.set_content_offset(used_offset);
+
+    if (independent_formatting_context)
+        independent_formatting_context->parent_context_did_dimension_child_root_box();
+}
+
 void GridFormattingContext::parent_context_did_dimension_child_root_box()
 {
     grid_container().for_each_child_of_type<Box>([&](Layout::Box& box) {
