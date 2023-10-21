@@ -9,6 +9,7 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/JIT/Compiler.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <sys/mman.h>
@@ -422,6 +423,29 @@ void Compiler::compile_new_object(Bytecode::Op::NewObject const&)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_new_array(VM& vm, size_t element_count, u32 first_register_index)
+{
+    auto& realm = *vm.current_realm();
+    auto array = MUST(Array::create(realm, 0));
+    for (size_t i = 0; i < element_count; ++i) {
+        auto& value = vm.bytecode_interpreter().reg(Bytecode::Register(first_register_index + i));
+        array->indexed_properties().put(i, value, default_attributes);
+    }
+    return array;
+}
+
+void Compiler::compile_new_array(Bytecode::Op::NewArray const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(op.element_count()));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(op.element_count() ? op.start().index() : 0));
+    m_assembler.native_call((void*)cxx_new_array);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
 static Value cxx_get_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, u32 cache_index)
 {
     return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm.bytecode_interpreter(), property, base, base, cache_index));
@@ -661,6 +685,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::NewObject:
                 compiler.compile_new_object(static_cast<Bytecode::Op::NewObject const&>(op));
+                break;
+            case Bytecode::Instruction::Type::NewArray:
+                compiler.compile_new_array(static_cast<Bytecode::Op::NewArray const&>(op));
                 break;
             case Bytecode::Instruction::Type::GetById:
                 compiler.compile_get_by_id(static_cast<Bytecode::Op::GetById const&>(op));
