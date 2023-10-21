@@ -1357,33 +1357,10 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
 {
     auto& vm = interpreter.vm();
 
-    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
     auto value = interpreter.accumulator();
-
-    auto base = interpreter.reg(m_base);
-    auto property_key_value = interpreter.reg(m_property);
-
-    // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
-    if (base.is_object() && property_key_value.is_int32() && property_key_value.as_i32() >= 0) {
-        auto& object = base.as_object();
-        auto* storage = object.indexed_properties().storage();
-        auto index = static_cast<u32>(property_key_value.as_i32());
-        if (storage
-            && storage->is_simple_storage()
-            && !object.may_interfere_with_indexed_property_access()
-            && storage->has_index(index)) {
-            auto existing_value = storage->get(index)->value;
-            if (!existing_value.is_accessor()) {
-                storage->put(index, value);
-                interpreter.accumulator() = value;
-                return {};
-            }
-        }
-    }
-
-    auto property_key = m_kind != PropertyKind::Spread ? TRY(property_key_value.to_property_key(vm)) : PropertyKey {};
-    TRY(put_by_property_key(vm, base, base, value, property_key, m_kind));
+    TRY(put_by_value(vm, interpreter.reg(m_base), interpreter.reg(m_property), interpreter.accumulator(), m_kind));
     interpreter.accumulator() = value;
+
     return {};
 }
 
