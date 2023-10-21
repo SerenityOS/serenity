@@ -6,6 +6,7 @@
 
 #include "Instruction.h"
 #include "A.h"
+#include "C.h"
 #include "Encoding.h"
 #include "FD.h"
 #include "IM.h"
@@ -85,9 +86,59 @@ static NonnullOwnPtr<InstructionImpl> parse_full_impl(MajorOpcode opcode, u32 in
 
 static NonnullOwnPtr<InstructionImpl> parse_compressed_impl(CompressedOpcode opcode, u16 instruction)
 {
-    (void)opcode;
-    (void)instruction;
-    TODO();
+    // Note that for the multi-purpose opcodes, we only concern ourselves with the RV64C variant.
+    switch (opcode) {
+    case CompressedOpcode::LWSP:
+        return parse_c_lwsp(instruction);
+    case CompressedOpcode::FLWSP_LDSP:
+        return parse_c_ldsp(instruction);
+    case CompressedOpcode::ADDI4SPN:
+        return parse_c_addi4spn(instruction);
+    case CompressedOpcode::LUI_ADDI16SP:
+        return parse_c_lui_or_addi16sp(instruction);
+    case CompressedOpcode::ADDI:
+        return parse_c_addi(instruction);
+    case CompressedOpcode::SWSP:
+        return parse_c_swsp(instruction);
+    case CompressedOpcode::FSWSP_SDSP:
+        return parse_c_sdsp(instruction);
+    case CompressedOpcode::MISC_ALU:
+        return parse_c_alu(instruction);
+    case CompressedOpcode::LI:
+        return parse_c_li(instruction);
+    case CompressedOpcode::J:
+        return parse_c_j(instruction);
+    case CompressedOpcode::JALR_MV_ADD:
+        return parse_c_jalr_mv_add(instruction);
+    case CompressedOpcode::FLW_LD:
+        return parse_c_ld(instruction);
+    case CompressedOpcode::BNEZ:
+        return parse_c_bnez(instruction);
+    case CompressedOpcode::BEQZ:
+        return parse_c_beqz(instruction);
+    case CompressedOpcode::SLLI:
+        return parse_c_slli(instruction);
+    case CompressedOpcode::LW:
+        return parse_c_lw(instruction);
+    case CompressedOpcode::SW:
+        return parse_c_sw(instruction);
+    case CompressedOpcode::FSDSP_SQSP:
+        return parse_c_fsdsp(instruction);
+    case CompressedOpcode::FLDSP_LQSP:
+        return parse_c_fldsp(instruction);
+    case CompressedOpcode::FLD_LQ:
+        return parse_c_fld(instruction);
+    case CompressedOpcode::FSD_SQ:
+        return parse_c_fsd(instruction);
+    case CompressedOpcode::FSW_SD:
+        return parse_c_sd(instruction);
+    case CompressedOpcode::JAL_ADDIW:
+        return parse_c_addiw(instruction);
+    case CompressedOpcode::reserved:
+        return make<UnknownInstruction>();
+        break;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 NonnullOwnPtr<Instruction> Instruction::parse_full(u32 instruction)
