@@ -40,13 +40,6 @@ enum class CommandResult {
     SkipStackingContext,
 };
 
-struct ClearRect {
-    Gfx::IntRect rect;
-    Color color;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
-};
-
 struct DrawTextRun {
     Color color;
     Gfx::IntPoint baseline_start;
@@ -347,7 +340,6 @@ struct BlitCornerClipping {
 };
 
 using PaintingCommand = Variant<
-    ClearRect,
     DrawTextRun,
     DrawText,
     FillRect,
@@ -387,7 +379,6 @@ using PaintingCommand = Variant<
 
 class RecordingPainter {
 public:
-    void clear_rect(Gfx::IntRect const& rect, Color color);
     void fill_rect(Gfx::IntRect const& rect, Color color);
 
     struct FillPathUsingColorParams {
