@@ -21,5 +21,6 @@ ThrowCompletionOr<Value> perform_call(Interpreter&, Value this_value, Op::CallTy
 template<typename InstructionType>
 ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, InstructionType const&, Value callee);
 ThrowCompletionOr<Value> typeof_variable(VM&, DeprecatedFlyString const&);
+ThrowCompletionOr<void> set_variable(VM&, DeprecatedFlyString const&, Value, Op::EnvironmentMode, Op::SetVariable::InitializationMode);
 
 }
