@@ -446,6 +446,30 @@ void Compiler::compile_new_array(Bytecode::Op::NewArray const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+Value cxx_new_function(
+    VM& vm,
+    FunctionExpression const& function_node,
+    Optional<Bytecode::IdentifierTableIndex> const& lhs_name,
+    Optional<Bytecode::Register> const& home_object)
+{
+    return Bytecode::new_function(vm, function_node, lhs_name, home_object);
+}
+
+void Compiler::compile_new_function(Bytecode::Op::NewFunction const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(bit_cast<u64>(&op.function_node())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(bit_cast<u64>(&op.lhs_name())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm64(bit_cast<u64>(&op.home_object())));
+    m_assembler.native_call((void*)cxx_new_function);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
 static Value cxx_get_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, u32 cache_index)
 {
     return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm.bytecode_interpreter(), property, base, base, cache_index));
@@ -688,6 +712,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::NewArray:
                 compiler.compile_new_array(static_cast<Bytecode::Op::NewArray const&>(op));
+                break;
+            case Bytecode::Instruction::Type::NewFunction:
+                compiler.compile_new_function(static_cast<Bytecode::Op::NewFunction const&>(op));
                 break;
             case Bytecode::Instruction::Type::GetById:
                 compiler.compile_get_by_id(static_cast<Bytecode::Op::GetById const&>(op));
