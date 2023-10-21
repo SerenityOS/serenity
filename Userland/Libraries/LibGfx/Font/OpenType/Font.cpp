@@ -3,6 +3,7 @@
  * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  * Copyright (c) 2023, Lukas Affolter <git@lukasach.dev>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -110,11 +111,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset)
 {
-    if (Checked<u32>::addition_would_overflow(offset, (u32)Sizes::OffsetTable))
-        return Error::from_string_literal("Invalid offset in font header");
-
-    if (buffer.size() <= offset + (u32)Sizes::OffsetTable)
-        return Error::from_string_literal("Font file too small");
+    FixedMemoryStream stream { buffer };
+    TRY(stream.seek(offset, AK::SeekMode::SetPosition));
+    auto& table_directory = *TRY(stream.read_in_place<TableDirectory const>());
 
     Optional<ReadonlyBytes> opt_head_slice = {};
     Optional<ReadonlyBytes> opt_name_slice = {};
@@ -143,54 +142,47 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<CBDT> cbdt;
     Optional<GPOS> gpos;
 
-    auto num_tables = be_u16(buffer.offset(offset + (u32)Offsets::NumTables));
-    if (buffer.size() <= offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
-        return Error::from_string_literal("Font file too small");
+    for (auto i = 0; i < table_directory.num_tables; i++) {
+        auto& table_record = *TRY(stream.read_in_place<TableRecord const>());
 
-    for (auto i = 0; i < num_tables; i++) {
-        u32 record_offset = offset + (u32)Sizes::OffsetTable + i * (u32)Sizes::TableRecord;
-        u32 tag = be_u32(buffer.offset(record_offset));
-        u32 table_offset = be_u32(buffer.offset(record_offset + (u32)Offsets::TableRecord_Offset));
-        u32 table_length = be_u32(buffer.offset(record_offset + (u32)Offsets::TableRecord_Length));
-
-        if (table_length == 0 || Checked<u32>::addition_would_overflow(table_offset, table_length))
+        if (table_record.length == 0 || Checked<u32>::addition_would_overflow(static_cast<u32>(table_record.offset), static_cast<u32>(table_record.length)))
             return Error::from_string_literal("Invalid table offset or length in font");
 
-        if (buffer.size() < table_offset + table_length)
+        if (buffer.size() < table_record.offset + table_record.length)
             return Error::from_string_literal("Font file too small");
 
-        auto buffer_here = ReadonlyBytes(buffer.offset(table_offset), table_length);
+        auto buffer_here = buffer.slice(table_record.offset, table_record.length);
 
         // Get the table offsets we need.
-        if (tag == tag_from_str("head")) {
+        if (table_record.table_tag == tag_from_str("head")) {
             opt_head_slice = buffer_here;
-        } else if (tag == tag_from_str("name")) {
+        } else if (table_record.table_tag == tag_from_str("name")) {
             opt_name_slice = buffer_here;
-        } else if (tag == tag_from_str("hhea")) {
+        } else if (table_record.table_tag == tag_from_str("hhea")) {
             opt_hhea_slice = buffer_here;
-        } else if (tag == tag_from_str("maxp")) {
+        } else if (table_record.table_tag == tag_from_str("maxp")) {
             opt_maxp_slice = buffer_here;
-        } else if (tag == tag_from_str("hmtx")) {
+        } else if (table_record.table_tag == tag_from_str("hmtx")) {
             opt_hmtx_slice = buffer_here;
-        } else if (tag == tag_from_str("cmap")) {
+        } else if (table_record.table_tag == tag_from_str("cmap")) {
             opt_cmap_slice = buffer_here;
-        } else if (tag == tag_from_str("loca")) {
+        } else if (table_record.table_tag == tag_from_str("loca")) {
             opt_loca_slice = buffer_here;
-        } else if (tag == tag_from_str("glyf")) {
+        } else if (table_record.table_tag == tag_from_str("glyf")) {
             opt_glyf_slice = buffer_here;
-        } else if (tag == tag_from_str("OS/2")) {
+        } else if (table_record.table_tag == tag_from_str("OS/2")) {
             opt_os2_slice = buffer_here;
-        } else if (tag == tag_from_str("kern")) {
+        } else if (table_record.table_tag == tag_from_str("kern")) {
             opt_kern_slice = buffer_here;
-        } else if (tag == tag_from_str("fpgm")) {
+        } else if (table_record.table_tag == tag_from_str("fpgm")) {
             opt_fpgm_slice = buffer_here;
-        } else if (tag == tag_from_str("prep")) {
+        } else if (table_record.table_tag == tag_from_str("prep")) {
             opt_prep_slice = buffer_here;
-        } else if (tag == tag_from_str("CBLC")) {
+        } else if (table_record.table_tag == tag_from_str("CBLC")) {
             cblc = TRY(CBLC::from_slice(buffer_here));
-        } else if (tag == tag_from_str("CBDT")) {
+        } else if (table_record.table_tag == tag_from_str("CBDT")) {
             cbdt = TRY(CBDT::from_slice(buffer_here));
-        } else if (tag == tag_from_str("GPOS")) {
+        } else if (table_record.table_tag == tag_from_str("GPOS")) {
             gpos = TRY(GPOS::from_slice(buffer_here));
         }
     }
