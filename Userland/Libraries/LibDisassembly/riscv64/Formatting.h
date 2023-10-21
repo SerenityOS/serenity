@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/String.h>
 #include <LibDisassembly/riscv64/Encoding.h>
+#include <LibDisassembly/riscv64/FD.h>
 #include <LibDisassembly/riscv64/IM.h>
 #include <LibDisassembly/riscv64/Instruction.h>
 #include <LibDisassembly/riscv64/Zicsr.h>
@@ -349,6 +350,67 @@ struct AK::Formatter<Disassembly::RISCV64::ArithmeticInstruction::Operation> : A
 };
 
 template<>
+struct AK::Formatter<Disassembly::RISCV64::FloatArithmeticInstruction::Operation> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::FloatArithmeticInstruction::Operation op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::Add:
+            op_name = "fadd"sv;
+            break;
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::Subtract:
+            op_name = "fsub"sv;
+            break;
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::Multiply:
+            op_name = "fmul"sv;
+            break;
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::Divide:
+            op_name = "fdiv"sv;
+            break;
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::Min:
+            op_name = "fmin"sv;
+            break;
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::Max:
+            op_name = "fmax"sv;
+            break;
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::SignInject:
+            op_name = "fsgnj"sv;
+            break;
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::SignInjectNegate:
+            op_name = "fsgnjn"sv;
+            break;
+        case Disassembly::RISCV64::FloatArithmeticInstruction::Operation::SignInjectXor:
+            op_name = "fsgnjx"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+        case Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation::MultiplyAdd:
+            op_name = "fmadd"sv;
+            break;
+        case Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation::MultiplySubtract:
+            op_name = "fmsub"sv;
+            break;
+        case Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation::NegatedMultiplyAdd:
+            op_name = "fnmadd"sv;
+            break;
+        case Disassembly::RISCV64::FloatFusedMultiplyAdd::Operation::NegatedMultiplySubtract:
+            op_name = "fnmsub"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
+    }
+};
+
+template<>
 struct AK::Formatter<Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation> : AK::Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::ArithmeticImmediateInstruction::Operation op)
     {
@@ -462,6 +524,29 @@ struct AK::Formatter<Disassembly::RISCV64::Fence::AccessType> : AK::Formatter<St
             op_name.append_code_point('w');
 
         return AK::Formatter<String>::format(builder, MUST(op_name.to_string()));
+    }
+};
+
+template<>
+struct AK::Formatter<Disassembly::RISCV64::FloatWidth> : AK::Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Disassembly::RISCV64::FloatWidth op)
+    {
+        auto op_name = ""sv;
+        switch (op) {
+        case Disassembly::RISCV64::FloatWidth::Single:
+            op_name = "s"sv;
+            break;
+        case Disassembly::RISCV64::FloatWidth::Double:
+            op_name = "d"sv;
+            break;
+        case Disassembly::RISCV64::FloatWidth::Half:
+            op_name = "h"sv;
+            break;
+        case Disassembly::RISCV64::FloatWidth::Quad:
+            op_name = "q"sv;
+            break;
+        }
+        return AK::Formatter<StringView>::format(builder, op_name);
     }
 };
 
