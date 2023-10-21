@@ -104,20 +104,6 @@ static ErrorOr<u32> read_uint_base_128(SeekableStream& stream)
     return Error::from_string_literal("UIntBase128 type is larger than 5 bytes");
 }
 
-static void be_u16(u8* ptr, u16 value)
-{
-    ptr[0] = (value >> 8) & 0xff;
-    ptr[1] = value & 0xff;
-}
-
-static void be_u32(u8* ptr, u32 value)
-{
-    ptr[0] = (value >> 24) & 0xff;
-    ptr[1] = (value >> 16) & 0xff;
-    ptr[2] = (value >> 8) & 0xff;
-    ptr[3] = value & 0xff;
-}
-
 static i16 be_i16(u8 const* ptr)
 {
     return (((i16)ptr[0]) << 8) | ((i16)ptr[1]);
@@ -831,15 +817,15 @@ static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transfo
 
     size_t loca_element_size_in_bytes = loca_element_size == LocaElementSize::TwoBytes ? sizeof(u16) : sizeof(u32);
     size_t loca_table_buffer_size = loca_indexes.size() * loca_element_size_in_bytes;
-    ByteBuffer loca_table_buffer = TRY(ByteBuffer::create_zeroed(loca_table_buffer_size));
-    for (size_t loca_indexes_index = 0; loca_indexes_index < loca_indexes.size(); ++loca_indexes_index) {
-        u32 loca_index = loca_indexes.at(loca_indexes_index);
-        size_t loca_offset = loca_indexes_index * loca_element_size_in_bytes;
-
+    ByteBuffer loca_table_buffer;
+    TRY(loca_table_buffer.try_ensure_capacity(loca_table_buffer_size));
+    for (auto loca_index : loca_indexes) {
         if (loca_element_size == LocaElementSize::TwoBytes) {
-            be_u16(loca_table_buffer.offset_pointer(loca_offset), loca_index >> 1);
+            auto value = BigEndian<u16>(loca_index >> 1);
+            loca_table_buffer.append({ &value, sizeof(value) });
         } else {
-            be_u32(loca_table_buffer.offset_pointer(loca_offset), loca_index);
+            auto value = BigEndian<u32>(loca_index);
+            loca_table_buffer.append({ &value, sizeof(value) });
         }
     }
 
