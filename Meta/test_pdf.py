@@ -30,11 +30,16 @@ def elide_aslr(s):
     return re.sub(rb'\b0x[0-9a-f]+\b', b'0xc3ns0r3d', s)
 
 
+def elide_parser_offset(s):
+    return re.sub(rb'\bParser error at offset [0-9]+:', b'Parser error:', s)
+
+
 def test_pdf(filename):
     pdf_path = os.path.join(os.path.dirname(__file__), '../Build/lagom/bin/pdf')
     r = subprocess.run([pdf_path, '--debugging-stats', filename],
                        capture_output=True)
-    return Result(filename, r.returncode, r.stdout, elide_aslr(r.stderr))
+    return Result(filename, r.returncode, r.stdout,
+                  elide_parser_offset(elide_aslr(r.stderr)))
 
 
 def main():
@@ -68,16 +73,15 @@ def main():
     keys.sort(key=lambda x: len(stack_to_files[x]), reverse=True)
     for stack in reversed(keys[:5]):
         files = stack_to_files[stack]
-        print(stack.decode('utf-8'), end='')
+        print(stack.decode('utf-8', 'backslashreplace'), end='')
         print(f'In {len(files)} files:')
         for file in files:
             print(f'    {file}')
         print()
 
-    print(f'{len(keys)} distinct crash stacks')
-
     percent = 100 * num_crashes / len(results)
     print(f'{num_crashes} crashes ({percent:.1f}%)')
+    print(f'{len(keys)} distinct crash stacks')
 
 
 if __name__ == '__main__':
