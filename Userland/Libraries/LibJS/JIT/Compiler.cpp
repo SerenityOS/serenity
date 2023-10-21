@@ -536,14 +536,37 @@ void Compiler::compile_to_numeric(Bytecode::Op::ToNumeric const&)
 
 static Value cxx_resolve_this_binding(VM& vm)
 {
-    return TRY_OR_SET_EXCEPTION(vm.resolve_this_binding());
+    auto this_value = TRY_OR_SET_EXCEPTION(vm.resolve_this_binding());
+    vm.bytecode_interpreter().reg(Bytecode::Register::this_value()) = this_value;
+    return this_value;
 }
 
 void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding const&)
 {
+    // OPTIMIZATION: We cache the `this` value in a special VM register.
+    //               So first we check if the cache is non-empty, and if so,
+    //               we can avoid calling out to C++ at all. :^)
+    load_vm_register(GPR0, Bytecode::Register::this_value());
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm64(Value().encoded()));
+
+    auto slow_case = m_assembler.make_label();
+    m_assembler.jump_if_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(GPR1),
+        slow_case);
+
+    // Fast case: We have a cached `this` value!
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
+    auto end = m_assembler.jump();
+
+    slow_case.link(m_assembler);
     m_assembler.native_call((void*)cxx_resolve_this_binding);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
+
+    end.link(m_assembler);
 }
 
 static Value cxx_put_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, Value value, Bytecode::Op::PropertyKind kind)
