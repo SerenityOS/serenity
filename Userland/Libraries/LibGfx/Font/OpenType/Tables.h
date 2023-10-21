@@ -67,6 +67,22 @@ struct [[gnu::packed]] TableRecord {
 };
 static_assert(AssertSize<TableRecord, 16>());
 
+}
+
+template<>
+class AK::Traits<OpenType::TableDirectory const> : public GenericTraits<OpenType::TableDirectory const> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<OpenType::TableRecord const> : public GenericTraits<OpenType::TableRecord const> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+namespace OpenType {
+
 // https://learn.microsoft.com/en-us/typography/opentype/spec/head
 // head: Font Header Table
 class Head {
