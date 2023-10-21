@@ -502,7 +502,7 @@ PDFErrorOr<Destination> Document::create_destination_from_object(NonnullRefPtr<O
         else
             dest_name = dest_obj->cast<StringObject>()->string();
         if (auto dests_value = m_catalog->get(CommonNames::Dests); dests_value.has_value()) {
-            auto dests = dests_value.value().get<NonnullRefPtr<Object>>()->cast<DictObject>();
+            auto dests = TRY(resolve_to<DictObject>(dests_value.value()));
             auto entry = MUST(dests->get_object(this, dest_name));
             return TRY(create_destination_from_dictionary_entry(entry, page_number_by_index_ref));
         }
