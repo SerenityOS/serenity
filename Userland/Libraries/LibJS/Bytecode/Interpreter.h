@@ -32,6 +32,7 @@ struct CallFrame {
     Vector<Value> registers;
     Vector<GCPtr<Environment>> saved_lexical_environments;
     Vector<UnwindInfo> unwind_contexts;
+    Vector<BasicBlock const*> previously_scheduled_jumps;
 };
 
 class Interpreter {
