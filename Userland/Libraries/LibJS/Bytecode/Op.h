@@ -1003,6 +1003,10 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    FunctionExpression const& function_node() const { return m_function_node; }
+    Optional<IdentifierTableIndex> const& lhs_name() const { return m_lhs_name; }
+    Optional<Register> const& home_object() const { return m_home_object; }
+
 private:
     FunctionExpression const& m_function_node;
     Optional<IdentifierTableIndex> m_lhs_name;
