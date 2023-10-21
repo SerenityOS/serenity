@@ -21,6 +21,7 @@ set(SOURCES
     Font/OpenType/Font.cpp
     Font/OpenType/Glyf.cpp
     Font/OpenType/Hinting/Opcodes.cpp
+    Font/OpenType/Tables.cpp
     Font/ScaledFont.cpp
     Font/Typeface.cpp
     Font/WOFF/Font.cpp

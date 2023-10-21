@@ -15,6 +15,7 @@
 #include <AK/FixedArray.h>
 #include <AK/Forward.h>
 #include <AK/Span.h>
+#include <AK/String.h>
 
 namespace OpenType {
 
