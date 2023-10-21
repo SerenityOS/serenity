@@ -5,6 +5,7 @@
  */
 
 #include "Formatting.h"
+#include "Instruction.h"
 
 namespace Disassembly::RISCV64 {
 
@@ -43,6 +44,11 @@ static String format_relative_address(DisplayStyle display_style, Optional<Symbo
         formatted_target = MUST(String::formatted("{:+#06x}", offset));
     }
     return formatted_target;
+}
+
+String InstructionWithoutArguments::to_string(DisplayStyle, u32, Optional<SymbolProvider const&>) const
+{
+    return mnemonic();
 }
 
 }
