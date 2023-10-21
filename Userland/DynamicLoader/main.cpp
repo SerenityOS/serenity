@@ -136,7 +136,7 @@ void _entry(int argc, char** argv, char** envp)
         }
     }
 
-    if (main_program_path == "/usr/lib/Loader.so"sv) {
+    if (main_program_fd == -1) {
         // We've been invoked directly as an executable rather than as the
         // ELF interpreter for some other binary. The second argv string should
         // be the path to the ELF executable, and if we don't have enough strings in argv
