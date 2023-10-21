@@ -68,17 +68,6 @@ private:
 
     EmbeddedBitmapData embedded_bitmap_data_for_glyph(u32 glyph_id) const;
 
-    enum class Offsets {
-        NumTables = 4,
-        TableRecord_Offset = 8,
-        TableRecord_Length = 12,
-    };
-    enum class Sizes {
-        TTCHeaderV1 = 12,
-        OffsetTable = 12,
-        TableRecord = 16,
-    };
-
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
 
     Font(
