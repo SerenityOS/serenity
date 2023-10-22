@@ -104,20 +104,10 @@ static ErrorOr<u32> read_uint_base_128(SeekableStream& stream)
     return Error::from_string_literal("UIntBase128 type is larger than 5 bytes");
 }
 
-static u16 be_u16(u8 const* ptr)
-{
-    return (((u16)ptr[0]) << 8) | ((u16)ptr[1]);
-}
-
 static void be_u16(u8* ptr, u16 value)
 {
     ptr[0] = (value >> 8) & 0xff;
     ptr[1] = value & 0xff;
-}
-
-static u32 be_u32(u8 const* ptr)
-{
-    return (((u32)ptr[0]) << 24) | (((u32)ptr[1]) << 16) | (((u32)ptr[2]) << 8) | ((u32)ptr[3]);
 }
 
 static void be_u32(u8* ptr, u32 value)
@@ -489,7 +479,50 @@ static ErrorOr<Vector<FontPoint>> retrieve_points_of_simple_glyph(FixedMemoryStr
     return points;
 }
 
-static constexpr size_t TRANSFORMED_GLYF_TABLE_HEADER_SIZE_IN_BYTES = 36;
+// https://www.w3.org/TR/WOFF2/#glyf_table_format
+struct [[gnu::packed]] TransformedGlyfTable {
+    BigEndian<u16> reserved;                // = 0x0000
+    BigEndian<u16> option_flags;            // Bit 0: if set, indicates the presence of the overlapSimpleBitmap[] bit array.
+                                            // Bits 1-15: Reserved.
+    BigEndian<u16> num_glyphs;              // Number of glyphs
+    BigEndian<u16> index_format;            // Offset format for loca table, should be consistent with indexToLocFormat of the
+                                            // original head table (see [OFF] specification)
+    BigEndian<u32> n_contour_stream_size;   // Size of nContour stream in bytes
+    BigEndian<u32> n_points_stream_size;    // Size of nPoints stream in bytes
+    BigEndian<u32> flag_stream_size;        // Size of flag stream in bytes
+    BigEndian<u32> glyph_stream_size;       // Size of glyph stream in bytes (a stream of variable-length encoded values, see
+                                            // description below)
+    BigEndian<u32> composite_stream_size;   // Size of composite stream in bytes (a stream of variable-length encoded values,
+                                            // see description below)
+    BigEndian<u32> bbox_stream_size;        // Size of bbox data in bytes representing combined length of bboxBitmap
+                                            // (a packed bit array) and bboxStream (a stream of Int16 values)
+    BigEndian<u32> instruction_stream_size; // Size of instruction stream (a stream of UInt8 values)
+
+    // Other fields are variable-length, and so are not represented in this struct:
+    // Int16      nContourStream[]       Stream of Int16 values representing number of contours for each glyph record
+    // 255UInt16  nPointsStream[]        Stream of values representing number of outline points for each contour in glyph records
+    // UInt8      flagStream[]           Stream of UInt8 values representing flag values for each outline point.
+    // Vary       glyphStream[]          Stream of bytes representing point coordinate values using variable length encoding
+    //                                   format (defined in subclause 5.2)
+    // Vary       compositeStream[]      Stream of bytes representing component flag values and associated composite glyph data
+    // UInt8      bboxBitmap[]           Bitmap (a numGlyphs-long bit array) indicating explicit bounding boxes
+    // Int16      bboxStream[]           Stream of Int16 values representing glyph bounding box data
+    // UInt8      instructionStream[]    Stream of UInt8 values representing a set of instructions for each corresponding glyph
+    // UInt8      overlapSimpleBitmap[]  A numGlyphs-long bit array that provides values for the overlap flag [bit 6] for each
+    //                                   simple glyph. (Flag values for composite glyphs are already encoded as part of the
+    //                                   compositeStream[]).
+};
+static_assert(AssertSize<TransformedGlyfTable, 36>());
+
+}
+
+template<>
+class AK::Traits<WOFF2::TransformedGlyfTable> : public GenericTraits<WOFF2::TransformedGlyfTable> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+namespace WOFF2 {
 
 enum class LocaElementSize {
     TwoBytes,
@@ -512,31 +545,18 @@ enum SimpleGlyphFlags : u8 {
 
 static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transformed_glyf_table(FixedMemoryStream& table_stream)
 {
-    u8 header_buffer[TRANSFORMED_GLYF_TABLE_HEADER_SIZE_IN_BYTES];
-    TRY(table_stream.read_until_filled(header_buffer));
-    auto header = ReadonlyBytes { header_buffer };
+    auto header = TRY(table_stream.read_value<TransformedGlyfTable>());
 
-    // Skip: reserved, optionFlags
-    u16 num_glyphs = be_u16(header.offset(4));
-    u16 index_format = be_u16(header.offset(6));
-    auto loca_element_size = index_format == 0 ? LocaElementSize::TwoBytes : LocaElementSize::FourBytes;
-
-    u32 number_of_contours_stream_size = be_u32(header.offset(8));
-    u32 number_of_points_stream_size = be_u32(header.offset(12));
-    u32 flag_stream_size = be_u32(header.offset(16));
-    u32 glyph_stream_size = be_u32(header.offset(20));
-    u32 composite_stream_size = be_u32(header.offset(24));
-    u32 bounding_box_stream_size = be_u32(header.offset(28));
-    u32 instruction_stream_size = be_u32(header.offset(32));
+    auto loca_element_size = header.index_format == 0 ? LocaElementSize::TwoBytes : LocaElementSize::FourBytes;
 
     size_t table_size = TRY(table_stream.size());
-    u64 total_size_of_streams = number_of_contours_stream_size;
-    total_size_of_streams += number_of_points_stream_size;
-    total_size_of_streams += flag_stream_size;
-    total_size_of_streams += glyph_stream_size;
-    total_size_of_streams += composite_stream_size;
-    total_size_of_streams += bounding_box_stream_size;
-    total_size_of_streams += instruction_stream_size;
+    u64 total_size_of_streams = header.n_contour_stream_size;
+    total_size_of_streams += header.n_points_stream_size;
+    total_size_of_streams += header.flag_stream_size;
+    total_size_of_streams += header.glyph_stream_size;
+    total_size_of_streams += header.composite_stream_size;
+    total_size_of_streams += header.bbox_stream_size;
+    total_size_of_streams += header.instruction_stream_size;
 
     if (table_size < total_size_of_streams)
         return Error::from_string_literal("Not enough data to read in streams of transformed glyf table");
@@ -544,42 +564,42 @@ static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transfo
     auto all_tables_buffer = TRY(ByteBuffer::create_zeroed(total_size_of_streams));
     u64 all_tables_buffer_offset = 0;
 
-    auto number_of_contours_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, number_of_contours_stream_size)));
+    auto number_of_contours_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, header.n_contour_stream_size)));
     auto number_of_contours_stream = FixedMemoryStream(number_of_contours_stream_buffer);
-    all_tables_buffer_offset += number_of_contours_stream_size;
+    all_tables_buffer_offset += header.n_contour_stream_size;
 
-    auto number_of_points_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, number_of_points_stream_size)));
+    auto number_of_points_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, header.n_points_stream_size)));
     auto number_of_points_stream = FixedMemoryStream(number_of_points_stream_buffer);
-    all_tables_buffer_offset += number_of_points_stream_size;
+    all_tables_buffer_offset += header.n_points_stream_size;
 
-    auto flag_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, flag_stream_size);
+    auto flag_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, header.flag_stream_size);
     TRY(table_stream.read_until_filled(flag_stream_buffer));
     auto flag_stream = FixedMemoryStream(flag_stream_buffer);
-    all_tables_buffer_offset += flag_stream_size;
+    all_tables_buffer_offset += header.flag_stream_size;
 
-    auto glyph_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, glyph_stream_size);
+    auto glyph_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, header.glyph_stream_size);
     TRY(table_stream.read_until_filled(glyph_stream_buffer));
     auto glyph_stream = FixedMemoryStream(glyph_stream_buffer);
-    all_tables_buffer_offset += glyph_stream_size;
+    all_tables_buffer_offset += header.glyph_stream_size;
 
-    auto composite_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, composite_stream_size);
+    auto composite_stream_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, header.composite_stream_size);
     TRY(table_stream.read_until_filled(composite_stream_buffer));
     auto composite_stream = FixedMemoryStream(composite_stream_buffer);
-    all_tables_buffer_offset += composite_stream_size;
+    all_tables_buffer_offset += header.composite_stream_size;
 
-    size_t bounding_box_bitmap_length = ((num_glyphs + 31) >> 5) << 2;
+    size_t bounding_box_bitmap_length = ((header.num_glyphs + 31) >> 5) << 2;
     auto bounding_box_bitmap_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, bounding_box_bitmap_length)));
     auto bounding_box_bitmap_memory_stream = FixedMemoryStream(bounding_box_bitmap_stream_buffer);
     auto bounding_box_bitmap_bit_stream = BigEndianInputBitStream { MaybeOwned<Stream>(bounding_box_bitmap_memory_stream) };
     all_tables_buffer_offset += bounding_box_bitmap_length;
 
-    if (bounding_box_stream_size < bounding_box_bitmap_length)
+    if (header.bbox_stream_size < bounding_box_bitmap_length)
         return Error::from_string_literal("Not enough data to read bounding box stream of transformed glyf table");
-    auto bounding_box_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, bounding_box_stream_size - bounding_box_bitmap_length)));
+    auto bounding_box_stream_buffer = TRY(table_stream.read_some(all_tables_buffer.span().slice(all_tables_buffer_offset, header.bbox_stream_size - bounding_box_bitmap_length)));
     auto bounding_box_stream = FixedMemoryStream(bounding_box_stream_buffer);
-    all_tables_buffer_offset += bounding_box_stream_size - bounding_box_bitmap_length;
+    all_tables_buffer_offset += header.bbox_stream_size - bounding_box_bitmap_length;
 
-    auto instruction_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, instruction_stream_size);
+    auto instruction_buffer = all_tables_buffer.span().slice(all_tables_buffer_offset, header.instruction_stream_size);
     TRY(table_stream.read_until_filled(instruction_buffer));
     auto instruction_stream = FixedMemoryStream(instruction_buffer);
 
@@ -615,7 +635,7 @@ static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transfo
         return {};
     };
 
-    for (size_t glyph_index = 0; glyph_index < num_glyphs; ++glyph_index) {
+    for (size_t glyph_index = 0; glyph_index < header.num_glyphs; ++glyph_index) {
         size_t starting_glyf_table_size = reconstructed_glyf_table.size();
 
         bool has_bounding_box = TRY(bounding_box_bitmap_bit_stream.read_bit());
