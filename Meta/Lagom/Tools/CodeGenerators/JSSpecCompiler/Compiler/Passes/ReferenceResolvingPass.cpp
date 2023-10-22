@@ -12,6 +12,13 @@
 
 namespace JSSpecCompiler {
 
+void ReferenceResolvingPass::process_function()
+{
+    for (auto name : m_function->m_argument_names)
+        m_function->m_local_variables.set(name, make_ref_counted<NamedVariableDeclaration>(name));
+    GenericASTPass::process_function();
+}
+
 RecursionDecision ReferenceResolvingPass::on_entry(Tree tree)
 {
     if (auto binary_operation = as<BinaryOperation>(tree); binary_operation) {

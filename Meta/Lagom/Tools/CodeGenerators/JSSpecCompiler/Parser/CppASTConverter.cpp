@@ -24,7 +24,11 @@ NonnullRefPtr<FunctionDefinition> CppASTConverter::convert()
     }
     auto tree = make_ref_counted<TreeList>(move(toplevel_statements));
 
-    return make_ref_counted<FunctionDefinition>(name, tree);
+    Vector<StringView> arguments;
+    for (auto const& parameter : m_function->parameters())
+        arguments.append(parameter->full_name());
+
+    return make_ref_counted<FunctionDefinition>(name, tree, move(arguments));
 }
 
 template<>

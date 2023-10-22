@@ -16,7 +16,7 @@ void CFGBuildingPass::process_function()
     m_current_block = m_cfg->start_block = create_empty_block();
     m_cfg->end_block = create_empty_block();
     m_cfg->end_block->m_continuation = make_ref_counted<ControlFlowFunctionReturn>(
-        make_ref_counted<Variable>(m_function->m_return_value));
+        make_ref_counted<Variable>(m_function->m_named_return_value));
     m_is_expression_stack = { false };
 
     run_in_subtree(m_function->m_ast);
@@ -25,7 +25,7 @@ void CFGBuildingPass::process_function()
     //        error_tree will 100% confuse future passes.
     m_current_block->m_expressions.append(make_ref_counted<BinaryOperation>(
         BinaryOperator::Assignment,
-        make_ref_counted<Variable>(m_function->m_return_value),
+        make_ref_counted<Variable>(m_function->m_named_return_value),
         error_tree));
     m_current_block->m_continuation = make_ref_counted<ControlFlowJump>(m_cfg->end_block);
 }
@@ -63,7 +63,7 @@ RecursionDecision CFGBuildingPass::on_entry(Tree tree)
     if (auto return_node = as<ReturnNode>(tree); return_node) {
         Tree return_assignment = make_ref_counted<BinaryOperation>(
             BinaryOperator::Assignment,
-            make_ref_counted<Variable>(m_function->m_return_value),
+            make_ref_counted<Variable>(m_function->m_named_return_value),
             return_node->m_return_value);
         run_in_subtree(return_assignment);
         auto* return_block = exchange_current_with_empty();
