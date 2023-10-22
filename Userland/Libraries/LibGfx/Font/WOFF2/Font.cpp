@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +19,36 @@
 
 namespace WOFF2 {
 
-static constexpr size_t WOFF2_HEADER_SIZE_IN_BYTES = 48;
+// https://www.w3.org/TR/WOFF2/#woff20Header
+struct [[gnu::packed]] Header {
+    BigEndian<u32> signature;             // 0x774F4632 'wOF2'
+    BigEndian<u32> flavor;                // The "sfnt version" of the input font.
+    BigEndian<u32> length;                // Total size of the WOFF file.
+    BigEndian<u16> num_tables;            // Number of entries in directory of font tables.
+    BigEndian<u16> reserved;              // Reserved; set to 0.
+    BigEndian<u32> total_sfnt_size;       // Total size needed for the uncompressed font data, including the sfnt header,
+                                          // directory, and font tables (including padding).
+    BigEndian<u32> total_compressed_size; // Total length of the compressed data block.
+    BigEndian<u16> major_version;         // Major version of the WOFF file.
+    BigEndian<u16> minor_version;         // Minor version of the WOFF file.
+    BigEndian<u32> meta_offset;           // Offset to metadata block, from beginning of WOFF file.
+    BigEndian<u32> meta_length;           // Length of compressed metadata block.
+    BigEndian<u32> meta_orig_length;      // Uncompressed size of metadata block.
+    BigEndian<u32> priv_offset;           // Offset to private data block, from beginning of WOFF file.
+    BigEndian<u32> priv_length;           // Length of private data block.
+};
+static_assert(AssertSize<Header, 48>());
+
+}
+
+template<>
+class AK::Traits<WOFF2::Header> : public GenericTraits<WOFF2::Header> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+namespace WOFF2 {
+
 static constexpr u32 WOFF2_SIGNATURE = 0x774F4632;
 static constexpr u32 TTCF_SIGNAURE = 0x74746366;
 static constexpr size_t SFNT_HEADER_SIZE = 12;
@@ -862,64 +892,47 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
 
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(SeekableStream& stream)
 {
-    auto stream_size = TRY(stream.size());
-
-    u8 header_buffer[WOFF2_HEADER_SIZE_IN_BYTES] {};
-    TRY(stream.read_until_filled(header_buffer));
-    auto header = ReadonlyBytes { header_buffer };
+    auto header = TRY(stream.read_value<Header>());
 
     // The signature field in the WOFF2 header MUST contain the value of 0x774F4632 ('wOF2'), which distinguishes it from WOFF 1.0 files.
     // If the field does not contain this value, user agents MUST reject the file as invalid.
-    u32 signature = be_u32(header.data());
-    if (signature != WOFF2_SIGNATURE)
+    if (header.signature != WOFF2_SIGNATURE)
         return Error::from_string_literal("Invalid WOFF2 signature");
 
     // The interpretation of the WOFF2 Header is the same as the WOFF Header in [WOFF1], with the addition of one new totalCompressedSize field.
     // NOTE: See WOFF/Font.cpp for more comments about this.
-    u32 flavor = be_u32(header.offset(4));      // The "sfnt version" of the input font.
-    u32 length = be_u32(header.offset(8));      // Total size of the WOFF file.
-    u16 num_tables = be_u16(header.offset(12)); // Number of entries in directory of font tables.
-    // Skip: reserved
-    u32 total_sfnt_size = be_u32(header.offset(16));       // Total size needed for the uncompressed font data, including the sfnt header, directory, and font tables (including padding).
-    u32 total_compressed_size = be_u32(header.offset(20)); // Total length of the compressed data block.
-    // Skip: major_version, minor_version
-    u32 meta_offset = be_u32(header.offset(28)); // Offset to metadata block, from beginning of WOFF file.
-    u32 meta_length = be_u32(header.offset(32)); // Length of compressed metadata block.
-    // Skip: meta_orig_length
-    u32 priv_offset = be_u32(header.offset(40)); // Offset to private data block, from beginning of WOFF file.
-    u32 priv_length = be_u32(header.offset(44)); // Length of private data block.
 
-    if (length > stream_size)
+    if (header.length > TRY(stream.size()))
         return Error::from_string_literal("Invalid WOFF length");
-    if (meta_length == 0 && meta_offset != 0)
+    if (header.meta_length == 0 && header.meta_offset != 0)
         return Error::from_string_literal("Invalid WOFF meta block offset");
-    if (priv_length == 0 && priv_offset != 0)
+    if (header.priv_length == 0 && header.priv_offset != 0)
         return Error::from_string_literal("Invalid WOFF private block offset");
-    if (flavor == TTCF_SIGNAURE)
+    if (header.flavor == TTCF_SIGNAURE)
         return Error::from_string_literal("Font collections not yet supported");
 
     // NOTE: "The "totalSfntSize" value in the WOFF2 Header is intended to be used for reference purposes only. It may represent the size of the uncompressed input font file,
     //        but if the transformed 'glyf' and 'loca' tables are present, the uncompressed size of the reconstructed tables and the total decompressed font size may differ
     //        substantially from the original total size specified in the WOFF2 Header."
     //        We use it as an initial size of the font buffer and extend it as necessary.
-    auto font_buffer = TRY(ByteBuffer::create_zeroed(total_sfnt_size));
+    auto font_buffer = TRY(ByteBuffer::create_zeroed(header.total_sfnt_size));
 
     // ISO-IEC 14496-22:2019 4.5.1 Offset table
     constexpr size_t OFFSET_TABLE_SIZE_IN_BYTES = 12;
     TRY(font_buffer.try_ensure_capacity(OFFSET_TABLE_SIZE_IN_BYTES));
-    u16 search_range = pow_2_less_than_or_equal(num_tables);
-    be_u32(font_buffer.data() + 0, flavor);
-    be_u16(font_buffer.data() + 4, num_tables);
+    u16 search_range = pow_2_less_than_or_equal(header.num_tables);
+    be_u32(font_buffer.data() + 0, header.flavor);
+    be_u16(font_buffer.data() + 4, header.num_tables);
     be_u16(font_buffer.data() + 6, search_range * 16);
     be_u16(font_buffer.data() + 8, log2(search_range));
-    be_u16(font_buffer.data() + 10, num_tables * 16 - search_range * 16);
+    be_u16(font_buffer.data() + 10, header.num_tables * 16 - search_range * 16);
 
     Vector<TableDirectoryEntry> table_entries;
-    TRY(table_entries.try_ensure_capacity(num_tables));
+    TRY(table_entries.try_ensure_capacity(header.num_tables));
 
     u64 total_length_of_all_tables = 0;
 
-    for (size_t table_entry_index = 0; table_entry_index < num_tables; ++table_entry_index) {
+    for (size_t table_entry_index = 0; table_entry_index < header.num_tables; ++table_entry_index) {
         TableDirectoryEntry table_directory_entry;
         u8 const flags_byte = TRY(stream.read_value<u8>());
 
@@ -994,9 +1007,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
             return Error::from_string_literal("Transformed 'loca' table must have a transform length of 0");
     }
 
-    auto compressed_bytes_read_buffer = TRY(ByteBuffer::create_zeroed(total_compressed_size));
+    auto compressed_bytes_read_buffer = TRY(ByteBuffer::create_zeroed(header.total_compressed_size));
     auto compressed_bytes = TRY(stream.read_some(compressed_bytes_read_buffer));
-    if (compressed_bytes.size() != total_compressed_size)
+    if (compressed_bytes.size() != header.total_compressed_size)
         return Error::from_string_literal("Not enough data to read in the reported size of the compressed data");
 
     auto compressed_stream = FixedMemoryStream(compressed_bytes);
@@ -1006,9 +1019,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
         return Error::from_string_literal("Size of the decompressed data is not equal to the total of the reported lengths of each table");
 
     auto decompressed_data_stream = FixedMemoryStream(decompressed_table_data.bytes());
-    size_t font_buffer_offset = SFNT_HEADER_SIZE + num_tables * SFNT_TABLE_SIZE;
+    size_t font_buffer_offset = SFNT_HEADER_SIZE + header.num_tables * SFNT_TABLE_SIZE;
     Optional<GlyfAndLocaTableBuffers> glyf_and_loca_buffer;
-    for (size_t table_entry_index = 0; table_entry_index < num_tables; ++table_entry_index) {
+    for (size_t table_entry_index = 0; table_entry_index < header.num_tables; ++table_entry_index) {
         auto& table_entry = table_entries.at(table_entry_index);
         u32 length_to_read = table_entry.has_transformation() ? table_entry.transform_length.value() : table_entry.original_length;
 
