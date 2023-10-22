@@ -418,18 +418,28 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         case Instructions::i64_store8.value():
         case Instructions::i64_store16.value():
         case Instructions::i64_store32.value(): {
-            // op (align offset)
+            // op (align [multi-memory: memindex] offset)
             auto align_or_error = stream.read_value<LEB128<size_t>>();
             if (align_or_error.is_error())
                 return with_eof_check(stream, ParseError::InvalidInput);
             size_t align = align_or_error.release_value();
+
+            // Proposal "multi-memory", if bit 6 of alignment is set, then a memory index follows the alignment.
+            size_t memory_index = 0;
+            if ((align & 0x20) != 0) {
+                align &= ~0x20;
+                auto memory_index_or_error = stream.read_value<LEB128<size_t>>();
+                if (memory_index_or_error.is_error())
+                    return with_eof_check(stream, ParseError::InvalidInput);
+                memory_index = memory_index_or_error.release_value();
+            }
 
             auto offset_or_error = stream.read_value<LEB128<size_t>>();
             if (offset_or_error.is_error())
                 return with_eof_check(stream, ParseError::InvalidInput);
             size_t offset = offset_or_error.release_value();
 
-            resulting_instructions.append(Instruction { opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset) } });
+            resulting_instructions.append(Instruction { opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset), MemoryIndex(memory_index) } });
             break;
         }
         case Instructions::local_get.value():
@@ -453,19 +463,15 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         }
         case Instructions::memory_size.value():
         case Instructions::memory_grow.value(): {
-            // op 0x0
-            // The zero is currently unused.
-            auto unused_or_error = stream.read_value<u8>();
-            if (unused_or_error.is_error())
+            // op [multi-memory: memindex]|0x00
+
+            auto memory_index_or_error = stream.read_value<u8>();
+            if (memory_index_or_error.is_error())
                 return with_eof_check(stream, ParseError::ExpectedKindTag);
 
-            auto unused = unused_or_error.release_value();
-            if (unused != 0x00) {
-                dbgln("Invalid tag in memory_grow {}", unused);
-                return with_eof_check(stream, ParseError::InvalidTag);
-            }
+            auto memory_index = memory_index_or_error.release_value();
 
-            resulting_instructions.append(Instruction { opcode });
+            resulting_instructions.append(Instruction { opcode, MemoryIndexArgument { MemoryIndex(memory_index) } });
             break;
         }
         case Instructions::i32_const.value(): {
@@ -704,14 +710,15 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
                 auto index = GenericIndexParser<DataIndex>::parse(stream);
                 if (index.is_error())
                     return index.error();
-                auto unused_or_error = stream.read_value<u8>();
-                if (unused_or_error.is_error())
+
+                // Proposal "multi-memory", literal 0x00 is replaced with a memory index.
+                auto memory_index_or_error = stream.read_value<u8>();
+                if (memory_index_or_error.is_error())
                     return with_eof_check(stream, ParseError::InvalidInput);
 
-                auto unused = unused_or_error.release_value();
-                if (unused != 0x00)
-                    return ParseError::InvalidImmediate;
-                resulting_instructions.append(Instruction { full_opcode, index.release_value() });
+                auto memory_index = memory_index_or_error.release_value();
+
+                resulting_instructions.append(Instruction { full_opcode, MemoryInitArgs { index.release_value(), MemoryIndex(memory_index) } });
                 break;
             }
             case Instructions::data_drop.value(): {
@@ -722,27 +729,27 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
                 break;
             }
             case Instructions::memory_copy.value(): {
+                // Proposal "multi-memory", literal 0x00 is replaced with two memory indices, destination and source, respectively.
+                MemoryIndex indices[] = { 0, 0 };
+
                 for (size_t i = 0; i < 2; ++i) {
-                    auto unused_or_error = stream.read_value<u8>();
-                    if (unused_or_error.is_error())
+                    auto memory_index_or_error = stream.read_value<u8>();
+                    if (memory_index_or_error.is_error())
                         return with_eof_check(stream, ParseError::InvalidInput);
 
-                    auto unused = unused_or_error.release_value();
-                    if (unused != 0x00)
-                        return ParseError::InvalidImmediate;
+                    indices[i] = memory_index_or_error.release_value();
                 }
-                resulting_instructions.append(Instruction { full_opcode });
+                resulting_instructions.append(Instruction { full_opcode, MemoryCopyArgs { indices[1], indices[0] } });
                 break;
             }
             case Instructions::memory_fill.value(): {
-                auto unused_or_error = stream.read_value<u8>();
-                if (unused_or_error.is_error())
+                // Proposal "multi-memory", literal 0x00 is replaced with a memory index.
+                auto memory_index_or_error = stream.read_value<u8>();
+                if (memory_index_or_error.is_error())
                     return with_eof_check(stream, ParseError::InvalidInput);
 
-                auto unused = unused_or_error.release_value();
-                if (unused != 0x00)
-                    return ParseError::InvalidImmediate;
-                resulting_instructions.append(Instruction { full_opcode });
+                auto memory_index = memory_index_or_error.release_value();
+                resulting_instructions.append(Instruction { full_opcode, MemoryIndexArgument { MemoryIndex { memory_index } } });
                 break;
             }
             case Instructions::table_init.value(): {
@@ -793,17 +800,28 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
             case Instructions::v128_load32_splat.value():
             case Instructions::v128_load64_splat.value():
             case Instructions::v128_store.value(): {
-                // op (align offset)
+                // op (align [multi-memory memindex] offset)
                 auto align_or_error = stream.read_value<LEB128<size_t>>();
                 if (align_or_error.is_error())
                     return with_eof_check(stream, ParseError::ExpectedIndex);
                 size_t align = align_or_error.release_value();
+
+                // Proposal "multi-memory", if bit 6 of alignment is set, then a memory index follows the alignment.
+                size_t memory_index = 0;
+                if ((align & 0x20) != 0) {
+                    align &= ~0x20;
+                    auto memory_index_or_error = stream.read_value<LEB128<size_t>>();
+                    if (memory_index_or_error.is_error())
+                        return with_eof_check(stream, ParseError::InvalidInput);
+                    memory_index = memory_index_or_error.release_value();
+                }
+
                 auto offset_or_error = stream.read_value<LEB128<size_t>>();
                 if (offset_or_error.is_error())
                     return with_eof_check(stream, ParseError::ExpectedIndex);
                 size_t offset = offset_or_error.release_value();
 
-                resulting_instructions.append(Instruction { full_opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset) } });
+                resulting_instructions.append(Instruction { full_opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset), MemoryIndex(memory_index) } });
                 break;
             }
             case Instructions::v128_load8_lane.value():
@@ -814,11 +832,22 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
             case Instructions::v128_store16_lane.value():
             case Instructions::v128_store32_lane.value():
             case Instructions::v128_store64_lane.value(): {
-                // op (align offset) (index)
+                // op (align [multi-memory: memindex] offset) (index)
                 auto align_or_error = stream.read_value<LEB128<size_t>>();
                 if (align_or_error.is_error())
                     return with_eof_check(stream, ParseError::ExpectedIndex);
                 size_t align = align_or_error.release_value();
+
+                // Proposal "multi-memory", if bit 6 of alignment is set, then a memory index follows the alignment.
+                size_t memory_index = 0;
+                if ((align & 0x20) != 0) {
+                    align &= ~0x20;
+                    auto memory_index_or_error = stream.read_value<LEB128<size_t>>();
+                    if (memory_index_or_error.is_error())
+                        return with_eof_check(stream, ParseError::InvalidInput);
+                    memory_index = memory_index_or_error.release_value();
+                }
+
                 auto offset_or_error = stream.read_value<LEB128<size_t>>();
                 if (offset_or_error.is_error())
                     return with_eof_check(stream, ParseError::ExpectedIndex);
@@ -829,7 +858,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
                     return with_eof_check(stream, ParseError::InvalidInput);
                 auto index = index_or_error.release_value();
 
-                resulting_instructions.append(Instruction { full_opcode, MemoryAndLaneArgument { { static_cast<u32>(align), static_cast<u32>(offset) }, index } });
+                resulting_instructions.append(Instruction { full_opcode, MemoryAndLaneArgument { { static_cast<u32>(align), static_cast<u32>(offset), MemoryIndex(memory_index) }, index } });
                 break;
             }
             case Instructions::v128_const.value(): {

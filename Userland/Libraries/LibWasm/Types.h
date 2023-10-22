@@ -410,6 +410,7 @@ public:
     struct MemoryArgument {
         u32 align;
         u32 offset;
+        MemoryIndex memory_index { 0 };
     };
 
     struct MemoryAndLaneArgument {
@@ -419,6 +420,21 @@ public:
 
     struct LaneIndex {
         u8 lane;
+    };
+
+    // Proposal "multi-memory"
+    struct MemoryCopyArgs {
+        MemoryIndex src_index;
+        MemoryIndex dst_index;
+    };
+
+    struct MemoryInitArgs {
+        DataIndex data_index;
+        MemoryIndex memory_index;
+    };
+
+    struct MemoryIndexArgument {
+        MemoryIndex memory_index;
     };
 
     struct ShuffleArgument {
@@ -460,6 +476,9 @@ private:
         LocalIndex,
         MemoryArgument,
         MemoryAndLaneArgument,
+        MemoryCopyArgs,
+        MemoryIndexArgument,
+        MemoryInitArgs,
         StructuredInstructionArgs,
         ShuffleArgument,
         TableBranchArgs,
