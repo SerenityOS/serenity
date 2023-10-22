@@ -19,8 +19,8 @@ public:
     using GenericASTPass::GenericASTPass;
 
 protected:
+    void process_function() override;
     RecursionDecision on_entry(Tree tree) override;
-
     void on_leave(Tree tree) override;
 };
 

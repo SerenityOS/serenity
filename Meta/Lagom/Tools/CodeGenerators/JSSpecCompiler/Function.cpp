@@ -30,10 +30,11 @@ FunctionDeclaration::FunctionDeclaration(StringView name)
 {
 }
 
-FunctionDefinition::FunctionDefinition(StringView name, Tree ast)
+FunctionDefinition::FunctionDefinition(StringView name, Tree ast, Vector<StringView>&& argument_names)
     : FunctionDeclaration(name)
     , m_ast(move(ast))
-    , m_return_value(make_ref_counted<NamedVariableDeclaration>("$return"sv))
+    , m_argument_names(move(argument_names))
+    , m_named_return_value(make_ref_counted<NamedVariableDeclaration>("$return"sv))
 {
 }
 

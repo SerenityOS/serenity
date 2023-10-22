@@ -279,7 +279,7 @@ void SSABuildingPass::place_phi_nodes()
     OrderedHashMap<NamedVariableDeclarationRef, Vector<BasicBlockRef>> m_declarations;
     for (auto const& [name, var_decl] : m_function->m_local_variables)
         m_declarations.set(var_decl, { m_order[0] });
-    m_declarations.set(m_function->m_return_value, { m_order[0] });
+    m_declarations.set(m_function->m_named_return_value, { m_order[0] });
 
     VariableAssignmentCollector collector(m_declarations);
     for (auto const& block : m_order)
@@ -414,6 +414,12 @@ void SSABuildingPass::rename_variables(Vertex u, Vertex from)
         });
     renamer.run(u.block());
 
+    if (auto function_return = as<ControlFlowFunctionReturn>(u.block()->m_continuation); function_return) {
+        // CFG should have exactly one ControlFlowFunctionReturn.
+        VERIFY(m_function->m_return_value == nullptr);
+        m_function->m_return_value = function_return->m_return_value->m_ssa;
+    }
+
     for (size_t j : u->outgoing_edges)
         rename_variables(j, u);
 
@@ -423,12 +429,24 @@ void SSABuildingPass::rename_variables(Vertex u, Vertex from)
 
 void SSABuildingPass::rename_variables()
 {
-    for (auto const& [name, var_decl] : m_function->m_local_variables)
+    HashMap<StringView, size_t> argument_index_by_name;
+    for (size_t i = 0; i < m_function->m_argument_names.size(); ++i)
+        argument_index_by_name.set(m_function->m_argument_names[i], i);
+    m_function->m_arguments.resize(m_function->m_argument_names.size());
+
+    for (auto const& [name, var_decl] : m_function->m_local_variables) {
         make_new_ssa_variable_for(var_decl);
-    make_new_ssa_variable_for(m_function->m_return_value);
+
+        if (auto maybe_index = argument_index_by_name.get(name); maybe_index.has_value()) {
+            size_t index = maybe_index.value();
+            m_function->m_arguments[index] = m_def_stack.get(var_decl).value()[0];
+        }
+    }
+    make_new_ssa_variable_for(m_function->m_named_return_value);
 
     ++m_mark_version;
     rename_variables(0);
+    VERIFY(m_function->m_return_value);
     m_function->reindex_ssa_variables();
 }
 

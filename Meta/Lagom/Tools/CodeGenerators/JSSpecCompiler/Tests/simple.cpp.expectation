@@ -1,5 +1,5 @@
 ===== AST after parser =====
-f():
+f([ cond1, cond2 ]):
 TreeList
   IfBranch
     UnresolvedReference cond1
@@ -27,7 +27,7 @@ TreeList
     UnresolvedReference b
 
 ===== AST after function-call-canonicalization =====
-f():
+f([ cond1, cond2 ]):
 TreeList
   IfBranch
     UnresolvedReference cond1
@@ -55,7 +55,7 @@ TreeList
     UnresolvedReference b
 
 ===== AST after if-branch-merging =====
-f():
+f([ cond1, cond2 ]):
 TreeList
   IfElseIfChain
     UnresolvedReference cond1
@@ -81,16 +81,16 @@ TreeList
     UnresolvedReference b
 
 ===== AST after reference-resolving =====
-f():
+f([ cond1, cond2 ]):
 TreeList
   IfElseIfChain
-    UnresolvedReference cond1
+    Var cond1
     TreeList
       BinaryOperation Assignment
         Var a
         MathematicalConstant 1
       IfElseIfChain
-        UnresolvedReference cond2
+        Var cond2
         TreeList
           BinaryOperation Assignment
             Var b
@@ -107,16 +107,16 @@ TreeList
     Var b
 
 ===== AST after cfg-building =====
-f():
+f([ cond1, cond2 ]):
 TreeList
   IfElseIfChain
-    UnresolvedReference cond1
+    Var cond1
     TreeList
       BinaryOperation Assignment
         Var a
         MathematicalConstant 1
       IfElseIfChain
-        UnresolvedReference cond2
+        Var cond2
         TreeList
           BinaryOperation Assignment
             Var b
@@ -133,10 +133,10 @@ TreeList
     Var b
 
 ===== CFG after cfg-building =====
-f():
+f([ cond1, cond2 ]):
 0:
 ControlFlowBranch true=3 false=7
-  UnresolvedReference cond1
+  Var cond1
 
 1:
 ControlFlowFunctionReturn
@@ -153,7 +153,7 @@ BinaryOperation Assignment
   Var a
   MathematicalConstant 1
 ControlFlowBranch true=5 false=6
-  UnresolvedReference cond2
+  Var cond2
 
 4:
 ControlFlowJump jump=2
@@ -183,16 +183,16 @@ BinaryOperation Assignment
 ControlFlowJump jump=1
 
 ===== AST after cfg-simplification =====
-f():
+f([ cond1, cond2 ]):
 TreeList
   IfElseIfChain
-    UnresolvedReference cond1
+    Var cond1
     TreeList
       BinaryOperation Assignment
         Var a
         MathematicalConstant 1
       IfElseIfChain
-        UnresolvedReference cond2
+        Var cond2
         TreeList
           BinaryOperation Assignment
             Var b
@@ -209,10 +209,10 @@ TreeList
     Var b
 
 ===== CFG after cfg-simplification =====
-f():
+f([ cond1, cond2 ]):
 0:
 ControlFlowBranch true=3 false=6
-  UnresolvedReference cond1
+  Var cond1
 
 1:
 ControlFlowFunctionReturn
@@ -229,7 +229,7 @@ BinaryOperation Assignment
   Var a
   MathematicalConstant 1
 ControlFlowBranch true=4 false=5
-  UnresolvedReference cond2
+  Var cond2
 
 4:
 BinaryOperation Assignment
@@ -250,16 +250,16 @@ BinaryOperation Assignment
 ControlFlowJump jump=2
 
 ===== AST after ssa-building =====
-f():
+f([ cond1, cond2 ]):
 TreeList
   IfElseIfChain
-    UnresolvedReference cond1
+    Var cond1@0
     TreeList
       BinaryOperation Assignment
         Var a@1
         MathematicalConstant 1
       IfElseIfChain
-        UnresolvedReference cond2
+        Var cond2@0
         TreeList
           BinaryOperation Assignment
             Var b@1
@@ -276,17 +276,17 @@ TreeList
     Var b@2
 
 ===== CFG after ssa-building =====
-f():
+f([ cond1, cond2 ]):
 0:
 ControlFlowBranch true=1 false=6
-  UnresolvedReference cond1
+  Var cond1@0
 
 1:
 BinaryOperation Assignment
   Var a@1
   MathematicalConstant 1
 ControlFlowBranch true=2 false=5
-  UnresolvedReference cond2
+  Var cond2@0
 
 2:
 BinaryOperation Assignment
@@ -319,16 +319,16 @@ BinaryOperation Assignment
 ControlFlowJump jump=3
 
 ===== AST after dce =====
-f():
+f([ cond1, cond2 ]):
 TreeList
   IfElseIfChain
-    UnresolvedReference cond1
+    Var cond1@0
     TreeList
       BinaryOperation Assignment
         Var a@1
         MathematicalConstant 1
       IfElseIfChain
-        UnresolvedReference cond2
+        Var cond2@0
         TreeList
           BinaryOperation Assignment
             Var b@1
@@ -345,17 +345,17 @@ TreeList
     Var b@2
 
 ===== CFG after dce =====
-f():
+f([ cond1, cond2 ]):
 0:
 ControlFlowBranch true=1 false=6
-  UnresolvedReference cond1
+  Var cond1@0
 
 1:
 BinaryOperation Assignment
   Var a@1
   MathematicalConstant 1
 ControlFlowBranch true=2 false=5
-  UnresolvedReference cond2
+  Var cond2@0
 
 2:
 BinaryOperation Assignment

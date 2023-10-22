@@ -140,14 +140,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (step.dump_ast) {
             outln(stderr, "===== AST after {} =====", step.step->name());
             for (auto const& function : translation_unit.functions_to_compile) {
-                outln(stderr, "{}():", function->m_name);
+                outln(stderr, "{}({}):", function->m_name, function->m_argument_names);
                 outln(stderr, "{}", function->m_ast);
             }
         }
         if (step.dump_cfg && translation_unit.functions_to_compile[0]->m_cfg != nullptr) {
             outln(stderr, "===== CFG after {} =====", step.step->name());
             for (auto const& function : translation_unit.functions_to_compile) {
-                outln(stderr, "{}():", function->m_name);
+                outln(stderr, "{}({}):", function->m_name, function->m_argument_names);
                 outln(stderr, "{}", *function->m_cfg);
             }
         }
