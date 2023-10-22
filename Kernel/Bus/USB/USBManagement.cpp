@@ -65,13 +65,6 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
     }));
 }
 
-bool USBManagement::initialized()
-{
-    // FIXME: Footgun, as the state of the singleton does not dictate if we have
-    //        set up the SysFSDirectory or enumerated controllers
-    return s_the.is_initialized();
-}
-
 UNMAP_AFTER_INIT void USBManagement::initialize()
 {
     if (!s_initialized_sys_fs_directory) {

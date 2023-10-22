@@ -17,7 +17,6 @@ class USBManagement {
 
 public:
     USBManagement();
-    static bool initialized();
     static void initialize();
     static USBManagement& the();
 
