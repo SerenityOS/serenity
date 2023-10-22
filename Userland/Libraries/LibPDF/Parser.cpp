@@ -531,10 +531,35 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
             }
 
             auto operator_string = StringView(m_reader.bytes().slice(operator_start, m_reader.offset() - operator_start));
+            m_reader.consume_whitespace();
+
             auto operator_type = Operator::operator_type_from_symbol(operator_string);
+
+            // Inline images contain a dictionary containing arbitrary values between BI and ID,
+            // and then arbitrary binary data between ID and EI.
+            // This means they need a special code path in the parser, so that image data in there doesn't confuse the operator parser.
+            if (operator_type == OperatorType::InlineImageBegin) {
+                if (!operator_args.is_empty())
+                    return error("operator args not empty on start of inline image");
+
+                while (!m_reader.done()) {
+                    if (m_reader.matches("EI")) {
+                        break;
+                    }
+                    m_reader.consume();
+                }
+
+                if (m_reader.done())
+                    return error("operator stream ended inside inline image");
+
+                m_reader.consume(2); // "EI"
+                m_reader.consume_whitespace();
+
+                // FIXME: Do more with inline images than just skipping them.
+            }
+
             operators.append(Operator(operator_type, move(operator_args)));
             operator_args = Vector<Value>();
-            m_reader.consume_whitespace();
 
             continue;
         }
