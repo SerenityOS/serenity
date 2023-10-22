@@ -161,6 +161,66 @@ u32 XzFilterLzma2Properties::dictionary_size() const
     return dictionary_size;
 }
 
+u32 XzFilterDeltaProperties::distance() const
+{
+    // "The Properties byte indicates the delta distance, which can be
+    //  1-256 bytes backwards from the current byte: 0x00 indicates
+    //  distance of 1 byte and 0xFF distance of 256 bytes."
+    return encoded_distance + 1;
+}
+
+ErrorOr<NonnullOwnPtr<XzFilterDelta>> XzFilterDelta::create(MaybeOwned<Stream> stream, u32 distance)
+{
+    auto buffer = TRY(CircularBuffer::create_empty(distance));
+    auto filter = TRY(adopt_nonnull_own_or_enomem(new (nothrow) XzFilterDelta(move(stream), move(buffer))));
+    return filter;
+}
+
+XzFilterDelta::XzFilterDelta(MaybeOwned<Stream> stream, CircularBuffer buffer)
+    : m_stream(move(stream))
+    , m_buffer(move(buffer))
+{
+}
+
+ErrorOr<Bytes> XzFilterDelta::read_some(Bytes bytes)
+{
+    bytes = TRY(m_stream->read_some(bytes));
+
+    auto distance = m_buffer.capacity();
+
+    for (auto& byte : bytes) {
+        if (m_buffer.seekback_limit() >= distance) {
+            u8 byte_at_distance { 0 };
+            MUST(m_buffer.read_with_seekback({ &byte_at_distance, 1 }, distance));
+            byte = byte_at_distance + byte;
+        }
+
+        m_buffer.write({ &byte, 1 });
+        MUST(m_buffer.discard(1));
+    }
+
+    return bytes;
+}
+
+ErrorOr<size_t> XzFilterDelta::write_some(ReadonlyBytes)
+{
+    return EBADF;
+}
+
+bool XzFilterDelta::is_eof() const
+{
+    return m_stream->is_eof();
+}
+
+bool XzFilterDelta::is_open() const
+{
+    return m_stream->is_open();
+}
+
+void XzFilterDelta::close()
+{
+}
+
 ErrorOr<NonnullOwnPtr<XzDecompressor>> XzDecompressor::create(MaybeOwned<Stream> stream)
 {
     auto counting_stream = TRY(try_make<CountingStream>(move(stream)));
@@ -350,6 +410,17 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
             TRY(properties->validate());
 
             new_block_stream = TRY(Lzma2Decompressor::create_from_raw_stream(move(new_block_stream), properties->dictionary_size()));
+            continue;
+        }
+
+        // 5.3.3. Delta
+        if (filter.id == 0x03) {
+            if (filter.properties.size() < sizeof(XzFilterDeltaProperties))
+                return Error::from_string_literal("XZ Delta filter has a smaller-than-needed properties size");
+
+            auto const* properties = reinterpret_cast<XzFilterDeltaProperties*>(filter.properties.data());
+
+            new_block_stream = TRY(XzFilterDelta::create(move(new_block_stream), properties->distance()));
             continue;
         }
 
