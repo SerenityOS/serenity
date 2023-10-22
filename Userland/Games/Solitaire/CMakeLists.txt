@@ -4,15 +4,12 @@ serenity_component(
     TARGETS Solitaire
 )
 
-stringify_gml(Solitaire.gml SolitaireGML.h solitaire_gml)
+compile_gml(Solitaire.gml SolitaireGML.cpp solitaire_gml)
 
 set(SOURCES
     Game.cpp
+    SolitaireGML.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    SolitaireGML.h
 )
 
 serenity_app(Solitaire ICON app-solitaire)

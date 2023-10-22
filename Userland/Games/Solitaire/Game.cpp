@@ -12,8 +12,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
-REGISTER_WIDGET(Solitaire, Game);
-
 namespace Solitaire {
 
 static constexpr uint8_t new_game_animation_delay = 2;
