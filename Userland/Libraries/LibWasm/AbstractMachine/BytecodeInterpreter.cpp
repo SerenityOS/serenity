@@ -88,13 +88,13 @@ void BytecodeInterpreter::branch_to_label(Configuration& configuration, LabelInd
 template<typename ReadType, typename PushType>
 void BytecodeInterpreter::load_and_push(Configuration& configuration, Instruction const& instruction)
 {
-    auto& address = configuration.frame().module().memories().first();
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    auto& address = configuration.frame().module().memories()[arg.memory_index.value()];
     auto memory = configuration.store().get(address);
     if (!memory) {
         m_trap = Trap { "Nonexistent memory" };
         return;
     }
-    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     auto& entry = configuration.stack().peek();
     auto base = entry.get<Value>().to<i32>();
     if (!base.has_value()) {
@@ -123,13 +123,13 @@ ALWAYS_INLINE static TDst convert_vector(TSrc v)
 template<size_t M, size_t N, template<typename> typename SetSign>
 void BytecodeInterpreter::load_and_push_mxn(Configuration& configuration, Instruction const& instruction)
 {
-    auto& address = configuration.frame().module().memories().first();
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    auto& address = configuration.frame().module().memories()[arg.memory_index.value()];
     auto memory = configuration.store().get(address);
     if (!memory) {
         m_trap = Trap { "Nonexistent memory" };
         return;
     }
-    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     auto& entry = configuration.stack().peek();
     auto base = entry.get<Value>().to<i32>();
     if (!base.has_value()) {
@@ -161,13 +161,13 @@ void BytecodeInterpreter::load_and_push_mxn(Configuration& configuration, Instru
 template<size_t M>
 void BytecodeInterpreter::load_and_push_m_splat(Configuration& configuration, Instruction const& instruction)
 {
-    auto& address = configuration.frame().module().memories().first();
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    auto& address = configuration.frame().module().memories()[arg.memory_index.value()];
     auto memory = configuration.store().get(address);
     if (!memory) {
         m_trap = Trap { "Nonexistent memory" };
         return;
     }
-    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     auto& entry = configuration.stack().peek();
     auto base = entry.get<Value>().to<i32>();
     if (!base.has_value()) {
@@ -384,9 +384,9 @@ void BytecodeInterpreter::pop_and_store(Configuration& configuration, Instructio
 
 void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruction const& instruction, ReadonlyBytes data, i32 base)
 {
-    auto& address = configuration.frame().module().memories().first();
-    auto memory = configuration.store().get(address);
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    auto& address = configuration.frame().module().memories()[arg.memory_index.value()];
+    auto memory = configuration.store().get(address);
     u64 instance_address = static_cast<u64>(bit_cast<u32>(base)) + arg.offset;
     Checked addition { instance_address };
     addition += data.size();
@@ -745,7 +745,8 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::memory_size.value(): {
-        auto address = configuration.frame().module().memories()[0];
+        auto& args = instruction.arguments().get<Instruction::MemoryIndexArgument>();
+        auto address = configuration.frame().module().memories()[args.memory_index.value()];
         auto instance = configuration.store().get(address);
         auto pages = instance->size() / Constants::page_size;
         dbgln_if(WASM_TRACE_DEBUG, "memory.size -> stack({})", pages);
@@ -753,7 +754,8 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::memory_grow.value(): {
-        auto address = configuration.frame().module().memories()[0];
+        auto& args = instruction.arguments().get<Instruction::MemoryIndexArgument>();
+        auto address = configuration.frame().module().memories()[args.memory_index.value()];
         auto instance = configuration.store().get(address);
         i32 old_pages = instance->size() / Constants::page_size;
         auto& entry = configuration.stack().peek();
@@ -767,7 +769,8 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     // https://webassembly.github.io/spec/core/bikeshed/#exec-memory-fill
     case Instructions::memory_fill.value(): {
-        auto address = configuration.frame().module().memories()[0];
+        auto& args = instruction.arguments().get<Instruction::MemoryIndexArgument>();
+        auto address = configuration.frame().module().memories()[args.memory_index.value()];
         auto instance = configuration.store().get(address);
         auto count = configuration.stack().pop().get<Value>().to<i32>().value();
         auto value = configuration.stack().pop().get<Value>().to<i32>().value();
@@ -790,31 +793,35 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     // https://webassembly.github.io/spec/core/bikeshed/#exec-memory-copy
     case Instructions::memory_copy.value(): {
-        auto address = configuration.frame().module().memories()[0];
-        auto instance = configuration.store().get(address);
+        auto& args = instruction.arguments().get<Instruction::MemoryCopyArgs>();
+        auto source_address = configuration.frame().module().memories()[args.src_index.value()];
+        auto destination_address = configuration.frame().module().memories()[args.dst_index.value()];
+        auto source_instance = configuration.store().get(source_address);
+        auto destination_instance = configuration.store().get(destination_address);
+
         auto count = configuration.stack().pop().get<Value>().to<i32>().value();
         auto source_offset = configuration.stack().pop().get<Value>().to<i32>().value();
         auto destination_offset = configuration.stack().pop().get<Value>().to<i32>().value();
 
-        TRAP_IF_NOT(static_cast<size_t>(source_offset + count) <= instance->data().size());
-        TRAP_IF_NOT(static_cast<size_t>(destination_offset + count) <= instance->data().size());
+        TRAP_IF_NOT(static_cast<size_t>(source_offset + count) <= source_instance->data().size());
+        TRAP_IF_NOT(static_cast<size_t>(destination_offset + count) <= destination_instance->data().size());
 
         if (count == 0)
             return;
 
         Instruction synthetic_store_instruction {
             Instructions::i32_store8,
-            Instruction::MemoryArgument { 0, 0 }
+            Instruction::MemoryArgument { 0, 0, args.dst_index }
         };
 
         if (destination_offset <= source_offset) {
             for (auto i = 0; i < count; ++i) {
-                auto value = instance->data()[source_offset + i];
+                auto value = source_instance->data()[source_offset + i];
                 store_to_memory(configuration, synthetic_store_instruction, { &value, sizeof(value) }, destination_offset + i);
             }
         } else {
             for (auto i = count - 1; i >= 0; --i) {
-                auto value = instance->data()[source_offset + i];
+                auto value = source_instance->data()[source_offset + i];
                 store_to_memory(configuration, synthetic_store_instruction, { &value, sizeof(value) }, destination_offset + i);
             }
         }
@@ -823,8 +830,8 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     // https://webassembly.github.io/spec/core/bikeshed/#exec-memory-init
     case Instructions::memory_init.value(): {
-        auto data_index = instruction.arguments().get<DataIndex>();
-        auto& data_address = configuration.frame().module().datas()[data_index.value()];
+        auto& args = instruction.arguments().get<Instruction::MemoryInitArgs>();
+        auto& data_address = configuration.frame().module().datas()[args.data_index.value()];
         auto& data = *configuration.store().get(data_address);
         auto count = *configuration.stack().pop().get<Value>().to<i32>();
         auto source_offset = *configuration.stack().pop().get<Value>().to<i32>();
@@ -836,7 +843,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
 
         Instruction synthetic_store_instruction {
             Instructions::i32_store8,
-            Instruction::MemoryArgument { 0, 0 }
+            Instruction::MemoryArgument { 0, 0, args.memory_index }
         };
 
         for (size_t i = 0; i < (size_t)count; ++i) {

@@ -148,11 +148,6 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
         }
     }
 
-    if (m_context.memories.size() > 1) {
-        module.set_validation_status(Module::ValidationStatus::Invalid, {});
-        return Errors::out_of_bounds("memory section count"sv, m_context.memories.size(), 1, 1);
-    }
-
     module.set_validation_status(Module::ValidationStatus::Valid, {});
     return {};
 }
@@ -1577,9 +1572,10 @@ VALIDATE_INSTRUCTION(elem_drop)
 // https://webassembly.github.io/spec/core/bikeshed/#memory-instructions%E2%91%A2
 VALIDATE_INSTRUCTION(i32_load)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(i32))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(i32));
 
@@ -1590,9 +1586,10 @@ VALIDATE_INSTRUCTION(i32_load)
 
 VALIDATE_INSTRUCTION(i64_load)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(i64))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(i64));
 
@@ -1603,9 +1600,10 @@ VALIDATE_INSTRUCTION(i64_load)
 
 VALIDATE_INSTRUCTION(f32_load)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(float))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(float));
 
@@ -1616,9 +1614,10 @@ VALIDATE_INSTRUCTION(f32_load)
 
 VALIDATE_INSTRUCTION(f64_load)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(double))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(double));
 
@@ -1629,9 +1628,10 @@ VALIDATE_INSTRUCTION(f64_load)
 
 VALIDATE_INSTRUCTION(i32_load16_s)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
@@ -1642,9 +1642,10 @@ VALIDATE_INSTRUCTION(i32_load16_s)
 
 VALIDATE_INSTRUCTION(i32_load16_u)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
@@ -1655,9 +1656,10 @@ VALIDATE_INSTRUCTION(i32_load16_u)
 
 VALIDATE_INSTRUCTION(i32_load8_s)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
@@ -1668,9 +1670,10 @@ VALIDATE_INSTRUCTION(i32_load8_s)
 
 VALIDATE_INSTRUCTION(i32_load8_u)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
@@ -1681,9 +1684,10 @@ VALIDATE_INSTRUCTION(i32_load8_u)
 
 VALIDATE_INSTRUCTION(i64_load32_s)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 32 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 32 / 8);
 
@@ -1694,9 +1698,10 @@ VALIDATE_INSTRUCTION(i64_load32_s)
 
 VALIDATE_INSTRUCTION(i64_load32_u)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 32 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 32 / 8);
 
@@ -1707,9 +1712,10 @@ VALIDATE_INSTRUCTION(i64_load32_u)
 
 VALIDATE_INSTRUCTION(i64_load16_s)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
@@ -1720,9 +1726,10 @@ VALIDATE_INSTRUCTION(i64_load16_s)
 
 VALIDATE_INSTRUCTION(i64_load16_u)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
@@ -1733,9 +1740,10 @@ VALIDATE_INSTRUCTION(i64_load16_u)
 
 VALIDATE_INSTRUCTION(i64_load8_s)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
@@ -1746,9 +1754,10 @@ VALIDATE_INSTRUCTION(i64_load8_s)
 
 VALIDATE_INSTRUCTION(i64_load8_u)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
@@ -1759,9 +1768,10 @@ VALIDATE_INSTRUCTION(i64_load8_u)
 
 VALIDATE_INSTRUCTION(i32_store)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(i32))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(i32));
 
@@ -1772,9 +1782,10 @@ VALIDATE_INSTRUCTION(i32_store)
 
 VALIDATE_INSTRUCTION(i64_store)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(i64))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(i64));
 
@@ -1785,9 +1796,10 @@ VALIDATE_INSTRUCTION(i64_store)
 
 VALIDATE_INSTRUCTION(f32_store)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(float))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(float));
 
@@ -1798,9 +1810,10 @@ VALIDATE_INSTRUCTION(f32_store)
 
 VALIDATE_INSTRUCTION(f64_store)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(double))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(double));
 
@@ -1811,9 +1824,10 @@ VALIDATE_INSTRUCTION(f64_store)
 
 VALIDATE_INSTRUCTION(i32_store16)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
@@ -1824,9 +1838,10 @@ VALIDATE_INSTRUCTION(i32_store16)
 
 VALIDATE_INSTRUCTION(i32_store8)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
@@ -1837,9 +1852,10 @@ VALIDATE_INSTRUCTION(i32_store8)
 
 VALIDATE_INSTRUCTION(i64_store32)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 32 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 32 / 8);
 
@@ -1850,9 +1866,10 @@ VALIDATE_INSTRUCTION(i64_store32)
 
 VALIDATE_INSTRUCTION(i64_store16)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 16 / 8);
 
@@ -1863,9 +1880,10 @@ VALIDATE_INSTRUCTION(i64_store16)
 
 VALIDATE_INSTRUCTION(i64_store8)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, 8 / 8);
 
@@ -1876,7 +1894,7 @@ VALIDATE_INSTRUCTION(i64_store8)
 
 VALIDATE_INSTRUCTION(memory_size)
 {
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(instruction.arguments().get<Instruction::MemoryIndexArgument>().memory_index));
 
     stack.append(ValueType(ValueType::I32));
     return {};
@@ -1884,7 +1902,8 @@ VALIDATE_INSTRUCTION(memory_size)
 
 VALIDATE_INSTRUCTION(memory_grow)
 {
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(instruction.arguments().get<Instruction::MemoryIndexArgument>().memory_index));
+
     TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
 
@@ -1893,7 +1912,7 @@ VALIDATE_INSTRUCTION(memory_grow)
 
 VALIDATE_INSTRUCTION(memory_fill)
 {
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(instruction.arguments().get<Instruction::MemoryIndexArgument>().memory_index));
 
     TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
@@ -1902,7 +1921,9 @@ VALIDATE_INSTRUCTION(memory_fill)
 
 VALIDATE_INSTRUCTION(memory_copy)
 {
-    TRY(validate(MemoryIndex { 0 }));
+    auto& args = instruction.arguments().get<Instruction::MemoryCopyArgs>();
+    TRY(validate(args.src_index));
+    TRY(validate(args.dst_index));
 
     TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
@@ -1911,10 +1932,11 @@ VALIDATE_INSTRUCTION(memory_copy)
 
 VALIDATE_INSTRUCTION(memory_init)
 {
-    TRY(validate(MemoryIndex { 0 }));
 
-    auto index = instruction.arguments().get<DataIndex>();
-    TRY(validate(index));
+    auto& args = instruction.arguments().get<Instruction::MemoryInitArgs>();
+
+    TRY(validate(args.memory_index));
+    TRY(validate(args.data_index));
 
     TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
@@ -2183,9 +2205,10 @@ VALIDATE_INSTRUCTION(call_indirect)
 
 VALIDATE_INSTRUCTION(v128_load)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(u128))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(u128));
 
@@ -2201,7 +2224,7 @@ VALIDATE_INSTRUCTION(v128_load8x8_s)
     constexpr auto M = 8;
     constexpr auto max_alignment = N * M / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2216,7 +2239,7 @@ VALIDATE_INSTRUCTION(v128_load8x8_u)
     constexpr auto M = 8;
     constexpr auto max_alignment = N * M / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2231,7 +2254,7 @@ VALIDATE_INSTRUCTION(v128_load16x4_s)
     constexpr auto M = 4;
     constexpr auto max_alignment = N * M / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2246,7 +2269,7 @@ VALIDATE_INSTRUCTION(v128_load16x4_u)
     constexpr auto M = 4;
     constexpr auto max_alignment = N * M / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2261,7 +2284,7 @@ VALIDATE_INSTRUCTION(v128_load32x2_s)
     constexpr auto M = 2;
     constexpr auto max_alignment = N * M / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2276,7 +2299,7 @@ VALIDATE_INSTRUCTION(v128_load32x2_u)
     constexpr auto M = 2;
     constexpr auto max_alignment = N * M / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2290,7 +2313,7 @@ VALIDATE_INSTRUCTION(v128_load8_splat)
     constexpr auto N = 8;
     constexpr auto max_alignment = N / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2304,7 +2327,7 @@ VALIDATE_INSTRUCTION(v128_load16_splat)
     constexpr auto N = 16;
     constexpr auto max_alignment = N / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2318,7 +2341,7 @@ VALIDATE_INSTRUCTION(v128_load32_splat)
     constexpr auto N = 32;
     constexpr auto max_alignment = N / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2332,7 +2355,7 @@ VALIDATE_INSTRUCTION(v128_load64_splat)
     constexpr auto N = 64;
     constexpr auto max_alignment = N / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -2342,9 +2365,10 @@ VALIDATE_INSTRUCTION(v128_load64_splat)
 
 VALIDATE_INSTRUCTION(v128_store)
 {
-    TRY(validate(MemoryIndex { 0 }));
-
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+
+    TRY(validate(arg.memory_index));
+
     if ((1ull << arg.align) > sizeof(u128))
         return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(u128));
 
@@ -2865,7 +2889,7 @@ VALIDATE_INSTRUCTION(v128_load8_lane)
     if (arg.lane > max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory.memory_index));
 
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
@@ -2883,7 +2907,7 @@ VALIDATE_INSTRUCTION(v128_load16_lane)
     if (arg.lane >= max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory.memory_index));
 
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
@@ -2901,7 +2925,7 @@ VALIDATE_INSTRUCTION(v128_load32_lane)
     if (arg.lane >= max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory.memory_index));
 
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
@@ -2919,7 +2943,7 @@ VALIDATE_INSTRUCTION(v128_load64_lane)
     if (arg.lane >= max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory.memory_index));
 
     if (arg.memory.align > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
@@ -2937,7 +2961,7 @@ VALIDATE_INSTRUCTION(v128_store8_lane)
     if (arg.lane >= max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory.memory_index));
 
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
@@ -2955,7 +2979,7 @@ VALIDATE_INSTRUCTION(v128_store16_lane)
     if (arg.lane >= max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory.memory_index));
 
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
@@ -2973,7 +2997,7 @@ VALIDATE_INSTRUCTION(v128_store32_lane)
     if (arg.lane >= max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory.memory_index));
 
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
@@ -2991,7 +3015,7 @@ VALIDATE_INSTRUCTION(v128_store64_lane)
     if (arg.lane >= max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory.memory_index));
 
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
@@ -3005,7 +3029,7 @@ VALIDATE_INSTRUCTION(v128_load32_zero)
     constexpr auto N = 32;
     constexpr auto max_alignment = N / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
@@ -3019,7 +3043,7 @@ VALIDATE_INSTRUCTION(v128_load64_zero)
     constexpr auto N = 64;
     constexpr auto max_alignment = N / 8;
 
-    TRY(validate(MemoryIndex { 0 }));
+    TRY(validate(arg.memory_index));
 
     if ((1 << arg.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);

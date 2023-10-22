@@ -432,8 +432,11 @@ void Printer::print(Wasm::Instruction const& instruction)
             [&](LocalIndex const& index) { print("(local index {})", index.value()); },
             [&](TableIndex const& index) { print("(table index {})", index.value()); },
             [&](Instruction::IndirectCallArgs const& args) { print("(indirect (type index {}) (table index {}))", args.type.value(), args.table.value()); },
-            [&](Instruction::MemoryArgument const& args) { print("(memory (align {}) (offset {}))", args.align, args.offset); },
-            [&](Instruction::MemoryAndLaneArgument const& args) { print("(memory (align {}) (offset {})) (lane {})", args.memory.align, args.memory.offset, args.lane); },
+            [&](Instruction::MemoryArgument const& args) { print("(memory index {} (align {}) (offset {}))", args.memory_index.value(), args.align, args.offset); },
+            [&](Instruction::MemoryAndLaneArgument const& args) { print("(memory index {} (align {}) (offset {})) (lane {})", args.memory.memory_index.value(), args.memory.align, args.memory.offset, args.lane); },
+            [&](Instruction::MemoryInitArgs const& args) { print("(memory index {}) (data index {})", args.memory_index.value(), args.data_index.value()); },
+            [&](Instruction::MemoryCopyArgs const& args) { print("(from (memory index {}) to (memory index {}))", args.src_index.value(), args.dst_index.value()); },
+            [&](Instruction::MemoryIndexArgument const& args) { print("(memory index {})", args.memory_index.value()); },
             [&](Instruction::LaneIndex const& args) { print("(lane {})", args.lane); },
             [&](Instruction::ShuffleArgument const& args) {
                 print("{{ {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} }}",
