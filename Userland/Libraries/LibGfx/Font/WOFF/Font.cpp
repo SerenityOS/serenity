@@ -60,22 +60,6 @@ public:
 namespace WOFF {
 
 static constexpr u32 WOFF_SIGNATURE = 0x774F4646;
-static constexpr size_t SFNT_HEADER_SIZE = 12;
-static constexpr size_t SFNT_TABLE_SIZE = 16;
-
-static void be_u16(u8* ptr, u16 value)
-{
-    ptr[0] = (value >> 8) & 0xff;
-    ptr[1] = value & 0xff;
-}
-
-static void be_u32(u8* ptr, u32 value)
-{
-    ptr[0] = (value >> 24) & 0xff;
-    ptr[1] = (value >> 16) & 0xff;
-    ptr[2] = (value >> 8) & 0xff;
-    ptr[3] = value & 0xff;
-}
 
 static u16 pow_2_less_than_or_equal(u16 x)
 {
@@ -121,15 +105,17 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         return Error::from_string_literal("Uncompressed font is more than 10 MiB");
     auto font_buffer = TRY(ByteBuffer::create_zeroed(header.total_sfnt_size));
 
-    // ISO-IEC 14496-22:2019 4.5.1 Offset table
     u16 search_range = pow_2_less_than_or_equal(header.num_tables);
-    be_u32(font_buffer.data() + 0, header.flavor);
-    be_u16(font_buffer.data() + 4, header.num_tables);
-    be_u16(font_buffer.data() + 6, search_range * 16);
-    be_u16(font_buffer.data() + 8, AK::log2(search_range));
-    be_u16(font_buffer.data() + 10, header.num_tables * 16 - search_range * 16);
+    OpenType::TableDirectory table_directory {
+        .sfnt_version = header.flavor,
+        .num_tables = header.num_tables,
+        .search_range = search_range * 16,
+        .entry_selector = AK::log2(search_range),
+        .range_shift = header.num_tables * 16 - search_range * 16,
+    };
+    font_buffer.overwrite(0, &table_directory, sizeof(table_directory));
 
-    size_t font_buffer_offset = SFNT_HEADER_SIZE + header.num_tables * SFNT_TABLE_SIZE;
+    size_t font_buffer_offset = sizeof(OpenType::TableDirectory) + header.num_tables * sizeof(OpenType::TableRecord);
     for (size_t i = 0; i < header.num_tables; ++i) {
         auto entry = TRY(stream.read_value<TableDirectoryEntry>());
 
@@ -150,12 +136,14 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
             font_buffer.overwrite(font_buffer_offset, buffer.data() + entry.offset, entry.orig_length);
         }
 
-        // ISO-IEC 14496-22:2019 4.5.2 Table directory
-        size_t table_directory_offset = SFNT_HEADER_SIZE + i * SFNT_TABLE_SIZE;
-        be_u32(font_buffer.data() + table_directory_offset, entry.tag);
-        be_u32(font_buffer.data() + table_directory_offset + 4, entry.orig_checksum);
-        be_u32(font_buffer.data() + table_directory_offset + 8, font_buffer_offset);
-        be_u32(font_buffer.data() + table_directory_offset + 12, entry.orig_length);
+        size_t table_directory_offset = sizeof(OpenType::TableDirectory) + i * sizeof(OpenType::TableRecord);
+        OpenType::TableRecord table_record {
+            .table_tag = entry.tag,
+            .checksum = entry.orig_checksum,
+            .offset = font_buffer_offset,
+            .length = entry.orig_length,
+        };
+        font_buffer.overwrite(table_directory_offset, &table_record, sizeof(table_record));
 
         font_buffer_offset += entry.orig_length;
     }
