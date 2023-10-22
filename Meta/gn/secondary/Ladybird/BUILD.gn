@@ -257,7 +257,7 @@ if (current_os == "mac") {
   }
 
   action("ladybird_create_icon") {
-    script = "//Meta/gn/secondary/Ladybird/invoke_process_with_args.py"
+    script = "//Meta/gn/build/invoke_process_with_args.py"
     icon_path = "//Ladybird/Icons/macos/app_icon.iconset"
     sources = [
       "$icon_path/icon_128x128.png",

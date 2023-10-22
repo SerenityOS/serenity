@@ -4,7 +4,7 @@ template("moc_qt_objects") {
   action_foreach(target_name) {
     forward_variables_from(invoker, [ "sources" ])
 
-    script = "//Meta/gn/secondary/Ladybird/invoke_process_with_args.py"
+    script = "//Meta/gn/build/invoke_process_with_args.py"
 
     outputs = [ "$target_gen_dir/moc_{{source_name_part}}.cpp" ]
     args = [
