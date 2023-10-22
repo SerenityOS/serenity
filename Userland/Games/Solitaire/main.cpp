@@ -7,9 +7,9 @@
  */
 
 #include "Game.h"
+#include "MainWidget.h"
 #include <AK/NumberFormat.h>
 #include <AK/URL.h>
-#include <Games/Solitaire/SolitaireGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
@@ -84,8 +84,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (mode >= Solitaire::Mode::__Count)
         update_mode(Solitaire::Mode::SingleCardDraw);
 
-    auto widget = window->set_main_widget<GUI::Widget>();
-    TRY(widget->load_from_gml(solitaire_gml));
+    auto widget = TRY(Solitaire::MainWidget::try_create());
+    window->set_main_widget(widget);
 
     auto& game = *widget->find_descendant_of_type_named<Solitaire::Game>("game");
     game.set_focus(true);
