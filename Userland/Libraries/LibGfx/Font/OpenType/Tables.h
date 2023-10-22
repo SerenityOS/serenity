@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  * Copyright (c) 2023, Lukas Affolter <git@lukasach.dev>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,6 +42,26 @@ using UFWord = BigEndian<u16>;
 using Tag = BigEndian<u32>;
 using Offset16 = BigEndian<u16>;
 using Offset32 = BigEndian<u32>;
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/otff#table-directory
+// Table Directory (known as the Offset Table in ISO-IEC 14496-22:2019)
+struct [[gnu::packed]] TableDirectory {
+    BigEndian<u32> sfnt_version;
+    BigEndian<u16> num_tables;     // Number of tables.
+    BigEndian<u16> search_range;   // (Maximum power of 2 <= numTables) x 16.
+    BigEndian<u16> entry_selector; // Log2(maximum power of 2 <= numTables).
+    BigEndian<u16> range_shift;    // NumTables x 16 - searchRange.
+};
+static_assert(AssertSize<TableDirectory, 12>());
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/otff#table-directory
+struct [[gnu::packed]] TableRecord {
+    Tag table_tag;           // Table identifier.
+    BigEndian<u32> checksum; // CheckSum for this table.
+    Offset32 offset;         // Offset from beginning of TrueType font file.
+    BigEndian<u32> length;   // Length of this table.
+};
+static_assert(AssertSize<TableRecord, 16>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/head
 // head: Font Header Table
