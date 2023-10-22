@@ -4,7 +4,7 @@ template("compile_qt_resource_file") {
   action_foreach(target_name) {
     forward_variables_from(invoker, [ "sources" ])
 
-    script = "//Meta/gn/secondary/Ladybird/invoke_process_with_args.py"
+    script = "//Meta/gn/build/invoke_process_with_args.py"
 
     outputs = [ "$target_gen_dir/rcc_{{source_name_part}}.cpp" ]
     depfile = "$target_gen_dir/rcc_{{source_name_part}}.cpp.d"

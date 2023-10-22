@@ -31,7 +31,7 @@ executable("Prekernel_bin") {
 }
 
 action("postprocess_prekernel") {
-  script = "//Meta/gn/secondary/Ladybird/invoke_process_with_args.py"
+  script = "//Meta/gn/build/invoke_process_with_args.py"
   inputs = [ "$target_out_dir/Prekernel_bin" ]
   outputs = [ "$target_gen_dir/Prekernel" ]
   deps = [ ":Prekernel_bin" ]

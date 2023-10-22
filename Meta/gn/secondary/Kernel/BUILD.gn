@@ -438,7 +438,7 @@ action("generate_version_header") {
 
 if (current_cpu == "x86_64") {
   action("preprocess_linker_script") {
-    script = "//Meta/gn/secondary/Ladybird/invoke_process_with_args.py"
+    script = "//Meta/gn/build/invoke_process_with_args.py"
     inputs = [ "Arch/x86_64/linker.ld" ]
     outputs = [ "$target_gen_dir/linker.ld" ]
     args = [
