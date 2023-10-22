@@ -138,7 +138,7 @@ i32 year_from_time(double t)
         return NumericLimits<i32>::max();
 
     // Approximation using average number of milliseconds per year. We might have to adjust this guess afterwards.
-    auto year = static_cast<i32>(t / (365.2425 * ms_per_day) + 1970);
+    auto year = static_cast<i32>(floor(t / (365.2425 * ms_per_day) + 1970));
 
     auto year_t = time_from_year(year);
     if (year_t > t)
