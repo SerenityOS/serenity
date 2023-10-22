@@ -21,6 +21,7 @@ set(FUZZER_TARGETS
     IMAPParser
     JPEGLoader
     Js
+    JsonParser
     Latin1Decoder
     Latin2Decoder
     LzmaDecompression
