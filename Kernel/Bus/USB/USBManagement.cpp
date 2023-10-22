@@ -8,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
@@ -19,14 +20,14 @@ namespace Kernel::USB {
 static Singleton<USBManagement> s_the;
 READONLY_AFTER_INIT bool s_initialized_sys_fs_directory = false;
 
-UNMAP_AFTER_INIT USBManagement::USBManagement()
-{
-    enumerate_controllers();
-}
+UNMAP_AFTER_INIT USBManagement::USBManagement() { }
 
 UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
 {
     if (kernel_command_line().disable_usb())
+        return;
+
+    if (PCI::Access::is_disabled())
         return;
 
     MUST(PCI::enumerate([this](PCI::DeviceIdentifier const& device_identifier) {
@@ -66,6 +67,8 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
 
 bool USBManagement::initialized()
 {
+    // FIXME: Footgun, as the state of the singleton does not dictate if we have
+    //        set up the SysFSDirectory or enumerated controllers
     return s_the.is_initialized();
 }
 
@@ -75,30 +78,23 @@ UNMAP_AFTER_INIT void USBManagement::initialize()
         SysFSUSBBusDirectory::initialize();
         s_initialized_sys_fs_directory = true;
     }
-
-    s_the.ensure_instance();
+    the().enumerate_controllers();
 }
 
 void USBManagement::register_driver(NonnullLockRefPtr<Driver> driver)
 {
-    if (!initialized())
-        return;
     dbgln_if(USB_DEBUG, "Registering driver {}", driver->name());
     the().m_available_drivers.append(driver);
 }
 
 LockRefPtr<Driver> USBManagement::get_driver_by_name(StringView name)
 {
-    if (!initialized())
-        return nullptr;
     auto it = the().m_available_drivers.find_if([name](auto driver) { return driver->name() == name; });
     return it.is_end() ? nullptr : LockRefPtr { *it };
 }
 
 void USBManagement::unregister_driver(NonnullLockRefPtr<Driver> driver)
 {
-    if (!initialized())
-        return;
     auto& the_instance = the();
     dbgln_if(USB_DEBUG, "Unregistering driver {}", driver->name());
     auto const& found_driver = the_instance.m_available_drivers.find(driver);
