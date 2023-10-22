@@ -1183,8 +1183,8 @@ TEST_CASE(xz_utils_good_1_3delta_lzma2)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: This uses the currently unimplemented delta filter.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
+    EXPECT_EQ(buffer.span(), xz_utils_lorem_ipsum.bytes());
 }
 
 TEST_CASE(xz_utils_good_1_arm64_lzma2_1)
@@ -1864,7 +1864,9 @@ TEST_CASE(xz_utils_unsupported_filter_flags_2)
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
 
-    // TODO: The delta filter is currently unimplemented. However, once it is implemented, we likely want to mirror the recommended behavior of the specification anyways.
+    // TODO: We don't yet check whether the filter chain satisfies the "can't be the last filter"
+    //       requirement. We just happen to get the result right because we try to uncompress the
+    //       test case and fail.
     auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
     EXPECT(buffer_or_error.is_error());
 }

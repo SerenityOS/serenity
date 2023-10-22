@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/CircularBuffer.h>
 #include <AK/ConstrainedStream.h>
 #include <AK/CountingStream.h>
 #include <AK/Endian.h>
@@ -97,6 +98,31 @@ struct [[gnu::packed]] XzFilterLzma2Properties {
     u32 dictionary_size() const;
 };
 static_assert(sizeof(XzFilterLzma2Properties) == 1);
+
+// 5.3.3. Delta
+struct [[gnu::packed]] XzFilterDeltaProperties {
+    u8 encoded_distance;
+
+    u32 distance() const;
+};
+static_assert(sizeof(XzFilterDeltaProperties) == 1);
+
+class XzFilterDelta : public Stream {
+public:
+    static ErrorOr<NonnullOwnPtr<XzFilterDelta>> create(MaybeOwned<Stream>, u32 distance);
+
+    virtual ErrorOr<Bytes> read_some(Bytes) override;
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
+
+private:
+    XzFilterDelta(MaybeOwned<Stream>, CircularBuffer);
+
+    MaybeOwned<Stream> m_stream;
+    CircularBuffer m_buffer;
+};
 
 class XzDecompressor : public Stream {
 public:
