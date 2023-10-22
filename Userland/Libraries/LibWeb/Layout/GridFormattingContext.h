@@ -142,6 +142,7 @@ private:
         size_t row_end { 1 };
         size_t column_start { 0 };
         size_t column_end { 1 };
+        bool invalid { false }; /* FIXME: Ignore ignore invalid areas during layout */
     };
 
     HashMap<String, GridArea> m_grid_areas;

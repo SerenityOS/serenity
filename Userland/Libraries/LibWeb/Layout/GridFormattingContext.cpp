@@ -1323,32 +1323,34 @@ void GridFormattingContext::build_grid_areas()
     // https://www.w3.org/TR/css-grid-2/#grid-template-areas-property
     // If a named grid area spans multiple grid cells, but those cells do not form a single
     // filled-in rectangle, the declaration is invalid.
-    for (size_t y = 0; y < grid_container().computed_values().grid_template_areas().size(); y++) {
-        for (size_t x = 0; x < grid_container().computed_values().grid_template_areas()[y].size(); x++) {
-            auto grid_area_name = grid_container().computed_values().grid_template_areas()[y][x];
-            auto maybe_grid_area = m_grid_areas.get(grid_area_name);
-            if (!maybe_grid_area.has_value()) {
-                m_grid_areas.set(grid_area_name, { grid_area_name, y, y + 1, x, x + 1 });
-            } else {
-                auto& grid_area = maybe_grid_area.value();
-                if (grid_area.row_start == y) {
-                    if (grid_area.column_end == x)
-                        grid_area.column_end = grid_area.column_end + 1;
-                    else
-                        return;
-                } else {
-                    if (grid_area.row_end == y) {
-                        if (grid_area.column_start != x)
-                            return;
-                        grid_area.row_end = grid_area.row_end + 1;
-                    } else if (grid_area.row_end == y + 1) {
-                        if (grid_area.column_end < x || grid_area.column_end > x + 1)
-                            return;
-                    } else {
-                        return;
-                    }
+    auto const& rows = grid_container().computed_values().grid_template_areas();
+
+    auto find_area_rectangle = [&](size_t x_start, size_t y_start, String const& name) {
+        bool invalid = false;
+        size_t x_end = x_start;
+        size_t y_end = y_start;
+        while (x_end < rows[y_start].size() && rows[y_start][x_end] == name)
+            x_end++;
+        while (y_end < rows.size() && rows[y_end][x_start] == name)
+            y_end++;
+        for (size_t y = y_start; y < y_end; y++) {
+            for (size_t x = x_start; x < x_end; x++) {
+                if (rows[y][x] != name) {
+                    // If a named grid area spans multiple grid cells, but those cells do not form a single filled-in rectangle, the declaration is invalid.
+                    invalid = true;
+                    break;
                 }
             }
+        }
+        m_grid_areas.set(name, { name, y_start, y_end, x_start, x_end, invalid });
+    };
+
+    for (size_t y = 0; y < rows.size(); y++) {
+        for (size_t x = 0; x < rows[y].size(); x++) {
+            auto name = rows[y][x];
+            if (auto grid_area = m_grid_areas.get(name); grid_area.has_value())
+                continue;
+            find_area_rectangle(x, y, name);
         }
     }
 }
