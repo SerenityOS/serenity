@@ -567,13 +567,12 @@ void paint_box_shadow(PaintContext& context,
             .device_content_rect = device_content_rect,
         };
 
-        params.border_radii.shrink(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
-
         if (box_shadow_data.placement == ShadowPlacement::Inner) {
-            ScopedCornerRadiusClip corner_clipper { context, device_content_rect, border_radii, CornerClip::Outside };
+            params.border_radii.shrink(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
+            ScopedCornerRadiusClip corner_clipper { context, device_content_rect, params.border_radii, CornerClip::Outside };
             context.painter().paint_inner_box_shadow_params(params);
         } else {
-            ScopedCornerRadiusClip corner_clipper { context, device_content_rect, params.border_radii, CornerClip::Inside };
+            ScopedCornerRadiusClip corner_clipper { context, device_content_rect, border_radii, CornerClip::Inside };
             context.painter().paint_outer_box_shadow_params(params);
         }
     }
