@@ -316,6 +316,13 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
         m_current_block_expected_uncompressed_size.clear();
     }
 
+    // We need to process the filters in reverse order, since they are listed in the order that they have been applied in.
+    struct FilterEntry {
+        u64 id;
+        ByteBuffer properties;
+    };
+    Vector<FilterEntry, 4> filters;
+
     // 3.1.5. List of Filter Flags:
     // "The number of Filter Flags fields is stored in the Block Flags
     //  field (see Section 3.1.2)."
@@ -330,12 +337,16 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
         auto filter_properties = TRY(ByteBuffer::create_uninitialized(size_of_properties));
         TRY(header_stream.read_until_filled(filter_properties));
 
+        filters.empend(filter_id, move(filter_properties));
+    }
+
+    for (auto& filter : filters.in_reverse()) {
         // 5.3.1. LZMA2
-        if (filter_id == 0x21) {
-            if (size_of_properties < sizeof(XzFilterLzma2Properties))
+        if (filter.id == 0x21) {
+            if (filter.properties.size() < sizeof(XzFilterLzma2Properties))
                 return Error::from_string_literal("XZ LZMA2 filter has a smaller-than-needed properties size");
 
-            auto const* properties = reinterpret_cast<XzFilterLzma2Properties*>(filter_properties.data());
+            auto const* properties = reinterpret_cast<XzFilterLzma2Properties*>(filter.properties.data());
             TRY(properties->validate());
 
             new_block_stream = TRY(Lzma2Decompressor::create_from_raw_stream(move(new_block_stream), properties->dictionary_size()));
