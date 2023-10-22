@@ -70,3 +70,12 @@ test("time clip", () => {
     expect(Date.UTC(275760, 8, 13, 0, 0, 0, 0)).toBe(8.64e15);
     expect(Date.UTC(275760, 8, 13, 0, 0, 0, 1)).toBeNaN();
 });
+
+test("YearFromTime invariant holds with negative times", () => {
+    // https://tc39.es/ecma262/#sec-yearfromtime: YearFromTime(t) should return
+    // a value such that TimeFromYear(YearFromTime(t)) <= t.
+    //
+    // If this doesn't hold, then the following Date constructor will result in
+    // a crash from an assertion (#21548).
+    new Date(Date.UTC(-1112, 11, 31));
+});
