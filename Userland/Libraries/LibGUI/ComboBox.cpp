@@ -177,12 +177,13 @@ void ComboBox::navigate_relative(int delta)
 
 void ComboBox::selection_updated(ModelIndex const& index)
 {
-    if (index.is_valid())
+    if (index.is_valid()) {
         m_selected_index = index;
-    else
+        auto new_value = index.data().to_deprecated_string();
+        m_editor->set_text(new_value);
+    } else {
         m_selected_index.clear();
-    auto new_value = index.data().to_deprecated_string();
-    m_editor->set_text(new_value);
+    }
     if (!m_only_allow_values_from_model)
         m_editor->select_all();
 }
