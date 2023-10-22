@@ -35,6 +35,7 @@
     T(IMAPParser)            \
     T(JPEGLoader)            \
     T(Js)                    \
+    T(JsonParser)            \
     T(Latin1Decoder)         \
     T(Latin2Decoder)         \
     T(LzmaDecompression)     \
