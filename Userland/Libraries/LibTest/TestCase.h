@@ -82,3 +82,11 @@ void set_suite_setup_function(Function<void()> setup);
     };                                                                                               \
     static struct __BENCHMARK_TYPE(x) __BENCHMARK_TYPE(x);                                           \
     static void __BENCHMARK_FUNC(x)()
+
+// This allows us to print the generated locals in the test after a failure is fully shrunk.
+#define GEN(identifier, value)                                        \
+    auto identifier = (value);                                        \
+    if (::Test::current_test_result() == ::Test::TestResult::Overrun) \
+        return;                                                       \
+    if (::Test::is_reporting_enabled())                               \
+    ::AK::warnln("{} = {}", #identifier, (identifier))
