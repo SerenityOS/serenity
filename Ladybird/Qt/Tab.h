@@ -87,6 +87,7 @@ private:
     QLabel* m_hover_label { nullptr };
 
     OwnPtr<QMenu> m_page_context_menu;
+    Optional<String> m_page_context_menu_search_text;
 
     OwnPtr<QMenu> m_link_context_menu;
     URL m_link_context_menu_url;
