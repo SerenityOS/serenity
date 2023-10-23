@@ -150,9 +150,13 @@ private:
     URL m_media_context_menu_url;
 
     RefPtr<GUI::Menu> m_tab_context_menu;
+
     RefPtr<GUI::Menu> m_page_context_menu;
+    Optional<String> m_page_context_menu_search_text;
+
     RefPtr<GUI::Menu> m_go_back_context_menu;
     RefPtr<GUI::Menu> m_go_forward_context_menu;
+
     DeprecatedString m_title;
     RefPtr<const Gfx::Bitmap> m_icon;
 
