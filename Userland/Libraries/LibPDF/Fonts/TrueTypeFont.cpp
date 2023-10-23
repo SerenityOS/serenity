@@ -35,7 +35,7 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
     return {};
 }
 
-float TrueTypeFont::get_glyph_width(u8 char_code) const
+Optional<float> TrueTypeFont::get_glyph_width(u8 char_code) const
 {
     return m_font->glyph_width(char_code);
 }
