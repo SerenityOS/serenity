@@ -53,6 +53,14 @@ public:
     void set_randomness_source(Randomized::RandomnessSource source) { m_randomness_source = move(source); }
     Randomized::RandomnessSource& randomness_source() { return m_randomness_source; }
 
+    // Dictates whether FAIL(), EXPECT() and similar macros in LibTest/Macros.h
+    // print messages or not. This is important for randomized tests because
+    // they run the test function many times in a row, and we only want to
+    // report the _minimal_ (shrunk) failure to the user, not all of them.
+    bool is_reporting_enabled() { return m_reporting_enabled; }
+    void enable_reporting() { m_reporting_enabled = true; }
+    void disable_reporting() { m_reporting_enabled = false; }
+
 private:
     static TestSuite* s_global;
     Vector<NonnullRefPtr<TestCase>> m_cases;
@@ -63,6 +71,7 @@ private:
     Function<void()> m_setup;
     TestResult m_current_test_result = TestResult::NotRun;
     Randomized::RandomnessSource m_randomness_source = Randomized::RandomnessSource::live();
+    bool m_reporting_enabled = true;
 };
 
 }
