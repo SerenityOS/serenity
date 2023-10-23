@@ -97,6 +97,12 @@ ByteString Document::text_string_to_utf8(ByteString const& text_string)
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
 {
+    size_t offset_to_start = TRY(DocumentParser::scan_for_header_start(bytes));
+    if (offset_to_start != 0) {
+        dbgln("warning: PDF header not at start of file, skipping {} bytes", offset_to_start);
+        bytes = bytes.slice(offset_to_start);
+    }
+
     auto parser = adopt_ref(*new DocumentParser({}, bytes));
     auto document = adopt_ref(*new Document(parser));
 
