@@ -82,62 +82,58 @@ DeprecatedString Shell::prompt() const
     if (m_next_scheduled_prompt_text.has_value())
         return m_next_scheduled_prompt_text.release_value();
 
-    auto build_prompt = [&]() -> DeprecatedString {
-        auto* ps1 = getenv("PROMPT");
-        if (!ps1) {
-            if (uid == 0)
-                return "# ";
-
-            StringBuilder builder;
-            builder.appendff("\033]0;{}@{}:{}\007", username, hostname, cwd);
-            builder.appendff("\033[31;1m{}\033[0m@\033[37;1m{}\033[0m:\033[32;1m{}\033[0m$> ", username, hostname, cwd);
-            return builder.to_deprecated_string();
-        }
+    auto const* ps1 = getenv("PROMPT");
+    if (!ps1) {
+        if (uid == 0)
+            return "# ";
 
         StringBuilder builder;
-        for (char* ptr = ps1; *ptr; ++ptr) {
-            if (*ptr == '\\') {
-                ++ptr;
-                if (!*ptr)
-                    break;
-                switch (*ptr) {
-                case 'X':
-                    builder.append("\033]0;"sv);
-                    break;
-                case 'a':
-                    builder.append(0x07);
-                    break;
-                case 'e':
-                    builder.append(0x1b);
-                    break;
-                case 'u':
-                    builder.append(username);
-                    break;
-                case 'h':
-                    builder.append({ hostname, strlen(hostname) });
-                    break;
-                case 'w': {
-                    DeprecatedString home_path = getenv("HOME");
-                    if (cwd.starts_with(home_path)) {
-                        builder.append('~');
-                        builder.append(cwd.substring_view(home_path.length(), cwd.length() - home_path.length()));
-                    } else {
-                        builder.append(cwd);
-                    }
-                    break;
-                }
-                case 'p':
-                    builder.append(uid == 0 ? '#' : '$');
-                    break;
-                }
-                continue;
-            }
-            builder.append(*ptr);
-        }
+        builder.appendff("\033]0;{}@{}:{}\007", username, hostname, cwd);
+        builder.appendff("\033[31;1m{}\033[0m@\033[37;1m{}\033[0m:\033[32;1m{}\033[0m$> ", username, hostname, cwd);
         return builder.to_deprecated_string();
-    };
+    }
 
-    return build_prompt();
+    StringBuilder builder;
+
+    GenericLexer lexer { { ps1, strlen(ps1) } };
+    while (!lexer.is_eof()) {
+        builder.append(lexer.consume_until('\\'));
+
+        if (!lexer.consume_specific('\\') || lexer.is_eof())
+            break;
+
+        if (lexer.consume_specific('X')) {
+            builder.append("\033]0;"sv);
+
+        } else if (lexer.consume_specific('a')) {
+            builder.append(0x07);
+
+        } else if (lexer.consume_specific('e')) {
+            builder.append(0x1b);
+
+        } else if (lexer.consume_specific('u')) {
+            builder.append(username);
+
+        } else if (lexer.consume_specific('h')) {
+            builder.append({ hostname, strlen(hostname) });
+
+        } else if (lexer.consume_specific('w')) {
+            DeprecatedString const home_path = getenv("HOME");
+            if (cwd.starts_with(home_path)) {
+                builder.append('~');
+                builder.append(cwd.substring_view(home_path.length(), cwd.length() - home_path.length()));
+            } else {
+                builder.append(cwd);
+            }
+
+        } else if (lexer.consume_specific('p')) {
+            builder.append(uid == 0 ? '#' : '$');
+
+        } else {
+            lexer.consume();
+        }
+    }
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Shell::expand_tilde(StringView expression)
