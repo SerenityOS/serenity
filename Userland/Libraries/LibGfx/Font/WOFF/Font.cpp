@@ -93,6 +93,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
 
     if (header.length > buffer.size())
         return Error::from_string_literal("Invalid WOFF length");
+    if (header.num_tables > NumericLimits<u16>::max() / 16)
+        return Error::from_string_literal("Invalid WOFF numTables");
     if (header.reserved != 0)
         return Error::from_string_literal("Invalid WOFF reserved field");
     if (header.meta_length == 0 && header.meta_offset != 0)
