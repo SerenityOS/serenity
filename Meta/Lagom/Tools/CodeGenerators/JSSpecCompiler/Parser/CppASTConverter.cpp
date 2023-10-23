@@ -123,6 +123,42 @@ NullableTree CppASTConverter::convert_node(Cpp::NumericLiteral const& literal)
     return make_ref_counted<MathematicalConstant>(literal.value().to_int<i64>().value());
 }
 
+template<>
+NullableTree CppASTConverter::convert_node(Cpp::BinaryExpression const& expression)
+{
+    static constexpr auto operator_translation = []() consteval {
+        Array<BinaryOperator, to_underlying(Cpp::BinaryOp::Arrow) + 1> table;
+#define ASSIGN_TRANSLATION(cpp_name, our_name) \
+    table[to_underlying(Cpp::BinaryOp::cpp_name)] = BinaryOperator::our_name
+        ASSIGN_TRANSLATION(Addition, Plus);
+        ASSIGN_TRANSLATION(Subtraction, Minus);
+        ASSIGN_TRANSLATION(Multiplication, Multiplication);
+        ASSIGN_TRANSLATION(Division, Division);
+        ASSIGN_TRANSLATION(Modulo, Invalid);
+        ASSIGN_TRANSLATION(GreaterThan, CompareGreater);
+        ASSIGN_TRANSLATION(GreaterThanEquals, Invalid);
+        ASSIGN_TRANSLATION(LessThan, CompareLess);
+        ASSIGN_TRANSLATION(LessThanEquals, Invalid);
+        ASSIGN_TRANSLATION(BitwiseAnd, Invalid);
+        ASSIGN_TRANSLATION(BitwiseOr, Invalid);
+        ASSIGN_TRANSLATION(BitwiseXor, Invalid);
+        ASSIGN_TRANSLATION(LeftShift, Invalid);
+        ASSIGN_TRANSLATION(RightShift, Invalid);
+        ASSIGN_TRANSLATION(EqualsEquals, CompareEqual);
+        ASSIGN_TRANSLATION(NotEqual, CompareNotEqual);
+        ASSIGN_TRANSLATION(LogicalOr, Invalid);
+        ASSIGN_TRANSLATION(LogicalAnd, Invalid);
+        ASSIGN_TRANSLATION(Arrow, Invalid);
+#undef ASSIGN_TRANSLATION
+        return table;
+    }();
+
+    auto translated_operator = operator_translation[to_underlying(expression.op())];
+    // TODO: Print nicer error.
+    VERIFY(translated_operator != BinaryOperator::Invalid);
+    return make_ref_counted<BinaryOperation>(translated_operator, as_tree(expression.lhs()), as_tree(expression.rhs()));
+}
+
 NullableTree CppASTConverter::as_nullable_tree(Cpp::Statement const* statement)
 {
     static Tree unknown_ast_node_error
@@ -149,7 +185,8 @@ NullableTree CppASTConverter::as_nullable_tree(Cpp::Statement const* statement)
         Cpp::IfStatement,
         Cpp::BlockStatement,
         Cpp::AssignmentExpression,
-        Cpp::NumericLiteral>();
+        Cpp::NumericLiteral,
+        Cpp::BinaryExpression>();
 
     if (result.has_value())
         return *result;
