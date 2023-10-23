@@ -1236,7 +1236,8 @@ static void build_sse_66_slash(u8 op, u8 slash, char const* mnemonic, Instructio
     table64[0x9A] = {};                         // far CALL
     table64[0x9C].long_mode_default_64 = true;  // PUSHF/D/Q
     table64[0x9D].long_mode_default_64 = true;  // POPF/D/Q
-    build_in_table(table64, 0xB8, "MOV", OP_regW_immW, &Interpreter::MOV_reg32_imm32, LockPrefixNotAllowed);
+    for (u8 mov = 0xB8; mov <= 0xBF; ++mov)
+        build_in_table(table64, mov, "MOV", OP_regW_immW, &Interpreter::MOV_reg32_imm32, LockPrefixNotAllowed);
     table64[0xC2].long_mode_force_64 = true;   // near RET
     table64[0xC3].long_mode_force_64 = true;   // near RET
     table64[0xC4] = {};                        // LES
