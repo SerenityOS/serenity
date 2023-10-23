@@ -52,6 +52,18 @@ void set_current_test_result(TestResult result)
     TestSuite::the().set_current_test_result(result);
 }
 
+// Declared in Macros.h
+void set_randomness_source(Randomized::RandomnessSource source)
+{
+    TestSuite::the().set_randomness_source(move(source));
+}
+
+// Declared in Macros.h
+Randomized::RandomnessSource& randomness_source()
+{
+    return TestSuite::the().randomness_source();
+}
+
 // Declared in TestCase.h
 void add_test_case_to_suite(NonnullRefPtr<TestCase> const& test_case)
 {
@@ -73,6 +85,8 @@ static DeprecatedString test_result_to_string(TestResult result)
         return "Completed";
     case TestResult::Failed:
         return "Failed";
+    case TestResult::Overrun:
+        return "Ran out of randomness";
     default:
         return "Unknown TestResult";
     }

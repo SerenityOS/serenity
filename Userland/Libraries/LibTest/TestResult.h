@@ -17,6 +17,10 @@ enum class TestResult {
 
     // Didn't get through EXPECT(...).
     Failed,
+
+    // Ran out of RandomRun data (in a randomized test, when shrinking).
+    // This is fine, we'll just try some other shrink.
+    Overrun,
 };
 
 // Used eg. to signal we've ran out of prerecorded random bits.

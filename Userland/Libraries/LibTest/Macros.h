@@ -11,6 +11,7 @@
 #include <AK/CheckedFormatString.h>
 #include <AK/Math.h>
 #include <LibTest/CrashTest.h>
+#include <LibTest/Randomized/RandomnessSource.h>
 #include <LibTest/TestResult.h>
 
 namespace AK {
@@ -22,6 +23,9 @@ namespace Test {
 // Declare helpers so that we can call them from VERIFY in included headers
 // the setter for TestResult is already declared in TestResult.h
 TestResult current_test_result();
+
+Randomized::RandomnessSource& randomness_source();
+void set_randomness_source(Randomized::RandomnessSource);
 }
 
 #define EXPECT_EQ(a, b)                                                                                                                                                                      \
