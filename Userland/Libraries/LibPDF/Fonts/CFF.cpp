@@ -742,7 +742,7 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
     if (format == 0) {
         // CFF spec, "Table 17 Format 0"
         dbgln_if(CFF_DEBUG, "CFF charset format 0");
-        for (u8 i = 0; i < glyph_count - 1; i++) {
+        for (size_t i = 0; i < glyph_count - 1; i++) {
             SID sid = TRY(reader.try_read<BigEndian<SID>>());
             TRY(names.try_append(resolve_sid(sid, strings)));
         }
