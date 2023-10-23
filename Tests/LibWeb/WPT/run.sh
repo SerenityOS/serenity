@@ -15,8 +15,6 @@ WEBDRIVER_BINARY=$(env PATH="${SERENITY_SOURCE_DIR}/Build/lagom/bin:${SERENITY_S
                    which WebDriver)
 update_expectations_metadata=false
 
-dev=0
-
 for arg in "$@"; do
   case $arg in
     --webdriver-binary=*)
@@ -25,10 +23,6 @@ for arg in "$@"; do
         ;;
     --update-expectations-metadata)
         update_expectations_metadata=true
-        shift
-        ;;
-    --dev)
-        dev=1
         shift
         ;;
     *)
@@ -50,14 +44,7 @@ if [ ! -d "${SCRIPT_DIR}/wpt" ]; then
     git clone --depth 10000 https://github.com/web-platform-tests/wpt.git
 
     # Switch to the commit that was used to generate tests expectations. Requires periodic updates.
-    git -C wpt checkout 4434e91bd0801dfefff044b5b9a9744e30d255d3
-
-    # Apply WPT patch with Ladybird runner
-    if [ "$dev" = "1" ]; then
-        git -C wpt am ../Add-Ladybird-WebDriver-runner.patch > /dev/null
-    else
-        patch -d wpt -p1 < Add-Ladybird-WebDriver-runner.patch > /dev/null
-    fi
+    git -C wpt checkout eedf737ce39c512d0ca3471f988972e3ece11822
 
     # Update hosts file if needed
     if [ "$(comm -13 <(sort -u /etc/hosts) <(python3 ./wpt/wpt make-hosts-file | sort -u) | wc -l)" -gt 0 ]; then
