@@ -24,6 +24,7 @@
 #    define LOG_JIT_SUCCESS 1
 #    define LOG_JIT_FAILURE 1
 #    define DUMP_JIT_MACHINE_CODE_TO_STDOUT 0
+#    define DUMP_JIT_DISASSEMBLY 0
 
 #    define TRY_OR_SET_EXCEPTION(expression)                                                                                        \
         ({                                                                                                                          \
@@ -1154,7 +1155,10 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         dbgln("\033[32;1mJIT compilation succeeded!\033[0m {}", bytecode_executable.name);
     }
 
-    return make<NativeExecutable>(executable_memory, compiler.m_output.size());
+    auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size());
+    if constexpr (DUMP_JIT_DISASSEMBLY)
+        executable->dump_disassembly();
+    return executable;
 }
 
 }

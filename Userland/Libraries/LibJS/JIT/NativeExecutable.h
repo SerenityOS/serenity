@@ -21,6 +21,7 @@ public:
     ~NativeExecutable();
 
     void run(VM&) const;
+    void dump_disassembly() const;
 
 private:
     void* m_code { nullptr };
