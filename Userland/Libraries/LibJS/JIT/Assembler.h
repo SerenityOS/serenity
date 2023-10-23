@@ -204,6 +204,14 @@ struct Assembler {
         return make_label();
     }
 
+    void jump(Label& label)
+    {
+        // jmp target (RIP-relative 32-bit offset)
+        emit8(0xe9);
+        emit32(0xdeadbeef);
+        label.offset_in_instruction_stream = m_output.size();
+    }
+
     void jump(Operand op)
     {
         if (op.type == Operand::Type::Reg) {
@@ -303,6 +311,25 @@ struct Assembler {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
             emit8(0xe0 | encode_reg(dst.reg));
+            emit32(src.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    void bitwise_or(Operand dst, Operand src)
+    {
+        // or dst,src
+        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+            emit8(0x48
+                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x09);
+            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm32) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x81);
+            emit8(0xc8 | encode_reg(dst.reg));
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
@@ -458,6 +485,12 @@ struct Assembler {
         pop(Operand::Register(Reg::RSI));
         pop(Operand::Register(Reg::RDX));
         pop(Operand::Register(Reg::RCX));
+    }
+
+    void trap()
+    {
+        // int3
+        emit8(0xcc);
     }
 };
 

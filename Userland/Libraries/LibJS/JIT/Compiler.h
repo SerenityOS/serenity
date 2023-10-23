@@ -89,6 +89,9 @@ private:
     void push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer);
     void pop_unwind_context();
 
+    template<typename Codegen>
+    void branch_if_int32(Assembler::Reg, Codegen);
+
     explicit Compiler(Bytecode::Executable& bytecode_executable)
         : m_bytecode_executable(bytecode_executable)
     {

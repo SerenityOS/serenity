@@ -162,18 +162,81 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 
 [[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
 {
+    dbgln("cxx_increment {}", value);
     auto old_value = TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
     if (old_value.is_number())
         return Value(old_value.as_double() + 1);
     return BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
 }
 
+template<typename Codegen>
+void Compiler::branch_if_int32(Assembler::Reg reg, Codegen codegen)
+{
+    // GPR0 = reg >> 48;
+    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(reg));
+    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm8(48));
+
+    auto not_int32_case = m_assembler.make_label();
+    m_assembler.jump_if_not_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm32(INT32_TAG),
+        not_int32_case);
+
+    codegen();
+
+    not_int32_case.link(m_assembler);
+}
+
 void Compiler::compile_increment(Bytecode::Op::Increment const&)
 {
     load_vm_register(ARG1, Bytecode::Register::accumulator());
+
+    auto end = m_assembler.make_label();
+    auto slow_case = m_assembler.make_label();
+
+    branch_if_int32(ARG1, [&] {
+        // GPR0 = ARG1 & 0xffffffff;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(ARG1));
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm64(0xffffffff));
+        m_assembler.bitwise_and(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(GPR1));
+
+        // if (GPR0 == 0x7fffffff) goto slow_case;
+        m_assembler.jump_if_equal(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm32(0x7fffffff),
+            slow_case);
+
+        // GPR0 += 1;
+        m_assembler.add(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm32(1));
+
+        // GPR0 |= INT32_TAG << 48;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm64(SHIFTED_INT32_TAG));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(GPR1));
+
+        // accumulator = GPR0;
+        store_vm_register(Bytecode::Register::accumulator(), GPR0);
+
+        m_assembler.jump(end);
+    });
+
+    slow_case.link(m_assembler);
     m_assembler.native_call((void*)cxx_increment);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
+
+    end.link(m_assembler);
 }
 
 static Value cxx_decrement(VM& vm, Value value)
