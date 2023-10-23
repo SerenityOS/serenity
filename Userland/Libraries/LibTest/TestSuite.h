@@ -12,6 +12,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/Vector.h>
+#include <LibTest/Randomized/RandomnessSource.h>
 #include <LibTest/TestCase.h>
 #include <LibTest/TestResult.h>
 
@@ -45,6 +46,12 @@ public:
     void set_current_test_result(TestResult result) { m_current_test_result = result; }
 
     void set_suite_setup(Function<void()> setup) { m_setup = move(setup); }
+    // The RandomnessSource is where generators record / replay random data
+    // from. Initially a live "truly random" RandomnessSource is used, and when
+    // a failure is found, a set of hardcoded RandomnessSources is used during
+    // shrinking.
+    void set_randomness_source(Randomized::RandomnessSource source) { m_randomness_source = move(source); }
+    Randomized::RandomnessSource& randomness_source() { return m_randomness_source; }
 
 private:
     static TestSuite* s_global;
@@ -55,6 +62,7 @@ private:
     u64 m_benchmark_repetitions = 1;
     Function<void()> m_setup;
     TestResult m_current_test_result = TestResult::NotRun;
+    Randomized::RandomnessSource m_randomness_source = Randomized::RandomnessSource::live();
 };
 
 }
