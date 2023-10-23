@@ -63,6 +63,7 @@ public:
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
     DeprecatedString selected_text();
+    Optional<String> selected_text_with_whitespace_collapsed();
     void select_all();
 
     void get_source();

@@ -10,6 +10,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWebView/ViewImplementation.h>
 
 namespace WebView {
@@ -126,6 +127,14 @@ void ViewImplementation::set_preferred_color_scheme(Web::CSS::PreferredColorSche
 DeprecatedString ViewImplementation::selected_text()
 {
     return client().get_selected_text();
+}
+
+Optional<String> ViewImplementation::selected_text_with_whitespace_collapsed()
+{
+    auto selected_text = MUST(Web::Infra::strip_and_collapse_whitespace(this->selected_text()));
+    if (selected_text.is_empty())
+        return OptionalNone {};
+    return selected_text;
 }
 
 void ViewImplementation::select_all()
