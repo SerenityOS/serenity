@@ -91,6 +91,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     // (The value 0x74727565 'true' has been used for some TrueType-flavored fonts on Mac OS, for example.)
     // Whether client software will actually support other types of sfnt font data is outside the scope of the WOFF specification, which simply describes how the sfnt is repackaged for Web use.
 
+    auto expected_total_sfnt_size = sizeof(OpenType::TableDirectory) + header.num_tables * 16;
     if (header.length > buffer.size())
         return Error::from_string_literal("Invalid WOFF length");
     if (header.num_tables > NumericLimits<u16>::max() / 16)
@@ -103,6 +104,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         return Error::from_string_literal("Invalid WOFF private block offset");
     if (sizeof(Header) + header.num_tables * sizeof(TableDirectoryEntry) > header.length)
         return Error::from_string_literal("Truncated WOFF table directory");
+    if (header.total_sfnt_size < expected_total_sfnt_size)
+        return Error::from_string_literal("Invalid WOFF total sfnt size");
     if (header.total_sfnt_size > 10 * MiB)
         return Error::from_string_literal("Uncompressed font is more than 10 MiB");
     auto font_buffer = TRY(ByteBuffer::create_zeroed(header.total_sfnt_size));
@@ -121,6 +124,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     for (size_t i = 0; i < header.num_tables; ++i) {
         auto entry = TRY(stream.read_value<TableDirectoryEntry>());
 
+        expected_total_sfnt_size += (entry.orig_length + 3) & 0xFFFFFFFC;
+        if (expected_total_sfnt_size > header.total_sfnt_size)
+            return Error::from_string_literal("Invalid WOFF total sfnt size");
         if ((size_t)entry.offset + entry.comp_length > header.length)
             return Error::from_string_literal("Truncated WOFF table");
         if (font_buffer_offset + entry.orig_length > font_buffer.size())
@@ -149,6 +155,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
 
         font_buffer_offset += entry.orig_length;
     }
+
+    if (header.total_sfnt_size != expected_total_sfnt_size)
+        return Error::from_string_literal("Invalid WOFF total sfnt size");
 
     auto input_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_buffer.bytes(), index));
     auto font = adopt_ref(*new Font(input_font, move(font_buffer)));

@@ -9,6 +9,7 @@ set(TEST_SOURCES
     TestParseISOBMFF.cpp
     TestRect.cpp
     TestScalingFunctions.cpp
+    TestWOFF.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
