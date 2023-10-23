@@ -42,6 +42,7 @@ for md_file in $(find "${MAN_DIR}" -iname '*.md' | ${SORT}); do
     pandoc -f gfm -t html5 -s \
         -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
         --lua-filter=Meta/convert-markdown-links.lua \
+        --lua-filter=Meta/Websites/man.serenityos.org/add-anchors.lua \
         --metadata title="${name}(${section_number}) - SerenityOS man pages" \
         -o "${output_file}" \
         "${md_file}" &
