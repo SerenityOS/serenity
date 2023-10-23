@@ -76,6 +76,24 @@ void set_suite_setup_function(Function<void()> setup)
     TestSuite::the().set_suite_setup(move(setup));
 }
 
+// Declared in Macros.h
+bool is_reporting_enabled()
+{
+    return TestSuite::the().is_reporting_enabled();
+}
+
+// Declared in Macros.h
+void enable_reporting()
+{
+    TestSuite::the().enable_reporting();
+}
+
+// Declared in Macros.h
+void disable_reporting()
+{
+    TestSuite::the().disable_reporting();
+}
+
 static DeprecatedString test_result_to_string(TestResult result)
 {
     switch (result) {
@@ -164,6 +182,7 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
 
         warnln("Running {} '{}'.", test_type, t->name());
         m_current_test_result = TestResult::NotRun;
+        enable_reporting();
 
         u64 total_time = 0;
         u64 sum_of_squared_times = 0;
