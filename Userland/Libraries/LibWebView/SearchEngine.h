@@ -18,6 +18,6 @@ struct SearchEngine {
 
 ReadonlySpan<SearchEngine> search_engines();
 SearchEngine const& default_search_engine();
-Optional<SearchEngine const&> find_search_engine(StringView name);
+Optional<SearchEngine const&> find_search_engine_by_name(StringView name);
 
 }

@@ -207,7 +207,7 @@
     auto* item = (NSMenuItem*)sender;
     auto title = Ladybird::ns_string_to_string([item title]);
 
-    if (auto search_engine = WebView::find_search_engine(title); search_engine.has_value())
+    if (auto search_engine = WebView::find_search_engine_by_name(title); search_engine.has_value())
         m_search_engine = search_engine.release_value();
     else
         m_search_engine = WebView::default_search_engine();
