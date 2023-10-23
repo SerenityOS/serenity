@@ -9,6 +9,7 @@
 
 #include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
+#include <LibTest/TestResult.h>
 #include <LibTest/TestSuite.h>
 #include <math.h>
 #include <stdlib.h>
@@ -40,9 +41,15 @@ private:
 };
 
 // Declared in Macros.h
-void current_test_case_did_fail()
+TestResult current_test_result()
 {
-    TestSuite::the().current_test_case_did_fail();
+    return TestSuite::the().current_test_result();
+}
+
+// Declared in Macros.h
+void set_current_test_result(TestResult result)
+{
+    TestSuite::the().set_current_test_result(result);
 }
 
 // Declared in TestCase.h
@@ -55,6 +62,20 @@ void add_test_case_to_suite(NonnullRefPtr<TestCase> const& test_case)
 void set_suite_setup_function(Function<void()> setup)
 {
     TestSuite::the().set_suite_setup(move(setup));
+}
+
+static DeprecatedString test_result_to_string(TestResult result)
+{
+    switch (result) {
+    case TestResult::NotRun:
+        return "Not run";
+    case TestResult::Passed:
+        return "Completed";
+    case TestResult::Failed:
+        return "Failed";
+    default:
+        return "Unknown TestResult";
+    }
 }
 
 int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> arguments)
@@ -116,8 +137,11 @@ Vector<NonnullRefPtr<TestCase>> TestSuite::find_cases(DeprecatedString const& se
 int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
 {
     size_t test_count = 0;
+    size_t test_passed_count = 0;
     size_t test_failed_count = 0;
     size_t benchmark_count = 0;
+    size_t benchmark_passed_count = 0;
+    size_t benchmark_failed_count = 0;
     TestElapsedTimer global_timer;
 
     for (auto const& t : tests) {
@@ -125,7 +149,7 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         auto const repetitions = t->is_benchmark() ? m_benchmark_repetitions : 1;
 
         warnln("Running {} '{}'.", test_type, t->name());
-        m_current_test_case_passed = true;
+        m_current_test_result = TestResult::NotRun;
 
         u64 total_time = 0;
         u64 sum_of_squared_times = 0;
@@ -140,6 +164,10 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             sum_of_squared_times += iteration_time * iteration_time;
             min_time = min(min_time, iteration_time);
             max_time = max(max_time, iteration_time);
+
+            // Non-randomized tests don't touch the test result when passing.
+            if (m_current_test_result == TestResult::NotRun)
+                m_current_test_result = TestResult::Passed;
         }
 
         if (repetitions != 1) {
@@ -148,22 +176,40 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
             double standard_deviation = sqrt((sum_of_squared_times + repetitions * average_squared - 2 * total_time * average) / (repetitions - 1));
 
             dbgln("{} {} '{}' on average in {:.1f}±{:.1f}ms (min={}ms, max={}ms, total={}ms)",
-                m_current_test_case_passed ? "Completed" : "Failed", test_type, t->name(),
+                test_result_to_string(m_current_test_result), test_type, t->name(),
                 average, standard_deviation, min_time, max_time, total_time);
         } else {
-            dbgln("{} {} '{}' in {}ms", m_current_test_case_passed ? "Completed" : "Failed", test_type, t->name(), total_time);
+            dbgln("{} {} '{}' in {}ms", test_result_to_string(m_current_test_result), test_type, t->name(), total_time);
         }
 
         if (t->is_benchmark()) {
             m_benchtime += total_time;
             benchmark_count++;
+
+            switch (m_current_test_result) {
+            case TestResult::Passed:
+                benchmark_passed_count++;
+                break;
+            case TestResult::Failed:
+                benchmark_failed_count++;
+                break;
+            default:
+                break;
+            }
         } else {
             m_testtime += total_time;
             test_count++;
-        }
 
-        if (!m_current_test_case_passed) {
-            test_failed_count++;
+            switch (m_current_test_result) {
+            case TestResult::Passed:
+                test_passed_count++;
+                break;
+            case TestResult::Failed:
+                test_failed_count++;
+                break;
+            default:
+                break;
+            }
         }
     }
 
@@ -175,10 +221,29 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         m_benchtime,
         global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime));
 
-    if (test_count != 0)
-        dbgln("Out of {} tests, {} passed and {} failed.", test_count, test_count - test_failed_count, test_failed_count);
+    if (test_count != 0) {
+        if (test_passed_count == test_count) {
+            dbgln("All {} tests passed.", test_count);
+        } else if (test_passed_count + test_failed_count == test_count) {
+            dbgln("Out of {} tests, {} passed and {} failed.", test_count, test_passed_count, test_failed_count);
+        } else {
+            dbgln("Out of {} tests, {} passed, {} failed and {} didn't finish for other reasons.", test_count, test_passed_count, test_failed_count, test_count - test_passed_count - test_failed_count);
+        }
+    }
 
-    return (int)test_failed_count;
+    if (benchmark_count != 0) {
+        if (benchmark_passed_count == benchmark_count) {
+            dbgln("All {} benchmarks passed.", benchmark_count);
+        } else if (benchmark_passed_count + benchmark_failed_count == benchmark_count) {
+            dbgln("Out of {} benchmarks, {} passed and {} failed.", benchmark_count, benchmark_passed_count, benchmark_failed_count);
+        } else {
+            dbgln("Out of {} benchmarks, {} passed, {} failed and {} didn't finish for other reasons.", benchmark_count, benchmark_passed_count, benchmark_failed_count, benchmark_count - benchmark_passed_count - benchmark_failed_count);
+        }
+    }
+
+    // We have multiple TestResults, all except for Passed being "bad".
+    // Let's get a count of them:
+    return (int)(test_count - test_passed_count + benchmark_count - benchmark_passed_count);
 }
 
-}
+} // namespace Test
