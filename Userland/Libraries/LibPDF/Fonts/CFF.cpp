@@ -192,6 +192,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
                         TRY(parse_index(subrs_reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
                             return TRY(local_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
                         }));
+                        dbgln_if(CFF_DEBUG, "CFF has {} subr entries", local_subroutines.size());
                         break;
                     }
                     case PrivDictOperator::DefaultWidthX:
@@ -222,6 +223,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     TRY(parse_index(reader, [&](ReadonlyBytes const& subroutine_bytes) -> PDFErrorOr<void> {
         return TRY(global_subroutines.try_append(TRY(ByteBuffer::copy(subroutine_bytes))));
     }));
+    dbgln_if(CFF_DEBUG, "CFF has {} gsubr entries", global_subroutines.size());
 
     // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
     auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), local_subroutines, global_subroutines));
@@ -250,15 +252,18 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
     Vector<DeprecatedFlyString> charset;
     switch (charset_offset) {
     case 0:
+        dbgln_if(CFF_DEBUG, "CFF predefined charset ISOAdobe");
         // CFF spec, "Appendix C Predefined Charsets, ISOAdobe"
         for (SID sid = 1; sid <= 228; sid++)
             TRY(charset.try_append(resolve_sid(sid, strings)));
         break;
     case 1:
+        dbgln_if(CFF_DEBUG, "CFF predefined charset Expert");
         for (SID sid : s_predefined_charset_expert)
             TRY(charset.try_append(resolve_sid(sid, strings)));
         break;
     case 2:
+        dbgln_if(CFF_DEBUG, "CFF predefined charset Expert Subset");
         for (SID sid : s_predefined_charset_expert_subset)
             TRY(charset.try_append(resolve_sid(sid, strings)));
         break;
@@ -713,6 +718,7 @@ PDFErrorOr<Vector<StringView>> CFF::parse_strings(Reader& reader)
     TRY(parse_index(reader, [&](ReadonlyBytes const& string) -> PDFErrorOr<void> {
         return TRY(strings.try_append(string));
     }));
+    dbgln_if(CFF_DEBUG, "CFF has {} additional strings in string table", strings.size());
     return strings;
 }
 
@@ -735,12 +741,14 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
     auto format = TRY(reader.try_read<Card8>());
     if (format == 0) {
         // CFF spec, "Table 17 Format 0"
+        dbgln_if(CFF_DEBUG, "CFF charset format 0");
         for (u8 i = 0; i < glyph_count - 1; i++) {
             SID sid = TRY(reader.try_read<BigEndian<SID>>());
             TRY(names.try_append(resolve_sid(sid, strings)));
         }
     } else if (format == 1) {
         // CFF spec, "Table 18 Format 1"
+        dbgln_if(CFF_DEBUG, "CFF charset format 1");
         while (names.size() < glyph_count - 1) {
             // CFF spec, "Table 19 Range1 Format (Charset)"
             auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
@@ -751,6 +759,7 @@ PDFErrorOr<Vector<DeprecatedFlyString>> CFF::parse_charset(Reader&& reader, size
     } else if (format == 2) {
         // CFF spec, "Table 20 Format 2"
         // "Format 2 differs from format 1 only in the size of the Left field in each range."
+        dbgln_if(CFF_DEBUG, "CFF charset format 2");
         while (names.size() < glyph_count - 1) {
             // CFF spec, "Table 21 Range2 Format"
             auto first_sid = TRY(reader.try_read<BigEndian<SID>>());
@@ -773,6 +782,7 @@ PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<By
         auto glyph = TRY(parse_glyph(charstring_data, local_subroutines, global_subroutines, state, true));
         return TRY(glyphs.try_append(glyph));
     }));
+    dbgln_if(CFF_DEBUG, "CFF has {} glyphs", glyphs.size());
     return glyphs;
 }
 
