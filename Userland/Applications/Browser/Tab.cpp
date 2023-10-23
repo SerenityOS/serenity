@@ -45,6 +45,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWebView/OutOfProcessWebView.h>
+#include <LibWebView/SearchEngine.h>
 #include <LibWebView/URL.h>
 
 namespace Browser {
@@ -633,6 +634,13 @@ Tab::Tab(BrowserWindow& window)
         on_tab_close_other_request(*this);
     }));
 
+    auto search_selected_text_action = GUI::Action::create(
+        "&Search for <query>"sv, g_icon_bag.search, [this](auto&) {
+            auto url = MUST(String::formatted(g_search_engine, URL::percent_encode(*m_page_context_menu_search_text)));
+            this->window().create_new_tab(url, Web::HTML::ActivateTab::Yes);
+        },
+        this);
+
     auto take_visible_screenshot_action = GUI::Action::create(
         "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
             if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible); result.is_error()) {
@@ -660,6 +668,9 @@ Tab::Tab(BrowserWindow& window)
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(window.copy_selection_action());
     m_page_context_menu->add_action(window.select_all_action());
+    // FIXME: It would be nice to have a separator here, but the below action is sometimes hidden, and WindowServer
+    //        does not hide successive separators like other toolkits.
+    m_page_context_menu->add_action(search_selected_text_action);
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(move(take_visible_screenshot_action));
     m_page_context_menu->add_action(move(take_full_screenshot_action));
@@ -668,7 +679,24 @@ Tab::Tab(BrowserWindow& window)
     m_page_context_menu->add_action(window.inspect_dom_tree_action());
     m_page_context_menu->add_action(window.inspect_dom_node_action());
 
-    view().on_context_menu_request = [&](auto widget_position) {
+    m_page_context_menu->on_visibility_change = [this](auto visible) {
+        if (!visible)
+            m_page_context_menu_search_text = {};
+    };
+
+    view().on_context_menu_request = [&, search_selected_text_action = move(search_selected_text_action)](auto widget_position) {
+        m_page_context_menu_search_text = g_search_engine.is_empty()
+            ? OptionalNone {}
+            : view().selected_text_with_whitespace_collapsed();
+
+        if (m_page_context_menu_search_text.has_value()) {
+            auto action_text = WebView::format_search_query_for_display(g_search_engine, *m_page_context_menu_search_text);
+            search_selected_text_action->set_text(action_text.to_deprecated_string());
+            search_selected_text_action->set_visible(true);
+        } else {
+            search_selected_text_action->set_visible(false);
+        }
+
         auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_page_context_menu->popup(screen_position);
     };
