@@ -268,3 +268,6 @@ set(SOURCES
 
 serenity_lib(LibJS js)
 target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex LibSyntax LibLocale LibUnicode LibJIT)
+if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+    target_link_libraries(LibJS PRIVATE LibX86)
+endif()
