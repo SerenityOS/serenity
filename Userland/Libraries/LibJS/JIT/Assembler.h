@@ -262,10 +262,10 @@ struct Assembler {
     {
         if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Reg) {
             emit8(0x48
-                | ((to_underlying(lhs.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(rhs.reg) >= 8) ? 1 << 0 : 0));
+                | ((to_underlying(rhs.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x39);
-            emit8(0xc0 | (encode_reg(lhs.reg) << 3) | encode_reg(rhs.reg));
+            emit8(0xc0 | (encode_reg(rhs.reg) << 3) | encode_reg(lhs.reg));
         } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm32) {
             emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
