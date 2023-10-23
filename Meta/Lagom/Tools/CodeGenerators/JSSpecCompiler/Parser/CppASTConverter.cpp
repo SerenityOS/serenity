@@ -124,6 +124,12 @@ NullableTree CppASTConverter::convert_node(Cpp::NumericLiteral const& literal)
 }
 
 template<>
+NullableTree CppASTConverter::convert_node(Cpp::StringLiteral const& literal)
+{
+    return make_ref_counted<StringLiteral>(literal.value());
+}
+
+template<>
 NullableTree CppASTConverter::convert_node(Cpp::BinaryExpression const& expression)
 {
     static constexpr auto operator_translation = []() consteval {
@@ -186,6 +192,7 @@ NullableTree CppASTConverter::as_nullable_tree(Cpp::Statement const* statement)
         Cpp::BlockStatement,
         Cpp::AssignmentExpression,
         Cpp::NumericLiteral,
+        Cpp::StringLiteral,
         Cpp::BinaryExpression>();
 
     if (result.has_value())
