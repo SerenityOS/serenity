@@ -77,7 +77,7 @@ public:
             return Gfx::TextAlignment::CenterLeft;
 
         if (role == GUI::ModelRole::Display) {
-            switch (static_cast<SearchEngineColumn>(index.row())) {
+            switch (static_cast<SearchEngineColumn>(index.column())) {
             case SearchEngineColumn::Name:
                 return m_search_engines[index.row()].name;
             case SearchEngineColumn::QueryURL:
