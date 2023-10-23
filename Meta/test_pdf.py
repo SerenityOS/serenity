@@ -59,12 +59,17 @@ def main():
 
     results = multiprocessing.Pool().map(test_pdf, files)
 
+    failed_files = []
     num_crashes = 0
     stack_to_files = {}
     for r in results:
         print(r.filename)
         print(r.stdout.decode('utf-8'))
-        if r.returncode != 0:
+        if r.returncode == 0:
+            continue
+        if r.returncode == 1:
+            failed_files.append(r.filename)
+        else:
             num_crashes += 1
             stack_to_files.setdefault(r.stderr, []).append(r.filename)
 
@@ -82,6 +87,12 @@ def main():
     percent = 100 * num_crashes / len(results)
     print(f'{num_crashes} crashes ({percent:.1f}%)')
     print(f'{len(keys)} distinct crash stacks')
+
+    percent = 100 * len(failed_files) / len(results)
+    print()
+    print(f'{len(failed_files)} failed to open ({percent:.1f}%)')
+    for f in failed_files:
+        print(f'    {f}')
 
 
 if __name__ == '__main__':
