@@ -1240,7 +1240,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
                 });
 
                 if (crosses_flexible_track)
-                    result = max(result, find_the_size_of_an_fr(spanned_tracks, calculate_max_content_size(item, dimension)));
+                    result = max(result, find_the_size_of_an_fr(spanned_tracks, calculate_max_content_contribution(item, dimension)));
             }
 
             return result;
