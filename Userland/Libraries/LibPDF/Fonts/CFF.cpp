@@ -874,26 +874,31 @@ PDFErrorOr<void> CFF::parse_index(Reader& reader, IndexDataHandler&& data_handle
     if (count == 0)
         return {};
     auto offset_size = TRY(reader.try_read<OffSize>());
-    if (offset_size == 1)
-        return parse_index_data<u8>(count, reader, data_handler);
-    if (offset_size == 2)
-        return parse_index_data<u16>(count, reader, data_handler);
-    if (offset_size == 4)
-        return parse_index_data<u32>(count, reader, data_handler);
-    VERIFY_NOT_REACHED();
+    if (offset_size > 4)
+        return error("CFF INDEX Data offset_size > 4 not supported");
+    return parse_index_data(offset_size, count, reader, data_handler);
 }
 
-template<typename OffsetType>
-PDFErrorOr<void> CFF::parse_index_data(Card16 count, Reader& reader, IndexDataHandler& handler)
+PDFErrorOr<void> CFF::parse_index_data(OffSize offset_size, Card16 count, Reader& reader, IndexDataHandler& handler)
 {
     // CFF spec, "5 INDEX Data"
-    OffsetType last_data_end = 1;
-    auto offset_refpoint = reader.offset() + sizeof(OffsetType) * (count + 1) - 1;
+    u32 last_data_end = 1;
+
+    auto read_offset = [&]() -> PDFErrorOr<u32> {
+        u32 offset = 0;
+        for (OffSize i = 0; i < offset_size; ++i)
+            offset = (offset << 8) | TRY(reader.try_read<u8>());
+        return offset;
+    };
+
+    auto offset_refpoint = reader.offset() + offset_size * (count + 1) - 1;
     for (u16 i = 0; i < count; i++) {
         reader.save();
-        reader.move_by(sizeof(OffsetType) * i);
-        OffsetType data_start = reader.read<BigEndian<OffsetType>>();
-        last_data_end = reader.read<BigEndian<OffsetType>>();
+
+        reader.move_by(offset_size * i);
+        u32 data_start = TRY(read_offset());
+        last_data_end = TRY(read_offset());
+
         auto data_size = last_data_end - data_start;
         reader.move_to(offset_refpoint + data_start);
         TRY(handler(reader.bytes().slice(reader.offset(), data_size)));
@@ -902,10 +907,6 @@ PDFErrorOr<void> CFF::parse_index_data(Card16 count, Reader& reader, IndexDataHa
     reader.move_to(offset_refpoint + last_data_end);
     return {};
 }
-
-template PDFErrorOr<void> CFF::parse_index_data<u8>(Card16, Reader&, IndexDataHandler&);
-template PDFErrorOr<void> CFF::parse_index_data<u16>(Card16, Reader&, IndexDataHandler&);
-template PDFErrorOr<void> CFF::parse_index_data<u32>(Card16, Reader&, IndexDataHandler&);
 
 int CFF::load_int_dict_operand(u8 b0, Reader& reader)
 {
