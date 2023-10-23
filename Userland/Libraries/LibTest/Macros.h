@@ -109,6 +109,25 @@ void disable_reporting();
 
 #define EXPECT_APPROXIMATE(a, b) EXPECT_APPROXIMATE_WITH_ERROR(a, b, 0.0000005)
 
+#define REJECT(message)                                                \
+    do {                                                               \
+        if (::Test::is_reporting_enabled())                            \
+            ::AK::warnln("\033[31;1mREJECTED\033[0m: {}:{}: {}",       \
+                __FILE__, __LINE__, #message);                         \
+        ::Test::set_current_test_result(::Test::TestResult::Rejected); \
+    } while (false)
+
+#define ASSUME(x)                                                                                                      \
+    do {                                                                                                               \
+        if (!(x)) {                                                                                                    \
+            if (::Test::is_reporting_enabled())                                                                        \
+                ::AK::warnln("\033[31;1mREJECTED\033[0m: {}:{}: Couldn't generate random value satisfying ASSUME({})", \
+                    __FILE__, __LINE__, #x);                                                                           \
+            ::Test::set_current_test_result(::Test::TestResult::Rejected);                                             \
+            return;                                                                                                    \
+        }                                                                                                              \
+    } while (false)
+
 #define FAIL(message)                                                                      \
     do {                                                                                   \
         if (::Test::is_reporting_enabled())                                                \

@@ -103,6 +103,8 @@ static DeprecatedString test_result_to_string(TestResult result)
         return "Completed";
     case TestResult::Failed:
         return "Failed";
+    case TestResult::Rejected:
+        return "Rejected";
     case TestResult::Overrun:
         return "Ran out of randomness";
     default:
