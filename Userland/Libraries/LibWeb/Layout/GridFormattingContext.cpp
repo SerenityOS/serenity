@@ -1626,6 +1626,21 @@ void GridFormattingContext::resolve_grid_item_widths()
         } else {
             used_width = try_compute_width(computed_width.to_px(grid_container(), containing_block_width));
         }
+
+        if (!should_treat_max_width_as_none(item.box, m_available_space->width)) {
+            auto max_width = try_compute_width(computed_values.max_width().to_px(grid_container(), containing_block_width));
+            if (used_width > max_width) {
+                used_width = max_width;
+            }
+        }
+
+        if (!computed_values.min_width().is_auto()) {
+            auto min_width = try_compute_width(computed_values.min_width().to_px(grid_container(), containing_block_width));
+            if (used_width < min_width) {
+                used_width = min_width;
+            }
+        }
+
         box_state.set_content_width(used_width);
     }
 }
