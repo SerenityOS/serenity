@@ -81,8 +81,7 @@ public:
     using IndexDataHandler = Function<PDFErrorOr<void>(ReadonlyBytes const&)>;
     static PDFErrorOr<void> parse_index(Reader& reader, IndexDataHandler&&);
 
-    template<typename OffsetType>
-    static PDFErrorOr<void> parse_index_data(Card16 count, Reader& reader, IndexDataHandler&);
+    static PDFErrorOr<void> parse_index_data(OffSize offset_size, Card16 count, Reader& reader, IndexDataHandler&);
 
     template<typename OperatorT>
     using DictEntryHandler = Function<PDFErrorOr<void>(OperatorT, Vector<DictOperand> const&)>;
