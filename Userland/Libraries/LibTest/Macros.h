@@ -11,6 +11,7 @@
 #include <AK/CheckedFormatString.h>
 #include <AK/Math.h>
 #include <LibTest/CrashTest.h>
+#include <LibTest/TestResult.h>
 
 namespace AK {
 template<typename... Parameters>
@@ -18,8 +19,9 @@ void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&...);
 }
 
 namespace Test {
-// Declare a helper so that we can call it from VERIFY in included headers
-void current_test_case_did_fail();
+// Declare helpers so that we can call them from VERIFY in included headers
+// the setter for TestResult is already declared in TestResult.h
+TestResult current_test_result();
 }
 
 #define EXPECT_EQ(a, b)                                                                                                                                                                      \
@@ -28,7 +30,7 @@ void current_test_case_did_fail();
         auto rhs = (b);                                                                                                                                                                      \
         if (lhs != rhs) {                                                                                                                                                                    \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
-            ::Test::current_test_case_did_fail();                                                                                                                                            \
+            ::Test::set_current_test_result(::Test::TestResult::Failed);                                                                                                                     \
         }                                                                                                                                                                                    \
     } while (false)
 
@@ -41,7 +43,7 @@ void current_test_case_did_fail();
         if (ltruth != rtruth) {                                                                                           \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ_TRUTH({}, {}) failed with lhs={} ({}) and rhs={} ({})", \
                 __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, ltruth, FormatIfSupported { rhs }, rtruth);        \
-            ::Test::current_test_case_did_fail();                                                                         \
+            ::Test::set_current_test_result(::Test::TestResult::Failed);                                                  \
         }                                                                                                                 \
     } while (false)
 
@@ -53,7 +55,7 @@ void current_test_case_did_fail();
         auto rhs = (b);                                                                                                                          \
         if (lhs != rhs) {                                                                                                                        \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, lhs, rhs); \
-            ::Test::current_test_case_did_fail();                                                                                                \
+            ::Test::set_current_test_result(::Test::TestResult::Failed);                                                                         \
         }                                                                                                                                        \
     } while (false)
 
@@ -63,7 +65,7 @@ void current_test_case_did_fail();
         auto rhs = (b);                                                                                                                                                                      \
         if (lhs == rhs) {                                                                                                                                                                    \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_NE({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
-            ::Test::current_test_case_did_fail();                                                                                                                                            \
+            ::Test::set_current_test_result(::Test::TestResult::Failed);                                                                                                                     \
         }                                                                                                                                                                                    \
     } while (false)
 
@@ -71,7 +73,7 @@ void current_test_case_did_fail();
     do {                                                                                             \
         if (!(x)) {                                                                                  \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT({}) failed", __FILE__, __LINE__, #x); \
-            ::Test::current_test_case_did_fail();                                                    \
+            ::Test::set_current_test_result(::Test::TestResult::Failed);                             \
         }                                                                                            \
     } while (false)
 
@@ -84,7 +86,7 @@ void current_test_case_did_fail();
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_APPROXIMATE({}, {})"                             \
                          " failed with lhs={}, rhs={}, (lhs-rhs)={}",                                           \
                 __FILE__, __LINE__, #a, #b, expect_close_lhs, expect_close_rhs, expect_close_diff);             \
-            ::Test::current_test_case_did_fail();                                                               \
+            ::Test::set_current_test_result(::Test::TestResult::Failed);                                        \
         }                                                                                                       \
     } while (false)
 
@@ -93,32 +95,32 @@ void current_test_case_did_fail();
 #define FAIL(message)                                                                  \
     do {                                                                               \
         ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: {}", __FILE__, __LINE__, message); \
-        ::Test::current_test_case_did_fail();                                          \
+        ::Test::set_current_test_result(::Test::TestResult::Failed);                   \
     } while (false)
 
 // To use, specify the lambda to execute in a sub process and verify it exits:
 //  EXPECT_CRASH("This should fail", []{
 //      return Test::Crash::Failure::DidNotCrash;
 //  });
-#define EXPECT_CRASH(test_message, test_func)       \
-    do {                                            \
-        Test::Crash crash(test_message, test_func); \
-        if (!crash.run())                           \
-            ::Test::current_test_case_did_fail();   \
+#define EXPECT_CRASH(test_message, test_func)                            \
+    do {                                                                 \
+        Test::Crash crash(test_message, test_func);                      \
+        if (!crash.run())                                                \
+            ::Test::set_current_test_result(::Test::TestResult::Failed); \
     } while (false)
 
-#define EXPECT_CRASH_WITH_SIGNAL(test_message, signal, test_func) \
-    do {                                                          \
-        Test::Crash crash(test_message, test_func, (signal));     \
-        if (!crash.run())                                         \
-            ::Test::current_test_case_did_fail();                 \
+#define EXPECT_CRASH_WITH_SIGNAL(test_message, signal, test_func)        \
+    do {                                                                 \
+        Test::Crash crash(test_message, test_func, (signal));            \
+        if (!crash.run())                                                \
+            ::Test::set_current_test_result(::Test::TestResult::Failed); \
     } while (false)
 
-#define EXPECT_NO_CRASH(test_message, test_func)       \
-    do {                                               \
-        Test::Crash crash(test_message, test_func, 0); \
-        if (!crash.run())                              \
-            ::Test::current_test_case_did_fail();      \
+#define EXPECT_NO_CRASH(test_message, test_func)                         \
+    do {                                                                 \
+        Test::Crash crash(test_message, test_func, 0);                   \
+        if (!crash.run())                                                \
+            ::Test::set_current_test_result(::Test::TestResult::Failed); \
     } while (false)
 
 #define TRY_OR_FAIL(expression)                                                                      \

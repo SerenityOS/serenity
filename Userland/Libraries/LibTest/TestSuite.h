@@ -13,6 +13,7 @@
 #include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibTest/TestCase.h>
+#include <LibTest/TestResult.h>
 
 namespace Test {
 
@@ -40,7 +41,8 @@ public:
         m_cases.append(test_case);
     }
 
-    void current_test_case_did_fail() { m_current_test_case_passed = false; }
+    TestResult current_test_result() const { return m_current_test_result; }
+    void set_current_test_result(TestResult result) { m_current_test_result = result; }
 
     void set_suite_setup(Function<void()> setup) { m_setup = move(setup); }
 
@@ -51,8 +53,8 @@ private:
     u64 m_benchtime = 0;
     DeprecatedString m_suite_name;
     u64 m_benchmark_repetitions = 1;
-    bool m_current_test_case_passed = true;
     Function<void()> m_setup;
+    TestResult m_current_test_result = TestResult::NotRun;
 };
 
 }
