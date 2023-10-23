@@ -198,22 +198,19 @@ void Compiler::branch_if_both_int32(Assembler::Reg lhs, Assembler::Reg rhs, Code
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Register(rhs));
     m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm8(48));
 
-    // FIXME: Use one label once Assembler::Label supports multiple jumps to it.
-    auto not_int32_case1 = m_assembler.make_label();
-    auto not_int32_case2 = m_assembler.make_label();
+    auto not_int32_case = m_assembler.make_label();
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm32(INT32_TAG),
-        not_int32_case1);
+        not_int32_case);
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR1),
         Assembler::Operand::Imm32(INT32_TAG),
-        not_int32_case2);
+        not_int32_case);
 
     codegen();
 
-    not_int32_case1.link(m_assembler);
-    not_int32_case2.link(m_assembler);
+    not_int32_case.link(m_assembler);
 }
 
 void Compiler::compile_increment(Bytecode::Op::Increment const&)
@@ -464,9 +461,7 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
     load_vm_register(ARG1, op.lhs());
     load_vm_register(ARG2, Bytecode::Register::accumulator());
 
-    // FIXME: Unify when we have multi-jump labels.
-    auto end1 = m_assembler.make_label();
-    auto end2 = m_assembler.make_label();
+    auto end = m_assembler.make_label();
 
     branch_if_both_int32(ARG1, ARG2, [&] {
         // if (ARG1 < ARG2) return true;
@@ -482,7 +477,7 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
             Assembler::Operand::Register(GPR0),
             Assembler::Operand::Imm64(Value(false).encoded()));
         store_vm_register(Bytecode::Register::accumulator(), GPR0);
-        m_assembler.jump(end1);
+        m_assembler.jump(end);
 
         true_case.link(m_assembler);
         m_assembler.mov(
@@ -490,14 +485,13 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
             Assembler::Operand::Imm64(Value(true).encoded()));
         store_vm_register(Bytecode::Register::accumulator(), GPR0);
 
-        m_assembler.jump(end2);
+        m_assembler.jump(end);
     });
 
     m_assembler.native_call((void*)cxx_less_than);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
-    end1.link(m_assembler);
-    end2.link(m_assembler);
+    end.link(m_assembler);
 }
 
 static ThrowCompletionOr<Value> not_(VM&, Value value)

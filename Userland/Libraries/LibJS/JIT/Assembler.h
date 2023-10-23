@@ -178,22 +178,31 @@ struct Assembler {
     }
 
     struct Label {
-        size_t offset_in_instruction_stream { 0 };
+        size_t offset_of_label_in_instruction_stream { 0 };
+        Vector<size_t> jump_slot_offsets_in_instruction_stream;
+
+        void add_jump(size_t offset)
+        {
+            jump_slot_offsets_in_instruction_stream.append(offset);
+        }
 
         void link(Assembler& assembler)
         {
-            auto offset = assembler.m_output.size() - offset_in_instruction_stream;
-            auto jump_slot = offset_in_instruction_stream - 4;
-            assembler.m_output[jump_slot + 0] = (offset >> 0) & 0xff;
-            assembler.m_output[jump_slot + 1] = (offset >> 8) & 0xff;
-            assembler.m_output[jump_slot + 2] = (offset >> 16) & 0xff;
-            assembler.m_output[jump_slot + 3] = (offset >> 24) & 0xff;
+            offset_of_label_in_instruction_stream = assembler.m_output.size();
+            for (auto offset_in_instruction_stream : jump_slot_offsets_in_instruction_stream) {
+                auto offset = offset_of_label_in_instruction_stream - offset_in_instruction_stream;
+                auto jump_slot = offset_in_instruction_stream - 4;
+                assembler.m_output[jump_slot + 0] = (offset >> 0) & 0xff;
+                assembler.m_output[jump_slot + 1] = (offset >> 8) & 0xff;
+                assembler.m_output[jump_slot + 2] = (offset >> 16) & 0xff;
+                assembler.m_output[jump_slot + 3] = (offset >> 24) & 0xff;
+            }
         }
     };
 
     [[nodiscard]] Label make_label()
     {
-        return { .offset_in_instruction_stream = m_output.size() };
+        return { .offset_of_label_in_instruction_stream = m_output.size() };
     }
 
     [[nodiscard]] Label jump()
@@ -201,7 +210,9 @@ struct Assembler {
         // jmp target (RIP-relative 32-bit offset)
         emit8(0xe9);
         emit32(0xdeadbeef);
-        return make_label();
+        auto label = make_label();
+        label.add_jump(m_output.size());
+        return label;
     }
 
     void jump(Label& label)
@@ -209,7 +220,7 @@ struct Assembler {
         // jmp target (RIP-relative 32-bit offset)
         emit8(0xe9);
         emit32(0xdeadbeef);
-        label.offset_in_instruction_stream = m_output.size();
+        label.add_jump(m_output.size());
     }
 
     void jump(Operand op)
@@ -284,7 +295,7 @@ struct Assembler {
         emit8(0x0f);
         emit8(0x84);
         emit32(0xdeadbeef);
-        label.offset_in_instruction_stream = m_output.size();
+        label.add_jump(m_output.size());
     }
 
     void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
@@ -295,7 +306,7 @@ struct Assembler {
         emit8(0x0f);
         emit8(0x85);
         emit32(0xdeadbeef);
-        label.offset_in_instruction_stream = m_output.size();
+        label.add_jump(m_output.size());
     }
 
     void jump_if_less_than(Operand lhs, Operand rhs, Label& label)
@@ -306,7 +317,7 @@ struct Assembler {
         emit8(0x0f);
         emit8(0x8c);
         emit32(0xdeadbeef);
-        label.offset_in_instruction_stream = m_output.size();
+        label.add_jump(m_output.size());
     }
 
     void bitwise_and(Operand dst, Operand src)
