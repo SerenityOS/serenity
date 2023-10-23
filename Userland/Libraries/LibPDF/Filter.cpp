@@ -212,7 +212,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)
 
 PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component)
 {
-    auto buff = Compress::DeflateDecompressor::decompress_all(bytes.slice(2)).value();
+    auto buff = TRY(Compress::DeflateDecompressor::decompress_all(bytes.slice(2)));
     if (predictor == 1)
         return buff;
 
