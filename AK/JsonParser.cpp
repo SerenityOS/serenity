@@ -18,6 +18,19 @@ constexpr bool is_space(int ch)
     return ch == '\t' || ch == '\n' || ch == '\r' || ch == ' ';
 }
 
+// ECMA-404 9 String
+// Boils down to
+// STRING = "\"" *("[^\"\\]" | "\\" ("[\"\\bfnrt]" | "u[0-9A-Za-z]{4}")) "\""
+//     │├── " ──╮───────────────────────────────────────────────╭── " ──┤│
+//              │                                               │
+//              │  ╭───────────────────<─────────────────────╮  │
+//              │  │                                         │  │
+//              ╰──╰──╮───────────── [^"\\] ──────────────╭──╯──╯
+//                    │                                   │
+//                    ╰── \ ───╮──── ["\\bfnrt] ───────╭──╯
+//                             │                       │
+//                             ╰─── u[0-9A-Za-z]{4}  ──╯
+//
 ErrorOr<DeprecatedString> JsonParser::consume_and_unescape_string()
 {
     if (!consume_specific('"'))
@@ -25,98 +38,95 @@ ErrorOr<DeprecatedString> JsonParser::consume_and_unescape_string()
     StringBuilder final_sb;
 
     for (;;) {
-        size_t peek_index = m_index;
-        char ch = 0;
+        // OPTIMIZATION: We try to append as many literal characters as possible at a time
+        //               This also pre-checks some error conditions
+        // Note: All utf8 characters are either plain ascii,  or have their most signifiant bit set,
+        //       which puts the, above plain ascii in value, so they will always consist
+        //       of a set of "legal" non-special bytes,
+        //       hence we don't need to bother with a code-point iterator,
+        //       as a simple byte iterator suffices, which GenericLexer provides by default
+        size_t literal_characters = 0;
         for (;;) {
-            if (peek_index == m_input.length())
-                break;
-            ch = m_input[peek_index];
+            char ch = peek(literal_characters);
+            // Note: We get a 0 byte when we hit EOF
+            if (ch == 0)
+                return Error::from_string_literal("JsonParser: EOF while parsing String");
+            // Spec: All code points may be placed within the quotation marks except
+            //       for the code points that must be escaped: quotation mark (U+0022),
+            //       reverse solidus (U+005C), and the control characters U+0000 to U+001F.
+            //       There are two-character escape sequence representations of some characters.
+            if (is_ascii_c0_control(ch))
+                return Error::from_string_literal("JsonParser: ASCII control sequence encountered");
             if (ch == '"' || ch == '\\')
                 break;
-            if (is_ascii_c0_control(ch))
-                return Error::from_string_literal("JsonParser: Error while parsing string");
-            ++peek_index;
+            ++literal_characters;
+        }
+        final_sb.append(consume(literal_characters));
+
+        // We have checked all cases except end-of-string and escaped characters in the loop above,
+        // so we now only have to handle those two cases
+        char ch = peek();
+
+        if (ch == '"') {
+            consume();
+            break;
         }
 
-        while (peek_index != m_index) {
-            final_sb.append(m_input[m_index]);
-            m_index++;
-        }
+        ignore(); // '\'
 
-        if (m_index == m_input.length())
-            break;
-        if (ch == '"')
-            break;
-        if (ch != '\\') {
+        switch (peek()) {
+        case '\0':
+            return Error::from_string_literal("JsonParser: EOF while parsing String");
+        case '"':
+        case '\\':
+        case '/':
             final_sb.append(consume());
-            continue;
-        }
-        ignore();
-        if (next_is('"')) {
-            ignore();
-            final_sb.append('"');
-            continue;
-        }
-
-        if (next_is('\\')) {
-            ignore();
-            final_sb.append('\\');
-            continue;
-        }
-
-        if (next_is('/')) {
-            ignore();
-            final_sb.append('/');
-            continue;
-        }
-
-        if (next_is('n')) {
-            ignore();
-            final_sb.append('\n');
-            continue;
-        }
-
-        if (next_is('r')) {
-            ignore();
-            final_sb.append('\r');
-            continue;
-        }
-
-        if (next_is('t')) {
-            ignore();
-            final_sb.append('\t');
-            continue;
-        }
-
-        if (next_is('b')) {
+            break;
+        case 'b':
             ignore();
             final_sb.append('\b');
-            continue;
-        }
-
-        if (next_is('f')) {
+            break;
+        case 'f':
             ignore();
             final_sb.append('\f');
-            continue;
-        }
-
-        if (next_is('u')) {
+            break;
+        case 'n':
             ignore();
+            final_sb.append('\n');
+            break;
+        case 'r':
+            ignore();
+            final_sb.append('\r');
+            break;
+        case 't':
+            ignore();
+            final_sb.append('\t');
+            break;
+        case 'u': {
+            ignore(); // 'u'
+
             if (tell_remaining() < 4)
                 return Error::from_string_literal("JsonParser: EOF while parsing Unicode escape");
-
-            auto code_point = AK::StringUtils::convert_to_uint_from_hex(consume(4));
-            if (code_point.has_value()) {
-                final_sb.append_code_point(code_point.value());
-                continue;
+            auto escaped_string = consume(4);
+            auto code_point = AK::StringUtils::convert_to_uint_from_hex(escaped_string);
+            if (!code_point.has_value()) {
+                dbgln("JsonParser: Error while parsing Unicode escape {}", escaped_string);
+                return Error::from_string_literal("JsonParser: Error while parsing Unicode escape");
             }
-            return Error::from_string_literal("JsonParser: Error while parsing Unicode escape");
+            // Note/FIXME: "To escape a code point that is not in the Basic Multilingual Plane, the character may be represented as a
+            //              twelve-character sequence, encoding the UTF-16 surrogate pair corresponding to the code point. So for
+            //              example, a string containing only the G clef character (U+1D11E) may be represented as "\uD834\uDD1E".
+            //              However, whether a processor of JSON texts interprets such a surrogate pair as a single code point or as an
+            //              explicit surrogate pair is a semantic decision that is determined by the specific processor."
+            //             ~ECMA-404, 2nd Edition Dec. 2017, page 5
+            final_sb.append_code_point(code_point.value());
+            break;
         }
-
-        return Error::from_string_literal("JsonParser: Error while parsing string");
+        default:
+            dbgln("JsonParser: Invalid escaped character '{}' ({:#x}) ", peek(), peek());
+            return Error::from_string_literal("JsonParser: Invalid escaped character");
+        }
     }
-    if (!consume_specific('"'))
-        return Error::from_string_literal("JsonParser: Expected '\"'");
 
     return final_sb.to_deprecated_string();
 }
