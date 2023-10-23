@@ -13,6 +13,7 @@
 #include "TVGIconEngine.h"
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
+#include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
 #include <LibWebView/URL.h>
 #include <QClipboard>
@@ -288,6 +289,13 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
             m_inspector_widget->set_accessibility_json(accessibility_tree);
     };
 
+    auto* search_selected_text_action = new QAction("&Search for <query>", this);
+    search_selected_text_action->setIcon(QIcon(QString("%1/res/icons/16x16/find.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(search_selected_text_action, &QAction::triggered, this, [this]() {
+        auto url = MUST(String::formatted(Settings::the()->search_engine().query_url, URL::percent_encode(*m_page_context_menu_search_text)));
+        m_window->new_tab(qstring_from_ak_string(url), Web::HTML::ActivateTab::Yes);
+    });
+
     auto* take_visible_screenshot_action = new QAction("Take &Visible Screenshot", this);
     take_visible_screenshot_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(take_visible_screenshot_action, &QAction::triggered, this, [this]() {
@@ -314,13 +322,28 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_page_context_menu->addAction(&m_window->copy_selection_action());
     m_page_context_menu->addAction(&m_window->select_all_action());
     m_page_context_menu->addSeparator();
+    m_page_context_menu->addAction(search_selected_text_action);
+    m_page_context_menu->addSeparator();
     m_page_context_menu->addAction(take_visible_screenshot_action);
     m_page_context_menu->addAction(take_full_screenshot_action);
     m_page_context_menu->addSeparator();
     m_page_context_menu->addAction(&m_window->view_source_action());
     m_page_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_context_menu_request = [this](Gfx::IntPoint) {
+    view().on_context_menu_request = [this, search_selected_text_action](Gfx::IntPoint) {
+        auto selected_text = Settings::the()->enable_search()
+            ? view().selected_text_with_whitespace_collapsed()
+            : OptionalNone {};
+        TemporaryChange change_url { m_page_context_menu_search_text, std::move(selected_text) };
+
+        if (m_page_context_menu_search_text.has_value()) {
+            auto action_text = WebView::format_search_query_for_display(Settings::the()->search_engine().query_url, *m_page_context_menu_search_text);
+            search_selected_text_action->setText(qstring_from_ak_string(action_text));
+            search_selected_text_action->setVisible(true);
+        } else {
+            search_selected_text_action->setVisible(false);
+        }
+
         auto screen_position = QCursor::pos();
         m_page_context_menu->exec(screen_position);
     };
