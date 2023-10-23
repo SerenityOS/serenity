@@ -18,6 +18,11 @@ enum class TestResult {
     // Didn't get through EXPECT(...).
     Failed,
 
+    // Didn't get through the ASSUME(...) filter 15 times in a row
+    // (in a randomized test).
+    // Alternatively, user used REJECT(...).
+    Rejected,
+
     // Ran out of RandomRun data (in a randomized test, when shrinking).
     // This is fine, we'll just try some other shrink.
     Overrun,
