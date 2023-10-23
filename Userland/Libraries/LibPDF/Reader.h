@@ -43,12 +43,12 @@ public:
         return offset() + 1;
     }
 
-    void move_by(size_t count)
+    void move_by(ssize_t count)
     {
         if (m_forwards) {
-            m_offset += static_cast<ssize_t>(count);
+            m_offset += count;
         } else {
-            m_offset -= static_cast<ssize_t>(count);
+            m_offset -= count;
         }
     }
 
