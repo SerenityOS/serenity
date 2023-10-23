@@ -18,6 +18,8 @@ struct Version {
 class DocumentParser final : public RefCounted<DocumentParser>
     , public Parser {
 public:
+    static PDFErrorOr<size_t> scan_for_header_start(ReadonlyBytes);
+
     DocumentParser(Document*, ReadonlyBytes);
 
     enum class LinearizationResult {
