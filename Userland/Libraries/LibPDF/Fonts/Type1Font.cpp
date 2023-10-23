@@ -49,9 +49,11 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
     return {};
 }
 
-float Type1Font::get_glyph_width(u8 char_code) const
+Optional<float> Type1Font::get_glyph_width(u8 char_code) const
 {
-    return m_font->glyph_width(char_code);
+    if (m_font)
+        return m_font->glyph_width(char_code);
+    return OptionalNone {};
 }
 
 void Type1Font::set_font_size(float font_size)

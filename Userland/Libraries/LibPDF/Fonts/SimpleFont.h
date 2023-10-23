@@ -17,7 +17,7 @@ public:
 
 protected:
     PDFErrorOr<void> initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size) override;
-    virtual float get_glyph_width(u8 char_code) const = 0;
+    virtual Optional<float> get_glyph_width(u8 char_code) const = 0;
     virtual void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color) = 0;
     RefPtr<Encoding>& encoding() { return m_encoding; }
     RefPtr<Encoding> const& encoding() const { return m_encoding; }
@@ -26,7 +26,7 @@ private:
     RefPtr<Encoding> m_encoding;
     RefPtr<StreamObject> m_to_unicode;
     HashMap<u8, u16> m_widths;
-    u16 m_missing_width;
+    u16 m_missing_width { 0 };
 };
 
 }

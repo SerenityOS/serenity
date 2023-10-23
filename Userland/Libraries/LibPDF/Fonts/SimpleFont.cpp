@@ -53,8 +53,10 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         float glyph_width;
         if (auto width = m_widths.get(char_code); width.has_value())
             glyph_width = font_size * width.value() / 1000.0f;
+        else if (auto width = get_glyph_width(char_code); width.has_value())
+            glyph_width = width.value();
         else
-            glyph_width = get_glyph_width(char_code);
+            glyph_width = m_missing_width;
 
         draw_glyph(painter, glyph_position, glyph_width, char_code, paint_color);
 
