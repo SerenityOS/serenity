@@ -47,10 +47,33 @@ private:
     void compile_to_numeric(Bytecode::Op::ToNumeric const&);
     void compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding const&);
 
+#define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
+    O(Add, add)                                             \
+    O(Sub, sub)                                             \
+    O(Mul, mul)                                             \
+    O(Div, div)                                             \
+    O(Exp, exp)                                             \
+    O(Mod, mod)                                             \
+    O(In, in)                                               \
+    O(InstanceOf, instance_of)                              \
+    O(GreaterThan, greater_than)                            \
+    O(GreaterThanEquals, greater_than_equals)               \
+    O(LessThanEquals, less_than_equals)                     \
+    O(LooselyInequals, abstract_inequals)                   \
+    O(LooselyEquals, abstract_equals)                       \
+    O(StrictlyInequals, typed_inequals)                     \
+    O(StrictlyEquals, typed_equals)                         \
+    O(BitwiseAnd, bitwise_and)                              \
+    O(BitwiseOr, bitwise_or)                                \
+    O(BitwiseXor, bitwise_xor)                              \
+    O(LeftShift, left_shift)                                \
+    O(RightShift, right_shift)                              \
+    O(UnsignedRightShift, unsigned_right_shift)
+
 #define DO_COMPILE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
     void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
 
-    JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
+    JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
 #undef DO_COMPILE_COMMON_BINARY_OP
 
 #define DO_COMPILE_COMMON_UNARY_OP(OpTitleCase, op_snake_case) \
@@ -58,6 +81,8 @@ private:
 
     JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
 #undef DO_COMPILE_COMMON_UNARY_OP
+
+    void compile_less_than(Bytecode::Op::LessThan const&);
 
     void compile_return(Bytecode::Op::Return const&);
     void compile_new_string(Bytecode::Op::NewString const&);
@@ -91,6 +116,9 @@ private:
 
     template<typename Codegen>
     void branch_if_int32(Assembler::Reg, Codegen);
+
+    template<typename Codegen>
+    void branch_if_both_int32(Assembler::Reg, Assembler::Reg, Codegen);
 
     explicit Compiler(Bytecode::Executable& bytecode_executable)
         : m_bytecode_executable(bytecode_executable)

@@ -298,6 +298,17 @@ struct Assembler {
         label.offset_in_instruction_stream = m_output.size();
     }
 
+    void jump_if_less_than(Operand lhs, Operand rhs, Label& label)
+    {
+        cmp(lhs, rhs);
+
+        // jl label (RIP-relative 32-bit offset)
+        emit8(0x0f);
+        emit8(0x8c);
+        emit32(0xdeadbeef);
+        label.offset_in_instruction_stream = m_output.size();
+    }
+
     void bitwise_and(Operand dst, Operand src)
     {
         // and dst,src

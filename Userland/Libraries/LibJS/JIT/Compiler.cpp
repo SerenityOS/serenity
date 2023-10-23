@@ -187,6 +187,35 @@ void Compiler::branch_if_int32(Assembler::Reg reg, Codegen codegen)
     not_int32_case.link(m_assembler);
 }
 
+template<typename Codegen>
+void Compiler::branch_if_both_int32(Assembler::Reg lhs, Assembler::Reg rhs, Codegen codegen)
+{
+    // GPR0 = lhs >> 48;
+    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(lhs));
+    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm8(48));
+
+    // GPR1 = rhs >> 48;
+    m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Register(rhs));
+    m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm8(48));
+
+    // FIXME: Use one label once Assembler::Label supports multiple jumps to it.
+    auto not_int32_case1 = m_assembler.make_label();
+    auto not_int32_case2 = m_assembler.make_label();
+    m_assembler.jump_if_not_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm32(INT32_TAG),
+        not_int32_case1);
+    m_assembler.jump_if_not_equal(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm32(INT32_TAG),
+        not_int32_case2);
+
+    codegen();
+
+    not_int32_case1.link(m_assembler);
+    not_int32_case2.link(m_assembler);
+}
+
 void Compiler::compile_increment(Bytecode::Op::Increment const&)
 {
     load_vm_register(ARG1, Bytecode::Register::accumulator());
@@ -422,8 +451,54 @@ static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
         check_exception();                                                          \
     }
 
-JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
+JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
 #undef DO_COMPILE_COMMON_BINARY_OP
+
+static Value cxx_less_than(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(less_than(vm, lhs, rhs));
+}
+
+void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+
+    // FIXME: Unify when we have multi-jump labels.
+    auto end1 = m_assembler.make_label();
+    auto end2 = m_assembler.make_label();
+
+    branch_if_both_int32(ARG1, ARG2, [&] {
+        // if (ARG1 < ARG2) return true;
+        // else return false;
+
+        auto true_case = m_assembler.make_label();
+        m_assembler.jump_if_less_than(
+            Assembler::Operand::Register(ARG1),
+            Assembler::Operand::Register(ARG2),
+            true_case);
+
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm64(Value(false).encoded()));
+        store_vm_register(Bytecode::Register::accumulator(), GPR0);
+        m_assembler.jump(end1);
+
+        true_case.link(m_assembler);
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm64(Value(true).encoded()));
+        store_vm_register(Bytecode::Register::accumulator(), GPR0);
+
+        m_assembler.jump(end2);
+    });
+
+    m_assembler.native_call((void*)cxx_less_than);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+    end1.link(m_assembler);
+    end2.link(m_assembler);
+}
 
 static ThrowCompletionOr<Value> not_(VM&, Value value)
 {
@@ -850,12 +925,15 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
             case Bytecode::Instruction::Type::SetVariable:
                 compiler.compile_set_variable(static_cast<Bytecode::Op::SetVariable const&>(op));
                 break;
+            case Bytecode::Instruction::Type::LessThan:
+                compiler.compile_less_than(static_cast<Bytecode::Op::LessThan const&>(op));
+                break;
 
 #define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \
     case Bytecode::Instruction::Type::TitleCaseName:                                             \
         compiler.compile_##snake_case_name(static_cast<Bytecode::Op::TitleCaseName const&>(op)); \
         break;
-                JS_ENUMERATE_COMMON_BINARY_OPS(DO_COMPILE_COMMON_BINARY_OP)
+                JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
 #undef DO_COMPILE_COMMON_BINARY_OP
 
 #define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)                               \
