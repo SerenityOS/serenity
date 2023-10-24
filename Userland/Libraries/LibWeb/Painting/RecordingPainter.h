@@ -47,6 +47,7 @@ struct DrawTextRun {
     NonnullRefPtr<Gfx::Font> font;
     Gfx::IntRect rect;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -59,6 +60,7 @@ struct DrawText {
     Gfx::TextWrapping wrapping;
     Optional<NonnullRefPtr<Gfx::Font>> font {};
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -66,6 +68,7 @@ struct FillRect {
     Gfx::IntRect rect;
     Color color;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -76,6 +79,7 @@ struct DrawScaledBitmap {
     float opacity;
     Gfx::Painter::ScalingMode scaling_mode;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return dst_rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -146,12 +150,14 @@ struct PaintLinearGradient {
     Gfx::IntRect gradient_rect;
     LinearGradientData linear_gradient_data;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return gradient_rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintOuterBoxShadow {
     PaintOuterBoxShadowParams outer_box_shadow_params;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const;
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -163,7 +169,7 @@ struct PaintInnerBoxShadow {
 
 struct PaintTextShadow {
     int blur_radius;
-    Gfx::IntRect bounding_rect;
+    Gfx::IntRect shadow_bounding_rect;
     Gfx::IntRect text_rect;
     String text;
     NonnullRefPtr<Gfx::Font> font;
@@ -171,6 +177,7 @@ struct PaintTextShadow {
     int fragment_baseline;
     Gfx::IntPoint draw_location;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return shadow_bounding_rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -183,48 +190,53 @@ struct FillRectWithRoundedCorners {
     Gfx::AntiAliasingPainter::CornerRadius bottom_right_radius;
     Optional<Gfx::FloatPoint> aa_translation {};
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct FillPathUsingColor {
-    Gfx::IntRect bounding_rect;
+    Gfx::IntRect path_bounding_rect;
     Gfx::Path path;
     Color color;
     Gfx::Painter::WindingRule winding_rule;
     Optional<Gfx::FloatPoint> aa_translation {};
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct FillPathUsingPaintStyle {
-    Gfx::IntRect bounding_rect;
+    Gfx::IntRect path_bounding_rect;
     Gfx::Path path;
     NonnullRefPtr<Gfx::PaintStyle> paint_style;
     Gfx::Painter::WindingRule winding_rule;
     float opacity;
     Optional<Gfx::FloatPoint> aa_translation {};
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct StrokePathUsingColor {
-    Gfx::IntRect bounding_rect;
+    Gfx::IntRect path_bounding_rect;
     Gfx::Path path;
     Color color;
     float thickness;
     Optional<Gfx::FloatPoint> aa_translation {};
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct StrokePathUsingPaintStyle {
-    Gfx::IntRect bounding_rect;
+    Gfx::IntRect path_bounding_rect;
     Gfx::Path path;
     NonnullRefPtr<Gfx::PaintStyle> paint_style;
     float thickness;
     float opacity = 1.0f;
     Optional<Gfx::FloatPoint> aa_translation {};
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -233,6 +245,7 @@ struct DrawEllipse {
     Color color;
     int thickness;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -241,6 +254,7 @@ struct FillElipse {
     Color color;
     Gfx::AntiAliasingPainter::BlendMode blend_mode;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -261,6 +275,7 @@ struct DrawSignedDistanceField {
     Gfx::GrayscaleBitmap sdf;
     float smoothing;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -273,6 +288,7 @@ struct PaintProgressbar {
     int value;
     StringView text;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return frame_rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -281,6 +297,7 @@ struct PaintFrame {
     Palette palette;
     Gfx::FrameStyle style;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -289,6 +306,7 @@ struct ApplyBackdropFilter {
     BorderRadiiData border_radii_data;
     CSS::ResolvedBackdropFilter backdrop_filter;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return backdrop_region; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -297,6 +315,7 @@ struct DrawRect {
     Color color;
     bool rough;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -306,6 +325,7 @@ struct PaintRadialGradient {
     Gfx::IntPoint center;
     Gfx::IntSize size;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -314,6 +334,7 @@ struct PaintConicGradient {
     ConicGradientData conic_gradient_data;
     Gfx::IntPoint position;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
@@ -330,12 +351,14 @@ struct DrawTriangleWave {
 struct SampleUnderCorners {
     NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const;
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct BlitCornerClipping {
     NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper;
 
+    [[nodiscard]] Gfx::IntRect bounding_rect() const;
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
