@@ -548,6 +548,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
                 if (!operator_args.is_empty())
                     return error("operator args not empty on start of inline image");
 
+                // FIXME: `EI` can be part of the image data, e.g. on page 3 of 0000450.pdf of 0000.zip of the RGBA dataset.
                 while (!m_reader.done()) {
                     if (m_reader.matches("EI")) {
                         break;
