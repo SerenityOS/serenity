@@ -157,6 +157,9 @@ DeprecatedString Shell::prompt() const
             else
                 builder.append('!');
 
+        } else if (lexer.consume_specific('\\')) {
+            builder.append('\\');
+
         } else {
             lexer.consume();
         }
