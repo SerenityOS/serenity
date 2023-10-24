@@ -139,6 +139,15 @@ DeprecatedString Shell::prompt() const
         } else if (lexer.consume_specific('@')) {
             builder.append(Core::DateTime::now().to_deprecated_string("%I:%M %p"sv));
 
+        } else if (lexer.consume_specific("D{"sv)) {
+            auto format = lexer.consume_until('}');
+            if (!lexer.consume_specific('}'))
+                continue;
+
+            if (format.is_empty())
+                format = "%y-%m-%d"sv;
+            builder.append(Core::DateTime::now().to_deprecated_string(format));
+
         } else if (lexer.consume_specific('j')) {
             builder.appendff("{}", jobs.size());
 
