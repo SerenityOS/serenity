@@ -10,7 +10,6 @@ depends=(
     'libpng'
     'SDL2'
     'SDL2_image'
-    'SDL2_mixer'
 )
 configopts=(
     '-DCMAKE_BUILD_TYPE=Release'
