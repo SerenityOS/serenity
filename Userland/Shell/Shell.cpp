@@ -2133,10 +2133,10 @@ bool Shell::read_single_line()
         if (line.is_empty())
             return true;
 
-        run_command(line);
-
         if (!has_history_event(line))
             m_editor->add_to_history(line);
+
+        run_command(line);
 
         return true;
     }
