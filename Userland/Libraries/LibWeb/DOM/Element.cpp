@@ -1924,7 +1924,8 @@ HashMap<DeprecatedFlyString, CSS::StyleProperty> const& Element::custom_properti
 void Element::scroll(double x, double y)
 {
     // AD-HOC:
-    paintable_box()->scroll_by(x, y);
+    if (auto* paintable_box = this->paintable_box())
+        paintable_box->scroll_by(x, y);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll
