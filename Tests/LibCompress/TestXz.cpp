@@ -1864,9 +1864,6 @@ TEST_CASE(xz_utils_unsupported_filter_flags_2)
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
 
-    // TODO: We don't yet check whether the filter chain satisfies the "can't be the last filter"
-    //       requirement. We just happen to get the result right because we try to uncompress the
-    //       test case and fail.
     auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
     EXPECT(buffer_or_error.is_error());
 }
