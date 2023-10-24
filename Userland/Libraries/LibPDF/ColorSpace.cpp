@@ -62,6 +62,9 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
     if (color_space_name == CommonNames::Indexed)
         return Error::rendering_unsupported_error("Indexed color spaces not yet implemented");
 
+    if (color_space_name == CommonNames::Lab)
+        return TRY(LabColorSpace::create(document, move(parameters)));
+
     if (color_space_name == CommonNames::Pattern)
         return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
 
@@ -380,6 +383,26 @@ Vector<float> ICCBasedColorSpace::default_decode() const
         }
         return decoding_ranges;
     }
+}
+
+PDFErrorOr<NonnullRefPtr<LabColorSpace>> LabColorSpace::create(Document*, Vector<Value>&& parameters)
+{
+    if (parameters.size() != 1)
+        return Error { Error::Type::MalformedPDF, "Lab color space expects one parameter" };
+
+    auto color_space = adopt_ref(*new LabColorSpace());
+    // FIXME: Implement.
+    return color_space;
+}
+
+PDFErrorOr<Color> LabColorSpace::color(ReadonlySpan<Value>) const
+{
+    return Error::rendering_unsupported_error("Lab color spaces not yet implemented");
+}
+
+Vector<float> LabColorSpace::default_decode() const
+{
+    return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
 }
 
 PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document*, Vector<Value>&&)

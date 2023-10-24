@@ -99,6 +99,7 @@
     X(LJ)                         \
     X(LW)                         \
     X(LZWDecode)                  \
+    X(Lab)                        \
     X(Last)                       \
     X(LastChar)                   \
     X(Length)                     \
