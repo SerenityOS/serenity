@@ -85,7 +85,7 @@ struct [[gnu::packed]] XzBlockFlags {
     bool compressed_size_present : 1;
     bool uncompressed_size_present : 1;
 
-    u8 number_of_filters() const;
+    size_t number_of_filters() const;
 };
 static_assert(sizeof(XzBlockFlags) == 1);
 
