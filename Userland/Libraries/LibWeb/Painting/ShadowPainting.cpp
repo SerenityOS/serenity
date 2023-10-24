@@ -583,32 +583,32 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
     if (shadow_layers.is_empty() || fragment.text().is_empty())
         return;
 
-    auto fragment_width = context.enclosing_device_pixels(fragment.width());
-    auto fragment_height = context.enclosing_device_pixels(fragment.height());
-    auto draw_rect = context.enclosing_device_rect(fragment.absolute_rect());
+    auto fragment_width = context.enclosing_device_pixels(fragment.width()).value();
+    auto fragment_height = context.enclosing_device_pixels(fragment.height()).value();
+    auto draw_rect = context.enclosing_device_rect(fragment.absolute_rect()).to_type<int>();
     auto text = Utf8View(fragment.text());
     auto& font = fragment.layout_node().scaled_font(context);
-    auto fragment_baseline = context.rounded_device_pixels(fragment.baseline());
+    auto fragment_baseline = context.rounded_device_pixels(fragment.baseline()).value();
 
     // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
     for (auto& layer : shadow_layers.in_reverse()) {
-        DevicePixels offset_x = context.rounded_device_pixels(layer.offset_x);
-        DevicePixels offset_y = context.rounded_device_pixels(layer.offset_y);
-        DevicePixels blur_radius = context.rounded_device_pixels(layer.blur_radius);
+        int offset_x = context.rounded_device_pixels(layer.offset_x).value();
+        int offset_y = context.rounded_device_pixels(layer.offset_y).value();
+        int blur_radius = context.rounded_device_pixels(layer.blur_radius).value();
 
         // Space around the painted text to allow it to blur.
         // FIXME: Include spread in this once we use that.
-        DevicePixels margin = blur_radius * 2;
-        DevicePixelRect text_rect {
+        int margin = blur_radius * 2;
+        Gfx::IntRect text_rect {
             margin, margin,
             fragment_width, fragment_height
         };
-        DevicePixelRect bounding_rect {
+        Gfx::IntRect bounding_rect {
             0, 0,
             text_rect.width() + margin + margin,
             text_rect.height() + margin + margin
         };
-        DevicePixelPoint draw_location {
+        Gfx::IntPoint draw_location {
             draw_rect.x() + offset_x - margin,
             draw_rect.y() + offset_y - margin
         };

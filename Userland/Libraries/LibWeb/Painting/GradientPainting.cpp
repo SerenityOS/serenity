@@ -157,7 +157,7 @@ void paint_conic_gradient(PaintContext& context, DevicePixelRect const& gradient
 
 void paint_radial_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, RadialGradientData const& data, DevicePixelPoint center, DevicePixelSize size)
 {
-    context.painter().fill_rect_with_radial_gradient(gradient_rect.to_type<int>(), data, center, size);
+    context.painter().fill_rect_with_radial_gradient(gradient_rect.to_type<int>(), data, center.to_type<int>(), size.to_type<int>());
 }
 
 }
