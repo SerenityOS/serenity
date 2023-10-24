@@ -9,6 +9,7 @@
 #include <AK/URL.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibWebView/SearchEngine.h>
 #include <LibWebView/SourceHighlighter.h>
 #include <UI/LadybirdWebViewBridge.h>
 
@@ -25,6 +26,7 @@ static constexpr NSInteger CONTEXT_MENU_PLAY_PAUSE_TAG = 1;
 static constexpr NSInteger CONTEXT_MENU_MUTE_UNMUTE_TAG = 2;
 static constexpr NSInteger CONTEXT_MENU_CONTROLS_TAG = 3;
 static constexpr NSInteger CONTEXT_MENU_LOOP_TAG = 4;
+static constexpr NSInteger CONTEXT_MENU_SEARCH_SELECTED_TEXT_TAG = 5;
 
 // Calls to [NSCursor hide] and [NSCursor unhide] must be balanced. We use this struct to ensure
 // we only call [NSCursor hide] once and to ensure that we do call [NSCursor unhide].
@@ -47,6 +49,7 @@ struct HideCursor {
 
     URL m_context_menu_url;
     Gfx::ShareableBitmap m_context_menu_bitmap;
+    Optional<String> m_context_menu_search_text;
 
     Optional<HideCursor> m_hidden_cursor;
 }
@@ -416,6 +419,23 @@ struct HideCursor {
     };
 
     m_web_view_bridge->on_context_menu_request = [self](auto position) {
+        auto* search_selected_text_menu_item = [self.page_context_menu itemWithTag:CONTEXT_MENU_SEARCH_SELECTED_TEXT_TAG];
+
+        auto selected_text = self.observer
+            ? m_web_view_bridge->selected_text_with_whitespace_collapsed()
+            : OptionalNone {};
+        TemporaryChange change_url { m_context_menu_search_text, move(selected_text) };
+
+        if (m_context_menu_search_text.has_value()) {
+            auto* delegate = (ApplicationDelegate*)[NSApp delegate];
+            auto action_text = WebView::format_search_query_for_display([delegate searchEngine].query_url, *m_context_menu_search_text);
+
+            [search_selected_text_menu_item setTitle:Ladybird::string_to_ns_string(action_text)];
+            [search_selected_text_menu_item setHidden:NO];
+        } else {
+            [search_selected_text_menu_item setHidden:YES];
+        }
+
         auto* event = Ladybird::create_context_menu_mouse_event(self, position);
         [NSMenu popUpContextMenu:self.page_context_menu withEvent:event forView:self];
     };
@@ -678,6 +698,14 @@ static void copy_text_to_clipboard(StringView text)
     m_web_view_bridge->select_all();
 }
 
+- (void)searchSelectedText:(id)sender
+{
+    auto* delegate = (ApplicationDelegate*)[NSApp delegate];
+
+    auto url = MUST(String::formatted([delegate searchEngine].query_url, URL::percent_encode(*m_context_menu_search_text)));
+    [self.observer onCreateNewTab:url activateTab:Web::HTML::ActivateTab::Yes];
+}
+
 - (void)takeVisibleScreenshot:(id)sender
 {
     auto result = m_web_view_bridge->take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible);
@@ -768,6 +796,13 @@ static void copy_text_to_clipboard(StringView text)
         [_page_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Select All"
                                                                action:@selector(selectAll:)
                                                         keyEquivalent:@""]];
+        [_page_context_menu addItem:[NSMenuItem separatorItem]];
+
+        auto* search_selected_text_menu_item = [[NSMenuItem alloc] initWithTitle:@"Search for <query>"
+                                                                          action:@selector(searchSelectedText:)
+                                                                   keyEquivalent:@""];
+        [search_selected_text_menu_item setTag:CONTEXT_MENU_SEARCH_SELECTED_TEXT_TAG];
+        [_page_context_menu addItem:search_selected_text_menu_item];
         [_page_context_menu addItem:[NSMenuItem separatorItem]];
 
         [_page_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Take Visible Screenshot"
