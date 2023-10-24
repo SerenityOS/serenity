@@ -396,8 +396,7 @@ PDFErrorOr<Color> SeparationColorSpace::color(ReadonlySpan<Value>) const
 
 Vector<float> SeparationColorSpace::default_decode() const
 {
-    warnln("PDF: TODO implement SeparationColorSpace::default_decode()");
-    return {};
+    return { 0.0f, 1.0f };
 }
 
 }
