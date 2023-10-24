@@ -527,6 +527,7 @@ PDFErrorOr<NonnullRefPtr<DictObject>> DocumentParser::parse_file_trailer()
     m_reader.consume_whitespace();
     auto dict = TRY(parse_dict());
 
+    parse_comment();
     if (!m_reader.matches("startxref"))
         return error("Expected \"startxref\"");
     m_reader.move_by(9);
