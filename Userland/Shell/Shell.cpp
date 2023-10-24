@@ -129,6 +129,12 @@ DeprecatedString Shell::prompt() const
         } else if (lexer.consume_specific('p')) {
             builder.append(uid == 0 ? '#' : '$');
 
+        } else if (lexer.consume_specific('!')) {
+            if (m_editor)
+                builder.appendff("{}", m_editor->history().size() + 1);
+            else
+                builder.append('!');
+
         } else {
             lexer.consume();
         }
