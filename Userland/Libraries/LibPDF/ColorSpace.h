@@ -106,6 +106,23 @@ private:
     DeviceCMYKColorSpace() = default;
 };
 
+class DeviceNColorSpace final : public ColorSpace {
+public:
+    static PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> create(Document*, Vector<Value>&& parameters);
+
+    ~DeviceNColorSpace() override = default;
+
+    PDFErrorOr<Color> color(ReadonlySpan<Value> arguments) const override;
+    int number_of_components() const override;
+    Vector<float> default_decode() const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::DeviceN; }
+
+private:
+    DeviceNColorSpace(size_t number_of_components);
+
+    size_t m_number_of_components { 0 };
+};
+
 class CalRGBColorSpace final : public ColorSpace {
 public:
     static PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> create(Document*, Vector<Value>&& parameters);

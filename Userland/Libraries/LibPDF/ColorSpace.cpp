@@ -56,6 +56,9 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
     if (color_space_name == CommonNames::CalRGB)
         return TRY(CalRGBColorSpace::create(document, move(parameters)));
 
+    if (color_space_name == CommonNames::DeviceN)
+        return TRY(DeviceNColorSpace::create(document, move(parameters)));
+
     if (color_space_name == CommonNames::ICCBased)
         return TRY(ICCBasedColorSpace::create(document, move(parameters)));
 
@@ -132,6 +135,51 @@ PDFErrorOr<Color> DeviceCMYKColorSpace::color(ReadonlySpan<Value> arguments) con
 Vector<float> DeviceCMYKColorSpace::default_decode() const
 {
     return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
+}
+
+PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document*, Vector<Value>&& parameters)
+{
+    // "[ /DeviceN names alternateSpace tintTransform ]
+    //  or
+    //  [ /DeviceN names alternateSpace tintTransform attributes ]"
+    if (parameters.size() != 4 && parameters.size() != 5)
+        return Error { Error::Type::MalformedPDF, "DevicN color space expects 4 or 5 parameters" };
+
+    // "The names parameter is an array of name objects specifying the individual color components.
+    //  The length of the array determines the number of components in the DeviceN color space"
+    auto names = parameters[0].get<NonnullRefPtr<Object>>()->cast<ArrayObject>();
+
+    // "The alternateSpace parameter is an array or name object that can be any device or CIE-based color space
+    //  but not another special color space (Pattern, Indexed, Separation, or DeviceN)."
+
+    // FIXME: Implement.
+
+    return adopt_ref(*new DeviceNColorSpace(names->size()));
+}
+
+PDFErrorOr<Color> DeviceNColorSpace::color(ReadonlySpan<Value>) const
+{
+    return Error::rendering_unsupported_error("DeviceN color spaces not yet implemented");
+}
+
+int DeviceNColorSpace::number_of_components() const
+{
+    return m_number_of_components;
+}
+
+Vector<float> DeviceNColorSpace::default_decode() const
+{
+    Vector<float> decoding_ranges;
+    for (u8 i = 0; i < number_of_components(); i++) {
+        decoding_ranges.append(0.0);
+        decoding_ranges.append(1.0);
+    }
+    return decoding_ranges;
+}
+
+DeviceNColorSpace::DeviceNColorSpace(size_t number_of_components)
+    : m_number_of_components(number_of_components)
+{
 }
 
 PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* document, Vector<Value>&& parameters)
