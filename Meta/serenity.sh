@@ -111,15 +111,6 @@ CMAKE_ARGS+=( "-DSERENITY_TOOLCHAIN=$TOOLCHAIN_TYPE" )
 
 CMD_ARGS=( "$@" )
 
-LADYBIRD_ENABLE_QT=1
-
-if [ "$TARGET" = "lagom" ]; then
-    if [ "${CMD_ARGS[0]}" = "ladybird-appkit" ]; then
-        CMD_ARGS[0]="ladybird"
-        LADYBIRD_ENABLE_QT=0
-    fi
-fi
-
 get_top_dir() {
     git rev-parse --show-toplevel
 }
@@ -140,7 +131,7 @@ is_valid_target() {
     if [ "$TARGET" = "lagom" ]; then
         CMAKE_ARGS+=("-DBUILD_LAGOM=ON")
         if [ "${CMD_ARGS[0]}" = "ladybird" ]; then
-            CMAKE_ARGS+=("-DENABLE_LAGOM_LADYBIRD=ON" "-DENABLE_QT=${LADYBIRD_ENABLE_QT}")
+            CMAKE_ARGS+=("-DENABLE_LAGOM_LADYBIRD=ON")
         fi
         return 0
     fi
@@ -211,7 +202,7 @@ build_target() {
         # invoked superbuild for serenity target that doesn't set -DBUILD_LAGOM=ON
         local EXTRA_CMAKE_ARGS=()
         if [ "${CMD_ARGS[0]}" = "ladybird" ]; then
-            EXTRA_CMAKE_ARGS=("-DENABLE_LAGOM_LADYBIRD=ON" "-DENABLE_QT=${LADYBIRD_ENABLE_QT}")
+            EXTRA_CMAKE_ARGS=("-DENABLE_LAGOM_LADYBIRD=ON")
         fi
         cmake -S "$SERENITY_SOURCE_DIR/Meta/Lagom" -B "$BUILD_DIR" -DBUILD_LAGOM=ON "${EXTRA_CMAKE_ARGS[@]}"
     fi
