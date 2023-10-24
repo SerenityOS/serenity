@@ -300,12 +300,12 @@ void StackingContext::paint(PaintContext& context) const
         if (masking_area->is_empty())
             return;
         auto paint_rect = context.enclosing_device_rect(*masking_area);
-        context.painter().push_stacking_context_with_mask(paint_rect);
+        context.painter().push_stacking_context_with_mask(paint_rect.to_type<int>());
         paint_internal(context);
 
         auto mask_bitmap = paintable_box().calculate_mask(context, *masking_area);
         auto mask_type = paintable_box().get_mask_type();
-        context.painter().pop_stacking_context_with_mask(mask_bitmap, *mask_type, paint_rect, opacity);
+        context.painter().pop_stacking_context_with_mask(mask_bitmap, *mask_type, paint_rect.to_type<int>(), opacity);
         return;
     }
 
@@ -324,7 +324,7 @@ void StackingContext::paint(PaintContext& context) const
         .opacity = opacity,
         .source_rect = source_rect,
         .transformed_destination_rect = transformed_destination_rect,
-        .painter_location = context.rounded_device_point(-paintable_box().absolute_paint_rect().location())
+        .painter_location = context.rounded_device_point(-paintable_box().absolute_paint_rect().location()).to_type<int>()
     };
 
     RecordingPainter::PopStackingContextParams pop_stacking_context_params {

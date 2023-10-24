@@ -225,7 +225,7 @@ CommandResult PushStackingContext::execute(CommandExecutionState& state) const
 
         Gfx::Painter stacking_context_painter(bitmap);
 
-        stacking_context_painter.translate(painter_location.to_type<int>() + destination_clipped_fixup.to_type<int>());
+        stacking_context_painter.translate(painter_location + destination_clipped_fixup.to_type<int>());
 
         state.stacking_contexts.append(CommandExecutionState::StackingContext {
             .painter = stacking_context_painter,
@@ -260,14 +260,14 @@ CommandResult PopStackingContext::execute(CommandExecutionState& state) const
 
 CommandResult PushStackingContextWithMask::execute(CommandExecutionState& state) const
 {
-    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, paint_rect.size().to_type<int>());
+    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, paint_rect.size());
     if (bitmap_or_error.is_error())
         return CommandResult::Continue;
     auto bitmap = bitmap_or_error.release_value();
 
     Gfx::Painter stacking_context_painter(bitmap);
 
-    stacking_context_painter.translate(-paint_rect.location().to_type<int>());
+    stacking_context_painter.translate(-paint_rect.location());
 
     state.stacking_contexts.append(CommandExecutionState::StackingContext {
         .painter = stacking_context_painter,
@@ -284,7 +284,7 @@ CommandResult PopStackingContextWithMask::execute(CommandExecutionState& state) 
     auto bitmap = stacking_context.painter.target();
     if (mask_bitmap)
         bitmap->apply_mask(*mask_bitmap, mask_kind);
-    state.painter().blit(paint_rect.location().to_type<int>(), *bitmap, bitmap->rect(), opacity);
+    state.painter().blit(paint_rect.location(), *bitmap, bitmap->rect(), opacity);
     return CommandResult::Continue;
 }
 
@@ -336,11 +336,11 @@ CommandResult PaintInnerBoxShadow::execute(CommandExecutionState& state) const
 
 CommandResult PaintTextShadow::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(text_rect.to_type<int>()))
+    if (state.would_be_fully_clipped_by_painter(text_rect))
         return CommandResult::Continue;
 
     // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
-    auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, bounding_rect.size().to_type<int>());
+    auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, bounding_rect.size());
     if (maybe_shadow_bitmap.is_error()) {
         dbgln("Unable to allocate temporary bitmap {} for text-shadow rendering: {}", bounding_rect.size(), maybe_shadow_bitmap.error());
         return CommandResult::Continue;
@@ -349,15 +349,15 @@ CommandResult PaintTextShadow::execute(CommandExecutionState& state) const
 
     Gfx::Painter shadow_painter { *shadow_bitmap };
     // FIXME: "Spread" the shadow somehow.
-    DevicePixelPoint baseline_start(text_rect.x(), text_rect.y() + fragment_baseline);
-    shadow_painter.draw_text_run(baseline_start.to_type<int>(), Utf8View(text), font, color);
+    Gfx::IntPoint baseline_start(text_rect.x(), text_rect.y() + fragment_baseline);
+    shadow_painter.draw_text_run(baseline_start, Utf8View(text), font, color);
 
     // Blur
     Gfx::StackBlurFilter filter(*shadow_bitmap);
-    filter.process_rgba(blur_radius.value(), color);
+    filter.process_rgba(blur_radius, color);
 
     auto& painter = state.painter();
-    painter.blit(draw_location.to_type<int>(), *shadow_bitmap, bounding_rect.to_type<int>());
+    painter.blit(draw_location, *shadow_bitmap, bounding_rect);
     return CommandResult::Continue;
 }
 
@@ -588,13 +588,13 @@ void RecordingPainter::fill_rect_with_conic_gradient(Gfx::IntRect const& rect, C
         .position = position });
 }
 
-void RecordingPainter::fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, DevicePixelPoint center, DevicePixelSize size)
+void RecordingPainter::fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::IntSize size)
 {
     push_command(PaintRadialGradient {
         .rect = rect,
         .radial_gradient_data = data,
-        .center = center.to_type<int>(),
-        .size = size.to_type<int>() });
+        .center = center,
+        .size = size });
 }
 
 void RecordingPainter::draw_rect(Gfx::IntRect const& rect, Color color, bool rough)
@@ -753,10 +753,10 @@ void RecordingPainter::paint_frame(Gfx::IntRect rect, Palette palette, Gfx::Fram
     push_command(PaintFrame { rect, palette, style });
 }
 
-void RecordingPainter::apply_backdrop_filter(DevicePixelRect const& backdrop_region, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter)
+void RecordingPainter::apply_backdrop_filter(Gfx::IntRect const& backdrop_region, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter)
 {
     push_command(ApplyBackdropFilter {
-        .backdrop_region = backdrop_region.to_type<int>(),
+        .backdrop_region = backdrop_region,
         .border_radii_data = border_radii_data,
         .backdrop_filter = backdrop_filter,
     });
@@ -776,7 +776,7 @@ void RecordingPainter::paint_inner_box_shadow_params(PaintOuterBoxShadowParams p
     });
 }
 
-void RecordingPainter::paint_text_shadow(DevicePixels blur_radius, DevicePixelRect bounding_rect, DevicePixelRect text_rect, Utf8View text, Gfx::Font const& font, Color color, DevicePixels fragment_baseline, DevicePixelPoint draw_location)
+void RecordingPainter::paint_text_shadow(int blur_radius, Gfx::IntRect bounding_rect, Gfx::IntRect text_rect, Utf8View text, Gfx::Font const& font, Color color, int fragment_baseline, Gfx::IntPoint draw_location)
 {
     push_command(PaintTextShadow {
         .blur_radius = blur_radius,
@@ -815,12 +815,12 @@ void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect
         { bottom_left_radius, bottom_left_radius });
 }
 
-void RecordingPainter::push_stacking_context_with_mask(DevicePixelRect paint_rect)
+void RecordingPainter::push_stacking_context_with_mask(Gfx::IntRect paint_rect)
 {
     push_command(PushStackingContextWithMask { .paint_rect = paint_rect });
 }
 
-void RecordingPainter::pop_stacking_context_with_mask(RefPtr<Gfx::Bitmap> mask_bitmap, Gfx::Bitmap::MaskKind mask_kind, DevicePixelRect paint_rect, float opacity)
+void RecordingPainter::pop_stacking_context_with_mask(RefPtr<Gfx::Bitmap> mask_bitmap, Gfx::Bitmap::MaskKind mask_kind, Gfx::IntRect paint_rect, float opacity)
 {
     push_command(PopStackingContextWithMask {
         .paint_rect = paint_rect,

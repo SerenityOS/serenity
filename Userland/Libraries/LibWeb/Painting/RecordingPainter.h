@@ -115,7 +115,7 @@ struct PushStackingContext {
     float opacity;
     Gfx::FloatRect source_rect;
     Gfx::FloatRect transformed_destination_rect;
-    DevicePixelPoint painter_location;
+    Gfx::IntPoint painter_location;
 
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
@@ -128,13 +128,13 @@ struct PopStackingContext {
 };
 
 struct PushStackingContextWithMask {
-    DevicePixelRect paint_rect;
+    Gfx::IntRect paint_rect;
 
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PopStackingContextWithMask {
-    DevicePixelRect paint_rect;
+    Gfx::IntRect paint_rect;
     RefPtr<Gfx::Bitmap> mask_bitmap;
     Gfx::Bitmap::MaskKind mask_kind;
     float opacity;
@@ -162,14 +162,14 @@ struct PaintInnerBoxShadow {
 };
 
 struct PaintTextShadow {
-    DevicePixels blur_radius;
-    DevicePixelRect bounding_rect;
-    DevicePixelRect text_rect;
+    int blur_radius;
+    Gfx::IntRect bounding_rect;
+    Gfx::IntRect text_rect;
     String text;
     NonnullRefPtr<Gfx::Font> font;
     Color color;
-    DevicePixels fragment_baseline;
-    DevicePixelPoint draw_location;
+    int fragment_baseline;
+    Gfx::IntPoint draw_location;
 
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
@@ -421,7 +421,7 @@ public:
 
     void fill_rect_with_linear_gradient(Gfx::IntRect const& gradient_rect, LinearGradientData const& data);
     void fill_rect_with_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const& data, Gfx::IntPoint const& position);
-    void fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, DevicePixelPoint center, DevicePixelSize size);
+    void fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::IntSize size);
 
     void draw_rect(Gfx::IntRect const& rect, Color color, bool rough = false);
 
@@ -454,7 +454,7 @@ public:
         float opacity;
         Gfx::FloatRect source_rect;
         Gfx::FloatRect transformed_destination_rect;
-        DevicePixelPoint painter_location;
+        Gfx::IntPoint painter_location;
     };
     void push_stacking_context(PushStackingContextParams params);
 
@@ -464,8 +464,8 @@ public:
     };
     void pop_stacking_context(PopStackingContextParams params);
 
-    void push_stacking_context_with_mask(DevicePixelRect paint_rect);
-    void pop_stacking_context_with_mask(RefPtr<Gfx::Bitmap> mask_bitmap, Gfx::Bitmap::MaskKind mask_kind, DevicePixelRect paint_rect, float opacity);
+    void push_stacking_context_with_mask(Gfx::IntRect paint_rect);
+    void pop_stacking_context_with_mask(RefPtr<Gfx::Bitmap> mask_bitmap, Gfx::Bitmap::MaskKind mask_kind, Gfx::IntRect paint_rect, float opacity);
 
     void sample_under_corners(NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper);
     void blit_corner_clipping(NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper);
@@ -473,11 +473,11 @@ public:
     void paint_progressbar(Gfx::IntRect frame_rect, Gfx::IntRect progress_rect, Palette palette, int min, int max, int value, StringView text);
     void paint_frame(Gfx::IntRect rect, Palette palette, Gfx::FrameStyle style);
 
-    void apply_backdrop_filter(DevicePixelRect const& backdrop_region, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter);
+    void apply_backdrop_filter(Gfx::IntRect const& backdrop_region, BorderRadiiData const& border_radii_data, CSS::ResolvedBackdropFilter const& backdrop_filter);
 
     void paint_outer_box_shadow_params(PaintOuterBoxShadowParams params);
     void paint_inner_box_shadow_params(PaintOuterBoxShadowParams params);
-    void paint_text_shadow(DevicePixels blur_radius, DevicePixelRect bounding_rect, DevicePixelRect text_rect, Utf8View text, Gfx::Font const& font, Color color, DevicePixels fragment_baseline, DevicePixelPoint draw_location);
+    void paint_text_shadow(int blur_radius, Gfx::IntRect bounding_rect, Gfx::IntRect text_rect, Utf8View text, Gfx::Font const& font, Color color, int fragment_baseline, Gfx::IntPoint draw_location);
 
     void fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color color, Gfx::AntiAliasingPainter::CornerRadius top_left_radius, Gfx::AntiAliasingPainter::CornerRadius top_right_radius, Gfx::AntiAliasingPainter::CornerRadius bottom_right_radius, Gfx::AntiAliasingPainter::CornerRadius bottom_left_radius);
     void fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int radius);
