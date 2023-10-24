@@ -10,6 +10,7 @@ set(TEST_SOURCES
     TestRect.cpp
     TestScalingFunctions.cpp
     TestWOFF.cpp
+    TestWOFF2.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)

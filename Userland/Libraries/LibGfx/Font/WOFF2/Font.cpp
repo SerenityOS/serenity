@@ -856,6 +856,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
     // The interpretation of the WOFF2 Header is the same as the WOFF Header in [WOFF1], with the addition of one new totalCompressedSize field.
     // NOTE: See WOFF/Font.cpp for more comments about this.
 
+    static constexpr size_t MAX_BUFFER_SIZE = 10 * MiB;
     if (header.length > TRY(stream.size()))
         return Error::from_string_literal("Invalid WOFF length");
     if (header.meta_length == 0 && header.meta_offset != 0)
@@ -869,7 +870,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
     //        but if the transformed 'glyf' and 'loca' tables are present, the uncompressed size of the reconstructed tables and the total decompressed font size may differ
     //        substantially from the original total size specified in the WOFF2 Header."
     //        We use it as an initial size of the font buffer and extend it as necessary.
-    auto font_buffer = TRY(ByteBuffer::create_zeroed(header.total_sfnt_size));
+    auto font_buffer_size = clamp(header.total_sfnt_size, sizeof(OpenType::TableDirectory) + header.num_tables * sizeof(TableDirectoryEntry), MAX_BUFFER_SIZE);
+    auto font_buffer = TRY(ByteBuffer::create_zeroed(font_buffer_size));
 
     u16 search_range = pow_2_less_than_or_equal(header.num_tables);
     OpenType::TableDirectory table_directory {

@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibGfx/Font/WOFF2/Font.h>
+#include <LibTest/TestCase.h>
+
+#ifdef AK_OS_SERENITY
+#    define TEST_INPUT(x) ("/usr/Tests/LibGfx/test-inputs/" x)
+#else
+#    define TEST_INPUT(x) ("test-inputs/" x)
+#endif
+
+TEST_CASE(tolerate_incorrect_sfnt_size)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("woff2/incorrect_sfnt_size.woff2"sv)));
+    auto font = TRY_OR_FAIL(WOFF2::Font::try_load_from_externally_owned_memory(file->bytes()));
+    EXPECT_EQ(font->family(), "Test"_string);
+    EXPECT_EQ(font->glyph_count(), 4u);
+}
