@@ -121,7 +121,7 @@ u32 XzStreamFooter::backward_size() const
     return (encoded_backward_size + 1) * 4;
 }
 
-u8 XzBlockFlags::number_of_filters() const
+size_t XzBlockFlags::number_of_filters() const
 {
     // 3.1.2. Block Flags:
     // "Bit(s)  Mask  Description
@@ -380,6 +380,7 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
     struct FilterEntry {
         u64 id;
         ByteBuffer properties;
+        bool last;
     };
     Vector<FilterEntry, 4> filters;
 
@@ -387,6 +388,8 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
     // "The number of Filter Flags fields is stored in the Block Flags
     //  field (see Section 3.1.2)."
     for (size_t i = 0; i < flags.number_of_filters(); i++) {
+        auto last = (i == flags.number_of_filters() - 1);
+
         // "The format of each Filter Flags field is as follows:
         //  Both Filter ID and Size of Properties are stored using the
         //  encoding described in Section 1.2."
@@ -397,12 +400,15 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
         auto filter_properties = TRY(ByteBuffer::create_uninitialized(size_of_properties));
         TRY(header_stream.read_until_filled(filter_properties));
 
-        filters.empend(filter_id, move(filter_properties));
+        filters.empend(filter_id, move(filter_properties), last);
     }
 
     for (auto& filter : filters.in_reverse()) {
         // 5.3.1. LZMA2
         if (filter.id == 0x21) {
+            if (!filter.last)
+                return Error::from_string_literal("XZ LZMA2 filter can only be the last filter");
+
             if (filter.properties.size() < sizeof(XzFilterLzma2Properties))
                 return Error::from_string_literal("XZ LZMA2 filter has a smaller-than-needed properties size");
 
@@ -415,6 +421,9 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
 
         // 5.3.3. Delta
         if (filter.id == 0x03) {
+            if (filter.last)
+                return Error::from_string_literal("XZ Delta filter can only be a non-last filter");
+
             if (filter.properties.size() < sizeof(XzFilterDeltaProperties))
                 return Error::from_string_literal("XZ Delta filter has a smaller-than-needed properties size");
 
