@@ -151,7 +151,7 @@ public:
     ~SeparationColorSpace() override = default;
 
     PDFErrorOr<Color> color(ReadonlySpan<Value> arguments) const override;
-    int number_of_components() const override { TODO(); }
+    int number_of_components() const override { return 1; }
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Separation; }
 
