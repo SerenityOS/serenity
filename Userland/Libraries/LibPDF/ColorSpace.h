@@ -144,6 +144,21 @@ private:
     NonnullRefPtr<Gfx::ICC::Profile> m_profile;
 };
 
+class LabColorSpace final : public ColorSpace {
+public:
+    static PDFErrorOr<NonnullRefPtr<LabColorSpace>> create(Document*, Vector<Value>&& parameters);
+
+    ~LabColorSpace() override = default;
+
+    PDFErrorOr<Color> color(ReadonlySpan<Value> arguments) const override;
+    int number_of_components() const override { return 3; }
+    Vector<float> default_decode() const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Lab; }
+
+private:
+    LabColorSpace() = default;
+};
+
 class SeparationColorSpace final : public ColorSpace {
 public:
     static PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> create(Document*, Vector<Value>&& parameters);
