@@ -4,10 +4,15 @@ serenity_component(
     TARGETS Maps
 )
 
+compile_gml(FavoritesEditDialog.gml FavoritesEditDialogGML.cpp)
+compile_gml(FavoritesPanel.gml FavoritesPanelGML.cpp)
 compile_gml(SearchPanel.gml SearchPanelGML.cpp)
 
 set(SOURCES
     main.cpp
+    FavoritesEditDialogGML.cpp
+    FavoritesPanelGML.cpp
+    FavoritesPanel.cpp
     MapWidget.cpp
     SearchPanelGML.cpp
     SearchPanel.cpp
