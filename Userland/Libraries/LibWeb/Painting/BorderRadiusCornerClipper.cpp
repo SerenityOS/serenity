@@ -113,7 +113,7 @@ ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixe
             .bottom_right = border_radii.bottom_right.as_corner(context),
             .bottom_left = border_radii.bottom_left.as_corner(context)
         };
-        auto clipper = BorderRadiusCornerClipper::create(corner_radii, border_rect, border_radii, corner_clip);
+        auto clipper = BorderRadiusCornerClipper::create(corner_radii, context.painter().state().translation.map(border_rect.to_type<int>()).to_type<DevicePixels>(), border_radii, corner_clip);
         if (!clipper.is_error()) {
             m_corner_clipper = clipper.release_value();
             m_context.painter().sample_under_corners(*m_corner_clipper);
