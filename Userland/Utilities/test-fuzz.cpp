@@ -76,6 +76,7 @@
     T(WAVLoader)             \
     T(WebPLoader)            \
     T(WOFF)                  \
+    T(WOFF2)                 \
     T(XML)                   \
     T(Zip)                   \
     T(ZlibDecompression)
