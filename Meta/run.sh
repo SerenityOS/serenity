@@ -523,7 +523,6 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
             -M raspi3b \
             -d guest_errors \
             -no-reboot \
-            -serial mon:stdio \
             -monitor none \
             -display none \
             -serial file:debug.log \
@@ -541,7 +540,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
             -no-reboot \
             -smp ${SERENITY_CPUS} \
             -device ich9-ahci \
-            -serial mon:stdio \
+            -serial stdio \
             -display none \
             -debugcon file:debug.log \
             $SERENITY_KERNEL_AND_INITRD \
