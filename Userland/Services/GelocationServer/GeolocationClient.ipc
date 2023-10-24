@@ -1,0 +1,4 @@
+endpoint GeolocationClient
+{
+    get_current_position_response(double latitude, double longitude, double accuracy, Optional<String> city, Optional<String> region, Optional<String> country, UnixDateTime timestamp) =|
+}

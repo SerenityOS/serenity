@@ -1,0 +1,4 @@
+endpoint GeolocationServer
+{
+    get_current_position() =|
+}

@@ -18,6 +18,7 @@
 #include <LibGUI/Splitter.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
+#include <LibGeolocation/Client.h>
 
 static int constexpr MAP_ZOOM_DEFAULT = 3;
 
@@ -105,6 +106,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto show_users_action = GUI::Action::create_checkable(
         "Show SerenityOS users", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&map_widget](auto& action) { map_widget.set_show_users(action.is_checked()); }, window);
     show_users_action->set_checked(map_widget.show_users());
+    auto show_current_position_action = GUI::Action::create(
+        "Show current position", TRY(Gfx::Bitmap::load_from_file("/res/icons/maps/crosshairs.png"sv)), [&map_widget](auto&) {
+            Geolocation::Client::the().get_current_position([&map_widget](auto current_position) {
+                if (!current_position.has_value())
+                    return;
+                Maps::MapWidget::LatLng latlng = { current_position->latitude, current_position->longitude };
+                map_widget.add_marker({ latlng, "Your current position"_string });
+                map_widget.set_center(latlng);
+                map_widget.set_zoom(18); // FIXME: Use accuracy to calculate zoom level
+            });
+        },
+        window);
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action([&map_widget](auto&) { map_widget.set_zoom(map_widget.zoom() + 1); }, window);
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action([&map_widget](auto&) { map_widget.set_zoom(map_widget.zoom() - 1); }, window);
     auto reset_zoom_action = GUI::CommonActions::make_reset_zoom_action([&map_widget](auto&) { map_widget.set_zoom(MAP_ZOOM_DEFAULT); }, window);
@@ -117,6 +130,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu->add_action(show_search_panel_action);
     view_menu->add_separator();
     view_menu->add_action(show_users_action);
+    view_menu->add_action(show_current_position_action);
     view_menu->add_separator();
     view_menu->add_action(zoom_in_action);
     view_menu->add_action(zoom_out_action);
@@ -135,6 +149,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     toolbar.add_action(show_search_panel_action);
     toolbar.add_separator();
     toolbar.add_action(show_users_action);
+    toolbar.add_action(show_current_position_action);
     toolbar.add_separator();
     toolbar.add_action(zoom_in_action);
     toolbar.add_action(zoom_out_action);
