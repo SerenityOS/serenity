@@ -106,7 +106,7 @@ SystemModes=self-test
 ```
 
 `/dev/ttyS0` is used as stdio because that serial port is connected when qemu is run with `-display none` and
-`-serial mon:stdio`, and output to it will show up in the stdout of the qemu window. Separately, the CI run script redirects
+`-serial stdio`, and output to it will show up in the stdout of the qemu window. Separately, the CI run script redirects
 the serial debug output to `./debug.log` so that both stdout of the tests and the dbgln from the kernel/tests can be
 captured.
 
