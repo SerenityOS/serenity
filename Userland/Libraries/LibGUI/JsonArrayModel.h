@@ -16,6 +16,13 @@ namespace GUI {
 class JsonArrayModel final : public Model {
 public:
     struct FieldSpec {
+        FieldSpec(DeprecatedString const& a_json_field_name, String const& a_column_name, Gfx::TextAlignment a_text_alignment)
+            : json_field_name(a_json_field_name)
+            , column_name(a_column_name)
+            , text_alignment(a_text_alignment)
+        {
+        }
+
         FieldSpec(String const& a_column_name, Gfx::TextAlignment a_text_alignment, Function<Variant(JsonObject const&)>&& a_massage_for_display, Function<Variant(JsonObject const&)>&& a_massage_for_sort = {}, Function<Variant(JsonObject const&)>&& a_massage_for_custom = {})
             : column_name(a_column_name)
             , text_alignment(a_text_alignment)
@@ -25,10 +32,13 @@ public:
         {
         }
 
-        FieldSpec(DeprecatedString const& a_json_field_name, String const& a_column_name, Gfx::TextAlignment a_text_alignment)
+        FieldSpec(DeprecatedString const& a_json_field_name, String const& a_column_name, Gfx::TextAlignment a_text_alignment, Function<Variant(JsonObject const&)>&& a_massage_for_display, Function<Variant(JsonObject const&)>&& a_massage_for_sort = {}, Function<Variant(JsonObject const&)>&& a_massage_for_custom = {})
             : json_field_name(a_json_field_name)
             , column_name(a_column_name)
             , text_alignment(a_text_alignment)
+            , massage_for_display(move(a_massage_for_display))
+            , massage_for_sort(move(a_massage_for_sort))
+            , massage_for_custom(move(a_massage_for_custom))
         {
         }
 
