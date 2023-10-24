@@ -51,6 +51,7 @@
     X(Dests)                      \
     X(DeviceCMYK)                 \
     X(DeviceGray)                 \
+    X(DeviceN)                    \
     X(DeviceRGB)                  \
     X(Differences)                \
     X(E)                          \
