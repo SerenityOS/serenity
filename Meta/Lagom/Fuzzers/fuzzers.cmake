@@ -62,6 +62,7 @@ set(FUZZER_TARGETS
     WAVLoader
     WebPLoader
     WOFF
+    WOFF2
     XML
     Zip
     ZlibDecompression
@@ -133,6 +134,7 @@ set(FUZZER_DEPENDENCIES_WasmParser LibWasm)
 set(FUZZER_DEPENDENCIES_WAVLoader LibAudio)
 set(FUZZER_DEPENDENCIES_WebPLoader LibGfx)
 set(FUZZER_DEPENDENCIES_WOFF LibGfx)
+set(FUZZER_DEPENDENCIES_WOFF2 LibGfx)
 set(FUZZER_DEPENDENCIES_XML LibXML)
 set(FUZZER_DEPENDENCIES_Zip LibArchive)
 set(FUZZER_DEPENDENCIES_ZlibDecompression LibCompress)
