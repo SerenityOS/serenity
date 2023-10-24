@@ -484,7 +484,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
             .bottom_left = border_radii_data.bottom_left.as_corner(context)
         };
         if (border_radii_data.has_any_radius()) {
-            auto corner_clipper = BorderRadiusCornerClipper::create(corner_radii, context.rounded_device_rect(*clip_rect), border_radii_data, CornerClip::Outside);
+            auto corner_clipper = BorderRadiusCornerClipper::create(corner_radii, context.painter().state().translation.map(context.rounded_device_rect(*clip_rect).to_type<int>()).to_type<DevicePixels>(), border_radii_data, CornerClip::Outside);
             if (corner_clipper.is_error()) {
                 dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
                 return;
@@ -689,7 +689,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
             .bottom_left = border_radii.bottom_left.as_corner(context)
         };
         if (border_radii.has_any_radius()) {
-            auto clipper = BorderRadiusCornerClipper::create(corner_radii, clip_box, border_radii);
+            auto clipper = BorderRadiusCornerClipper::create(corner_radii, context.painter().state().translation.map(clip_box.to_type<int>()).to_type<DevicePixels>(), border_radii);
             if (!clipper.is_error()) {
                 corner_clipper = clipper.release_value();
                 context.painter().sample_under_corners(*corner_clipper);

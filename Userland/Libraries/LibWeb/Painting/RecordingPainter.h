@@ -83,12 +83,6 @@ struct DrawScaledBitmap {
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
-struct Translate {
-    Gfx::IntPoint translation_delta;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
-};
-
 struct SaveState {
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
@@ -367,7 +361,6 @@ using PaintingCommand = Variant<
     DrawText,
     FillRect,
     DrawScaledBitmap,
-    Translate,
     SaveState,
     RestoreState,
     AddClipRect,
@@ -510,6 +503,17 @@ public:
 
     void execute(Gfx::Bitmap&);
 
+    RecordingPainter()
+    {
+        m_state_stack.append(State());
+    }
+
+    struct State {
+        Gfx::AffineTransform translation;
+    };
+    State& state() { return m_state_stack.last(); }
+    State const& state() const { return m_state_stack.last(); }
+
 private:
     void push_command(PaintingCommand command)
     {
@@ -517,6 +521,7 @@ private:
     }
 
     Vector<PaintingCommand> m_painting_commands;
+    Vector<State> m_state_stack;
 };
 
 class RecordingPainterStateSaver {

@@ -343,8 +343,8 @@ void StackingContext::paint(PaintContext& context) const
         paint_internal(context);
         context.painter().pop_stacking_context(pop_stacking_context_params);
     } else {
-        context.painter().push_stacking_context(push_stacking_context_params);
         context.painter().translate(affine_transform.translation().to_rounded<int>());
+        context.painter().push_stacking_context(push_stacking_context_params);
         paint_internal(context);
         context.painter().pop_stacking_context(pop_stacking_context_params);
     }
