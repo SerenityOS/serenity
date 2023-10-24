@@ -19,6 +19,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -128,6 +129,15 @@ DeprecatedString Shell::prompt() const
 
         } else if (lexer.consume_specific('p')) {
             builder.append(uid == 0 ? '#' : '$');
+
+        } else if (lexer.consume_specific('t')) {
+            builder.append(Core::DateTime::now().to_deprecated_string("%H:%M:%S"sv));
+
+        } else if (lexer.consume_specific('T')) {
+            builder.append(Core::DateTime::now().to_deprecated_string("%I:%M:%S"sv));
+
+        } else if (lexer.consume_specific('@')) {
+            builder.append(Core::DateTime::now().to_deprecated_string("%I:%M %p"sv));
 
         } else if (lexer.consume_specific('j')) {
             builder.appendff("{}", jobs.size());
