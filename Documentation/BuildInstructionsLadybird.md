@@ -47,7 +47,12 @@ Note that Xcode 13.x does not have sufficient C++20 support to build ladybird. X
 
 ```
 xcode-select --install
-brew install cmake qt ninja ccache
+brew install cmake ninja ccache
+```
+
+If you also plan to use the Qt chrome on macOS:
+```
+brew install qt
 ```
 
 On OpenIndiana:
@@ -71,7 +76,7 @@ MinGW/MSYS2 are not supported, but may work with sufficient elbow grease. Native
 For Android:
 
 On a Unix-like platform, install the prerequisites for that platform and then see the [Android Studio guide](AndroidStudioConfiguration.md).
-Or, download a version of Gradle >= 8.0.0, and run the ``gradlew`` program in ``Ladybird/Android`` 
+Or, download a version of Gradle >= 8.0.0, and run the ``gradlew`` program in ``Ladybird/Android``
 
 ## Build steps
 
@@ -85,18 +90,20 @@ The simplest way to build and run ladybird is via the serenity.sh script:
 ./Meta/serenity.sh gdb lagom ladybird
 ```
 
-By default, the above commands will build Ladybird using Qt for the browser chrome. We also support
-the following platform-specific browser chromes:
-
+The above commands will build Ladybird with one of the following browser chromes, depending on the platform:
+* [Android UI](https://developer.android.com/develop/ui) - The native chrome on Android.
 * [AppKit](https://developer.apple.com/documentation/appkit?language=objc) - The native chrome on macOS.
+* [Qt](https://doc.qt.io/qt-6/) - The chrome used on all other platforms.
 
-To build Ladybird using one of these chromes on the appropriate platform, use the following serenity.sh
-commands:
+The Qt chrome is available on platforms where it is not the default as well (except on Android). To build the
+Qt chrome, install the Qt dependencies for your platform, and enable the Qt chrome via CMake:
 
 ```bash
 # From /path/to/serenity
-./Meta/serenity.sh run lagom ladybird-appkit # Use the AppKit chrome on macOS.
+cmake -S Meta/Lagom -B Build/lagom -DENABLE_QT=ON
 ```
+
+To re-disable the Qt chrome, run the above command with `-DENABLE_QT=OFF`.
 
 ### Disabling Ladybird
 

@@ -80,7 +80,12 @@ add_compile_options(-DAK_DONT_REPLACE_STD)
 add_compile_options(-Wno-expansion-to-defined)
 add_compile_options(-Wno-user-defined-literals)
 
-serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
+if (ANDROID OR APPLE)
+    serenity_option(ENABLE_QT OFF CACHE BOOL "Build ladybird application using Qt GUI")
+else()
+    serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
+endif()
+
 if (ANDROID AND ENABLE_QT)
     message(STATUS "Disabling Qt for Android")
     set(ENABLE_QT OFF CACHE BOOL "" FORCE)
