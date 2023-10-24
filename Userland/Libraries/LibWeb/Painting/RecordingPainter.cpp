@@ -33,11 +33,7 @@ struct CommandExecutionState {
 
 CommandResult FillRectWithRoundedCorners::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
-
     auto& painter = state.painter();
-
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
         aa_painter.translate(*aa_translation);
@@ -75,8 +71,6 @@ CommandResult DrawTextRun::execute(CommandExecutionState& state) const
 
 CommandResult FillPathUsingColor::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(bounding_rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
@@ -87,8 +81,6 @@ CommandResult FillPathUsingColor::execute(CommandExecutionState& state) const
 
 CommandResult FillPathUsingPaintStyle::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(bounding_rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
@@ -99,8 +91,6 @@ CommandResult FillPathUsingPaintStyle::execute(CommandExecutionState& state) con
 
 CommandResult StrokePathUsingColor::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(bounding_rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
@@ -111,8 +101,6 @@ CommandResult StrokePathUsingColor::execute(CommandExecutionState& state) const
 
 CommandResult StrokePathUsingPaintStyle::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(bounding_rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     if (aa_translation.has_value())
@@ -123,8 +111,6 @@ CommandResult StrokePathUsingPaintStyle::execute(CommandExecutionState& state) c
 
 CommandResult FillRect::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     painter.fill_rect(rect, color);
     return CommandResult::Continue;
@@ -132,8 +118,6 @@ CommandResult FillRect::execute(CommandExecutionState& state) const
 
 CommandResult DrawScaledBitmap::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(dst_rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     painter.draw_scaled_bitmap(dst_rect, bitmap, src_rect, opacity, scaling_mode);
     return CommandResult::Continue;
@@ -290,8 +274,6 @@ CommandResult PopStackingContextWithMask::execute(CommandExecutionState& state) 
 
 CommandResult PaintLinearGradient::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(gradient_rect))
-        return CommandResult::Continue;
     auto const& data = linear_gradient_data;
     state.painter().fill_rect_with_linear_gradient(
         gradient_rect, data.color_stops.list,
@@ -301,8 +283,6 @@ CommandResult PaintLinearGradient::execute(CommandExecutionState& state) const
 
 CommandResult PaintRadialGradient::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     painter.fill_rect_with_radial_gradient(rect, radial_gradient_data.color_stops.list, center, size, radial_gradient_data.color_stops.repeat_length);
     return CommandResult::Continue;
@@ -310,18 +290,18 @@ CommandResult PaintRadialGradient::execute(CommandExecutionState& state) const
 
 CommandResult PaintConicGradient::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     painter.fill_rect_with_conic_gradient(rect, conic_gradient_data.color_stops.list, position, conic_gradient_data.start_angle, conic_gradient_data.color_stops.repeat_length);
     return CommandResult::Continue;
 }
 
+Gfx::IntRect PaintOuterBoxShadow::bounding_rect() const
+{
+    return get_outer_box_shadow_bounding_rect(outer_box_shadow_params);
+}
+
 CommandResult PaintOuterBoxShadow::execute(CommandExecutionState& state) const
 {
-    auto bounding_rect = get_outer_box_shadow_bounding_rect(outer_box_shadow_params);
-    if (state.would_be_fully_clipped_by_painter(bounding_rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     paint_outer_box_shadow(painter, outer_box_shadow_params);
     return CommandResult::Continue;
@@ -340,9 +320,9 @@ CommandResult PaintTextShadow::execute(CommandExecutionState& state) const
         return CommandResult::Continue;
 
     // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
-    auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, bounding_rect.size());
+    auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, shadow_bounding_rect.size());
     if (maybe_shadow_bitmap.is_error()) {
-        dbgln("Unable to allocate temporary bitmap {} for text-shadow rendering: {}", bounding_rect.size(), maybe_shadow_bitmap.error());
+        dbgln("Unable to allocate temporary bitmap {} for text-shadow rendering: {}", shadow_bounding_rect.size(), maybe_shadow_bitmap.error());
         return CommandResult::Continue;
     }
     auto shadow_bitmap = maybe_shadow_bitmap.release_value();
@@ -357,14 +337,12 @@ CommandResult PaintTextShadow::execute(CommandExecutionState& state) const
     filter.process_rgba(blur_radius, color);
 
     auto& painter = state.painter();
-    painter.blit(draw_location, *shadow_bitmap, bounding_rect);
+    painter.blit(draw_location, *shadow_bitmap, shadow_bounding_rect);
     return CommandResult::Continue;
 }
 
 CommandResult DrawEllipse::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     aa_painter.draw_ellipse(rect, color, thickness);
@@ -373,8 +351,6 @@ CommandResult DrawEllipse::execute(CommandExecutionState& state) const
 
 CommandResult FillElipse::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     Gfx::AntiAliasingPainter aa_painter(painter);
     aa_painter.fill_ellipse(rect, color, blend_mode);
@@ -394,8 +370,6 @@ CommandResult DrawLine::execute(CommandExecutionState& state) const
 
 CommandResult DrawSignedDistanceField::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     painter.draw_signed_distance_field(rect, color, sdf, smoothing);
     return CommandResult::Continue;
@@ -455,8 +429,6 @@ CommandResult ApplyBackdropFilter::execute(CommandExecutionState& state) const
 
 CommandResult DrawRect::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     painter.draw_rect(rect, color, rough);
     return CommandResult::Continue;
@@ -469,19 +441,25 @@ CommandResult DrawTriangleWave::execute(CommandExecutionState& state) const
     return CommandResult::Continue;
 }
 
+Gfx::IntRect SampleUnderCorners::bounding_rect() const
+{
+    return corner_clipper->border_rect().to_type<int>();
+}
+
 CommandResult SampleUnderCorners::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(corner_clipper->border_rect().to_type<int>()))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     corner_clipper->sample_under_corners(painter);
     return CommandResult::Continue;
 }
 
+Gfx::IntRect BlitCornerClipping::bounding_rect() const
+{
+    return corner_clipper->border_rect().to_type<int>();
+}
+
 CommandResult BlitCornerClipping::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(corner_clipper->border_rect().to_type<int>()))
-        return CommandResult::Continue;
     auto& painter = state.painter();
     corner_clipper->blit_corner_clipping(painter);
     return CommandResult::Continue;
@@ -507,9 +485,9 @@ void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color)
 
 void RecordingPainter::fill_path(FillPathUsingColorParams params)
 {
-    auto bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
+    auto path_bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
     push_command(FillPathUsingColor {
-        .bounding_rect = bounding_rect,
+        .path_bounding_rect = path_bounding_rect,
         .path = params.path,
         .color = params.color,
         .winding_rule = params.winding_rule,
@@ -519,9 +497,9 @@ void RecordingPainter::fill_path(FillPathUsingColorParams params)
 
 void RecordingPainter::fill_path(FillPathUsingPaintStyleParams params)
 {
-    auto bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
+    auto path_bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
     push_command(FillPathUsingPaintStyle {
-        .bounding_rect = bounding_rect,
+        .path_bounding_rect = path_bounding_rect,
         .path = params.path,
         .paint_style = params.paint_style,
         .winding_rule = params.winding_rule,
@@ -532,9 +510,9 @@ void RecordingPainter::fill_path(FillPathUsingPaintStyleParams params)
 
 void RecordingPainter::stroke_path(StrokePathUsingColorParams params)
 {
-    auto bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
+    auto path_bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
     push_command(StrokePathUsingColor {
-        .bounding_rect = bounding_rect,
+        .path_bounding_rect = path_bounding_rect,
         .path = params.path,
         .color = params.color,
         .thickness = params.thickness,
@@ -544,9 +522,9 @@ void RecordingPainter::stroke_path(StrokePathUsingColorParams params)
 
 void RecordingPainter::stroke_path(StrokePathUsingPaintStyleParams params)
 {
-    auto bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
+    auto path_bounding_rect = params.path.bounding_box().translated(params.translation.value_or({})).to_type<int>();
     push_command(StrokePathUsingPaintStyle {
-        .bounding_rect = bounding_rect,
+        .path_bounding_rect = path_bounding_rect,
         .path = params.path,
         .paint_style = params.paint_style,
         .thickness = params.thickness,
@@ -780,7 +758,7 @@ void RecordingPainter::paint_text_shadow(int blur_radius, Gfx::IntRect bounding_
 {
     push_command(PaintTextShadow {
         .blur_radius = blur_radius,
-        .bounding_rect = bounding_rect,
+        .shadow_bounding_rect = bounding_rect,
         .text_rect = text_rect,
         .text = String::from_utf8(text.as_string()).release_value_but_fixme_should_propagate_errors(),
         .font = font,
@@ -839,6 +817,17 @@ void RecordingPainter::draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2
         .thickness = thickness });
 }
 
+static Optional<Gfx::IntRect> command_bounding_rectangle(PaintingCommand const& command)
+{
+    return command.visit(
+        [&](auto const& command) -> Optional<Gfx::IntRect> {
+            if constexpr (requires { command.bounding_rect(); })
+                return command.bounding_rect();
+            else
+                return {};
+        });
+}
+
 void RecordingPainter::execute(Gfx::Bitmap& bitmap)
 {
     CommandExecutionState state;
@@ -851,8 +840,10 @@ void RecordingPainter::execute(Gfx::Bitmap& bitmap)
     size_t next_command_index = 0;
     while (next_command_index < m_painting_commands.size()) {
         auto& command = m_painting_commands[next_command_index++];
+        auto bounding_rect = command_bounding_rectangle(command);
+        if (bounding_rect.has_value() && state.would_be_fully_clipped_by_painter(*bounding_rect))
+            continue;
         auto result = command.visit([&](auto const& command) { return command.execute(state); });
-
         if (result == CommandResult::SkipStackingContext) {
             auto stacking_context_nesting_level = 1;
             while (next_command_index < m_painting_commands.size()) {
