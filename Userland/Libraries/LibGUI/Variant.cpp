@@ -43,6 +43,11 @@ Variant& Variant::operator=(JsonValue const& value)
         return *this;
     }
 
+    if (value.is_double()) {
+        set(value.as_double());
+        return *this;
+    }
+
     if (value.is_string()) {
         set(value.as_string());
         return *this;
