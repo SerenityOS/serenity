@@ -1,5 +1,6 @@
 #import <CSS/CSSRule.idl>
 
+// https://www.w3.org/TR/cssom/#the-cssrulelist-interface
 [Exposed=Window]
 interface CSSRuleList {
 

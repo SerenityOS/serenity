@@ -5,6 +5,7 @@
 [Exposed=(Window,DedicatedWorker,SharedWorker)]
 interface XMLHttpRequestEventTarget : EventTarget {
 
+    // event handlers
     attribute EventHandler onloadstart;
     attribute EventHandler onprogress;
     attribute EventHandler onabort;

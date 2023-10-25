@@ -4,9 +4,24 @@
 // https://drafts.csswg.org/cssom/#cssstylesheet
 [Exposed=Window]
 interface CSSStyleSheet : StyleSheet {
-    // readonly attribute CSSRule? ownerRule;
+    // FIXME: constructor(optional CSSStyleSheetInit options = {});
+
+    // FIXME: readonly attribute CSSRule? ownerRule;
     [SameObject] readonly attribute CSSRuleList cssRules;
     unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
     undefined deleteRule(unsigned long index);
+
+    // FIXME: Promise<CSSStyleSheet> replace(USVString text);
+    // FIXME: undefined replaceSync(USVString text);
+
+    // https://drafts.csswg.org/cssom/#legacy-css-style-sheet-members
+    // FIXME: [SameObject] readonly attribute CSSRuleList rules;
+    // FIXME: long addRule(optional DOMString selector = "undefined", optional DOMString style = "undefined", optional unsigned long index);
     undefined removeRule(unsigned long index);
+};
+
+dictionary CSSStyleSheetInit {
+    DOMString baseURL = null;
+    (MediaList or DOMString) media = "";
+    boolean disabled = false;
 };

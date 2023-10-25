@@ -1,5 +1,6 @@
 #import <Streams/ReadableStreamBYOBRequest.idl>
 
+// https://streams.spec.whatwg.org/#rbs-controller-class-definition
 [Exposed=*]
 interface ReadableByteStreamController {
     readonly attribute ReadableStreamBYOBRequest? byobRequest;
@@ -7,7 +8,5 @@ interface ReadableByteStreamController {
 
     undefined close();
     undefined error(optional any e);
-
-    // FIXME: Implement
-    // undefined enqueue(ArrayBufferView chunk);
+    // FIXME: undefined enqueue(ArrayBufferView chunk);
 };

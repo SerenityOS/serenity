@@ -1,5 +1,7 @@
+// https://fetch.spec.whatwg.org/#typedefdef-headersinit
 typedef (sequence<sequence<ByteString>> or record<ByteString, ByteString>) HeadersInit;
 
+// https://fetch.spec.whatwg.org/#headers
 [Exposed=(Window,Worker)]
 interface Headers {
     constructor(optional HeadersInit init);

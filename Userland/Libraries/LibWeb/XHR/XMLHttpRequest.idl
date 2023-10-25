@@ -5,12 +5,12 @@
 #import <XHR/XMLHttpRequestUpload.idl>
 
 enum XMLHttpRequestResponseType {
-  "",
-  "arraybuffer",
-  "blob",
-  "document",
-  "json",
-  "text"
+    "",
+    "arraybuffer",
+    "blob",
+    "document",
+    "json",
+    "text"
 };
 
 // https://xhr.spec.whatwg.org/#xmlhttprequest
@@ -19,33 +19,37 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
     constructor();
 
+    // event handler
+    attribute EventHandler onreadystatechange;
+
+    // states
     const unsigned short UNSENT = 0;
     const unsigned short OPENED = 1;
     const unsigned short HEADERS_RECEIVED = 2;
     const unsigned short LOADING = 3;
     const unsigned short DONE = 4;
-
     readonly attribute unsigned short readyState;
-    readonly attribute unsigned short status;
-    readonly attribute ByteString statusText;
-    readonly attribute DOMString responseText;
-    readonly attribute Document? responseXML;
-    readonly attribute any response;
-    attribute XMLHttpRequestResponseType responseType;
-    attribute unsigned long timeout;
-    attribute boolean withCredentials;
-    [SameObject] readonly attribute XMLHttpRequestUpload upload;
 
+    // request
     undefined open(DOMString method, DOMString url);
     undefined open(ByteString method, USVString url, boolean async, optional USVString? username = null, optional USVString? password = null);
     undefined setRequestHeader(DOMString name, DOMString value);
+    attribute unsigned long timeout;
+    attribute boolean withCredentials;
+    [SameObject] readonly attribute XMLHttpRequestUpload upload;
     undefined send(optional (Document or XMLHttpRequestBodyInit)? body = null);
     undefined abort();
 
+    // response
+    // FIXME: readonly attribute USVString responseURL;
+    readonly attribute unsigned short status;
+    readonly attribute ByteString statusText;
     ByteString? getResponseHeader(ByteString name);
     ByteString getAllResponseHeaders();
     undefined overrideMimeType(DOMString mime);
-
-    attribute EventHandler onreadystatechange;
+    attribute XMLHttpRequestResponseType responseType;
+    readonly attribute any response;
+    readonly attribute DOMString responseText;
+    readonly attribute Document? responseXML;
 
 };

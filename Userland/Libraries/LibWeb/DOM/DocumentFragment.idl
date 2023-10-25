@@ -9,6 +9,7 @@
 interface DocumentFragment : Node {
     constructor();
 
+    // https://dom.spec.whatwg.org/#interface-nonelementparentnode
     Element? getElementById(DOMString id);
 };
 

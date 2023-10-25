@@ -1,5 +1,6 @@
 #import <DOM/Element.idl>
 
+// https://drafts.csswg.org/resize-observer/#resize-observer-interface
 [Exposed=(Window)]
 interface ResizeObserver {
 
@@ -10,8 +11,6 @@ interface ResizeObserver {
 
 };
 
-callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
-
 enum ResizeObserverBoxOptions {
     "border-box", "content-box", "device-pixel-content-box"
 };
@@ -19,3 +18,6 @@ enum ResizeObserverBoxOptions {
 dictionary ResizeObserverOptions {
     ResizeObserverBoxOptions box = "content-box";
 };
+
+// https://drafts.csswg.org/resize-observer/#resize-observer-callback
+callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);

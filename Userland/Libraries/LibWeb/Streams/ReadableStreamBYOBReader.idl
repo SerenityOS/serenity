@@ -6,8 +6,7 @@
 interface ReadableStreamBYOBReader {
     constructor(ReadableStream stream);
 
-    // FIXME: Implement
-    // Promise<ReadableStreamReadResult> read(ArrayBufferView view);
+    // FIXME: Promise<ReadableStreamReadResult> read(ArrayBufferView view);
     undefined releaseLock();
 };
 ReadableStreamBYOBReader includes ReadableStreamGenericReader;

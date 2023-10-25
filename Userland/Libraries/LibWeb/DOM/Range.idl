@@ -2,6 +2,7 @@
 #import <DOM/AbstractRange.idl>
 #import <Geometry/DOMRect.idl>
 
+// https://dom.spec.whatwg.org/#interface-range
 [Exposed=Window]
 interface Range : AbstractRange {
 

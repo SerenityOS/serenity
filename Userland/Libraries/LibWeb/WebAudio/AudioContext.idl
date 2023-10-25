@@ -20,12 +20,12 @@ interface AudioContext : BaseAudioContext {
 };
 
 dictionary AudioContextOptions {
-  AudioContextLatencyCategory latencyHint = "interactive";
-  float sampleRate;
+    AudioContextLatencyCategory latencyHint = "interactive";
+    float sampleRate;
 };
 
 dictionary AudioTimestamp {
-  double contextTime;
-  // FIXME: Should be DOMHighResTimeStamp, but DOMHighResTimeStamp doesn't get parsed as a double during codegen
-  double performanceTime;
+    double contextTime;
+    // FIXME: Should be DOMHighResTimeStamp, but DOMHighResTimeStamp doesn't get parsed as a double during codegen
+    double performanceTime;
 };

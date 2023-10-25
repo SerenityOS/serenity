@@ -1,6 +1,7 @@
 #import <Streams/QueuingStrategy.idl>
 #import <Streams/WritableStreamDefaultWriter.idl>
 
+// https://streams.spec.whatwg.org/#writablestream
 [Exposed=*, Transferable]
 interface WritableStream {
     constructor(optional object underlyingSink, optional QueuingStrategy strategy = {});
