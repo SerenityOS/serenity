@@ -134,12 +134,7 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
             auto& value = widths_array->at(i);
             if (!pending_code.has_value()) {
                 pending_code = value.to_int();
-            } else if (value.has<NonnullRefPtr<Object>>()) {
-                auto array = value.get<NonnullRefPtr<Object>>()->cast<ArrayObject>();
-                auto code = pending_code.release_value();
-                for (auto& width : *array)
-                    widths.set(code++, width.to_int());
-            } else {
+            } else if (value.has_number()) {
                 auto first_code = pending_code.release_value();
                 auto last_code = value.to_int();
                 auto width = widths_array->at(i + 1).to_int();
@@ -147,6 +142,11 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
                     widths.set(code, width);
 
                 i++;
+            } else {
+                auto array = value.get<NonnullRefPtr<Object>>()->cast<ArrayObject>();
+                auto code = pending_code.release_value();
+                for (auto& width : *array)
+                    widths.set(code++, width.to_int());
             }
         }
     }
