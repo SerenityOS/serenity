@@ -49,9 +49,9 @@ public:
     PDFErrorOr<NonnullRefPtr<IndirectValue>> parse_indirect_value();
     PDFErrorOr<Value> parse_number();
     PDFErrorOr<NonnullRefPtr<NameObject>> parse_name();
-    NonnullRefPtr<StringObject> parse_string();
-    DeprecatedString parse_literal_string();
-    DeprecatedString parse_hex_string();
+    PDFErrorOr<NonnullRefPtr<StringObject>> parse_string();
+    PDFErrorOr<DeprecatedString> parse_literal_string();
+    PDFErrorOr<DeprecatedString> parse_hex_string();
     PDFErrorOr<NonnullRefPtr<ArrayObject>> parse_array();
     PDFErrorOr<NonnullRefPtr<DictObject>> parse_dict();
     PDFErrorOr<NonnullRefPtr<StreamObject>> parse_stream(NonnullRefPtr<DictObject> dict);
