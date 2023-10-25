@@ -6,9 +6,18 @@ interface HTMLTrackElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
+    // FIXME: [CEReactions] attribute DOMString kind;
     [CEReactions, Reflect] attribute DOMString src;
     [CEReactions, Reflect] attribute DOMString srclang;
     [CEReactions, Reflect] attribute DOMString label;
     [CEReactions, Reflect] attribute boolean default;
+
+    // FIXME: [const unsigned short NONE = 0;
+    // FIXME: [const unsigned short LOADING = 1;
+    // FIXME: [const unsigned short LOADED = 2;
+    // FIXME: [const unsigned short ERROR = 3;
+    // FIXME: [readonly attribute unsigned short readyState;
+
+    // FIXME: [readonly attribute TextTrack track;
 
 };

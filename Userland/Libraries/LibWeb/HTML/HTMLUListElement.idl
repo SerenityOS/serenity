@@ -6,6 +6,7 @@ interface HTMLUListElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
+    // Obsolete
     [CEReactions, Reflect] attribute boolean compact;
     [CEReactions, Reflect] attribute DOMString type;
 

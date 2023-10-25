@@ -6,6 +6,7 @@ interface HTMLTableCaptionElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
+    // Obsolete
     [CEReactions, Reflect] attribute DOMString align;
 
 };

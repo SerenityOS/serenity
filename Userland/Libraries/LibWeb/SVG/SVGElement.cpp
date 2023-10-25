@@ -97,4 +97,14 @@ void SVGElement::remove_from_use_element_that_reference_this()
     });
 }
 
+void SVGElement::focus()
+{
+    dbgln("(STUBBED) SVGElement::focus()");
+}
+
+void SVGElement::blur()
+{
+    dbgln("(STUBBED) SVGElement::blur()");
+}
+
 }

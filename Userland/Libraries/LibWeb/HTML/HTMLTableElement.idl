@@ -29,6 +29,7 @@ interface HTMLTableElement : HTMLElement {
     HTMLTableRowElement insertRow(optional long index = -1);
     [CEReactions] undefined deleteRow(long index);
 
+    // Obsolete
     [CEReactions, Reflect] attribute DOMString align;
     [CEReactions, Reflect] attribute DOMString border;
     [CEReactions, Reflect] attribute DOMString frame;

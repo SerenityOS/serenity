@@ -24,6 +24,9 @@ public:
 
     virtual Optional<ARIA::Role> default_role() const override;
 
+    void focus();
+    void blur();
+
 protected:
     virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
 

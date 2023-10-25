@@ -9,8 +9,12 @@ interface HTMLTableCellElement : HTMLElement {
     [CEReactions] attribute unsigned long colSpan;
     [CEReactions] attribute unsigned long rowSpan;
     [CEReactions, Reflect] attribute DOMString headers;
-    [CEReactions, Reflect] attribute DOMString abbr;
+    // FIXME: readonly attribute long cellIndex;
 
+    // FIXME: [CEReactions] attribute DOMString scope; // only conforming for th elements
+    [CEReactions, Reflect] attribute DOMString abbr;  // only conforming for th elements
+
+    // Obsolete
     [CEReactions, Reflect] attribute DOMString align;
     [CEReactions, Reflect] attribute DOMString axis;
     [CEReactions, Reflect] attribute DOMString height;

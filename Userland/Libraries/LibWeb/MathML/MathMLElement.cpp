@@ -33,4 +33,14 @@ Optional<ARIA::Role> MathMLElement::default_role() const
     return {};
 }
 
+void MathMLElement::focus()
+{
+    dbgln("(STUBBED) MathMLElement::focus()");
+}
+
+void MathMLElement::blur()
+{
+    dbgln("(STUBBED) MathMLElement::blur()");
+}
+
 }

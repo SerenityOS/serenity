@@ -6,6 +6,7 @@ interface HTMLHeadingElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
+    // Obsolete
     [CEReactions, Reflect] attribute DOMString align;
 
 };
