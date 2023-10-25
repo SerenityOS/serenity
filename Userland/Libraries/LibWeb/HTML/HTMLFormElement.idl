@@ -7,21 +7,27 @@ interface HTMLFormElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [CEReactions, Reflect] attribute DOMString name;
-    [CEReactions, Reflect] attribute DOMString rel;
-    [CEReactions] attribute DOMString method;
     [CEReactions, Reflect=accept-charset] attribute DOMString acceptCharset;
-    [CEReactions, Reflect=novalidate] attribute boolean noValidate;
     [CEReactions] attribute USVString action;
+    // FIXME: [CEReactions] attribute DOMString autocomplete;
+    // FIXME: [CEReactions] attribute DOMString enctype;
+    // FIXME: [CEReactions] attribute DOMString encoding;
+    [CEReactions] attribute DOMString method;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect=novalidate] attribute boolean noValidate;
     [CEReactions, Reflect] attribute DOMString target;
+    [CEReactions, Reflect] attribute DOMString rel;
+    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
+
+    [SameObject] readonly attribute HTMLFormControlsCollection elements;
+    readonly attribute unsigned long length;
+    // FIXME: getter Element (unsigned long index);
+    // FIXME: getter (RadioNodeList or Element) (DOMString name);
 
     undefined submit();
+    // FIXME: undefined requestSubmit(optional HTMLElement? submitter = null);
     [CEReactions] undefined reset();
     boolean checkValidity();
     boolean reportValidity();
-
-    [SameObject] readonly attribute HTMLFormControlsCollection elements;
-
-    readonly attribute unsigned long length;
 
 };

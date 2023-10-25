@@ -10,7 +10,9 @@ interface HTMLEmbedElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString type;
     [CEReactions, Reflect] attribute DOMString width;
     [CEReactions, Reflect] attribute DOMString height;
+    // FIXME: Document? getSVGDocument();
 
+    // Obsolete
     [CEReactions, Reflect] attribute DOMString align;
     [CEReactions, Reflect] attribute DOMString name;
 

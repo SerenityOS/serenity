@@ -10,6 +10,7 @@ interface HTMLOListElement : HTMLElement {
     // FIXME: [CEReactions] attribute long start;
     [CEReactions, Reflect] attribute DOMString type;
 
+    // Obsolete
     [CEReactions, Reflect] attribute boolean compact;
 
 };

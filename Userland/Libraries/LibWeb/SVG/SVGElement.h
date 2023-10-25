@@ -26,6 +26,9 @@ public:
     HTML::DOMStringMap* dataset() { return m_dataset.ptr(); }
     HTML::DOMStringMap const* dataset() const { return m_dataset.ptr(); }
 
+    void focus();
+    void blur();
+
 protected:
     SVGElement(DOM::Document&, DOM::QualifiedName);
 

@@ -1,3 +1,4 @@
+#import <CSS/LinkStyle.idl>
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/semantics.html#htmllinkelement
@@ -7,17 +8,26 @@ interface HTMLLinkElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     [CEReactions, Reflect] attribute DOMString href;
-    [CEReactions, Reflect] attribute DOMString hreflang;
-    [CEReactions, Reflect] attribute DOMString integrity;
-    [CEReactions, Reflect] attribute DOMString media;
+    // FIXME: [CEReactions] attribute DOMString? crossOrigin;
     [CEReactions, Reflect] attribute DOMString rel;
+    // FIXME: [CEReactions] attribute DOMString as;
+    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
+    [CEReactions, Reflect] attribute DOMString media;
+    [CEReactions, Reflect] attribute DOMString integrity;
+    [CEReactions, Reflect] attribute DOMString hreflang;
     [CEReactions, Reflect] attribute DOMString type;
+    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList sizes;
     [CEReactions, Reflect=imagesrcset] attribute DOMString imageSrcset;
     [CEReactions, Reflect=imagesizes] attribute DOMString imageSizes;
+    // FIXME: [CEReactions] attribute DOMString referrerPolicy;
+    // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList blocking;
     [CEReactions, Reflect] attribute boolean disabled;
+    // FIXME: [CEReactions] attribute DOMString fetchPriority;
 
+    // Obsolete
     [CEReactions, Reflect] attribute DOMString charset;
     [CEReactions, Reflect] attribute DOMString rev;
     [CEReactions, Reflect] attribute DOMString target;
 
 };
+// FIXME: HTMLLinkElement includes LinkStyle;

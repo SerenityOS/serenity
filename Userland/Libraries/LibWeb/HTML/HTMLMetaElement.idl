@@ -7,9 +7,11 @@ interface HTMLMetaElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     [CEReactions, Reflect] attribute DOMString name;
-    [CEReactions, Reflect] attribute DOMString content;
     [CEReactions, Reflect=http-equiv] attribute DOMString httpEquiv;
+    [CEReactions, Reflect] attribute DOMString content;
+    // FIXME: [CEReactions] attribute DOMString media;
 
+    // Obsolete
     [CEReactions, Reflect] attribute DOMString scheme;
 
 };

@@ -7,6 +7,7 @@ interface HTMLBodyElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
+    // Obsolete
     [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString text;
     [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString link;
     [CEReactions, LegacyNullToEmptyString, Reflect=vlink] attribute DOMString vLink;

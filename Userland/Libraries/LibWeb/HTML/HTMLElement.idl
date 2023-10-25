@@ -8,37 +8,62 @@ interface HTMLElement : Element {
 
     [HTMLConstructor] constructor();
 
+    // metadata attributes
     [Reflect, CEReactions] attribute DOMString title;
     [Reflect, CEReactions] attribute DOMString lang;
+    // FIXME: [CEReactions] attribute boolean translate;
     [CEReactions] attribute DOMString dir;
 
+    // user interaction
     [Reflect, CEReactions] attribute boolean hidden;
-
-    attribute DOMString contentEditable;
-
+    // FIXME: [CEReactions] attribute boolean inert;
     undefined click();
-
-    // FIXME: Support the optional FocusOptions parameter.
-    undefined focus();
-
-    undefined blur();
+    // FIXME: [CEReactions] attribute DOMString accessKey;
+    // FIXME: readonly attribute DOMString accessKeyLabel;
+    // FIXME: [CEReactions] attribute boolean draggable;
+    // FIXME: [CEReactions] attribute boolean spellcheck;
+    // FIXME: [CEReactions] attribute DOMString autocapitalize;
 
     [LegacyNullToEmptyString, CEReactions] attribute DOMString innerText;
+    // FIXME: [LegacyNullToEmptyString, CEReactions] attribute DOMString outerText;
 
+    // FIXME: ElementInternals attachInternals();
+
+    // The popover API
+    // FIXME: undefined showPopover();
+    // FIXME: undefined hidePopover();
+    // FIXME: boolean togglePopover(optional boolean force);
+    // FIXME: [CEReactions] attribute DOMString? popover;
+
+    // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
+    // FIXME: readonly attribute Element? offsetParent;
     readonly attribute long offsetTop;
     readonly attribute long offsetLeft;
     readonly attribute long offsetWidth;
     readonly attribute long offsetHeight;
+
 };
 
 HTMLElement includes GlobalEventHandlers;
+HTMLElement includes ElementContentEditable;
 HTMLElement includes HTMLOrSVGElement;
+
+interface mixin ElementContentEditable {
+    [CEReactions] attribute DOMString contentEditable;
+    // FIXME: [CEReactions] attribute DOMString enterKeyHint;
+    // FIXME: readonly attribute boolean isContentEditable;
+    // FIXME: [CEReactions] attribute DOMString inputMode;
+};
 
 interface mixin HTMLOrSVGElement {
     [SameObject] readonly attribute DOMStringMap dataset;
+    // FIXME: attribute DOMString nonce; // intentionally no [CEReactions]
 
     [CEReactions, Reflect] attribute boolean autofocus;
     [CEReactions] attribute long tabIndex;
+    // FIXME: Support the optional FocusOptions parameter.
+    undefined focus();
+    undefined blur();
 };
 
 HTMLElement includes ElementCSSInlineStyle;

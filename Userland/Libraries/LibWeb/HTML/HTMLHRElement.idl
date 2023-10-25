@@ -6,6 +6,7 @@ interface HTMLHRElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
+    // Obsolete
     [CEReactions, Reflect] attribute DOMString align;
     [CEReactions, Reflect] attribute DOMString color;
     [CEReactions, Reflect=noshade] attribute boolean noShade;

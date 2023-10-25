@@ -6,6 +6,8 @@ interface HTMLLabelElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
+    // FIXME: readonly attribute HTMLFormElement? form;
     [CEReactions, Reflect=for] attribute DOMString htmlFor;
+    // FIXME: readonly attribute HTMLElement? control;
 
 };
