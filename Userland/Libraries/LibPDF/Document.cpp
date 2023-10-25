@@ -568,9 +568,9 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
 
     if (outline_item_dict->contains(CommonNames::C)) {
         auto color_array = TRY(outline_item_dict->get_array(this, CommonNames::C));
-        auto r = static_cast<int>(255.0f * color_array->at(0).get<float>());
-        auto g = static_cast<int>(255.0f * color_array->at(1).get<float>());
-        auto b = static_cast<int>(255.0f * color_array->at(2).get<float>());
+        auto r = static_cast<int>(255.0f * color_array->at(0).to_float());
+        auto g = static_cast<int>(255.0f * color_array->at(1).to_float());
+        auto b = static_cast<int>(255.0f * color_array->at(2).to_float());
         outline_item->color = Color(r, g, b);
     }
 
