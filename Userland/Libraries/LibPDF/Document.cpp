@@ -418,6 +418,10 @@ PDFErrorOr<void> Document::build_outline()
 PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefPtr<ArrayObject> array, HashMap<u32, u32> const& page_number_by_index_ref)
 {
     auto page_ref = array->at(0);
+
+    if (page_ref.has<nullptr_t>())
+        return Destination { Destination::Type::XYZ, {}, {} };
+
     auto type_name = TRY(array->get_name_at(this, 1))->name();
 
     Vector<Optional<float>> parameters;
