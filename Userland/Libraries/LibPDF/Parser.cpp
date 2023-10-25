@@ -282,6 +282,9 @@ PDFErrorOr<DeprecatedString> Parser::parse_literal_string()
     auto opened_parens = 0;
 
     while (true) {
+        if (m_reader.done())
+            return error("unterminated string literal");
+
         if (m_reader.matches('(')) {
             opened_parens++;
             builder.append(m_reader.consume());
