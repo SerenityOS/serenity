@@ -820,8 +820,8 @@ PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
 PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<StreamObject> image)
 {
     auto image_dict = image->dict();
-    auto width = image_dict->get_value(CommonNames::Width).get<int>();
-    auto height = image_dict->get_value(CommonNames::Height).get<int>();
+    auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
+    auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
 
     auto is_filter = [&](DeprecatedFlyString const& name) -> PDFErrorOr<bool> {
         if (!image_dict->contains(CommonNames::Filter))
@@ -836,7 +836,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
         return Error(Error::Type::RenderingUnsupported, "JPXDecode filter");
     }
     if (image_dict->contains(CommonNames::ImageMask)) {
-        auto is_mask = image_dict->get_value(CommonNames::ImageMask).get<bool>();
+        auto is_mask = TRY(m_document->resolve_to<bool>(image_dict->get_value(CommonNames::ImageMask)));
         if (is_mask) {
             return Error(Error::Type::RenderingUnsupported, "Image masks");
         }
@@ -853,7 +853,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
     // FIXME: Do something with color_rendering_intent.
 
     // "Valid values are 1, 2, 4, 8, and (in PDF 1.5) 16."
-    auto bits_per_component = image_dict->get_value(CommonNames::BitsPerComponent).get<int>();
+    auto bits_per_component = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::BitsPerComponent)));
     if (bits_per_component != 8) {
         return Error(Error::Type::RenderingUnsupported, "Image's bit per component != 8");
     }
@@ -928,8 +928,8 @@ void Renderer::show_empty_image(int width, int height)
 PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
 {
     auto image_dict = image->dict();
-    auto width = image_dict->get_value(CommonNames::Width).get<int>();
-    auto height = image_dict->get_value(CommonNames::Height).get<int>();
+    auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
+    auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
 
     if (!m_rendering_preferences.show_images) {
         show_empty_image(width, height);
