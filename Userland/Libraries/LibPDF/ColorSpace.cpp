@@ -27,7 +27,8 @@ PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(DeprecatedFlyString const& fa
     }
     ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE)
 #undef ENUMERATE
-    return Error(Error::Type::MalformedPDF, DeprecatedString::formatted("Unknown ColorSpace family {}", family_name));
+    dbgln_if(PDF_DEBUG, "Unknown ColorSpace family: {}", family_name);
+    return Error(Error::Type::MalformedPDF, "Unknown ColorSpace family"_string);
 }
 
 PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name)

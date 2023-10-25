@@ -284,7 +284,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 i += 2;
                 TRY(push(a));
             } else {
-                return error(DeprecatedString::formatted("CFF Subr command 28 only valid in type2 data"));
+                return error("CFF Subr command 28 only valid in type2 data");
             }
         } else {
             // Not a parameter but a command byte.
@@ -494,7 +494,8 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     break;
 
                 default:
-                    return error(DeprecatedString::formatted("Unhandled command: 12 {}", data[i]));
+                    dbgln_if(PDF_DEBUG, "Unhandled command: 12 {}", data[i]);
+                    return error("Unhandled command");
                 }
                 break;
             }
@@ -578,7 +579,8 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
             }
 
             default:
-                return error(DeprecatedString::formatted("Unhandled command: {}", v));
+                dbgln_if(PDF_DEBUG, "Unhandled command: {}", v);
+                return error("Unhandled command");
             }
 
             is_first_command = false;

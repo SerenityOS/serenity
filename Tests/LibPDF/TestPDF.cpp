@@ -73,3 +73,16 @@ TEST_CASE(encrypted_object_stream)
     EXPECT_EQ(MUST(info_dict.author()).value(), "van der Knijff");
     EXPECT_EQ(MUST(info_dict.creator()).value(), "Acrobat PDFMaker 9.1 voor Word");
 }
+
+TEST_CASE(malformed_pdf_document)
+{
+    Array test_inputs = {
+        "oss-fuzz-testcase-62065.pdf"sv
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto document_or_error = PDF::Document::create(file->bytes());
+        EXPECT(document_or_error.is_error());
+    }
+}

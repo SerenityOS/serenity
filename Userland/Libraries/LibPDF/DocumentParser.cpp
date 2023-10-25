@@ -81,15 +81,19 @@ PDFErrorOr<Version> DocumentParser::parse_header()
     m_reader.move_by(5);
 
     char major_ver = m_reader.read();
-    if (major_ver != '1' && major_ver != '2')
-        return error(DeprecatedString::formatted("Unknown major version \"{}\"", major_ver));
+    if (major_ver != '1' && major_ver != '2') {
+        dbgln_if(PDF_DEBUG, "Unknown major version \"{}\"", major_ver);
+        return error("Unknown major version");
+    }
 
     if (m_reader.read() != '.')
         return error("Malformed PDF version");
 
     char minor_ver = m_reader.read();
-    if (minor_ver < '0' || minor_ver > '7')
-        return error(DeprecatedString::formatted("Unknown minor version \"{}\"", minor_ver));
+    if (minor_ver < '0' || minor_ver > '7') {
+        dbgln_if(PDF_DEBUG, "Unknown minor version \"{}\"", minor_ver);
+        return error("Unknown minor version");
+    }
 
     m_reader.consume_eol();
     m_reader.consume_whitespace();
