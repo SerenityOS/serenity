@@ -51,7 +51,8 @@ PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString c
     if (encoding_type == CommonNames::Crypt)
         return decode_crypt(bytes);
 
-    return Error::malformed_error("Unrecognized filter encoding {}", encoding_type);
+    dbgln_if(PDF_DEBUG, "Unrecognized filter encoding {}", encoding_type);
+    return Error::malformed_error("Unrecognized filter encoding");
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)

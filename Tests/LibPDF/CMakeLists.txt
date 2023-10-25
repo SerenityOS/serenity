@@ -11,6 +11,7 @@ set(TEST_FILES
     encryption_nocopy.pdf
     linearized.pdf
     non-linearized.pdf
+    oss-fuzz-testcase-62065.pdf
     password-is-sup.pdf
     type1.pdf
 )

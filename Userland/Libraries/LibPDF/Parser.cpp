@@ -101,7 +101,8 @@ PDFErrorOr<Value> Parser::parse_value(CanBeIndirectValue can_be_indirect_value)
     if (m_reader.matches('['))
         return TRY(parse_array());
 
-    return error(DeprecatedString::formatted("Unexpected char \"{}\"", m_reader.peek()));
+    dbgln_if(PDF_DEBUG, "Unexpected char \"{}\"", m_reader.peek());
+    return error("Unexpected character");
 }
 
 PDFErrorOr<Value> Parser::parse_possible_indirect_value_or_ref()

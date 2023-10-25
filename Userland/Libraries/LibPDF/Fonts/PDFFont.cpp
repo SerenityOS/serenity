@@ -37,14 +37,16 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
     auto subtype = TRY(dict->get_name(document, CommonNames::Subtype))->name();
 
     RefPtr<PDFFont> font;
-    if (subtype == "Type1")
+    if (subtype == "Type1") {
         font = adopt_ref(*new Type1Font());
-    else if (subtype == "TrueType")
+    } else if (subtype == "TrueType") {
         font = adopt_ref(*new TrueTypeFont());
-    else if (subtype == "Type0")
+    } else if (subtype == "Type0")
         font = adopt_ref(*new Type0Font());
-    else
-        return Error::internal_error("Unhandled font subtype: {}", subtype);
+    else {
+        dbgln_if(PDF_DEBUG, "Unhandled font subtype: {}", subtype);
+        return Error::internal_error("Unhandled font subtype");
+    }
 
     TRY(font->initialize(document, dict, font_size));
     return font.release_nonnull();
