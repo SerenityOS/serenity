@@ -24,7 +24,8 @@ TEST_CASE(tolerate_incorrect_sfnt_size)
 TEST_CASE(malformed_woff2)
 {
     Array test_inputs = {
-        TEST_INPUT("woff2/incorrect_compressed_size.woff2"sv)
+        TEST_INPUT("woff2/incorrect_compressed_size.woff2"sv),
+        TEST_INPUT("woff2/invalid_numtables.woff2"sv)
     };
 
     for (auto test_input : test_inputs) {

@@ -859,6 +859,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
     static constexpr size_t MAX_BUFFER_SIZE = 10 * MiB;
     if (header.length > TRY(stream.size()))
         return Error::from_string_literal("Invalid WOFF length");
+    if (header.num_tables == 0 || header.num_tables > NumericLimits<u16>::max() / 16)
+        return Error::from_string_literal("Invalid WOFF numTables");
     if (header.total_compressed_size > MAX_BUFFER_SIZE)
         return Error::from_string_literal("Compressed font is more than 10 MiB");
     if (header.meta_length == 0 && header.meta_offset != 0)
