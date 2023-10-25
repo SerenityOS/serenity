@@ -241,7 +241,7 @@ PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
     return make_object<NameObject>(builder.to_deprecated_string());
 }
 
-NonnullRefPtr<StringObject> Parser::parse_string()
+PDFErrorOr<NonnullRefPtr<StringObject>> Parser::parse_string()
 {
     ScopeGuard guard([&] { m_reader.consume_whitespace(); });
 
@@ -249,10 +249,10 @@ NonnullRefPtr<StringObject> Parser::parse_string()
     bool is_binary_string;
 
     if (m_reader.matches('(')) {
-        string = parse_literal_string();
+        string = TRY(parse_literal_string());
         is_binary_string = false;
     } else {
-        string = parse_hex_string();
+        string = TRY(parse_hex_string());
         is_binary_string = true;
     }
 
@@ -275,7 +275,7 @@ NonnullRefPtr<StringObject> Parser::parse_string()
     return string_object;
 }
 
-DeprecatedString Parser::parse_literal_string()
+PDFErrorOr<DeprecatedString> Parser::parse_literal_string()
 {
     VERIFY(m_reader.consume('('));
     StringBuilder builder;
@@ -299,7 +299,7 @@ DeprecatedString Parser::parse_literal_string()
             }
 
             if (m_reader.done())
-                return {};
+                return error("out of data in string literal after \\");
 
             auto ch = m_reader.consume();
             switch (ch) {
@@ -353,7 +353,7 @@ DeprecatedString Parser::parse_literal_string()
     return builder.to_deprecated_string();
 }
 
-DeprecatedString Parser::parse_hex_string()
+PDFErrorOr<DeprecatedString> Parser::parse_hex_string()
 {
     VERIFY(m_reader.consume('<'));
 
