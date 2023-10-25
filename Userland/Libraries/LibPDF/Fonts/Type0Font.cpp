@@ -143,7 +143,7 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
 
                 i++;
             } else {
-                auto array = value.get<NonnullRefPtr<Object>>()->cast<ArrayObject>();
+                auto array = TRY(document->resolve_to<ArrayObject>(value));
                 auto code = pending_code.release_value();
                 for (auto& width : *array)
                     widths.set(code++, width.to_int());
