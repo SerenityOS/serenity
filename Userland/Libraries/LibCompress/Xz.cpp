@@ -221,6 +221,124 @@ void XzFilterDelta::close()
 {
 }
 
+ErrorOr<NonnullOwnPtr<XzFilterBCJArm64>> XzFilterBCJArm64::create(MaybeOwned<Stream> stream, u32 start_offset)
+{
+    if (start_offset % INSTRUCTION_ALIGNMENT != 0)
+        return Error::from_string_literal("XZ BCJ filter offset is not a multiple of the alignment");
+
+    auto counting_stream = CountingStream { move(stream) };
+    auto input_buffer = TRY(CircularBuffer::create_empty(INSTRUCTION_SIZE));
+    auto output_buffer = TRY(CircularBuffer::create_empty(INSTRUCTION_SIZE));
+    auto filter = TRY(adopt_nonnull_own_or_enomem(new (nothrow) XzFilterBCJArm64(move(counting_stream), start_offset, move(input_buffer), move(output_buffer))));
+    return filter;
+}
+
+XzFilterBCJArm64::XzFilterBCJArm64(CountingStream stream, u32 start_offset, CircularBuffer input_buffer, CircularBuffer output_buffer)
+    : m_stream(move(stream))
+    , m_start_offset(start_offset)
+    , m_input_buffer(move(input_buffer))
+    , m_output_buffer(move(output_buffer))
+{
+}
+
+ErrorOr<Bytes> XzFilterBCJArm64::read_some(Bytes bytes)
+{
+    if (m_output_buffer.used_space() > 0) {
+        // If we still have buffered outgoing data, return that first.
+        return m_output_buffer.read(bytes);
+    }
+
+    while (m_input_buffer.used_space() < INSTRUCTION_SIZE) {
+        if (m_stream.is_eof()) {
+            // If we can't get any more input data, dump the buffered contents unchanged.
+            // We won't be able to assemble another instruction.
+            return m_input_buffer.read(bytes);
+        }
+
+        TRY(m_input_buffer.fill_from_stream(m_stream));
+    }
+
+    // The algorithm considers the offset of the current bytes to be the current program counter.
+    u32 stream_offset = m_start_offset + m_stream.read_bytes() - m_input_buffer.used_space();
+
+    Array<u8, INSTRUCTION_SIZE> buffer;
+    auto buffer_span = m_input_buffer.read(buffer);
+    VERIFY(buffer_span.size() == INSTRUCTION_SIZE);
+
+    if ((buffer[3] & 0b11111100) == 0b10010100) {
+        // The ARM64 instruction manual notes that BL is encoded as the following in a little-endian byte order:
+        //   100101XX XXXXXXX XXXXXXXX XXXXXXXX
+        // X is an immediate 26 bit value designating the program counter offset divided by 4.
+
+        stream_offset >>= 2;
+
+        u32 program_counter = ((buffer[3] & 0b11) << 24) | (buffer[2] << 16) | (buffer[1] << 8) | buffer[0];
+        u32 program_counter_offset = program_counter - stream_offset;
+
+        // Reassemble the instruction.
+        buffer[3] = ((program_counter_offset >> 24) & 0b11) | 0b10010100;
+        buffer[2] = program_counter_offset >> 16;
+        buffer[1] = program_counter_offset >> 8;
+        buffer[0] = program_counter_offset;
+    } else if ((buffer[3] & 0b10011111) == 0b10010000) {
+        // ADRP instructions are encoded in the following format:
+        //  1XX10000 YYYYYYYY YYYYYYYY YYYZZZZZ
+        // Y:X is an immediate 21 bit value designating the program counter offset divided by 4096 (i.e. a right shift by 12).
+        // Z is the register number.
+
+        stream_offset >>= 12;
+
+        auto register_number = buffer[0] & 0b11111;
+        u32 program_counter = (buffer[2] << 13) | (buffer[1] << 5) | ((buffer[0] >> 3) & 0b11100) | ((buffer[3] >> 5) & 0b11);
+
+        // Only offsets between -512MiB and +512MiB are processed, which is suppsoed to reduce false-positives.
+        // Note: The XZ reference implementation presents a human readable range, an unoptimized condition, and an optimized condition for this.
+        //       Since none of the three entirely match each other, our only option is to copy the exact formula that is used in practice.
+        if (!((program_counter + 0x00020000) & 0x001C0000)) {
+            u32 program_counter_offset = program_counter - stream_offset;
+
+            // Clip the immediate to 18 bits, then sign-extend to 21 bits.
+            program_counter_offset &= (1 << 18) - 1;
+            program_counter_offset |= (0 - (program_counter_offset & (1 << 17))) & (0b111 << 18);
+
+            // Reassemble the instruction.
+            buffer[3] = ((program_counter_offset & 0b11) << 5) | 0b10010000;
+            buffer[2] = program_counter_offset >> 13;
+            buffer[1] = program_counter_offset >> 5;
+            buffer[0] = ((program_counter_offset & 0b11100) << 3) | register_number;
+        }
+    }
+
+    // Write what we can into the Span, put the rest into the output buffer.
+    auto size_in_span = min(INSTRUCTION_SIZE, bytes.size());
+    bytes = bytes.trim(size_in_span);
+    buffer.span().trim(size_in_span).copy_to(bytes);
+    if (size_in_span < INSTRUCTION_SIZE) {
+        auto bytes_written_to_buffer = m_output_buffer.write(buffer.span().slice(size_in_span));
+        VERIFY(bytes_written_to_buffer == INSTRUCTION_SIZE - size_in_span);
+    }
+    return bytes;
+}
+
+ErrorOr<size_t> XzFilterBCJArm64::write_some(ReadonlyBytes)
+{
+    return EBADF;
+}
+
+bool XzFilterBCJArm64::is_eof() const
+{
+    return m_stream.is_eof();
+}
+
+bool XzFilterBCJArm64::is_open() const
+{
+    return m_stream.is_open();
+}
+
+void XzFilterBCJArm64::close()
+{
+}
+
 ErrorOr<NonnullOwnPtr<XzDecompressor>> XzDecompressor::create(MaybeOwned<Stream> stream)
 {
     auto counting_stream = TRY(try_make<CountingStream>(move(stream)));
@@ -416,6 +534,25 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
             TRY(properties->validate());
 
             new_block_stream = TRY(Lzma2Decompressor::create_from_raw_stream(move(new_block_stream), properties->dictionary_size()));
+            continue;
+        }
+
+        // 5.3.2. Branch/Call/Jump Filters for Executables
+        if (filter.id == 0x0a) {
+            if (filter.last)
+                return Error::from_string_literal("XZ BCJ filter can only be a non-last filter");
+
+            u32 start_offset = 0;
+            if (filter.properties.size() == 0) {
+                // No start offset given.
+            } else if (filter.properties.size() == sizeof(XzFilterBCJProperties)) {
+                auto const* properties = reinterpret_cast<XzFilterBCJProperties*>(filter.properties.data());
+                start_offset = properties->start_offset;
+            } else {
+                return Error::from_string_literal("XZ BCJ filter has an unknown properties size");
+            }
+
+            new_block_stream = TRY(XzFilterBCJArm64::create(move(new_block_stream), start_offset));
             continue;
         }
 

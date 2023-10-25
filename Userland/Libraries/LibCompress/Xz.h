@@ -99,6 +99,34 @@ struct [[gnu::packed]] XzFilterLzma2Properties {
 };
 static_assert(sizeof(XzFilterLzma2Properties) == 1);
 
+// 5.3.2. Branch/Call/Jump Filters for Executables
+struct [[gnu::packed]] XzFilterBCJProperties {
+    u32 start_offset;
+};
+static_assert(sizeof(XzFilterBCJProperties) == 4);
+
+class XzFilterBCJArm64 : public Stream {
+public:
+    static ErrorOr<NonnullOwnPtr<XzFilterBCJArm64>> create(MaybeOwned<Stream>, u32 start_offset);
+
+    virtual ErrorOr<Bytes> read_some(Bytes) override;
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
+
+private:
+    static constexpr size_t INSTRUCTION_ALIGNMENT = 4;
+    static constexpr size_t INSTRUCTION_SIZE = 4;
+
+    XzFilterBCJArm64(CountingStream, u32 start_offset, CircularBuffer input_buffer, CircularBuffer output_buffer);
+
+    CountingStream m_stream;
+    u32 m_start_offset;
+    CircularBuffer m_input_buffer;
+    CircularBuffer m_output_buffer;
+};
+
 // 5.3.3. Delta
 struct [[gnu::packed]] XzFilterDeltaProperties {
     u8 encoded_distance;
