@@ -260,7 +260,7 @@ PDFErrorOr<Page> Document::get_page(u32 index)
     int rotate = 0;
     auto maybe_rotate = TRY(get_inheritable_value(CommonNames::Rotate, raw_page_object));
     if (maybe_rotate.has_value()) {
-        rotate = maybe_rotate.value().to_int();
+        rotate = TRY(resolve_to<int>(maybe_rotate.value()));
         VERIFY(rotate % 90 == 0);
     }
 
