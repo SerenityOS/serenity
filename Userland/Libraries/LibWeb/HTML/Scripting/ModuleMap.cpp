@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2022-2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,12 +42,14 @@ Optional<ModuleMap::Entry> ModuleMap::get(AK::URL const& url, DeprecatedString c
 
 AK::HashSetResult ModuleMap::set(AK::URL const& url, DeprecatedString const& type, Entry entry)
 {
+    auto value = m_values.set({ url, type }, entry);
+
     auto callbacks = m_callbacks.get({ url, type });
     if (callbacks.has_value())
         for (auto const& callback : *callbacks)
             callback(entry);
 
-    return m_values.set({ url, type }, entry);
+    return value;
 }
 
 void ModuleMap::wait_for_change(AK::URL const& url, DeprecatedString const& type, Function<void(Entry)> callback)
