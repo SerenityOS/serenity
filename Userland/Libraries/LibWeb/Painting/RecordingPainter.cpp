@@ -293,9 +293,6 @@ CommandResult PaintInnerBoxShadow::execute(CommandExecutionState& state) const
 
 CommandResult PaintTextShadow::execute(CommandExecutionState& state) const
 {
-    if (state.would_be_fully_clipped_by_painter(text_rect))
-        return CommandResult::Continue;
-
     // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
     auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, shadow_bounding_rect.size());
     if (maybe_shadow_bitmap.is_error()) {
@@ -758,8 +755,8 @@ void RecordingPainter::paint_text_shadow(int blur_radius, Gfx::IntRect bounding_
 {
     push_command(PaintTextShadow {
         .blur_radius = blur_radius,
-        .shadow_bounding_rect = state().translation.map(bounding_rect),
-        .text_rect = state().translation.map(text_rect),
+        .shadow_bounding_rect = bounding_rect,
+        .text_rect = text_rect,
         .text = String::from_utf8(text.as_string()).release_value_but_fixme_should_propagate_errors(),
         .font = font,
         .color = color,

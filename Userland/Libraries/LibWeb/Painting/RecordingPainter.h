@@ -163,7 +163,7 @@ struct PaintTextShadow {
     int fragment_baseline;
     Gfx::IntPoint draw_location;
 
-    [[nodiscard]] Gfx::IntRect bounding_rect() const { return shadow_bounding_rect; }
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return { draw_location, shadow_bounding_rect.size() }; }
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
