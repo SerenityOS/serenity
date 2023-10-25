@@ -111,10 +111,9 @@ static i16 be_i16(u8 const* ptr)
 
 static u16 pow_2_less_than_or_equal(u16 x)
 {
-    u16 result = 1;
-    while (result < x)
-        result <<= 1;
-    return result;
+    VERIFY(x > 0);
+    VERIFY(x < 32769);
+    return 1 << (sizeof(u16) * 8 - count_leading_zeroes<u16>(x - 1));
 }
 
 enum class TransformationVersion {

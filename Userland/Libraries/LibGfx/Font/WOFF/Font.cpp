@@ -63,10 +63,9 @@ static constexpr u32 WOFF_SIGNATURE = 0x774F4646;
 
 static u16 pow_2_less_than_or_equal(u16 x)
 {
-    u16 result = 1;
-    while (result < x)
-        result <<= 1;
-    return result;
+    VERIFY(x > 0);
+    VERIFY(x < 32769);
+    return 1 << (sizeof(u16) * 8 - count_leading_zeroes<u16>(x - 1));
 }
 
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(DeprecatedString path, unsigned int index)
