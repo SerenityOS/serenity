@@ -2196,11 +2196,12 @@ CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem con
         return should_treat_height_as_auto(item.box, available_space_for_item);
     }();
 
-    if (should_treat_preferred_size_as_auto) {
-        return item.add_margin_box_sizes(calculate_max_content_size(item, dimension), dimension, m_state);
+    auto preferred_size = get_item_preferred_size(item, dimension);
+    if (should_treat_preferred_size_as_auto || preferred_size.is_fit_content()) {
+        auto fit_content_size = dimension == GridDimension::Column ? calculate_fit_content_width(item.box, available_space_for_item) : calculate_fit_content_height(item.box, available_space_for_item);
+        return item.add_margin_box_sizes(fit_content_size, dimension, m_state);
     }
 
-    auto preferred_size = get_item_preferred_size(item, dimension);
     auto containing_block_size = containing_block_size_for_item(item, dimension);
     return item.add_margin_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
 }
