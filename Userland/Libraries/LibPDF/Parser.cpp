@@ -380,7 +380,9 @@ PDFErrorOr<DeprecatedString> Parser::parse_hex_string()
                     builder.append(static_cast<char>(hex_value));
                     return builder.to_deprecated_string();
                 }
-                VERIFY(isxdigit(ch));
+
+                if (!isxdigit(ch))
+                    return error("character in hex string isn't hex digit");
 
                 hex_value *= 16;
                 if (ch <= '9') {
