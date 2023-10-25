@@ -14,6 +14,7 @@ interface WheelEvent : MouseEvent {
     readonly attribute unsigned long deltaMode;
 };
 
+// https://www.w3.org/TR/uievents/#idl-wheeleventinit
 dictionary WheelEventInit : MouseEventInit {
     double deltaX = 0;
     double deltaY = 0;

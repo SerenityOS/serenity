@@ -1,6 +1,7 @@
 #import <DOM/Node.idl>
 #import <DOM/NodeList.idl>
 
+// https://dom.spec.whatwg.org/#interface-mutationrecord
 [Exposed=Window]
 interface MutationRecord {
 

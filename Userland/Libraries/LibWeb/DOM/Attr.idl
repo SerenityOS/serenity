@@ -1,6 +1,7 @@
 #import <DOM/Node.idl>
 #import <DOM/Element.idl>
 
+// https://dom.spec.whatwg.org/#interface-attr
 [Exposed=Window]
 interface Attr : Node {
     readonly attribute DOMString? namespaceURI;
@@ -11,5 +12,5 @@ interface Attr : Node {
 
     readonly attribute Element? ownerElement;
 
-    readonly attribute boolean specified;
+    readonly attribute boolean specified; // useless; always returns true
 };

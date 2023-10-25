@@ -15,10 +15,17 @@ dictionary ReadableStreamGetReaderOptions {
 interface ReadableStream {
     constructor(optional object underlyingSource, optional QueuingStrategy strategy = {});
 
+    // FIXME: static ReadableStream from(any asyncIterable);
+
     readonly attribute boolean locked;
 
     Promise<undefined> cancel(optional any reason);
     ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions options = {});
+    // FIXME: ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
+    // FIXME: Promise<undefined> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
+    // FIXME: sequence<ReadableStream> tee();
+
+    // FIXME: async iterable<any>(optional ReadableStreamIteratorOptions options = {});
 };
 
 typedef (ReadableStreamDefaultReader or ReadableStreamBYOBReader) ReadableStreamReader;

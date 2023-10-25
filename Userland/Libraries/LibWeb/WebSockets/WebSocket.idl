@@ -9,13 +9,15 @@ interface WebSocket : EventTarget {
 
     readonly attribute USVString url;
 
+    // ready state
     const unsigned short CONNECTING = 0;
     const unsigned short OPEN = 1;
     const unsigned short CLOSING = 2;
     const unsigned short CLOSED = 3;
     readonly attribute unsigned short readyState;
-    // readonly attribute unsigned long long bufferedAmount;
+    // FIXME: readonly attribute unsigned long long bufferedAmount;
 
+    // networking
     attribute EventHandler onopen;
     attribute EventHandler onerror;
     attribute EventHandler onclose;
@@ -23,6 +25,7 @@ interface WebSocket : EventTarget {
     readonly attribute DOMString protocol;
     undefined close(optional unsigned short code, optional USVString reason);
 
+    // messaging
     attribute EventHandler onmessage;
     attribute DOMString binaryType;
     undefined send((BufferSource or Blob or USVString) data);

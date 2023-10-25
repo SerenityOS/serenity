@@ -2,6 +2,7 @@
 #import <Fetch/BodyInit.idl>
 #import <Fetch/Headers.idl>
 
+// https://fetch.spec.whatwg.org/#response-class
 [Exposed=(Window,Worker)]
 interface Response {
     constructor(optional BodyInit? body = null, optional ResponseInit init = {});

@@ -1,6 +1,7 @@
 #import <DOM/Node.idl>
 #import <DOM/NodeFilter.idl>
 
+// https://dom.spec.whatwg.org/#interface-nodeiterator
 [Exposed=Window]
 interface NodeIterator {
 

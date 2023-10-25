@@ -1,11 +1,12 @@
 #import <Crypto/SubtleCrypto.idl>
 
+// https://w3c.github.io/webcrypto/#crypto-interface
 [Exposed=(Window,Worker)]
 interface Crypto {
-  [SecureContext] readonly attribute SubtleCrypto subtle;
+    [SecureContext] readonly attribute SubtleCrypto subtle;
 
-  // FIXME: the argument and the return value should be of type ArrayBufferView
-  any getRandomValues(any array);
+    // FIXME: the argument and the return value should be of type ArrayBufferView
+    any getRandomValues(any array);
 
-  [SecureContext] DOMString randomUUID();
+    [SecureContext] DOMString randomUUID();
 };
