@@ -93,7 +93,7 @@ void Compiler::compile_set_local(Bytecode::Op::SetLocal const& op)
 
 void Compiler::compile_jump(Bytecode::Op::Jump const& op)
 {
-    m_assembler.jump(const_cast<Bytecode::BasicBlock&>(op.true_target()->block()));
+    m_assembler.jump(label_for(op.true_target()->block()));
 }
 
 static bool cxx_to_boolean(VM&, Value value)
@@ -155,9 +155,12 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 
     compile_to_boolean(GPR0, GPR1);
 
-    m_assembler.jump_conditional(GPR0,
-        const_cast<Bytecode::BasicBlock&>(op.true_target()->block()),
-        const_cast<Bytecode::BasicBlock&>(op.false_target()->block()));
+    m_assembler.jump_if_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm32(0),
+        label_for(op.false_target()->block()));
+
+    m_assembler.jump(label_for(op.true_target()->block()));
 }
 
 [[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
@@ -365,7 +368,7 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm64(0));
     if (finalizer.has_value())
-        const_cast<Bytecode::BasicBlock&>(finalizer.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
+        block_data_for(finalizer.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
     m_assembler.push(Assembler::Operand::Register(GPR0));
 
     // push handler (patched later)
@@ -373,7 +376,7 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm64(0));
     if (handler.has_value())
-        const_cast<Bytecode::BasicBlock&>(handler.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
+        block_data_for(handler.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
     m_assembler.push(Assembler::Operand::Register(GPR0));
 
     // push valid
@@ -398,7 +401,7 @@ void Compiler::compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext con
 {
     push_unwind_context(true, op.handler_target(), op.finalizer_target());
 
-    m_assembler.jump(const_cast<Bytecode::BasicBlock&>(op.entry_point().block()));
+    m_assembler.jump(label_for(op.entry_point().block()));
 }
 
 void Compiler::compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&)
@@ -839,7 +842,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
     compiler.push_unwind_context(false, {}, {});
 
     for (auto& block : bytecode_executable.basic_blocks) {
-        block->offset = compiler.m_output.size();
+        compiler.block_data_for(*block).start_offset = compiler.m_output.size();
         auto it = Bytecode::InstructionStreamIterator(block->instruction_stream());
         while (!it.at_end()) {
             auto const& op = *it;
@@ -962,18 +965,13 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
     }
 
     for (auto& block : bytecode_executable.basic_blocks) {
-        // Patch up all the jumps
-        for (auto& jump : block->jumps_to_here) {
-            auto offset = block->offset - jump - 4;
-            compiler.m_output[jump + 0] = (offset >> 0) & 0xff;
-            compiler.m_output[jump + 1] = (offset >> 8) & 0xff;
-            compiler.m_output[jump + 2] = (offset >> 16) & 0xff;
-            compiler.m_output[jump + 3] = (offset >> 24) & 0xff;
-        }
+        auto& block_data = compiler.block_data_for(*block);
+
+        block_data.label.link_to(compiler.m_assembler, block_data.start_offset);
 
         // Patch up all the absolute references
-        for (auto& absolute_reference : block->absolute_references_to_here) {
-            auto offset = bit_cast<u64>(executable_memory) + block->offset;
+        for (auto& absolute_reference : block_data.absolute_references_to_here) {
+            auto offset = bit_cast<u64>(executable_memory) + block_data.start_offset;
             compiler.m_output[absolute_reference + 0] = (offset >> 0) & 0xff;
             compiler.m_output[absolute_reference + 1] = (offset >> 8) & 0xff;
             compiler.m_output[absolute_reference + 2] = (offset >> 16) & 0xff;

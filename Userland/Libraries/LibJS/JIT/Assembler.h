@@ -188,7 +188,12 @@ struct Assembler {
 
         void link(Assembler& assembler)
         {
-            offset_of_label_in_instruction_stream = assembler.m_output.size();
+            link_to(assembler, assembler.m_output.size());
+        }
+
+        void link_to(Assembler& assembler, size_t link_offset)
+        {
+            offset_of_label_in_instruction_stream = link_offset;
             for (auto offset_in_instruction_stream : jump_slot_offsets_in_instruction_stream) {
                 auto offset = offset_of_label_in_instruction_stream - offset_in_instruction_stream;
                 auto jump_slot = offset_in_instruction_stream - 4;
