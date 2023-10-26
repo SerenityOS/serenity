@@ -108,7 +108,12 @@ struct Assembler {
         emit8(count.offset_or_immediate);
     }
 
-    void mov(Operand dst, Operand src)
+    enum class Patchable {
+        Yes,
+        No,
+    };
+
+    void mov(Operand dst, Operand src, Patchable patchable = Patchable::No)
     {
         if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
             if (src.reg == dst.reg)
@@ -122,9 +127,9 @@ struct Assembler {
         }
 
         if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm64) {
-            if (src.offset_or_immediate == 0) {
+            if (patchable == Patchable::No && src.offset_or_immediate == 0) {
                 // xor dst, dst
-                emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+                emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? (1 << 0 | 1 << 2) : 0));
                 emit8(0x31);
                 emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(dst.reg));
                 return;
