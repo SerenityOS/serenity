@@ -468,6 +468,10 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
         // else return false;
 
         auto true_case = m_assembler.make_label();
+
+        m_assembler.sign_extend_32_to_64_bits(ARG1);
+        m_assembler.sign_extend_32_to_64_bits(ARG2);
+
         m_assembler.jump_if_less_than(
             Assembler::Operand::Register(ARG1),
             Assembler::Operand::Register(ARG2),
