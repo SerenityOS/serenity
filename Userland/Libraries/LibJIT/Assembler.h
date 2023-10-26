@@ -281,8 +281,53 @@ struct Assembler {
         }
     }
 
+    void test(Operand lhs, Operand rhs)
+    {
+        if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Reg) {
+            emit8(0x48
+                | ((to_underlying(rhs.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x85);
+            emit8(0xc0 | (encode_reg(rhs.reg) << 3) | encode_reg(lhs.reg));
+        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm32) {
+            emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0xf7);
+            emit8(0xc0 | encode_reg(lhs.reg));
+            emit32(rhs.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    void jump_if_zero(Operand reg, Label& label)
+    {
+        test(reg, reg);
+
+        // jz label (RIP-relative 32-bit offset)
+        emit8(0x0f);
+        emit8(0x84);
+        emit32(0xdeadbeef);
+        label.add_jump(m_output.size());
+    }
+
+    void jump_if_not_zero(Operand reg, Label& label)
+    {
+        test(reg, reg);
+
+        // jnz label (RIP-relative 32-bit offset)
+        emit8(0x0f);
+        emit8(0x85);
+        emit32(0xdeadbeef);
+        label.add_jump(m_output.size());
+    }
+
     void jump_if_equal(Operand lhs, Operand rhs, Label& label)
     {
+        if (rhs.type == Operand::Type::Imm32 && rhs.offset_or_immediate == 0) {
+            jump_if_zero(lhs, label);
+            return;
+        }
+
         cmp(lhs, rhs);
 
         // je label (RIP-relative 32-bit offset)
@@ -294,6 +339,11 @@ struct Assembler {
 
     void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
     {
+        if (rhs.type == Operand::Type::Imm32 && rhs.offset_or_immediate == 0) {
+            jump_if_not_zero(lhs, label);
+            return;
+        }
+
         cmp(lhs, rhs);
 
         // jne label (RIP-relative 32-bit offset)
