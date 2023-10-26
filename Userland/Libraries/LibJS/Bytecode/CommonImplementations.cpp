@@ -202,29 +202,24 @@ ThrowCompletionOr<Value> perform_call(Interpreter& interpreter, Value this_value
     return return_value;
 }
 
-static Completion throw_type_error_for_callee(Bytecode::Interpreter& interpreter, auto& call, StringView callee_type)
+static Completion throw_type_error_for_callee(Bytecode::Interpreter& interpreter, Value callee, StringView callee_type, Optional<StringTableIndex> const& expression_string)
 {
     auto& vm = interpreter.vm();
-    auto callee = interpreter.reg(call.callee());
 
-    if (call.expression_string().has_value())
-        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(call.expression_string()->value()));
+    if (expression_string.has_value())
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(expression_string->value()));
 
     return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), callee_type);
 }
 
-template<typename InstructionType>
-ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter, InstructionType const& call, Value callee)
+ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter, Value callee, Op::CallType call_type, Optional<StringTableIndex> const& expression_string)
 {
-    if (call.call_type() == Op::CallType::Call && !callee.is_function())
-        return throw_type_error_for_callee(interpreter, call, "function"sv);
-    if (call.call_type() == Op::CallType::Construct && !callee.is_constructor())
-        return throw_type_error_for_callee(interpreter, call, "constructor"sv);
+    if (call_type == Op::CallType::Call && !callee.is_function())
+        return throw_type_error_for_callee(interpreter, callee, "function"sv, expression_string);
+    if (call_type == Op::CallType::Construct && !callee.is_constructor())
+        return throw_type_error_for_callee(interpreter, callee, "constructor"sv, expression_string);
     return {};
 }
-
-template ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, Op::Call const&, Value);
-template ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, Op::CallWithArgumentArray const&, Value);
 
 ThrowCompletionOr<Value> typeof_variable(VM& vm, DeprecatedFlyString const& string)
 {
