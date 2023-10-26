@@ -159,14 +159,12 @@ private:
     };
     static_assert(AssertSize<HorizontalHeaderTable, 36>());
 
-    HorizontalHeaderTable const& header() const { return *bit_cast<HorizontalHeaderTable const*>(m_slice.data()); }
-
-    Hhea(ReadonlyBytes slice)
-        : m_slice(slice)
+    Hhea(HorizontalHeaderTable const& horizontal_header_table)
+        : m_data(horizontal_header_table)
     {
     }
 
-    ReadonlyBytes m_slice;
+    HorizontalHeaderTable const& m_data;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/maxp
