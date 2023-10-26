@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-24 23:32+0300\n"
+"POT-Creation-Date: 2023-10-26 15:17+0300\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -37,7 +37,7 @@ msgstr "Annuler"
 msgid "Close _Other Tabs"
 msgstr "Fermer les _autres onglets"
 
-#: shortcuts-dialog.blp:63
+#: shortcuts-dialog.blp:62
 msgid "Close current tab"
 msgstr "Fermer l‘onglet actif"
 
@@ -45,7 +45,7 @@ msgstr "Fermer l‘onglet actif"
 msgid "Confirm"
 msgstr "Confirmer"
 
-#: shortcuts-dialog.blp:97 shortcuts-dialog.blp:99
+#: shortcuts-dialog.blp:94
 msgid "Developer Tools"
 msgstr "Outils de développement"
 
@@ -61,15 +61,15 @@ msgstr "Entrer l‘expression JavaScript à évaluer"
 msgid "Failed to pick file"
 msgstr "Impossible d‘ouvrir le fichier"
 
-#: shortcuts-dialog.blp:50
+#: shortcuts-dialog.blp:49
 msgid "Focus location entry"
 msgstr "Donner le focus à la barre d‘adresse"
 
-#: shortcuts-dialog.blp:10
+#: shortcuts-dialog.blp:9
 msgid "General"
 msgstr "Général"
 
-#: Tab.cpp:48 shortcuts-dialog.blp:102 window.blp:16
+#: Tab.cpp:48 shortcuts-dialog.blp:97 window.blp:16
 msgid "JavaScript Console"
 msgstr "Console JavaScript"
 
@@ -79,8 +79,9 @@ msgid ""
 "engine, developed by a large team of contributors as a part of the "
 "SerenityOS project."
 msgstr ""
-"Ladybird est un navigateur basé sur le moteur de rendu LibWeb et le moteur JavaScript "
-"LibJS, développé par une équipe de contributeurs appartenant au projet SerenityOS."
+"Ladybird est un navigateur basé sur le moteur de rendu LibWeb et le moteur "
+"JavaScript LibJS, développé par une équipe de contributeurs appartenant au "
+"projet SerenityOS."
 
 #: window.blp:218
 msgid "Main Menu"
@@ -94,15 +95,15 @@ msgstr "Naviguer vers la page précédente"
 msgid "Navigate Forward"
 msgstr "Naviguer vers la page suivante"
 
-#: shortcuts-dialog.blp:38
+#: shortcuts-dialog.blp:37
 msgid "Navigate back"
 msgstr "Page précédente"
 
-#: shortcuts-dialog.blp:42
+#: shortcuts-dialog.blp:41
 msgid "Navigate forward"
 msgstr "Page suivante"
 
-#: shortcuts-dialog.blp:35
+#: shortcuts-dialog.blp:34
 msgid "Navigation"
 msgstr "Navigation"
 
@@ -114,19 +115,19 @@ msgstr "Nouvel Onglet"
 msgid "New _Incognito Window"
 msgstr "Nouvelle Fenêtre de Navigation _Privée"
 
-#: shortcuts-dialog.blp:17
+#: shortcuts-dialog.blp:16
 msgid "New incognito window"
 msgstr "Nouvelle fenêtre privée"
 
-#: Window.cpp:101 shortcuts-dialog.blp:59
+#: Window.cpp:101 shortcuts-dialog.blp:58
 msgid "New tab"
 msgstr "Nouvel onglet"
 
-#: shortcuts-dialog.blp:13
+#: shortcuts-dialog.blp:12
 msgid "New window"
 msgstr "Nouvelle fenêtre"
 
-#: shortcuts-dialog.blp:67
+#: shortcuts-dialog.blp:66
 msgid "Next tab"
 msgstr "Onglet suivant"
 
@@ -134,7 +135,7 @@ msgstr "Onglet suivant"
 msgid "OK"
 msgstr "OK"
 
-#: shortcuts-dialog.blp:21
+#: shortcuts-dialog.blp:20
 msgid "Open file"
 msgstr "Ouvrir un fichier"
 
@@ -143,11 +144,11 @@ msgstr "Ouvrir un fichier"
 msgid "P_in"
 msgstr "_Épingler"
 
-#: shortcuts-dialog.blp:71
+#: shortcuts-dialog.blp:70
 msgid "Previous tab"
 msgstr "Onglet précédent"
 
-#: shortcuts-dialog.blp:29
+#: shortcuts-dialog.blp:28
 msgid "Quit"
 msgstr "Quitter"
 
@@ -155,11 +156,11 @@ msgstr "Quitter"
 msgid "Reload Page"
 msgstr "Recharger la Page"
 
-#: shortcuts-dialog.blp:46
+#: shortcuts-dialog.blp:45
 msgid "Reload current page"
 msgstr "Actualiser"
 
-#: shortcuts-dialog.blp:89
+#: shortcuts-dialog.blp:88
 msgid "Reset zoom"
 msgstr "Taille réelle"
 
@@ -189,11 +190,7 @@ msgstr "Site web de SerenityOS"
 msgid "Sergey Bugaev"
 msgstr "Sergey Bugaev"
 
-#: shortcuts-dialog.blp:8
-msgid "Shortcuts"
-msgstr "Raccourcis"
-
-#: shortcuts-dialog.blp:25
+#: shortcuts-dialog.blp:24
 msgid "Show shortcuts"
 msgstr "Afficher les raccourcis"
 
@@ -201,7 +198,7 @@ msgstr "Afficher les raccourcis"
 msgid "Tab Overview"
 msgstr "Aperçu de l‘Onglet"
 
-#: shortcuts-dialog.blp:56
+#: shortcuts-dialog.blp:55
 msgid "Tabs"
 msgstr "Onglets"
 
@@ -222,7 +219,7 @@ msgstr "La page web demande une saisie:"
 msgid "Web page asks you to confirm:"
 msgstr "La page web demande confirmation:"
 
-#: shortcuts-dialog.blp:77
+#: shortcuts-dialog.blp:76
 msgid "Zoom"
 msgstr "Zoom"
 
@@ -234,11 +231,11 @@ msgstr "Zoom avant"
 msgid "Zoom Out"
 msgstr "Zoom arrière"
 
-#: shortcuts-dialog.blp:80
+#: shortcuts-dialog.blp:79
 msgid "Zoom in"
 msgstr "Zoom avant"
 
-#: shortcuts-dialog.blp:85
+#: shortcuts-dialog.blp:84
 msgid "Zoom out"
 msgstr "Zoom arrière"
 
@@ -293,3 +290,6 @@ msgstr "© 2023 Les développeurs de SerenityOS"
 #: window.blp:55
 msgid "…will appear here, once we implement them :^)"
 msgstr "…s‘afficheront ici, quand on les aura implémentés :^)"
+
+#~ msgid "Shortcuts"
+#~ msgstr "Raccourcis"
