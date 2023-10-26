@@ -87,32 +87,33 @@ ErrorOr<Hhea> Hhea::from_slice(ReadonlyBytes slice)
     if (slice.size() < sizeof(HorizontalHeaderTable))
         return Error::from_string_literal("Could not load Hhea: Not enough data");
 
-    return Hhea(slice);
+    auto const& horizontal_header_table = *bit_cast<HorizontalHeaderTable const*>(slice.data());
+    return Hhea(horizontal_header_table);
 }
 
 i16 Hhea::ascender() const
 {
-    return header().ascender;
+    return m_data.ascender;
 }
 
 i16 Hhea::descender() const
 {
-    return header().descender;
+    return m_data.descender;
 }
 
 i16 Hhea::line_gap() const
 {
-    return header().line_gap;
+    return m_data.line_gap;
 }
 
 u16 Hhea::advance_width_max() const
 {
-    return header().advance_width_max;
+    return m_data.advance_width_max;
 }
 
 u16 Hhea::number_of_h_metrics() const
 {
-    return header().number_of_h_metrics;
+    return m_data.number_of_h_metrics;
 }
 
 ErrorOr<Maxp> Maxp::from_slice(ReadonlyBytes slice)
