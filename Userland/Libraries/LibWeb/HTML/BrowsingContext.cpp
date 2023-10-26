@@ -728,40 +728,6 @@ BrowsingContext const* BrowsingContext::the_one_permitted_sandboxed_navigator() 
     return nullptr;
 }
 
-void BrowsingContext::append_child(JS::NonnullGCPtr<BrowsingContext> child)
-{
-    VERIFY(!child->m_parent);
-
-    if (m_last_child)
-        m_last_child->m_next_sibling = child;
-    child->m_previous_sibling = m_last_child;
-    child->m_parent = this;
-    m_last_child = child;
-    if (!m_first_child)
-        m_first_child = m_last_child;
-}
-
-void BrowsingContext::remove_child(JS::NonnullGCPtr<BrowsingContext> child)
-{
-    VERIFY(child->m_parent.ptr() == this);
-
-    if (m_first_child == child)
-        m_first_child = child->m_next_sibling;
-
-    if (m_last_child == child)
-        m_last_child = child->m_previous_sibling;
-
-    if (child->m_next_sibling)
-        child->m_next_sibling->m_previous_sibling = child->m_previous_sibling;
-
-    if (child->m_previous_sibling)
-        child->m_previous_sibling->m_next_sibling = child->m_next_sibling;
-
-    child->m_next_sibling = nullptr;
-    child->m_previous_sibling = nullptr;
-    child->m_parent = nullptr;
-}
-
 JS::GCPtr<BrowsingContext> BrowsingContext::first_child() const
 {
     return m_first_child;
