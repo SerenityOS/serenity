@@ -122,6 +122,13 @@ struct Assembler {
         }
 
         if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm64) {
+            if (src.offset_or_immediate == 0) {
+                // xor dst, dst
+                emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+                emit8(0x31);
+                emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(dst.reg));
+                return;
+            }
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0xb8 | encode_reg(dst.reg));
             emit64(src.offset_or_immediate);
