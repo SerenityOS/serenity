@@ -176,15 +176,13 @@ public:
     u16 num_glyphs() const;
 
 private:
-    struct [[gnu::packed]] MaximumProfileVersion0_5 {
+    struct [[gnu::packed]] Version0_5 {
         Version16Dot16 version;
         BigEndian<u16> num_glyphs;
     };
-    static_assert(AssertSize<MaximumProfileVersion0_5, 6>());
+    static_assert(AssertSize<Version0_5, 6>());
 
-    struct [[gnu::packed]] MaximumProfileVersion1_0 {
-        Version16Dot16 version;
-        BigEndian<u16> num_glyphs;
+    struct [[gnu::packed]] Version1_0 : Version0_5 {
         BigEndian<u16> max_points;
         BigEndian<u16> max_contours;
         BigEndian<u16> max_composite_points;
@@ -199,16 +197,16 @@ private:
         BigEndian<u16> max_component_elements;
         BigEndian<u16> max_component_depths;
     };
-    static_assert(AssertSize<MaximumProfileVersion1_0, 32>());
+    static_assert(AssertSize<Version1_0, 32>());
 
-    Maxp(Variant<MaximumProfileVersion0_5 const*, MaximumProfileVersion1_0 const*> data)
+    Maxp(Variant<Version0_5 const*, Version1_0 const*> data)
         : m_data(move(data))
     {
         VERIFY(m_data.visit([](auto const* any) { return any != nullptr; }));
     }
 
     // NOTE: Whichever pointer is present is non-null, but Variant can't contain references.
-    Variant<MaximumProfileVersion0_5 const*, MaximumProfileVersion1_0 const*> m_data;
+    Variant<Version0_5 const*, Version1_0 const*> m_data;
 };
 
 struct GlyphHorizontalMetrics {
@@ -325,15 +323,13 @@ private:
     };
     static_assert(AssertSize<Version0, 78>());
 
-    struct [[gnu::packed]] Version1 {
-        Version0 version0;
+    struct [[gnu::packed]] Version1 : Version0 {
         BigEndian<u32> ul_code_page_range1;
         BigEndian<u32> ul_code_page_range2;
     };
     static_assert(AssertSize<Version1, 86>());
 
-    struct [[gnu::packed]] Version2 {
-        Version1 version1;
+    struct [[gnu::packed]] Version2 : Version1 {
         BigEndian<i16> sx_height;
         BigEndian<i16> s_cap_height;
         BigEndian<u16> us_default_char;
@@ -698,14 +694,14 @@ static_assert(AssertSize<ClassDefFormat2, 4>());
 class GPOS {
 public:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#gpos-header
-    struct [[gnu::packed]] GPOSHeader {
+    struct [[gnu::packed]] Version1_0 {
         BigEndian<u16> major_version;
         BigEndian<u16> minor_version;
         Offset16 script_list_offset;
         Offset16 feature_list_offset;
         Offset16 lookup_list_offset;
     };
-    static_assert(AssertSize<GPOSHeader, 10>());
+    static_assert(AssertSize<Version1_0, 10>());
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-1-adjustments-for-glyph-pairs
     struct [[gnu::packed]] PairPosFormat1 {
@@ -755,7 +751,7 @@ public:
         Y_ADVANCE_DEVICE = 0x0080,
     };
 
-    GPOSHeader const& header() const { return *bit_cast<GPOSHeader const*>(m_slice.data()); }
+    Version1_0 const& header() const { return *bit_cast<Version1_0 const*>(m_slice.data()); }
 
     Optional<i16> glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const;
 
