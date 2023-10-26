@@ -320,6 +320,14 @@ struct Assembler {
         label.add_jump(m_output.size());
     }
 
+    void sign_extend_32_to_64_bits(Reg reg)
+    {
+        // movsxd (reg as 64-bit), (reg as 32-bit)
+        emit8(0x48 | ((to_underlying(reg) >= 8) ? 1 << 0 : 0));
+        emit8(0x63);
+        emit8(0xc0 | (encode_reg(reg) << 3) | encode_reg(reg));
+    }
+
     void bitwise_and(Operand dst, Operand src)
     {
         // and dst,src
