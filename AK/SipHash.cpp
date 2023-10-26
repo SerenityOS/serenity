@@ -52,10 +52,11 @@ static void do_siphash(ReadonlyBytes input, u128 key, Bytes output)
     u64 v1 = 0x646f72616e646f6dull;
     u64 v2 = 0x6c7967656e657261ull;
     u64 v3 = 0x7465646279746573ull;
-    auto const left = input.size() & 7;
+    u64 const length = input.size();
+    auto const left = length & 7;
     // The end of 64-bit blocks.
-    auto const block_end = input.size() - (input.size() % sizeof(u64));
-    u64 b = input.size() << 56;
+    auto const block_end = length - (length % sizeof(u64));
+    u64 b = length << 56;
     v3 ^= key.high();
     v2 ^= key.low();
     v1 ^= key.high();
