@@ -155,9 +155,8 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 
     compile_to_boolean(GPR0, GPR1);
 
-    m_assembler.jump_if_equal(
+    m_assembler.jump_if_zero(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm32(0),
         label_for(op.false_target()->block()));
 
     m_assembler.jump(label_for(op.true_target()->block()));
