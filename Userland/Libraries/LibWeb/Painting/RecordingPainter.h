@@ -33,8 +33,6 @@
 
 namespace Web::Painting {
 
-struct CommandExecutionState;
-
 enum class CommandResult {
     Continue,
     SkipStackingContext,
@@ -48,7 +46,6 @@ struct DrawTextRun {
     Gfx::IntRect rect;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct DrawText {
@@ -61,7 +58,6 @@ struct DrawText {
     Optional<NonnullRefPtr<Gfx::Font>> font {};
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct FillRect {
@@ -69,7 +65,6 @@ struct FillRect {
     Color color;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct DrawScaledBitmap {
@@ -80,23 +75,16 @@ struct DrawScaledBitmap {
     Gfx::Painter::ScalingMode scaling_mode;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return dst_rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct SetClipRect {
     Gfx::IntRect rect;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
-struct ClearClipRect {
-    CommandResult execute(CommandExecutionState&) const;
-};
+struct ClearClipRect { };
 
 struct SetFont {
     NonnullRefPtr<Gfx::Font> font;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PushStackingContext {
@@ -106,21 +94,15 @@ struct PushStackingContext {
     Gfx::FloatRect source_rect;
     Gfx::FloatRect transformed_destination_rect;
     Gfx::IntPoint painter_location;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PopStackingContext {
     bool semitransparent_or_has_non_identity_transform;
     Gfx::Painter::ScalingMode scaling_mode;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PushStackingContextWithMask {
     Gfx::IntRect paint_rect;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PopStackingContextWithMask {
@@ -128,8 +110,6 @@ struct PopStackingContextWithMask {
     RefPtr<Gfx::Bitmap> mask_bitmap;
     Gfx::Bitmap::MaskKind mask_kind;
     float opacity;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintLinearGradient {
@@ -137,20 +117,16 @@ struct PaintLinearGradient {
     LinearGradientData linear_gradient_data;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return gradient_rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintOuterBoxShadow {
     PaintOuterBoxShadowParams outer_box_shadow_params;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintInnerBoxShadow {
     PaintOuterBoxShadowParams outer_box_shadow_params;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintTextShadow {
@@ -164,7 +140,6 @@ struct PaintTextShadow {
     Gfx::IntPoint draw_location;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return { draw_location, shadow_bounding_rect.size() }; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct FillRectWithRoundedCorners {
@@ -177,7 +152,6 @@ struct FillRectWithRoundedCorners {
     Optional<Gfx::FloatPoint> aa_translation {};
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct FillPathUsingColor {
@@ -188,7 +162,6 @@ struct FillPathUsingColor {
     Optional<Gfx::FloatPoint> aa_translation {};
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct FillPathUsingPaintStyle {
@@ -200,7 +173,6 @@ struct FillPathUsingPaintStyle {
     Optional<Gfx::FloatPoint> aa_translation {};
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct StrokePathUsingColor {
@@ -211,7 +183,6 @@ struct StrokePathUsingColor {
     Optional<Gfx::FloatPoint> aa_translation {};
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct StrokePathUsingPaintStyle {
@@ -223,7 +194,6 @@ struct StrokePathUsingPaintStyle {
     Optional<Gfx::FloatPoint> aa_translation {};
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return path_bounding_rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct DrawEllipse {
@@ -232,7 +202,6 @@ struct DrawEllipse {
     int thickness;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct FillElipse {
@@ -241,7 +210,6 @@ struct FillElipse {
     Gfx::AntiAliasingPainter::BlendMode blend_mode;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct DrawLine {
@@ -251,8 +219,6 @@ struct DrawLine {
     int thickness;
     Gfx::Painter::LineStyle style;
     Color alternate_color;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct DrawSignedDistanceField {
@@ -262,7 +228,6 @@ struct DrawSignedDistanceField {
     float smoothing;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintProgressbar {
@@ -275,7 +240,6 @@ struct PaintProgressbar {
     StringView text;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return frame_rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintFrame {
@@ -284,7 +248,6 @@ struct PaintFrame {
     Gfx::FrameStyle style;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct ApplyBackdropFilter {
@@ -293,7 +256,6 @@ struct ApplyBackdropFilter {
     CSS::ResolvedBackdropFilter backdrop_filter;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return backdrop_region; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct DrawRect {
@@ -302,7 +264,6 @@ struct DrawRect {
     bool rough;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintRadialGradient {
@@ -312,7 +273,6 @@ struct PaintRadialGradient {
     Gfx::IntSize size;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct PaintConicGradient {
@@ -321,7 +281,6 @@ struct PaintConicGradient {
     Gfx::IntPoint position;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct DrawTriangleWave {
@@ -330,22 +289,18 @@ struct DrawTriangleWave {
     Color color;
     int amplitude;
     int thickness;
-
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct SampleUnderCorners {
     NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 struct BlitCornerClipping {
     NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper;
 
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
 using PaintingCommand = Variant<
@@ -382,6 +337,47 @@ using PaintingCommand = Variant<
     DrawTriangleWave,
     SampleUnderCorners,
     BlitCornerClipping>;
+
+class PaintingCommandExecutor {
+public:
+    virtual ~PaintingCommandExecutor() = default;
+
+    virtual CommandResult draw_text_run(Color const&, Gfx::IntPoint const& baseline_start, String const&, Gfx::Font const&) = 0;
+    virtual CommandResult draw_text(Gfx::IntRect const&, String const&, Gfx::TextAlignment alignment, Color const&, Gfx::TextElision, Gfx::TextWrapping, Optional<NonnullRefPtr<Gfx::Font>> const&) = 0;
+    virtual CommandResult fill_rect(Gfx::IntRect const&, Color const&) = 0;
+    virtual CommandResult draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, float opacity, Gfx::Painter::ScalingMode scaling_mode) = 0;
+    virtual CommandResult set_clip_rect(Gfx::IntRect const& rect) = 0;
+    virtual CommandResult clear_clip_rect() = 0;
+    virtual CommandResult set_font(Gfx::Font const& font) = 0;
+    virtual CommandResult push_stacking_context(bool semitransparent_or_has_non_identity_transform, float opacity, Gfx::FloatRect const& source_rect, Gfx::FloatRect const& transformed_destination_rect, Gfx::IntPoint const& painter_location) = 0;
+    virtual CommandResult pop_stacking_context(bool semitransparent_or_has_non_identity_transform, Gfx::Painter::ScalingMode scaling_mode) = 0;
+    virtual CommandResult push_stacking_context_with_mask(Gfx::IntRect const& paint_rect) = 0;
+    virtual CommandResult pop_stacking_context_with_mask(Gfx::IntRect const& paint_rect, RefPtr<Gfx::Bitmap> const& mask_bitmap, Gfx::Bitmap::MaskKind mask_kind, float opacity) = 0;
+    virtual CommandResult paint_linear_gradient(Gfx::IntRect const&, LinearGradientData const&) = 0;
+    virtual CommandResult paint_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const&, Gfx::IntPoint const& center, Gfx::IntSize const& size) = 0;
+    virtual CommandResult paint_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const&, Gfx::IntPoint const& position) = 0;
+    virtual CommandResult paint_outer_box_shadow(PaintOuterBoxShadowParams const&) = 0;
+    virtual CommandResult paint_inner_box_shadow(PaintOuterBoxShadowParams const&) = 0;
+    virtual CommandResult paint_text_shadow(int blur_radius, Gfx::IntRect const& shadow_bounding_rect, Gfx::IntRect const& text_rect, String const&, Gfx::Font const&, Color const&, int fragment_baseline, Gfx::IntPoint const& draw_location) = 0;
+    virtual CommandResult fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
+    virtual CommandResult fill_path_using_color(Gfx::Path const&, Color const& color, Gfx::Painter::WindingRule, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
+    virtual CommandResult fill_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const& paint_style, Gfx::Painter::WindingRule winding_rule, float opacity, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
+    virtual CommandResult stroke_path_using_color(Gfx::Path const&, Color const& color, float thickness, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
+    virtual CommandResult stroke_path_using_paint_style(Gfx::Path const&, Gfx::PaintStyle const& paint_style, float thickness, float opacity, Optional<Gfx::FloatPoint> const& aa_translation) = 0;
+    virtual CommandResult draw_ellipse(Gfx::IntRect const&, Color const&, int thickness) = 0;
+    virtual CommandResult fill_ellipse(Gfx::IntRect const&, Color const&, Gfx::AntiAliasingPainter::BlendMode blend_mode) = 0;
+    virtual CommandResult draw_line(Color const& color, Gfx::IntPoint const& from, Gfx::IntPoint const& to, int thickness, Gfx::Painter::LineStyle, Color const& alternate_color) = 0;
+    virtual CommandResult draw_signed_distance_field(Gfx::IntRect const& rect, Color const&, Gfx::GrayscaleBitmap const&, float smoothing) = 0;
+    virtual CommandResult paint_progressbar(Gfx::IntRect const& frame_rect, Gfx::IntRect const& progress_rect, Palette const& palette, int min, int max, int value, StringView const& text) = 0;
+    virtual CommandResult paint_frame(Gfx::IntRect const& rect, Palette const&, Gfx::FrameStyle) = 0;
+    virtual CommandResult apply_backdrop_filter(Gfx::IntRect const& backdrop_region, Web::CSS::ResolvedBackdropFilter const& backdrop_filter) = 0;
+    virtual CommandResult draw_rect(Gfx::IntRect const& rect, Color const&, bool rough) = 0;
+    virtual CommandResult draw_triangle_wave(Gfx::IntPoint const& p1, Gfx::IntPoint const& p2, Color const& color, int amplitude, int thickness) = 0;
+    virtual CommandResult sample_under_corners(BorderRadiusCornerClipper&) = 0;
+    virtual CommandResult blit_corner_clipping(BorderRadiusCornerClipper&) = 0;
+
+    virtual bool would_be_fully_clipped_by_painter(Gfx::IntRect) const = 0;
+};
 
 class RecordingPainter {
 public:
@@ -490,7 +486,7 @@ public:
 
     void draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2, Color color, int amplitude, int thickness);
 
-    void execute(Gfx::Bitmap&);
+    void execute(PaintingCommandExecutor&);
 
     RecordingPainter()
     {
