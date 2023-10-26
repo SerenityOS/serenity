@@ -260,16 +260,14 @@ private:
     };
     static_assert(AssertSize<LongHorMetric, 4>());
 
-    Hmtx(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
-        : m_slice(slice)
-        , m_num_glyphs(num_glyphs)
-        , m_number_of_h_metrics(number_of_h_metrics)
+    Hmtx(ReadonlySpan<LongHorMetric> long_hor_metrics, ReadonlySpan<i16> left_side_bearings)
+        : m_long_hor_metrics(long_hor_metrics)
+        , m_left_side_bearings(left_side_bearings)
     {
     }
 
-    ReadonlyBytes m_slice;
-    u32 m_num_glyphs { 0 };
-    u32 m_number_of_h_metrics { 0 };
+    ReadonlySpan<LongHorMetric> m_long_hor_metrics;
+    ReadonlySpan<i16> m_left_side_bearings;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/os2
