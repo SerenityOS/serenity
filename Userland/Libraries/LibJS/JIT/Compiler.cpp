@@ -240,21 +240,13 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
             Assembler::Operand::Imm32(0x7fffffff),
             slow_case);
 
-        // GPR0 += 1;
+        // ARG1 += 1;
         m_assembler.add(
-            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(ARG1),
             Assembler::Operand::Imm32(1));
 
-        // GPR0 |= INT32_TAG << 48;
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Operand::Imm64(SHIFTED_INT32_TAG));
-        m_assembler.bitwise_or(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(GPR1));
-
-        // accumulator = GPR0;
-        store_vm_register(Bytecode::Register::accumulator(), GPR0);
+        // accumulator = ARG1;
+        store_vm_register(Bytecode::Register::accumulator(), ARG1);
 
         m_assembler.jump(end);
     });
