@@ -120,14 +120,12 @@ private:
     };
     static_assert(AssertSize<FontHeaderTable, 54>());
 
-    FontHeaderTable const& header() const { return *bit_cast<FontHeaderTable const*>(m_slice.data()); }
-
-    Head(ReadonlyBytes slice)
-        : m_slice(slice)
+    Head(FontHeaderTable const& font_header_table)
+        : m_data(font_header_table)
     {
     }
 
-    ReadonlyBytes m_slice;
+    FontHeaderTable const& m_data;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/hhea
