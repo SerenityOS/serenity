@@ -751,8 +751,8 @@ void Compiler::compile_put_by_value(Bytecode::Op::PutByValue const& op)
 
 static Value cxx_call(VM& vm, Value callee, u32 first_argument_index, u32 argument_count, Value this_value, Bytecode::Op::CallType call_type)
 {
-    // FIXME: Uncomment this and deal with it.
-    // TRY_OR_SET_EXCEPTION(throw_if_needed_for_call(vm.bytecode_interpreter(), *this, callee));
+    // FIXME: Get the expression_string() here as well.
+    TRY_OR_SET_EXCEPTION(throw_if_needed_for_call(vm.bytecode_interpreter(), callee, call_type, {}));
 
     MarkedVector<Value> argument_values(vm.heap());
     argument_values.ensure_capacity(argument_count);
