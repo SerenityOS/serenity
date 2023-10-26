@@ -125,6 +125,26 @@ private:
     {
     }
 
+    Assembler::Label& label_for(Bytecode::BasicBlock const& block)
+    {
+        return block_data_for(block).label;
+    }
+
+    struct BasicBlockData {
+        size_t start_offset { 0 };
+        Assembler::Label label;
+        Vector<size_t> absolute_references_to_here;
+    };
+
+    BasicBlockData& block_data_for(Bytecode::BasicBlock const& block)
+    {
+        return *m_basic_block_data.ensure(&block, [] {
+            return make<BasicBlockData>();
+        });
+    }
+
+    HashMap<Bytecode::BasicBlock const*, NonnullOwnPtr<BasicBlockData>> m_basic_block_data;
+
     Vector<u8> m_output;
     Assembler m_assembler { m_output };
     Bytecode::Executable& m_bytecode_executable;
