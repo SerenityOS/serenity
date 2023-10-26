@@ -32,11 +32,6 @@ jobs:
         with:
           repository: SerenityOS/libjs-test262-data
           path: libjs-test262-data
-          lfs: true
-
-      - name: Checkout SerenityOS/libjs-test262-data LFS objects
-        working-directory: libjs-test262-data
-        run: git lfs checkout
 
       - name: Checkout tc39/test262
         uses: actions/checkout@v4
