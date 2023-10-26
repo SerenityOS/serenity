@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <AK/Optional.h>
 #include <LibGfx/Font/OpenType/Cmap.h>
 
@@ -88,6 +89,7 @@ u32 Cmap::Subtable::glyph_id_for_code_point(u32 code_point) const
     case Format::SegmentedCoverage:
         return glyph_id_for_code_point_table_12(code_point);
     default:
+        dbgln("OpenType Cmap: Unimplemented format {}", (int)format());
         return 0;
     }
 }
