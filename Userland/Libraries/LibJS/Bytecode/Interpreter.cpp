@@ -1131,7 +1131,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     auto& vm = interpreter.vm();
     auto callee = interpreter.reg(m_callee);
 
-    TRY(throw_if_needed_for_call(interpreter, *this, callee));
+    TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
 
     MarkedVector<Value> argument_values(vm.heap());
     argument_values.ensure_capacity(m_argument_count);
@@ -1145,7 +1145,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto callee = interpreter.reg(m_callee);
-    TRY(throw_if_needed_for_call(interpreter, *this, callee));
+    TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
     auto argument_values = argument_list_evaluation(interpreter);
     interpreter.accumulator() = TRY(perform_call(interpreter, interpreter.reg(m_this_value), call_type(), callee, move(argument_values)));
     return {};
