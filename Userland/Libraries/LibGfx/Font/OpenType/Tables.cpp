@@ -145,27 +145,35 @@ u16 Maxp::num_glyphs() const
 
 ErrorOr<Hmtx> Hmtx::from_slice(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
 {
-    if (slice.size() < number_of_h_metrics * sizeof(LongHorMetric) + (num_glyphs - number_of_h_metrics) * sizeof(u16)) {
+    if (slice.size() < number_of_h_metrics * sizeof(LongHorMetric) + (num_glyphs - number_of_h_metrics) * sizeof(i16))
         return Error::from_string_literal("Could not load Hmtx: Not enough data");
+
+    // The Horizontal Metrics table is LongHorMetric[number_of_h_metrics] followed by i16[num_glyphs - number_of_h_metrics];
+    ReadonlySpan<LongHorMetric> long_hor_metrics { bit_cast<LongHorMetric*>(slice.data()), number_of_h_metrics };
+    ReadonlySpan<i16> left_side_bearings {};
+    auto number_of_left_side_bearings = num_glyphs - number_of_h_metrics;
+    if (number_of_left_side_bearings > 0) {
+        left_side_bearings = {
+            bit_cast<i16*>(slice.offset(number_of_h_metrics * sizeof(LongHorMetric))),
+            number_of_left_side_bearings
+        };
     }
-    return Hmtx(slice, num_glyphs, number_of_h_metrics);
+    return Hmtx(long_hor_metrics, left_side_bearings);
 }
 
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 {
-    VERIFY(glyph_id < m_num_glyphs);
-    auto const* long_hor_metrics = bit_cast<LongHorMetric const*>(m_slice.data());
-    if (glyph_id < m_number_of_h_metrics) {
+    VERIFY(glyph_id < m_long_hor_metrics.size() + m_left_side_bearings.size());
+    if (glyph_id < m_long_hor_metrics.size()) {
         return GlyphHorizontalMetrics {
-            .advance_width = static_cast<u16>(long_hor_metrics[glyph_id].advance_width),
-            .left_side_bearing = static_cast<i16>(long_hor_metrics[glyph_id].lsb),
+            .advance_width = m_long_hor_metrics[glyph_id].advance_width,
+            .left_side_bearing = m_long_hor_metrics[glyph_id].lsb,
         };
     }
 
-    auto const* left_side_bearings = bit_cast<BigEndian<u16> const*>(m_slice.offset(m_number_of_h_metrics * sizeof(LongHorMetric)));
     return GlyphHorizontalMetrics {
-        .advance_width = static_cast<u16>(long_hor_metrics[m_number_of_h_metrics - 1].advance_width),
-        .left_side_bearing = static_cast<i16>(left_side_bearings[glyph_id - m_number_of_h_metrics]),
+        .advance_width = m_long_hor_metrics.last().advance_width,
+        .left_side_bearing = m_left_side_bearings[glyph_id - m_long_hor_metrics.size()],
     };
 }
 
