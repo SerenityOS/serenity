@@ -124,15 +124,15 @@ ErrorOr<Maxp> Maxp::from_slice(ReadonlyBytes slice)
     Version16Dot16 const& version = *bit_cast<Version16Dot16 const*>(slice.data());
 
     if (version.major == 0 && version.minor == 5) {
-        if (slice.size() < sizeof(MaximumProfileVersion0_5))
+        if (slice.size() < sizeof(Version0_5))
             return Error::from_string_literal("Could not load Maxp: Not enough data");
-        return Maxp(bit_cast<MaximumProfileVersion0_5 const*>(slice.data()));
+        return Maxp(bit_cast<Version0_5 const*>(slice.data()));
     }
 
     if (version.major == 1 && version.minor == 0) {
-        if (slice.size() < sizeof(MaximumProfileVersion1_0))
+        if (slice.size() < sizeof(Version1_0))
             return Error::from_string_literal("Could not load Maxp: Not enough data");
-        return Maxp(bit_cast<MaximumProfileVersion1_0 const*>(slice.data()));
+        return Maxp(bit_cast<Version1_0 const*>(slice.data()));
     }
 
     return Error::from_string_literal("Could not load Maxp: Unrecognized version");
