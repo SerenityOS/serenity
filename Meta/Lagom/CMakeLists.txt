@@ -421,6 +421,7 @@ if (BUILD_LAGOM)
         IMAP
         ImageDecoderClient
         IPC
+        JIT
         JS
         Line
         Locale

@@ -8,7 +8,7 @@
 
 #include <AK/Vector.h>
 
-namespace JS::JIT {
+namespace JIT {
 
 struct Assembler {
     Assembler(Vector<u8>& output)
