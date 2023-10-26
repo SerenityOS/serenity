@@ -31,47 +31,48 @@ ErrorOr<Head> Head::from_slice(ReadonlyBytes slice)
     if (slice.size() < sizeof(FontHeaderTable))
         return Error::from_string_literal("Could not load Head: Not enough data");
 
-    return Head(slice);
+    auto const& font_header_table = *bit_cast<FontHeaderTable const*>(slice.data());
+    return Head(font_header_table);
 }
 
 u16 Head::units_per_em() const
 {
-    return header().units_per_em;
+    return m_data.units_per_em;
 }
 
 i16 Head::xmin() const
 {
-    return header().x_min;
+    return m_data.x_min;
 }
 
 i16 Head::ymin() const
 {
-    return header().y_min;
+    return m_data.y_min;
 }
 
 i16 Head::xmax() const
 {
-    return header().x_max;
+    return m_data.x_max;
 }
 
 i16 Head::ymax() const
 {
-    return header().y_max;
+    return m_data.y_max;
 }
 
 u16 Head::style() const
 {
-    return header().mac_style;
+    return m_data.mac_style;
 }
 
 u16 Head::lowest_recommended_ppem() const
 {
-    return header().lowest_rec_ppem;
+    return m_data.lowest_rec_ppem;
 }
 
 IndexToLocFormat Head::index_to_loc_format() const
 {
-    switch (header().index_to_loc_format) {
+    switch (m_data.index_to_loc_format) {
     case 0:
         return IndexToLocFormat::Offset16;
     case 1:
