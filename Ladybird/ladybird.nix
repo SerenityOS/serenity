@@ -11,7 +11,7 @@ pkgs.mkShell.override
     cmake
     libxcrypt
     ninja
-    pkgconfig
+    pkg-config
     qt6.qtbase
     qt6.qtbase.dev
     qt6.qtmultimedia
