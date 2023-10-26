@@ -1577,71 +1577,89 @@ void GridFormattingContext::resolve_grid_item_widths()
         auto const& computed_values = item.box->computed_values();
         auto const& computed_width = computed_values.width();
 
-        auto try_compute_width = [&](CSSPixels a_width) {
-            CSSPixels width = a_width;
+        struct ItemAlignment {
+            CSSPixels margin_left;
+            CSSPixels margin_right;
+            CSSPixels width;
+        };
+
+        ItemAlignment initial {
+            .margin_left = box_state.margin_left,
+            .margin_right = box_state.margin_right,
+            .width = box_state.content_width()
+        };
+
+        auto try_compute_width = [&](CSSPixels a_width) -> ItemAlignment {
+            ItemAlignment result = initial;
+            result.width = a_width;
 
             // Auto margins absorb positive free space prior to alignment via the box alignment properties.
-            auto free_space_left_for_margins = containing_block_width - width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right - box_state.margin_left - box_state.margin_right;
+            auto free_space_left_for_margins = containing_block_width - result.width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right - box_state.margin_left - box_state.margin_right;
             if (computed_values.margin().left().is_auto() && computed_values.margin().right().is_auto()) {
-                box_state.margin_left = free_space_left_for_margins / 2;
-                box_state.margin_right = free_space_left_for_margins / 2;
+                result.margin_left = free_space_left_for_margins / 2;
+                result.margin_right = free_space_left_for_margins / 2;
             } else if (computed_values.margin().left().is_auto()) {
-                box_state.margin_left = free_space_left_for_margins;
+                result.margin_left = free_space_left_for_margins;
             } else if (computed_values.margin().right().is_auto()) {
-                box_state.margin_right = free_space_left_for_margins;
+                result.margin_right = free_space_left_for_margins;
             } else if (computed_values.width().is_auto()) {
-                width += free_space_left_for_margins;
+                result.width += free_space_left_for_margins;
             }
 
             auto free_space_left_for_alignment = containing_block_width - a_width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right - box_state.margin_left - box_state.margin_right;
             switch (justification_for_item(item.box)) {
             case CSS::JustifyItems::Normal:
             case CSS::JustifyItems::Stretch:
-                return width;
+                break;
             case CSS::JustifyItems::Center:
-                box_state.margin_left += free_space_left_for_alignment / 2;
-                box_state.margin_right += free_space_left_for_alignment / 2;
-                return a_width;
+                result.margin_left += free_space_left_for_alignment / 2;
+                result.margin_right += free_space_left_for_alignment / 2;
+                result.width = a_width;
+                break;
             case CSS::JustifyItems::Start:
             case CSS::JustifyItems::FlexStart:
-                box_state.margin_right += free_space_left_for_alignment;
-                return a_width;
+                result.margin_right += free_space_left_for_alignment;
+                result.width = a_width;
+                break;
             case CSS::JustifyItems::End:
             case CSS::JustifyItems::FlexEnd:
-                box_state.margin_left += free_space_left_for_alignment;
-                return a_width;
+                result.margin_left += free_space_left_for_alignment;
+                result.width = a_width;
+                break;
             default:
                 break;
             }
 
-            return width;
+            return result;
         };
 
-        CSSPixels used_width;
+        ItemAlignment used_alignment;
         AvailableSpace available_space { AvailableSize::make_definite(containing_block_width), AvailableSize::make_indefinite() };
         if (computed_width.is_auto()) {
-            used_width = try_compute_width(calculate_fit_content_width(item.box, available_space));
+            used_alignment = try_compute_width(calculate_fit_content_width(item.box, available_space));
         } else if (computed_width.is_fit_content()) {
-            used_width = try_compute_width(calculate_fit_content_width(item.box, available_space));
+            used_alignment = try_compute_width(calculate_fit_content_width(item.box, available_space));
         } else {
-            used_width = try_compute_width(computed_width.to_px(grid_container(), containing_block_width));
+            used_alignment = try_compute_width(computed_width.to_px(grid_container(), containing_block_width));
         }
 
         if (!should_treat_max_width_as_none(item.box, m_available_space->width)) {
-            auto max_width = try_compute_width(computed_values.max_width().to_px(grid_container(), containing_block_width));
-            if (used_width > max_width) {
-                used_width = max_width;
+            auto max_width_alignment = try_compute_width(computed_values.max_width().to_px(grid_container(), containing_block_width));
+            if (used_alignment.width > max_width_alignment.width) {
+                used_alignment = max_width_alignment;
             }
         }
 
         if (!computed_values.min_width().is_auto()) {
-            auto min_width = try_compute_width(computed_values.min_width().to_px(grid_container(), containing_block_width));
-            if (used_width < min_width) {
-                used_width = min_width;
+            auto min_width_alignment = try_compute_width(computed_values.min_width().to_px(grid_container(), containing_block_width));
+            if (used_alignment.width < min_width_alignment.width) {
+                used_alignment = min_width_alignment;
             }
         }
 
-        box_state.set_content_width(used_width);
+        box_state.margin_left = used_alignment.margin_left;
+        box_state.margin_right = used_alignment.margin_right;
+        box_state.set_content_width(used_alignment.width);
     }
 }
 
