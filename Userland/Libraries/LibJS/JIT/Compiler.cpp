@@ -709,6 +709,7 @@ static Value cxx_put_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex pr
 {
     PropertyKey name = vm.bytecode_interpreter().current_executable().get_identifier(property);
     TRY_OR_SET_EXCEPTION(Bytecode::put_by_property_key(vm, base, base, value, name, kind));
+    vm.bytecode_interpreter().accumulator() = value;
     return {};
 }
 
@@ -729,6 +730,7 @@ void Compiler::compile_put_by_id(Bytecode::Op::PutById const& op)
 static Value cxx_put_by_value(VM& vm, Value base, Value property, Value value, Bytecode::Op::PropertyKind kind)
 {
     TRY_OR_SET_EXCEPTION(Bytecode::put_by_value(vm, base, property, value, kind));
+    vm.bytecode_interpreter().accumulator() = value;
     return {};
 }
 
