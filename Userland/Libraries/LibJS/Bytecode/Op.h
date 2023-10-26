@@ -18,7 +18,6 @@
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Environment.h>
-#include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/ValueTraits.h>
@@ -451,11 +450,12 @@ private:
 
 class GetCalleeAndThisFromEnvironment final : public Instruction {
 public:
-    explicit GetCalleeAndThisFromEnvironment(IdentifierTableIndex identifier, Register callee_reg, Register this_reg)
+    explicit GetCalleeAndThisFromEnvironment(IdentifierTableIndex identifier, Register callee_reg, Register this_reg, u32 cache_index)
         : Instruction(Type::GetCalleeAndThisFromEnvironment, sizeof(*this))
         , m_identifier(identifier)
         , m_callee_reg(callee_reg)
         , m_this_reg(this_reg)
+        , m_cache_index(cache_index)
     {
     }
 
@@ -463,20 +463,21 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
+    u32 cache_index() const { return m_cache_index; }
 
 private:
     IdentifierTableIndex m_identifier;
     Register m_callee_reg;
     Register m_this_reg;
-
-    Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
+    u32 m_cache_index { 0 };
 };
 
 class GetVariable final : public Instruction {
 public:
-    explicit GetVariable(IdentifierTableIndex identifier)
+    explicit GetVariable(IdentifierTableIndex identifier, u32 cache_index)
         : Instruction(Type::GetVariable, sizeof(*this))
         , m_identifier(identifier)
+        , m_cache_index(cache_index)
     {
     }
 
@@ -484,11 +485,11 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
     IdentifierTableIndex identifier() const { return m_identifier; }
+    u32 cache_index() const { return m_cache_index; }
 
 private:
     IdentifierTableIndex m_identifier;
-
-    Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
+    u32 m_cache_index { 0 };
 };
 
 class GetGlobal final : public Instruction {

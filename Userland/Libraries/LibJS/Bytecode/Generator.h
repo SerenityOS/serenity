@@ -206,6 +206,7 @@ public:
     void emit_get_by_id_with_this(IdentifierTableIndex, Register);
 
     [[nodiscard]] size_t next_global_variable_cache() { return m_next_global_variable_cache++; }
+    [[nodiscard]] size_t next_environment_variable_cache() { return m_next_environment_variable_cache++; }
 
 private:
     enum class JumpType {
@@ -236,6 +237,7 @@ private:
     u32 m_next_block { 1 };
     u32 m_next_property_lookup_cache { 0 };
     u32 m_next_global_variable_cache { 0 };
+    u32 m_next_environment_variable_cache { 0 };
     FunctionKind m_enclosing_function_kind { FunctionKind::Normal };
     Vector<LabelableScope> m_continuable_scopes;
     Vector<LabelableScope> m_breakable_scopes;

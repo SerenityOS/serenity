@@ -314,7 +314,7 @@ Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Ge
     } else if (is_local()) {
         generator.emit<Bytecode::Op::GetLocal>(local_variable_index());
     } else {
-        generator.emit<Bytecode::Op::GetVariable>(generator.intern_identifier(m_string));
+        generator.emit<Bytecode::Op::GetVariable>(generator.intern_identifier(m_string), generator.next_environment_variable_cache());
     }
     return {};
 }
@@ -1061,7 +1061,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Byt
     if (m_is_hoisted) {
         Bytecode::Generator::SourceLocationScope scope(generator, *this);
         auto index = generator.intern_identifier(name());
-        generator.emit<Bytecode::Op::GetVariable>(index);
+        generator.emit<Bytecode::Op::GetVariable>(index, generator.next_environment_variable_cache());
         generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
     }
     return {};
@@ -1534,7 +1534,7 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         //       a `with` binding, so we can skip this.
         auto& identifier = static_cast<Identifier const&>(*m_callee);
         if (!identifier.is_local() && !identifier.is_global()) {
-            generator.emit<Bytecode::Op::GetCalleeAndThisFromEnvironment>(generator.intern_identifier(identifier.string()), callee_reg, this_reg);
+            generator.emit<Bytecode::Op::GetCalleeAndThisFromEnvironment>(generator.intern_identifier(identifier.string()), callee_reg, this_reg, generator.next_environment_variable_cache());
         } else {
             TRY(m_callee->generate_bytecode(generator));
             generator.emit<Bytecode::Op::Store>(callee_reg);

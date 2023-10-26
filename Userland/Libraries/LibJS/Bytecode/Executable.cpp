@@ -18,6 +18,7 @@ Executable::Executable(
     NonnullRefPtr<SourceCode const> source_code,
     size_t number_of_property_lookup_caches,
     size_t number_of_global_variable_caches,
+    size_t number_of_environment_variable_caches,
     size_t number_of_registers,
     Vector<NonnullOwnPtr<BasicBlock>> basic_blocks,
     bool is_strict_mode)
@@ -31,6 +32,7 @@ Executable::Executable(
 {
     property_lookup_caches.resize(number_of_property_lookup_caches);
     global_variable_caches.resize(number_of_global_variable_caches);
+    environment_variable_caches.resize(number_of_environment_variable_caches);
 }
 
 Executable::~Executable() = default;

@@ -12,6 +12,7 @@
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/EnvironmentCoordinate.h>
 
 namespace JS::Bytecode {
 
@@ -39,6 +40,7 @@ public:
         NonnullRefPtr<SourceCode const>,
         size_t number_of_property_lookup_caches,
         size_t number_of_global_variable_caches,
+        size_t number_of_environment_variable_caches,
         size_t number_of_registers,
         Vector<NonnullOwnPtr<BasicBlock>>,
         bool is_strict_mode);
@@ -48,6 +50,7 @@ public:
     DeprecatedFlyString name;
     Vector<PropertyLookupCache> property_lookup_caches;
     Vector<GlobalVariableCache> global_variable_caches;
+    Vector<Optional<EnvironmentCoordinate>> environment_variable_caches;
     Vector<NonnullOwnPtr<BasicBlock>> basic_blocks;
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;

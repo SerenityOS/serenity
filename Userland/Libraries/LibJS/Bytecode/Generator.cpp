@@ -63,6 +63,7 @@ CodeGenerationErrorOr<NonnullRefPtr<Executable>> Generator::generate(ASTNode con
         node.source_code(),
         generator.m_next_property_lookup_cache,
         generator.m_next_global_variable_cache,
+        generator.m_next_environment_variable_cache,
         generator.m_next_register,
         move(generator.m_root_basic_blocks),
         is_strict_mode));
