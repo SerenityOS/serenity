@@ -201,14 +201,14 @@ private:
     };
     static_assert(AssertSize<MaximumProfileVersion1_0, 32>());
 
-    MaximumProfileVersion0_5 const& header() const { return *bit_cast<MaximumProfileVersion0_5 const*>(m_slice.data()); }
-
-    Maxp(ReadonlyBytes slice)
-        : m_slice(slice)
+    Maxp(Variant<MaximumProfileVersion0_5 const*, MaximumProfileVersion1_0 const*> data)
+        : m_data(move(data))
     {
+        VERIFY(m_data.visit([](auto const* any) { return any != nullptr; }));
     }
 
-    ReadonlyBytes m_slice;
+    // NOTE: Whichever pointer is present is non-null, but Variant can't contain references.
+    Variant<MaximumProfileVersion0_5 const*, MaximumProfileVersion1_0 const*> m_data;
 };
 
 struct GlyphHorizontalMetrics {
