@@ -93,7 +93,7 @@ ErrorOr<void> insert_one_to_onehundred(Vector<int>& vector)
 
 ## Fallible Constructors
 
-The usual C++ constructors are incompatible with SerenityOS' method of handling errors,
+The usual C++ constructors are incompatible with SerenityOS's method of handling errors,
 as potential errors are passed using the `ErrorOr` return type. As a replacement, classes
 that require fallible operations during their construction define a static function that
 is fallible instead.
