@@ -83,15 +83,7 @@ struct DrawScaledBitmap {
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
 };
 
-struct SaveState {
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
-};
-
-struct RestoreState {
-    [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
-};
-
-struct AddClipRect {
+struct SetClipRect {
     Gfx::IntRect rect;
 
     [[nodiscard]] CommandResult execute(CommandExecutionState&) const;
@@ -361,9 +353,7 @@ using PaintingCommand = Variant<
     DrawText,
     FillRect,
     DrawScaledBitmap,
-    SaveState,
-    RestoreState,
-    AddClipRect,
+    SetClipRect,
     ClearClipRect,
     SetFont,
     PushStackingContext,
@@ -454,7 +444,6 @@ public:
     void draw_text_run(Gfx::IntPoint baseline_start, Utf8View string, Gfx::Font const& font, Color color, Gfx::IntRect const& rect);
 
     void add_clip_rect(Gfx::IntRect const& rect);
-    void clear_clip_rect();
 
     void translate(int dx, int dy);
     void translate(Gfx::IntPoint delta);
@@ -510,6 +499,7 @@ public:
 
     struct State {
         Gfx::AffineTransform translation;
+        Optional<Gfx::IntRect> clip_rect;
     };
     State& state() { return m_state_stack.last(); }
     State const& state() const { return m_state_stack.last(); }
