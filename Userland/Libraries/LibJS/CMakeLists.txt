@@ -24,7 +24,6 @@ set(SOURCES
     Heap/Heap.cpp
     Heap/HeapBlock.cpp
     Heap/MarkedVector.cpp
-    JIT/Assembler.cpp
     JIT/Compiler.cpp
     JIT/NativeExecutable.cpp
     Lexer.cpp
@@ -268,4 +267,4 @@ set(SOURCES
 )
 
 serenity_lib(LibJS js)
-target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex LibSyntax LibLocale LibUnicode)
+target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex LibSyntax LibLocale LibUnicode LibJIT)

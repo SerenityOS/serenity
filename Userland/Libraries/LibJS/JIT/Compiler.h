@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <LibJIT/Assembler.h>
 #include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/Op.h>
-#include <LibJS/JIT/Assembler.h>
 #include <LibJS/JIT/NativeExecutable.h>
 
 namespace JS::JIT {
+
+using ::JIT::Assembler;
 
 class Compiler {
 public:
