@@ -18,6 +18,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Print.h>
 #include <LibJS/Runtime/ConsoleObject.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/SourceTextModule.h>
@@ -39,7 +40,7 @@
 class ReplConsoleClient;
 
 RefPtr<JS::VM> g_vm;
-OwnPtr<JS::Interpreter> g_interpreter;
+OwnPtr<JS::ExecutionContext> g_execution_context;
 OwnPtr<ReplConsoleClient> g_console_client;
 JS::Handle<JS::Value> g_last_value = JS::make_handle(JS::js_undefined());
 
@@ -104,8 +105,10 @@ static bool s_dump_ast = false;
 static bool s_as_module = false;
 static bool s_print_last_result = false;
 
-static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView source, StringView source_name)
+static ErrorOr<bool> parse_and_run(JS::Realm& realm, StringView source, StringView source_name)
 {
+    auto& interpreter = g_vm->bytecode_interpreter();
+
     enum class ReturnEarly {
         No,
         Yes,
@@ -123,7 +126,7 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
     };
 
     if (!s_as_module) {
-        auto script_or_error = JS::Script::parse(source, interpreter.realm(), source_name);
+        auto script_or_error = JS::Script::parse(source, realm, source_name);
         if (script_or_error.is_error()) {
             auto error = script_or_error.error()[0];
             auto hint = error.source_location_hint(source);
@@ -132,14 +135,14 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
 
             auto error_string = TRY(error.to_string());
             displayln("{}", error_string);
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(move(error_string));
+            result = g_vm->throw_completion<JS::SyntaxError>(move(error_string));
         } else {
             auto return_early = TRY(run_script_or_module(script_or_error.value()));
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
     } else {
-        auto module_or_error = JS::SourceTextModule::parse(source, interpreter.realm(), source_name);
+        auto module_or_error = JS::SourceTextModule::parse(source, realm, source_name);
         if (module_or_error.is_error()) {
             auto error = module_or_error.error()[0];
             auto hint = error.source_location_hint(source);
@@ -148,7 +151,7 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
 
             auto error_string = TRY(error.to_string());
             displayln("{}", error_string);
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(move(error_string));
+            result = g_vm->throw_completion<JS::SyntaxError>(move(error_string));
         } else {
             auto return_early = TRY(run_script_or_module(module_or_error.value()));
             if (return_early == ReturnEarly::Yes)
@@ -344,21 +347,20 @@ extern "C" int initialize_repl(char const* time_zone)
         (void)print(promise.result());
         displayln(")");
     };
-    OwnPtr<JS::Interpreter> interpreter;
 
     s_print_last_result = true;
-    interpreter = JS::Interpreter::create<ReplObject>(*g_vm);
-    auto console_object = interpreter->realm().intrinsics().console_object();
+    g_execution_context = JS::create_simple_execution_context<ReplObject>(*g_vm);
+    auto& realm = *g_execution_context->realm;
+    auto console_object = realm.intrinsics().console_object();
     g_console_client = make<ReplConsoleClient>(console_object->console());
     console_object->console().set_client(*g_console_client);
-    g_interpreter = move(interpreter);
 
     return 0;
 }
 
 extern "C" bool execute(char const* source)
 {
-    if (auto result = parse_and_run(*g_interpreter, { source, strlen(source) }, "REPL"sv); result.is_error()) {
+    if (auto result = parse_and_run(*g_execution_context->realm, { source, strlen(source) }, "REPL"sv); result.is_error()) {
         displayln("{}", result.error());
         return false;
     } else {
