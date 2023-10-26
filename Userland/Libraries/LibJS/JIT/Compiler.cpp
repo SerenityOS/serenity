@@ -357,7 +357,8 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
     // push finalizer (patched later)
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm64(0));
+        Assembler::Operand::Imm64(0),
+        Assembler::Patchable::Yes);
     if (finalizer.has_value())
         block_data_for(finalizer.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
     m_assembler.push(Assembler::Operand::Register(GPR0));
@@ -365,7 +366,8 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
     // push handler (patched later)
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm64(0));
+        Assembler::Operand::Imm64(0),
+        Assembler::Patchable::Yes);
     if (handler.has_value())
         block_data_for(handler.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
     m_assembler.push(Assembler::Operand::Register(GPR0));
