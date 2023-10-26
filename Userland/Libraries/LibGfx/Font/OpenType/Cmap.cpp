@@ -144,7 +144,7 @@ u32 Cmap::Subtable::glyph_id_for_code_point_table_6(u32 code_point) const
 
     u32 entry_count = be_u16(m_slice.offset((u32)Table6Offsets::EntryCount));
     u32 code_offset = code_point - first_code;
-    if (code_offset > entry_count)
+    if (code_offset >= entry_count)
         return 0;
 
     return be_u16(m_slice.offset((u32)Table6Offsets::GlyphIdArray + code_offset * 2));
