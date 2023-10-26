@@ -15,6 +15,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintContext.h>
+#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/SVG/SVGDecodedImageData.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
@@ -111,7 +112,8 @@ void SVGDecodedImageData::render(Gfx::IntSize size) const
 
     m_document->paintable()->paint_all_phases(context);
 
-    recording_painter.execute(*m_bitmap);
+    Painting::PaintingCommandExecutorCPU executor { *m_bitmap };
+    recording_painter.execute(executor);
 }
 
 RefPtr<Gfx::Bitmap const> SVGDecodedImageData::bitmap(size_t, Gfx::IntSize size) const

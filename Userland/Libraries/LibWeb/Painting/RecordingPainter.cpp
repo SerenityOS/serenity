@@ -4,415 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Filters/StackBlurFilter.h>
-#include <LibGfx/StylePainter.h>
-#include <LibWeb/Painting/BorderRadiusCornerClipper.h>
-#include <LibWeb/Painting/FilterPainting.h>
 #include <LibWeb/Painting/RecordingPainter.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
 
-struct CommandExecutionState {
-    struct StackingContext {
-        Gfx::Painter painter;
-        Gfx::IntRect destination;
-        float opacity;
-    };
-
-    [[nodiscard]] Gfx::Painter const& painter() const { return stacking_contexts.last().painter; }
-    [[nodiscard]] Gfx::Painter& painter() { return stacking_contexts.last().painter; }
-
-    [[nodiscard]] bool would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
-    {
-        return !painter().clip_rect().intersects(rect.translated(painter().translation()));
-    }
-
-    Vector<StackingContext> stacking_contexts;
-};
-
-CommandResult FillRectWithRoundedCorners::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::AntiAliasingPainter aa_painter(painter);
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
-    aa_painter.fill_rect_with_rounded_corners(
-        rect,
-        color,
-        top_left_radius,
-        top_right_radius,
-        bottom_right_radius,
-        bottom_left_radius);
-    return CommandResult::Continue;
-}
-
-CommandResult DrawText::execute(CommandExecutionState& state) const
-{
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
-    auto& painter = state.painter();
-    if (font.has_value()) {
-        painter.draw_text(rect, raw_text, *font, alignment, color, elision, wrapping);
-    } else {
-        painter.draw_text(rect, raw_text, alignment, color, elision, wrapping);
-    }
-    return CommandResult::Continue;
-}
-
-CommandResult DrawTextRun::execute(CommandExecutionState& state) const
-{
-    if (state.would_be_fully_clipped_by_painter(rect))
-        return CommandResult::Continue;
-    auto& painter = state.painter();
-    painter.draw_text_run(baseline_start, Utf8View(string), font, color);
-    return CommandResult::Continue;
-}
-
-CommandResult FillPathUsingColor::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::AntiAliasingPainter aa_painter(painter);
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
-    aa_painter.fill_path(path, color, winding_rule);
-    return CommandResult::Continue;
-}
-
-CommandResult FillPathUsingPaintStyle::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::AntiAliasingPainter aa_painter(painter);
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
-    aa_painter.fill_path(path, paint_style, opacity, winding_rule);
-    return CommandResult::Continue;
-}
-
-CommandResult StrokePathUsingColor::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::AntiAliasingPainter aa_painter(painter);
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
-    aa_painter.stroke_path(path, color, thickness);
-    return CommandResult::Continue;
-}
-
-CommandResult StrokePathUsingPaintStyle::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::AntiAliasingPainter aa_painter(painter);
-    if (aa_translation.has_value())
-        aa_painter.translate(*aa_translation);
-    aa_painter.stroke_path(path, paint_style, thickness, opacity);
-    return CommandResult::Continue;
-}
-
-CommandResult FillRect::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.fill_rect(rect, color);
-    return CommandResult::Continue;
-}
-
-CommandResult DrawScaledBitmap::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.draw_scaled_bitmap(dst_rect, bitmap, src_rect, opacity, scaling_mode);
-    return CommandResult::Continue;
-}
-
-CommandResult SetClipRect::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.clear_clip_rect();
-    painter.add_clip_rect(rect);
-    return CommandResult::Continue;
-}
-
-CommandResult ClearClipRect::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.clear_clip_rect();
-    return CommandResult::Continue;
-}
-
-CommandResult SetFont::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.set_font(font);
-    return CommandResult::Continue;
-}
-
-CommandResult PushStackingContext::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    if (semitransparent_or_has_non_identity_transform) {
-        auto destination_rect = transformed_destination_rect.to_rounded<int>();
-
-        // FIXME: We should find a way to scale the paintable, rather than paint into a separate bitmap,
-        // then scale it. This snippet now copies the background at the destination, then scales it down/up
-        // to the size of the source (which could add some artefacts, though just scaling the bitmap already does that).
-        // We need to copy the background at the destination because a bunch of our rendering effects now rely on
-        // being able to sample the painter (see border radii, shadows, filters, etc).
-        Gfx::FloatPoint destination_clipped_fixup {};
-        auto try_get_scaled_destination_bitmap = [&]() -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
-            Gfx::IntRect actual_destination_rect;
-            auto bitmap = TRY(painter.get_region_bitmap(destination_rect, Gfx::BitmapFormat::BGRA8888, actual_destination_rect));
-            // get_region_bitmap() may clip to a smaller region if the requested rect goes outside the painter, so we need to account for that.
-            destination_clipped_fixup = Gfx::FloatPoint { destination_rect.location() - actual_destination_rect.location() };
-            destination_rect = actual_destination_rect;
-            if (source_rect.size() != transformed_destination_rect.size()) {
-                auto sx = static_cast<float>(source_rect.width()) / transformed_destination_rect.width();
-                auto sy = static_cast<float>(source_rect.height()) / transformed_destination_rect.height();
-                bitmap = TRY(bitmap->scaled(sx, sy));
-                destination_clipped_fixup.scale_by(sx, sy);
-            }
-            return bitmap;
-        };
-
-        auto bitmap_or_error = try_get_scaled_destination_bitmap();
-        if (bitmap_or_error.is_error()) {
-            // NOTE: If the creation of the bitmap fails, we need to skip all painting commands that belong to this stacking context.
-            //       We don't interrupt the execution of painting commands because get_region_bitmap() returns an error if the requested
-            //       region is outside of the viewport (mmap fails to allocate a zero-size region), which means we can safely proceed
-            //       with execution of commands outside of this stacking context.
-            // FIXME: Change the get_region_bitmap() API to return ErrorOr<Optional<Bitmap>> and exit the execution of commands here
-            //        if we run out of memory.
-            return CommandResult::SkipStackingContext;
-        }
-        auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-
-        Gfx::Painter stacking_context_painter(bitmap);
-
-        stacking_context_painter.translate(painter_location + destination_clipped_fixup.to_type<int>());
-
-        state.stacking_contexts.append(CommandExecutionState::StackingContext {
-            .painter = stacking_context_painter,
-            .destination = destination_rect,
-            .opacity = opacity,
-        });
-    } else {
-        state.painter().save();
-    }
-
-    return CommandResult::Continue;
-}
-
-CommandResult PopStackingContext::execute(CommandExecutionState& state) const
-{
-    if (semitransparent_or_has_non_identity_transform) {
-        auto stacking_context = state.stacking_contexts.take_last();
-        auto bitmap = stacking_context.painter.target();
-        auto destination_rect = stacking_context.destination;
-
-        if (destination_rect.size() == bitmap->size()) {
-            state.painter().blit(destination_rect.location(), *bitmap, bitmap->rect(), stacking_context.opacity);
-        } else {
-            state.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), stacking_context.opacity, scaling_mode);
-        }
-    } else {
-        state.painter().restore();
-    }
-
-    return CommandResult::Continue;
-}
-
-CommandResult PushStackingContextWithMask::execute(CommandExecutionState& state) const
-{
-    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, paint_rect.size());
-    if (bitmap_or_error.is_error())
-        return CommandResult::Continue;
-    auto bitmap = bitmap_or_error.release_value();
-
-    Gfx::Painter stacking_context_painter(bitmap);
-
-    stacking_context_painter.translate(-paint_rect.location());
-
-    state.stacking_contexts.append(CommandExecutionState::StackingContext {
-        .painter = stacking_context_painter,
-        .destination = {},
-        .opacity = 1,
-    });
-
-    return CommandResult::Continue;
-}
-
-CommandResult PopStackingContextWithMask::execute(CommandExecutionState& state) const
-{
-    auto stacking_context = state.stacking_contexts.take_last();
-    auto bitmap = stacking_context.painter.target();
-    if (mask_bitmap)
-        bitmap->apply_mask(*mask_bitmap, mask_kind);
-    state.painter().blit(paint_rect.location(), *bitmap, bitmap->rect(), opacity);
-    return CommandResult::Continue;
-}
-
-CommandResult PaintLinearGradient::execute(CommandExecutionState& state) const
-{
-    auto const& data = linear_gradient_data;
-    state.painter().fill_rect_with_linear_gradient(
-        gradient_rect, data.color_stops.list,
-        data.gradient_angle, data.color_stops.repeat_length);
-    return CommandResult::Continue;
-}
-
-CommandResult PaintRadialGradient::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.fill_rect_with_radial_gradient(rect, radial_gradient_data.color_stops.list, center, size, radial_gradient_data.color_stops.repeat_length);
-    return CommandResult::Continue;
-}
-
-CommandResult PaintConicGradient::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.fill_rect_with_conic_gradient(rect, conic_gradient_data.color_stops.list, position, conic_gradient_data.start_angle, conic_gradient_data.color_stops.repeat_length);
-    return CommandResult::Continue;
-}
-
 Gfx::IntRect PaintOuterBoxShadow::bounding_rect() const
 {
     return get_outer_box_shadow_bounding_rect(outer_box_shadow_params);
-}
-
-CommandResult PaintOuterBoxShadow::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    paint_outer_box_shadow(painter, outer_box_shadow_params);
-    return CommandResult::Continue;
-}
-
-CommandResult PaintInnerBoxShadow::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    paint_inner_box_shadow(painter, outer_box_shadow_params);
-    return CommandResult::Continue;
-}
-
-CommandResult PaintTextShadow::execute(CommandExecutionState& state) const
-{
-    // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
-    auto maybe_shadow_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, shadow_bounding_rect.size());
-    if (maybe_shadow_bitmap.is_error()) {
-        dbgln("Unable to allocate temporary bitmap {} for text-shadow rendering: {}", shadow_bounding_rect.size(), maybe_shadow_bitmap.error());
-        return CommandResult::Continue;
-    }
-    auto shadow_bitmap = maybe_shadow_bitmap.release_value();
-
-    Gfx::Painter shadow_painter { *shadow_bitmap };
-    // FIXME: "Spread" the shadow somehow.
-    Gfx::IntPoint baseline_start(text_rect.x(), text_rect.y() + fragment_baseline);
-    shadow_painter.draw_text_run(baseline_start, Utf8View(text), font, color);
-
-    // Blur
-    Gfx::StackBlurFilter filter(*shadow_bitmap);
-    filter.process_rgba(blur_radius, color);
-
-    auto& painter = state.painter();
-    painter.blit(draw_location, *shadow_bitmap, shadow_bounding_rect);
-    return CommandResult::Continue;
-}
-
-CommandResult DrawEllipse::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::AntiAliasingPainter aa_painter(painter);
-    aa_painter.draw_ellipse(rect, color, thickness);
-    return CommandResult::Continue;
-}
-
-CommandResult FillElipse::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::AntiAliasingPainter aa_painter(painter);
-    aa_painter.fill_ellipse(rect, color, blend_mode);
-    return CommandResult::Continue;
-}
-
-CommandResult DrawLine::execute(CommandExecutionState& state) const
-{
-    if (style == Gfx::Painter::LineStyle::Dotted) {
-        Gfx::AntiAliasingPainter aa_painter(state.painter());
-        aa_painter.draw_line(from, to, color, thickness, style, alternate_color);
-    } else {
-        state.painter().draw_line(from, to, color, thickness, style, alternate_color);
-    }
-    return CommandResult::Continue;
-}
-
-CommandResult DrawSignedDistanceField::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.draw_signed_distance_field(rect, color, sdf, smoothing);
-    return CommandResult::Continue;
-}
-
-CommandResult PaintProgressbar::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::StylePainter::paint_progressbar(painter, progress_rect, palette, min, max, value, text);
-    Gfx::StylePainter::paint_frame(painter, frame_rect, palette, Gfx::FrameStyle::RaisedBox);
-    return CommandResult::Continue;
-}
-
-CommandResult PaintFrame::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    Gfx::StylePainter::paint_frame(painter, rect, palette, style);
-    return CommandResult::Continue;
-}
-
-CommandResult ApplyBackdropFilter::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-
-    // This performs the backdrop filter operation: https://drafts.fxtf.org/filter-effects-2/#backdrop-filter-operation
-
-    // Note: The region bitmap can be smaller than the backdrop_region if it's at the edge of canvas.
-    // Note: This is in DevicePixels, but we use an IntRect because `get_region_bitmap()` below writes to it.
-
-    // FIXME: Go through the steps to find the "Backdrop Root Image"
-    // https://drafts.fxtf.org/filter-effects-2/#BackdropRoot
-
-    // 1. Copy the Backdrop Root Image into a temporary buffer, such as a raster image. Call this buffer T’.
-    Gfx::IntRect actual_region {};
-    auto maybe_backdrop_bitmap = painter.get_region_bitmap(backdrop_region, Gfx::BitmapFormat::BGRA8888, actual_region);
-    if (actual_region.is_empty())
-        return CommandResult::Continue;
-    if (maybe_backdrop_bitmap.is_error()) {
-        dbgln("Failed get region bitmap for backdrop-filter");
-        return CommandResult::Continue;
-    }
-    auto backdrop_bitmap = maybe_backdrop_bitmap.release_value();
-
-    // 2. Apply the backdrop-filter’s filter operations to the entire contents of T'.
-    apply_filter_list(*backdrop_bitmap, backdrop_filter.filters);
-
-    // FIXME: 3. If element B has any transforms (between B and the Backdrop Root), apply the inverse of those transforms to the contents of T’.
-
-    // 4. Apply a clip to the contents of T’, using the border box of element B, including border-radius if specified. Note that the children of B are not considered for the sizing or location of this clip.
-    // FIXME: 5. Draw all of element B, including its background, border, and any children elements, into T’.
-    // FXIME: 6. If element B has any transforms, effects, or clips, apply those to T’.
-
-    // 7. Composite the contents of T’ into element B’s parent, using source-over compositing.
-    painter.blit(actual_region.location(), *backdrop_bitmap, backdrop_bitmap->rect());
-    return CommandResult::Continue;
-}
-
-CommandResult DrawRect::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.draw_rect(rect, color, rough);
-    return CommandResult::Continue;
-}
-
-CommandResult DrawTriangleWave::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.draw_triangle_wave(p1, p2, color, amplitude, thickness);
-    return CommandResult::Continue;
 }
 
 Gfx::IntRect SampleUnderCorners::bounding_rect() const
@@ -420,23 +19,9 @@ Gfx::IntRect SampleUnderCorners::bounding_rect() const
     return corner_clipper->border_rect().to_type<int>();
 }
 
-CommandResult SampleUnderCorners::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    corner_clipper->sample_under_corners(painter);
-    return CommandResult::Continue;
-}
-
 Gfx::IntRect BlitCornerClipping::bounding_rect() const
 {
     return corner_clipper->border_rect().to_type<int>();
-}
-
-CommandResult BlitCornerClipping::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    corner_clipper->blit_corner_clipping(painter);
-    return CommandResult::Continue;
 }
 
 void RecordingPainter::sample_under_corners(NonnullRefPtr<BorderRadiusCornerClipper> corner_clipper)
@@ -825,22 +410,117 @@ static Optional<Gfx::IntRect> command_bounding_rectangle(PaintingCommand const& 
         });
 }
 
-void RecordingPainter::execute(Gfx::Bitmap& bitmap)
+void RecordingPainter::execute(PaintingCommandExecutor& executor)
 {
-    CommandExecutionState state;
-    state.stacking_contexts.append(CommandExecutionState::StackingContext {
-        .painter = Gfx::Painter(bitmap),
-        .destination = Gfx::IntRect { 0, 0, 0, 0 },
-        .opacity = 1,
-    });
-
     size_t next_command_index = 0;
     while (next_command_index < m_painting_commands.size()) {
         auto& command = m_painting_commands[next_command_index++];
         auto bounding_rect = command_bounding_rectangle(command);
-        if (bounding_rect.has_value() && state.would_be_fully_clipped_by_painter(*bounding_rect))
+        if (bounding_rect.has_value() && executor.would_be_fully_clipped_by_painter(*bounding_rect)) {
             continue;
-        auto result = command.visit([&](auto const& command) { return command.execute(state); });
+        }
+
+        auto result = command.visit(
+            [&](DrawTextRun const& command) {
+                return executor.draw_text_run(command.color, command.baseline_start, command.string, command.font);
+            },
+            [&](DrawText const& command) {
+                return executor.draw_text(command.rect, command.raw_text, command.alignment, command.color, command.elision, command.wrapping, command.font);
+            },
+            [&](FillRect const& command) {
+                return executor.fill_rect(command.rect, command.color);
+            },
+            [&](DrawScaledBitmap const& command) {
+                return executor.draw_scaled_bitmap(command.dst_rect, command.bitmap, command.src_rect, command.opacity, command.scaling_mode);
+            },
+            [&](SetClipRect const& command) {
+                return executor.set_clip_rect(command.rect);
+            },
+            [&](ClearClipRect const&) {
+                return executor.clear_clip_rect();
+            },
+            [&](SetFont const& command) {
+                return executor.set_font(command.font);
+            },
+            [&](PushStackingContext const& command) {
+                return executor.push_stacking_context(command.semitransparent_or_has_non_identity_transform, command.opacity, command.source_rect, command.transformed_destination_rect, command.painter_location);
+            },
+            [&](PopStackingContext const& command) {
+                return executor.pop_stacking_context(command.semitransparent_or_has_non_identity_transform, command.scaling_mode);
+            },
+            [&](PushStackingContextWithMask const& command) {
+                return executor.push_stacking_context_with_mask(command.paint_rect);
+            },
+            [&](PopStackingContextWithMask const& command) {
+                return executor.pop_stacking_context_with_mask(command.paint_rect, command.mask_bitmap, command.mask_kind, command.opacity);
+            },
+            [&](PaintLinearGradient const& command) {
+                return executor.paint_linear_gradient(command.gradient_rect, command.linear_gradient_data);
+            },
+            [&](PaintRadialGradient const& command) {
+                return executor.paint_radial_gradient(command.rect, command.radial_gradient_data, command.center, command.size);
+            },
+            [&](PaintConicGradient const& command) {
+                return executor.paint_conic_gradient(command.rect, command.conic_gradient_data, command.position);
+            },
+            [&](PaintOuterBoxShadow const& command) {
+                return executor.paint_outer_box_shadow(command.outer_box_shadow_params);
+            },
+            [&](PaintInnerBoxShadow const& command) {
+                return executor.paint_inner_box_shadow(command.outer_box_shadow_params);
+            },
+            [&](PaintTextShadow const& command) {
+                return executor.paint_text_shadow(command.blur_radius, command.shadow_bounding_rect, command.text_rect, command.text, command.font, command.color, command.fragment_baseline, command.draw_location);
+            },
+            [&](FillRectWithRoundedCorners const& command) {
+                return executor.fill_rect_with_rounded_corners(command.rect, command.color, command.top_left_radius, command.top_right_radius, command.bottom_left_radius, command.bottom_right_radius, command.aa_translation);
+            },
+            [&](FillPathUsingColor const& command) {
+                return executor.fill_path_using_color(command.path, command.color, command.winding_rule, command.aa_translation);
+            },
+            [&](FillPathUsingPaintStyle const& command) {
+                return executor.fill_path_using_paint_style(command.path, command.paint_style, command.winding_rule, command.opacity, command.aa_translation);
+            },
+            [&](StrokePathUsingColor const& command) {
+                return executor.stroke_path_using_color(command.path, command.color, command.thickness, command.aa_translation);
+            },
+            [&](StrokePathUsingPaintStyle const& command) {
+                return executor.stroke_path_using_paint_style(command.path, command.paint_style, command.thickness, command.opacity, command.aa_translation);
+            },
+            [&](DrawEllipse const& command) {
+                return executor.draw_ellipse(command.rect, command.color, command.thickness);
+            },
+            [&](FillElipse const& command) {
+                return executor.fill_ellipse(command.rect, command.color, command.blend_mode);
+            },
+            [&](DrawLine const& command) {
+                return executor.draw_line(command.color, command.from, command.to, command.thickness, command.style, command.alternate_color);
+            },
+            [&](DrawSignedDistanceField const& command) {
+                return executor.draw_signed_distance_field(command.rect, command.color, command.sdf, command.smoothing);
+            },
+            [&](PaintProgressbar const& command) {
+                return executor.paint_progressbar(command.frame_rect, command.progress_rect, command.palette, command.min, command.max, command.value, command.text);
+            },
+            [&](PaintFrame const& command) {
+                return executor.paint_frame(command.rect, command.palette, command.style);
+            },
+            [&](ApplyBackdropFilter const& command) {
+                return executor.apply_backdrop_filter(command.backdrop_region, command.backdrop_filter);
+            },
+            [&](DrawRect const& command) {
+                return executor.draw_rect(command.rect, command.color, command.rough);
+            },
+            [&](DrawTriangleWave const& command) {
+                return executor.draw_triangle_wave(command.p1, command.p2, command.color, command.amplitude, command.thickness);
+            },
+            [&](SampleUnderCorners const& command) {
+                return executor.sample_under_corners(command.corner_clipper);
+            },
+            [&](BlitCornerClipping const& command) {
+                return executor.blit_corner_clipping(command.corner_clipper);
+            });
+
         if (result == CommandResult::SkipStackingContext) {
             auto stacking_context_nesting_level = 1;
             while (next_command_index < m_painting_commands.size()) {
@@ -857,8 +537,6 @@ void RecordingPainter::execute(Gfx::Bitmap& bitmap)
             }
         }
     }
-
-    VERIFY(state.stacking_contexts.size() == 1);
 }
 
 }

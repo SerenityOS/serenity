@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/PaintingCommandExecutorCPU.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/Timer.h>
 #include <WebContent/WebContentClientEndpoint.h>
@@ -144,7 +145,8 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     context.set_has_focus(m_has_focus);
     document->paintable()->paint_all_phases(context);
 
-    recording_painter.execute(target);
+    Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);
+    recording_painter.execute(painting_command_executor);
 }
 
 void PageHost::set_viewport_rect(Web::DevicePixelRect const& rect)
