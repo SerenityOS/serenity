@@ -118,15 +118,29 @@ u16 Hhea::number_of_h_metrics() const
 
 ErrorOr<Maxp> Maxp::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < sizeof(MaximumProfileVersion0_5))
+    // All Maximum Profile tables begin with a version.
+    if (slice.size() < sizeof(Version16Dot16))
         return Error::from_string_literal("Could not load Maxp: Not enough data");
+    Version16Dot16 const& version = *bit_cast<Version16Dot16 const*>(slice.data());
 
-    return Maxp(slice);
+    if (version.major == 0 && version.minor == 5) {
+        if (slice.size() < sizeof(MaximumProfileVersion0_5))
+            return Error::from_string_literal("Could not load Maxp: Not enough data");
+        return Maxp(bit_cast<MaximumProfileVersion0_5 const*>(slice.data()));
+    }
+
+    if (version.major == 1 && version.minor == 0) {
+        if (slice.size() < sizeof(MaximumProfileVersion1_0))
+            return Error::from_string_literal("Could not load Maxp: Not enough data");
+        return Maxp(bit_cast<MaximumProfileVersion1_0 const*>(slice.data()));
+    }
+
+    return Error::from_string_literal("Could not load Maxp: Unrecognized version");
 }
 
 u16 Maxp::num_glyphs() const
 {
-    return header().num_glyphs;
+    return m_data.visit([](auto const* any) { return any->num_glyphs; });
 }
 
 ErrorOr<Hmtx> Hmtx::from_slice(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
