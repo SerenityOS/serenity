@@ -123,23 +123,10 @@ CommandResult DrawScaledBitmap::execute(CommandExecutionState& state) const
     return CommandResult::Continue;
 }
 
-CommandResult SaveState::execute(CommandExecutionState& state) const
+CommandResult SetClipRect::execute(CommandExecutionState& state) const
 {
     auto& painter = state.painter();
-    painter.save();
-    return CommandResult::Continue;
-}
-
-CommandResult RestoreState::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
-    painter.restore();
-    return CommandResult::Continue;
-}
-
-CommandResult AddClipRect::execute(CommandExecutionState& state) const
-{
-    auto& painter = state.painter();
+    painter.clear_clip_rect();
     painter.add_clip_rect(rect);
     return CommandResult::Continue;
 }
@@ -648,12 +635,15 @@ void RecordingPainter::draw_text_run(Gfx::IntPoint baseline_start, Utf8View stri
 
 void RecordingPainter::add_clip_rect(Gfx::IntRect const& rect)
 {
-    push_command(AddClipRect { .rect = state().translation.map(rect) });
-}
+    auto prev_clip_rect = state().clip_rect;
+    if (!state().clip_rect.has_value()) {
+        state().clip_rect = state().translation.map(rect);
+    } else {
+        state().clip_rect->intersect(state().translation.map(rect));
+    }
 
-void RecordingPainter::clear_clip_rect()
-{
-    push_command(ClearClipRect {});
+    if (prev_clip_rect != state().clip_rect)
+        push_command(SetClipRect { .rect = *state().clip_rect });
 }
 
 void RecordingPainter::translate(int dx, int dy)
@@ -674,14 +664,21 @@ void RecordingPainter::set_font(Gfx::Font const& font)
 void RecordingPainter::save()
 {
     m_state_stack.append(m_state_stack.last());
-    push_command(SaveState {});
 }
 
 void RecordingPainter::restore()
 {
+    auto prev_clip_rect = state().clip_rect;
+
     VERIFY(m_state_stack.size() > 1);
     m_state_stack.take_last();
-    push_command(RestoreState {});
+
+    if (state().clip_rect != prev_clip_rect) {
+        if (state().clip_rect.has_value())
+            push_command(SetClipRect { .rect = *state().clip_rect });
+        else
+            push_command(ClearClipRect {});
+    }
 }
 
 void RecordingPainter::push_stacking_context(PushStackingContextParams params)
