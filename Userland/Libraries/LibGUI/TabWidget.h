@@ -12,15 +12,17 @@
 
 namespace GUI {
 
+enum class TabPosition {
+    Top,
+    Bottom,
+    Left,
+    Right,
+};
+
 class TabWidget : public Widget {
     C_OBJECT(TabWidget)
 public:
-    enum TabPosition {
-        Top,
-        Bottom,
-        Left,
-        Right,
-    };
+    typedef GUI::TabPosition TabPosition;
 
     virtual ~TabWidget() override = default;
 

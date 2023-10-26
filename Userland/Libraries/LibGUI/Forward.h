@@ -100,6 +100,8 @@ class ConnectionToWindowServer;
 enum class ModelRole;
 enum class SortOrder;
 
+enum class TabPosition;
+
 }
 
 namespace WindowServer {

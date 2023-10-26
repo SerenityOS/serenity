@@ -9,6 +9,7 @@
  */
 
 #include <AK/StringView.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
