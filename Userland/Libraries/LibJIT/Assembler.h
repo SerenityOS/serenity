@@ -140,8 +140,13 @@ struct Assembler {
                 | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x89);
-            emit8(0x80 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
-            emit32(dst.offset_or_immediate);
+            if (dst.offset_or_immediate <= 127) {
+                emit8(0x40 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+                emit8(dst.offset_or_immediate);
+            } else {
+                emit8(0x80 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+                emit32(dst.offset_or_immediate);
+            }
             return;
         }
 
@@ -150,8 +155,13 @@ struct Assembler {
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x8b);
-            emit8(0x80 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
-            emit32(src.offset_or_immediate);
+            if (src.offset_or_immediate <= 127) {
+                emit8(0x40 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
+                emit8(src.offset_or_immediate);
+            } else {
+                emit8(0x80 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
+                emit32(src.offset_or_immediate);
+            }
             return;
         }
 
