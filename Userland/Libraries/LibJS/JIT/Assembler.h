@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibJS/Bytecode/BasicBlock.h>
 
 namespace JS::JIT {
 
@@ -245,33 +244,6 @@ struct Assembler {
         // ud2
         emit8(0x0f);
         emit8(0x0b);
-    }
-
-    void jump(Bytecode::BasicBlock& target)
-    {
-        // jmp target (RIP-relative 32-bit offset)
-        emit8(0xe9);
-        target.jumps_to_here.append(m_output.size());
-        emit32(0xdeadbeef);
-    }
-
-    void jump_conditional(Reg reg, Bytecode::BasicBlock& true_target, Bytecode::BasicBlock& false_target)
-    {
-        // if (reg & 1) is 0, jump to false_target, else jump to true_target
-        // test reg, 1
-        emit8(0x48 | ((to_underlying(reg) >= 8) ? 1 << 2 : 0));
-        emit8(0xf7);
-        emit8(0xc0 | encode_reg(reg));
-        emit32(0x01);
-
-        // jz false_target (RIP-relative 32-bit offset)
-        emit8(0x0f);
-        emit8(0x84);
-        false_target.jumps_to_here.append(m_output.size());
-        emit32(0xdeadbeef);
-
-        // jmp true_target (RIP-relative 32-bit offset)
-        jump(true_target);
     }
 
     void cmp(Operand lhs, Operand rhs)
