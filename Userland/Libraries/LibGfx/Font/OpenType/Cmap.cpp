@@ -96,6 +96,7 @@ u32 Cmap::Subtable::glyph_id_for_code_point(u32 code_point) const
 
 u32 Cmap::Subtable::glyph_id_for_code_point_table_0(u32 code_point) const
 {
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/cmap#format-0-byte-encoding-table
     if (code_point > 255)
         return 0;
 
@@ -104,6 +105,7 @@ u32 Cmap::Subtable::glyph_id_for_code_point_table_0(u32 code_point) const
 
 u32 Cmap::Subtable::glyph_id_for_code_point_table_4(u32 code_point) const
 {
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/cmap#format-4-segment-mapping-to-delta-values
     u32 segcount_x2 = be_u16(m_slice.offset((u32)Table4Offsets::SegCountX2));
     if (m_slice.size() < segcount_x2 * (u32)Table4Sizes::NonConstMultiplier + (u32)Table4Sizes::Constant)
         return 0;
@@ -135,6 +137,7 @@ u32 Cmap::Subtable::glyph_id_for_code_point_table_4(u32 code_point) const
 
 u32 Cmap::Subtable::glyph_id_for_code_point_table_6(u32 code_point) const
 {
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/cmap#format-6-trimmed-table-mapping
     u32 first_code = be_u16(m_slice.offset((u32)Table6Offsets::FirstCode));
     if (code_point < first_code)
         return 0;
@@ -149,6 +152,7 @@ u32 Cmap::Subtable::glyph_id_for_code_point_table_6(u32 code_point) const
 
 u32 Cmap::Subtable::glyph_id_for_code_point_table_12(u32 code_point) const
 {
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/cmap#format-12-segmented-coverage
     u32 num_groups = be_u32(m_slice.offset((u32)Table12Offsets::NumGroups));
     VERIFY(m_slice.size() >= (u32)Table12Sizes::Header + (u32)Table12Sizes::Record * num_groups);
     for (u32 offset = 0; offset < num_groups * (u32)Table12Sizes::Record; offset += (u32)Table12Sizes::Record) {
