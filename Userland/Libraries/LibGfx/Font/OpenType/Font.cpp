@@ -23,6 +23,26 @@
 
 namespace OpenType {
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/otff#ttc-header
+struct [[gnu::packed]] TTCHeaderV1 {
+    Tag ttc_tag;                      // Font Collection ID string: 'ttcf' (used for fonts with CFF or CFF2 outlines as well as TrueType outlines)
+    BigEndian<u16> major_version;     // Major version of the TTC Header, = 1.
+    BigEndian<u16> minor_version;     // Minor version of the TTC Header, = 0.
+    BigEndian<u32> num_fonts;         // Number of fonts in TTC
+    Offset32 table_directory_offsets; // Array of offsets to the TableDirectory for each font from the beginning of the file
+};
+static_assert(AssertSize<TTCHeaderV1, 16>());
+
+}
+
+template<>
+class AK::Traits<OpenType::TTCHeaderV1> : public GenericTraits<OpenType::TTCHeaderV1> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+namespace OpenType {
+
 u16 be_u16(u8 const*);
 u32 be_u32(u8 const*);
 i16 be_i16(u8 const*);
@@ -63,16 +83,20 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_resource(Core::Resource const& 
 
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, unsigned index)
 {
-    if (buffer.size() < 4)
-        return Error::from_string_literal("Font file too small");
+    FixedMemoryStream stream { buffer };
 
-    u32 tag = be_u32(buffer.data());
+    auto tag = TRY(stream.read_value<Tag>());
     if (tag == tag_from_str("ttcf")) {
         // It's a font collection
-        if (buffer.size() < (u32)Sizes::TTCHeaderV1 + sizeof(u32) * (index + 1))
-            return Error::from_string_literal("Font file too small");
+        TRY(stream.seek(0, SeekMode::SetPosition));
+        auto ttc_header_v1 = TRY(stream.read_in_place<TTCHeaderV1>());
+        // FIXME: Check for major_version == 2.
 
-        u32 offset = be_u32(buffer.offset((u32)Sizes::TTCHeaderV1 + sizeof(u32) * index));
+        if (index >= ttc_header_v1->num_fonts)
+            return Error::from_string_literal("Requested font index is too large");
+
+        TRY(stream.seek(ttc_header_v1->table_directory_offsets + sizeof(u32) * index, SeekMode::SetPosition));
+        auto offset = TRY(stream.read_value<BigEndian<u32>>());
         return try_load_from_offset(buffer, offset);
     }
     if (tag == tag_from_str("OTTO"))
