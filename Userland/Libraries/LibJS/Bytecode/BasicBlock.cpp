@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Op.h>
 
 namespace JS::Bytecode {
 
-NonnullOwnPtr<BasicBlock> BasicBlock::create(DeprecatedString name)
+NonnullOwnPtr<BasicBlock> BasicBlock::create(String name)
 {
     return adopt_own(*new BasicBlock(move(name)));
 }
 
-BasicBlock::BasicBlock(DeprecatedString name)
+BasicBlock::BasicBlock(String name)
     : m_name(move(name))
 {
 }
