@@ -2,7 +2,7 @@ import("//Ladybird/compile_qt_resource_file.gni")
 import("//Ladybird/link_qt.gni")
 import("//Ladybird/moc_qt_objects.gni")
 
-group("ladybird") {
+group("Ladybird") {
   if (current_os == "mac") {
     deps = [ ":ladybird.app" ]
   } else {
@@ -98,10 +98,7 @@ executable("ladybird_executable") {
   ]
   sources += get_target_outputs(":generate_moc") +
              get_target_outputs(":compile_resource_file")
-  if (current_os == "android") {
-    sources += [ "AndroidPlatform.cpp" ]
-  }
-  output_name = "ladybird"
+  output_name = "Ladybird"
 }
 
 executable("headless-browser") {
@@ -149,13 +146,13 @@ if (current_os == "mac") {
       "WebSocket",
     ]
     sources = [
+      "$root_out_dir/bin/Ladybird",
       "$root_out_dir/bin/RequestServer",
       "$root_out_dir/bin/SQLServer",
       "$root_out_dir/bin/WebContent",
       "$root_out_dir/bin/WebDriver",
       "$root_out_dir/bin/WebSocket",
       "$root_out_dir/bin/headless-browser",
-      "$root_out_dir/bin/ladybird",
     ]
     outputs = [ "{{bundle_executable_dir}}/{{source_file_part}}" ]
   }
@@ -288,7 +285,7 @@ if (current_os == "mac") {
     outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
   }
 
-  create_bundle("ladybird.app") {
+  create_bundle("Ladybird.app") {
     product_type = "com.apple.product-type.application"
 
     bundle_root_dir = "$root_build_dir/$target_name"
