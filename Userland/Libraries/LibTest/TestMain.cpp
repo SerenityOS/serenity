@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibTest/TestCase.h>
-
 #include <AK/Format.h>
 #include <AK/Vector.h>
 #include <LibTest/TestSuite.h>
