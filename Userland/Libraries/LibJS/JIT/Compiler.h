@@ -6,10 +6,11 @@
 
 #pragma once
 
-#include <LibJIT/Assembler.h>
-#include <LibJS/Bytecode/Executable.h>
-#include <LibJS/Bytecode/Op.h>
-#include <LibJS/JIT/NativeExecutable.h>
+#if ARCH(X86_64)
+#    include <LibJIT/Assembler.h>
+#    include <LibJS/Bytecode/Executable.h>
+#    include <LibJS/Bytecode/Op.h>
+#    include <LibJS/JIT/NativeExecutable.h>
 
 namespace JS::JIT {
 
@@ -20,6 +21,7 @@ public:
     static OwnPtr<NativeExecutable> compile(Bytecode::Executable&);
 
 private:
+#    if ARCH(X86_64)
     static constexpr auto GPR0 = Assembler::Reg::RAX;
     static constexpr auto GPR1 = Assembler::Reg::RCX;
     static constexpr auto ARG0 = Assembler::Reg::RDI;
@@ -33,6 +35,7 @@ private:
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::R13;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
     static constexpr auto UNWIND_CONTEXT_BASE = Assembler::Reg::R15;
+#    endif
 
     void compile_load_immediate(Bytecode::Op::LoadImmediate const&);
     void compile_load(Bytecode::Op::Load const&);
@@ -51,40 +54,40 @@ private:
     void compile_to_numeric(Bytecode::Op::ToNumeric const&);
     void compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding const&);
 
-#define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
-    O(Add, add)                                             \
-    O(Sub, sub)                                             \
-    O(Mul, mul)                                             \
-    O(Div, div)                                             \
-    O(Exp, exp)                                             \
-    O(Mod, mod)                                             \
-    O(In, in)                                               \
-    O(InstanceOf, instance_of)                              \
-    O(GreaterThan, greater_than)                            \
-    O(GreaterThanEquals, greater_than_equals)               \
-    O(LessThanEquals, less_than_equals)                     \
-    O(LooselyInequals, abstract_inequals)                   \
-    O(LooselyEquals, abstract_equals)                       \
-    O(StrictlyInequals, typed_inequals)                     \
-    O(StrictlyEquals, typed_equals)                         \
-    O(BitwiseAnd, bitwise_and)                              \
-    O(BitwiseOr, bitwise_or)                                \
-    O(BitwiseXor, bitwise_xor)                              \
-    O(LeftShift, left_shift)                                \
-    O(RightShift, right_shift)                              \
-    O(UnsignedRightShift, unsigned_right_shift)
+#    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
+        O(Add, add)                                             \
+        O(Sub, sub)                                             \
+        O(Mul, mul)                                             \
+        O(Div, div)                                             \
+        O(Exp, exp)                                             \
+        O(Mod, mod)                                             \
+        O(In, in)                                               \
+        O(InstanceOf, instance_of)                              \
+        O(GreaterThan, greater_than)                            \
+        O(GreaterThanEquals, greater_than_equals)               \
+        O(LessThanEquals, less_than_equals)                     \
+        O(LooselyInequals, abstract_inequals)                   \
+        O(LooselyEquals, abstract_equals)                       \
+        O(StrictlyInequals, typed_inequals)                     \
+        O(StrictlyEquals, typed_equals)                         \
+        O(BitwiseAnd, bitwise_and)                              \
+        O(BitwiseOr, bitwise_or)                                \
+        O(BitwiseXor, bitwise_xor)                              \
+        O(LeftShift, left_shift)                                \
+        O(RightShift, right_shift)                              \
+        O(UnsignedRightShift, unsigned_right_shift)
 
-#define DO_COMPILE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
-    void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
+#    define DO_COMPILE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
+        void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
 
     JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
-#undef DO_COMPILE_COMMON_BINARY_OP
+#    undef DO_COMPILE_COMMON_BINARY_OP
 
-#define DO_COMPILE_COMMON_UNARY_OP(OpTitleCase, op_snake_case) \
-    void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
+#    define DO_COMPILE_COMMON_UNARY_OP(OpTitleCase, op_snake_case) \
+        void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
 
     JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
-#undef DO_COMPILE_COMMON_UNARY_OP
+#    undef DO_COMPILE_COMMON_UNARY_OP
 
     void compile_less_than(Bytecode::Op::LessThan const&);
 
@@ -157,3 +160,14 @@ private:
 };
 
 }
+
+#else
+
+namespace JS::JIT {
+class Compiler {
+public:
+    static OwnPtr<NativeExecutable> compile(Bytecode::Executable&) { return nullptr; }
+};
+}
+
+#endif
