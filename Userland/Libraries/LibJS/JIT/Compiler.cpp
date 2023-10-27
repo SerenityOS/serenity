@@ -656,6 +656,24 @@ void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
     check_exception();
 }
 
+static Value cxx_get_variable(VM& vm, DeprecatedFlyString const& name, u32 cache_index)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_variable(vm.bytecode_interpreter(), name, cache_index));
+}
+
+void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(op.cache_index()));
+    m_assembler.native_call((void*)cxx_get_variable);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 static Value cxx_to_numeric(VM& vm, Value value)
 {
     return TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
@@ -902,6 +920,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::GetGlobal:
                 compiler.compile_get_global(static_cast<Bytecode::Op::GetGlobal const&>(op));
+                break;
+            case Bytecode::Instruction::Type::GetVariable:
+                compiler.compile_get_variable(static_cast<Bytecode::Op::GetVariable const&>(op));
                 break;
             case Bytecode::Instruction::Type::PutById:
                 compiler.compile_put_by_id(static_cast<Bytecode::Op::PutById const&>(op));
