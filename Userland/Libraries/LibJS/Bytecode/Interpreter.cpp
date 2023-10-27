@@ -780,27 +780,7 @@ ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interp
 
 ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
-
-    auto& cached_environment_coordinate = interpreter.current_executable().environment_variable_caches[m_cache_index];
-    if (cached_environment_coordinate.has_value()) {
-        auto environment = vm.running_execution_context().lexical_environment;
-        for (size_t i = 0; i < cached_environment_coordinate->hops; ++i)
-            environment = environment->outer_environment();
-        VERIFY(environment);
-        VERIFY(environment->is_declarative_environment());
-        if (!environment->is_permanently_screwed_by_eval()) {
-            interpreter.accumulator() = TRY(verify_cast<DeclarativeEnvironment>(*environment).get_binding_value_direct(vm, cached_environment_coordinate.value().index, vm.in_strict_mode()));
-            return {};
-        }
-        cached_environment_coordinate = {};
-    }
-
-    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-    auto reference = TRY(vm.resolve_binding(string));
-    if (reference.environment_coordinate().has_value())
-        cached_environment_coordinate = reference.environment_coordinate();
-    interpreter.accumulator() = TRY(reference.get_value(vm));
+    interpreter.accumulator() = TRY(get_variable(interpreter, interpreter.current_executable().get_identifier(m_identifier), m_cache_index));
     return {};
 }
 

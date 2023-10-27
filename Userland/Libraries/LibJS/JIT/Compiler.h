@@ -95,6 +95,7 @@ private:
     void compile_get_by_id(Bytecode::Op::GetById const&);
     void compile_get_by_value(Bytecode::Op::GetByValue const&);
     void compile_get_global(Bytecode::Op::GetGlobal const&);
+    void compile_get_variable(Bytecode::Op::GetVariable const&);
 
     void compile_put_by_id(Bytecode::Op::PutById const&);
     void compile_put_by_value(Bytecode::Op::PutByValue const&);
