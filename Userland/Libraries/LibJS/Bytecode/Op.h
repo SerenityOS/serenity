@@ -470,6 +470,8 @@ public:
 
     IdentifierTableIndex identifier() const { return m_identifier; }
     u32 cache_index() const { return m_cache_index; }
+    Register callee() const { return m_callee_reg; }
+    Register this_() const { return m_this_reg; }
 
 private:
     IdentifierTableIndex m_identifier;
