@@ -43,9 +43,7 @@ struct Assembler {
     struct Operand {
         enum class Type {
             Reg,
-            Imm8,
-            Imm32,
-            Imm64,
+            Imm,
             Mem64BaseAndOffset,
         };
 
@@ -62,27 +60,11 @@ struct Assembler {
             return operand;
         }
 
-        static Operand Imm8(u8 imm8)
+        static Operand Imm(u64 imm)
         {
             Operand operand;
-            operand.type = Type::Imm8;
-            operand.offset_or_immediate = imm8;
-            return operand;
-        }
-
-        static Operand Imm32(u32 imm32)
-        {
-            Operand operand;
-            operand.type = Type::Imm32;
-            operand.offset_or_immediate = imm32;
-            return operand;
-        }
-
-        static Operand Imm64(u64 imm64)
-        {
-            Operand operand;
-            operand.type = Type::Imm64;
-            operand.offset_or_immediate = imm64;
+            operand.type = Type::Imm;
+            operand.offset_or_immediate = imm;
             return operand;
         }
 
@@ -94,6 +76,27 @@ struct Assembler {
             operand.offset_or_immediate = offset;
             return operand;
         }
+
+        bool fits_in_u8() const
+        {
+            VERIFY(type == Type::Imm);
+            return offset_or_immediate <= NumericLimits<u8>::max();
+        }
+        bool fits_in_u32() const
+        {
+            VERIFY(type == Type::Imm);
+            return offset_or_immediate <= NumericLimits<u32>::max();
+        }
+        bool fits_in_i8() const
+        {
+            VERIFY(type == Type::Imm);
+            return (offset_or_immediate <= NumericLimits<i8>::max()) || (((~offset_or_immediate) & NumericLimits<i8>::min()) == 0);
+        }
+        bool fits_in_i32() const
+        {
+            VERIFY(type == Type::Imm);
+            return (offset_or_immediate <= NumericLimits<i32>::max()) || (((~offset_or_immediate) & NumericLimits<i32>::min()) == 0);
+        }
     };
 
     static constexpr u8 encode_reg(Reg reg)
@@ -104,7 +107,8 @@ struct Assembler {
     void shift_right(Operand dst, Operand count)
     {
         VERIFY(dst.type == Operand::Type::Reg);
-        VERIFY(count.type == Operand::Type::Imm8);
+        VERIFY(count.type == Operand::Type::Imm);
+        VERIFY(count.fits_in_u8());
         emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
         emit8(0xc1);
         emit8(0xe8 | encode_reg(dst.reg));
@@ -129,13 +133,22 @@ struct Assembler {
             return;
         }
 
-        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm64) {
-            if (patchable == Patchable::No && src.offset_or_immediate == 0) {
-                // xor dst, dst
-                emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? (1 << 0 | 1 << 2) : 0));
-                emit8(0x31);
-                emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(dst.reg));
-                return;
+        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm) {
+            if (patchable == Patchable::No) {
+                if (src.offset_or_immediate == 0) {
+                    // xor dst, dst
+                    emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? (1 << 0 | 1 << 2) : 0));
+                    emit8(0x31);
+                    emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(dst.reg));
+                    return;
+                }
+                if (src.fits_in_u32()) {
+                    if (dst.reg > Reg::RDI)
+                        emit8(0x41);
+                    emit8(0xb8 | encode_reg(dst.reg));
+                    emit32(src.offset_or_immediate);
+                    return;
+                }
             }
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0xb8 | encode_reg(dst.reg));
@@ -282,7 +295,12 @@ struct Assembler {
                 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x39);
             emit8(0xc0 | (encode_reg(rhs.reg) << 3) | encode_reg(lhs.reg));
-        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm32) {
+        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm && rhs.fits_in_i8()) {
+            emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x83);
+            emit8(0xf8 | encode_reg(lhs.reg));
+            emit8(rhs.offset_or_immediate);
+        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm && rhs.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
             emit8(0xf8 | encode_reg(lhs.reg));
@@ -300,7 +318,8 @@ struct Assembler {
                 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x85);
             emit8(0xc0 | (encode_reg(rhs.reg) << 3) | encode_reg(lhs.reg));
-        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm32) {
+        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm) {
+            VERIFY(rhs.fits_in_i32());
             emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0xf7);
             emit8(0xc0 | encode_reg(lhs.reg));
@@ -334,7 +353,7 @@ struct Assembler {
 
     void jump_if_equal(Operand lhs, Operand rhs, Label& label)
     {
-        if (rhs.type == Operand::Type::Imm32 && rhs.offset_or_immediate == 0) {
+        if (rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
             jump_if_zero(lhs, label);
             return;
         }
@@ -350,7 +369,7 @@ struct Assembler {
 
     void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
     {
-        if (rhs.type == Operand::Type::Imm32 && rhs.offset_or_immediate == 0) {
+        if (rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
             jump_if_not_zero(lhs, label);
             return;
         }
@@ -392,7 +411,12 @@ struct Assembler {
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x21);
             emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm32) {
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x83);
+            emit8(0xe0 | encode_reg(dst.reg));
+            emit8(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
             emit8(0xe0 | encode_reg(dst.reg));
@@ -411,7 +435,12 @@ struct Assembler {
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x09);
             emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm32) {
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x83);
+            emit8(0xc8 | encode_reg(dst.reg));
+            emit8(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
             emit8(0xc8 | encode_reg(dst.reg));
@@ -427,7 +456,7 @@ struct Assembler {
 
         push(Operand::Register(Reg::RBP));
         mov(Operand::Register(Reg::RBP), Operand::Register(Reg::RSP));
-        sub(Operand::Register(Reg::RSP), Operand::Imm8(8));
+        sub(Operand::Register(Reg::RSP), Operand::Imm(8));
     }
 
     void exit()
@@ -470,7 +499,8 @@ struct Assembler {
             if (to_underlying(op.reg) >= 8)
                 emit8(0x49);
             emit8(0x50 | encode_reg(op.reg));
-        } else if (op.type == Operand::Type::Imm32) {
+        } else if (op.type == Operand::Type::Imm) {
+            VERIFY(op.fits_in_i32());
             emit8(0x68);
             emit32(op.offset_or_immediate);
         } else {
@@ -497,16 +527,16 @@ struct Assembler {
                 | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x01);
             emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm32) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
-            emit8(0x81);
-            emit8(0xc0 | encode_reg(dst.reg));
-            emit32(src.offset_or_immediate);
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm8) {
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
             emit8(0xc0 | encode_reg(dst.reg));
             emit8(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x81);
+            emit8(0xc0 | encode_reg(dst.reg));
+            emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
         }
@@ -520,16 +550,16 @@ struct Assembler {
                 | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x29);
             emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm32) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
-            emit8(0x81);
-            emit8(0xe8 | encode_reg(dst.reg));
-            emit32(src.offset_or_immediate);
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm8) {
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
             emit8(0xe8 | encode_reg(dst.reg));
             emit8(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x81);
+            emit8(0xe8 | encode_reg(dst.reg));
+            emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
         }
@@ -549,17 +579,17 @@ struct Assembler {
         push(Operand::Register(Reg::R11));
 
         // align the stack to 16-byte boundary
-        sub(Operand::Register(Reg::RSP), Operand::Imm8(8));
+        sub(Operand::Register(Reg::RSP), Operand::Imm(8));
 
         // load callee into RAX
-        mov(Operand::Register(Reg::RAX), Operand::Imm64(bit_cast<u64>(callee)));
+        mov(Operand::Register(Reg::RAX), Operand::Imm(bit_cast<u64>(callee)));
 
         // call RAX
         emit8(0xff);
         emit8(0xd0);
 
         // adjust stack pointer
-        add(Operand::Register(Reg::RSP), Operand::Imm8(8));
+        add(Operand::Register(Reg::RSP), Operand::Imm(8));
 
         // restore caller-saved registers from the stack
         pop(Operand::Register(Reg::R11));
