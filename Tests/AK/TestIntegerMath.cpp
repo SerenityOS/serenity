@@ -36,3 +36,21 @@ TEST_CASE(is_power_of)
     check_prime.operator()<97>(9);
     check_prime.operator()<257>(7);
 }
+
+TEST_CASE(exp2)
+{
+    EXPECT_EQ(AK::exp2<u64>(0), 1ull);
+    EXPECT_EQ(AK::exp2<u64>(1), 2ull);
+    EXPECT_EQ(AK::exp2<i8>(6), 64);
+    EXPECT_EQ(AK::exp2<u8>(7), 128);
+    EXPECT_EQ(AK::exp2<u16>(9), 512);
+    EXPECT_EQ(AK::exp2<i16>(14), 16384);
+    EXPECT_EQ(AK::exp2<u16>(15), 32768);
+    EXPECT_EQ(AK::exp2<u32>(17), 131072u);
+    EXPECT_EQ(AK::exp2<i32>(30), 1073741824);
+    EXPECT_EQ(AK::exp2<u32>(31), 2147483648);
+    EXPECT_EQ(AK::exp2<i64>(32), 4294967296);
+    EXPECT_EQ(AK::exp2<u64>(33), 8589934592ull);
+    EXPECT_EQ(AK::exp2<i64>(62), 4611686018427387904);
+    EXPECT_EQ(AK::exp2<u64>(63), 9223372036854775808ull);
+}

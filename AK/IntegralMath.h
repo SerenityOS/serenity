@@ -15,7 +15,7 @@ namespace AK {
 template<Integral T>
 constexpr T exp2(T exponent)
 {
-    return 1u << exponent;
+    return static_cast<T>(1) << exponent;
 }
 
 template<Integral T>
