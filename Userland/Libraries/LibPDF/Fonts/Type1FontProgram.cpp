@@ -500,6 +500,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 case Hflex1:
                 case Flex1:
                     // TODO: implement these
+                    dbgln_if(PDF_DEBUG, "Unimplemented flex: 12 {}", data[i]);
                     state.sp = 0;
                     break;
 
