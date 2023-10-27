@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <LibGUI/TabWidget.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
+#include <LibGfx/TabPosition.h>
 
 namespace Gfx {
 
@@ -38,7 +38,7 @@ public:
     virtual ~BaseStylePainter() = default;
 
     virtual void paint_button(Painter&, IntRect const&, Palette const&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false, bool default_button = false) = 0;
-    virtual void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window, bool accented) = 0;
+    virtual void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, TabPosition position, bool in_active_window, bool accented) = 0;
     virtual void paint_frame(Painter&, IntRect const&, Palette const&, FrameStyle, bool skip_vertical_lines = false) = 0;
     virtual void paint_window_frame(Painter&, IntRect const&, Palette const&) = 0;
     virtual void paint_progressbar(Painter&, IntRect const&, Palette const&, int min, int max, int value, StringView text, Orientation = Orientation::Horizontal) = 0;
@@ -57,7 +57,7 @@ public:
 
     // FIXME: These are here for API compatibility, we should probably remove them and move BaseStylePainter into here
     static void paint_button(Painter&, IntRect const&, Palette const&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false, bool default_button = false);
-    static void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window, bool accented);
+    static void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, TabPosition position, bool in_active_window, bool accented);
     static void paint_frame(Painter&, IntRect const&, Palette const&, FrameStyle, bool skip_vertical_lines = false);
     static void paint_window_frame(Painter&, IntRect const&, Palette const&);
     static void paint_progressbar(Painter&, IntRect const&, Palette const&, int min, int max, int value, StringView text, Orientation = Orientation::Horizontal);

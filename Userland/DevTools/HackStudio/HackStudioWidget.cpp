@@ -1371,7 +1371,7 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
 void HackStudioWidget::create_project_tab(GUI::Widget& parent)
 {
     m_project_tab = parent.add<GUI::TabWidget>();
-    m_project_tab->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    m_project_tab->set_tab_position(TabPosition::Bottom);
 
     auto& tree_view_container = m_project_tab->add_tab<GUI::Widget>("Files"_string);
     tree_view_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 2);

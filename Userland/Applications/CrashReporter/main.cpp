@@ -244,7 +244,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     backtrace_label.set_fixed_height(16);
 
     auto& backtrace_tab_widget = backtrace_tab.add<GUI::TabWidget>();
-    backtrace_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    backtrace_tab_widget.set_tab_position(TabPosition::Bottom);
 
     auto& cpu_registers_tab = tab_widget.add_tab<GUI::Widget>("CPU Registers"_string);
     cpu_registers_tab.set_layout<GUI::VerticalBoxLayout>(4);
@@ -254,7 +254,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     cpu_registers_label.set_fixed_height(16);
 
     auto& cpu_registers_tab_widget = cpu_registers_tab.add<GUI::TabWidget>();
-    cpu_registers_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    cpu_registers_tab_widget.set_tab_position(TabPosition::Bottom);
 
     auto& environment_tab = tab_widget.add_tab<GUI::Widget>("Environment"_string);
     environment_tab.set_layout<GUI::VerticalBoxLayout>(4);
