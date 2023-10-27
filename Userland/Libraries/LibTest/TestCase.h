@@ -7,22 +7,13 @@
 
 #pragma once
 
-#include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
-#include <LibTest/Randomized/RandomnessSource.h>
-#include <LibTest/Randomized/Shrink.h>
-
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-
-#ifndef MAX_GENERATED_VALUES_PER_TEST
-#    define MAX_GENERATED_VALUES_PER_TEST 100
-#endif
-
-#ifndef MAX_GEN_ATTEMPTS_PER_VALUE
-#    define MAX_GEN_ATTEMPTS_PER_VALUE 15
-#endif
+#include <LibTest/Macros.h>
+#include <LibTest/Randomized/RandomnessSource.h>
+#include <LibTest/Randomized/Shrink.h>
 
 namespace Test {
 
@@ -54,8 +45,12 @@ public:
     static NonnullRefPtr<TestCase> randomized(DeprecatedString const& name, TestFunction&& test_function)
     {
         using namespace Randomized;
+
+        constexpr u8 MAX_GEN_ATTEMPTS_PER_VALUE = 15;
+
         TestFunction test_case_function = [test_function = move(test_function)]() {
-            for (u32 i = 0; i < MAX_GENERATED_VALUES_PER_TEST; ++i) {
+            u64 max_randomized_runs = randomized_runs();
+            for (u64 i = 0; i < max_randomized_runs; ++i) {
                 bool generated_successfully = false;
                 u8 gen_attempt;
                 for (gen_attempt = 0; gen_attempt < MAX_GEN_ATTEMPTS_PER_VALUE && !generated_successfully; ++gen_attempt) {
@@ -100,7 +95,7 @@ public:
                     return;
                 }
             }
-            // MAX_GENERATED_VALUES_PER_TEST values generated, all passed the test.
+            // All randomized_runs() values generated + passed the test.
         };
         return make_ref_counted<TestCase>(name, move(test_case_function), false);
     }
