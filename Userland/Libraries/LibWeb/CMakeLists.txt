@@ -626,6 +626,10 @@ set(SOURCES
     XML/XMLDocumentBuilder.cpp
 )
 
+if (LINUX)
+    list(APPEND SOURCES Painting/PaintingCommandExecutorGPU.cpp)
+endif()
+
 invoke_generator(
         "AriaRoles.cpp"
         Lagom::GenerateAriaRoles
@@ -658,6 +662,10 @@ serenity_lib(LibWeb web)
 # NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
 target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGL LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibAudio LibVideo LibWasm LibXML LibIDL)
 link_with_locale_data(LibWeb)
+
+if (LINUX)
+    target_link_libraries(LibWeb PRIVATE LibAccelGfx)
+endif()
 
 generate_js_bindings(LibWeb)
 
