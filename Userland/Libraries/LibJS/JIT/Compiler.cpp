@@ -9,6 +9,7 @@
 #include <LibJS/Bytecode/CommonImplementations.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Bytecode/RegexTable.h>
 #include <LibJS/JIT/Compiler.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -583,6 +584,31 @@ void Compiler::compile_new_string(Bytecode::Op::NewString const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_new_regexp(VM& vm, Bytecode::ParsedRegex const& parsed_regex, DeprecatedString const& pattern, DeprecatedString const& flags)
+{
+    return Bytecode::new_regexp(vm, parsed_regex, pattern, flags);
+}
+
+void Compiler::compile_new_regexp(Bytecode::Op::NewRegExp const& op)
+{
+    auto const& parsed_regex = m_bytecode_executable.regex_table->get(op.regex_index());
+    auto const& pattern = m_bytecode_executable.string_table->get(op.source_index());
+    auto const& flags = m_bytecode_executable.string_table->get(op.flags_index());
+
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(bit_cast<u64>(&parsed_regex)));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(bit_cast<u64>(&pattern)));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm64(bit_cast<u64>(&flags)));
+
+    m_assembler.native_call((void*)cxx_new_regexp);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
 static Value cxx_new_object(VM& vm)
 {
     auto& realm = *vm.current_realm();
@@ -1016,6 +1042,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::NewFunction:
                 compiler.compile_new_function(static_cast<Bytecode::Op::NewFunction const&>(op));
+                break;
+            case Bytecode::Instruction::Type::NewRegExp:
+                compiler.compile_new_regexp(static_cast<Bytecode::Op::NewRegExp const&>(op));
                 break;
             case Bytecode::Instruction::Type::GetById:
                 compiler.compile_get_by_id(static_cast<Bytecode::Op::GetById const&>(op));
