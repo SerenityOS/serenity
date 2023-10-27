@@ -958,7 +958,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 
     auto* executable_memory = mmap(nullptr, compiler.m_output.size(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     if (executable_memory == MAP_FAILED) {
-        perror("mmap");
+        dbgln("mmap: {}", strerror(errno));
         return nullptr;
     }
 
@@ -986,7 +986,11 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
     }
 
     memcpy(executable_memory, compiler.m_output.data(), compiler.m_output.size());
-    mprotect(executable_memory, compiler.m_output.size(), PROT_READ | PROT_EXEC);
+
+    if (mprotect(executable_memory, compiler.m_output.size(), PROT_READ | PROT_EXEC) < 0) {
+        dbgln("mprotect: {}", strerror(errno));
+        return nullptr;
+    }
 
     if constexpr (LOG_JIT_SUCCESS) {
         dbgln("\033[32;1mJIT compilation succeeded!\033[0m {}", bytecode_executable.name);
