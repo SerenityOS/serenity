@@ -128,10 +128,10 @@ public:
 
     [[nodiscard]] BasicBlock& current_block() { return *m_current_basic_block; }
 
-    BasicBlock& make_block(DeprecatedString name = {})
+    BasicBlock& make_block(String name = {})
     {
         if (name.is_empty())
-            name = DeprecatedString::number(m_next_block++);
+            name = MUST(String::number(m_next_block++));
         auto block = BasicBlock::create(name);
         if (auto const* context = m_current_unwind_context) {
             if (context->handler().has_value())
