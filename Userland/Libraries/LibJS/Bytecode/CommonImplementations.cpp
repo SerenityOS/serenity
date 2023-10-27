@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
+#include <LibJS/Runtime/RegExpObject.h>
 
 namespace JS::Bytecode {
 
@@ -373,6 +374,25 @@ ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::
         .callee = callee,
         .this_value = this_value,
     };
+}
+
+// 13.2.7.3 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation
+Value new_regexp(VM& vm, ParsedRegex const& parsed_regex, DeprecatedString const& pattern, DeprecatedString const& flags)
+{
+    // 1. Let pattern be CodePointsToString(BodyText of RegularExpressionLiteral).
+    // 2. Let flags be CodePointsToString(FlagText of RegularExpressionLiteral).
+
+    // 3. Return ! RegExpCreate(pattern, flags).
+    auto& realm = *vm.current_realm();
+    Regex<ECMA262> regex(parsed_regex.regex, parsed_regex.pattern, parsed_regex.flags);
+    // NOTE: We bypass RegExpCreate and subsequently RegExpAlloc as an optimization to use the already parsed values.
+    auto regexp_object = RegExpObject::create(realm, move(regex), pattern, flags);
+    // RegExpAlloc has these two steps from the 'Legacy RegExp features' proposal.
+    regexp_object->set_realm(realm);
+    // We don't need to check 'If SameValue(newTarget, thisRealm.[[Intrinsics]].[[%RegExp%]]) is true'
+    // here as we know RegExpCreate calls RegExpAlloc with %RegExp% for newTarget.
+    regexp_object->set_legacy_features_enabled(true);
+    return regexp_object;
 }
 
 }
