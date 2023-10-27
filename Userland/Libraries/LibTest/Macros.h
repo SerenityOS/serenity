@@ -30,6 +30,8 @@ void set_randomness_source(Randomized::RandomnessSource);
 bool is_reporting_enabled();
 void enable_reporting();
 void disable_reporting();
+
+u64 randomized_runs();
 }
 
 #define EXPECT_EQ(a, b)                                                                                       \

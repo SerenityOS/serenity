@@ -7,11 +7,10 @@
 
 #pragma once
 
-#include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
-
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/Vector.h>
+#include <LibTest/Macros.h>
 #include <LibTest/Randomized/RandomnessSource.h>
 #include <LibTest/TestCase.h>
 #include <LibTest/TestResult.h>
@@ -61,6 +60,8 @@ public:
     void enable_reporting() { m_reporting_enabled = true; }
     void disable_reporting() { m_reporting_enabled = false; }
 
+    u64 randomized_runs() { return m_randomized_runs; }
+
 private:
     static TestSuite* s_global;
     Vector<NonnullRefPtr<TestCase>> m_cases;
@@ -68,6 +69,7 @@ private:
     u64 m_benchtime = 0;
     DeprecatedString m_suite_name;
     u64 m_benchmark_repetitions = 1;
+    u64 m_randomized_runs = 100;
     Function<void()> m_setup;
     TestResult m_current_test_result = TestResult::NotRun;
     Randomized::RandomnessSource m_randomness_source = Randomized::RandomnessSource::live();
