@@ -254,16 +254,18 @@ function(lagom_lib target_name fs_name)
 endfunction()
 
 function(lagom_test source)
-    cmake_parse_arguments(LAGOM_TEST "" "WORKING_DIRECTORY" "LIBS" ${ARGN})
-    get_filename_component(name ${source} NAME_WE)
-    add_executable(${name} ${source})
-    target_link_libraries(${name} PRIVATE LibCore LibFileSystem LibTest LibTestMain ${LAGOM_TEST_LIBS})
+    cmake_parse_arguments(LAGOM_TEST "" "NAME;WORKING_DIRECTORY" "LIBS" ${ARGN})
+    if (NOT DEFINED LAGOM_TEST_NAME)
+        get_filename_component(LAGOM_TEST_NAME ${source} NAME_WE)
+    endif()
+    add_executable(${LAGOM_TEST_NAME} ${source})
+    target_link_libraries(${LAGOM_TEST_NAME} PRIVATE LibCore LibFileSystem LibTest LibTestMain ${LAGOM_TEST_LIBS})
     add_test(
-        NAME ${name}
-        COMMAND ${name}
+        NAME ${LAGOM_TEST_NAME}
+        COMMAND ${LAGOM_TEST_NAME}
         WORKING_DIRECTORY ${LAGOM_TEST_WORKING_DIRECTORY}
     )
-    set_target_properties(${name} PROPERTIES LAGOM_WORKING_DIRECTORY "${LAGOM_TEST_WORKING_DIRECTORY}")
+    set_target_properties(${LAGOM_TEST_NAME} PROPERTIES LAGOM_WORKING_DIRECTORY "${LAGOM_TEST_WORKING_DIRECTORY}")
 endfunction()
 
 function(serenity_test test_src sub_dir)
