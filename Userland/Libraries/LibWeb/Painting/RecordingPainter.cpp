@@ -37,7 +37,7 @@ void RecordingPainter::blit_corner_clipping(NonnullRefPtr<BorderRadiusCornerClip
 void RecordingPainter::fill_rect(Gfx::IntRect const& rect, Color color)
 {
     push_command(FillRect {
-        .rect = rect,
+        .rect = state().translation.map(rect),
         .color = color,
     });
 }
