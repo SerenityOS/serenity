@@ -181,6 +181,10 @@ public:
     template<Arithmetic T>
     Optional<T> to_number(TrimWhitespace trim_whitespace = TrimWhitespace::Yes) const
     {
+#ifndef KERNEL
+        if constexpr (IsFloatingPoint<T>)
+            return StringUtils::convert_to_floating_point<T>(bytes_as_string_view(), trim_whitespace);
+#endif
         if constexpr (IsSigned<T>)
             return StringUtils::convert_to_int<T>(bytes_as_string_view(), trim_whitespace);
         else
