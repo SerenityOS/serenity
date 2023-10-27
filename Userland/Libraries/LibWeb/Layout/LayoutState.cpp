@@ -163,7 +163,7 @@ void LayoutState::resolve_relative_positions(Vector<Painting::PaintableWithLines
             offset = used_values.offset;
         }
         // Apply relative position inset if appropriate.
-        if (node.computed_values().position() == CSS::Position::Relative && is<NodeWithStyleAndBoxModelMetrics>(node)) {
+        if (node.computed_values().position() == CSS::Positioning::Relative && is<NodeWithStyleAndBoxModelMetrics>(node)) {
             auto& inset = static_cast<NodeWithStyleAndBoxModelMetrics const&>(node).box_model().inset;
             offset.translate_by(inset.left, inset.top);
         }
@@ -184,7 +184,7 @@ void LayoutState::resolve_relative_positions(Vector<Painting::PaintableWithLines
                         break;
                     if (!ancestor->display().is_inline_outside() || !ancestor->display().is_flow_inside())
                         break;
-                    if (ancestor->computed_values().position() == CSS::Position::Relative) {
+                    if (ancestor->computed_values().position() == CSS::Positioning::Relative) {
                         auto const& ancestor_node = static_cast<Layout::NodeWithStyleAndBoxModelMetrics const&>(*ancestor);
                         auto const& inset = ancestor_node.box_model().inset;
                         offset.translate_by(inset.left, inset.top);

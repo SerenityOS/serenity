@@ -1204,7 +1204,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_replaced_elemen
 // https://www.w3.org/TR/css-position-3/#relpos-insets
 void FormattingContext::compute_inset(NodeWithStyleAndBoxModelMetrics const& box)
 {
-    if (box.computed_values().position() != CSS::Position::Relative)
+    if (box.computed_values().position() != CSS::Positioning::Relative)
         return;
 
     auto resolve_two_opposing_insets = [&](CSS::LengthPercentage const& computed_first, CSS::LengthPercentage const& computed_second, CSSPixels& used_start, CSSPixels& used_end, CSSPixels reference_for_percentage) {
@@ -1486,7 +1486,7 @@ CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, Av
     auto const* containing_block = box.non_anonymous_containing_block();
     auto const& containing_block_state = m_state.get(*containing_block);
     auto height_of_containing_block = containing_block_state.content_height();
-    if (box.computed_values().position() == CSS::Position::Absolute) {
+    if (box.computed_values().position() == CSS::Positioning::Absolute) {
         // https://www.w3.org/TR/css-position-3/#def-cb
         // If the box has position: absolute, then the containing block is formed by the padding edge of the ancestor
         height_of_containing_block += containing_block_state.padding_top + containing_block_state.padding_bottom;
