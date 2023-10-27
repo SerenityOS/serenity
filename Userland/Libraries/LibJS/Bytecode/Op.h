@@ -187,6 +187,10 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    StringTableIndex source_index() const { return m_source_index; }
+    StringTableIndex flags_index() const { return m_flags_index; }
+    RegexTableIndex regex_index() const { return m_regex_index; }
+
 private:
     StringTableIndex m_source_index;
     StringTableIndex m_flags_index;

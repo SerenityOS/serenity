@@ -30,5 +30,6 @@ struct CalleeAndThis {
     Value this_value;
 };
 ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::Interpreter&, DeprecatedFlyString const& name, u32 cache_index);
+Value new_regexp(VM&, ParsedRegex const&, DeprecatedString const& pattern, DeprecatedString const& flags);
 
 }
