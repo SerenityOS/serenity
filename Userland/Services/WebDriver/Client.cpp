@@ -139,7 +139,7 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     auto session = make_ref_counted<Session>(session_id, *this, move(options));
 
     if (auto start_result = session->start(m_callbacks); start_result.is_error())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, DeprecatedString::formatted("Failed to start session: {}", start_result.error().string_literal()));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, DeprecatedString::formatted("Failed to start session: {}", start_result.error()));
 
     auto& web_content_connection = session->web_content_connection();
 
