@@ -786,44 +786,9 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
 
 ThrowCompletionOr<void> GetCalleeAndThisFromEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
-
-    auto& cached_environment_coordinate = interpreter.current_executable().environment_variable_caches[m_cache_index];
-    if (cached_environment_coordinate.has_value()) {
-        auto environment = vm.running_execution_context().lexical_environment;
-        for (size_t i = 0; i < cached_environment_coordinate->hops; ++i)
-            environment = environment->outer_environment();
-        VERIFY(environment);
-        VERIFY(environment->is_declarative_environment());
-        if (!environment->is_permanently_screwed_by_eval()) {
-            interpreter.reg(m_callee_reg) = TRY(verify_cast<DeclarativeEnvironment>(*environment).get_binding_value_direct(vm, cached_environment_coordinate.value().index, vm.in_strict_mode()));
-            Value this_value = js_undefined();
-            if (auto base_object = environment->with_base_object())
-                this_value = base_object;
-            interpreter.reg(m_this_reg) = this_value;
-            return {};
-        }
-        cached_environment_coordinate = {};
-    }
-
-    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-    auto reference = TRY(vm.resolve_binding(string));
-    if (reference.environment_coordinate().has_value())
-        cached_environment_coordinate = reference.environment_coordinate();
-
-    interpreter.reg(m_callee_reg) = TRY(reference.get_value(vm));
-
-    Value this_value = js_undefined();
-    if (reference.is_property_reference()) {
-        this_value = reference.get_this_value();
-    } else {
-        if (reference.is_environment_reference()) {
-            if (auto base_object = reference.base_environment().with_base_object(); base_object != nullptr)
-                this_value = base_object;
-        }
-    }
-    interpreter.reg(m_this_reg) = this_value;
-
+    auto callee_and_this = TRY(get_callee_and_this_from_environment(interpreter, interpreter.current_executable().get_identifier(m_identifier), m_cache_index));
+    interpreter.reg(m_callee_reg) = callee_and_this.callee;
+    interpreter.reg(m_this_reg) = callee_and_this.this_value;
     return {};
 }
 

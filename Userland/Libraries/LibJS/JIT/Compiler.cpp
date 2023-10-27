@@ -674,6 +674,37 @@ void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
     check_exception();
 }
 
+static Value cxx_get_callee_and_this_from_environment(VM& vm, DeprecatedFlyString const& name, u32 cache_index, Bytecode::Register callee_reg, Bytecode::Register this_reg)
+{
+    auto& bytecode_interpreter = vm.bytecode_interpreter();
+    auto callee_and_this = TRY_OR_SET_EXCEPTION(Bytecode::get_callee_and_this_from_environment(
+        bytecode_interpreter,
+        name,
+        cache_index));
+
+    bytecode_interpreter.reg(callee_reg) = callee_and_this.callee;
+    bytecode_interpreter.reg(this_reg) = callee_and_this.this_value;
+    return {};
+}
+
+void Compiler::compile_get_callee_and_this_from_environment(Bytecode::Op::GetCalleeAndThisFromEnvironment const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm64(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm64(op.cache_index()));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm64(op.callee().index()));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Imm64(op.this_().index()));
+    m_assembler.native_call((void*)cxx_get_callee_and_this_from_environment);
+    check_exception();
+}
+
 static Value cxx_to_numeric(VM& vm, Value value)
 {
     return TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
@@ -923,6 +954,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::GetVariable:
                 compiler.compile_get_variable(static_cast<Bytecode::Op::GetVariable const&>(op));
+                break;
+            case Bytecode::Instruction::Type::GetCalleeAndThisFromEnvironment:
+                compiler.compile_get_callee_and_this_from_environment(static_cast<Bytecode::Op::GetCalleeAndThisFromEnvironment const&>(op));
                 break;
             case Bytecode::Instruction::Type::PutById:
                 compiler.compile_put_by_id(static_cast<Bytecode::Op::PutById const&>(op));
