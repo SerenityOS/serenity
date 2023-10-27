@@ -41,7 +41,7 @@ ALWAYS_INLINE void dump_backtrace()
 {
     // Grab symbols and dso name for up to 256 frames
     void* trace[256] = {};
-    int const num_frames = backtrace(trace, sizeof(trace));
+    int const num_frames = backtrace(trace, array_size(trace));
     char** syms = backtrace_symbols(trace, num_frames);
 
     for (auto i = 0; i < num_frames; ++i) {
