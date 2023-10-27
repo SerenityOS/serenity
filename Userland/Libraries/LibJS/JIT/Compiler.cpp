@@ -15,6 +15,10 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#define LOG_JIT_SUCCESS 1
+#define LOG_JIT_FAILURE 1
+#define DUMP_JIT_MACHINE_CODE_TO_STDOUT 0
+
 #define TRY_OR_SET_EXCEPTION(expression)                                                                                        \
     ({                                                                                                                          \
         /* Ignore -Wshadow to allow nesting the macro. */                                                                       \
@@ -939,8 +943,10 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 #undef DO_COMPILE_COMMON_UNARY_OP
 
             default:
-                dbgln("\033[31;1mJIT compilation failed\033[0m: {}", bytecode_executable.name);
-                dbgln("Unsupported bytecode op: {}", op.to_deprecated_string(bytecode_executable));
+                if constexpr (LOG_JIT_FAILURE) {
+                    dbgln("\033[31;1mJIT compilation failed\033[0m: {}", bytecode_executable.name);
+                    dbgln("Unsupported bytecode op: {}", op.to_deprecated_string(bytecode_executable));
+                }
                 return nullptr;
             }
 
@@ -975,13 +981,16 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         }
     }
 
-    size_t res = write(STDOUT_FILENO, compiler.m_output.data(), compiler.m_output.size());
-    if (!res) { }
+    if constexpr (DUMP_JIT_MACHINE_CODE_TO_STDOUT) {
+        (void)write(STDOUT_FILENO, compiler.m_output.data(), compiler.m_output.size());
+    }
 
     memcpy(executable_memory, compiler.m_output.data(), compiler.m_output.size());
     mprotect(executable_memory, compiler.m_output.size(), PROT_READ | PROT_EXEC);
 
-    dbgln("\033[32;1mJIT compilation succeeded!\033[0m {}", bytecode_executable.name);
+    if constexpr (LOG_JIT_SUCCESS) {
+        dbgln("\033[32;1mJIT compilation succeeded!\033[0m {}", bytecode_executable.name);
+    }
 
     return make<NativeExecutable>(executable_memory, compiler.m_output.size());
 }
