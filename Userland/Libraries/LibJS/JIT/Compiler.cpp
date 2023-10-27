@@ -581,7 +581,7 @@ void Compiler::compile_new_array(Bytecode::Op::NewArray const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
-Value cxx_new_function(
+static Value cxx_new_function(
     VM& vm,
     FunctionExpression const& function_node,
     Optional<Bytecode::IdentifierTableIndex> const& lhs_name,
