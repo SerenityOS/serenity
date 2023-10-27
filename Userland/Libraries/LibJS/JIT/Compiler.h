@@ -42,6 +42,7 @@ private:
     void compile_store(Bytecode::Op::Store const&);
     void compile_get_local(Bytecode::Op::GetLocal const&);
     void compile_set_local(Bytecode::Op::SetLocal const&);
+    void compile_typeof_local(Bytecode::Op::TypeofLocal const&);
     void compile_jump(Bytecode::Op::Jump const&);
     void compile_jump_conditional(Bytecode::Op::JumpConditional const&);
     void compile_increment(Bytecode::Op::Increment const&);

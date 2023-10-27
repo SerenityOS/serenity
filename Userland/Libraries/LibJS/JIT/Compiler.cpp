@@ -100,6 +100,18 @@ void Compiler::compile_set_local(Bytecode::Op::SetLocal const& op)
     store_vm_local(op.index(), GPR0);
 }
 
+static Value cxx_typeof_local(VM& vm, Value value)
+{
+    return PrimitiveString::create(vm, value.typeof());
+}
+
+void Compiler::compile_typeof_local(Bytecode::Op::TypeofLocal const& op)
+{
+    load_vm_local(ARG1, op.index());
+    m_assembler.native_call((void*)cxx_typeof_local);
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
+}
+
 void Compiler::compile_jump(Bytecode::Op::Jump const& op)
 {
     m_assembler.jump(label_for(op.true_target()->block()));
@@ -936,6 +948,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::SetLocal:
                 compiler.compile_set_local(static_cast<Bytecode::Op::SetLocal const&>(op));
+                break;
+            case Bytecode::Instruction::Type::TypeofLocal:
+                compiler.compile_typeof_local(static_cast<Bytecode::Op::TypeofLocal const&>(op));
                 break;
             case Bytecode::Instruction::Type::Jump:
                 compiler.compile_jump(static_cast<Bytecode::Op::Jump const&>(op));

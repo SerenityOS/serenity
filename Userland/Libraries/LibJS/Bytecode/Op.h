@@ -1447,6 +1447,8 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    size_t index() const { return m_index; }
+
 private:
     size_t m_index;
 };
