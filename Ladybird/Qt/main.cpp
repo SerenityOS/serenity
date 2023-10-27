@@ -75,6 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool enable_callgrind_profiling = false;
     bool enable_sql_database = false;
     bool use_lagom_networking = false;
+    bool use_gpu_painting = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
@@ -83,6 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(enable_callgrind_profiling, "Enable Callgrind profiling", "enable-callgrind-profiling", 'P');
     args_parser.add_option(enable_sql_database, "Enable SQL database", "enable-sql-database", 0);
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "enable-lagom-networking", 0);
+    args_parser.add_option(use_gpu_painting, "Enable GPU painting", "enable-gpu-painting", 0);
     args_parser.parse(arguments);
 
     RefPtr<WebView::Database> database;
@@ -106,7 +108,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         initial_urls.append(MUST(ak_string_from_qstring(new_tab_page)));
     }
 
-    Ladybird::BrowserWindow window(initial_urls, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
+    Ladybird::BrowserWindow window(initial_urls, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No, use_gpu_painting ? WebView::EnableGPUPainting::Yes : WebView::EnableGPUPainting::No);
     window.setWindowTitle("Ladybird");
 
     if (Ladybird::Settings::the()->is_maximized()) {

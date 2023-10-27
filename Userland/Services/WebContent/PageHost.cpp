@@ -21,6 +21,10 @@
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebDriverConnection.h>
 
+#ifdef AK_OS_LINUX
+#    include <LibWeb/Painting/PaintingCommandExecutorGPU.h>
+#endif
+
 namespace WebContent {
 
 PageHost::PageHost(ConnectionFromClient& client)
@@ -35,6 +39,13 @@ PageHost::PageHost(ConnectionFromClient& client)
 }
 
 PageHost::~PageHost() = default;
+
+static bool s_use_gpu_painter = false;
+
+void PageHost::set_use_gpu_painter()
+{
+    s_use_gpu_painter = true;
+}
 
 void PageHost::set_has_focus(bool has_focus)
 {
@@ -145,8 +156,15 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     context.set_has_focus(m_has_focus);
     document->paintable()->paint_all_phases(context);
 
-    Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);
-    recording_painter.execute(painting_command_executor);
+    if (s_use_gpu_painter) {
+#ifdef AK_OS_LINUX
+        Web::Painting::PaintingCommandExecutorGPU painting_command_executor(target);
+        recording_painter.execute(painting_command_executor);
+#endif
+    } else {
+        Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);
+        recording_painter.execute(painting_command_executor);
+    }
 }
 
 void PageHost::set_viewport_rect(Web::DevicePixelRect const& rect)

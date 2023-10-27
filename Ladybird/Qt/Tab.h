@@ -28,7 +28,7 @@ class InspectorWidget;
 class Tab final : public QWidget {
     Q_OBJECT
 public:
-    Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking);
+    Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking, WebView::EnableGPUPainting);
     virtual ~Tab() override;
 
     WebContentView& view() { return *m_view; }

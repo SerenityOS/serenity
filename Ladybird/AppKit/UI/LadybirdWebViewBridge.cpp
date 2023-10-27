@@ -184,7 +184,7 @@ void WebViewBridge::create_client(WebView::EnableCallgrindProfiling enable_callg
     m_client_state = {};
 
     auto candidate_web_content_paths = MUST(get_paths_for_helper_process("WebContent"sv));
-    auto new_client = MUST(launch_web_content_process(*this, candidate_web_content_paths, enable_callgrind_profiling, WebView::IsLayoutTestMode::No, Ladybird::UseLagomNetworking::Yes));
+    auto new_client = MUST(launch_web_content_process(*this, candidate_web_content_paths, enable_callgrind_profiling, WebView::IsLayoutTestMode::No, Ladybird::UseLagomNetworking::Yes, WebView::EnableGPUPainting::No));
 
     m_client_state.client = new_client;
     m_client_state.client->on_web_content_process_crash = [this] {
