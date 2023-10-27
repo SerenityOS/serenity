@@ -820,7 +820,7 @@ void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
-    if (getenv("LIBJS_NO_JIT"))
+    if (!getenv("LIBJS_JIT"))
         return nullptr;
 
     Compiler compiler { bytecode_executable };
