@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include <AK/Platform.h>
 #include <AK/Vector.h>
+
+#if ARCH(X86_64)
 
 namespace JIT {
 
@@ -577,3 +580,5 @@ struct Assembler {
 };
 
 }
+
+#endif
