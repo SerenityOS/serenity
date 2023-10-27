@@ -12,6 +12,8 @@
 #    include <Kernel/Arch/x86_64/ThreadRegisters.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/ThreadRegisters.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/ThreadRegisters.h>
 #else
 #    error "Unknown architecture"
 #endif

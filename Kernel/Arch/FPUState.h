@@ -16,6 +16,8 @@ struct FPUState;
 #    include <Kernel/Arch/x86_64/FPUState.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/FPUState.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/FPUState.h>
 #else
 #    error "Unknown architecture"
 #endif
