@@ -74,7 +74,7 @@ void Compiler::compile_load_immediate(Bytecode::Op::LoadImmediate const& op)
 {
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm64(op.value().encoded()));
+        Assembler::Operand::Imm(op.value().encoded()));
     store_vm_register(Bytecode::Register::accumulator(), GPR0);
 }
 
@@ -134,13 +134,13 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
     // dst >>= 48;
     m_assembler.shift_right(
         Assembler::Operand::Register(dst),
-        Assembler::Operand::Imm8(48));
+        Assembler::Operand::Imm(48));
 
     // if (dst != BOOLEAN_TAG) goto slow_case;
     auto slow_case = m_assembler.make_label();
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(dst),
-        Assembler::Operand::Imm32(BOOLEAN_TAG),
+        Assembler::Operand::Imm(BOOLEAN_TAG),
         slow_case);
 
     // Fast path for JS::Value booleans.
@@ -169,7 +169,7 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
     // dst &= 1;
     m_assembler.bitwise_and(
         Assembler::Operand::Register(dst),
-        Assembler::Operand::Imm32(1));
+        Assembler::Operand::Imm(1));
 }
 
 void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
@@ -191,15 +191,15 @@ void Compiler::compile_jump_nullish(Bytecode::Op::JumpNullish const& op)
 
     m_assembler.shift_right(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm8(48));
+        Assembler::Operand::Imm(48));
 
     m_assembler.bitwise_and(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm32(IS_NULLISH_EXTRACT_PATTERN));
+        Assembler::Operand::Imm(IS_NULLISH_EXTRACT_PATTERN));
 
     m_assembler.jump_if_equal(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm32(IS_NULLISH_PATTERN),
+        Assembler::Operand::Imm(IS_NULLISH_PATTERN),
         label_for(op.true_target()->block()));
 
     m_assembler.jump(label_for(op.false_target()->block()));
@@ -218,12 +218,12 @@ void Compiler::branch_if_int32(Assembler::Reg reg, Codegen codegen)
 {
     // GPR0 = reg >> 48;
     m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(reg));
-    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm8(48));
+    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
 
     auto not_int32_case = m_assembler.make_label();
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm32(INT32_TAG),
+        Assembler::Operand::Imm(INT32_TAG),
         not_int32_case);
 
     codegen();
@@ -236,20 +236,20 @@ void Compiler::branch_if_both_int32(Assembler::Reg lhs, Assembler::Reg rhs, Code
 {
     // GPR0 = lhs >> 48;
     m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(lhs));
-    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm8(48));
+    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
 
     // GPR1 = rhs >> 48;
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Register(rhs));
-    m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm8(48));
+    m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(48));
 
     auto not_int32_case = m_assembler.make_label();
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm32(INT32_TAG),
+        Assembler::Operand::Imm(INT32_TAG),
         not_int32_case);
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Imm32(INT32_TAG),
+        Assembler::Operand::Imm(INT32_TAG),
         not_int32_case);
 
     codegen();
@@ -271,7 +271,7 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
             Assembler::Operand::Register(ARG1));
         m_assembler.mov(
             Assembler::Operand::Register(GPR1),
-            Assembler::Operand::Imm64(0xffffffff));
+            Assembler::Operand::Imm(0xffffffff));
         m_assembler.bitwise_and(
             Assembler::Operand::Register(GPR0),
             Assembler::Operand::Register(GPR1));
@@ -279,13 +279,13 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
         // if (GPR0 == 0x7fffffff) goto slow_case;
         m_assembler.jump_if_equal(
             Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm32(0x7fffffff),
+            Assembler::Operand::Imm(0x7fffffff),
             slow_case);
 
         // ARG1 += 1;
         m_assembler.add(
             Assembler::Operand::Register(ARG1),
-            Assembler::Operand::Imm32(1));
+            Assembler::Operand::Imm(1));
 
         // accumulator = ARG1;
         store_vm_register(Bytecode::Register::accumulator(), ARG1);
@@ -321,7 +321,7 @@ void Compiler::check_exception()
 {
     // if (exception.is_empty()) goto no_exception;
     load_vm_register(GPR0, Bytecode::Register::exception());
-    m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm64(Value().encoded()));
+    m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
     auto no_exception = m_assembler.make_label();
     m_assembler.jump_if_equal(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(GPR1), no_exception);
 
@@ -334,7 +334,7 @@ void Compiler::check_exception()
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm32(0),
+        Assembler::Operand::Imm(0),
         handle_exception);
 
     m_assembler.exit();
@@ -353,13 +353,13 @@ void Compiler::check_exception()
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 8));
     m_assembler.jump_if_equal(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm32(0),
+        Assembler::Operand::Imm(0),
         no_handler);
     load_vm_register(GPR1, Bytecode::Register::exception());
     store_vm_register(Bytecode::Register::accumulator(), GPR1);
     m_assembler.mov(
         Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Imm64(Value().encoded()));
+        Assembler::Operand::Imm(Value().encoded()));
     store_vm_register(Bytecode::Register::exception(), GPR1);
     m_assembler.jump(Assembler::Operand::Register(GPR0));
 
@@ -373,7 +373,7 @@ void Compiler::check_exception()
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 16));
     m_assembler.jump_if_equal(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm32(0),
+        Assembler::Operand::Imm(0),
         no_finalizer);
 
     m_assembler.jump(Assembler::Operand::Register(GPR0));
@@ -399,7 +399,7 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
     // push finalizer (patched later)
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm64(0),
+        Assembler::Operand::Imm(0),
         Assembler::Patchable::Yes);
     if (finalizer.has_value())
         block_data_for(finalizer.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
@@ -408,14 +408,14 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
     // push handler (patched later)
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm64(0),
+        Assembler::Operand::Imm(0),
         Assembler::Patchable::Yes);
     if (handler.has_value())
         block_data_for(handler.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
     m_assembler.push(Assembler::Operand::Register(GPR0));
 
     // push valid
-    m_assembler.push(Assembler::Operand::Imm32(valid));
+    m_assembler.push(Assembler::Operand::Imm(valid));
 
     // UNWIND_CONTEXT_BASE = STACK_POINTER
     m_assembler.mov(
@@ -423,13 +423,13 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
         Assembler::Operand::Register(STACK_POINTER));
 
     // align stack pointer
-    m_assembler.sub(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm8(8));
+    m_assembler.sub(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(8));
 }
 
 void Compiler::pop_unwind_context()
 {
-    m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm8(32));
-    m_assembler.add(Assembler::Operand::Register(UNWIND_CONTEXT_BASE), Assembler::Operand::Imm8(32));
+    m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(32));
+    m_assembler.add(Assembler::Operand::Register(UNWIND_CONTEXT_BASE), Assembler::Operand::Imm(32));
 }
 
 void Compiler::compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const& op)
@@ -517,14 +517,14 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
 
         m_assembler.mov(
             Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm64(Value(false).encoded()));
+            Assembler::Operand::Imm(Value(false).encoded()));
         store_vm_register(Bytecode::Register::accumulator(), GPR0);
         m_assembler.jump(end);
 
         true_case.link(m_assembler);
         m_assembler.mov(
             Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm64(Value(true).encoded()));
+            Assembler::Operand::Imm(Value(true).encoded()));
         store_vm_register(Bytecode::Register::accumulator(), GPR0);
 
         m_assembler.jump(end);
@@ -580,7 +580,7 @@ void Compiler::compile_new_string(Bytecode::Op::NewString const& op)
     auto const& string = m_bytecode_executable.string_table->get(op.index());
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(bit_cast<u64>(&string)));
+        Assembler::Operand::Imm(bit_cast<u64>(&string)));
     m_assembler.native_call((void*)cxx_new_string);
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
@@ -598,13 +598,13 @@ void Compiler::compile_new_regexp(Bytecode::Op::NewRegExp const& op)
 
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(bit_cast<u64>(&parsed_regex)));
+        Assembler::Operand::Imm(bit_cast<u64>(&parsed_regex)));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(bit_cast<u64>(&pattern)));
+        Assembler::Operand::Imm(bit_cast<u64>(&pattern)));
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm64(bit_cast<u64>(&flags)));
+        Assembler::Operand::Imm(bit_cast<u64>(&flags)));
 
     m_assembler.native_call((void*)cxx_new_regexp);
     store_vm_register(Bytecode::Register::accumulator(), RET);
@@ -637,10 +637,10 @@ void Compiler::compile_new_array(Bytecode::Op::NewArray const& op)
 {
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(op.element_count()));
+        Assembler::Operand::Imm(op.element_count()));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(op.element_count() ? op.start().index() : 0));
+        Assembler::Operand::Imm(op.element_count() ? op.start().index() : 0));
     m_assembler.native_call((void*)cxx_new_array);
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
@@ -658,13 +658,13 @@ void Compiler::compile_new_function(Bytecode::Op::NewFunction const& op)
 {
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(bit_cast<u64>(&op.function_node())));
+        Assembler::Operand::Imm(bit_cast<u64>(&op.function_node())));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(bit_cast<u64>(&op.lhs_name())));
+        Assembler::Operand::Imm(bit_cast<u64>(&op.lhs_name())));
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm64(bit_cast<u64>(&op.home_object())));
+        Assembler::Operand::Imm(bit_cast<u64>(&op.home_object())));
     m_assembler.native_call((void*)cxx_new_function);
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
@@ -679,10 +679,10 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
     load_vm_register(ARG1, Bytecode::Register::accumulator());
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(op.property().value()));
+        Assembler::Operand::Imm(op.property().value()));
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm64(op.cache_index()));
+        Assembler::Operand::Imm(op.cache_index()));
     m_assembler.native_call((void*)cxx_get_by_id);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
@@ -711,10 +711,10 @@ void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
 {
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(op.identifier().value()));
+        Assembler::Operand::Imm(op.identifier().value()));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(op.cache_index()));
+        Assembler::Operand::Imm(op.cache_index()));
     m_assembler.native_call((void*)cxx_get_global);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
@@ -729,10 +729,10 @@ void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
 {
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(op.cache_index()));
+        Assembler::Operand::Imm(op.cache_index()));
     m_assembler.native_call((void*)cxx_get_variable);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
@@ -755,16 +755,16 @@ void Compiler::compile_get_callee_and_this_from_environment(Bytecode::Op::GetCal
 {
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(op.cache_index()));
+        Assembler::Operand::Imm(op.cache_index()));
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm64(op.callee().index()));
+        Assembler::Operand::Imm(op.callee().index()));
     m_assembler.mov(
         Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm64(op.this_().index()));
+        Assembler::Operand::Imm(op.this_().index()));
     m_assembler.native_call((void*)cxx_get_callee_and_this_from_environment);
     check_exception();
 }
@@ -797,7 +797,7 @@ void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding con
     load_vm_register(GPR0, Bytecode::Register::this_value());
     m_assembler.mov(
         Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Imm64(Value().encoded()));
+        Assembler::Operand::Imm(Value().encoded()));
 
     auto slow_case = m_assembler.make_label();
     m_assembler.jump_if_equal(
@@ -830,11 +830,11 @@ void Compiler::compile_put_by_id(Bytecode::Op::PutById const& op)
     load_vm_register(ARG1, op.base());
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(op.property().value()));
+        Assembler::Operand::Imm(op.property().value()));
     load_vm_register(ARG3, Bytecode::Register::accumulator());
     m_assembler.mov(
         Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm64(to_underlying(op.kind())));
+        Assembler::Operand::Imm(to_underlying(op.kind())));
     m_assembler.native_call((void*)cxx_put_by_id);
     check_exception();
 }
@@ -853,7 +853,7 @@ void Compiler::compile_put_by_value(Bytecode::Op::PutByValue const& op)
     load_vm_register(ARG3, Bytecode::Register::accumulator());
     m_assembler.mov(
         Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm64(to_underlying(op.kind())));
+        Assembler::Operand::Imm(to_underlying(op.kind())));
     m_assembler.native_call((void*)cxx_put_by_value);
     check_exception();
 }
@@ -876,14 +876,14 @@ void Compiler::compile_call(Bytecode::Op::Call const& op)
     load_vm_register(ARG1, op.callee());
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm64(op.first_argument().index()));
+        Assembler::Operand::Imm(op.first_argument().index()));
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm64(op.argument_count()));
+        Assembler::Operand::Imm(op.argument_count()));
     load_vm_register(ARG4, op.this_value());
     m_assembler.mov(
         Assembler::Operand::Register(ARG5),
-        Assembler::Operand::Imm64(to_underlying(op.call_type())));
+        Assembler::Operand::Imm(to_underlying(op.call_type())));
     m_assembler.native_call((void*)cxx_call);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
@@ -898,7 +898,7 @@ void Compiler::compile_typeof_variable(Bytecode::Op::TypeofVariable const& op)
 {
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
     m_assembler.native_call((void*)cxx_typeof_variable);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
@@ -919,14 +919,14 @@ void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
 {
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm64(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
     load_vm_register(ARG2, Bytecode::Register::accumulator());
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm64(to_underlying(op.mode())));
+        Assembler::Operand::Imm(to_underlying(op.mode())));
     m_assembler.mov(
         Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm64(to_underlying(op.initialization_mode())));
+        Assembler::Operand::Imm(to_underlying(op.initialization_mode())));
     m_assembler.native_call((void*)cxx_set_variable);
     check_exception();
 }
