@@ -4,7 +4,7 @@ import("//Ladybird/moc_qt_objects.gni")
 
 group("Ladybird") {
   if (current_os == "mac") {
-    deps = [ ":ladybird.app" ]
+    deps = [ ":Ladybird.app" ]
   } else {
     deps = [ ":ladybird_executable" ]
   }
@@ -54,6 +54,7 @@ executable("ladybird_executable") {
   ]
   data_deps = [
     ":headless-browser",
+    "ImageDecoder",
     "RequestServer",
     "SQLServer",
     "WebContent",
@@ -69,10 +70,10 @@ executable("ladybird_executable") {
     "//Userland/Libraries/LibGUI",
     "//Userland/Libraries/LibGfx",
     "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibImageDecoderClient",
     "//Userland/Libraries/LibJS",
     "//Userland/Libraries/LibMain",
     "//Userland/Libraries/LibProtocol",
-    "//Userland/Libraries/LibPublicSuffix",
     "//Userland/Libraries/LibSQL",
     "//Userland/Libraries/LibWeb",
     "//Userland/Libraries/LibWebView",
@@ -113,6 +114,7 @@ executable("headless-browser") {
     "//Userland/Libraries/LibGfx",
     "//Userland/Libraries/LibHTTP",
     "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibImageDecoderClient",
     "//Userland/Libraries/LibJS",
     "//Userland/Libraries/LibMain",
     "//Userland/Libraries/LibProtocol",
@@ -139,6 +141,7 @@ if (current_os == "mac") {
     public_deps = [
       ":headless-browser",
       ":ladybird_executable",
+      "ImageDecoder",
       "RequestServer",
       "SQLServer",
       "WebContent",
@@ -146,6 +149,7 @@ if (current_os == "mac") {
       "WebSocket",
     ]
     sources = [
+      "$root_out_dir/bin/ImageDecoder",
       "$root_out_dir/bin/Ladybird",
       "$root_out_dir/bin/RequestServer",
       "$root_out_dir/bin/SQLServer",
@@ -174,11 +178,12 @@ if (current_os == "mac") {
       "//Userland/Libraries/LibHTTP",
       "//Userland/Libraries/LibIDL",
       "//Userland/Libraries/LibIPC",
+      "//Userland/Libraries/LibImageDecoderClient",
+      "//Userland/Libraries/LibJIT",
       "//Userland/Libraries/LibJS",
       "//Userland/Libraries/LibLine",
       "//Userland/Libraries/LibMarkdown",
       "//Userland/Libraries/LibProtocol",
-      "//Userland/Libraries/LibPublicSuffix",
       "//Userland/Libraries/LibRegex",
       "//Userland/Libraries/LibSQL",
       "//Userland/Libraries/LibSoftGPU",
@@ -208,12 +213,13 @@ if (current_os == "mac") {
       "$root_out_dir/lib/liblagom-gui.dylib",
       "$root_out_dir/lib/liblagom-http.dylib",
       "$root_out_dir/lib/liblagom-idl.dylib",
+      "$root_out_dir/lib/liblagom-imagedecoderclient.dylib",
       "$root_out_dir/lib/liblagom-ipc.dylib",
+      "$root_out_dir/lib/liblagom-jit.dylib",
       "$root_out_dir/lib/liblagom-js.dylib",
       "$root_out_dir/lib/liblagom-line.dylib",
       "$root_out_dir/lib/liblagom-markdown.dylib",
       "$root_out_dir/lib/liblagom-protocol.dylib",
-      "$root_out_dir/lib/liblagom-publicsuffix.dylib",
       "$root_out_dir/lib/liblagom-regex.dylib",
       "$root_out_dir/lib/liblagom-softgpu.dylib",
       "$root_out_dir/lib/liblagom-sql.dylib",
