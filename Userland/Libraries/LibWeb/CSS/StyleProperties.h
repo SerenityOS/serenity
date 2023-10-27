@@ -145,7 +145,7 @@ public:
 
     bool operator==(StyleProperties const&) const;
 
-    Optional<CSS::Position> position() const;
+    Optional<CSS::Positioning> position() const;
     Optional<int> z_index() const;
 
     void set_math_depth(int math_depth);

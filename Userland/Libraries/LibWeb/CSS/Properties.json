@@ -1863,7 +1863,7 @@
     "inherited": false,
     "initial": "static",
     "valid-types": [
-      "position"
+      "positioning"
     ]
   },
   "quotes": {

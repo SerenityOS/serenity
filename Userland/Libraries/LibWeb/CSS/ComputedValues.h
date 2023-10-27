@@ -90,7 +90,7 @@ public:
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
     static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
     static CSS::TextJustify text_justify() { return CSS::TextJustify::Auto; }
-    static CSS::Position position() { return CSS::Position::Static; }
+    static CSS::Positioning position() { return CSS::Positioning::Static; }
     static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
     static CSS::Length text_decoration_thickness() { return Length::make_auto(); }
     static CSS::TextDecorationStyle text_decoration_style() { return CSS::TextDecorationStyle::Solid; }
@@ -304,7 +304,7 @@ public:
     Color text_decoration_color() const { return m_noninherited.text_decoration_color; }
     CSS::TextTransform text_transform() const { return m_inherited.text_transform; }
     Vector<ShadowData> const& text_shadow() const { return m_inherited.text_shadow; }
-    CSS::Position position() const { return m_noninherited.position; }
+    CSS::Positioning position() const { return m_noninherited.position; }
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
     CSS::FlexWrap flex_wrap() const { return m_noninherited.flex_wrap; }
@@ -463,7 +463,7 @@ protected:
         CSS::LengthPercentage text_decoration_thickness { InitialValues::text_decoration_thickness() };
         CSS::TextDecorationStyle text_decoration_style { InitialValues::text_decoration_style() };
         Color text_decoration_color { InitialValues::color() };
-        CSS::Position position { InitialValues::position() };
+        CSS::Positioning position { InitialValues::position() };
         CSS::Size width { InitialValues::width() };
         CSS::Size min_width { InitialValues::min_width() };
         CSS::Size max_width { InitialValues::max_width() };
@@ -570,7 +570,7 @@ public:
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
     void set_text_shadow(Vector<ShadowData>&& value) { m_inherited.text_shadow = move(value); }
     void set_text_indent(CSS::LengthPercentage value) { m_inherited.text_indent = move(value); }
-    void set_position(CSS::Position position) { m_noninherited.position = position; }
+    void set_position(CSS::Positioning position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }
     void set_width(CSS::Size const& width) { m_noninherited.width = width; }
     void set_min_width(CSS::Size const& width) { m_noninherited.min_width = width; }
