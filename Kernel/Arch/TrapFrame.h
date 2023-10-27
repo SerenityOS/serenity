@@ -19,6 +19,8 @@
 #    include <Kernel/Arch/x86_64/TrapFrame.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/TrapFrame.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/TrapFrame.h>
 #else
 #    error "Unknown architecture"
 #endif
