@@ -76,3 +76,7 @@ if (HAVE_PULSEAUDIO)
         target_compile_definitions(webcontent PRIVATE HAVE_PULSEAUDIO=1)
     endif()
 endif()
+
+if (LINUX)
+    target_link_libraries(WebContent PRIVATE LibAccelGfx)
+endif()
