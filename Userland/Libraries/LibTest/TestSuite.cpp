@@ -5,10 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
-
 #include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
+#include <LibTest/Macros.h>
 #include <LibTest/TestResult.h>
 #include <LibTest/TestSuite.h>
 #include <math.h>
@@ -62,6 +61,12 @@ void set_randomness_source(Randomized::RandomnessSource source)
 Randomized::RandomnessSource& randomness_source()
 {
     return TestSuite::the().randomness_source();
+}
+
+// Declared in Macros.h
+u64 randomized_runs()
+{
+    return TestSuite::the().randomized_runs();
 }
 
 // Declared in TestCase.h
@@ -126,6 +131,7 @@ int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> argumen
     args_parser.add_option(do_tests_only, "Only run tests.", "tests", 0);
     args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0);
     args_parser.add_option(m_benchmark_repetitions, "Number of times to repeat each benchmark (default 1)", "benchmark_repetitions", 0, "N");
+    args_parser.add_option(m_randomized_runs, "Number of times to run each RANDOMIZED_TEST_CASE (default 100)", "randomized_runs", 0, "RUNS");
     args_parser.add_option(do_list_cases, "List available test cases.", "list", 0);
     args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
