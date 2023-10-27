@@ -183,6 +183,26 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
     m_assembler.jump(label_for(op.true_target()->block()));
 }
 
+void Compiler::compile_jump_nullish(Bytecode::Op::JumpNullish const& op)
+{
+    load_vm_register(GPR0, Bytecode::Register::accumulator());
+
+    m_assembler.shift_right(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm8(48));
+
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm32(IS_NULLISH_EXTRACT_PATTERN));
+
+    m_assembler.jump_if_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm32(IS_NULLISH_PATTERN),
+        label_for(op.true_target()->block()));
+
+    m_assembler.jump(label_for(op.false_target()->block()));
+}
+
 [[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
 {
     auto old_value = TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
@@ -957,6 +977,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::JumpConditional:
                 compiler.compile_jump_conditional(static_cast<Bytecode::Op::JumpConditional const&>(op));
+                break;
+            case Bytecode::Instruction::Type::JumpNullish:
+                compiler.compile_jump_nullish(static_cast<Bytecode::Op::JumpNullish const&>(op));
                 break;
             case Bytecode::Instruction::Type::Increment:
                 compiler.compile_increment(static_cast<Bytecode::Op::Increment const&>(op));
