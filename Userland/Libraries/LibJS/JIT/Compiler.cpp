@@ -5,6 +5,7 @@
  */
 
 #include <AK/OwnPtr.h>
+#include <AK/Platform.h>
 #include <LibJS/Bytecode/CommonImplementations.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
@@ -17,23 +18,25 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#define LOG_JIT_SUCCESS 1
-#define LOG_JIT_FAILURE 1
-#define DUMP_JIT_MACHINE_CODE_TO_STDOUT 0
+#if ARCH(X86_64)
 
-#define TRY_OR_SET_EXCEPTION(expression)                                                                                        \
-    ({                                                                                                                          \
-        /* Ignore -Wshadow to allow nesting the macro. */                                                                       \
-        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                                                        \
-            auto&& _temporary_result = (expression));                                                                           \
-        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>,                            \
-            "Do not return a reference from a fallible expression");                                                            \
-        if (_temporary_result.is_error()) [[unlikely]] {                                                                        \
-            vm.bytecode_interpreter().reg(Bytecode::Register::exception()) = _temporary_result.release_error().value().value(); \
-            return {};                                                                                                          \
-        }                                                                                                                       \
-        _temporary_result.release_value();                                                                                      \
-    })
+#    define LOG_JIT_SUCCESS 1
+#    define LOG_JIT_FAILURE 1
+#    define DUMP_JIT_MACHINE_CODE_TO_STDOUT 0
+
+#    define TRY_OR_SET_EXCEPTION(expression)                                                                                        \
+        ({                                                                                                                          \
+            /* Ignore -Wshadow to allow nesting the macro. */                                                                       \
+            AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                                                        \
+                auto&& _temporary_result = (expression));                                                                           \
+            static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>,                            \
+                "Do not return a reference from a fallible expression");                                                            \
+            if (_temporary_result.is_error()) [[unlikely]] {                                                                        \
+                vm.bytecode_interpreter().reg(Bytecode::Register::exception()) = _temporary_result.release_error().value().value(); \
+                return {};                                                                                                          \
+            }                                                                                                                       \
+            _temporary_result.release_value();                                                                                      \
+        })
 
 namespace JS::JIT {
 
@@ -434,23 +437,23 @@ static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
     return Value(is_strictly_equal(src1, src2));
 }
 
-#define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                 \
-    static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                \
-    {                                                                               \
-        return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                 \
-    }                                                                               \
-                                                                                    \
-    void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op) \
-    {                                                                               \
-        load_vm_register(ARG1, op.lhs());                                           \
-        load_vm_register(ARG2, Bytecode::Register::accumulator());                  \
-        m_assembler.native_call((void*)cxx_##snake_case_name);                      \
-        store_vm_register(Bytecode::Register::accumulator(), RET);                  \
-        check_exception();                                                          \
-    }
+#    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                 \
+        static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                \
+        {                                                                               \
+            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                 \
+        }                                                                               \
+                                                                                        \
+        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op) \
+        {                                                                               \
+            load_vm_register(ARG1, op.lhs());                                           \
+            load_vm_register(ARG2, Bytecode::Register::accumulator());                  \
+            m_assembler.native_call((void*)cxx_##snake_case_name);                      \
+            store_vm_register(Bytecode::Register::accumulator(), RET);                  \
+            check_exception();                                                          \
+        }
 
 JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
-#undef DO_COMPILE_COMMON_BINARY_OP
+#    undef DO_COMPILE_COMMON_BINARY_OP
 
 static Value cxx_less_than(VM& vm, Value lhs, Value rhs)
 {
@@ -509,22 +512,22 @@ static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
     return PrimitiveString::create(vm, value.typeof());
 }
 
-#define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)               \
-    static Value cxx_##snake_case_name(VM& vm, Value value)                      \
-    {                                                                            \
-        return TRY_OR_SET_EXCEPTION(snake_case_name(vm, value));                 \
-    }                                                                            \
-                                                                                 \
-    void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const&) \
-    {                                                                            \
-        load_vm_register(ARG1, Bytecode::Register::accumulator());               \
-        m_assembler.native_call((void*)cxx_##snake_case_name);                   \
-        store_vm_register(Bytecode::Register::accumulator(), RET);               \
-        check_exception();                                                       \
-    }
+#    define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)               \
+        static Value cxx_##snake_case_name(VM& vm, Value value)                      \
+        {                                                                            \
+            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, value));                 \
+        }                                                                            \
+                                                                                     \
+        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const&) \
+        {                                                                            \
+            load_vm_register(ARG1, Bytecode::Register::accumulator());               \
+            m_assembler.native_call((void*)cxx_##snake_case_name);                   \
+            store_vm_register(Bytecode::Register::accumulator(), RET);               \
+            check_exception();                                                       \
+        }
 
 JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
-#undef DO_COMPILE_COMMON_UNARY_OP
+#    undef DO_COMPILE_COMMON_UNARY_OP
 
 void Compiler::compile_return(Bytecode::Op::Return const&)
 {
@@ -1016,19 +1019,19 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 compiler.compile_less_than(static_cast<Bytecode::Op::LessThan const&>(op));
                 break;
 
-#define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                              \
+#    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                          \
     case Bytecode::Instruction::Type::TitleCaseName:                                             \
         compiler.compile_##snake_case_name(static_cast<Bytecode::Op::TitleCaseName const&>(op)); \
         break;
                 JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
-#undef DO_COMPILE_COMMON_BINARY_OP
+#    undef DO_COMPILE_COMMON_BINARY_OP
 
-#define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)                               \
+#    define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)                           \
     case Bytecode::Instruction::Type::TitleCaseName:                                             \
         compiler.compile_##snake_case_name(static_cast<Bytecode::Op::TitleCaseName const&>(op)); \
         break;
                 JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
-#undef DO_COMPILE_COMMON_UNARY_OP
+#    undef DO_COMPILE_COMMON_UNARY_OP
 
             default:
                 if constexpr (LOG_JIT_FAILURE) {
@@ -1088,3 +1091,5 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 }
 
 }
+
+#endif
