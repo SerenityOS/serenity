@@ -45,6 +45,9 @@ namespace Gen {
 // Shrinks towards 0.
 inline u32 unsigned_int(u32 max)
 {
+    if (max == 0)
+        return 0;
+
     u32 random = Test::randomness_source().draw_value(max, [&]() {
         return AK::get_random_uniform(max + 1);
     });
@@ -58,19 +61,15 @@ inline u32 unsigned_int(u32 max)
 //                         -> value 10, RandomRun [7]
 //                         etc.
 //
-// In case `min == max`, the RandomRun footprint will be smaller, as we'll
-// switch to a `constant` and won't need any randomness to generate that
-// value:
+// In case `min == max`, the RandomRun footprint will be smaller: no randomness
+// is needed.
 //
 // Gen::unsigned_int(3,3) -> value 3, RandomRun [] (always)
 //
-// Shrinks towards the smaller argument.
+// Shrinks towards the minimum.
 inline u32 unsigned_int(u32 min, u32 max)
 {
     VERIFY(max >= min);
-    if (min == max) {
-        return min;
-    }
     return unsigned_int(max - min) + min;
 }
 
@@ -174,9 +173,7 @@ inline u32 unsigned_int()
             NumericLimits<u32>::max());
     }
 
-    u32 max = (bits == 32)
-        ? NumericLimits<u32>::max()
-        : ((u64)1 << bits) - 1;
+    u32 max = ((u64)1 << bits) - 1;
     return unsigned_int(max);
 }
 
