@@ -14,7 +14,9 @@ Lagom is used by the Serenity project in the following ways:
 - [Unit tests](../../Documentation/RunningTests.md) in CI are built using the Lagom build for host systems to ensure portability.
 - [Continuous fuzzing](#fuzzing-on-oss-fuzz) is done with the help of OSS-fuzz using the Lagom build.
 - [The Ladybird browser](../../Ladybird/README.md) uses Lagom to provide LibWeb and LibJS for non-Serenity systems.
-- [ECMA 262 spec tests](https://v8.github.io/test262/website/default.html) for LibJS are run per-commit and tracked on [test262.fyi](https:/test262.fyi) by CanadaHonk.
+- [ECMA 262 spec tests](https://serenityos.github.io/libjs-website/test262) for LibJS are run per-commit and tracked on [LibJS website](https://serenityos.github.io/libjs-website/).
+- [Wasm spec tests](https://serenityos.github.io/libjs-website/wasm) for LibWasm are run per-commit and tracked on [LibJS website](https://serenityos.github.io/libjs-website/).
+- [A Wasm LibJS Repl](https://serenityos.github.io/libjs-website/repl) using an Emscripten build of Lagom is hosted on [LibJS website](https://serenityos.github.io/libjs-website/).
 - [The LibJS Repl](../../.github/workflows/serenity-js-artifacts.yml) is built per-commit for Linux and macOS for use by the [esvu](https://github.com/devsnek/esvu) project.
 
 ## Using Lagom in an External Project

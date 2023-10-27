@@ -22,6 +22,8 @@ This is a roughly categorized list of pages relating to SerenityOS and its subpr
 -   [Issues Found by OSS-Fuzz Continuous Fuzzing](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=label:Proj-serenity)
 -   [Azure CI Overview](https://dev.azure.com/SerenityOS/SerenityOS/_build)
 -   [SonarCloud Static Analysis](https://sonarcloud.io/project/overview?id=SerenityOS_serenity)
+-   [LibJS website](https://serenityos.github.io/libjs-website/)
+    -   [Try LibJS Online!](https://serenityos.github.io/libjs-website/repl/)
 -   [Compiler Explorer](https://serenity.godbolt.org/): Select "Lagom trunk" under "Libraries" and add the compiler option `-std=c++20`
 
 ## Related Projects
@@ -57,7 +59,8 @@ This is a roughly categorized list of pages relating to SerenityOS and its subpr
 -   [Emoji Table](https://emoji.serenityos.net/)
     -   [Emoji Statistics](https://emoji.serenityos.net/chart.emoji.serenityos)
 -   [Flags](https://flags.serenityos.net/)
--   [test262](https://test262.fyi/) (JavaScript Spec Tests)
+-   [test262](https://serenityos.github.io/libjs-website/test262/) (JavaScript Spec Tests)
+-   [Wasm Spec Tests](https://serenityos.github.io/libjs-website/wasm/)
 -   [Test Performance](https://github.com/alimpfard/random-serenity-statistics/tree/main/view/benchmarks/x86_64)
 -   [serenityos.social Statistics](https://grafana.serenityos.social/public)
 
