@@ -42,7 +42,7 @@ class WebContentView final
     , public WebView::ViewImplementation {
     Q_OBJECT
 public:
-    explicit WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking);
+    explicit WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking, WebView::EnableGPUPainting);
     virtual ~WebContentView() override;
 
     Function<String(const AK::URL&, Web::HTML::ActivateTab)> on_tab_open_request;
@@ -93,6 +93,7 @@ private:
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
     UseLagomNetworking m_use_lagom_networking {};
+    WebView::EnableGPUPainting m_use_gpu_painting {};
 
     Gfx::IntRect m_viewport_rect;
 

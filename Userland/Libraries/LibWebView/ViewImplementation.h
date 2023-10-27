@@ -25,6 +25,11 @@ enum class EnableCallgrindProfiling {
     Yes
 };
 
+enum class EnableGPUPainting {
+    No,
+    Yes
+};
+
 enum class IsLayoutTestMode {
     No,
     Yes

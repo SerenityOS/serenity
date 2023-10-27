@@ -73,12 +73,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
     bool use_lagom_networking = false;
+    bool use_gpu_painting = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
+    args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting", 0);
+
     args_parser.parse(arguments);
+
+    if (use_gpu_painting) {
+        WebContent::PageHost::set_use_gpu_painter();
+    }
 
 #if defined(HAVE_QT)
     if (!use_lagom_networking) {

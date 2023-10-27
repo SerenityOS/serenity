@@ -25,7 +25,7 @@ class WebContentView;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking);
+    explicit BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking, WebView::EnableGPUPainting);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -121,6 +121,7 @@ private:
     StringView m_webdriver_content_ipc_path;
     WebView::EnableCallgrindProfiling m_enable_callgrind_profiling;
     UseLagomNetworking m_use_lagom_networking;
+    WebView::EnableGPUPainting m_use_gpu_painting;
 };
 
 }

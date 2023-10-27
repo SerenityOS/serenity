@@ -20,7 +20,8 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
     ReadonlySpan<String> candidate_web_content_paths,
     WebView::EnableCallgrindProfiling,
     WebView::IsLayoutTestMode,
-    Ladybird::UseLagomNetworking);
+    Ladybird::UseLagomNetworking,
+    WebView::EnableGPUPainting);
 
 ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>> launch_image_decoder_process(ReadonlySpan<String> candidate_image_decoder_paths);
 ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths, StringView serenity_resource_root);
