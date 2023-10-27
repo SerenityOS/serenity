@@ -164,7 +164,6 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 
 [[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
 {
-    dbgln("cxx_increment {}", value);
     auto old_value = TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
     if (old_value.is_number())
         return Value(old_value.as_double() + 1);
