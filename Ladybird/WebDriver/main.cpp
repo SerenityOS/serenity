@@ -32,7 +32,7 @@ static ErrorOr<pid_t> launch_process(StringView application, ReadonlySpan<char c
 
 static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
 {
-    return launch_process("ladybird"sv,
+    return launch_process("Ladybird"sv,
         Array {
             "--webdriver-content-path",
             socket_path.characters(),
