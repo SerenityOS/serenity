@@ -558,10 +558,10 @@ CSS::BackdropFilter StyleProperties::backdrop_filter() const
     return BackdropFilter::make_none();
 }
 
-Optional<CSS::Position> StyleProperties::position() const
+Optional<CSS::Positioning> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);
-    return value_id_to_position(value->to_identifier());
+    return value_id_to_positioning(value->to_identifier());
 }
 
 bool StyleProperties::operator==(StyleProperties const& other) const

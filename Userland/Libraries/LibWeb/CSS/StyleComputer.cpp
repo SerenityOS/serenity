@@ -1986,7 +1986,7 @@ static BoxTypeTransformation required_box_type_transformation(StyleProperties co
         return BoxTypeTransformation::None;
 
     // Absolute positioning or floating an element blockifies the box’s display type. [CSS2]
-    if (style.position() == CSS::Position::Absolute || style.position() == CSS::Position::Fixed || style.float_() != CSS::Float::None)
+    if (style.position() == CSS::Positioning::Absolute || style.position() == CSS::Positioning::Fixed || style.float_() != CSS::Float::None)
         return BoxTypeTransformation::Blockify;
 
     // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].

@@ -35,7 +35,7 @@ bool Paintable::is_positioned() const
         // grid items with z_index should behave as if position were "relative"
         return true;
     }
-    return computed_values().position() != CSS::Position::Static;
+    return computed_values().position() != CSS::Positioning::Static;
 }
 
 void Paintable::set_dom_node(JS::GCPtr<DOM::Node> dom_node)

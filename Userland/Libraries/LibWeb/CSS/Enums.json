@@ -319,7 +319,7 @@
     "all",
     "none"
   ],
-  "position": [
+  "positioning": [
     "absolute",
     "fixed",
     "relative",

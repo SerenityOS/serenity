@@ -75,7 +75,7 @@ bool Node::is_out_of_flow(FormattingContext const& formatting_context) const
 
 bool Node::can_contain_boxes_with_position_absolute() const
 {
-    if (computed_values().position() != CSS::Position::Static)
+    if (computed_values().position() != CSS::Positioning::Static)
         return true;
 
     if (is<Viewport>(*this))
@@ -110,7 +110,7 @@ Box const* Node::containing_block() const
     auto position = computed_values().position();
 
     // https://drafts.csswg.org/css-position-3/#absolute-cb
-    if (position == CSS::Position::Absolute) {
+    if (position == CSS::Positioning::Absolute) {
         auto const* ancestor = parent();
         while (ancestor && !ancestor->can_contain_boxes_with_position_absolute())
             ancestor = ancestor->parent();
@@ -119,7 +119,7 @@ Box const* Node::containing_block() const
         return static_cast<Box const*>(ancestor);
     }
 
-    if (position == CSS::Position::Fixed)
+    if (position == CSS::Positioning::Fixed)
         return &root();
 
     return nearest_ancestor_capable_of_forming_a_containing_block(*this);
@@ -157,14 +157,14 @@ bool Node::establishes_stacking_context() const
     auto position = computed_values().position();
 
     // Element with a position value absolute or relative and z-index value other than auto.
-    if (position == CSS::Position::Absolute || position == CSS::Position::Relative) {
+    if (position == CSS::Positioning::Absolute || position == CSS::Positioning::Relative) {
         if (computed_values().z_index().has_value()) {
             return true;
         }
     }
 
     // Element with a position value fixed or sticky.
-    if (position == CSS::Position::Fixed || position == CSS::Position::Sticky)
+    if (position == CSS::Positioning::Fixed || position == CSS::Positioning::Sticky)
         return true;
 
     if (!computed_values().transformations().is_empty())
@@ -273,7 +273,7 @@ bool Node::is_floating() const
 
 bool Node::is_positioned() const
 {
-    return has_style() && computed_values().position() != CSS::Position::Static;
+    return has_style() && computed_values().position() != CSS::Positioning::Static;
 }
 
 bool Node::is_absolutely_positioned() const
@@ -281,7 +281,7 @@ bool Node::is_absolutely_positioned() const
     if (!has_style())
         return false;
     auto position = computed_values().position();
-    return position == CSS::Position::Absolute || position == CSS::Position::Fixed;
+    return position == CSS::Positioning::Absolute || position == CSS::Positioning::Fixed;
 }
 
 bool Node::is_fixed_position() const
@@ -289,7 +289,7 @@ bool Node::is_fixed_position() const
     if (!has_style())
         return false;
     auto position = computed_values().position();
-    return position == CSS::Position::Fixed;
+    return position == CSS::Positioning::Fixed;
 }
 
 NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> computed_style)
