@@ -12,6 +12,8 @@
 #    include <Kernel/Arch/x86_64/RegisterState.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RegisterState.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/RegisterState.h>
 #else
 #    error "Unknown architecture"
 #endif

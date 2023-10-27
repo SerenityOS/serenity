@@ -12,4 +12,6 @@
 #    include "x86_64/regs.h"
 #elif ARCH(AARCH64)
 #    include "aarch64/regs.h"
+#elif ARCH(RISCV64)
+#    include "riscv64/regs.h"
 #endif
