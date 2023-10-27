@@ -16,7 +16,7 @@ namespace Gfx {
 class ClassicStylePainter : public BaseStylePainter {
 public:
     virtual void paint_button(Painter&, IntRect const&, Palette const&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false, bool default_button = false) override;
-    virtual void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window, bool accented) override;
+    virtual void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, TabPosition position, bool in_active_window, bool accented) override;
     virtual void paint_frame(Painter&, IntRect const&, Palette const&, FrameStyle, bool skip_vertical_lines = false) override;
     virtual void paint_window_frame(Painter&, IntRect const&, Palette const&) override;
     virtual void paint_progressbar(Painter&, IntRect const&, Palette const&, int min, int max, int value, StringView text, Orientation = Orientation::Horizontal) override;

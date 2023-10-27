@@ -72,7 +72,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     current_cell_label.set_enabled(false);
 
     m_tab_widget = container.add<GUI::TabWidget>();
-    m_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    m_tab_widget->set_tab_position(TabPosition::Bottom);
 
     m_cell_value_editor = cell_value_editor;
     m_current_cell_label = current_cell_label;

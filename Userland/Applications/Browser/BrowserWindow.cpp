@@ -131,13 +131,13 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL> const& 
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
     m_window_actions.on_vertical_tabs = [this](auto& action) {
-        m_tab_widget->set_tab_position(action.is_checked() ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
+        m_tab_widget->set_tab_position(action.is_checked() ? TabPosition::Left : TabPosition::Top);
         Config::write_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, action.is_checked());
     };
 
     bool vertical_tabs = Config::read_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, false);
     m_window_actions.vertical_tabs_action().set_checked(vertical_tabs);
-    m_tab_widget->set_tab_position(vertical_tabs ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
+    m_tab_widget->set_tab_position(vertical_tabs ? TabPosition::Left : TabPosition::Top);
 
     build_menus();
 
