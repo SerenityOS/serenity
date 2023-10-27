@@ -36,6 +36,7 @@ executable("WebContent") {
     "//Userland/Libraries/LibFileSystem",
     "//Userland/Libraries/LibGfx",
     "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibImageDecoderClient",
     "//Userland/Libraries/LibJS",
     "//Userland/Libraries/LibMain",
     "//Userland/Libraries/LibProtocol",

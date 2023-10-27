@@ -1,0 +1,12 @@
+shared_library("LibJIT") {
+  output_name = "jit"
+  include_dirs = [ "//Userland/Libraries" ]
+  sources = [
+    "Assembler.cpp",
+    "Assembler.h",
+  ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+  ]
+}
