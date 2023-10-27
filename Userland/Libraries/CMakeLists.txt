@@ -1,3 +1,4 @@
+add_subdirectory(LibAccelGfx)
 add_subdirectory(LibArchive)
 add_subdirectory(LibAudio)
 add_subdirectory(LibC)
