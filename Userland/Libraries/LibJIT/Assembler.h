@@ -228,7 +228,10 @@ struct Assembler {
 
     [[nodiscard]] Label make_label()
     {
-        return { .offset_of_label_in_instruction_stream = m_output.size() };
+        return Label {
+            .offset_of_label_in_instruction_stream = m_output.size(),
+            .jump_slot_offsets_in_instruction_stream = {},
+        };
     }
 
     [[nodiscard]] Label jump()
