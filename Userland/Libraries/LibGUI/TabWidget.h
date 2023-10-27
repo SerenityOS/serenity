@@ -9,19 +9,13 @@
 
 #include <LibGUI/Margins.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/TabPosition.h>
 
 namespace GUI {
 
 class TabWidget : public Widget {
     C_OBJECT(TabWidget)
 public:
-    enum TabPosition {
-        Top,
-        Bottom,
-        Left,
-        Right,
-    };
-
     virtual ~TabWidget() override = default;
 
     TabPosition tab_position() const { return m_tab_position; }

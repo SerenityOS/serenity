@@ -18,7 +18,7 @@
 
 namespace Gfx {
 
-void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, GUI::TabWidget::TabPosition position, bool in_active_window, bool accented)
+void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect, Palette const& palette, bool active, bool hovered, bool enabled, TabPosition position, bool in_active_window, bool accented)
 {
     Color base_color = palette.button();
     Color highlight_color2 = palette.threed_highlight();
@@ -36,7 +36,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         accent = accent.to_grayscale();
 
     switch (position) {
-    case GUI::TabWidget::TabPosition::Top:
+    case TabPosition::Top:
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, base_color);
 
@@ -58,7 +58,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.draw_line({ rect.width() - 2, 2 }, { rect.width() - 2, rect.height() - 1 }, shadow_color1);
         painter.set_pixel(rect.width() - 2, 1, shadow_color2);
         break;
-    case GUI::TabWidget::TabPosition::Bottom:
+    case TabPosition::Bottom:
         // Base
         painter.fill_rect({ 0, 0, rect.width() - 1, rect.height() }, base_color);
 
@@ -79,7 +79,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.draw_line({ rect.width() - 2, 0 }, { rect.width() - 2, rect.height() - 3 }, shadow_color1);
         painter.set_pixel({ rect.width() - 2, rect.height() - 2 }, shadow_color2);
         break;
-    case GUI::TabWidget::TabPosition::Left:
+    case TabPosition::Left:
         // Base tab
         painter.fill_rect({ 1, 1, rect.width(), rect.height() - 1 }, base_color);
         painter.draw_line({ 2, 0 }, { rect.width(), 0 }, highlight_color2);
@@ -98,7 +98,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, IntRect const& rect
         painter.set_pixel({ 1, 1 }, highlight_color2);
         painter.set_pixel({ 1, rect.height() - 2 }, shadow_color2);
         break;
-    case GUI::TabWidget::TabPosition::Right:
+    case TabPosition::Right:
         // Base tab
         painter.fill_rect({ 0, 1, rect.width() - 1, rect.height() - 1 }, base_color);
         painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color2);

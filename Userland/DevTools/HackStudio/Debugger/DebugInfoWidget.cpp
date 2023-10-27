@@ -76,7 +76,7 @@ DebugInfoWidget::DebugInfoWidget()
     auto& splitter = bottom_box.add<GUI::HorizontalSplitter>();
     m_backtrace_view = splitter.add<GUI::ListView>();
     auto& variables_tab_widget = splitter.add<GUI::TabWidget>();
-    variables_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    variables_tab_widget.set_tab_position(TabPosition::Bottom);
     variables_tab_widget.add_widget(build_variables_tab());
     variables_tab_widget.add_widget(build_registers_tab());
 
