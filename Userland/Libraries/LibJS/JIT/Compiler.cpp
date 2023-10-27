@@ -9,7 +9,9 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/JIT/Compiler.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <sys/mman.h>
@@ -867,6 +869,31 @@ void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
     check_exception();
 }
 
+static void cxx_create_lexical_environment(VM& vm)
+{
+    auto make_and_swap_envs = [&](auto& old_environment) {
+        GCPtr<Environment> environment = new_declarative_environment(*old_environment).ptr();
+        swap(old_environment, environment);
+        return environment;
+    };
+    vm.bytecode_interpreter().saved_lexical_environment_stack().append(make_and_swap_envs(vm.running_execution_context().lexical_environment));
+}
+
+void Compiler::compile_create_lexical_environment(Bytecode::Op::CreateLexicalEnvironment const&)
+{
+    m_assembler.native_call((void*)cxx_create_lexical_environment);
+}
+
+static void cxx_leave_lexical_environment(VM& vm)
+{
+    vm.running_execution_context().lexical_environment = vm.bytecode_interpreter().saved_lexical_environment_stack().take_last();
+}
+
+void Compiler::compile_leave_lexical_environment(Bytecode::Op::LeaveLexicalEnvironment const&)
+{
+    m_assembler.native_call((void*)cxx_leave_lexical_environment);
+}
+
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
 {
     if (!getenv("LIBJS_JIT"))
@@ -930,6 +957,12 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::Return:
                 compiler.compile_return(static_cast<Bytecode::Op::Return const&>(op));
+                break;
+            case Bytecode::Instruction::Type::CreateLexicalEnvironment:
+                compiler.compile_create_lexical_environment(static_cast<Bytecode::Op::CreateLexicalEnvironment const&>(op));
+                break;
+            case Bytecode::Instruction::Type::LeaveLexicalEnvironment:
+                compiler.compile_leave_lexical_environment(static_cast<Bytecode::Op::LeaveLexicalEnvironment const&>(op));
                 break;
             case Bytecode::Instruction::Type::NewString:
                 compiler.compile_new_string(static_cast<Bytecode::Op::NewString const&>(op));
