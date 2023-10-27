@@ -46,6 +46,8 @@ private:
     void compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const&);
     void compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&);
     void compile_throw(Bytecode::Op::Throw const&);
+    void compile_create_lexical_environment(Bytecode::Op::CreateLexicalEnvironment const&);
+    void compile_leave_lexical_environment(Bytecode::Op::LeaveLexicalEnvironment const&);
     void compile_to_numeric(Bytecode::Op::ToNumeric const&);
     void compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding const&);
 
