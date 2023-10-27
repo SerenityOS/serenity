@@ -405,6 +405,7 @@ endif()
 if (BUILD_LAGOM)
     # Lagom Libraries
     set(lagom_standard_libraries
+        AccelGfx
         Archive
         Audio
         Compress
