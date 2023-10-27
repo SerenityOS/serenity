@@ -32,7 +32,7 @@ static QString rebase_default_url_on_serenity_resource_root(StringView default_u
 Settings::Settings()
     : m_search_engine(WebView::default_search_engine())
 {
-    m_qsettings = make<QSettings>("Serenity", "Ladybird", this);
+    m_qsettings = make<QSettings>("SerenityOS", "Ladybird", this);
 
     auto default_search_engine = WebView::default_search_engine();
     auto default_search_engine_name = qstring_from_ak_deprecated_string(default_search_engine.name);
