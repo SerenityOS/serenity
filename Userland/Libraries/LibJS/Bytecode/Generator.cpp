@@ -449,7 +449,8 @@ void Generator::generate_scoped_jump(JumpType type)
             VERIFY(m_current_unwind_context->finalizer().has_value());
             m_current_unwind_context = m_current_unwind_context->previous();
             auto jump_type_name = type == JumpType::Break ? "break"sv : "continue"sv;
-            auto& block = make_block(DeprecatedString::formatted("{}.{}", current_block().name(), jump_type_name));
+            auto block_name = MUST(String::formatted("{}.{}", current_block().name(), jump_type_name));
+            auto& block = make_block(block_name);
             emit<Op::ScheduleJump>(Label { block });
             switch_to_basic_block(block);
             last_was_finally = true;
@@ -485,7 +486,8 @@ void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const&
                 VERIFY(m_current_unwind_context->finalizer().has_value());
                 m_current_unwind_context = m_current_unwind_context->previous();
                 auto jump_type_name = type == JumpType::Break ? "break"sv : "continue"sv;
-                auto& block = make_block(DeprecatedString::formatted("{}.{}", current_block().name(), jump_type_name));
+                auto block_name = MUST(String::formatted("{}.{}", current_block().name(), jump_type_name));
+                auto& block = make_block(block_name);
                 emit<Op::ScheduleJump>(Label { block });
                 switch_to_basic_block(block);
                 last_was_finally = true;
