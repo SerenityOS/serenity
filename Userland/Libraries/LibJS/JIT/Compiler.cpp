@@ -127,11 +127,6 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
         Assembler::Operand::Register(dst),
         Assembler::Operand::Register(src));
 
-    // dst &= 1;
-    m_assembler.bitwise_and(
-        Assembler::Operand::Register(dst),
-        Assembler::Operand::Imm32(1));
-
     // goto end;
     auto end = m_assembler.jump();
 
@@ -147,6 +142,11 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
 
     // end:
     end.link(m_assembler);
+
+    // dst &= 1;
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(dst),
+        Assembler::Operand::Imm32(1));
 }
 
 void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
