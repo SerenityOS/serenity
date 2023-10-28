@@ -532,10 +532,10 @@ struct Assembler {
     {
         if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
             emit8(0x48
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
+                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x01);
-            emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
+            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
@@ -555,10 +555,10 @@ struct Assembler {
     {
         if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
             emit8(0x48
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
+                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
+                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x29);
-            emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
+            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
