@@ -11,9 +11,12 @@ namespace Web::HTML {
 void ModuleMap::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    for (auto& it : m_values) {
+    for (auto& it : m_values)
         visitor.visit(it.value.module_script);
-    }
+
+    for (auto const& it : m_callbacks)
+        for (auto const& callback : it.value)
+            visitor.visit(callback);
 }
 
 bool ModuleMap::is_fetching(AK::URL const& url, DeprecatedString const& type) const
@@ -47,14 +50,14 @@ AK::HashSetResult ModuleMap::set(AK::URL const& url, DeprecatedString const& typ
     auto callbacks = m_callbacks.get({ url, type });
     if (callbacks.has_value())
         for (auto const& callback : *callbacks)
-            callback(entry);
+            callback->function()(entry);
 
     return value;
 }
 
-void ModuleMap::wait_for_change(AK::URL const& url, DeprecatedString const& type, Function<void(Entry)> callback)
+void ModuleMap::wait_for_change(JS::Heap& heap, AK::URL const& url, DeprecatedString const& type, Function<void(Entry)> callback)
 {
-    m_callbacks.ensure({ url, type }).append(move(callback));
+    m_callbacks.ensure({ url, type }).append(JS::create_heap_function(heap, move(callback)));
 }
 
 }

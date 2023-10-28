@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2022-2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibJS/Runtime/ModuleRequest.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
@@ -25,6 +26,11 @@
 #include <LibWeb/URL/URL.h>
 
 namespace Web::HTML {
+
+OnFetchScriptComplete create_on_fetch_script_complete(JS::Heap& heap, Function<void(JS::GCPtr<Script>)> function)
+{
+    return JS::create_heap_function(heap, move(function));
+}
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#module-type-from-module-request
 DeprecatedString module_type_from_module_request(JS::ModuleRequest const& module_request)
@@ -279,7 +285,7 @@ WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElemen
         // - response's status is not an ok status,
         if (body_bytes.template has<Empty>() || body_bytes.template has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
             // then run onComplete given null, and abort these steps.
-            on_complete(nullptr);
+            on_complete->function()(nullptr);
             return;
         }
 
@@ -307,7 +313,7 @@ WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElemen
         auto script = ClassicScript::create(response_url.to_deprecated_string(), source_text, settings_object, response_url, 1, muted_errors);
 
         // 8. Run onComplete given script.
-        on_complete(script);
+        on_complete->function()(script);
     };
 
     TRY(Fetch::Fetching::fetch(element->realm(), request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
@@ -329,22 +335,24 @@ void fetch_internal_module_script_graph(JS::Realm& realm, JS::ModuleRequest cons
     // 4. Assert: visited set contains (url, moduleType).
     VERIFY(visited_set.contains({ url, module_type }));
 
-    // 5. Fetch a single module script given url, fetch client settings object, destination, options, referringScript's settings object,
-    //    referringScript's base URL, moduleRequest, false, and onSingleFetchComplete as defined below. If performFetch was given, pass it along as well.
-    // FIXME: Pass performFetch if given.
-    fetch_single_module_script(realm, url, fetch_client_settings_object, destination, options, referring_script.settings_object(), referring_script.base_url(), module_request, TopLevelModule::No, [&realm, on_complete = move(on_complete), &fetch_client_settings_object, destination, visited_set](auto result) mutable {
-        // onSingleFetchComplete given result is the following algorithm:
+    // onSingleFetchComplete given result is the following algorithm:
+    auto on_single_fetch_complete = create_on_fetch_script_complete(realm.heap(), [&realm, on_complete, &fetch_client_settings_object, destination, visited_set](auto result) mutable {
         // 1. If result is null, run onComplete with null, and abort these steps.
         if (!result) {
-            on_complete(nullptr);
+            on_complete->function()(nullptr);
             return;
         }
 
         // 2. Fetch the descendants of result given fetch client settings object, destination, visited set, and with onComplete. If performFetch was given, pass it along as well.
         // FIXME: Pass performFetch if given.
         auto& module_script = verify_cast<JavaScriptModuleScript>(*result);
-        fetch_descendants_of_a_module_script(realm, module_script, fetch_client_settings_object, destination, visited_set, move(on_complete));
+        fetch_descendants_of_a_module_script(realm, module_script, fetch_client_settings_object, destination, visited_set, on_complete);
     });
+
+    // 5. Fetch a single module script given url, fetch client settings object, destination, options, referringScript's settings object,
+    //    referringScript's base URL, moduleRequest, false, and onSingleFetchComplete as defined below. If performFetch was given, pass it along as well.
+    // FIXME: Pass performFetch if given.
+    fetch_single_module_script(realm, url, fetch_client_settings_object, destination, options, referring_script.settings_object(), referring_script.base_url(), module_request, TopLevelModule::No, on_single_fetch_complete);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-the-descendants-of-a-module-script
@@ -352,7 +360,7 @@ void fetch_descendants_of_a_module_script(JS::Realm& realm, JavaScriptModuleScri
 {
     // 1. If module script's record is null, run onComplete with module script and return.
     if (!module_script.record()) {
-        on_complete(&module_script);
+        on_complete->function()(&module_script);
         return;
     }
 
@@ -362,7 +370,7 @@ void fetch_descendants_of_a_module_script(JS::Realm& realm, JavaScriptModuleScri
     // 3. If record is not a Cyclic Module Record, or if record.[[RequestedModules]] is empty, run onComplete with module script and return.
     // FIXME: Currently record is always a cyclic module.
     if (record->requested_modules().is_empty()) {
-        on_complete(&module_script);
+        on_complete->function()(&module_script);
         return;
     }
 
@@ -400,44 +408,43 @@ void fetch_descendants_of_a_module_script(JS::Realm& realm, JavaScriptModuleScri
 
     // 9. If pendingCount is zero, run onComplete with module script.
     if (pending_count == 0) {
-        on_complete(&module_script);
+        on_complete->function()(&module_script);
         return;
     }
 
     // 10. Let failed be false.
-    auto context = DescendantFetchingContext::create();
-    context->set_pending_count(pending_count);
-    context->set_failed(false);
-    context->set_on_complete(move(on_complete));
+    bool failed = false;
 
     // 11. For each moduleRequest in moduleRequests, perform the internal module script graph fetching procedure given moduleRequest,
     //     fetch client settings object, destination, options, module script, visited set, and onInternalFetchingComplete as defined below.
     //     If performFetch was given, pass it along as well.
     for (auto const& module_request : module_requests) {
-        // FIXME: Pass performFetch if given.
-        fetch_internal_module_script_graph(realm, module_request, fetch_client_settings_object, destination, options, module_script, visited_set, [context, &module_script](auto result) mutable {
-            // onInternalFetchingComplete given result is the following algorithm:
+        // onInternalFetchingComplete given result is the following algorithm:
+        auto on_internal_fetching_complete = create_on_fetch_script_complete(realm.heap(), [failed, pending_count, &module_script, on_complete](auto result) mutable {
             // 1. If failed is true, then abort these steps.
-            if (context->failed())
+            if (failed)
                 return;
 
             // 2. If result is null, then set failed to true, run onComplete with null, and abort these steps.
             if (!result) {
-                context->set_failed(true);
-                context->on_complete(nullptr);
+                failed = true;
+                on_complete->function()(nullptr);
                 return;
             }
 
             // 3. Assert: pendingCount is greater than zero.
-            VERIFY(context->pending_count() > 0);
+            VERIFY(pending_count > 0);
 
             // 4. Decrement pendingCount by one.
-            context->decrement_pending_count();
+            --pending_count;
 
             // 5. If pendingCount is zero, run onComplete with module script.
-            if (context->pending_count() == 0)
-                context->on_complete(&module_script);
+            if (pending_count == 0)
+                on_complete->function()(&module_script);
         });
+
+        // FIXME: Pass performFetch if given.
+        fetch_internal_module_script_graph(realm, module_request, fetch_client_settings_object, destination, options, module_script, visited_set, on_internal_fetching_complete);
     }
 }
 
@@ -471,13 +478,13 @@ void fetch_single_module_script(JS::Realm& realm,
     // 5. If moduleMap[(url, moduleType)] is "fetching", wait in parallel until that entry's value changes,
     //    then queue a task on the networking task source to proceed with running the following steps.
     if (module_map.is_fetching(url, module_type)) {
-        module_map.wait_for_change(url, module_type, [on_complete = move(on_complete)](auto entry) {
+        module_map.wait_for_change(realm.heap(), url, module_type, [on_complete](auto entry) -> void {
             // FIXME: This should queue a task.
 
             // FIXME: This should run other steps, for now we just assume the script loaded.
             VERIFY(entry.type == ModuleMap::EntryType::ModuleScript);
 
-            on_complete(entry.module_script);
+            on_complete->function()(entry.module_script);
         });
 
         return;
@@ -486,7 +493,7 @@ void fetch_single_module_script(JS::Realm& realm,
     // 6. If moduleMap[(url, moduleType)] exists, run onComplete given moduleMap[(url, moduleType)], and return.
     auto entry = module_map.get(url, module_type);
     if (entry.has_value() && entry->type == ModuleMap::EntryType::ModuleScript) {
-        on_complete(entry->module_script);
+        on_complete->function()(entry->module_script);
         return;
     }
 
@@ -516,14 +523,14 @@ void fetch_single_module_script(JS::Realm& realm,
     //     In both cases, let processResponseConsumeBody given response response and null, failure, or a byte sequence bodyBytes be the following algorithm:
     // FIXME: Run performFetch if given.
     Web::Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
-    fetch_algorithms_input.process_response_consume_body = [&module_map, url, module_type, &settings_object, on_complete = move(on_complete)](JS::NonnullGCPtr<Fetch::Infrastructure::Response> response, Fetch::Infrastructure::FetchAlgorithms::BodyBytes body_bytes) {
+    fetch_algorithms_input.process_response_consume_body = [&module_map, url, module_type, &settings_object, on_complete](JS::NonnullGCPtr<Fetch::Infrastructure::Response> response, Fetch::Infrastructure::FetchAlgorithms::BodyBytes body_bytes) {
         // 1. If either of the following conditions are met:
         //    - bodyBytes is null or failure; or
         //    - response's status is not an ok status,
         if (body_bytes.has<Empty>() || body_bytes.has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
             // then set moduleMap[(url, moduleType)] to null, run onComplete given null, and abort these steps.
             module_map.set(url, module_type, { ModuleMap::EntryType::Failed, nullptr });
-            on_complete(nullptr);
+            on_complete->function()(nullptr);
             return;
         }
 
@@ -551,7 +558,7 @@ void fetch_single_module_script(JS::Realm& realm,
 
         // 10. Set moduleMap[(url, moduleType)] to moduleScript, and run onComplete given moduleScript.
         module_map.set(url, module_type, { ModuleMap::EntryType::ModuleScript, module_script });
-        on_complete(module_script);
+        on_complete->function()(module_script);
     };
 
     Fetch::Fetching::fetch(realm, request, Fetch::Infrastructure::FetchAlgorithms::create(realm.vm(), move(fetch_algorithms_input))).release_value_but_fixme_should_propagate_errors();
@@ -563,11 +570,10 @@ void fetch_external_module_script_graph(JS::Realm& realm, AK::URL const& url, En
     // 1. Disallow further import maps given settings object.
     settings_object.disallow_further_import_maps();
 
-    // 2. Fetch a single module script given url, settings object, "script", options, settings object, "client", true, and with the following steps given result:
-    fetch_single_module_script(realm, url, settings_object, Fetch::Infrastructure::Request::Destination::Script, options, settings_object, Web::Fetch::Infrastructure::Request::Referrer::Client, {}, TopLevelModule::Yes, [&realm, &settings_object, on_complete = move(on_complete), url](auto result) mutable {
+    auto steps = create_on_fetch_script_complete(realm.heap(), [&realm, &settings_object, on_complete, url](auto result) mutable {
         // 1. If result is null, run onComplete given null, and abort these steps.
         if (!result) {
-            on_complete(nullptr);
+            on_complete->function()(nullptr);
             return;
         }
 
@@ -577,8 +583,11 @@ void fetch_external_module_script_graph(JS::Realm& realm, AK::URL const& url, En
 
         // 3. Fetch the descendants of and link result given settings object, "script", visited set, and onComplete.
         auto& module_script = verify_cast<JavaScriptModuleScript>(*result);
-        fetch_descendants_of_and_link_a_module_script(realm, module_script, settings_object, Fetch::Infrastructure::Request::Destination::Script, move(visited_set), move(on_complete));
+        fetch_descendants_of_and_link_a_module_script(realm, module_script, settings_object, Fetch::Infrastructure::Request::Destination::Script, move(visited_set), on_complete);
     });
+
+    // 2. Fetch a single module script given url, settings object, "script", options, settings object, "client", true, and with the following steps given result:
+    fetch_single_module_script(realm, url, settings_object, Fetch::Infrastructure::Request::Destination::Script, options, settings_object, Web::Fetch::Infrastructure::Request::Referrer::Client, {}, TopLevelModule::Yes, steps);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-inline-module-script-graph
@@ -592,7 +601,7 @@ void fetch_inline_module_script_graph(JS::Realm& realm, DeprecatedString const& 
 
     // 3. If script is null, run onComplete given null, and return.
     if (!script) {
-        on_complete(nullptr);
+        on_complete->function()(nullptr);
         return;
     }
 
@@ -600,20 +609,17 @@ void fetch_inline_module_script_graph(JS::Realm& realm, DeprecatedString const& 
     HashTable<ModuleLocationTuple> visited_set;
 
     // 5. Fetch the descendants of and link script, given settings object, the destination "script", visited set, and onComplete.
-    fetch_descendants_of_and_link_a_module_script(realm, *script, settings_object, Fetch::Infrastructure::Request::Destination::Script, visited_set, move(on_complete));
+    fetch_descendants_of_and_link_a_module_script(realm, *script, settings_object, Fetch::Infrastructure::Request::Destination::Script, visited_set, on_complete);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-the-descendants-of-and-link-a-module-script
 void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm, JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, Fetch::Infrastructure::Request::Destination destination, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete)
 {
-    // 1. Fetch the descendants of module script, given fetch client settings object, destination, visited set, and onFetchDescendantsComplete as defined below.
-    //    If performFetch was given, pass it along as well.
-    // FIXME: Pass performFetch if given.
-    fetch_descendants_of_a_module_script(realm, module_script, fetch_client_settings_object, destination, visited_set, [&fetch_client_settings_object, on_complete = move(on_complete)](auto result) {
+    auto on_fetch_descendants_complete = create_on_fetch_script_complete(realm.heap(), [&fetch_client_settings_object, on_complete](auto result) {
         // onFetchDescendantsComplete given result is the following algorithm:
         // 1. If result is null, then run onComplete given result, and abort these steps.
         if (!result) {
-            on_complete(nullptr);
+            on_complete->function()(nullptr);
             return;
         }
 
@@ -639,8 +645,13 @@ void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm, JavaScriptM
         }
 
         // 5. Run onComplete given result.
-        on_complete(result);
+        on_complete->function()(result);
     });
+
+    // 1. Fetch the descendants of module script, given fetch client settings object, destination, visited set, and onFetchDescendantsComplete as defined below.
+    //    If performFetch was given, pass it along as well.
+    // FIXME: Pass performFetch if given.
+    fetch_descendants_of_a_module_script(realm, module_script, fetch_client_settings_object, destination, visited_set, on_fetch_descendants_complete);
 }
 
 }
