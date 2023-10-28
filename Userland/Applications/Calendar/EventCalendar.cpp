@@ -25,28 +25,28 @@ void EventCalendar::paint_tile(GUI::Painter& painter, GUI::Calendar::Tile& tile,
 {
     Calendar::paint_tile(painter, tile, tile_rect, x_offset, y_offset, day_offset);
 
-    auto events = m_event_manager->events();
+    if (tile.width < tile_breakpoint || tile.height < tile_breakpoint)
+        return;
 
-    if (tile.width > tile_breakpoint && tile.height > tile_breakpoint) {
-        auto index = 0;
-        auto font_height = font().x_height();
-        events.for_each([&](JsonValue const& value) {
-            auto const& event = value.as_object();
+    auto index = 0;
+    auto font_height = font().x_height();
+    for (auto const& event : m_event_manager->events()) {
+        auto start = event.start;
+        if (start.year() == tile.year && start.month() == tile.month && start.day() == tile.day) {
+            auto text_rect = tile.rect.translated(4, 4 + (font_height + 4) * ++index);
 
-            if (!event.has("start_date"sv) || !event.has("start_date"sv) || !event.has("summary"sv))
-                return;
+            auto event_text = String::formatted("{} {}", start.to_byte_string("%H:%M"sv), event.summary);
+            if (event_text.is_error())
+                continue;
 
-            auto start_date = event.get("start_date"sv).value().to_byte_string();
-            auto start_time = event.get("start_time"sv).value().to_byte_string();
-            auto summary = event.get("summary"sv).value().to_byte_string();
-            auto combined_text = ByteString::formatted("{} {}", start_time, summary);
-
-            if (start_date == ByteString::formatted("{}-{:0>2d}-{:0>2d}", tile.year, tile.month, tile.day)) {
-
-                auto text_rect = tile.rect.translated(4, 4 + (font_height + 4) * ++index);
-                painter.draw_text(text_rect, combined_text, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::TopLeft, palette().base_text(), Gfx::TextElision::Right);
-            }
-        });
+            painter.draw_text(
+                text_rect,
+                event_text.release_value(),
+                Gfx::FontDatabase::default_font(),
+                Gfx::TextAlignment::TopLeft,
+                palette().base_text(),
+                Gfx::TextElision::Right);
+        }
     }
 }
 
