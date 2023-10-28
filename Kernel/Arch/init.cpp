@@ -449,6 +449,8 @@ void init_stage2(void*)
     auto userspace_init = kernel_command_line().userspace_init();
     auto init_args = kernel_command_line().userspace_init_args();
 
+    dmesgln("Running first user process: {}", userspace_init);
+    dmesgln("Init (first) process args: {}", init_args);
     auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
     if (init_or_error.is_error())
         PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
