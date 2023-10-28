@@ -59,4 +59,18 @@ bool StringBase::is_short_string() const
     return has_short_string_bit(reinterpret_cast<uintptr_t>(m_data));
 }
 
+ReadonlyBytes StringBase::bytes() const
+{
+    if (is_short_string())
+        return m_short_string.bytes();
+    return m_data->bytes();
+}
+
+bool StringBase::operator==(StringBase const& other) const
+{
+    if (is_short_string())
+        return m_data == other.m_data;
+    return bytes() == other.bytes();
+}
+
 }
