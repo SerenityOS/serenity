@@ -397,37 +397,47 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 if (static_cast<size_t>(subr_number) >= subroutines.size())
                     return error("Subroutine index out of range");
 
-                // Subroutines 0-2 handle the flex feature.
-                if (subr_number == 0) {
-                    if (state.flex_index != 14)
+                if (!is_type2) {
+                    // FIXME: Hardcoding subrs 0-2 here is incorrect, since some fonts don't use the flex feature.
+                    // For the ones that do, subrs 0-2 have fixed contents that have callothersubr instructions.
+                    // The right thing to do is to implement callothersubr for subrs 0-3 and remove the hardcoding here.
+
+                    // Subroutines 0-2 handle the flex feature.
+                    if (subr_number == 0) {
+                        if (state.flex_index != 14)
+                            break;
+
+                        auto& flex = state.flex_sequence;
+
+                        path.cubic_bezier_curve_to(
+                            { flex[2], flex[3] },
+                            { flex[4], flex[5] },
+                            { flex[6], flex[7] });
+                        path.cubic_bezier_curve_to(
+                            { flex[8], flex[9] },
+                            { flex[10], flex[11] },
+                            { flex[12], flex[13] });
+
+                        state.flex_feature = false;
+                        state.sp = 0;
                         break;
-
-                    auto& flex = state.flex_sequence;
-
-                    path.cubic_bezier_curve_to(
-                        { flex[2], flex[3] },
-                        { flex[4], flex[5] },
-                        { flex[6], flex[7] });
-                    path.cubic_bezier_curve_to(
-                        { flex[8], flex[9] },
-                        { flex[10], flex[11] },
-                        { flex[12], flex[13] });
-
-                    state.flex_feature = false;
-                    state.sp = 0;
-                } else if (subr_number == 1) {
-                    state.flex_feature = true;
-                    state.flex_index = 0;
-                    state.sp = 0;
-                } else if (subr_number == 2) {
-                    state.sp = 0;
-                } else {
-                    auto const& subr = subroutines[subr_number];
-                    if (subr.is_empty())
-                        return error("Empty subroutine");
-
-                    TRY(parse_glyph(subr, local_subroutines, global_subroutines, state, is_type2));
+                    }
+                    if (subr_number == 1) {
+                        state.flex_feature = true;
+                        state.flex_index = 0;
+                        state.sp = 0;
+                        break;
+                    }
+                    if (subr_number == 2) {
+                        state.sp = 0;
+                        break;
+                    }
                 }
+                auto const& subr = subroutines[subr_number];
+                if (subr.is_empty())
+                    return error("Empty subroutine");
+
+                TRY(parse_glyph(subr, local_subroutines, global_subroutines, state, is_type2));
                 break;
             }
 
