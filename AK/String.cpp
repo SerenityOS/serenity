@@ -252,11 +252,7 @@ ErrorOr<String> String::substring_from_byte_offset(size_t start) const
 
 ErrorOr<String> String::substring_from_byte_offset_with_shared_superstring(size_t start, size_t byte_count) const
 {
-    if (!byte_count)
-        return String {};
-    if (byte_count <= MAX_SHORT_STRING_BYTE_COUNT)
-        return String::from_utf8(bytes_as_string_view().substring_view(start, byte_count));
-    return String { TRY(Detail::StringData::create_substring(*m_data, start, byte_count)) };
+    return String { TRY(StringBase::substring_from_byte_offset_with_shared_superstring(start, byte_count)) };
 }
 
 ErrorOr<String> String::substring_from_byte_offset_with_shared_superstring(size_t start) const

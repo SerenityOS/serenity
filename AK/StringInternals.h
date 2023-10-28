@@ -59,6 +59,8 @@ public:
     bool is_fly_string() const { return m_is_fly_string; }
     void set_fly_string(bool is_fly_string) const { m_is_fly_string = is_fly_string; }
 
+    size_t byte_count() const { return m_byte_count; }
+
 private:
     explicit StringData(size_t byte_count);
     StringData(StringData const& superstring, size_t start, size_t byte_count);

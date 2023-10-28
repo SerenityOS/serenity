@@ -70,6 +70,13 @@ u32 StringBase::hash() const
     return m_data->hash();
 }
 
+size_t StringBase::byte_count() const
+{
+    if (is_short_string())
+        return m_short_string.byte_count_and_short_string_flag >> 1;
+    return m_data->byte_count();
+}
+
 bool StringBase::operator==(StringBase const& other) const
 {
     if (is_short_string())
@@ -86,6 +93,20 @@ ErrorOr<Bytes> StringBase::replace_with_uninitialized_buffer(size_t byte_count)
     destroy_string();
     m_data = &TRY(StringData::create_uninitialized(byte_count, buffer)).leak_ref();
     return Bytes { buffer, byte_count };
+}
+
+ErrorOr<StringBase> StringBase::substring_from_byte_offset_with_shared_superstring(size_t start, size_t length) const
+{
+    VERIFY(start + length <= byte_count());
+
+    if (length == 0)
+        return StringBase {};
+    if (length <= MAX_SHORT_STRING_BYTE_COUNT) {
+        StringBase result;
+        bytes().slice(start, length).copy_to(result.replace_with_uninitialized_short_string(length));
+        return result;
+    }
+    return StringBase { TRY(Detail::StringData::create_substring(*m_data, start, length)) };
 }
 
 void StringBase::destroy_string()
