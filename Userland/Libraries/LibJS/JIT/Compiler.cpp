@@ -617,11 +617,6 @@ void Compiler::compile_new_string(Bytecode::Op::NewString const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
-static Value cxx_new_regexp(VM& vm, Bytecode::ParsedRegex const& parsed_regex, DeprecatedString const& pattern, DeprecatedString const& flags)
-{
-    return Bytecode::new_regexp(vm, parsed_regex, pattern, flags);
-}
-
 void Compiler::compile_new_regexp(Bytecode::Op::NewRegExp const& op)
 {
     auto const& parsed_regex = m_bytecode_executable.regex_table->get(op.regex_index());
@@ -638,7 +633,7 @@ void Compiler::compile_new_regexp(Bytecode::Op::NewRegExp const& op)
         Assembler::Operand::Register(ARG3),
         Assembler::Operand::Imm(bit_cast<u64>(&flags)));
 
-    native_call((void*)cxx_new_regexp);
+    native_call((void*)Bytecode::new_regexp);
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
@@ -677,15 +672,6 @@ void Compiler::compile_new_array(Bytecode::Op::NewArray const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
-static Value cxx_new_function(
-    VM& vm,
-    FunctionExpression const& function_node,
-    Optional<Bytecode::IdentifierTableIndex> const& lhs_name,
-    Optional<Bytecode::Register> const& home_object)
-{
-    return Bytecode::new_function(vm, function_node, lhs_name, home_object);
-}
-
 void Compiler::compile_new_function(Bytecode::Op::NewFunction const& op)
 {
     m_assembler.mov(
@@ -697,7 +683,7 @@ void Compiler::compile_new_function(Bytecode::Op::NewFunction const& op)
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
         Assembler::Operand::Imm(bit_cast<u64>(&op.home_object())));
-    native_call((void*)cxx_new_function);
+    native_call((void*)Bytecode::new_function);
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
