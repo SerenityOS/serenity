@@ -360,146 +360,41 @@ void Compiler::compile_decrement(Bytecode::Op::Decrement const&)
 
 void Compiler::check_exception()
 {
-    // if (!exception.is_empty()) goto m_exception_handler;
     load_vm_register(GPR0, Bytecode::Register::exception());
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Condition::NotEqualTo,
-        Assembler::Operand::Register(GPR1),
-        m_exception_handler);
-}
 
-void Compiler::handle_exception()
-{
-    // if (!unwind_context.valid) return;
-    Assembler::Label handle_exception {};
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Condition::NotEqualTo,
-        Assembler::Operand::Imm(0),
-        handle_exception);
-
-    jump_to_exit();
-
-    // handle_exception:
-    handle_exception.link(m_assembler);
-
-    // if (unwind_context.handler) {
-    Assembler::Label no_handler {};
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 8));
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Condition::EqualTo,
-        Assembler::Operand::Imm(0),
-        no_handler);
-    //     accumulator = exception;
-    load_vm_register(GPR1, Bytecode::Register::exception());
-    store_vm_register(Bytecode::Register::accumulator(), GPR1);
-    //     exception = Value();
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Imm(Value().encoded()));
-    store_vm_register(Bytecode::Register::exception(), GPR1);
-    //     unwind_context.handler = nullptr;
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Imm(0));
-    m_assembler.mov(
-        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 8),
-        Assembler::Operand::Register(GPR1));
-    //     goto handler;
-    m_assembler.jump(Assembler::Operand::Register(GPR0));
-    // }
-
-    // no_handler:
-    no_handler.link(m_assembler);
-
-    // if (unwind_context.finalizer) goto finalizer;
-    Assembler::Label no_finalizer {};
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 16));
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Condition::EqualTo,
-        Assembler::Operand::Imm(0),
-        no_finalizer);
-
-    m_assembler.jump(Assembler::Operand::Register(GPR0));
-
-    // no_finalizer:
-    // NOTE: No catch and no finally!? Crash.
-    no_finalizer.link(m_assembler);
-    m_assembler.verify_not_reached();
-}
-
-void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer)
-{
-    // Put this on the stack, and then point UNWIND_CONTEXT_BASE at it.
-    // struct {
-    //     u64 valid;
-    //     u64 handler;
-    //     u64 finalizer;
-    // };
-
-    if (finalizer.has_value()) {
-        // push finalizer (patched later)
-        m_assembler.mov(
+    if (auto const* handler = current_block().handler(); handler) {
+        Assembler::Label no_exception;
+        m_assembler.jump_if(
             Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm(0),
-            Assembler::Patchable::Yes);
-        block_data_for(finalizer.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
-        m_assembler.push(Assembler::Operand::Register(GPR0));
+            Assembler::Condition::EqualTo,
+            Assembler::Operand::Register(GPR1),
+            no_exception);
+        store_vm_register(Bytecode::Register::accumulator(), GPR0);
+        store_vm_register(Bytecode::Register::exception(), GPR1);
+        m_assembler.jump(label_for(*handler));
+        no_exception.link(m_assembler);
+    } else if (auto const* finalizer = current_block().finalizer(); finalizer) {
+        m_assembler.jump_if(Assembler::Operand::Register(GPR0),
+            Assembler::Condition::NotEqualTo,
+            Assembler::Operand::Register(GPR1),
+            label_for(*finalizer));
     } else {
-        m_assembler.push(Assembler::Operand::Imm(0));
+        m_assembler.jump_if(Assembler::Operand::Register(GPR0),
+            Assembler::Condition::NotEqualTo,
+            Assembler::Operand::Register(GPR1),
+            m_exit_label);
     }
-
-    if (handler.has_value()) {
-        // push handler (patched later)
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm(0),
-            Assembler::Patchable::Yes);
-        block_data_for(handler.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
-        m_assembler.push(Assembler::Operand::Register(GPR0));
-    } else {
-        m_assembler.push(Assembler::Operand::Imm(0));
-    }
-
-    // push valid
-    m_assembler.push(Assembler::Operand::Imm(valid));
-
-    // UNWIND_CONTEXT_BASE = STACK_POINTER
-    m_assembler.mov(
-        Assembler::Operand::Register(UNWIND_CONTEXT_BASE),
-        Assembler::Operand::Register(STACK_POINTER));
-
-    // align stack pointer
-    m_assembler.sub(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(8));
-}
-
-void Compiler::pop_unwind_context()
-{
-    m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(32));
-    m_assembler.add(Assembler::Operand::Register(UNWIND_CONTEXT_BASE), Assembler::Operand::Imm(32));
 }
 
 void Compiler::compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const& op)
 {
-    push_unwind_context(true, op.handler_target(), op.finalizer_target());
-
     m_assembler.jump(label_for(op.entry_point().block()));
 }
 
 void Compiler::compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&)
 {
-    pop_unwind_context();
+    /* Nothing */
 }
 
 void Compiler::compile_throw(Bytecode::Op::Throw const&)
@@ -668,35 +563,13 @@ void Compiler::compile_return(Bytecode::Op::Return const&)
 {
     load_vm_register(GPR0, Bytecode::Register::accumulator());
 
-    // check for finalizer
-    // if (!unwind_context.valid) goto normal_return;
-    Assembler::Label normal_return {};
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR1),
-        Assembler::Condition::EqualTo,
-        Assembler::Operand::Imm(0),
-        normal_return);
-
-    // if (!unwind_context.finalizer) goto normal_return;
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 16));
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR1),
-        Assembler::Condition::EqualTo,
-        Assembler::Operand::Imm(0),
-        normal_return);
-
-    store_vm_register(Bytecode::Register::saved_return_value(), GPR0);
-    m_assembler.jump(Assembler::Operand::Register(GPR1));
-
-    // normal_return:
-    normal_return.link(m_assembler);
-    store_vm_register(Bytecode::Register::return_value(), GPR0);
-    jump_to_exit();
+    if (auto const* finalizer = current_block().finalizer(); finalizer) {
+        store_vm_register(Bytecode::Register::saved_return_value(), GPR0);
+        m_assembler.jump(label_for(*finalizer));
+    } else {
+        store_vm_register(Bytecode::Register::return_value(), GPR0);
+        jump_to_exit();
+    }
 }
 
 static Value cxx_new_string(VM& vm, DeprecatedString const& string)
@@ -1800,10 +1673,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         Assembler::Operand::Register(LOCALS_ARRAY_BASE),
         Assembler::Operand::Register(ARG2));
 
-    compiler.push_unwind_context(false, {}, {});
-
     for (auto& block : bytecode_executable.basic_blocks) {
         compiler.block_data_for(*block).start_offset = compiler.m_output.size();
+        compiler.set_current_block(*block);
         auto it = Bytecode::InstructionStreamIterator(block->instruction_stream());
         while (!it.at_end()) {
             auto const& op = *it;
@@ -1831,11 +1703,6 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
     compiler.m_exit_label.link(compiler.m_assembler);
     compiler.m_assembler.exit();
 
-    if (!compiler.m_exception_handler.jump_slot_offsets_in_instruction_stream.is_empty()) {
-        compiler.m_exception_handler.link(compiler.m_assembler);
-        compiler.handle_exception();
-    }
-
     auto* executable_memory = mmap(nullptr, compiler.m_output.size(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     if (executable_memory == MAP_FAILED) {
         dbgln("mmap: {}", strerror(errno));
@@ -1844,21 +1711,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 
     for (auto& block : bytecode_executable.basic_blocks) {
         auto& block_data = compiler.block_data_for(*block);
-
         block_data.label.link_to(compiler.m_assembler, block_data.start_offset);
-
-        // Patch up all the absolute references
-        for (auto& absolute_reference : block_data.absolute_references_to_here) {
-            auto offset = bit_cast<u64>(executable_memory) + block_data.start_offset;
-            compiler.m_output[absolute_reference + 0] = (offset >> 0) & 0xff;
-            compiler.m_output[absolute_reference + 1] = (offset >> 8) & 0xff;
-            compiler.m_output[absolute_reference + 2] = (offset >> 16) & 0xff;
-            compiler.m_output[absolute_reference + 3] = (offset >> 24) & 0xff;
-            compiler.m_output[absolute_reference + 4] = (offset >> 32) & 0xff;
-            compiler.m_output[absolute_reference + 5] = (offset >> 40) & 0xff;
-            compiler.m_output[absolute_reference + 6] = (offset >> 48) & 0xff;
-            compiler.m_output[absolute_reference + 7] = (offset >> 56) & 0xff;
-        }
     }
 
     if constexpr (DUMP_JIT_MACHINE_CODE_TO_STDOUT) {
