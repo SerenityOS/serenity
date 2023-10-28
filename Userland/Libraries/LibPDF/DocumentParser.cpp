@@ -430,7 +430,12 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
         for (int i = 0; i < count; i++) {
             Array<long, 3> fields;
             for (size_t field_index = 0; field_index < 3; ++field_index) {
+                if (!field_sizes->at(field_index).has_u32())
+                    return error("Malformed xref stream");
+
                 auto field_size = field_sizes->at(field_index).get_u32();
+                if (field_size > 8)
+                    return error("Malformed xref stream");
 
                 if (byte_index + field_size > stream->bytes().size())
                     return error("The xref stream data cut off early");
