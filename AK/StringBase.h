@@ -55,7 +55,10 @@ public:
     }
 
     // NOTE: This is primarily interesting to unit tests.
-    [[nodiscard]] bool is_short_string() const;
+    [[nodiscard]] constexpr bool is_short_string() const
+    {
+        return (m_short_string.byte_count_and_short_string_flag & SHORT_STRING_FLAG) != 0;
+    }
 
     // Returns the underlying UTF-8 encoded bytes.
     // NOTE: There is no guarantee about null-termination.
@@ -80,12 +83,41 @@ protected:
     {
     }
 
+    template<typename Func>
+    ErrorOr<void> replace_with_new_string(size_t byte_count, Func&& callback)
+    {
+        Bytes buffer = TRY(replace_with_uninitialized_buffer(byte_count));
+        if (byte_count != 0)
+            TRY(callback(buffer));
+        return {};
+    }
+
+    template<typename Func>
+    constexpr void replace_with_new_short_string(size_t byte_count, Func&& callback)
+    {
+        Bytes buffer = replace_with_uninitialized_short_string(byte_count);
+        if (byte_count != 0)
+            callback(buffer);
+    }
+
     union {
         ShortString m_short_string;
         Detail::StringData const* m_data { nullptr };
     };
 
 private:
+    ErrorOr<Bytes> replace_with_uninitialized_buffer(size_t byte_count);
+
+    constexpr Bytes replace_with_uninitialized_short_string(size_t byte_count)
+    {
+        VERIFY(is_short_string());
+        VERIFY(byte_count <= MAX_SHORT_STRING_BYTE_COUNT);
+
+        m_short_string = ShortString {};
+        m_short_string.byte_count_and_short_string_flag = (byte_count << 1) | SHORT_STRING_FLAG;
+        return { m_short_string.storage, byte_count };
+    }
+
     void destroy_string();
 };
 
