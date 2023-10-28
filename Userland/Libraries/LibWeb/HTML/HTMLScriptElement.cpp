@@ -492,7 +492,7 @@ void HTMLScriptElement::prepare_script()
         // 4. Otherwise, if el has a defer attribute or el's type is "module":
         else if (has_attribute(HTML::AttributeNames::defer) || m_script_type == ScriptType::Module) {
             // 1. Append el to its parser document's list of scripts that will execute when the document has finished parsing.
-            m_parser_document->scripts_to_execute_when_parsing_has_finished().append(*this);
+            m_parser_document->add_script_to_execute_when_parsing_has_finished({}, *this);
 
             // 2. Set el's steps to run when the result is ready to the following:
             m_steps_to_run_when_the_result_is_ready = [this] {
