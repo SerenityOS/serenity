@@ -196,6 +196,11 @@ public:
 
 private:
     using ShortString = Detail::ShortString;
+
+    explicit constexpr String(StringBase&& base)
+        : StringBase(move(base))
+    {
+    }
 };
 
 template<>

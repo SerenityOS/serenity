@@ -64,6 +64,7 @@ public:
     // NOTE: There is no guarantee about null-termination.
     [[nodiscard]] ReadonlyBytes bytes() const;
     [[nodiscard]] u32 hash() const;
+    [[nodiscard]] size_t byte_count() const;
 
     [[nodiscard]] bool operator==(StringBase const&) const;
 
@@ -99,6 +100,10 @@ protected:
         if (byte_count != 0)
             callback(buffer);
     }
+
+    // This is not a trivial operation with storage, so it does not belong here. Unfortunately, it
+    // is impossible to implement it without access to StringData.
+    ErrorOr<StringBase> substring_from_byte_offset_with_shared_superstring(size_t start, size_t byte_count) const;
 
     union {
         ShortString m_short_string;
