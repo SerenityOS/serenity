@@ -122,25 +122,13 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
 
 ErrorOr<void> AddEventDialog::add_event_to_calendar()
 {
-    auto to_date_string = [](Core::DateTime date_time) -> ErrorOr<String> {
-        return String::formatted("{}-{:0>2d}-{:0>2d}", date_time.year(), date_time.month(), date_time.day());
-    };
-    auto to_time_string = [](Core::DateTime date_time) -> ErrorOr<String> {
-        return String::formatted("{}:{:0>2d}", date_time.hour(), date_time.minute());
-    };
-
-    JsonObject event;
-    auto start_date = TRY(to_date_string(m_start_date_time));
-    auto start_time = TRY(to_time_string(m_start_date_time));
-    auto end_date = TRY(to_date_string(m_end_date_time));
-    auto end_time = TRY(to_time_string(m_end_date_time));
     auto summary = find_descendant_of_type_named<GUI::TextBox>("event_title_textbox")->get_text();
-    event.set("start_date", JsonValue(start_date));
-    event.set("start_time", JsonValue(start_time));
-    event.set("end_date", JsonValue(end_date));
-    event.set("end_time", JsonValue(end_time));
-    event.set("summary", JsonValue(summary));
-    TRY(m_event_manager.add_event(event));
+    m_event_manager.add_event(Event {
+        .summary = TRY(String::from_deprecated_string(summary)),
+        .start = m_start_date_time,
+        .end = m_end_date_time,
+    });
+
     m_event_manager.set_dirty(true);
 
     return {};
