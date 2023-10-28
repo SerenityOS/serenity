@@ -637,6 +637,20 @@ void Compiler::compile_new_regexp(Bytecode::Op::NewRegExp const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_new_bigint(VM& vm, Crypto::SignedBigInteger const& bigint)
+{
+    return BigInt::create(vm, bigint);
+}
+
+void Compiler::compile_new_bigint(Bytecode::Op::NewBigInt const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm(bit_cast<u64>(&op.bigint())));
+    native_call((void*)cxx_new_bigint);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
 static Value cxx_new_object(VM& vm)
 {
     auto& realm = *vm.current_realm();
@@ -1105,6 +1119,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::NewRegExp:
                 compiler.compile_new_regexp(static_cast<Bytecode::Op::NewRegExp const&>(op));
+                break;
+            case Bytecode::Instruction::Type::NewBigInt:
+                compiler.compile_new_bigint(static_cast<Bytecode::Op::NewBigInt const&>(op));
                 break;
             case Bytecode::Instruction::Type::GetById:
                 compiler.compile_get_by_id(static_cast<Bytecode::Op::GetById const&>(op));
