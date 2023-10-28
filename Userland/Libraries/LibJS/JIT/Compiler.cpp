@@ -396,23 +396,29 @@ void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& 
     //     u64 finalizer;
     // };
 
-    // push finalizer (patched later)
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm(0),
-        Assembler::Patchable::Yes);
-    if (finalizer.has_value())
+    if (finalizer.has_value()) {
+        // push finalizer (patched later)
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm(0),
+            Assembler::Patchable::Yes);
         block_data_for(finalizer.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
-    m_assembler.push(Assembler::Operand::Register(GPR0));
+        m_assembler.push(Assembler::Operand::Register(GPR0));
+    } else {
+        m_assembler.push(Assembler::Operand::Imm(0));
+    }
 
-    // push handler (patched later)
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm(0),
-        Assembler::Patchable::Yes);
-    if (handler.has_value())
+    if (handler.has_value()) {
+        // push handler (patched later)
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm(0),
+            Assembler::Patchable::Yes);
         block_data_for(handler.value().block()).absolute_references_to_here.append(m_assembler.m_output.size() - 8);
-    m_assembler.push(Assembler::Operand::Register(GPR0));
+        m_assembler.push(Assembler::Operand::Register(GPR0));
+    } else {
+        m_assembler.push(Assembler::Operand::Imm(0));
+    }
 
     // push valid
     m_assembler.push(Assembler::Operand::Imm(valid));
