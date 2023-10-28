@@ -566,6 +566,32 @@ JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
 void Compiler::compile_return(Bytecode::Op::Return const&)
 {
     load_vm_register(GPR0, Bytecode::Register::accumulator());
+
+    // check for finalizer
+    // if (!unwind_context.valid) goto normal_return;
+    auto normal_return = m_assembler.make_label();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
+    m_assembler.jump_if_equal(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm(0),
+        normal_return);
+
+    // if (!unwind_context.finalizer) goto normal_return;
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 16));
+    m_assembler.jump_if_equal(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm(0),
+        normal_return);
+
+    store_vm_register(Bytecode::Register::saved_return_value(), GPR0);
+    m_assembler.jump(Assembler::Operand::Register(GPR1));
+
+    // normal_return:
+    normal_return.link(m_assembler);
     store_vm_register(Bytecode::Register::return_value(), GPR0);
     m_assembler.exit();
 }
@@ -933,6 +959,21 @@ void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
     check_exception();
 }
 
+void Compiler::compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwind const& op)
+{
+    // re-throw the exception if we reached the end of the finally block and there was no catch block to handle it
+    check_exception();
+
+    // if (!saved_return_value.is_empty()) goto resume_block;
+    load_vm_register(GPR0, Bytecode::Register::saved_return_value());
+    m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
+    m_assembler.jump_if_not_equal(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(GPR1), label_for(op.resume_target().block()));
+
+    // finish the pending return from the try block
+    store_vm_register(Bytecode::Register::return_value(), GPR0);
+    m_assembler.exit();
+}
+
 static void cxx_create_lexical_environment(VM& vm)
 {
     auto make_and_swap_envs = [&](auto& old_environment) {
@@ -1087,6 +1128,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::LessThan:
                 compiler.compile_less_than(static_cast<Bytecode::Op::LessThan const&>(op));
+                break;
+            case Bytecode::Instruction::Type::ContinuePendingUnwind:
+                compiler.compile_continue_pending_unwind(static_cast<Bytecode::Op::ContinuePendingUnwind const&>(op));
                 break;
 
 #    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                          \
