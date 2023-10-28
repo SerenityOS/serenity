@@ -122,12 +122,6 @@ void StringData::compute_hash() const
 
 }
 
-void String::destroy_string()
-{
-    if (!is_short_string())
-        m_data->unref();
-}
-
 String String::from_utf8_without_validation(ReadonlyBytes bytes)
 {
     if (bytes.size() <= MAX_SHORT_STRING_BYTE_COUNT) {

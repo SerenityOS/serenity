@@ -42,6 +42,12 @@ public:
     StringBase& operator=(StringBase&&);
     StringBase& operator=(StringBase const&);
 
+    constexpr ~StringBase()
+    {
+        if (!is_constant_evaluated())
+            destroy_string();
+    }
+
     // NOTE: This is primarily interesting to unit tests.
     [[nodiscard]] bool is_short_string() const;
 
@@ -71,6 +77,9 @@ protected:
         ShortString m_short_string;
         Detail::StringData const* m_data { nullptr };
     };
+
+private:
+    void destroy_string();
 };
 
 }
