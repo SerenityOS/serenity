@@ -51,7 +51,7 @@ public:
     virtual size_t first_animated_frame_index() { return 0; }
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) = 0;
-    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() = 0;
+    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() { return OptionalNone {}; }
 
     virtual bool is_vector() { return false; }
     virtual ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t) { VERIFY_NOT_REACHED(); }

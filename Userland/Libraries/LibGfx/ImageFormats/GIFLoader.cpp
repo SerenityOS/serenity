@@ -644,9 +644,4 @@ ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index, Optiona
     return frame;
 }
 
-ErrorOr<Optional<ReadonlyBytes>> GIFImageDecoderPlugin::icc_data()
-{
-    return OptionalNone {};
-}
-
 }
