@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,10 +11,17 @@
 #include <AK/JsonValue.h>
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
+#include <LibCore/DateTime.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Window.h>
 
 namespace Calendar {
+
+struct Event {
+    String summary;
+    Core::DateTime start;
+    Core::DateTime end;
+};
 
 class EventManager {
     AK_MAKE_NONCOPYABLE(EventManager);
@@ -29,18 +37,21 @@ public:
 
     ErrorOr<void> save(FileSystemAccessClient::File& file);
     ErrorOr<void> load_file(FileSystemAccessClient::File& file);
-    ErrorOr<void> add_event(JsonObject);
-    void set_events(JsonArray events);
+    void add_event(Event);
+    void set_events(Vector<Event>);
     void clear() { m_events.clear(); }
 
-    JsonArray const& events() const { return m_events; }
+    Span<Event const> events() const { return m_events.span(); }
 
     Function<void()> on_events_change;
 
 private:
     explicit EventManager();
 
-    JsonArray m_events;
+    ErrorOr<JsonArray> serialize_events();
+    ErrorOr<Vector<Event>> deserialize_events(JsonArray const& json);
+
+    Vector<Event> m_events;
 
     String m_current_filename;
     bool m_dirty { false };
