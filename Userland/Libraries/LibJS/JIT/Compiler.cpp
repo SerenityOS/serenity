@@ -858,10 +858,9 @@ void Compiler::compile_put_by_value(Bytecode::Op::PutByValue const& op)
     check_exception();
 }
 
-static Value cxx_call(VM& vm, Value callee, u32 first_argument_index, u32 argument_count, Value this_value, Bytecode::Op::CallType call_type)
+static Value cxx_call(VM& vm, Value callee, u32 first_argument_index, u32 argument_count, Value this_value, Bytecode::Op::CallType call_type, Optional<Bytecode::StringTableIndex> const& expression_string)
 {
-    // FIXME: Get the expression_string() here as well.
-    TRY_OR_SET_EXCEPTION(throw_if_needed_for_call(vm.bytecode_interpreter(), callee, call_type, {}));
+    TRY_OR_SET_EXCEPTION(throw_if_needed_for_call(vm.bytecode_interpreter(), callee, call_type, expression_string));
 
     MarkedVector<Value> argument_values(vm.heap());
     argument_values.ensure_capacity(argument_count);
@@ -884,7 +883,10 @@ void Compiler::compile_call(Bytecode::Op::Call const& op)
     m_assembler.mov(
         Assembler::Operand::Register(ARG5),
         Assembler::Operand::Imm(to_underlying(op.call_type())));
-    m_assembler.native_call((void*)cxx_call);
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(bit_cast<u64>(&op.expression_string())));
+    m_assembler.native_call((void*)cxx_call, { Assembler::Operand::Register(GPR0) });
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
 }
