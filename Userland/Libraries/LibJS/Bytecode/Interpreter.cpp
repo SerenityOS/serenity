@@ -1027,33 +1027,6 @@ ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) cons
     __builtin_unreachable();
 }
 
-// 13.3.8.1 https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
-static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& interpreter)
-{
-    // Note: Any spreading and actual evaluation is handled in preceding opcodes
-    // Note: The spec uses the concept of a list, while we create a temporary array
-    //       in the preceding opcodes, so we have to convert in a manner that is not
-    //       visible to the user
-    auto& vm = interpreter.vm();
-
-    MarkedVector<Value> argument_values { vm.heap() };
-    auto arguments = interpreter.accumulator();
-
-    auto& argument_array = arguments.as_array();
-    auto array_length = argument_array.indexed_properties().array_like_size();
-
-    argument_values.ensure_capacity(array_length);
-
-    for (size_t i = 0; i < array_length; ++i) {
-        if (auto maybe_value = argument_array.indexed_properties().get(i); maybe_value.has_value())
-            argument_values.append(maybe_value.release_value().value);
-        else
-            argument_values.append(js_undefined());
-    }
-
-    return argument_values;
-}
-
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();

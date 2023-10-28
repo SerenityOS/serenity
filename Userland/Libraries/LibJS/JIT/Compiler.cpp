@@ -923,6 +923,25 @@ void Compiler::compile_call(Bytecode::Op::Call const& op)
     check_exception();
 }
 
+static Value cxx_call_with_argument_array(VM& vm, Value callee, Value this_value, Bytecode::Op::CallType call_type, Optional<Bytecode::StringTableIndex> const& expression_string)
+{
+    TRY_OR_SET_EXCEPTION(throw_if_needed_for_call(vm.bytecode_interpreter(), callee, call_type, expression_string));
+    auto argument_values = argument_list_evaluation(vm.bytecode_interpreter());
+    return TRY_OR_SET_EXCEPTION(perform_call(vm.bytecode_interpreter(), this_value, call_type, callee, move(argument_values)));
+}
+
+void Compiler::compile_call_with_argument_array(Bytecode::Op::CallWithArgumentArray const& op)
+{
+    load_vm_register(ARG1, op.callee());
+    load_vm_register(ARG2, op.this_value());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm(to_underlying(op.call_type())));
+    native_call((void*)cxx_call_with_argument_array);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 static Value cxx_typeof_variable(VM& vm, DeprecatedFlyString const& identifier)
 {
     return TRY_OR_SET_EXCEPTION(Bytecode::typeof_variable(vm, identifier));
@@ -1152,6 +1171,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::Call:
                 compiler.compile_call(static_cast<Bytecode::Op::Call const&>(op));
+                break;
+            case Bytecode::Instruction::Type::CallWithArgumentArray:
+                compiler.compile_call_with_argument_array(static_cast<Bytecode::Op::CallWithArgumentArray const&>(op));
                 break;
             case Bytecode::Instruction::Type::TypeofVariable:
                 compiler.compile_typeof_variable(static_cast<Bytecode::Op::TypeofVariable const&>(op));
