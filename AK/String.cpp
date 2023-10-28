@@ -134,31 +134,19 @@ ErrorOr<String> String::repeated(u32 code_point, size_t count)
         code_point_as_utf8[i++] = static_cast<u8>(byte);
     });
 
-    auto copy_to_buffer = [&](u8* buffer) {
-        if (code_point_byte_length == 1) {
-            memset(buffer, code_point_as_utf8[0], count);
-            return;
-        }
-
-        for (i = 0; i < count; ++i)
-            memcpy(buffer + (i * code_point_byte_length), code_point_as_utf8.data(), code_point_byte_length);
-    };
-
     auto total_byte_count = code_point_byte_length * count;
 
-    if (total_byte_count <= MAX_SHORT_STRING_BYTE_COUNT) {
-        ShortString short_string;
-        copy_to_buffer(short_string.storage);
-        short_string.byte_count_and_short_string_flag = (total_byte_count << 1) | SHORT_STRING_FLAG;
-
-        return String { short_string };
-    }
-
-    u8* buffer = nullptr;
-    auto new_string_data = TRY(Detail::StringData::create_uninitialized(total_byte_count, buffer));
-    copy_to_buffer(buffer);
-
-    return String { move(new_string_data) };
+    String result;
+    TRY(result.replace_with_new_string(total_byte_count, [&](Bytes buffer) {
+        if (code_point_byte_length == 1) {
+            buffer.fill(code_point_as_utf8[0]);
+        } else {
+            for (i = 0; i < count; ++i)
+                memcpy(buffer.data() + (i * code_point_byte_length), code_point_as_utf8.data(), code_point_byte_length);
+        }
+        return ErrorOr<void> {};
+    }));
+    return result;
 }
 
 StringView String::bytes_as_string_view() const
@@ -462,18 +450,19 @@ bool String::equals_ignoring_ascii_case(StringView other) const
 String String::repeated(String const& input, size_t count)
 {
     VERIFY(!Checked<size_t>::multiplication_would_overflow(count, input.bytes().size()));
-    u8* buffer = nullptr;
-    auto data = MUST(Detail::StringData::create_uninitialized(count * input.bytes().size(), buffer));
 
-    if (input.bytes().size() == 1) {
-        memset(buffer, input.bytes().first(), count);
-        return String { move(data) };
-    }
-
-    for (size_t i = 0; i < count; ++i) {
-        memcpy(buffer + (i * input.bytes().size()), input.bytes().data(), input.bytes().size());
-    }
-    return String { data };
+    String result;
+    size_t input_size = input.bytes().size();
+    MUST(result.replace_with_new_string(count * input_size, [&](Bytes buffer) {
+        if (input_size == 1) {
+            buffer.fill(input.bytes().first());
+        } else {
+            for (size_t i = 0; i < count; ++i)
+                input.bytes().copy_to(buffer.slice(i * input_size, input_size));
+        }
+        return ErrorOr<void> {};
+    }));
+    return result;
 }
 
 }
