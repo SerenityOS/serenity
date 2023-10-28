@@ -222,6 +222,7 @@ enum class DeclarationKind;
 struct AlreadyResolved;
 struct JobCallback;
 struct ModuleRequest;
+struct ModuleWithSpecifier;
 
 // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
 class ProxyObject;
