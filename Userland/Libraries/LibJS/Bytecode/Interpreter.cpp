@@ -819,34 +819,8 @@ ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpret
 
 ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
     auto const& name = interpreter.current_executable().get_identifier(m_identifier);
-
-    if (m_mode == EnvironmentMode::Lexical) {
-        VERIFY(!m_is_global);
-
-        // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
-        //       Instead of crashing in there, we'll just raise an exception here.
-        if (TRY(vm.lexical_environment()->has_binding(name)))
-            return vm.throw_completion<InternalError>(TRY_OR_THROW_OOM(vm, String::formatted("Lexical environment already has binding '{}'", name)));
-
-        if (m_is_immutable)
-            return vm.lexical_environment()->create_immutable_binding(vm, name, m_is_strict);
-        else
-            return vm.lexical_environment()->create_mutable_binding(vm, name, m_is_strict);
-    } else {
-        if (!m_is_global) {
-            if (m_is_immutable)
-                return vm.variable_environment()->create_immutable_binding(vm, name, m_is_strict);
-            else
-                return vm.variable_environment()->create_mutable_binding(vm, name, m_is_strict);
-        } else {
-            // NOTE: CreateVariable with m_is_global set to true is expected to only be used in GlobalDeclarationInstantiation currently, which only uses "false" for "can_be_deleted".
-            //       The only area that sets "can_be_deleted" to true is EvalDeclarationInstantiation, which is currently fully implemented in C++ and not in Bytecode.
-            return verify_cast<GlobalEnvironment>(vm.variable_environment())->create_global_var_binding(name, false);
-        }
-    }
-    return {};
+    return create_variable(interpreter.vm(), name, m_mode, m_is_global, m_is_immutable, m_is_strict);
 }
 
 ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
