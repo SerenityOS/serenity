@@ -14,6 +14,7 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
+#include <AK/StringBase.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
@@ -24,10 +25,6 @@
 #include <AK/Vector.h>
 
 namespace AK {
-
-namespace Detail {
-class StringData;
-}
 
 // FIXME: Remove this when OpenBSD Clang fully supports consteval.
 //        And once oss-fuzz updates to clang >15.
@@ -41,16 +38,15 @@ class StringData;
 // String is a strongly owned sequence of Unicode code points encoded as UTF-8.
 // The data may or may not be heap-allocated, and may or may not be reference counted.
 // There is no guarantee that the underlying bytes are null-terminated.
-class String {
+class String : public Detail::StringBase {
+    AK_MAKE_DEFAULT_COPYABLE(String);
+    AK_MAKE_DEFAULT_MOVABLE(String);
+
 public:
     // NOTE: For short strings, we avoid heap allocations by storing them in the data pointer slot.
-    static constexpr size_t MAX_SHORT_STRING_BYTE_COUNT = sizeof(Detail::StringData*) - 1;
+    static constexpr size_t MAX_SHORT_STRING_BYTE_COUNT = Detail::MAX_SHORT_STRING_BYTE_COUNT;
 
-    String(String const&);
-    String(String&&);
-
-    String& operator=(String&&);
-    String& operator=(String const&);
+    using StringBase::StringBase;
 
     constexpr ~String()
     {
@@ -60,7 +56,7 @@ public:
 
     // Creates an empty (zero-length) String.
     constexpr String()
-        : String(ShortString { SHORT_STRING_FLAG, {} })
+        : StringBase(ShortString { SHORT_STRING_FLAG, {} })
     {
     }
 
@@ -199,9 +195,6 @@ public:
         return builder.to_string();
     }
 
-    // NOTE: This is primarily interesting to unit tests.
-    [[nodiscard]] bool is_short_string() const;
-
     [[nodiscard]] static String fly_string_data_to_string(Badge<FlyString>, uintptr_t const&);
     [[nodiscard]] static StringView fly_string_data_to_string_view(Badge<FlyString>, uintptr_t const&);
     [[nodiscard]] static u32 fly_string_data_to_hash(Badge<FlyString>, uintptr_t const&);
@@ -219,36 +212,9 @@ public:
     static ErrorOr<String> from_byte_string(T&&) = delete;
 
 private:
-    // NOTE: If the least significant bit of the pointer is set, this is a short string.
-    static constexpr uintptr_t SHORT_STRING_FLAG = 1;
-
-    static constexpr bool has_short_string_bit(uintptr_t data)
-    {
-        return (data & SHORT_STRING_FLAG) != 0;
-    }
-
-    struct ShortString {
-        ReadonlyBytes bytes() const;
-        size_t byte_count() const;
-
-        // NOTE: This is the byte count shifted left 1 step and or'ed with a 1 (the SHORT_STRING_FLAG)
-        u8 byte_count_and_short_string_flag { 0 };
-        u8 storage[MAX_SHORT_STRING_BYTE_COUNT] = { 0 };
-    };
-
-    explicit String(NonnullRefPtr<Detail::StringData const>);
-
-    explicit constexpr String(ShortString short_string)
-        : m_short_string(short_string)
-    {
-    }
+    using ShortString = Detail::ShortString;
 
     void destroy_string();
-
-    union {
-        ShortString m_short_string;
-        Detail::StringData const* m_data { nullptr };
-    };
 };
 
 template<>

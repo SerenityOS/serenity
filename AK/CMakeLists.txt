@@ -28,6 +28,7 @@ set(AK_SOURCES
     StackInfo.cpp
     Stream.cpp
     String.cpp
+    StringBase.cpp
     StringBuilder.cpp
     StringFloatingPointConversions.cpp
     StringImpl.cpp
