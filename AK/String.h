@@ -121,10 +121,6 @@ public:
     // Returns an iterable view over the Unicode code points.
     [[nodiscard]] Utf8View code_points() const;
 
-    // Returns the underlying UTF-8 encoded bytes.
-    // NOTE: There is no guarantee about null-termination.
-    [[nodiscard]] ReadonlyBytes bytes() const;
-
     // Returns true if the String is zero-length.
     [[nodiscard]] bool is_empty() const;
 
@@ -146,7 +142,7 @@ public:
     Optional<size_t> find_byte_offset(u32 code_point, size_t from_byte_offset = 0) const;
     Optional<size_t> find_byte_offset(StringView substring, size_t from_byte_offset = 0) const;
 
-    [[nodiscard]] bool operator==(String const&) const;
+    [[nodiscard]] bool operator==(String const&) const = default;
     [[nodiscard]] bool operator==(FlyString const&) const;
     [[nodiscard]] bool operator==(StringView) const;
     [[nodiscard]] bool operator==(char const* cstring) const;

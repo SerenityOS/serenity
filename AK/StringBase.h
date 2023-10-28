@@ -45,6 +45,12 @@ public:
     // NOTE: This is primarily interesting to unit tests.
     [[nodiscard]] bool is_short_string() const;
 
+    // Returns the underlying UTF-8 encoded bytes.
+    // NOTE: There is no guarantee about null-termination.
+    [[nodiscard]] ReadonlyBytes bytes() const;
+
+    [[nodiscard]] bool operator==(StringBase const&) const;
+
 protected:
     // NOTE: If the least significant bit of the pointer is set, this is a short string.
     static constexpr uintptr_t SHORT_STRING_FLAG = 1;

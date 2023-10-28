@@ -213,13 +213,6 @@ StringView String::bytes_as_string_view() const
     return StringView(bytes());
 }
 
-ReadonlyBytes String::bytes() const
-{
-    if (is_short_string())
-        return m_short_string.bytes();
-    return m_data->bytes();
-}
-
 bool String::is_empty() const
 {
     return bytes().size() == 0;
@@ -289,13 +282,6 @@ Optional<size_t> String::find_byte_offset(StringView substring, size_t from_byte
     if (index.has_value())
         return *index + from_byte_offset;
     return {};
-}
-
-bool String::operator==(String const& other) const
-{
-    if (is_short_string())
-        return m_data == other.m_data;
-    return bytes_as_string_view() == other.bytes_as_string_view();
 }
 
 bool String::operator==(FlyString const& other) const
