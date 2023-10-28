@@ -26,6 +26,7 @@ class CheckBox;
 class ComboBox;
 class Command;
 class CommandPalette;
+class DatePicker;
 class Dialog;
 class DialogButton;
 class DragEvent;
