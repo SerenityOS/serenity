@@ -202,12 +202,78 @@ struct Assembler {
         }
     }
 
+    union REX {
+        struct {
+            u8 B : 1; // ModRM::RM
+            u8 X : 1; // SIB::Index
+            u8 R : 1; // ModRM::Reg
+            u8 W : 1; // Operand size override
+            u8 _ : 4 { 0b0100 };
+        };
+        u8 raw;
+    };
+
+    enum class REX_W : bool {
+        No = 0,
+        Yes = 1
+    };
+
+    void emit_rex_for_OI(Operand arg, REX_W W)
+    {
+        emit_rex_for_slash(arg, W);
+    }
+
+    void emit_rex_for_slash(Operand arg, REX_W W)
+    {
+        VERIFY(arg.is_register_or_memory());
+
+        if (W == REX_W::No && to_underlying(arg.reg) < 8)
+            return;
+
+        REX rex {
+            .B = to_underlying(arg.reg) >= 8,
+            .X = 0,
+            .R = 0,
+            .W = to_underlying(W)
+        };
+        emit8(rex.raw);
+    }
+    void emit_rex_for_mr(Operand dst, Operand src, REX_W W)
+    {
+        VERIFY(dst.is_register_or_memory());
+        VERIFY(src.type == Operand::Type::Reg);
+        if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
+            return;
+        REX rex {
+            .B = to_underlying(dst.reg) >= 8,
+            .X = 0,
+            .R = to_underlying(src.reg) >= 8,
+            .W = to_underlying(W)
+        };
+        emit8(rex.raw);
+    }
+
+    void emit_rex_for_rm(Operand dst, Operand src, REX_W W)
+    {
+        VERIFY(src.is_register_or_memory());
+        VERIFY(dst.type == Operand::Type::Reg);
+        if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
+            return;
+        REX rex {
+            .B = to_underlying(src.reg) >= 8,
+            .X = 0,
+            .R = to_underlying(dst.reg) >= 8,
+            .W = to_underlying(W)
+        };
+        emit8(rex.raw);
+    }
+
     void shift_right(Operand dst, Operand count)
     {
         VERIFY(dst.type == Operand::Type::Reg);
         VERIFY(count.type == Operand::Type::Imm);
         VERIFY(count.fits_in_u8());
-        emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+        emit_rex_for_slash(dst, REX_W::Yes);
         emit8(0xc1);
         emit_modrm_slash(5, dst);
         emit8(count.offset_or_immediate);
@@ -218,9 +284,7 @@ struct Assembler {
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
             if (src.type == Operand::Type::Reg && src.reg == dst.reg)
                 return;
-            emit8(0x48
-                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_mr(dst, src, REX_W::Yes);
             emit8(0x89);
             emit_modrm_mr(dst, src, patchable);
             return;
@@ -230,29 +294,29 @@ struct Assembler {
             if (patchable == Patchable::No) {
                 if (src.offset_or_immediate == 0) {
                     // xor dst, dst
-                    emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? (1 << 0 | 1 << 2) : 0));
+                    // Note: Operand size does not matter here, as the result is 0-extended to 64 bit,
+                    //       so we don't have to set the W flag in the REX prefix,
+                    //       or use it at all in case we dont use REX addressed registers (elision is implemented in the helper)
+                    emit_rex_for_mr(dst, dst, REX_W::No);
                     emit8(0x31);
                     emit_modrm_mr(dst, dst, patchable);
                     return;
                 }
                 if (src.fits_in_u32()) {
-                    if (dst.reg > Reg::RDI)
-                        emit8(0x41);
+                    emit_rex_for_OI(dst, REX_W::No);
                     emit8(0xb8 | encode_reg(dst.reg));
                     emit32(src.offset_or_immediate);
                     return;
                 }
             }
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_OI(dst, REX_W::Yes);
             emit8(0xb8 | encode_reg(dst.reg));
             emit64(src.offset_or_immediate);
             return;
         }
 
         if (dst.type == Operand::Type::Reg && src.is_register_or_memory()) {
-            emit8(0x48
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_rm(dst, src, REX_W::Yes);
             emit8(0x8b);
             emit_modrm_rm(dst, src, patchable);
             return;
@@ -342,8 +406,7 @@ struct Assembler {
 
     void jump(Operand op)
     {
-        if (to_underlying(op.reg) >= 8)
-            emit8(0x41);
+        emit_rex_for_slash(op, REX_W::No);
         emit8(0xff);
         emit_modrm_slash(4, op);
     }
@@ -360,18 +423,16 @@ struct Assembler {
         if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
             test(lhs, lhs);
         } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Reg) {
-            emit8(0x48
-                | ((to_underlying(rhs.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_mr(lhs, rhs, REX_W::Yes);
             emit8(0x39);
             emit_modrm_mr(lhs, rhs);
         } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Imm && rhs.fits_in_i8()) {
-            emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(lhs, REX_W::Yes);
             emit8(0x83);
             emit_modrm_slash(7, lhs);
             emit8(rhs.offset_or_immediate);
         } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Imm && rhs.fits_in_i32()) {
-            emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(lhs, REX_W::Yes);
             emit8(0x81);
             emit_modrm_slash(7, lhs);
             emit32(rhs.offset_or_immediate);
@@ -383,14 +444,12 @@ struct Assembler {
     void test(Operand lhs, Operand rhs)
     {
         if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Reg) {
-            emit8(0x48
-                | ((to_underlying(rhs.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_mr(lhs, rhs, REX_W::Yes);
             emit8(0x85);
             emit_modrm_mr(lhs, rhs);
         } else if (lhs.type != Operand::Type::Imm && rhs.type == Operand::Type::Imm) {
             VERIFY(rhs.fits_in_i32());
-            emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(lhs, REX_W::Yes);
             emit8(0xf7);
             emit_modrm_slash(0, lhs);
             emit32(rhs.offset_or_immediate);
@@ -412,7 +471,7 @@ struct Assembler {
     void sign_extend_32_to_64_bits(Reg reg)
     {
         // movsxd (reg as 64-bit), (reg as 32-bit)
-        emit8(0x48 | ((to_underlying(reg) >= 8) ? 1 << 0 : 0));
+        emit_rex_for_rm(Operand::Register(reg), Operand::Register(reg), REX_W::Yes);
         emit8(0x63);
         emit_modrm_rm(Operand::Register(reg), Operand::Register(reg));
     }
@@ -421,18 +480,16 @@ struct Assembler {
     {
         // and dst,src
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit8(0x48
-                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_mr(dst, src, REX_W::Yes);
             emit8(0x21);
             emit_modrm_mr(dst, src);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(dst, REX_W::Yes);
             emit8(0x83);
             emit_modrm_slash(4, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(dst, REX_W::Yes);
             emit8(0x81);
             emit_modrm_slash(4, dst);
             emit32(src.offset_or_immediate);
@@ -445,18 +502,16 @@ struct Assembler {
     {
         // or dst,src
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit8(0x48
-                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_mr(dst, src, REX_W::Yes);
             emit8(0x09);
             emit_modrm_mr(dst, src);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(dst, REX_W::Yes);
             emit8(0x83);
             emit_modrm_slash(1, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(dst, REX_W::Yes);
             emit8(0x81);
             emit_modrm_slash(1, dst);
             emit32(src.offset_or_immediate);
@@ -510,8 +565,7 @@ struct Assembler {
     void push(Operand op)
     {
         if (op.type == Operand::Type::Reg) {
-            if (to_underlying(op.reg) >= 8)
-                emit8(0x49);
+            emit_rex_for_OI(op, REX_W::No);
             emit8(0x50 | encode_reg(op.reg));
         } else if (op.type == Operand::Type::Imm) {
             if (op.fits_in_i8()) {
@@ -531,8 +585,7 @@ struct Assembler {
     void pop(Operand op)
     {
         if (op.type == Operand::Type::Reg) {
-            if (to_underlying(op.reg) >= 8)
-                emit8(0x49);
+            emit_rex_for_OI(op, REX_W::No);
             emit8(0x58 | encode_reg(op.reg));
         } else {
             VERIFY_NOT_REACHED();
@@ -542,18 +595,16 @@ struct Assembler {
     void add(Operand dst, Operand src)
     {
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit8(0x48
-                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_mr(dst, src, REX_W::Yes);
             emit8(0x01);
             emit_modrm_mr(dst, src);
         } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(dst, REX_W::Yes);
             emit8(0x83);
             emit_modrm_slash(0, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(dst, REX_W::Yes);
             emit8(0x81);
             emit_modrm_slash(0, dst);
             emit32(src.offset_or_immediate);
@@ -591,18 +642,16 @@ struct Assembler {
     void sub(Operand dst, Operand src)
     {
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit8(0x48
-                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_mr(dst, src, REX_W::Yes);
             emit8(0x29);
             emit_modrm_mr(dst, src);
         } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(dst, REX_W::Yes);
             emit8(0x83);
             emit_modrm_slash(5, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit_rex_for_slash(dst, REX_W::Yes);
             emit8(0x81);
             emit_modrm_slash(5, dst);
             emit32(src.offset_or_immediate);
