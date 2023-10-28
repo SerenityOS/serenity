@@ -15,18 +15,8 @@ namespace AK {
 
 static auto& all_fly_strings()
 {
-    static Singleton<HashMap<StringView, uintptr_t>> table;
+    static Singleton<HashMap<StringView, Detail::StringBase>> table;
     return *table;
-}
-
-FlyString::FlyString()
-    : m_data(String {}.to_fly_string_data({}))
-{
-}
-
-FlyString::~FlyString()
-{
-    String::unref_fly_string_data({}, m_data);
 }
 
 ErrorOr<FlyString> FlyString::from_utf8(StringView string)
@@ -37,56 +27,24 @@ ErrorOr<FlyString> FlyString::from_utf8(StringView string)
 FlyString::FlyString(String const& string)
 {
     if (string.is_short_string()) {
-        m_data = string.to_fly_string_data({});
+        m_data = string;
         return;
     }
 
     auto it = all_fly_strings().find(string.bytes_as_string_view());
     if (it == all_fly_strings().end()) {
-        m_data = string.to_fly_string_data({});
+        m_data = string;
 
         all_fly_strings().set(string.bytes_as_string_view(), m_data);
         string.did_create_fly_string({});
     } else {
         m_data = it->value;
     }
-
-    String::ref_fly_string_data({}, m_data);
 }
 
 FlyString& FlyString::operator=(String const& string)
 {
     *this = FlyString { string };
-    return *this;
-}
-
-FlyString::FlyString(FlyString const& other)
-    : m_data(other.m_data)
-{
-    String::ref_fly_string_data({}, m_data);
-}
-
-FlyString& FlyString::operator=(FlyString const& other)
-{
-    if (this != &other) {
-        m_data = other.m_data;
-        String::ref_fly_string_data({}, m_data);
-    }
-
-    return *this;
-}
-
-FlyString::FlyString(FlyString&& other)
-    : m_data(other.m_data)
-{
-    other.m_data = String {}.to_fly_string_data({});
-}
-
-FlyString& FlyString::operator=(FlyString&& other)
-{
-    m_data = other.m_data;
-    other.m_data = String {}.to_fly_string_data({});
-
     return *this;
 }
 
@@ -97,7 +55,7 @@ bool FlyString::is_empty() const
 
 unsigned FlyString::hash() const
 {
-    return String::fly_string_data_to_hash({}, m_data);
+    return m_data.hash();
 }
 
 u32 FlyString::ascii_case_insensitive_hash() const
@@ -112,7 +70,8 @@ FlyString::operator String() const
 
 String FlyString::to_string() const
 {
-    return String::fly_string_data_to_string({}, m_data);
+    Detail::StringBase copy = m_data;
+    return String(move(copy));
 }
 
 Utf8View FlyString::code_points() const
@@ -127,7 +86,7 @@ ReadonlyBytes FlyString::bytes() const
 
 StringView FlyString::bytes_as_string_view() const
 {
-    return String::fly_string_data_to_string_view({}, m_data);
+    return m_data.bytes();
 }
 
 bool FlyString::operator==(FlyString const& other) const
@@ -137,10 +96,7 @@ bool FlyString::operator==(FlyString const& other) const
 
 bool FlyString::operator==(String const& other) const
 {
-    if (m_data == other.to_fly_string_data({}))
-        return true;
-
-    return bytes_as_string_view() == other.bytes_as_string_view();
+    return m_data == other;
 }
 
 bool FlyString::operator==(StringView string) const
@@ -158,7 +114,7 @@ void FlyString::did_destroy_fly_string_data(Badge<Detail::StringData>, StringVie
     all_fly_strings().remove(string_data);
 }
 
-uintptr_t FlyString::data(Badge<String>) const
+Detail::StringBase FlyString::data(Badge<String>) const
 {
     return m_data;
 }

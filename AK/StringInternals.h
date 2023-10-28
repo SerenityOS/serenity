@@ -25,6 +25,8 @@ public:
 
     void operator delete(void* ptr);
 
+    void unref() const;
+
     ~StringData();
 
     SubstringData const& substring_data() const

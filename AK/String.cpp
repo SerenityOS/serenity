@@ -41,10 +41,17 @@ StringData::StringData(StringData const& superstring, size_t start, size_t byte_
 
 StringData::~StringData()
 {
-    if (m_is_fly_string)
-        FlyString::did_destroy_fly_string_data({}, bytes_as_string_view());
     if (m_substring)
         substring_data().superstring->unref();
+}
+
+void StringData::unref() const
+{
+    if (m_is_fly_string && m_ref_count == 2) {
+        m_is_fly_string = false; // Otherwise unref from did_destory_fly_string_data will cause infinite recursion.
+        FlyString::did_destroy_fly_string_data({}, bytes_as_string_view());
+    }
+    RefCounted::unref();
 }
 
 constexpr size_t allocation_size_for_string_data(size_t length)
@@ -227,9 +234,7 @@ Optional<size_t> String::find_byte_offset(StringView substring, size_t from_byte
 
 bool String::operator==(FlyString const& other) const
 {
-    if (reinterpret_cast<uintptr_t>(m_data) == other.data({}))
-        return true;
-    return bytes_as_string_view() == other.bytes_as_string_view();
+    return static_cast<StringBase const&>(*this) == other.data({});
 }
 
 bool String::operator==(StringView other) const
@@ -365,67 +370,6 @@ bool String::ends_with_bytes(StringView bytes, CaseSensitivity case_sensitivity)
 unsigned Traits<String>::hash(String const& string)
 {
     return string.hash();
-}
-
-String String::fly_string_data_to_string(Badge<FlyString>, uintptr_t const& data)
-{
-    if (has_short_string_bit(data))
-        return String { *reinterpret_cast<ShortString const*>(&data) };
-
-    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
-    return String { NonnullRefPtr<Detail::StringData const>(*string_data) };
-}
-
-StringView String::fly_string_data_to_string_view(Badge<FlyString>, uintptr_t const& data)
-{
-    if (has_short_string_bit(data)) {
-        auto const* short_string = reinterpret_cast<ShortString const*>(&data);
-        return short_string->bytes();
-    }
-
-    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
-    return string_data->bytes_as_string_view();
-}
-
-u32 String::fly_string_data_to_hash(Badge<FlyString>, uintptr_t const& data)
-{
-    if (has_short_string_bit(data)) {
-        auto const* short_string = reinterpret_cast<ShortString const*>(&data);
-        auto bytes = short_string->bytes();
-        return string_hash(reinterpret_cast<char const*>(bytes.data()), bytes.size());
-    }
-
-    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
-    return string_data->hash();
-}
-
-uintptr_t String::to_fly_string_data(Badge<FlyString>) const
-{
-    return reinterpret_cast<uintptr_t>(m_data);
-}
-
-void String::ref_fly_string_data(Badge<FlyString>, uintptr_t data)
-{
-    if (has_short_string_bit(data))
-        return;
-
-    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
-    string_data->ref();
-}
-
-void String::unref_fly_string_data(Badge<FlyString>, uintptr_t data)
-{
-    if (has_short_string_bit(data))
-        return;
-
-    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
-    string_data->unref();
-}
-
-void String::did_create_fly_string(Badge<FlyString>) const
-{
-    VERIFY(!is_short_string());
-    m_data->set_fly_string(true);
 }
 
 ByteString String::to_byte_string() const

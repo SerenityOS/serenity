@@ -16,9 +16,11 @@
 namespace AK {
 
 class FlyString {
+    AK_MAKE_DEFAULT_MOVABLE(FlyString);
+    AK_MAKE_DEFAULT_COPYABLE(FlyString);
+
 public:
-    FlyString();
-    ~FlyString();
+    FlyString() = default;
 
     static ErrorOr<FlyString> from_utf8(StringView);
     template<typename T>
@@ -27,12 +29,6 @@ public:
 
     FlyString(String const&);
     FlyString& operator=(String const&);
-
-    FlyString(FlyString const&);
-    FlyString& operator=(FlyString const&);
-
-    FlyString(FlyString&&);
-    FlyString& operator=(FlyString&&);
 
     [[nodiscard]] bool is_empty() const;
     [[nodiscard]] unsigned hash() const;
@@ -53,7 +49,7 @@ public:
     [[nodiscard]] int operator<=>(FlyString const& other) const;
 
     static void did_destroy_fly_string_data(Badge<Detail::StringData>, StringView);
-    [[nodiscard]] uintptr_t data(Badge<String>) const;
+    [[nodiscard]] Detail::StringBase data(Badge<String>) const;
 
     // This is primarily interesting to unit tests.
     [[nodiscard]] static size_t number_of_fly_strings();
@@ -80,9 +76,7 @@ public:
     }
 
 private:
-    // This will hold either the pointer to the Detail::StringData it represents or the raw bytes of
-    // an inlined short string.
-    uintptr_t m_data { 0 };
+    Detail::StringBase m_data;
 };
 
 template<>
