@@ -73,4 +73,10 @@ bool StringBase::operator==(StringBase const& other) const
     return bytes() == other.bytes();
 }
 
+void StringBase::destroy_string()
+{
+    if (!is_short_string())
+        m_data->unref();
+}
+
 }

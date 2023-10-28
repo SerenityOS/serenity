@@ -48,12 +48,6 @@ public:
 
     using StringBase::StringBase;
 
-    constexpr ~String()
-    {
-        if (!is_constant_evaluated())
-            destroy_string();
-    }
-
     // Creates an empty (zero-length) String.
     constexpr String()
         : StringBase(ShortString { SHORT_STRING_FLAG, {} })
@@ -209,8 +203,6 @@ public:
 
 private:
     using ShortString = Detail::ShortString;
-
-    void destroy_string();
 };
 
 template<>
