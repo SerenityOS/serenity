@@ -32,17 +32,17 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(Readonl
     };
 
     static constexpr ImagePluginInitializer s_initializers[] = {
-        { PNGImageDecoderPlugin::sniff, PNGImageDecoderPlugin::create },
-        { GIFImageDecoderPlugin::sniff, GIFImageDecoderPlugin::create },
         { BMPImageDecoderPlugin::sniff, BMPImageDecoderPlugin::create },
-        { PBMImageDecoderPlugin::sniff, PBMImageDecoderPlugin::create },
-        { PGMImageDecoderPlugin::sniff, PGMImageDecoderPlugin::create },
-        { PPMImageDecoderPlugin::sniff, PPMImageDecoderPlugin::create },
+        { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
+        { GIFImageDecoderPlugin::sniff, GIFImageDecoderPlugin::create },
         { ICOImageDecoderPlugin::sniff, ICOImageDecoderPlugin::create },
         { ILBMImageDecoderPlugin::sniff, ILBMImageDecoderPlugin::create },
         { JPEGImageDecoderPlugin::sniff, JPEGImageDecoderPlugin::create },
         { JPEGXLImageDecoderPlugin::sniff, JPEGXLImageDecoderPlugin::create },
-        { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
+        { PBMImageDecoderPlugin::sniff, PBMImageDecoderPlugin::create },
+        { PGMImageDecoderPlugin::sniff, PGMImageDecoderPlugin::create },
+        { PNGImageDecoderPlugin::sniff, PNGImageDecoderPlugin::create },
+        { PPMImageDecoderPlugin::sniff, PPMImageDecoderPlugin::create },
         { QOIImageDecoderPlugin::sniff, QOIImageDecoderPlugin::create },
         { TinyVGImageDecoderPlugin::sniff, TinyVGImageDecoderPlugin::create },
         { WebPImageDecoderPlugin::sniff, WebPImageDecoderPlugin::create },
