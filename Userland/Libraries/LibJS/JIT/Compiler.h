@@ -112,6 +112,7 @@ private:
     void compile_call(Bytecode::Op::Call const&);
     void compile_typeof_variable(Bytecode::Op::TypeofVariable const&);
     void compile_set_variable(Bytecode::Op::SetVariable const&);
+    void compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwind const&);
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);
