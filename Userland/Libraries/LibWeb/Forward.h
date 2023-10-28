@@ -451,7 +451,6 @@ struct CrossOriginOpenerPolicyEnforcementResult;
 struct Environment;
 struct EnvironmentSettingsObject;
 struct NavigationParams;
-struct NavigationParams;
 struct PolicyContainer;
 struct POSTResource;
 struct ScrollOptions;
