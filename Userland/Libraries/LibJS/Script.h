@@ -30,6 +30,7 @@ public:
 
     Realm& realm() { return *m_realm; }
     Program const& parse_node() const { return *m_parse_node; }
+    Vector<ModuleWithSpecifier> const& loaded_modules() const { return m_loaded_modules; }
 
     HostDefined* host_defined() const { return m_host_defined; }
     StringView filename() const { return m_filename; }
@@ -39,8 +40,9 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    GCPtr<Realm> m_realm;                // [[Realm]]
-    NonnullRefPtr<Program> m_parse_node; // [[ECMAScriptCode]]
+    GCPtr<Realm> m_realm;                         // [[Realm]]
+    NonnullRefPtr<Program> m_parse_node;          // [[ECMAScriptCode]]
+    Vector<ModuleWithSpecifier> m_loaded_modules; // [[LoadedModules]]
 
     // Needed for potential lookups of modules.
     DeprecatedString m_filename;
