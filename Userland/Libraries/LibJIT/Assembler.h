@@ -77,6 +77,11 @@ struct Assembler {
             return operand;
         }
 
+        bool is_register_or_memory() const
+        {
+            return type == Type::Reg || type == Type::Mem64BaseAndOffset;
+        }
+
         bool fits_in_u8() const
         {
             VERIFY(type == Type::Imm);
@@ -204,20 +209,20 @@ struct Assembler {
         VERIFY(count.fits_in_u8());
         emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
         emit8(0xc1);
-        emit8(0xe8 | encode_reg(dst.reg));
+        emit_modrm_slash(5, dst);
         emit8(count.offset_or_immediate);
     }
 
     void mov(Operand dst, Operand src, Patchable patchable = Patchable::No)
     {
-        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
-            if (src.reg == dst.reg)
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
+            if (src.type == Operand::Type::Reg && src.reg == dst.reg)
                 return;
             emit8(0x48
                 | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x89);
-            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+            emit_modrm_mr(dst, src, patchable);
             return;
         }
 
@@ -227,7 +232,7 @@ struct Assembler {
                     // xor dst, dst
                     emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? (1 << 0 | 1 << 2) : 0));
                     emit8(0x31);
-                    emit8(0xc0 | (encode_reg(dst.reg) << 3) | encode_reg(dst.reg));
+                    emit_modrm_mr(dst, dst, patchable);
                     return;
                 }
                 if (src.fits_in_u32()) {
@@ -244,37 +249,12 @@ struct Assembler {
             return;
         }
 
-        if (dst.type == Operand::Type::Mem64BaseAndOffset && src.type == Operand::Type::Reg) {
-            emit8(0x48
-                | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
-                | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
-            emit8(0x89);
-            if (dst.reg <= Reg::RDI && dst.offset_or_immediate == 0) {
-                emit8(0x00 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
-            } else if (dst.offset_or_immediate <= 127) {
-                emit8(0x40 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
-                emit8(dst.offset_or_immediate);
-            } else {
-                emit8(0x80 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
-                emit32(dst.offset_or_immediate);
-            }
-            return;
-        }
-
-        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Mem64BaseAndOffset) {
+        if (dst.type == Operand::Type::Reg && src.is_register_or_memory()) {
             emit8(0x48
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x8b);
-            if (src.reg <= Reg::RDI && src.offset_or_immediate == 0) {
-                emit8(0x00 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
-            } else if (src.offset_or_immediate <= 127) {
-                emit8(0x40 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
-                emit8(src.offset_or_immediate);
-            } else {
-                emit8(0x80 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
-                emit32(src.offset_or_immediate);
-            }
+            emit_modrm_rm(dst, src, patchable);
             return;
         }
 
@@ -362,14 +342,10 @@ struct Assembler {
 
     void jump(Operand op)
     {
-        if (op.type == Operand::Type::Reg) {
-            if (to_underlying(op.reg) >= 8)
-                emit8(0x41);
-            emit8(0xff);
-            emit8(0xe0 | encode_reg(op.reg));
-        } else {
-            VERIFY_NOT_REACHED();
-        }
+        if (to_underlying(op.reg) >= 8)
+            emit8(0x41);
+        emit8(0xff);
+        emit_modrm_slash(4, op);
     }
 
     void verify_not_reached()
@@ -381,23 +357,23 @@ struct Assembler {
 
     void cmp(Operand lhs, Operand rhs)
     {
-        if (rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
+        if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
             test(lhs, lhs);
-        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Reg) {
+        } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Reg) {
             emit8(0x48
                 | ((to_underlying(rhs.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x39);
-            emit8(0xc0 | (encode_reg(rhs.reg) << 3) | encode_reg(lhs.reg));
-        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm && rhs.fits_in_i8()) {
+            emit_modrm_mr(lhs, rhs);
+        } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Imm && rhs.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
-            emit8(0xf8 | encode_reg(lhs.reg));
+            emit_modrm_slash(7, lhs);
             emit8(rhs.offset_or_immediate);
-        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm && rhs.fits_in_i32()) {
+        } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Imm && rhs.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
-            emit8(0xf8 | encode_reg(lhs.reg));
+            emit_modrm_slash(7, lhs);
             emit32(rhs.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
@@ -406,17 +382,17 @@ struct Assembler {
 
     void test(Operand lhs, Operand rhs)
     {
-        if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Reg) {
+        if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Reg) {
             emit8(0x48
                 | ((to_underlying(rhs.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x85);
-            emit8(0xc0 | (encode_reg(rhs.reg) << 3) | encode_reg(lhs.reg));
-        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm) {
+            emit_modrm_mr(lhs, rhs);
+        } else if (lhs.type != Operand::Type::Imm && rhs.type == Operand::Type::Imm) {
             VERIFY(rhs.fits_in_i32());
             emit8(0x48 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
             emit8(0xf7);
-            emit8(0xc0 | encode_reg(lhs.reg));
+            emit_modrm_slash(0, lhs);
             emit32(rhs.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
@@ -438,27 +414,27 @@ struct Assembler {
         // movsxd (reg as 64-bit), (reg as 32-bit)
         emit8(0x48 | ((to_underlying(reg) >= 8) ? 1 << 0 : 0));
         emit8(0x63);
-        emit8(0xc0 | (encode_reg(reg) << 3) | encode_reg(reg));
+        emit_modrm_rm(Operand::Register(reg), Operand::Register(reg));
     }
 
     void bitwise_and(Operand dst, Operand src)
     {
         // and dst,src
-        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
             emit8(0x48
                 | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x21);
-            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+            emit_modrm_mr(dst, src);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
-            emit8(0xe0 | encode_reg(dst.reg));
+            emit_modrm_slash(4, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
-            emit8(0xe0 | encode_reg(dst.reg));
+            emit_modrm_slash(4, dst);
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
@@ -468,21 +444,21 @@ struct Assembler {
     void bitwise_or(Operand dst, Operand src)
     {
         // or dst,src
-        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
             emit8(0x48
                 | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x09);
-            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+            emit_modrm_mr(dst, src);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
-            emit8(0xc8 | encode_reg(dst.reg));
+            emit_modrm_slash(1, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
-            emit8(0xc8 | encode_reg(dst.reg));
+            emit_modrm_slash(1, dst);
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
@@ -565,21 +541,21 @@ struct Assembler {
 
     void add(Operand dst, Operand src)
     {
-        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
             emit8(0x48
                 | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x01);
-            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit_modrm_mr(dst, src);
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
-            emit8(0xc0 | encode_reg(dst.reg));
+            emit_modrm_slash(0, dst);
             emit8(src.offset_or_immediate);
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
-            emit8(0xc0 | encode_reg(dst.reg));
+            emit_modrm_slash(0, dst);
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
@@ -590,14 +566,14 @@ struct Assembler {
     {
         if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Reg && to_underlying(src.reg) < 8) {
             emit8(0x01);
-            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+            emit_modrm_mr(dst, src);
         } else if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x83);
-            emit8(0xc0 | encode_reg(dst.reg));
+            emit_modrm_slash(0, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x81);
-            emit8(0xc0 | encode_reg(dst.reg));
+            emit_modrm_slash(0, dst);
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
@@ -614,21 +590,21 @@ struct Assembler {
 
     void sub(Operand dst, Operand src)
     {
-        if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
             emit8(0x48
                 | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x29);
-            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit_modrm_mr(dst, src);
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x83);
-            emit8(0xe8 | encode_reg(dst.reg));
+            emit_modrm_slash(5, dst);
             emit8(src.offset_or_immediate);
-        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x81);
-            emit8(0xe8 | encode_reg(dst.reg));
+            emit_modrm_slash(5, dst);
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
@@ -649,7 +625,7 @@ struct Assembler {
 
         // call RAX
         emit8(0xff);
-        emit8(0xd0);
+        emit_modrm_slash(2, Operand::Register(Reg::RAX));
 
         if (!stack_arguments.is_empty())
             add(Operand::Register(Reg::RSP), Operand::Imm(align_up_to(stack_arguments.size(), 2) * sizeof(void*)));
