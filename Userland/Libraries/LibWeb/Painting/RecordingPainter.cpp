@@ -91,6 +91,7 @@ void RecordingPainter::stroke_path(StrokePathUsingPaintStyleParams params)
         .path = params.path,
         .paint_style = params.paint_style,
         .thickness = params.thickness,
+        .opacity = params.opacity,
         .aa_translation = aa_translation,
     });
 }
