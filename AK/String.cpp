@@ -11,89 +11,10 @@
 #include <AK/MemMem.h>
 #include <AK/Stream.h>
 #include <AK/String.h>
-#include <AK/StringInternals.h>
 #include <AK/Vector.h>
 #include <stdlib.h>
 
 namespace AK {
-
-namespace Detail {
-
-void StringData::operator delete(void* ptr)
-{
-    free(ptr);
-}
-
-StringData::StringData(size_t byte_count)
-    : m_byte_count(byte_count)
-{
-}
-
-StringData::StringData(StringData const& superstring, size_t start, size_t byte_count)
-    : m_byte_count(byte_count)
-    , m_substring(true)
-{
-    auto& data = const_cast<SubstringData&>(substring_data());
-    data.start_offset = start;
-    data.superstring = &superstring;
-    superstring.ref();
-}
-
-StringData::~StringData()
-{
-    if (m_substring)
-        substring_data().superstring->unref();
-}
-
-void StringData::unref() const
-{
-    if (m_is_fly_string && m_ref_count == 2) {
-        m_is_fly_string = false; // Otherwise unref from did_destory_fly_string_data will cause infinite recursion.
-        FlyString::did_destroy_fly_string_data({}, bytes_as_string_view());
-    }
-    RefCounted::unref();
-}
-
-constexpr size_t allocation_size_for_string_data(size_t length)
-{
-    return sizeof(StringData) + (sizeof(char) * length);
-}
-
-ErrorOr<NonnullRefPtr<StringData>> StringData::create_uninitialized(size_t byte_count, u8*& buffer)
-{
-    VERIFY(byte_count);
-    void* slot = malloc(allocation_size_for_string_data(byte_count));
-    if (!slot) {
-        return Error::from_errno(ENOMEM);
-    }
-    auto new_string_data = adopt_ref(*new (slot) StringData(byte_count));
-    buffer = const_cast<u8*>(new_string_data->bytes().data());
-    return new_string_data;
-}
-
-ErrorOr<NonnullRefPtr<StringData>> StringData::create_substring(StringData const& superstring, size_t start, size_t byte_count)
-{
-    // Strings of MAX_SHORT_STRING_BYTE_COUNT bytes or less should be handled by the String short string optimization.
-    VERIFY(byte_count > String::MAX_SHORT_STRING_BYTE_COUNT);
-
-    void* slot = malloc(sizeof(StringData) + sizeof(StringData::SubstringData));
-    if (!slot) {
-        return Error::from_errno(ENOMEM);
-    }
-    return adopt_ref(*new (slot) StringData(superstring, start, byte_count));
-}
-
-void StringData::compute_hash() const
-{
-    auto bytes = this->bytes();
-    if (bytes.size() == 0)
-        m_hash = 0;
-    else
-        m_hash = string_hash(reinterpret_cast<char const*>(bytes.data()), bytes.size());
-    m_has_hash = true;
-}
-
-}
 
 String String::from_utf8_without_validation(ReadonlyBytes bytes)
 {
