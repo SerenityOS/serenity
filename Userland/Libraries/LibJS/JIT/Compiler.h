@@ -37,7 +37,6 @@ private:
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
-    static constexpr auto UNWIND_CONTEXT_BASE = Assembler::Reg::R15;
 #    endif
 
 #    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
@@ -159,9 +158,6 @@ private:
     void check_exception();
     void handle_exception();
 
-    void push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer);
-    void pop_unwind_context();
-
     void jump_to_exit();
 
     void native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments = {});
@@ -187,7 +183,6 @@ private:
     struct BasicBlockData {
         size_t start_offset { 0 };
         Assembler::Label label;
-        Vector<size_t> absolute_references_to_here;
     };
 
     BasicBlockData& block_data_for(Bytecode::BasicBlock const& block)
@@ -197,13 +192,23 @@ private:
         });
     }
 
+    void set_current_block(Bytecode::BasicBlock const& block)
+    {
+        m_current_block = &block;
+    }
+
+    Bytecode::BasicBlock const& current_block()
+    {
+        return *m_current_block;
+    }
+
     HashMap<Bytecode::BasicBlock const*, NonnullOwnPtr<BasicBlockData>> m_basic_block_data;
 
     Vector<u8> m_output;
     Assembler m_assembler { m_output };
     Assembler::Label m_exit_label;
-    Assembler::Label m_exception_handler;
     Bytecode::Executable& m_bytecode_executable;
+    Bytecode::BasicBlock const* m_current_block;
 };
 
 }
