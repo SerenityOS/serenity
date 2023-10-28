@@ -256,6 +256,8 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    Crypto::SignedBigInteger const& bigint() const { return m_bigint; }
+
 private:
     Crypto::SignedBigInteger m_bigint;
 };
