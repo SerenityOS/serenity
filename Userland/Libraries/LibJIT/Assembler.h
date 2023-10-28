@@ -117,6 +117,86 @@ struct Assembler {
         return to_underlying(reg) & 0x7;
     }
 
+    enum class Patchable {
+        Yes,
+        No,
+    };
+
+    union ModRM {
+        static constexpr u8 Mem = 0b00;
+        static constexpr u8 MemDisp8 = 0b01;
+        static constexpr u8 MemDisp32 = 0b10;
+        static constexpr u8 Reg = 0b11;
+        struct {
+            u8 rm : 3;
+            u8 reg : 3;
+            u8 mode : 2;
+        };
+        u8 raw;
+    };
+
+    void emit_modrm_slash(u8 slash, Operand rm, Patchable patchable = Patchable::No)
+    {
+        ModRM raw;
+        raw.rm = encode_reg(rm.reg);
+        raw.reg = slash;
+        emit_modrm(raw, rm, patchable);
+    }
+
+    void emit_modrm_rm(Operand dst, Operand src, Patchable patchable = Patchable::No)
+    {
+        VERIFY(dst.type == Operand::Type::Reg);
+        ModRM raw {};
+        raw.reg = encode_reg(dst.reg);
+        raw.rm = encode_reg(src.reg);
+        emit_modrm(raw, src, patchable);
+    }
+
+    void emit_modrm_mr(Operand dst, Operand src, Patchable patchable = Patchable::No)
+    {
+        VERIFY(src.type == Operand::Type::Reg);
+        ModRM raw {};
+        raw.reg = encode_reg(src.reg);
+        raw.rm = encode_reg(dst.reg);
+        emit_modrm(raw, dst, patchable);
+    }
+
+    void emit_modrm(ModRM raw, Operand rm, Patchable patchable)
+    {
+        // FIXME: rm:100 (RSP) is reserved as the SIB marker
+        VERIFY(rm.type != Operand::Type::Imm);
+
+        switch (rm.type) {
+        case Operand::Type::Reg:
+            // FIXME: There is mod:00,rm:101(EBP?) -> disp32, that might be something else
+            raw.mode = ModRM::Reg;
+            emit8(raw.raw);
+            break;
+        case Operand::Type::Mem64BaseAndOffset: {
+            auto disp = rm.offset_or_immediate;
+            if (patchable == Patchable::Yes) {
+                raw.mode = ModRM::MemDisp32;
+                emit8(raw.raw);
+                emit32(disp);
+            } else if (disp == 0) {
+                raw.mode = ModRM::Mem;
+                emit8(raw.raw);
+            } else if (static_cast<i64>(disp) >= -128 && disp <= 127) {
+                raw.mode = ModRM::MemDisp8;
+                emit8(raw.raw);
+                emit8(disp & 0xff);
+            } else {
+                raw.mode = ModRM::MemDisp32;
+                emit8(raw.raw);
+                emit32(disp);
+            }
+            break;
+        }
+        case Operand::Type::Imm:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
     void shift_right(Operand dst, Operand count)
     {
         VERIFY(dst.type == Operand::Type::Reg);
@@ -127,11 +207,6 @@ struct Assembler {
         emit8(0xe8 | encode_reg(dst.reg));
         emit8(count.offset_or_immediate);
     }
-
-    enum class Patchable {
-        Yes,
-        No,
-    };
 
     void mov(Operand dst, Operand src, Patchable patchable = Patchable::No)
     {
