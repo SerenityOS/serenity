@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> { } }:
 pkgs.mkShell.override
 {
-  stdenv = pkgs.gcc12Stdenv;
+  stdenv = pkgs.gcc13Stdenv;
 }
 {
   name = "ladybird";
