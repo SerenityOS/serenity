@@ -13,6 +13,7 @@
 #include <LibCore/DateTime.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
@@ -163,6 +164,35 @@ private:
     DayOfWeek m_first_day_of_week { DayOfWeek::Sunday };
     DayOfWeek m_first_day_of_weekend { DayOfWeek::Saturday };
     int m_weekend_length { 2 };
+};
+
+class MonthListModel final : public GUI::Model {
+public:
+    enum DisplayMode {
+        Short,
+        Long,
+    };
+
+    enum Column {
+        Month,
+        __Count,
+    };
+
+    static NonnullRefPtr<MonthListModel> create(DisplayMode mode = DisplayMode::Short) { return adopt_ref(*new MonthListModel(mode)); }
+    virtual ~MonthListModel() override = default;
+
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 12; }
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
+    virtual ErrorOr<String> column_name(int) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+
+private:
+    MonthListModel(DisplayMode mode)
+        : m_mode(mode)
+    {
+    }
+
+    DisplayMode m_mode;
 };
 
 }

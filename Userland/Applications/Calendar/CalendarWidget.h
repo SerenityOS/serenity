@@ -24,6 +24,8 @@ public:
     void update_window_title();
     void load_file(FileSystemAccessClient::File file);
 
+    bool request_close();
+
 private:
     void create_on_tile_doubleclick();
 
@@ -43,6 +45,7 @@ private:
     ErrorOr<NonnullRefPtr<GUI::Action>> create_open_settings_action();
 
     OwnPtr<GUI::ActionGroup> m_view_type_action_group;
+    RefPtr<GUI::Action> m_save_action;
 
     RefPtr<EventCalendar> m_event_calendar;
 };

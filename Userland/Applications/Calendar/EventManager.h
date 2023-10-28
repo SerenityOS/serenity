@@ -41,6 +41,7 @@ public:
     void set_events(Vector<Event>);
     void clear() { m_events.clear(); }
 
+    bool is_dirty() const { return m_dirty; }
     Span<Event const> events() const { return m_events.span(); }
 
     Function<void()> on_events_change;
@@ -53,8 +54,8 @@ private:
 
     Vector<Event> m_events;
 
-    String m_current_filename;
     bool m_dirty { false };
+    String m_current_filename;
 };
 
 }

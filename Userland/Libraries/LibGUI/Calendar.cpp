@@ -857,4 +857,28 @@ bool Calendar::is_day_in_weekend(DayOfWeek day)
     return day_index < weekend_end_index;
 }
 
+ErrorOr<String> MonthListModel::column_name(int column) const
+{
+    switch (column) {
+    case Column::Month:
+        return "Month"_string;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+GUI::Variant MonthListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+{
+    auto const& month = (m_mode == MonthListModel::DisplayMode::Short ? AK::short_month_names : AK::long_month_names)[index.row()];
+    if (role == GUI::ModelRole::Display) {
+        switch (index.column()) {
+        case Column::Month:
+            return month;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+    return {};
+}
+
 }

@@ -25,25 +25,6 @@ public:
 private:
     explicit DatePickerDialog(Window* parent_window, String const& title, Core::DateTime focused_date = Core::DateTime::now());
 
-    class MonthListModel final : public GUI::Model {
-    public:
-        enum Column {
-            Month,
-            __Count,
-        };
-
-        static NonnullRefPtr<MonthListModel> create() { return adopt_ref(*new MonthListModel); }
-        virtual ~MonthListModel() override = default;
-
-        virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 12; }
-        virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
-        virtual ErrorOr<String> column_name(int) const override;
-        virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
-
-    private:
-        MonthListModel() = default;
-    };
-
     Core::DateTime m_selected_date;
     RefPtr<ComboBox> m_month_box;
     RefPtr<SpinBox> m_year_box;

@@ -42,7 +42,7 @@ DatePickerDialog::DatePickerDialog(Window* parent_window, String const& title, C
     calendar.update_tiles(focused_date.year(), focused_date.month());
 
     m_month_box = widget->find_descendant_of_type_named<GUI::ComboBox>("month_box");
-    m_month_box->set_model(DatePickerDialog::MonthListModel::create());
+    m_month_box->set_model(GUI::MonthListModel::create(GUI::MonthListModel::DisplayMode::Long));
     m_month_box->set_selected_index(focused_date.month() - 1, AllowCallback::No);
     m_month_box->on_change = [&](DeprecatedString const&, ModelIndex const& index) {
         m_selected_date.set_time(static_cast<int>(m_selected_date.year()), index.row() + 1);
@@ -81,35 +81,6 @@ Dialog::ExecResult DatePickerDialog::show(Window* parent_window, String title, C
     auto result = box->exec();
     result_date = box->m_selected_date;
     return result;
-}
-
-ErrorOr<String> DatePickerDialog::MonthListModel::column_name(int column) const
-{
-    switch (column) {
-    case Column::Month:
-        return "Month"_string;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-GUI::Variant DatePickerDialog::MonthListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
-{
-    constexpr Array short_month_names = {
-        "January", "Febuary", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    };
-
-    auto const& month = short_month_names[index.row()];
-    if (role == GUI::ModelRole::Display) {
-        switch (index.column()) {
-        case Column::Month:
-            return month;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    }
-    return {};
 }
 
 }
