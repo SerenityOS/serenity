@@ -237,9 +237,4 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
-ErrorOr<Optional<ReadonlyBytes>> TGAImageDecoderPlugin::icc_data()
-{
-    return OptionalNone {};
-}
-
 }

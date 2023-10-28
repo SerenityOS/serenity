@@ -225,9 +225,4 @@ ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index, Optiona
     return ImageFrameDescriptor { m_context->images[m_context->largest_index].bitmap, 0 };
 }
 
-ErrorOr<Optional<ReadonlyBytes>> ICOImageDecoderPlugin::icc_data()
-{
-    return OptionalNone {};
-}
-
 }

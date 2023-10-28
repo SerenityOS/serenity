@@ -365,8 +365,4 @@ ErrorOr<ImageFrameDescriptor> ILBMImageDecoderPlugin::frame(size_t index, Option
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
-ErrorOr<Optional<ReadonlyBytes>> ILBMImageDecoderPlugin::icc_data()
-{
-    return OptionalNone {};
-}
 }

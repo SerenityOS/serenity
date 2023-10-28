@@ -20,7 +20,6 @@ public:
     virtual ~ILBMImageDecoderPlugin() override;
 
     virtual IntSize size() override;
-    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
 
