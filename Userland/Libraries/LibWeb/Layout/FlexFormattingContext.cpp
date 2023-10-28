@@ -1937,13 +1937,13 @@ bool FlexFormattingContext::should_treat_main_size_as_auto(Box const& box) const
 {
     if (is_row_layout())
         return should_treat_width_as_auto(box, m_available_space_for_items->space);
-    return should_treat_height_as_auto(box, m_available_space_for_items->space);
+    return should_treat_height_as_auto(box);
 }
 
 bool FlexFormattingContext::should_treat_cross_size_as_auto(Box const& box) const
 {
     if (is_row_layout())
-        return should_treat_height_as_auto(box, m_available_space_for_items->space);
+        return should_treat_height_as_auto(box);
     return should_treat_width_as_auto(box, m_available_space_for_items->space);
 }
 

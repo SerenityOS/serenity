@@ -2192,7 +2192,7 @@ CSSPixels GridFormattingContext::calculate_min_content_contribution(GridItem con
     auto should_treat_preferred_size_as_auto = [&] {
         if (dimension == GridDimension::Column)
             return should_treat_width_as_auto(item.box, available_space_for_item);
-        return should_treat_height_as_auto(item.box, available_space_for_item);
+        return should_treat_height_as_auto(item.box);
     }();
 
     if (should_treat_preferred_size_as_auto) {
@@ -2211,7 +2211,7 @@ CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem con
     auto should_treat_preferred_size_as_auto = [&] {
         if (dimension == GridDimension::Column)
             return should_treat_width_as_auto(item.box, available_space_for_item);
-        return should_treat_height_as_auto(item.box, available_space_for_item);
+        return should_treat_height_as_auto(item.box);
     }();
 
     auto preferred_size = get_item_preferred_size(item, dimension);
@@ -2327,7 +2327,7 @@ CSSPixels GridFormattingContext::calculate_minimum_contribution(GridItem const& 
     auto should_treat_preferred_size_as_auto = [&] {
         if (dimension == GridDimension::Column)
             return should_treat_width_as_auto(item.box, get_available_space_for_item(item));
-        return should_treat_height_as_auto(item.box, get_available_space_for_item(item));
+        return should_treat_height_as_auto(item.box);
     }();
 
     if (should_treat_preferred_size_as_auto) {
