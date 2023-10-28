@@ -1,4 +1,5 @@
 stringify_gml(AboutDialog.gml AboutDialogGML.h about_dialog_gml)
+stringify_gml(DatePickerDialog.gml  DatePickerDialogGML.h date_picker_dialog_gml)
 stringify_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
 stringify_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
 stringify_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
@@ -34,6 +35,7 @@ set(SOURCES
     CommonMenus.cpp
     ConnectionToWindowManagerServer.cpp
     ConnectionToWindowServer.cpp
+    DatePickerDialog.cpp
     Desktop.cpp
     Dialog.cpp
     DisplayLink.cpp
@@ -143,6 +145,7 @@ set(GENERATED_SOURCES
     FontPickerDialogGML.h
     IncrementalSearchBannerGML.h
     PasswordInputDialogGML.h
+    DatePickerDialogGML.h
 )
 
 serenity_lib(LibGUI gui)
