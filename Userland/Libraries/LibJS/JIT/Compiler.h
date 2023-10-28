@@ -111,6 +111,7 @@ private:
     void compile_put_by_value(Bytecode::Op::PutByValue const&);
 
     void compile_call(Bytecode::Op::Call const&);
+    void compile_call_with_argument_array(Bytecode::Op::CallWithArgumentArray const&);
     void compile_typeof_variable(Bytecode::Op::TypeofVariable const&);
     void compile_set_variable(Bytecode::Op::SetVariable const&);
     void compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwind const&);
