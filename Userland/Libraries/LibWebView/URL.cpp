@@ -107,33 +107,45 @@ static URLParts break_file_url_into_parts(URL const& url, StringView url_string)
 
 static URLParts break_web_url_into_parts(URL const& url, StringView url_string)
 {
-    auto host = MUST(url.serialized_host());
+    auto scheme = url_string.substring_view(0, url.scheme().bytes_as_string_view().length() + "://"sv.length());
+    auto url_without_scheme = url_string.substring_view(scheme.length());
 
-    auto public_suffix = get_public_suffix(host);
-    if (!public_suffix.has_value())
-        return {};
+    StringView domain;
+    StringView remainder;
 
-    auto public_suffix_start = url_string.find(*public_suffix);
-    auto public_suffix_end = public_suffix_start.value() + public_suffix->bytes_as_string_view().length();
+    if (auto index = url_without_scheme.find_any_of("/?#"sv); index.has_value()) {
+        domain = url_without_scheme.substring_view(0, *index);
+        remainder = url_without_scheme.substring_view(*index);
+    } else {
+        domain = url_without_scheme;
+    }
 
-    auto scheme_and_subdomain = url_string.substring_view(0, *public_suffix_start);
-    scheme_and_subdomain = scheme_and_subdomain.trim("."sv, TrimMode::Right);
+    auto public_suffix = get_public_suffix(domain);
+    if (!public_suffix.has_value() || !domain.ends_with(*public_suffix))
+        return { scheme, domain, remainder };
 
-    if (auto index = scheme_and_subdomain.find_last('.'); index.has_value())
-        scheme_and_subdomain = scheme_and_subdomain.substring_view(0, *index + 1);
-    else
-        scheme_and_subdomain = scheme_and_subdomain.substring_view(0, url.scheme().bytes_as_string_view().length() + "://"sv.length());
+    auto subdomain = domain.substring_view(0, domain.length() - public_suffix->bytes_as_string_view().length());
+    subdomain = subdomain.trim("."sv, TrimMode::Right);
 
-    auto effective_tld_plus_one = url_string.substring_view(scheme_and_subdomain.length(), public_suffix_end - scheme_and_subdomain.length());
-    auto remainder = url_string.substring_view(public_suffix_end);
+    if (auto index = subdomain.find_last('.'); index.has_value()) {
+        subdomain = subdomain.substring_view(0, *index + 1);
+        domain = domain.substring_view(subdomain.length());
+    } else {
+        subdomain = {};
+    }
 
-    return URLParts { scheme_and_subdomain, effective_tld_plus_one, remainder };
+    auto scheme_and_subdomain = url_string.substring_view(0, scheme.length() + subdomain.length());
+    return { scheme_and_subdomain, domain, remainder };
 }
 
 Optional<URLParts> break_url_into_parts(StringView url_string)
 {
     auto url = URL::create_with_url_or_path(url_string);
     if (!url.is_valid())
+        return {};
+
+    auto scheme_length = url.scheme().bytes_as_string_view().length();
+    if (!url_string.substring_view(scheme_length).starts_with("://"sv))
         return {};
 
     if (url.scheme() == "file"sv)

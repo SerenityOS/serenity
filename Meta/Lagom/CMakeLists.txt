@@ -651,6 +651,7 @@ if (BUILD_LAGOM)
             LibTimeZone
             LibUnicode
             LibVideo
+            LibWebView
             LibXML
         )
         if (ENABLE_LAGOM_LIBWEB)
