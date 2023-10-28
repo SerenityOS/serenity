@@ -7,7 +7,7 @@
         fixed_height: 20
         fill_with_background_color: true
         layout: @GUI::HorizontalBoxLayout {}
-        
+
         @GUI::ComboBox {
             name: "month_box"
             model_only: true
@@ -52,5 +52,4 @@
             fixed_size: [80, 20]
         }
     }
-
 }

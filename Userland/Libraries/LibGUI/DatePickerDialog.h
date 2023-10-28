@@ -35,10 +35,10 @@ private:
         static NonnullRefPtr<MonthListModel> create() { return adopt_ref(*new MonthListModel); }
         virtual ~MonthListModel() override = default;
 
-        virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 12; }
-        virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
+        virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 12; }
+        virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
         virtual ErrorOr<String> column_name(int) const override;
-        virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+        virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
 
     private:
         MonthListModel() = default;
