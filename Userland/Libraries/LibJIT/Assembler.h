@@ -161,7 +161,9 @@ struct Assembler {
                 | ((to_underlying(src.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x89);
-            if (dst.offset_or_immediate <= 127) {
+            if (dst.reg <= Reg::RDI && dst.offset_or_immediate == 0) {
+                emit8(0x00 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+            } else if (dst.offset_or_immediate <= 127) {
                 emit8(0x40 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
                 emit8(dst.offset_or_immediate);
             } else {
@@ -176,7 +178,9 @@ struct Assembler {
                 | ((to_underlying(dst.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(src.reg) >= 8) ? 1 << 0 : 0));
             emit8(0x8b);
-            if (src.offset_or_immediate <= 127) {
+            if (src.reg <= Reg::RDI && src.offset_or_immediate == 0) {
+                emit8(0x00 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
+            } else if (src.offset_or_immediate <= 127) {
                 emit8(0x40 | (encode_reg(dst.reg) << 3) | encode_reg(src.reg));
                 emit8(src.offset_or_immediate);
             } else {
