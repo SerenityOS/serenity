@@ -104,7 +104,7 @@ Any two expressions joined by the Join operator (` ` [whitespace]), or a _variab
 * Syntactic Lists: Any _list_ enclosed in parentheses (`(` and `)`)
 
 ##### Comments
-Any text following a `#` in _bareword_ position, up to but not including a newline
+Any text following and including that in a word starting with `#`, up to but not including a newline
 
 ##### Keywords
 The following tokens:
@@ -497,7 +497,7 @@ variable_ref :: '$' identifier
 
 slice :: '[' brace_expansion_spec ']'
 
-comment :: '#' [^\n]*
+comment :: (?<!\w) '#' .*
 
 immediate_expression :: '$' '{' immediate_function expression* '}'
 
@@ -515,8 +515,8 @@ word_selector :: number
                | '^'                   {== 0}
                | '$'                   {== end}
 
-bareword :: [^"'*$&#|()[\]{} ?;<>] bareword?
-          | '\' [^"'*$&#|()[\]{} ?;<>] bareword?
+bareword :: [^"'*$&|()[\]{} ?;<>] bareword?
+          | '\' [^"'*$&|()[\]{} ?;<>] bareword?
 
 bareword_with_tilde_expansion :: '~' bareword?
 

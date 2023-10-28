@@ -292,7 +292,7 @@ variable_ref :: '$' identifier
 
 slice :: '[' brace_expansion_spec ']'
 
-comment :: '#' [^\n]*
+comment :: (?<!\w) '#' .*
 
 immediate_expression :: '$' '{' immediate_function expression* '}'
 
@@ -310,8 +310,8 @@ word_selector :: number
                | '^'                   {== 0}
                | '$'                   {== end}
 
-bareword :: [^"'*$&#|()[\]{} ?;<>] bareword?
-          | '\' [^"'*$&#|()[\]{} ?;<>] bareword?
+bareword :: [^"'*$&|()[\]{} ?;<>] bareword?
+          | '\' [^"'*$&|()[\]{} ?;<>] bareword?
 
 bareword_with_tilde_expansion :: '~' bareword?
 
