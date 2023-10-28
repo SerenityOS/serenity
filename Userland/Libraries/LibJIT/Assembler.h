@@ -160,6 +160,14 @@ struct Assembler {
                     emit32(src.offset_or_immediate);
                     return;
                 }
+                if ((src.offset_or_immediate & 0xffffffff) == 0) {
+                    if (dst.reg > Reg::RDI)
+                        emit8(0x41);
+                    emit8(0xb8 | encode_reg(dst.reg));
+                    emit32((src.offset_or_immediate >> 32) & 0xffffffff);
+                    shift_left(dst, Operand::Imm(32));
+                    return;
+                }
             }
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
             emit8(0xb8 | encode_reg(dst.reg));
