@@ -298,7 +298,7 @@ UNMAP_AFTER_INIT CommandLine::GraphicsSubsystemMode CommandLine::graphics_subsys
 
 StringView CommandLine::userspace_init() const
 {
-    return lookup("init"sv).value_or("/bin/SystemServer"sv);
+    return lookup("init"sv).value_or("/init"sv);
 }
 
 Vector<NonnullOwnPtr<KString>> CommandLine::userspace_init_args() const
