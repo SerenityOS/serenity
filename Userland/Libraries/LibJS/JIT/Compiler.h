@@ -123,6 +123,7 @@ private:
     void compile_to_boolean(Assembler::Reg dst, Assembler::Reg src);
 
     void check_exception();
+    void handle_exception();
 
     void push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer);
     void pop_unwind_context();
@@ -165,6 +166,7 @@ private:
     Vector<u8> m_output;
     Assembler m_assembler { m_output };
     Assembler::Label m_exit_label;
+    Assembler::Label m_exception_handler;
     Bytecode::Executable& m_bytecode_executable;
 };
 
