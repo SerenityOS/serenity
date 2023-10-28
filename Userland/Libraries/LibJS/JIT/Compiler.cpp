@@ -937,6 +937,9 @@ void Compiler::compile_call_with_argument_array(Bytecode::Op::CallWithArgumentAr
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
         Assembler::Operand::Imm(to_underlying(op.call_type())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Imm(bit_cast<u64>(&op.expression_string())));
     native_call((void*)cxx_call_with_argument_array);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
