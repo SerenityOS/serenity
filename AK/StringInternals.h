@@ -17,7 +17,6 @@ class StringData final : public RefCounted<StringData> {
 public:
     static ErrorOr<NonnullRefPtr<StringData>> create_uninitialized(size_t, u8*& buffer);
     static ErrorOr<NonnullRefPtr<StringData>> create_substring(StringData const& superstring, size_t start, size_t byte_count);
-    static ErrorOr<NonnullRefPtr<StringData>> from_utf8(char const* utf8_bytes, size_t);
     static ErrorOr<NonnullRefPtr<StringData>> from_stream(Stream&, size_t byte_count);
 
     struct SubstringData {

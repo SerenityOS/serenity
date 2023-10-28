@@ -64,18 +64,6 @@ ErrorOr<NonnullRefPtr<StringData>> StringData::create_uninitialized(size_t byte_
     return new_string_data;
 }
 
-ErrorOr<NonnullRefPtr<StringData>> StringData::from_utf8(char const* utf8_data, size_t byte_count)
-{
-    // Strings of MAX_SHORT_STRING_BYTE_COUNT bytes or less should be handled by the String short string optimization.
-    VERIFY(byte_count > String::MAX_SHORT_STRING_BYTE_COUNT);
-
-    VERIFY(utf8_data);
-    u8* buffer = nullptr;
-    auto new_string_data = TRY(create_uninitialized(byte_count, buffer));
-    memcpy(buffer, utf8_data, byte_count * sizeof(char));
-    return new_string_data;
-}
-
 static ErrorOr<void> read_stream_into_buffer(Stream& stream, Bytes buffer)
 {
     TRY(stream.read_until_filled(buffer));
@@ -124,15 +112,12 @@ void StringData::compute_hash() const
 
 String String::from_utf8_without_validation(ReadonlyBytes bytes)
 {
-    if (bytes.size() <= MAX_SHORT_STRING_BYTE_COUNT) {
-        ShortString short_string;
-        if (!bytes.is_empty())
-            memcpy(short_string.storage, bytes.data(), bytes.size());
-        short_string.byte_count_and_short_string_flag = (bytes.size() << 1) | SHORT_STRING_FLAG;
-        return String { short_string };
-    }
-    auto data = MUST(Detail::StringData::from_utf8(reinterpret_cast<char const*>(bytes.data()), bytes.size()));
-    return String { move(data) };
+    String result;
+    MUST(result.replace_with_new_string(bytes.size(), [&](Bytes buffer) {
+        bytes.copy_to(buffer);
+        return ErrorOr<void> {};
+    }));
+    return result;
 }
 
 ErrorOr<String> String::from_utf8(StringView view)
@@ -140,15 +125,12 @@ ErrorOr<String> String::from_utf8(StringView view)
     if (!Utf8View { view }.validate())
         return Error::from_string_literal("String::from_utf8: Input was not valid UTF-8");
 
-    if (view.length() <= MAX_SHORT_STRING_BYTE_COUNT) {
-        ShortString short_string;
-        if (!view.is_empty())
-            memcpy(short_string.storage, view.characters_without_null_termination(), view.length());
-        short_string.byte_count_and_short_string_flag = (view.length() << 1) | SHORT_STRING_FLAG;
-        return String { short_string };
-    }
-    auto data = TRY(Detail::StringData::from_utf8(view.characters_without_null_termination(), view.length()));
-    return String { move(data) };
+    String result;
+    TRY(result.replace_with_new_string(view.length(), [&](Bytes buffer) {
+        view.bytes().copy_to(buffer);
+        return ErrorOr<void> {};
+    }));
+    return result;
 }
 
 ErrorOr<String> String::from_stream(Stream& stream, size_t byte_count)

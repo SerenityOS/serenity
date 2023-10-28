@@ -54,11 +54,6 @@ StringBase& StringBase::operator=(StringBase const& other)
     return *this;
 }
 
-bool StringBase::is_short_string() const
-{
-    return has_short_string_bit(reinterpret_cast<uintptr_t>(m_data));
-}
-
 ReadonlyBytes StringBase::bytes() const
 {
     if (is_short_string())
@@ -80,6 +75,17 @@ bool StringBase::operator==(StringBase const& other) const
     if (is_short_string())
         return m_data == other.m_data;
     return bytes() == other.bytes();
+}
+
+ErrorOr<Bytes> StringBase::replace_with_uninitialized_buffer(size_t byte_count)
+{
+    if (byte_count <= MAX_SHORT_STRING_BYTE_COUNT)
+        return replace_with_uninitialized_short_string(byte_count);
+
+    u8* buffer = nullptr;
+    destroy_string();
+    m_data = &TRY(StringData::create_uninitialized(byte_count, buffer)).leak_ref();
+    return Bytes { buffer, byte_count };
 }
 
 void StringBase::destroy_string()
