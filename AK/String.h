@@ -64,15 +64,15 @@ public:
     {
         VERIFY(is_unicode(code_point));
 
-        ShortString short_string;
-        size_t i = 0;
-
-        auto length = UnicodeUtils::code_point_to_utf8(code_point, [&](auto byte) {
-            short_string.storage[i++] = static_cast<u8>(byte);
+        String string;
+        string.replace_with_new_short_string(UnicodeUtils::bytes_to_store_code_point_in_utf8(code_point), [&](Bytes buffer) {
+            size_t i = 0;
+            (void)UnicodeUtils::code_point_to_utf8(code_point, [&](auto byte) {
+                buffer[i++] = static_cast<u8>(byte);
+            });
         });
-        short_string.byte_count_and_short_string_flag = (length << 1) | SHORT_STRING_FLAG;
 
-        return String { short_string };
+        return string;
     }
 
     // Creates a new String with a single code point repeated N times.
