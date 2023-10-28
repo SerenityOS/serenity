@@ -201,6 +201,7 @@ ln -sf Shell mnt/bin/sh
 ln -sf test mnt/bin/[
 ln -sf less mnt/bin/more
 ln -sf /bin/env mnt/usr/bin/env
+ln -sf /bin/SystemServer mnt/init
 echo "done"
 
 printf "installing 'checksum' variants... "
