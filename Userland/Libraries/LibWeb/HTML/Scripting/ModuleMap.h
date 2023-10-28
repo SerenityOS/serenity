@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2022-2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,7 @@
 
 #include <AK/URL.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
 
 namespace Web::HTML {
@@ -52,6 +53,8 @@ public:
         JS::GCPtr<JavaScriptModuleScript> module_script;
     };
 
+    using CallbackFunction = JS::NonnullGCPtr<JS::HeapFunction<void(Entry)>>;
+
     bool is_fetching(AK::URL const& url, DeprecatedString const& type) const;
     bool is_failed(AK::URL const& url, DeprecatedString const& type) const;
 
@@ -61,13 +64,13 @@ public:
 
     AK::HashSetResult set(AK::URL const& url, DeprecatedString const& type, Entry);
 
-    void wait_for_change(AK::URL const& url, DeprecatedString const& type, Function<void(Entry)> callback);
+    void wait_for_change(JS::Heap&, AK::URL const& url, DeprecatedString const& type, Function<void(Entry)> callback);
 
 private:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     HashMap<ModuleLocationTuple, Entry> m_values;
-    HashMap<ModuleLocationTuple, Vector<Function<void(Entry)>>> m_callbacks;
+    HashMap<ModuleLocationTuple, Vector<CallbackFunction>> m_callbacks;
 };
 
 }

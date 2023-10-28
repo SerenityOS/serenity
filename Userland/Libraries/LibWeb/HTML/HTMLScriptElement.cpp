@@ -379,24 +379,24 @@ void HTMLScriptElement::prepare_script()
         // FIXME: 9. If el is currently render-blocking, then set options's render-blocking to true.
 
         // 10. Let onComplete given result be the following steps:
-        OnFetchScriptComplete on_complete = [this](auto result) {
+        OnFetchScriptComplete on_complete = create_on_fetch_script_complete(heap(), [this](auto result) {
             // 1. Mark as ready el given result.
             if (result)
                 mark_as_ready(Result { *result });
             else
                 mark_as_ready(ResultState::Null {});
-        };
+        });
 
         // 11. Switch on el's type:
         // -> "classic"
         if (m_script_type == ScriptType::Classic) {
             // Fetch a classic script given url, settings object, options, classic script CORS setting, encoding, and onComplete.
-            fetch_classic_script(*this, url, settings_object, move(options), classic_script_cors_setting, encoding.release_value(), move(on_complete)).release_value_but_fixme_should_propagate_errors();
+            fetch_classic_script(*this, url, settings_object, move(options), classic_script_cors_setting, encoding.release_value(), on_complete).release_value_but_fixme_should_propagate_errors();
         }
         // -> "module"
         else if (m_script_type == ScriptType::Module) {
             // Fetch an external module script graph given url, settings object, options, and onComplete.
-            fetch_external_module_script_graph(realm(), url, settings_object, options, move(on_complete));
+            fetch_external_module_script_graph(realm(), url, settings_object, options, on_complete);
         }
     }
 
@@ -420,15 +420,17 @@ void HTMLScriptElement::prepare_script()
             // 1. Set el's delaying the load event to true.
             begin_delaying_document_load_event(*m_preparation_time_document);
 
-            // 2. Fetch an inline module script graph, given source text, base URL, settings object, options, and with the following steps given result:
-            // FIXME: Pass options
-            fetch_inline_module_script_graph(realm(), m_document->url().to_deprecated_string(), source_text, base_url, document().relevant_settings_object(), [this](auto result) {
+            auto steps = create_on_fetch_script_complete(heap(), [this](auto result) {
                 // 1. Mark as ready el given result.
                 if (!result)
                     mark_as_ready(ResultState::Null {});
                 else
                     mark_as_ready(Result(*result));
             });
+
+            // 2. Fetch an inline module script graph, given source text, base URL, settings object, options, and with the following steps given result:
+            // FIXME: Pass options
+            fetch_inline_module_script_graph(realm(), m_document->url().to_deprecated_string(), source_text, base_url, document().relevant_settings_object(), steps);
         }
         // -> "importmap"
         else if (m_script_type == ScriptType::ImportMap) {

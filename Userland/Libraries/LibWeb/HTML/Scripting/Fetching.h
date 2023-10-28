@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2022-2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +15,9 @@
 
 namespace Web::HTML {
 
-using OnFetchScriptComplete = JS::SafeFunction<void(JS::GCPtr<Script>)>;
+using OnFetchScriptComplete = JS::NonnullGCPtr<JS::HeapFunction<void(JS::GCPtr<Script>)>>;
+
+OnFetchScriptComplete create_on_fetch_script_complete(JS::Heap& heap, Function<void(JS::GCPtr<Script>)> function);
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#script-fetch-options
 struct ScriptFetchOptions {
@@ -39,31 +41,6 @@ struct ScriptFetchOptions {
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-fetch-priority
     Fetch::Infrastructure::Request::Priority fetch_priority {};
-};
-
-class DescendantFetchingContext : public RefCounted<DescendantFetchingContext> {
-public:
-    static NonnullRefPtr<DescendantFetchingContext> create() { return adopt_ref(*new DescendantFetchingContext); }
-
-    ~DescendantFetchingContext() = default;
-
-    size_t pending_count() const { return m_pending_count; }
-    void set_pending_count(size_t count) { m_pending_count = count; }
-    void decrement_pending_count() { --m_pending_count; }
-
-    bool failed() const { return m_failed; }
-    void set_failed(bool failed) { m_failed = failed; }
-
-    void on_complete(JavaScriptModuleScript* module_script) { m_on_complete(module_script); }
-    void set_on_complete(OnFetchScriptComplete on_complete) { m_on_complete = move(on_complete); }
-
-private:
-    DescendantFetchingContext() = default;
-
-    size_t m_pending_count { 0 };
-    bool m_failed { false };
-
-    OnFetchScriptComplete m_on_complete;
 };
 
 DeprecatedString module_type_from_module_request(JS::ModuleRequest const&);
