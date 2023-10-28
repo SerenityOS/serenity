@@ -129,6 +129,8 @@ private:
 
     void jump_to_exit();
 
+    void native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments = {});
+
     template<typename Codegen>
     void branch_if_int32(Assembler::Reg, Codegen);
 
