@@ -1006,28 +1006,21 @@ void Compiler::jump_to_exit()
 
 void Compiler::native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments)
 {
-    // push caller-saved registers on the stack
-    // (callee-saved registers: RBX, RSP, RBP, and R12–R15)
-    m_assembler.push(Assembler::Operand::Register(Assembler::Reg::RCX));
-    m_assembler.push(Assembler::Operand::Register(Assembler::Reg::RDX));
-    m_assembler.push(Assembler::Operand::Register(Assembler::Reg::RSI));
-    m_assembler.push(Assembler::Operand::Register(Assembler::Reg::RDI));
-    m_assembler.push(Assembler::Operand::Register(Assembler::Reg::R8));
-    m_assembler.push(Assembler::Operand::Register(Assembler::Reg::R9));
-    m_assembler.push(Assembler::Operand::Register(Assembler::Reg::R10));
-    m_assembler.push(Assembler::Operand::Register(Assembler::Reg::R11));
+    // Make sure we don't clobber the VM&.
+    m_assembler.push(Assembler::Operand::Register(ARG0));
 
+    // Align the stack pointer.
+    m_assembler.sub(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(8));
+
+    // NOTE: We don't preserve caller-saved registers when making a native call.
+    //       This means that they may have changed after we return from the call.
     m_assembler.native_call(function_address, stack_arguments);
 
-    // restore caller-saved registers from the stack
-    m_assembler.pop(Assembler::Operand::Register(Assembler::Reg::R11));
-    m_assembler.pop(Assembler::Operand::Register(Assembler::Reg::R10));
-    m_assembler.pop(Assembler::Operand::Register(Assembler::Reg::R9));
-    m_assembler.pop(Assembler::Operand::Register(Assembler::Reg::R8));
-    m_assembler.pop(Assembler::Operand::Register(Assembler::Reg::RDI));
-    m_assembler.pop(Assembler::Operand::Register(Assembler::Reg::RSI));
-    m_assembler.pop(Assembler::Operand::Register(Assembler::Reg::RDX));
-    m_assembler.pop(Assembler::Operand::Register(Assembler::Reg::RCX));
+    // Restore the stack pointer.
+    m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(8));
+
+    // Restore our VM&.
+    m_assembler.pop(Assembler::Operand::Register(ARG0));
 }
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
