@@ -1027,6 +1027,21 @@ void Compiler::compile_leave_lexical_environment(Bytecode::Op::LeaveLexicalEnvir
     native_call((void*)cxx_leave_lexical_environment);
 }
 
+static Value cxx_concat_string(VM& vm, Value lhs, Value rhs)
+{
+    auto string = TRY_OR_SET_EXCEPTION(rhs.to_primitive_string(vm));
+    return PrimitiveString::create(vm, lhs.as_string(), string);
+}
+
+void Compiler::compile_concat_string(Bytecode::Op::ConcatString const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    native_call((void*)cxx_concat_string);
+    store_vm_register(op.lhs(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
@@ -1189,6 +1204,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::ContinuePendingUnwind:
                 compiler.compile_continue_pending_unwind(static_cast<Bytecode::Op::ContinuePendingUnwind const&>(op));
+                break;
+            case Bytecode::Instruction::Type::ConcatString:
+                compiler.compile_concat_string(static_cast<Bytecode::Op::ConcatString const&>(op));
                 break;
 
 #    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                          \
