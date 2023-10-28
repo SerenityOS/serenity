@@ -32,7 +32,7 @@ private:
     static constexpr auto ARG5 = Assembler::Reg::R9;
     static constexpr auto RET = Assembler::Reg::RAX;
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
-    static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::R13;
+    static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
     static constexpr auto UNWIND_CONTEXT_BASE = Assembler::Reg::R15;
 #    endif
