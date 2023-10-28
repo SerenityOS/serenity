@@ -9,7 +9,7 @@ stdenv.mkDerivation {
     curl
     e2fsprogs
     fuse2fs
-    gcc12
+    gcc13
     gmp
     # To create port launcher icons
     imagemagick
