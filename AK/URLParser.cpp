@@ -1124,7 +1124,8 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // 3. Set atSignSeen to true.
                 at_sign_seen = true;
 
-                StringBuilder builder;
+                StringBuilder username_builder;
+                StringBuilder password_builder;
 
                 // 4. For each codePoint in buffer:
                 for (auto c : Utf8View(buffer.string_view())) {
@@ -1137,20 +1138,26 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     // 2. Let encodedCodePoints be the result of running UTF-8 percent-encode codePoint using the userinfo percent-encode set.
                     // NOTE: This is done inside of step 3 and 4 implementation
 
-                    builder.clear();
                     // 3. If passwordTokenSeen is true, then append encodedCodePoints to url’s password.
                     if (password_token_seen) {
-                        builder.append(url->m_password);
-                        URL::append_percent_encoded_if_necessary(builder, c, URL::PercentEncodeSet::Userinfo);
-                        url->m_password = builder.to_string().release_value_but_fixme_should_propagate_errors();
+                        if (password_builder.is_empty())
+                            password_builder.append(url->m_password);
+
+                        URL::append_percent_encoded_if_necessary(password_builder, c, URL::PercentEncodeSet::Userinfo);
                     }
                     // 4. Otherwise, append encodedCodePoints to url’s username.
                     else {
-                        builder.append(url->m_username);
-                        URL::append_percent_encoded_if_necessary(builder, c, URL::PercentEncodeSet::Userinfo);
-                        url->m_username = builder.to_string().release_value_but_fixme_should_propagate_errors();
+                        if (username_builder.is_empty())
+                            username_builder.append(url->m_username);
+
+                        URL::append_percent_encoded_if_necessary(username_builder, c, URL::PercentEncodeSet::Userinfo);
                     }
                 }
+
+                if (username_builder.string_view().length() > url->m_username.bytes().size())
+                    url->m_username = username_builder.to_string().release_value_but_fixme_should_propagate_errors();
+                if (password_builder.string_view().length() > url->m_password.bytes().size())
+                    url->m_password = password_builder.to_string().release_value_but_fixme_should_propagate_errors();
 
                 // 5. Set buffer to the empty string.
                 buffer.clear();

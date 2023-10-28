@@ -542,3 +542,44 @@ TEST_CASE(ipv4_address)
         EXPECT(!url.is_valid());
     }
 }
+
+TEST_CASE(username_and_password)
+{
+    {
+        constexpr auto url_with_username_and_password = "http://username:password@test.com/index.html"sv;
+        URL url(url_with_username_and_password);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(MUST(url.serialized_host()), "test.com"sv);
+        EXPECT_EQ(MUST(url.username()), "username"sv);
+        EXPECT_EQ(MUST(url.password()), "password"sv);
+    }
+
+    {
+        constexpr auto url_with_percent_encoded_credentials = "http://username%21%24%25:password%21%24%25@test.com/index.html"sv;
+        URL url(url_with_percent_encoded_credentials);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(MUST(url.serialized_host()), "test.com"sv);
+        EXPECT_EQ(MUST(url.username()), "username!$%"sv);
+        EXPECT_EQ(MUST(url.password()), "password!$%"sv);
+    }
+
+    {
+        auto const& username = MUST(String::repeated('a', 50000));
+        auto const& url_with_long_username = MUST(String::formatted("http://{}:@test.com/index.html", username));
+        URL url(url_with_long_username);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(MUST(url.serialized_host()), "test.com"sv);
+        EXPECT_EQ(MUST(url.username()), username);
+        EXPECT(MUST(url.password()).is_empty());
+    }
+
+    {
+        auto const& password = MUST(String::repeated('a', 50000));
+        auto const& url_with_long_password = MUST(String::formatted("http://:{}@test.com/index.html", password));
+        URL url(url_with_long_password);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(MUST(url.serialized_host()), "test.com"sv);
+        EXPECT(MUST(url.username()).is_empty());
+        EXPECT_EQ(MUST(url.password()), password);
+    }
+}
