@@ -564,19 +564,9 @@ struct Assembler {
         }
     }
 
+    // NOTE: It's up to the caller of this function to preserve registers as needed.
     void native_call(void* callee, Vector<Operand> const& stack_arguments = {})
     {
-        // push caller-saved registers on the stack
-        // (callee-saved registers: RBX, RSP, RBP, and R12–R15)
-        push(Operand::Register(Reg::RCX));
-        push(Operand::Register(Reg::RDX));
-        push(Operand::Register(Reg::RSI));
-        push(Operand::Register(Reg::RDI));
-        push(Operand::Register(Reg::R8));
-        push(Operand::Register(Reg::R9));
-        push(Operand::Register(Reg::R10));
-        push(Operand::Register(Reg::R11));
-
         // Preserve 16-byte stack alignment for non-even amount of stack-passed arguments
         if ((stack_arguments.size() % 2) == 1)
             push(Operand::Imm(0));
@@ -592,16 +582,6 @@ struct Assembler {
 
         if (!stack_arguments.is_empty())
             add(Operand::Register(Reg::RSP), Operand::Imm(align_up_to(stack_arguments.size(), 2) * sizeof(void*)));
-
-        // restore caller-saved registers from the stack
-        pop(Operand::Register(Reg::R11));
-        pop(Operand::Register(Reg::R10));
-        pop(Operand::Register(Reg::R9));
-        pop(Operand::Register(Reg::R8));
-        pop(Operand::Register(Reg::RDI));
-        pop(Operand::Register(Reg::RSI));
-        pop(Operand::Register(Reg::RDX));
-        pop(Operand::Register(Reg::RCX));
     }
 
     void trap()
