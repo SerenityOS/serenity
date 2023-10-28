@@ -71,16 +71,6 @@ public:
     void did_create_fly_string(Badge<FlyString>) const;
 
 protected:
-    // NOTE: If the least significant bit of the pointer is set, this is a short string.
-    static constexpr uintptr_t SHORT_STRING_FLAG = 1;
-
-    explicit StringBase(NonnullRefPtr<Detail::StringData const>);
-
-    explicit constexpr StringBase(ShortString short_string)
-        : m_short_string(short_string)
-    {
-    }
-
     template<typename Func>
     ErrorOr<void> replace_with_new_string(size_t byte_count, Func&& callback)
     {
@@ -102,12 +92,17 @@ protected:
     // is impossible to implement it without access to StringData.
     ErrorOr<StringBase> substring_from_byte_offset_with_shared_superstring(size_t start, size_t byte_count) const;
 
-    union {
-        ShortString m_short_string;
-        Detail::StringData const* m_data { nullptr };
-    };
-
 private:
+    // NOTE: If the least significant bit of the pointer is set, this is a short string.
+    static constexpr uintptr_t SHORT_STRING_FLAG = 1;
+
+    explicit StringBase(NonnullRefPtr<Detail::StringData const>);
+
+    explicit constexpr StringBase(ShortString short_string)
+        : m_short_string(short_string)
+    {
+    }
+
     ErrorOr<Bytes> replace_with_uninitialized_buffer(size_t byte_count);
 
     constexpr Bytes replace_with_uninitialized_short_string(size_t byte_count)
@@ -121,6 +116,11 @@ private:
     }
 
     void destroy_string();
+
+    union {
+        ShortString m_short_string;
+        Detail::StringData const* m_data { nullptr };
+    };
 };
 
 }
