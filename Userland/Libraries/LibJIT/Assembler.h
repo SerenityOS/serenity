@@ -219,12 +219,14 @@ struct Assembler {
     }
 
     struct Label {
-        size_t offset_of_label_in_instruction_stream { 0 };
+        Optional<size_t> offset_of_label_in_instruction_stream;
         Vector<size_t> jump_slot_offsets_in_instruction_stream;
 
-        void add_jump(size_t offset)
+        void add_jump(Assembler& assembler, size_t offset)
         {
             jump_slot_offsets_in_instruction_stream.append(offset);
+            if (offset_of_label_in_instruction_stream.has_value())
+                link_jump(assembler, offset);
         }
 
         void link(Assembler& assembler)
@@ -234,24 +236,27 @@ struct Assembler {
 
         void link_to(Assembler& assembler, size_t link_offset)
         {
+            VERIFY(!offset_of_label_in_instruction_stream.has_value());
             offset_of_label_in_instruction_stream = link_offset;
-            for (auto offset_in_instruction_stream : jump_slot_offsets_in_instruction_stream) {
-                auto offset = offset_of_label_in_instruction_stream - offset_in_instruction_stream;
-                auto jump_slot = offset_in_instruction_stream - 4;
-                assembler.m_output[jump_slot + 0] = (offset >> 0) & 0xff;
-                assembler.m_output[jump_slot + 1] = (offset >> 8) & 0xff;
-                assembler.m_output[jump_slot + 2] = (offset >> 16) & 0xff;
-                assembler.m_output[jump_slot + 3] = (offset >> 24) & 0xff;
-            }
+            for (auto offset_in_instruction_stream : jump_slot_offsets_in_instruction_stream)
+                link_jump(assembler, offset_in_instruction_stream);
+        }
+
+    private:
+        void link_jump(Assembler& assembler, size_t offset_in_instruction_stream)
+        {
+            auto offset = offset_of_label_in_instruction_stream.value() - offset_in_instruction_stream;
+            auto jump_slot = offset_in_instruction_stream - 4;
+            assembler.m_output[jump_slot + 0] = (offset >> 0) & 0xff;
+            assembler.m_output[jump_slot + 1] = (offset >> 8) & 0xff;
+            assembler.m_output[jump_slot + 2] = (offset >> 16) & 0xff;
+            assembler.m_output[jump_slot + 3] = (offset >> 24) & 0xff;
         }
     };
 
     [[nodiscard]] Label make_label()
     {
-        return Label {
-            .offset_of_label_in_instruction_stream = m_output.size(),
-            .jump_slot_offsets_in_instruction_stream = {},
-        };
+        return Label {};
     }
 
     [[nodiscard]] Label jump()
@@ -260,7 +265,7 @@ struct Assembler {
         emit8(0xe9);
         emit32(0xdeadbeef);
         auto label = make_label();
-        label.add_jump(m_output.size());
+        label.add_jump(*this, m_output.size());
         return label;
     }
 
@@ -269,7 +274,7 @@ struct Assembler {
         // jmp target (RIP-relative 32-bit offset)
         emit8(0xe9);
         emit32(0xdeadbeef);
-        label.add_jump(m_output.size());
+        label.add_jump(*this, m_output.size());
     }
 
     void jump(Operand op)
@@ -341,7 +346,7 @@ struct Assembler {
         emit8(0x0f);
         emit8(0x84);
         emit32(0xdeadbeef);
-        label.add_jump(m_output.size());
+        label.add_jump(*this, m_output.size());
     }
 
     void jump_if_not_zero(Operand reg, Label& label)
@@ -352,7 +357,7 @@ struct Assembler {
         emit8(0x0f);
         emit8(0x85);
         emit32(0xdeadbeef);
-        label.add_jump(m_output.size());
+        label.add_jump(*this, m_output.size());
     }
 
     void jump_if_equal(Operand lhs, Operand rhs, Label& label)
@@ -368,7 +373,7 @@ struct Assembler {
         emit8(0x0f);
         emit8(0x84);
         emit32(0xdeadbeef);
-        label.add_jump(m_output.size());
+        label.add_jump(*this, m_output.size());
     }
 
     void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
@@ -384,7 +389,7 @@ struct Assembler {
         emit8(0x0f);
         emit8(0x85);
         emit32(0xdeadbeef);
-        label.add_jump(m_output.size());
+        label.add_jump(*this, m_output.size());
     }
 
     void jump_if_less_than(Operand lhs, Operand rhs, Label& label)
@@ -395,7 +400,7 @@ struct Assembler {
         emit8(0x0f);
         emit8(0x8c);
         emit32(0xdeadbeef);
-        label.add_jump(m_output.size());
+        label.add_jump(*this, m_output.size());
     }
 
     void sign_extend_32_to_64_bits(Reg reg)
