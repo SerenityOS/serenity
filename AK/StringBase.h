@@ -30,6 +30,12 @@ static_assert(__builtin_offsetof(ShortString, byte_count_and_short_string_flag) 
 
 class StringBase {
 public:
+    // Creates an empty (zero-length) String.
+    constexpr StringBase()
+        : StringBase(ShortString { SHORT_STRING_FLAG, {} })
+    {
+    }
+
     StringBase(StringBase const&);
 
     constexpr StringBase(StringBase&& other)
@@ -54,6 +60,7 @@ public:
     // Returns the underlying UTF-8 encoded bytes.
     // NOTE: There is no guarantee about null-termination.
     [[nodiscard]] ReadonlyBytes bytes() const;
+    [[nodiscard]] u32 hash() const;
 
     [[nodiscard]] bool operator==(StringBase const&) const;
 
