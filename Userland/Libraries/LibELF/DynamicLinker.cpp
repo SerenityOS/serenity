@@ -680,7 +680,31 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
         fflush(stderr);
         _exit(1);
     }
-    (void)result1.release_value();
+
+    auto loader = result1.release_value();
+    size_t needed_dependencies = 0;
+    loader->for_each_needed_library([&needed_dependencies](auto) {
+        needed_dependencies++;
+    });
+    bool has_interpreter = false;
+    loader->image().for_each_program_header([&has_interpreter](const ELF::Image::ProgramHeader& program_header) {
+        if (program_header.type() == PT_INTERP)
+            has_interpreter = true;
+    });
+    // NOTE: Refuse to run a program if it has a dynamic section,
+    // it is pie, and does not have an interpreter or needed libraries
+    // which is also called "static-pie". These binaries are probably
+    // some sort of ELF packers or dynamic loaders, and there's no added
+    // value in trying to run them, as they will probably crash due to trying
+    // to invoke syscalls from a non-syscall memory executable (code) region.
+    if (loader->is_dynamic() && (!has_interpreter || needed_dependencies == 0) && loader->dynamic_object().is_pie()) {
+        char const message[] = R"(error: the dynamic loader can't reasonably run static-pie ELF. static-pie ELFs might run executable code that invokes syscalls
+outside of the defined syscall memory executable (code) region security measure we implement.
+Examples of static-pie ELF objects are ELF packers, and the system dynamic loader itself.)";
+        fprintf(stderr, "%s", message);
+        fflush(stderr);
+        _exit(1);
+    }
 
     auto result2 = map_dependencies(main_program_path);
     if (result2.is_error()) {
