@@ -137,7 +137,7 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
         Assembler::Operand::Imm(48));
 
     // if (dst != BOOLEAN_TAG) goto slow_case;
-    auto slow_case = m_assembler.make_label();
+    Assembler::Label slow_case {};
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(dst),
         Assembler::Operand::Imm(BOOLEAN_TAG),
@@ -220,7 +220,7 @@ void Compiler::branch_if_int32(Assembler::Reg reg, Codegen codegen)
     m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(reg));
     m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
 
-    auto not_int32_case = m_assembler.make_label();
+    Assembler::Label not_int32_case {};
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm(INT32_TAG),
@@ -242,7 +242,7 @@ void Compiler::branch_if_both_int32(Assembler::Reg lhs, Assembler::Reg rhs, Code
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Register(rhs));
     m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(48));
 
-    auto not_int32_case = m_assembler.make_label();
+    Assembler::Label not_int32_case {};
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm(INT32_TAG),
@@ -261,8 +261,8 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
 {
     load_vm_register(ARG1, Bytecode::Register::accumulator());
 
-    auto end = m_assembler.make_label();
-    auto slow_case = m_assembler.make_label();
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
 
     branch_if_int32(ARG1, [&] {
         // GPR0 = ARG1 & 0xffffffff;
@@ -328,7 +328,7 @@ void Compiler::check_exception()
     // We have an exception!
 
     // if (!unwind_context.valid) return;
-    auto handle_exception = m_assembler.make_label();
+    Assembler::Label handle_exception {};
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
@@ -347,7 +347,7 @@ void Compiler::check_exception()
     //     exception = Value();
     //     goto handler;
     // }
-    auto no_handler = m_assembler.make_label();
+    Assembler::Label no_handler {};
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 8));
@@ -367,7 +367,7 @@ void Compiler::check_exception()
     no_handler.link(m_assembler);
 
     // if (unwind_context.finalizer) goto finalizer;
-    auto no_finalizer = m_assembler.make_label();
+    Assembler::Label no_finalizer {};
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 16));
@@ -505,13 +505,13 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
     load_vm_register(ARG1, op.lhs());
     load_vm_register(ARG2, Bytecode::Register::accumulator());
 
-    auto end = m_assembler.make_label();
+    Assembler::Label end {};
 
     branch_if_both_int32(ARG1, ARG2, [&] {
         // if (ARG1 < ARG2) return true;
         // else return false;
 
-        auto true_case = m_assembler.make_label();
+        Assembler::Label true_case {};
 
         m_assembler.sign_extend_32_to_64_bits(ARG1);
         m_assembler.sign_extend_32_to_64_bits(ARG2);
@@ -575,7 +575,7 @@ void Compiler::compile_return(Bytecode::Op::Return const&)
 
     // check for finalizer
     // if (!unwind_context.valid) goto normal_return;
-    auto normal_return = m_assembler.make_label();
+    Assembler::Label normal_return {};
     m_assembler.mov(
         Assembler::Operand::Register(GPR1),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
@@ -831,7 +831,7 @@ void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding con
         Assembler::Operand::Register(GPR1),
         Assembler::Operand::Imm(Value().encoded()));
 
-    auto slow_case = m_assembler.make_label();
+    Assembler::Label slow_case {};
     m_assembler.jump_if_equal(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Register(GPR1),

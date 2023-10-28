@@ -254,17 +254,12 @@ struct Assembler {
         }
     };
 
-    [[nodiscard]] Label make_label()
-    {
-        return Label {};
-    }
-
     [[nodiscard]] Label jump()
     {
         // jmp target (RIP-relative 32-bit offset)
         emit8(0xe9);
         emit32(0xdeadbeef);
-        auto label = make_label();
+        Assembler::Label label {};
         label.add_jump(*this, m_output.size());
         return label;
     }
