@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,8 +9,14 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/Vector.h>
+#include <LibJS/Module.h>
 
 namespace JS {
+
+struct ModuleWithSpecifier {
+    DeprecatedString specifier;  // [[Specifier]]
+    NonnullGCPtr<Module> module; // [[Module]]
+};
 
 // 2.9 ModuleRequest Records, https://tc39.es/proposal-import-assertions/#sec-modulerequest-record
 struct ModuleRequest {
