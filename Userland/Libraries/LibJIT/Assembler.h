@@ -456,7 +456,6 @@ struct Assembler {
 
         push(Operand::Register(Reg::RBP));
         mov(Operand::Register(Reg::RBP), Operand::Register(Reg::RSP));
-        sub(Operand::Register(Reg::RSP), Operand::Imm(8));
     }
 
     void exit()
@@ -578,18 +577,12 @@ struct Assembler {
         push(Operand::Register(Reg::R10));
         push(Operand::Register(Reg::R11));
 
-        // align the stack to 16-byte boundary
-        sub(Operand::Register(Reg::RSP), Operand::Imm(8));
-
         // load callee into RAX
         mov(Operand::Register(Reg::RAX), Operand::Imm(bit_cast<u64>(callee)));
 
         // call RAX
         emit8(0xff);
         emit8(0xd0);
-
-        // adjust stack pointer
-        add(Operand::Register(Reg::RSP), Operand::Imm(8));
 
         // restore caller-saved registers from the stack
         pop(Operand::Register(Reg::R11));
