@@ -458,6 +458,10 @@
 #    cmakedefine01 TEXTEDITOR_DEBUG
 #endif
 
+#ifndef TIFF_DEBUG
+#    cmakedefine01 TIFF_DEBUG
+#endif
+
 #ifndef TIME_ZONE_DEBUG
 #    cmakedefine01 TIME_ZONE_DEBUG
 #endif
