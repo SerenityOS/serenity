@@ -325,8 +325,7 @@ void Compiler::check_exception()
     m_assembler.jump_if_not_equal(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Register(GPR1),
-        m_exception_handler
-    );
+        m_exception_handler);
 }
 
 void Compiler::handle_exception()
