@@ -319,14 +319,18 @@ void Compiler::compile_decrement(Bytecode::Op::Decrement const&)
 
 void Compiler::check_exception()
 {
-    // if (exception.is_empty()) goto no_exception;
+    // if (!exception.is_empty()) goto m_exception_handler;
     load_vm_register(GPR0, Bytecode::Register::exception());
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
-    auto no_exception = m_assembler.make_label();
-    m_assembler.jump_if_equal(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(GPR1), no_exception);
+    m_assembler.jump_if_not_equal(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(GPR1),
+        m_exception_handler
+    );
+}
 
-    // We have an exception!
-
+void Compiler::handle_exception()
+{
     // if (!unwind_context.valid) return;
     Assembler::Label handle_exception {};
     m_assembler.mov(
@@ -382,9 +386,6 @@ void Compiler::check_exception()
     // NOTE: No catch and no finally!? Crash.
     no_finalizer.link(m_assembler);
     m_assembler.verify_not_reached();
-
-    // no_exception:
-    no_exception.link(m_assembler);
 }
 
 void Compiler::push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer)
@@ -1218,6 +1219,11 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 
     compiler.m_exit_label.link(compiler.m_assembler);
     compiler.m_assembler.exit();
+
+    if (!compiler.m_exception_handler.jump_slot_offsets_in_instruction_stream.is_empty()) {
+        compiler.m_exception_handler.link(compiler.m_assembler);
+        compiler.handle_exception();
+    }
 
     auto* executable_memory = mmap(nullptr, compiler.m_output.size(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     if (executable_memory == MAP_FAILED) {
