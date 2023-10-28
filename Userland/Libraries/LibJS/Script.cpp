@@ -45,6 +45,8 @@ void Script::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_realm);
     if (m_host_defined)
         m_host_defined->visit_host_defined_self(visitor);
+    for (auto const& loaded_module : m_loaded_modules)
+        visitor.visit(loaded_module.module);
 }
 
 }

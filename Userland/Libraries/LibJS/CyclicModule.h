@@ -33,6 +33,7 @@ public:
     virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) override final;
 
     Vector<ModuleRequest> const& requested_modules() const { return m_requested_modules; }
+    Vector<ModuleWithSpecifier> const& loaded_modules() const { return m_loaded_modules; }
 
 protected:
     CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<ModuleRequest> requested_modules, Script::HostDefined* host_defined);
@@ -55,6 +56,7 @@ protected:
     Optional<u32> m_dfs_index;                          // [[DFSIndex]]
     Optional<u32> m_dfs_ancestor_index;                 // [[DFSAncestorIndex]]
     Vector<ModuleRequest> m_requested_modules;          // [[RequestedModules]]
+    Vector<ModuleWithSpecifier> m_loaded_modules;       // [[LoadedModules]]
     GCPtr<CyclicModule> m_cycle_root;                   // [[CycleRoot]]
     bool m_has_top_level_await { false };               // [[HasTLA]]
     bool m_async_evaluation { false };                  // [[AsyncEvaluation]]

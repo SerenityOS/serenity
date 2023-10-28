@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +29,8 @@ void CyclicModule::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_top_level_capability);
     for (auto const& module : m_async_parent_modules)
         visitor.visit(module);
+    for (auto const& loaded_module : m_loaded_modules)
+        visitor.visit(loaded_module.module);
 }
 
 // 16.2.1.5.1 Link ( ), https://tc39.es/ecma262/#sec-moduledeclarationlinking
