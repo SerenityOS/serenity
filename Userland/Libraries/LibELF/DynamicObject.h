@@ -254,6 +254,8 @@ public:
     InitializationFunction init_section_function() const;
     Section init_array_section() const;
 
+    bool is_pie() const { return m_is_pie; }
+
     bool has_fini_section() const { return m_fini_offset != 0; }
     bool has_fini_array_section() const { return m_fini_array_offset != 0; }
     Section fini_section() const;
@@ -377,6 +379,8 @@ private:
     size_t m_size_of_relr_relocation_table { 0 };
     FlatPtr m_relr_relocation_table_offset { 0 };
     bool m_is_elf_dynamic { false };
+
+    bool m_is_pie { false };
 
     // DT_FLAGS
     ElfW(Word) m_dt_flags { 0 };

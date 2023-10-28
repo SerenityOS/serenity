@@ -183,6 +183,7 @@ void DynamicObject::parse()
         case DT_DEBUG:
             break;
         case DT_FLAGS_1:
+            m_is_pie = true;
             break;
         case DT_NEEDED:
             // We handle these in for_each_needed_library
