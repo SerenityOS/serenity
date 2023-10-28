@@ -22,7 +22,6 @@ public:
     virtual IntSize size() override;
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
-    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
     ICOImageDecoderPlugin(u8 const*, size_t);

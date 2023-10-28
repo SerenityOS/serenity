@@ -61,7 +61,6 @@ public:
     virtual IntSize size() override;
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
-    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
     PortableImageDecoderPlugin(NonnullOwnPtr<SeekableStream> stream);
@@ -124,12 +123,6 @@ ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t
 
     VERIFY(m_context->bitmap);
     return ImageFrameDescriptor { m_context->bitmap, 0 };
-}
-
-template<typename TContext>
-ErrorOr<Optional<ReadonlyBytes>> PortableImageDecoderPlugin<TContext>::icc_data()
-{
-    return OptionalNone {};
 }
 
 }
