@@ -178,15 +178,6 @@ public:
         return builder.to_string();
     }
 
-    [[nodiscard]] static String fly_string_data_to_string(Badge<FlyString>, uintptr_t const&);
-    [[nodiscard]] static StringView fly_string_data_to_string_view(Badge<FlyString>, uintptr_t const&);
-    [[nodiscard]] static u32 fly_string_data_to_hash(Badge<FlyString>, uintptr_t const&);
-    [[nodiscard]] uintptr_t to_fly_string_data(Badge<FlyString>) const;
-
-    static void ref_fly_string_data(Badge<FlyString>, uintptr_t);
-    static void unref_fly_string_data(Badge<FlyString>, uintptr_t);
-    void did_create_fly_string(Badge<FlyString>) const;
-
     // FIXME: Remove these once all code has been ported to String
     [[nodiscard]] ByteString to_byte_string() const;
     static ErrorOr<String> from_byte_string(ByteString const&);
@@ -195,6 +186,8 @@ public:
     static ErrorOr<String> from_byte_string(T&&) = delete;
 
 private:
+    friend FlyString;
+
     using ShortString = Detail::ShortString;
 
     explicit constexpr String(StringBase&& base)

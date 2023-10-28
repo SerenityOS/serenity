@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Badge.h>
 #include <AK/StringBase.h>
 #include <AK/StringInternals.h>
 
@@ -81,7 +82,17 @@ bool StringBase::operator==(StringBase const& other) const
 {
     if (is_short_string())
         return m_data == other.m_data;
+    if (other.is_short_string())
+        return false;
+    if (m_data->is_fly_string() && other.m_data->is_fly_string())
+        return m_data == other.m_data;
     return bytes() == other.bytes();
+}
+
+void StringBase::did_create_fly_string(Badge<FlyString>) const
+{
+    VERIFY(!is_short_string());
+    m_data->set_fly_string(true);
 }
 
 ErrorOr<Bytes> StringBase::replace_with_uninitialized_buffer(size_t byte_count)

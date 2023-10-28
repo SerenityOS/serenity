@@ -68,14 +68,11 @@ public:
 
     [[nodiscard]] bool operator==(StringBase const&) const;
 
+    void did_create_fly_string(Badge<FlyString>) const;
+
 protected:
     // NOTE: If the least significant bit of the pointer is set, this is a short string.
     static constexpr uintptr_t SHORT_STRING_FLAG = 1;
-
-    static constexpr bool has_short_string_bit(uintptr_t data)
-    {
-        return (data & SHORT_STRING_FLAG) != 0;
-    }
 
     explicit StringBase(NonnullRefPtr<Detail::StringData const>);
 
