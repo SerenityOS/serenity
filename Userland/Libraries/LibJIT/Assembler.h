@@ -499,9 +499,15 @@ struct Assembler {
                 emit8(0x49);
             emit8(0x50 | encode_reg(op.reg));
         } else if (op.type == Operand::Type::Imm) {
-            VERIFY(op.fits_in_i32());
-            emit8(0x68);
-            emit32(op.offset_or_immediate);
+            if (op.fits_in_i8()) {
+                emit8(0x6a);
+                emit8(op.offset_or_immediate);
+            } else if (op.fits_in_i32()) {
+                emit8(0x68);
+                emit32(op.offset_or_immediate);
+            } else {
+                VERIFY_NOT_REACHED();
+            }
         } else {
             VERIFY_NOT_REACHED();
         }
