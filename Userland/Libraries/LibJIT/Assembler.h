@@ -564,7 +564,7 @@ struct Assembler {
         }
     }
 
-    void native_call(void* callee)
+    void native_call(void* callee, Vector<Operand> const& stack_arguments = {})
     {
         // push caller-saved registers on the stack
         // (callee-saved registers: RBX, RSP, RBP, and R12–R15)
@@ -577,12 +577,21 @@ struct Assembler {
         push(Operand::Register(Reg::R10));
         push(Operand::Register(Reg::R11));
 
+        // Preserve 16-byte stack alignment for non-even amount of stack-passed arguments
+        if ((stack_arguments.size() % 2) == 1)
+            push(Operand::Imm(0));
+        for (auto const& stack_argument : stack_arguments.in_reverse())
+            push(stack_argument);
+
         // load callee into RAX
         mov(Operand::Register(Reg::RAX), Operand::Imm(bit_cast<u64>(callee)));
 
         // call RAX
         emit8(0xff);
         emit8(0xd0);
+
+        if (!stack_arguments.is_empty())
+            add(Operand::Register(Reg::RSP), Operand::Imm(align_up_to(stack_arguments.size(), 2) * sizeof(void*)));
 
         // restore caller-saved registers from the stack
         pop(Operand::Register(Reg::R11));
