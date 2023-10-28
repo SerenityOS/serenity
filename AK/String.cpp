@@ -323,15 +323,6 @@ bool String::operator==(char const* c_string) const
     return bytes_as_string_view() == c_string;
 }
 
-u32 String::hash() const
-{
-    if (is_short_string()) {
-        auto bytes = this->bytes();
-        return string_hash(reinterpret_cast<char const*>(bytes.data()), bytes.size());
-    }
-    return m_data->hash();
-}
-
 u32 String::ascii_case_insensitive_hash() const
 {
     return case_insensitive_string_hash(reinterpret_cast<char const*>(bytes().data()), bytes().size());

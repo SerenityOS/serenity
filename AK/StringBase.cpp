@@ -66,6 +66,15 @@ ReadonlyBytes StringBase::bytes() const
     return m_data->bytes();
 }
 
+u32 StringBase::hash() const
+{
+    if (is_short_string()) {
+        auto bytes = this->bytes();
+        return string_hash(reinterpret_cast<char const*>(bytes.data()), bytes.size());
+    }
+    return m_data->hash();
+}
+
 bool StringBase::operator==(StringBase const& other) const
 {
     if (is_short_string())

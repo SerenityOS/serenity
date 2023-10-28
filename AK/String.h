@@ -48,12 +48,6 @@ public:
 
     using StringBase::StringBase;
 
-    // Creates an empty (zero-length) String.
-    constexpr String()
-        : StringBase(ShortString { SHORT_STRING_FLAG, {} })
-    {
-    }
-
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
     template<typename T>
@@ -153,7 +147,6 @@ public:
     [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool contains(u32, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 
-    [[nodiscard]] u32 hash() const;
     [[nodiscard]] u32 ascii_case_insensitive_hash() const;
 
     template<Arithmetic T>
