@@ -122,49 +122,6 @@ void StringData::compute_hash() const
 
 }
 
-String::String(NonnullRefPtr<Detail::StringData const> data)
-    : m_data(&data.leak_ref())
-{
-}
-
-String::String(String const& other)
-    : m_data(other.m_data)
-{
-    if (!is_short_string())
-        m_data->ref();
-}
-
-String::String(String&& other)
-    : m_data(exchange(other.m_data, nullptr))
-{
-    other.m_short_string.byte_count_and_short_string_flag = SHORT_STRING_FLAG;
-}
-
-String& String::operator=(String&& other)
-{
-    if (!is_short_string())
-        m_data->unref();
-
-    m_data = exchange(other.m_data, nullptr);
-    other.m_short_string.byte_count_and_short_string_flag = SHORT_STRING_FLAG;
-    return *this;
-}
-
-String& String::operator=(String const& other)
-{
-    if (&other != this) {
-        if (!is_short_string())
-            m_data->unref();
-
-        m_data = other.m_data;
-
-        if (!is_short_string())
-            m_data->ref();
-    }
-
-    return *this;
-}
-
 void String::destroy_string()
 {
     if (!is_short_string())
@@ -489,21 +446,6 @@ bool String::ends_with(u32 code_point) const
 bool String::ends_with_bytes(StringView bytes, CaseSensitivity case_sensitivity) const
 {
     return bytes_as_string_view().ends_with(bytes, case_sensitivity);
-}
-
-bool String::is_short_string() const
-{
-    return has_short_string_bit(reinterpret_cast<uintptr_t>(m_data));
-}
-
-ReadonlyBytes String::ShortString::bytes() const
-{
-    return { storage, byte_count() };
-}
-
-size_t String::ShortString::byte_count() const
-{
-    return byte_count_and_short_string_flag >> 1;
 }
 
 unsigned Traits<String>::hash(String const& string)
