@@ -12,6 +12,19 @@
 
 namespace AK::UnicodeUtils {
 
+constexpr int bytes_to_store_code_point_in_utf8(u32 code_point)
+{
+    if (code_point <= 0x7f)
+        return 1;
+    if (code_point <= 0x7ff)
+        return 2;
+    if (code_point <= 0xffff)
+        return 3;
+    if (code_point <= 0x10ffff)
+        return 4;
+    return 0;
+}
+
 template<typename Callback>
 [[nodiscard]] constexpr int code_point_to_utf8(u32 code_point, Callback callback)
 {
