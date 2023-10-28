@@ -337,7 +337,7 @@ void Compiler::check_exception()
         Assembler::Operand::Imm(0),
         handle_exception);
 
-    m_assembler.exit();
+    jump_to_exit();
 
     // handle_exception:
     handle_exception.link(m_assembler);
@@ -593,7 +593,7 @@ void Compiler::compile_return(Bytecode::Op::Return const&)
     // normal_return:
     normal_return.link(m_assembler);
     store_vm_register(Bytecode::Register::return_value(), GPR0);
-    m_assembler.exit();
+    jump_to_exit();
 }
 
 static Value cxx_new_string(VM& vm, DeprecatedString const& string)
@@ -971,7 +971,7 @@ void Compiler::compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwi
 
     // finish the pending return from the try block
     store_vm_register(Bytecode::Register::return_value(), GPR0);
-    m_assembler.exit();
+    jump_to_exit();
 }
 
 static void cxx_create_lexical_environment(VM& vm)
@@ -997,6 +997,11 @@ static void cxx_leave_lexical_environment(VM& vm)
 void Compiler::compile_leave_lexical_environment(Bytecode::Op::LeaveLexicalEnvironment const&)
 {
     m_assembler.native_call((void*)cxx_leave_lexical_environment);
+}
+
+void Compiler::jump_to_exit()
+{
+    m_assembler.jump(m_exit_label);
 }
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
@@ -1158,8 +1163,11 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
             ++it;
         }
         if (!block->is_terminated())
-            compiler.m_assembler.exit();
+            compiler.jump_to_exit();
     }
+
+    compiler.m_exit_label.link(compiler.m_assembler);
+    compiler.m_assembler.exit();
 
     auto* executable_memory = mmap(nullptr, compiler.m_output.size(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     if (executable_memory == MAP_FAILED) {

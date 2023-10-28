@@ -127,6 +127,8 @@ private:
     void push_unwind_context(bool valid, Optional<Bytecode::Label> const& handler, Optional<Bytecode::Label> const& finalizer);
     void pop_unwind_context();
 
+    void jump_to_exit();
+
     template<typename Codegen>
     void branch_if_int32(Assembler::Reg, Codegen);
 
@@ -160,6 +162,7 @@ private:
 
     Vector<u8> m_output;
     Assembler m_assembler { m_output };
+    Assembler::Label m_exit_label;
     Bytecode::Executable& m_bytecode_executable;
 };
 
