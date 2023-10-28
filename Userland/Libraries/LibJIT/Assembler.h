@@ -115,6 +115,17 @@ struct Assembler {
         emit8(count.offset_or_immediate);
     }
 
+    void shift_left(Operand dst, Operand count)
+    {
+        VERIFY(dst.type == Operand::Type::Reg);
+        VERIFY(count.type == Operand::Type::Imm);
+        VERIFY(count.fits_in_u8());
+        emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+        emit8(0xc1);
+        emit8(0xf0 | encode_reg(dst.reg));
+        emit8(count.offset_or_immediate);
+    }
+
     enum class Patchable {
         Yes,
         No,
