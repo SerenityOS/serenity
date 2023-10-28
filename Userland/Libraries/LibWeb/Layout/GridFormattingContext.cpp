@@ -1673,17 +1673,32 @@ void GridFormattingContext::resolve_grid_item_heights()
         auto const& computed_values = item.box->computed_values();
         auto const& computed_height = computed_values.height();
 
-        auto try_compute_height = [&](CSSPixels a_height) {
+        struct ItemAlignment {
+            CSSPixels margin_top;
+            CSSPixels margin_bottom;
+            CSSPixels height;
+        };
+
+        ItemAlignment initial {
+            .margin_top = box_state.margin_top,
+            .margin_bottom = box_state.margin_bottom,
+            .height = box_state.content_height()
+        };
+
+        auto try_compute_height = [&](CSSPixels a_height) -> ItemAlignment {
+            ItemAlignment result = initial;
+            result.height = a_height;
+
             CSSPixels height = a_height;
             auto underflow_px = containing_block_height - height - box_state.border_top - box_state.border_bottom - box_state.padding_top - box_state.padding_bottom - box_state.margin_top - box_state.margin_bottom;
             if (computed_values.margin().top().is_auto() && computed_values.margin().bottom().is_auto()) {
                 auto half_of_the_underflow = underflow_px / 2;
-                box_state.margin_top = half_of_the_underflow;
-                box_state.margin_bottom = half_of_the_underflow;
+                result.margin_top = half_of_the_underflow;
+                result.margin_bottom = half_of_the_underflow;
             } else if (computed_values.margin().top().is_auto()) {
-                box_state.margin_top = underflow_px;
+                result.margin_top = underflow_px;
             } else if (computed_values.margin().bottom().is_auto()) {
-                box_state.margin_bottom = underflow_px;
+                result.margin_bottom = underflow_px;
             } else if (computed_values.height().is_auto()) {
                 height += underflow_px;
             }
@@ -1693,37 +1708,55 @@ void GridFormattingContext::resolve_grid_item_heights()
                 // FIXME: Not implemented
             case CSS::AlignItems::Stretch:
             case CSS::AlignItems::Normal:
+                result.height = height;
                 break;
             case CSS::AlignItems::Start:
             case CSS::AlignItems::FlexStart:
             case CSS::AlignItems::SelfStart:
-                box_state.margin_bottom += underflow_px;
-                return a_height;
+                result.margin_bottom += underflow_px;
+                break;
             case CSS::AlignItems::End:
             case CSS::AlignItems::SelfEnd:
             case CSS::AlignItems::FlexEnd:
-                box_state.margin_top += underflow_px;
-                return a_height;
+                result.margin_top += underflow_px;
+                break;
             case CSS::AlignItems::Center:
-                box_state.margin_top += underflow_px / 2;
-                box_state.margin_bottom += underflow_px / 2;
-                return a_height;
+                result.margin_top += underflow_px / 2;
+                result.margin_bottom += underflow_px / 2;
+                break;
             default:
                 break;
             }
 
-            return height;
+            return result;
         };
 
-        CSSPixels used_height;
+        ItemAlignment used_alignment;
         if (computed_height.is_auto()) {
-            used_height = try_compute_height(calculate_fit_content_height(item.box, get_available_space_for_item(item)));
+            used_alignment = try_compute_height(calculate_fit_content_height(item.box, get_available_space_for_item(item)));
         } else if (computed_height.is_fit_content()) {
-            used_height = try_compute_height(calculate_fit_content_height(item.box, get_available_space_for_item(item)));
+            used_alignment = try_compute_height(calculate_fit_content_height(item.box, get_available_space_for_item(item)));
         } else {
-            used_height = try_compute_height(computed_height.to_px(grid_container(), containing_block_height));
+            used_alignment = try_compute_height(computed_height.to_px(grid_container(), containing_block_height));
         }
-        box_state.set_content_height(used_height);
+
+        if (!should_treat_max_height_as_none(item.box, m_available_space->height)) {
+            auto max_height_alignment = try_compute_height(computed_values.max_height().to_px(grid_container(), containing_block_height));
+            if (used_alignment.height > max_height_alignment.height) {
+                used_alignment = max_height_alignment;
+            }
+        }
+
+        if (!computed_values.min_height().is_auto()) {
+            auto min_height_alignment = try_compute_height(computed_values.min_height().to_px(grid_container(), containing_block_height));
+            if (used_alignment.height < min_height_alignment.height) {
+                used_alignment = min_height_alignment;
+            }
+        }
+
+        box_state.margin_top = used_alignment.margin_top;
+        box_state.margin_bottom = used_alignment.margin_bottom;
+        box_state.set_content_height(used_alignment.height);
     }
 }
 
@@ -2185,6 +2218,20 @@ AvailableSpace GridFormattingContext::get_available_space_for_item(GridItem cons
     return AvailableSpace(available_width, available_height);
 }
 
+static CSS::Size const& get_item_minimum_size(GridItem const& item, GridDimension const dimension)
+{
+    if (dimension == GridDimension::Column)
+        return item.box->computed_values().min_width();
+    return item.box->computed_values().min_height();
+}
+
+static CSS::Size const& get_item_maximum_size(GridItem const& item, GridDimension const dimension)
+{
+    if (dimension == GridDimension::Column)
+        return item.box->computed_values().max_width();
+    return item.box->computed_values().max_height();
+}
+
 CSSPixels GridFormattingContext::calculate_min_content_contribution(GridItem const& item, GridDimension const dimension) const
 {
     auto available_space_for_item = get_available_space_for_item(item);
@@ -2195,13 +2242,20 @@ CSSPixels GridFormattingContext::calculate_min_content_contribution(GridItem con
         return should_treat_height_as_auto(item.box, available_space_for_item);
     }();
 
+    auto maxium_size = CSSPixels::max();
+    if (auto const& css_maximum_size = get_item_maximum_size(item, dimension); css_maximum_size.is_length()) {
+        maxium_size = css_maximum_size.length().to_px(item.box);
+    }
+
     if (should_treat_preferred_size_as_auto) {
-        return item.add_margin_box_sizes(calculate_min_content_size(item, dimension), dimension, m_state);
+        auto result = item.add_margin_box_sizes(calculate_min_content_size(item, dimension), dimension, m_state);
+        return min(result, maxium_size);
     }
 
     auto preferred_size = get_item_preferred_size(item, dimension);
     auto containing_block_size = containing_block_size_for_item(item, dimension);
-    return item.add_margin_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
+    auto result = item.add_margin_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
+    return min(result, maxium_size);
 }
 
 CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem const& item, GridDimension const dimension) const
@@ -2214,14 +2268,21 @@ CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem con
         return should_treat_height_as_auto(item.box, available_space_for_item);
     }();
 
+    auto maxium_size = CSSPixels::max();
+    if (auto const& css_maximum_size = get_item_maximum_size(item, dimension); css_maximum_size.is_length()) {
+        maxium_size = css_maximum_size.length().to_px(item.box);
+    }
+
     auto preferred_size = get_item_preferred_size(item, dimension);
     if (should_treat_preferred_size_as_auto || preferred_size.is_fit_content()) {
         auto fit_content_size = dimension == GridDimension::Column ? calculate_fit_content_width(item.box, available_space_for_item) : calculate_fit_content_height(item.box, available_space_for_item);
-        return item.add_margin_box_sizes(fit_content_size, dimension, m_state);
+        auto result = item.add_margin_box_sizes(fit_content_size, dimension, m_state);
+        return min(result, maxium_size);
     }
 
     auto containing_block_size = containing_block_size_for_item(item, dimension);
-    return item.add_margin_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
+    auto result = item.add_margin_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
+    return min(result, maxium_size);
 }
 
 CSSPixels GridFormattingContext::calculate_limited_min_content_contribution(GridItem const& item, GridDimension const dimension) const
@@ -2248,13 +2309,6 @@ CSSPixels GridFormattingContext::calculate_limited_max_content_contribution(Grid
     if (max_content_contribution < minimum_contribution)
         return minimum_contribution;
     return max_content_contribution;
-}
-
-CSS::Size const& GridFormattingContext::get_item_minimum_size(GridItem const& item, GridDimension const dimension) const
-{
-    if (dimension == GridDimension::Column)
-        return item.box->computed_values().min_width();
-    return item.box->computed_values().min_height();
 }
 
 CSSPixels GridFormattingContext::content_size_suggestion(GridItem const& item, GridDimension const dimension) const
@@ -2284,13 +2338,21 @@ Optional<CSSPixels> GridFormattingContext::specified_size_suggestion(GridItem co
 CSSPixels GridFormattingContext::content_based_minimum_size(GridItem const& item, GridDimension const dimension) const
 {
     // https://www.w3.org/TR/css-grid-1/#content-based-minimum-size
-    // The content-based minimum size for a grid item in a given dimension is its specified size suggestion if it exists
-    if (auto specified_size_suggestion = this->specified_size_suggestion(item, dimension); specified_size_suggestion.has_value()) {
-        return specified_size_suggestion.value();
+    // The content-based minimum size for a grid item in a given dimension is its specified size suggestion if it exists,
+    // otherwise its transferred size suggestion if that exists,
+    // else its content size suggestion, see below.
+    // In all cases, the size suggestion is additionally clamped by the maximum size in the affected axis, if it’s definite.
+
+    auto maximum_size = CSSPixels::max();
+    if (auto const& css_maximum_size = get_item_maximum_size(item, dimension); css_maximum_size.is_length()) {
+        maximum_size = css_maximum_size.length().to_px(item.box);
     }
-    // FIXME: otherwise its transferred size suggestion if that exists
-    // else its content size suggestion
-    return content_size_suggestion(item, dimension);
+
+    if (auto specified_size_suggestion = this->specified_size_suggestion(item, dimension); specified_size_suggestion.has_value()) {
+        return min(specified_size_suggestion.value(), maximum_size);
+    }
+
+    return min(content_size_suggestion(item, dimension), maximum_size);
 }
 
 CSSPixels GridFormattingContext::automatic_minimum_size(GridItem const& item, GridDimension const dimension) const
