@@ -99,6 +99,7 @@ private:
     void compile_new_array(Bytecode::Op::NewArray const&);
     void compile_new_function(Bytecode::Op::NewFunction const&);
     void compile_new_regexp(Bytecode::Op::NewRegExp const&);
+    void compile_new_bigint(Bytecode::Op::NewBigInt const&);
 
     void compile_get_by_id(Bytecode::Op::GetById const&);
     void compile_get_by_value(Bytecode::Op::GetByValue const&);
