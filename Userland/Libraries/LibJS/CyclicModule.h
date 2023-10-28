@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,7 @@
 namespace JS {
 
 enum class ModuleStatus {
+    New,
     Unlinked,
     Linking,
     Linked,
