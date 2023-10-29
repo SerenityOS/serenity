@@ -544,4 +544,27 @@ IteratorRecord object_to_iterator(VM& vm, Object& object)
     };
 }
 
+ThrowCompletionOr<NonnullGCPtr<Array>> iterator_to_array(VM& vm, Value iterator)
+{
+    auto iterator_object = TRY(iterator.to_object(vm));
+    auto iterator_record = object_to_iterator(vm, iterator_object);
+
+    auto array = MUST(Array::create(*vm.current_realm(), 0));
+    size_t index = 0;
+
+    while (true) {
+        auto iterator_result = TRY(iterator_next(vm, iterator_record));
+
+        auto complete = TRY(iterator_complete(vm, iterator_result));
+
+        if (complete)
+            return array;
+
+        auto value = TRY(iterator_value(vm, iterator_result));
+
+        MUST(array->create_data_property_or_throw(index, value));
+        index++;
+    }
+}
+
 }

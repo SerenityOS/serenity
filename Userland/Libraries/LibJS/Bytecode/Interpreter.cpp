@@ -647,28 +647,7 @@ ThrowCompletionOr<void> ImportCall::execute_impl(Bytecode::Interpreter& interpre
 
 ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
-    auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(vm, iterator_object);
-
-    auto array = MUST(Array::create(interpreter.realm(), 0));
-    size_t index = 0;
-
-    while (true) {
-        auto iterator_result = TRY(iterator_next(vm, iterator));
-
-        auto complete = TRY(iterator_complete(vm, iterator_result));
-
-        if (complete) {
-            interpreter.accumulator() = array;
-            return {};
-        }
-
-        auto value = TRY(iterator_value(vm, iterator_result));
-
-        MUST(array->create_data_property_or_throw(index, value));
-        index++;
-    }
+    interpreter.accumulator() = TRY(iterator_to_array(interpreter.vm(), interpreter.accumulator()));
     return {};
 }
 
