@@ -32,6 +32,21 @@ OnFetchScriptComplete create_on_fetch_script_complete(JS::Heap& heap, Function<v
     return JS::create_heap_function(heap, move(function));
 }
 
+ScriptFetchOptions default_classic_script_fetch_options()
+{
+    // The default classic script fetch options are a script fetch options whose cryptographic nonce is the empty string,
+    // integrity metadata is the empty string, parser metadata is "not-parser-inserted", credentials mode is "same-origin",
+    // referrer policy is the empty string, and fetch priority is "auto".
+    return ScriptFetchOptions {
+        .cryptographic_nonce = {},
+        .integrity_metadata = {},
+        .parser_metadata = Fetch::Infrastructure::Request::ParserMetadata::NotParserInserted,
+        .credentials_mode = Fetch::Infrastructure::Request::CredentialsMode::SameOrigin,
+        .referrer_policy = {},
+        .fetch_priority = Fetch::Infrastructure::Request::Priority::Auto
+    };
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#module-type-from-module-request
 DeprecatedString module_type_from_module_request(JS::ModuleRequest const& module_request)
 {
