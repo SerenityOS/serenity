@@ -40,4 +40,8 @@ source_set("Painting") {
     "VideoPaintable.cpp",
     "ViewportPaintable.cpp",
   ]
+  if (current_os == "linux") {
+    sources += [ "PaintingCommandExecutorGPU.cpp" ]
+    public_deps = [ "//Userland/Libraries/LibAccelGfx" ]
+  }
 }
