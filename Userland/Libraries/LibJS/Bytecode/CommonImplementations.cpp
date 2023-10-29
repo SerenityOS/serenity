@@ -535,4 +535,13 @@ Object* iterator_to_object(VM& vm, IteratorRecord iterator)
     return object;
 }
 
+IteratorRecord object_to_iterator(VM& vm, Object& object)
+{
+    return IteratorRecord {
+        .iterator = &MUST(object.get(vm.names.iterator)).as_object(),
+        .next_method = MUST(object.get(vm.names.next)),
+        .done = MUST(object.get(vm.names.done)).as_bool()
+    };
+}
+
 }
