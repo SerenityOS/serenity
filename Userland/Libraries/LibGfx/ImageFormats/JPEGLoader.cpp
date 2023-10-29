@@ -1926,9 +1926,9 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     return {};
 }
 
-JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
+JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<JPEGLoadingContext> context)
+    : m_context(move(context))
 {
-    m_context = JPEGLoadingContext::create(move(stream)).release_value_but_fixme_should_propagate_errors();
 }
 
 JPEGImageDecoderPlugin::~JPEGImageDecoderPlugin() = default;
@@ -1949,7 +1949,8 @@ bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(ReadonlyBytes data)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(stream))));
+    auto context = TRY(JPEGLoadingContext::create(move(stream)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(context))));
     TRY(decode_header(*plugin->m_context));
     return plugin;
 }

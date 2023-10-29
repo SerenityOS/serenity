@@ -28,9 +28,9 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream>);
+    JPEGImageDecoderPlugin(NonnullOwnPtr<JPEGLoadingContext>);
 
-    OwnPtr<JPEGLoadingContext> m_context;
+    NonnullOwnPtr<JPEGLoadingContext> m_context;
 };
 
 }
