@@ -747,6 +747,9 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    Register this_value() const { return m_this_value; }
+    IdentifierTableIndex property() const { return m_property; }
+
 private:
     Register m_this_value;
     IdentifierTableIndex m_property;
