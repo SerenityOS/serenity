@@ -46,6 +46,21 @@ struct ScriptFetchOptions {
 // https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options
 ScriptFetchOptions default_classic_script_fetch_options();
 
+struct FetchContext : JS::GraphLoadingState::HostDefined {
+    FetchContext(JS::GCPtr<JS::Value> parse_error, Fetch::Infrastructure::Request::Destination destination, JS::GCPtr<JS::Promise> perform_fetch, EnvironmentSettingsObject& fetch_client)
+        : parse_error(parse_error)
+        , destination(destination)
+        , perform_fetch(perform_fetch)
+        , fetch_client(fetch_client)
+    {
+    }
+
+    JS::GCPtr<JS::Value> parse_error;                        // [[ParseError]]
+    Fetch::Infrastructure::Request::Destination destination; // [[Destination]]
+    JS::GCPtr<JS::Promise> perform_fetch;                    // [[PerformFetch]]
+    EnvironmentSettingsObject& fetch_client;                 // [[FetchClient]]
+};
+
 DeprecatedString module_type_from_module_request(JS::ModuleRequest const&);
 WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referring_script, DeprecatedString const& specifier);
 WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const&);
