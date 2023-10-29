@@ -1366,6 +1366,21 @@ void Compiler::compile_delete_by_value(Bytecode::Op::DeleteByValue const& op)
     check_exception();
 }
 
+static Value cxx_delete_by_value_with_this(VM& vm, Value base_value, Value property_key_value, Value this_value)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::delete_by_value_with_this(vm.bytecode_interpreter(), base_value, property_key_value, this_value));
+}
+
+void Compiler::compile_delete_by_value_with_this(Bytecode::Op::DeleteByValueWithThis const& op)
+{
+    load_vm_register(ARG1, op.base());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    load_vm_register(ARG3, op.this_value());
+    native_call((void*)cxx_delete_by_value_with_this);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
