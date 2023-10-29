@@ -1241,6 +1241,20 @@ void Compiler::compile_iterator_result_done(Bytecode::Op::IteratorResultDone con
     check_exception();
 }
 
+static Value cxx_throw_if_not_object(VM& vm, Value value)
+{
+    if (!value.is_object())
+        TRY_OR_SET_EXCEPTION(vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects()));
+    return {};
+}
+
+void Compiler::compile_throw_if_not_object(Bytecode::Op::ThrowIfNotObject const&)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    native_call((void*)cxx_throw_if_not_object);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
