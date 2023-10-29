@@ -119,7 +119,8 @@ private:
         O(DeleteById, delete_by_id)                                              \
         O(DeleteByValue, delete_by_value)                                        \
         O(DeleteByValueWithThis, delete_by_value_with_this)                      \
-        O(GetObjectPropertyIterator, get_object_property_iterator)
+        O(GetObjectPropertyIterator, get_object_property_iterator)               \
+        O(GetPrivateById, get_private_by_id)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
