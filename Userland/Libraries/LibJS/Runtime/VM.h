@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,7 @@
 #include <AK/RefCounted.h>
 #include <AK/StackInfo.h>
 #include <AK/Variant.h>
+#include <LibJS/CyclicModule.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/CommonPropertyNames.h>
@@ -221,6 +223,13 @@ public:
     ThrowCompletionOr<void> link_and_eval_module(Badge<Bytecode::Interpreter>, SourceTextModule& module);
 
     ScriptOrModule get_active_script_or_module() const;
+
+    // NOTE: The host defined implementation described in the web spec https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
+    //       currently references proposal-import-attributes.
+    //       Our implementation of this proposal is outdated however, as such we try to adapt the proposal and living standard
+    //       to match our implementation for now.
+    // 16.2.1.8 HostLoadImportedModule ( referrer, moduleRequest, hostDefined, payload ), https://tc39.es/proposal-import-attributes/#sec-HostLoadImportedModule
+    Function<void(Realm&, Variant<NonnullGCPtr<Script>, NonnullGCPtr<CyclicModule>>, ModuleRequest const&, Optional<GraphLoadingState::HostDefined>, GraphLoadingState&)> host_load_imported_module;
 
     Function<ThrowCompletionOr<NonnullGCPtr<Module>>(ScriptOrModule, ModuleRequest const&)> host_resolve_imported_module;
     Function<ThrowCompletionOr<void>(ScriptOrModule, ModuleRequest, PromiseCapability const&)> host_import_module_dynamically;
