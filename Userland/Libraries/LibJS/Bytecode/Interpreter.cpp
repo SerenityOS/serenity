@@ -817,12 +817,8 @@ ThrowCompletionOr<void> PutPrivateById::execute_impl(Bytecode::Interpreter& inte
 
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
     auto base_value = interpreter.accumulator();
-    auto const& identifier = interpreter.current_executable().get_identifier(m_property);
-    bool strict = vm.in_strict_mode();
-    auto reference = Reference { base_value, identifier, {}, strict };
-    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
+    interpreter.accumulator() = TRY(Bytecode::delete_by_id(interpreter, base_value, m_property));
     return {};
 }
 
