@@ -37,6 +37,7 @@ private:
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
+    static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::R13;
 #    endif
 
 #    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
@@ -152,6 +153,11 @@ private:
 
     void store_vm_local(size_t, Assembler::Reg);
     void load_vm_local(Assembler::Reg, size_t);
+
+    void reload_cached_accumulator();
+    void flush_cached_accumulator();
+    void load_accumulator(Assembler::Reg);
+    void store_accumulator(Assembler::Reg);
 
     void compile_to_boolean(Assembler::Reg dst, Assembler::Reg src);
 

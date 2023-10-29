@@ -934,7 +934,7 @@ ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interprete
 {
     auto callee = interpreter.reg(m_callee);
     TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
-    auto argument_values = argument_list_evaluation(interpreter);
+    auto argument_values = argument_list_evaluation(interpreter.vm(), interpreter.accumulator());
     interpreter.accumulator() = TRY(perform_call(interpreter, interpreter.reg(m_this_value), call_type(), callee, move(argument_values)));
     return {};
 }
@@ -1217,7 +1217,7 @@ ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter&
 
 ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(new_class(interpreter.vm(), m_class_expression, m_lhs_name));
+    interpreter.accumulator() = TRY(new_class(interpreter.vm(), interpreter.accumulator(), m_class_expression, m_lhs_name));
     return {};
 }
 
