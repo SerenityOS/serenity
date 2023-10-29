@@ -74,6 +74,7 @@ private:
         O(Jump, jump)                                                            \
         O(JumpConditional, jump_conditional)                                     \
         O(JumpNullish, jump_nullish)                                             \
+        O(JumpUndefined, jump_undefined)                                         \
         O(Increment, increment)                                                  \
         O(Decrement, decrement)                                                  \
         O(EnterUnwindContext, enter_unwind_context)                              \
