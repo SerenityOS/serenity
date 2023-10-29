@@ -1596,6 +1596,28 @@ void Compiler::compile_get_new_target(Bytecode::Op::GetNewTarget const&)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_has_private_id(VM& vm, Value object, DeprecatedFlyString const& identifier)
+{
+    if (!object.is_object())
+        TRY_OR_SET_EXCEPTION(vm.throw_completion<TypeError>(ErrorType::InOperatorWithObject));
+
+    auto private_environment = vm.running_execution_context().private_environment;
+    VERIFY(private_environment);
+    auto private_name = private_environment->resolve_private_identifier(identifier);
+    return Value(object.as_object().private_element_find(private_name) != nullptr);
+}
+
+void Compiler::compile_has_private_id(Bytecode::Op::HasPrivateId const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
+    native_call((void*)cxx_has_private_id);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
