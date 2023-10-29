@@ -399,16 +399,13 @@ Value new_regexp(VM& vm, ParsedRegex const& parsed_regex, DeprecatedString const
 }
 
 // 13.3.8.1 https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
-MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& interpreter)
+MarkedVector<Value> argument_list_evaluation(VM& vm, Value arguments)
 {
     // Note: Any spreading and actual evaluation is handled in preceding opcodes
     // Note: The spec uses the concept of a list, while we create a temporary array
     //       in the preceding opcodes, so we have to convert in a manner that is not
     //       visible to the user
-    auto& vm = interpreter.vm();
-
     MarkedVector<Value> argument_values { vm.heap() };
-    auto arguments = interpreter.accumulator();
 
     auto& argument_array = arguments.as_array();
     auto array_length = argument_array.indexed_properties().array_like_size();
@@ -451,11 +448,10 @@ ThrowCompletionOr<void> create_variable(VM& vm, DeprecatedFlyString const& name,
     return verify_cast<GlobalEnvironment>(vm.variable_environment())->create_global_var_binding(name, false);
 }
 
-ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, ClassExpression const& class_expression, Optional<IdentifierTableIndex> const& lhs_name)
+ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, Value super_class, ClassExpression const& class_expression, Optional<IdentifierTableIndex> const& lhs_name)
 {
     auto& interpreter = vm.bytecode_interpreter();
     auto name = class_expression.name();
-    auto super_class = interpreter.accumulator();
 
     // NOTE: NewClass expects classEnv to be active lexical environment
     auto* class_environment = vm.lexical_environment();
@@ -476,7 +472,6 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, ClassExpression c
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
 ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM& vm, Value argument_array, bool is_synthetic)
 {
-    auto& interpreter = vm.bytecode_interpreter();
     // 1. Let newTarget be GetNewTarget().
     auto new_target = vm.get_new_target();
 
@@ -495,7 +490,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM& vm, V
         for (size_t i = 0; i < length; ++i)
             arg_list.append(array_value.get_without_side_effects(PropertyKey { i }));
     } else {
-        arg_list = argument_list_evaluation(interpreter);
+        arg_list = argument_list_evaluation(vm, argument_array);
     }
 
     // 5. If IsConstructor(func) is false, throw a TypeError exception.
