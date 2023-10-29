@@ -1,5 +1,6 @@
 set(SOURCES
     Assembler.cpp
+    GDB.cpp
 )
 
 serenity_lib(LibJIT jit)
