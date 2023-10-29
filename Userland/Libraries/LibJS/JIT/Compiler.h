@@ -130,7 +130,8 @@ private:
         O(ImportCall, import_call)                                               \
         O(GetImportMeta, get_import_meta)                                        \
         O(DeleteVariable, delete_variable)                                       \
-        O(GetMethod, get_method)
+        O(GetMethod, get_method)                                                 \
+        O(GetNewTarget, get_new_target)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
