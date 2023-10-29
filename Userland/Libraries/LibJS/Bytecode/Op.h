@@ -1299,6 +1299,8 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    IteratorHint hint() const { return m_hint; }
+
 private:
     IteratorHint m_hint { IteratorHint::Sync };
 };
