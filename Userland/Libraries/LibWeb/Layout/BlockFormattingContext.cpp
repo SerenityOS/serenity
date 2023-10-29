@@ -519,7 +519,10 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
         // NOTE: min-width or max-width for boxes with inline children can only be applied after inside layout
         //       is done and width of box content is known
         auto used_width_px = context.automatic_content_width();
-        auto available_width = AvailableSize::make_definite(used_width_px);
+        // https://www.w3.org/TR/css-sizing-3/#sizing-values
+        // Percentages are resolved against the width/height, as appropriate, of the box’s containing block.
+        auto containing_block_width = m_state.get(*block_container.containing_block()).content_width();
+        auto available_width = AvailableSize::make_definite(containing_block_width);
         if (!should_treat_max_width_as_none(block_container, available_space.width)) {
             auto max_width_px = calculate_inner_width(block_container, available_width, block_container.computed_values().max_width()).to_px(block_container);
             if (used_width_px > max_width_px)
