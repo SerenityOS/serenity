@@ -338,6 +338,9 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    Register specifier() const { return m_specifier; }
+    Register options() const { return m_options; }
+
 private:
     Register m_specifier;
     Register m_options;
