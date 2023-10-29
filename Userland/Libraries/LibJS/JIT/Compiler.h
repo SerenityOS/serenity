@@ -57,7 +57,6 @@ private:
     void compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding const&);
 
 #    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
-        O(Add, add)                                             \
         O(Sub, sub)                                             \
         O(Mul, mul)                                             \
         O(Div, div)                                             \
@@ -91,6 +90,7 @@ private:
     JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
 #    undef DO_COMPILE_COMMON_UNARY_OP
 
+    void compile_add(Bytecode::Op::Add const&);
     void compile_less_than(Bytecode::Op::LessThan const&);
 
     void compile_return(Bytecode::Op::Return const&);

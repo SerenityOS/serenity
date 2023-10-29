@@ -503,6 +503,49 @@ static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
 JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
 #    undef DO_COMPILE_COMMON_BINARY_OP
 
+static Value cxx_add(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(add(vm, lhs, rhs));
+}
+
+void Compiler::compile_add(Bytecode::Op::Add const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    branch_if_both_int32(ARG1, ARG2, [&] {
+        // GPR0 = ARG1 + ARG2 (32-bit)
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(ARG1));
+        m_assembler.add32(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(ARG2));
+
+        // if (overflow) goto slow_case;
+        m_assembler.jump_if_overflow(slow_case);
+
+        // accumulator = GPR0 | SHIFTED_INT32_TAG;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm(SHIFTED_INT32_TAG));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(GPR1));
+        store_vm_register(Bytecode::Register::accumulator(), GPR0);
+        m_assembler.jump(end);
+    });
+
+    slow_case.link(m_assembler);
+    native_call((void*)cxx_add);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+    end.link(m_assembler);
+}
+
 static Value cxx_less_than(VM& vm, Value lhs, Value rhs)
 {
     return TRY_OR_SET_EXCEPTION(less_than(vm, lhs, rhs));
@@ -1256,6 +1299,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::SetVariable:
                 compiler.compile_set_variable(static_cast<Bytecode::Op::SetVariable const&>(op));
+                break;
+            case Bytecode::Instruction::Type::Add:
+                compiler.compile_add(static_cast<Bytecode::Op::Add const&>(op));
                 break;
             case Bytecode::Instruction::Type::LessThan:
                 compiler.compile_less_than(static_cast<Bytecode::Op::LessThan const&>(op));
