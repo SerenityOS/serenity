@@ -577,63 +577,7 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
 
 ThrowCompletionOr<void> Append::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    // Note: This OpCode is used to construct array literals and argument arrays for calls,
-    //       containing at least one spread element,
-    //       Iterating over such a spread element to unpack it has to be visible by
-    //       the user courtesy of
-    //       (1) https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation
-    //          SpreadElement : ... AssignmentExpression
-    //              1. Let spreadRef be ? Evaluation of AssignmentExpression.
-    //              2. Let spreadObj be ? GetValue(spreadRef).
-    //              3. Let iteratorRecord be ? GetIterator(spreadObj).
-    //              4. Repeat,
-    //                  a. Let next be ? IteratorStep(iteratorRecord).
-    //                  b. If next is false, return nextIndex.
-    //                  c. Let nextValue be ? IteratorValue(next).
-    //                  d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
-    //                  e. Set nextIndex to nextIndex + 1.
-    //       (2) https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
-    //          ArgumentList : ... AssignmentExpression
-    //              1. Let list be a new empty List.
-    //              2. Let spreadRef be ? Evaluation of AssignmentExpression.
-    //              3. Let spreadObj be ? GetValue(spreadRef).
-    //              4. Let iteratorRecord be ? GetIterator(spreadObj).
-    //              5. Repeat,
-    //                  a. Let next be ? IteratorStep(iteratorRecord).
-    //                  b. If next is false, return list.
-    //                  c. Let nextArg be ? IteratorValue(next).
-    //                  d. Append nextArg to list.
-    //          ArgumentList : ArgumentList , ... AssignmentExpression
-    //             1. Let precedingArgs be ? ArgumentListEvaluation of ArgumentList.
-    //             2. Let spreadRef be ? Evaluation of AssignmentExpression.
-    //             3. Let iteratorRecord be ? GetIterator(? GetValue(spreadRef)).
-    //             4. Repeat,
-    //                 a. Let next be ? IteratorStep(iteratorRecord).
-    //                 b. If next is false, return precedingArgs.
-    //                 c. Let nextArg be ? IteratorValue(next).
-    //                 d. Append nextArg to precedingArgs.
-
-    auto& vm = interpreter.vm();
-
-    // Note: We know from codegen, that lhs is a plain array with only indexed properties
-    auto& lhs = interpreter.reg(m_lhs).as_array();
-    auto lhs_size = lhs.indexed_properties().array_like_size();
-
-    auto rhs = interpreter.accumulator();
-
-    if (m_is_spread) {
-        // ...rhs
-        size_t i = lhs_size;
-        TRY(get_iterator_values(vm, rhs, [&i, &lhs](Value iterator_value) -> Optional<Completion> {
-            lhs.indexed_properties().put(i, iterator_value, default_attributes);
-            ++i;
-            return {};
-        }));
-    } else {
-        lhs.indexed_properties().put(lhs_size, rhs, default_attributes);
-    }
-
-    return {};
+    return append(interpreter.vm(), interpreter.reg(m_lhs), interpreter.accumulator(), m_is_spread);
 }
 
 ThrowCompletionOr<void> ImportCall::execute_impl(Bytecode::Interpreter& interpreter) const

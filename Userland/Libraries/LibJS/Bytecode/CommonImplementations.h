@@ -38,5 +38,6 @@ ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM&, Valu
 Object* iterator_to_object(VM&, IteratorRecord);
 IteratorRecord object_to_iterator(VM&, Object&);
 ThrowCompletionOr<NonnullGCPtr<Array>> iterator_to_array(VM&, Value iterator);
+ThrowCompletionOr<void> append(VM& vm, Value lhs, Value rhs, bool is_spread);
 
 }
