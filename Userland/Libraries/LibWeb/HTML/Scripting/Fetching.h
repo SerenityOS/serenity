@@ -43,6 +43,9 @@ struct ScriptFetchOptions {
     Fetch::Infrastructure::Request::Priority fetch_priority {};
 };
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options
+ScriptFetchOptions default_classic_script_fetch_options();
+
 DeprecatedString module_type_from_module_request(JS::ModuleRequest const&);
 WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referring_script, DeprecatedString const& specifier);
 WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const&);
