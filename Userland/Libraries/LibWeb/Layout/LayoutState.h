@@ -11,7 +11,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Painting/PaintableBox.h>
-#include <LibWeb/Painting/SVGGeometryPaintable.h>
+#include <LibWeb/Painting/SVGGraphicsPaintable.h>
 
 namespace Web::Layout {
 
@@ -124,8 +124,11 @@ struct LayoutState {
         void set_table_cell_coordinates(Painting::PaintableBox::TableCellCoordinates const& table_cell_coordinates) { m_table_cell_coordinates = table_cell_coordinates; }
         auto const& table_cell_coordinates() const { return m_table_cell_coordinates; }
 
-        void set_svg_path_data(Painting::SVGGeometryPaintable::PathData const& svg_path_data) { m_svg_path_data = svg_path_data; }
-        auto& svg_path_data() const { return m_svg_path_data; }
+        void set_computed_svg_path(Gfx::Path const& svg_path) { m_computed_svg_path = svg_path; }
+        auto& computed_svg_path() { return m_computed_svg_path; }
+
+        void set_computed_svg_transforms(Painting::SVGGraphicsPaintable::ComputedTransforms const& computed_transforms) { m_computed_svg_transforms = computed_transforms; }
+        auto const& computed_svg_transforms() const { return m_computed_svg_transforms; }
 
     private:
         AvailableSize available_width_inside() const;
@@ -151,7 +154,8 @@ struct LayoutState {
         Optional<Painting::PaintableBox::BordersDataWithElementKind> m_override_borders_data;
         Optional<Painting::PaintableBox::TableCellCoordinates> m_table_cell_coordinates;
 
-        Optional<Painting::SVGGeometryPaintable::PathData> m_svg_path_data;
+        Optional<Gfx::Path> m_computed_svg_path;
+        Optional<Painting::SVGGraphicsPaintable::ComputedTransforms> m_computed_svg_transforms;
     };
 
     // Commits the used values produced by layout and builds a paintable tree.

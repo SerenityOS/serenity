@@ -21,6 +21,8 @@ public:
 
     Optional<TextAnchor> text_anchor() const;
 
+    DeprecatedString text_contents() const;
+
 protected:
     SVGTextContentElement(DOM::Document&, DOM::QualifiedName);
 

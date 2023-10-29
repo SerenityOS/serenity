@@ -135,8 +135,6 @@ static ViewBoxTransform scale_and_align_viewbox_content(SVG::PreserveAspectRatio
 
 static bool should_ensure_creation_of_paintable(Node const& node)
 {
-    if (is<SVGTextBox>(node))
-        return true;
     if (is<SVGGraphicsBox>(node))
         return true;
     if (node.dom_node()) {
@@ -166,46 +164,87 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         return IterationDecision::Continue;
     });
 
+    auto compute_viewbox_transform = [&](auto const& viewbox) -> Gfx::AffineTransform {
+        if (!viewbox.has_value())
+            return {};
+
+        // FIXME: This should allow just one of width or height to be specified.
+        // E.g. We should be able to layout <svg width="100%"> where height is unspecified/auto.
+        if (!svg_box_state.has_definite_width() || !svg_box_state.has_definite_height()) {
+            dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Attempting to layout indefinitely sized SVG with a viewbox -- this likely won't work!");
+        }
+
+        auto scale_width = svg_box_state.has_definite_width() ? svg_box_state.content_width() / viewbox->width : 1;
+        auto scale_height = svg_box_state.has_definite_height() ? svg_box_state.content_height() / viewbox->height : 1;
+
+        // The initial value for preserveAspectRatio is xMidYMid meet.
+        auto preserve_aspect_ratio = svg_svg_element.preserve_aspect_ratio().value_or(SVG::PreserveAspectRatio {});
+        auto viewbox_offset_and_scale = scale_and_align_viewbox_content(preserve_aspect_ratio, *viewbox, { scale_width, scale_height }, svg_box_state);
+
+        CSSPixelPoint offset = viewbox_offset_and_scale.offset;
+        return Gfx::AffineTransform {}.translate(offset.to_type<float>()).scale(viewbox_offset_and_scale.scale_factor, viewbox_offset_and_scale.scale_factor).translate({ -viewbox->min_x, -viewbox->min_y });
+    };
+
     box.for_each_in_subtree([&](Node const& descendant) {
-        if (is<SVGGeometryBox>(descendant)) {
-            auto const& geometry_box = static_cast<SVGGeometryBox const&>(descendant);
-            auto& geometry_box_state = m_state.get_mutable(geometry_box);
-            auto& dom_node = const_cast<SVGGeometryBox&>(geometry_box).dom_node();
+        if (is<SVGGraphicsBox>(descendant)) {
+            auto const& graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
+            auto& graphics_box_state = m_state.get_mutable(graphics_box);
+            auto& dom_node = const_cast<SVGGraphicsBox&>(graphics_box).dom_node();
 
-            auto& path = dom_node.get_path();
             auto svg_transform = dom_node.get_transform();
-            Gfx::AffineTransform viewbox_transform;
+            Gfx::AffineTransform viewbox_transform = compute_viewbox_transform(dom_node.view_box());
+            graphics_box_state.set_computed_svg_transforms(Painting::SVGGraphicsPaintable::ComputedTransforms(viewbox_transform, svg_transform));
+            auto to_css_pixels_transform = Gfx::AffineTransform {}.multiply(viewbox_transform).multiply(svg_transform);
 
-            double viewbox_scale = 1;
-            auto maybe_view_box = dom_node.view_box();
-            if (maybe_view_box.has_value()) {
-                // FIXME: This should allow just one of width or height to be specified.
-                // E.g. We should be able to layout <svg width="100%"> where height is unspecified/auto.
-                if (!svg_box_state.has_definite_width() || !svg_box_state.has_definite_height()) {
-                    dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Attempting to layout indefinitely sized SVG with a viewbox -- this likely won't work!");
+            if (is<SVGGeometryBox>(descendant)) {
+                auto path = static_cast<SVG::SVGGeometryElement&>(dom_node).get_path();
+                auto path_bounding_box = to_css_pixels_transform.map(path.bounding_box()).to_type<CSSPixels>();
+                // Stroke increases the path's size by stroke_width/2 per side.
+                CSSPixels stroke_width = CSSPixels::nearest_value_for(graphics_box.dom_node().visible_stroke_width() * viewbox_transform.x_scale());
+                path_bounding_box.inflate(stroke_width, stroke_width);
+                graphics_box_state.set_content_offset(path_bounding_box.top_left());
+                graphics_box_state.set_content_width(path_bounding_box.width());
+                graphics_box_state.set_content_height(path_bounding_box.height());
+                graphics_box_state.set_computed_svg_path(move(path));
+            } else if (is<SVGTextBox>(descendant)) {
+                auto& text_element = static_cast<SVG::SVGTextPositioningElement&>(dom_node);
+
+                // FIXME: Support arbitrary path transforms for fonts.
+                // FIMXE: This assumes transform->x_scale() == transform->y_scale().
+                auto& scaled_font = graphics_box.scaled_font(to_css_pixels_transform.x_scale());
+                auto text_contents = text_element.text_contents();
+
+                auto text_offset = text_element.get_offset().transformed(to_css_pixels_transform).to_type<CSSPixels>();
+                auto text_width = CSSPixels::nearest_value_for(scaled_font.width(Utf8View { text_contents }));
+
+                // https://svgwg.org/svg2-draft/text.html#TextAnchoringProperties
+                switch (text_element.text_anchor().value_or(SVG::TextAnchor::Start)) {
+                case SVG::TextAnchor::Start:
+                    // The rendered characters are aligned such that the start of the resulting rendered text is at the initial
+                    // current text position.
+                    break;
+                case SVG::TextAnchor::Middle: {
+                    // The rendered characters are shifted such that the geometric middle of the resulting rendered text
+                    // (determined from the initial and final current text position before applying the text-anchor property)
+                    // is at the initial current text position.
+                    text_offset.translate_by(-text_width / 2, 0);
+                    break;
+                }
+                case SVG::TextAnchor::End: {
+                    // The rendered characters are shifted such that the end of the resulting rendered text (final current text
+                    // position before applying the text-anchor property) is at the initial current text position.
+                    text_offset.translate_by(-text_width, 0);
+                    break;
+                }
+                default:
+                    VERIFY_NOT_REACHED();
                 }
 
-                auto view_box = maybe_view_box.value();
-                auto scale_width = svg_box_state.has_definite_width() ? svg_box_state.content_width() / view_box.width : 1;
-                auto scale_height = svg_box_state.has_definite_height() ? svg_box_state.content_height() / view_box.height : 1;
-
-                // The initial value for preserveAspectRatio is xMidYMid meet.
-                auto preserve_aspect_ratio = svg_svg_element.preserve_aspect_ratio().value_or(SVG::PreserveAspectRatio {});
-                auto viewbox_offset_and_scale = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width, scale_height }, svg_box_state);
-                viewbox_transform = Gfx::AffineTransform {}.translate(viewbox_offset_and_scale.offset.to_type<float>()).scale(viewbox_offset_and_scale.scale_factor, viewbox_offset_and_scale.scale_factor).translate({ -view_box.min_x, -view_box.min_y });
-
-                viewbox_scale = viewbox_offset_and_scale.scale_factor;
+                auto text_height = CSSPixels::nearest_value_for(scaled_font.pixel_size());
+                graphics_box_state.set_content_offset(text_offset.translated(0, -text_height));
+                graphics_box_state.set_content_width(text_width);
+                graphics_box_state.set_content_height(text_height);
             }
-
-            // Stroke increases the path's size by stroke_width/2 per side.
-            auto path_transform = Gfx::AffineTransform {}.multiply(viewbox_transform).multiply(svg_transform);
-            auto path_bounding_box = path_transform.map(path.bounding_box()).to_type<CSSPixels>();
-            CSSPixels stroke_width = CSSPixels::nearest_value_for(static_cast<double>(geometry_box.dom_node().visible_stroke_width()) * viewbox_scale);
-            path_bounding_box.inflate(stroke_width, stroke_width);
-            geometry_box_state.set_content_offset(path_bounding_box.top_left());
-            geometry_box_state.set_content_width(path_bounding_box.width());
-            geometry_box_state.set_content_height(path_bounding_box.height());
-            geometry_box_state.set_svg_path_data(Painting::SVGGeometryPaintable::PathData(path, viewbox_transform, svg_transform));
         } else if (is<SVGSVGBox>(descendant)) {
             SVGFormattingContext nested_context(m_state, static_cast<SVGSVGBox const&>(descendant), this);
             nested_context.run(static_cast<SVGSVGBox const&>(descendant), layout_mode, available_space);

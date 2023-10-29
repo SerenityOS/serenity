@@ -45,10 +45,15 @@ Optional<TextAnchor> SVGTextContentElement::text_anchor() const
     }
 }
 
+DeprecatedString SVGTextContentElement::text_contents() const
+{
+    return child_text_content().trim_whitespace();
+}
+
 // https://svgwg.org/svg2-draft/text.html#__svg__SVGTextContentElement__getNumberOfChars
 WebIDL::ExceptionOr<int> SVGTextContentElement::get_number_of_chars() const
 {
-    auto chars = TRY_OR_THROW_OOM(vm(), utf8_to_utf16(child_text_content()));
+    auto chars = TRY_OR_THROW_OOM(vm(), utf8_to_utf16(text_contents()));
     return static_cast<int>(chars.size());
 }
 
