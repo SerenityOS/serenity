@@ -15,7 +15,7 @@ GUI::ModelIndex VariablesModel::index(int row, int column, const GUI::ModelIndex
     if (!parent_index.is_valid()) {
         if (static_cast<size_t>(row) >= m_variables.size())
             return {};
-        return create_index(row, column, &m_variables[row]);
+        return create_index(row, column, m_variables[row].ptr());
     }
     auto* parent = static_cast<Debug::DebugInfo::VariableInfo const*>(parent_index.internal_data());
     if (static_cast<size_t>(row) >= parent->members.size())
