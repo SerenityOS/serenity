@@ -24,7 +24,7 @@
 
 #if ARCH(X86_64)
 
-#    define LOG_JIT_SUCCESS 1
+#    define LOG_JIT_SUCCESS 0
 #    define LOG_JIT_FAILURE 1
 #    define DUMP_JIT_MACHINE_CODE_TO_STDOUT 0
 #    define DUMP_JIT_DISASSEMBLY 0
