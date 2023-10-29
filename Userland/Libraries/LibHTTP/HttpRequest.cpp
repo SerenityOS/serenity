@@ -62,17 +62,28 @@ ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const
     if (m_url.port().has_value())
         TRY(builder.try_appendff(":{}", *m_url.port()));
     TRY(builder.try_append("\r\n"sv));
+    // Start headers.
+    bool has_content_length = false;
     for (auto& header : m_headers) {
+        if (header.name.equals_ignoring_ascii_case("Content-Length"sv))
+            has_content_length = true;
         TRY(builder.try_append(header.name));
         TRY(builder.try_append(": "sv));
         TRY(builder.try_append(header.value));
         TRY(builder.try_append("\r\n"sv));
     }
     if (!m_body.is_empty() || method() == Method::POST) {
-        TRY(builder.try_appendff("Content-Length: {}\r\n\r\n", m_body.size()));
+        // Add Content-Length header if it's not already present.
+        if (!has_content_length) {
+            TRY(builder.try_appendff("Content-Length: {}\r\n", m_body.size()));
+        }
+        // Finish headers.
+        TRY(builder.try_append("\r\n"sv));
         TRY(builder.try_append((char const*)m_body.data(), m_body.size()));
+    } else {
+        // Finish headers.
+        TRY(builder.try_append("\r\n"sv));
     }
-    TRY(builder.try_append("\r\n"sv));
     return builder.to_byte_buffer();
 }
 
