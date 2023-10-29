@@ -19,7 +19,7 @@ class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:
     virtual ~CalculatorWidget() override = default;
-    DeprecatedString get_entry();
+    String get_entry();
     void set_entry(Crypto::BigFraction);
     void set_typed_entry(Crypto::BigFraction);
 
