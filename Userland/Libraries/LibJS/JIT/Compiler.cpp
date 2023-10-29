@@ -1162,6 +1162,22 @@ void Compiler::compile_concat_string(Bytecode::Op::ConcatString const& op)
     check_exception();
 }
 
+static void cxx_block_declaration_instantiation(VM& vm, ScopeNode const& scope_node)
+{
+    auto old_environment = vm.running_execution_context().lexical_environment;
+    vm.bytecode_interpreter().saved_lexical_environment_stack().append(old_environment);
+    vm.running_execution_context().lexical_environment = new_declarative_environment(*old_environment);
+    scope_node.block_declaration_instantiation(vm, vm.running_execution_context().lexical_environment);
+}
+
+void Compiler::compile_block_declaration_instantiation(Bytecode::Op::BlockDeclarationInstantiation const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm(bit_cast<u64>(&op.scope_node())));
+    native_call((void*)cxx_block_declaration_instantiation);
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
