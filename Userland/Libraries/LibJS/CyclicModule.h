@@ -49,6 +49,9 @@ public:
     virtual ThrowCompletionOr<void> link(VM& vm) override final;
     virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) override final;
 
+    virtual PromiseCapability& load_requested_modules(Realm&, Optional<GraphLoadingState::HostDefined>);
+    virtual void inner_module_loading(GraphLoadingState& state);
+
     Vector<ModuleRequest> const& requested_modules() const { return m_requested_modules; }
     Vector<ModuleWithSpecifier> const& loaded_modules() const { return m_loaded_modules; }
 
@@ -81,5 +84,7 @@ protected:
     Vector<GCPtr<CyclicModule>> m_async_parent_modules; // [[AsyncParentModules]]
     Optional<u32> m_pending_async_dependencies;         // [[PendingAsyncDependencies]]
 };
+
+void continue_module_loading(Realm&, GraphLoadingState& state, ThrowCompletionOr<Module*> const&);
 
 }

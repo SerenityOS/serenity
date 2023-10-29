@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #include <LibJS/CyclicModule.h>
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/ModuleNamespaceObject.h>
+#include <LibJS/Runtime/ModuleRequest.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/VM.h>
 
@@ -60,6 +62,51 @@ ThrowCompletionOr<u32> Module::inner_module_evaluation(VM& vm, Vector<Module*>&,
 
     // d. Return index.
     return index;
+}
+
+// 16.2.1.9 FinishLoadingImportedModule ( referrer, specifier, payload, result ), https://tc39.es/ecma262/#sec-FinishLoadingImportedModule
+// FIXME: We currently implement an outdated version of https://tc39.es/proposal-import-attributes, as such it is not possible to
+//        use the exact steps from https://tc39.es/proposal-import-attributes/#sec-HostLoadImportedModule here.
+// FIXME: Support Realm for referrer.
+void finish_loading_imported_module(Realm& realm, Variant<JS::NonnullGCPtr<JS::Script>, JS::NonnullGCPtr<JS::CyclicModule>> referrer, ModuleRequest const& module_request, GraphLoadingState& payload, ThrowCompletionOr<Module*> const& result)
+{
+    // 1. If result is a normal completion, then
+    if (!result.is_error()) {
+        auto loaded_modules = referrer.visit(
+            [](JS::NonnullGCPtr<JS::Script> script) -> Vector<ModuleWithSpecifier> { return script->loaded_modules(); },
+            [](JS::NonnullGCPtr<JS::CyclicModule> module) -> Vector<ModuleWithSpecifier> { return module->loaded_modules(); });
+
+        bool found_record = false;
+
+        // a.a. If referrer.[[LoadedModules]] contains a Record whose [[Specifier]] is specifier, then
+        for (auto const& record : loaded_modules) {
+            if (record.specifier == module_request.module_specifier) {
+                // i. Assert: That Record's [[Module]] is result.[[Value]].
+                VERIFY(record.module == result.value());
+
+                found_record = true;
+            }
+        }
+
+        // b. Else,
+        if (!found_record) {
+            auto* module = const_cast<Module*>(result.value());
+
+            // i. Append the Record { [[Specifier]]: specifier, [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+            loaded_modules.append(ModuleWithSpecifier {
+                .specifier = module_request.module_specifier,
+                .module = NonnullGCPtr<Module>(*module) });
+        }
+    }
+
+    // FIXME: 2. If payload is a GraphLoadingState Record, then
+    // a. Perform ContinueModuleLoading(payload, result)
+    continue_module_loading(realm, payload, result);
+
+    // FIXME: Else,
+    // FIXME: a. Perform ContinueDynamicImport(payload, result).
+
+    // 4. Return unused.
 }
 
 // 16.2.1.10 GetModuleNamespace ( module ), https://tc39.es/ecma262/#sec-getmodulenamespace

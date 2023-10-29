@@ -582,7 +582,7 @@ void fetch_single_module_script(JS::Realm& realm,
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-module-script-tree
 void fetch_external_module_script_graph(JS::Realm& realm, AK::URL const& url, EnvironmentSettingsObject& settings_object, ScriptFetchOptions const& options, OnFetchScriptComplete on_complete)
 {
-    // 1. Disallow further import maps given settings object.
+    // 1. Disallow further import maps given settingsObject.
     settings_object.disallow_further_import_maps();
 
     auto steps = create_on_fetch_script_complete(realm.heap(), [&realm, &settings_object, on_complete, url](auto result) mutable {
@@ -592,26 +592,22 @@ void fetch_external_module_script_graph(JS::Realm& realm, AK::URL const& url, En
             return;
         }
 
-        // 2. Let visited set be « (url, "javascript") ».
-        HashTable<ModuleLocationTuple> visited_set;
-        visited_set.set({ url, "javascript"sv });
-
-        // 3. Fetch the descendants of and link result given settings object, "script", visited set, and onComplete.
+        // 2. Fetch the descendants of and link result given settingsObject, "script", and onComplete.
         auto& module_script = verify_cast<JavaScriptModuleScript>(*result);
-        fetch_descendants_of_and_link_a_module_script(realm, module_script, settings_object, Fetch::Infrastructure::Request::Destination::Script, move(visited_set), on_complete);
+        fetch_descendants_of_and_link_a_module_script(realm, module_script, settings_object, Fetch::Infrastructure::Request::Destination::Script, on_complete);
     });
 
-    // 2. Fetch a single module script given url, settings object, "script", options, settings object, "client", true, and with the following steps given result:
+    // 2. Fetch a single module script given url, settingsObject, "script", options, settingsObject, "client", true, and with the following steps given result:
     fetch_single_module_script(realm, url, settings_object, Fetch::Infrastructure::Request::Destination::Script, options, settings_object, Web::Fetch::Infrastructure::Request::Referrer::Client, {}, TopLevelModule::Yes, steps);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-inline-module-script-graph
 void fetch_inline_module_script_graph(JS::Realm& realm, DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete)
 {
-    // 1. Disallow further import maps given settings object.
+    // 1. Disallow further import maps given settingsObject.
     settings_object.disallow_further_import_maps();
 
-    // 2. Let script be the result of creating a JavaScript module script using source text, settings object, base URL, and options.
+    // 2. Let script be the result of creating a JavaScript module script using sourceText, settingsObject, baseURL, and options.
     auto script = JavaScriptModuleScript::create(filename, source_text.view(), settings_object, base_url).release_value_but_fixme_should_propagate_errors();
 
     // 3. If script is null, run onComplete given null, and return.
@@ -620,53 +616,115 @@ void fetch_inline_module_script_graph(JS::Realm& realm, DeprecatedString const& 
         return;
     }
 
-    // 4. Let visited set be an empty set.
-    HashTable<ModuleLocationTuple> visited_set;
+    // 5. Fetch the descendants of and link script, given settingsObject, "script", and onComplete.
+    fetch_descendants_of_and_link_a_module_script(realm, *script, settings_object, Fetch::Infrastructure::Request::Destination::Script, on_complete);
+}
 
-    // 5. Fetch the descendants of and link script, given settings object, the destination "script", visited set, and onComplete.
-    fetch_descendants_of_and_link_a_module_script(realm, *script, settings_object, Fetch::Infrastructure::Request::Destination::Script, visited_set, on_complete);
+// https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-single-imported-module-script
+void fetch_single_imported_module_script(JS::Realm& realm,
+    AK::URL const& url,
+    EnvironmentSettingsObject& fetch_client,
+    Fetch::Infrastructure::Request::Destination destination,
+    ScriptFetchOptions const& options,
+    EnvironmentSettingsObject& settings_object,
+    Fetch::Infrastructure::Request::Referrer referrer,
+    JS::ModuleRequest const& module_request,
+    OnFetchScriptComplete on_complete)
+{
+    // 1. Assert: moduleRequest.[[Attributes]] does not contain any Record entry such that entry.[[Key]] is not "type",
+    //    because we only asked for "type" attributes in HostGetSupportedImportAttributes.
+    for (auto const& entry : module_request.assertions)
+        VERIFY(entry.key == "type"sv);
+
+    // 2. Let moduleType be the result of running the module type from module request steps given moduleRequest.
+    auto module_type = module_type_from_module_request(module_request);
+
+    // 3. If the result of running the module type allowed steps given moduleType and settingsObject is false,
+    //    then run onComplete given null, and return.
+    if (!settings_object.module_type_allowed(module_type)) {
+        on_complete->function()(nullptr);
+        return;
+    }
+
+    // 4. Fetch a single module script given url, fetchClient, destination, options, settingsObject, referrer, moduleRequest, false,
+    //    and onComplete. If performFetch was given, pass it along as well.
+    fetch_single_module_script(realm, url, fetch_client, destination, options, settings_object, referrer, module_request, TopLevelModule::No, on_complete);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-the-descendants-of-and-link-a-module-script
-void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm, JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, Fetch::Infrastructure::Request::Destination destination, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete)
+void fetch_descendants_of_and_link_a_module_script(JS::Realm& realm,
+    JavaScriptModuleScript& module_script,
+    EnvironmentSettingsObject& fetch_client,
+    Fetch::Infrastructure::Request::Destination destination,
+    OnFetchScriptComplete on_complete)
 {
-    auto on_fetch_descendants_complete = create_on_fetch_script_complete(realm.heap(), [&fetch_client_settings_object, on_complete](auto result) {
-        // onFetchDescendantsComplete given result is the following algorithm:
-        // 1. If result is null, then run onComplete given result, and abort these steps.
-        if (!result) {
-            on_complete->function()(nullptr);
-            return;
-        }
+    // 1. Let record be moduleScript's record.
+    auto* record = module_script.record();
 
-        TemporaryExecutionContext execution_context { fetch_client_settings_object };
+    // 2. If record is null, then:
+    if (!record) {
+        // 1. Set moduleScript's error to rethrow to moduleScript's parse error.
+        module_script.set_error_to_rethrow(module_script.parse_error());
 
-        // FIXME: 2. Let parse error be the result of finding the first parse error given result.
+        // 2. Run onComplete given moduleScript.
+        on_complete->function()(module_script);
 
-        // 3. If parse error is null, then:
-        if (auto& module_script = verify_cast<JavaScriptModuleScript>(*result); module_script.record()) {
-            // 1. Let record be result's record.
-            auto const& record = *module_script.record();
+        // 3. Return.
+        return;
+    }
 
-            // 2. Perform record.Link().
-            auto linking_result = const_cast<JS::SourceTextModule&>(record).link(result->vm());
+    // 3. Let state be Record { [[ParseError]]: null, [[Destination]]: destination, [[PerformFetch]]: null, [[FetchClient]]: fetchClient }.
+    auto state = FetchContext { {}, destination, {}, fetch_client };
 
-            // If this throws an exception, set result's error to rethrow to that exception.
-            if (linking_result.is_throw_completion()) {
-                result->set_error_to_rethrow(linking_result.release_error().value().value());
-            }
-        } else {
-            // FIXME: 4. Otherwise, set result's error to rethrow to parse error.
-            TODO();
-        }
+    // FIXME: 4. If performFetch was given, set state.[[PerformFetch]] to performFetch.
 
-        // 5. Run onComplete given result.
-        on_complete->function()(result);
+    // FIXME: These should most likely be steps in the spec.
+    // NOTE: For reasons beyond my understanding, we cannot use TemporaryExecutionContext here.
+    //       Calling perform_a_microtask_checkpoint() on the fetch_client's responsible_event_loop
+    //       prevents this from functioning properly. HTMLParser::the_end would be run before
+    //       HTMLScriptElement::prepare_script had a chance to setup the callback to mark_done properly,
+    //       resulting in the event loop hanging forever awaiting for the script to be ready for parser
+    //       execution.
+    realm.vm().push_execution_context(fetch_client.realm_execution_context());
+    fetch_client.prepare_to_run_callback();
+
+    // 5. Let loadingPromise be record.LoadRequestedModules(state).
+    auto& loading_promise = record->load_requested_modules(realm, state);
+
+    // 6. Upon fulfillment of loadingPromise, run the following steps:
+    WebIDL::upon_fulfillment(loading_promise, [&realm, record, &module_script, on_complete](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Perform record.Link().
+        auto linking_result = record->link(realm.vm());
+
+        // If this throws an exception, set result's error to rethrow to that exception.
+        if (linking_result.is_throw_completion())
+            module_script.set_error_to_rethrow(linking_result.release_error().value().value());
+
+        // 2. Run onComplete given moduleScript.
+        on_complete->function()(module_script);
+
+        return JS::js_undefined();
     });
 
-    // 1. Fetch the descendants of module script, given fetch client settings object, destination, visited set, and onFetchDescendantsComplete as defined below.
-    //    If performFetch was given, pass it along as well.
-    // FIXME: Pass performFetch if given.
-    fetch_descendants_of_a_module_script(realm, module_script, fetch_client_settings_object, destination, visited_set, on_fetch_descendants_complete);
+    // 7. Upon rejection of loadingPromise, run the following steps:
+    WebIDL::upon_rejection(loading_promise, [&state, &module_script, on_complete](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. If state.[[ParseError]] is not null, set moduleScript's error to rethrow to state.[[ParseError]] and run
+        //    onComplete given moduleScript.
+        if (state.parse_error != nullptr) {
+            module_script.set_error_to_rethrow(*state.parse_error);
+
+            on_complete->function()(module_script);
+        }
+        // 2. Otherwise, run onComplete given null.
+        else {
+            on_complete->function()(nullptr);
+        }
+
+        return JS::js_undefined();
+    });
+
+    fetch_client.clean_up_after_running_callback();
+    realm.vm().pop_execution_context();
 }
 
 }

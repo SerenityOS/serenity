@@ -109,4 +109,9 @@ private:
     DeprecatedString m_filename;
 };
 
+class CyclicModule;
+struct GraphLoadingState;
+
+void finish_loading_imported_module(Realm&, Variant<NonnullGCPtr<Script>, NonnullGCPtr<CyclicModule>>, ModuleRequest const&, GraphLoadingState&, ThrowCompletionOr<Module*> const&);
+
 }
