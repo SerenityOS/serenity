@@ -1527,6 +1527,20 @@ void Compiler::compile_put_private_by_id(Bytecode::Op::PutPrivateById const& op)
     check_exception();
 }
 
+static Value cxx_import_call(VM& vm, Value specifier, Value options)
+{
+    return TRY_OR_SET_EXCEPTION(perform_import_call(vm, specifier, options));
+}
+
+void Compiler::compile_import_call(Bytecode::Op::ImportCall const& op)
+{
+    load_vm_register(ARG1, op.specifier());
+    load_vm_register(ARG2, op.options());
+    native_call((void*)cxx_import_call);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
