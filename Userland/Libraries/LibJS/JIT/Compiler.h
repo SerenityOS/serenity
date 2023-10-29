@@ -113,7 +113,8 @@ private:
         O(ThrowIfNullish, throw_if_nullish)                                      \
         O(IteratorResultValue, iterator_result_value)                            \
         O(IteratorClose, iterator_close)                                         \
-        O(IteratorToArray, iterator_to_array)
+        O(IteratorToArray, iterator_to_array)                                    \
+        O(Append, append)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);

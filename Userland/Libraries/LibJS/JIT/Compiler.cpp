@@ -1319,6 +1319,23 @@ void Compiler::compile_iterator_to_array(Bytecode::Op::IteratorToArray const&)
     check_exception();
 }
 
+static Value cxx_append(VM& vm, Value lhs, Value rhs, bool is_spread)
+{
+    TRY_OR_SET_EXCEPTION(Bytecode::append(vm, lhs, rhs, is_spread));
+    return {};
+}
+
+void Compiler::compile_append(Bytecode::Op::Append const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm(static_cast<u64>(op.is_spread())));
+    native_call((void*)cxx_append);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
