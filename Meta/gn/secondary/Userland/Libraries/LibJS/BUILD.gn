@@ -17,6 +17,9 @@ shared_library("LibJS") {
     "//Userland/Libraries/LibSyntax",
     "//Userland/Libraries/LibUnicode",
   ]
+  if (current_cpu == "x86" || current_cpu == "x64") {
+    deps += [ "//Userland/Libraries/LibX86" ]
+  }
   sources = [
     "AST.cpp",
     "Bytecode/ASTCodegen.cpp",
