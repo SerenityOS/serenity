@@ -1,4 +1,5 @@
 include(libweb_generators)
+include(accelerated_graphics)
 
 set(SOURCES
     ARIA/AriaData.cpp
@@ -626,10 +627,6 @@ set(SOURCES
     XML/XMLDocumentBuilder.cpp
 )
 
-if (LINUX)
-    list(APPEND SOURCES Painting/PaintingCommandExecutorGPU.cpp)
-endif()
-
 invoke_generator(
         "AriaRoles.cpp"
         Lagom::GenerateAriaRoles
@@ -663,7 +660,8 @@ serenity_lib(LibWeb web)
 target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGL LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibAudio LibVideo LibWasm LibXML LibIDL)
 link_with_locale_data(LibWeb)
 
-if (LINUX)
+if (HAS_ACCELERATED_GRAPHICS)
+    target_sources(LibWeb PRIVATE Painting/PaintingCommandExecutorGPU.cpp)
     target_link_libraries(LibWeb PRIVATE LibAccelGfx)
 endif()
 
