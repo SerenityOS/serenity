@@ -33,5 +33,6 @@ ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::
 Value new_regexp(VM&, ParsedRegex const&, DeprecatedString const& pattern, DeprecatedString const& flags);
 MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter&);
 ThrowCompletionOr<void> create_variable(VM&, DeprecatedFlyString const& name, Op::EnvironmentMode, bool is_global, bool is_immutable, bool is_strict);
+ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM&, ClassExpression const&, Optional<IdentifierTableIndex> const& lhs_name);
 
 }
