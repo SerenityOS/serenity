@@ -346,10 +346,6 @@ void Compiler::handle_exception()
     handle_exception.link(m_assembler);
 
     // if (unwind_context.handler) {
-    //     accumulator = exception;
-    //     exception = Value();
-    //     goto handler;
-    // }
     Assembler::Label no_handler {};
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
@@ -358,13 +354,24 @@ void Compiler::handle_exception()
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm(0),
         no_handler);
+    //     accumulator = exception;
     load_vm_register(GPR1, Bytecode::Register::exception());
     store_vm_register(Bytecode::Register::accumulator(), GPR1);
+    //     exception = Value();
     m_assembler.mov(
         Assembler::Operand::Register(GPR1),
         Assembler::Operand::Imm(Value().encoded()));
     store_vm_register(Bytecode::Register::exception(), GPR1);
+    //     unwind_context.handler = nullptr;
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm(0));
+    m_assembler.mov(
+        Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 8),
+        Assembler::Operand::Register(GPR1));
+    //     goto handler;
     m_assembler.jump(Assembler::Operand::Register(GPR0));
+    // }
 
     // no_handler:
     no_handler.link(m_assembler);
