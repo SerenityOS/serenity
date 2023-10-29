@@ -1349,6 +1349,8 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    IdentifierTableIndex property() const { return m_property; }
+
 private:
     IdentifierTableIndex m_property;
 };

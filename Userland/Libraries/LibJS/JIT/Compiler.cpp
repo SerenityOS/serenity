@@ -1568,6 +1568,23 @@ void Compiler::compile_delete_variable(Bytecode::Op::DeleteVariable const& op)
     check_exception();
 }
 
+static Value cxx_get_method(VM& vm, Value value, DeprecatedFlyString const& identifier)
+{
+    auto method = TRY_OR_SET_EXCEPTION(value.get_method(vm, identifier));
+    return method ?: js_undefined();
+}
+
+void Compiler::compile_get_method(Bytecode::Op::GetMethod const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
+    native_call((void*)cxx_get_method);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
