@@ -1452,6 +1452,23 @@ void Compiler::compile_get_by_id_with_this(Bytecode::Op::GetByIdWithThis const& 
     check_exception();
 }
 
+static Value cxx_get_by_value_with_this(VM& vm, Value property_key_value, Value base, Value this_value)
+{
+    auto object = TRY_OR_SET_EXCEPTION(base.to_object(vm));
+    auto property_key = TRY_OR_SET_EXCEPTION(property_key_value.to_property_key(vm));
+    return TRY_OR_SET_EXCEPTION(object->internal_get(property_key, this_value));
+}
+
+void Compiler::compile_get_by_value_with_this(Bytecode::Op::GetByValueWithThis const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    load_vm_register(ARG2, op.base());
+    load_vm_register(ARG3, op.this_value());
+    native_call((void*)cxx_get_by_value_with_this);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
