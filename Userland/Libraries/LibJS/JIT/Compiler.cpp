@@ -1306,6 +1306,19 @@ void Compiler::compile_iterator_close(Bytecode::Op::IteratorClose const& op)
     check_exception();
 }
 
+static Value iterator_to_array(VM& vm, Value iterator)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::iterator_to_array(vm, iterator));
+}
+
+void Compiler::compile_iterator_to_array(Bytecode::Op::IteratorToArray const&)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    native_call((void*)iterator_to_array);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
