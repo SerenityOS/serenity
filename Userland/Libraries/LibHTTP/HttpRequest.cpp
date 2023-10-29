@@ -69,7 +69,7 @@ ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const
         TRY(builder.try_append("\r\n"sv));
     }
     if (!m_body.is_empty() || method() == Method::POST) {
-        TRY(builder.try_appendff("Content-Length: {}\r\n\r\n", m_body.size()));
+        TRY(builder.try_append("\r\n"sv));
         TRY(builder.try_append((char const*)m_body.data(), m_body.size()));
     }
     TRY(builder.try_append("\r\n"sv));
