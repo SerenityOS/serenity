@@ -102,13 +102,9 @@ private:
         PackBits = 32773,
     };
 
-    ErrorOr<void> decode_frame_impl()
+    template<typename ByteReader>
+    ErrorOr<void> loop_over_pixels(ByteReader&& byte_reader)
     {
-        if (m_compression != Compression::NoCompression)
-            return Error::from_string_literal("Compressed TIFF are not supported yet :^)");
-
-        m_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, m_size));
-
         for (u32 strip_index = 0; strip_index < m_strip_offsets.size(); ++strip_index) {
             TRY(m_stream->seek(m_strip_offsets[strip_index]));
             for (u32 row = 0; row < m_rows_per_strip; row++) {
@@ -117,11 +113,27 @@ private:
                     break;
 
                 for (u32 column = 0; column < static_cast<u32>(m_size.width()); ++column) {
-                    Color const color { TRY(read_value<u8>()), TRY(read_value<u8>()), TRY(read_value<u8>()) };
+                    auto const color = Color { TRY(byte_reader()), TRY(byte_reader()), TRY(byte_reader()) };
                     m_bitmap->set_pixel(column, scanline, color);
                 }
             }
         }
+
+        return {};
+    }
+
+    ErrorOr<void> decode_frame_impl()
+    {
+        m_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, m_size));
+
+        switch (m_compression) {
+        case Compression::NoCompression:
+            TRY(loop_over_pixels([this]() { return read_value<u8>(); }));
+            break;
+        default:
+            return Error::from_string_literal("Compressed TIFF are not supported yet :^)");
+        }
+
         return {};
     }
 
