@@ -20,6 +20,7 @@
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PPMLoader.h>
 #include <LibGfx/ImageFormats/TGALoader.h>
+#include <LibGfx/ImageFormats/TIFFLoader.h>
 #include <LibGfx/ImageFormats/TinyVGLoader.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibTest/TestCase.h>
@@ -366,6 +367,18 @@ TEST_CASE(test_targa_top_left_compressed)
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
+}
+
+TEST_CASE(test_tiff_uncompressed)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("uncompressed.tiff"sv)));
+    EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 400, 300 });
+
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color::NamedColor::White);
+    EXPECT_EQ(frame.image->get_pixel(60, 75), Gfx::Color::NamedColor::Red);
 }
 
 TEST_CASE(test_webp_simple_lossy)
