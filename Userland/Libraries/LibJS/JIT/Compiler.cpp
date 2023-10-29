@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
+#include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <sys/mman.h>
@@ -1427,6 +1428,26 @@ static Value cxx_resolve_super_base(VM& vm)
 void Compiler::compile_resolve_super_base(Bytecode::Op::ResolveSuperBase const&)
 {
     native_call((void*)cxx_resolve_super_base);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
+static Value cxx_get_by_id_with_this(VM& vm, Bytecode::IdentifierTableIndex property, Value base_value, Value this_value, u32 cache_index)
+{
+    return TRY_OR_SET_EXCEPTION(get_by_id(vm.bytecode_interpreter(), property, base_value, this_value, cache_index));
+}
+
+void Compiler::compile_get_by_id_with_this(Bytecode::Op::GetByIdWithThis const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm(op.property().value()));
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    load_vm_register(ARG3, op.this_value());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Imm(op.cache_index()));
+    native_call((void*)cxx_get_by_id_with_this);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
 }
