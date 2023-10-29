@@ -173,7 +173,8 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             auto& dom_node = const_cast<SVGGeometryBox&>(geometry_box).dom_node();
 
             auto& path = dom_node.get_path();
-            auto path_transform = dom_node.get_transform();
+            auto svg_transform = dom_node.get_transform();
+            Gfx::AffineTransform viewbox_transform;
 
             double viewbox_scale = 1;
             auto maybe_view_box = dom_node.view_box();
@@ -190,18 +191,21 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
 
                 // The initial value for preserveAspectRatio is xMidYMid meet.
                 auto preserve_aspect_ratio = svg_svg_element.preserve_aspect_ratio().value_or(SVG::PreserveAspectRatio {});
-                auto viewbox_transform = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width, scale_height }, svg_box_state);
-                path_transform = Gfx::AffineTransform {}.translate(viewbox_transform.offset.to_type<float>()).scale(viewbox_transform.scale_factor, viewbox_transform.scale_factor).translate({ -view_box.min_x, -view_box.min_y }).multiply(path_transform);
-                viewbox_scale = viewbox_transform.scale_factor;
+                auto viewbox_offset_and_scale = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width, scale_height }, svg_box_state);
+                viewbox_transform = Gfx::AffineTransform {}.translate(viewbox_offset_and_scale.offset.to_type<float>()).scale(viewbox_offset_and_scale.scale_factor, viewbox_offset_and_scale.scale_factor).translate({ -view_box.min_x, -view_box.min_y });
+
+                viewbox_scale = viewbox_offset_and_scale.scale_factor;
             }
 
             // Stroke increases the path's size by stroke_width/2 per side.
+            auto path_transform = Gfx::AffineTransform {}.multiply(viewbox_transform).multiply(svg_transform);
             auto path_bounding_box = path_transform.map(path.bounding_box()).to_type<CSSPixels>();
             CSSPixels stroke_width = CSSPixels::nearest_value_for(static_cast<double>(geometry_box.dom_node().visible_stroke_width()) * viewbox_scale);
             path_bounding_box.inflate(stroke_width, stroke_width);
             geometry_box_state.set_content_offset(path_bounding_box.top_left());
             geometry_box_state.set_content_width(path_bounding_box.width());
             geometry_box_state.set_content_height(path_bounding_box.height());
+            geometry_box_state.set_svg_path_data(Painting::SVGGeometryPaintable::PathData(path, viewbox_transform, svg_transform));
         } else if (is<SVGSVGBox>(descendant)) {
             SVGFormattingContext nested_context(m_state, static_cast<SVGSVGBox const&>(descendant), this);
             nested_context.run(static_cast<SVGSVGBox const&>(descendant), layout_mode, available_space);

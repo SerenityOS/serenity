@@ -22,13 +22,9 @@ public:
     SVG::SVGGeometryElement& dom_node() { return static_cast<SVG::SVGGeometryElement&>(SVGGraphicsBox::dom_node()); }
     SVG::SVGGeometryElement const& dom_node() const { return static_cast<SVG::SVGGeometryElement const&>(SVGGraphicsBox::dom_node()); }
 
-    Optional<Gfx::AffineTransform> layout_transform(Gfx::AffineTransform additional_svg_transform) const;
-
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 private:
-    CSSPixelPoint viewbox_origin() const;
-
     virtual bool is_svg_geometry_box() const final { return true; }
 };
 

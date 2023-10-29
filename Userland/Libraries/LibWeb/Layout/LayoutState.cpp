@@ -265,6 +265,11 @@ void LayoutState::commit(Box& root)
                 paintable_with_lines.set_line_boxes(move(used_values.line_boxes));
                 paintables_with_lines.append(paintable_with_lines);
             }
+
+            if (used_values.svg_path_data().has_value() && is<Painting::SVGGeometryPaintable>(paintable_box)) {
+                auto& svg_geometry_paintable = static_cast<Painting::SVGGeometryPaintable&>(paintable_box);
+                svg_geometry_paintable.set_path_data(move(*used_values.svg_path_data()));
+            }
         }
     }
 
