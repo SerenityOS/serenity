@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Simon Wanner <simon@skyrising.xyz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -117,7 +118,8 @@ private:
         O(Append, append)                                                        \
         O(DeleteById, delete_by_id)                                              \
         O(DeleteByValue, delete_by_value)                                        \
-        O(DeleteByValueWithThis, delete_by_value_with_this)
+        O(DeleteByValueWithThis, delete_by_value_with_this)                      \
+        O(GetObjectPropertyIterator, get_object_property_iterator)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
