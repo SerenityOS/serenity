@@ -523,4 +523,16 @@ ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM& vm, V
     return result;
 }
 
+// FIXME: Since the accumulator is a Value, we store an object there and have to convert back and forth between that an Iterator records. Not great.
+// Make sure to put this into the accumulator before the iterator object disappears from the stack to prevent the members from being GC'd.
+Object* iterator_to_object(VM& vm, IteratorRecord iterator)
+{
+    auto& realm = *vm.current_realm();
+    auto object = Object::create(realm, nullptr);
+    object->define_direct_property(vm.names.iterator, iterator.iterator, 0);
+    object->define_direct_property(vm.names.next, iterator.next_method, 0);
+    object->define_direct_property(vm.names.done, Value(iterator.done), 0);
+    return object;
+}
+
 }
