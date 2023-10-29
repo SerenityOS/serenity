@@ -1178,6 +1178,23 @@ void Compiler::compile_block_declaration_instantiation(Bytecode::Op::BlockDeclar
     native_call((void*)cxx_block_declaration_instantiation);
 }
 
+static Value cxx_super_call_with_argument_array(VM& vm, Value argument_array, bool is_synthetic)
+{
+    TRY_OR_SET_EXCEPTION(Bytecode::super_call_with_argument_array(vm, argument_array, is_synthetic));
+    return {};
+}
+
+void Compiler::compile_super_call_with_argument_array(Bytecode::Op::SuperCallWithArgumentArray const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(static_cast<u64>(op.is_synthetic())));
+    native_call((void*)cxx_super_call_with_argument_array);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
