@@ -960,6 +960,39 @@ void Compiler::compile_typeof_variable(Bytecode::Op::TypeofVariable const& op)
     check_exception();
 }
 
+static Value cxx_create_variable(
+    VM& vm,
+    DeprecatedFlyString const& name,
+    Bytecode::Op::EnvironmentMode mode,
+    bool is_global,
+    bool is_immutable,
+    bool is_strict)
+{
+    TRY_OR_SET_EXCEPTION(Bytecode::create_variable(vm, name, mode, is_global, is_immutable, is_strict));
+    return {};
+}
+
+void Compiler::compile_create_variable(Bytecode::Op::CreateVariable const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(to_underlying(op.mode())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm(static_cast<u64>(op.is_global())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Imm(static_cast<u64>(op.is_immutable())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG5),
+        Assembler::Operand::Imm(static_cast<u64>(op.is_strict())));
+    native_call((void*)cxx_create_variable);
+    check_exception();
+}
+
 static Value cxx_set_variable(
     VM& vm,
     DeprecatedFlyString const& identifier,
@@ -1207,6 +1240,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::ConcatString:
                 compiler.compile_concat_string(static_cast<Bytecode::Op::ConcatString const&>(op));
+                break;
+            case Bytecode::Instruction::Type::CreateVariable:
+                compiler.compile_create_variable(static_cast<Bytecode::Op::CreateVariable const&>(op));
                 break;
 
 #    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                          \

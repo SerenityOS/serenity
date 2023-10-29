@@ -101,6 +101,8 @@ private:
     void compile_new_regexp(Bytecode::Op::NewRegExp const&);
     void compile_new_bigint(Bytecode::Op::NewBigInt const&);
 
+    void compile_create_variable(Bytecode::Op::CreateVariable const&);
+
     void compile_get_by_id(Bytecode::Op::GetById const&);
     void compile_get_by_value(Bytecode::Op::GetByValue const&);
     void compile_get_global(Bytecode::Op::GetGlobal const&);
