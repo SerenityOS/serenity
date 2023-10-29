@@ -318,6 +318,9 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    Register lhs() const { return m_lhs; }
+    bool is_spread() const { return m_is_spread; }
+
 private:
     Register m_lhs;
     bool m_is_spread = false;
