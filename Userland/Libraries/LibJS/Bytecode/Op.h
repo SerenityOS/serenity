@@ -850,6 +850,9 @@ public:
     {
     }
 
+    Register base() const { return m_base; }
+    Register this_value() const { return m_this_value; }
+
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
