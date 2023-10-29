@@ -615,14 +615,17 @@ struct Assembler {
 
     void add32(Operand dst, Operand src, Optional<Label&> label)
     {
-        if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Reg && to_underlying(src.reg) < 8) {
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
+            emit_rex_for_mr(dst, src, REX_W::No);
             emit8(0x01);
             emit_modrm_mr(dst, src);
-        } else if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit_rex_for_slash(dst, REX_W::No);
             emit8(0x83);
             emit_modrm_slash(0, dst);
             emit8(src.offset_or_immediate);
-        } else if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+            emit_rex_for_slash(dst, REX_W::No);
             emit8(0x81);
             emit_modrm_slash(0, dst);
             emit32(src.offset_or_immediate);
