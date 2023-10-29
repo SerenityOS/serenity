@@ -645,15 +645,6 @@ ThrowCompletionOr<void> ImportCall::execute_impl(Bytecode::Interpreter& interpre
     return {};
 }
 
-static IteratorRecord object_to_iterator(VM& vm, Object& object)
-{
-    return IteratorRecord {
-        .iterator = &MUST(object.get(vm.names.iterator)).as_object(),
-        .next_method = MUST(object.get(vm.names.next)),
-        .done = MUST(object.get(vm.names.done)).as_bool()
-    };
-}
-
 ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
