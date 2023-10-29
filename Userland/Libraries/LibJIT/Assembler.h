@@ -358,40 +358,6 @@ struct Assembler {
         label.add_jump(*this, m_output.size());
     }
 
-    void jump_if_zero(Operand reg, Label& label)
-    {
-        jump_if(reg, Condition::EqualTo, Operand::Imm(0), label);
-    }
-
-    void jump_if_not_zero(Operand reg, Label& label)
-    {
-        jump_if(reg, Condition::NotEqualTo, Operand::Imm(0), label);
-    }
-
-    void jump_if_equal(Operand lhs, Operand rhs, Label& label)
-    {
-        jump_if(lhs, Condition::EqualTo, rhs, label);
-    }
-
-    void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
-    {
-        jump_if(lhs, Condition::NotEqualTo, rhs, label);
-    }
-
-    void jump_if_less_than(Operand lhs, Operand rhs, Label& label)
-    {
-        jump_if(lhs, Condition::SignedLessThan, rhs, label);
-    }
-
-    void jump_if_overflow(Label& label)
-    {
-        // jo label (RIP-relative 32-bit offset)
-        emit8(0x0f);
-        emit8(0x80);
-        emit32(0xdeadbeef);
-        label.add_jump(*this, m_output.size());
-    }
-
     void sign_extend_32_to_64_bits(Reg reg)
     {
         // movsxd (reg as 64-bit), (reg as 32-bit)
@@ -545,7 +511,7 @@ struct Assembler {
         }
     }
 
-    void add32(Operand dst, Operand src)
+    void add32(Operand dst, Operand src, Optional<Label&> label)
     {
         if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Reg && to_underlying(src.reg) < 8) {
             emit8(0x01);
@@ -560,6 +526,14 @@ struct Assembler {
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
+        }
+
+        if (label.has_value()) {
+            // jo label (RIP-relative 32-bit offset)
+            emit8(0x0f);
+            emit8(0x80);
+            emit32(0xdeadbeef);
+            label->add_jump(*this, m_output.size());
         }
     }
 
