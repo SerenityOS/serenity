@@ -989,6 +989,8 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    bool is_synthetic() const { return m_is_synthetic; }
+
 private:
     bool m_is_synthetic;
 };
