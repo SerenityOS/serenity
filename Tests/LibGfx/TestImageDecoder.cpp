@@ -372,7 +372,7 @@ TEST_CASE(test_targa_top_left_compressed)
 
 TEST_CASE(test_tiff_uncompressed)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("uncompressed.tiff"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("tiff/uncompressed.tiff"sv)));
     EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
 
