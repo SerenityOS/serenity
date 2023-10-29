@@ -111,7 +111,8 @@ private:
         O(IteratorResultDone, iterator_result_done)                              \
         O(ThrowIfNotObject, throw_if_not_object)                                 \
         O(ThrowIfNullish, throw_if_nullish)                                      \
-        O(IteratorResultValue, iterator_result_value)
+        O(IteratorResultValue, iterator_result_value)                            \
+        O(IteratorClose, iterator_close)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
