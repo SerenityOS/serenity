@@ -1585,6 +1585,17 @@ void Compiler::compile_get_method(Bytecode::Op::GetMethod const& op)
     check_exception();
 }
 
+static Value cxx_get_new_target(VM& vm)
+{
+    return vm.get_new_target();
+}
+
+void Compiler::compile_get_new_target(Bytecode::Op::GetNewTarget const&)
+{
+    native_call((void*)cxx_get_new_target);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
