@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+
 #if ARCH(X86_64)
 #    include <LibJIT/Assembler.h>
 #    include <LibJS/Bytecode/Executable.h>
@@ -37,25 +39,6 @@ private:
     static constexpr auto UNWIND_CONTEXT_BASE = Assembler::Reg::R15;
 #    endif
 
-    void compile_load_immediate(Bytecode::Op::LoadImmediate const&);
-    void compile_load(Bytecode::Op::Load const&);
-    void compile_store(Bytecode::Op::Store const&);
-    void compile_get_local(Bytecode::Op::GetLocal const&);
-    void compile_set_local(Bytecode::Op::SetLocal const&);
-    void compile_typeof_local(Bytecode::Op::TypeofLocal const&);
-    void compile_jump(Bytecode::Op::Jump const&);
-    void compile_jump_conditional(Bytecode::Op::JumpConditional const&);
-    void compile_jump_nullish(Bytecode::Op::JumpNullish const&);
-    void compile_increment(Bytecode::Op::Increment const&);
-    void compile_decrement(Bytecode::Op::Decrement const&);
-    void compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const&);
-    void compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&);
-    void compile_throw(Bytecode::Op::Throw const&);
-    void compile_create_lexical_environment(Bytecode::Op::CreateLexicalEnvironment const&);
-    void compile_leave_lexical_environment(Bytecode::Op::LeaveLexicalEnvironment const&);
-    void compile_to_numeric(Bytecode::Op::ToNumeric const&);
-    void compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding const&);
-
 #    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
         O(Sub, sub)                                             \
         O(Mul, mul)                                             \
@@ -78,47 +61,55 @@ private:
         O(RightShift, right_shift)                              \
         O(UnsignedRightShift, unsigned_right_shift)
 
-#    define DO_COMPILE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
+#    define JS_ENUMERATE_IMPLEMENTED_JIT_OPS(O)                                  \
+        JS_ENUMERATE_COMMON_BINARY_OPS(O)                                        \
+        JS_ENUMERATE_COMMON_UNARY_OPS(O)                                         \
+        O(LoadImmediate, load_immediate)                                         \
+        O(Load, load)                                                            \
+        O(Store, store)                                                          \
+        O(GetLocal, get_local)                                                   \
+        O(SetLocal, set_local)                                                   \
+        O(TypeofLocal, typeof_local)                                             \
+        O(Jump, jump)                                                            \
+        O(JumpConditional, jump_conditional)                                     \
+        O(JumpNullish, jump_nullish)                                             \
+        O(Increment, increment)                                                  \
+        O(Decrement, decrement)                                                  \
+        O(EnterUnwindContext, enter_unwind_context)                              \
+        O(LeaveUnwindContext, leave_unwind_context)                              \
+        O(Throw, throw)                                                          \
+        O(CreateLexicalEnvironment, create_lexical_environment)                  \
+        O(LeaveLexicalEnvironment, leave_lexical_environment)                    \
+        O(ToNumeric, to_numeric)                                                 \
+        O(ResolveThisBinding, resolve_this_binding)                              \
+        O(Return, return)                                                        \
+        O(NewString, new_string)                                                 \
+        O(NewObject, new_object)                                                 \
+        O(NewArray, new_array)                                                   \
+        O(NewFunction, new_function)                                             \
+        O(NewRegExp, new_regexp)                                                 \
+        O(NewBigInt, new_bigint)                                                 \
+        O(NewClass, new_class)                                                   \
+        O(CreateVariable, create_variable)                                       \
+        O(GetById, get_by_id)                                                    \
+        O(GetByValue, get_by_value)                                              \
+        O(GetGlobal, get_global)                                                 \
+        O(GetVariable, get_variable)                                             \
+        O(GetCalleeAndThisFromEnvironment, get_callee_and_this_from_environment) \
+        O(PutById, put_by_id)                                                    \
+        O(PutByValue, put_by_value)                                              \
+        O(Call, call)                                                            \
+        O(CallWithArgumentArray, call_with_argument_array)                       \
+        O(TypeofVariable, typeof_variable)                                       \
+        O(SetVariable, set_variable)                                             \
+        O(ContinuePendingUnwind, continue_pending_unwind)                        \
+        O(ConcatString, concat_string)
+
+#    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
 
-    JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
-#    undef DO_COMPILE_COMMON_BINARY_OP
-
-#    define DO_COMPILE_COMMON_UNARY_OP(OpTitleCase, op_snake_case) \
-        void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
-
-    JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
-#    undef DO_COMPILE_COMMON_UNARY_OP
-
-    void compile_add(Bytecode::Op::Add const&);
-    void compile_less_than(Bytecode::Op::LessThan const&);
-
-    void compile_return(Bytecode::Op::Return const&);
-    void compile_new_string(Bytecode::Op::NewString const&);
-    void compile_new_object(Bytecode::Op::NewObject const&);
-    void compile_new_array(Bytecode::Op::NewArray const&);
-    void compile_new_function(Bytecode::Op::NewFunction const&);
-    void compile_new_regexp(Bytecode::Op::NewRegExp const&);
-    void compile_new_bigint(Bytecode::Op::NewBigInt const&);
-    void compile_new_class(Bytecode::Op::NewClass const&);
-
-    void compile_create_variable(Bytecode::Op::CreateVariable const&);
-
-    void compile_get_by_id(Bytecode::Op::GetById const&);
-    void compile_get_by_value(Bytecode::Op::GetByValue const&);
-    void compile_get_global(Bytecode::Op::GetGlobal const&);
-    void compile_get_variable(Bytecode::Op::GetVariable const&);
-    void compile_get_callee_and_this_from_environment(Bytecode::Op::GetCalleeAndThisFromEnvironment const&);
-
-    void compile_put_by_id(Bytecode::Op::PutById const&);
-    void compile_put_by_value(Bytecode::Op::PutByValue const&);
-
-    void compile_call(Bytecode::Op::Call const&);
-    void compile_call_with_argument_array(Bytecode::Op::CallWithArgumentArray const&);
-    void compile_typeof_variable(Bytecode::Op::TypeofVariable const&);
-    void compile_set_variable(Bytecode::Op::SetVariable const&);
-    void compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwind const&);
-    void compile_concat_string(Bytecode::Op::ConcatString const&);
+    JS_ENUMERATE_IMPLEMENTED_JIT_OPS(DECLARE_COMPILE_OP)
+#    undef DECLARE_COMPILE_OP
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);
