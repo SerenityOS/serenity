@@ -1,4 +1,6 @@
-if (LINUX)
+include(accelerated_graphics)
+
+if (HAS_ACCELERATED_GRAPHICS)
     set(SOURCES
         Canvas.cpp
         Context.cpp
@@ -6,5 +8,5 @@ if (LINUX)
     )
 
     serenity_lib(LibAccelGfx accelgfx)
-    target_link_libraries(LibAccelGfx PRIVATE LibGfx GL EGL)
+    target_link_libraries(LibAccelGfx PRIVATE LibGfx ${ACCEL_GFX_LIBS})
 endif()
