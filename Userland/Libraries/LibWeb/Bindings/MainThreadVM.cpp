@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
- * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2022-2023, networkException <networkexception@serenityos.org>
  * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/AST.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/Array.h>
@@ -32,6 +33,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
+#include <LibWeb/HTML/Scripting/ModuleScript.h>
 #include <LibWeb/HTML/Scripting/Script.h>
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/HTML/Window.h>
@@ -397,6 +399,117 @@ ErrorOr<void> initialize_main_thread_vm()
     s_main_thread_vm->host_get_supported_import_assertions = []() -> Vector<DeprecatedString> {
         // 1. Return « "type" ».
         return { "type"sv };
+    };
+
+    // 8.1.6.5.3 HostLoadImportedModule(referrer, moduleRequest, loadState, payload), https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
+    s_main_thread_vm->host_load_imported_module = [](JS::Realm& realm, Variant<JS::NonnullGCPtr<JS::Script>, JS::NonnullGCPtr<JS::CyclicModule>> referrer, JS::ModuleRequest const& module_request, Optional<JS::GraphLoadingState::HostDefined> load_state, JS::GraphLoadingState& payload) -> void {
+        // 1. Let settingsObject be the current settings object.
+        Optional<HTML::EnvironmentSettingsObject&> settings_object = HTML::current_settings_object();
+
+        // FIXME: 2. If settingsObject's global object implements WorkletGlobalScope or ServiceWorkerGlobalScope and loadState is undefined, then:
+
+        // 3. Let referencingScript be null.
+        Optional<HTML::Script&> referencing_script;
+
+        // FIXME: 4. Let fetchOptions be the default classic script fetch options.
+        auto fetch_options = HTML::default_classic_script_fetch_options();
+
+        // 5. Let fetchReferrer be "client".
+        auto fetch_referrer = Fetch::Infrastructure::Request::Referrer::Client;
+
+        // 6. If referrer is a Script Record or a Module Record, then:
+        if (referrer.has<JS::NonnullGCPtr<JS::Script>>() || referrer.has<JS::NonnullGCPtr<JS::CyclicModule>>()) {
+            // 1. Set referencingScript to referrer.[[HostDefined]].
+            referencing_script = verify_cast<HTML::Script>(referrer.has<JS::NonnullGCPtr<JS::Script>>() ? *referrer.get<JS::NonnullGCPtr<JS::Script>>()->host_defined() : *referrer.get<JS::NonnullGCPtr<JS::CyclicModule>>()->host_defined());
+
+            // 2. Set settingsObject to referencingScript's settings object.
+            settings_object = referencing_script->settings_object();
+
+            // FIXME: 3. Set fetchOptions to the new descendant script fetch options for referencingScript's fetch options.
+
+            // FIXME: 4. Assert: fetchOptions is not null, as referencingScript is a classic script or a JavaScript module script.
+
+            // FIXME: 5. Set fetchReferrer to referrer's base URL.
+        }
+
+        // 7. Disallow further import maps given settingsObject.
+        settings_object->disallow_further_import_maps();
+
+        // 8. Let url be the result of resolving a module specifier given referencingScript and moduleRequest.[[Specifier]],
+        //    catching any exceptions. If they throw an exception, let resolutionError be the thrown exception.
+        auto url = HTML::resolve_module_specifier(referencing_script, module_request.module_specifier);
+
+        // 9. If the previous step threw an exception, then:
+        if (url.is_exception()) {
+            // 1. Let completion be Completion Record { [[Type]]: throw, [[Value]]: resolutionError, [[Target]]: empty }.
+            auto completion = dom_exception_to_throw_completion(main_thread_vm(), url.exception());
+
+            // 2. Perform FinishLoadingImportedModule(referrer, moduleRequest, payload, completion).
+            JS::finish_loading_imported_module(realm, referrer, module_request, payload, completion);
+
+            // 3. Return.
+            return;
+        }
+
+        // 10. Let destination be "script".
+        auto destination = Fetch::Infrastructure::Request::Destination::Script;
+
+        // 11. Let fetchClient be settingsObject.
+        Optional<HTML::EnvironmentSettingsObject&> fetch_client = *settings_object;
+
+        // 12. If loadState is not undefined, then:
+        if (load_state.has_value()) {
+            auto fetch_context = static_cast<HTML::FetchContext&>(load_state.value());
+
+            // 1. Set destination to loadState.[[Destination]].
+            destination = fetch_context.destination;
+
+            // 2. Set fetchClient loadState.[[FetchClient]].
+            fetch_client = fetch_context.fetch_client;
+        }
+
+        auto on_single_fetch_complete = HTML::create_on_fetch_script_complete(realm.heap(), [&referrer, &realm, &load_state, &module_request, &payload](JS::GCPtr<HTML::Script> const& module_script) -> void {
+            // onSingleFetchComplete given moduleScript is the following algorithm:
+            // 1. Let completion be null.
+            // NOTE: Our JS::Completion does not support non JS::Value types for its [[Value]], a such we
+            //       use JS::ThrowCompletionOr here.
+            auto completion = JS::ThrowCompletionOr<JS::Module*> { {} };
+
+            // 2. If moduleScript is null, then set completion to Completion Record { [[Type]]: throw, [[Value]]: a new TypeError, [[Target]]: empty }.
+            if (!module_script) {
+                completion = JS::throw_completion(JS::TypeError::create(realm, DeprecatedString::formatted("Loading imported module '{}' failed.", module_request.module_specifier)));
+            }
+            // 3. Otherwise, if moduleScript's parse error is not null, then:
+            else if (!module_script->parse_error().is_empty()) {
+                // 1. Let parseError be moduleScript's parse error.
+                auto parse_error = module_script->parse_error();
+
+                // 2. Set completion to Completion Record { [[Type]]: throw, [[Value]]: parseError, [[Target]]: empty }.
+                completion = JS::throw_completion(parse_error);
+
+                // 3. If loadState is not undefined and loadState.[[ParseError]] is null, set loadState.[[ParseError]] to parseError.
+                if (load_state.has_value()) {
+                    auto load_state_as_fetch_context = static_cast<HTML::FetchContext&>(load_state.value());
+                    if (load_state_as_fetch_context.parse_error->is_empty()) {
+                        load_state_as_fetch_context.parse_error = parse_error;
+                    }
+                }
+            }
+            // 4. Otherwise, set completion to Completion Record { [[Type]]: normal, [[Value]]: result's record, [[Target]]: empty }.
+            else {
+                auto* record = static_cast<HTML::JavaScriptModuleScript&>(*module_script).record();
+
+                completion = JS::ThrowCompletionOr<JS::Module*>(record);
+            }
+
+            // 5. Perform FinishLoadingImportedModule(referrer, moduleRequest, payload, completion).
+            JS::finish_loading_imported_module(realm, referrer, module_request, payload, completion);
+        });
+
+        // 13. Fetch a single imported module script given url, fetchClient, destination, fetchOptions, settingsObject, fetchReferrer,
+        //     moduleRequest, and onSingleFetchComplete as defined below.
+        //     If loadState is not undefined and loadState.[[PerformFetch]] is not null, pass loadState.[[PerformFetch]] along as well.#
+        HTML::fetch_single_imported_module_script(realm, url.release_value(), *fetch_client, destination, fetch_options, *settings_object, fetch_referrer, module_request, on_single_fetch_complete);
     };
 
     // 8.1.6.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
