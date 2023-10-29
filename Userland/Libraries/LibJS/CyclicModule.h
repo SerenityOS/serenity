@@ -22,7 +22,24 @@ enum class ModuleStatus {
     Evaluated
 };
 
-// 16.2.1.5 Cyclic Module Records, https://tc39.es/ecma262/#sec-cyclic-module-records
+class CyclicModule;
+
+// https://tc39.es/ecma262/#graphloadingstate-record
+struct GraphLoadingState {
+    struct HostDefined {
+        virtual ~HostDefined() = default;
+
+        virtual void visit_edges(Cell::Visitor&) { }
+    };
+
+    GCPtr<PromiseCapability> promise_capability; // [[PromiseCapability]]
+    bool is_loading { false };                   // [[IsLoading]]
+    size_t pending_module_count { 0 };           // [[PendingModulesCount]]
+    HashTable<CyclicModule*> visited;            // [[Visited]]
+    Optional<HostDefined> host_defined;          // [[HostDefined]]
+};
+
+// 16.2.1.5 Cyclic Module Records, https://tc39.es/ecma262/#cyclic-module-record
 class CyclicModule : public Module {
     JS_CELL(CyclicModule, Module);
 
