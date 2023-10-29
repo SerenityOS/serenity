@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
+#include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/RegExpObject.h>
@@ -469,6 +470,57 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, ClassExpression c
     }
 
     return TRY(class_expression.create_class_constructor(vm, class_environment, vm.lexical_environment(), super_class, binding_name, class_name));
+}
+
+// 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM& vm, Value argument_array, bool is_synthetic)
+{
+    auto& interpreter = vm.bytecode_interpreter();
+    // 1. Let newTarget be GetNewTarget().
+    auto new_target = vm.get_new_target();
+
+    // 2. Assert: Type(newTarget) is Object.
+    VERIFY(new_target.is_object());
+
+    // 3. Let func be GetSuperConstructor().
+    auto* func = get_super_constructor(vm);
+
+    // 4. Let argList be ? ArgumentListEvaluation of Arguments.
+    MarkedVector<Value> arg_list { vm.heap() };
+    if (is_synthetic) {
+        VERIFY(argument_array.is_object() && is<Array>(argument_array.as_object()));
+        auto const& array_value = static_cast<Array const&>(argument_array.as_object());
+        auto length = MUST(length_of_array_like(vm, array_value));
+        for (size_t i = 0; i < length; ++i)
+            arg_list.append(array_value.get_without_side_effects(PropertyKey { i }));
+    } else {
+        arg_list = argument_list_evaluation(interpreter);
+    }
+
+    // 5. If IsConstructor(func) is false, throw a TypeError exception.
+    if (!Value(func).is_constructor())
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, "Super constructor");
+
+    // 6. Let result be ? Construct(func, argList, newTarget).
+    auto result = TRY(construct(vm, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
+
+    // 7. Let thisER be GetThisEnvironment().
+    auto& this_environment = verify_cast<FunctionEnvironment>(*get_this_environment(vm));
+
+    // 8. Perform ? thisER.BindThisValue(result).
+    TRY(this_environment.bind_this_value(vm, result));
+
+    // 9. Let F be thisER.[[FunctionObject]].
+    auto& f = this_environment.function_object();
+
+    // 10. Assert: F is an ECMAScript function object.
+    // NOTE: This is implied by the strong C++ type.
+
+    // 11. Perform ? InitializeInstanceElements(result, F).
+    TRY(result->initialize_instance_elements(f));
+
+    // 12. Return result.
+    return result;
 }
 
 }
