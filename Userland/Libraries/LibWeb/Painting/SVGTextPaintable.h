@@ -17,8 +17,6 @@ class SVGTextPaintable final : public SVGGraphicsPaintable {
 public:
     static JS::NonnullGCPtr<SVGTextPaintable> create(Layout::SVGTextBox const&);
 
-    virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
-
     virtual void paint(PaintContext&, PaintPhase) const override;
 
     Layout::SVGTextBox const& layout_box() const

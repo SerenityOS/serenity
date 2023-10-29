@@ -1,0 +1,30 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x261.328125 children: inline
+      line 0 width: 784, height: 261.328125, bottom: 261.328125, baseline: 261.328125
+        frag 0 from SVGSVGBox start: 0, length: 0, rect: [8,8 784x261.328125]
+      SVGSVGBox <svg> at (8,8) content-size 784x261.328125 [SVG] children: inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGTextBox <text.small> at (73.34375,79.859375) content-size 50.265625x42.46875 children: inline
+          TextNode <#text>
+        TextNode <#text>
+        SVGTextBox <text.heavy> at (138.6875,24.328125) content-size 153.703125x98 children: inline
+          TextNode <#text>
+        TextNode <#text>
+        SVGTextBox <text.small> at (187.671875,145.1875) content-size 36.90625x42.46875 children: inline
+          TextNode <#text>
+        TextNode <#text>
+        SVGTextBox <text.Rrrrr> at (220.34375,57) content-size 526.609375x130.65625 children: inline
+          TextNode <#text>
+        TextNode <#text>
+      TextNode <#text>
+
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x261.328125]
+      SVGSVGPaintable (SVGSVGBox<svg>) [8,8 784x261.328125]
+        SVGTextPaintable (SVGTextBox<text>.small) [73.34375,79.859375 50.265625x42.46875]
+        SVGTextPaintable (SVGTextBox<text>.heavy) [138.6875,24.328125 153.703125x98]
+        SVGTextPaintable (SVGTextBox<text>.small) [187.671875,145.1875 36.90625x42.46875]
+        SVGTextPaintable (SVGTextBox<text>.Rrrrr) [220.34375,57 526.609375x130.65625]
