@@ -115,7 +115,8 @@ private:
         O(IteratorClose, iterator_close)                                         \
         O(IteratorToArray, iterator_to_array)                                    \
         O(Append, append)                                                        \
-        O(DeleteById, delete_by_id)
+        O(DeleteById, delete_by_id)                                              \
+        O(DeleteByValue, delete_by_value)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
