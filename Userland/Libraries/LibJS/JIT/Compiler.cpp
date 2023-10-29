@@ -139,8 +139,9 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
 
     // if (dst != BOOLEAN_TAG) goto slow_case;
     Assembler::Label slow_case {};
-    m_assembler.jump_if_not_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(dst),
+        Assembler::Condition::NotEqualTo,
         Assembler::Operand::Imm(BOOLEAN_TAG),
         slow_case);
 
@@ -179,8 +180,10 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 
     compile_to_boolean(GPR0, GPR1);
 
-    m_assembler.jump_if_zero(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(0),
         label_for(op.false_target()->block()));
 
     m_assembler.jump(label_for(op.true_target()->block()));
@@ -198,8 +201,9 @@ void Compiler::compile_jump_nullish(Bytecode::Op::JumpNullish const& op)
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm(IS_NULLISH_EXTRACT_PATTERN));
 
-    m_assembler.jump_if_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(IS_NULLISH_PATTERN),
         label_for(op.true_target()->block()));
 
@@ -222,8 +226,9 @@ void Compiler::branch_if_int32(Assembler::Reg reg, Codegen codegen)
     m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
 
     Assembler::Label not_int32_case {};
-    m_assembler.jump_if_not_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
         Assembler::Operand::Imm(INT32_TAG),
         not_int32_case);
 
@@ -244,12 +249,14 @@ void Compiler::branch_if_both_int32(Assembler::Reg lhs, Assembler::Reg rhs, Code
     m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(48));
 
     Assembler::Label not_int32_case {};
-    m_assembler.jump_if_not_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
         Assembler::Operand::Imm(INT32_TAG),
         not_int32_case);
-    m_assembler.jump_if_not_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR1),
+        Assembler::Condition::NotEqualTo,
         Assembler::Operand::Imm(INT32_TAG),
         not_int32_case);
 
@@ -278,8 +285,9 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
             Assembler::Operand::Register(GPR1));
 
         // if (GPR0 == 0x7fffffff) goto slow_case;
-        m_assembler.jump_if_equal(
+        m_assembler.jump_if(
             Assembler::Operand::Register(GPR0),
+            Assembler::Condition::EqualTo,
             Assembler::Operand::Imm(0x7fffffff),
             slow_case);
 
@@ -323,8 +331,9 @@ void Compiler::check_exception()
     // if (!exception.is_empty()) goto m_exception_handler;
     load_vm_register(GPR0, Bytecode::Register::exception());
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
-    m_assembler.jump_if_not_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
         Assembler::Operand::Register(GPR1),
         m_exception_handler);
 }
@@ -336,8 +345,9 @@ void Compiler::handle_exception()
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
-    m_assembler.jump_if_not_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
         Assembler::Operand::Imm(0),
         handle_exception);
 
@@ -351,8 +361,9 @@ void Compiler::handle_exception()
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 8));
-    m_assembler.jump_if_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(0),
         no_handler);
     //     accumulator = exception;
@@ -382,8 +393,9 @@ void Compiler::handle_exception()
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 16));
-    m_assembler.jump_if_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(0),
         no_finalizer);
 
@@ -518,15 +530,14 @@ void Compiler::compile_add(Bytecode::Op::Add const& op)
 
     branch_if_both_int32(ARG1, ARG2, [&] {
         // GPR0 = ARG1 + ARG2 (32-bit)
+        // if (overflow) goto slow_case;
         m_assembler.mov(
             Assembler::Operand::Register(GPR0),
             Assembler::Operand::Register(ARG1));
         m_assembler.add32(
             Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(ARG2));
-
-        // if (overflow) goto slow_case;
-        m_assembler.jump_if_overflow(slow_case);
+            Assembler::Operand::Register(ARG2),
+            slow_case);
 
         // accumulator = GPR0 | SHIFTED_INT32_TAG;
         m_assembler.mov(
@@ -567,8 +578,9 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
         m_assembler.sign_extend_32_to_64_bits(ARG1);
         m_assembler.sign_extend_32_to_64_bits(ARG2);
 
-        m_assembler.jump_if_less_than(
+        m_assembler.jump_if(
             Assembler::Operand::Register(ARG1),
+            Assembler::Condition::SignedLessThan,
             Assembler::Operand::Register(ARG2),
             true_case);
 
@@ -630,8 +642,9 @@ void Compiler::compile_return(Bytecode::Op::Return const&)
     m_assembler.mov(
         Assembler::Operand::Register(GPR1),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 0));
-    m_assembler.jump_if_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR1),
+        Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(0),
         normal_return);
 
@@ -639,8 +652,9 @@ void Compiler::compile_return(Bytecode::Op::Return const&)
     m_assembler.mov(
         Assembler::Operand::Register(GPR1),
         Assembler::Operand::Mem64BaseAndOffset(UNWIND_CONTEXT_BASE, 16));
-    m_assembler.jump_if_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR1),
+        Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(0),
         normal_return);
 
@@ -900,8 +914,9 @@ void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding con
         Assembler::Operand::Imm(Value().encoded()));
 
     Assembler::Label slow_case {};
-    m_assembler.jump_if_equal(
+    m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
         Assembler::Operand::Register(GPR1),
         slow_case);
 
@@ -1096,7 +1111,11 @@ void Compiler::compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwi
     // if (!saved_return_value.is_empty()) goto resume_block;
     load_vm_register(GPR0, Bytecode::Register::saved_return_value());
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
-    m_assembler.jump_if_not_equal(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(GPR1), label_for(op.resume_target().block()));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Register(GPR1),
+        label_for(op.resume_target().block()));
 
     // finish the pending return from the try block
     store_vm_register(Bytecode::Register::return_value(), GPR0);
