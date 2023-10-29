@@ -121,10 +121,10 @@ void Keypad::set_to_0()
     m_state = State::External;
 }
 
-DeprecatedString Keypad::to_deprecated_string() const
+ErrorOr<String> Keypad::to_string() const
 {
     if (m_state == State::External || m_state == State::TypedExternal)
-        return m_internal_value.to_deprecated_string(m_displayed_fraction_length);
+        return String::from_deprecated_string(m_internal_value.to_deprecated_string(m_displayed_fraction_length));
 
     StringBuilder builder;
 
@@ -142,7 +142,7 @@ DeprecatedString Keypad::to_deprecated_string() const
             builder.append(frac_value);
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 bool Keypad::in_typing_state() const

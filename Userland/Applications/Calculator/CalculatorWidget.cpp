@@ -28,7 +28,7 @@ CalculatorWidget::CalculatorWidget()
     m_label->set_frame_style(Gfx::FrameStyle::SunkenContainer);
 
     for (int i = 0; i < 10; i++) {
-        m_digit_button[i] = *find_descendant_of_type_named<GUI::Button>(DeprecatedString::formatted("{}_button", i));
+        m_digit_button[i] = *find_descendant_of_type_named<GUI::Button>(String::formatted("{}_button", i).release_value_but_fixme_should_propagate_errors());
         add_digit_button(*m_digit_button[i], i);
     }
 
@@ -128,9 +128,9 @@ void CalculatorWidget::add_digit_button(GUI::Button& button, int digit)
     };
 }
 
-DeprecatedString CalculatorWidget::get_entry()
+String CalculatorWidget::get_entry()
 {
-    return m_entry->text();
+    return String::from_deprecated_string(m_entry->text()).release_value_but_fixme_should_propagate_errors();
 }
 
 void CalculatorWidget::set_entry(Crypto::BigFraction value)
@@ -147,7 +147,7 @@ void CalculatorWidget::set_typed_entry(Crypto::BigFraction value)
 
 void CalculatorWidget::update_display()
 {
-    m_entry->set_text(m_keypad.to_deprecated_string());
+    m_entry->set_text(m_keypad.to_string().release_value_but_fixme_should_propagate_errors());
     if (m_calculator.has_error())
         m_label->set_text("E"_string);
     else
