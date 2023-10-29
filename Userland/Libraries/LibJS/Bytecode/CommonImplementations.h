@@ -37,5 +37,6 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM&, ClassExpression cons
 ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM&, Value argument_array, bool is_synthetic);
 Object* iterator_to_object(VM&, IteratorRecord);
 IteratorRecord object_to_iterator(VM&, Object&);
+ThrowCompletionOr<NonnullGCPtr<Array>> iterator_to_array(VM&, Value iterator);
 
 }
