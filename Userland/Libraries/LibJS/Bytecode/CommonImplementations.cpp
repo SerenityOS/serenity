@@ -624,4 +624,15 @@ ThrowCompletionOr<void> append(VM& vm, Value lhs, Value rhs, bool is_spread)
     return {};
 }
 
+ThrowCompletionOr<Value> delete_by_id(Bytecode::Interpreter& interpreter, Value base, IdentifierTableIndex property)
+{
+    auto& vm = interpreter.vm();
+
+    auto const& identifier = interpreter.current_executable().get_identifier(property);
+    bool strict = vm.in_strict_mode();
+    auto reference = Reference { base, identifier, {}, strict };
+
+    return TRY(reference.delete_(vm));
+}
+
 }
