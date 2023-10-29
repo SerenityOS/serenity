@@ -1195,6 +1195,23 @@ void Compiler::compile_super_call_with_argument_array(Bytecode::Op::SuperCallWit
     check_exception();
 }
 
+static Value cxx_get_iterator(VM& vm, Value value, IteratorHint hint)
+{
+    auto iterator = TRY_OR_SET_EXCEPTION(get_iterator(vm, value, hint));
+    return Bytecode::iterator_to_object(vm, iterator);
+}
+
+void Compiler::compile_get_iterator(Bytecode::Op::GetIterator const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(to_underlying(op.hint())));
+    native_call((void*)cxx_get_iterator);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
