@@ -1,0 +1,25 @@
+shared_library("LibAccelGfx") {
+  output_name = "accelgfx"
+  include_dirs = [ "//Userland/Libraries" ]
+
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibGfx",
+  ]
+  if (current_os == "linux") {
+    libs = [
+      "GL",
+      "EGL",
+    ]
+  }
+  sources = [
+    "Canvas.cpp",
+    "Canvas.h",
+    "Context.cpp",
+    "Context.h",
+    "Forward.h",
+    "Painter.cpp",
+    "Painter.h",
+  ]
+}
