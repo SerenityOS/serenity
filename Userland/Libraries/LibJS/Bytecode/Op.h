@@ -410,6 +410,12 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    IdentifierTableIndex identifier() const { return m_identifier; }
+    EnvironmentMode mode() const { return m_mode; }
+    bool is_immutable() const { return m_is_immutable; }
+    bool is_global() const { return m_is_global; }
+    bool is_strict() const { return m_is_strict; }
+
 private:
     IdentifierTableIndex m_identifier;
     EnvironmentMode m_mode;
