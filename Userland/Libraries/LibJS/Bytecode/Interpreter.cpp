@@ -1143,92 +1143,9 @@ ThrowCompletionOr<void> GetMethod::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
-// 14.7.5.9 EnumerateObjectProperties ( O ), https://tc39.es/ecma262/#sec-enumerate-object-properties
 ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    // While the spec does provide an algorithm, it allows us to implement it ourselves so long as we meet the following invariants:
-    //    1- Returned property keys do not include keys that are Symbols
-    //    2- Properties of the target object may be deleted during enumeration. A property that is deleted before it is processed by the iterator's next method is ignored
-    //    3- If new properties are added to the target object during enumeration, the newly added properties are not guaranteed to be processed in the active enumeration
-    //    4- A property name will be returned by the iterator's next method at most once in any enumeration.
-    //    5- Enumerating the properties of the target object includes enumerating properties of its prototype, and the prototype of the prototype, and so on, recursively;
-    //       but a property of a prototype is not processed if it has the same name as a property that has already been processed by the iterator's next method.
-    //    6- The values of [[Enumerable]] attributes are not considered when determining if a property of a prototype object has already been processed.
-    //    7- The enumerable property names of prototype objects must be obtained by invoking EnumerateObjectProperties passing the prototype object as the argument.
-    //    8- EnumerateObjectProperties must obtain the own property keys of the target object by calling its [[OwnPropertyKeys]] internal method.
-    //    9- Property attributes of the target object must be obtained by calling its [[GetOwnProperty]] internal method
-
-    // Invariant 3 effectively allows the implementation to ignore newly added keys, and we do so (similar to other implementations).
-    auto& vm = interpreter.vm();
-    auto object = TRY(interpreter.accumulator().to_object(vm));
-    // Note: While the spec doesn't explicitly require these to be ordered, it says that the values should be retrieved via OwnPropertyKeys,
-    //       so we just keep the order consistent anyway.
-    OrderedHashTable<PropertyKey> properties;
-    OrderedHashTable<PropertyKey> non_enumerable_properties;
-    HashTable<NonnullGCPtr<Object>> seen_objects;
-    // Collect all keys immediately (invariant no. 5)
-    for (auto object_to_check = GCPtr { object.ptr() }; object_to_check && !seen_objects.contains(*object_to_check); object_to_check = TRY(object_to_check->internal_get_prototype_of())) {
-        seen_objects.set(*object_to_check);
-        for (auto& key : TRY(object_to_check->internal_own_property_keys())) {
-            if (key.is_symbol())
-                continue;
-            auto property_key = TRY(PropertyKey::from_value(vm, key));
-
-            // If there is a non-enumerable property higher up the prototype chain with the same key,
-            // we mustn't include this property even if it's enumerable (invariant no. 5 and 6)
-            if (non_enumerable_properties.contains(property_key))
-                continue;
-            if (properties.contains(property_key))
-                continue;
-
-            auto descriptor = TRY(object_to_check->internal_get_own_property(property_key));
-            if (!*descriptor->enumerable)
-                non_enumerable_properties.set(move(property_key));
-            else
-                properties.set(move(property_key));
-        }
-    }
-    IteratorRecord iterator {
-        .iterator = object,
-        .next_method = NativeFunction::create(
-            interpreter.realm(),
-            [items = move(properties)](VM& vm) mutable -> ThrowCompletionOr<Value> {
-                auto& realm = *vm.current_realm();
-                auto iterated_object_value = vm.this_value();
-                if (!iterated_object_value.is_object())
-                    return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next"sv);
-
-                auto& iterated_object = iterated_object_value.as_object();
-                auto result_object = Object::create(realm, nullptr);
-                while (true) {
-                    if (items.is_empty()) {
-                        result_object->define_direct_property(vm.names.done, JS::Value(true), default_attributes);
-                        return result_object;
-                    }
-
-                    auto key = items.take_first();
-
-                    // If the property is deleted, don't include it (invariant no. 2)
-                    if (!TRY(iterated_object.has_property(key)))
-                        continue;
-
-                    result_object->define_direct_property(vm.names.done, JS::Value(false), default_attributes);
-
-                    if (key.is_number())
-                        result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::number(key.as_number()))), default_attributes);
-                    else if (key.is_string())
-                        result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, key.as_string()), default_attributes);
-                    else
-                        VERIFY_NOT_REACHED(); // We should not have non-string/number keys.
-
-                    return result_object;
-                }
-            },
-            1,
-            vm.names.next),
-        .done = false,
-    };
-    interpreter.accumulator() = iterator_to_object(vm, move(iterator));
+    interpreter.accumulator() = TRY(get_object_property_iterator(interpreter.vm(), interpreter.accumulator()));
     return {};
 }
 
