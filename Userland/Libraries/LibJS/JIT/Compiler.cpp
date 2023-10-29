@@ -1486,6 +1486,27 @@ void Compiler::compile_delete_by_id_with_this(Bytecode::Op::DeleteByIdWithThis c
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_put_by_id_with_this(VM& vm, Value base, Value value, DeprecatedFlyString const& name, Value this_value, Bytecode::Op::PropertyKind kind)
+{
+    TRY_OR_SET_EXCEPTION(Bytecode::put_by_property_key(vm, base, this_value, value, name, kind));
+    return {};
+}
+
+void Compiler::compile_put_by_id_with_this(Bytecode::Op::PutByIdWithThis const& op)
+{
+    load_vm_register(ARG1, op.base());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
+    load_vm_register(ARG4, op.this_value());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG5),
+        Assembler::Operand::Imm(to_underlying(op.kind())));
+    native_call((void*)cxx_put_by_id_with_this);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
