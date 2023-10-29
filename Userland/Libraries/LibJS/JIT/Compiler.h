@@ -103,7 +103,8 @@ private:
         O(TypeofVariable, typeof_variable)                                       \
         O(SetVariable, set_variable)                                             \
         O(ContinuePendingUnwind, continue_pending_unwind)                        \
-        O(ConcatString, concat_string)
+        O(ConcatString, concat_string)                                           \
+        O(BlockDeclarationInstantiation, block_declaration_instantiation)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);

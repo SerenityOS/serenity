@@ -1047,6 +1047,8 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    ScopeNode const& scope_node() const { return m_scope_node; }
+
 private:
     ScopeNode const& m_scope_node;
 };
