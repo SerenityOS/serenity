@@ -1541,6 +1541,17 @@ void Compiler::compile_import_call(Bytecode::Op::ImportCall const& op)
     check_exception();
 }
 
+static Value cxx_get_import_meta(VM& vm)
+{
+    return vm.get_import_meta();
+}
+
+void Compiler::compile_get_import_meta(Bytecode::Op::GetImportMeta const&)
+{
+    native_call((void*)cxx_get_import_meta);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
