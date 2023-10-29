@@ -1443,25 +1443,7 @@ ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter&
 
 ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
-    auto name = m_class_expression.name();
-    auto super_class = interpreter.accumulator();
-
-    // NOTE: NewClass expects classEnv to be active lexical environment
-    auto class_environment = vm.lexical_environment();
-    vm.running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
-
-    DeprecatedFlyString binding_name;
-    DeprecatedFlyString class_name;
-    if (!m_class_expression.has_name() && m_lhs_name.has_value()) {
-        class_name = interpreter.current_executable().get_identifier(m_lhs_name.value());
-    } else {
-        binding_name = name;
-        class_name = name.is_null() ? ""sv : name;
-    }
-
-    interpreter.accumulator() = TRY(m_class_expression.create_class_constructor(vm, class_environment, vm.lexical_environment(), super_class, binding_name, class_name));
-
+    interpreter.accumulator() = TRY(new_class(interpreter.vm(), m_class_expression, m_lhs_name));
     return {};
 }
 
