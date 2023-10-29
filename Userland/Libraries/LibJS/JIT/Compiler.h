@@ -106,7 +106,8 @@ private:
         O(ConcatString, concat_string)                                           \
         O(BlockDeclarationInstantiation, block_declaration_instantiation)        \
         O(SuperCallWithArgumentArray, super_call_with_argument_array)            \
-        O(GetIterator, get_iterator)
+        O(GetIterator, get_iterator)                                             \
+        O(IteratorNext, iterator_next)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
