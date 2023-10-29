@@ -62,6 +62,7 @@ public:
 
     StringImpl const* impl() const { return m_impl; }
     char const* characters() const { return m_impl ? m_impl->characters() : nullptr; }
+    char const* characters_without_null_termination() const { return m_impl ? m_impl->characters() : nullptr; }
     size_t length() const { return m_impl ? m_impl->length() : 0; }
 
     ALWAYS_INLINE u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }

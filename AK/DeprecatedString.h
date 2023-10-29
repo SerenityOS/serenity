@@ -172,6 +172,8 @@ public:
     [[nodiscard]] ALWAYS_INLINE size_t length() const { return m_impl->length(); }
     // Includes NUL-terminator.
     [[nodiscard]] ALWAYS_INLINE char const* characters() const { return m_impl->characters(); }
+    [[nodiscard]] ALWAYS_INLINE char const* characters_for_external_api() const { return m_impl->characters(); }
+    [[nodiscard]] ALWAYS_INLINE char const* characters_without_null_termination() const { return m_impl->characters(); }
 
     [[nodiscard]] bool copy_characters_to_buffer(char* buffer, size_t buffer_size) const;
 
