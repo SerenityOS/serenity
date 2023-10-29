@@ -212,6 +212,23 @@ void Compiler::compile_jump_nullish(Bytecode::Op::JumpNullish const& op)
     m_assembler.jump(label_for(op.false_target()->block()));
 }
 
+void Compiler::compile_jump_undefined(Bytecode::Op::JumpUndefined const& op)
+{
+    load_vm_register(GPR0, Bytecode::Register::accumulator());
+
+    m_assembler.shift_right(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(48));
+
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(UNDEFINED_TAG),
+        label_for(op.true_target()->block()));
+
+    m_assembler.jump(label_for(op.false_target()->block()));
+}
+
 [[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
 {
     auto old_value = TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
