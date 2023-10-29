@@ -732,11 +732,17 @@ struct Assembler {
         }
     }
 
-    // NOTE: It's up to the caller of this function to preserve registers as needed.
-    void native_call(void* callee, Vector<Operand> const& stack_arguments = {})
+    void native_call(
+        void* callee,
+        Vector<Operand> const& preserved_registers = {},
+        Vector<Operand> const& stack_arguments = {})
     {
+        for (auto const& reg : preserved_registers.in_reverse())
+            push(reg);
+
         // Preserve 16-byte stack alignment for non-even amount of stack-passed arguments
-        if ((stack_arguments.size() % 2) == 1)
+        auto needs_aligning = ((stack_arguments.size() + preserved_registers.size()) % 2) == 1;
+        if (needs_aligning)
             push(Operand::Imm(0));
         for (auto const& stack_argument : stack_arguments.in_reverse())
             push(stack_argument);
@@ -748,8 +754,11 @@ struct Assembler {
         emit8(0xff);
         emit_modrm_slash(2, Operand::Register(Reg::RAX));
 
-        if (!stack_arguments.is_empty())
-            add(Operand::Register(Reg::RSP), Operand::Imm(align_up_to(stack_arguments.size(), 2) * sizeof(void*)));
+        if (!stack_arguments.is_empty() || needs_aligning)
+            add(Operand::Register(Reg::RSP), Operand::Imm((stack_arguments.size() + (needs_aligning ? 1 : 0)) * sizeof(void*)));
+
+        for (auto const& reg : preserved_registers)
+            pop(reg);
     }
 
     void trap()

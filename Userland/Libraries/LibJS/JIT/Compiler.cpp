@@ -1917,21 +1917,9 @@ void Compiler::jump_to_exit()
 
 void Compiler::native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments)
 {
-    // Make sure we don't clobber the VM&.
-    m_assembler.push(Assembler::Operand::Register(ARG0));
-
-    // Align the stack pointer.
-    m_assembler.sub(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(8));
-
     // NOTE: We don't preserve caller-saved registers when making a native call.
     //       This means that they may have changed after we return from the call.
-    m_assembler.native_call(function_address, stack_arguments);
-
-    // Restore the stack pointer.
-    m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(8));
-
-    // Restore our VM&.
-    m_assembler.pop(Assembler::Operand::Register(ARG0));
+    m_assembler.native_call(function_address, { Assembler::Operand::Register(ARG0) }, stack_arguments);
 }
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
