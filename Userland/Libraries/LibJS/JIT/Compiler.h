@@ -100,6 +100,7 @@ private:
     void compile_new_function(Bytecode::Op::NewFunction const&);
     void compile_new_regexp(Bytecode::Op::NewRegExp const&);
     void compile_new_bigint(Bytecode::Op::NewBigInt const&);
+    void compile_new_class(Bytecode::Op::NewClass const&);
 
     void compile_create_variable(Bytecode::Op::CreateVariable const&);
 
