@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <sys/mman.h>
@@ -708,6 +709,23 @@ void Compiler::compile_new_function(Bytecode::Op::NewFunction const& op)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_new_class(VM& vm, ClassExpression const& class_expression, Optional<Bytecode::IdentifierTableIndex> const& lhs_name)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::new_class(vm, class_expression, lhs_name));
+}
+
+void Compiler::compile_new_class(Bytecode::Op::NewClass const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm(bit_cast<u64>(&op.class_expression())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(bit_cast<u64>(&op.lhs_name())));
+    native_call((void*)cxx_new_class);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+}
+
 static Value cxx_get_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, u32 cache_index)
 {
     return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm.bytecode_interpreter(), property, base, base, cache_index));
@@ -1250,6 +1268,9 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
                 break;
             case Bytecode::Instruction::Type::CreateVariable:
                 compiler.compile_create_variable(static_cast<Bytecode::Op::CreateVariable const&>(op));
+                break;
+            case Bytecode::Instruction::Type::NewClass:
+                compiler.compile_new_class(static_cast<Bytecode::Op::NewClass const&>(op));
                 break;
 
 #    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                          \

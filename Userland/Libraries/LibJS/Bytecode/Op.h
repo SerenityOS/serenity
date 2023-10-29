@@ -1005,6 +1005,9 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    ClassExpression const& class_expression() const { return m_class_expression; }
+    Optional<IdentifierTableIndex> const& lhs_name() const { return m_lhs_name; }
+
 private:
     ClassExpression const& m_class_expression;
     Optional<IdentifierTableIndex> m_lhs_name;
