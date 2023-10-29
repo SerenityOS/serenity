@@ -50,7 +50,7 @@ bool DeprecatedString::copy_characters_to_buffer(char* buffer, size_t buffer_siz
     VERIFY(buffer_size > 0);
 
     size_t characters_to_copy = min(length(), buffer_size - 1);
-    __builtin_memcpy(buffer, characters(), characters_to_copy);
+    __builtin_memcpy(buffer, characters_without_null_termination(), characters_to_copy);
     buffer[characters_to_copy] = 0;
 
     return characters_to_copy == length();
@@ -72,26 +72,26 @@ DeprecatedString DeprecatedString::substring(size_t start, size_t length) const
         return DeprecatedString::empty();
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
-    return { characters() + start, length };
+    return { characters_without_null_termination() + start, length };
 }
 
 DeprecatedString DeprecatedString::substring(size_t start) const
 {
     VERIFY(start <= length());
-    return { characters() + start, length() - start };
+    return { characters_without_null_termination() + start, length() - start };
 }
 
 StringView DeprecatedString::substring_view(size_t start, size_t length) const
 {
     VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
-    return { characters() + start, length };
+    return { characters_without_null_termination() + start, length };
 }
 
 StringView DeprecatedString::substring_view(size_t start) const
 {
     VERIFY(start <= length());
-    return { characters() + start, length() - start };
+    return { characters_without_null_termination() + start, length() - start };
 }
 
 Vector<DeprecatedString> DeprecatedString::split(char separator, SplitBehavior split_behavior) const
@@ -108,8 +108,9 @@ Vector<DeprecatedString> DeprecatedString::split_limit(char separator, size_t li
     size_t substart = 0;
     bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
     bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
+    char const* characters = characters_without_null_termination();
     for (size_t i = 0; i < length() && (v.size() + 1) != limit; ++i) {
-        char ch = characters()[i];
+        char ch = characters[i];
         if (ch == separator) {
             size_t sublen = i - substart;
             if (sublen != 0 || keep_empty)
@@ -132,8 +133,9 @@ Vector<StringView> DeprecatedString::split_view(Function<bool(char)> separator, 
     size_t substart = 0;
     bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
     bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
+    char const* characters = characters_without_null_termination();
     for (size_t i = 0; i < length(); ++i) {
-        char ch = characters()[i];
+        char ch = characters[i];
         if (separator(ch)) {
             size_t sublen = i - substart;
             if (sublen != 0 || keep_empty)
@@ -203,7 +205,7 @@ bool DeprecatedString::starts_with(char ch) const
 {
     if (is_empty())
         return false;
-    return characters()[0] == ch;
+    return characters_without_null_termination()[0] == ch;
 }
 
 bool DeprecatedString::ends_with(StringView str, CaseSensitivity case_sensitivity) const
@@ -215,7 +217,7 @@ bool DeprecatedString::ends_with(char ch) const
 {
     if (is_empty())
         return false;
-    return characters()[length() - 1] == ch;
+    return characters_without_null_termination()[length() - 1] == ch;
 }
 
 DeprecatedString DeprecatedString::repeated(char ch, size_t count)
@@ -349,8 +351,9 @@ bool DeprecatedString::equals_ignoring_ascii_case(StringView other) const
 DeprecatedString DeprecatedString::reverse() const
 {
     StringBuilder reversed_string(length());
+    char const* characters = characters_without_null_termination();
     for (size_t i = length(); i-- > 0;) {
-        reversed_string.append(characters()[i]);
+        reversed_string.append(characters[i]);
     }
     return reversed_string.to_deprecated_string();
 }

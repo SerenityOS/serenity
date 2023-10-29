@@ -35,13 +35,13 @@ StringView::StringView(FlyString const& string)
 }
 
 StringView::StringView(DeprecatedString const& string)
-    : m_characters(string.characters())
+    : m_characters(string.characters_without_null_termination())
     , m_length(string.length())
 {
 }
 
 StringView::StringView(DeprecatedFlyString const& string)
-    : m_characters(string.characters())
+    : m_characters(string.characters_without_null_termination())
     , m_length(string.length())
 {
 }

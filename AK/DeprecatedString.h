@@ -280,7 +280,7 @@ public:
 
     [[nodiscard]] StringView view() const
     {
-        return { characters(), length() };
+        return { characters_without_null_termination(), length() };
     }
 
     [[nodiscard]] DeprecatedString replace(StringView needle, StringView replacement, ReplaceMode replace_mode = ReplaceMode::All) const { return StringUtils::replace(*this, needle, replacement, replace_mode); }
