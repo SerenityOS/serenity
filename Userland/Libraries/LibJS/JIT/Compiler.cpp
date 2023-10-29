@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Simon Wanner <simon@skyrising.xyz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1377,6 +1378,19 @@ void Compiler::compile_delete_by_value_with_this(Bytecode::Op::DeleteByValueWith
     load_vm_register(ARG2, Bytecode::Register::accumulator());
     load_vm_register(ARG3, op.this_value());
     native_call((void*)cxx_delete_by_value_with_this);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
+static Value cxx_get_object_property_iterator(VM& vm, Value object)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_object_property_iterator(vm, object));
+}
+
+void Compiler::compile_get_object_property_iterator(Bytecode::Op::GetObjectPropertyIterator const&)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    native_call((void*)cxx_get_object_property_iterator);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
 }
