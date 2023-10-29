@@ -1412,6 +1412,25 @@ void Compiler::compile_get_private_by_id(Bytecode::Op::GetPrivateById const& op)
     check_exception();
 }
 
+static Value cxx_resolve_super_base(VM& vm)
+{
+    // 1. Let env be GetThisEnvironment().
+    auto& env = verify_cast<FunctionEnvironment>(*get_this_environment(vm));
+
+    // 2. Assert: env.HasSuperBinding() is true.
+    VERIFY(env.has_super_binding());
+
+    // 3. Let baseValue be ? env.GetSuperBase().
+    return TRY_OR_SET_EXCEPTION(env.get_super_base());
+}
+
+void Compiler::compile_resolve_super_base(Bytecode::Op::ResolveSuperBase const&)
+{
+    native_call((void*)cxx_resolve_super_base);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
