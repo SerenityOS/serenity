@@ -293,7 +293,9 @@ struct Assembler {
 
     void cmp(Operand lhs, Operand rhs)
     {
-        if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Reg) {
+        if (rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
+            test(lhs, lhs);
+        } else if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Reg) {
             emit8(0x48
                 | ((to_underlying(rhs.reg) >= 8) ? 1 << 2 : 0)
                 | ((to_underlying(lhs.reg) >= 8) ? 1 << 0 : 0));
