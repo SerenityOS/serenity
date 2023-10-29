@@ -41,5 +41,6 @@ ThrowCompletionOr<NonnullGCPtr<Array>> iterator_to_array(VM&, Value iterator);
 ThrowCompletionOr<void> append(VM& vm, Value lhs, Value rhs, bool is_spread);
 ThrowCompletionOr<Value> delete_by_id(Bytecode::Interpreter&, Value base, IdentifierTableIndex identifier);
 ThrowCompletionOr<Value> delete_by_value(Bytecode::Interpreter&, Value base, Value property_key_value);
+ThrowCompletionOr<Value> delete_by_value_with_this(Bytecode::Interpreter&, Value base, Value property_key_value, Value this_value);
 
 }

@@ -1117,16 +1117,12 @@ ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& inter
 
 ThrowCompletionOr<void> DeleteByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
-
     // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
     auto property_key_value = interpreter.accumulator();
-
     auto base_value = interpreter.reg(m_base);
-    auto property_key = TRY(property_key_value.to_property_key(vm));
-    bool strict = vm.in_strict_mode();
-    auto reference = Reference { base_value, property_key, interpreter.reg(m_this_value), strict };
-    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
+    auto this_value = interpreter.reg(m_this_value);
+    interpreter.accumulator() = TRY(delete_by_value_with_this(interpreter, base_value, property_key_value, this_value));
+
     return {};
 }
 
