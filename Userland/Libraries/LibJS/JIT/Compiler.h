@@ -128,7 +128,8 @@ private:
         O(PutByIdWithThis, put_by_id_with_this)                                  \
         O(PutPrivateById, put_private_by_id)                                     \
         O(ImportCall, import_call)                                               \
-        O(GetImportMeta, get_import_meta)
+        O(GetImportMeta, get_import_meta)                                        \
+        O(DeleteVariable, delete_variable)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
