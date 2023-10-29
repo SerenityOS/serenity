@@ -91,6 +91,8 @@ void ak_verification_failed(char const* message)
 {
 #    if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
     bool colorize_output = true;
+#    elif defined(AK_OS_WINDOWS)
+    bool colorize_output = false;
 #    else
     bool colorize_output = isatty(STDERR_FILENO) == 1;
 #    endif
