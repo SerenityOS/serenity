@@ -1395,6 +1395,23 @@ void Compiler::compile_get_object_property_iterator(Bytecode::Op::GetObjectPrope
     check_exception();
 }
 
+static Value cxx_get_private_by_id(VM& vm, Value base_value, DeprecatedFlyString& name)
+{
+    auto private_reference = make_private_reference(vm, base_value, name);
+    return TRY_OR_SET_EXCEPTION(private_reference.get_value(vm));
+}
+
+void Compiler::compile_get_private_by_id(Bytecode::Op::GetPrivateById const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
+    native_call((void*)cxx_get_private_by_id);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
