@@ -5008,6 +5008,8 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> c
     };
 
     auto to_axis_offset = [](RefPtr<StyleValue> value) -> Optional<AxisOffset> {
+        if (!value)
+            return OptionalNone {};
         if (value->is_percentage())
             return AxisOffset { Axis::None, value->as_percentage() };
         if (value->is_length())
