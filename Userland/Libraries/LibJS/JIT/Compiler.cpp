@@ -1552,6 +1552,22 @@ void Compiler::compile_get_import_meta(Bytecode::Op::GetImportMeta const&)
     store_vm_register(Bytecode::Register::accumulator(), RET);
 }
 
+static Value cxx_delete_variable(VM& vm, DeprecatedFlyString const& identifier)
+{
+    auto reference = TRY_OR_SET_EXCEPTION(vm.resolve_binding(identifier));
+    return Value(TRY_OR_SET_EXCEPTION(reference.delete_(vm)));
+}
+
+void Compiler::compile_delete_variable(Bytecode::Op::DeleteVariable const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
+    native_call((void*)cxx_delete_variable);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
