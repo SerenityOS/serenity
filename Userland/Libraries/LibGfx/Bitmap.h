@@ -31,6 +31,8 @@
     __ENUMERATE_IMAGE_FORMAT(ppm, ".ppm")   \
     __ENUMERATE_IMAGE_FORMAT(qoi, ".qoi")   \
     __ENUMERATE_IMAGE_FORMAT(tga, ".tga")   \
+    __ENUMERATE_IMAGE_FORMAT(tiff, ".tif")  \
+    __ENUMERATE_IMAGE_FORMAT(tiff, ".tiff") \
     __ENUMERATE_IMAGE_FORMAT(tvg, ".tvg")   \
     __ENUMERATE_IMAGE_FORMAT(tvg, ".webp")
 
