@@ -34,5 +34,6 @@ Value new_regexp(VM&, ParsedRegex const&, DeprecatedString const& pattern, Depre
 MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter&);
 ThrowCompletionOr<void> create_variable(VM&, DeprecatedFlyString const& name, Op::EnvironmentMode, bool is_global, bool is_immutable, bool is_strict);
 ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM&, ClassExpression const&, Optional<IdentifierTableIndex> const& lhs_name);
+ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM&, Value argument_array, bool is_synthetic);
 
 }
