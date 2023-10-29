@@ -152,6 +152,8 @@ private:
 
     void native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments = {});
 
+    void jump_if_int32(Assembler::Reg, Assembler::Label&);
+
     template<typename Codegen>
     void branch_if_int32(Assembler::Reg, Codegen);
 

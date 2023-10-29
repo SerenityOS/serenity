@@ -220,6 +220,19 @@ void Compiler::compile_jump_nullish(Bytecode::Op::JumpNullish const& op)
     return BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
 }
 
+void Compiler::jump_if_int32(Assembler::Reg reg, Assembler::Label& label)
+{
+    // GPR0 = reg >> 48;
+    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(reg));
+    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
+
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(INT32_TAG),
+        label);
+}
+
 template<typename Codegen>
 void Compiler::branch_if_int32(Assembler::Reg reg, Codegen codegen)
 {
@@ -892,10 +905,16 @@ static Value cxx_to_numeric(VM& vm, Value value)
 
 void Compiler::compile_to_numeric(Bytecode::Op::ToNumeric const&)
 {
+    Assembler::Label fast_case {};
+
     load_vm_register(ARG1, Bytecode::Register::accumulator());
+    jump_if_int32(ARG1, fast_case);
+
     native_call((void*)cxx_to_numeric);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
+
+    fast_case.link(m_assembler);
 }
 
 static Value cxx_resolve_this_binding(VM& vm)
