@@ -130,8 +130,50 @@ private:
         case Compression::NoCompression:
             TRY(loop_over_pixels([this]() { return read_value<u8>(); }));
             break;
+        case Compression::PackBits: {
+            // Section 9: PackBits Compression
+            Optional<i8> n;
+            Optional<u8> saved_byte;
+
+            auto read_packed_byte = [&]() -> ErrorOr<u8> {
+                while (true) {
+                    if (!n.has_value())
+                        n = TRY(read_value<i8>());
+
+                    if (n.value() >= 0 && !saved_byte.has_value()) {
+                        n.value() = n.value() - 1;
+                        if (n.value() == -1)
+                            n.clear();
+
+                        return read_value<u8>();
+                    }
+
+                    if (n.value() == -128) {
+                        n.clear();
+                        continue;
+                    }
+
+                    if (!saved_byte.has_value())
+                        saved_byte = TRY(read_value<u8>());
+
+                    n.value() = n.value() + 1;
+
+                    auto const byte_backup = *saved_byte;
+
+                    if (n == 1) {
+                        saved_byte.clear();
+                        n.clear();
+                    }
+
+                    return byte_backup;
+                }
+            };
+
+            TRY(loop_over_pixels(move(read_packed_byte)));
+            break;
+        }
         default:
-            return Error::from_string_literal("Compressed TIFF are not supported yet :^)");
+            return Error::from_string_literal("This compression type is not supported yet :^)");
         }
 
         return {};
