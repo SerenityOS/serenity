@@ -99,6 +99,19 @@ struct Assembler {
         }
     };
 
+    enum class Condition {
+        EqualTo = 0x4,
+        NotEqualTo = 0x5,
+        UnsignedGreaterThan = 0x7,
+        UnsignedGreaterThanOrEqualTo = 0x3,
+        UnsignedLessThan = 0x2,
+        UnsignedLessThanOrEqualTo = 0x6,
+        SignedGreaterThan = 0xF,
+        SignedGreaterThanOrEqualTo = 0xD,
+        SignedLessThan = 0xC,
+        SignedLessThanOrEqualTo = 0xE,
+    };
+
     static constexpr u8 encode_reg(Reg reg)
     {
         return to_underlying(reg) & 0x7;
@@ -335,69 +348,39 @@ struct Assembler {
         }
     }
 
-    void jump_if_zero(Operand reg, Label& label)
+    void jump_if(Operand lhs, Condition condition, Operand rhs, Label& label)
     {
-        test(reg, reg);
+        cmp(lhs, rhs);
 
-        // jz label (RIP-relative 32-bit offset)
-        emit8(0x0f);
-        emit8(0x84);
+        emit8(0x0F);
+        emit8(0x80 | to_underlying(condition));
         emit32(0xdeadbeef);
         label.add_jump(*this, m_output.size());
+    }
+
+    void jump_if_zero(Operand reg, Label& label)
+    {
+        jump_if(reg, Condition::EqualTo, Operand::Imm(0), label);
     }
 
     void jump_if_not_zero(Operand reg, Label& label)
     {
-        test(reg, reg);
-
-        // jnz label (RIP-relative 32-bit offset)
-        emit8(0x0f);
-        emit8(0x85);
-        emit32(0xdeadbeef);
-        label.add_jump(*this, m_output.size());
+        jump_if(reg, Condition::NotEqualTo, Operand::Imm(0), label);
     }
 
     void jump_if_equal(Operand lhs, Operand rhs, Label& label)
     {
-        if (rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
-            jump_if_zero(lhs, label);
-            return;
-        }
-
-        cmp(lhs, rhs);
-
-        // je label (RIP-relative 32-bit offset)
-        emit8(0x0f);
-        emit8(0x84);
-        emit32(0xdeadbeef);
-        label.add_jump(*this, m_output.size());
+        jump_if(lhs, Condition::EqualTo, rhs, label);
     }
 
     void jump_if_not_equal(Operand lhs, Operand rhs, Label& label)
     {
-        if (rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
-            jump_if_not_zero(lhs, label);
-            return;
-        }
-
-        cmp(lhs, rhs);
-
-        // jne label (RIP-relative 32-bit offset)
-        emit8(0x0f);
-        emit8(0x85);
-        emit32(0xdeadbeef);
-        label.add_jump(*this, m_output.size());
+        jump_if(lhs, Condition::NotEqualTo, rhs, label);
     }
 
     void jump_if_less_than(Operand lhs, Operand rhs, Label& label)
     {
-        cmp(lhs, rhs);
-
-        // jl label (RIP-relative 32-bit offset)
-        emit8(0x0f);
-        emit8(0x8c);
-        emit32(0xdeadbeef);
-        label.add_jump(*this, m_output.size());
+        jump_if(lhs, Condition::SignedLessThan, rhs, label);
     }
 
     void jump_if_overflow(Label& label)
