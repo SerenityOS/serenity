@@ -1507,6 +1507,26 @@ void Compiler::compile_put_by_id_with_this(Bytecode::Op::PutByIdWithThis const& 
     check_exception();
 }
 
+static Value cxx_put_private_by_id(VM& vm, Value base, Value value, DeprecatedFlyString const& name)
+{
+    auto object = TRY_OR_SET_EXCEPTION(base.to_object(vm));
+    auto private_reference = make_private_reference(vm, object, name);
+    TRY_OR_SET_EXCEPTION(private_reference.put_value(vm, value));
+    return value;
+}
+
+void Compiler::compile_put_private_by_id(Bytecode::Op::PutPrivateById const& op)
+{
+    load_vm_register(ARG1, op.base());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
+    native_call((void*)cxx_put_private_by_id);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
