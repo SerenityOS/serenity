@@ -387,7 +387,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     if (Checked<u32>::addition_would_overflow(offset, (u32)Sizes::OffsetTable))
         return Error::from_string_literal("Invalid offset in font header");
 
-    if (buffer.size() < offset + (u32)Sizes::OffsetTable)
+    if (buffer.size() <= offset + (u32)Sizes::OffsetTable)
         return Error::from_string_literal("Font file too small");
 
     Optional<ReadonlyBytes> opt_head_slice = {};
@@ -418,7 +418,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<GPOS> gpos;
 
     auto num_tables = be_u16(buffer.offset(offset + (u32)Offsets::NumTables));
-    if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
+    if (buffer.size() <= offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
         return Error::from_string_literal("Font file too small");
 
     for (auto i = 0; i < num_tables; i++) {
@@ -427,7 +427,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         u32 table_offset = be_u32(buffer.offset(record_offset + (u32)Offsets::TableRecord_Offset));
         u32 table_length = be_u32(buffer.offset(record_offset + (u32)Offsets::TableRecord_Length));
 
-        if (Checked<u32>::addition_would_overflow(table_offset, table_length))
+        if (table_length == 0 || Checked<u32>::addition_would_overflow(table_offset, table_length))
             return Error::from_string_literal("Invalid table offset or length in font");
 
         if (buffer.size() < table_offset + table_length)
