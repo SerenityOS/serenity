@@ -18,10 +18,16 @@ find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
 find_program(BLUEPRINT_COMPILER NAMES blueprint-compiler REQUIRED)
 
+get_filename_component(SERENITY_SOURCE_DIR "${SERENITY_SOURCE_DIR}" ABSOLUTE CACHE FORCE)
+
 set(LAGOM_SOURCE_DIR "${SERENITY_SOURCE_DIR}/Meta/Lagom")
 set(LAGOM_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/Lagom")
 
 include("${SERENITY_SOURCE_DIR}/Meta/CMake/lagom_compile_options.cmake")
+macro(serenity_option)
+    set(${ARGV})
+endmacro()
+include("${SERENITY_SOURCE_DIR}/Meta/CMake/lagom_options.cmake")
 
 set(BUILD_LAGOM ON CACHE INTERNAL "")
 set(ENABLE_LAGOM_LIBWEB ON CACHE INTERNAL "")
@@ -106,7 +112,7 @@ set(SOURCES
 add_subdirectory(po)
 
 add_executable(ladybird ${SOURCES})
-target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC Lagom::FileSystem Lagom::Protocol)
+target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC Lagom::FileSystem Lagom::Protocol Lagom::ImageDecoderClient)
 
 if (libsoup_FOUND)
     target_link_libraries(ladybird PRIVATE PkgConfig::libsoup)
@@ -137,10 +143,13 @@ if (libsoup_FOUND)
 endif()
 
 add_executable(WebContent ${WEBCONTENT_SOURCES})
-target_link_libraries(WebContent PRIVATE Lagom::Audio Lagom::Core Lagom::FileSystem Lagom::Gfx Lagom::IPC Lagom::JS Lagom::Main Lagom::Web Lagom::WebSocket Lagom::WebView Lagom::Protocol)
+target_link_libraries(WebContent PRIVATE Lagom::Audio Lagom::Core Lagom::FileSystem Lagom::Gfx Lagom::IPC Lagom::JS Lagom::Main Lagom::Web Lagom::WebSocket Lagom::WebView Lagom::Protocol Lagom::ImageDecoderClient)
 if (libsoup_FOUND)
     target_link_libraries(WebContent PRIVATE PkgConfig::libsoup)
 endif()
+
+add_subdirectory("${SERENITY_SOURCE_DIR}/Ladybird/ImageDecoder" "${Lagom_BINARY_DIR}/ImageDecoder")
+add_dependencies(WebContent ImageDecoder)
 
 if (NOT CMAKE_SKIP_INSTALL_RULES)
   include(cmake/InstallRules.cmake)
