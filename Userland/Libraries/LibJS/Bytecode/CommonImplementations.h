@@ -36,5 +36,6 @@ ThrowCompletionOr<void> create_variable(VM&, DeprecatedFlyString const& name, Op
 ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM&, ClassExpression const&, Optional<IdentifierTableIndex> const& lhs_name);
 ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM&, Value argument_array, bool is_synthetic);
 Object* iterator_to_object(VM&, IteratorRecord);
+IteratorRecord object_to_iterator(VM&, Object&);
 
 }
