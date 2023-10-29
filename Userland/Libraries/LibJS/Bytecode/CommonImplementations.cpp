@@ -635,4 +635,15 @@ ThrowCompletionOr<Value> delete_by_id(Bytecode::Interpreter& interpreter, Value 
     return TRY(reference.delete_(vm));
 }
 
+ThrowCompletionOr<Value> delete_by_value(Bytecode::Interpreter& interpreter, Value base, Value property_key_value)
+{
+    auto& vm = interpreter.vm();
+
+    auto property_key = TRY(property_key_value.to_property_key(vm));
+    bool strict = vm.in_strict_mode();
+    auto reference = Reference { base, property_key, {}, strict };
+
+    return Value(TRY(reference.delete_(vm)));
+}
+
 }
