@@ -1336,6 +1336,22 @@ void Compiler::compile_append(Bytecode::Op::Append const& op)
     check_exception();
 }
 
+static Value cxx_delete_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property)
+{
+    return TRY_OR_SET_EXCEPTION(Bytecode::delete_by_id(vm.bytecode_interpreter(), base, property));
+}
+
+void Compiler::compile_delete_by_id(Bytecode::Op::DeleteById const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(op.property().value()));
+    native_call((void*)cxx_delete_by_id);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
