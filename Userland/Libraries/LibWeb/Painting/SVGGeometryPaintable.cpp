@@ -30,15 +30,11 @@ Layout::SVGGeometryBox const& SVGGeometryPaintable::layout_box() const
 Optional<HitTestResult> SVGGeometryPaintable::hit_test(CSSPixelPoint position, HitTestType type) const
 {
     auto result = SVGGraphicsPaintable::hit_test(position, type);
-    if (!result.has_value())
+    if (!result.has_value() || !path_data().has_value())
         return {};
-    auto& geometry_element = layout_box().dom_node();
-    if (auto transform = layout_box().layout_transform({}); transform.has_value()) {
-        auto transformed_bounding_box = transform->map_to_quad(
-            const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().bounding_box());
-        if (!transformed_bounding_box.contains(position.to_type<float>()))
-            return {};
-    }
+    auto transformed_bounding_box = path_data()->svg_to_css_pixels_transform().map_to_quad(path_data()->computed_path().bounding_box());
+    if (!transformed_bounding_box.contains(position.to_type<float>()))
+        return {};
     return result;
 }
 
@@ -56,7 +52,7 @@ static Gfx::Painter::WindingRule to_gfx_winding_rule(SVG::FillRule fill_rule)
 
 void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
-    if (!is_visible())
+    if (!is_visible() || !path_data().has_value())
         return;
 
     SVGGraphicsPaintable::paint(context, phase);
@@ -73,17 +69,10 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     RecordingPainterStateSaver save_painter { context.painter() };
 
     auto offset = context.floored_device_point(svg_element_rect.location()).to_type<int>().to_type<float>();
-
     auto maybe_view_box = geometry_element.view_box();
 
-    auto transform = layout_box().layout_transform(context.svg_transform());
-    if (!transform.has_value())
-        return;
-
-    auto css_scale = context.device_pixels_per_css_pixel();
-    auto paint_transform = Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(*transform);
-    auto const& original_path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path();
-    Gfx::Path path = original_path.copy_transformed(paint_transform);
+    auto paint_transform = path_data()->svg_to_device_pixels_transform(context, context.svg_transform());
+    Gfx::Path path = path_data()->computed_path().copy_transformed(paint_transform);
 
     // Fills are computed as though all subpaths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
     auto closed_path = [&] {
@@ -106,7 +95,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     SVG::SVGPaintContext paint_context {
         .viewport = svg_viewport,
-        .path_bounding_box = original_path.bounding_box(),
+        .path_bounding_box = path_data()->computed_path().bounding_box(),
         .transform = paint_transform
     };
 

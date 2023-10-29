@@ -11,6 +11,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/SVGGeometryPaintable.h>
 
 namespace Web::Layout {
 
@@ -123,6 +124,9 @@ struct LayoutState {
         void set_table_cell_coordinates(Painting::PaintableBox::TableCellCoordinates const& table_cell_coordinates) { m_table_cell_coordinates = table_cell_coordinates; }
         auto const& table_cell_coordinates() const { return m_table_cell_coordinates; }
 
+        void set_svg_path_data(Painting::SVGGeometryPaintable::PathData const& svg_path_data) { m_svg_path_data = svg_path_data; }
+        auto& svg_path_data() const { return m_svg_path_data; }
+
     private:
         AvailableSize available_width_inside() const;
         AvailableSize available_height_inside() const;
@@ -146,6 +150,8 @@ struct LayoutState {
 
         Optional<Painting::PaintableBox::BordersDataWithElementKind> m_override_borders_data;
         Optional<Painting::PaintableBox::TableCellCoordinates> m_table_cell_coordinates;
+
+        Optional<Painting::SVGGeometryPaintable::PathData> m_svg_path_data;
     };
 
     // Commits the used values produced by layout and builds a paintable tree.
