@@ -53,6 +53,7 @@ set(FUZZER_TARGETS
     SQLParser
     Tar
     TGALoader
+    TIFFLoader
     TTF
     TinyVGLoader
     URL
@@ -126,6 +127,7 @@ set(FUZZER_DEPENDENCIES_ShellPosix LibShell)
 set(FUZZER_DEPENDENCIES_SQLParser LibSQL)
 set(FUZZER_DEPENDENCIES_Tar LibArchive)
 set(FUZZER_DEPENDENCIES_TGALoader LibGfx)
+set(FUZZER_DEPENDENCIES_TIFFLoader LibGfx)
 set(FUZZER_DEPENDENCIES_TTF LibGfx)
 set(FUZZER_DEPENDENCIES_TinyVGLoader LibGfx)
 set(FUZZER_DEPENDENCIES_UTF16BEDecoder LibTextCodec)
