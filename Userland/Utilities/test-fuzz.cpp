@@ -67,6 +67,7 @@
     T(SQLParser)             \
     T(Tar)                   \
     T(TGALoader)             \
+    T(TIFFLoader)            \
     T(TTF)                   \
     T(TinyVGLoader)          \
     T(URL)                   \
