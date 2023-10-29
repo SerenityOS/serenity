@@ -108,7 +108,8 @@ private:
         O(SuperCallWithArgumentArray, super_call_with_argument_array)            \
         O(GetIterator, get_iterator)                                             \
         O(IteratorNext, iterator_next)                                           \
-        O(IteratorResultDone, iterator_result_done)
+        O(IteratorResultDone, iterator_result_done)                              \
+        O(ThrowIfNotObject, throw_if_not_object)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
