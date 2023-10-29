@@ -398,6 +398,15 @@ struct Assembler {
         label.add_jump(*this, m_output.size());
     }
 
+    void jump_if_overflow(Label& label)
+    {
+        // jo label (RIP-relative 32-bit offset)
+        emit8(0x0f);
+        emit8(0x80);
+        emit32(0xdeadbeef);
+        label.add_jump(*this, m_output.size());
+    }
+
     void sign_extend_32_to_64_bits(Reg reg)
     {
         // movsxd (reg as 64-bit), (reg as 32-bit)
@@ -543,6 +552,24 @@ struct Assembler {
             emit8(src.offset_or_immediate);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x48 | ((to_underlying(dst.reg) >= 8) ? 1 << 0 : 0));
+            emit8(0x81);
+            emit8(0xc0 | encode_reg(dst.reg));
+            emit32(src.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    void add32(Operand dst, Operand src)
+    {
+        if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Reg && to_underlying(src.reg) < 8) {
+            emit8(0x01);
+            emit8(0xc0 | (encode_reg(src.reg) << 3) | encode_reg(dst.reg));
+        } else if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit8(0x83);
+            emit8(0xc0 | encode_reg(dst.reg));
+            emit8(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::Reg && to_underlying(dst.reg) < 8 && src.type == Operand::Type::Imm && src.fits_in_i32()) {
             emit8(0x81);
             emit8(0xc0 | encode_reg(dst.reg));
             emit32(src.offset_or_immediate);
