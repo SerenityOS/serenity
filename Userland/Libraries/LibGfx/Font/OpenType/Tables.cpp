@@ -179,18 +179,33 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 
 ErrorOr<Name> Name::from_slice(ReadonlyBytes slice)
 {
-    return Name(slice);
+    // FIXME: Support version 1 table too.
+
+    if (slice.size() < sizeof(NamingTableVersion0))
+        return Error::from_string_literal("Could not load Name: Not enough data");
+
+    auto& naming_table = *bit_cast<NamingTableVersion0 const*>(slice.data());
+
+    auto name_record_data_size = naming_table.count * sizeof(NameRecord);
+    if (slice.size() < sizeof(NamingTableVersion0) + name_record_data_size)
+        return Error::from_string_literal("Could not load Name: Not enough data");
+    ReadonlySpan<NameRecord> name_records = { bit_cast<NameRecord const*>(slice.offset_pointer(sizeof(NamingTableVersion0))), naming_table.count };
+
+    if (slice.size() < naming_table.storage_offset)
+        return Error::from_string_literal("Could not load Name: Not enough data");
+    ReadonlyBytes string_data = slice.slice(naming_table.storage_offset);
+
+    return Name(naming_table, name_records, string_data);
 }
 
 String Name::string_for_id(NameId id) const
 {
-    auto const count = header().count;
-    auto const storage_offset = header().storage_offset;
+    auto const count = m_naming_table.count;
 
     Vector<int> valid_ids;
 
     for (size_t i = 0; i < count; ++i) {
-        auto this_id = header().name_record[i].name_id;
+        auto this_id = m_name_records[i].name_id;
         if (this_id == to_underlying(id))
             valid_ids.append(i);
     }
@@ -200,7 +215,7 @@ String Name::string_for_id(NameId id) const
 
     auto it = valid_ids.find_if([this](auto const& i) {
         // check if font has naming table for en-US language id
-        auto const& name_record = header().name_record[i];
+        auto const& name_record = m_name_records[i];
         auto const platform_id = name_record.platform_id;
         auto const language_id = name_record.language_id;
         return (platform_id == to_underlying(Platform::Macintosh) && language_id == to_underlying(MacintoshLanguage::English))
@@ -208,7 +223,7 @@ String Name::string_for_id(NameId id) const
     });
     auto i = it != valid_ids.end() ? *it : valid_ids.first();
 
-    auto const& name_record = header().name_record[i];
+    auto const& name_record = m_name_records[i];
 
     auto const platform_id = name_record.platform_id;
     auto const length = name_record.length;
@@ -216,10 +231,10 @@ String Name::string_for_id(NameId id) const
 
     if (platform_id == to_underlying(Platform::Windows)) {
         static auto& decoder = *TextCodec::decoder_for("utf-16be"sv);
-        return decoder.to_utf8(StringView { (char const*)m_slice.offset(storage_offset + offset), length }).release_value_but_fixme_should_propagate_errors();
+        return decoder.to_utf8(m_string_data.slice(offset, length)).release_value_but_fixme_should_propagate_errors();
     }
 
-    return String::from_utf8(m_slice.slice(storage_offset + offset, length)).release_value_but_fixme_should_propagate_errors();
+    return String::from_utf8(m_string_data.slice(offset, length)).release_value_but_fixme_should_propagate_errors();
 }
 
 ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
