@@ -41,6 +41,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWebView/URL.h>
 #include <LibWebView/ViewImplementation.h>
 #include <LibWebView/WebContentClient.h>
 
@@ -143,18 +144,6 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
 
     timer->start();
     return timer;
-}
-
-static ErrorOr<URL> format_url(StringView url)
-{
-    if (FileSystem::exists(url))
-        return URL::create_with_file_scheme(TRY(FileSystem::real_path(url)).to_deprecated_string());
-
-    URL formatted_url { url };
-    if (!formatted_url.is_valid())
-        formatted_url = TRY(String::formatted("http://{}", url));
-
-    return formatted_url;
 }
 
 enum class TestMode {
@@ -403,7 +392,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::EventLoop event_loop;
 
     int screenshot_timeout = 1;
-    StringView url;
+    StringView raw_url;
     auto resources_folder = "/res"sv;
     StringView web_driver_ipc_path;
     bool dump_layout_tree = false;
@@ -420,7 +409,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
-    args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
@@ -471,6 +460,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, screenshot_timeout));
     }
 
-    view->load(TRY(format_url(url)));
+    auto url = WebView::sanitize_url(raw_url);
+    if (!url.has_value()) {
+        warnln("Invalid URL: \"{}\"", raw_url);
+        return Error::from_string_literal("Invalid URL");
+    }
+
+    view->load(*url);
     return event_loop.exec();
 }
