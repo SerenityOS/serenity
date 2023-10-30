@@ -271,10 +271,13 @@ ErrorOr<bool> TLSv12::flush()
     size_t written;
     do {
         auto result = stream.write_some(out_bytes);
-        if (result.is_error() && result.error().code() != EINTR && result.error().code() != EAGAIN) {
-            error = result.release_error();
-            dbgln("TLS Socket write error: {}", *error);
-            break;
+        if (result.is_error()) {
+            if (result.error().code() != EINTR && result.error().code() != EAGAIN) {
+                error = result.release_error();
+                dbgln("TLS Socket write error: {}", *error);
+                break;
+            }
+            continue;
         }
         written = result.value();
         out_bytes = out_bytes.slice(written);
