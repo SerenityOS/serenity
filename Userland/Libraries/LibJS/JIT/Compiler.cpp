@@ -1686,6 +1686,14 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 
     Compiler compiler { bytecode_executable };
 
+    Vector<BytecodeMapping> mapping;
+
+    mapping.append({
+        .native_offset = compiler.m_output.size(),
+        .block_index = BytecodeMapping::EXECUTABLE,
+        .bytecode_offset = 0,
+    });
+
     compiler.m_assembler.enter();
 
     compiler.m_assembler.mov(
@@ -1696,12 +1704,20 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         Assembler::Operand::Register(LOCALS_ARRAY_BASE),
         Assembler::Operand::Register(ARG2));
 
-    for (auto& block : bytecode_executable.basic_blocks) {
+    for (size_t block_index = 0; block_index < bytecode_executable.basic_blocks.size(); block_index++) {
+        auto& block = bytecode_executable.basic_blocks[block_index];
         compiler.block_data_for(*block).start_offset = compiler.m_output.size();
         compiler.set_current_block(*block);
         auto it = Bytecode::InstructionStreamIterator(block->instruction_stream());
         while (!it.at_end()) {
             auto const& op = *it;
+
+            mapping.append({
+                .native_offset = compiler.m_output.size(),
+                .block_index = block_index,
+                .bytecode_offset = it.offset(),
+            });
+
             switch (op.type()) {
 #    define CASE_BYTECODE_OP(OpTitleCase, op_snake_case, ...)                                \
     case Bytecode::Instruction::Type::OpTitleCase:                                           \
@@ -1722,6 +1738,12 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         if (!block->is_terminated())
             compiler.jump_to_exit();
     }
+
+    mapping.append({
+        .native_offset = compiler.m_output.size(),
+        .block_index = BytecodeMapping::EXECUTABLE,
+        .bytecode_offset = 1,
+    });
 
     compiler.m_exit_label.link(compiler.m_assembler);
     compiler.m_assembler.exit();
@@ -1752,7 +1774,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         dbgln("\033[32;1mJIT compilation succeeded!\033[0m {}", bytecode_executable.name);
     }
 
-    auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size());
+    auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size(), mapping);
     if constexpr (DUMP_JIT_DISASSEMBLY)
         executable->dump_disassembly();
     return executable;
