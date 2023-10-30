@@ -232,7 +232,7 @@ struct Formatter<PDF::Destination> : Formatter<FormatString> {
             TRY(builder.put_literal(" parameters="sv));
             for (auto const& param : destination.parameters) {
                 if (param.has_value())
-                    TRY(builder.put_f64(double(param.value())));
+                    TRY(builder.put_f32_or_f64(param.value()));
                 else
                     TRY(builder.put_literal("{{}}"sv));
                 TRY(builder.put_literal(" "sv));
