@@ -191,11 +191,20 @@ static ErrorOr<ByteBuffer> uncompress_byte_run(ReadonlyBytes data, ILBMLoadingCo
         auto const byte = static_cast<i8>(data[read_bytes++]);
         if (byte >= -127 && byte <= -1) {
             // read next byte
+            if (read_bytes == data.size())
+                return Error::from_string_literal("Malformed compressed data");
+
             u8 next_byte = data[read_bytes++];
+            if (index + -byte >= plane_data.size())
+                return Error::from_string_literal("Malformed compressed data");
+
             for (u16 i = 0; i < -byte + 1; ++i) {
                 plane_data[index++] = next_byte;
             }
         } else if (byte >= 0) {
+            if (index + byte >= plane_data_size || read_bytes + byte >= length)
+                return Error::from_string_literal("Malformed compressed data");
+
             for (u16 i = 0; i < byte + 1; ++i) {
                 plane_data[index] = data[read_bytes];
                 read_bytes++;
