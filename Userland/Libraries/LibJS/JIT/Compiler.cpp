@@ -1042,12 +1042,12 @@ void Compiler::compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwi
     // re-throw the exception if we reached the end of the finally block and there was no catch block to handle it
     check_exception();
 
-    // if (!saved_return_value.is_empty()) goto resume_block;
+    // if (saved_return_value.is_empty()) goto resume_block;
     load_vm_register(GPR0, Bytecode::Register::saved_return_value());
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
     m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
-        Assembler::Condition::NotEqualTo,
+        Assembler::Condition::EqualTo,
         Assembler::Operand::Register(GPR1),
         label_for(op.resume_target().block()));
 
