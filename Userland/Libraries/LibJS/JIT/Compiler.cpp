@@ -1776,7 +1776,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 
     auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size(), mapping);
     if constexpr (DUMP_JIT_DISASSEMBLY)
-        executable->dump_disassembly();
+        executable->dump_disassembly(bytecode_executable);
     return executable;
 }
 
