@@ -1814,7 +1814,45 @@ void GridFormattingContext::collapse_auto_fit_tracks_if_needed(GridDimension con
     }
 }
 
-void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
+CSSPixelRect GridFormattingContext::get_grid_area_rect(GridItem const& grid_item) const
+{
+    auto const& row_gap = grid_container().computed_values().row_gap();
+    auto resolved_row_span = row_gap.is_auto() ? grid_item.row_span : grid_item.row_span * 2;
+    if (!row_gap.is_auto() && grid_item.gap_adjusted_row(grid_container()) == 0)
+        resolved_row_span -= 1;
+    if (grid_item.gap_adjusted_row(grid_container()) + resolved_row_span > m_grid_rows.size())
+        resolved_row_span = m_grid_rows_and_gaps.size() - grid_item.gap_adjusted_row(grid_container());
+
+    auto const& column_gap = grid_container().computed_values().column_gap();
+    auto resolved_column_span = column_gap.is_auto() ? grid_item.column_span : grid_item.column_span * 2;
+    if (!column_gap.is_auto() && grid_item.gap_adjusted_column(grid_container()) == 0)
+        resolved_column_span -= 1;
+    if (grid_item.gap_adjusted_column(grid_container()) + resolved_column_span > m_grid_columns_and_gaps.size())
+        resolved_column_span = m_grid_columns_and_gaps.size() - grid_item.gap_adjusted_column(grid_container());
+
+    int row_start = grid_item.gap_adjusted_row(grid_container());
+    int row_end = grid_item.gap_adjusted_row(grid_container()) + resolved_row_span;
+    int column_start = grid_item.gap_adjusted_column(grid_container());
+    int column_end = grid_item.gap_adjusted_column(grid_container()) + resolved_column_span;
+
+    CSSPixels x_start = 0;
+    CSSPixels x_end = 0;
+    CSSPixels y_start = 0;
+    CSSPixels y_end = 0;
+    for (int i = 0; i < column_start; i++)
+        x_start += m_grid_columns_and_gaps[i].base_size;
+    for (int i = 0; i < column_end; i++)
+        x_end += m_grid_columns_and_gaps[i].base_size;
+    for (int i = 0; i < row_start; i++)
+        y_start += m_grid_rows_and_gaps[i].base_size;
+    for (int i = 0; i < row_end; i++) {
+        y_end += m_grid_rows_and_gaps[i].base_size;
+    }
+
+    return { x_start, y_start, x_end - x_start, y_end - y_start };
+}
+
+void GridFormattingContext::run(Box const&, LayoutMode, AvailableSpace const& available_space)
 {
     m_available_space = available_space;
 
@@ -1902,55 +1940,15 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         return;
     }
 
-    auto layout_box = [&](int row_start, int row_end, int column_start, int column_end, Box const& child_box) -> void {
-        if (column_start < 0 || row_start < 0)
-            return;
-        auto& child_box_state = m_state.get_mutable(child_box);
-        CSSPixels x_start = 0;
-        CSSPixels x_end = 0;
-        CSSPixels y_start = 0;
-        CSSPixels y_end = 0;
-        for (int i = 0; i < column_start; i++)
-            x_start += m_grid_columns_and_gaps[i].base_size;
-        for (int i = 0; i < column_end; i++)
-            x_end += m_grid_columns_and_gaps[i].base_size;
-        for (int i = 0; i < row_start; i++)
-            y_start += m_grid_rows_and_gaps[i].base_size;
-        for (int i = 0; i < row_end; i++) {
-            y_end += m_grid_rows_and_gaps[i].base_size;
-        }
-
-        child_box_state.offset = {
-            x_start + child_box_state.border_left + child_box_state.padding_left + child_box_state.margin_left,
-            y_start + child_box_state.border_top + child_box_state.padding_top + child_box_state.margin_top
-        };
-
-        compute_inset(child_box);
-
-        auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(child_box_state.content_width()), AvailableSize::make_definite(child_box_state.content_height()));
-        if (auto independent_formatting_context = layout_inside(child_box, LayoutMode::Normal, available_space_for_children))
-            independent_formatting_context->parent_context_did_dimension_child_root_box();
-    };
-
     for (auto& grid_item : m_grid_items) {
-        auto resolved_row_span = box.computed_values().row_gap().is_auto() ? grid_item.row_span : grid_item.row_span * 2;
-        if (!box.computed_values().row_gap().is_auto() && grid_item.gap_adjusted_row(box) == 0)
-            resolved_row_span -= 1;
-        if (grid_item.gap_adjusted_row(box) + resolved_row_span > m_grid_rows.size())
-            resolved_row_span = m_grid_rows_and_gaps.size() - grid_item.gap_adjusted_row(box);
+        auto& grid_item_box_state = m_state.get_mutable(grid_item.box);
+        CSSPixelPoint margin_offset = { grid_item_box_state.margin_box_left(), grid_item_box_state.margin_box_top() };
+        grid_item_box_state.offset = get_grid_area_rect(grid_item).top_left() + margin_offset;
+        compute_inset(grid_item.box);
 
-        auto resolved_column_span = box.computed_values().column_gap().is_auto() ? grid_item.column_span : grid_item.column_span * 2;
-        if (!box.computed_values().column_gap().is_auto() && grid_item.gap_adjusted_column(box) == 0)
-            resolved_column_span -= 1;
-        if (grid_item.gap_adjusted_column(box) + resolved_column_span > m_grid_columns_and_gaps.size())
-            resolved_column_span = m_grid_columns_and_gaps.size() - grid_item.gap_adjusted_column(box);
-
-        layout_box(
-            grid_item.gap_adjusted_row(box),
-            grid_item.gap_adjusted_row(box) + resolved_row_span,
-            grid_item.gap_adjusted_column(box),
-            grid_item.gap_adjusted_column(box) + resolved_column_span,
-            grid_item.box);
+        auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(grid_item_box_state.content_width()), AvailableSize::make_definite(grid_item_box_state.content_height()));
+        if (auto independent_formatting_context = layout_inside(grid_item.box, LayoutMode::Normal, available_space_for_children))
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
     }
 }
 
