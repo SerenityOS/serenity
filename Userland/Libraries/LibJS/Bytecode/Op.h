@@ -212,6 +212,8 @@ private:
         ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;            \
         DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const; \
                                                                                        \
+        StringTableIndex error_string() const { return m_error_string; }               \
+                                                                                       \
     private:                                                                           \
         StringTableIndex m_error_string;                                               \
     };

@@ -62,9 +62,13 @@ private:
         O(RightShift, right_shift)                              \
         O(UnsignedRightShift, unsigned_right_shift)
 
+#    define JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(O) \
+        O(NewTypeError, new_type_error, TypeError)
+
 #    define JS_ENUMERATE_IMPLEMENTED_JIT_OPS(O)                                  \
         JS_ENUMERATE_COMMON_BINARY_OPS(O)                                        \
         JS_ENUMERATE_COMMON_UNARY_OPS(O)                                         \
+        JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(O)                           \
         O(LoadImmediate, load_immediate)                                         \
         O(Load, load)                                                            \
         O(Store, store)                                                          \
@@ -135,7 +139,7 @@ private:
         O(GetNewTarget, get_new_target)                                          \
         O(HasPrivateId, has_private_id)
 
-#    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case) \
+#    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case, ...) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
 
     JS_ENUMERATE_IMPLEMENTED_JIT_OPS(DECLARE_COMPILE_OP)
