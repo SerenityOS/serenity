@@ -149,7 +149,7 @@ static ErrorOr<ByteBuffer> planar_to_chunky(ReadonlyBytes bitplanes, ILBMLoading
     u16 width = context.bm_header.width;
     u16 height = context.bm_header.height;
     u8 planes = context.bm_header.planes;
-    auto chunky = TRY(ByteBuffer::create_zeroed(width * height));
+    auto chunky = TRY(ByteBuffer::create_zeroed(static_cast<size_t>(width) * height));
 
     for (u16 y = 0; y < height; y++) {
         size_t scanline = y * width;
