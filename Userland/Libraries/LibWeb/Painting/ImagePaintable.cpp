@@ -128,17 +128,16 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto const& horizontal = object_position.edge_x();
             if (horizontal->is_edge()) {
                 auto const& horizontal_edge = horizontal->as_edge();
+                auto const& offset = horizontal_edge.offset();
                 if (horizontal_edge.edge() == CSS::PositionEdge::Left) {
-                    auto const& offset = horizontal_edge.offset();
-                    if (horizontal_edge.offset().is_percentage())
+                    if (offset.is_percentage())
                         offset_x = (double)(residual_horizontal)*offset.percentage().as_fraction();
                     else
                         offset_x = offset.length().to_px(layout_node()).to_int();
 
                     bitmap_intersect.set_x(0);
                 } else if (horizontal_edge.edge() == CSS::PositionEdge::Right) {
-                    auto const& offset = horizontal_edge.offset();
-                    if (horizontal_edge.offset().is_percentage())
+                    if (offset.is_percentage())
                         offset_x = (double)residual_horizontal - (double)(residual_horizontal)*offset.percentage().as_fraction();
                     else
                         offset_x = residual_horizontal - offset.length().to_px(layout_node()).to_int();
@@ -152,17 +151,16 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto const& vertical = object_position.edge_y();
             if (vertical->is_edge()) {
                 auto const& vertical_edge = vertical->as_edge();
+                auto const& offset = vertical_edge.offset();
                 if (vertical_edge.edge() == CSS::PositionEdge::Top) {
-                    auto const& offset = vertical_edge.offset();
-                    if (vertical_edge.offset().is_percentage())
+                    if (offset.is_percentage())
                         offset_y = (double)(residual_vertical)*offset.percentage().as_fraction();
                     else
                         offset_y = offset.length().to_px(layout_node()).to_int();
 
                     bitmap_intersect.set_y(0);
                 } else if (vertical_edge.edge() == CSS::PositionEdge::Bottom) {
-                    auto const& offset = vertical_edge.offset();
-                    if (vertical_edge.offset().is_percentage())
+                    if (offset.is_percentage())
                         offset_y = (double)residual_vertical - (double)(residual_vertical)*offset.percentage().as_fraction();
                     else
                         offset_y = residual_vertical - offset.length().to_px(layout_node()).to_int();
