@@ -27,14 +27,16 @@ struct Chunk {
 
 enum class CompressionType : u8 {
     None = 0,
-    ByteRun = 1
+    ByteRun = 1,
+    __Count
 };
 
 enum class MaskType : u8 {
     None = 0,
     HasMask = 1,
     HasTransparentColor = 2,
-    HasLasso = 3
+    HasLasso = 3,
+    __Count
 };
 
 enum class ViewportMode : u32 {
@@ -329,6 +331,16 @@ static ErrorOr<void> decode_bmhd_chunk(ILBMLoadingContext& context)
         return Error::from_string_literal("IFFImageDecoderPlugin: Not enough data for header chunk");
 
     context.bm_header = *bit_cast<BMHDHeader const*>(first_chunk.data.data());
+
+    if (context.bm_header.planes > 8)
+        return Error::from_string_literal("IFFImageDecoderPlugin: Deep ILBMs are not currently supported");
+
+    if (context.bm_header.mask >= MaskType::__Count)
+        return Error::from_string_literal("IFFImageDecoderPlugin: Unsupported mask type");
+
+    if (context.bm_header.compression >= CompressionType::__Count)
+        return Error::from_string_literal("IFFImageDecoderPlugin: Unsupported compression type");
+
     context.pitch = ceil_div((u16)context.bm_header.width, (u16)16) * 2;
 
     context.state = ILBMLoadingContext::State::HeaderDecoded;
