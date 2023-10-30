@@ -8,6 +8,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/Types.h>
+#include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Runtime/Completion.h>
 
 namespace JS::JIT {
@@ -33,6 +34,7 @@ public:
     void run(VM&) const;
     void dump_disassembly(Bytecode::Executable const& executable) const;
     BytecodeMapping const& find_mapping_entry(size_t native_offset) const;
+    Optional<Bytecode::InstructionStreamIterator const&> instruction_stream_iterator(Bytecode::Executable const& executable) const;
 
     ReadonlyBytes code_bytes() const { return { m_code, m_size }; }
 
@@ -40,6 +42,7 @@ private:
     void* m_code { nullptr };
     size_t m_size { 0 };
     Vector<BytecodeMapping> m_mapping;
+    mutable OwnPtr<Bytecode::InstructionStreamIterator> m_instruction_stream_iterator;
 };
 
 }
