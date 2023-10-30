@@ -1652,6 +1652,33 @@ void Compiler::compile_has_private_id(Bytecode::Op::HasPrivateId const& op)
 JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(COMPILE_NEW_BUILTIN_ERROR_OP)
 #    undef COMPILE_NEW_BUILTIN_ERROR_OP
 
+static Value cxx_put_by_value_with_this(VM& vm, Value base, Value value, Value name, Value this_value, Bytecode::Op::PropertyKind kind)
+{
+    auto property_key = kind != Bytecode::Op::PropertyKind::Spread ? TRY_OR_SET_EXCEPTION(name.to_property_key(vm)) : PropertyKey {};
+    TRY_OR_SET_EXCEPTION(Bytecode::put_by_property_key(vm, base, this_value, value, property_key, kind));
+    return value;
+}
+
+void Compiler::compile_put_by_value_with_this(Bytecode::Op::PutByValueWithThis const& op)
+{
+    load_vm_register(ARG1, op.base());
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+    if (op.kind() != Bytecode::Op::PropertyKind::Spread) {
+        load_vm_register(ARG3, op.property());
+    } else {
+        m_assembler.mov(
+            Assembler::Operand::Register(ARG3),
+            Assembler::Operand::Imm(Value().encoded()));
+    }
+    load_vm_register(ARG4, op.this_value());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG5),
+        Assembler::Operand::Imm(to_underlying(op.kind())));
+    native_call((void*)cxx_put_by_value_with_this);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
