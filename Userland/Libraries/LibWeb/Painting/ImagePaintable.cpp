@@ -68,7 +68,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto scaling_mode = to_gfx_scaling_mode(computed_values().image_rendering(), bitmap_rect, image_int_rect);
             auto& dom_element = verify_cast<DOM::Element>(*dom_node());
             auto object_fit = dom_element.computed_css_values()->object_fit();
-            auto bitmap_aspect_ratio = bitmap_rect.height() / bitmap_rect.width();
+            auto bitmap_aspect_ratio = (float)bitmap_rect.height() / bitmap_rect.width();
             auto image_aspect_ratio = (float)image_rect.height().value() / image_rect.width().value();
 
             auto scale_x = 0.0f;
