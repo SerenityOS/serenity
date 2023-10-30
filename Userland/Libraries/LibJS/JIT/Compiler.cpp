@@ -1679,6 +1679,44 @@ void Compiler::compile_put_by_value_with_this(Bytecode::Op::PutByValueWithThis c
     check_exception();
 }
 
+static Value cxx_copy_object_excluding_properties(VM& vm, Value from_object, u64 excluded_names_count, Value* excluded_names)
+{
+    auto& realm = *vm.current_realm();
+    auto to_object = Object::create(realm, realm.intrinsics().object_prototype());
+
+    HashTable<PropertyKey> excluded_names_table;
+    for (size_t i = 0; i < excluded_names_count; ++i) {
+        excluded_names_table.set(TRY_OR_SET_EXCEPTION(excluded_names[i].to_property_key(vm)));
+    }
+    TRY_OR_SET_EXCEPTION(to_object->copy_data_properties(vm, from_object, excluded_names_table));
+    return to_object;
+}
+
+void Compiler::compile_copy_object_excluding_properties(Bytecode::Op::CopyObjectExcludingProperties const& op)
+{
+    load_vm_register(ARG1, op.from_object());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(op.excluded_names_count()));
+
+    // Build `Value arg3[op.excluded_names_count()] {...}` on the stack.
+    auto stack_space = align_up_to(op.excluded_names_count() * sizeof(Value), 16);
+    m_assembler.sub(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(stack_space));
+    m_assembler.mov(Assembler::Operand::Register(ARG3), Assembler::Operand::Register(STACK_POINTER));
+    for (size_t i = 0; i < op.excluded_names_count(); ++i) {
+        load_vm_register(GPR0, op.excluded_names()[i]);
+        m_assembler.mov(Assembler::Operand::Mem64BaseAndOffset(ARG3, i * sizeof(Value)), Assembler::Operand::Register(GPR0));
+    }
+
+    native_call((void*)cxx_copy_object_excluding_properties);
+
+    // Restore the stack pointer / discard array.
+    m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(stack_space));
+
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);

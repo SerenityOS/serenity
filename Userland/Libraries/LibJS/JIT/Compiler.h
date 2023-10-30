@@ -138,7 +138,8 @@ private:
         O(GetMethod, get_method)                                                 \
         O(GetNewTarget, get_new_target)                                          \
         O(HasPrivateId, has_private_id)                                          \
-        O(PutByValueWithThis, put_by_value_with_this)
+        O(PutByValueWithThis, put_by_value_with_this)                            \
+        O(CopyObjectExcludingProperties, copy_object_excluding_properties)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case, ...) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
