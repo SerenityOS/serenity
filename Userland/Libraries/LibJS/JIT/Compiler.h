@@ -139,7 +139,8 @@ private:
         O(GetNewTarget, get_new_target)                                          \
         O(HasPrivateId, has_private_id)                                          \
         O(PutByValueWithThis, put_by_value_with_this)                            \
-        O(CopyObjectExcludingProperties, copy_object_excluding_properties)
+        O(CopyObjectExcludingProperties, copy_object_excluding_properties)       \
+        O(AsyncIteratorClose, async_iterator_close)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case, ...) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);

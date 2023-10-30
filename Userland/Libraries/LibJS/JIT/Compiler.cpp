@@ -1717,6 +1717,29 @@ void Compiler::compile_copy_object_excluding_properties(Bytecode::Op::CopyObject
     check_exception();
 }
 
+static Value cxx_async_iterator_close(VM& vm, Value iterator, Completion::Type completion_type, Optional<Value> const& completion_value)
+{
+    auto iterator_object = TRY_OR_SET_EXCEPTION(iterator.to_object(vm));
+    auto iterator_record = Bytecode::object_to_iterator(vm, iterator_object);
+
+    // FIXME: Return the value of the resulting completion. (Note that completion_value can be empty!)
+    TRY_OR_SET_EXCEPTION(async_iterator_close(vm, iterator_record, Completion { completion_type, completion_value, {} }));
+    return {};
+}
+
+void Compiler::compile_async_iterator_close(Bytecode::Op::AsyncIteratorClose const& op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(to_underlying(op.completion_type())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm(bit_cast<u64>(&op.completion_value())));
+    native_call((void*)cxx_async_iterator_close);
+    check_exception();
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);

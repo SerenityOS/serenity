@@ -1411,6 +1411,9 @@ public:
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
+    Completion::Type completion_type() const { return m_completion_type; }
+    Optional<Value> const& completion_value() const { return m_completion_value; }
+
 private:
     Completion::Type m_completion_type { Completion::Type::Normal };
     Optional<Value> m_completion_value;
