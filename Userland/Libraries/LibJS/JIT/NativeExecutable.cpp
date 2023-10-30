@@ -12,9 +12,10 @@
 
 namespace JS::JIT {
 
-NativeExecutable::NativeExecutable(void* code, size_t size)
+NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping)
     : m_code(code)
     , m_size(size)
+    , m_mapping(move(mapping))
 {
 }
 

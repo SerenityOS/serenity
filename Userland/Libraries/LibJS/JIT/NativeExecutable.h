@@ -12,12 +12,21 @@
 
 namespace JS::JIT {
 
+struct BytecodeMapping {
+    size_t native_offset;
+    size_t block_index;
+    size_t bytecode_offset;
+
+    // Special block index for labels outside any blocks.
+    static constexpr auto EXECUTABLE = NumericLimits<size_t>::max();
+};
+
 class NativeExecutable {
     AK_MAKE_NONCOPYABLE(NativeExecutable);
     AK_MAKE_NONMOVABLE(NativeExecutable);
 
 public:
-    NativeExecutable(void* code, size_t size);
+    NativeExecutable(void* code, size_t size, Vector<BytecodeMapping>);
     ~NativeExecutable();
 
     void run(VM&) const;
@@ -26,6 +35,7 @@ public:
 private:
     void* m_code { nullptr };
     size_t m_size { 0 };
+    Vector<BytecodeMapping> m_mapping;
 };
 
 }
