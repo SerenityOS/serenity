@@ -298,6 +298,9 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
         if (chunk.type == FourCC("CMAP")) {
             context.color_table = TRY(decode_cmap_chunk(chunk));
         } else if (chunk.type == FourCC("BODY")) {
+            if (context.color_table.is_empty())
+                return Error::from_string_literal("Decoding BODY chunk without a color map is not currently supported");
+
             TRY(decode_body_chunk(chunk, context));
             context.state = ILBMLoadingContext::State::BitmapDecoded;
         } else if (chunk.type == FourCC("CRNG")) {
