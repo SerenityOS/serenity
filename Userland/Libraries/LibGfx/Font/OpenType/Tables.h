@@ -272,6 +272,8 @@ private:
 // OS/2: OS/2 and Windows Metrics Table
 class OS2 {
 public:
+    static ErrorOr<OS2> from_slice(ReadonlyBytes);
+
     u16 weight_class() const;
     u16 width_class() const;
     u16 selection() const;
@@ -282,11 +284,6 @@ public:
     bool use_typographic_metrics() const;
 
     [[nodiscard]] Optional<i16> x_height() const;
-
-    explicit OS2(ReadonlyBytes slice)
-        : m_slice(slice)
-    {
-    }
 
 private:
     struct [[gnu::packed]] Version0 {
@@ -338,14 +335,12 @@ private:
     };
     static_assert(AssertSize<Version2, 96>());
 
-    Version0 const& header() const { return *bit_cast<Version0 const*>(m_slice.data()); }
-    Version2 const& header_v2() const
+    explicit OS2(Variant<Version0 const*, Version1 const*, Version2 const*> data)
+        : m_data(move(data))
     {
-        VERIFY(header().version >= 2);
-        return *bit_cast<Version2 const*>(m_slice.data());
     }
 
-    ReadonlyBytes m_slice;
+    Variant<Version0 const*, Version1 const*, Version2 const*> m_data;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/name
