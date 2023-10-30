@@ -1091,8 +1091,7 @@ void Compiler::compile_block_declaration_instantiation(Bytecode::Op::BlockDeclar
 
 static Value cxx_super_call_with_argument_array(VM& vm, Value argument_array, bool is_synthetic)
 {
-    TRY_OR_SET_EXCEPTION(Bytecode::super_call_with_argument_array(vm, argument_array, is_synthetic));
-    return {};
+    return TRY_OR_SET_EXCEPTION(Bytecode::super_call_with_argument_array(vm, argument_array, is_synthetic));
 }
 
 void Compiler::compile_super_call_with_argument_array(Bytecode::Op::SuperCallWithArgumentArray const& op)
