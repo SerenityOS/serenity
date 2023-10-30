@@ -238,15 +238,16 @@ public:
         SignMode sign_mode = SignMode::OnlyIfNeeded,
         RealNumberDisplayMode = RealNumberDisplayMode::Default);
 
-    ErrorOr<void> put_f64(
-        double value,
+    template<OneOf<f32, f64> T>
+    ErrorOr<void> put_f32_or_f64(
+        T value,
         u8 base = 10,
         bool upper_case = false,
         bool zero_pad = false,
         bool use_separator = false,
         Align align = Align::Right,
         size_t min_width = 0,
-        size_t precision = 6,
+        Optional<size_t> precision = {},
         char fill = ' ',
         SignMode sign_mode = SignMode::OnlyIfNeeded,
         RealNumberDisplayMode = RealNumberDisplayMode::Default);
@@ -265,6 +266,21 @@ public:
 
 private:
     StringBuilder& m_builder;
+
+#ifndef KERNEL
+    ErrorOr<void> put_f64_with_precision(
+        double value,
+        u8 base,
+        bool upper_case,
+        bool zero_pad,
+        bool use_separator,
+        Align align,
+        size_t min_width,
+        size_t precision,
+        char fill,
+        SignMode sign_mode,
+        RealNumberDisplayMode);
+#endif
 };
 
 class TypeErasedFormatParams {
