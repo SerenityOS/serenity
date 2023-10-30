@@ -283,6 +283,28 @@ TEST_CASE(floating_point_numbers)
     EXPECT_EQ(DeprecatedString::formatted("{:x>5.1}", 1.12), "xx1.1");
 }
 
+TEST_CASE(floating_point_default_precision)
+{
+#define EXPECT_FORMAT(lit, value) \
+    EXPECT_EQ(DeprecatedString::formatted("{}", lit), value##sv)
+
+    EXPECT_FORMAT(10.3f, "10.3");
+    EXPECT_FORMAT(123e4f, "1230000");
+    EXPECT_FORMAT(1.23e4f, "12300");
+    EXPECT_FORMAT(134232544.4365f, "134232540");
+    EXPECT_FORMAT(1.43e24, "1.43e+24");
+    EXPECT_FORMAT(1.43e-24, "1.43e-24");
+    EXPECT_FORMAT(0.0f, "0");
+    EXPECT_FORMAT(3.14159265358979, "3.14159265358979");
+    EXPECT_FORMAT(1.61803399, "1.61803399");
+    EXPECT_FORMAT(2.71827, "2.71827");
+    EXPECT_FORMAT(42.f, "42");
+    EXPECT_FORMAT(123456.78, "123456.78");
+    EXPECT_FORMAT(23456.78910, "23456.7891");
+
+#undef EXPECT_FORMAT
+}
+
 TEST_CASE(no_precision_no_trailing_number)
 {
     EXPECT_EQ(DeprecatedString::formatted("{:.0}", 0.1), "0");
