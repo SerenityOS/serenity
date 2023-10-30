@@ -19,6 +19,7 @@ struct BytecodeMapping {
 
     // Special block index for labels outside any blocks.
     static constexpr auto EXECUTABLE = NumericLimits<size_t>::max();
+    static constexpr auto EXECUTABLE_LABELS = AK::Array { "entry"sv, "common_exit"sv };
 };
 
 class NativeExecutable {
@@ -30,7 +31,10 @@ public:
     ~NativeExecutable();
 
     void run(VM&) const;
-    void dump_disassembly() const;
+    void dump_disassembly(Bytecode::Executable const& executable) const;
+    BytecodeMapping const& find_mapping_entry(size_t native_offset) const;
+
+    ReadonlyBytes code_bytes() const { return { m_code, m_size }; }
 
 private:
     void* m_code { nullptr };

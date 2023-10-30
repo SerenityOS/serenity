@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Simon Wanner <simon@skyrising.xyz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BinarySearch.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/VM.h>
@@ -32,16 +34,73 @@ void NativeExecutable::run(VM& vm) const
         vm.running_execution_context().local_variables.data());
 }
 
-void NativeExecutable::dump_disassembly() const
+class JITSymbolProvider : public X86::SymbolProvider {
+public:
+    JITSymbolProvider(NativeExecutable const& executable)
+        : m_executable(executable)
+    {
+    }
+
+    virtual ~JITSymbolProvider() override = default;
+
+    virtual DeprecatedString symbolicate(FlatPtr address, u32* offset = nullptr) const override
+    {
+        auto base = bit_cast<FlatPtr>(m_executable.code_bytes().data());
+        auto native_offset = static_cast<u32>(address - base);
+        if (native_offset >= m_executable.code_bytes().size())
+            return {};
+
+        auto const& entry = m_executable.find_mapping_entry(native_offset);
+
+        if (offset)
+            *offset = native_offset - entry.native_offset;
+
+        if (entry.block_index == BytecodeMapping::EXECUTABLE)
+            return BytecodeMapping::EXECUTABLE_LABELS[entry.bytecode_offset];
+
+        if (entry.bytecode_offset == 0)
+            return DeprecatedString::formatted("Block {}", entry.block_index + 1);
+
+        return DeprecatedString::formatted("{}:{:x}", entry.block_index + 1, entry.bytecode_offset);
+    }
+
+private:
+    NativeExecutable const& m_executable;
+};
+
+void NativeExecutable::dump_disassembly(Bytecode::Executable const& executable) const
 {
 #if ARCH(X86_64)
     auto const* code_bytes = static_cast<u8 const*>(m_code);
     auto stream = X86::SimpleInstructionStream { code_bytes, m_size };
     auto disassembler = X86::Disassembler(stream);
+    auto symbol_provider = JITSymbolProvider(*this);
+    auto mapping = m_mapping.begin();
+
+    auto first_instruction = Bytecode::InstructionStreamIterator { executable.basic_blocks[0]->instruction_stream(), &executable };
+    auto source_range = first_instruction.source_range().realize();
+    dbgln("Disassembly of '{}' ({}:{}:{}):", executable.name, source_range.filename(), source_range.start.line, source_range.start.column);
 
     while (true) {
         auto offset = stream.offset();
         auto virtual_offset = bit_cast<size_t>(m_code) + offset;
+
+        while (!mapping.is_end() && offset > mapping->native_offset)
+            ++mapping;
+        if (!mapping.is_end() && offset == mapping->native_offset) {
+            if (mapping->block_index == BytecodeMapping::EXECUTABLE) {
+                dbgln("{}:", BytecodeMapping::EXECUTABLE_LABELS[mapping->bytecode_offset]);
+            } else {
+                auto const& block = *executable.basic_blocks[mapping->block_index];
+                if (mapping->bytecode_offset == 0)
+                    dbgln("\nBlock {}:", mapping->block_index + 1);
+
+                VERIFY(mapping->bytecode_offset < block.size());
+                auto const& instruction = *reinterpret_cast<Bytecode::Instruction const*>(block.data() + mapping->bytecode_offset);
+                dbgln("{}:{:x} {}:", mapping->block_index + 1, mapping->bytecode_offset, instruction.to_deprecated_string(executable));
+            }
+        }
+
         auto insn = disassembler.next();
         if (!insn.has_value())
             break;
@@ -56,7 +115,7 @@ void NativeExecutable::dump_disassembly() const
                 builder.append("   "sv);
         }
         builder.append(" "sv);
-        builder.append(insn.value().to_deprecated_string(virtual_offset, nullptr));
+        builder.append(insn.value().to_deprecated_string(virtual_offset, &symbol_provider));
         dbgln("{}", builder.string_view());
 
         for (size_t bytes_printed = 7; bytes_printed < length; bytes_printed += 7) {
@@ -67,7 +126,26 @@ void NativeExecutable::dump_disassembly() const
             dbgln("{}", builder.string_view());
         }
     }
+
+    dbgln();
 #endif
+}
+
+BytecodeMapping const& NativeExecutable::find_mapping_entry(size_t native_offset) const
+{
+    size_t nearby_index = 0;
+    AK::binary_search(
+        m_mapping,
+        native_offset,
+        &nearby_index,
+        [](FlatPtr needle, BytecodeMapping const& mapping_entry) {
+            if (needle > mapping_entry.native_offset)
+                return 1;
+            if (needle == mapping_entry.native_offset)
+                return 0;
+            return -1;
+        });
+    return m_mapping[nearby_index];
 }
 
 }
