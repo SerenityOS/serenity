@@ -241,6 +241,10 @@ public:
         return round_up_to_power_of_two(alignof(void*), sizeof(*this) + sizeof(Register) * excluded_names_count);
     }
 
+    Register from_object() const { return m_from_object; }
+    size_t excluded_names_count() const { return m_excluded_names_count; }
+    Register const* excluded_names() const { return m_excluded_names; }
+
 private:
     Register m_from_object;
     size_t m_excluded_names_count { 0 };
