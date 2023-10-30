@@ -439,30 +439,73 @@ void HTMLLinkElement::resource_did_load_favicon()
     document().check_favicon_after_loading_link_resource();
 }
 
+static bool decode_favicon(ReadonlyBytes favicon_data, AK::URL const& favicon_url, JS::GCPtr<Navigable> navigable)
+{
+    auto decoded_image = Platform::ImageCodecPlugin::the().decode_image(favicon_data);
+    if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
+        dbgln("Could not decode favicon {}", favicon_url);
+        return false;
+    }
+
+    auto favicon_bitmap = decoded_image->frames[0].bitmap;
+    dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
+
+    if (navigable && navigable->is_traversable())
+        navigable->traversable_navigable()->page()->client().page_did_change_favicon(*favicon_bitmap);
+
+    return favicon_bitmap;
+}
+
 bool HTMLLinkElement::load_favicon_and_use_if_window_is_active()
 {
     if (!has_loaded_icon())
         return false;
 
-    RefPtr<Gfx::Bitmap> favicon_bitmap;
-    auto decoded_image = Platform::ImageCodecPlugin::the().decode_image(resource()->encoded_data());
-    if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
-        dbgln("Could not decode favicon {}", resource()->url());
-        return false;
-    }
+    return decode_favicon(resource()->encoded_data(), resource()->url(), navigable());
+}
 
-    favicon_bitmap = decoded_image->frames[0].bitmap;
-    dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
+// https://html.spec.whatwg.org/multipage/links.html#rel-icon:the-link-element-3
+WebIDL::ExceptionOr<void> HTMLLinkElement::load_fallback_favicon_if_needed(JS::NonnullGCPtr<DOM::Document> document)
+{
+    auto& realm = document->realm();
+    auto& vm = realm.vm();
 
-    auto* page = document().page();
-    if (!page)
-        return favicon_bitmap;
+    // In the absence of a link with the icon keyword, for Document objects whose URL's scheme is an HTTP(S) scheme,
+    // user agents may instead run these steps in parallel:
+    if (document->has_active_favicon())
+        return {};
+    if (!document->url().scheme().is_one_of("http"sv, "https"sv))
+        return {};
 
-    if (navigable() && navigable()->is_traversable()) {
-        navigable()->traversable_navigable()->page()->client().page_did_change_favicon(*favicon_bitmap);
-    }
+    // 1. Let request be a new request whose URL is the URL record obtained by resolving the URL "/favicon.ico" against
+    //    the Document object's URL, client is the Document object's relevant settings object, destination is "image",
+    //    synchronous flag is set, credentials mode is "include", and whose use-URL-credentials flag is set.
+    // NOTE: Fetch requests no longer have a synchronous flag, see https://github.com/whatwg/fetch/pull/1165
+    auto request = Fetch::Infrastructure::Request::create(vm);
+    request->set_url(document->parse_url("/favicon.ico"sv));
+    request->set_client(&document->relevant_settings_object());
+    request->set_destination(Fetch::Infrastructure::Request::Destination::Image);
+    request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::Include);
+    request->set_use_url_credentials(true);
 
-    return true;
+    // 2. Let response be the result of fetching request.
+    Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
+    fetch_algorithms_input.process_response = [document, request](JS::NonnullGCPtr<Fetch::Infrastructure::Response> response) {
+        auto& realm = document->realm();
+        auto global = JS::NonnullGCPtr { realm.global_object() };
+
+        auto process_body = [document, request](auto body) {
+            decode_favicon(body, request->url(), document->navigable());
+        };
+        auto process_body_error = [](auto) {
+        };
+
+        // 3. Use response's unsafe response as an icon as if it had been declared using the icon keyword.
+        response->unsafe_response()->body()->fully_read(realm, move(process_body), move(process_body_error), global).release_value_but_fixme_should_propagate_errors();
+    };
+
+    TRY(Fetch::Fetching::fetch(realm, request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
+    return {};
 }
 
 void HTMLLinkElement::visit_edges(Cell::Visitor& visitor)
