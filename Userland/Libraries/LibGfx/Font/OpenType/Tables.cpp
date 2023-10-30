@@ -345,46 +345,76 @@ Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_gly
     return pair->value;
 }
 
+ErrorOr<OS2> OS2::from_slice(ReadonlyBytes slice)
+{
+    // All OS2 tables begin with a version.
+    if (slice.size() < sizeof(BigEndian<u16>))
+        return Error::from_string_literal("Could not load OS2: Not enough data");
+    u16 version = *bit_cast<BigEndian<u16> const*>(slice.data());
+
+    // NOTE: We assume that this table only ever has new fields added to the end in future versions.
+    switch (version) {
+    case 0: {
+        if (slice.size() < sizeof(Version0))
+            return Error::from_string_literal("Could not load OS2 v0: Not enough data");
+        return OS2(bit_cast<Version0 const*>(slice.data()));
+    }
+    case 1: {
+        if (slice.size() < sizeof(Version1))
+            return Error::from_string_literal("Could not load OS2 v1: Not enough data");
+        return OS2(bit_cast<Version1 const*>(slice.data()));
+    }
+    case 2:
+    default: {
+        if (slice.size() < sizeof(Version2))
+            return Error::from_string_literal("Could not load OS2 v2: Not enough data");
+        return OS2(bit_cast<Version2 const*>(slice.data()));
+    }
+    }
+}
+
 u16 OS2::weight_class() const
 {
-    return header().us_weight_class;
+    return m_data.visit([](auto* any) { return any->us_weight_class; });
 }
 
 u16 OS2::width_class() const
 {
-    return header().us_width_class;
+    return m_data.visit([](auto* any) { return any->us_width_class; });
 }
 
 u16 OS2::selection() const
 {
-    return header().fs_selection;
+    return m_data.visit([](auto* any) { return any->fs_selection; });
 }
 
 i16 OS2::typographic_ascender() const
 {
-    return header().s_typo_ascender;
+    return m_data.visit([](auto* any) { return any->s_typo_ascender; });
 }
 
 i16 OS2::typographic_descender() const
 {
-    return header().s_typo_descender;
+    return m_data.visit([](auto* any) { return any->s_typo_descender; });
 }
 
 i16 OS2::typographic_line_gap() const
 {
-    return header().s_typo_line_gap;
+    return m_data.visit([](auto* any) { return any->s_typo_line_gap; });
 }
 
 bool OS2::use_typographic_metrics() const
 {
-    return header().fs_selection & 0x80;
+    return m_data.visit([](auto* any) { return any->fs_selection & 0x80; });
 }
 
 Optional<i16> OS2::x_height() const
 {
-    if (header().version < 2)
-        return {};
-    return header_v2().sx_height;
+    return m_data.visit(
+        []<typename T> requires(requires { T::sx_height; })(T * data)->Optional<i16> {
+            return data->sx_height;
+        },
+        [](auto*) { return Optional<i16>(); });
 }
 
 ErrorOr<CBLC> CBLC::from_slice(ReadonlyBytes slice)
