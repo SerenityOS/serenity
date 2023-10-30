@@ -176,7 +176,14 @@ static ErrorOr<ByteBuffer> uncompress_byte_run(ReadonlyBytes data, ILBMLoadingCo
     auto length = data.size();
     dbgln_if(ILBM_DEBUG, "uncompress_byte_run pitch={} size={}", context.pitch, data.size());
 
-    auto plane_data = TRY(ByteBuffer::create_uninitialized(context.pitch * context.bm_header.height * context.bm_header.planes));
+    size_t plane_data_size = context.pitch * context.bm_header.height * context.bm_header.planes;
+
+    // The maximum run length of this compression method is 127 bytes, so the uncompressed size
+    // cannot be more than 127 times the size of the chunk we are decompressing.
+    if (plane_data_size > NumericLimits<u32>::max() || ceil_div(plane_data_size, 127ul) > length)
+        return Error::from_string_literal("Uncompressed data size too large");
+
+    auto plane_data = TRY(ByteBuffer::create_uninitialized(plane_data_size));
 
     u32 index = 0;
     u32 read_bytes = 0;
@@ -196,6 +203,9 @@ static ErrorOr<ByteBuffer> uncompress_byte_run(ReadonlyBytes data, ILBMLoadingCo
             }
         }
     }
+
+    if (index != plane_data_size)
+        return Error::from_string_literal("Unexpected end of chunk while decompressing data");
 
     return plane_data;
 }
