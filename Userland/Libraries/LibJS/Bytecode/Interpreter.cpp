@@ -16,6 +16,7 @@
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/JIT/Compiler.h>
+#include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -53,6 +54,13 @@ void Interpreter::visit_edges(Cell::Visitor& visitor)
     for (auto& frame : m_call_frames) {
         frame.visit([&](auto& value) { value->visit_edges(visitor); });
     }
+}
+
+Optional<InstructionStreamIterator const&> Interpreter::instruction_stream_iterator() const
+{
+    if (m_current_executable && m_current_executable->native_executable())
+        return m_current_executable->native_executable()->instruction_stream_iterator(*m_current_executable);
+    return m_pc;
 }
 
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation

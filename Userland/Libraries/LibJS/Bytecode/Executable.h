@@ -15,8 +15,11 @@
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
-#include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
+
+namespace JS::JIT {
+class NativeExecutable;
+}
 
 namespace JS::Bytecode {
 
@@ -70,6 +73,7 @@ public:
     void dump() const;
 
     JIT::NativeExecutable const* get_or_create_native_executable();
+    JIT::NativeExecutable const* native_executable() const { return m_native_executable; }
 
 private:
     OwnPtr<JIT::NativeExecutable> m_native_executable;

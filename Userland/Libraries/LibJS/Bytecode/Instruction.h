@@ -157,10 +157,10 @@ private:
 
 class InstructionStreamIterator {
 public:
-    InstructionStreamIterator(ReadonlyBytes bytes, Executable const* executable = nullptr)
+    InstructionStreamIterator(ReadonlyBytes bytes, Executable const* executable = nullptr, size_t offset = 0)
         : m_begin(bytes.data())
         , m_end(bytes.data() + bytes.size())
-        , m_ptr(bytes.data())
+        , m_ptr(bytes.data() + offset)
         , m_executable(executable)
     {
     }
