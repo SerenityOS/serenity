@@ -154,6 +154,7 @@ TEST_CASE(test_ilbm_malformed_header)
 TEST_CASE(test_ilbm_malformed_frame)
 {
     Array test_inputs = {
+        TEST_INPUT("ilbm/incorrect-uncompressed-size.iff"sv),
         TEST_INPUT("ilbm/missing-body-chunk.iff"sv)
     };
 
