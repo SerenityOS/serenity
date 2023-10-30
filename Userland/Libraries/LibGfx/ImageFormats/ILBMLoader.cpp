@@ -152,18 +152,22 @@ static ErrorOr<ByteBuffer> planar_to_chunky(ReadonlyBytes bitplanes, ILBMLoading
     auto chunky = TRY(ByteBuffer::create_zeroed(width * height));
 
     for (u16 y = 0; y < height; y++) {
+        size_t scanline = y * width;
         for (u8 p = 0; p < planes; p++) {
             u8 const plane_mask = 1 << p;
+            size_t offset_base = (pitch * planes * y) + (p * pitch);
+            if (offset_base + pitch > bitplanes.size() || scanline + ((pitch - 1) * 8) + 7 >= chunky.size())
+                return Error::from_string_literal("Malformed bitplane data");
+
             for (u16 i = 0; i < pitch; i++) {
-                u16 offset = (pitch * planes * y) + (p * pitch) + i;
-                u8 bit = bitplanes[offset];
+                u8 bit = bitplanes[offset_base + i];
 
                 for (u8 b = 0; b < 8; b++) {
                     u8 mask = 1 << (7 - b);
                     // get current plane
                     if (bit & mask) {
                         u16 x = (i * 8) + b;
-                        chunky[(y * width) + x] |= plane_mask;
+                        chunky[scanline + x] |= plane_mask;
                     }
                 }
             }
