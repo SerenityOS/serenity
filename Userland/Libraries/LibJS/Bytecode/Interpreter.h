@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
@@ -77,7 +78,7 @@ public:
     Executable& current_executable() { return *m_current_executable; }
     Executable const& current_executable() const { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
-    auto& instruction_stream_iterator() const { return m_pc; }
+    Optional<InstructionStreamIterator const&> instruction_stream_iterator() const;
 
     void visit_edges(Cell::Visitor&);
 
