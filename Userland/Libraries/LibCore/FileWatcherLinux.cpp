@@ -143,7 +143,7 @@ ErrorOr<bool> FileWatcherBase::add_watch(DeprecatedString path, FileWatcherEvent
     if (has_flag(event_mask, FileWatcherEvent::Type::MetadataModified))
         inotify_mask |= IN_ATTRIB;
 
-    int watch_descriptor = ::inotify_add_watch(m_watcher_fd, path.characters(), inotify_mask);
+    int watch_descriptor = ::inotify_add_watch(m_watcher_fd, path.characters_for_external_api(), inotify_mask);
     if (watch_descriptor < 0)
         return Error::from_errno(errno);
 

@@ -66,7 +66,7 @@ ErrorOr<IPv4Address> Socket::resolve_host(DeprecatedString const& host, SocketTy
     hints.ai_flags = 0;
     hints.ai_protocol = 0;
 
-    auto const results = TRY(Core::System::getaddrinfo(host.characters(), nullptr, hints));
+    auto const results = TRY(Core::System::getaddrinfo(host.characters_for_external_api(), nullptr, hints));
 
     for (auto const& result : results.addresses()) {
         if (result.ai_family == AF_INET) {

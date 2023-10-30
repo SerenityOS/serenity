@@ -15,7 +15,7 @@ DirIterator::DirIterator(DeprecatedString path, Flags flags)
     : m_path(move(path))
     , m_flags(flags)
 {
-    m_dir = opendir(m_path.characters());
+    m_dir = opendir(m_path.characters_for_external_api());
     if (!m_dir) {
         m_error = Error::from_errno(errno);
     }

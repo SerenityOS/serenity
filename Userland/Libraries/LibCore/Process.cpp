@@ -43,7 +43,7 @@ struct ArgvList {
         : m_path { path }
     {
         m_argv.ensure_capacity(size + 2);
-        m_argv.append(m_path.characters());
+        m_argv.append(m_path.characters_for_external_api());
     }
 
     void append(char const* arg)
@@ -72,7 +72,7 @@ struct ArgvList {
             posix_spawn_file_actions_destroy(&spawn_actions);
         };
         if (!m_working_directory.is_empty())
-            posix_spawn_file_actions_addchdir(&spawn_actions, m_working_directory.characters());
+            posix_spawn_file_actions_addchdir(&spawn_actions, m_working_directory.characters_for_external_api());
 
         auto pid = TRY(System::posix_spawn(m_path.view(), &spawn_actions, nullptr, const_cast<char**>(get().data()), System::environment()));
         if (keep_as_child == Process::KeepAsChild::No)
@@ -90,7 +90,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<DeprecatedString> ar
 {
     ArgvList argv { path, arguments.size() };
     for (auto const& arg : arguments)
-        argv.append(arg.characters());
+        argv.append(arg.characters_for_external_api());
     argv.set_working_directory(working_directory);
     return argv.spawn(keep_as_child);
 }
@@ -102,7 +102,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> argument
     ArgvList argv { path, arguments.size() };
     for (auto const& arg : arguments) {
         backing_strings.append(arg);
-        argv.append(backing_strings.last().characters());
+        argv.append(backing_strings.last().characters_for_external_api());
     }
     argv.set_working_directory(working_directory);
     return argv.spawn(keep_as_child);

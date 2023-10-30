@@ -166,7 +166,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSPro
             address_data[0] = to_underlying(AddressType::DomainName);
             address_data[1] = hostname.length();
             TRY(stream.write_until_depleted({ address_data, sizeof(address_data) }));
-            TRY(stream.write_until_depleted({ hostname.characters(), hostname.length() }));
+            TRY(stream.write_until_depleted({ hostname.characters_without_null_termination(), hostname.length() }));
             return {};
         },
         [&](u32 ipv4) -> ErrorOr<void> {
@@ -223,12 +223,12 @@ ErrorOr<u8> send_username_password_authentication_message(Core::Socket& socket, 
     u8 username_length = auth_data.username.length();
     TRY(stream.write_value(username_length));
 
-    TRY(stream.write_until_depleted({ auth_data.username.characters(), auth_data.username.length() }));
+    TRY(stream.write_until_depleted({ auth_data.username.characters_without_null_termination(), auth_data.username.length() }));
 
     u8 password_length = auth_data.password.length();
     TRY(stream.write_value(password_length));
 
-    TRY(stream.write_until_depleted({ auth_data.password.characters(), auth_data.password.length() }));
+    TRY(stream.write_until_depleted({ auth_data.password.characters_without_null_termination(), auth_data.password.length() }));
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
     TRY(stream.read_until_filled(buffer.bytes()));

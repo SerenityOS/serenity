@@ -170,7 +170,7 @@ bool Account::authenticate(SecretString const& password) const
         return true;
 
     // FIXME: Use crypt_r if it can be built in lagom.
-    auto const bytes = m_password_hash->characters();
+    auto const bytes = m_password_hash->characters_for_external_api();
     char* hash = crypt(password.characters(), bytes);
     return hash != nullptr && AK::timing_safe_compare(hash, bytes, m_password_hash->length());
 }
@@ -186,7 +186,7 @@ ErrorOr<void> Account::login() const
 
 void Account::set_password(SecretString const& password)
 {
-    m_password_hash = crypt(password.characters(), get_salt().characters());
+    m_password_hash = crypt(password.characters(), get_salt().characters_for_external_api());
 }
 
 void Account::set_password_enabled(bool enabled)
@@ -269,7 +269,7 @@ ErrorOr<DeprecatedString> Account::generate_group_file() const
         auto should_be_present = !m_deleted && m_extra_gids.contains_slow(group->gr_gid);
 
         auto already_present = false;
-        Vector<char const*> members;
+        Vector<StringView> members;
         for (size_t i = 0; group->gr_mem[i]; ++i) {
             auto const* member = group->gr_mem[i];
             if (member == m_username) {
@@ -277,11 +277,11 @@ ErrorOr<DeprecatedString> Account::generate_group_file() const
                 if (!should_be_present)
                     continue;
             }
-            members.append(member);
+            members.append({ member, __builtin_strlen(member) });
         }
 
         if (should_be_present && !already_present)
-            members.append(m_username.characters());
+            members.append(m_username);
 
         builder.appendff("{}:{}:{}:{}\n", group->gr_name, group->gr_passwd, group->gr_gid, DeprecatedString::join(","sv, members));
     }

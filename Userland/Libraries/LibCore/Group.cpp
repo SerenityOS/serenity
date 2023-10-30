@@ -78,7 +78,7 @@ ErrorOr<void> Group::add_group(Group& group)
         return Error::from_string_literal("Group name has invalid characters.");
 
     // Disallow names starting with '_', '-' or other non-alpha characters.
-    if (group.name().starts_with('_') || group.name().starts_with('-') || !is_ascii_alpha(group.name().characters()[0]))
+    if (group.name().starts_with('_') || group.name().starts_with('-') || !is_ascii_alpha(group.name().characters_without_null_termination()[0]))
         return Error::from_string_literal("Group name has invalid characters.");
 
     // Verify group name does not already exist
@@ -162,7 +162,7 @@ ErrorOr<bool> Group::id_exists(gid_t id)
 ErrorOr<struct group> Group::to_libc_group()
 {
     struct group gr;
-    gr.gr_name = const_cast<char*>(m_name.characters());
+    gr.gr_name = const_cast<char*>(m_name.characters_for_external_api());
     gr.gr_passwd = const_cast<char*>("x");
     gr.gr_gid = m_id;
     gr.gr_mem = nullptr;
@@ -175,7 +175,7 @@ ErrorOr<struct group> Group::to_libc_group()
     if (m_members.size() > 0) {
         TRY(members.try_ensure_capacity(m_members.size() + 1));
         for (auto member : m_members)
-            members.unchecked_append(const_cast<char*>(member.characters()));
+            members.unchecked_append(const_cast<char*>(member.characters_for_external_api()));
         members.unchecked_append(nullptr);
 
         gr.gr_mem = const_cast<char**>(members.data());
