@@ -288,6 +288,8 @@ private:
     CSSPixels containing_block_size_for_item(GridItem const&, GridDimension const) const;
     AvailableSpace get_available_space_for_item(GridItem const&) const;
 
+    CSSPixelRect get_grid_area_rect(GridItem const&) const;
+
     CSSPixels content_size_suggestion(GridItem const&, GridDimension const) const;
     Optional<CSSPixels> specified_size_suggestion(GridItem const&, GridDimension const) const;
     CSSPixels content_based_minimum_size(GridItem const&, GridDimension const) const;
