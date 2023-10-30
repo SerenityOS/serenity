@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 
 #ifndef KERNEL
@@ -127,6 +128,62 @@ StringView GenericLexer::consume_quoted_string(char escape_char)
 
     return m_input.substring_view(start, length);
 }
+
+template<Integral T>
+ErrorOr<T> GenericLexer::consume_decimal_integer()
+{
+    using UnsignedT = MakeUnsigned<T>;
+
+    ArmedScopeGuard rollback { [&, rollback_position = m_index] {
+        m_index = rollback_position;
+    } };
+
+    bool has_minus_sign = false;
+
+    if (next_is('+') || next_is('-'))
+        if (consume() == '-')
+            has_minus_sign = true;
+
+    StringView number_view = consume_while(is_ascii_digit);
+    if (number_view.is_empty())
+        return Error::from_errno(EINVAL);
+
+    auto maybe_number = StringUtils::convert_to_uint<UnsignedT>(number_view, TrimWhitespace::No);
+    if (!maybe_number.has_value())
+        return Error::from_errno(ERANGE);
+    auto number = maybe_number.value();
+
+    if (!has_minus_sign) {
+        if (NumericLimits<T>::max() < number) // This is only possible in a signed case.
+            return Error::from_errno(ERANGE);
+
+        rollback.disarm();
+        return number;
+    } else {
+        if constexpr (IsUnsigned<T>) {
+            if (number == 0) {
+                rollback.disarm();
+                return 0;
+            }
+            return Error::from_errno(ERANGE);
+        } else {
+            static constexpr UnsignedT max_value = static_cast<UnsignedT>(NumericLimits<T>::max()) + 1;
+            if (number > max_value)
+                return Error::from_errno(ERANGE);
+            rollback.disarm();
+            return -number;
+        }
+    }
+}
+
+template ErrorOr<u8> GenericLexer::consume_decimal_integer<u8>();
+template ErrorOr<i8> GenericLexer::consume_decimal_integer<i8>();
+template ErrorOr<u16> GenericLexer::consume_decimal_integer<u16>();
+template ErrorOr<i16> GenericLexer::consume_decimal_integer<i16>();
+template ErrorOr<u32> GenericLexer::consume_decimal_integer<u32>();
+template ErrorOr<i32> GenericLexer::consume_decimal_integer<i32>();
+template ErrorOr<u64> GenericLexer::consume_decimal_integer<u64>();
+template ErrorOr<i64> GenericLexer::consume_decimal_integer<i64>();
 
 #ifndef KERNEL
 Optional<DeprecatedString> GenericLexer::consume_and_unescape_string(char escape_char)
