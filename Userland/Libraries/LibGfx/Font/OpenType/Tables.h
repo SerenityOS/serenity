@@ -382,11 +382,10 @@ private:
         BigEndian<u16> version;
         BigEndian<u16> count;
         Offset16 storage_offset;
-        NameRecord name_record[0];
+        // NameRecords are stored in a separate span.
+        // NameRecord name_record[0];
     };
     static_assert(AssertSize<NamingTableVersion0, 6>());
-
-    NamingTableVersion0 const& header() const { return *bit_cast<NamingTableVersion0 const*>(m_slice.data()); }
 
     enum class NameId : u16 {
         Copyright = 0,
@@ -404,14 +403,18 @@ private:
         TypographicSubfamilyName = 17,
     };
 
-    Name(ReadonlyBytes slice)
-        : m_slice(slice)
+    Name(NamingTableVersion0 const& naming_table, ReadonlySpan<NameRecord> name_records, ReadonlyBytes string_data)
+        : m_naming_table(naming_table)
+        , m_name_records(name_records)
+        , m_string_data(string_data)
     {
     }
 
     [[nodiscard]] String string_for_id(NameId) const;
 
-    ReadonlyBytes m_slice;
+    NamingTableVersion0 const& m_naming_table;
+    ReadonlySpan<NameRecord> m_name_records;
+    ReadonlyBytes m_string_data;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/kern
