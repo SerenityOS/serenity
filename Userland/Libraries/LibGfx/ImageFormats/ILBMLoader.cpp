@@ -298,6 +298,9 @@ static ErrorOr<void> decode_iff_chunks(ILBMLoadingContext& context)
     while (!chunks.is_empty()) {
         auto chunk = TRY(decode_iff_advance_chunk(chunks));
         if (chunk.type == FourCC("CMAP")) {
+            if (chunk.data.size() != (1ul << context.bm_header.planes) * 3)
+                return Error::from_string_literal("Invalid CMAP chunk size");
+
             context.color_table = TRY(decode_cmap_chunk(chunk));
         } else if (chunk.type == FourCC("BODY")) {
             if (context.color_table.is_empty())
