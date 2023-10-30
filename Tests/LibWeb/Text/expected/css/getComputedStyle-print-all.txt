@@ -115,6 +115,7 @@ min-height: auto
 min-inline-size: 0px
 min-width: auto
 object-fit: fill
+object-position: left 50% top 50%
 opacity: 1
 order: 0
 outline-color: rgb(0, 0, 0)
