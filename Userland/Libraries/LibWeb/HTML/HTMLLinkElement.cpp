@@ -462,7 +462,7 @@ bool HTMLLinkElement::load_favicon_and_use_if_window_is_active()
         navigable()->traversable_navigable()->page()->client().page_did_change_favicon(*favicon_bitmap);
     }
 
-    return false;
+    return true;
 }
 
 void HTMLLinkElement::visit_edges(Cell::Visitor& visitor)
