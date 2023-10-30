@@ -81,7 +81,8 @@ static bool s_disable_source_location_hints = false;
 static RefPtr<Line::Editor> s_editor;
 static String s_history_path = String {};
 static int s_repl_line_level = 0;
-static bool s_fail_repl = false;
+static bool s_keep_running_repl = true;
+static int s_exit_code = 0;
 
 static ErrorOr<void> print(JS::Value value, Stream& stream)
 {
@@ -124,7 +125,7 @@ static ErrorOr<String> read_next_piece()
         line_level_delta_for_next_line = 0;
 
         if (line_result.is_error()) {
-            s_fail_repl = true;
+            s_keep_running_repl = false;
             return String {};
         }
 
@@ -387,10 +388,11 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
-    s_editor->save_history(s_history_path.to_deprecated_string());
-    if (!vm.argument_count())
-        exit(0);
-    exit(TRY(vm.argument(0).to_number(vm)).as_double());
+    if (vm.argument_count() != 0)
+        s_exit_code = TRY(vm.argument(0).to_number(vm)).as_double();
+
+    s_keep_running_repl = false;
+    return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
@@ -460,7 +462,7 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
 
 static ErrorOr<void> repl(JS::Realm& realm)
 {
-    while (!s_fail_repl) {
+    while (s_keep_running_repl) {
         auto const piece = TRY(read_next_piece());
         if (Utf8View { piece }.trim(JS::whitespace_characters).is_empty())
             continue;
@@ -879,5 +881,5 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
     }
 
-    return 0;
+    return s_exit_code;
 }
