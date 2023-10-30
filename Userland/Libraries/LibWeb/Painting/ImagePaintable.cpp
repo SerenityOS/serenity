@@ -141,10 +141,9 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
                         offset_x = (double)residual_horizontal - (double)(residual_horizontal)*offset.percentage().as_fraction();
                     else
                         offset_x = residual_horizontal - offset.length().to_px(layout_node()).to_int();
-
-                    if (image_int_rect.width() < scaled_bitmap_width)
-                        bitmap_intersect.set_x(-(offset_x / scale_x));
                 }
+                if (image_int_rect.width() < scaled_bitmap_width)
+                    bitmap_intersect.set_x(-(offset_x / scale_x));
             }
 
             auto offset_y = 0;
@@ -164,10 +163,9 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
                         offset_y = (double)residual_vertical - (double)(residual_vertical)*offset.percentage().as_fraction();
                     else
                         offset_y = residual_vertical - offset.length().to_px(layout_node()).to_int();
-
-                    if (image_int_rect.height() < scaled_bitmap_height)
-                        bitmap_intersect.set_y(-(offset_y / scale_y));
                 }
+                if (image_int_rect.height() < scaled_bitmap_height)
+                    bitmap_intersect.set_y(-(offset_y / scale_y));
             }
 
             Gfx::IntRect draw_rect = {
