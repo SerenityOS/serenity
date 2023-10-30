@@ -1635,6 +1635,23 @@ void Compiler::compile_has_private_id(Bytecode::Op::HasPrivateId const& op)
     check_exception();
 }
 
+#    define COMPILE_NEW_BUILTIN_ERROR_OP(NewErrorName, new_error_name, ErrorName)                              \
+        static Value cxx_##new_error_name(VM& vm, DeprecatedString const& error_string)                        \
+        {                                                                                                      \
+            return ErrorName::create(*vm.current_realm(), error_string);                                       \
+        }                                                                                                      \
+                                                                                                               \
+        void Compiler::compile_##new_error_name(Bytecode::Op::NewErrorName const& op)                          \
+        {                                                                                                      \
+            m_assembler.mov(                                                                                   \
+                Assembler::Operand::Register(ARG1),                                                            \
+                Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_string(op.error_string())))); \
+            native_call((void*)cxx_##new_error_name);                                                          \
+            store_vm_register(Bytecode::Register::accumulator(), RET);                                         \
+        }
+JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(COMPILE_NEW_BUILTIN_ERROR_OP)
+#    undef COMPILE_NEW_BUILTIN_ERROR_OP
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
@@ -1684,7 +1701,7 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         while (!it.at_end()) {
             auto const& op = *it;
             switch (op.type()) {
-#    define CASE_BYTECODE_OP(OpTitleCase, op_snake_case)                                     \
+#    define CASE_BYTECODE_OP(OpTitleCase, op_snake_case, ...)                                \
     case Bytecode::Instruction::Type::OpTitleCase:                                           \
         compiler.compile_##op_snake_case(static_cast<Bytecode::Op::OpTitleCase const&>(op)); \
         break;
