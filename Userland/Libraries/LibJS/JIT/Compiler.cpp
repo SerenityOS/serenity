@@ -93,9 +93,32 @@ void Compiler::compile_store(Bytecode::Op::Store const& op)
     store_vm_register(op.dst(), GPR0);
 }
 
+static Value cxx_throw_binding_not_initialized(VM& vm, size_t index)
+{
+    auto const& variable_name = vm.running_execution_context().function->local_variables_names()[index];
+    TRY_OR_SET_EXCEPTION(vm.throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, variable_name));
+    return {};
+}
+
 void Compiler::compile_get_local(Bytecode::Op::GetLocal const& op)
 {
     load_vm_local(GPR0, op.index());
+
+    // if (GPR0 == <empty>) throw ReferenceError(BindingNotInitialized)
+    Assembler::Label not_empty {};
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm(Value().encoded()));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Register(GPR1),
+        not_empty);
+    m_assembler.mov(Assembler::Operand::Register(ARG1), Assembler::Operand::Imm(op.index()));
+    native_call((void*)cxx_throw_binding_not_initialized);
+    check_exception();
+    not_empty.link(m_assembler);
+
     store_vm_register(Bytecode::Register::accumulator(), GPR0);
 }
 
