@@ -141,7 +141,7 @@ TEST_CASE(test_ilbm_uncompressed)
 TEST_CASE(test_ilbm_malformed_header)
 {
     Array test_inputs = {
-        TEST_INPUT("ilbm/oss-fuzz-testcase-62033.iff"sv),
+        TEST_INPUT("ilbm/truncated-bmhd-chunk.iff"sv)
     };
 
     for (auto test_input : test_inputs) {
@@ -154,7 +154,7 @@ TEST_CASE(test_ilbm_malformed_header)
 TEST_CASE(test_ilbm_malformed_frame)
 {
     Array test_inputs = {
-        TEST_INPUT("ilbm/oss-fuzz-testcase-63296.iff"sv)
+        TEST_INPUT("ilbm/missing-body-chunk.iff"sv)
     };
 
     for (auto test_input : test_inputs) {
