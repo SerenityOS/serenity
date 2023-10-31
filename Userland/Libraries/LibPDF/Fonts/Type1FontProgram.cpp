@@ -397,32 +397,6 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 if (static_cast<size_t>(subr_number) >= subroutines.size())
                     return error("Subroutine index out of range");
 
-                if (!is_type2) {
-                    // FIXME: Hardcoding subr 0 here is incorrect, since some fonts don't use the flex feature.
-                    // For the ones that do, subrs 0 has fixed contents that have callothersubr instructions.
-                    // The right thing to do is to implement callothersubr for subrs 0 and remove the hardcoding here.
-
-                    // Subroutines 0-2 handle the flex feature.
-                    if (subr_number == 0) {
-                        if (state.flex_index != 14)
-                            break;
-
-                        auto& flex = state.flex_sequence;
-
-                        path.cubic_bezier_curve_to(
-                            { flex[2], flex[3] },
-                            { flex[4], flex[5] },
-                            { flex[6], flex[7] });
-                        path.cubic_bezier_curve_to(
-                            { flex[8], flex[9] },
-                            { flex[10], flex[11] },
-                            { flex[12], flex[13] });
-
-                        state.flex_feature = false;
-                        state.sp = 0;
-                        break;
-                    }
-                }
                 auto const& subr = subroutines[subr_number];
                 if (subr.is_empty())
                     return error("Empty subroutine");
@@ -471,7 +445,19 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     //     and a call to Subrs entry 2 after each of the seven coordinate pairs in the sequence.
                     //  7. Place the Flex height control parameter and the final coordinate expressed in absolute terms (in character space)
                     //     followed by a call to Subrs entry 0 at the end."
+                    // [...]
+                    // Type 1 spec, 8.4 First Four Subrs Entries:
+                    // "Subrs entry number 0: 3 0 callothersubr pop pop setcurrentpoint return
+                    //  Subrs entry number 1: 0 1 callothersubr return
+                    //  Subrs entry number 2: 0 2 callothersubr return
+                    //  Subrs entry number 3: return
+                    // [...]
+                    //  Subrs entry 0 passes the final three arguments in the Flex mechanism into OtherSubrs entry 0.
+                    //  That procedure puts the new current point on top of the Post- Script interpreter operand stack.
+                    //  Subrs entry 0 then transfers these two coordinate values to the Type 1 BuildChar operand stack
+                    // with two pop commands and makes them the current point coordinates with a setcurrentpoint command."
                     enum OtherSubrCommand {
+                        EndFlex = 0,
                         StartFlex = 1,
                         AddFlexPoint = 2,
                     };
@@ -480,6 +466,35 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     auto n = static_cast<int>(pop());
 
                     switch ((OtherSubrCommand)othersubr_number) {
+                    case EndFlex: {
+                        if (n != 3)
+                            return error("Unexpected argument code for othersubr 0");
+
+                        auto y = pop();
+                        auto x = pop();
+                        [[maybe_unused]] auto flex_height = pop();
+
+                        state.postscript_stack[state.postscript_sp++] = y;
+                        state.postscript_stack[state.postscript_sp++] = x;
+
+                        if (state.flex_index != 14)
+                            break;
+
+                        auto& flex = state.flex_sequence;
+
+                        path.cubic_bezier_curve_to(
+                            { flex[2], flex[3] },
+                            { flex[4], flex[5] },
+                            { flex[6], flex[7] });
+                        path.cubic_bezier_curve_to(
+                            { flex[8], flex[9] },
+                            { flex[10], flex[11] },
+                            { flex[12], flex[13] });
+
+                        state.flex_feature = false;
+                        state.sp = 0;
+                        break;
+                    }
                     case StartFlex:
                         if (n != 0)
                             return error("Unexpected argument code for othersubr 1");
@@ -510,8 +525,17 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     auto y = pop();
                     auto x = pop();
 
-                    state.point = { x, y };
-                    path.move_to(state.point);
+                    // FIXME: Gfx::Path behaves weirdly if a cubic_bezier_curve_to(a, b, c)
+                    //        is followed by move(c). Figure out why, fix in Gfx::Path, then
+                    //        remove this check here.
+                    //        Run `Build/lagom/bin/pdf --render out.png Tests/LibPDF/type1.pdf`
+                    //        as test -- if the output looks good, then all's good. At the moment,
+                    //        the output looks broken without the if here.
+                    Gfx::FloatPoint new_point { x, y };
+                    if (state.point != new_point) {
+                        state.point = new_point;
+                        path.move_to(state.point);
+                    }
                     state.sp = 0;
                     break;
                 }
