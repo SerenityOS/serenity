@@ -31,11 +31,11 @@ jobs:
           emcc --version
           ninja --version
           gcc --version
-      - name: Checkout SerenityOS/libjs-test262-data libjs-wasm
+      - name: Checkout SerenityOS/libjs-data libjs-wasm
         uses: actions/checkout@v4
         with:
-          repository: SerenityOS/libjs-test262-data
-          path: libjs-test262-data
+          repository: SerenityOS/libjs-data
+          path: libjs-data
           ref: libjs-wasm
       - name: "Create build directories"
         run: |
@@ -88,10 +88,10 @@ jobs:
 
       - name: "Prepare files"
         run: |
-          cp ${{ github.workspace }}/Build/wasm/bin/libjs.js ${{ github.workspace }}/libjs-test262-data/libjs.js
-          cp ${{ github.workspace }}/Build/wasm/bin/libjs.wasm ${{ github.workspace }}/libjs-test262-data/libjs.wasm
-          echo 'Module.SERENITYOS_COMMIT = "${{ github.sha }}";' >> ${{ github.workspace }}/libjs-test262-data/libjs.js
-          tar --exclude='.[^/]*' -czvf libjs-wasm.tar.gz -C ${{ github.workspace }}/libjs-test262-data .
+          cp ${{ github.workspace }}/Build/wasm/bin/libjs.js ${{ github.workspace }}/libjs-data/libjs.js
+          cp ${{ github.workspace }}/Build/wasm/bin/libjs.wasm ${{ github.workspace }}/libjs-data/libjs.wasm
+          echo 'Module.SERENITYOS_COMMIT = "${{ github.sha }}";' >> ${{ github.workspace }}/libjs-data/libjs.js
+          tar --exclude='.[^/]*' -czvf libjs-wasm.tar.gz -C ${{ github.workspace }}/libjs-data .
 
       - name: Deploy to GitHub
         uses: JamesIves/github-pages-deploy-action@v4.4.3
@@ -100,9 +100,9 @@ jobs:
           git-config-name: BuggieBot
           git-config-email: buggiebot@serenityos.org
           branch: libjs-wasm
-          repository-name: SerenityOS/libjs-test262-data
+          repository-name: SerenityOS/libjs-data
           token: ${{ secrets.BUGGIEBOT_TOKEN }}
-          folder: ${{ github.workspace }}/libjs-test262-data
+          folder: ${{ github.workspace }}/libjs-data
 
       - name: Upload artifact package
         if: github.ref == 'refs/heads/master'
