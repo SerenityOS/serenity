@@ -49,7 +49,9 @@ inline u32 unsigned_int(u32 max)
         return 0;
 
     u32 random = Test::randomness_source().draw_value(max, [&]() {
-        return AK::get_random_uniform(max + 1);
+        // `clamp` to guard against integer overflow and calling get_random_uniform(0).
+        u32 exclusive_bound = AK::clamp(max + 1, max, NumericLimits<u32>::max());
+        return AK::get_random_uniform(exclusive_bound);
     });
     return random;
 }
