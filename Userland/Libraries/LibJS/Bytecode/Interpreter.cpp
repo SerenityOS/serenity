@@ -56,13 +56,6 @@ void Interpreter::visit_edges(Cell::Visitor& visitor)
     }
 }
 
-Optional<InstructionStreamIterator const&> Interpreter::instruction_stream_iterator() const
-{
-    if (m_current_executable && m_current_executable->native_executable())
-        return m_current_executable->native_executable()->instruction_stream_iterator(*m_current_executable);
-    return m_pc;
-}
-
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
 ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Environment> lexical_environment_override)
 {
@@ -370,6 +363,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
         push_call_frame(in_frame, executable.number_of_registers);
     else
         push_call_frame(make<CallFrame>(), executable.number_of_registers);
+
+    vm().execution_context_stack().last()->executable = &executable;
 
     if (auto native_executable = executable.get_or_create_native_executable()) {
         native_executable->run(vm());

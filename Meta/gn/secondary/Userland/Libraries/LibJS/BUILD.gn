@@ -6,6 +6,7 @@ shared_library("LibJS") {
     # FIXME: Why does LibSyntax need to depend on WindowServer headers?
     "//Userland",
   ]
+  cflags_cc = [ "-fno-omit-frame-pointer" ]
   deps = [
     "//AK",
     "//Userland/Libraries/LibCore",

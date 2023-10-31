@@ -34,7 +34,7 @@ public:
     void run(VM&) const;
     void dump_disassembly(Bytecode::Executable const& executable) const;
     BytecodeMapping const& find_mapping_entry(size_t native_offset) const;
-    Optional<Bytecode::InstructionStreamIterator const&> instruction_stream_iterator(Bytecode::Executable const& executable) const;
+    Optional<UnrealizedSourceRange> get_source_range(Bytecode::Executable const& executable, FlatPtr address) const;
 
     ReadonlyBytes code_bytes() const { return { m_code, m_size }; }
 

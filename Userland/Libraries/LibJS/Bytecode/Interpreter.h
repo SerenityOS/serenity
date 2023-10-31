@@ -78,7 +78,7 @@ public:
     Executable& current_executable() { return *m_current_executable; }
     Executable const& current_executable() const { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
-    Optional<InstructionStreamIterator const&> instruction_stream_iterator() const;
+    Optional<InstructionStreamIterator const&> instruction_stream_iterator() const { return m_pc; }
 
     void visit_edges(Cell::Visitor&);
 
