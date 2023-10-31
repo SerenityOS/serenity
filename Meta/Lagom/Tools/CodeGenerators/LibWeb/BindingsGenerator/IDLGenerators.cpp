@@ -5,6 +5,7 @@
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -3635,45 +3636,135 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
 {
 )~~~");
 
+    // FIXME: Unify this code with the overload arbiter and possibly WebIDL::resolve_overload
     if (interface.constructors.is_empty()) {
         // No constructor
         generator.set("constructor.length", "0");
         generator.append(R"~~~(
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "@namespaced_name@");
 )~~~");
-    } else if (interface.constructors.size() == 1) {
-        // Single constructor
+    } else {
+        auto shortest_length = NumericLimits<size_t>::max();
+        Optional<IDL::Constructor> html_constructor;
 
-        auto& constructor = interface.constructors[0];
-        generator.set("constructor.length", DeprecatedString::number(constructor.shortest_length()));
+        for (auto const& constructor : interface.constructors) {
+            shortest_length = min(shortest_length, constructor.shortest_length());
+
+            if (constructor.extended_attributes.contains("HTMLConstructor"sv)) {
+                html_constructor = constructor;
+                break;
+            }
+        }
+
+        generator.set("constructor.length", DeprecatedString::number(shortest_length));
 
         generator.append(R"~~~(
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 )~~~");
 
-        if (!constructor.extended_attributes.contains("HTMLConstructor"sv)) {
-            if (!constructor.parameters.is_empty()) {
-                generate_argument_count_check(generator, constructor.name, constructor.shortest_length());
+        if (!html_constructor.has_value()) {
+            if (interface.constructors.size() == 1) {
+                auto const& constructor = interface.constructors[0];
 
-                StringBuilder arguments_builder;
-                generate_arguments(generator, constructor.parameters, arguments_builder, interface);
-                generator.set(".constructor_arguments", arguments_builder.string_view());
+                if (!constructor.parameters.is_empty()) {
+                    generate_argument_count_check(generator, constructor.name, constructor.shortest_length());
 
-                generator.append(R"~~~(
+                    StringBuilder arguments_builder;
+                    generate_arguments(generator, constructor.parameters, arguments_builder, interface);
+                    generator.set(".constructor_arguments", arguments_builder.string_view());
+
+                    generator.append(R"~~~(
     auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm, @.constructor_arguments@); }));
 )~~~");
-            } else {
-                generator.append(R"~~~(
+                } else {
+                    generator.append(R"~~~(
     auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm); }));
 )~~~");
-            }
-            generator.append(R"~~~(
+                }
+
+                generator.append(R"~~~(
     return *impl;
 )~~~");
+            } else {
+                HashTable<size_t> observed_parameter_counts;
+
+                generator.append(R"~~~(
+    switch (vm.argument_count()) {
+)~~~");
+
+                for (auto const& constructor : interface.constructors) {
+                    for (ssize_t i = static_cast<ssize_t>(constructor.parameters.size()); i >= 0; --i) {
+                        if (observed_parameter_counts.contains(i)) {
+                            dbgln("Interface {} has multiple constructors that can accept {} parameters", interface.name, i);
+                            VERIFY_NOT_REACHED();
+                        }
+                        observed_parameter_counts.set(i);
+
+                        generator.set("parameter_count", MUST(String::number(i)));
+                        generator.append(R"~~~(
+    case @parameter_count@:
+)~~~");
+
+                        if (!constructor.parameters[i - 1].optional)
+                            break;
+                    }
+
+                    generator.append(R"~~~(
+    {
+)~~~");
+
+                    if (!constructor.parameters.is_empty()) {
+                        StringBuilder arguments_builder;
+                        generate_arguments(generator, constructor.parameters, arguments_builder, interface);
+                        generator.set(".constructor_arguments", arguments_builder.string_view());
+
+                        generator.append(R"~~~(
+        auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm, @.constructor_arguments@); }));
+        return *impl;
+)~~~");
+                    } else {
+                        generator.append(R"~~~(
+        auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm); }));
+        return *impl;
+)~~~");
+                    }
+
+                    generator.append(R"~~~(
+    }
+)~~~");
+                }
+
+                if (shortest_length == 1) {
+                    generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountOne");
+                    generator.set(".arg_count_suffix", "");
+                } else {
+                    generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountMany");
+                    generator.set(".arg_count_suffix", DeprecatedString::formatted(", \"{}\"", shortest_length));
+                }
+
+                generator.append(R"~~~(
+    default:
+        return vm.throw_completion<JS::TypeError>(@.bad_arg_count@, "constructor"@.arg_count_suffix@);
+    }
+)~~~");
+            }
         } else {
             // https://html.spec.whatwg.org/multipage/dom.html#html-element-constructors
             // NOTE: The active function object in this context is always going to be the current constructor that has just been called.
+
+            // The [HTMLConstructor] extended attribute must take no arguments, and must only appear on constructor operations. It must
+            // appear only once on a constructor operation, and the interface must contain only the single, annotated constructor
+            // operation, and no others
+            if (interface.constructors.size() != 1) {
+                dbgln("Interface {}'s constructor annotated with [HTMLConstructor] must be the only constructor", interface.name);
+                VERIFY_NOT_REACHED();
+            }
+
+            if (!interface.constructors[0].parameters.is_empty()) {
+                dbgln("Interface {}'s constructor marked with [HTMLConstructor] must not have any parameters", interface.name);
+                VERIFY_NOT_REACHED();
+            }
 
             generator.append(R"~~~(
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
@@ -3794,9 +3885,6 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
     return *actual_element;
 )~~~");
         }
-    } else {
-        // Multiple constructor overloads - can't do that yet.
-        TODO();
     }
 
     generator.append(R"~~~(
