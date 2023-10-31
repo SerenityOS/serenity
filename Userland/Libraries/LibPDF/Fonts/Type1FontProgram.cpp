@@ -187,6 +187,18 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
         point.translate_by(dx1 + dx2 + dx3, dy1 + dy2 + dy3);
     };
 
+    auto flex = [&](float dx1, float dy1, float dx2, float dy2, float dx3, float dy3,
+                    float dx4, float dy4, float dx5, float dy5, float dx6, float dy6,
+                    float flex_depth) {
+        // FIXME: The beziers are supposed to collapse to a line if the displacement is less
+        //        than flex_depth. For now, we rely on antialiasing, but if we want to implement
+        //        this, we'd have to add a Flex segment type to path and then look at flex_depth
+        //        at rasterization time.
+        (void)flex_depth;
+        cube_bezier_curve_to(dx1, dy1, dx2, dy2, dx3, dy3);
+        cube_bezier_curve_to(dx4, dy4, dx5, dy5, dx6, dy6);
+    };
+
     // Shared operator logic
     auto rline_to = [&]() {
         auto dx = pop_front();
@@ -540,14 +552,81 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     break;
                 }
 
-                case Hflex:
-                case Flex:
-                case Hflex1:
-                case Flex1:
-                    // TODO: implement these
-                    dbgln_if(PDF_DEBUG, "Unimplemented flex: 12 {}", data[i]);
+                case Flex: {
+                    auto flex_depth = pop();
+                    auto dy6 = pop();
+                    auto dx6 = pop();
+                    auto dy5 = pop();
+                    auto dx5 = pop();
+                    auto dy4 = pop();
+                    auto dx4 = pop();
+                    auto dy3 = pop();
+                    auto dx3 = pop();
+                    auto dy2 = pop();
+                    auto dx2 = pop();
+                    auto dy1 = pop();
+                    auto dx1 = pop();
+                    flex(dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4, dx5, dy5, dx6, dy6, flex_depth);
                     state.sp = 0;
                     break;
+                }
+                case Hflex: {
+                    auto flex_depth = 50;
+                    auto dx6 = pop();
+                    auto dx5 = pop();
+                    auto dx4 = pop();
+                    auto dx3 = pop();
+                    auto dy2 = pop();
+                    auto dx2 = pop();
+                    auto dx1 = pop();
+                    flex(dx1, 0, dx2, dy2, dx3, 0, dx4, 0, dx5, -dy2, dx6, 0, flex_depth);
+                    state.sp = 0;
+                    break;
+                }
+                case Hflex1: {
+                    auto flex_depth = 50;
+                    auto dx6 = pop();
+                    auto dy5 = pop();
+                    auto dx5 = pop();
+                    auto dx4 = pop();
+                    auto dx3 = pop();
+                    auto dy2 = pop();
+                    auto dx2 = pop();
+                    auto dy1 = pop();
+                    auto dx1 = pop();
+                    flex(dx1, dy1, dx2, dy2, dx3, 0, dx4, 0, dx5, dy5, dx6, -(dy1 + dy2 + dy5), flex_depth);
+                    state.sp = 0;
+                    break;
+                }
+                case Flex1: {
+                    auto flex_depth = 50;
+                    auto d6 = pop();
+                    auto dy5 = pop();
+                    auto dx5 = pop();
+                    auto dy4 = pop();
+                    auto dx4 = pop();
+                    auto dy3 = pop();
+                    auto dx3 = pop();
+                    auto dy2 = pop();
+                    auto dx2 = pop();
+                    auto dy1 = pop();
+                    auto dx1 = pop();
+
+                    float dx6, dy6;
+                    auto dx = dx1 + dx2 + dx3 + dx4 + dx5;
+                    auto dy = dy1 + dy2 + dy3 + dy4 + dy5;
+                    if (fabs(dx) > fabs(dy)) {
+                        dx6 = d6;
+                        dy6 = -dy;
+                    } else {
+                        dx6 = -dx;
+                        dy6 = d6;
+                    }
+
+                    flex(dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4, dx5, dy5, dx6, dy6, flex_depth);
+                    state.sp = 0;
+                    break;
+                }
 
                 default:
                     dbgln_if(PDF_DEBUG, "Unhandled command: 12 {}", data[i]);
