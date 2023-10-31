@@ -31,9 +31,6 @@
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 
-template<typename Client>
-static ErrorOr<NonnullRefPtr<Client>> bind_service(void (*bind_method)(int, int));
-
 static ErrorOr<NonnullRefPtr<Protocol::RequestClient>> bind_request_server_service()
 {
     return bind_service<Protocol::RequestClient>(&bind_request_server_java);
@@ -92,7 +89,7 @@ ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)
 }
 
 template<typename Client>
-static ErrorOr<NonnullRefPtr<Client>> bind_service(void (*bind_method)(int, int))
+ErrorOr<NonnullRefPtr<Client>> bind_service(void (*bind_method)(int, int))
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
