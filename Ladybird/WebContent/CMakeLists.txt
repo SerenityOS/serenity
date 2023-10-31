@@ -1,3 +1,4 @@
+include(accelerated_graphics)
 set(WEBCONTENT_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Services/WebContent/)
 
 set(WEBCONTENT_SOURCES
@@ -77,6 +78,11 @@ if (HAVE_PULSEAUDIO)
     endif()
 endif()
 
-if (LINUX)
+if (HAS_ACCELERATED_GRAPHICS)
+    target_compile_definitions(WebContent PRIVATE HAS_ACCELERATED_GRAPHICS)
     target_link_libraries(WebContent PRIVATE LibAccelGfx)
+    if (TARGET webcontent)
+        target_compile_definitions(webcontent PRIVATE HAS_ACCELERATED_GRAPHICS)
+        target_link_libraries(webcontent PRIVATE LibAccelGfx)
+    endif()
 endif()
