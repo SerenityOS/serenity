@@ -127,11 +127,14 @@ static ErrorOr<TinyVGHeader> decode_tinyvg_header(Stream& stream)
     return header;
 }
 
-static ErrorOr<FixedArray<Color>> decode_color_table(Stream& stream, ColorEncoding encoding, u32 color_count)
+static ErrorOr<Vector<Color>> decode_color_table(Stream& stream, ColorEncoding encoding, u32 color_count)
 {
     if (encoding == ColorEncoding::Custom)
         return Error::from_string_literal("Invalid TinyVG: Unsupported color encoding");
-    auto color_table = TRY(FixedArray<Color>::create(color_count));
+
+    static constexpr size_t MAX_INITIAL_COLOR_TABLE_SIZE = 65536;
+    Vector<Color> color_table;
+    TRY(color_table.try_ensure_capacity(min(MAX_INITIAL_COLOR_TABLE_SIZE, color_count)));
     auto parse_color = [&]() -> ErrorOr<Color> {
         switch (encoding) {
         case ColorEncoding::RGBA8888: {
@@ -157,8 +160,8 @@ static ErrorOr<FixedArray<Color>> decode_color_table(Stream& stream, ColorEncodi
             return Error::from_string_literal("Invalid TinyVG: Bad color encoding");
         }
     };
-    for (auto& color : color_table) {
-        color = TRY(parse_color());
+    while (color_count-- > 0) {
+        TRY(color_table.try_append(TRY(parse_color())));
     }
     return color_table;
 }
@@ -357,7 +360,7 @@ ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> TinyVGDecodedImageData::decode(St
     if (header.version != 1)
         return Error::from_string_literal("Invalid TinyVG: Unsupported version");
 
-    auto color_table = TRY(decode_color_table(stream, header.color_encoding, header.color_count));
+    auto const& color_table = TRY(decode_color_table(stream, header.color_encoding, header.color_count));
     TinyVGReader reader { stream, header, color_table.span() };
 
     auto rectangle_to_path = [](FloatRect const& rect) -> Path {
