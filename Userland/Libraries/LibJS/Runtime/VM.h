@@ -254,6 +254,8 @@ public:
     // NOTE: This is meant as a temporary stopgap until everything is bytecode.
     ThrowCompletionOr<Value> execute_ast_node(ASTNode const&);
 
+    Vector<StackTraceElement> stack_trace() const;
+
 private:
     using ErrorMessages = AK::Array<String, to_underlying(ErrorMessage::__Count)>;
 
@@ -276,6 +278,8 @@ private:
     void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise);
 
     void set_well_known_symbols(WellKnownSymbols well_known_symbols) { m_well_known_symbols = move(well_known_symbols); }
+
+    Vector<FlatPtr> get_native_stack_trace() const;
 
     HashMap<String, GCPtr<PrimitiveString>> m_string_cache;
     HashMap<DeprecatedString, GCPtr<PrimitiveString>> m_deprecated_string_cache;
