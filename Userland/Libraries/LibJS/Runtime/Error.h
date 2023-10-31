@@ -22,6 +22,11 @@ struct TracebackFrame {
     mutable Variant<SourceRange, UnrealizedSourceRange> source_range_storage;
 };
 
+enum CompactTraceback {
+    No,
+    Yes,
+};
+
 class Error : public Object {
     JS_OBJECT(Error, Object);
 
@@ -32,7 +37,7 @@ public:
 
     virtual ~Error() override = default;
 
-    [[nodiscard]] String stack_string() const;
+    [[nodiscard]] String stack_string(CompactTraceback compact = CompactTraceback::No) const;
 
     ThrowCompletionOr<void> install_error_cause(Value options);
 

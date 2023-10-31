@@ -79,15 +79,11 @@ void Error::populate_stack()
     m_traceback.ensure_capacity(vm.execution_context_stack().size());
     for (ssize_t i = vm.execution_context_stack().size() - 1; i >= 0; i--) {
         auto context = vm.execution_context_stack()[i];
-        auto function_name = context->function_name;
-        if (function_name.is_empty())
-            function_name = "<unknown>"sv;
-
         UnrealizedSourceRange range = {};
         if (context->instruction_stream_iterator.has_value())
             range = context->instruction_stream_iterator->source_range();
         TracebackFrame frame {
-            .function_name = move(function_name),
+            .function_name = context->function_name,
             .source_range_storage = range,
         };
 
@@ -95,29 +91,63 @@ void Error::populate_stack()
     }
 }
 
-String Error::stack_string() const
+String Error::stack_string(CompactTraceback compact) const
 {
     StringBuilder stack_string_builder;
 
     // Note: We roughly follow V8's formatting
-    // Note: The error's name and message get prepended by ErrorPrototype::stack
-    // Note: We don't want to capture the global execution context, so we omit the last frame
-    // FIXME: We generate a stack-frame for the Errors constructor, other engines do not
-    for (size_t i = 0; i < m_traceback.size() - 1; ++i) {
-        auto const& frame = m_traceback[i];
+    auto append_frame = [&](TracebackFrame const& frame) {
         auto function_name = frame.function_name;
         auto source_range = frame.source_range();
         // Note: Since we don't know whether we have a valid SourceRange here we just check for some default values.
         if (!source_range.filename().is_empty() || source_range.start.offset != 0 || source_range.end.offset != 0) {
 
-            if (function_name == "<unknown>"sv)
+            if (function_name.is_empty())
                 stack_string_builder.appendff("    at {}:{}:{}\n", source_range.filename(), source_range.start.line, source_range.start.column);
             else
                 stack_string_builder.appendff("    at {} ({}:{}:{})\n", function_name, source_range.filename(), source_range.start.line, source_range.start.column);
         } else {
             stack_string_builder.appendff("    at {}\n", function_name.is_empty() ? "<unknown>"sv : function_name.view());
         }
+    };
+
+    auto is_same_frame = [](TracebackFrame const& a, TracebackFrame const& b) {
+        if (a.function_name.is_empty() && b.function_name.is_empty()) {
+            auto source_range_a = a.source_range();
+            auto source_range_b = b.source_range();
+            return source_range_a.filename() == source_range_b.filename() && source_range_a.start.line == source_range_b.start.line;
+        }
+        return a.function_name == b.function_name;
+    };
+
+    // Note: We don't want to capture the global execution context, so we omit the last frame
+    // Note: The error's name and message get prepended by ErrorPrototype::stack
+    // FIXME: We generate a stack-frame for the Errors constructor, other engines do not
+    unsigned repetitions = 0;
+    size_t used_frames = m_traceback.size() - 1;
+    for (size_t i = 0; i < used_frames; ++i) {
+        auto const& frame = m_traceback[i];
+        if (compact == CompactTraceback::Yes && i + 1 < used_frames) {
+            auto const& next_traceback_frame = m_traceback[i + 1];
+            if (is_same_frame(frame, next_traceback_frame)) {
+                repetitions++;
+                continue;
+            }
+        }
+        if (repetitions > 4) {
+            // If more than 5 (1 + >4) consecutive function calls with the same name, print
+            // the name only once and show the number of repetitions instead. This prevents
+            // printing ridiculously large call stacks of recursive functions.
+            append_frame(frame);
+            stack_string_builder.appendff("    {} more calls\n", repetitions);
+        } else {
+            for (size_t j = 0; j < repetitions + 1; j++)
+                append_frame(frame);
+        }
+        repetitions = 0;
     }
+    for (size_t j = 0; j < repetitions; j++)
+        append_frame(m_traceback[used_frames - 1]);
 
     return MUST(stack_string_builder.to_string());
 }
