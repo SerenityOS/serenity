@@ -164,7 +164,7 @@ struct Options {
         { HashAlgorithm::SHA256, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA1, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA256, SignatureAlgorithm::ECDSA },
-        { HashAlgorithm::INTRINSIC, SignatureAlgorithm::ECDSA });
+        { HashAlgorithm::INTRINSIC, SignatureAlgorithm::ED25519 });
     OPTION_WITH_DEFAULTS(Vector<SupportedGroup>, elliptic_curves,
         SupportedGroup::X25519,
         SupportedGroup::SECP256R1,
