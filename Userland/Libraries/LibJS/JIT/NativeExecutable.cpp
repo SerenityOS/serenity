@@ -12,15 +12,6 @@
 #include <LibX86/Disassembler.h>
 #include <sys/mman.h>
 
-#if __has_include(<execinfo.h>)
-#    include <execinfo.h>
-#    define EXECINFO_BACKTRACE
-#endif
-
-#if defined(AK_OS_ANDROID) && (__ANDROID_API__ < 33)
-#    undef EXECINFO_BACKTRACE
-#endif
-
 namespace JS::JIT {
 
 NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping)
@@ -159,32 +150,20 @@ BytecodeMapping const& NativeExecutable::find_mapping_entry(size_t native_offset
     return m_mapping[nearby_index];
 }
 
-Optional<Bytecode::InstructionStreamIterator const&> NativeExecutable::instruction_stream_iterator([[maybe_unused]] Bytecode::Executable const& executable) const
+Optional<UnrealizedSourceRange> NativeExecutable::get_source_range(Bytecode::Executable const& executable, FlatPtr address) const
 {
-#ifdef EXECINFO_BACKTRACE
-    void* buffer[10];
-    auto count = backtrace(buffer, 10);
     auto start = bit_cast<FlatPtr>(m_code);
     auto end = start + m_size;
-    for (auto i = 0; i < count; i++) {
-        auto address = bit_cast<FlatPtr>(buffer[i]);
-        if (address < start || address >= end)
-            continue;
-        // return address points after the call
-        // let's subtract 1 to make sure we don't hit the next bytecode
-        // (in practice that's not necessary, because our native_call() sequence continues)
-        auto offset = address - start - 1;
-        auto& entry = find_mapping_entry(offset);
-        if (entry.block_index < executable.basic_blocks.size()) {
-            auto const& block = *executable.basic_blocks[entry.block_index];
-            if (entry.bytecode_offset < block.size()) {
-                // This is rather clunky, but Interpreter::instruction_stream_iterator() gives out references, so we need to keep it alive.
-                m_instruction_stream_iterator = make<Bytecode::InstructionStreamIterator>(block.instruction_stream(), &executable, entry.bytecode_offset);
-                return *m_instruction_stream_iterator;
-            }
+    if (address < start || address >= end)
+        return {};
+    auto const& entry = find_mapping_entry(address - start - 1);
+    if (entry.block_index < executable.basic_blocks.size()) {
+        auto const& block = *executable.basic_blocks[entry.block_index];
+        if (entry.bytecode_offset < block.size()) {
+            auto iterator = Bytecode::InstructionStreamIterator { block.instruction_stream(), &executable, entry.bytecode_offset };
+            return iterator.source_range();
         }
     }
-#endif
     return {};
 }
 

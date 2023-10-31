@@ -271,3 +271,4 @@ target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex Lib
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
     target_link_libraries(LibJS PRIVATE LibX86)
 endif()
+target_compile_options(LibJS PRIVATE -fno-omit-frame-pointer)

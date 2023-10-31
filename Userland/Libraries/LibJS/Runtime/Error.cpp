@@ -75,13 +75,13 @@ ThrowCompletionOr<void> Error::install_error_cause(Value options)
 
 void Error::populate_stack()
 {
-    auto& vm = this->vm();
-    m_traceback.ensure_capacity(vm.execution_context_stack().size());
-    for (ssize_t i = vm.execution_context_stack().size() - 1; i >= 0; i--) {
-        auto context = vm.execution_context_stack()[i];
+    auto stack_trace = vm().stack_trace();
+    m_traceback.ensure_capacity(stack_trace.size());
+    for (auto& element : stack_trace) {
+        auto* context = element.execution_context;
         UnrealizedSourceRange range = {};
-        if (context->instruction_stream_iterator.has_value())
-            range = context->instruction_stream_iterator->source_range();
+        if (element.source_range.has_value())
+            range = element.source_range.value();
         TracebackFrame frame {
             .function_name = context->function_name,
             .source_range_storage = range,
