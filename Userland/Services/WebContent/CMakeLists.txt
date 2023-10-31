@@ -1,3 +1,5 @@
+include(accelerated_graphics)
+
 serenity_component(
     WebContent
     TARGETS WebContent
@@ -30,3 +32,8 @@ set(GENERATED_SOURCES
 serenity_bin(WebContent)
 target_link_libraries(WebContent PRIVATE LibCore LibFileSystem LibIPC LibGfx LibAudio LibImageDecoderClient LibJS LibWebView LibWeb LibLocale LibMain)
 link_with_locale_data(WebContent)
+
+if (HAS_ACCELERATED_GRAPHICS)
+    target_compile_definitions(WebContent PRIVATE HAS_ACCELERATED_GRAPHICS)
+    target_link_libraries(WebContent PRIVATE LibAccelGfx)
+endif()
