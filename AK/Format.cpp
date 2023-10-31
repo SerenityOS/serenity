@@ -1065,6 +1065,9 @@ ErrorOr<void> Formatter<float>::format(FormatBuilder& builder, float value)
 
     return builder.put_f32_or_f64(value, base, upper_case, m_zero_pad, m_use_separator, m_align, m_width.value(), m_precision, m_fill, m_sign_mode, real_number_display_mode);
 }
+
+template ErrorOr<void> FormatBuilder::put_f32_or_f64<float>(float, u8, bool, bool, bool, Align, size_t, Optional<size_t>, char, SignMode, RealNumberDisplayMode);
+template ErrorOr<void> FormatBuilder::put_f32_or_f64<double>(double, u8, bool, bool, bool, Align, size_t, Optional<size_t>, char, SignMode, RealNumberDisplayMode);
 #endif
 
 #ifndef KERNEL
