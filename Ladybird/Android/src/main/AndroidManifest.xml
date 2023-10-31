@@ -61,6 +61,11 @@
             android:enabled="true"
             android:exported="false"
             android:process=":WebSocket" />
+        <service
+            android:name=".ImageDecoderService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":ImageDecoder" />
     </application>
 
 </manifest>
