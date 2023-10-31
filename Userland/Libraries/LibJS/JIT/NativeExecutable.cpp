@@ -79,9 +79,13 @@ void NativeExecutable::dump_disassembly([[maybe_unused]] Bytecode::Executable co
     auto symbol_provider = JITSymbolProvider(*this);
     auto mapping = m_mapping.begin();
 
-    auto first_instruction = Bytecode::InstructionStreamIterator { executable.basic_blocks[0]->instruction_stream(), &executable };
-    auto source_range = first_instruction.source_range().realize();
-    dbgln("Disassembly of '{}' ({}:{}:{}):", executable.name, source_range.filename(), source_range.start.line, source_range.start.column);
+    if (!executable.basic_blocks.is_empty() && executable.basic_blocks[0]->size() != 0) {
+        auto first_instruction = Bytecode::InstructionStreamIterator { executable.basic_blocks[0]->instruction_stream(), &executable };
+        auto source_range = first_instruction.source_range().realize();
+        dbgln("Disassembly of '{}' ({}:{}:{}):", executable.name, source_range.filename(), source_range.start.line, source_range.start.column);
+    } else {
+        dbgln("Disassembly of '{}':", executable.name);
+    }
 
     while (true) {
         auto offset = stream.offset();
