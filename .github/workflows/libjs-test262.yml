@@ -27,11 +27,11 @@ jobs:
           repository: SerenityOS/libjs-test262
           path: libjs-test262
 
-      - name: Checkout SerenityOS/libjs-test262-data
+      - name: Checkout SerenityOS/libjs-data
         uses: actions/checkout@v4
         with:
-          repository: SerenityOS/libjs-test262-data
-          path: libjs-test262-data
+          repository: SerenityOS/libjs-data
+          path: libjs-data
 
       - name: Checkout tc39/test262
         uses: actions/checkout@v4
@@ -90,8 +90,8 @@ jobs:
 
       - name: Get previous results
         run: |
-          mkdir -p old-libjs-test262-data
-          cp -R libjs-test262-data/test262 libjs-test262-data/wasm old-libjs-test262-data
+          mkdir -p old-libjs-data
+          cp -R libjs-data/test262 libjs-data/wasm old-libjs-data
 
       - name: Build test262-runner, test-js and test-wasm
         working-directory: libjs-test262
@@ -113,14 +113,14 @@ jobs:
             --serenity .. \
             --test262 ../test262 \
             --test262-parser-tests ../test262-parser-tests \
-            --results-json ../libjs-test262-data/test262/results.json \
-            --per-file-output ../libjs-test262-data/test262/per-file-master.json
+            --results-json ../libjs-data/test262/results.json \
+            --per-file-output ../libjs-data/test262/per-file-master.json
 
       - name: Run test-wasm
         working-directory: libjs-test262
         run: |
-          Build/bin/test-wasm --per-file Build/_deps/lagom-build/Userland/Libraries/LibWasm/Tests > ../libjs-test262-data/wasm/per-file-master.json || true
-          jq -nc -f /dev/stdin <<-EOF --slurpfile previous ../libjs-test262-data/wasm/results.json --slurpfile details ../libjs-test262-data/wasm/per-file-master.json > wasm-new-results.json
+          Build/bin/test-wasm --per-file Build/_deps/lagom-build/Userland/Libraries/LibWasm/Tests > ../libjs-data/wasm/per-file-master.json || true
+          jq -nc -f /dev/stdin <<-EOF --slurpfile previous ../libjs-data/wasm/results.json --slurpfile details ../libjs-data/wasm/per-file-master.json > wasm-new-results.json
             \$details[0] as \$details | \$previous[0] + [{
               "commit_timestamp": $(git -C .. log -1 --format=%ct),
               "run_timestamp": $(date +%s),
@@ -141,13 +141,13 @@ jobs:
               }
             }]
           EOF
-          mv wasm-new-results.json ../libjs-test262-data/wasm/results.json
+          mv wasm-new-results.json ../libjs-data/wasm/results.json
 
       - name: Compare test262 results
-        run: ./libjs-test262/per_file_result_diff.py -o old-libjs-test262-data/test262/per-file-master.json -n libjs-test262-data/test262/per-file-master.json
+        run: ./libjs-test262/per_file_result_diff.py -o old-libjs-data/test262/per-file-master.json -n libjs-data/test262/per-file-master.json
 
       - name: Compare Wasm results
-        run: ./libjs-test262/per_file_result_diff.py -o old-libjs-test262-data/wasm/per-file-master.json -n libjs-test262-data/wasm/per-file-master.json
+        run: ./libjs-test262/per_file_result_diff.py -o old-libjs-data/wasm/per-file-master.json -n libjs-data/wasm/per-file-master.json
 
       - name: Deploy to GitHub
         uses: JamesIves/github-pages-deploy-action@v4.4.3
@@ -155,6 +155,6 @@ jobs:
           git-config-name: BuggieBot
           git-config-email: buggiebot@serenityos.org
           branch: master
-          repository-name: SerenityOS/libjs-test262-data
+          repository-name: SerenityOS/libjs-data
           token: ${{ secrets.BUGGIEBOT_TOKEN }}
-          folder: libjs-test262-data
+          folder: libjs-data
