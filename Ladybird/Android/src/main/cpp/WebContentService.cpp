@@ -17,6 +17,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibIPC/ConnectionFromClient.h>
+#include <LibImageDecoderClient/Client.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/Window.h>
@@ -41,7 +42,11 @@ static ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> bind_web_socket_service
     return bind_service<Protocol::WebSocketClient>(&bind_web_socket_java);
 }
 
+template ErrorOr<NonnullRefPtr<ImageDecoderClient::Client>, Error>
+bind_service<ImageDecoderClient::Client>(void (*)(int, int));
+
 static ErrorOr<void> load_content_filters();
+
 static ErrorOr<void> load_autoplay_allowlist();
 
 ErrorOr<int> service_main(int ipc_socket, int fd_passing_socket)

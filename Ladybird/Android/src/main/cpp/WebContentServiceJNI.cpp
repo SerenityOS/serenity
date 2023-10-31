@@ -12,6 +12,7 @@ jobject global_instance;
 jclass global_class_reference;
 jmethodID bind_request_server_method;
 jmethodID bind_web_socket_method;
+jmethodID bind_image_decoder_method;
 
 extern "C" JNIEXPORT void JNICALL
 Java_org_serenityos_ladybird_WebContentService_nativeInit(JNIEnv* env, jobject thiz)
@@ -33,6 +34,11 @@ Java_org_serenityos_ladybird_WebContentService_nativeInit(JNIEnv* env, jobject t
     if (!method)
         TODO();
     bind_web_socket_method = method;
+
+    method = env->GetMethodID(global_class_reference, "bindImageDecoder", "(II)V");
+    if (!method)
+        TODO();
+    bind_image_decoder_method = method;
 }
 
 void bind_request_server_java(int ipc_socket, int fd_passing_socket)
@@ -45,4 +51,10 @@ void bind_web_socket_java(int ipc_socket, int fd_passing_socket)
 {
     Ladybird::JavaEnvironment env(global_vm);
     env.get()->CallVoidMethod(global_instance, bind_web_socket_method, ipc_socket, fd_passing_socket);
+}
+
+void bind_image_decoder_java(int ipc_socket, int fd_passing_socket)
+{
+    Ladybird::JavaEnvironment env(global_vm);
+    env.get()->CallVoidMethod(global_instance, bind_image_decoder_method, ipc_socket, fd_passing_socket);
 }

@@ -40,11 +40,26 @@ class WebContentService : LadybirdServiceBase("WebContentService") {
         val connector = LadybirdServiceConnection(ipcFd, fdPassingFd, resourceDir)
         connector.onDisconnect = {
             // FIXME: Notify impl that service is dead and might need restarted
-            Log.e(TAG, "RequestServer Died! :(")
+            Log.e(TAG, "WebSocket Died! :(")
         }
         // FIXME: Unbind this at some point maybe
         bindService(
             Intent(this, WebSocketService::class.java),
+            connector,
+            Context.BIND_AUTO_CREATE
+        )
+    }
+
+    private fun bindImageDecoder(ipcFd: Int, fdPassingFd: Int)
+    {
+        val connector = LadybirdServiceConnection(ipcFd, fdPassingFd, resourceDir)
+        connector.onDisconnect = {
+            // FIXME: Notify impl that service is dead and might need restarted
+            Log.e(TAG, "ImageDecoder Died! :(")
+        }
+        // FIXME: Unbind this at some point maybe
+        bindService(
+            Intent(this, ImageDecoderService::class.java),
             connector,
             Context.BIND_AUTO_CREATE
         )
