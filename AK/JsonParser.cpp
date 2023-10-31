@@ -304,7 +304,7 @@ ErrorOr<JsonValue> JsonParser::parse_null()
 {
     if (!consume_specific("null"))
         return Error::from_string_literal("JsonParser: Expected 'null'");
-    return JsonValue(JsonValue::Type::Null);
+    return JsonValue {};
 }
 
 ErrorOr<JsonValue> JsonParser::parse_helper()
