@@ -398,9 +398,9 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     return error("Subroutine index out of range");
 
                 if (!is_type2) {
-                    // FIXME: Hardcoding subrs 0-2 here is incorrect, since some fonts don't use the flex feature.
-                    // For the ones that do, subrs 0-2 have fixed contents that have callothersubr instructions.
-                    // The right thing to do is to implement callothersubr for subrs 0-3 and remove the hardcoding here.
+                    // FIXME: Hardcoding subr 0 here is incorrect, since some fonts don't use the flex feature.
+                    // For the ones that do, subrs 0 has fixed contents that have callothersubr instructions.
+                    // The right thing to do is to implement callothersubr for subrs 0 and remove the hardcoding here.
 
                     // Subroutines 0-2 handle the flex feature.
                     if (subr_number == 0) {
@@ -419,16 +419,6 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                             { flex[12], flex[13] });
 
                         state.flex_feature = false;
-                        state.sp = 0;
-                        break;
-                    }
-                    if (subr_number == 1) {
-                        state.flex_feature = true;
-                        state.flex_index = 0;
-                        state.sp = 0;
-                        break;
-                    }
-                    if (subr_number == 2) {
                         state.sp = 0;
                         break;
                     }
@@ -474,10 +464,41 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 }
 
                 case CallOtherSubr: {
-                    [[maybe_unused]] auto othersubr_number = pop();
+                    // Type 1 spec, 8.3 Flex:
+                    // "5. Insert at the beginning of the sequence the coordinate of the reference point relative to the starting point.
+                    //     There are now seven coordinate values (14 numbers) in the sequence.
+                    //  6. Place a call to Subrs entry 1 at the beginning of this sequence of coordinates, and place an rmoveto command
+                    //     and a call to Subrs entry 2 after each of the seven coordinate pairs in the sequence.
+                    //  7. Place the Flex height control parameter and the final coordinate expressed in absolute terms (in character space)
+                    //     followed by a call to Subrs entry 0 at the end."
+                    enum OtherSubrCommand {
+                        StartFlex = 1,
+                        AddFlexPoint = 2,
+                    };
+                    auto othersubr_number = (OtherSubrCommand)pop();
+
                     auto n = static_cast<int>(pop());
-                    for (int i = 0; i < n; ++i)
-                        state.postscript_stack[state.postscript_sp++] = pop();
+
+                    switch ((OtherSubrCommand)othersubr_number) {
+                    case StartFlex:
+                        if (n != 0)
+                            return error("Unexpected argument code for othersubr 1");
+                        state.flex_feature = true;
+                        state.flex_index = 0;
+                        state.sp = 0;
+                        break;
+                    case AddFlexPoint:
+                        if (n != 0)
+                            return error("Unexpected argument code for othersubr 2");
+                        // We do this directly in move_to().
+                        state.sp = 0;
+                        break;
+                    default:
+                        for (int i = 0; i < n; ++i)
+                            state.postscript_stack[state.postscript_sp++] = pop();
+                        break;
+                    }
+
                     break;
                 }
 
