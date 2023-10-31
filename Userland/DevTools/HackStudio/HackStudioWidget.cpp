@@ -1323,6 +1323,9 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_run_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/program-run.png"sv));
     return GUI::Action::create("&Run", { Mod_Ctrl, Key_R }, icon, [this](auto&) {
+        if (warn_unsaved_changes("There are unsaved changes, do you want to save before running?") == ContinueDecision::No)
+            return;
+
         reveal_action_tab(*m_terminal_wrapper);
         run();
     });
