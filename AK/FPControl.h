@@ -13,7 +13,7 @@ VALIDATE_IS_X86();
 
 namespace AK {
 
-enum class RoundingMode : u8 {
+enum class RoundingMode : u16 {
     NEAREST = 0b00,
     DOWN = 0b01,
     UP = 0b10,
