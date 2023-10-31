@@ -721,6 +721,20 @@ TEST_CASE(test_everything_tvg)
     }
 }
 
+TEST_CASE(test_tvg_malformed)
+{
+    Array test_inputs = {
+        TEST_INPUT("tvg/bogus-color-table-size.tvg"sv)
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = MUST(Core::MappedFile::map(test_input));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::TinyVGImageDecoderPlugin::create(file->bytes()));
+        auto frame_or_error = plugin_decoder->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
+}
+
 TEST_CASE(test_jxl_modular_simple_tree_upsample2_10bits)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("jxl/modular_simple_tree_upsample2_10bits_rct.jxl"sv)));
