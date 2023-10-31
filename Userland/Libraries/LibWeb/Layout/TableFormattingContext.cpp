@@ -503,6 +503,8 @@ void TableFormattingContext::compute_table_width()
                     used_width = max(used_width, adjusted_used_width);
             }
         }
+    } else if (computed_values.width().is_max_content()) {
+        used_width = grid_max;
     } else {
         // If the table-root’s width property has a computed value (resolving to
         // resolved-table-width) other than auto, the used width is the greater
