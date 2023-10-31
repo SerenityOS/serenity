@@ -72,7 +72,7 @@ class LadybirdActivity : AppCompatActivity() {
     companion object {
         // Used to load the 'ladybird' library on application startup.
         init {
-            System.loadLibrary("ladybird")
+            System.loadLibrary("Ladybird")
         }
     }
 }
