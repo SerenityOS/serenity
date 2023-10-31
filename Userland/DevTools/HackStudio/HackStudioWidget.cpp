@@ -1678,7 +1678,8 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(Deprec
     if (result == GUI::MessageBox::ExecResult::Yes) {
         for (auto& editor_wrapper : m_all_editor_wrappers) {
             if (editor_wrapper->editor().document().is_modified()) {
-                editor_wrapper->save();
+                if (!editor_wrapper->save())
+                    return ContinueDecision::No;
             }
         }
     }

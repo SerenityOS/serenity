@@ -30,7 +30,7 @@ public:
     Editor& editor() { return *m_editor; }
     Editor const& editor() const { return *m_editor; }
 
-    void save();
+    bool save();
 
     LanguageClient& language_client();
 
