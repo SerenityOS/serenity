@@ -522,18 +522,18 @@ struct Assembler {
 
     void enter()
     {
-        push_callee_saved_registers();
-
         push(Operand::Register(Reg::RBP));
         mov(Operand::Register(Reg::RBP), Operand::Register(Reg::RSP));
+
+        push_callee_saved_registers();
     }
 
     void exit()
     {
+        pop_callee_saved_registers();
+
         // leave
         emit8(0xc9);
-
-        pop_callee_saved_registers();
 
         // ret
         emit8(0xc3);
