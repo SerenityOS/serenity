@@ -15,11 +15,6 @@
 
 namespace AK {
 
-JsonValue::JsonValue(Type type)
-    : m_type(type)
-{
-}
-
 JsonValue::JsonValue(JsonValue const& other)
 {
     copy_from(other);
