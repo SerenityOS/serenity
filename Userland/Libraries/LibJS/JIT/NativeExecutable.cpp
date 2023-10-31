@@ -17,6 +17,10 @@
 #    define EXECINFO_BACKTRACE
 #endif
 
+#if defined(AK_OS_ANDROID) && (__ANDROID_API__ < 33)
+#    undef EXECINFO_BACKTRACE
+#endif
+
 namespace JS::JIT {
 
 NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping)
