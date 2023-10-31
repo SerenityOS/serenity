@@ -54,7 +54,9 @@ enum class IndicatorStyle {
     Directory = 1 << 0,
     Executable = 1 << 1,
     SymbolicLink = 1 << 2,
-    Classify = Directory | Executable | SymbolicLink
+    Pipe = 1 << 3,
+    Socket = 1 << 4,
+    Classify = Directory | Executable | SymbolicLink | Pipe | Socket
 };
 AK_ENUM_BITWISE_OPERATORS(IndicatorStyle)
 
@@ -292,12 +294,13 @@ static size_t print_name(const struct stat& st, DeprecatedString const& name, Op
             begin_color = "\033[32;1m";
         else if (S_ISSOCK(st.st_mode))
             begin_color = "\033[35;1m";
-        else if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
+        else if (S_ISFIFO(st.st_mode) || S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
             begin_color = "\033[33;1m";
         printf("%s", begin_color);
         nprinted = print_escaped(name);
         printf("%s", end_color);
     }
+
     if (S_ISLNK(st.st_mode)) {
         if (path_for_link_resolution.has_value()) {
             auto link_destination_or_error = FileSystem::read_link(path_for_link_resolution.value());
@@ -316,6 +319,12 @@ static size_t print_name(const struct stat& st, DeprecatedString const& name, Op
     } else if (st.st_mode & 0111) {
         if (has_flag(flag_indicator_style, IndicatorStyle::Executable))
             nprinted += printf("*");
+    } else if (S_ISFIFO(st.st_mode)) {
+        if (has_flag(flag_indicator_style, IndicatorStyle::Pipe))
+            nprinted += printf("|");
+    } else if (S_ISSOCK(st.st_mode)) {
+        if (has_flag(flag_indicator_style, IndicatorStyle::Socket))
+            nprinted += printf("=");
     }
 
     if (!flag_disable_hyperlinks) {
