@@ -157,7 +157,7 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     document->paintable()->paint_all_phases(context);
 
     if (s_use_gpu_painter) {
-#ifdef AK_OS_LINUX
+#ifdef HAS_ACCELERATED_GRAPHICS
         Web::Painting::PaintingCommandExecutorGPU painting_command_executor(target);
         recording_painter.execute(painting_command_executor);
 #endif
