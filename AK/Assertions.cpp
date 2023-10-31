@@ -10,8 +10,12 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 
-#if (defined(AK_OS_LINUX) && !defined(AK_OS_ANDROID)) || defined(AK_LIBC_GLIBC) || defined(AK_OS_BSD_GENERIC) || defined(AK_OS_SOLARIS) || defined(AK_OS_HAIKU)
+#if __has_include(<execinfo.h>) && __ANDROID_API__ >= 33
 #    define EXECINFO_BACKTRACE
+#endif
+
+#if defined(AK_OS_ANDROID) && __ANDROID_API__ >= 33
+#    undef EXECINFO_BACKTRACE
 #endif
 
 #if defined(AK_OS_ANDROID) && (__ANDROID_API__ >= 33)
