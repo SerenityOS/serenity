@@ -71,18 +71,24 @@ void EditorWrapper::set_filename(DeprecatedString const& filename)
     update_diff();
 }
 
-void EditorWrapper::save()
+bool EditorWrapper::save()
 {
     if (filename().is_empty()) {
         auto file_picker_action = GUI::CommonActions::make_save_as_action([&](auto&) {
             Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(), "file"sv, "txt"sv, project_root().value());
-            set_filename(save_path.value());
+            if (save_path.has_value())
+                set_filename(save_path.value());
         });
         file_picker_action->activate();
+
+        if (filename().is_empty())
+            return false;
     }
     editor().write_to_file(filename()).release_value_but_fixme_should_propagate_errors();
     update_diff();
     editor().update();
+
+    return true;
 }
 
 void EditorWrapper::update_diff()
