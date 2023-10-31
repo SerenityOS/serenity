@@ -584,7 +584,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 }
 
                 default:
-                    dbgln_if(PDF_DEBUG, "Unhandled command: 12 {}", data[i]);
+                    dbgln("Unhandled command: 12 {}", data[i]);
                     return error("Unhandled command");
                 }
                 break;
@@ -669,7 +669,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
             }
 
             default:
-                dbgln_if(PDF_DEBUG, "Unhandled command: {}", v);
+                dbgln("Unhandled command: {}", v);
                 return error("Unhandled command");
             }
 
