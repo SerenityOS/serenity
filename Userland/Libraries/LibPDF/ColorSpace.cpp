@@ -255,7 +255,7 @@ constexpr Array<float, 3> matrix_multiply(Array<float, 9> a, Array<float, 3> b)
 }
 
 // Converts to a flat XYZ space with white point = (1, 1, 1)
-// Step 2 of https://www.adobe.com/content/dam/acom/en/devnet/photoshop/sdk/AdobeBPC.pdf
+// Step 2 of https://www.color.org/adobebpc.pdf
 constexpr Array<float, 3> flatten_and_normalize_whitepoint(Array<float, 3> whitepoint, Array<float, 3> xyz)
 {
     VERIFY(whitepoint[1] == 1.0f);
