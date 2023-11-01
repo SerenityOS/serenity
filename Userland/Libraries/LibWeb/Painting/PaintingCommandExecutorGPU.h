@@ -50,15 +50,13 @@ public:
 
     bool would_be_fully_clipped_by_painter(Gfx::IntRect) const override;
 
-    PaintingCommandExecutorGPU(Gfx::Bitmap& bitmap);
+    PaintingCommandExecutorGPU(AccelGfx::Painter& painter);
     ~PaintingCommandExecutorGPU() override;
 
 private:
     AccelGfx::Painter& painter() { return m_painter; }
 
-    Gfx::Bitmap& m_target_bitmap;
-    AccelGfx::Canvas m_canvas;
-    AccelGfx::Painter m_painter;
+    AccelGfx::Painter& m_painter;
 };
 
 }
