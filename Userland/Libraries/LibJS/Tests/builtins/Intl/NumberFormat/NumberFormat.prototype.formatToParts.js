@@ -322,14 +322,14 @@ describe("style=decimal", () => {
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0662\u0663" },
-            { type: "exponentSeparator", value: "\u0627\u0633" },
+            { type: "exponentSeparator", value: "\u0623\u0633" },
             { type: "exponentInteger", value: "\u0661" },
         ]);
         expect(ar.formatToParts(0.12)).toEqual([
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0662" },
-            { type: "exponentSeparator", value: "\u0627\u0633" },
+            { type: "exponentSeparator", value: "\u0623\u0633" },
             { type: "exponentMinusSign", value: "\u061c-" },
             { type: "exponentInteger", value: "\u0661" },
         ]);
@@ -356,12 +356,12 @@ describe("style=decimal", () => {
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0662\u0663\u0664" },
-            { type: "exponentSeparator", value: "\u0627\u0633" },
+            { type: "exponentSeparator", value: "\u0623\u0633" },
             { type: "exponentInteger", value: "\u0663" },
         ]);
         expect(ar.formatToParts(0.12)).toEqual([
             { type: "integer", value: "\u0661\u0662\u0660" },
-            { type: "exponentSeparator", value: "\u0627\u0633" },
+            { type: "exponentSeparator", value: "\u0623\u0633" },
             { type: "exponentMinusSign", value: "\u061c-" },
             { type: "exponentInteger", value: "\u0663" },
         ]);

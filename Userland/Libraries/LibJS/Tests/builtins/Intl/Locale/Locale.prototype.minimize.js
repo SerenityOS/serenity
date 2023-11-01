@@ -23,7 +23,7 @@ test("normal behavior", () => {
     expect(new Intl.Locale("ru-Cyrl-RU").minimize().toString()).toBe("ru");
     expect(new Intl.Locale("de-Latn-AT").minimize().toString()).toBe("de-AT");
     expect(new Intl.Locale("bg-Cyrl-RO").minimize().toString()).toBe("bg-RO");
-    expect(new Intl.Locale("und-Latn-AQ").minimize().toString()).toBe("und-AQ");
+    expect(new Intl.Locale("und-Latn-AQ").minimize().toString()).toBe("en-AQ");
 });
 
 test("keywords are preserved", () => {

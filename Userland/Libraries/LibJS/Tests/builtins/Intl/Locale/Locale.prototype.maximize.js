@@ -18,10 +18,10 @@ test("normal behavior", () => {
     expect(new Intl.Locale("und").maximize().toString()).toBe("en-Latn-US");
     expect(new Intl.Locale("und-Thai").maximize().toString()).toBe("th-Thai-TH");
     expect(new Intl.Locale("und-419").maximize().toString()).toBe("es-Latn-419");
-    expect(new Intl.Locale("und-150").maximize().toString()).toBe("ru-Cyrl-RU");
+    expect(new Intl.Locale("und-150").maximize().toString()).toBe("en-Latn-150");
     expect(new Intl.Locale("und-AT").maximize().toString()).toBe("de-Latn-AT");
     expect(new Intl.Locale("und-Cyrl-RO").maximize().toString()).toBe("bg-Cyrl-RO");
-    expect(new Intl.Locale("und-AQ").maximize().toString()).toBe("und-Latn-AQ");
+    expect(new Intl.Locale("und-AQ").maximize().toString()).toBe("en-Latn-AQ");
 });
 
 test("keywords are preserved", () => {
