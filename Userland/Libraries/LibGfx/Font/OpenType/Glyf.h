@@ -174,13 +174,14 @@ public:
 
 private:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/glyf#glyph-headers
-    struct GlyphHeader {
+    struct [[gnu::packed]] GlyphHeader {
         BigEndian<i16> number_of_contours;
         BigEndian<i16> x_min;
         BigEndian<i16> y_min;
         BigEndian<i16> x_max;
         BigEndian<i16> y_max;
     };
+    static_assert(AssertSize<GlyphHeader, 10>());
 
     ReadonlyBytes m_slice;
 };
