@@ -293,17 +293,13 @@ constexpr Array<float, 3> scale_black_point(Array<float, 3> blackpoint, Array<fl
 }
 
 // https://en.wikipedia.org/wiki/Illuminant_D65
-constexpr Array<float, 3> convert_to_d65(Array<float, 3> whitepoint, Array<float, 3> xyz)
+constexpr Array<float, 3> convert_to_d65(Array<float, 3> xyz)
 {
     constexpr float d65x = 0.95047f;
     constexpr float d65y = 1.0f;
     constexpr float d65z = 1.08883f;
 
-    return {
-        (xyz[0] * d65x) / whitepoint[0],
-        (xyz[1] * d65y) / whitepoint[1],
-        (xyz[2] * d65z) / whitepoint[2],
-    };
+    return { xyz[0] * d65x, xyz[1] * d65y, xyz[2] * d65z };
 }
 
 // https://en.wikipedia.org/wiki/SRGB
@@ -343,7 +339,7 @@ PDFErrorOr<Color> CalRGBColorSpace::color(ReadonlySpan<Value> arguments) const
 
     auto flattened_xyz = flatten_and_normalize_whitepoint(m_whitepoint, { x, y, z });
     auto scaled_black_point_xyz = scale_black_point(m_blackpoint, flattened_xyz);
-    auto d65_normalized = convert_to_d65(m_whitepoint, scaled_black_point_xyz);
+    auto d65_normalized = convert_to_d65(scaled_black_point_xyz);
     auto srgb = convert_to_srgb(d65_normalized);
 
     auto red = static_cast<u8>(srgb[0] * 255.0f);
