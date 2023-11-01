@@ -154,7 +154,11 @@ static ErrorOr<Vector<Color>> decode_color_table(Stream& stream, ColorEncoding e
             auto green = TRY(stream.read_value<LittleEndian<f32>>());
             auto blue = TRY(stream.read_value<LittleEndian<f32>>());
             auto alpha = TRY(stream.read_value<LittleEndian<f32>>());
-            return Color(red * 255, green * 255, blue * 255, alpha * 255);
+            return Color(
+                clamp(red * 255.0f, 0.0f, 255.0f),
+                clamp(green * 255.0f, 0.0f, 255.0f),
+                clamp(blue * 255.0f, 0.0f, 255.0f),
+                clamp(alpha * 255.0f, 0.0f, 255.0f));
         }
         default:
             return Error::from_string_literal("Invalid TinyVG: Bad color encoding");
