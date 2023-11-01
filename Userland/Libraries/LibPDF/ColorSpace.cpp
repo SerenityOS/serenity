@@ -229,7 +229,7 @@ PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* d
 
     if (dict->contains(CommonNames::Matrix)) {
         auto matrix_array = TRY(dict->get_array(document, CommonNames::Matrix));
-        if (matrix_array->size() == 3) {
+        if (matrix_array->size() == 9) {
             color_space->m_matrix[0] = matrix_array->at(0).to_float();
             color_space->m_matrix[1] = matrix_array->at(1).to_float();
             color_space->m_matrix[2] = matrix_array->at(2).to_float();
