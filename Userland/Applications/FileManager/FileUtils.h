@@ -15,6 +15,7 @@ namespace FileManager {
 
 enum class FileOperation {
     Copy = 0,
+    Link,
     Move,
     Delete,
 };

@@ -11,8 +11,11 @@
 #include <LibCore/MimeData.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
+#include <functional>
 #include <unistd.h>
 
 namespace FileManager {
@@ -65,6 +68,9 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
         case FileOperation::Delete:
             file_operation_args.append("Delete"sv);
             break;
+        case FileOperation::Link:
+            GUI::MessageBox::show(parent_window, "This feature is not implemented yet"sv, "Not Implemented"sv);
+            break;
         default:
             VERIFY_NOT_REACHED();
         }
@@ -112,10 +118,12 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
 
 ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& destination, GUI::Window* window)
 {
+
     bool has_accepted_drop = false;
 
     if (!event.mime_data().has_urls())
         return has_accepted_drop;
+
     auto const urls = event.mime_data().urls();
     if (urls.is_empty()) {
         dbgln("No files to drop");
@@ -127,8 +135,9 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& d
     if (!FileSystem::is_directory(target))
         return has_accepted_drop;
 
-    Vector<DeprecatedString> paths_to_copy;
-    for (auto& url_to_copy : urls) {
+    Vector<DeprecatedString> sources;
+
+    for (auto const& url_to_copy : urls) {
         auto file_path = url_to_copy.serialize_path();
         if (!url_to_copy.is_valid() || file_path == target)
             continue;
@@ -136,12 +145,35 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& d
         if (file_path == new_path)
             continue;
 
-        paths_to_copy.append(file_path);
+        if (FileSystem::exists(new_path.view())) {
+            auto result = GUI::MessageBox::create(window, ""sv, ""sv);
+        }
+
+        sources.append(file_path);
         has_accepted_drop = true;
     }
 
-    if (!paths_to_copy.is_empty())
-        TRY(run_file_operation(FileOperation::Copy, paths_to_copy, target, window));
+    if (!sources.is_empty()) {
+        auto ctx_menu = GUI::Menu::construct("Item Drop Menu"_string);
+        auto move_action = GUI::Action::create(urls.size() > 1 ? "Move Items" : "Move Item", [&](auto&) {
+            MUST(run_file_operation(FileOperation::Move, sources, target, window));
+        });
+        auto link_action = GUI::Action::create(urls.size() > 1 ? "Link Items" : "Link Item", [&](auto&) {
+            MUST(run_file_operation(FileOperation::Link, sources, target, window));
+        });
+        auto copy_action = GUI::Action::create(urls.size() > 1 ? "Copy Items" : "Copy Item", [&](auto&) {
+            MUST(run_file_operation(FileOperation::Copy, sources, target, window));
+        });
+        auto cancel_action = GUI::Action::create("Cancel", [&](auto&) {
+            has_accepted_drop = false;
+        });
+        ctx_menu->add_action(move_action);
+        ctx_menu->add_action(copy_action);
+        ctx_menu->add_action(link_action);
+        ctx_menu->add_separator();
+        ctx_menu->add_action(cancel_action);
+        ctx_menu->popup(event.position(), cancel_action);
+    }
 
     return has_accepted_drop;
 }
