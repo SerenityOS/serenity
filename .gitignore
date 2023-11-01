@@ -29,6 +29,7 @@ sync-local.sh
 .vim/
 .exrc
 .helix/
+__pycache__/
 
 # Gradle/AndroidStudio
 .gradle/

@@ -6,3 +6,4 @@ Build
 build
 CMakeLists.txt.user
 Android/src/main/assets/
+Qt/ladybird_rc.py
