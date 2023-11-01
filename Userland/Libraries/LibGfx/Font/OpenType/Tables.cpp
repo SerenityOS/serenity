@@ -451,12 +451,14 @@ ErrorOr<CBLC> CBLC::from_slice(ReadonlyBytes slice)
     if (slice.size() < total_size)
         return Error::from_string_literal("CBLC table too small");
 
-    return CBLC { slice };
+    ReadonlySpan<BitmapSize> bitmap_sizes { bit_cast<BitmapSize const*>(slice.data() + sizeof(CblcHeader)), num_sizes };
+
+    return CBLC { slice, header, bitmap_sizes };
 }
 
 Optional<CBLC::BitmapSize const&> CBLC::bitmap_size_for_glyph_id(u32 glyph_id) const
 {
-    for (auto const& bitmap_size : this->bitmap_sizes()) {
+    for (auto const& bitmap_size : m_bitmap_sizes) {
         if (glyph_id >= bitmap_size.start_glyph_index && glyph_id <= bitmap_size.end_glyph_index) {
             return bitmap_size;
         }
