@@ -5,8 +5,10 @@
  */
 
 #include "CalculatorWidget.h"
+#include <AK/URL.h>
 #include <LibCore/System.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -23,6 +25,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
     auto app = TRY(GUI::Application::create(arguments));
+
+    auto const man_file = "/usr/share/man/man1/Applications/Calculator.md";
+
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme(man_file) }));
+    TRY(Desktop::Launcher::seal_allowlist());
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/res", "r"));
@@ -123,6 +130,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([&man_file](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme(man_file), "/bin/Help");
+    }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Calculator"_string, app_icon, window));
 
     window->show();
