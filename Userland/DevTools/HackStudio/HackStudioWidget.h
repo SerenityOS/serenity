@@ -168,6 +168,7 @@ private:
     void update_toolbar_actions();
     void on_cursor_change();
     void file_renamed(DeprecatedString const& old_name, DeprecatedString const& new_name);
+    bool save_file_changes();
 
     struct ProjectLocation {
         DeprecatedString filename;
@@ -194,6 +195,8 @@ private:
     // It always points at one past the current location in the list.
     size_t m_locations_history_end_index { 0 };
     bool m_locations_history_disabled { false };
+
+    bool m_auto_save_before_build_or_run { false };
 
     RefPtr<GUI::TreeView> m_project_tree_view;
     RefPtr<GUI::ListView> m_open_files_view;
