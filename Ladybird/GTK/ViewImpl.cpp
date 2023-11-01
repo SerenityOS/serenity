@@ -157,7 +157,8 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
         candidate_web_content_paths,
         enable_callgrind_profiling,
         WebView::IsLayoutTestMode::No,
-        Ladybird::UseLagomNetworking::No)
+        Ladybird::UseLagomNetworking::No,
+        WebView::EnableGPUPainting::No)
                           .release_value_but_fixme_should_propagate_errors();
 
     m_client_state.client = new_client;
