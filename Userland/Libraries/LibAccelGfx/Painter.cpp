@@ -42,6 +42,21 @@ Gfx::FloatRect Painter::to_clip_space(Gfx::FloatRect const& screen_rect) const
     return { x, y, width, height };
 }
 
+char const* vertex_shader_source = R"(
+attribute vec2 aVertexPosition;
+void main() {
+    gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+}
+)";
+
+char const* solid_color_fragment_shader_source = R"(
+precision mediump float;
+uniform vec4 uColor;
+void main() {
+    gl_FragColor = uColor;
+}
+)";
+
 OwnPtr<Painter> Painter::create()
 {
     auto& context = Context::the();
@@ -50,6 +65,7 @@ OwnPtr<Painter> Painter::create()
 
 Painter::Painter(Context& context)
     : m_context(context)
+    , m_rectangle_program(Program::create(vertex_shader_source, solid_color_fragment_shader_source))
 {
     m_state_stack.empend(State());
 }
@@ -69,24 +85,6 @@ void Painter::clear(Gfx::Color color)
 void Painter::fill_rect(Gfx::IntRect rect, Gfx::Color color)
 {
     fill_rect(rect.to_type<float>(), color);
-}
-
-static GLuint create_shader(GLenum type, char const* source)
-{
-    GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
-    glCompileShader(shader);
-
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char buffer[512];
-        glGetShaderInfoLog(shader, sizeof(buffer), nullptr, buffer);
-        dbgln("GLSL shader compilation failed: {}", buffer);
-        VERIFY_NOT_REACHED();
-    }
-
-    return shader;
 }
 
 static Array<GLfloat, 8> rect_to_vertices(Gfx::FloatRect const& rect)
@@ -109,45 +107,12 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
 
     auto vertices = rect_to_vertices(to_clip_space(transform().map(rect)));
 
-    char const* vertex_shader_source = R"(
-    attribute vec2 position;
-    void main() {
-        gl_Position = vec4(position, 0.0, 1.0);
-    }
-)";
-
-    char const* fragment_shader_source = R"(
-    precision mediump float;
-    uniform vec4 uColor;
-    void main() {
-        gl_FragColor = uColor;
-    }
-)";
-
     auto [red, green, blue, alpha] = gfx_color_to_opengl_color(color);
 
-    GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_shader_source);
-    GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_shader_source);
+    m_rectangle_program.use();
 
-    GLuint program = glCreateProgram();
-
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-
-    int linked;
-    glGetProgramiv(program, GL_LINK_STATUS, &linked);
-    if (!linked) {
-        char buffer[512];
-        glGetProgramInfoLog(program, sizeof(buffer), nullptr, buffer);
-        dbgln("GLSL program linking failed: {}", buffer);
-        VERIFY_NOT_REACHED();
-    }
-
-    glUseProgram(program);
-
-    GLuint position_attribute = glGetAttribLocation(program, "position");
-    GLuint color_uniform = glGetUniformLocation(program, "uColor");
+    GLuint position_attribute = m_rectangle_program.get_attribute_location("aVertexPosition");
+    GLuint color_uniform = m_rectangle_program.get_uniform_location("uColor");
 
     glUniform4f(color_uniform, red, green, blue, alpha);
 
@@ -158,10 +123,6 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-    glDeleteProgram(program);
 }
 
 void Painter::save()

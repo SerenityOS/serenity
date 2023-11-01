@@ -5,6 +5,7 @@ if (HAS_ACCELERATED_GRAPHICS)
         Canvas.cpp
         Context.cpp
         Painter.cpp
+        Program.cpp
     )
 
     serenity_lib(LibAccelGfx accelgfx)
