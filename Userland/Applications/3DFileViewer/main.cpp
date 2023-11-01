@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
@@ -338,6 +339,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::create(arguments));
 
+    auto const man_file = "/usr/share/man/man1/Applications/3DFileViewer.md";
+
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme(man_file) }));
+    TRY(Desktop::Launcher::seal_allowlist());
+
     StringView filename;
 
     Core::ArgsParser args_parser;
@@ -564,6 +570,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([&man_file](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme(man_file), "/bin/Help");
+    }));
     help_menu->add_action(GUI::CommonActions::make_about_action("3D File Viewer"_string, app_icon, window));
 
     window->show();
