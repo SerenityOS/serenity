@@ -16,7 +16,8 @@ public:
     enum class SniffingContext {
         None,
         Browsing,
-        Image
+        Image,
+        AudioOrVideo
     };
 
     static ErrorOr<Resource> create(ReadonlyBytes data, SniffingContext sniffing_context = SniffingContext::None, StringView scheme = ""sv, Optional<MimeType> supplied_type = {}, bool no_sniff = false);
@@ -40,6 +41,7 @@ private:
     ErrorOr<void> mime_type_sniffing_algorithm();
     ErrorOr<void> context_specific_sniffing_algorithm(SniffingContext sniffing_context);
     ErrorOr<void> rules_for_sniffing_images_specifically();
+    ErrorOr<void> rules_for_sniffing_audio_or_video_specifically();
 
     // https://mimesniff.spec.whatwg.org/#supplied-mime-type
     // A supplied MIME type, the MIME type determined by the supplied MIME type detection algorithm.

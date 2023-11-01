@@ -18,6 +18,16 @@ static void set_image_type_mappings(HashMap<StringView, Vector<StringView>>& mim
     mime_type_to_headers_map.set("image/jpeg"sv, { "\xFF\xD8\xFF"sv });
 }
 
+static void set_audio_or_video_type_mappings(HashMap<StringView, Vector<StringView>>& mime_type_to_headers_map)
+{
+    mime_type_to_headers_map.set("audio/aiff"sv, { "FORM\x00\x00\x00\x00\x41IFF"sv });
+    mime_type_to_headers_map.set("audio/mpeg"sv, { "ID3"sv });
+    mime_type_to_headers_map.set("application/ogg"sv, { "OggS\x00"sv });
+    mime_type_to_headers_map.set("audio/midi"sv, { "MThd\x00\x00\x00\x06"sv });
+    mime_type_to_headers_map.set("video/avi"sv, { "RIFF\x00\x00\x00\x00\x41\x56\x49\x20"sv });
+    mime_type_to_headers_map.set("audio/wave"sv, { "RIFF\x00\x00\x00\x00WAVE"sv });
+}
+
 TEST_CASE(determine_computed_mime_type_in_both_none_and_browsing_sniffing_context)
 {
     HashMap<StringView, Vector<StringView>> mime_type_to_headers_map;
@@ -53,13 +63,8 @@ TEST_CASE(determine_computed_mime_type_in_both_none_and_browsing_sniffing_contex
                                                  });
 
     set_image_type_mappings(mime_type_to_headers_map);
+    set_audio_or_video_type_mappings(mime_type_to_headers_map);
 
-    mime_type_to_headers_map.set("audio/aiff"sv, { "FORM\x00\x00\x00\x00\x41IFF"sv });
-    mime_type_to_headers_map.set("audio/mpeg"sv, { "ID3"sv });
-    mime_type_to_headers_map.set("application/ogg"sv, { "OggS\x00"sv });
-    mime_type_to_headers_map.set("audio/midi"sv, { "MThd\x00\x00\x00\x06"sv });
-    mime_type_to_headers_map.set("video/avi"sv, { "RIFF\x00\x00\x00\x00\x41\x56\x49\x20"sv });
-    mime_type_to_headers_map.set("audio/wave"sv, { "RIFF\x00\x00\x00\x00WAVE"sv });
     mime_type_to_headers_map.set("application/x-gzip"sv, { "\x1F\x8B\x08"sv });
     mime_type_to_headers_map.set("application/zip"sv, { "PK\x03\x04"sv });
     mime_type_to_headers_map.set("application/x-rar-compressed"sv, { "Rar\x20\x1A\x07\x00"sv });
@@ -93,6 +98,25 @@ TEST_CASE(determine_computed_mime_type_in_image_sniffing_context)
 
         for (auto const& header : mime_type_to_headers.value) {
             auto resource = MUST(Web::MimeSniff::Resource::create(header.bytes(), Web::MimeSniff::Resource::SniffingContext::Image));
+            EXPECT_EQ(mime_type, resource.computed_mime_type().essence());
+        }
+    }
+}
+
+TEST_CASE(determine_computed_mime_type_in_audio_or_video_sniffing_context)
+{
+    HashMap<StringView, Vector<StringView>> mime_type_to_headers_map;
+
+    set_audio_or_video_type_mappings(mime_type_to_headers_map);
+
+    // Also consider a resource that is not an audio or video.
+    mime_type_to_headers_map.set("application/octet-stream"sv, { "\x00"sv });
+
+    for (auto const& mime_type_to_headers : mime_type_to_headers_map) {
+        auto mime_type = mime_type_to_headers.key;
+
+        for (auto const& header : mime_type_to_headers.value) {
+            auto resource = MUST(Web::MimeSniff::Resource::create(header.bytes(), Web::MimeSniff::Resource::SniffingContext::AudioOrVideo));
             EXPECT_EQ(mime_type, resource.computed_mime_type().essence());
         }
     }
