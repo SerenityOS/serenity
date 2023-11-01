@@ -33,17 +33,23 @@ static ColorComponents gfx_color_to_opengl_color(Gfx::Color color)
 
 Gfx::FloatRect Painter::to_clip_space(Gfx::FloatRect const& screen_rect) const
 {
-    float x = 2.0f * screen_rect.x() / m_canvas.width() - 1.0f;
-    float y = -1.0f + 2.0f * screen_rect.y() / m_canvas.height();
+    float x = 2.0f * screen_rect.x() / m_canvas->width() - 1.0f;
+    float y = -1.0f + 2.0f * screen_rect.y() / m_canvas->height();
 
-    float width = 2.0f * screen_rect.width() / m_canvas.width();
-    float height = 2.0f * screen_rect.height() / m_canvas.height();
+    float width = 2.0f * screen_rect.width() / m_canvas->width();
+    float height = 2.0f * screen_rect.height() / m_canvas->height();
 
     return { x, y, width, height };
 }
 
-Painter::Painter(Canvas& canvas)
-    : m_canvas(canvas)
+OwnPtr<Painter> Painter::create()
+{
+    auto& context = Context::the();
+    return make<Painter>(context);
+}
+
+Painter::Painter(Context& context)
+    : m_context(context)
 {
     m_state_stack.empend(State());
 }
@@ -171,7 +177,7 @@ void Painter::restore()
 
 void Painter::flush()
 {
-    m_canvas.flush();
+    m_canvas->flush();
 }
 
 }
