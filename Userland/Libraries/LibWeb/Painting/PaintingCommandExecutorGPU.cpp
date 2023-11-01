@@ -8,16 +8,14 @@
 
 namespace Web::Painting {
 
-PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(Gfx::Bitmap& bitmap)
-    : m_target_bitmap(bitmap)
-    , m_canvas(AccelGfx::Canvas::create(AccelGfx::Context::the(), bitmap))
-    , m_painter(m_canvas)
+PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Painter& painter)
+    : m_painter(painter)
 {
 }
 
 PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
 {
-    m_canvas.flush();
+    m_painter.flush();
 }
 
 CommandResult PaintingCommandExecutorGPU::draw_text_run(Color const&, Gfx::IntPoint const&, String const&, Gfx::Font const&)

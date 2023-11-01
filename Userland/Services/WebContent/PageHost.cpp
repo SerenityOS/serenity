@@ -27,6 +27,13 @@
 
 namespace WebContent {
 
+static bool s_use_gpu_painter = false;
+
+void PageHost::set_use_gpu_painter()
+{
+    s_use_gpu_painter = true;
+}
+
 PageHost::PageHost(ConnectionFromClient& client)
     : m_client(client)
     , m_page(make<Web::Page>(*this))
@@ -36,16 +43,15 @@ PageHost::PageHost(ConnectionFromClient& client)
         m_client.async_did_invalidate_content_rect({ m_invalidation_rect.x().value(), m_invalidation_rect.y().value(), m_invalidation_rect.width().value(), m_invalidation_rect.height().value() });
         m_invalidation_rect = {};
     });
+
+    if (s_use_gpu_painter) {
+#ifdef HAS_ACCELERATED_GRAPHICS
+        m_accelerated_painter = AccelGfx::Painter::create();
+#endif
+    }
 }
 
 PageHost::~PageHost() = default;
-
-static bool s_use_gpu_painter = false;
-
-void PageHost::set_use_gpu_painter()
-{
-    s_use_gpu_painter = true;
-}
 
 void PageHost::set_has_focus(bool has_focus)
 {
@@ -158,8 +164,11 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
 
     if (s_use_gpu_painter) {
 #ifdef HAS_ACCELERATED_GRAPHICS
-        Web::Painting::PaintingCommandExecutorGPU painting_command_executor(target);
+        auto canvas = AccelGfx::Canvas::create(AccelGfx::Context::the(), target);
+        m_accelerated_painter->set_canvas(canvas);
+        Web::Painting::PaintingCommandExecutorGPU painting_command_executor(*m_accelerated_painter);
         recording_painter.execute(painting_command_executor);
+        m_accelerated_painter->flush();
 #endif
     } else {
         Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);

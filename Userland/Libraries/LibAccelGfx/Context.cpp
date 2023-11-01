@@ -69,6 +69,12 @@ OwnPtr<Context> Context::create()
     };
     EGLContext egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attributes);
 
+    EGLBoolean result = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
+    if (result == EGL_FALSE) {
+        dbgln("eglMakeCurrent failed");
+        VERIFY_NOT_REACHED();
+    }
+
     return make<Context>(egl_display, egl_context, egl_config);
 }
 
