@@ -8,10 +8,12 @@
 
 #include "Game.h"
 #include <AK/NumberFormat.h>
+#include <AK/URL.h>
 #include <Games/Spider/SpiderGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -39,6 +41,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domains({ "Games", "Spider" });
     Config::monitor_domain("Games");
+
+    auto const man_file = "/usr/share/man/man6/Spider.md";
+
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme(man_file) }));
+    TRY(Desktop::Launcher::seal_allowlist());
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath proc exec"));
 
@@ -279,6 +286,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([&man_file](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_scheme(man_file), "/bin/Help");
+    }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Spider"_string, app_icon, window));
 
     window->set_resizable(false);
