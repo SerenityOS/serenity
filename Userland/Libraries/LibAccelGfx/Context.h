@@ -9,9 +9,10 @@
 #include <AK/Assertions.h>
 #include <AK/OwnPtr.h>
 
-#ifdef AK_OS_LINUX
-#    include <EGL/egl.h>
-#endif
+// Make sure egl.h doesn't give us definitions from X11 headers
+#define EGL_NO_X11
+#include <EGL/egl.h>
+#undef EGL_NO_X11
 
 namespace AccelGfx {
 
