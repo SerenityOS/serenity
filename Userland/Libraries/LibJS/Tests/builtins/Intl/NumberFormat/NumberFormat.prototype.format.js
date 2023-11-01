@@ -176,14 +176,14 @@ describe("style=decimal", () => {
         expect(en.format(0.01)).toBe("1E-2");
 
         const ar = new Intl.NumberFormat("ar", { notation: "scientific" });
-        expect(ar.format(1)).toBe("\u0661\u0627\u0633\u0660");
-        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662\u0627\u0633\u0660");
-        expect(ar.format(12)).toBe("\u0661\u066b\u0662\u0627\u0633\u0661");
-        expect(ar.format(12.3)).toBe("\u0661\u066b\u0662\u0663\u0627\u0633\u0661");
-        expect(ar.format(123)).toBe("\u0661\u066b\u0662\u0663\u0627\u0633\u0662");
-        expect(ar.format(0.1)).toBe("\u0661\u0627\u0633\u061c-\u0661");
-        expect(ar.format(0.12)).toBe("\u0661\u066b\u0662\u0627\u0633\u061c-\u0661");
-        expect(ar.format(0.01)).toBe("\u0661\u0627\u0633\u061c-\u0662");
+        expect(ar.format(1)).toBe("\u0661\u0623\u0633\u0660");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662\u0623\u0633\u0660");
+        expect(ar.format(12)).toBe("\u0661\u066b\u0662\u0623\u0633\u0661");
+        expect(ar.format(12.3)).toBe("\u0661\u066b\u0662\u0663\u0623\u0633\u0661");
+        expect(ar.format(123)).toBe("\u0661\u066b\u0662\u0663\u0623\u0633\u0662");
+        expect(ar.format(0.1)).toBe("\u0661\u0623\u0633\u061c-\u0661");
+        expect(ar.format(0.12)).toBe("\u0661\u066b\u0662\u0623\u0633\u061c-\u0661");
+        expect(ar.format(0.01)).toBe("\u0661\u0623\u0633\u061c-\u0662");
     });
 
     test("notation=engineering", () => {
@@ -201,19 +201,19 @@ describe("style=decimal", () => {
         expect(en.format(1.23)).toBe("1.23E0");
 
         const ar = new Intl.NumberFormat("ar", { notation: "engineering" });
-        expect(ar.format(1)).toBe("\u0661\u0627\u0633\u0660");
-        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662\u0627\u0633\u0660");
-        expect(ar.format(12)).toBe("\u0661\u0662\u0627\u0633\u0660");
-        expect(ar.format(123)).toBe("\u0661\u0662\u0663\u0627\u0633\u0660");
-        expect(ar.format(1234)).toBe("\u0661\u066b\u0662\u0663\u0664\u0627\u0633\u0663");
-        expect(ar.format(12345)).toBe("\u0661\u0662\u066b\u0663\u0664\u0665\u0627\u0633\u0663");
+        expect(ar.format(1)).toBe("\u0661\u0623\u0633\u0660");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662\u0623\u0633\u0660");
+        expect(ar.format(12)).toBe("\u0661\u0662\u0623\u0633\u0660");
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663\u0623\u0633\u0660");
+        expect(ar.format(1234)).toBe("\u0661\u066b\u0662\u0663\u0664\u0623\u0633\u0663");
+        expect(ar.format(12345)).toBe("\u0661\u0662\u066b\u0663\u0664\u0665\u0623\u0633\u0663");
         expect(ar.format(123456)).toBe(
-            "\u0661\u0662\u0663\u066b\u0664\u0665\u0666\u0627\u0633\u0663"
+            "\u0661\u0662\u0663\u066b\u0664\u0665\u0666\u0623\u0633\u0663"
         );
-        expect(ar.format(1234567)).toBe("\u0661\u066b\u0662\u0663\u0665\u0627\u0633\u0666");
-        expect(ar.format(0.1)).toBe("\u0661\u0660\u0660\u0627\u0633\u061c-\u0663");
-        expect(ar.format(0.12)).toBe("\u0661\u0662\u0660\u0627\u0633\u061c-\u0663");
-        expect(ar.format(1.23)).toBe("\u0661\u066b\u0662\u0663\u0627\u0633\u0660");
+        expect(ar.format(1234567)).toBe("\u0661\u066b\u0662\u0663\u0665\u0623\u0633\u0666");
+        expect(ar.format(0.1)).toBe("\u0661\u0660\u0660\u0623\u0633\u061c-\u0663");
+        expect(ar.format(0.12)).toBe("\u0661\u0662\u0660\u0623\u0633\u061c-\u0663");
+        expect(ar.format(1.23)).toBe("\u0661\u066b\u0662\u0663\u0623\u0633\u0660");
     });
 
     test("notation=compact", () => {
