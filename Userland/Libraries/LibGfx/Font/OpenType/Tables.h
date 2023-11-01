@@ -549,26 +549,26 @@ public:
         BigEndian<u16> major_version;
         BigEndian<u16> minor_version;
         BigEndian<u32> num_sizes;
-        BitmapSize bitmap_sizes[];
+        // Stored in a separate span:
+        // BitmapSize bitmap_sizes[];
     };
     static_assert(AssertSize<CblcHeader, 8>());
 
-    CblcHeader const& header() const { return *bit_cast<CblcHeader const*>(m_slice.data()); }
-    ReadonlySpan<BitmapSize> bitmap_sizes() const { return { header().bitmap_sizes, header().num_sizes }; }
-    Optional<BitmapSize const&> bitmap_size_for_glyph_id(u32 glyph_id) const;
-
     static ErrorOr<CBLC> from_slice(ReadonlyBytes);
-    ReadonlyBytes bytes() const { return m_slice; }
-
+    Optional<BitmapSize const&> bitmap_size_for_glyph_id(u32 glyph_id) const;
     Optional<EBLC::IndexSubHeader const&> index_subtable_for_glyph_id(u32 glyph_id, u16& first_glyph_index, u16& last_glyph_index) const;
 
 private:
-    explicit CBLC(ReadonlyBytes slice)
+    explicit CBLC(ReadonlyBytes slice, CblcHeader const& header, ReadonlySpan<BitmapSize> bitmap_sizes)
         : m_slice(slice)
+        , m_header(header)
+        , m_bitmap_sizes(bitmap_sizes)
     {
     }
 
     ReadonlyBytes m_slice;
+    CblcHeader const& m_header;
+    ReadonlySpan<BitmapSize> m_bitmap_sizes;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/ebdt
