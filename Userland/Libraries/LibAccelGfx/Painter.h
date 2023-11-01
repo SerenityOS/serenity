@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibAccelGfx/Canvas.h>
 #include <LibAccelGfx/Forward.h>
+#include <LibAccelGfx/Program.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Forward.h>
 
@@ -53,6 +54,8 @@ private:
     [[nodiscard]] Gfx::FloatRect to_clip_space(Gfx::FloatRect const& screen_rect) const;
 
     Vector<State, 1> m_state_stack;
+
+    Program m_rectangle_program;
 };
 
 }
