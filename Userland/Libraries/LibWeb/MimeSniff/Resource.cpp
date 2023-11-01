@@ -547,6 +547,48 @@ ErrorOr<void> Resource::context_specific_sniffing_algorithm(SniffingContext snif
         return mime_type_sniffing_algorithm();
     }
 
+    // NOTE: Non-standard but if the client expects us to not sniff, we shouldn't be doing any
+    //       context-specific sniffing if we don't have to.
+    if (m_no_sniff && m_supplied_mime_type.has_value()) {
+        m_computed_mime_type = m_supplied_mime_type.value();
+        return {};
+    }
+
+    if (sniffing_context == SniffingContext::Image)
+        return rules_for_sniffing_images_specifically();
+
+    return {};
+}
+
+// https://mimesniff.spec.whatwg.org/#sniffing-in-an-image-context
+ErrorOr<void> Resource::rules_for_sniffing_images_specifically()
+{
+    // 1. If the supplied MIME type is an XML MIME type, the computed MIME type is the supplied MIME type.
+    //    Abort these steps.
+    // NOTE: Non-standard but due to the mime type detection algorithm we need this sanity check.
+    if (m_supplied_mime_type.has_value() && m_supplied_mime_type->is_xml()) {
+        m_computed_mime_type = m_supplied_mime_type.value();
+        return {};
+    }
+
+    // 2. Let image-type-matched be the result of executing the image type pattern matching algorithm with
+    //    the resource header as the byte sequence to be matched.
+    auto image_type_matched = TRY(match_an_image_type_pattern(resource_header()));
+
+    // 3. If image-type-matched is not undefined, the computed MIME type is image-type-matched.
+    //    Abort these steps.
+    if (image_type_matched.has_value()) {
+        m_computed_mime_type = image_type_matched.release_value();
+        return {};
+    }
+
+    // 4. The computed MIME type is the supplied MIME type.
+    // NOTE: Non-standard but due to the mime type detection algorithm we need this sanity check.
+    if (m_supplied_mime_type.has_value()) {
+        m_computed_mime_type = m_supplied_mime_type.value();
+    }
+
+    // NOTE: Non-standard but if the supplied mime type is undefined, we use computed mime type's default value.
     return {};
 }
 

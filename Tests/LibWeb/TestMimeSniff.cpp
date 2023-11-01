@@ -8,6 +8,16 @@
 
 #include <LibWeb/MimeSniff/Resource.h>
 
+static void set_image_type_mappings(HashMap<StringView, Vector<StringView>>& mime_type_to_headers_map)
+{
+    mime_type_to_headers_map.set("image/x-icon"sv, { "\x00\x00\x01\x00"sv, "\x00\x00\x02\x00"sv });
+    mime_type_to_headers_map.set("image/bmp"sv, { "BM"sv });
+    mime_type_to_headers_map.set("image/gif"sv, { "GIF87a"sv, "GIF89a"sv });
+    mime_type_to_headers_map.set("image/webp"sv, { "RIFF\x00\x00\x00\x00WEBPVP"sv });
+    mime_type_to_headers_map.set("image/png"sv, { "\x89PNG\x0D\x0A\x1A\x0A"sv });
+    mime_type_to_headers_map.set("image/jpeg"sv, { "\xFF\xD8\xFF"sv });
+}
+
 TEST_CASE(determine_computed_mime_type_in_both_none_and_browsing_sniffing_context)
 {
     HashMap<StringView, Vector<StringView>> mime_type_to_headers_map;
@@ -41,12 +51,9 @@ TEST_CASE(determine_computed_mime_type_in_both_none_and_browsing_sniffing_contex
                                                      "\xEF\xBB\xBF\x00"sv,
                                                      "Hello world!"sv,
                                                  });
-    mime_type_to_headers_map.set("image/x-icon"sv, { "\x00\x00\x01\x00"sv, "\x00\x00\x02\x00"sv });
-    mime_type_to_headers_map.set("image/bmp"sv, { "BM"sv });
-    mime_type_to_headers_map.set("image/gif"sv, { "GIF87a"sv, "GIF89a"sv });
-    mime_type_to_headers_map.set("image/webp"sv, { "RIFF\x00\x00\x00\x00WEBPVP"sv });
-    mime_type_to_headers_map.set("image/png"sv, { "\x89PNG\x0D\x0A\x1A\x0A"sv });
-    mime_type_to_headers_map.set("image/jpeg"sv, { "\xFF\xD8\xFF"sv });
+
+    set_image_type_mappings(mime_type_to_headers_map);
+
     mime_type_to_headers_map.set("audio/aiff"sv, { "FORM\x00\x00\x00\x00\x41IFF"sv });
     mime_type_to_headers_map.set("audio/mpeg"sv, { "ID3"sv });
     mime_type_to_headers_map.set("application/ogg"sv, { "OggS\x00"sv });
@@ -67,6 +74,25 @@ TEST_CASE(determine_computed_mime_type_in_both_none_and_browsing_sniffing_contex
 
             // Test sniffing in a browsing context.
             resource = MUST(Web::MimeSniff::Resource::create(header.bytes(), Web::MimeSniff::Resource::SniffingContext::Browsing));
+            EXPECT_EQ(mime_type, resource.computed_mime_type().essence());
+        }
+    }
+}
+
+TEST_CASE(determine_computed_mime_type_in_image_sniffing_context)
+{
+    HashMap<StringView, Vector<StringView>> mime_type_to_headers_map;
+
+    set_image_type_mappings(mime_type_to_headers_map);
+
+    // Also consider a resource that is not an image.
+    mime_type_to_headers_map.set("application/octet-stream"sv, { "\x00"sv });
+
+    for (auto const& mime_type_to_headers : mime_type_to_headers_map) {
+        auto mime_type = mime_type_to_headers.key;
+
+        for (auto const& header : mime_type_to_headers.value) {
+            auto resource = MUST(Web::MimeSniff::Resource::create(header.bytes(), Web::MimeSniff::Resource::SniffingContext::Image));
             EXPECT_EQ(mime_type, resource.computed_mime_type().essence());
         }
     }
