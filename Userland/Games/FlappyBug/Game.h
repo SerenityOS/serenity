@@ -39,6 +39,8 @@ private:
     bool ready_to_start() const;
     void player_input();
 
+    static u32 get_final_score(float score);
+
 public:
     struct Bug {
         float const x { 50 };
@@ -169,7 +171,7 @@ private:
     Obstacle m_obstacle;
     Cloud m_cloud;
     bool m_active;
-    Optional<float> m_high_score {};
+    Optional<u32> m_high_score {};
     float m_last_score {};
     float m_difficulty {};
     float m_restart_cooldown {};

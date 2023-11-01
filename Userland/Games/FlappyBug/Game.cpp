@@ -30,7 +30,7 @@ void Game::reset()
 void Game::game_over()
 {
     if (on_game_end)
-        m_high_score = on_game_end(static_cast<u32>(m_difficulty));
+        m_high_score = on_game_end(get_final_score(m_difficulty));
 
     reset();
 }
@@ -73,7 +73,7 @@ void Game::paint_event(GUI::PaintEvent& event)
     if (m_active) {
         painter.draw_text(m_score_rect, String::formatted("{:.0}", m_difficulty).release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::TopLeft, Color::White);
     } else if (m_high_score.has_value()) {
-        auto message = String::formatted("Your score: {:.0}\nHigh score: {:.0}\n\n{}", m_last_score, m_high_score.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ").release_value_but_fixme_should_propagate_errors();
+        auto message = String::formatted("Your score: {}\nHigh score: {}\n\n{}", get_final_score(m_last_score), m_high_score.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ").release_value_but_fixme_should_propagate_errors();
         painter.draw_text(m_text_rect, message, Gfx::TextAlignment::Center, Color::White);
     } else {
         painter.draw_text(m_text_rect, "Press any key to start"sv, Gfx::TextAlignment::Center, Color::White);
@@ -148,6 +148,11 @@ void Game::tick()
     m_restart_cooldown -= 1.0f / 16.0f;
 
     queue_update();
+}
+
+u32 Game::get_final_score(float score)
+{
+    return static_cast<u32>(roundf(score));
 }
 
 }
