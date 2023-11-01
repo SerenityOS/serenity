@@ -342,9 +342,9 @@ PDFErrorOr<Color> CalRGBColorSpace::color(ReadonlySpan<Value> arguments) const
     auto d65_normalized = convert_to_d65(scaled_black_point_xyz);
     auto srgb = convert_to_srgb(d65_normalized);
 
-    auto red = static_cast<u8>(srgb[0] * 255.0f);
-    auto green = static_cast<u8>(srgb[1] * 255.0f);
-    auto blue = static_cast<u8>(srgb[2] * 255.0f);
+    auto red = static_cast<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
+    auto green = static_cast<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
+    auto blue = static_cast<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
 
     return Color(red, green, blue);
 }
