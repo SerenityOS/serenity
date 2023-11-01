@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Spider ICON app-spider)
-target_link_libraries(Spider PRIVATE LibCards LibGUI LibGfx LibCore LibConfig LibMain)
+target_link_libraries(Spider PRIVATE LibCards LibGUI LibGfx LibCore LibDesktop LibConfig LibMain)
