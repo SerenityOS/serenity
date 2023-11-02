@@ -76,6 +76,8 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     regs.x[1] = (FlatPtr)params.entry_argument;
     regs.x[2] = (FlatPtr)params.stack_location;
     regs.x[3] = (FlatPtr)params.stack_size;
+#elif ARCH(RISCV64)
+    TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif

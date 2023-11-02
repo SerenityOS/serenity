@@ -12,6 +12,8 @@
 #    include <Kernel/Arch/x86_64/IRQController.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/IRQController.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/IRQController.h>
 #else
 #    error "Unknown architecture"
 #endif

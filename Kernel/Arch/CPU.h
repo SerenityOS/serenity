@@ -20,6 +20,8 @@
 #    include <Kernel/Arch/x86_64/CPU.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/CPU.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/CPU.h>
 #else
 #    error "Unknown architecture"
 #endif

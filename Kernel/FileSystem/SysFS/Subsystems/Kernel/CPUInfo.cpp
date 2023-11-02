@@ -81,6 +81,10 @@ ErrorOr<void> SysFSCPUInformation::try_generate(KBufferBuilder& builder)
     (void)builder;
     dmesgln("TODO: Implement ProcessorInfo for AArch64!");
     return Error::from_errno(EINVAL);
+#elif ARCH(RISCV64)
+    (void)builder;
+    dmesgln("TODO: Implement ProcessorInfo for riscv64!");
+    return Error::from_errno(EINVAL);
 #else
 #    error Unknown architecture
 #endif
