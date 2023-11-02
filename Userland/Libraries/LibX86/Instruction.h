@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
+#include <LibX86/Forward.h>
 #include <stdio.h>
 
 namespace X86 {
@@ -292,11 +293,11 @@ struct InstructionDescriptor {
     IsLockPrefixAllowed lock_prefix_allowed { LockPrefixNotAllowed };
 };
 
-extern InstructionDescriptor s_table[3][256];
-extern InstructionDescriptor s_0f_table[3][256];
-extern InstructionDescriptor s_sse_table_np[256];
-extern InstructionDescriptor s_sse_table_66[256];
-extern InstructionDescriptor s_sse_table_f3[256];
+extern LibX86_API InstructionDescriptor s_table[3][256];
+extern LibX86_API InstructionDescriptor s_0f_table[3][256];
+extern LibX86_API InstructionDescriptor s_sse_table_np[256];
+extern LibX86_API InstructionDescriptor s_sse_table_66[256];
+extern LibX86_API InstructionDescriptor s_sse_table_f3[256];
 
 struct Prefix {
     enum Op {
