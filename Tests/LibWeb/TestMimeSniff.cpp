@@ -41,6 +41,12 @@ TEST_CASE(compute_unknown_mime_type)
                                                      "\xEF\xBB\xBF\x00"sv,
                                                      "Hello world!"sv,
                                                  });
+    mime_type_to_headers_map.set("image/x-icon"sv, { "\x00\x00\x01\x00"sv, "\x00\x00\x02\x00"sv });
+    mime_type_to_headers_map.set("image/bmp"sv, { "BM"sv });
+    mime_type_to_headers_map.set("image/gif"sv, { "GIF87a"sv, "GIF89a"sv });
+    mime_type_to_headers_map.set("image/webp"sv, { "RIFF\x00\x00\x00\x00WEBPVP"sv });
+    mime_type_to_headers_map.set("image/png"sv, { "\x89PNG\x0D\x0A\x1A\x0A"sv });
+    mime_type_to_headers_map.set("image/jpeg"sv, { "\xFF\xD8\xFF"sv });
 
     for (auto const& mime_type_to_headers : mime_type_to_headers_map) {
         auto mime_type = mime_type_to_headers.key;
