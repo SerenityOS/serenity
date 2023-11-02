@@ -97,14 +97,14 @@ private:
 
 static_assert(sizeof(DNSRecordWithoutName) == 10);
 
-Optional<Packet> Packet::from_raw_packet(u8 const* raw_data, size_t raw_size)
+Optional<Packet> Packet::from_raw_packet(ReadonlyBytes bytes)
 {
-    if (raw_size < sizeof(PacketHeader)) {
-        dbgln("DNS response not large enough ({} out of {}) to be a DNS packet.", raw_size, sizeof(PacketHeader));
+    if (bytes.size() < sizeof(PacketHeader)) {
+        dbgln("DNS response not large enough ({} out of {}) to be a DNS packet.", bytes.size(), sizeof(PacketHeader));
         return {};
     }
 
-    auto& header = *(PacketHeader const*)(raw_data);
+    auto const& header = *bit_cast<PacketHeader const*>(bytes.data());
     dbgln_if(LOOKUPSERVER_DEBUG, "Got packet (ID: {})", header.id());
     dbgln_if(LOOKUPSERVER_DEBUG, "  Question count: {}", header.question_count());
     dbgln_if(LOOKUPSERVER_DEBUG, "    Answer count: {}", header.answer_count());
@@ -123,12 +123,12 @@ Optional<Packet> Packet::from_raw_packet(u8 const* raw_data, size_t raw_size)
     size_t offset = sizeof(PacketHeader);
 
     for (u16 i = 0; i < header.question_count(); i++) {
-        auto name = Name::parse(raw_data, offset, raw_size);
+        auto name = Name::parse(bytes, offset);
         struct RawDNSAnswerQuestion {
             NetworkOrdered<u16> record_type;
             NetworkOrdered<u16> class_code;
         };
-        auto& record_and_class = *(RawDNSAnswerQuestion const*)&raw_data[offset];
+        auto const& record_and_class = *bit_cast<RawDNSAnswerQuestion const*>(bytes.offset_pointer(offset));
         u16 class_code = record_and_class.class_code & ~MDNS_WANTS_UNICAST_RESPONSE;
         bool mdns_wants_unicast_response = record_and_class.class_code & MDNS_WANTS_UNICAST_RESPONSE;
         packet.m_questions.empend(name, (RecordType)(u16)record_and_class.record_type, (RecordClass)class_code, mdns_wants_unicast_response);
@@ -138,18 +138,16 @@ Optional<Packet> Packet::from_raw_packet(u8 const* raw_data, size_t raw_size)
     }
 
     for (u16 i = 0; i < header.answer_count(); ++i) {
-        auto name = Name::parse(raw_data, offset, raw_size);
-
-        auto& record = *(DNSRecordWithoutName const*)(&raw_data[offset]);
+        auto name = Name::parse(bytes, offset);
+        auto const& record = *bit_cast<DNSRecordWithoutName const*>(bytes.offset_pointer(offset));
+        offset += sizeof(DNSRecordWithoutName);
 
         DeprecatedString data;
-
-        offset += sizeof(DNSRecordWithoutName);
 
         switch ((RecordType)record.type()) {
         case RecordType::PTR: {
             size_t dummy_offset = offset;
-            data = Name::parse(raw_data, dummy_offset, raw_size).as_string();
+            data = Name::parse(bytes, dummy_offset).as_string();
             break;
         }
         case RecordType::CNAME:
