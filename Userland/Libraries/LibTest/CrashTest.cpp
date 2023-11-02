@@ -9,10 +9,15 @@
 #include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <LibTest/CrashTest.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN) && !defined(AK_OS_GNU_HURD)
+#if !defined(AK_OS_WINDOWS)
+#    include <sys/wait.h>
+#    include <unistd.h>
+#else
+#    include <windows.h>
+#endif
+
+#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN) && !defined(AK_OS_GNU_HURD) && !defined(AK_OS_WINDOWS)
 #    include <sys/prctl.h>
 #endif
 
@@ -32,19 +37,20 @@ bool Crash::run(RunType run_type)
     if (run_type == RunType::UsingCurrentProcess) {
         return do_report(m_crash_function());
     } else {
+#if !defined(AK_OS_WINDOWS)
         // Run the test in a child process so that we do not crash the crash program :^)
         pid_t pid = fork();
         if (pid < 0) {
             perror("fork");
             VERIFY_NOT_REACHED();
         } else if (pid == 0) {
-#if defined(AK_OS_GNU_HURD)
+#    if defined(AK_OS_GNU_HURD)
             // When we crash, just kill the program, don't dump core.
             setenv("CRASHSERVER", "/servers/crash-kill", true);
-#elif !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
+#    elif !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
             if (prctl(PR_SET_DUMPABLE, 0, 0, 0) < 0)
                 perror("prctl(PR_SET_DUMPABLE)");
-#endif
+#    endif
             exit((int)m_crash_function());
         }
 
@@ -59,6 +65,35 @@ bool Crash::run(RunType run_type)
             return do_report(signal);
         }
         VERIFY_NOT_REACHED();
+#else
+        HANDLE thread_handle = CreateThread(
+            nullptr, 0, [](LPVOID lpParameter) -> DWORD {
+                Crash* crash = reinterpret_cast<Crash*>(lpParameter);
+                return (DWORD)crash->m_crash_function();
+            },
+            this, 0, nullptr);
+
+        if (thread_handle == nullptr) {
+            perror("CreateThread");
+            VERIFY_NOT_REACHED();
+        }
+
+        WaitForSingleObject(thread_handle, INFINITE);
+
+        DWORD exit_code;
+        if (GetExitCodeThread(thread_handle, &exit_code)) {
+            CloseHandle(thread_handle);
+
+            if (exit_code != STATUS_ACCESS_VIOLATION) {
+                return do_report(Failure(exit_code));
+            }
+
+            return do_report(exit_code);
+        }
+
+        CloseHandle(thread_handle);
+        VERIFY_NOT_REACHED();
+#endif
     }
 }
 

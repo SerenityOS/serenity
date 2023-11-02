@@ -6,13 +6,30 @@
  */
 
 #include <AK/Function.h>
+#include <AK/Time.h>
 #include <LibCore/ArgsParser.h>
 #include <LibTest/Macros.h>
 #include <LibTest/TestResult.h>
 #include <LibTest/TestSuite.h>
 #include <math.h>
 #include <stdlib.h>
-#include <sys/time.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <sys/time.h>
+#else
+#    include <winsock2.h>
+#    ifndef timersub
+#        define timersub(a, b, result)                           \
+            do {                                                 \
+                (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;    \
+                (result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
+                if ((result)->tv_usec < 0) {                     \
+                    --(result)->tv_sec;                          \
+                    (result)->tv_usec += 1000000;                \
+                }                                                \
+            } while (0)
+#    endif
+#endif
 
 namespace Test {
 
@@ -22,12 +39,12 @@ class TestElapsedTimer {
 public:
     TestElapsedTimer() { restart(); }
 
-    void restart() { gettimeofday(&m_started, nullptr); }
+    void restart() { AK::get_time_of_day(&m_started); }
 
     u64 elapsed_milliseconds()
     {
         struct timeval now = {};
-        gettimeofday(&now, nullptr);
+        AK::get_time_of_day(&now);
 
         struct timeval delta = {};
         timersub(&now, &m_started, &delta);
