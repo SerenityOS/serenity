@@ -14,7 +14,10 @@
 #include <AK/String.h>
 #include <LibCore/File.h>
 #include <LibCore/Forward.h>
-#include <spawn.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <spawn.h>
+#endif
 
 namespace Core {
 
@@ -37,7 +40,9 @@ public:
 
     static ErrorOr<OwnPtr<Command>> create(StringView command, char const* const arguments[]);
 
+#if !defined(AK_OS_WINDOWS)
     Command(pid_t pid, NonnullOwnPtr<Core::File> stdin_file, NonnullOwnPtr<Core::File> stdout_file, NonnullOwnPtr<Core::File> stderr_file);
+#endif
 
     ErrorOr<void> write(StringView input);
 
@@ -56,7 +61,9 @@ public:
     ErrorOr<ProcessResult> status(int options = 0);
 
 private:
+#if !defined(AK_OS_WINDOWS)
     pid_t m_pid { -1 };
+#endif
     NonnullOwnPtr<Core::File> m_stdin;
     NonnullOwnPtr<Core::File> m_stdout;
     NonnullOwnPtr<Core::File> m_stderr;

@@ -13,18 +13,19 @@
 #endif
 
 namespace Core::SessionManagement {
+#if !defined(AK_OS_WINDOWS)
 
 ErrorOr<pid_t> root_session_id([[maybe_unused]] Optional<pid_t> force_sid)
 {
-#ifdef AK_OS_SERENITY
+#    ifdef AK_OS_SERENITY
     int rc = syscall(SC_get_root_session_id, force_sid.value_or(-1));
     if (rc < 0) {
         return Error::from_syscall("get_root_session_id"sv, rc);
     }
     return static_cast<pid_t>(rc);
-#else
+#    else
     return 0;
-#endif
+#    endif
 }
 
 ErrorOr<void> logout(Optional<pid_t> force_sid)
@@ -52,4 +53,5 @@ ErrorOr<void> create_session_temporary_directory_if_needed(uid_t uid, gid_t gid,
     return {};
 }
 
+#endif
 }

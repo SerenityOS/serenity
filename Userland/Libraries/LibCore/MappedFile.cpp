@@ -10,16 +10,25 @@
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
-#include <sys/mman.h>
-#include <unistd.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <sys/mman.h>
+#    include <unistd.h>
+#endif
 
 namespace Core {
 
 ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map(StringView path, Mode mode)
 {
+#if !defined(AK_OS_WINDOWS)
     auto const file_mode = mode == Mode::ReadOnly ? O_RDONLY : O_RDWR;
     auto fd = TRY(Core::System::open(path, file_mode | O_CLOEXEC, 0));
     return map_from_fd_and_close(fd, path, mode);
+#else
+    (void)mode;
+    dbgln("FIXME: Implement Core::MappedFile::map(\"{}\") on Windows", path);
+    VERIFY_NOT_REACHED();
+#endif
 }
 
 ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_file(NonnullOwnPtr<Core::File> stream, StringView path)
@@ -29,6 +38,7 @@ ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_file(NonnullOwnPtr<Core:
 
 ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] StringView path, Mode mode)
 {
+#if !defined(AK_OS_WINDOWS)
     TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
 
     ScopeGuard fd_close_guard = [fd] {
@@ -55,6 +65,11 @@ ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[m
     auto* ptr = TRY(Core::System::mmap(nullptr, size, protection, flags, fd, 0, 0, path));
 
     return adopt_own(*new MappedFile(ptr, size, mode));
+#else
+    (void)mode;
+    dbgln("FIXME: Implement Core::MappedFile::map_from_fd_and_close({}, \"{}\") on Windows", fd, path);
+    VERIFY_NOT_REACHED();
+#endif
 }
 
 MappedFile::MappedFile(void* ptr, size_t size, Mode mode)
