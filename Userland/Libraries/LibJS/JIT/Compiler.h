@@ -141,7 +141,8 @@ private:
         O(PutByValueWithThis, put_by_value_with_this)                            \
         O(CopyObjectExcludingProperties, copy_object_excluding_properties)       \
         O(AsyncIteratorClose, async_iterator_close)                              \
-        O(Yield, yield)
+        O(Yield, yield)                                                          \
+        O(Await, await)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case, ...) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
