@@ -478,7 +478,12 @@ void Element::attribute_changed(FlyString const& name, Optional<DeprecatedString
 {
     auto value_or_empty = value.value_or("");
 
-    if (name == HTML::AttributeNames::class_) {
+    if (name == HTML::AttributeNames::id) {
+        if (!value.has_value())
+            m_id = {};
+        else
+            m_id = MUST(FlyString::from_deprecated_fly_string(value_or_empty));
+    } else if (name == HTML::AttributeNames::class_) {
         auto new_classes = value_or_empty.split_view(Infra::is_ascii_whitespace);
         m_classes.clear();
         m_classes.ensure_capacity(new_classes.size());
