@@ -1724,6 +1724,11 @@ void Compiler::compile_yield(Bytecode::Op::Yield const& op)
     compile_continuation(op.continuation(), false);
 }
 
+void Compiler::compile_await(Bytecode::Op::Await const& op)
+{
+    compile_continuation(op.continuation(), true);
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
