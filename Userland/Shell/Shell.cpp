@@ -127,6 +127,33 @@ DeprecatedString Shell::prompt() const
                 builder.append(cwd);
             }
 
+        } else if (auto const number_string = lexer.consume_while(is_ascii_digit); !number_string.is_empty()) {
+            if (lexer.is_eof() || lexer.consume() != 'w')
+                continue;
+
+            auto const max_component_count = number_string.to_uint().value();
+
+            DeprecatedString const home_path = getenv("HOME");
+
+            auto const should_collapse_path = cwd.starts_with(home_path);
+            auto const path = should_collapse_path ? cwd.substring_view(home_path.length(), cwd.length() - home_path.length())
+                                                   : cwd.view();
+            auto const parts = path.split_view('/');
+
+            auto const start_index = (max_component_count < parts.size()) ? parts.size() - max_component_count : 0;
+            if (start_index == 0) {
+                if (should_collapse_path)
+                    builder.append('~');
+                builder.append(path);
+                continue;
+            }
+
+            for (auto i = start_index; i < parts.size(); ++i) {
+                if (i != start_index)
+                    builder.append('/');
+                builder.append(parts[i]);
+            }
+
         } else if (lexer.consume_specific('p')) {
             builder.append(uid == 0 ? '#' : '$');
 
