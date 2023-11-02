@@ -239,11 +239,10 @@ String Name::string_for_id(NameId id) const
 
 ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < sizeof(Header))
-        return Error::from_string_literal("Invalid kern table header");
+    FixedMemoryStream stream { slice };
 
     // We only support the old (2x u16) version of the header
-    auto const& header = *bit_cast<Header const*>(slice.data());
+    auto const& header = *TRY(stream.read_in_place<Header const>());
     auto version = header.version;
     auto number_of_subtables = header.n_tables;
     if (version != 0)
@@ -251,18 +250,41 @@ ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
     if (number_of_subtables == 0)
         return Error::from_string_literal("Kern table does not contain any subtables");
 
-    // Read all subtable offsets
-    auto subtable_offsets = TRY(FixedArray<size_t>::create(number_of_subtables));
-    size_t offset = sizeof(Header);
+    // Read subtables
+    Vector<Subtable> subtables;
+    TRY(subtables.try_ensure_capacity(number_of_subtables));
     for (size_t i = 0; i < number_of_subtables; ++i) {
-        if (slice.size() < offset + sizeof(SubtableHeader))
-            return Error::from_string_literal("Invalid kern subtable header");
-        auto const& subtable_header = *bit_cast<SubtableHeader const*>(slice.offset_pointer(offset));
-        subtable_offsets[i] = offset;
-        offset += subtable_header.length;
+        auto const& subtable_header = *TRY(stream.read_in_place<SubtableHeader const>());
+
+        if (subtable_header.version != 0)
+            return Error::from_string_literal("Unsupported Kern subtable version");
+
+        if (stream.remaining() + sizeof(SubtableHeader) < subtable_header.length)
+            return Error::from_string_literal("Kern subtable is truncated");
+
+        auto subtable_format = (subtable_header.coverage & 0xFF00) >> 8;
+        if (subtable_format == 0) {
+            auto const& format0_header = *TRY(stream.read_in_place<Format0 const>());
+            auto pairs = TRY(stream.read_in_place<Format0Pair const>(5));
+
+            subtables.append(Subtable {
+                .header = subtable_header,
+                .table = Format0Table {
+                    .header = format0_header,
+                    .pairs = pairs,
+                },
+            });
+        } else {
+            dbgln("OpenType::Kern: FIXME: subtable format {} is unsupported", subtable_format);
+            TRY(stream.discard(subtable_header.length - sizeof(SubtableHeader)));
+            subtables.append(Subtable {
+                .header = subtable_header,
+                .table = UnsupportedTable {},
+            });
+        }
     }
 
-    return Kern(slice, move(subtable_offsets));
+    return Kern(header, move(subtables));
 }
 
 i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
@@ -270,30 +292,14 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
     VERIFY(left_glyph_id > 0 && right_glyph_id > 0);
 
     i16 glyph_kerning = 0;
-    for (auto subtable_offset : m_subtable_offsets) {
-        auto subtable_slice = m_slice.slice(subtable_offset);
-        auto const& subtable_header = *bit_cast<SubtableHeader const*>(subtable_slice.data());
-
-        auto version = subtable_header.version;
-        auto length = subtable_header.length;
-        auto coverage = subtable_header.coverage;
-
-        if (version != 0) {
-            dbgln("OpenType::Kern: unsupported subtable version {}", version);
-            continue;
-        }
-
-        if (subtable_slice.size() < length) {
-            dbgln("OpenType::Kern: subtable has an invalid size {}", length);
-            continue;
-        }
+    for (auto const& subtable : m_subtables) {
+        auto coverage = subtable.header.coverage;
 
         auto is_horizontal = (coverage & (1 << 0)) > 0;
         auto is_minimum = (coverage & (1 << 1)) > 0;
         auto is_cross_stream = (coverage & (1 << 2)) > 0;
         auto is_override = (coverage & (1 << 3)) > 0;
         auto reserved_bits = (coverage & 0xF0);
-        auto format = (coverage & 0xFF00) >> 8;
 
         // FIXME: implement support for these features
         if (!is_horizontal || is_minimum || is_cross_stream || (reserved_bits > 0)) {
@@ -303,14 +309,12 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 
         // FIXME: implement support for subtable formats other than 0
         Optional<i16> subtable_kerning;
-        switch (format) {
-        case 0:
-            subtable_kerning = read_glyph_kerning_format0(subtable_slice.slice(sizeof(SubtableHeader)), left_glyph_id, right_glyph_id);
-            break;
-        default:
-            dbgln("OpenType::Kern: FIXME: subtable format {} is unsupported", format);
-            continue;
-        }
+        subtable.table.visit(
+            [&](Format0Table const& format0) {
+                subtable_kerning = read_glyph_kerning_format0(format0, left_glyph_id, right_glyph_id);
+            },
+            [&](auto&) {});
+
         if (!subtable_kerning.has_value())
             continue;
         auto kerning_value = subtable_kerning.release_value();
@@ -323,16 +327,12 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
     return glyph_kerning;
 }
 
-Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_glyph_id, u16 right_glyph_id)
+Optional<i16> Kern::read_glyph_kerning_format0(Format0Table const& format0, u16 left_glyph_id, u16 right_glyph_id)
 {
-    if (slice.size() < sizeof(Format0))
-        return {};
-
-    auto const& format0 = *bit_cast<Format0 const*>(slice.data());
-    u16 number_of_pairs = format0.n_pairs;
-    u16 search_range = format0.search_range;
-    u16 entry_selector = format0.entry_selector;
-    u16 range_shift = format0.range_shift;
+    u16 number_of_pairs = format0.header.n_pairs;
+    u16 search_range = format0.header.search_range;
+    u16 entry_selector = format0.header.entry_selector;
+    u16 range_shift = format0.header.range_shift;
 
     // Sanity checks for this table format
     auto pairs_in_search_range = search_range / sizeof(Format0Pair);
@@ -346,11 +346,10 @@ Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_gly
         return {};
 
     // FIXME: implement a possibly slightly more efficient binary search using the parameters above
-    ReadonlySpan<Format0Pair> pairs { bit_cast<Format0Pair const*>(slice.slice(sizeof(Format0)).data()), number_of_pairs };
 
     // The left and right halves of the kerning pair make an unsigned 32-bit number, which is then used to order the kerning pairs numerically.
     auto needle = (static_cast<u32>(left_glyph_id) << 16u) | static_cast<u32>(right_glyph_id);
-    auto* pair = binary_search(pairs, nullptr, nullptr, [&](void*, Format0Pair const& pair) {
+    auto* pair = binary_search(format0.pairs, nullptr, nullptr, [&](void*, Format0Pair const& pair) {
         auto as_u32 = (static_cast<u32>(pair.left) << 16u) | static_cast<u32>(pair.right);
         return needle - as_u32;
     });
