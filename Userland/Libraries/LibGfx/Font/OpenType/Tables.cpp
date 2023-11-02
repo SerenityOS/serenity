@@ -509,6 +509,27 @@ ErrorOr<CBDT> CBDT::from_slice(ReadonlyBytes slice)
     return CBDT { slice };
 }
 
+ErrorOr<GPOS> GPOS::from_slice(ReadonlyBytes slice)
+{
+    FixedMemoryStream stream { slice };
+    auto const& header = *TRY(stream.read_in_place<Version1_0 const>());
+    // FIXME: Detect version 1.1 and support the extra FeatureVariations table.
+
+    TRY(stream.seek(header.script_list_offset, SeekMode::SetPosition));
+    auto const& script_list = *TRY(stream.read_in_place<ScriptList const>());
+    auto script_records = TRY(stream.read_in_place<ScriptRecord const>(script_list.script_count));
+
+    TRY(stream.seek(header.feature_list_offset, SeekMode::SetPosition));
+    auto const& feature_list = *TRY(stream.read_in_place<FeatureList const>());
+    auto feature_records = TRY(stream.read_in_place<FeatureRecord const>(feature_list.feature_count));
+
+    TRY(stream.seek(header.lookup_list_offset, SeekMode::SetPosition));
+    auto const& lookup_list = *TRY(stream.read_in_place<LookupList const>());
+    auto lookup_records = TRY(stream.read_in_place<Offset16>(lookup_list.lookup_count));
+
+    return GPOS { slice, header, script_list, script_records, feature_list, feature_records, lookup_list, lookup_records };
+}
+
 Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 {
     auto read_value_record = [&](u16 value_format, FixedMemoryStream& stream) -> ValueRecord {
@@ -532,30 +553,17 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
         return value_record;
     };
 
-    auto const& header = this->header();
     dbgln_if(OPENTYPE_GPOS_DEBUG, "GPOS header:");
-    dbgln_if(OPENTYPE_GPOS_DEBUG, "   Version: {}.{}", header.major_version, header.minor_version);
-    dbgln_if(OPENTYPE_GPOS_DEBUG, "   Feature list offset: {}", header.feature_list_offset);
+    dbgln_if(OPENTYPE_GPOS_DEBUG, "   Version: {}.{}", m_header.major_version, m_header.minor_version);
+    dbgln_if(OPENTYPE_GPOS_DEBUG, "   Feature list offset: {}", m_header.feature_list_offset);
 
     // FIXME: Make sure everything is bounds-checked appropriately.
 
-    auto feature_list_slice = m_slice.slice(header.feature_list_offset);
-    if (feature_list_slice.size() < sizeof(FeatureList)) {
-        dbgln_if(OPENTYPE_GPOS_DEBUG, "GPOS table feature list slice is too small");
-        return {};
-    }
-    auto const& feature_list = *bit_cast<FeatureList const*>(feature_list_slice.data());
-
-    auto lookup_list_slice = m_slice.slice(header.lookup_list_offset);
-    if (lookup_list_slice.size() < sizeof(LookupList)) {
-        dbgln_if(OPENTYPE_GPOS_DEBUG, "GPOS table lookup list slice is too small");
-        return {};
-    }
-    auto const& lookup_list = *bit_cast<LookupList const*>(lookup_list_slice.data());
+    auto feature_list_slice = m_slice.slice(m_header.feature_list_offset);
+    auto lookup_list_slice = m_slice.slice(m_header.lookup_list_offset);
 
     Optional<Offset16> kern_feature_offset;
-    for (size_t i = 0; i < feature_list.feature_count; ++i) {
-        auto const& feature_record = feature_list.feature_records[i];
+    for (auto const& feature_record : m_feature_records) {
         if (feature_record.feature_tag == tag_from_str("kern")) {
             kern_feature_offset = feature_record.feature_offset;
             break;
@@ -577,7 +585,7 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
     for (size_t i = 0; i < feature.lookup_index_count; ++i) {
         auto lookup_index = feature.lookup_list_indices[i];
         dbgln_if(OPENTYPE_GPOS_DEBUG, "Lookup index: {}", lookup_index);
-        auto lookup_slice = lookup_list_slice.slice(lookup_list.lookup_offsets[lookup_index]);
+        auto lookup_slice = lookup_list_slice.slice(m_lookup_offsets[lookup_index]);
         auto const& lookup = *bit_cast<Lookup const*>(lookup_slice.data());
 
         dbgln_if(OPENTYPE_GPOS_DEBUG, "Lookup:");
