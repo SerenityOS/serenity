@@ -109,7 +109,7 @@ void Compiler::compile_get_local(Bytecode::Op::GetLocal const& op)
     m_assembler.mov(
         Assembler::Operand::Register(GPR1),
         Assembler::Operand::Imm(Value().encoded()));
-    m_assembler.jump_if(
+    m_assembler.compare_and_jump_if(
         Assembler::Operand::Register(GPR0),
         Assembler::Condition::NotEqualTo,
         Assembler::Operand::Register(GPR1),
@@ -164,7 +164,7 @@ void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
 
     // if (dst != BOOLEAN_TAG) goto slow_case;
     Assembler::Label slow_case {};
-    m_assembler.jump_if(
+    m_assembler.compare_and_jump_if(
         Assembler::Operand::Register(dst),
         Assembler::Condition::NotEqualTo,
         Assembler::Operand::Imm(BOOLEAN_TAG),
@@ -205,7 +205,7 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 
     compile_to_boolean(GPR0, GPR1);
 
-    m_assembler.jump_if(
+    m_assembler.compare_and_jump_if(
         Assembler::Operand::Register(GPR0),
         Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(0),
@@ -226,7 +226,7 @@ void Compiler::compile_jump_nullish(Bytecode::Op::JumpNullish const& op)
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm(IS_NULLISH_EXTRACT_PATTERN));
 
-    m_assembler.jump_if(
+    m_assembler.compare_and_jump_if(
         Assembler::Operand::Register(GPR0),
         Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(IS_NULLISH_PATTERN),
@@ -243,7 +243,7 @@ void Compiler::compile_jump_undefined(Bytecode::Op::JumpUndefined const& op)
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Imm(48));
 
-    m_assembler.jump_if(
+    m_assembler.compare_and_jump_if(
         Assembler::Operand::Register(GPR0),
         Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(UNDEFINED_TAG),
@@ -252,7 +252,60 @@ void Compiler::compile_jump_undefined(Bytecode::Op::JumpUndefined const& op)
     m_assembler.jump(label_for(op.false_target()->block()));
 }
 
-[[maybe_unused]] static Value cxx_increment(VM& vm, Value value)
+void Compiler::jump_if_int32_condition(Assembler::Reg reg, Assembler::Condition cond, Assembler::Label& cond_label)
+{
+    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(reg));
+    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
+
+    m_assembler.compare_and_jump_if(
+        Assembler::Operand::Register(GPR0),
+        cond,
+        Assembler::Operand::Imm(INT32_TAG),
+        cond_label);
+}
+
+template <typename CXXOp>
+void Compiler::compile_increment_or_decrement(Assembler::ArithSign sign, CXXOp cxx_op)
+{
+    load_vm_register(ARG1, Bytecode::Register::accumulator());
+
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    jump_if_not_int32(ARG1, slow_case);
+    
+    /* Check for overflow in the int32 */
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(ARG1),
+        Assembler::OpBits::Bits32);
+    m_assembler.inc_dec(GPR0,
+        sign,
+        Assembler::OpBits::Bits32);
+    m_assembler.jump_if(Assembler::Condition::SignedOverflow, slow_case);
+
+    /* No overflow - we can actually increment/decrement again with the tag already in the top 32 bits of the second operand */
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(ARG1),
+        Assembler::OpBits::Bits64);
+    m_assembler.inc_dec(GPR0,
+        sign,
+        Assembler::OpBits::Bits64);
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
+    m_assembler.jump(end);
+
+    /* Overflow - slow C++-based increment/decrement */
+    slow_case.link(m_assembler);
+    native_call((void*) cxx_op);
+    store_vm_register(Bytecode::Register::accumulator(), RET);
+    check_exception();
+
+    /* Ready to return here */
+    end.link(m_assembler);
+}
+
+static Value cxx_increment(VM& vm, Value value)
 {
     auto old_value = TRY_OR_SET_EXCEPTION(value.to_numeric(vm));
     if (old_value.is_number())
@@ -260,109 +313,9 @@ void Compiler::compile_jump_undefined(Bytecode::Op::JumpUndefined const& op)
     return BigInt::create(vm, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
 }
 
-void Compiler::jump_if_int32(Assembler::Reg reg, Assembler::Label& label)
+void Compiler::compile_increment(JS::Bytecode::Op::Increment const&)
 {
-    // GPR0 = reg >> 48;
-    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(reg));
-    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
-
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Condition::EqualTo,
-        Assembler::Operand::Imm(INT32_TAG),
-        label);
-}
-
-template<typename Codegen>
-void Compiler::branch_if_int32(Assembler::Reg reg, Codegen codegen)
-{
-    // GPR0 = reg >> 48;
-    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(reg));
-    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
-
-    Assembler::Label not_int32_case {};
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Condition::NotEqualTo,
-        Assembler::Operand::Imm(INT32_TAG),
-        not_int32_case);
-
-    codegen();
-
-    not_int32_case.link(m_assembler);
-}
-
-template<typename Codegen>
-void Compiler::branch_if_both_int32(Assembler::Reg lhs, Assembler::Reg rhs, Codegen codegen)
-{
-    // GPR0 = lhs >> 48;
-    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(lhs));
-    m_assembler.shift_right(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(48));
-
-    // GPR1 = rhs >> 48;
-    m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Register(rhs));
-    m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(48));
-
-    Assembler::Label not_int32_case {};
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Condition::NotEqualTo,
-        Assembler::Operand::Imm(INT32_TAG),
-        not_int32_case);
-    m_assembler.jump_if(
-        Assembler::Operand::Register(GPR1),
-        Assembler::Condition::NotEqualTo,
-        Assembler::Operand::Imm(INT32_TAG),
-        not_int32_case);
-
-    codegen();
-
-    not_int32_case.link(m_assembler);
-}
-
-void Compiler::compile_increment(Bytecode::Op::Increment const&)
-{
-    load_vm_register(ARG1, Bytecode::Register::accumulator());
-
-    Assembler::Label end {};
-    Assembler::Label slow_case {};
-
-    branch_if_int32(ARG1, [&] {
-        // GPR0 = ARG1 & 0xffffffff;
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(ARG1));
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Operand::Imm(0xffffffff));
-        m_assembler.bitwise_and(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(GPR1));
-
-        // if (GPR0 == 0x7fffffff) goto slow_case;
-        m_assembler.jump_if(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Condition::EqualTo,
-            Assembler::Operand::Imm(0x7fffffff),
-            slow_case);
-
-        // ARG1 += 1;
-        m_assembler.add(
-            Assembler::Operand::Register(ARG1),
-            Assembler::Operand::Imm(1));
-
-        // accumulator = ARG1;
-        store_vm_register(Bytecode::Register::accumulator(), ARG1);
-
-        m_assembler.jump(end);
-    });
-
-    slow_case.link(m_assembler);
-    native_call((void*)cxx_increment);
-    store_vm_register(Bytecode::Register::accumulator(), RET);
-    check_exception();
-
-    end.link(m_assembler);
+    compile_increment_or_decrement(Assembler::ArithSign::Positive, cxx_increment);
 }
 
 static Value cxx_decrement(VM& vm, Value value)
@@ -373,12 +326,70 @@ static Value cxx_decrement(VM& vm, Value value)
     return BigInt::create(vm, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
 }
 
-void Compiler::compile_decrement(Bytecode::Op::Decrement const&)
+void Compiler::compile_decrement(JS::Bytecode::Op::Decrement const&)
 {
-    load_vm_register(ARG1, Bytecode::Register::accumulator());
-    native_call((void*)cxx_decrement);
+    compile_increment_or_decrement(Assembler::ArithSign::Negative, cxx_decrement);
+}
+
+template <typename CXXOp>
+void Compiler::compile_add_or_sub(Bytecode::Register lhs, Assembler::ArithSign sign, CXXOp cxx_op)
+{
+    load_vm_register(ARG1, lhs);
+    load_vm_register(ARG2, Bytecode::Register::accumulator());
+
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    jump_if_not_int32(ARG1, slow_case);
+    jump_if_not_int32(ARG2, slow_case);
+    
+    /* Check for overflow in the int32 */
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(ARG1),
+        Assembler::OpBits::Bits32);
+    m_assembler.add_sub(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(ARG2),
+        sign,
+        Assembler::OpBits::Bits32);
+    m_assembler.jump_if(Assembler::Condition::SignedOverflow, slow_case);
+
+    /* No overflow - we can actually add/sub again with the tag already in the top 32 bits of the second operand */
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(ARG2),
+        Assembler::OpBits::Bits32);
+    
+    /* When the sign is negative, negate arg2 so that when we add arg1 we are actually doing -arg2 + arg1 */
+    if (sign == Assembler::ArithSign::Negative)
+        m_assembler.neg(GPR0, Assembler::OpBits::Bits32);
+
+    m_assembler.add(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(ARG1),
+        Assembler::OpBits::Bits64);
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
+    m_assembler.jump(end);
+
+    /* Overflow - slow C++-based add/sub */
+    slow_case.link(m_assembler);
+    native_call((void*) cxx_op);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
+
+    /* Ready to return here */
+    end.link(m_assembler);
+}
+
+static Value cxx_add(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(add(vm, lhs, rhs));
+}
+
+void Compiler::compile_add(Bytecode::Op::Add const& op)
+{
+    compile_add_or_sub(op.lhs(), Assembler::ArithSign::Positive, cxx_add);
 }
 
 void Compiler::check_exception()
@@ -388,7 +399,7 @@ void Compiler::check_exception()
 
     if (auto const* handler = current_block().handler(); handler) {
         Assembler::Label no_exception;
-        m_assembler.jump_if(
+        m_assembler.compare_and_jump_if(
             Assembler::Operand::Register(GPR0),
             Assembler::Condition::EqualTo,
             Assembler::Operand::Register(GPR1),
@@ -399,12 +410,12 @@ void Compiler::check_exception()
         no_exception.link(m_assembler);
     } else if (auto const* finalizer = current_block().finalizer(); finalizer) {
         store_vm_register(Bytecode::Register::exception(), GPR1);
-        m_assembler.jump_if(Assembler::Operand::Register(GPR0),
+        m_assembler.compare_and_jump_if(Assembler::Operand::Register(GPR0),
             Assembler::Condition::NotEqualTo,
             Assembler::Operand::Register(GPR1),
             label_for(*finalizer));
     } else {
-        m_assembler.jump_if(Assembler::Operand::Register(GPR0),
+        m_assembler.compare_and_jump_if(Assembler::Operand::Register(GPR0),
             Assembler::Condition::NotEqualTo,
             Assembler::Operand::Register(GPR1),
             m_exit_label);
@@ -466,48 +477,6 @@ static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
 JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
 #    undef DO_COMPILE_COMMON_BINARY_OP
 
-static Value cxx_add(VM& vm, Value lhs, Value rhs)
-{
-    return TRY_OR_SET_EXCEPTION(add(vm, lhs, rhs));
-}
-
-void Compiler::compile_add(Bytecode::Op::Add const& op)
-{
-    load_vm_register(ARG1, op.lhs());
-    load_vm_register(ARG2, Bytecode::Register::accumulator());
-
-    Assembler::Label end {};
-    Assembler::Label slow_case {};
-
-    branch_if_both_int32(ARG1, ARG2, [&] {
-        // GPR0 = ARG1 + ARG2 (32-bit)
-        // if (overflow) goto slow_case;
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(ARG1));
-        m_assembler.add32(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(ARG2),
-            slow_case);
-
-        // accumulator = GPR0 | SHIFTED_INT32_TAG;
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Operand::Imm(SHIFTED_INT32_TAG));
-        m_assembler.bitwise_or(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(GPR1));
-        store_vm_register(Bytecode::Register::accumulator(), GPR0);
-        m_assembler.jump(end);
-    });
-
-    slow_case.link(m_assembler);
-    native_call((void*)cxx_add);
-    store_vm_register(Bytecode::Register::accumulator(), RET);
-    check_exception();
-    end.link(m_assembler);
-}
-
 static Value cxx_less_than(VM& vm, Value lhs, Value rhs)
 {
     return TRY_OR_SET_EXCEPTION(less_than(vm, lhs, rhs));
@@ -519,37 +488,40 @@ void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
     load_vm_register(ARG2, Bytecode::Register::accumulator());
 
     Assembler::Label end {};
+    Assembler::Label slow_case {};
 
-    branch_if_both_int32(ARG1, ARG2, [&] {
-        // if (ARG1 < ARG2) return true;
-        // else return false;
+    jump_if_not_int32(ARG1, slow_case);
+    jump_if_not_int32(ARG2, slow_case);
 
-        Assembler::Label true_case {};
+    // if (ARG1 < ARG2) return true;
+    // else return false;
 
-        m_assembler.sign_extend_32_to_64_bits(ARG1);
-        m_assembler.sign_extend_32_to_64_bits(ARG2);
+    Assembler::Label true_case {};
 
-        m_assembler.jump_if(
-            Assembler::Operand::Register(ARG1),
-            Assembler::Condition::SignedLessThan,
-            Assembler::Operand::Register(ARG2),
-            true_case);
+    m_assembler.sign_extend_32_to_64_bits(ARG1);
+    m_assembler.sign_extend_32_to_64_bits(ARG2);
 
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm(Value(false).encoded()));
-        store_vm_register(Bytecode::Register::accumulator(), GPR0);
-        m_assembler.jump(end);
+    m_assembler.compare_and_jump_if(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Condition::SignedLessThan,
+        Assembler::Operand::Register(ARG2),
+        true_case);
 
-        true_case.link(m_assembler);
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm(Value(true).encoded()));
-        store_vm_register(Bytecode::Register::accumulator(), GPR0);
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(Value(false).encoded()));
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
+    m_assembler.jump(end);
 
-        m_assembler.jump(end);
-    });
+    true_case.link(m_assembler);
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(Value(true).encoded()));
+    store_vm_register(Bytecode::Register::accumulator(), GPR0);
 
+    m_assembler.jump(end);
+
+    slow_case.link(m_assembler);
     native_call((void*)cxx_less_than);
     store_vm_register(Bytecode::Register::accumulator(), RET);
     check_exception();
@@ -849,7 +821,7 @@ void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding con
         Assembler::Operand::Imm(Value().encoded()));
 
     Assembler::Label slow_case {};
-    m_assembler.jump_if(
+    m_assembler.compare_and_jump_if(
         Assembler::Operand::Register(GPR0),
         Assembler::Condition::EqualTo,
         Assembler::Operand::Register(GPR1),
@@ -1046,7 +1018,7 @@ void Compiler::compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwi
     // if (saved_return_value.is_empty()) goto resume_block;
     load_vm_register(GPR0, Bytecode::Register::saved_return_value());
     m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
-    m_assembler.jump_if(
+    m_assembler.compare_and_jump_if(
         Assembler::Operand::Register(GPR0),
         Assembler::Condition::EqualTo,
         Assembler::Operand::Register(GPR1),

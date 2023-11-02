@@ -161,14 +161,23 @@ private:
     void jump_to_exit();
 
     void native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments = {});
+    void jump_if_int32_condition(Assembler::Reg reg, Assembler::Condition cond, Assembler::Label& cond_label);
 
-    void jump_if_int32(Assembler::Reg, Assembler::Label&);
+    void jump_if_int32(Assembler::Reg reg, Assembler::Label& int32_case)
+    {
+        jump_if_int32_condition(reg, Assembler::Condition::EqualTo, int32_case);
+    }
 
-    template<typename Codegen>
-    void branch_if_int32(Assembler::Reg, Codegen);
+    void jump_if_not_int32(Assembler::Reg reg, Assembler::Label& not_int32_case)
+    {
+        jump_if_int32_condition(reg, Assembler::Condition::NotEqualTo, not_int32_case);
+    }
 
-    template<typename Codegen>
-    void branch_if_both_int32(Assembler::Reg, Assembler::Reg, Codegen);
+    template <typename CXXOp>
+    void compile_increment_or_decrement(Assembler::ArithSign sign, CXXOp cxx_op);
+
+    template <typename CXXOp>
+    void compile_add_or_sub(Bytecode::Register lhs, Assembler::ArithSign sign, CXXOp cxx_op);
 
     explicit Compiler(Bytecode::Executable& bytecode_executable)
         : m_bytecode_executable(bytecode_executable)

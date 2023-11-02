@@ -115,6 +115,8 @@ struct Assembler {
         SignedGreaterThanOrEqualTo = 0xD,
         SignedLessThan = 0xC,
         SignedLessThanOrEqualTo = 0xE,
+        SignedOverflow = 0x0,
+        NotSignedOverflow = 0x1,
     };
 
     static constexpr u8 encode_reg(Reg reg)
@@ -122,9 +124,19 @@ struct Assembler {
         return to_underlying(reg) & 0x7;
     }
 
-    enum class Patchable {
+    enum class Patchable : u8 {
         Yes,
         No,
+    };
+
+    enum class ArithSign : u8 {
+        Positive,
+        Negative
+    };
+
+    enum class OpBits : u8 {
+        Bits64 = 1,
+        Bits32 = 0
     };
 
     union ModRM {
@@ -213,57 +225,52 @@ struct Assembler {
         u8 raw;
     };
 
-    enum class REX_W : bool {
-        No = 0,
-        Yes = 1
-    };
-
-    void emit_rex_for_OI(Operand arg, REX_W W)
+    void emit_rex_for_OI(Operand arg, OpBits bits)
     {
-        emit_rex_for_slash(arg, W);
+        emit_rex_for_slash(arg, bits);
     }
 
-    void emit_rex_for_slash(Operand arg, REX_W W)
+    void emit_rex_for_slash(Operand arg, OpBits bits)
     {
         VERIFY(arg.is_register_or_memory());
 
-        if (W == REX_W::No && to_underlying(arg.reg) < 8)
+        if (bits != OpBits::Bits64 && to_underlying(arg.reg) < 8)
             return;
 
         REX rex {
             .B = to_underlying(arg.reg) >= 8,
             .X = 0,
             .R = 0,
-            .W = to_underlying(W)
+            .W = to_underlying(bits)
         };
         emit8(rex.raw);
     }
-    void emit_rex_for_mr(Operand dst, Operand src, REX_W W)
+    void emit_rex_for_mr(Operand dst, Operand src, OpBits bits)
     {
         VERIFY(dst.is_register_or_memory());
         VERIFY(src.type == Operand::Type::Reg);
-        if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
+        if (bits != OpBits::Bits64 && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
             return;
         REX rex {
             .B = to_underlying(dst.reg) >= 8,
             .X = 0,
             .R = to_underlying(src.reg) >= 8,
-            .W = to_underlying(W)
+            .W = to_underlying(bits)
         };
         emit8(rex.raw);
     }
 
-    void emit_rex_for_rm(Operand dst, Operand src, REX_W W)
+    void emit_rex_for_rm(Operand dst, Operand src, OpBits bits)
     {
         VERIFY(src.is_register_or_memory());
         VERIFY(dst.type == Operand::Type::Reg);
-        if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
+        if (bits != OpBits::Bits64 && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
             return;
         REX rex {
             .B = to_underlying(src.reg) >= 8,
             .X = 0,
             .R = to_underlying(dst.reg) >= 8,
-            .W = to_underlying(W)
+            .W = to_underlying(bits)
         };
         emit8(rex.raw);
     }
@@ -273,18 +280,18 @@ struct Assembler {
         VERIFY(dst.type == Operand::Type::Reg);
         VERIFY(count.type == Operand::Type::Imm);
         VERIFY(count.fits_in_u8());
-        emit_rex_for_slash(dst, REX_W::Yes);
+        emit_rex_for_slash(dst, OpBits::Bits64);
         emit8(0xc1);
         emit_modrm_slash(5, dst);
         emit8(count.offset_or_immediate);
     }
 
-    void mov(Operand dst, Operand src, Patchable patchable = Patchable::No)
+    void mov(Operand dst, Operand src, OpBits bits = OpBits::Bits64, Patchable patchable = Patchable::No)
     {
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
             if (src.type == Operand::Type::Reg && src.reg == dst.reg)
                 return;
-            emit_rex_for_mr(dst, src, REX_W::Yes);
+            emit_rex_for_mr(dst, src, bits);
             emit8(0x89);
             emit_modrm_mr(dst, src, patchable);
             return;
@@ -297,26 +304,26 @@ struct Assembler {
                     // Note: Operand size does not matter here, as the result is 0-extended to 64 bit,
                     //       so we don't have to set the W flag in the REX prefix,
                     //       or use it at all in case we dont use REX addressed registers (elision is implemented in the helper)
-                    emit_rex_for_mr(dst, dst, REX_W::No);
+                    emit_rex_for_mr(dst, dst, OpBits::Bits32);
                     emit8(0x31);
                     emit_modrm_mr(dst, dst, patchable);
                     return;
                 }
                 if (src.fits_in_u32()) {
-                    emit_rex_for_OI(dst, REX_W::No);
+                    emit_rex_for_OI(dst, OpBits::Bits32);
                     emit8(0xb8 | encode_reg(dst.reg));
                     emit32(src.offset_or_immediate);
                     return;
                 }
             }
-            emit_rex_for_OI(dst, REX_W::Yes);
+            emit_rex_for_OI(dst, bits);
             emit8(0xb8 | encode_reg(dst.reg));
             emit64(src.offset_or_immediate);
             return;
         }
 
         if (dst.type == Operand::Type::Reg && src.is_register_or_memory()) {
-            emit_rex_for_rm(dst, src, REX_W::Yes);
+            emit_rex_for_rm(dst, src, bits);
             emit8(0x8b);
             emit_modrm_rm(dst, src, patchable);
             return;
@@ -406,7 +413,7 @@ struct Assembler {
 
     void jump(Operand op)
     {
-        emit_rex_for_slash(op, REX_W::No);
+        emit_rex_for_slash(op, OpBits::Bits32);
         emit8(0xff);
         emit_modrm_slash(4, op);
     }
@@ -423,16 +430,16 @@ struct Assembler {
         if (lhs.type == Operand::Type::Reg && rhs.type == Operand::Type::Imm && rhs.offset_or_immediate == 0) {
             test(lhs, lhs);
         } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Reg) {
-            emit_rex_for_mr(lhs, rhs, REX_W::Yes);
+            emit_rex_for_mr(lhs, rhs, OpBits::Bits64);
             emit8(0x39);
             emit_modrm_mr(lhs, rhs);
         } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Imm && rhs.fits_in_i8()) {
-            emit_rex_for_slash(lhs, REX_W::Yes);
+            emit_rex_for_slash(lhs, OpBits::Bits64);
             emit8(0x83);
             emit_modrm_slash(7, lhs);
             emit8(rhs.offset_or_immediate);
         } else if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Imm && rhs.fits_in_i32()) {
-            emit_rex_for_slash(lhs, REX_W::Yes);
+            emit_rex_for_slash(lhs, OpBits::Bits64);
             emit8(0x81);
             emit_modrm_slash(7, lhs);
             emit32(rhs.offset_or_immediate);
@@ -444,12 +451,12 @@ struct Assembler {
     void test(Operand lhs, Operand rhs)
     {
         if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Reg) {
-            emit_rex_for_mr(lhs, rhs, REX_W::Yes);
+            emit_rex_for_mr(lhs, rhs, OpBits::Bits64);
             emit8(0x85);
             emit_modrm_mr(lhs, rhs);
         } else if (lhs.type != Operand::Type::Imm && rhs.type == Operand::Type::Imm) {
             VERIFY(rhs.fits_in_i32());
-            emit_rex_for_slash(lhs, REX_W::Yes);
+            emit_rex_for_slash(lhs, OpBits::Bits64);
             emit8(0xf7);
             emit_modrm_slash(0, lhs);
             emit32(rhs.offset_or_immediate);
@@ -458,20 +465,24 @@ struct Assembler {
         }
     }
 
-    void jump_if(Operand lhs, Condition condition, Operand rhs, Label& label)
+    void jump_if(Condition condition, Label& label)
     {
-        cmp(lhs, rhs);
-
         emit8(0x0F);
         emit8(0x80 | to_underlying(condition));
         emit32(0xdeadbeef);
         label.add_jump(*this, m_output.size());
     }
 
+    void compare_and_jump_if(Operand lhs, Condition condition, Operand rhs, Label& label)
+    {
+        cmp(lhs, rhs);
+        jump_if(condition, label);
+    }
+
     void sign_extend_32_to_64_bits(Reg reg)
     {
         // movsxd (reg as 64-bit), (reg as 32-bit)
-        emit_rex_for_rm(Operand::Register(reg), Operand::Register(reg), REX_W::Yes);
+        emit_rex_for_rm(Operand::Register(reg), Operand::Register(reg), OpBits::Bits64);
         emit8(0x63);
         emit_modrm_rm(Operand::Register(reg), Operand::Register(reg));
     }
@@ -480,16 +491,16 @@ struct Assembler {
     {
         // and dst,src
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit_rex_for_mr(dst, src, REX_W::Yes);
+            emit_rex_for_mr(dst, src, OpBits::Bits64);
             emit8(0x21);
             emit_modrm_mr(dst, src);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit_rex_for_slash(dst, REX_W::Yes);
+            emit_rex_for_slash(dst, OpBits::Bits64);
             emit8(0x83);
             emit_modrm_slash(4, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit_rex_for_slash(dst, REX_W::Yes);
+            emit_rex_for_slash(dst, OpBits::Bits64);
             emit8(0x81);
             emit_modrm_slash(4, dst);
             emit32(src.offset_or_immediate);
@@ -502,16 +513,16 @@ struct Assembler {
     {
         // or dst,src
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit_rex_for_mr(dst, src, REX_W::Yes);
+            emit_rex_for_mr(dst, src, OpBits::Bits64);
             emit8(0x09);
             emit_modrm_mr(dst, src);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit_rex_for_slash(dst, REX_W::Yes);
+            emit_rex_for_slash(dst, OpBits::Bits64);
             emit8(0x83);
             emit_modrm_slash(1, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit_rex_for_slash(dst, REX_W::Yes);
+            emit_rex_for_slash(dst, OpBits::Bits64);
             emit8(0x81);
             emit_modrm_slash(1, dst);
             emit32(src.offset_or_immediate);
@@ -565,7 +576,7 @@ struct Assembler {
     void push(Operand op)
     {
         if (op.type == Operand::Type::Reg) {
-            emit_rex_for_OI(op, REX_W::No);
+            emit_rex_for_OI(op, OpBits::Bits32);
             emit8(0x50 | encode_reg(op.reg));
         } else if (op.type == Operand::Type::Imm) {
             if (op.fits_in_i8()) {
@@ -585,82 +596,69 @@ struct Assembler {
     void pop(Operand op)
     {
         if (op.type == Operand::Type::Reg) {
-            emit_rex_for_OI(op, REX_W::No);
+            emit_rex_for_OI(op, OpBits::Bits32);
             emit8(0x58 | encode_reg(op.reg));
         } else {
             VERIFY_NOT_REACHED();
         }
     }
 
-    void add(Operand dst, Operand src)
+    void inc_dec(Reg reg, ArithSign sign, OpBits bits)
     {
+        emit_rex_for_slash(Operand::Register(reg), bits);
+        emit8(0xff);
+        emit8(0xc0 | encode_reg(reg) | ((sign == ArithSign::Positive) ? 0 : 8));
+    }
+
+    void inc(Reg reg, OpBits bits = OpBits::Bits64)
+    {
+        inc_dec(reg, ArithSign::Positive, bits);
+    }
+
+    void dec(Reg reg, OpBits bits = OpBits::Bits64)
+    {
+        inc_dec(reg, ArithSign::Negative, bits);
+    }
+
+    void add_sub(Operand dst, Operand src, ArithSign sign, OpBits bits)
+    {
+        u8 regOp = (sign == ArithSign::Positive) ? 0x01 : 0x29;
+        u8 slash = (sign == ArithSign::Positive) ? 0 : 5;
+
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit_rex_for_mr(dst, src, REX_W::Yes);
-            emit8(0x01);
+            emit_rex_for_mr(dst, src, bits);
+            emit8(regOp);
             emit_modrm_mr(dst, src);
         } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit_rex_for_slash(dst, REX_W::Yes);
+            emit_rex_for_slash(dst, bits);
             emit8(0x83);
-            emit_modrm_slash(0, dst);
+            emit_modrm_slash(slash, dst);
             emit8(src.offset_or_immediate);
         } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit_rex_for_slash(dst, REX_W::Yes);
+            emit_rex_for_slash(dst, bits);
             emit8(0x81);
-            emit_modrm_slash(0, dst);
+            emit_modrm_slash(slash, dst);
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
         }
     }
 
-    void add32(Operand dst, Operand src, Optional<Label&> label)
+    void add(Operand dst, Operand src, OpBits bits = OpBits::Bits64)
     {
-        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit_rex_for_mr(dst, src, REX_W::No);
-            emit8(0x01);
-            emit_modrm_mr(dst, src);
-        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit_rex_for_slash(dst, REX_W::No);
-            emit8(0x83);
-            emit_modrm_slash(0, dst);
-            emit8(src.offset_or_immediate);
-        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit_rex_for_slash(dst, REX_W::No);
-            emit8(0x81);
-            emit_modrm_slash(0, dst);
-            emit32(src.offset_or_immediate);
-        } else {
-            VERIFY_NOT_REACHED();
-        }
-
-        if (label.has_value()) {
-            // jo label (RIP-relative 32-bit offset)
-            emit8(0x0f);
-            emit8(0x80);
-            emit32(0xdeadbeef);
-            label->add_jump(*this, m_output.size());
-        }
+        add_sub(dst, src, ArithSign::Positive, bits);
     }
 
-    void sub(Operand dst, Operand src)
+    void sub(Operand dst, Operand src, OpBits bits = OpBits::Bits64)
     {
-        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
-            emit_rex_for_mr(dst, src, REX_W::Yes);
-            emit8(0x29);
-            emit_modrm_mr(dst, src);
-        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
-            emit_rex_for_slash(dst, REX_W::Yes);
-            emit8(0x83);
-            emit_modrm_slash(5, dst);
-            emit8(src.offset_or_immediate);
-        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
-            emit_rex_for_slash(dst, REX_W::Yes);
-            emit8(0x81);
-            emit_modrm_slash(5, dst);
-            emit32(src.offset_or_immediate);
-        } else {
-            VERIFY_NOT_REACHED();
-        }
+        add_sub(dst, src, ArithSign::Negative, bits);
+    }
+
+    void neg(Reg reg, OpBits bits)
+    {
+        emit_rex_for_slash(Operand::Register(reg), bits);
+        emit8(0xf7);
+        emit8(0xd0 | encode_reg(reg));
     }
 
     // NOTE: It's up to the caller of this function to preserve registers as needed.
