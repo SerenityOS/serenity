@@ -145,16 +145,16 @@ u16 Maxp::num_glyphs() const
 
 ErrorOr<Hmtx> Hmtx::from_slice(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
 {
-    if (slice.size() < number_of_h_metrics * sizeof(LongHorMetric) + (num_glyphs - number_of_h_metrics) * sizeof(i16))
+    if (slice.size() < number_of_h_metrics * sizeof(LongHorMetric) + (num_glyphs - number_of_h_metrics) * sizeof(Int16))
         return Error::from_string_literal("Could not load Hmtx: Not enough data");
 
-    // The Horizontal Metrics table is LongHorMetric[number_of_h_metrics] followed by i16[num_glyphs - number_of_h_metrics];
+    // The Horizontal Metrics table is LongHorMetric[number_of_h_metrics] followed by Int16[num_glyphs - number_of_h_metrics];
     ReadonlySpan<LongHorMetric> long_hor_metrics { bit_cast<LongHorMetric*>(slice.data()), number_of_h_metrics };
-    ReadonlySpan<i16> left_side_bearings {};
+    ReadonlySpan<Int16> left_side_bearings {};
     auto number_of_left_side_bearings = num_glyphs - number_of_h_metrics;
     if (number_of_left_side_bearings > 0) {
         left_side_bearings = {
-            bit_cast<i16*>(slice.offset(number_of_h_metrics * sizeof(LongHorMetric))),
+            bit_cast<Int16*>(slice.offset(number_of_h_metrics * sizeof(LongHorMetric))),
             number_of_left_side_bearings
         };
     }
