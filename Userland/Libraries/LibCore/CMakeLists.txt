@@ -1,26 +1,19 @@
 set(SOURCES
     AnonymousBuffer.cpp
     ArgsParser.cpp
-    Command.cpp
     ConfigFile.cpp
     DateTime.cpp
     Directory.cpp
-    DirectoryEntry.cpp
-    DirIterator.cpp
     ElapsedTimer.cpp
     Event.cpp
     EventLoop.cpp
     EventLoopImplementation.cpp
-    EventLoopImplementationUnix.cpp
     EventReceiver.cpp
     File.cpp
-    LockFile.cpp
     MappedFile.cpp
     MimeData.cpp
     NetworkJob.cpp
     Notifier.cpp
-    Process.cpp
-    ProcessStatisticsReader.cpp
     Resource.cpp
     ResourceImplementation.cpp
     ResourceImplementationFile.cpp
@@ -29,12 +22,8 @@ set(SOURCES
     Socket.cpp
     SOCKSProxyClient.cpp
     StandardPaths.cpp
-    System.cpp
-    SystemServerTakeover.cpp
-    TCPServer.cpp
     ThreadEventQueue.cpp
     Timer.cpp
-    UDPServer.cpp
     Version.cpp
 )
 if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
@@ -47,6 +36,29 @@ if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
 endif()
 if (NOT WIN32 AND NOT EMSCRIPTEN)
     list(APPEND SOURCES LocalServer.cpp)
+endif()
+
+if(WIN32)
+    list(APPEND SOURCES 
+        DirectoryEntryWindows.cpp 
+        DirIteratorWindows.cpp
+        EventLoopImplementationWindows.cpp
+        SystemWindows.cpp
+    )
+else()
+    list(APPEND SOURCES 
+        Command.cpp
+        DirectoryEntry.cpp 
+        DirIterator.cpp
+        EventLoopImplementationUnix.cpp
+        LockFile.cpp
+        Process.cpp
+        ProcessStatisticsReader.cpp
+        System.cpp
+        SystemServerTakeover.cpp
+        TCPServer.cpp
+        UDPServer.cpp
+    )
 endif()
 
 # FIXME: Implement Core::FileWatcher for macOS, *BSD, and Windows.
@@ -67,6 +79,8 @@ if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")
     target_link_libraries(LibCore PUBLIC "-framework CoreServices")
     target_link_libraries(LibCore PUBLIC "-framework Foundation")
+elseif (WIN32)
+    target_link_libraries(LibCore PUBLIC ws2_32.lib)
 endif()
 
 if (ANDROID)
