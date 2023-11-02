@@ -257,7 +257,10 @@ constexpr Array<float, 3> convert_to_srgb(Array<float, 3> xyz)
         1.0572252,
     };
 
-    return matrix_multiply(conversion_matrix, xyz);
+    auto linear_srgb = matrix_multiply(conversion_matrix, xyz);
+
+    // FIXME: Use the real sRGB curve by replacing this function with Gfx::ICC::sRGB().from_pcs().
+    return { pow(linear_srgb[0], 1.0f / 2.2f), pow(linear_srgb[1], 1.0f / 2.2f), pow(linear_srgb[2], 1.0f / 2.2f) };
 }
 
 PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* document, Vector<Value>&& parameters)
