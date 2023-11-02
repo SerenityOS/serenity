@@ -37,6 +37,14 @@ public:
     void fill_rect(Gfx::FloatRect, Gfx::Color);
     void fill_rect(Gfx::IntRect, Gfx::Color);
 
+    enum class ScalingMode {
+        NearestNeighbor,
+        Bilinear,
+    };
+
+    void draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap const&, Gfx::FloatRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
+    void draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const&, Gfx::IntRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
+
     void set_canvas(Canvas& canvas) { m_canvas = canvas; }
     void flush();
 
@@ -56,6 +64,7 @@ private:
     Vector<State, 1> m_state_stack;
 
     Program m_rectangle_program;
+    Program m_blit_program;
 };
 
 }
