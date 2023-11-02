@@ -54,6 +54,9 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
     for (size_t i = 1; i < color_space_array->size(); i++)
         parameters.unchecked_append(color_space_array->at(i));
 
+    if (color_space_name == CommonNames::CalGray)
+        return TRY(CalGrayColorSpace::create(document, move(parameters)));
+
     if (color_space_name == CommonNames::CalRGB)
         return TRY(CalRGBColorSpace::create(document, move(parameters)));
 
@@ -261,6 +264,76 @@ constexpr Array<float, 3> convert_to_srgb(Array<float, 3> xyz)
 
     // FIXME: Use the real sRGB curve by replacing this function with Gfx::ICC::sRGB().from_pcs().
     return { pow(linear_srgb[0], 1.0f / 2.2f), pow(linear_srgb[1], 1.0f / 2.2f), pow(linear_srgb[2], 1.0f / 2.2f) };
+}
+
+PDFErrorOr<NonnullRefPtr<CalGrayColorSpace>> CalGrayColorSpace::create(Document* document, Vector<Value>&& parameters)
+{
+    if (parameters.size() != 1)
+        return Error { Error::Type::MalformedPDF, "Gray color space expects one parameter" };
+
+    auto param = parameters[0];
+    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
+        return Error { Error::Type::MalformedPDF, "Gray color space expects a dict parameter" };
+
+    auto dict = param.get<NonnullRefPtr<Object>>()->cast<DictObject>();
+    if (!dict->contains(CommonNames::WhitePoint))
+        return Error { Error::Type::MalformedPDF, "Gray color space expects a Whitepoint key" };
+
+    auto white_point_array = TRY(dict->get_array(document, CommonNames::WhitePoint));
+    if (white_point_array->size() != 3)
+        return Error { Error::Type::MalformedPDF, "Gray color space expects 3 Whitepoint parameters" };
+
+    auto color_space = adopt_ref(*new CalGrayColorSpace());
+
+    color_space->m_whitepoint[0] = white_point_array->at(0).to_float();
+    color_space->m_whitepoint[1] = white_point_array->at(1).to_float();
+    color_space->m_whitepoint[2] = white_point_array->at(2).to_float();
+
+    if (color_space->m_whitepoint[1] != 1.0f)
+        return Error { Error::Type::MalformedPDF, "Gray color space expects 2nd Whitepoint to be 1.0" };
+
+    if (dict->contains(CommonNames::BlackPoint)) {
+        auto black_point_array = TRY(dict->get_array(document, CommonNames::BlackPoint));
+        if (black_point_array->size() == 3) {
+            color_space->m_blackpoint[0] = black_point_array->at(0).to_float();
+            color_space->m_blackpoint[1] = black_point_array->at(1).to_float();
+            color_space->m_blackpoint[2] = black_point_array->at(2).to_float();
+        }
+    }
+
+    if (dict->contains(CommonNames::Gamma)) {
+        color_space->m_gamma = TRY(document->resolve(dict->get_value(CommonNames::Gamma))).to_float();
+    }
+
+    return color_space;
+}
+
+PDFErrorOr<Color> CalGrayColorSpace::color(ReadonlySpan<Value> arguments) const
+{
+    VERIFY(arguments.size() == 1);
+    auto a = clamp(arguments[0].to_float(), 0.0f, 1.0f);
+
+    auto ag = powf(a, m_gamma);
+
+    auto x = m_whitepoint[0] * ag;
+    auto y = m_whitepoint[1] * ag;
+    auto z = m_whitepoint[2] * ag;
+
+    auto flattened_xyz = flatten_and_normalize_whitepoint(m_whitepoint, { x, y, z });
+    auto scaled_black_point_xyz = scale_black_point(m_blackpoint, flattened_xyz);
+    auto d65_normalized = convert_to_d65(scaled_black_point_xyz);
+    auto srgb = convert_to_srgb(d65_normalized);
+
+    auto red = static_cast<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
+    auto green = static_cast<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
+    auto blue = static_cast<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
+
+    return Color(red, green, blue);
+}
+
+Vector<float> CalGrayColorSpace::default_decode() const
+{
+    return { 0.0f, 1.0f };
 }
 
 PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* document, Vector<Value>&& parameters)
