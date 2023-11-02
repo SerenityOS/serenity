@@ -90,6 +90,52 @@ bool pattern_matching_algorithm(ReadonlyBytes input, ReadonlyBytes pattern, Read
 
 ReadonlyBytes constexpr no_ignored_bytes;
 
+// https://mimesniff.spec.whatwg.org/#matching-an-image-type-pattern
+ErrorOr<Optional<MimeType>> match_an_image_type_pattern(ReadonlyBytes input)
+{
+    // 1. Execute the following steps for each row row in the following table:
+    static Array<BytePatternTableRow, 8> constexpr pattern_table {
+        // A Windows Icon signature.
+        BytePatternTableRow { "\x00\x00\x01\x00"sv, "\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "image/x-icon"sv },
+
+        // A Windows Cursor signature.
+        BytePatternTableRow { "\x00\x00\x02\x00"sv, "\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "image/x-icon"sv },
+
+        // The string "BM", a BMP signature.
+        BytePatternTableRow { "\x42\x4D"sv, "\xFF\xFF"sv, no_ignored_bytes, "image/bmp"sv },
+
+        // The string "GIF87a", a GIF signature.
+        BytePatternTableRow { "\x47\x49\x46\x38\x37\x61"sv, "\xFF\xFF\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "image/gif"sv },
+
+        // The string "GIF89a", a GIF signature.
+        BytePatternTableRow { "\x47\x49\x46\x38\x39\x61"sv, "\xFF\xFF\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "image/gif"sv },
+
+        // The string "RIFF" followed by four bytes followed by the string "WEBPVP".
+        BytePatternTableRow { "\x52\x49\x46\x46\x00\x00\x00\x00\x57\x45\x42\x50\x56\x50"sv,
+            "\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "image/webp"sv },
+
+        // An error-checking byte followed by the string "PNG" followed by CR LF SUB LF, the PNG signature.
+        BytePatternTableRow { "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"sv, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"sv, no_ignored_bytes, "image/png"sv },
+
+        // The JPEG Start of Image marker followed by the indicator byte of another marker.
+        BytePatternTableRow { "\xFF\xD8\xFF"sv, "\xFF\xFF\xFF"sv, no_ignored_bytes, "image/jpeg"sv },
+    };
+
+    for (auto const& row : pattern_table) {
+        // 1. Let patternMatched be the result of the pattern matching algorithm given input, the value in
+        //    the first column of row, the value in the second column of row, and the value in the third
+        //    column of row.
+        auto pattern_matched = pattern_matching_algorithm(input, row.byte_pattern.bytes(), row.pattern_mask.bytes(), row.ignored_leading_bytes);
+
+        // 2. If patternMatched is true, return the value in the fourth column of row.
+        if (pattern_matched)
+            return MimeType::parse(row.mime_type);
+    }
+
+    // 2. Return undefined.
+    return OptionalNone {};
+}
+
 // https://mimesniff.spec.whatwg.org/#rules-for-identifying-an-unknown-mime-type
 ErrorOr<MimeType> rules_for_identifying_an_unknown_mime_type(Resource const& resource, bool sniff_scriptable = false)
 {
@@ -208,8 +254,8 @@ ErrorOr<MimeType> rules_for_identifying_an_unknown_mime_type(Resource const& res
         }
     }
 
-    // FIXME: 3. Let matchedType be the result of executing the image type pattern matching algorithm given resource’s resource header.
-    Optional<MimeType> matched_type;
+    // 3. Let matchedType be the result of executing the image type pattern matching algorithm given resource’s resource header.
+    auto matched_type = TRY(match_an_image_type_pattern(resource.resource_header()));
 
     // 4. If matchedType is not undefined, return matchedType.
     if (matched_type.has_value())
