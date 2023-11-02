@@ -80,8 +80,10 @@ protected:
     int default_flags() const
     {
         int flags = 0;
+#if !defined(AK_OS_WINDOWS)
         if (m_prevent_sigpipe)
             flags |= MSG_NOSIGNAL;
+#endif
         return flags;
     }
 
@@ -327,8 +329,11 @@ public:
 
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
-    ErrorOr<pid_t> peer_pid() const;
     ErrorOr<Bytes> read_without_waiting(Bytes buffer);
+
+#if !defined(AK_OS_WINDOWS)
+    ErrorOr<pid_t> peer_pid() const;
+#endif
 
     /// Release the fd associated with this LocalSocket. After the fd is
     /// released, the socket will be considered "closed" and all operations done

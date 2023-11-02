@@ -18,7 +18,7 @@ ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
         socket_domain = AF_INET;
         break;
     case SocketDomain::Local:
-        socket_domain = AF_LOCAL;
+        socket_domain = AF_UNIX;
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -39,6 +39,9 @@ ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
     // Let's have a safe default of CLOEXEC. :^)
 #ifdef SOCK_CLOEXEC
     return System::socket(socket_domain, socket_type | SOCK_CLOEXEC, 0);
+#elif defined(AK_OS_WINDOWS)
+    auto fd = TRY(System::socket(socket_domain, socket_type, 0));
+    return fd;
 #else
     auto fd = TRY(System::socket(socket_domain, socket_type, 0));
     TRY(System::fcntl(fd, F_SETFD, FD_CLOEXEC));
@@ -59,6 +62,13 @@ ErrorOr<IPv4Address> Socket::resolve_host(DeprecatedString const& host, SocketTy
     default:
         VERIFY_NOT_REACHED();
     }
+
+#if defined(AK_OS_WINDOWS)
+    WSAData wsa_data;
+    auto rc = WSAStartup(MAKEWORD(2, 2), &wsa_data);
+    if (rc != 0)
+        return Error::from_windows_error(GetLastError());
+#endif
 
     struct addrinfo hints = {};
     hints.ai_family = AF_UNSPEC;
@@ -81,6 +91,7 @@ ErrorOr<IPv4Address> Socket::resolve_host(DeprecatedString const& host, SocketTy
 
 ErrorOr<void> Socket::connect_local(int fd, DeprecatedString const& path)
 {
+#if !defined(AK_OS_WINDOWS)
     auto address = SocketAddress::local(path);
     auto maybe_sockaddr = address.to_sockaddr_un();
     if (!maybe_sockaddr.has_value()) {
@@ -90,6 +101,11 @@ ErrorOr<void> Socket::connect_local(int fd, DeprecatedString const& path)
 
     auto addr = maybe_sockaddr.release_value();
     return System::connect(fd, bit_cast<struct sockaddr*>(&addr), sizeof(addr));
+#else
+    dbgln("Core::Socket::connect_local({}, \"{}\") not implemented on Windows", fd, path);
+    VERIFY_NOT_REACHED();
+    (void)fd;
+#endif
 }
 
 ErrorOr<void> Socket::connect_inet(int fd, SocketAddress const& address)
@@ -134,17 +150,25 @@ void PosixSocketHelper::close()
     if (m_notifier)
         m_notifier->set_enabled(false);
 
+#if defined(AK_OS_WINDOWS)
+    int result;
+    do {
+        result = closesocket(m_fd);
+    } while (result == SOCKET_ERROR && WSAGetLastError() == WSAEINTR);
+    VERIFY(result != SOCKET_ERROR);
+#else
     ErrorOr<void> result;
     do {
         result = System::close(m_fd);
     } while (result.is_error() && result.error().code() == EINTR);
-
     VERIFY(!result.is_error());
+#endif
     m_fd = -1;
 }
 
 ErrorOr<bool> PosixSocketHelper::can_read_without_blocking(int timeout) const
 {
+#if !defined(AK_OS_WINDOWS)
     struct pollfd the_fd = { .fd = m_fd, .events = POLLIN, .revents = 0 };
 
     ErrorOr<int> result { 0 };
@@ -156,16 +180,28 @@ ErrorOr<bool> PosixSocketHelper::can_read_without_blocking(int timeout) const
         return result.release_error();
 
     return (the_fd.revents & POLLIN) > 0;
+#else
+    (void)timeout;
+    dbgln("Core::Socket::can_read_without_blocking() not implemented on Windows");
+    VERIFY_NOT_REACHED();
+#endif
 }
 
 ErrorOr<void> PosixSocketHelper::set_blocking(bool enabled)
 {
+#if !defined(AK_OS_WINDOWS)
     int value = enabled ? 0 : 1;
     return System::ioctl(m_fd, FIONBIO, &value);
+#else
+    dbgln("Core::Socket::set_blocking({}) is not implemented on Windows", enabled);
+    VERIFY_NOT_REACHED();
+    return {};
+#endif
 }
 
 ErrorOr<void> PosixSocketHelper::set_close_on_exec(bool enabled)
 {
+#if !defined(AK_OS_WINDOWS)
     int flags = TRY(System::fcntl(m_fd, F_GETFD));
 
     if (enabled)
@@ -175,6 +211,11 @@ ErrorOr<void> PosixSocketHelper::set_close_on_exec(bool enabled)
 
     TRY(System::fcntl(m_fd, F_SETFD, flags));
     return {};
+#else
+    dbgln("Core::Socket::set_close_on_exec({}, {}) is not implemented on Windows", m_fd, enabled);
+    VERIFY_NOT_REACHED();
+    return {};
+#endif
 }
 
 ErrorOr<void> PosixSocketHelper::set_receive_timeout(Duration timeout)
@@ -280,9 +321,7 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::adopt_fd(int fd, PreventSIGPIPE
 
 ErrorOr<int> LocalSocket::receive_fd(int flags)
 {
-#if defined(AK_OS_SERENITY)
-    return Core::System::recvfd(m_helper.fd(), flags);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_GNU_HURD) || defined(AK_OS_BSD_GENERIC) || defined(AK_OS_HAIKU)
+#if !defined(AK_OS_WINDOWS)
     union {
         struct cmsghdr cmsghdr;
         char control[CMSG_SPACE(sizeof(int))];
@@ -314,8 +353,8 @@ ErrorOr<int> LocalSocket::receive_fd(int flags)
 
     return fd;
 #else
-    (void)flags;
-    return Error::from_string_literal("File descriptor passing not supported on this platform");
+    dbgln("Core::TCPSocket::receive_fd({}) not implemented on Windows", flags);
+    VERIFY_NOT_REACHED();
 #endif
 }
 
@@ -356,51 +395,59 @@ ErrorOr<void> LocalSocket::send_fd(int fd)
 #endif
 }
 
+#if !defined(AK_OS_WINDOWS)
 ErrorOr<pid_t> LocalSocket::peer_pid() const
 {
-#ifdef AK_OS_MACOS
+#    ifdef AK_OS_MACOS
     pid_t pid;
     socklen_t pid_size = sizeof(pid);
-#elif defined(AK_OS_FREEBSD)
+#    elif defined(AK_OS_FREEBSD)
     struct xucred creds = {};
     socklen_t creds_size = sizeof(creds);
-#elif defined(AK_OS_OPENBSD)
+#    elif defined(AK_OS_OPENBSD)
     struct sockpeercred creds = {};
     socklen_t creds_size = sizeof(creds);
-#elif defined(AK_OS_NETBSD)
+#    elif defined(AK_OS_NETBSD)
     struct sockcred creds = {};
     socklen_t creds_size = sizeof(creds);
-#elif defined(AK_OS_SOLARIS)
+#    elif defined(AK_OS_SOLARIS)
     ucred_t* creds = NULL;
     socklen_t creds_size = sizeof(creds);
-#elif defined(AK_OS_GNU_HURD)
+#    elif defined(AK_OS_GNU_HURD)
     return Error::from_errno(ENOTSUP);
-#else
+#    else
     struct ucred creds = {};
     socklen_t creds_size = sizeof(creds);
-#endif
+#    endif
 
-#ifdef AK_OS_MACOS
+#    ifdef AK_OS_MACOS
     TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size));
     return pid;
-#elif defined(AK_OS_FREEBSD)
+#    elif defined(AK_OS_FREEBSD)
     TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERCRED, &creds, &creds_size));
     return creds.cr_pid;
-#elif defined(AK_OS_NETBSD)
+#    elif defined(AK_OS_NETBSD)
     TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SCM_CREDS, &creds, &creds_size));
     return creds.sc_pid;
-#elif defined(AK_OS_SOLARIS)
+#    elif defined(AK_OS_SOLARIS)
     TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SO_RECVUCRED, &creds, &creds_size));
     return ucred_getpid(creds);
-#elif !defined(AK_OS_GNU_HURD)
+#    elif !defined(AK_OS_GNU_HURD)
     TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size));
     return creds.pid;
-#endif
+#    endif
 }
+#endif
 
 ErrorOr<Bytes> LocalSocket::read_without_waiting(Bytes buffer)
 {
+#if !defined(AK_OS_WINDOWS)
     return m_helper.read(buffer, MSG_DONTWAIT);
+#else
+    (void)buffer;
+    dbgln("Core::LocalSocket::read_without_waiting() not implemented on Windows");
+    VERIFY_NOT_REACHED();
+#endif
 }
 
 Optional<int> LocalSocket::fd() const
