@@ -8,7 +8,12 @@
 #include <LibJS/Contrib/Test262/AgentObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
-#include <unistd.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <unistd.h>
+#else
+#    include <windows.h>
+#endif
 
 namespace JS::Test262 {
 
@@ -39,7 +44,11 @@ JS_DEFINE_NATIVE_FUNCTION(AgentObject::monotonic_now)
 JS_DEFINE_NATIVE_FUNCTION(AgentObject::sleep)
 {
     auto milliseconds = TRY(vm.argument(0).to_i32(vm));
+#if !defined(AK_OS_WINDOWS)
     ::usleep(milliseconds * 1000);
+#else
+    ::Sleep(milliseconds);
+#endif
     return js_undefined();
 }
 
