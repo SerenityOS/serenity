@@ -583,7 +583,7 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
         VERIFY_NOT_REACHED();
     }
     case CSS::Selector::SimpleSelector::Type::Id:
-        return component.name() == element.deprecated_attribute(HTML::AttributeNames::id).view();
+        return component.name() == element.id();
     case CSS::Selector::SimpleSelector::Type::Class:
         return element.has_class(component.name());
     case CSS::Selector::SimpleSelector::Type::Attribute:
