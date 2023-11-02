@@ -16,6 +16,7 @@
 #include <AK/Forward.h>
 #include <AK/Span.h>
 #include <AK/String.h>
+#include <LibGfx/Font/OpenType/DataTypes.h>
 
 namespace OpenType {
 
@@ -24,46 +25,23 @@ enum class IndexToLocFormat {
     Offset32,
 };
 
-struct [[gnu::packed]] Fixed {
-    BigEndian<u16> integer;
-    BigEndian<u16> fraction;
-};
-static_assert(AssertSize<Fixed, 4>());
-
-struct [[gnu::packed]] LongDateTime {
-    BigEndian<u64> value;
-};
-static_assert(AssertSize<LongDateTime, 8>());
-
-struct [[gnu::packed]] Version16Dot16 {
-    BigEndian<u16> major;
-    BigEndian<u16> minor;
-};
-static_assert(AssertSize<Version16Dot16, 4>());
-
-using FWord = BigEndian<i16>;
-using UFWord = BigEndian<u16>;
-using Tag = BigEndian<u32>;
-using Offset16 = BigEndian<u16>;
-using Offset32 = BigEndian<u32>;
-
 // https://learn.microsoft.com/en-us/typography/opentype/spec/otff#table-directory
 // Table Directory (known as the Offset Table in ISO-IEC 14496-22:2019)
 struct [[gnu::packed]] TableDirectory {
-    BigEndian<u32> sfnt_version;
-    BigEndian<u16> num_tables;     // Number of tables.
-    BigEndian<u16> search_range;   // (Maximum power of 2 <= numTables) x 16.
-    BigEndian<u16> entry_selector; // Log2(maximum power of 2 <= numTables).
-    BigEndian<u16> range_shift;    // NumTables x 16 - searchRange.
+    Uint32 sfnt_version;
+    Uint16 num_tables;     // Number of tables.
+    Uint16 search_range;   // (Maximum power of 2 <= numTables) x 16.
+    Uint16 entry_selector; // Log2(maximum power of 2 <= numTables).
+    Uint16 range_shift;    // NumTables x 16 - searchRange.
 };
 static_assert(AssertSize<TableDirectory, 12>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/otff#table-directory
 struct [[gnu::packed]] TableRecord {
-    Tag table_tag;           // Table identifier.
-    BigEndian<u32> checksum; // CheckSum for this table.
-    Offset32 offset;         // Offset from beginning of TrueType font file.
-    BigEndian<u32> length;   // Length of this table.
+    Tag table_tag;   // Table identifier.
+    Uint32 checksum; // CheckSum for this table.
+    Offset32 offset; // Offset from beginning of TrueType font file.
+    Uint32 length;   // Length of this table.
 };
 static_assert(AssertSize<TableRecord, 16>());
 
@@ -99,24 +77,24 @@ public:
 
 private:
     struct [[gnu::packed]] FontHeaderTable {
-        BigEndian<u16> major_version;
-        BigEndian<u16> minor_version;
+        Uint16 major_version;
+        Uint16 minor_version;
         Fixed font_revision;
-        BigEndian<u32> checksum_adjustment;
-        BigEndian<u32> magic_number;
-        BigEndian<u16> flags;
-        BigEndian<u16> units_per_em;
+        Uint32 checksum_adjustment;
+        Uint32 magic_number;
+        Uint16 flags;
+        Uint16 units_per_em;
         LongDateTime created;
         LongDateTime modified;
-        BigEndian<i16> x_min;
-        BigEndian<i16> y_min;
-        BigEndian<i16> x_max;
-        BigEndian<i16> y_max;
-        BigEndian<u16> mac_style;
-        BigEndian<u16> lowest_rec_ppem;
-        BigEndian<i16> font_direction_hint;
-        BigEndian<i16> index_to_loc_format;
-        BigEndian<i16> glyph_data_format;
+        Int16 x_min;
+        Int16 y_min;
+        Int16 x_max;
+        Int16 y_max;
+        Uint16 mac_style;
+        Uint16 lowest_rec_ppem;
+        Int16 font_direction_hint;
+        Int16 index_to_loc_format;
+        Int16 glyph_data_format;
     };
     static_assert(AssertSize<FontHeaderTable, 54>());
 
@@ -141,8 +119,8 @@ public:
 
 private:
     struct [[gnu::packed]] HorizontalHeaderTable {
-        BigEndian<u16> major_version;
-        BigEndian<u16> minor_version;
+        Uint16 major_version;
+        Uint16 minor_version;
         FWord ascender;
         FWord descender;
         FWord line_gap;
@@ -150,12 +128,12 @@ private:
         FWord min_left_side_bearing;
         FWord min_right_side_bearing;
         FWord x_max_extent;
-        BigEndian<i16> caret_slope_rise;
-        BigEndian<i16> caret_slope_run;
-        BigEndian<i16> caret_offset;
-        BigEndian<i16> reserved[4];
-        BigEndian<i16> metric_data_format;
-        BigEndian<u16> number_of_h_metrics;
+        Int16 caret_slope_rise;
+        Int16 caret_slope_run;
+        Int16 caret_offset;
+        Int16 reserved[4];
+        Int16 metric_data_format;
+        Uint16 number_of_h_metrics;
     };
     static_assert(AssertSize<HorizontalHeaderTable, 36>());
 
@@ -178,24 +156,24 @@ public:
 private:
     struct [[gnu::packed]] Version0_5 {
         Version16Dot16 version;
-        BigEndian<u16> num_glyphs;
+        Uint16 num_glyphs;
     };
     static_assert(AssertSize<Version0_5, 6>());
 
     struct [[gnu::packed]] Version1_0 : Version0_5 {
-        BigEndian<u16> max_points;
-        BigEndian<u16> max_contours;
-        BigEndian<u16> max_composite_points;
-        BigEndian<u16> max_composite_contours;
-        BigEndian<u16> max_zones;
-        BigEndian<u16> max_twilight_points;
-        BigEndian<u16> max_storage;
-        BigEndian<u16> max_function_defs;
-        BigEndian<u16> max_instruction_defs;
-        BigEndian<u16> max_stack_elements;
-        BigEndian<u16> max_size_of_instructions;
-        BigEndian<u16> max_component_elements;
-        BigEndian<u16> max_component_depths;
+        Uint16 max_points;
+        Uint16 max_contours;
+        Uint16 max_composite_points;
+        Uint16 max_composite_contours;
+        Uint16 max_zones;
+        Uint16 max_twilight_points;
+        Uint16 max_storage;
+        Uint16 max_function_defs;
+        Uint16 max_instruction_defs;
+        Uint16 max_stack_elements;
+        Uint16 max_size_of_instructions;
+        Uint16 max_component_elements;
+        Uint16 max_component_depths;
     };
     static_assert(AssertSize<Version1_0, 32>());
 
@@ -253,19 +231,19 @@ public:
 
 private:
     struct [[gnu::packed]] LongHorMetric {
-        BigEndian<u16> advance_width;
-        BigEndian<i16> lsb;
+        Uint16 advance_width;
+        Int16 lsb;
     };
     static_assert(AssertSize<LongHorMetric, 4>());
 
-    Hmtx(ReadonlySpan<LongHorMetric> long_hor_metrics, ReadonlySpan<i16> left_side_bearings)
+    Hmtx(ReadonlySpan<LongHorMetric> long_hor_metrics, ReadonlySpan<Int16> left_side_bearings)
         : m_long_hor_metrics(long_hor_metrics)
         , m_left_side_bearings(left_side_bearings)
     {
     }
 
     ReadonlySpan<LongHorMetric> m_long_hor_metrics;
-    ReadonlySpan<i16> m_left_side_bearings;
+    ReadonlySpan<Int16> m_left_side_bearings;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/os2
@@ -287,51 +265,51 @@ public:
 
 private:
     struct [[gnu::packed]] Version0 {
-        BigEndian<u16> version;
-        BigEndian<i16> avg_char_width;
-        BigEndian<u16> us_weight_class;
-        BigEndian<u16> us_width_class;
-        BigEndian<u16> fs_type;
-        BigEndian<i16> y_subscript_x_size;
-        BigEndian<i16> y_subscript_y_size;
-        BigEndian<i16> y_subscript_x_offset;
-        BigEndian<i16> y_subscript_y_offset;
-        BigEndian<i16> y_superscript_x_size;
-        BigEndian<i16> y_superscript_y_size;
-        BigEndian<i16> y_superscript_x_offset;
-        BigEndian<i16> y_superscript_y_offset;
-        BigEndian<i16> y_strikeout_size;
-        BigEndian<i16> y_strikeout_position;
-        BigEndian<i16> s_family_class;
-        u8 panose[10];
-        BigEndian<u32> ul_unicode_range1;
-        BigEndian<u32> ul_unicode_range2;
-        BigEndian<u32> ul_unicode_range3;
-        BigEndian<u32> ul_unicode_range4;
+        Uint16 version;
+        Int16 avg_char_width;
+        Uint16 us_weight_class;
+        Uint16 us_width_class;
+        Uint16 fs_type;
+        Int16 y_subscript_x_size;
+        Int16 y_subscript_y_size;
+        Int16 y_subscript_x_offset;
+        Int16 y_subscript_y_offset;
+        Int16 y_superscript_x_size;
+        Int16 y_superscript_y_size;
+        Int16 y_superscript_x_offset;
+        Int16 y_superscript_y_offset;
+        Int16 y_strikeout_size;
+        Int16 y_strikeout_position;
+        Int16 s_family_class;
+        Uint8 panose[10];
+        Uint32 ul_unicode_range1;
+        Uint32 ul_unicode_range2;
+        Uint32 ul_unicode_range3;
+        Uint32 ul_unicode_range4;
         Tag ach_vend_id;
-        BigEndian<u16> fs_selection;
-        BigEndian<u16> fs_first_char_index;
-        BigEndian<u16> us_last_char_index;
-        BigEndian<i16> s_typo_ascender;
-        BigEndian<i16> s_typo_descender;
-        BigEndian<i16> s_typo_line_gap;
-        BigEndian<u16> us_win_ascent;
-        BigEndian<u16> us_win_descent;
+        Uint16 fs_selection;
+        Uint16 fs_first_char_index;
+        Uint16 us_last_char_index;
+        Int16 s_typo_ascender;
+        Int16 s_typo_descender;
+        Int16 s_typo_line_gap;
+        Uint16 us_win_ascent;
+        Uint16 us_win_descent;
     };
     static_assert(AssertSize<Version0, 78>());
 
     struct [[gnu::packed]] Version1 : Version0 {
-        BigEndian<u32> ul_code_page_range1;
-        BigEndian<u32> ul_code_page_range2;
+        Uint32 ul_code_page_range1;
+        Uint32 ul_code_page_range2;
     };
     static_assert(AssertSize<Version1, 86>());
 
     struct [[gnu::packed]] Version2 : Version1 {
-        BigEndian<i16> sx_height;
-        BigEndian<i16> s_cap_height;
-        BigEndian<u16> us_default_char;
-        BigEndian<u16> us_break_char;
-        BigEndian<u16> us_max_context;
+        Int16 sx_height;
+        Int16 s_cap_height;
+        Uint16 us_default_char;
+        Uint16 us_break_char;
+        Uint16 us_max_context;
     };
     static_assert(AssertSize<Version2, 96>());
 
@@ -368,19 +346,19 @@ public:
 private:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/name#name-records
     struct [[gnu::packed]] NameRecord {
-        BigEndian<u16> platform_id;
-        BigEndian<u16> encoding_id;
-        BigEndian<u16> language_id;
-        BigEndian<u16> name_id;
-        BigEndian<u16> length;
+        Uint16 platform_id;
+        Uint16 encoding_id;
+        Uint16 language_id;
+        Uint16 name_id;
+        Uint16 length;
         Offset16 string_offset;
     };
     static_assert(AssertSize<NameRecord, 12>());
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/name#naming-table-version-0
     struct [[gnu::packed]] NamingTableVersion0 {
-        BigEndian<u16> version;
-        BigEndian<u16> count;
+        Uint16 version;
+        Uint16 count;
         Offset16 storage_offset;
         // NameRecords are stored in a separate span.
         // NameRecord name_record[0];
@@ -425,30 +403,30 @@ public:
     i16 get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const;
 
     struct [[gnu::packed]] Header {
-        BigEndian<u16> version;
-        BigEndian<u16> n_tables;
+        Uint16 version;
+        Uint16 n_tables;
     };
     static_assert(AssertSize<Header, 4>());
 
     struct [[gnu::packed]] SubtableHeader {
-        BigEndian<u16> version;
-        BigEndian<u16> length;
-        BigEndian<u16> coverage;
+        Uint16 version;
+        Uint16 length;
+        Uint16 coverage;
     };
     static_assert(AssertSize<SubtableHeader, 6>());
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/kern#format-0
     struct [[gnu::packed]] Format0 {
-        BigEndian<u16> n_pairs;
-        BigEndian<u16> search_range;
-        BigEndian<u16> entry_selector;
-        BigEndian<u16> range_shift;
+        Uint16 n_pairs;
+        Uint16 search_range;
+        Uint16 entry_selector;
+        Uint16 range_shift;
     };
     static_assert(AssertSize<Format0, 8>());
 
     struct [[gnu::packed]] Format0Pair {
-        BigEndian<u16> left;
-        BigEndian<u16> right;
+        Uint16 left;
+        Uint16 right;
         FWord value;
     };
     static_assert(AssertSize<Format0Pair, 6>());
@@ -483,33 +461,33 @@ class EBLC {
 public:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/eblc#sbitlinemetrics-record
     struct [[gnu::packed]] SbitLineMetrics {
-        i8 ascender {};
-        i8 descender {};
-        u8 width_max {};
-        i8 caret_slope_numerator {};
-        i8 caret_slope_denominator {};
-        i8 caret_offset {};
-        i8 min_origin_sb {};
-        i8 min_advance_sb {};
-        i8 max_before_bl {};
-        i8 min_after_bl {};
-        i8 pad1 {};
-        i8 pad2 {};
+        Int8 ascender {};
+        Int8 descender {};
+        Uint8 width_max {};
+        Int8 caret_slope_numerator {};
+        Int8 caret_slope_denominator {};
+        Int8 caret_offset {};
+        Int8 min_origin_sb {};
+        Int8 min_advance_sb {};
+        Int8 max_before_bl {};
+        Int8 min_after_bl {};
+        Int8 pad1 {};
+        Int8 pad2 {};
     };
     static_assert(AssertSize<SbitLineMetrics, 12>());
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/eblc#indexsubtablearray
     struct [[gnu::packed]] IndexSubTableArray {
-        BigEndian<u16> first_glyph_index;
-        BigEndian<u16> last_glyph_index;
+        Uint16 first_glyph_index;
+        Uint16 last_glyph_index;
         Offset32 additional_offset_to_index_subtable;
     };
     static_assert(AssertSize<IndexSubTableArray, 8>());
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/eblc#indexsubheader
     struct [[gnu::packed]] IndexSubHeader {
-        BigEndian<u16> index_format;
-        BigEndian<u16> image_format;
+        Uint16 index_format;
+        Uint16 image_format;
         Offset32 image_data_offset;
     };
     static_assert(AssertSize<IndexSubHeader, 8>());
@@ -530,25 +508,25 @@ public:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/cblc#bitmapsize-record
     struct [[gnu::packed]] BitmapSize {
         Offset32 index_subtable_array_offset;
-        BigEndian<u32> index_tables_size;
-        BigEndian<u32> number_of_index_subtables;
-        BigEndian<u32> color_ref;
+        Uint32 index_tables_size;
+        Uint32 number_of_index_subtables;
+        Uint32 color_ref;
         EBLC::SbitLineMetrics hori;
         EBLC::SbitLineMetrics vert;
-        BigEndian<u16> start_glyph_index;
-        BigEndian<u16> end_glyph_index;
-        u8 ppem_x {};
-        u8 ppem_y {};
-        u8 bit_depth {};
-        i8 flags {};
+        Uint16 start_glyph_index;
+        Uint16 end_glyph_index;
+        Uint8 ppem_x {};
+        Uint8 ppem_y {};
+        Uint8 bit_depth {};
+        Int8 flags {};
     };
     static_assert(AssertSize<BitmapSize, 48>());
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/cblc#cblcheader
     struct [[gnu::packed]] CblcHeader {
-        BigEndian<u16> major_version;
-        BigEndian<u16> minor_version;
-        BigEndian<u32> num_sizes;
+        Uint16 major_version;
+        Uint16 minor_version;
+        Uint32 num_sizes;
         // Stored in a separate span:
         // BitmapSize bitmap_sizes[];
     };
@@ -577,11 +555,11 @@ class EBDT {
 public:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/ebdt#smallglyphmetrics
     struct [[gnu::packed]] SmallGlyphMetrics {
-        u8 height {};
-        u8 width {};
-        i8 bearing_x {};
-        i8 bearing_y {};
-        u8 advance {};
+        Uint8 height {};
+        Uint8 width {};
+        Int8 bearing_x {};
+        Int8 bearing_y {};
+        Uint8 advance {};
     };
     static_assert(AssertSize<SmallGlyphMetrics, 5>());
 };
@@ -592,16 +570,16 @@ class CBDT {
 public:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/cbdt#table-structure
     struct [[gnu::packed]] CbdtHeader {
-        BigEndian<u16> major_version;
-        BigEndian<u16> minor_version;
+        Uint16 major_version;
+        Uint16 minor_version;
     };
     static_assert(AssertSize<CbdtHeader, 4>());
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/cbdt#format-17-small-metrics-png-image-data
     struct [[gnu::packed]] Format17 {
         EBDT::SmallGlyphMetrics glyph_metrics;
-        BigEndian<u32> data_len;
-        u8 data[];
+        Uint32 data_len;
+        Uint8 data[];
     };
     static_assert(AssertSize<Format17, 9>());
 
@@ -628,7 +606,7 @@ static_assert(AssertSize<FeatureRecord, 6>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#feature-list-table
 struct [[gnu::packed]] FeatureList {
-    BigEndian<u16> feature_count;
+    Uint16 feature_count;
     FeatureRecord feature_records[];
 };
 static_assert(AssertSize<FeatureList, 2>());
@@ -636,63 +614,63 @@ static_assert(AssertSize<FeatureList, 2>());
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#feature-table
 struct [[gnu::packed]] Feature {
     Offset16 feature_params_offset;
-    BigEndian<u16> lookup_index_count;
-    BigEndian<u16> lookup_list_indices[];
+    Uint16 lookup_index_count;
+    Uint16 lookup_list_indices[];
 };
 static_assert(AssertSize<Feature, 4>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#lookup-table
 struct [[gnu::packed]] Lookup {
-    BigEndian<u16> lookup_type;
-    BigEndian<u16> lookup_flag;
-    BigEndian<u16> subtable_count;
+    Uint16 lookup_type;
+    Uint16 lookup_flag;
+    Uint16 subtable_count;
     Offset16 subtable_offsets[];
 };
 static_assert(AssertSize<Lookup, 6>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#lookup-list-table
 struct [[gnu::packed]] LookupList {
-    BigEndian<u16> lookup_count;
+    Uint16 lookup_count;
     Offset16 lookup_offsets[];
 };
 static_assert(AssertSize<LookupList, 2>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-1
 struct [[gnu::packed]] CoverageFormat1 {
-    BigEndian<u16> coverage_format;
-    BigEndian<u16> glyph_count;
-    BigEndian<u16> glyph_array[];
+    Uint16 coverage_format;
+    Uint16 glyph_count;
+    Uint16 glyph_array[];
 };
 static_assert(AssertSize<CoverageFormat1, 4>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-2
 struct [[gnu::packed]] RangeRecord {
-    BigEndian<u16> start_glyph_id;
-    BigEndian<u16> end_glyph_id;
-    BigEndian<u16> start_coverage_index;
+    Uint16 start_glyph_id;
+    Uint16 end_glyph_id;
+    Uint16 start_coverage_index;
 };
 static_assert(AssertSize<RangeRecord, 6>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-2
 struct [[gnu::packed]] CoverageFormat2 {
-    BigEndian<u16> coverage_format;
-    BigEndian<u16> range_count;
+    Uint16 coverage_format;
+    Uint16 range_count;
     RangeRecord range_records[];
 };
 static_assert(AssertSize<CoverageFormat2, 4>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#class-definition-table-format-2
 struct [[gnu::packed]] ClassRangeRecord {
-    BigEndian<u16> start_glyph_id;
-    BigEndian<u16> end_glyph_id;
-    BigEndian<u16> class_;
+    Uint16 start_glyph_id;
+    Uint16 end_glyph_id;
+    Uint16 class_;
 };
 static_assert(AssertSize<ClassRangeRecord, 6>());
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#class-definition-table-format-2
 struct [[gnu::packed]] ClassDefFormat2 {
-    BigEndian<u16> class_format;
-    BigEndian<u16> class_range_count;
+    Uint16 class_format;
+    Uint16 class_range_count;
     ClassRangeRecord class_range_records[];
 };
 static_assert(AssertSize<ClassDefFormat2, 4>());
@@ -702,8 +680,8 @@ class GPOS {
 public:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#gpos-header
     struct [[gnu::packed]] Version1_0 {
-        BigEndian<u16> major_version;
-        BigEndian<u16> minor_version;
+        Uint16 major_version;
+        Uint16 minor_version;
         Offset16 script_list_offset;
         Offset16 feature_list_offset;
         Offset16 lookup_list_offset;
@@ -712,21 +690,21 @@ public:
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-1-adjustments-for-glyph-pairs
     struct [[gnu::packed]] PairPosFormat1 {
-        BigEndian<u16> pos_format;
+        Uint16 pos_format;
         Offset16 coverage_offset;
-        BigEndian<u16> value_format1;
-        BigEndian<u16> value_format2;
-        BigEndian<u16> pair_set_count;
+        Uint16 value_format1;
+        Uint16 value_format2;
+        Uint16 pair_set_count;
         Offset16 pair_set_offsets[];
     };
     static_assert(AssertSize<PairPosFormat1, 10>());
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#value-record
     struct [[gnu::packed]] ValueRecord {
-        BigEndian<i16> x_placement;
-        BigEndian<i16> y_placement;
-        BigEndian<i16> x_advance;
-        BigEndian<i16> y_advance;
+        Int16 x_placement;
+        Int16 y_placement;
+        Int16 x_advance;
+        Int16 y_advance;
         Offset16 x_placement_device_offset;
         Offset16 y_placement_device_offset;
         Offset16 x_advance_device_offset;
@@ -736,14 +714,14 @@ public:
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
     struct [[gnu::packed]] PairPosFormat2 {
-        BigEndian<u16> pos_format;
+        Uint16 pos_format;
         Offset16 coverage_offset;
-        BigEndian<u16> value_format1;
-        BigEndian<u16> value_format2;
+        Uint16 value_format1;
+        Uint16 value_format2;
         Offset16 class_def1_offset;
         Offset16 class_def2_offset;
-        BigEndian<u16> class1_count;
-        BigEndian<u16> class2_count;
+        Uint16 class1_count;
+        Uint16 class2_count;
     };
     static_assert(AssertSize<PairPosFormat2, 16>());
 
