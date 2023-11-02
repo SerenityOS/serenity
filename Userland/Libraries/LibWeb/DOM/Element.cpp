@@ -995,7 +995,7 @@ void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilde
         auto object = MUST(children_array.add_object());
         MUST(object.add("name"sv, DeprecatedString::formatted("::{}", CSS::pseudo_element_name(static_cast<CSS::Selector::PseudoElement>(i)))));
         MUST(object.add("type"sv, "pseudo-element"));
-        MUST(object.add("parent-id"sv, id()));
+        MUST(object.add("parent-id"sv, unique_id()));
         MUST(object.add("pseudo-element"sv, i));
         MUST(object.finish());
     }
