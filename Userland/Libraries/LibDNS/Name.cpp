@@ -21,14 +21,14 @@ Name::Name(DeprecatedString const& name)
         m_name = name;
 }
 
-Name Name::parse(u8 const* data, size_t& offset, size_t max_offset, size_t recursion_level)
+Name Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_level)
 {
     if (recursion_level > 4)
         return {};
 
     StringBuilder builder;
     while (true) {
-        if (offset >= max_offset)
+        if (offset >= data.size())
             return {};
         u8 b = data[offset++];
         if (b == '\0') {
@@ -36,17 +36,17 @@ Name Name::parse(u8 const* data, size_t& offset, size_t max_offset, size_t recur
             return builder.to_deprecated_string();
         } else if ((b & 0xc0) == 0xc0) {
             // The two bytes tell us the offset when to continue from.
-            if (offset >= max_offset)
+            if (offset >= data.size())
                 return {};
             size_t dummy = (b & 0x3f) << 8 | data[offset++];
-            auto rest_of_name = parse(data, dummy, max_offset, recursion_level + 1);
+            auto rest_of_name = parse(data, dummy, recursion_level + 1);
             builder.append(rest_of_name.as_string());
             return builder.to_deprecated_string();
         } else {
             // This is the length of a part.
-            if (offset + b >= max_offset)
+            if (offset + b >= data.size())
                 return {};
-            builder.append((char const*)&data[offset], (size_t)b);
+            builder.append({ data.offset_pointer(offset), b });
             builder.append('.');
             offset += b;
         }

@@ -263,13 +263,13 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString 
     TRY(udp_socket->write_until_depleted(buffer));
 
     u8 response_buffer[4096];
-    int nrecv = TRY(udp_socket->read_some({ response_buffer, sizeof(response_buffer) })).size();
+    auto nrecv = TRY(udp_socket->read_some({ response_buffer, sizeof(response_buffer) })).size();
     if (udp_socket->is_eof())
         return Vector<Answer> {};
 
     did_get_response = true;
 
-    auto o_response = Packet::from_raw_packet(response_buffer, nrecv);
+    auto o_response = Packet::from_raw_packet({ response_buffer, nrecv });
     if (!o_response.has_value())
         return Vector<Answer> {};
 
