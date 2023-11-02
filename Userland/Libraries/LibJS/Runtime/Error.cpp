@@ -93,6 +93,9 @@ void Error::populate_stack()
 
 String Error::stack_string(CompactTraceback compact) const
 {
+    if (m_traceback.is_empty())
+        return {};
+
     StringBuilder stack_string_builder;
 
     // Note: We roughly follow V8's formatting
