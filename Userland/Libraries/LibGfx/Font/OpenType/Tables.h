@@ -675,6 +675,20 @@ struct [[gnu::packed]] ClassDefFormat2 {
 };
 static_assert(AssertSize<ClassDefFormat2, 4>());
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#script-list-table-and-script-record
+struct [[gnu::packed]] ScriptRecord {
+    Tag script_tag;
+    Offset16 script_offset;
+};
+static_assert(AssertSize<ScriptRecord, 6>());
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#script-list-table-and-script-record
+struct [[gnu::packed]] ScriptList {
+    Uint16 script_count;
+    ScriptRecord script_records[];
+};
+static_assert(AssertSize<ScriptList, 2>());
+
 // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#gpos-header
 class GPOS {
 public:
@@ -736,19 +750,37 @@ public:
         Y_ADVANCE_DEVICE = 0x0080,
     };
 
-    Version1_0 const& header() const { return *bit_cast<Version1_0 const*>(m_slice.data()); }
-
     Optional<i16> glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const;
 
-    static ErrorOr<GPOS> from_slice(ReadonlyBytes slice) { return GPOS { slice }; }
+    static ErrorOr<GPOS> from_slice(ReadonlyBytes);
 
 private:
-    GPOS(ReadonlyBytes slice)
+    GPOS(ReadonlyBytes slice, Version1_0 const& header,
+        ScriptList const& script_list, ReadonlySpan<ScriptRecord> script_records,
+        FeatureList const& feature_list, ReadonlySpan<FeatureRecord> feature_records,
+        LookupList const& lookup_list, ReadonlySpan<Offset16> lookup_offsets)
         : m_slice(slice)
+        , m_header(header)
+        , m_script_list(script_list)
+        , m_script_records(script_records)
+        , m_feature_list(feature_list)
+        , m_feature_records(feature_records)
+        , m_lookup_list(lookup_list)
+        , m_lookup_offsets(lookup_offsets)
     {
     }
 
     ReadonlyBytes m_slice;
+    Version1_0 const& m_header;
+
+    ScriptList const& m_script_list;
+    ReadonlySpan<ScriptRecord> m_script_records;
+
+    FeatureList const& m_feature_list;
+    ReadonlySpan<FeatureRecord> m_feature_records;
+
+    LookupList const& m_lookup_list;
+    ReadonlySpan<Offset16> m_lookup_offsets;
 };
 }
 
@@ -767,6 +799,34 @@ struct Traits<OpenType::Kern::Format0 const> : public GenericTraits<OpenType::Ke
 };
 template<>
 struct Traits<OpenType::Kern::Format0Pair const> : public GenericTraits<OpenType::Kern::Format0Pair const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+struct Traits<OpenType::GPOS::Version1_0 const> : public GenericTraits<OpenType::GPOS::Version1_0 const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+struct Traits<OpenType::FeatureList const> : public GenericTraits<OpenType::FeatureList const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+template<>
+struct Traits<OpenType::FeatureRecord const> : public GenericTraits<OpenType::FeatureRecord const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+struct Traits<OpenType::LookupList const> : public GenericTraits<OpenType::LookupList const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+struct Traits<OpenType::ScriptList const> : public GenericTraits<OpenType::ScriptList const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+template<>
+struct Traits<OpenType::ScriptRecord const> : public GenericTraits<OpenType::ScriptRecord const> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 }
