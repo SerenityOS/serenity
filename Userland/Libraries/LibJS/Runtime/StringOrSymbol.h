@@ -59,8 +59,8 @@ public:
     }
 
     ALWAYS_INLINE bool is_valid() const { return m_ptr != nullptr; }
-    ALWAYS_INLINE bool is_symbol() const { return is_valid() && (bits() & 1ul); }
-    ALWAYS_INLINE bool is_string() const { return is_valid() && !(bits() & 1ul); }
+    ALWAYS_INLINE bool is_symbol() const { return is_valid() && (bits() & 1ULL); }
+    ALWAYS_INLINE bool is_string() const { return is_valid() && !(bits() & 1ULL); }
 
     ALWAYS_INLINE DeprecatedFlyString as_string() const
     {
@@ -71,7 +71,7 @@ public:
     ALWAYS_INLINE Symbol const* as_symbol() const
     {
         VERIFY(is_symbol());
-        return reinterpret_cast<Symbol const*>(bits() & ~1ul);
+        return reinterpret_cast<Symbol const*>(bits() & ~1ULL);
     }
 
     DeprecatedString to_display_string() const
@@ -139,7 +139,7 @@ private:
 
     ALWAYS_INLINE void set_symbol_flag()
     {
-        m_ptr = reinterpret_cast<void const*>(bits() | 1ul);
+        m_ptr = reinterpret_cast<void const*>(bits() | 1ULL);
     }
 
     ALWAYS_INLINE StringImpl const& as_string_impl() const
