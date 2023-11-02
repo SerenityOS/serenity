@@ -542,7 +542,7 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
     switch (component.type) {
     case CSS::Selector::SimpleSelector::Type::Universal:
     case CSS::Selector::SimpleSelector::Type::TagName: {
-        auto qualified_name = component.qualified_name();
+        auto const& qualified_name = component.qualified_name();
 
         // Reject if the tag name doesn't match
         if (component.type == CSS::Selector::SimpleSelector::Type::TagName) {
