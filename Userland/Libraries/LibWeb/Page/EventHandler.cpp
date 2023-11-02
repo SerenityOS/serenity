@@ -312,7 +312,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                         };
 
                         if (auto* page = m_browsing_context->page())
-                            page->did_request_media_context_menu(media_element.id(), m_browsing_context->to_top_level_position(position), "", modifiers, move(menu));
+                            page->did_request_media_context_menu(media_element.unique_id(), m_browsing_context->to_top_level_position(position), "", modifiers, move(menu));
                     } else if (auto* page = m_browsing_context->page()) {
                         page->client().page_did_request_context_menu(m_browsing_context->to_top_level_position(position));
                     }
