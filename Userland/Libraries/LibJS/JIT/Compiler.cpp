@@ -1685,6 +1685,45 @@ void Compiler::compile_async_iterator_close(Bytecode::Op::AsyncIteratorClose con
     check_exception();
 }
 
+static Value cxx_continuation(VM& vm, Value value, Value continuation, Value is_await)
+{
+    auto object = Object::create(*vm.current_realm(), nullptr);
+    object->define_direct_property("result", value.value_or(js_undefined()), JS::default_attributes);
+    object->define_direct_property("continuation", continuation, JS::default_attributes);
+    object->define_direct_property("isAwait", is_await, JS::default_attributes);
+    return object;
+}
+
+void Compiler::compile_continuation(Optional<Bytecode::Label> continuation, bool is_await)
+{
+    load_accumulator(ARG1);
+    if (continuation.has_value()) {
+        // FIXME: If we get a pointer, which is not accurately representable as a double
+        //        will cause this to explode
+        auto continuation_value = Value(static_cast<double>(bit_cast<u64>(&continuation->block())));
+        m_assembler.mov(
+            Assembler::Operand::Register(ARG2),
+            Assembler::Operand::Imm(continuation_value.encoded()));
+    } else {
+        m_assembler.mov(
+            Assembler::Operand::Register(ARG2),
+            Assembler::Operand::Imm(Value(0).encoded()));
+    }
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Operand::Imm(Value(is_await).encoded()));
+    native_call((void*)cxx_continuation);
+    store_vm_register(Bytecode::Register::return_value(), RET);
+
+    // FIXME: This should run the finalizer if it is a return
+    jump_to_exit();
+}
+
+void Compiler::compile_yield(Bytecode::Op::Yield const& op)
+{
+    compile_continuation(op.continuation(), false);
+}
+
 void Compiler::jump_to_exit()
 {
     m_assembler.jump(m_exit_label);
