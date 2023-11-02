@@ -122,6 +122,11 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
 #elif ARCH(AARCH64)
             (void)force_pio;
             TODO_AARCH64();
+#elif ARCH(RISCV64)
+            (void)force_pio;
+            if (subclass_code == SubclassID::IDEController && kernel_command_line().is_ide_enabled()) {
+                TODO_RISCV64();
+            }
 #else
 #    error Unknown architecture
 #endif

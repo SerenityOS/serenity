@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
