@@ -424,7 +424,6 @@ public:
     static ErrorOr<Kern> from_slice(ReadonlyBytes);
     i16 get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const;
 
-private:
     struct [[gnu::packed]] Header {
         BigEndian<u16> version;
         BigEndian<u16> n_tables;
@@ -454,18 +453,28 @@ private:
     };
     static_assert(AssertSize<Format0Pair, 6>());
 
-    Header const& header() const { return *bit_cast<Header const*>(m_slice.data()); }
+private:
+    // Non-spec structs for easier reference
+    struct Format0Table {
+        Format0 const& header;
+        ReadonlySpan<Format0Pair> pairs;
+    };
+    struct UnsupportedTable { };
+    struct Subtable {
+        SubtableHeader const& header;
+        Variant<Format0Table, UnsupportedTable> table;
+    };
 
-    Kern(ReadonlyBytes slice, FixedArray<size_t> subtable_offsets)
-        : m_slice(slice)
-        , m_subtable_offsets(move(subtable_offsets))
+    Kern(Header const& header, Vector<Subtable> subtables)
+        : m_header(header)
+        , m_subtables(move(subtables))
     {
     }
 
-    static Optional<i16> read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_glyph_id, u16 right_glyph_id);
+    static Optional<i16> read_glyph_kerning_format0(Format0Table const& format0, u16 left_glyph_id, u16 right_glyph_id);
 
-    ReadonlyBytes m_slice;
-    FixedArray<size_t> m_subtable_offsets;
+    Header const& m_header;
+    Vector<Subtable> const m_subtables;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/eblc
@@ -762,5 +771,24 @@ private:
     }
 
     ReadonlyBytes m_slice;
+};
+}
+
+namespace AK {
+template<>
+struct Traits<OpenType::Kern::Header const> : public GenericTraits<OpenType::Kern::Header const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+template<>
+struct Traits<OpenType::Kern::SubtableHeader const> : public GenericTraits<OpenType::Kern::SubtableHeader const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+template<>
+struct Traits<OpenType::Kern::Format0 const> : public GenericTraits<OpenType::Kern::Format0 const> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+template<>
+struct Traits<OpenType::Kern::Format0Pair const> : public GenericTraits<OpenType::Kern::Format0Pair const> {
+    static constexpr bool is_trivially_serializable() { return true; }
 };
 }
