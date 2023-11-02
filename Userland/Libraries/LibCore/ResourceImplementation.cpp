@@ -90,11 +90,19 @@ String ResourceImplementation::filesystem_path(Resource const& resource)
 // Note: This is a copy of the impl in LibFilesystem, but we can't link that to LibCore
 bool ResourceImplementation::is_directory(StringView filesystem_path)
 {
+#ifndef AK_OS_WINDOWS
     auto st_or_error = System::stat(filesystem_path);
     if (st_or_error.is_error())
         return false;
     auto st = st_or_error.release_value();
     return S_ISDIR(st.st_mode);
+#else
+    auto attr = GetFileAttributes(filesystem_path.to_deprecated_string().characters());
+    if (attr == INVALID_FILE_ATTRIBUTES)
+        return false;
+
+    return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0u;
+#endif
 }
 
 }
