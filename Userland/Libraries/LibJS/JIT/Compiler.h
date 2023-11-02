@@ -140,7 +140,8 @@ private:
         O(HasPrivateId, has_private_id)                                          \
         O(PutByValueWithThis, put_by_value_with_this)                            \
         O(CopyObjectExcludingProperties, copy_object_excluding_properties)       \
-        O(AsyncIteratorClose, async_iterator_close)
+        O(AsyncIteratorClose, async_iterator_close)                              \
+        O(Yield, yield)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case, ...) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
@@ -160,6 +161,7 @@ private:
     void store_accumulator(Assembler::Reg);
 
     void compile_to_boolean(Assembler::Reg dst, Assembler::Reg src);
+    void compile_continuation(Optional<Bytecode::Label>, bool is_await);
 
     void check_exception();
     void handle_exception();
