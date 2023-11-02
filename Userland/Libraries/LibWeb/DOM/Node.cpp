@@ -1544,14 +1544,8 @@ void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedStrin
     OrderedHashMap<MutationObserver*, Optional<DeprecatedString>> interested_observers;
 
     // 2. Let nodes be the inclusive ancestors of target.
-    Vector<JS::Handle<Node const>> nodes;
-    nodes.append(JS::make_handle(*this));
-
-    for (auto* parent_node = parent(); parent_node; parent_node = parent_node->parent())
-        nodes.append(JS::make_handle(*parent_node));
-
     // 3. For each node in nodes, and then for each registered of node’s registered observer list:
-    for (auto& node : nodes) {
+    for (auto* node = this; node; node = node->parent()) {
         for (auto& registered_observer : node->m_registered_observer_list) {
             // 1. Let options be registered’s options.
             auto& options = registered_observer->options();
@@ -1563,7 +1557,7 @@ void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedStrin
             //      - type is "characterData" and options["characterData"] either does not exist or is false
             //      - type is "childList" and options["childList"] is false
             //    then:
-            if (!(node.ptr() != this && !options.subtree)
+            if (!(node != this && !options.subtree)
                 && !(type == MutationType::attributes && (!options.attributes.has_value() || !options.attributes.value()))
                 && !(type == MutationType::attributes && options.attribute_filter.has_value() && (attribute_namespace.has_value() || !options.attribute_filter->contains_slow(attribute_name.value_or("").view())))
                 && !(type == MutationType::characterData && (!options.character_data.has_value() || !options.character_data.value()))
