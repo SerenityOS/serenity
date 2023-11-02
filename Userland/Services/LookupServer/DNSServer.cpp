@@ -29,7 +29,7 @@ ErrorOr<void> DNSServer::handle_client()
 {
     sockaddr_in client_address;
     auto buffer = TRY(receive(1024, client_address));
-    auto optional_request = Packet::from_raw_packet(buffer.data(), buffer.size());
+    auto optional_request = Packet::from_raw_packet(buffer);
     if (!optional_request.has_value()) {
         dbgln("Got an invalid DNS packet");
         return {};
