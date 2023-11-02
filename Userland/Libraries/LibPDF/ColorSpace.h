@@ -193,6 +193,10 @@ public:
 
 private:
     LabColorSpace() = default;
+
+    Array<float, 3> m_whitepoint { 0, 0, 0 };
+    Array<float, 3> m_blackpoint { 0, 0, 0 };
+    Array<float, 4> m_range { -100, 100, -100, 100 };
 };
 
 class SeparationColorSpace final : public ColorSpace {

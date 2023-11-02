@@ -506,24 +506,90 @@ Vector<float> ICCBasedColorSpace::default_decode() const
     }
 }
 
-PDFErrorOr<NonnullRefPtr<LabColorSpace>> LabColorSpace::create(Document*, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<LabColorSpace>> LabColorSpace::create(Document* document, Vector<Value>&& parameters)
 {
     if (parameters.size() != 1)
         return Error { Error::Type::MalformedPDF, "Lab color space expects one parameter" };
 
+    auto param = parameters[0];
+    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
+        return Error { Error::Type::MalformedPDF, "Lab color space expects a dict parameter" };
+
+    auto dict = param.get<NonnullRefPtr<Object>>()->cast<DictObject>();
+    if (!dict->contains(CommonNames::WhitePoint))
+        return Error { Error::Type::MalformedPDF, "Lab color space expects a Whitepoint key" };
+
+    auto white_point_array = TRY(dict->get_array(document, CommonNames::WhitePoint));
+    if (white_point_array->size() != 3)
+        return Error { Error::Type::MalformedPDF, "Lab color space expects 3 Whitepoint parameters" };
+
     auto color_space = adopt_ref(*new LabColorSpace());
-    // FIXME: Implement.
+
+    color_space->m_whitepoint[0] = white_point_array->at(0).to_float();
+    color_space->m_whitepoint[1] = white_point_array->at(1).to_float();
+    color_space->m_whitepoint[2] = white_point_array->at(2).to_float();
+
+    if (color_space->m_whitepoint[1] != 1.0f)
+        return Error { Error::Type::MalformedPDF, "Lab color space expects 2nd Whitepoint to be 1.0" };
+
+    if (dict->contains(CommonNames::BlackPoint)) {
+        auto black_point_array = TRY(dict->get_array(document, CommonNames::BlackPoint));
+        if (black_point_array->size() == 3) {
+            color_space->m_blackpoint[0] = black_point_array->at(0).to_float();
+            color_space->m_blackpoint[1] = black_point_array->at(1).to_float();
+            color_space->m_blackpoint[2] = black_point_array->at(2).to_float();
+        }
+    }
+
+    if (dict->contains(CommonNames::Range)) {
+        auto range_array = TRY(dict->get_array(document, CommonNames::Range));
+        if (range_array->size() == 4) {
+            color_space->m_range[0] = range_array->at(0).to_float();
+            color_space->m_range[1] = range_array->at(1).to_float();
+            color_space->m_range[2] = range_array->at(2).to_float();
+            color_space->m_range[3] = range_array->at(3).to_float();
+        }
+    }
+
     return color_space;
 }
 
-PDFErrorOr<Color> LabColorSpace::color(ReadonlySpan<Value>) const
+PDFErrorOr<Color> LabColorSpace::color(ReadonlySpan<Value> arguments) const
 {
-    return Error::rendering_unsupported_error("Lab color spaces not yet implemented");
+    VERIFY(arguments.size() == 3);
+    auto L_star = clamp(arguments[0].to_float(), 0.0f, 100.0f);
+    auto a_star = clamp(arguments[1].to_float(), m_range[0], m_range[1]);
+    auto b_star = clamp(arguments[2].to_float(), m_range[2], m_range[3]);
+
+    auto L = (L_star + 16) / 116 + a_star / 500;
+    auto M = (L_star + 16) / 116;
+    auto N = (L_star + 16) / 116 - b_star / 200;
+
+    auto g = [](float x) {
+        if (x >= 6.0f / 29.0f)
+            return powf(x, 3);
+        return 108.0f / 841.0f * (x - 4.0f / 29.0f);
+    };
+
+    auto x = m_whitepoint[0] * g(L);
+    auto y = m_whitepoint[1] * g(M);
+    auto z = m_whitepoint[2] * g(N);
+
+    auto flattened_xyz = flatten_and_normalize_whitepoint(m_whitepoint, { x, y, z });
+    auto scaled_black_point_xyz = scale_black_point(m_blackpoint, flattened_xyz);
+    auto d65_normalized = convert_to_d65(scaled_black_point_xyz);
+    auto srgb = convert_to_srgb(d65_normalized);
+
+    auto red = static_cast<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
+    auto green = static_cast<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
+    auto blue = static_cast<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
+
+    return Color(red, green, blue);
 }
 
 Vector<float> LabColorSpace::default_decode() const
 {
-    return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
+    return { 0.0f, 100.0f, m_range[0], m_range[1], m_range[2], m_range[3] };
 }
 
 PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document*, Vector<Value>&&)
