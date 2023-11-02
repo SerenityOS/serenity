@@ -183,68 +183,6 @@ DeviceNColorSpace::DeviceNColorSpace(size_t number_of_components)
 {
 }
 
-PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* document, Vector<Value>&& parameters)
-{
-    if (parameters.size() != 1)
-        return Error { Error::Type::MalformedPDF, "RGB color space expects one parameter" };
-
-    auto param = parameters[0];
-    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
-        return Error { Error::Type::MalformedPDF, "RGB color space expects a dict parameter" };
-
-    auto dict = param.get<NonnullRefPtr<Object>>()->cast<DictObject>();
-    if (!dict->contains(CommonNames::WhitePoint))
-        return Error { Error::Type::MalformedPDF, "RGB color space expects a Whitepoint key" };
-
-    auto white_point_array = TRY(dict->get_array(document, CommonNames::WhitePoint));
-    if (white_point_array->size() != 3)
-        return Error { Error::Type::MalformedPDF, "RGB color space expects 3 Whitepoint parameters" };
-
-    auto color_space = adopt_ref(*new CalRGBColorSpace());
-
-    color_space->m_whitepoint[0] = white_point_array->at(0).to_float();
-    color_space->m_whitepoint[1] = white_point_array->at(1).to_float();
-    color_space->m_whitepoint[2] = white_point_array->at(2).to_float();
-
-    if (color_space->m_whitepoint[1] != 1.0f)
-        return Error { Error::Type::MalformedPDF, "RGB color space expects 2nd Whitepoint to be 1.0" };
-
-    if (dict->contains(CommonNames::BlackPoint)) {
-        auto black_point_array = TRY(dict->get_array(document, CommonNames::BlackPoint));
-        if (black_point_array->size() == 3) {
-            color_space->m_blackpoint[0] = black_point_array->at(0).to_float();
-            color_space->m_blackpoint[1] = black_point_array->at(1).to_float();
-            color_space->m_blackpoint[2] = black_point_array->at(2).to_float();
-        }
-    }
-
-    if (dict->contains(CommonNames::Gamma)) {
-        auto gamma_array = TRY(dict->get_array(document, CommonNames::Gamma));
-        if (gamma_array->size() == 3) {
-            color_space->m_gamma[0] = gamma_array->at(0).to_float();
-            color_space->m_gamma[1] = gamma_array->at(1).to_float();
-            color_space->m_gamma[2] = gamma_array->at(2).to_float();
-        }
-    }
-
-    if (dict->contains(CommonNames::Matrix)) {
-        auto matrix_array = TRY(dict->get_array(document, CommonNames::Matrix));
-        if (matrix_array->size() == 9) {
-            color_space->m_matrix[0] = matrix_array->at(0).to_float();
-            color_space->m_matrix[1] = matrix_array->at(1).to_float();
-            color_space->m_matrix[2] = matrix_array->at(2).to_float();
-            color_space->m_matrix[3] = matrix_array->at(3).to_float();
-            color_space->m_matrix[4] = matrix_array->at(4).to_float();
-            color_space->m_matrix[5] = matrix_array->at(5).to_float();
-            color_space->m_matrix[6] = matrix_array->at(6).to_float();
-            color_space->m_matrix[7] = matrix_array->at(7).to_float();
-            color_space->m_matrix[8] = matrix_array->at(8).to_float();
-        }
-    }
-
-    return color_space;
-}
-
 constexpr Array<float, 3> matrix_multiply(Array<float, 9> a, Array<float, 3> b)
 {
     return Array<float, 3> {
@@ -320,6 +258,68 @@ constexpr Array<float, 3> convert_to_srgb(Array<float, 3> xyz)
     };
 
     return matrix_multiply(conversion_matrix, xyz);
+}
+
+PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* document, Vector<Value>&& parameters)
+{
+    if (parameters.size() != 1)
+        return Error { Error::Type::MalformedPDF, "RGB color space expects one parameter" };
+
+    auto param = parameters[0];
+    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
+        return Error { Error::Type::MalformedPDF, "RGB color space expects a dict parameter" };
+
+    auto dict = param.get<NonnullRefPtr<Object>>()->cast<DictObject>();
+    if (!dict->contains(CommonNames::WhitePoint))
+        return Error { Error::Type::MalformedPDF, "RGB color space expects a Whitepoint key" };
+
+    auto white_point_array = TRY(dict->get_array(document, CommonNames::WhitePoint));
+    if (white_point_array->size() != 3)
+        return Error { Error::Type::MalformedPDF, "RGB color space expects 3 Whitepoint parameters" };
+
+    auto color_space = adopt_ref(*new CalRGBColorSpace());
+
+    color_space->m_whitepoint[0] = white_point_array->at(0).to_float();
+    color_space->m_whitepoint[1] = white_point_array->at(1).to_float();
+    color_space->m_whitepoint[2] = white_point_array->at(2).to_float();
+
+    if (color_space->m_whitepoint[1] != 1.0f)
+        return Error { Error::Type::MalformedPDF, "RGB color space expects 2nd Whitepoint to be 1.0" };
+
+    if (dict->contains(CommonNames::BlackPoint)) {
+        auto black_point_array = TRY(dict->get_array(document, CommonNames::BlackPoint));
+        if (black_point_array->size() == 3) {
+            color_space->m_blackpoint[0] = black_point_array->at(0).to_float();
+            color_space->m_blackpoint[1] = black_point_array->at(1).to_float();
+            color_space->m_blackpoint[2] = black_point_array->at(2).to_float();
+        }
+    }
+
+    if (dict->contains(CommonNames::Gamma)) {
+        auto gamma_array = TRY(dict->get_array(document, CommonNames::Gamma));
+        if (gamma_array->size() == 3) {
+            color_space->m_gamma[0] = gamma_array->at(0).to_float();
+            color_space->m_gamma[1] = gamma_array->at(1).to_float();
+            color_space->m_gamma[2] = gamma_array->at(2).to_float();
+        }
+    }
+
+    if (dict->contains(CommonNames::Matrix)) {
+        auto matrix_array = TRY(dict->get_array(document, CommonNames::Matrix));
+        if (matrix_array->size() == 9) {
+            color_space->m_matrix[0] = matrix_array->at(0).to_float();
+            color_space->m_matrix[1] = matrix_array->at(1).to_float();
+            color_space->m_matrix[2] = matrix_array->at(2).to_float();
+            color_space->m_matrix[3] = matrix_array->at(3).to_float();
+            color_space->m_matrix[4] = matrix_array->at(4).to_float();
+            color_space->m_matrix[5] = matrix_array->at(5).to_float();
+            color_space->m_matrix[6] = matrix_array->at(6).to_float();
+            color_space->m_matrix[7] = matrix_array->at(7).to_float();
+            color_space->m_matrix[8] = matrix_array->at(8).to_float();
+        }
+    }
+
+    return color_space;
 }
 
 PDFErrorOr<Color> CalRGBColorSpace::color(ReadonlySpan<Value> arguments) const
