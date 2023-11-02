@@ -5,6 +5,7 @@ set(FUZZER_TARGETS
     Brotli
     CyrillicDecoder
     DDSLoader
+    DNSPacket
     DeflateCompression
     DeflateDecompression
     ELF
@@ -80,6 +81,7 @@ set(FUZZER_DEPENDENCIES_Brotli LibCompress)
 set(FUZZER_DEPENDENCIES_CSSParser LibWeb)
 set(FUZZER_DEPENDENCIES_CyrillicDecoder LibTextCodec)
 set(FUZZER_DEPENDENCIES_DDSLoader LibGfx)
+set(FUZZER_DEPENDENCIES_DNSPacket LibDNS)
 set(FUZZER_DEPENDENCIES_DeflateCompression LibCompress)
 set(FUZZER_DEPENDENCIES_DeflateDecompression LibCompress)
 set(FUZZER_DEPENDENCIES_ELF LibELF)

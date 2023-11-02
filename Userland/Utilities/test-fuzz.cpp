@@ -19,6 +19,7 @@
     T(CSSParser)             \
     T(CyrillicDecoder)       \
     T(DDSLoader)             \
+    T(DNSPacket)             \
     T(DeflateCompression)    \
     T(DeflateDecompression)  \
     T(ELF)                   \
