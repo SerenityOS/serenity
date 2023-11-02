@@ -1641,18 +1641,21 @@ void GridFormattingContext::resolve_grid_item_widths()
         } else if (computed_width.is_fit_content()) {
             used_alignment = try_compute_width(calculate_fit_content_width(item.box, available_space));
         } else {
-            used_alignment = try_compute_width(computed_width.to_px(grid_container(), containing_block_width));
+            auto width_px = calculate_inner_width(item.box, available_space.width, computed_width).to_px(item.box);
+            used_alignment = try_compute_width(width_px);
         }
 
         if (!should_treat_max_width_as_none(item.box, m_available_space->width)) {
-            auto max_width_alignment = try_compute_width(computed_values.max_width().to_px(grid_container(), containing_block_width));
+            auto max_width_px = calculate_inner_width(item.box, available_space.width, computed_values.max_width()).to_px(item.box);
+            auto max_width_alignment = try_compute_width(max_width_px);
             if (used_alignment.width > max_width_alignment.width) {
                 used_alignment = max_width_alignment;
             }
         }
 
         if (!computed_values.min_width().is_auto()) {
-            auto min_width_alignment = try_compute_width(computed_values.min_width().to_px(grid_container(), containing_block_width));
+            auto min_width_px = calculate_inner_width(item.box, available_space.width, computed_values.min_width()).to_px(item.box);
+            auto min_width_alignment = try_compute_width(min_width_px);
             if (used_alignment.width < min_width_alignment.width) {
                 used_alignment = min_width_alignment;
             }
