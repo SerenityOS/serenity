@@ -46,33 +46,33 @@
 
 namespace Web::DOM {
 
-static IDAllocator s_node_id_allocator;
+static IDAllocator s_unique_id_allocator;
 static HashMap<i32, Node*> s_node_directory;
 
-static i32 allocate_node_id(Node* node)
+static i32 allocate_unique_id(Node* node)
 {
-    i32 id = s_node_id_allocator.allocate();
+    i32 id = s_unique_id_allocator.allocate();
     s_node_directory.set(id, node);
     return id;
 }
 
-static void deallocate_node_id(i32 node_id)
+static void deallocate_unique_id(i32 node_id)
 {
     if (!s_node_directory.remove(node_id))
         VERIFY_NOT_REACHED();
-    s_node_id_allocator.deallocate(node_id);
+    s_unique_id_allocator.deallocate(node_id);
 }
 
-Node* Node::from_id(i32 node_id)
+Node* Node::from_unique_id(i32 unique_id)
 {
-    return s_node_directory.get(node_id).value_or(nullptr);
+    return s_node_directory.get(unique_id).value_or(nullptr);
 }
 
 Node::Node(JS::Realm& realm, Document& document, NodeType type)
     : EventTarget(realm)
     , m_document(&document)
     , m_type(type)
-    , m_id(allocate_node_id(this))
+    , m_unique_id(allocate_unique_id(this))
 {
 }
 
@@ -86,7 +86,7 @@ Node::~Node() = default;
 void Node::finalize()
 {
     Base::finalize();
-    deallocate_node_id(m_id);
+    deallocate_unique_id(m_unique_id);
 }
 
 void Node::visit_edges(Cell::Visitor& visitor)
@@ -1155,7 +1155,7 @@ bool Node::is_uninteresting_whitespace_node() const
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
     MUST(object.add("name"sv, node_name()));
-    MUST(object.add("id"sv, id()));
+    MUST(object.add("id"sv, unique_id()));
     if (is_document()) {
         MUST(object.add("type"sv, "document"));
     } else if (is_element()) {
@@ -1758,7 +1758,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
     auto const* root_node = this;
     auto const* current_node = root_node;
     StringBuilder total_accumulated_text;
-    visited_nodes.set(id());
+    visited_nodes.set(unique_id());
 
     if (is_element()) {
         auto const* element = static_cast<DOM::Element const*>(this);
@@ -1792,7 +1792,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
                 if (!node)
                     continue;
 
-                if (visited_nodes.contains(node->id()))
+                if (visited_nodes.contains(node->unique_id()))
                     continue;
                 // a. Set the current node to the node referenced by the IDREF.
                 current_node = node;
@@ -1842,7 +1842,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
             // iii. For each child node of the current node:
             element->for_each_child([&total_accumulated_text, current_node, target, &document, &visited_nodes](
                                         DOM::Node const& child_node) mutable {
-                if (visited_nodes.contains(child_node.id()))
+                if (visited_nodes.contains(child_node.unique_id()))
                     return;
 
                 // a. Set the current node to the child node.

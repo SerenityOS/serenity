@@ -384,7 +384,7 @@ JS::GCPtr<HTML::HTMLMediaElement> Page::media_context_menu_element()
     if (!m_media_context_menu_element_id.has_value())
         return nullptr;
 
-    auto* dom_node = DOM::Node::from_id(*m_media_context_menu_element_id);
+    auto* dom_node = DOM::Node::from_unique_id(*m_media_context_menu_element_id);
     if (dom_node == nullptr)
         return nullptr;
 

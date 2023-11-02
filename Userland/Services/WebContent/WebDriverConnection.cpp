@@ -123,7 +123,7 @@ static DeprecatedString get_or_create_a_web_element_reference(Web::DOM::Node con
     // FIXME: 2. Add element to the list of known elements of the current browsing context.
     // FIXME: 3. Return success with the element’s web element reference.
 
-    return DeprecatedString::number(element.id());
+    return DeprecatedString::number(element.unique_id());
 }
 
 // https://w3c.github.io/webdriver/#dfn-web-element-reference-object
@@ -154,7 +154,7 @@ static ErrorOr<Web::DOM::Element*, Web::WebDriver::Error> get_known_connected_el
     if (!element.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Element ID is not an integer");
 
-    auto* node = Web::DOM::Node::from_id(*element);
+    auto* node = Web::DOM::Node::from_unique_id(*element);
 
     if (!node || !node->is_element())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, DeprecatedString::formatted("Could not find element with ID: {}", element_id));
@@ -170,7 +170,7 @@ static DeprecatedString get_or_create_a_shadow_root_reference(Web::DOM::ShadowRo
     // FIXME: 2. Add shadow to the list of known shadow roots of the current browsing context.
     // FIXME: 3. Return success with the shadow’s shadow root reference.
 
-    return DeprecatedString::number(shadow_root.id());
+    return DeprecatedString::number(shadow_root.unique_id());
 }
 
 // https://w3c.github.io/webdriver/#dfn-shadow-root-reference-object
@@ -201,7 +201,7 @@ static ErrorOr<Web::DOM::ShadowRoot*, Web::WebDriver::Error> get_known_shadow_ro
     if (!shadow_root.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Shadow ID is not an integer");
 
-    auto* node = Web::DOM::Node::from_id(*shadow_root);
+    auto* node = Web::DOM::Node::from_unique_id(*shadow_root);
 
     if (!node || !node->is_shadow_root())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, DeprecatedString::formatted("Could not find shadow root with ID: {}", shadow_id));
@@ -982,7 +982,7 @@ Messages::WebDriverClient::GetActiveElementResponse WebDriverConnection::get_act
     // 4. If active element is a non-null element, return success with data set to web element reference object for active element.
     //    Otherwise, return error with error code no such element.
     if (active_element)
-        return DeprecatedString::number(active_element->id());
+        return DeprecatedString::number(active_element->unique_id());
 
     return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The current document does not have an active element"sv);
 }
