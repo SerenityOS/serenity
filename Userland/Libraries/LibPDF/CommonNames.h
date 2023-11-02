@@ -134,6 +134,7 @@
     X(Producer)                   \
     X(R)                          \
     X(RI)                         \
+    X(Range)                      \
     X(Registry)                   \
     X(Resources)                  \
     X(Root)                       \
