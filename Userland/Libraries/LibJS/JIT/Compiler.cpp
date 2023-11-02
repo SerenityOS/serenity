@@ -1736,11 +1736,32 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 
     compiler.reload_cached_accumulator();
 
+    Assembler::Label normal_entry {};
+
+    compiler.m_assembler.jump_if(
+        Assembler::Operand::Register(ARG3),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(0),
+        normal_entry);
+
+    compiler.m_assembler.jump(Assembler::Operand::Register(ARG3));
+
+    normal_entry.link(compiler.m_assembler);
+
     for (size_t block_index = 0; block_index < bytecode_executable.basic_blocks.size(); block_index++) {
         auto& block = bytecode_executable.basic_blocks[block_index];
         compiler.block_data_for(*block).start_offset = compiler.m_output.size();
         compiler.set_current_block(*block);
         auto it = Bytecode::InstructionStreamIterator(block->instruction_stream());
+
+        if (it.at_end()) {
+            mapping.append({
+                .native_offset = compiler.m_output.size(),
+                .block_index = block_index,
+                .bytecode_offset = 0,
+            });
+        }
+
         while (!it.at_end()) {
             auto const& op = *it;
 

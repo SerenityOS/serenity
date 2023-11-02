@@ -367,7 +367,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
     vm().execution_context_stack().last()->executable = &executable;
 
     if (auto native_executable = executable.get_or_create_native_executable()) {
-        native_executable->run(vm());
+        auto block_index = 0;
+        if (entry_point)
+            block_index = executable.basic_blocks.find_first_index_if([&](auto const& block) { return block.ptr() == entry_point; }).value();
+        native_executable->run(vm(), block_index);
 
 #if 0
         for (size_t i = 0; i < vm().running_execution_context().local_variables.size(); ++i) {

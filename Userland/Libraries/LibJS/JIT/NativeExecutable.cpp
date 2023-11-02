@@ -19,6 +19,15 @@ NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMappi
     , m_size(size)
     , m_mapping(move(mapping))
 {
+    // Translate block index to instruction address, so the native code can just jump to it.
+    for (auto const& entry : m_mapping) {
+        if (entry.block_index == BytecodeMapping::EXECUTABLE)
+            continue;
+        if (entry.bytecode_offset == 0) {
+            VERIFY(entry.block_index == m_block_entry_points.size());
+            m_block_entry_points.append(bit_cast<FlatPtr>(m_code) + entry.native_offset);
+        }
+    }
 }
 
 NativeExecutable::~NativeExecutable()
@@ -26,12 +35,19 @@ NativeExecutable::~NativeExecutable()
     munmap(m_code, m_size);
 }
 
-void NativeExecutable::run(VM& vm) const
+void NativeExecutable::run(VM& vm, size_t entry_point) const
 {
-    typedef void (*JITCode)(VM&, Value* registers, Value* locals);
+    FlatPtr entry_point_address = 0;
+    if (entry_point != 0) {
+        entry_point_address = m_block_entry_points[entry_point];
+        VERIFY(entry_point_address != 0);
+    }
+
+    typedef void (*JITCode)(VM&, Value* registers, Value* locals, FlatPtr entry_point_address);
     ((JITCode)m_code)(vm,
         vm.bytecode_interpreter().registers().data(),
-        vm.running_execution_context().local_variables.data());
+        vm.running_execution_context().local_variables.data(),
+        entry_point_address);
 }
 
 #if ARCH(X86_64)
