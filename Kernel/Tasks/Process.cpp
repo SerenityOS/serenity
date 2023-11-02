@@ -457,6 +457,20 @@ void signal_trampoline_dummy()
         ".global asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end: \n" ::[sigreturn_syscall_number] "i"(Syscall::SC_sigreturn),
         [offset_to_first_register_slot] "i"(offset_to_first_register_slot));
+#elif ARCH(RISCV64)
+    constexpr static auto offset_to_a0_slot = align_up_to(sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 3 * sizeof(FlatPtr), 16);
+    asm(
+        ".global asm_signal_trampoline\n"
+        "asm_signal_trampoline:\n"
+        // stack state: 0, ucontext, signal_info (alignment = 16), fpu_state (alignment = 16), ucontext*, siginfo*, signal, handler
+
+        // FIXME: Implement this
+        "unimp\n"
+
+        "\n"
+        ".global asm_signal_trampoline_end\n"
+        "asm_signal_trampoline_end: \n" ::[sigreturn_syscall_number] "i"(Syscall::SC_sigreturn),
+        [offset_to_first_register_slot] "i"(offset_to_a0_slot));
 #else
 #    error Unknown architecture
 #endif
@@ -499,6 +513,8 @@ void Process::crash(int signal, Optional<RegisterState const&> regs, bool out_of
 #if ARCH(X86_64)
         constexpr bool userspace_backtrace = false;
 #elif ARCH(AARCH64)
+        constexpr bool userspace_backtrace = true;
+#elif ARCH(RISCV64)
         constexpr bool userspace_backtrace = true;
 #else
 #    error "Unknown architecture"

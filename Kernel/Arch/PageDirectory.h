@@ -13,6 +13,8 @@
 #    include <Kernel/Arch/x86_64/PageDirectory.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/PageDirectory.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/PageDirectory.h>
 #else
 #    error "Unknown architecture"
 #endif

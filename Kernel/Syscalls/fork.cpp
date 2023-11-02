@@ -150,6 +150,10 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_regs.spsr_el1 = regs.spsr_el1;
     child_regs.elr_el1 = regs.elr_el1;
     child_regs.sp_el0 = regs.sp_el0;
+#elif ARCH(RISCV64)
+    (void)child_regs;
+    (void)regs;
+    TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif

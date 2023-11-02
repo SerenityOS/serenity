@@ -512,9 +512,22 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/Processor.cpp
         kprintf.cpp
 
+        Arch/riscv64/Firmware/ACPI/StaticParsing.cpp
+
         Arch/riscv64/boot.S
+        Arch/riscv64/DebugOutput.cpp
+        Arch/riscv64/Delay.cpp
+        Arch/riscv64/InterruptManagement.cpp
+        Arch/riscv64/Interrupts.cpp
+        Arch/riscv64/PageDirectory.cpp
+        Arch/riscv64/Panic.cpp
+        Arch/riscv64/PCI.cpp
+        Arch/riscv64/PowerState.cpp
+        Arch/riscv64/pre_init.cpp
         Arch/riscv64/Processor.cpp
+        Arch/riscv64/SafeMem.cpp
         Arch/riscv64/SBI.cpp
+        Arch/riscv64/SmapDisabler.cpp
     )
 
     add_compile_options(-fno-stack-protector -fno-sanitize=all)

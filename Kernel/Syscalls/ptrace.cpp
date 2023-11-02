@@ -258,6 +258,9 @@ ErrorOr<FlatPtr> Thread::peek_debug_register(u32 register_index)
 #elif ARCH(AARCH64)
     (void)register_index;
     TODO_AARCH64();
+#elif ARCH(RISCV64)
+    (void)register_index;
+    TODO_RISCV64();
 #else
 #    error "Unknown architecture"
 #endif
@@ -290,6 +293,10 @@ ErrorOr<void> Thread::poke_debug_register(u32 register_index, FlatPtr data)
     (void)register_index;
     (void)data;
     TODO_AARCH64();
+#elif ARCH(RISCV64)
+    (void)register_index;
+    (void)data;
+    TODO_RISCV64();
 #else
 #    error "Unknown architecture"
 #endif

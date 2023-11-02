@@ -18,7 +18,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 
-#if ARCH(X86_64) || ARCH(AARCH64)
+#if ARCH(X86_64) || ARCH(AARCH64) || ARCH(RISCV64)
 static constexpr size_t CHUNK_SIZE = 64;
 #else
 #    error Unknown architecture

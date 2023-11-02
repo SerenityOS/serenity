@@ -14,7 +14,7 @@ u64 msi_address_register(u8 destination_id, bool redirection_hint, bool destinat
 u32 msi_data_register(u8 vector, bool level_trigger, bool assert);
 u32 msix_vector_control_register(u32 vector_control, bool mask);
 void msi_signal_eoi();
-#elif ARCH(AARCH64)
+#elif ARCH(AARCH64) || ARCH(RISCV64)
 [[maybe_unused]] static u64 msi_address_register([[maybe_unused]] u8 destination_id, [[maybe_unused]] bool redirection_hint, [[maybe_unused]] bool destination_mode)
 {
     TODO_AARCH64();

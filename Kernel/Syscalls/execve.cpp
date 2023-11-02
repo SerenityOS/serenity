@@ -156,6 +156,10 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     regs.x[0] = argv_entries.size();
     regs.x[1] = argv;
     regs.x[2] = envp;
+#elif ARCH(RISCV64)
+    (void)argv;
+    (void)envp;
+    TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif
@@ -737,6 +741,8 @@ static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vect
         { ELF::AuxiliaryValue::HwCap, (long)CPUID(1).edx() },
 #elif ARCH(AARCH64)
         { ELF::AuxiliaryValue::HwCap, (long)0 },
+#elif ARCH(RISCV64)
+        { ELF::AuxiliaryValue::HwCap, (long)0 }, // TODO
 #else
 #    error "Unknown architecture"
 #endif
