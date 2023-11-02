@@ -4,6 +4,8 @@
 
 Qt6 development packages and a C++20 capable compiler are required. g++-12 or clang-15 are required at a minimum for c++20 support.
 
+NOTE: In all of the below lists of packages, the Qt6 multimedia package is not needed if your Linux system supports PulseAudio.
+
 On Debian/Ubuntu required packages include, but are not limited to:
 
 ```

@@ -16,8 +16,6 @@ set(WEBCONTENT_SOURCES
 if (ENABLE_QT)
     qt_add_executable(WebContent ${WEBCONTENT_SOURCES})
     target_sources(WebContent PRIVATE
-        ../Qt/AudioCodecPluginQt.cpp
-        ../Qt/AudioThread.cpp
         ../Qt/EventLoopImplementationQt.cpp
         ../Qt/EventLoopImplementationQtEventTarget.cpp
         ../Qt/RequestManagerQt.cpp
@@ -27,8 +25,20 @@ if (ENABLE_QT)
         ../Qt/WebSocketImplQt.cpp
         main.cpp
     )
-    target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network Qt::Multimedia)
+    target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network)
     target_compile_definitions(WebContent PRIVATE HAVE_QT=1)
+
+    if (NOT HAVE_PULSEAUDIO)
+        find_package(Qt6 REQUIRED COMPONENTS Multimedia)
+
+        target_sources(WebContent PRIVATE
+            ../Qt/AudioCodecPluginQt.cpp
+            ../Qt/AudioThread.cpp
+        )
+
+        target_link_libraries(WebContent PRIVATE Qt::Multimedia)
+        target_compile_definitions(WebContent PRIVATE HAVE_QT_MULTIMEDIA=1)
+    endif()
 else()
     set(LIB_TYPE STATIC)
     if (ANDROID)
