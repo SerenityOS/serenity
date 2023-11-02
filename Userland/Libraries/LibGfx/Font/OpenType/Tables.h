@@ -586,15 +586,17 @@ public:
     static ErrorOr<CBDT> from_slice(ReadonlyBytes);
     ReadonlyBytes bytes() const { return m_slice; }
 
-    CbdtHeader const& header() const { return *bit_cast<CbdtHeader const*>(m_slice.data()); }
+    CbdtHeader const& header() const { return m_header; }
 
 private:
-    explicit CBDT(ReadonlyBytes slice)
+    explicit CBDT(ReadonlyBytes slice, CbdtHeader const& header)
         : m_slice(slice)
+        , m_header(header)
     {
     }
 
     ReadonlyBytes m_slice;
+    CbdtHeader const& m_header;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#feature-list-table
