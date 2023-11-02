@@ -1038,14 +1038,6 @@ ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interprete
     __builtin_unreachable();
 }
 
-ThrowCompletionOr<void> PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    auto environment = interpreter.vm().heap().allocate_without_realm<DeclarativeEnvironment>(interpreter.vm().lexical_environment());
-    interpreter.vm().running_execution_context().lexical_environment = environment;
-    interpreter.vm().running_execution_context().variable_environment = environment;
-    return {};
-}
-
 ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.accumulator().value_or(js_undefined());
@@ -1590,21 +1582,6 @@ DeprecatedString LeaveUnwindContext::to_deprecated_string_impl(Bytecode::Executa
 DeprecatedString ContinuePendingUnwind::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
-}
-
-DeprecatedString PushDeclarativeEnvironment::to_deprecated_string_impl(Bytecode::Executable const& executable) const
-{
-    StringBuilder builder;
-    builder.append("PushDeclarativeEnvironment"sv);
-    if (!m_variables.is_empty()) {
-        builder.append(" {"sv);
-        Vector<DeprecatedString> names;
-        for (auto& it : m_variables)
-            names.append(executable.get_string(it.key));
-        builder.append('}');
-        builder.join(", "sv, names);
-    }
-    return builder.to_deprecated_string();
 }
 
 DeprecatedString Yield::to_deprecated_string_impl(Bytecode::Executable const&) const
