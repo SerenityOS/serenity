@@ -310,7 +310,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
         if (auto it = rule_cache.rules_by_class.find(class_name); it != rule_cache.rules_by_class.end())
             add_rules_to_run(it->value);
     }
-    if (auto id = element.get_attribute(HTML::AttributeNames::id); id.has_value()) {
+    if (auto id = element.id(); id.has_value()) {
         if (auto it = rule_cache.rules_by_id.find(id.value()); it != rule_cache.rules_by_id.end())
             add_rules_to_run(it->value);
     }
