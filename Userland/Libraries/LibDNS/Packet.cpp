@@ -128,6 +128,9 @@ Optional<Packet> Packet::from_raw_packet(ReadonlyBytes bytes)
             NetworkOrdered<u16> record_type;
             NetworkOrdered<u16> class_code;
         };
+        if (offset >= bytes.size() || bytes.size() - offset < sizeof(RawDNSAnswerQuestion))
+            return {};
+
         auto const& record_and_class = *bit_cast<RawDNSAnswerQuestion const*>(bytes.offset_pointer(offset));
         u16 class_code = record_and_class.class_code & ~MDNS_WANTS_UNICAST_RESPONSE;
         bool mdns_wants_unicast_response = record_and_class.class_code & MDNS_WANTS_UNICAST_RESPONSE;
@@ -139,8 +142,13 @@ Optional<Packet> Packet::from_raw_packet(ReadonlyBytes bytes)
 
     for (u16 i = 0; i < header.answer_count(); ++i) {
         auto name = Name::parse(bytes, offset);
+        if (offset >= bytes.size() || bytes.size() - offset < sizeof(DNSRecordWithoutName))
+            return {};
+
         auto const& record = *bit_cast<DNSRecordWithoutName const*>(bytes.offset_pointer(offset));
         offset += sizeof(DNSRecordWithoutName);
+        if (record.data_length() > bytes.size() - offset)
+            return {};
 
         DeprecatedString data;
 
