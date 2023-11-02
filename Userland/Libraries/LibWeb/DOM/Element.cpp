@@ -542,6 +542,13 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
             return Element::RequiredInvalidationAfterStyleChange::full();
         }
 
+        // NOTE: If one of the overflow properties change, we rebuild the entire layout tree.
+        //       This ensures that overflow propagation from root/body to viewport happens correctly.
+        //       In the future, we can make this invalidation narrower.
+        if (property_id == CSS::PropertyID::OverflowX || property_id == CSS::PropertyID::OverflowY) {
+            return Element::RequiredInvalidationAfterStyleChange::full();
+        }
+
         // OPTIMIZATION: Special handling for CSS `visibility`:
         if (property_id == CSS::PropertyID::Visibility) {
             // We don't need to relayout if the visibility changes from visible to hidden or vice versa. Only collapse requires relayout.
