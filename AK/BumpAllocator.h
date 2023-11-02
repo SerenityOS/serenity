@@ -11,7 +11,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
-#include <sys/mman.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <sys/mman.h>
+#endif
 
 namespace AK {
 
@@ -73,11 +76,15 @@ public:
                 // The cache got filled in the meantime. Oh well, we have to call munmap() anyway.
             }
 
+#if defined(AK_OS_WINDOWS)
+            kfree_sized((void*)chunk, m_chunk_size);
+#else
             if constexpr (use_mmap) {
                 munmap((void*)chunk, m_chunk_size);
             } else {
                 kfree_sized((void*)chunk, m_chunk_size);
             }
+#endif
         });
     }
 
@@ -103,12 +110,17 @@ protected:
         // m_allocations_in_previous_chunk = 0;
         void* new_chunk = reinterpret_cast<void*>(s_unused_allocation_cache.exchange(0));
         if (!new_chunk) {
-            if constexpr (use_mmap) {
-#ifdef AK_OS_SERENITY
-                new_chunk = serenity_mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_RANDOMIZED | MAP_PRIVATE, 0, 0, m_chunk_size, "BumpAllocator Chunk");
+#if defined(AK_OS_WINDOWS)
+            new_chunk = kmalloc(m_chunk_size);
+            if (!new_chunk)
+                return false;
 #else
+            if constexpr (use_mmap) {
+#    ifdef AK_OS_SERENITY
+                new_chunk = serenity_mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_RANDOMIZED | MAP_PRIVATE, 0, 0, m_chunk_size, "BumpAllocator Chunk");
+#    else
                 new_chunk = mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-#endif
+#    endif
                 if (new_chunk == MAP_FAILED)
                     return false;
             } else {
@@ -116,6 +128,7 @@ protected:
                 if (!new_chunk)
                     return false;
             }
+#endif
         }
 
         auto& new_header = *reinterpret_cast<ChunkHeader*>(new_chunk);
