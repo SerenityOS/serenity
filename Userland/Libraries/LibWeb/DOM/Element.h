@@ -375,6 +375,8 @@ public:
     };
     Directionality directionality() const;
 
+    Optional<FlyString> const& id() const { return m_id; }
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual void initialize(JS::Realm&) override;
@@ -410,6 +412,8 @@ private:
 
     Vector<FlyString> m_classes;
     Optional<Dir> m_dir;
+
+    Optional<FlyString> m_id;
 
     Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_nodes;
 
