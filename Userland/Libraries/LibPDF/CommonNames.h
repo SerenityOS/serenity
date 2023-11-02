@@ -27,6 +27,7 @@
     X(CCITTFaxDecode)             \
     X(CF)                         \
     X(CFM)                        \
+    X(CalGray)                    \
     X(CalRGB)                     \
     X(CIDFontType0)               \
     X(CIDFontType2)               \
