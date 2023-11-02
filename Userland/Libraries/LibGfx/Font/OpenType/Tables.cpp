@@ -534,21 +534,21 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 {
     auto read_value_record = [&](u16 value_format, FixedMemoryStream& stream) -> ValueRecord {
         ValueRecord value_record;
-        if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT))
+        if (value_format & to_underlying(ValueFormat::X_PLACEMENT))
             value_record.x_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-        if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT))
+        if (value_format & to_underlying(ValueFormat::Y_PLACEMENT))
             value_record.y_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-        if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE))
+        if (value_format & to_underlying(ValueFormat::X_ADVANCE))
             value_record.x_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-        if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE))
+        if (value_format & to_underlying(ValueFormat::Y_ADVANCE))
             value_record.y_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-        if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT_DEVICE))
+        if (value_format & to_underlying(ValueFormat::X_PLACEMENT_DEVICE))
             value_record.x_placement_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
-        if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT_DEVICE))
+        if (value_format & to_underlying(ValueFormat::Y_PLACEMENT_DEVICE))
             value_record.y_placement_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
-        if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE_DEVICE))
+        if (value_format & to_underlying(ValueFormat::X_ADVANCE_DEVICE))
             value_record.x_advance_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
-        if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE_DEVICE))
+        if (value_format & to_underlying(ValueFormat::Y_ADVANCE_DEVICE))
             value_record.y_advance_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
         return value_record;
     };
