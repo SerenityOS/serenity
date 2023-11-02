@@ -63,13 +63,13 @@ The value of this variable is used to generate a prompt, the following escape se
 - `\\u`: the current username
 - `\\w`: a collapsed path (relative to home) to the current directory
 - `\\X`: reset style (foreground and background color, etc)
-- `\\t`: Current time in the 24-hour format HH:MM:SS
-- `\\T`: Current time in the 12-hour format HH:MM
-- `\\@`: Current time in the 12-hour format HH:MM AM/PM
-- `\\D{format}`: Current time, where the string _format_ is passed on to `Core::DateTime::to_string`. If _format_ is empty, a default format string is chosen.
-- `\\j`: The number of jobs currently managed by the shell
-- `\\!`: The history number of the next command to be run
-- `\\\\`: A backslash
+- `\\t`: current time in the 24-hour format HH:MM:SS
+- `\\T`: current time in the 12-hour format HH:MM
+- `\\@`: current time in the 12-hour format HH:MM AM/PM
+- `\\D{format}`: current time, where the string _format_ is passed on to `Core::DateTime::to_string`. If _format_ is empty, a default format string is chosen.
+- `\\j`: the number of jobs currently managed by the shell
+- `\\!`: the history number of the next command to be run
+- `\\\\`: a backslash
 
 Any other escaped character shall be ignored.
 
