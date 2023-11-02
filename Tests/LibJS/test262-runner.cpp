@@ -24,11 +24,26 @@
 #include <LibJS/SourceTextModule.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <unistd.h>
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN) && !defined(AK_OS_GNU_HURD)
+#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN) && !defined(AK_OS_GNU_HURD) && !defined(AK_OS_WINDOWS)
 // Only used to disable core dumps
 #    include <sys/prctl.h>
+#endif
+
+#if !defined(AK_OS_WINDOWS)
+#    include <unistd.h>
+#else
+#    include <io.h>
+#    include <windows.h>
+#    ifndef STDIN_FILENO
+#        define STDIN_FILENO _fileno(stdin)
+#    endif
+#    ifndef STDOUT_FILENO
+#        define STDOUT_FILENO _fileno(stdout)
+#    endif
+#    ifndef STDERR_FILENO
+#        define STDERR_FILENO _fileno(stderr)
+#    endif
 #endif
 
 static DeprecatedString s_current_test = "";
@@ -577,7 +592,7 @@ int main(int argc, char** argv)
 #ifdef AK_OS_GNU_HURD
     if (disable_core_dumping)
         setenv("CRASHSERVER", "/servers/crash-kill", true);
-#elif !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
+#elif !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN) && !defined(AK_OS_WINDOWS)
     if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0, 0) < 0) {
         perror("prctl(PR_SET_DUMPABLE)");
         return exit_wrong_arguments;
@@ -614,6 +629,7 @@ int main(int argc, char** argv)
     }
 
     int stdout_pipe[2];
+#if !defined(AK_OS_WINDOWS)
     if (pipe(stdout_pipe) < 0) {
         perror("pipe");
         return exit_stdout_setup_failed;
@@ -626,6 +642,12 @@ int main(int argc, char** argv)
     auto flags2 = fcntl(stdout_pipe[1], F_GETFL);
     flags2 |= O_NONBLOCK;
     fcntl(stdout_pipe[1], F_SETFL, flags2);
+#else
+    if (_pipe(stdout_pipe, BUFFER_SIZE, O_BINARY) < 0) {
+        perror("_pipe");
+        return exit_stdout_setup_failed;
+    }
+#endif
 
     if (dup2(stdout_pipe[1], STDOUT_FILENO) < 0) {
         perror("dup2");
@@ -637,6 +659,7 @@ int main(int argc, char** argv)
         return exit_stdout_setup_failed;
     }
 
+#if !defined(AK_OS_WINDOWS)
     auto collect_output = [&] {
         fflush(stdout);
         auto nread = read(stdout_pipe[0], buffer, BUFFER_SIZE);
@@ -652,11 +675,39 @@ int main(int argc, char** argv)
         return value;
     };
 
-#define ARM_TIMER() \
-    alarm(timeout)
+#    define ARM_TIMER() \
+        alarm(timeout)
 
-#define DISARM_TIMER() \
-    alarm(0)
+#    define DISARM_TIMER() \
+        alarm(0)
+#else
+    auto collect_output = [&] {
+        fflush(stdout);
+        DWORD nread = 0;
+        Optional<DeprecatedString> value;
+        PeekNamedPipe((HANDLE)_get_osfhandle(stdout_pipe[0]), nullptr, 0, nullptr, &nread, nullptr);
+        if (nread > 0) {
+            ReadFile((HANDLE)_get_osfhandle(stdout_pipe[0]), buffer, BUFFER_SIZE, &nread, nullptr);
+
+            if (nread > 0) {
+                value = DeprecatedString { buffer, static_cast<size_t>(nread) };
+                while (nread > 0) {
+                    PeekNamedPipe((HANDLE)_get_osfhandle(stdout_pipe[0]), nullptr, 0, nullptr, &nread, nullptr);
+                    if (nread > 0) {
+                        ReadFile((HANDLE)_get_osfhandle(stdout_pipe[0]), buffer, BUFFER_SIZE, &nread, nullptr);
+                    }
+                }
+            }
+        }
+        return value;
+    };
+
+#    define ARM_TIMER() \
+        SetTimer(nullptr, 0, timeout * 1000, [](HWND, UINT, UINT_PTR, DWORD) { exit(1); })
+
+#    define DISARM_TIMER() \
+        KillTimer(nullptr, 0);
+#endif
 
     auto standard_input_or_error = Core::File::standard_input();
     if (standard_input_or_error.is_error())
