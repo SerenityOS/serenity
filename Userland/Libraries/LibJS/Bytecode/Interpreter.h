@@ -110,7 +110,7 @@ private:
     Optional<InstructionStreamIterator&> m_pc {};
 };
 
-extern bool g_dump_bytecode;
+LibJS_API extern bool g_dump_bytecode;
 
 ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name);
 

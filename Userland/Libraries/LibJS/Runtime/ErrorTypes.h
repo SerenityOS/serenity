@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/StringView.h>
+#include <LibJS/Forward.h>
 
 #define JS_ENUMERATE_ERROR_TYPES(M)                                                                                                     \
     M(ArrayMaxSize, "Maximum array size exceeded")                                                                                      \
@@ -336,7 +337,7 @@ namespace JS {
 class ErrorType {
 public:
 #define __ENUMERATE_JS_ERROR(name, message) \
-    static const ErrorType name;
+    LibJS_API static const ErrorType name;
     JS_ENUMERATE_ERROR_TYPES(__ENUMERATE_JS_ERROR)
 #undef __ENUMERATE_JS_ERROR
 
