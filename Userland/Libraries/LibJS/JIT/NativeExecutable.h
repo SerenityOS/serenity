@@ -11,6 +11,10 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Runtime/Completion.h>
 
+#if defined(AK_OS_WINDOWS)
+#    include <windows.h>
+#endif
+
 namespace JS::JIT {
 
 struct BytecodeMapping {
@@ -28,7 +32,12 @@ class NativeExecutable {
     AK_MAKE_NONMOVABLE(NativeExecutable);
 
 public:
+#if !defined(AK_OS_WINDOWS)
     NativeExecutable(void* code, size_t size, Vector<BytecodeMapping>);
+#else
+    NativeExecutable(void* code, size_t size, Vector<BytecodeMapping>, DWORD old_protect);
+#endif
+
     ~NativeExecutable();
 
     void run(VM&, size_t entry_point) const;
@@ -44,6 +53,10 @@ private:
     Vector<BytecodeMapping> m_mapping;
     Vector<FlatPtr> m_block_entry_points;
     mutable OwnPtr<Bytecode::InstructionStreamIterator> m_instruction_stream_iterator;
+
+#if defined(AK_OS_WINDOWS)
+    DWORD m_old_protect { 0 };
+#endif
 };
 
 }

@@ -19,8 +19,17 @@
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
-#include <sys/mman.h>
-#include <unistd.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <sys/mman.h>
+#    include <unistd.h>
+#else
+#    include <io.h>
+#    include <windows.h>
+#    ifndef STDOUT_FILENO
+#        define STDOUT_FILENO _fileno(stdout)
+#    endif
+#endif
 
 #ifdef JIT_ARCH_SUPPORTED
 
@@ -2286,11 +2295,19 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
     compiler.flush_cached_accumulator();
     compiler.m_assembler.exit();
 
+#    if defined(AK_OS_WINDOWS)
+    auto* executable_memory = VirtualAlloc(NULL, compiler.m_output.size(), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    if (executable_memory == NULL) {
+        dbgln("VirtualAlloc: {}", AK::Error::from_windows_error(GetLastError()));
+        return nullptr;
+    }
+#    else
     auto* executable_memory = mmap(nullptr, compiler.m_output.size(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     if (executable_memory == MAP_FAILED) {
         dbgln("mmap: {}", strerror(errno));
         return nullptr;
     }
+#    endif
 
     for (auto& block : bytecode_executable.basic_blocks) {
         auto& block_data = compiler.block_data_for(*block);
@@ -2303,16 +2320,28 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
 
     memcpy(executable_memory, compiler.m_output.data(), compiler.m_output.size());
 
+#    if defined(AK_OS_WINDOWS)
+    DWORD oldProtect;
+    if (VirtualProtect(executable_memory, compiler.m_output.size(), PAGE_EXECUTE_READ, &oldProtect) == 0) {
+        dbgln("VirtualProtect: {}", AK::Error::from_windows_error(GetLastError()));
+        return nullptr;
+    }
+#    else
     if (mprotect(executable_memory, compiler.m_output.size(), PROT_READ | PROT_EXEC) < 0) {
         dbgln("mprotect: {}", strerror(errno));
         return nullptr;
     }
+#    endif
 
     if constexpr (LOG_JIT_SUCCESS) {
         dbgln("\033[32;1mJIT compilation succeeded!\033[0m {}", bytecode_executable.name);
     }
 
+#    if defined(AK_OS_WINDOWS)
+    auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size(), mapping, 0);
+#    else
     auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size(), mapping);
+#    endif
     if constexpr (DUMP_JIT_DISASSEMBLY)
         executable->dump_disassembly(bytecode_executable);
     return executable;

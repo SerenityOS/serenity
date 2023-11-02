@@ -268,7 +268,7 @@ set(SOURCES
 
 serenity_lib(LibJS js)
 target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex LibSyntax LibLocale LibUnicode LibTimeZone LibJIT)
-if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
     target_link_libraries(LibJS PRIVATE LibX86)
 endif()
 
@@ -278,3 +278,7 @@ if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "i.86.*")
 endif()
 
 target_compile_options(LibJS PRIVATE -fno-omit-frame-pointer)
+
+if (WIN32)
+    target_link_libraries(LibJS PRIVATE dbghelp)
+endif()

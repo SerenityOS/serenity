@@ -10,10 +10,14 @@
 #include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibX86/Disassembler.h>
-#include <sys/mman.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <sys/mman.h>
+#endif
 
 namespace JS::JIT {
 
+#if !defined(AK_OS_WINDOWS)
 NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping)
     : m_code(code)
     , m_size(size)
@@ -34,6 +38,20 @@ NativeExecutable::~NativeExecutable()
 {
     munmap(m_code, m_size);
 }
+#else
+NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping, DWORD old_protect)
+    : m_code(code)
+    , m_size(size)
+    , m_mapping(move(mapping))
+    , m_old_protect(old_protect)
+{
+}
+NativeExecutable::~NativeExecutable()
+{
+    VirtualProtect(m_code, m_size, m_old_protect, &m_old_protect);
+    VirtualFree(m_code, 0, MEM_RELEASE);
+}
+#endif
 
 void NativeExecutable::run(VM& vm, size_t entry_point) const
 {
