@@ -506,7 +506,8 @@ ErrorOr<CBDT> CBDT::from_slice(ReadonlyBytes slice)
 {
     if (slice.size() < sizeof(CbdtHeader))
         return Error::from_string_literal("CBDT table too small");
-    return CBDT { slice };
+    auto const& header = *bit_cast<CbdtHeader*>(slice.data());
+    return CBDT { slice, header };
 }
 
 ErrorOr<GPOS> GPOS::from_slice(ReadonlyBytes slice)
