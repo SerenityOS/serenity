@@ -9,6 +9,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(u8 const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
     auto matroska_reader_result = Video::Matroska::Reader::from_data({ data, size });
     if (matroska_reader_result.is_error())
         return 0;

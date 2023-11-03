@@ -9,6 +9,8 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
+
     // LibFuzzer has a default memory limit of 2048 MB, so limit the dictionary size to a
     // reasonable number to make sure that we don't actually run into it by allocating a
     // huge dictionary. The chosen value is double of what the largest dictionary in the

@@ -10,6 +10,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
     auto parser = IMAP::Parser();
     parser.parse(ByteBuffer::copy(data, size).release_value(), true);
     parser.parse(ByteBuffer::copy(data, size).release_value(), false);

@@ -8,6 +8,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(u8 const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
     XML::Parser parser({ data, size });
     (void)parser.parse();
     return 0;
