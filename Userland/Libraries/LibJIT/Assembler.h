@@ -105,6 +105,7 @@ struct Assembler {
     };
 
     enum class Condition {
+        Overflow = 0x0,
         EqualTo = 0x4,
         NotEqualTo = 0x5,
         UnsignedGreaterThan = 0x7,
@@ -458,14 +459,18 @@ struct Assembler {
         }
     }
 
-    void jump_if(Operand lhs, Condition condition, Operand rhs, Label& label)
+    void jump_if(Condition condition, Label& label)
     {
-        cmp(lhs, rhs);
-
         emit8(0x0F);
         emit8(0x80 | to_underlying(condition));
         emit32(0xdeadbeef);
         label.add_jump(*this, m_output.size());
+    }
+
+    void jump_if(Operand lhs, Condition condition, Operand rhs, Label& label)
+    {
+        cmp(lhs, rhs);
+        jump_if(condition, label);
     }
 
     void sign_extend_32_to_64_bits(Reg reg)
@@ -613,7 +618,7 @@ struct Assembler {
         }
     }
 
-    void add32(Operand dst, Operand src, Optional<Label&> label)
+    void add32(Operand dst, Operand src, Optional<Label&> overflow_label)
     {
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
             emit_rex_for_mr(dst, src, REX_W::No);
@@ -633,12 +638,8 @@ struct Assembler {
             VERIFY_NOT_REACHED();
         }
 
-        if (label.has_value()) {
-            // jo label (RIP-relative 32-bit offset)
-            emit8(0x0f);
-            emit8(0x80);
-            emit32(0xdeadbeef);
-            label->add_jump(*this, m_output.size());
+        if (overflow_label.has_value()) {
+            jump_if(Condition::Overflow, *overflow_label);
         }
     }
 
