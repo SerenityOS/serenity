@@ -296,11 +296,8 @@ public:
     {
         m_bit_offset += count;
 
-        if (m_bit_offset > bits_in_reservoir) {
-            // FIXME: I can't find a test case for that so let's leave it for later
-            //        instead of inserting an hard-to-find bug.
-            TODO();
-        }
+        if (m_bit_offset > bits_in_reservoir)
+            TRY(refill_reservoir());
 
         return {};
     }

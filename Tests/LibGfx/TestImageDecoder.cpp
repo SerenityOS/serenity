@@ -270,7 +270,8 @@ TEST_CASE(test_jpeg_malformed_header)
 TEST_CASE(test_jpeg_malformed_frame)
 {
     Array test_inputs = {
-        TEST_INPUT("jpg/oss-fuzz-testcase-62584.jpg"sv)
+        TEST_INPUT("jpg/oss-fuzz-testcase-62584.jpg"sv),
+        TEST_INPUT("jpg/oss-fuzz-testcase-63815.jpg"sv)
     };
 
     for (auto test_input : test_inputs) {
