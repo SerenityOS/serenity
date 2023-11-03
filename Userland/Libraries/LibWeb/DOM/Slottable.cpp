@@ -176,6 +176,12 @@ void assign_slottables(JS::NonnullGCPtr<HTML::HTMLSlotElement> slot)
 // https://dom.spec.whatwg.org/#assign-slotables-for-a-tree
 void assign_slottables_for_a_tree(JS::NonnullGCPtr<Node> root)
 {
+    // AD-HOC: This method iterates over the root's entire subtree. That iteration does nothing if the root is not a
+    //         shadow root (see `find_slottables`). This iteration can be very expensive as the HTML parser inserts
+    //         nodes, especially on sites with many elements. So we skip it if we know it's going to be a no-op anyways.
+    if (!root->is_shadow_root())
+        return;
+
     // To assign slottables for a tree, given a node root, run assign slottables for each slot slot in root’s inclusive
     // descendants, in tree order.
     root->for_each_in_inclusive_subtree_of_type<HTML::HTMLSlotElement>([](auto& slot) {
