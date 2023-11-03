@@ -140,13 +140,24 @@ Debugger::CreateDebugSessionResult Debugger::create_debug_session()
                 return m_child_setup_callback();
             return ErrorOr<void> {};
         };
-        auto debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root, move(child_setup_callback), move(m_on_initialization_progress));
+
+        auto on_initialization_progress = [this](float progress) {
+            if (m_on_initialization_progress)
+                m_on_initialization_progress(progress);
+        };
+
+        auto debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root, move(child_setup_callback), move(on_initialization_progress));
         VERIFY(!!debug_session);
         return { debug_session.release_nonnull(), Debug::DebugSession::Running };
     }
 
     if (m_pid_to_attach.has_value()) {
-        auto debug_session = Debug::DebugSession::attach(m_pid_to_attach.value(), m_source_root, move(m_on_initialization_progress));
+        auto on_initialization_progress = [this](float progress) {
+            if (m_on_initialization_progress)
+                m_on_initialization_progress(progress);
+        };
+
+        auto debug_session = Debug::DebugSession::attach(m_pid_to_attach.value(), m_source_root, move(on_initialization_progress));
         VERIFY(!!debug_session);
         return { debug_session.release_nonnull(), Debug::DebugSession::Stopped };
     }
