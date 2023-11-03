@@ -150,7 +150,7 @@ private:
     void adjust_mathml_attributes(HTMLToken&);
     void adjust_svg_tag_names(HTMLToken&);
     void adjust_svg_attributes(HTMLToken&);
-    void adjust_foreign_attributes(HTMLToken&);
+    static void adjust_foreign_attributes(HTMLToken&);
 
     enum AdoptionAgencyAlgorithmOutcome {
         DoNothing,
