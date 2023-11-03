@@ -45,7 +45,13 @@ public:
         return Register(return_value_index);
     }
 
-    static constexpr u32 reserved_register_count = 5;
+    static constexpr Register saved_exception()
+    {
+        constexpr u32 saved_exception_index = 5;
+        return Register(saved_exception_index);
+    }
+
+    static constexpr u32 reserved_register_count = 6;
 
     constexpr explicit Register(u32 index)
         : m_index(index)
