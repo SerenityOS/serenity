@@ -58,7 +58,7 @@ public:
 
     virtual PDFErrorOr<Color> color(ReadonlySpan<Value> arguments) const = 0;
     virtual int number_of_components() const = 0;
-    virtual Vector<float> default_decode() const = 0;
+    virtual Vector<float> default_decode() const = 0; // "TABLE 4.40 Default Decode arrays"
     virtual ColorSpaceFamily const& family() const = 0;
 };
 
