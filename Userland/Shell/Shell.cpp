@@ -118,7 +118,7 @@ DeprecatedString Shell::prompt() const
         } else if (lexer.consume_specific('h')) {
             builder.append({ hostname, strlen(hostname) });
 
-        } else if (lexer.consume_specific('w')) {
+        } else if (lexer.consume_specific('w') || lexer.consume_specific('W')) {
             DeprecatedString const home_path = getenv("HOME");
             if (cwd.starts_with(home_path)) {
                 builder.append('~');
@@ -128,7 +128,11 @@ DeprecatedString Shell::prompt() const
             }
 
         } else if (auto const number_string = lexer.consume_while(is_ascii_digit); !number_string.is_empty()) {
-            if (lexer.is_eof() || lexer.consume() != 'w')
+            if (lexer.is_eof())
+                break;
+
+            auto const next_char = lexer.consume();
+            if (next_char != 'w' && next_char != 'W')
                 continue;
 
             auto const max_component_count = number_string.to_uint().value();
@@ -136,16 +140,24 @@ DeprecatedString Shell::prompt() const
             DeprecatedString const home_path = getenv("HOME");
 
             auto const should_collapse_path = cwd.starts_with(home_path);
+            auto const should_use_ellipsis = (next_char == 'w');
+
             auto const path = should_collapse_path ? cwd.substring_view(home_path.length(), cwd.length() - home_path.length())
                                                    : cwd.view();
             auto const parts = path.split_view('/');
 
             auto const start_index = (max_component_count < parts.size()) ? parts.size() - max_component_count : 0;
-            if (start_index == 0) {
+            if (start_index == 0 || (start_index == 1 && should_use_ellipsis)) {
                 if (should_collapse_path)
                     builder.append('~');
                 builder.append(path);
                 continue;
+            }
+
+            if (should_use_ellipsis) {
+                if (should_collapse_path)
+                    builder.append("~/"sv);
+                builder.append(".../"sv);
             }
 
             for (auto i = start_index; i < parts.size(); ++i) {
