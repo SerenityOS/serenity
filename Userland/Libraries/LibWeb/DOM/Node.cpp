@@ -456,8 +456,8 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
             auto is_named_shadow_host = element.is_shadow_host()
                 && element.shadow_root_internal()->slot_assignment() == Bindings::SlotAssignmentMode::Named;
 
-            if (is_named_shadow_host && node->is_slottable())
-                assign_a_slot(node->as_slottable());
+            if (is_named_shadow_host && node_to_insert->is_slottable())
+                assign_a_slot(node_to_insert->as_slottable());
         }
 
         // 5. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run
@@ -470,7 +470,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
         }
 
         // 6. Run assign slottables for a tree with node’s root.
-        assign_slottables_for_a_tree(node->root());
+        assign_slottables_for_a_tree(node_to_insert->root());
 
         node_to_insert->invalidate_style();
 
