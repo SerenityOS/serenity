@@ -2696,14 +2696,15 @@ void Document::destroy()
 {
     page()->client().page_did_destroy_document(*this);
 
-    // NOTE: Abort needs to happen before destory. There is currently bug in the spec: https://github.com/whatwg/html/issues/9148
-    // 4. Abort document.
+    // FIXME: 1. Assert: this is running as part of a task queued on document's relevant agent's event loop.
+
+    // 2. Abort document.
     abort();
 
-    // 2. Set document's salvageable state to false.
+    // 3. Set document's salvageable state to false.
     m_salvageable = false;
 
-    // 3. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+    // 4. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
     run_unloading_cleanup_steps();
 
     // 5. Remove any tasks whose document is document from any task queue (without running those tasks).
@@ -2713,14 +2714,6 @@ void Document::destroy()
 
     // 6. Set document's browsing context to null.
     m_browsing_context = nullptr;
-
-    // When a frame element stops being an active frame element, the user agent must destroy a child navigable given the element.
-    // A frame element is said to be an active frame element when it is in a document tree and its node document's browsing context is non-null.
-    for (auto& navigable_container : HTML::NavigableContainer::all_instances()) {
-        if (&navigable_container->document() == this) {
-            navigable_container->destroy_the_child_navigable();
-        }
-    }
 
     // 7. Set document's node navigable's active session history entry's document state's document to null.
     if (navigable()) {
@@ -2732,23 +2725,38 @@ void Document::destroy()
     // FIXME: 9. For each workletGlobalScope in document's worklet global scopes, terminate workletGlobalScope.
 }
 
+void Document::destroy_document_and_its_descendants(JS::NonnullGCPtr<Document> document)
+{
+    // 1. Let childNavigables be document's child navigables.
+    auto child_navigables = document->document_tree_child_navigables();
+
+    // 2. Let numberDestroyed be 0.
+    size_t number_destroyed = 0;
+
+    // 3. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source
+    //    given childNavigable's active window to perform the following steps:
+    for (auto& child_navigable : child_navigables) {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), [&] {
+            // 1. Destroy childNavigable's active document.
+            child_navigable->active_document()->destroy();
+
+            // 2. Increment numberDestroyed.
+            number_destroyed++;
+        });
+    }
+
+    // 4. Wait until numberDestroyed equals childNavigable's size.
+    HTML::main_thread_event_loop().spin_until([&] {
+        return number_destroyed == child_navigables.size();
+    });
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
 void Document::abort()
 {
     // 1. Abort the active documents of each of document's descendant navigables.
     //    If this results in any of those Document objects having their salvageable state set to false,
     //    then set document's salvageable state to false also.
-    for (auto navigable : descendant_navigables()) {
-        if (auto document = navigable->active_document()) {
-            // NOTE: This is not in the spec but we need to abort ongoing navigations in all descendandt navigables.
-            //       See https://github.com/whatwg/html/issues/9711
-            navigable->set_ongoing_navigation({});
-
-            document->abort();
-            if (!document->m_salvageable)
-                m_salvageable = false;
-        }
-    }
 
     // FIXME: 2. Cancel any instances of the fetch algorithm in the context of document,
     //           discarding any tasks queued for them, and discarding any further data received from the network for them.
@@ -2756,11 +2764,11 @@ void Document::abort()
     //           or any queued tasks or any network data getting discarded,
     //           then set document's salvageable state to false.
 
-    // 3. If document's navigation id is non-null, then:
+    // 3. If document's during-loading navigation ID for WebDriver BiDi is non-null, then:
     if (m_navigation_id.has_value()) {
-        // 1. FIXME: Invoke WebDriver BiDi navigation aborted with document's browsing context,
-        //           and new WebDriver BiDi navigation status whose whose id is document's navigation id,
-        //           status is "canceled", and url is document's URL.
+        // FIXME: 1. Invoke WebDriver BiDi navigation aborted with document's browsing context, and new WebDriver BiDi navigation
+        //           status whose whose id is document's during-loading navigation ID for WebDriver BiDi, status is "canceled",
+        //           and url is document's URL.
 
         // 2. Set document's navigation id to null.
         m_navigation_id = {};
@@ -2777,6 +2785,31 @@ void Document::abort()
         // 3. Set document's salvageable state to false.
         m_salvageable = false;
     }
+}
+
+void Document::abort_document_and_its_descendants(JS::NonnullGCPtr<Document> document)
+{
+    // 1. Assert: this is running as part of a task queued on document's relevant agent's event loop.
+
+    // 2. Let descendantNavigables be document's descendant navigables.
+    auto descendant_navigables = document->descendant_navigables();
+
+    // 3. For each descendantNavigable of descendantNavigables, queue a global task on the navigation and traversal task
+    //    source given descendantNavigable's active window to perform the following steps:
+    for (auto& descendant_navigable : descendant_navigables) {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *descendant_navigable->active_window(), [descendant_navigable] {
+            // 1. Abort descendantNavigable's active document.
+            descendant_navigable->active_document()->abort();
+
+            // 2. If descendantNavigable's active document's salvageable is false, then set document's salvageable to false.
+            if (!descendant_navigable->active_document()->m_salvageable) {
+                descendant_navigable->active_document()->set_salvageable(false);
+            }
+        });
+    }
+
+    // 4. Abort document.
+    document->abort();
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#active-parser
@@ -2877,6 +2910,43 @@ void Document::unload(JS::GCPtr<Document>)
     //            newDocument's previous document unload timing to unloadTimingInfo.
 
     did_stop_being_active_document_in_navigable();
+}
+
+void Document::unload_a_document_and_its_descendants(JS::NonnullGCPtr<Document> document, JS::GCPtr<Document> new_document, JS::SafeFunction<void()> after_all_unloads)
+{
+    // FIXME: 1. Assert: this is running within document's node navigable's traversable navigable's session history traversal queue.
+
+    // 2. Let childNavigables be document's child navigables.
+    auto child_navigables = document->document_tree_child_navigables();
+
+    // 3. Let numberUnloaded be 0.
+    size_t number_unloaded = 0;
+
+    // 4. For each childNavigable of childNavigable's, queue a global task on the navigation and traversal task source given childNavigable's active window to perform the following steps:
+    for (auto& child_navigable : child_navigables) {
+        HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, *child_navigable->active_window(), [child_navigable, &number_unloaded] {
+            // 1. Unload childNavigable's active document.
+            child_navigable->active_document()->unload();
+
+            // 2. Increment numberUnloaded.
+            number_unloaded++;
+        });
+    }
+
+    // 5. Wait until numberUnloaded equals childNavigable's size.
+    HTML::main_thread_event_loop().spin_until([&] {
+        return number_unloaded == child_navigables.size();
+    });
+
+    // 6. Queue a global task on the navigation and traversal task source given document's relevant global object to perform the following steps:
+    HTML::queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*document), [document, new_document, after_all_unloads = move(after_all_unloads)] {
+        // 1. Unload document, passing along newDocument if it is not null.
+        document->unload(new_document);
+
+        // 2. If afterAllUnloads was given, then run it.
+        if (after_all_unloads)
+            after_all_unloads();
+    });
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use

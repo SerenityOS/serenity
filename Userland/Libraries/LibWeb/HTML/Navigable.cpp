@@ -1251,10 +1251,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
             return;
         }
 
-        // 3. Queue a global task on the navigation and traversal task source given navigable's active window to abort navigable's active document.
+        // 3. Queue a global task on the navigation and traversal task source given navigable's active window to abort a document and its descendants given navigable's active document.
         queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this] {
             VERIFY(this->active_document());
-            this->active_document()->abort();
+            DOM::Document::abort_document_and_its_descendants(*this->active_document());
         });
 
         // 4. Let documentState be a new document state with

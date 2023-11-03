@@ -262,8 +262,8 @@ void NavigableContainer::destroy_the_child_navigable()
     // 3. Set container's content navigable to null.
     m_content_navigable = nullptr;
 
-    // 4. Destroy navigable's active document.
-    navigable->active_document()->destroy();
+    // 4. Destroy a document and its descendants given navigable's active document.
+    DOM::Document::destroy_document_and_its_descendants(*navigable->active_document());
 
     // 5. Let parentDocState be container's node navigable's active session history entry's document state.
     auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state;

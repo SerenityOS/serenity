@@ -484,6 +484,10 @@ public:
     // https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document
     void unload(JS::GCPtr<Document> new_document = nullptr);
 
+    static void destroy_document_and_its_descendants(JS::NonnullGCPtr<Document>);
+    static void abort_document_and_its_descendants(JS::NonnullGCPtr<Document>);
+    static void unload_a_document_and_its_descendants(JS::NonnullGCPtr<Document> document, JS::GCPtr<Document> new_document, JS::SafeFunction<void()> after_all_unloads);
+
     // https://html.spec.whatwg.org/multipage/dom.html#active-parser
     JS::GCPtr<HTML::HTMLParser> active_parser();
 

@@ -416,43 +416,51 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
 
         // FIXME: 9. Append navigable to navigablesThatMustWaitBeforeHandlingSyncNavigation.
 
-        // 10. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
-        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index] {
-            // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
-            if (navigable->has_been_destroyed())
-                return;
+        // FIXME: 10. Let entriesForNavigationAPI be the result of getting session history entries for the navigation API given navigable and targetStep.
 
-            // 1. If changingNavigableContinuation's update-only is false, then:
+        // 11. If changingNavigableContinuation's update-only is false, and targetEntry's document does not equal displayedDocument, then unload a document
+        //     and its descendants given displayedDocument, targetEntry's document, and afterPotentialUnloads.
+        auto update_only = changing_navigable_continuation.update_only;
+
+        JS::SafeFunction<void()> after_potential_unloads = [update_only, navigable, target_entry, &completed_change_jobs, script_history_length, script_history_index, displayed_document] {
+            // 1. If changingNavigableContinuation's update-only is false, then activate history entry targetEntry for navigable.
             if (!update_only) {
-                // 1. If targetEntry's document does not equal displayedDocument, then:
-                if (target_entry->document_state->document().ptr() != displayed_document.ptr()) {
-                    // 1. Unload displayedDocument given targetEntry's document.
-                    displayed_document->unload(target_entry->document_state->document());
-
-                    // 2. For each childNavigable of displayedDocument's descendant navigables, queue a global task on the navigation and traversal task source given
-                    //    childNavigable's active window to unload childNavigable's active document.
-                    for (auto child_navigable : displayed_document->descendant_navigables()) {
-                        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [child_navigable] {
-                            child_navigable->active_document()->unload();
-                        });
-                    }
-                }
-
-                // 3. Activate history entry targetEntry for navigable.
                 navigable->activate_history_entry(*target_entry);
             }
 
-            // FIXME: 2. If targetEntry's document is not equal to displayedDocument, then queue a global task on the navigation and traversal task source given targetEntry's document's
-            //           relevant global object to perform the following step. Otherwise, continue onward to perform the following step within the currently-queued task.
+            // FIXME: 2. If navigable is not traversable, and targetEntry is not navigable's current session history entry, and targetEntry's document
+            //           state's origin is the same as navigable's current session history entry's document state's origin, then fire a traverse navigate
+            //           event given targetEntry and userInvolvementForNavigateEvents.
 
-            // 3. Update document for history step application given targetEntry's document, targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength, and
-            //    scriptHistoryIndex and entriesForNavigationAPI.
-            //    FIXME: Pass entriesForNavigationAPI
-            target_entry->document_state->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index);
+            // 3. Let updateDocument be an algorithm step which performs update document for history step application given targetEntry's document, targetEntry,
+            //    changingNavigableContinuation's update-only, scriptHistoryLength, scriptHistoryIndex, and entriesForNavigationAPI.
+            auto update_document = [target_entry, update_only, script_history_length, script_history_index] {
+                target_entry->document_state->document()->update_for_history_step_application(*target_entry, update_only, script_history_length, script_history_index);
+            };
 
-            // 4. Increment completedChangeJobs.
+            // 4. If targetEntry's document is equal to displayedDocument, then perform updateDocument.
+            if (target_entry->document_state->document().ptr() == displayed_document.ptr()) {
+                update_document();
+            }
+            // 5. Otherwise, queue a global task on the navigation and traversal task source given targetEntry's document's relevant global object to perform updateDocument.
+            else {
+                queue_global_task(Task::Source::NavigationAndTraversal, relevant_global_object(*target_entry->document_state->document()), move(update_document));
+            }
+
+            // 6. Increment completedChangeJobs.
             completed_change_jobs++;
-        });
+        };
+
+        // 10. If changingNavigableContinuation's update-only is false, and targetEntry's document does not equal displayedDocument, then unload a document and its
+        //     descendants given displayedDocument, targetEntry's document, and afterPotentialUnloads.
+        if (!update_only && target_entry->document_state->document().ptr() != displayed_document.ptr()) {
+            DOM::Document::unload_a_document_and_its_descendants(*displayed_document.ptr(), target_entry->document_state->document(), move(after_potential_unloads));
+        } else {
+            // Otherwise, queue a global task on the navigation and traversal task source given navigable's active window to perform afterPotentialUnloads.
+            queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [after_potential_unloads = move(after_potential_unloads)] {
+                after_potential_unloads();
+            });
+        }
     }
 
     // FIXME: 15. Let totalNonchangingJobs be the size of nonchangingNavigablesThatStillNeedUpdates.
@@ -591,9 +599,9 @@ void TraversableNavigable::destroy_top_level_traversable()
         // 1. Let document be historyEntry's document.
         auto document = history_entry->document_state->document();
 
-        // 2. If document is not null, then destroy document.
+        // 2. If document is not null, then destroy document and its descendants given document.
         if (document)
-            document->destroy();
+            DOM::Document::destroy_document_and_its_descendants(*document);
     }
 
     // 3. Remove browsingContext.
