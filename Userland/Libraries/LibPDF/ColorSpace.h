@@ -200,6 +200,25 @@ private:
     Array<float, 4> m_range { -100, 100, -100, 100 };
 };
 
+class IndexedColorSpace final : public ColorSpace {
+public:
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Vector<Value>&& parameters);
+
+    ~IndexedColorSpace() override = default;
+
+    PDFErrorOr<Color> color(ReadonlySpan<Value> arguments) const override;
+    int number_of_components() const override { return 1; }
+    Vector<float> default_decode() const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Indexed; }
+
+private:
+    IndexedColorSpace(NonnullRefPtr<ColorSpace>);
+
+    NonnullRefPtr<ColorSpace> m_base;
+    int m_hival { 0 };
+    Vector<u8> m_lookup;
+};
+
 class SeparationColorSpace final : public ColorSpace {
 public:
     static PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> create(Document*, Vector<Value>&& parameters);
