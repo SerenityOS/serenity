@@ -476,7 +476,8 @@ ErrorOr<void> DebugSession::update_loaded_libs()
     };
 
     ScopeGuard progress_guard([this]() {
-        m_on_initialization_progress(0);
+        if (m_on_initialization_progress)
+            m_on_initialization_progress(0);
     });
 
     size_t vm_entry_index = 0;
