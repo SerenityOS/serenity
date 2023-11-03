@@ -2298,21 +2298,22 @@ void HTMLParser::adjust_svg_attributes(HTMLToken& token)
     token.adjust_attribute_name("zoomandpan"_fly_string, "zoomAndPan"_fly_string);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#adjust-foreign-attributes
 void HTMLParser::adjust_foreign_attributes(HTMLToken& token)
 {
-    token.adjust_foreign_attribute("xlink:actuate"_fly_string, "xlink", "actuate"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:arcrole"_fly_string, "xlink", "arcrole"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:href"_fly_string, "xlink", "href"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:role"_fly_string, "xlink", "role"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:show"_fly_string, "xlink", "show"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:title"_fly_string, "xlink", "title"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:type"_fly_string, "xlink", "type"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:actuate"_fly_string, "xlink"_fly_string, "actuate"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:arcrole"_fly_string, "xlink"_fly_string, "arcrole"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:href"_fly_string, "xlink"_fly_string, "href"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:role"_fly_string, "xlink"_fly_string, "role"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:show"_fly_string, "xlink"_fly_string, "show"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:title"_fly_string, "xlink"_fly_string, "title"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:type"_fly_string, "xlink"_fly_string, "type"_fly_string, Namespace::XLink);
 
-    token.adjust_foreign_attribute("xml:lang"_fly_string, "xml", "lang"_fly_string, Namespace::XML);
-    token.adjust_foreign_attribute("xml:space"_fly_string, "xml", "space"_fly_string, Namespace::XML);
+    token.adjust_foreign_attribute("xml:lang"_fly_string, "xml"_fly_string, "lang"_fly_string, Namespace::XML);
+    token.adjust_foreign_attribute("xml:space"_fly_string, "xml"_fly_string, "space"_fly_string, Namespace::XML);
 
-    token.adjust_foreign_attribute("xmlns"_fly_string, "", "xmlns"_fly_string, Namespace::XMLNS);
-    token.adjust_foreign_attribute("xmlns:xlink"_fly_string, "xmlns", "xlink"_fly_string, Namespace::XMLNS);
+    token.adjust_foreign_attribute("xmlns"_fly_string, {}, "xmlns"_fly_string, Namespace::XMLNS);
+    token.adjust_foreign_attribute("xmlns:xlink"_fly_string, "xmlns"_fly_string, "xlink"_fly_string, Namespace::XMLNS);
 }
 
 void HTMLParser::increment_script_nesting_level()
