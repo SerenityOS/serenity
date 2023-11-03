@@ -655,6 +655,35 @@ void Compiler::compile_bitwise_and(Bytecode::Op::BitwiseAnd const& op)
     end.link(m_assembler);
 }
 
+static Value cxx_bitwise_or(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(bitwise_or(vm, lhs, rhs));
+}
+
+void Compiler::compile_bitwise_or(Bytecode::Op::BitwiseOr const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_accumulator(ARG2);
+
+    Assembler::Label end {};
+
+    branch_if_both_int32(ARG1, ARG2, [&] {
+        // NOTE: Since both sides are Int32, we know that the upper 32 bits are nothing but the INT32_TAG.
+        //       This means we can get away with just a simple 64-bit bitwise or.
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(ARG1),
+            Assembler::Operand::Register(ARG2));
+
+        store_accumulator(ARG1);
+        m_assembler.jump(end);
+    });
+
+    native_call((void*)cxx_bitwise_or);
+    store_accumulator(RET);
+    check_exception();
+    end.link(m_assembler);
+}
+
 static ThrowCompletionOr<Value> not_(VM&, Value value)
 {
     return Value(!value.to_boolean());
