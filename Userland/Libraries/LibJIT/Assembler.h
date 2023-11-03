@@ -664,6 +664,31 @@ struct Assembler {
         }
     }
 
+    void sub32(Operand dst, Operand src, Optional<Label&> overflow_label)
+    {
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
+            emit_rex_for_mr(dst, src, REX_W::No);
+            emit8(0x29);
+            emit_modrm_mr(dst, src);
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit_rex_for_slash(dst, REX_W::No);
+            emit8(0x83);
+            emit_modrm_slash(5, dst);
+            emit8(src.offset_or_immediate);
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+            emit_rex_for_slash(dst, REX_W::No);
+            emit8(0x81);
+            emit_modrm_slash(5, dst);
+            emit32(src.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        if (overflow_label.has_value()) {
+            jump_if(Condition::Overflow, *overflow_label);
+        }
+    }
+
     // NOTE: It's up to the caller of this function to preserve registers as needed.
     void native_call(void* callee, Vector<Operand> const& stack_arguments = {})
     {
