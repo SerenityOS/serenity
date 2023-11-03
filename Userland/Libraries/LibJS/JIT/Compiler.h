@@ -41,7 +41,6 @@ private:
 #    endif
 
 #    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
-        O(Mul, mul)                                             \
         O(Div, div)                                             \
         O(Exp, exp)                                             \
         O(Mod, mod)                                             \
