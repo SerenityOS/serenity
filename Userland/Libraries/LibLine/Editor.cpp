@@ -817,13 +817,13 @@ void Editor::handle_interrupt_event()
 
     m_previous_interrupt_was_handled_as_interrupt = true;
 
+    insert("^C"sv);
     fprintf(stderr, "^C");
     fflush(stderr);
 
     if (on_interrupt_handled)
         on_interrupt_handled();
 
-    m_buffer.clear();
     m_chars_touched_in_the_middle = buffer().size();
     m_cursor = 0;
 
