@@ -80,7 +80,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
         return TRY(ICCBasedColorSpace::create(document, move(parameters)));
 
     if (color_space_name == CommonNames::Indexed)
-        return Error::rendering_unsupported_error("Indexed color spaces not yet implemented");
+        return TRY(IndexedColorSpace::create(document, move(parameters)));
 
     if (color_space_name == CommonNames::Lab)
         return TRY(LabColorSpace::create(document, move(parameters)));
@@ -603,6 +603,88 @@ PDFErrorOr<Color> LabColorSpace::color(ReadonlySpan<Value> arguments) const
 Vector<float> LabColorSpace::default_decode() const
 {
     return { 0.0f, 100.0f, m_range[0], m_range[1], m_range[2], m_range[3] };
+}
+
+PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* document, Vector<Value>&& parameters)
+{
+    if (parameters.size() != 3)
+        return Error { Error::Type::MalformedPDF, "Indexed color space expected three parameters" };
+
+    // "The base parameter is an array or name that identifies the base color space in which the values
+    //  in the color table are to be interpreted. It can be any device or CIE-based color space or (in PDF 1.3)
+    //  a Separation or DeviceN space, but not a Pattern space or another Indexed space."
+
+    auto param0 = TRY(document->resolve(parameters[0]));
+    if (!param0.has<NonnullRefPtr<Object>>())
+        return Error { Error::Type::MalformedPDF, "Indexed color space expects object for first arg" };
+    auto base_object = param0.get<NonnullRefPtr<Object>>();
+    auto base = TRY(ColorSpace::create(document, base_object));
+
+    if (base->family().name() == ColorSpaceFamily::Pattern.name() || base->family().name() == ColorSpaceFamily::Indexed.name())
+        return Error { Error::Type::MalformedPDF, "Indexed color space has invalid base color space" };
+
+    // "The hival parameter is an integer that specifies the maximum valid index value. In other words,
+    // the color table is to be indexed by integers in the range 0 to hival. hival can be no greater than 255"
+    auto param1 = TRY(document->resolve(parameters[1]));
+    if (!param1.has<int>())
+        return Error { Error::Type::MalformedPDF, "Indexed color space expects int for second arg" };
+    auto hival = param1.get<int>();
+
+    // "The color table is defined by the lookup parameter, which can be either a stream or (in PDF 1.2) a byte string.
+    //  It provides the mapping between index values and the corresponding colors in the base color space.
+    //  The color table data must be m × (hival + 1) bytes long, where m is the number of color components in the
+    //  base color space. Each byte is an unsigned integer in the range 0 to 255 that is scaled to the range of
+    //  the corresponding color component in the base color space; that is, 0 corresponds to the minimum value
+    //  in the range for that component, and 255 corresponds to the maximum."
+    auto param2 = TRY(document->resolve(parameters[2]));
+    if (!param2.has<NonnullRefPtr<Object>>())
+        return Error { Error::Type::MalformedPDF, "Indexed color space expects object for third arg" };
+    auto lookup_object = param2.get<NonnullRefPtr<Object>>();
+
+    Vector<u8> lookup;
+    if (lookup_object->is<StreamObject>()) {
+        lookup = Vector<u8> { lookup_object->cast<StreamObject>()->bytes() };
+    } else if (lookup_object->is<StringObject>()) {
+        // FIXME: Check if it's a hex string.
+        auto const& string = lookup_object->cast<StringObject>()->string();
+        lookup = Vector<u8> { ReadonlyBytes { string.characters(), string.length() } };
+    } else {
+        return Error { Error::Type::MalformedPDF, "Indexed color space expects stream or string for third arg" };
+    }
+
+    if (static_cast<int>(lookup.size()) != (hival + 1) * base->number_of_components())
+        return Error { Error::Type::MalformedPDF, "Indexed color space lookup table doesn't match size" };
+
+    auto color_space = adopt_ref(*new IndexedColorSpace(move(base)));
+    color_space->m_hival = hival;
+    color_space->m_lookup = move(lookup);
+    return color_space;
+}
+
+IndexedColorSpace::IndexedColorSpace(NonnullRefPtr<ColorSpace> base)
+    : m_base(move(base))
+{
+}
+
+PDFErrorOr<Color> IndexedColorSpace::color(ReadonlySpan<Value> arguments) const
+{
+    VERIFY(arguments.size() == 1);
+
+    auto index = arguments[0].to_int();
+    if (index < 0 || index > m_hival)
+        return Error { Error::Type::MalformedPDF, "Indexed color space index out of range" };
+
+    Vector<Value, 4> components;
+    size_t const n = m_base->number_of_components();
+    for (size_t i = 0; i < n; ++i)
+        TRY(components.try_append(Value(m_lookup[index * n + i] / 255.0f)));
+
+    return m_base->color(components);
+}
+
+Vector<float> IndexedColorSpace::default_decode() const
+{
+    return { 0.0, static_cast<float>(m_hival) };
 }
 
 PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document*, Vector<Value>&&)
