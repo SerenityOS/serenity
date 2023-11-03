@@ -980,16 +980,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
 
 PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(NonnullRefPtr<Object> color_space_object)
 {
-    // "A color space is defined by an array object whose first element is a name object identifying the color space family.
-    //  The remaining array elements, if any, are parameters that further characterize the color space;
-    //  their number and types vary according to the particular family.
-    //  For families that do not require parameters, the color space can be specified simply by the family name itself instead of an array."
-
-    // Pattern cannot be a name in these cases
-    if (color_space_object->is<NameObject>()) {
-        return ColorSpace::create(color_space_object->cast<NameObject>()->name());
-    }
-    return ColorSpace::create(m_document, color_space_object->cast<ArrayObject>());
+    return ColorSpace::create(m_document, color_space_object);
 }
 
 Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()

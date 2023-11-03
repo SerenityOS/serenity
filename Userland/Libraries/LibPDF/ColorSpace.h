@@ -50,6 +50,7 @@ private:
 
 class ColorSpace : public RefCounted<ColorSpace> {
 public:
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<Object>);
     static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(DeprecatedFlyString const&);
     static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<ArrayObject>);
 

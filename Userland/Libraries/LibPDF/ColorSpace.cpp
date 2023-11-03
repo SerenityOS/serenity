@@ -31,6 +31,19 @@ PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(DeprecatedFlyString const& fa
     return Error(Error::Type::MalformedPDF, "Unknown ColorSpace family"_string);
 }
 
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<Object> color_space_object)
+{
+    // "A color space is defined by an array object whose first element is a name object identifying the color space family.
+    //  The remaining array elements, if any, are parameters that further characterize the color space;
+    //  their number and types vary according to the particular family.
+    //  For families that do not require parameters, the color space can be specified simply by the family name itself instead of an array."
+    if (color_space_object->is<NameObject>())
+        return ColorSpace::create(color_space_object->cast<NameObject>()->name());
+    if (color_space_object->is<ArrayObject>())
+        return ColorSpace::create(document, color_space_object->cast<ArrayObject>());
+    return Error { Error::Type::MalformedPDF, "Color space must be name or array" };
+}
+
 PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name)
 {
     // Simple color spaces with no parameters, which can be specified directly
