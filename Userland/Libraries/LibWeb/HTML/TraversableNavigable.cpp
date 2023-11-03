@@ -636,6 +636,10 @@ void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> 
         // 4. Append targetEntry to targetEntries.
         target_entries.append(target_entry);
     } else {
+        Platform::EventLoopPlugin::the().spin_until([&] {
+            return entry_to_replace->step.has<int>();
+        });
+
         // 1. Replace entryToReplace with targetEntry in targetEntries.
         *(target_entries.find(*entry_to_replace)) = target_entry;
 
