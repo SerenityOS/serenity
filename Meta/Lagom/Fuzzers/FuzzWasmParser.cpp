@@ -11,6 +11,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
     ReadonlyBytes bytes { data, size };
     FixedMemoryStream stream { bytes };
     [[maybe_unused]] auto result = Wasm::Module::parse(stream);

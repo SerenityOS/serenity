@@ -10,6 +10,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
     auto decoder_or_error = Gfx::PBMImageDecoderPlugin::create({ data, size });
     if (decoder_or_error.is_error())
         return 0;

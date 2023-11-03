@@ -10,6 +10,8 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
+
     auto stream = make<FixedMemoryStream>(ReadonlyBytes { data, size });
 
     auto decompressor_or_error = Compress::ZlibDecompressor::create(move(stream));
