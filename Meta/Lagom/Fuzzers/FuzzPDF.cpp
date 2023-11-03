@@ -9,6 +9,8 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
+
     ReadonlyBytes bytes { data, size };
 
     if (auto maybe_document = PDF::Document::create(bytes); !maybe_document.is_error()) {

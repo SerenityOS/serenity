@@ -4,12 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <LibCrypto/Authentication/Poly1305.h>
 #include <stddef.h>
 #include <stdint.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
+
     if (size < 32)
         return 0;
 
