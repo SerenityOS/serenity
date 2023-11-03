@@ -426,6 +426,8 @@ void Compiler::check_exception()
         m_assembler.jump(label_for(*handler));
         no_exception.link(m_assembler);
     } else if (auto const* finalizer = current_block().finalizer(); finalizer) {
+        store_vm_register(Bytecode::Register::saved_exception(), GPR0);
+        store_vm_register(Bytecode::Register::exception(), GPR1);
         m_assembler.jump_if(Assembler::Operand::Register(GPR0),
             Assembler::Condition::NotEqualTo,
             Assembler::Operand::Register(GPR1),
@@ -1247,11 +1249,14 @@ void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
 void Compiler::compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwind const& op)
 {
     // re-throw the exception if we reached the end of the finally block and there was no catch block to handle it
+    load_vm_register(GPR0, Bytecode::Register::saved_exception());
+    store_vm_register(Bytecode::Register::exception(), GPR0);
+    m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
+    store_vm_register(Bytecode::Register::saved_exception(), GPR1);
     check_exception();
 
     // if (saved_return_value.is_empty()) goto resume_block;
     load_vm_register(GPR0, Bytecode::Register::saved_return_value());
-    m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(Value().encoded()));
     m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
         Assembler::Condition::EqualTo,
