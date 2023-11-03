@@ -19,16 +19,6 @@
 
 namespace Audio {
 
-#define TRY_OR_REJECT_AND_STOP(expression, promise)                \
-    ({                                                             \
-        auto&& __temporary_result = (expression);                  \
-        if (__temporary_result.is_error()) [[unlikely]] {          \
-            (promise)->reject(__temporary_result.release_error()); \
-            return 1;                                              \
-        }                                                          \
-        __temporary_result.release_value();                        \
-    })
-
 ErrorOr<NonnullRefPtr<PlaybackStream>> PlaybackStream::create(OutputState initial_output_state, u32 sample_rate, u8 channels, u32 target_latency_ms, AudioDataRequestCallback&& data_request_callback)
 {
     VERIFY(data_request_callback);
