@@ -426,7 +426,6 @@ void Compiler::check_exception()
         m_assembler.jump(label_for(*handler));
         no_exception.link(m_assembler);
     } else if (auto const* finalizer = current_block().finalizer(); finalizer) {
-        store_vm_register(Bytecode::Register::exception(), GPR1);
         m_assembler.jump_if(Assembler::Operand::Register(GPR0),
             Assembler::Condition::NotEqualTo,
             Assembler::Operand::Register(GPR1),
