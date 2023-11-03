@@ -54,7 +54,6 @@ private:
         O(LooselyEquals, abstract_equals)                       \
         O(StrictlyInequals, typed_inequals)                     \
         O(StrictlyEquals, typed_equals)                         \
-        O(BitwiseXor, bitwise_xor)                              \
         O(LeftShift, left_shift)                                \
         O(RightShift, right_shift)                              \
         O(UnsignedRightShift, unsigned_right_shift)
