@@ -89,7 +89,8 @@ ErrorOr<FlatPtr> Process::do_write(OpenFileDescription& description, UserOrKerne
                 Thread::current()->send_signal(SIGPIPE, &Process::current());
             return nwritten_or_error.release_error();
         }
-        VERIFY(nwritten_or_error.value() > 0);
+        if (nwritten_or_error.value() == 0)
+            break;
         total_nwritten += nwritten_or_error.value();
     }
     return total_nwritten;
