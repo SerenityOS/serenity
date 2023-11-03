@@ -42,9 +42,9 @@ public:
     };
 
     struct Attribute {
-        DeprecatedString prefix;
+        Optional<FlyString> prefix;
         FlyString local_name;
-        FlyString namespace_;
+        Optional<FlyString> namespace_;
         String value;
         Position name_start_position;
         Position value_start_position;
@@ -290,7 +290,7 @@ public:
         });
     }
 
-    void adjust_foreign_attribute(FlyString const& old_name, DeprecatedFlyString const& prefix, FlyString const& local_name, FlyString const& namespace_)
+    void adjust_foreign_attribute(FlyString const& old_name, Optional<FlyString> const& prefix, FlyString const& local_name, Optional<FlyString> const& namespace_)
     {
         VERIFY(is_start_tag() || is_end_tag());
         for_each_attribute([&](Attribute& attribute) {
