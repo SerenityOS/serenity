@@ -447,10 +447,10 @@ static bool is_allowed_to_be_readonly(HTML::HTMLInputElement::TypeAttributeState
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#attr-input-readonly
-void HTMLInputElement::handle_readonly_attribute(DeprecatedFlyString const& value)
+void HTMLInputElement::handle_readonly_attribute(Optional<String> const& maybe_value)
 {
     // The readonly attribute is a boolean attribute that controls whether or not the user can edit the form control. When specified, the element is not mutable.
-    m_is_mutable = !(!value.is_null() && is_allowed_to_be_readonly(m_type));
+    m_is_mutable = !maybe_value.has_value() || !is_allowed_to_be_readonly(m_type);
 
     if (m_text_node)
         m_text_node->set_always_editable(m_is_mutable);
@@ -563,11 +563,7 @@ void HTMLInputElement::create_text_input_shadow_tree()
         // NOTE: file upload state is mutable, but we don't allow the text node to be modifed
         m_text_node->set_always_editable(false);
     } else {
-        auto readonly = attribute(HTML::AttributeNames::readonly);
-        if (readonly.has_value())
-            handle_readonly_attribute(readonly->to_deprecated_string());
-        else
-            handle_readonly_attribute({});
+        handle_readonly_attribute(attribute(HTML::AttributeNames::readonly));
     }
 
     m_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
@@ -671,7 +667,7 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<Depreca
             m_placeholder_text_node->set_data(MUST(String::from_deprecated_string(value.value_or(""))));
     } else if (name == HTML::AttributeNames::readonly) {
         if (value.has_value())
-            handle_readonly_attribute(*value);
+            handle_readonly_attribute(MUST(String::from_deprecated_string(*value)));
         else
             handle_readonly_attribute({});
     }

@@ -174,7 +174,7 @@ private:
     WebIDL::ExceptionOr<void> run_input_activation_behavior();
     void set_checked_within_group();
 
-    void handle_readonly_attribute(DeprecatedFlyString const& value);
+    void handle_readonly_attribute(Optional<String> const& value);
 
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
     DeprecatedString value_sanitization_algorithm(DeprecatedString) const;
