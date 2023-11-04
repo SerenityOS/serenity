@@ -12,13 +12,23 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/Process.h>
 #include <LibDesktop/AppFile.h>
+#include <LibFileSystem/FileSystem.h>
 
 namespace Desktop {
 
+DeprecatedString AppFile::app_file_path_for_app(StringView app_name)
+{
+    return DeprecatedString::formatted("{}/{}.af", APP_FILES_DIRECTORY, app_name);
+}
+
+bool AppFile::exists_for_app(StringView app_name)
+{
+    return FileSystem::exists(app_file_path_for_app(app_name));
+}
+
 NonnullRefPtr<AppFile> AppFile::get_for_app(StringView app_name)
 {
-    auto path = DeprecatedString::formatted("{}/{}.af", APP_FILES_DIRECTORY, app_name);
-    return open(path);
+    return open(app_file_path_for_app(app_name));
 }
 
 NonnullRefPtr<AppFile> AppFile::open(StringView path)
