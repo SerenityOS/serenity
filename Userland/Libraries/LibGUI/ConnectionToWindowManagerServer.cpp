@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -85,6 +86,12 @@ void ConnectionToWindowManagerServer::keymap_changed(i32 wm_id, DeprecatedString
 {
     if (auto* window = Window::from_window_id(wm_id))
         Core::EventLoop::current().post_event(*window, make<WMKeymapChangedEvent>(wm_id, keymap));
+}
+
+void ConnectionToWindowManagerServer::add_to_quick_launch(i32 wm_id, pid_t pid)
+{
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMAddToQuickLaunchEvent>(wm_id, pid));
 }
 
 }

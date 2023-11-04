@@ -765,6 +765,14 @@ void WindowManager::stop_tile_window_animation()
     m_tile_window_overlay_animation = nullptr;
 }
 
+void WindowManager::on_add_to_quick_launch(pid_t pid)
+{
+    for_each_window_manager([&](WMConnectionFromClient& conn) {
+        conn.async_add_to_quick_launch(conn.window_id(), pid);
+        return IterationDecision::Continue;
+    });
+}
+
 void WindowManager::show_tile_window_overlay(Window& window, Screen const& cursor_screen, WindowTileType tile_type)
 {
     m_move_window_suggested_tile = tile_type;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -743,6 +744,13 @@ void Window::ensure_window_menu()
             m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
         }
 
+        auto add_to_quick_launch_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::AddToQuickLaunch, "&Add to Quick Launch");
+        m_window_menu_add_to_quick_launch_item = add_to_quick_launch_item.ptr();
+        m_window_menu_add_to_quick_launch_item->set_icon(&pin_icon());
+        m_window_menu->add_item(move(add_to_quick_launch_item));
+
+        m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
+
         auto close_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Close, "&Close");
         m_window_menu_close_item = close_item.ptr();
         m_window_menu_close_item->set_icon(&close_icon());
@@ -790,6 +798,11 @@ void Window::handle_window_menu_action(WindowMenuAction action)
         auto new_is_checked = !item.is_checked();
         item.set_checked(new_is_checked);
         WindowManager::the().set_always_on_top(*this, new_is_checked);
+        break;
+    }
+    case WindowMenuAction::AddToQuickLaunch: {
+        if (m_process_id.has_value())
+            WindowManager::the().on_add_to_quick_launch(m_process_id.value());
         break;
     }
     }

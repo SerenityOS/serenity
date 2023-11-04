@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Fabian Blatz <fabianblatz@gmail.com>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -88,6 +89,8 @@ public:
 
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
+
+    ErrorOr<bool> add_from_pid(pid_t pid);
 
 private:
     explicit QuickLaunchWidget();

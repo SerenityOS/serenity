@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,6 +39,7 @@ private:
     virtual void super_digit_key_pressed(i32, u8) override;
     virtual void workspace_changed(i32, u32, u32) override;
     virtual void keymap_changed(i32, DeprecatedString const&) override;
+    virtual void add_to_quick_launch(i32, pid_t) override;
 };
 
 }
