@@ -29,10 +29,8 @@ public:
     JS::NonnullGCPtr<HTMLCollection> children();
 
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
+    // FIXME: This should take an Optional<FlyString>
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name_ns(Optional<String> const&, FlyString const&);
-
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name(DeprecatedFlyString const&);
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_tag_name_ns(DeprecatedFlyString const&, DeprecatedFlyString const&);
 
     WebIDL::ExceptionOr<void> prepend(Vector<Variant<JS::Handle<Node>, String>> const& nodes);
     WebIDL::ExceptionOr<void> append(Vector<Variant<JS::Handle<Node>, String>> const& nodes);
