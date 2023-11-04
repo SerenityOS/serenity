@@ -97,9 +97,9 @@ void HTMLTextAreaElement::create_shadow_tree_if_needed()
         return;
 
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
-    auto element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    auto element = MUST(DOM::create_element(document(), HTML::TagNames::div, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
 
-    m_inner_text_element = MUST(DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML));
+    m_inner_text_element = MUST(DOM::create_element(document(), HTML::TagNames::div, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
 
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), String {});
     m_text_node->set_always_editable(true);

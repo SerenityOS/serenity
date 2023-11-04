@@ -809,7 +809,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     if (is<Element>(this)) {
         // 1. Let copy be the result of creating an element, given document, node’s local name, node’s namespace, node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset.
         auto& element = *verify_cast<Element>(this);
-        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_(), element.prefix(), element.is_value(), false).release_value_but_fixme_should_propagate_errors();
+        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_uri(), element.prefix(), element.is_value(), false).release_value_but_fixme_should_propagate_errors();
 
         // 2. For each attribute in node’s attribute list:
         element.for_each_attribute([&](auto& name, auto& value) {

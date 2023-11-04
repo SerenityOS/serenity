@@ -564,7 +564,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> Anything else
 AnythingElse:
     // Create an html element whose node document is the Document object. Append it to the Document object. Put this element in the stack of open elements.
-    auto element = create_element(document(), HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    auto element = create_element(document(), HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
     MUST(document().append_child(element));
     m_stack_of_open_elements.push(element);
 
@@ -684,7 +684,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
 
     // 9. Let element be the result of creating an element given document, localName, given namespace, null, and is.
     //    If will execute script is true, set the synchronous custom elements flag; otherwise, leave it unset.
-    auto element = create_element(*document, local_name, namespace_, {}, is_value, will_execute_script).release_value_but_fixme_should_propagate_errors();
+    auto element = create_element(*document, local_name, MUST(FlyString::from_deprecated_fly_string(namespace_)), {}, is_value, will_execute_script).release_value_but_fixme_should_propagate_errors();
 
     // 10. Append each attribute in the given token to element.
     // FIXME: This isn't the exact `append` the spec is talking about.
@@ -3772,7 +3772,7 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     }
 
     // 5. Let root be a new html element with no attributes.
-    auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    auto root = create_element(context_element.document(), HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
 
     // 6. Append the element root to the Document node created above.
     MUST(temp_document->append_child(root));
