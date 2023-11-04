@@ -177,6 +177,23 @@ Attr const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
+Attr const* NamedNodeMap::get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name, size_t* item_index) const
+{
+    // FIXME: We shouldn't need to do any conversion when looking up in the node map.
+    StringView namespace_view;
+    if (namespace_.has_value())
+        namespace_view = namespace_->bytes_as_string_view();
+
+    return get_attribute_ns(namespace_view, local_name, item_index);
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
+Attr* NamedNodeMap::get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name, size_t* item_index)
+{
+    return const_cast<Attr*>(const_cast<NamedNodeMap const*>(this)->get_attribute_ns(namespace_, local_name, item_index));
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
 Attr* NamedNodeMap::get_attribute_ns(StringView namespace_, StringView local_name, size_t* item_index)
 {
     return const_cast<Attr*>(const_cast<NamedNodeMap const*>(this)->get_attribute_ns(namespace_, local_name, item_index));

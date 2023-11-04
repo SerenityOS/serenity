@@ -52,6 +52,9 @@ public:
     void replace_attribute(Attr& old_attribute, Attr& new_attribute, size_t old_attribute_index);
     void append_attribute(Attr& attribute);
 
+    Attr* get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name, size_t* item_index = nullptr);
+    Attr const* get_attribute_ns(Optional<FlyString> const& namespace_, FlyString const& local_name, size_t* item_index = nullptr) const;
+
     // FIXME: This should take a 'FlyString cosnt&'
     Attr const* remove_attribute(StringView qualified_name);
     Attr const* remove_attribute_ns(StringView namespace_, StringView local_name);
