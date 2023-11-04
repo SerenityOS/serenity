@@ -55,6 +55,12 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
+    enum class TaskState {
+        None,
+        Pending,
+        RunAsSoonAsReady,
+    };
+
     void apply_any_pending_playback_rate();
 
     JS::NonnullGCPtr<WebIDL::Promise> current_ready_promise() const;
@@ -90,6 +96,12 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#current-finished-promise
     mutable JS::GCPtr<WebIDL::Promise> m_current_finished_promise;
+
+    // https://www.w3.org/TR/web-animations-1/#pending-play-task
+    TaskState m_pending_play_task { TaskState::None };
+
+    // https://www.w3.org/TR/web-animations-1/#pending-pause-task
+    TaskState m_pending_pause_task { TaskState::None };
 };
 
 }

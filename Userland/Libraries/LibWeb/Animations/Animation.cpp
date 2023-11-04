@@ -54,10 +54,14 @@ void Animation::set_effect(JS::GCPtr<AnimationEffect> new_effect)
     if (new_effect == old_effect)
         return;
 
-    // FIXME: 3. If animation has a pending pause task, reschedule that task to run as soon as animation is ready.
+    // 3. If animation has a pending pause task, reschedule that task to run as soon as animation is ready.
+    if (m_pending_pause_task == TaskState::Pending)
+        m_pending_pause_task = TaskState::RunAsSoonAsReady;
 
-    // FIXME: 4. If animation has a pending play task, reschedule that task to run as soon as animation is ready to play
-    //           new effect.
+    // 4. If animation has a pending play task, reschedule that task to run as soon as animation is ready to play ne
+    //    effect.
+    if (m_pending_play_task == TaskState::Pending)
+        m_pending_play_task = TaskState::RunAsSoonAsReady;
 
     // 5. If new effect is not null and if new effect is the associated effect of another animation, previous animation,
     //    run the procedure to set the associated effect of an animation (this procedure) on previous animation passing
@@ -143,8 +147,13 @@ void Animation::set_start_time(Optional<double> const& new_start_time)
         m_hold_time = previous_current_time;
     }
 
-    // FIXME: 7. If animation has a pending play task or a pending pause task, cancel that task and resolve animation’s
-    //           current ready promise with animation.
+    // 7. If animation has a pending play task or a pending pause task, cancel that task and resolve animation’s current
+    //    ready promise with animation.
+    if (m_pending_play_task == TaskState::Pending || m_pending_pause_task == TaskState::Pending) {
+        m_pending_play_task = TaskState::None;
+        m_pending_pause_task = TaskState::None;
+        WebIDL::resolve_promise(realm(), current_ready_promise(), this);
+    }
 
     // FIXME: 8. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
     //           true, and the synchronously notify flag set to false.
