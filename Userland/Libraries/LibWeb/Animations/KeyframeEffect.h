@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023-2024, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,9 +10,13 @@
 #include <LibWeb/Animations/AnimationEffect.h>
 #include <LibWeb/Bindings/KeyframeEffectPrototype.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Element.h>
 
 namespace Web::Animations {
+
+using EasingValue = Variant<String, NonnullRefPtr<CSS::StyleValue const>>;
 
 // https://www.w3.org/TR/web-animations-1/#the-keyframeeffectoptions-dictionary
 struct KeyframeEffectOptions : public EffectTiming {
@@ -21,19 +25,31 @@ struct KeyframeEffectOptions : public EffectTiming {
 };
 
 // https://www.w3.org/TR/web-animations-1/#dictdef-basepropertyindexedkeyframe
+// Note: This is an intermediate structure used only when parsing Keyframes provided by the caller in a slightly
+//       different format. It is converted to BaseKeyframe, which is why it doesn't need to store the parsed properties
 struct BasePropertyIndexedKeyframe {
     Variant<Optional<double>, Vector<Optional<double>>> offset { Vector<Optional<double>> {} };
-    Variant<String, Vector<String>> easing { Vector<String> {} };
+    Variant<EasingValue, Vector<EasingValue>> easing { Vector<EasingValue> {} };
     Variant<Bindings::CompositeOperationOrAuto, Vector<Bindings::CompositeOperationOrAuto>> composite { Vector<Bindings::CompositeOperationOrAuto> {} };
+
+    HashMap<String, Vector<String>> properties {};
 };
 
 // https://www.w3.org/TR/web-animations-1/#dictdef-basekeyframe
 struct BaseKeyframe {
+    using UnparsedProperties = HashMap<String, String>;
+    using ParsedProperties = HashMap<CSS::PropertyID, NonnullRefPtr<CSS::StyleValue const>>;
+
     Optional<double> offset {};
-    String easing { "linear"_string };
+    EasingValue easing { "linear"_string };
     Bindings::CompositeOperationOrAuto composite { Bindings::CompositeOperationOrAuto::Auto };
 
     Optional<double> computed_offset {};
+
+    Variant<UnparsedProperties, ParsedProperties> properties { UnparsedProperties {} };
+
+    UnparsedProperties& unparsed_properties() { return properties.get<UnparsedProperties>(); }
+    ParsedProperties& parsed_properties() { return properties.get<ParsedProperties>(); }
 };
 
 // https://www.w3.org/TR/web-animations-1/#the-keyframeeffect-interface
