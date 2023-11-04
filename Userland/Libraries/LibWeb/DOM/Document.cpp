@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibWeb/Animations/DocumentTimeline.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
@@ -382,6 +383,8 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_parser);
     visitor.visit(m_lazy_load_intersection_observer);
     visitor.visit(m_visual_viewport);
+
+    visitor.visit(m_default_timeline);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script);
@@ -3560,6 +3563,15 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
 HashMap<AK::URL, HTML::SharedImageRequest*>& Document::shared_image_requests()
 {
     return m_shared_image_requests;
+}
+
+// https://www.w3.org/TR/web-animations-1/#dom-document-timeline
+JS::NonnullGCPtr<Animations::DocumentTimeline> Document::timeline()
+{
+    // The DocumentTimeline object representing the default document timeline.
+    if (!m_default_timeline)
+        m_default_timeline = Animations::DocumentTimeline::create(realm(), *this, static_cast<double>(MonotonicTime::now().milliseconds()));
+    return *m_default_timeline;
 }
 
 }
