@@ -292,6 +292,69 @@ Bindings::AnimationPlayState Animation::play_state() const
     return Bindings::AnimationPlayState::Running;
 }
 
+// https://www.w3.org/TR/web-animations-1/#animation-time-to-timeline-time
+Optional<double> Animation::convert_an_animation_time_to_timeline_time(Optional<double> time) const
+{
+    // 1. If time is unresolved, return time.
+    if (!time.has_value())
+        return time;
+
+    // 2. If time is infinity, return an unresolved time value.
+    if (isinf(time.value()))
+        return {};
+
+    // 3. If animation’s playback rate is zero, return an unresolved time value.
+    if (m_playback_rate == 0.0)
+        return {};
+
+    // 4. If animation’s start time is unresolved, return an unresolved time value.
+    if (!m_start_time.has_value())
+        return {};
+
+    // 5. Return the result of calculating: time × (1 / playback rate) + start time (where playback rate and start time
+    //    are the playback rate and start time of animation, respectively).
+    return (time.value() * (1.0 / m_playback_rate)) + m_start_time.value();
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-time-to-origin-relative-time
+Optional<double> Animation::convert_a_timeline_time_to_an_origin_relative_time(Optional<double> time) const
+{
+    // 1. Let timeline time be the result of converting time from an animation time to a timeline time.
+    auto timeline_time = convert_an_animation_time_to_timeline_time(time);
+
+    // 2. If timeline time is unresolved, return time.
+    if (!timeline_time.has_value())
+        return time;
+
+    // 3. If animation is not associated with a timeline, return an unresolved time value.
+    if (!m_timeline)
+        return {};
+
+    // 4. If animation is associated with an inactive timeline, return an unresolved time value.
+    if (m_timeline->is_inactive())
+        return {};
+
+    // 5. If there is no procedure to convert a timeline time to an origin-relative time for the timeline associated
+    //    with animation, return an unresolved time value.
+    if (!m_timeline->can_convert_a_timeline_time_to_an_original_relative_time())
+        return {};
+
+    // 6. Return the result of converting timeline time to an origin-relative time using the procedure defined for the
+    //    timeline associated with animation.
+    return m_timeline->convert_a_timeline_time_to_an_original_relative_time(timeline_time);
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-document-for-timing
+JS::GCPtr<DOM::Document> Animation::document_for_timing() const
+{
+    // An animation’s document for timing is the Document with which its timeline is associated. If an animation is not
+    // associated with a timeline, or its timeline is not associated with a document, then it has no document for
+    // timing.
+    if (!m_timeline)
+        return {};
+    return m_timeline->associated_document();
+}
+
 // https://www.w3.org/TR/web-animations-1/#associated-effect-end
 double Animation::associated_effect_end() const
 {

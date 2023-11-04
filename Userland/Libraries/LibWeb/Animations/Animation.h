@@ -51,6 +51,11 @@ public:
     // https://www.w3.org/TR/web-animations-1/#dom-animation-finished
     JS::NonnullGCPtr<JS::Object> finished() const { return *current_finished_promise()->promise(); }
 
+    Optional<double> convert_an_animation_time_to_timeline_time(Optional<double>) const;
+    Optional<double> convert_a_timeline_time_to_an_origin_relative_time(Optional<double>) const;
+
+    JS::GCPtr<DOM::Document> document_for_timing() const;
+
 protected:
     Animation(JS::Realm&);
 
