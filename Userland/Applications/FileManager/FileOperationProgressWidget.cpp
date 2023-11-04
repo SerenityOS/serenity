@@ -138,38 +138,38 @@ void FileOperationProgressWidget::did_error(StringView message)
     window()->close();
 }
 
-DeprecatedString FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_byte_count)
+ErrorOr<String> FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_byte_count)
 {
     i64 const elapsed_seconds = m_elapsed_timer.elapsed_time().to_seconds();
 
     if (bytes_done == 0 || elapsed_seconds < 3)
-        return "Estimating...";
+        return "Estimating..."_string;
 
     off_t bytes_left = total_byte_count - bytes_done;
     int seconds_remaining = (bytes_left * elapsed_seconds) / bytes_done;
 
     if (seconds_remaining < 30)
-        return DeprecatedString::formatted("{} seconds", 5 + seconds_remaining - seconds_remaining % 5);
+        return String::formatted("{} seconds", 5 + seconds_remaining - seconds_remaining % 5);
     if (seconds_remaining < 60)
-        return "About a minute";
+        return "About a minute"_string;
     if (seconds_remaining < 90)
-        return "Over a minute";
+        return "Over a minute"_string;
     if (seconds_remaining < 120)
-        return "Less than two minutes";
+        return "Less than two minutes"_string;
 
     time_t minutes_remaining = seconds_remaining / 60;
     seconds_remaining %= 60;
 
     if (minutes_remaining < 60) {
         if (seconds_remaining < 30)
-            return DeprecatedString::formatted("About {} minutes", minutes_remaining);
-        return DeprecatedString::formatted("Over {} minutes", minutes_remaining);
+            return String::formatted("About {} minutes", minutes_remaining);
+        return String::formatted("Over {} minutes", minutes_remaining);
     }
 
     time_t hours_remaining = minutes_remaining / 60;
     minutes_remaining %= 60;
 
-    return DeprecatedString::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
+    return String::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
 }
 
 void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, [[maybe_unused]] off_t current_file_done, [[maybe_unused]] off_t current_file_size, StringView current_filename)
@@ -195,7 +195,7 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
         VERIFY_NOT_REACHED();
     }
 
-    estimated_time_label.set_text(String::from_deprecated_string(estimate_time(bytes_done, total_byte_count)).release_value_but_fixme_should_propagate_errors());
+    estimated_time_label.set_text(estimate_time(bytes_done, total_byte_count).release_value_but_fixme_should_propagate_errors());
 
     if (total_byte_count) {
         window()->set_progress(100.0f * bytes_done / total_byte_count);

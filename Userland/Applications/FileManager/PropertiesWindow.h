@@ -20,13 +20,13 @@ class PropertiesWindow final : public GUI::Window {
     C_OBJECT(PropertiesWindow);
 
 public:
-    static ErrorOr<NonnullRefPtr<PropertiesWindow>> try_create(DeprecatedString const& path, bool disable_rename, Window* parent = nullptr);
+    static ErrorOr<NonnullRefPtr<PropertiesWindow>> try_create(String const& path, bool disable_rename, Window* parent = nullptr);
     virtual ~PropertiesWindow() override = default;
 
     virtual void close() final;
 
 private:
-    PropertiesWindow(DeprecatedString const& path, Window* parent = nullptr);
+    PropertiesWindow(String const& path, Window* parent = nullptr);
     ErrorOr<void> create_widgets(bool disable_rename);
     ErrorOr<void> create_general_tab(GUI::TabWidget&, bool disable_rename);
     ErrorOr<void> create_file_type_specific_tabs(GUI::TabWidget&);
@@ -44,7 +44,7 @@ private:
 
     class DirectoryStatisticsCalculator final : public RefCounted<DirectoryStatisticsCalculator> {
     public:
-        DirectoryStatisticsCalculator(DeprecatedString path);
+        DirectoryStatisticsCalculator(String path);
         void start();
         void stop();
         Function<void(off_t total_size_in_bytes, size_t file_count, size_t directory_count)> on_update;
@@ -54,7 +54,7 @@ private:
         size_t m_file_count { 0 };
         size_t m_directory_count { 0 };
         RefPtr<Threading::BackgroundAction<int>> m_background_action;
-        Queue<DeprecatedString> m_work_queue;
+        Queue<String> m_work_queue;
     };
 
     static StringView const get_description(mode_t const mode)
@@ -84,7 +84,7 @@ private:
     void permission_changed(mode_t mask, bool set);
     bool apply_changes();
     void update();
-    DeprecatedString make_full_path(DeprecatedString const& name);
+    String make_full_path(String const& name);
 
     RefPtr<GUI::Button> m_apply_button;
     RefPtr<GUI::TextBox> m_name_box;
@@ -92,9 +92,9 @@ private:
     RefPtr<GUI::Label> m_size_label;
     RefPtr<DirectoryStatisticsCalculator> m_directory_statistics_calculator;
     RefPtr<GUI::Action> m_on_escape;
-    DeprecatedString m_name;
-    DeprecatedString m_parent_path;
-    DeprecatedString m_path;
+    String m_name;
+    String m_parent_path;
+    String m_path;
     mode_t m_mode { 0 };
     mode_t m_old_mode { 0 };
     bool m_permissions_dirty { false };
