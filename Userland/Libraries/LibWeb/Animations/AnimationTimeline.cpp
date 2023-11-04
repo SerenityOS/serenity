@@ -26,6 +26,10 @@ WebIDL::ExceptionOr<void> AnimationTimeline::set_current_time(Optional<double> v
 
 void AnimationTimeline::set_associated_document(JS::GCPtr<DOM::Document> document)
 {
+    if (document)
+        document->associate_with_timeline(*this);
+    if (m_associated_document)
+        m_associated_document->disassociate_with_timeline(*this);
     m_associated_document = document;
 }
 
@@ -39,6 +43,12 @@ bool AnimationTimeline::is_inactive() const
 AnimationTimeline::AnimationTimeline(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
+}
+
+AnimationTimeline::~AnimationTimeline()
+{
+    if (m_associated_document)
+        m_associated_document->disassociate_with_timeline(*this);
 }
 
 void AnimationTimeline::initialize(JS::Realm& realm)

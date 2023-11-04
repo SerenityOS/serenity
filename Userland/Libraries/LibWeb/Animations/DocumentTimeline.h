@@ -33,6 +33,7 @@ public:
 
 private:
     DocumentTimeline(JS::Realm&, DOM::Document&, HighResolutionTime::DOMHighResTimeStamp origin_time);
+    virtual ~DocumentTimeline() override = default;
 
     virtual void initialize(JS::Realm&) override;
 

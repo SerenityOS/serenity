@@ -404,6 +404,9 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto& observer : m_intersection_observers)
         visitor.visit(observer);
+
+    for (auto& timeline : m_associated_animation_timelines)
+        visitor.visit(timeline);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
@@ -3570,6 +3573,16 @@ JS::NonnullGCPtr<Animations::DocumentTimeline> Document::timeline()
     if (!m_default_timeline)
         m_default_timeline = Animations::DocumentTimeline::create(realm(), *this, static_cast<double>(MonotonicTime::now().milliseconds()));
     return *m_default_timeline;
+}
+
+void Document::associate_with_timeline(JS::NonnullGCPtr<Animations::AnimationTimeline> timeline)
+{
+    m_associated_animation_timelines.set(timeline);
+}
+
+void Document::disassociate_with_timeline(JS::NonnullGCPtr<Animations::AnimationTimeline> timeline)
+{
+    m_associated_animation_timelines.remove(timeline);
 }
 
 }
