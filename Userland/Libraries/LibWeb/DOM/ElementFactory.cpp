@@ -490,7 +490,7 @@ static JS::GCPtr<MathML::MathMLElement> create_mathml_element(JS::Realm& realm, 
     return nullptr;
 }
 // https://dom.spec.whatwg.org/#concept-create-element
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document, FlyString local_name, DeprecatedFlyString namespace_, Optional<FlyString> prefix, Optional<String> is_value, bool synchronous_custom_elements_flag)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document, FlyString local_name, Optional<FlyString> namespace_, Optional<FlyString> prefix, Optional<String> is_value, bool synchronous_custom_elements_flag)
 {
     auto& realm = document.realm();
 
@@ -504,7 +504,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
     // NOTE: We collapse this into just returning an element where necessary.
 
     // 4. Let definition be the result of looking up a custom element definition given document, namespace, localName, and is.
-    auto definition = document.lookup_custom_element_definition(namespace_, local_name.to_deprecated_fly_string(), is_value);
+    DeprecatedFlyString deprecated_namespace = namespace_.has_value() ? namespace_.value().to_deprecated_fly_string() : DeprecatedFlyString {};
+    auto definition = document.lookup_custom_element_definition(deprecated_namespace, local_name.to_deprecated_fly_string(), is_value);
 
     // 5. If definition is non-null, and definition’s name is not equal to its local name (i.e., definition represents a customized built-in element), then:
     if (definition && definition->name() != definition->local_name()) {
@@ -624,7 +625,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
 
     auto qualified_name = QualifiedName { local_name, prefix, namespace_ };
 
-    if (namespace_ == Namespace::HTML) {
+    if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))) {
         auto element = create_html_element(realm, document, move(qualified_name));
         element->set_is_value(move(is_value));
         element->set_custom_element_state(CustomElementState::Uncustomized);
@@ -637,7 +638,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
         return element;
     }
 
-    if (namespace_ == Namespace::SVG) {
+    if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::SVG))) {
         auto element = create_svg_element(realm, document, qualified_name);
         if (element) {
             element->set_is_value(move(is_value));
@@ -646,7 +647,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
         }
     }
 
-    if (namespace_ == Namespace::MathML) {
+    if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::MathML))) {
         auto element = create_mathml_element(realm, document, qualified_name);
         if (element) {
             element->set_is_value(move(is_value));

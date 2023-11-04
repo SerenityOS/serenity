@@ -47,7 +47,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> OptionConstructor::construct
     auto& document = window.associated_document();
 
     // 2. Let option be the result of creating an element given document, option, and the HTML namespace.
-    auto element = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() { return DOM::create_element(document, HTML::TagNames::option, Namespace::HTML); }));
+    auto element = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() { return DOM::create_element(document, HTML::TagNames::option, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))); }));
     JS::NonnullGCPtr<HTML::HTMLOptionElement> option_element = verify_cast<HTML::HTMLOptionElement>(*element);
 
     // 3. If text is not the empty string, then append to option a new Text node whose data is text.
