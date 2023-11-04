@@ -55,6 +55,7 @@
     X(DeviceN)                    \
     X(DeviceRGB)                  \
     X(Differences)                \
+    X(Domain)                     \
     X(E)                          \
     X(Encoding)                   \
     X(Encrypt)                    \
@@ -79,6 +80,7 @@
     X(FontFile)                   \
     X(FontFile2)                  \
     X(FontFile3)                  \
+    X(FunctionType)               \
     X(Gamma)                      \
     X(H)                          \
     X(Height)                     \
