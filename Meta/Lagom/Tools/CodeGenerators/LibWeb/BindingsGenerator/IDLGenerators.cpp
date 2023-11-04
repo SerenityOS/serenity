@@ -3225,6 +3225,7 @@ void generate_namespace_implementation(IDL::Interface const& interface, StringBu
 
     generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::Animations;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
@@ -3443,6 +3444,7 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 
     generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::Animations;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
@@ -3828,6 +3830,7 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
     generator.append(R"~~~(
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::Animations;
 using namespace Web::Crypto;
 using namespace Web::CSS;
 using namespace Web::DOM;
@@ -3977,6 +3980,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface,
 
     generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::Animations;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::DOMParsing;
@@ -4109,6 +4113,7 @@ void generate_global_mixin_implementation(IDL::Interface const& interface, Strin
     generator.append(R"~~~(
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::Animations;
 using namespace Web::Crypto;
 using namespace Web::CSS;
 using namespace Web::DOM;

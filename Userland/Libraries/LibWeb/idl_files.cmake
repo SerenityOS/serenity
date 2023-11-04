@@ -1,6 +1,7 @@
 # This file is included from "Meta/CMake/libweb_data.cmake"
 # It is defined here so that there is no need to go to the Meta directory when adding new idl files
 
+libweb_js_bindings(Animations/AnimationTimeline)
 libweb_js_bindings(Crypto/Crypto)
 libweb_js_bindings(Crypto/SubtleCrypto)
 libweb_js_bindings(CSS/CSSConditionRule)

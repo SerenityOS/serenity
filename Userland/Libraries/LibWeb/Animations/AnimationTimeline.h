@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>.
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <LibWeb/Bindings/PlatformObject.h>
+
+namespace Web::Animations {
+
+// https://www.w3.org/TR/web-animations-1/#animationtimeline
+class AnimationTimeline : public Bindings::PlatformObject {
+    WEB_PLATFORM_OBJECT(AnimationTimeline, Bindings::PlatformObject);
+
+public:
+    Optional<double> current_time() const { return m_current_time; }
+    virtual WebIDL::ExceptionOr<void> set_current_time(Optional<double>);
+
+    JS::GCPtr<DOM::Document> associated_document() const { return m_associated_document; }
+    void set_associated_document(JS::GCPtr<DOM::Document>);
+
+    virtual bool is_inactive() const;
+    bool is_monotonically_increasing() const { return m_is_monotonically_increasing; }
+
+    // https://www.w3.org/TR/web-animations-1/#timeline-time-to-origin-relative-time
+    virtual Optional<double> convert_a_timeline_time_to_an_original_relative_time(Optional<double>) { VERIFY_NOT_REACHED(); }
+    virtual bool can_convert_a_timeline_time_to_an_original_relative_time() const { return false; }
+
+protected:
+    AnimationTimeline(JS::Realm&);
+
+    virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    // https://www.w3.org/TR/web-animations-1/#dom-animationtimeline-currenttime
+    Optional<double> m_current_time {};
+
+    // https://www.w3.org/TR/web-animations-1/#monotonically-increasing-timeline
+    bool m_is_monotonically_increasing { true };
+
+    // https://www.w3.org/TR/web-animations-1/#timeline-associated-with-a-document
+    JS::GCPtr<DOM::Document> m_associated_document {};
+};
+
+}
