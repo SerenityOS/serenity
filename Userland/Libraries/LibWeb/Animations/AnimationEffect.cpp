@@ -200,6 +200,58 @@ double AnimationEffect::active_duration() const
     return m_iteration_duration.get<double>() * m_iteration_count;
 }
 
+Optional<double> AnimationEffect::active_time() const
+{
+    return active_time_using_fill(m_fill_mode);
+}
+
+// https://www.w3.org/TR/web-animations-1/#calculating-the-active-time
+Optional<double> AnimationEffect::active_time_using_fill(Bindings::FillMode fill_mode) const
+{
+    // The active time is based on the local time and start delay. However, it is only defined when the animation effect
+    // should produce an output and hence depends on its fill mode and phase as follows,
+
+    // -> If the animation effect is in the before phase,
+    if (is_in_the_before_phase()) {
+        // The result depends on the first matching condition from the following,
+
+        // -> If the fill mode is backwards or both,
+        if (fill_mode == Bindings::FillMode::Backwards || fill_mode == Bindings::FillMode::Both) {
+            // Return the result of evaluating max(local time - start delay, 0).
+            return max(local_time().value() - m_start_delay, 0.0);
+        }
+
+        // -> Otherwise,
+        //    Return an unresolved time value.
+        return {};
+    }
+
+    // -> If the animation effect is in the active phase,
+    if (is_in_the_active_phase()) {
+        // Return the result of evaluating local time - start delay.
+        return local_time().value() - m_start_delay;
+    }
+
+    // -> If the animation effect is in the after phase,
+    if (is_in_the_after_phase()) {
+        // The result depends on the first matching condition from the following,
+
+        // -> If the fill mode is forwards or both,
+        if (fill_mode == Bindings::FillMode::Forwards || fill_mode == Bindings::FillMode::Both) {
+            // Return the result of evaluating max(local time - start delay - active duration, 0).
+            return max(local_time().value() - m_start_delay - active_duration(), 0.0);
+        }
+
+        // -> Otherwise,
+        //    Return an unresolved time value.
+        return {};
+    }
+
+    // -> Otherwise (the local time is unresolved),
+    //    Return an unresolved time value.
+    return {};
+}
+
 // https://www.w3.org/TR/web-animations-1/#before-active-boundary-time
 double AnimationEffect::before_active_boundary_time() const
 {
