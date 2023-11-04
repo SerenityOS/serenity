@@ -22,6 +22,7 @@
 #include <LibWeb/HTML/NavigationHistoryEntry.h>
 #include <LibWeb/HTML/NavigationTransition.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
@@ -1068,7 +1069,7 @@ bool Navigation::inner_navigate_event_firing_algorithm(
 
     // 31. Prepare to run script given navigation's relevant settings object.
     // NOTE: There's a massive spec note here
-    relevant_settings_object(*this).prepare_to_run_script();
+    TemporaryExecutionContext execution_context { relevant_settings_object(*this) };
 
     // 32. If event's interception state is not "none":
     if (event->interception_state() != NavigateEvent::InterceptionState::None) {
@@ -1117,11 +1118,6 @@ bool Navigation::inner_navigate_event_firing_algorithm(
         for (auto const& handler : event->navigation_handler_list()) {
             // 1. Append the result of invoking handler with an empty arguments list to promisesList.
             auto result = WebIDL::invoke_callback(handler, {});
-            if (result.is_abrupt()) {
-                // FIXME: https://github.com/whatwg/html/issues/9774
-                report_exception(result.release_error(), realm);
-                continue;
-            }
             // This *should* be equivalent to converting a promise to a promise capability
             promises_list.append(WebIDL::create_resolved_promise(realm, result.value().value()));
         }
@@ -1139,9 +1135,12 @@ bool Navigation::inner_navigate_event_firing_algorithm(
 
         // 4. Wait for all of promisesList, with the following success steps:
         WebIDL::wait_for_all(
-            realm, promises_list, [&](JS::MarkedVector<JS::Value> const&) -> void {
+            realm, promises_list, [event, this, api_method_tracker](auto const&) -> void {
+
                 // FIXME: Spec issue: Event's relevant global objects' *associated document*
                 // 1. If event's relevant global object is not fully active, then abort these steps.
+                auto& relevant_global_object = verify_cast<HTML::Window>(HTML::relevant_global_object(*event));
+                auto& realm = event->realm();
                 if (!relevant_global_object.associated_document().is_fully_active())
                     return;
 
@@ -1170,12 +1169,14 @@ bool Navigation::inner_navigate_event_firing_algorithm(
                 m_transition = nullptr;
 
                 // 9. If apiMethodTracker is non-null, then resolve the finished promise for apiMethodTracker.
-                if (api_method_tracker)
+                if (api_method_tracker != nullptr)
                     resolve_the_finished_promise(*api_method_tracker); },
             // and the following failure steps given reason rejectionReason:
-            [&](JS::Value rejection_reason) -> void {
+            [event, this, api_method_tracker](JS::Value rejection_reason) -> void {
                 // FIXME: Spec issue: Event's relevant global objects' *associated document*
                 // 1. If event's relevant global object is not fully active, then abort these steps.
+                auto& relevant_global_object = verify_cast<HTML::Window>(HTML::relevant_global_object(*event));
+                auto& realm = event->realm();
                 if (!relevant_global_object.associated_document().is_fully_active())
                     return;
 
@@ -1213,18 +1214,18 @@ bool Navigation::inner_navigate_event_firing_algorithm(
                 m_transition = nullptr;
 
                 // 9. If apiMethodTracker is non-null, then reject the finished promise for apiMethodTracker with rejectionReason.
-                if (api_method_tracker)
+                if (api_method_tracker != nullptr)
                     reject_the_finished_promise(*api_method_tracker, rejection_reason);
             });
     }
 
     // 34. Otherwise, if apiMethodTracker is non-null, then clean up apiMethodTracker.
-    else if (api_method_tracker) {
+    else if (api_method_tracker != nullptr) {
         clean_up(*api_method_tracker);
     }
 
     // 35. Clean up after running script given navigation's relevant settings object.
-    relevant_settings_object(*this).clean_up_after_running_script();
+    // Handled by TemporaryExecutionContext destructor from step 31
 
     // 36. If event's interception state is "none", then return true.
     // 37. Return false.
