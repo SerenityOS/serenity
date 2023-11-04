@@ -265,7 +265,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<String> const& name
     auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_fly_string()));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
-    set_attribute_value(extracted_qualified_name.local_name(), value.to_deprecated_fly_string(), extracted_qualified_name.prefix(), extracted_qualified_name.deprecated_namespace_());
+    set_attribute_value(extracted_qualified_name.local_name(), value.to_deprecated_fly_string(), extracted_qualified_name.prefix(), extracted_qualified_name.namespace_());
 
     return {};
 }
@@ -277,7 +277,7 @@ void Element::append_attribute(Attr& attribute)
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set-value
-void Element::set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix, DeprecatedFlyString const& namespace_)
+void Element::set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_)
 {
     // 1. Let attribute be the result of getting an attribute given namespace, localName, and element.
     auto* attribute = m_attributes->get_attribute_ns(namespace_, local_name);

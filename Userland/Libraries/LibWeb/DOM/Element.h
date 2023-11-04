@@ -118,7 +118,7 @@ public:
 
     // FIXME: This should be taking an Optional<FlyString>
     WebIDL::ExceptionOr<void> set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value);
-    void set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix = {}, DeprecatedFlyString const& namespace_ = {});
+    void set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix = {}, Optional<FlyString> const& namespace_ = {});
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
 
