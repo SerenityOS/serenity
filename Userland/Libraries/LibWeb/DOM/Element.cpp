@@ -185,7 +185,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
-    bool insert_as_lowercase = namespace_() == Namespace::HTML;
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
 
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
@@ -211,10 +211,10 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name)
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Optional<FlyString> namespace_, DeprecatedFlyString qualified_name)
 {
     // 1. If namespace is the empty string, then set it to null.
-    if (namespace_.is_empty())
+    if (namespace_.has_value() && namespace_.value().is_empty())
         namespace_ = {};
 
     // 2. Validate qualifiedName.
@@ -234,7 +234,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Deprec
     }
 
     // 6. If prefix is non-null and namespace is null, then throw a "NamespaceError" DOMException.
-    if (prefix.has_value() && namespace_.is_null())
+    if (prefix.has_value() && !namespace_.has_value())
         return WebIDL::NamespaceError::create(realm, "Prefix is non-null and namespace is null."_fly_string);
 
     // 7. If prefix is "xml" and namespace is not the XML namespace, then throw a "NamespaceError" DOMException.
@@ -256,12 +256,13 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Deprec
 // https://dom.spec.whatwg.org/#dom-element-setattributens
 WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value)
 {
-    DeprecatedFlyString deprecated_namespace;
+    // FIXME: This conversion is ugly
+    Optional<FlyString> namespace_to_use;
     if (namespace_.has_value())
-        deprecated_namespace = namespace_->to_deprecated_string();
+        namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), deprecated_namespace, qualified_name.to_deprecated_fly_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_fly_string()));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
     set_attribute_value(extracted_qualified_name.local_name(), value.to_deprecated_fly_string(), extracted_qualified_name.prefix(), extracted_qualified_name.deprecated_namespace_());
@@ -343,7 +344,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optio
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
-    bool insert_as_lowercase = namespace_() == Namespace::HTML;
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
 
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
@@ -632,7 +633,7 @@ DOMTokenList* Element::class_list()
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowRootInit init)
 {
     // 1. If this’s namespace is not the HTML namespace, then throw a "NotSupportedError" DOMException.
-    if (namespace_() != Namespace::HTML)
+    if (namespace_uri() != Namespace::HTML)
         return WebIDL::NotSupportedError::create(realm(), "Element's namespace is not the HTML namespace"_fly_string);
 
     // 2. If this’s local name is not one of the following:
@@ -823,7 +824,7 @@ CSS::CSSStyleDeclaration* Element::style_for_bindings()
 void Element::make_html_uppercased_qualified_name()
 {
     // This is allowed by the spec: "User agents could optimize qualified name and HTML-uppercased qualified name by storing them in internal slots."
-    if (namespace_() == Namespace::HTML && document().document_type() == Document::Type::HTML)
+    if (namespace_uri() == Namespace::HTML && document().document_type() == Document::Type::HTML)
         m_html_uppercased_qualified_name = MUST(Infra::to_ascii_uppercase(qualified_name()));
     else
         m_html_uppercased_qualified_name = qualified_name();
@@ -1413,7 +1414,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
     if (!is<Element>(*context)
         || (context->document().document_type() == Document::Type::HTML
             && static_cast<Element const&>(*context).local_name() == "html"sv
-            && static_cast<Element const&>(*context).namespace_() == Namespace::HTML)) {
+            && static_cast<Element const&>(*context).namespace_uri() == Namespace::HTML)) {
         // FIXME: let context be a new Element with
         //        - body as its local name,
         //        - The HTML namespace as its namespace, and

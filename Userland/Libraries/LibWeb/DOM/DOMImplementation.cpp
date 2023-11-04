@@ -70,12 +70,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
     xml_document->set_origin(document().origin());
 
     // 7. document’s content type is determined by namespace:
-    auto deprecated_namespace = namespace_.has_value() ? namespace_->to_deprecated_string() : DeprecatedString::empty();
+    // FIXME: This conversion is ugly
+    Optional<FlyString> namespace_to_use;
+    if (namespace_.has_value())
+        namespace_to_use = namespace_.value();
 
-    if (deprecated_namespace == Namespace::HTML) {
+    if (namespace_to_use == Namespace::HTML) {
         // -> HTML namespace
         xml_document->set_content_type("application/xhtml+xml"_string);
-    } else if (deprecated_namespace == Namespace::SVG) {
+    } else if (namespace_to_use == Namespace::SVG) {
         // -> SVG namespace
         xml_document->set_content_type("image/svg+xml"_string);
     } else {
@@ -104,17 +107,17 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(Optional<Stri
     MUST(html_document->append_child(*doctype));
 
     // 4. Append the result of creating an element given doc, html, and the HTML namespace, to doc.
-    auto html_element = create_element(html_document, HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto html_element = create_element(html_document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_document->append_child(html_element));
 
     // 5. Append the result of creating an element given doc, head, and the HTML namespace, to the html element created earlier.
-    auto head_element = create_element(html_document, HTML::TagNames::head, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto head_element = create_element(html_document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
 
     // 6. If title is given:
     if (title.has_value()) {
         // 1. Append the result of creating an element given doc, title, and the HTML namespace, to the head element created earlier.
-        auto title_element = create_element(html_document, HTML::TagNames::title, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+        auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
         MUST(head_element->append_child(title_element));
 
         // 2. Append a new Text node, with its data set to title (which could be the empty string) and its node document set to doc, to the title element created earlier.
@@ -123,7 +126,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(Optional<Stri
     }
 
     // 7. Append the result of creating an element given doc, body, and the HTML namespace, to the html element created earlier.
-    auto body_element = create_element(html_document, HTML::TagNames::body, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto body_element = create_element(html_document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
     // 8. doc’s origin is this’s associated document’s origin.

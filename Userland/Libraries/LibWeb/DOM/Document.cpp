@@ -741,7 +741,7 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
         else {
             // 1. Let element be the result of creating an element given the document element's node document, title,
             //    and the SVG namespace.
-            element = TRY(DOM::create_element(*this, HTML::TagNames::title, MUST(FlyString::from_deprecated_fly_string(Namespace::SVG))));
+            element = TRY(DOM::create_element(*this, HTML::TagNames::title, Namespace::SVG));
 
             // 2. Insert element as the first child of the document element.
             document_element->insert_before(*element, nullptr);
@@ -752,7 +752,7 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
     }
 
     // -> If the document element is in the HTML namespace
-    else if (document_element && document_element->namespace_() == Namespace::HTML) {
+    else if (document_element && document_element->namespace_uri() == Namespace::HTML) {
         auto title_element = this->title_element();
         auto* head_element = this->head();
 
@@ -770,7 +770,7 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
         else {
             // 1. Let element be the result of creating an element given the document element's node document, title,
             //    and the HTML namespace.
-            element = TRY(DOM::create_element(*this, HTML::TagNames::title, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
+            element = TRY(DOM::create_element(*this, HTML::TagNames::title, Namespace::HTML));
 
             // 2. Append element to the head element.
             TRY(head_element->append_child(*element));
@@ -1358,7 +1358,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String c
     // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
     Optional<FlyString> namespace_;
     if (document_type() == Type::HTML || content_type() == "application/xhtml+xml"sv)
-        namespace_ = MUST(FlyString::from_deprecated_fly_string(Namespace::HTML));
+        namespace_ = Namespace::HTML;
 
     // 6. Return the result of creating an element given this, localName, namespace, null, is, and with the synchronous custom elements flag set.
     return TRY(DOM::create_element(*this, MUST(FlyString::from_deprecated_fly_string(local_name)), move(namespace_), {}, move(is_value), true));
@@ -1369,12 +1369,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String c
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optional<String> const& namespace_, String const& qualified_name, Variant<String, ElementCreationOptions> const& options)
 {
     // FIXME: This conversion is ugly
-    StringView namespace_view;
+    Optional<FlyString> namespace_to_use;
     if (namespace_.has_value())
-        namespace_view = namespace_->bytes_as_string_view();
+        namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_view, qualified_name.to_deprecated_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_string()));
 
     // 2. Let is be null.
     Optional<String> is_value;
@@ -2435,7 +2435,7 @@ void Document::set_window(HTML::Window& window)
 JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definition(Optional<FlyString> const& namespace_, FlyString const& local_name, Optional<String> const& is) const
 {
     // 1. If namespace is not the HTML namespace, return null.
-    if (namespace_ != MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)))
+    if (namespace_ != Namespace::HTML)
         return nullptr;
 
     // 2. If document's browsing context is null, return null.
@@ -3005,12 +3005,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(String co
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(Optional<String> const& namespace_, String const& qualified_name)
 {
     // FIXME: This conversion is ugly
-    StringView namespace_view;
+    Optional<FlyString> namespace_to_use;
     if (namespace_.has_value())
-        namespace_view = namespace_->bytes_as_string_view();
+        namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_view, qualified_name.to_deprecated_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_string()));
 
     // 2. Return a new attribute whose namespace is namespace, namespace prefix is prefix, local name is localName, and node document is this.
 

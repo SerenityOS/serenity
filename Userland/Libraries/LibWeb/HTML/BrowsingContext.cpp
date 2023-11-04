@@ -244,10 +244,10 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     document->set_ready_for_post_load_tasks(true);
 
     // 18. Ensure that document has a single child html node, which itself has two empty child nodes: a head element, and a body element.
-    auto html_node = TRY(DOM::create_element(document, HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
-    auto head_element = TRY(DOM::create_element(document, HTML::TagNames::head, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
+    auto html_node = TRY(DOM::create_element(document, HTML::TagNames::html, Namespace::HTML));
+    auto head_element = TRY(DOM::create_element(document, HTML::TagNames::head, Namespace::HTML));
     TRY(html_node->append_child(head_element));
-    auto body_element = TRY(DOM::create_element(document, HTML::TagNames::body, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
+    auto body_element = TRY(DOM::create_element(document, HTML::TagNames::body, Namespace::HTML));
     TRY(html_node->append_child(body_element));
     TRY(document->append_child(html_node));
 

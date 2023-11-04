@@ -112,11 +112,11 @@ WebIDL::ExceptionOr<void> HTMLDetailsElement::create_shadow_tree(JS::Realm& real
     shadow_root->set_slot_assignment(Bindings::SlotAssignmentMode::Manual);
 
     // The first slot is expected to take the details element's first summary element child, if any.
-    auto summary_slot = TRY(DOM::create_element(document(), HTML::TagNames::slot, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
+    auto summary_slot = TRY(DOM::create_element(document(), HTML::TagNames::slot, Namespace::HTML));
     MUST(shadow_root->append_child(summary_slot));
 
     // The second slot is expected to take the details element's remaining descendants, if any.
-    auto descendants_slot = TRY(DOM::create_element(document(), HTML::TagNames::slot, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
+    auto descendants_slot = TRY(DOM::create_element(document(), HTML::TagNames::slot, Namespace::HTML));
     MUST(shadow_root->append_child(descendants_slot));
 
     m_summary_slot = static_cast<HTML::HTMLSlotElement&>(*summary_slot);

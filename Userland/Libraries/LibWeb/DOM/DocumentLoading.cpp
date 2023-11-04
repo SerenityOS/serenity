@@ -79,21 +79,21 @@ static bool build_markdown_document(DOM::Document& document, ByteBuffer const& d
 
 static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
 {
-    auto html_element = DOM::create_element(document, HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(document.append_child(html_element));
 
-    auto head_element = DOM::create_element(document, HTML::TagNames::head, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
-    auto title_element = DOM::create_element(document, HTML::TagNames::title, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(head_element->append_child(title_element));
 
     auto title_text = document.create_text_node(MUST(String::from_deprecated_string(document.url().basename())));
     MUST(title_element->append_child(title_text));
 
-    auto body_element = DOM::create_element(document, HTML::TagNames::body, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
-    auto pre_element = DOM::create_element(document, HTML::TagNames::pre, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto pre_element = DOM::create_element(document, HTML::TagNames::pre, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(body_element->append_child(pre_element));
 
     MUST(pre_element->append_child(document.create_text_node(String::from_utf8(StringView { data }).release_value_but_fixme_should_propagate_errors())));
@@ -110,22 +110,22 @@ static bool build_image_document(DOM::Document& document, ByteBuffer const& data
     if (!bitmap)
         return false;
 
-    auto html_element = DOM::create_element(document, HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(document.append_child(html_element));
 
-    auto head_element = DOM::create_element(document, HTML::TagNames::head, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
-    auto title_element = DOM::create_element(document, HTML::TagNames::title, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(head_element->append_child(title_element));
 
     auto basename = LexicalPath::basename(document.url().serialize_path());
     auto title_text = document.heap().allocate<DOM::Text>(document.realm(), document, MUST(String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
     MUST(title_element->append_child(*title_text));
 
-    auto body_element = DOM::create_element(document, HTML::TagNames::body, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
-    auto image_element = DOM::create_element(document, HTML::TagNames::img, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(image_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
     MUST(body_element->append_child(image_element));
 
@@ -160,16 +160,16 @@ bool build_xml_document(DOM::Document& document, ByteBuffer const& data)
 
 static bool build_video_document(DOM::Document& document)
 {
-    auto html_element = DOM::create_element(document, HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(document.append_child(html_element));
 
-    auto head_element = DOM::create_element(document, HTML::TagNames::head, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
 
-    auto body_element = DOM::create_element(document, HTML::TagNames::body, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
-    auto video_element = DOM::create_element(document, HTML::TagNames::video, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto video_element = DOM::create_element(document, HTML::TagNames::video, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(video_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
     MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, String {}));
     MUST(video_element->set_attribute(HTML::AttributeNames::controls, String {}));
@@ -180,16 +180,16 @@ static bool build_video_document(DOM::Document& document)
 
 static bool build_audio_document(DOM::Document& document)
 {
-    auto html_element = DOM::create_element(document, HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(document.append_child(html_element));
 
-    auto head_element = DOM::create_element(document, HTML::TagNames::head, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
 
-    auto body_element = DOM::create_element(document, HTML::TagNames::body, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
-    auto video_element = DOM::create_element(document, HTML::TagNames::audio, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto video_element = DOM::create_element(document, HTML::TagNames::audio, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(video_element->set_attribute(HTML::AttributeNames::src, MUST(document.url().to_string())));
     MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, String {}));
     MUST(video_element->set_attribute(HTML::AttributeNames::controls, String {}));

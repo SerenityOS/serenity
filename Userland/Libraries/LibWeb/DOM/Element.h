@@ -441,6 +441,6 @@ private:
 template<>
 inline bool Node::fast_is<Element>() const { return is_element(); }
 
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name);
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, Optional<FlyString> namespace_, DeprecatedFlyString qualified_name);
 
 }
