@@ -42,6 +42,9 @@ public:
 
     Bindings::AnimationReplaceState replace_state() const { return m_replace_state; }
 
+    // https://www.w3.org/TR/web-animations-1/#dom-animation-pending
+    bool pending() const { return m_pending_pause_task != TaskState::None || m_pending_play_task != TaskState::None; }
+
     // https://www.w3.org/TR/web-animations-1/#dom-animation-ready
     JS::NonnullGCPtr<JS::Object> ready() const { return *current_ready_promise()->promise(); }
 
@@ -62,6 +65,7 @@ private:
     };
 
     double associated_effect_end() const;
+    double effective_playback_rate() const;
 
     void apply_any_pending_playback_rate();
     WebIDL::ExceptionOr<void> silently_set_current_time(Optional<double>);
