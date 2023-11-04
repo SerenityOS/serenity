@@ -13,6 +13,7 @@
 #include <Kernel/API/POSIX/net/if_arp.h>
 #include <Kernel/API/POSIX/net/route.h>
 #include <Kernel/API/POSIX/netinet/in.h>
+#include <Kernel/API/POSIX/netinet/tcp.h>
 #include <Kernel/API/POSIX/poll.h>
 #include <Kernel/API/POSIX/sched.h>
 #include <Kernel/API/POSIX/serenity.h>

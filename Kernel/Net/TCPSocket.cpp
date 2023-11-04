@@ -211,16 +211,17 @@ ErrorOr<size_t> TCPSocket::protocol_send(UserOrKernelBuffer const& data, size_t 
         return set_so_error(EHOSTUNREACH);
     size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
 
-    // RFC 896 (Nagle’s algorithm): https://www.ietf.org/rfc/rfc0896
-    // "The solution is to inhibit the sending of new TCP  segments when
-    //  new  outgoing  data  arrives  from  the  user  if  any previously
-    //  transmitted data on the connection remains unacknowledged.   This
-    //  inhibition  is  to be unconditional; no timers, tests for size of
-    //  data received, or other conditions are required."
-    // FIXME: Make this configurable via TCP_NODELAY.
-    auto has_unacked_data = m_unacked_packets.with_shared([&](auto const& packets) { return packets.size > 0; });
-    if (has_unacked_data && data_length < mss)
-        return set_so_error(EAGAIN);
+    if (!m_no_delay) {
+        // RFC 896 (Nagle’s algorithm): https://www.ietf.org/rfc/rfc0896
+        // "The solution is to inhibit the sending of new TCP  segments when
+        //  new  outgoing  data  arrives  from  the  user  if  any previously
+        //  transmitted data on the connection remains unacknowledged.   This
+        //  inhibition  is  to be unconditional; no timers, tests for size of
+        //  data received, or other conditions are required."
+        auto has_unacked_data = m_unacked_packets.with_shared([&](auto const& packets) { return packets.size > 0; });
+        if (has_unacked_data && data_length < mss)
+            return set_so_error(EAGAIN);
+    }
 
     data_length = min(data_length, mss);
     TRY(send_tcp_packet(TCPFlags::PSH | TCPFlags::ACK, &data, data_length, &routing_decision));
@@ -425,6 +426,54 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(IPv4Address const& source, I
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     return ~(checksum & 0xffff);
+}
+
+ErrorOr<void> TCPSocket::setsockopt(int level, int option, Userspace<void const*> user_value, socklen_t user_value_size)
+{
+    if (level != IPPROTO_TCP)
+        return IPv4Socket::setsockopt(level, option, user_value, user_value_size);
+
+    MutexLocker locker(mutex());
+
+    switch (option) {
+    case TCP_NODELAY:
+        if (user_value_size < sizeof(int))
+            return EINVAL;
+        int value;
+        TRY(copy_from_user(&value, static_ptr_cast<int const*>(user_value)));
+        if (value != 0 && value != 1)
+            return EINVAL;
+        m_no_delay = value;
+        return {};
+    default:
+        dbgln("setsockopt({}) at IPPROTO_TCP not implemented.", option);
+        return ENOPROTOOPT;
+    }
+}
+
+ErrorOr<void> TCPSocket::getsockopt(OpenFileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
+{
+    if (level != IPPROTO_TCP)
+        return IPv4Socket::getsockopt(description, level, option, value, value_size);
+
+    MutexLocker locker(mutex());
+
+    socklen_t size;
+    TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
+
+    switch (option) {
+    case TCP_NODELAY: {
+        int nodelay = m_no_delay ? 1 : 0;
+        if (size < sizeof(nodelay))
+            return EINVAL;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &nodelay));
+        size = sizeof(nodelay);
+        return copy_to_user(value_size, &size);
+    }
+    default:
+        dbgln("getsockopt({}) at IPPROTO_TCP not implemented.", option);
+        return ENOPROTOOPT;
+    }
 }
 
 ErrorOr<void> TCPSocket::protocol_bind()
