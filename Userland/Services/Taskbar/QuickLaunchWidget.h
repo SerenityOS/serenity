@@ -14,6 +14,7 @@
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Frame.h>
+#include <LibGfx/Rect.h>
 
 namespace Taskbar {
 
@@ -27,6 +28,16 @@ public:
 
     static OwnPtr<QuickLaunchEntry> create_from_config_value(StringView path);
     static OwnPtr<QuickLaunchEntry> create_from_path(StringView path);
+
+    bool is_hovered() const { return m_hovered; }
+    void set_hovered(bool hovered) { m_hovered = hovered; }
+
+    void set_pressed(bool pressed) { m_pressed = pressed; }
+    bool is_pressed() const { return m_pressed; }
+
+private:
+    bool m_hovered { false };
+    bool m_pressed { false };
 };
 
 class QuickLaunchEntryAppFile : public QuickLaunchEntry {
@@ -90,18 +101,37 @@ public:
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+
+    virtual void leave_event(Core::Event&) override;
+
+    virtual void paint_event(GUI::PaintEvent&) override;
+
     ErrorOr<bool> add_from_pid(pid_t pid);
 
 private:
     explicit QuickLaunchWidget();
-    ErrorOr<void> add_or_adjust_button(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>&&);
+    ErrorOr<void> add_or_adjust_button(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>);
     ErrorOr<void> create_context_menu();
-    ErrorOr<void> add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries);
+    void add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries);
+
+    template<typename Callback>
+    void for_each_entry(Callback);
+
+    void resize();
+
+    void set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry>);
+    void remove_entry(DeprecatedString const&);
 
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;
     DeprecatedString m_context_menu_app_name;
     RefPtr<Core::FileWatcher> m_watcher;
+
+    Vector<NonnullOwnPtr<QuickLaunchEntry>> m_entries;
 };
 
 }
