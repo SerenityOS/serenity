@@ -108,8 +108,46 @@ void Animation::set_timeline(JS::GCPtr<AnimationTimeline> new_timeline)
 // https://www.w3.org/TR/web-animations-1/#set-the-start-time
 void Animation::set_start_time(Optional<double> const& new_start_time)
 {
-    // FIXME: Implement
-    (void)new_start_time;
+    // Setting this attribute updates the start time using the procedure to set the start time of this object to the new
+    // value.
+
+    // 1. Let timeline time be the current time value of the timeline that animation is associated with. If there is no
+    //    timeline associated with animation or the associated timeline is inactive, let the timeline time be
+    //    unresolved.
+    auto timeline_time = m_timeline && !m_timeline->is_inactive() ? m_timeline->current_time() : Optional<double> {};
+
+    // 2. If timeline time is unresolved and new start time is resolved, make animation’s hold time unresolved.
+    if (!timeline_time.has_value() && new_start_time.has_value())
+        m_hold_time = {};
+
+    // 3. Let previous current time be animation’s current time.
+    auto previous_current_time = current_time();
+
+    // 4. Apply any pending playback rate on animation.
+    apply_any_pending_playback_rate();
+
+    // 5. Set animation’s start time to new start time.
+    m_start_time = new_start_time;
+
+    // 6. Update animation’s hold time based on the first matching condition from the following,
+
+    // -> If new start time is resolved,
+    if (new_start_time.has_value()) {
+        // If animation’s playback rate is not zero, make animation’s hold time unresolved.
+        if (m_playback_rate != 0.0)
+            m_hold_time = {};
+    }
+    // -> Otherwise (new start time is unresolved),
+    else {
+        // Set animation’s hold time to previous current time even if previous current time is unresolved.
+        m_hold_time = previous_current_time;
+    }
+
+    // FIXME: 7. If animation has a pending play task or a pending pause task, cancel that task and resolve animation’s
+    //           current ready promise with animation.
+
+    // FIXME: 8. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
+    //           true, and the synchronously notify flag set to false.
 }
 
 // https://www.w3.org/TR/web-animations-1/#animation-current-time
@@ -141,6 +179,20 @@ Bindings::AnimationPlayState Animation::play_state() const
 {
     // FIXME: Implement
     return Bindings::AnimationPlayState::Idle;
+}
+
+// https://www.w3.org/TR/web-animations-1/#apply-any-pending-playback-rate
+void Animation::apply_any_pending_playback_rate()
+{
+    // 1. If animation does not have a pending playback rate, abort these steps.
+    if (!m_pending_playback_rate.has_value())
+        return;
+
+    // 2. Set animation’s playback rate to its pending playback rate.
+    m_playback_rate = m_pending_playback_rate.value();
+
+    // 3. Clear animation’s pending playback rate.
+    m_pending_playback_rate = {};
 }
 
 JS::NonnullGCPtr<WebIDL::Promise> Animation::current_ready_promise() const
