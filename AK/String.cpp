@@ -513,9 +513,9 @@ bool String::starts_with(u32 code_point) const
     return *code_points().begin() == code_point;
 }
 
-bool String::starts_with_bytes(StringView bytes) const
+bool String::starts_with_bytes(StringView bytes, CaseSensitivity case_sensitivity) const
 {
-    return bytes_as_string_view().starts_with(bytes);
+    return bytes_as_string_view().starts_with(bytes, case_sensitivity);
 }
 
 bool String::ends_with(u32 code_point) const
@@ -530,9 +530,9 @@ bool String::ends_with(u32 code_point) const
     return last_code_point == code_point;
 }
 
-bool String::ends_with_bytes(StringView bytes) const
+bool String::ends_with_bytes(StringView bytes, CaseSensitivity case_sensitivity) const
 {
-    return bytes_as_string_view().ends_with(bytes);
+    return bytes_as_string_view().ends_with(bytes, case_sensitivity);
 }
 
 bool String::is_short_string() const
@@ -624,6 +624,11 @@ DeprecatedString String::to_deprecated_string() const
 ErrorOr<String> String::from_deprecated_string(DeprecatedString const& deprecated_string)
 {
     return String::from_utf8(deprecated_string.view());
+}
+
+bool String::equals_ignoring_ascii_case(StringView other) const
+{
+    return StringUtils::equals_ignoring_ascii_case(bytes_as_string_view(), other);
 }
 
 }
