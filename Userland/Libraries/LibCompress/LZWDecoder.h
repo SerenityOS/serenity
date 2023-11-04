@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
@@ -19,8 +20,8 @@ private:
     static constexpr int max_code_size = 12;
 
 public:
-    explicit LZWDecoder(Vector<u8> const& lzw_bytes, u8 min_code_size)
-        : m_lzw_bytes(lzw_bytes)
+    explicit LZWDecoder(MaybeOwned<LittleEndianInputBitStream> lzw_stream, u8 min_code_size)
+        : m_bit_stream(move(lzw_stream))
         , m_code_size(min_code_size)
         , m_original_code_size(min_code_size)
         , m_table_capacity(AK::exp2<u32>(min_code_size))
@@ -52,45 +53,19 @@ public:
 
     ErrorOr<u16> next_code()
     {
-        size_t current_byte_index = m_current_bit_index / 8;
-        if (current_byte_index >= m_lzw_bytes.size()) {
-            return Error::from_string_literal("LZWDecoder tries to read ouf of bounds");
-        }
-
-        // Extract the code bits using a 32-bit mask to cover the possibility that if
-        // the current code size > 9 bits then the code can span 3 bytes.
-        u8 current_bit_offset = m_current_bit_index % 8;
-        u32 mask = (u32)(m_table_capacity - 1) << current_bit_offset;
-
-        // Make a padded copy of the final bytes in the data to ensure we don't read past the end.
-        if (current_byte_index + sizeof(mask) > m_lzw_bytes.size()) {
-            u8 padded_last_bytes[sizeof(mask)] = { 0 };
-            for (int i = 0; current_byte_index + i < m_lzw_bytes.size(); ++i) {
-                padded_last_bytes[i] = m_lzw_bytes[current_byte_index + i];
-            }
-            u32 const* addr = (u32 const*)&padded_last_bytes;
-            m_current_code = (*addr & mask) >> current_bit_offset;
-        } else {
-            u32 tmp_word;
-            memcpy(&tmp_word, &m_lzw_bytes.at(current_byte_index), sizeof(u32));
-            m_current_code = (tmp_word & mask) >> current_bit_offset;
-        }
+        m_current_code = TRY(m_bit_stream->read_bits<u16>(m_code_size));
 
         if (m_current_code > m_code_table.size()) {
-            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, invalid code: {} at bit index {}, code table size: {}",
+            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, invalid code: {}, code table size: {}",
                 m_current_code,
-                m_current_bit_index,
                 m_code_table.size());
             return Error::from_string_literal("Corrupted LZW stream, invalid code");
         } else if (m_current_code == m_code_table.size() && m_output.is_empty()) {
-            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, valid new code but output buffer is empty: {} at bit index {}, code table size: {}",
+            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, valid new code but output buffer is empty: {}, code table size: {}",
                 m_current_code,
-                m_current_bit_index,
                 m_code_table.size());
             return Error::from_string_literal("Corrupted LZW stream, valid new code but output buffer is empty");
         }
-
-        m_current_bit_index += m_code_size;
 
         return m_current_code;
     }
@@ -132,9 +107,7 @@ private:
         }
     }
 
-    Vector<u8> const& m_lzw_bytes;
-
-    int m_current_bit_index { 0 };
+    MaybeOwned<LittleEndianInputBitStream> m_bit_stream;
 
     Vector<Vector<u8>> m_code_table {};
     Vector<Vector<u8>> m_original_code_table {};
