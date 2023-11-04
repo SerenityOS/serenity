@@ -332,6 +332,8 @@ private:
     bool m_save_size_and_position_on_close { false };
     StringView m_save_domain;
     StringView m_save_group;
+
+    pid_t m_pid;
 };
 
 }

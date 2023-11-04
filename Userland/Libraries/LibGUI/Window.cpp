@@ -75,6 +75,7 @@ Window* Window::from_window_id(int window_id)
 Window::Window(Core::EventReceiver* parent)
     : GUI::Object(parent)
     , m_menubar(Menubar::construct())
+    , m_pid(getpid())
 {
     if (parent)
         set_window_mode(WindowMode::Passive);
@@ -154,6 +155,7 @@ void Window::show()
 
     ConnectionToWindowServer::the().async_create_window(
         m_window_id,
+        m_pid,
         m_rect_when_windowless,
         !m_moved_by_client,
         m_has_alpha_channel,
