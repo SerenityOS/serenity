@@ -8,6 +8,7 @@
 
 #include "InspectorWidget.h"
 #include "ElementSizePreviewWidget.h"
+#include "ModelAdapter.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
@@ -15,11 +16,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWebView/AccessibilityTreeModel.h>
-#include <LibWebView/AriaPropertiesStateModel.h>
-#include <LibWebView/DOMTreeModel.h>
 #include <LibWebView/OutOfProcessWebView.h>
-#include <LibWebView/StylePropertiesModel.h>
 
 namespace Browser {
 
@@ -31,7 +28,7 @@ void InspectorWidget::set_selection(Selection selection)
         return;
     }
 
-    auto* model = verify_cast<WebView::DOMTreeModel>(m_dom_tree_view->model());
+    auto* model = verify_cast<DOMTreeModel>(m_dom_tree_view->model());
     auto index = model->index_for_node(selection.dom_node_id, selection.pseudo_element);
     if (!index.is_valid()) {
         dbgln("InspectorWidget told to inspect non-existent node: {}", selection.to_string());
@@ -137,7 +134,7 @@ void InspectorWidget::select_default_node()
 
 void InspectorWidget::set_dom_json(StringView json)
 {
-    m_dom_tree_view->set_model(WebView::DOMTreeModel::create(json, *m_dom_tree_view));
+    m_dom_tree_view->set_model(DOMTreeModel::create(*m_dom_tree_view, json).release_value_but_fixme_should_propagate_errors());
     m_dom_loaded = true;
 
     if (m_pending_selection.has_value())
@@ -167,13 +164,13 @@ void InspectorWidget::set_dom_node_properties_json(Selection selection, StringVi
 
 void InspectorWidget::load_style_json(StringView computed_values_json, StringView resolved_values_json, StringView custom_properties_json)
 {
-    m_computed_style_table_view->set_model(WebView::StylePropertiesModel::create(computed_values_json));
+    m_computed_style_table_view->set_model(PropertyTableModel::create(PropertyTableModel::Type::StyleProperties, computed_values_json).release_value_but_fixme_should_propagate_errors());
     m_computed_style_table_view->set_searchable(true);
 
-    m_resolved_style_table_view->set_model(WebView::StylePropertiesModel::create(resolved_values_json));
+    m_resolved_style_table_view->set_model(PropertyTableModel::create(PropertyTableModel::Type::StyleProperties, resolved_values_json).release_value_but_fixme_should_propagate_errors());
     m_resolved_style_table_view->set_searchable(true);
 
-    m_custom_properties_table_view->set_model(WebView::StylePropertiesModel::create(custom_properties_json));
+    m_custom_properties_table_view->set_model(PropertyTableModel::create(PropertyTableModel::Type::StyleProperties, custom_properties_json).release_value_but_fixme_should_propagate_errors());
     m_custom_properties_table_view->set_searchable(true);
 }
 
@@ -206,7 +203,7 @@ void InspectorWidget::update_node_box_model(StringView node_box_sizing_json)
 
 void InspectorWidget::update_aria_properties_state_model(StringView aria_properties_state_json)
 {
-    m_aria_properties_state_view->set_model(WebView::AriaPropertiesStateModel::create(aria_properties_state_json).release_value_but_fixme_should_propagate_errors());
+    m_aria_properties_state_view->set_model(PropertyTableModel::create(PropertyTableModel::Type::ARIAProperties, aria_properties_state_json).release_value_but_fixme_should_propagate_errors());
     m_aria_properties_state_view->set_searchable(true);
 }
 
@@ -232,7 +229,7 @@ void InspectorWidget::clear_style_json()
 
 void InspectorWidget::set_accessibility_json(StringView json)
 {
-    m_accessibility_tree_view->set_model(WebView::AccessibilityTreeModel::create(json, *m_accessibility_tree_view));
+    m_accessibility_tree_view->set_model(TreeModel::create(TreeModel::Type::AccessibilityTree, json).release_value_but_fixme_should_propagate_errors());
 }
 
 }
