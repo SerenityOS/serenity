@@ -140,7 +140,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(Optional<Stri
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
 {
     // 1. Validate qualifiedName.
-    TRY(Document::validate_qualified_name(realm(), qualified_name.to_deprecated_string()));
+    TRY(Document::validate_qualified_name(realm(), qualified_name));
 
     // 2. Return a new doctype, with qualifiedName as its name, publicId as its public ID, and systemId as its system ID, and with its node document set to the associated document of this.
     auto document_type = DocumentType::create(document());
