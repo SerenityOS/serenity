@@ -207,11 +207,10 @@ void RecordingPainter::draw_signed_distance_field(Gfx::IntRect const& dst_rect, 
 
 void RecordingPainter::draw_text_run(Gfx::IntPoint baseline_start, Utf8View string, Gfx::Font const& font, Color color, Gfx::IntRect const& rect)
 {
-    push_command(DrawTextRun {
+    auto glyph_run = Gfx::get_glyph_run(state().translation.map(baseline_start).to_type<float>(), string, font);
+    push_command(DrawGlyphRun {
+        .glyph_run = glyph_run,
         .color = color,
-        .baseline_start = state().translation.map(baseline_start),
-        .string = String::from_utf8(string.as_string()).release_value_but_fixme_should_propagate_errors(),
-        .font = font,
         .rect = state().translation.map(rect),
     });
 }
@@ -427,8 +426,8 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
         }
 
         auto result = command.visit(
-            [&](DrawTextRun const& command) {
-                return executor.draw_text_run(command.color, command.baseline_start, command.string, command.font);
+            [&](DrawGlyphRun const& command) {
+                return executor.draw_glyph_run(command.glyph_run, command.color);
             },
             [&](DrawText const& command) {
                 return executor.draw_text(command.rect, command.raw_text, command.alignment, command.color, command.elision, command.wrapping, command.font);

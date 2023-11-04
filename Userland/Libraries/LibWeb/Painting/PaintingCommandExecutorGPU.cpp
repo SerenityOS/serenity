@@ -18,7 +18,7 @@ PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
     m_painter.flush();
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_text_run(Color const&, Gfx::IntPoint const&, String const&, Gfx::Font const&)
+CommandResult PaintingCommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const&, Color const&)
 {
     // FIXME
     return CommandResult::Continue;
