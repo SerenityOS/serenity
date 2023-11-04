@@ -607,8 +607,10 @@ private:
 
     u8 m_mod : 2 { 0 };
     u8 m_reg : 4 { 0 };
+    u8 : 2;
     u8 m_rm : 4 { 0 };
     u8 m_sib_scale : 2 { 0 };
+    u8 : 2;
     u8 m_sib_index : 4 { 0 };
     u8 m_sib_base : 4 { 0 };
     u8 m_displacement_bytes { 0 };

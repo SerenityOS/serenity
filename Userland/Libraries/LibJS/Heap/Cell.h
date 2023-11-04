@@ -37,7 +37,7 @@ public:
     bool is_marked() const { return m_mark; }
     void set_marked(bool b) { m_mark = b; }
 
-    enum class State {
+    enum class State : bool {
         Live,
         Dead,
     };
