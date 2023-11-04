@@ -54,8 +54,8 @@ QualifiedName::QualifiedName(FlyString const& local_name, Optional<FlyString> co
 {
 }
 
-QualifiedName::QualifiedName(FlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
-    : QualifiedName(local_name, prefix.is_null() ? Optional<FlyString> {} : MUST(FlyString::from_deprecated_fly_string(prefix)), namespace_.is_null() ? Optional<FlyString> {} : MUST(FlyString::from_deprecated_fly_string(namespace_)))
+QualifiedName::QualifiedName(FlyString const& local_name, Optional<FlyString> const& prefix, DeprecatedFlyString const& namespace_)
+    : QualifiedName(local_name, prefix, namespace_.is_null() ? Optional<FlyString> {} : MUST(FlyString::from_deprecated_fly_string(namespace_)))
 {
 }
 

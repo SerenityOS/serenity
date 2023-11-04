@@ -221,7 +221,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Deprec
     TRY(Document::validate_qualified_name(realm, qualified_name));
 
     // 3. Let prefix be null.
-    DeprecatedFlyString prefix = {};
+    Optional<FlyString> prefix = {};
 
     // 4. Let localName be qualifiedName.
     auto local_name = qualified_name;
@@ -229,12 +229,12 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Deprec
     // 5. If qualifiedName contains a U+003A (:), then strictly split the string on it and set prefix to the part before and localName to the part after.
     if (qualified_name.view().contains(':')) {
         auto parts = qualified_name.view().split_view(':');
-        prefix = parts[0];
+        prefix = MUST(FlyString::from_utf8(parts[0]));
         local_name = parts[1];
     }
 
     // 6. If prefix is non-null and namespace is null, then throw a "NamespaceError" DOMException.
-    if (!prefix.is_null() && namespace_.is_null())
+    if (prefix.has_value() && namespace_.is_null())
         return WebIDL::NamespaceError::create(realm, "Prefix is non-null and namespace is null."_fly_string);
 
     // 7. If prefix is "xml" and namespace is not the XML namespace, then throw a "NamespaceError" DOMException.
@@ -264,13 +264,13 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<String> const& name
     auto extracted_qualified_name = TRY(validate_and_extract(realm(), deprecated_namespace, qualified_name.to_deprecated_fly_string()));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
-    set_attribute_value(extracted_qualified_name.local_name().to_deprecated_fly_string(), value.to_deprecated_fly_string(), extracted_qualified_name.deprecated_prefix(), extracted_qualified_name.deprecated_namespace_());
+    set_attribute_value(extracted_qualified_name.local_name(), value.to_deprecated_fly_string(), extracted_qualified_name.prefix(), extracted_qualified_name.deprecated_namespace_());
 
     return {};
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set-value
-void Element::set_attribute_value(DeprecatedFlyString const& local_name, DeprecatedString const& value, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
+void Element::set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix, DeprecatedFlyString const& namespace_)
 {
     // 1. Let attribute be the result of getting an attribute given namespace, localName, and element.
     auto* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
@@ -279,7 +279,7 @@ void Element::set_attribute_value(DeprecatedFlyString const& local_name, Depreca
     //    is localName, value is value, and node document is element’s node document, then append this attribute to element,
     //    and then return.
     if (!attribute) {
-        QualifiedName name { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, namespace_ };
+        QualifiedName name { local_name, prefix, namespace_ };
 
         auto new_attribute = Attr::create(document(), move(name), MUST(String::from_deprecated_string(value)));
         m_attributes->append_attribute(new_attribute);

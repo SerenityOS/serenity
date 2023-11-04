@@ -490,7 +490,7 @@ static JS::GCPtr<MathML::MathMLElement> create_mathml_element(JS::Realm& realm, 
     return nullptr;
 }
 // https://dom.spec.whatwg.org/#concept-create-element
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document, FlyString local_name, DeprecatedFlyString namespace_, DeprecatedFlyString prefix, Optional<String> is_value, bool synchronous_custom_elements_flag)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document, FlyString local_name, DeprecatedFlyString namespace_, Optional<FlyString> prefix, Optional<String> is_value, bool synchronous_custom_elements_flag)
 {
     auto& realm = document.realm();
 
@@ -581,10 +581,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
                     return JS::throw_completion(WebIDL::NotSupportedError::create(realm, "Synchronously created custom element must have the same local name that element creation was invoked with"_fly_string));
 
                 // 10. Set result’s namespace prefix to prefix.
-                if (prefix.is_null())
-                    element->set_prefix({});
-                else
-                    element->set_prefix(MUST(FlyString::from_deprecated_fly_string(prefix)));
+                element->set_prefix(prefix);
 
                 // 11. Set result’s is value to null.
                 element->set_is_value(Optional<String> {});
