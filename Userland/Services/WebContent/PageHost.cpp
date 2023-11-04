@@ -21,7 +21,7 @@
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebDriverConnection.h>
 
-#ifdef AK_OS_LINUX
+#ifdef HAS_ACCELERATED_GRAPHICS
 #    include <LibWeb/Painting/PaintingCommandExecutorGPU.h>
 #endif
 
