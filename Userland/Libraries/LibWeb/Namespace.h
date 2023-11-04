@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/Error.h>
+#include <AK/FlyString.h>
 
 namespace Web::Namespace {
 
@@ -19,7 +19,7 @@ namespace Web::Namespace {
     __ENUMERATE_NAMESPACE(XML, "http://www.w3.org/XML/1998/namespace")  \
     __ENUMERATE_NAMESPACE(XMLNS, "http://www.w3.org/2000/xmlns/")
 
-#define __ENUMERATE_NAMESPACE(name, namespace_) extern DeprecatedFlyString name;
+#define __ENUMERATE_NAMESPACE(name, namespace_) extern FlyString name;
 ENUMERATE_NAMESPACES
 #undef __ENUMERATE_NAMESPACE
 

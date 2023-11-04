@@ -181,7 +181,7 @@ void HTMLParser::run()
         // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction-dispatcher
         // As each token is emitted from the tokenizer, the user agent must follow the appropriate steps from the following list, known as the tree construction dispatcher:
         if (m_stack_of_open_elements.is_empty()
-            || adjusted_current_node().namespace_() == Namespace::HTML
+            || adjusted_current_node().namespace_uri() == Namespace::HTML
             || (is_html_integration_point(adjusted_current_node()) && (token.is_start_tag() || token.is_character()))
             || token.is_end_of_file()) {
             // -> If the stack of open elements is empty
@@ -539,7 +539,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> A start tag whose tag name is "html"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
         // Create an element for the token in the HTML namespace, with the Document as the intended parent. Append it to the Document object. Put this element in the stack of open elements.
-        auto element = create_element_for(token, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)), document());
+        auto element = create_element_for(token, Namespace::HTML, document());
         MUST(document().append_child(*element));
         m_stack_of_open_elements.push(move(element));
 
@@ -564,7 +564,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> Anything else
 AnythingElse:
     // Create an html element whose node document is the Document object. Append it to the Document object. Put this element in the stack of open elements.
-    auto element = create_element(document(), HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto element = create_element(document(), HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(document().append_child(element));
     m_stack_of_open_elements.push(element);
 
@@ -772,7 +772,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken cons
 
 JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_html_element(HTMLToken const& token)
 {
-    return insert_foreign_element(token, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)));
+    return insert_foreign_element(token, Namespace::HTML);
 }
 
 void HTMLParser::handle_before_head(HTMLToken& token)
@@ -882,7 +882,7 @@ void HTMLParser::handle_in_head(HTMLToken& token)
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::script) {
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-        auto element = create_element_for(token, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)), *adjusted_insertion_location.parent);
+        auto element = create_element_for(token, Namespace::HTML, *adjusted_insertion_location.parent);
         auto& script_element = verify_cast<HTMLScriptElement>(*element);
         script_element.set_parser_document(Badge<HTMLParser> {}, document());
         script_element.set_force_async(Badge<HTMLParser> {}, false);
@@ -1383,7 +1383,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
             // 6. Create an element for the token for which the element node was created,
             //    in the HTML namespace, with common ancestor as the intended parent;
             // FIXME: hold onto the real token
-            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name()), MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)), *common_ancestor);
+            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name()), Namespace::HTML, *common_ancestor);
             // replace the entry for node in the list of active formatting elements with an entry for the new element,
             m_list_of_active_formatting_elements.replace(*node, *element);
             // replace the entry for node in the stack of open elements with an entry for the new element,
@@ -1412,7 +1412,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
         // 15. Create an element for the token for which formatting element was created,
         //     in the HTML namespace, with furthest block as the intended parent.
         // FIXME: hold onto the real token
-        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name()), MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)), *furthest_block);
+        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name()), Namespace::HTML, *furthest_block);
 
         // 16. Take all of the child nodes of furthest block and append them to the element created in the last step.
         for (auto& child : furthest_block->children_as_vector())
@@ -1439,7 +1439,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
 // https://html.spec.whatwg.org/multipage/parsing.html#special
 bool HTMLParser::is_special_tag(FlyString const& tag_name, Optional<FlyString> const& namespace_)
 {
-    if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))) {
+    if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(
             HTML::TagNames::address,
             HTML::TagNames::applet,
@@ -1523,12 +1523,12 @@ bool HTMLParser::is_special_tag(FlyString const& tag_name, Optional<FlyString> c
             HTML::TagNames::ul,
             HTML::TagNames::wbr,
             HTML::TagNames::xmp);
-    } else if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::SVG))) {
+    } else if (namespace_ == Namespace::SVG) {
         return tag_name.is_one_of(
             SVG::TagNames::desc,
             SVG::TagNames::foreignObject,
             SVG::TagNames::title);
-    } else if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::MathML))) {
+    } else if (namespace_ == Namespace::MathML) {
         return tag_name.is_one_of(
             MathML::TagNames::mi,
             MathML::TagNames::mo,
@@ -2127,7 +2127,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         adjust_mathml_attributes(token);
         adjust_foreign_attributes(token);
 
-        (void)insert_foreign_element(token, MUST(FlyString::from_deprecated_fly_string(Namespace::MathML)));
+        (void)insert_foreign_element(token, Namespace::MathML);
 
         if (token.is_self_closing()) {
             (void)m_stack_of_open_elements.pop();
@@ -2141,7 +2141,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         adjust_svg_attributes(token);
         adjust_foreign_attributes(token);
 
-        (void)insert_foreign_element(token, MUST(FlyString::from_deprecated_fly_string(Namespace::SVG)));
+        (void)insert_foreign_element(token, Namespace::SVG);
 
         if (token.is_self_closing()) {
             (void)m_stack_of_open_elements.pop();
@@ -3480,7 +3480,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         // While the current node is not a MathML text integration point, an HTML integration point, or an element in the HTML namespace, pop elements from the stack of open elements.
         while (!is_mathml_text_integration_point(current_node())
             && !is_html_integration_point(current_node())
-            && current_node().namespace_() != Namespace::HTML) {
+            && current_node().namespace_uri() != Namespace::HTML) {
             (void)m_stack_of_open_elements.pop();
         }
 
@@ -3492,13 +3492,13 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
     // Any other start tag
     if (token.is_start_tag()) {
         // If the adjusted current node is an element in the MathML namespace, adjust MathML attributes for the token. (This fixes the case of MathML attributes that are not all lowercase.)
-        if (adjusted_current_node().namespace_() == Namespace::MathML) {
+        if (adjusted_current_node().namespace_uri() == Namespace::MathML) {
             adjust_mathml_attributes(token);
         }
         // If the adjusted current node is an element in the SVG namespace, and the token's tag name is one of the ones in the first column of the
         // following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG
         // elements that are not all lowercase.)
-        else if (adjusted_current_node().namespace_() == Namespace::SVG) {
+        else if (adjusted_current_node().namespace_uri() == Namespace::SVG) {
             adjust_svg_tag_names(token);
             // If the adjusted current node is an element in the SVG namespace, adjust SVG attributes for the token. (This fixes the case of SVG attributes that are not all lowercase.)
             adjust_svg_attributes(token);
@@ -3514,7 +3514,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         if (token.is_self_closing()) {
 
             // -> If the token's tag name is "script", and the new current node is in the SVG namespace
-            if (token.tag_name() == SVG::TagNames::script && current_node().namespace_() == Namespace::SVG) {
+            if (token.tag_name() == SVG::TagNames::script && current_node().namespace_uri() == Namespace::SVG) {
                 // Acknowledge the token's self-closing flag, and then act as described in the steps for a "script" end tag below.
                 token.acknowledge_self_closing_flag_if_set();
                 goto ScriptEndTag;
@@ -3531,7 +3531,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
     }
 
     // -> An end tag whose tag name is "script", if the current node is an SVG script element
-    if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
+    if (token.is_end_tag() && current_node().namespace_uri() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
     ScriptEndTag:
         // Pop the current node off the stack of open elements.
         (void)m_stack_of_open_elements.pop();
@@ -3587,7 +3587,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
             node = m_stack_of_open_elements.elements().at(i - 1).ptr();
 
             // 6. If node is not an element in the HTML namespace, return to the step labeled loop.
-            if (node->namespace_() != Namespace::HTML)
+            if (node->namespace_uri() != Namespace::HTML)
                 continue;
 
             // 7. Otherwise, process the token according to the rules given in the section corresponding to the current insertion mode in HTML content.
@@ -3772,7 +3772,7 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     }
 
     // 5. Let root be a new html element with no attributes.
-    auto root = create_element(context_element.document(), HTML::TagNames::html, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
 
     // 6. Append the element root to the Document node created above.
     MUST(temp_document->append_child(root));

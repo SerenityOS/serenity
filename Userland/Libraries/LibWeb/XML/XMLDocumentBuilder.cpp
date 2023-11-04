@@ -57,7 +57,7 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
 
     if (auto it = attributes.find("xmlns"); it != attributes.end()) {
         m_namespace_stack.append({ m_namespace, 1 });
-        m_namespace = it->value;
+        m_namespace = MUST(FlyString::from_deprecated_fly_string(it->value));
     } else {
         m_namespace_stack.last().depth += 1;
     }
@@ -67,7 +67,7 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
         return;
     }
 
-    auto node = DOM::create_element(m_document, MUST(FlyString::from_deprecated_fly_string(name)), MUST(FlyString::from_deprecated_fly_string(m_namespace))).release_value_but_fixme_should_propagate_errors();
+    auto node = DOM::create_element(m_document, MUST(FlyString::from_deprecated_fly_string(name)), m_namespace).release_value_but_fixme_should_propagate_errors();
 
     // When an XML parser with XML scripting support enabled creates a script element,
     // it must have its parser document set and its "force async" flag must be unset.

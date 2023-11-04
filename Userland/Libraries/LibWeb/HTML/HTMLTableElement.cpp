@@ -118,7 +118,7 @@ JS::NonnullGCPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
         return *maybe_caption;
     }
 
-    auto caption = DOM::create_element(document(), TagNames::caption, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto caption = DOM::create_element(document(), TagNames::caption, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(pre_insert(caption, first_child()));
     return static_cast<HTMLTableCaptionElement&>(*caption);
 }
@@ -196,7 +196,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
     if (maybe_thead)
         return *maybe_thead;
 
-    auto thead = DOM::create_element(document(), TagNames::thead, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto thead = DOM::create_element(document(), TagNames::thead, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
 
     // We insert the new thead after any <caption> or <colgroup> elements
     DOM::Node* child_to_insert_before = nullptr;
@@ -272,7 +272,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_foot()
     if (maybe_tfoot)
         return *maybe_tfoot;
 
-    auto tfoot = DOM::create_element(document(), TagNames::tfoot, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto tfoot = DOM::create_element(document(), TagNames::tfoot, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(append_child(tfoot));
     return static_cast<HTMLTableSectionElement&>(*tfoot);
 }
@@ -302,7 +302,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-createtbody
 JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
 {
-    auto tbody = DOM::create_element(document(), TagNames::tbody, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto tbody = DOM::create_element(document(), TagNames::tbody, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
 
     // We insert the new tbody after the last <tbody> element
     DOM::Node* child_to_insert_before = nullptr;
@@ -365,9 +365,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::ins
     if (index < -1 || index > (long)rows_length) {
         return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than the number of rows"_fly_string);
     }
-    auto& tr = static_cast<HTMLTableRowElement&>(*TRY(DOM::create_element(document(), TagNames::tr, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)))));
+    auto& tr = static_cast<HTMLTableRowElement&>(*TRY(DOM::create_element(document(), TagNames::tr, Namespace::HTML)));
     if (rows_length == 0 && !has_child_of_type<HTMLTableRowElement>()) {
-        auto tbody = TRY(DOM::create_element(document(), TagNames::tbody, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
+        auto tbody = TRY(DOM::create_element(document(), TagNames::tbody, Namespace::HTML));
         TRY(tbody->append_child(tr));
         TRY(append_child(tbody));
     } else if (rows_length == 0) {

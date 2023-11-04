@@ -624,7 +624,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
 
     auto qualified_name = QualifiedName { local_name, prefix, namespace_ };
 
-    if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))) {
+    if (namespace_ == Namespace::HTML) {
         auto element = create_html_element(realm, document, move(qualified_name));
         element->set_is_value(move(is_value));
         element->set_custom_element_state(CustomElementState::Uncustomized);
@@ -637,7 +637,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
         return element;
     }
 
-    if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::SVG))) {
+    if (namespace_ == Namespace::SVG) {
         auto element = create_svg_element(realm, document, qualified_name);
         if (element) {
             element->set_is_value(move(is_value));
@@ -646,7 +646,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
         }
     }
 
-    if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::MathML))) {
+    if (namespace_ == Namespace::MathML) {
         auto element = create_mathml_element(realm, document, qualified_name);
         if (element) {
             element->set_is_value(move(is_value));

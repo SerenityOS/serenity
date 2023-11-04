@@ -280,7 +280,7 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
 {
     // FIXME: Filter out non-default namespace using prefixes
     auto namespace_uri = rule.sheet->default_namespace();
-    if (namespace_uri.has_value() && namespace_uri.value() != element.namespace_()) {
+    if (namespace_uri.has_value() && namespace_uri.value() != element.namespace_uri()) {
         return false;
     }
     return true;
@@ -2023,7 +2023,7 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
         // https://w3c.github.io/mathml-core/#new-display-math-value
         // For elements that are not MathML elements, if the specified value of display is inline math or block math
         // then the computed value is block flow and inline flow respectively.
-        if (element.namespace_() != Namespace::MathML)
+        if (element.namespace_uri() != Namespace::MathML)
             new_display = CSS::Display { display.outside(), CSS::DisplayInside::Flow };
         // For the mtable element the computed value is block table and inline table respectively.
         else if (element.tag_name().equals_ignoring_ascii_case("mtable"sv))

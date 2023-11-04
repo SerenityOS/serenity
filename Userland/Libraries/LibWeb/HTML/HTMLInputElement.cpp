@@ -536,7 +536,7 @@ void HTMLInputElement::create_text_input_shadow_tree()
 {
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
     auto initial_value = m_value;
-    auto element = DOM::create_element(document(), HTML::TagNames::div, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(element->set_attribute(HTML::AttributeNames::style, R"~~~(
         display: flex;
         height: 100%;
@@ -555,7 +555,7 @@ void HTMLInputElement::create_text_input_shadow_tree()
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
     MUST(element->append_child(*m_placeholder_element));
 
-    m_inner_text_element = DOM::create_element(document(), HTML::TagNames::div, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    m_inner_text_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(m_inner_text_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
 
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), MUST(String::from_deprecated_string(initial_value)));
@@ -587,7 +587,7 @@ void HTMLInputElement::create_color_input_shadow_tree()
 
     auto color = value_sanitization_algorithm(m_value);
 
-    auto border = DOM::create_element(document(), HTML::TagNames::div, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    auto border = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(border->set_attribute(HTML::AttributeNames::style, R"~~~(
         width: fit-content;
         height: fit-content;
@@ -596,7 +596,7 @@ void HTMLInputElement::create_color_input_shadow_tree()
         background-color: ButtonFace;
 )~~~"_string));
 
-    m_color_well_element = DOM::create_element(document(), HTML::TagNames::div, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))).release_value_but_fixme_should_propagate_errors();
+    m_color_well_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(m_color_well_element->set_attribute(HTML::AttributeNames::style, R"~~~(
         width: 24px;
         height: 24px;

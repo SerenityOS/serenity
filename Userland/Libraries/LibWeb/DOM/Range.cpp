@@ -1181,7 +1181,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::create_contextual
         // - "body" as its local name,
         // - The HTML namespace as its namespace, and
         // - The context object's node document as its node document.
-        element = TRY(DOM::create_element(node->document(), HTML::TagNames::body, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))));
+        element = TRY(DOM::create_element(node->document(), HTML::TagNames::body, Namespace::HTML));
     }
 
     // 3. Let fragment node be the result of invoking the fragment parsing algorithm with fragment as markup, and element as the context element.
