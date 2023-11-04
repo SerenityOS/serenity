@@ -29,6 +29,7 @@ class RecordingPainter;
 namespace Web::Animations {
 class Animation;
 class AnimationEffect;
+class AnimationPlaybackEvent;
 class AnimationTimeline;
 class DocumentTimeline;
 }

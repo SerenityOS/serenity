@@ -4,6 +4,7 @@ include(accelerated_graphics)
 set(SOURCES
     Animations/Animation.cpp
     Animations/AnimationEffect.cpp
+    Animations/AnimationPlaybackEvent.cpp
     Animations/AnimationTimeline.cpp
     Animations/DocumentTimeline.cpp
     Animations/TimingFunction.cpp
