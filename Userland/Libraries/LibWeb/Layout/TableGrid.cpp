@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/HTML/HTMLTableCellElement.h>
+#include <LibWeb/HTML/HTMLTableColElement.h>
 #include <LibWeb/Layout/TableGrid.h>
 
 namespace Web::Layout {
@@ -61,6 +62,18 @@ TableGrid TableGrid::calculate_row_column_grid(Box const& box, Vector<Cell>& cel
         rows.append(Row { row });
         y_current++;
     };
+
+    auto process_col_group = [&](auto& col_group) {
+        auto dom_node = col_group.dom_node();
+        dom_node->template for_each_in_subtree_of_type<HTML::HTMLTableColElement>([&](auto&) {
+            x_width += 1;
+            return IterationDecision::Continue;
+        });
+    };
+
+    for_each_child_box_matching(box, is_table_column_group, [&](auto& column_group_box) {
+        process_col_group(column_group_box);
+    });
 
     for_each_child_box_matching(box, is_table_row_group, [&](auto& row_group_box) {
         for_each_child_box_matching(row_group_box, is_table_row, [&](auto& row_box) {
