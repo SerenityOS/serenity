@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Concepts.h>
 #include <AK/MaybeOwned.h>
 #include <AK/NumericLimits.h>
 #include <AK/OwnPtr.h>
@@ -427,4 +428,11 @@ public:
     }
 };
 
+template<typename T>
+concept InputBitStream = OneOf<T, BigEndianInputBitStream, LittleEndianInputBitStream>;
+
 }
+
+#if USING_AK_GLOBALLY
+using AK::InputBitStream;
+#endif
