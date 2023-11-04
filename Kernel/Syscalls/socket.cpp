@@ -66,7 +66,7 @@ ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (backlog < 0)
-        return EINVAL;
+        backlog = 0;
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
