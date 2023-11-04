@@ -23,6 +23,8 @@
     X(BitsPerComponent)           \
     X(BlackPoint)                 \
     X(C)                          \
+    X(C0)                         \
+    X(C1)                         \
     X(CA)                         \
     X(CCITTFaxDecode)             \
     X(CF)                         \
