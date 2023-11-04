@@ -7,6 +7,7 @@
 #include <AK/QuickSort.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibWeb/Animations/KeyframeEffect.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Animations {
@@ -196,7 +197,7 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
 }
 
 // https://www.w3.org/TR/web-animations-1/#compute-missing-keyframe-offsets
-[[maybe_unused]] static void compute_missing_keyframe_offsets(Vector<BaseKeyframe>& keyframes)
+static void compute_missing_keyframe_offsets(Vector<BaseKeyframe>& keyframes)
 {
     // 1. For each keyframe, in keyframes, let the computed keyframe offset of the keyframe be equal to its keyframe
     //    offset value.
@@ -256,6 +257,150 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
         index_a = index_b;
         maybe_index_b = find_next_index_of_keyframe_with_computed_offset(index_b + 1);
     }
+}
+
+// https://www.w3.org/TR/web-animations-1/#loosely-sorted-by-offset
+static bool is_loosely_sorted_by_offset(Vector<BaseKeyframe> const& keyframes)
+{
+    // The list of keyframes for a keyframe effect must be loosely sorted by offset which means that for each keyframe
+    // in the list that has a keyframe offset that is not null, the offset is greater than or equal to the offset of the
+    // previous keyframe in the list with a keyframe offset that is not null, if any.
+
+    Optional<double> last_offset;
+    for (auto const& keyframe : keyframes) {
+        if (!keyframe.offset.has_value())
+            continue;
+
+        if (last_offset.has_value() && keyframe.offset.value() < last_offset.value())
+            return false;
+
+        last_offset = keyframe.offset;
+    }
+
+    return true;
+}
+
+// https://www.w3.org/TR/web-animations-1/#process-a-keyframes-argument
+[[maybe_unused]] static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS::Realm& realm, JS::GCPtr<JS::Object> object)
+{
+    auto& vm = realm.vm();
+
+    auto parse_easing_string = [&](auto& value) -> RefPtr<CSS::StyleValue const> {
+        auto maybe_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value);
+        if (maybe_parser.is_error())
+            return {};
+
+        if (auto style_value = maybe_parser.release_value().parse_as_css_value(CSS::PropertyID::AnimationTimingFunction)) {
+            if (style_value->is_easing())
+                return style_value;
+        }
+
+        return {};
+    };
+
+    // 1. If object is null, return an empty sequence of keyframes.
+    if (!object)
+        return Vector<BaseKeyframe> {};
+
+    // 2. Let processed keyframes be an empty sequence of keyframes.
+    Vector<BaseKeyframe> processed_keyframes;
+
+    // 3. Let method be the result of GetMethod(object, @@iterator).
+    // 4. Check the completion record of method.
+    auto method = TRY(JS::Value(object).get_method(vm, vm.well_known_symbol_iterator()));
+
+    // 5. Perform the steps corresponding to the first matching condition from below,
+
+    // -> If method is not undefined,
+    if (method) {
+        // 1. Let iter be GetIterator(object, method).
+        // 2. Check the completion record of iter.
+        auto iter = TRY(JS::get_iterator_from_method(vm, object, *method));
+
+        // 3. Repeat:
+        while (true) {
+            // 1. Let next be IteratorStep(iter).
+            // 2. Check the completion record of next.
+            auto next = TRY(JS::iterator_step(vm, iter));
+
+            // 3. If next is false abort this loop.
+            if (!next)
+                break;
+
+            // 4. Let nextItem be IteratorValue(next).
+            // 5. Check the completion record of nextItem.
+            auto next_item = TRY(JS::iterator_value(vm, *next));
+
+            // 6. If Type(nextItem) is not Undefined, Null or Object, then throw a TypeError and abort these steps.
+            if (!next_item.is_nullish() && !next_item.is_object())
+                return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOrNull, next_item.to_string_without_side_effects());
+
+            // 7. Append to processed keyframes the result of running the procedure to process a keyframe-like object
+            //    passing nextItem as the keyframe input and with the allow lists flag set to false.
+            processed_keyframes.append(TRY(process_a_keyframe_like_object<AllowLists::No>(realm, next_item.as_object())));
+        }
+    }
+    // -> Otherwise,
+    else {
+        // FIXME: Support processing a single keyframe-like object
+        TODO();
+    }
+
+    // 6. If processed keyframes is not loosely sorted by offset, throw a TypeError and abort these steps.
+    if (!is_loosely_sorted_by_offset(processed_keyframes))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Keyframes are not in ascending order based on offset"sv };
+
+    // 7. If there exist any keyframe in processed keyframes whose keyframe offset is non-null and less than zero or
+    //    greater than one, throw a TypeError and abort these steps.
+    for (size_t i = 0; i < processed_keyframes.size(); i++) {
+        auto const& keyframe = processed_keyframes[i];
+        if (!keyframe.offset.has_value())
+            continue;
+
+        auto offset = keyframe.offset.value();
+        if (offset < 0.0 || offset > 1.0)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, MUST(String::formatted("Keyframe {} has invalid offset value {}"sv, i, offset)) };
+    }
+
+    // 8. For each frame in processed keyframes, perform the following steps:
+    for (auto& keyframe : processed_keyframes) {
+        // 1. For each property-value pair in frame, parse the property value using the syntax specified for that
+        //    property.
+        //
+        //    If the property value is invalid according to the syntax for the property, discard the property-value pair.
+        //    User agents that provide support for diagnosing errors in content SHOULD produce an appropriate warning
+        //    highlight
+        BaseKeyframe::ParsedProperties parsed_properties;
+        for (auto& [property_string, value_string] : keyframe.unparsed_properties()) {
+            if (auto property = CSS::property_id_from_camel_case_string(property_string); property.has_value()) {
+                auto maybe_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value_string);
+                if (maybe_parser.is_error())
+                    continue;
+
+                if (auto style_value = maybe_parser.release_value().parse_as_css_value(*property))
+                    parsed_properties.set(*property, *style_value);
+            }
+        }
+        keyframe.properties.set(move(parsed_properties));
+
+        // 2. Let the timing function of frame be the result of parsing the "easing" property on frame using the CSS
+        //    syntax defined for the easing member of the EffectTiming dictionary.
+        //
+        //    If parsing the "easing" property fails, throw a TypeError and abort this procedure.
+        auto easing_string = keyframe.easing.get<String>();
+        auto easing_value = parse_easing_string(easing_string);
+
+        if (!easing_value)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, MUST(String::formatted("Invalid animation easing value: \"{}\"", easing_string)) };
+
+        keyframe.easing.set(NonnullRefPtr<CSS::StyleValue const> { *easing_value });
+    }
+
+    // FIXME:
+    // 9. Parse each of the values in unused easings using the CSS syntax defined for easing member of the EffectTiming
+    //    interface, and if any of the values fail to parse, throw a TypeError and abort this procedure.
+
+    return processed_keyframes;
 }
 
 JS::NonnullGCPtr<KeyframeEffect> KeyframeEffect::create(JS::Realm& realm)
