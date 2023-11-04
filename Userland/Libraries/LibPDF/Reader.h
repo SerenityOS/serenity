@@ -120,13 +120,13 @@ public:
             move_by(1);
     }
 
-    void move_until(Function<bool(char)> predicate)
+    void move_until(AK::Function<bool(char)> predicate)
     {
         while (!done() && !predicate(peek()))
             move_by(1);
     }
 
-    ALWAYS_INLINE void move_while(Function<bool(char)> predicate)
+    ALWAYS_INLINE void move_while(AK::Function<bool(char)> predicate)
     {
         move_until([&predicate](char t) { return !predicate(t); });
     }

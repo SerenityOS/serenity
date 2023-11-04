@@ -687,16 +687,70 @@ Vector<float> IndexedColorSpace::default_decode() const
     return { 0.0, static_cast<float>(m_hival) };
 }
 
-PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document*, Vector<Value>&&)
+PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document* document, Vector<Value>&& parameters)
 {
-    auto color_space = adopt_ref(*new SeparationColorSpace());
-    // FIXME: Implement.
+    if (parameters.size() != 3)
+        return Error { Error::Type::MalformedPDF, "Separation color space expected three parameters" };
+
+    // "The name parameter is a name object specifying the name of the colorant that this Separation color space
+    //  is intended to represent (or one of the special names All or None; see below)"
+    auto param0 = TRY(document->resolve(parameters[0]));
+    if (!param0.has<NonnullRefPtr<Object>>())
+        return Error { Error::Type::MalformedPDF, "Separation color space expects object for first arg" };
+    auto name_object = param0.get<NonnullRefPtr<Object>>();
+    if (!name_object->is<NameObject>())
+        return Error { Error::Type::MalformedPDF, "Separation color space expects name object for first arg" };
+    auto name = name_object->cast<NameObject>()->name();
+
+    // "The alternateSpace parameter must be an array or name object that identifies the alternate color space,
+    //  which can be any device or CIE-based color space but not another special color space
+    //  (Pattern, Indexed, Separation, or DeviceN)."
+    auto param1 = TRY(document->resolve(parameters[1]));
+    if (!param1.has<NonnullRefPtr<Object>>())
+        return Error { Error::Type::MalformedPDF, "Separation color space expects object for second arg" };
+    auto alternate_space_object = param1.get<NonnullRefPtr<Object>>();
+    auto alternate_space = TRY(ColorSpace::create(document, alternate_space_object));
+
+    auto family = alternate_space->family();
+    if (family.name() == ColorSpaceFamily::Pattern.name() || family.name() == ColorSpaceFamily::Indexed.name() || family.name() == ColorSpaceFamily::Separation.name() || family.name() == ColorSpaceFamily::DeviceN.name())
+        return Error { Error::Type::MalformedPDF, "Separation color space has invalid alternate color space" };
+
+    // "The tintTransform parameter must be a function"
+    auto param2 = TRY(document->resolve(parameters[2]));
+    if (!param2.has<NonnullRefPtr<Object>>())
+        return Error { Error::Type::MalformedPDF, "Separation color space expects object for third arg" };
+    auto tint_transform_object = param2.get<NonnullRefPtr<Object>>();
+    auto tint_transform = TRY(Function::create(document, tint_transform_object));
+
+    auto color_space = adopt_ref(*new SeparationColorSpace(move(alternate_space), move(tint_transform)));
+    color_space->m_name = move(name);
     return color_space;
 }
 
-PDFErrorOr<Color> SeparationColorSpace::color(ReadonlySpan<Value>) const
+SeparationColorSpace::SeparationColorSpace(NonnullRefPtr<ColorSpace> alternate_space, NonnullRefPtr<Function> tint_transform)
+    : m_alternate_space(move(alternate_space))
+    , m_tint_transform(move(tint_transform))
 {
-    return Error::rendering_unsupported_error("Separation color spaces not yet implemented");
+}
+
+PDFErrorOr<Color> SeparationColorSpace::color(ReadonlySpan<Value> arguments) const
+{
+    // "For an additive device such as a computer display, a Separation color space never applies a process colorant directly;
+    //  it always reverts to the alternate color space as described below."
+    // "During subsequent painting operations, an application calls [the tint] function to transform a tint value into
+    //  color component values in the alternate color space."
+    // FIXME: Does this need handling for the special colorant names "All" and "None"?
+    // FIXME: When drawing to a printer, do something else.
+    VERIFY(arguments.size() == 1);
+    auto a = arguments[0].to_float();
+
+    auto tint_output = TRY(m_tint_transform->evaluate(ReadonlySpan<float> { &a, 1 }));
+
+    m_tint_output_values.resize(tint_output.size());
+    for (size_t i = 0; i < tint_output.size(); ++i)
+        m_tint_output_values[i] = tint_output[i];
+
+    return m_alternate_space->color(m_tint_output_values);
 }
 
 Vector<float> SeparationColorSpace::default_decode() const
