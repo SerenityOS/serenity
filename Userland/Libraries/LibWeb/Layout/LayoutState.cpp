@@ -10,7 +10,7 @@
 #include <LibWeb/Layout/LayoutState.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
-#include <LibWeb/Painting/SVGGeometryPaintable.h>
+#include <LibWeb/Painting/SVGPathPaintable.h>
 
 namespace Web::Layout {
 
@@ -272,8 +272,8 @@ void LayoutState::commit(Box& root)
                 svg_graphics_paintable.set_computed_transforms(*used_values.computed_svg_transforms());
             }
 
-            if (used_values.computed_svg_path().has_value() && is<Painting::SVGGeometryPaintable>(paintable_box)) {
-                auto& svg_geometry_paintable = static_cast<Painting::SVGGeometryPaintable&>(paintable_box);
+            if (used_values.computed_svg_path().has_value() && is<Painting::SVGPathPaintable>(paintable_box)) {
+                auto& svg_geometry_paintable = static_cast<Painting::SVGPathPaintable&>(paintable_box);
                 svg_geometry_paintable.set_computed_path(move(*used_values.computed_svg_path()));
             }
         }

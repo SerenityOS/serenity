@@ -196,27 +196,20 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             graphics_box_state.set_computed_svg_transforms(Painting::SVGGraphicsPaintable::ComputedTransforms(viewbox_transform, svg_transform));
             auto to_css_pixels_transform = Gfx::AffineTransform {}.multiply(viewbox_transform).multiply(svg_transform);
 
+            Gfx::Path path;
             if (is<SVGGeometryBox>(descendant)) {
-                auto path = static_cast<SVG::SVGGeometryElement&>(dom_node).get_path();
-                auto path_bounding_box = to_css_pixels_transform.map(path.bounding_box()).to_type<CSSPixels>();
-                // Stroke increases the path's size by stroke_width/2 per side.
-                CSSPixels stroke_width = CSSPixels::nearest_value_for(graphics_box.dom_node().visible_stroke_width() * viewbox_transform.x_scale());
-                path_bounding_box.inflate(stroke_width, stroke_width);
-                graphics_box_state.set_content_offset(path_bounding_box.top_left());
-                graphics_box_state.set_content_width(path_bounding_box.width());
-                graphics_box_state.set_content_height(path_bounding_box.height());
-                graphics_box_state.set_computed_svg_path(move(path));
+                path = static_cast<SVG::SVGGeometryElement&>(dom_node).get_path();
             } else if (is<SVGTextBox>(descendant)) {
                 auto& text_element = static_cast<SVG::SVGTextPositioningElement&>(dom_node);
 
                 // FIXME: Support arbitrary path transforms for fonts.
                 // FIMXE: This assumes transform->x_scale() == transform->y_scale().
-                auto& scaled_font = graphics_box.scaled_font(to_css_pixels_transform.x_scale());
+                auto& font = graphics_box.font();
                 auto text_contents = text_element.text_contents();
+                Utf8View text_utf8 { text_contents };
+                auto text_width = font.width(text_utf8);
 
-                auto text_offset = text_element.get_offset().transformed(to_css_pixels_transform).to_type<CSSPixels>();
-                auto text_width = CSSPixels::nearest_value_for(scaled_font.width(Utf8View { text_contents }));
-
+                auto text_offset = text_element.get_offset();
                 // https://svgwg.org/svg2-draft/text.html#TextAnchoringProperties
                 switch (text_element.text_anchor().value_or(SVG::TextAnchor::Start)) {
                 case SVG::TextAnchor::Start:
@@ -240,11 +233,18 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
                     VERIFY_NOT_REACHED();
                 }
 
-                auto text_height = CSSPixels::nearest_value_for(scaled_font.pixel_size());
-                graphics_box_state.set_content_offset(text_offset.translated(0, -text_height));
-                graphics_box_state.set_content_width(text_width);
-                graphics_box_state.set_content_height(text_height);
+                path.move_to(text_offset);
+                path.text(text_utf8, font);
             }
+
+            auto path_bounding_box = to_css_pixels_transform.map(path.bounding_box()).to_type<CSSPixels>();
+            // Stroke increases the path's size by stroke_width/2 per side.
+            CSSPixels stroke_width = CSSPixels::nearest_value_for(graphics_box.dom_node().visible_stroke_width() * viewbox_transform.x_scale());
+            path_bounding_box.inflate(stroke_width, stroke_width);
+            graphics_box_state.set_content_offset(path_bounding_box.top_left());
+            graphics_box_state.set_content_width(path_bounding_box.width());
+            graphics_box_state.set_content_height(path_bounding_box.height());
+            graphics_box_state.set_computed_svg_path(move(path));
         } else if (is<SVGSVGBox>(descendant)) {
             SVGFormattingContext nested_context(m_state, static_cast<SVGSVGBox const&>(descendant), this);
             nested_context.run(static_cast<SVGSVGBox const&>(descendant), layout_mode, available_space);
