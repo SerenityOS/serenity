@@ -61,6 +61,8 @@ private:
         RunAsSoonAsReady,
     };
 
+    double associated_effect_end() const;
+
     void apply_any_pending_playback_rate();
     WebIDL::ExceptionOr<void> silently_set_current_time(Optional<double>);
 
