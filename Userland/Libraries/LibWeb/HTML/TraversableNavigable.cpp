@@ -352,7 +352,6 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
     // 5. FIXME: If checkForCancelation is true, and the result of checking if unloading is canceled given navigablesCrossingDocuments, traversable, targetStep,
     //           and userInvolvementForNavigateEvents is not "continue", then return that result.
     (void)check_for_cancelation;
-    (void)user_involvement_for_navigate_events;
 
     // 6. Let changingNavigables be the result of get all navigables whose current session history entry will change or reload given traversable and targetStep.
     auto changing_navigables = move(change_or_reload_navigables);
@@ -477,12 +476,14 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
                 // 7. In parallel, attempt to populate the history entry's document for targetEntry, given navigable, potentiallyTargetSpecificSourceSnapshotParams,
                 //    targetSnapshotParams, with allowPOST set to allowPOST and completionSteps set to queue a global task on the navigation and traversal task source given
                 //    navigable's active window to run afterDocumentPopulated.
-                navigable->populate_session_history_entry_document(target_entry, *potentially_target_specific_source_snapshot_params, target_snapshot_params, {}, Empty {}, CSPNavigationType::Other, allow_POST, [this, after_document_populated]() mutable {
-                             queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [after_document_populated]() mutable {
-                                 after_document_populated();
-                             });
-                         })
-                    .release_value_but_fixme_should_propagate_errors();
+                Platform::EventLoopPlugin::the().deferred_invoke([target_entry, potentially_target_specific_source_snapshot_params, target_snapshot_params, this, allow_POST, navigable, after_document_populated] {
+                    navigable->populate_session_history_entry_document(target_entry, *potentially_target_specific_source_snapshot_params, target_snapshot_params, {}, Empty {}, CSPNavigationType::Other, allow_POST, [this, after_document_populated]() mutable {
+                                 queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [after_document_populated]() mutable {
+                                     after_document_populated();
+                                 });
+                             })
+                        .release_value_but_fixme_should_propagate_errors();
+                });
             }
             // Otherwise, run afterDocumentPopulated immediately.
             else {
@@ -491,11 +492,35 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         });
     }
 
-    // FIXME: 13. Let navigablesThatMustWaitBeforeHandlingSyncNavigation be an empty set.
+    // 13. Let navigablesThatMustWaitBeforeHandlingSyncNavigation be an empty set.
+    Vector<JS::GCPtr<Navigable>> navigables_that_must_wait_before_handling_sync_navigation;
 
-    // FIXME: 14. While completedChangeJobs does not equal totalChangeJobs:
+    // 14. While completedChangeJobs does not equal totalChangeJobs:
     while (completed_change_jobs != total_change_jobs) {
-        // FIXME: 1. If traversable's running nested apply history step is false, then:
+        // NOTE: Synchronous navigations that are intended to take place before this traversal jump the queue at this point,
+        //       so they can be added to the correct place in traversable's session history entries before this traversal
+        //       potentially unloads their document. More details can be found here (https://html.spec.whatwg.org/multipage/browsing-the-web.html#sync-navigation-steps-queue-jumping-examples)
+        // 1. If traversable's running nested apply history step is false, then:
+        if (!m_running_nested_apply_history_step) {
+            // 1. While traversable's session history traversal queue's algorithm set contains one or more synchronous
+            //    navigation steps with a target navigable not contained in navigablesThatMustWaitBeforeHandlingSyncNavigation:
+            //   1. Let steps be the first item in traversable's session history traversal queue's algorithm set
+            //    that is synchronous navigation steps with a target navigable not contained in navigablesThatMustWaitBeforeHandlingSyncNavigation.
+            //   2. Remove steps from traversable's session history traversal queue's algorithm set.
+            for (auto steps = m_session_history_traversal_queue.first_synchronous_navigation_steps_with_target_navigable_not_contained_in(navigables_that_must_wait_before_handling_sync_navigation);
+                 steps.target_navigable != nullptr;
+                 steps = m_session_history_traversal_queue.first_synchronous_navigation_steps_with_target_navigable_not_contained_in(navigables_that_must_wait_before_handling_sync_navigation)) {
+
+                // 3. Set traversable's running nested apply history step to true.
+                m_running_nested_apply_history_step = true;
+
+                // 4. Run steps.
+                steps.steps();
+
+                // 5. Set traversable's running nested apply history step to false.
+                m_running_nested_apply_history_step = false;
+            }
+        }
 
         // AD-HOC: Since currently populate_session_history_entry_document does not run in parallel
         //         we call spin_until to interrupt execution of this function and let document population
@@ -534,16 +559,18 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         auto script_history_length = history_object_length_and_index.script_history_length;
         auto script_history_index = history_object_length_and_index.script_history_index;
 
-        // FIXME: 9. Append navigable to navigablesThatMustWaitBeforeHandlingSyncNavigation.
+        // 9. Append navigable to navigablesThatMustWaitBeforeHandlingSyncNavigation.
+        navigables_that_must_wait_before_handling_sync_navigation.append(*navigable);
 
         // 10. Let entriesForNavigationAPI be the result of getting session history entries for the navigation API given navigable and targetStep.
         auto entries_for_navigation_api = get_session_history_entries_for_the_navigation_api(*navigable, target_step);
 
         // 11. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
-        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api)]() mutable {
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&completed_change_jobs, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only, script_history_length, script_history_index, entries_for_navigation_api = move(entries_for_navigation_api), user_involvement_for_navigate_events]() mutable {
             // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
-            if (navigable->has_been_destroyed())
+            if (navigable->has_been_destroyed()) {
                 return;
+            }
 
             // 1. If changingNavigableContinuation's update-only is false, then:
             if (!update_only) {
@@ -596,15 +623,47 @@ TraversableNavigable::HistoryStepResult TraversableNavigable::apply_the_history_
         });
     }
 
-    // FIXME: 15. Let totalNonchangingJobs be the size of nonchangingNavigablesThatStillNeedUpdates.
+    // 15. Let totalNonchangingJobs be the size of nonchangingNavigablesThatStillNeedUpdates.
+    auto total_non_changing_jobs = non_changing_navigables_that_still_need_updates.size();
 
-    // FIXME: 16. Let completedNonchangingJobs be 0.
+    // 16. Let completedNonchangingJobs be 0.
+    auto completed_non_changing_jobs = 0u;
 
-    // FIXME: 17. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
+    // 17. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
+    auto length_and_index = get_the_history_object_length_and_index(target_step);
+    auto script_history_length = length_and_index.script_history_length;
+    auto script_history_index = length_and_index.script_history_index;
 
-    // FIXME: 18. For each navigable of nonchangingNavigablesThatStillNeedUpdates, queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
+    // 18. For each navigable of nonchangingNavigablesThatStillNeedUpdates, queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
+    for (auto& navigable : non_changing_navigables_that_still_need_updates) {
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&] {
+            // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
+            if (navigable->has_been_destroyed()) {
+                ++completed_non_changing_jobs;
+                return;
+            }
 
-    // FIXME: 19. Wait for completedNonchangingJobs to equal totalNonchangingJobs.
+            // 1. Let document be navigable's active document.
+            auto document = navigable->active_document();
+
+            // 2. Set document's history object's index to scriptHistoryIndex.
+            document->history()->m_index = script_history_index;
+
+            // 3. Set document's history object's length to scriptHistoryLength.
+            document->history()->m_length = script_history_length;
+
+            // 4. Increment completedNonchangingJobs.
+            ++completed_non_changing_jobs;
+        });
+    }
+
+    // 19. Wait for completedNonchangingJobs to equal totalNonchangingJobs.
+    // AD-HOC: Since currently populate_session_history_entry_document does not run in parallel
+    //         we call spin_until to interrupt execution of this function and let document population
+    //         to complete.
+    Platform::EventLoopPlugin::the().spin_until([&] {
+        return completed_non_changing_jobs == total_non_changing_jobs;
+    });
 
     // 20. Set traversable's current session history step to targetStep.
     m_current_session_history_step = target_step;
