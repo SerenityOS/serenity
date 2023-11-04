@@ -29,6 +29,7 @@ set(SOURCES
     Crypto/CryptoKey.cpp
     Crypto/SubtleCrypto.cpp
     CSS/Angle.cpp
+    CSS/AnimationEvent.cpp
     CSS/CalculatedOr.cpp
     CSS/Clip.cpp
     CSS/CSS.cpp
