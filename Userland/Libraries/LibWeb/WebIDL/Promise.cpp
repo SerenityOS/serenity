@@ -6,6 +6,7 @@
 
 #include <AK/Function.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/Realm.h>
@@ -182,18 +183,46 @@ void mark_promise_as_handled(Promise const& promise)
     promise_object->set_is_handled();
 }
 
+struct WaitForAllResults : JS::Cell {
+    JS_CELL(WaitForAllResults, JS::Cell);
+
+    WaitForAllResults(JS::NonnullGCPtr<JS::HeapFunction<void(Vector<JS::Value> const&)>> s, size_t t)
+        : success_steps(s)
+        , total(t)
+    {
+        // 8. Let result be a list containing total null values.
+        result.ensure_capacity(total);
+        for (size_t i = 0; i < total; ++i)
+            result.unchecked_append(JS::js_null());
+    }
+
+    virtual void visit_edges(JS::Cell::Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+        visitor.visit(success_steps);
+        for (auto& value : result) {
+            visitor.visit(value);
+        }
+    }
+
+    JS::NonnullGCPtr<JS::HeapFunction<void(Vector<JS::Value> const&)>> success_steps;
+    Vector<JS::Value> result;
+    size_t total = 0;
+    size_t fulfilled_count = 0;
+};
+
 // https://webidl.spec.whatwg.org/#wait-for-all
-void wait_for_all(JS::Realm& realm, JS::MarkedVector<JS::NonnullGCPtr<Promise>> const& promises, JS::SafeFunction<void(JS::MarkedVector<JS::Value> const&)> success_steps, JS::SafeFunction<void(JS::Value)> failure_steps)
+void wait_for_all(JS::Realm& realm, Vector<JS::NonnullGCPtr<Promise>> const& promises, Function<void(Vector<JS::Value> const&)> success_steps, Function<void(JS::Value)> failure_steps)
 {
     // FIXME: Fix spec typo, fullfilled --> fulfilled
     // 1. Let fullfilledCount be 0.
-    size_t fulfilled_count = 0;
+    // Handled later in WaitForAllResults
 
     // 2. Let rejected be false.
     auto rejected = false;
 
     // 3. Let rejectionHandlerSteps be the following steps given arg:
-    auto rejection_handler_steps = [&rejected, failure_steps = move(failure_steps)](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+    auto rejection_handler_steps = [rejected, failure_steps = JS::create_heap_function(realm.heap(), move(failure_steps))](JS::VM& vm) mutable -> JS::ThrowCompletionOr<JS::Value> {
         // 1. If rejected is true, abort these steps.
         if (rejected)
             return JS::js_undefined();
@@ -202,7 +231,7 @@ void wait_for_all(JS::Realm& realm, JS::MarkedVector<JS::NonnullGCPtr<Promise>> 
         rejected = true;
 
         // 3. Perform failureSteps given arg.
-        failure_steps(vm.argument(0));
+        failure_steps->function()(vm.argument(0));
 
         return JS::js_undefined();
     };
@@ -216,8 +245,8 @@ void wait_for_all(JS::Realm& realm, JS::MarkedVector<JS::NonnullGCPtr<Promise>> 
     // 6. If total is 0, then:
     if (total == 0) {
         // 1. Queue a microtask to perform successSteps given « ».
-        HTML::queue_a_microtask(nullptr, [&realm, success_steps = move(success_steps)] {
-            success_steps(JS::MarkedVector<JS::Value> { realm.heap() });
+        HTML::queue_a_microtask(nullptr, [success_steps = JS::create_heap_function(realm.heap(), move(success_steps))] {
+            success_steps->function()({});
         });
 
         // 2. Return.
@@ -228,10 +257,9 @@ void wait_for_all(JS::Realm& realm, JS::MarkedVector<JS::NonnullGCPtr<Promise>> 
     auto index = 0;
 
     // 8. Let result be a list containing total null values.
-    auto result = JS::MarkedVector<JS::Value>(realm.heap());
-    result.ensure_capacity(total);
-    for (size_t i = 0; i < total; ++i)
-        result.unchecked_append(JS::js_null());
+    // Handled in WaitForAllResults
+
+    auto results = realm.heap().allocate<WaitForAllResults>(realm, JS::create_heap_function(realm.heap(), move(success_steps)), total);
 
     // 9. For each promise of promises:
     for (auto const& promise : promises) {
@@ -240,18 +268,18 @@ void wait_for_all(JS::Realm& realm, JS::MarkedVector<JS::NonnullGCPtr<Promise>> 
 
         // FIXME: This should be fulfillmentHandlerSteps
         // 2. Let fulfillmentHandler be the following steps given arg:
-        auto fulfillment_handler_steps = [&](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+        auto fulfillment_handler_steps = [results, promise_index](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
             auto arg = vm.argument(0);
 
             // 1. Set result[promiseIndex] to arg.
-            result[promise_index] = arg;
+            results->result[promise_index] = arg;
 
             // 2. Set fullfilledCount to fullfilledCount + 1.
-            ++fulfilled_count;
+            ++results->fulfilled_count;
 
             // 3. If fullfilledCount equals total, then perform successSteps given result.
-            if (fulfilled_count == total)
-                success_steps(result);
+            if (results->fulfilled_count == results->total)
+                results->success_steps->function()(results->result);
 
             return JS::js_undefined();
         };
