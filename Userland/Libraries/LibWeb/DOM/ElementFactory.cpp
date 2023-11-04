@@ -504,8 +504,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
     // NOTE: We collapse this into just returning an element where necessary.
 
     // 4. Let definition be the result of looking up a custom element definition given document, namespace, localName, and is.
-    DeprecatedFlyString deprecated_namespace = namespace_.has_value() ? namespace_.value().to_deprecated_fly_string() : DeprecatedFlyString {};
-    auto definition = document.lookup_custom_element_definition(deprecated_namespace, local_name.to_deprecated_fly_string(), is_value);
+    auto definition = document.lookup_custom_element_definition(namespace_, local_name, is_value);
 
     // 5. If definition is non-null, and definition’s name is not equal to its local name (i.e., definition represents a customized built-in element), then:
     if (definition && definition->name() != definition->local_name()) {
