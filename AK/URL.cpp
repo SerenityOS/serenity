@@ -117,6 +117,15 @@ void URL::set_paths(Vector<DeprecatedString> const& paths)
     m_valid = compute_validity();
 }
 
+void URL::set_paths(Vector<String> const& paths)
+{
+    m_paths.clear_with_capacity();
+    m_paths.ensure_capacity(paths.size());
+    for (auto const& segment : paths)
+        m_paths.unchecked_append(String::from_deprecated_string(percent_encode(segment, PercentEncodeSet::Path)).release_value_but_fixme_should_propagate_errors());
+    m_valid = compute_validity();
+}
+
 void URL::append_path(StringView path)
 {
     m_paths.append(String::from_deprecated_string(percent_encode(path, PercentEncodeSet::Path)).release_value_but_fixme_should_propagate_errors());
@@ -196,6 +205,23 @@ URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString 
         url.append_slash();
     if (!fragment.is_empty())
         url.set_fragment(String::from_deprecated_string(fragment).release_value_but_fixme_should_propagate_errors());
+    return url;
+}
+
+URL URL::create_with_file_scheme(String const& path, String const& fragment, String const& hostname)
+{
+    LexicalPath lexical_path(path.to_deprecated_string());
+    if (!lexical_path.is_absolute())
+        return {};
+
+    URL url;
+    url.set_scheme("file"_string);
+    url.set_host(hostname == "localhost" ? String {} : hostname);
+    url.set_paths(lexical_path.parts());
+    if (path.ends_with('/'))
+        url.append_slash();
+    if (!fragment.is_empty())
+        url.set_fragment(fragment);
     return url;
 }
 

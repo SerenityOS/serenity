@@ -97,6 +97,7 @@ public:
     void set_host(Host);
     void set_port(Optional<u16>);
     void set_paths(Vector<DeprecatedString> const&);
+    void set_paths(Vector<String> const&);
     void set_query(Optional<String> query) { m_query = move(query); }
     void set_fragment(Optional<String> fragment) { m_fragment = move(fragment); }
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
@@ -132,6 +133,7 @@ public:
 
     static URL create_with_url_or_path(DeprecatedString const&);
     static URL create_with_file_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
+    static URL create_with_file_scheme(String const& path, String const& fragment = {}, String const& hostname = {});
     static URL create_with_help_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
     static URL create_with_data(StringView mime_type, StringView payload, bool is_base64 = false);
 

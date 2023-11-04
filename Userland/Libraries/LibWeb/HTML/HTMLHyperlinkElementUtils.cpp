@@ -311,7 +311,7 @@ void HTMLHyperlinkElementUtils::set_pathname(StringView pathname)
 
     // 4. Set url's path to the empty list.
     auto url = m_url; // We copy the URL here to follow other browser's behavior of reverting the path change if the parse failed.
-    url->set_paths({});
+    url->set_paths(Vector<String> {});
 
     // 5. Basic URL parse the given value, with url as url and path start state as state override.
     auto result_url = URLParser::basic_parse(pathname, {}, move(url), URLParser::State::PathStart);

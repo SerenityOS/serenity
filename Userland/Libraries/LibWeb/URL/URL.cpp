@@ -366,7 +366,7 @@ void URL::set_pathname(String const& pathname)
 
     // 2. Empty this’s URL’s path.
     auto url = m_url; // We copy the URL here to follow other browser's behavior of reverting the path change if the parse failed.
-    url.set_paths({});
+    url.set_paths(Vector<String> {});
 
     // 3. Basic URL parse the given value with this’s URL as url and path start state as state override.
     auto result_url = URLParser::basic_parse(pathname, {}, move(url), URLParser::State::PathStart);
