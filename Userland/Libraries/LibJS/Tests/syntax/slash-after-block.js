@@ -45,4 +45,8 @@ test("slash token resolution in lexer", () => {
     expect("yield / b/").not.toEval();
     expect("function* foo() { yield / b }").not.toEval();
     expect("function* foo() { yield / b/ }").toEval();
+
+    expect("this / 1").toEval();
+    expect("this / 1 /").not.toEval();
+    expect("this / 1 / 1").toEval();
 });
