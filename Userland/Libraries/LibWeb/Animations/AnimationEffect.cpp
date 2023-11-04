@@ -462,6 +462,31 @@ Optional<double> AnimationEffect::current_iteration() const
     return floor(overall_progress().value());
 }
 
+// https://www.w3.org/TR/web-animations-1/#transformed-progress
+Optional<double> AnimationEffect::transformed_progress() const
+{
+    // 1. If the directed progress is unresolved, return unresolved.
+    auto directed_progress = this->directed_progress();
+    if (!directed_progress.has_value())
+        return {};
+
+    // 2. Calculate the value of the before flag as follows:
+
+    //    1. Determine the current direction using the procedure defined in §4.9.1 Calculating the directed progress.
+    auto current_direction = this->current_direction();
+
+    //    2. If the current direction is forwards, let going forwards be true, otherwise it is false.
+    auto going_forwards = current_direction == AnimationDirection::Forwards;
+
+    //    3. The before flag is set if the animation effect is in the before phase and going forwards is true; or if the animation effect
+    //       is in the after phase and going forwards is false.
+    auto before_flag = (is_in_the_before_phase() && going_forwards) || (is_in_the_after_phase() && !going_forwards);
+
+    // 3. Return the result of evaluating the animation effect’s timing function passing directed progress as the input progress value and
+    //    before flag as the before flag.
+    return m_timing_function(directed_progress.value(), before_flag);
+}
+
 AnimationEffect::AnimationEffect(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
