@@ -70,6 +70,9 @@ private:
     // https://www.w3.org/TR/web-animations-1/#animation-start-time
     Optional<double> m_start_time {};
 
+    // https://www.w3.org/TR/web-animations-1/#animation-hold-time
+    Optional<double> m_hold_time {};
+
     // https://www.w3.org/TR/web-animations-1/#playback-rate
     double m_playback_rate { 1.0 };
 
