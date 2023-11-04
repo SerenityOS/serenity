@@ -539,6 +539,13 @@ public:
     void associate_with_timeline(JS::NonnullGCPtr<Animations::AnimationTimeline>);
     void disassociate_with_timeline(JS::NonnullGCPtr<Animations::AnimationTimeline>);
 
+    struct PendingAnimationEvent {
+        JS::NonnullGCPtr<DOM::Event> event;
+        JS::NonnullGCPtr<Animations::Animation> target;
+        Optional<double> scheduled_event_time;
+    };
+    void append_pending_animation_event(PendingAnimationEvent const&);
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -751,6 +758,9 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#document-default-document-timeline
     JS::GCPtr<Animations::DocumentTimeline> m_default_timeline;
+
+    // https://www.w3.org/TR/web-animations-1/#pending-animation-event-queue
+    Vector<PendingAnimationEvent> m_pending_animation_event_queue;
 };
 
 template<>

@@ -3585,4 +3585,9 @@ void Document::disassociate_with_timeline(JS::NonnullGCPtr<Animations::Animation
     m_associated_animation_timelines.remove(timeline);
 }
 
+void Document::append_pending_animation_event(Web::DOM::Document::PendingAnimationEvent const& event)
+{
+    m_pending_animation_event_queue.append(event);
+}
+
 }
