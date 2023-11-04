@@ -84,6 +84,9 @@ public:
     String const& easing_function() const { return m_easing_function; }
     void set_easing_function(String easing_function) { m_easing_function = move(easing_function); }
 
+    JS::GCPtr<Animation> associated_animation() const { return m_associated_animation; }
+    void set_associated_animation(JS::GCPtr<Animation> value) { m_associated_animation = value; }
+
 protected:
     AnimationEffect(JS::Realm&);
 
@@ -112,6 +115,9 @@ protected:
 
     // https://www.w3.org/TR/css-easing-1/#easing-function
     String m_easing_function { "linear"_string };
+
+    // https://www.w3.org/TR/web-animations-1/#animation-associated-effect
+    JS::GCPtr<Animation> m_associated_animation {};
 };
 
 }

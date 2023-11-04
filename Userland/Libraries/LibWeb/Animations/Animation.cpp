@@ -44,8 +44,38 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Animation>> Animation::construct_impl(JS::R
 // https://www.w3.org/TR/web-animations-1/#animation-set-the-associated-effect-of-an-animation
 void Animation::set_effect(JS::GCPtr<AnimationEffect> new_effect)
 {
-    // FIXME: Implement
-    (void)new_effect;
+    // Setting this attribute updates the object’s associated effect using the procedure to set the associated effect of
+    // an animation.
+
+    // 1. Let old effect be the current associated effect of animation, if any.
+    auto old_effect = m_effect;
+
+    // 2. If new effect is the same object as old effect, abort this procedure.
+    if (new_effect == old_effect)
+        return;
+
+    // FIXME: 3. If animation has a pending pause task, reschedule that task to run as soon as animation is ready.
+
+    // FIXME: 4. If animation has a pending play task, reschedule that task to run as soon as animation is ready to play
+    //           new effect.
+
+    // 5. If new effect is not null and if new effect is the associated effect of another animation, previous animation,
+    //    run the procedure to set the associated effect of an animation (this procedure) on previous animation passing
+    //    null as new effect.
+    if (new_effect && new_effect->associated_animation() != this) {
+        if (auto animation = new_effect->associated_animation())
+            animation->set_effect({});
+    }
+
+    // 6. Let the associated effect of animation be new effect.
+    if (new_effect)
+        new_effect->set_associated_animation(this);
+    if (m_effect)
+        m_effect->set_associated_animation({});
+    m_effect = new_effect;
+
+    // FIXME: 7. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
+    //           false, and the synchronously notify flag set to false.
 }
 
 // https://www.w3.org/TR/web-animations-1/#animation-set-the-timeline-of-an-animation
