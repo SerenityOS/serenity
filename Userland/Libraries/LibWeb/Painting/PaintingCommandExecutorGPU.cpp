@@ -18,9 +18,9 @@ PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
     m_painter.flush();
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const&, Color const&)
+CommandResult PaintingCommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
 {
-    // FIXME
+    painter().draw_glyph_run(glyph_run, color);
     return CommandResult::Continue;
 }
 
@@ -236,6 +236,11 @@ bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect)
 {
     // FIXME
     return false;
+}
+
+void PaintingCommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
+{
+    m_painter.prepare_glyph_texture(unique_glyphs);
 }
 
 }
