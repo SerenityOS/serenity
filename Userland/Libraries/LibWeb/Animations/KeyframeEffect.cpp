@@ -1,15 +1,199 @@
 /*
- * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023-2024, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibWeb/Animations/KeyframeEffect.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Animations {
 
 JS_DEFINE_ALLOCATOR(KeyframeEffect);
+
+template<typename T>
+WebIDL::ExceptionOr<Variant<T, Vector<T>>> convert_value_to_maybe_list(JS::Realm& realm, JS::Value value, Function<WebIDL::ExceptionOr<T>(JS::Value)>& value_converter)
+{
+    auto& vm = realm.vm();
+
+    if (TRY(value.is_array(vm))) {
+        Vector<T> offsets;
+
+        auto iterator = TRY(JS::get_iterator(vm, value, JS::IteratorHint::Sync));
+        auto values = TRY(JS::iterator_to_list(vm, iterator));
+        for (auto const& element : values) {
+            if (element.is_undefined()) {
+                offsets.append({});
+            } else {
+                offsets.append(TRY(value_converter(element)));
+            }
+        }
+
+        return offsets;
+    }
+
+    return TRY(value_converter(value));
+}
+
+enum AllowLists {
+    Yes,
+    No,
+};
+
+template<AllowLists AL>
+using KeyframeType = Conditional<AL == AllowLists::Yes, BasePropertyIndexedKeyframe, BaseKeyframe>;
+
+// https://www.w3.org/TR/web-animations-1/#process-a-keyframe-like-object
+template<AllowLists AL>
+static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::Realm& realm, JS::GCPtr<JS::Object> keyframe_input)
+{
+    auto& vm = realm.vm();
+
+    Function<WebIDL::ExceptionOr<Optional<double>>(JS::Value)> to_nullable_double = [&vm](JS::Value value) -> WebIDL::ExceptionOr<Optional<double>> {
+        if (value.is_undefined())
+            return Optional<double> {};
+        return TRY(value.to_double(vm));
+    };
+
+    Function<WebIDL::ExceptionOr<String>(JS::Value)> to_string = [&vm](JS::Value value) -> WebIDL::ExceptionOr<String> {
+        return TRY(value.to_string(vm));
+    };
+
+    Function<WebIDL::ExceptionOr<Bindings::CompositeOperationOrAuto>(JS::Value)> to_composite_operation = [&vm](JS::Value value) -> WebIDL::ExceptionOr<Bindings::CompositeOperationOrAuto> {
+        if (value.is_undefined())
+            return Bindings::CompositeOperationOrAuto::Auto;
+
+        auto string_value = TRY(value.to_string(vm));
+        if (string_value == "replace")
+            return Bindings::CompositeOperationOrAuto::Replace;
+        if (string_value == "add")
+            return Bindings::CompositeOperationOrAuto::Add;
+        if (string_value == "accumulate")
+            return Bindings::CompositeOperationOrAuto::Accumulate;
+        if (string_value == "auto")
+            return Bindings::CompositeOperationOrAuto::Auto;
+
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid composite value"sv };
+    };
+
+    // 1. Run the procedure to convert an ECMAScript value to a dictionary type with keyframe input as the ECMAScript
+    //    value, and the dictionary type depending on the value of the allow lists flag as follows:
+    //
+    //    -> If allow lists is true, use the following dictionary type: <BasePropertyIndexedKeyframe>.
+    //    -> Otherwise, use the following dictionary type: <BaseKeyframe>.
+    //
+    //    Store the result of this procedure as keyframe output.
+
+    KeyframeType<AL> keyframe_output;
+    auto offset = TRY(keyframe_input->get("offset"));
+    auto easing = TRY(keyframe_input->get("easing"));
+    if (easing.is_undefined())
+        easing = JS::PrimitiveString::create(vm, "linear"_string);
+    auto composite = TRY(keyframe_input->get("composite"));
+    if (composite.is_undefined())
+        composite = JS::PrimitiveString::create(vm, "auto"_string);
+
+    if constexpr (AL == AllowLists::Yes) {
+        keyframe_output.offset = TRY(convert_value_to_maybe_list(realm, offset, to_nullable_double));
+        keyframe_output.composite = TRY(convert_value_to_maybe_list(realm, composite, to_composite_operation));
+
+        auto easing_maybe_list = TRY(convert_value_to_maybe_list(realm, easing, to_string));
+        easing_maybe_list.visit(
+            [&](String const& value) {
+                keyframe_output.easing = EasingValue { value };
+            },
+            [&](Vector<String> const& values) {
+                Vector<EasingValue> easing_values;
+                for (auto& easing_value : values)
+                    easing_values.append(easing_value);
+                keyframe_output.easing = move(easing_values);
+            });
+    } else {
+        keyframe_output.offset = TRY(to_nullable_double(offset));
+        keyframe_output.easing = TRY(to_string(easing));
+        keyframe_output.composite = TRY(to_composite_operation(composite));
+    }
+
+    // 2. Build up a list of animatable properties as follows:
+    //
+    //    1. Let animatable properties be a list of property names (including shorthand properties that have longhand
+    //       sub-properties that are animatable) that can be animated by the implementation.
+    //    2. Convert each property name in animatable properties to the equivalent IDL attribute by applying the
+    //       animation property name to IDL attribute name algorithm.
+
+    // 3. Let input properties be the result of calling the EnumerableOwnNames operation with keyframe input as the
+    //    object.
+
+    // 4. Make up a new list animation properties that consists of all of the properties that are in both input
+    //    properties and animatable properties, or which are in input properties and conform to the
+    //    <custom-property-name> production.
+    auto input_properties = TRY(keyframe_input->internal_own_property_keys());
+
+    Vector<String> animation_properties;
+    for (auto const& input_property : input_properties) {
+        if (!input_property.is_string())
+            continue;
+
+        auto name = input_property.as_string().utf8_string();
+        if (auto property = CSS::property_id_from_camel_case_string(name); property.has_value()) {
+            if (CSS::is_animatable_property(property.value()))
+                animation_properties.append(name);
+        }
+    }
+
+    // 5. Sort animation properties in ascending order by the Unicode codepoints that define each property name.
+    quick_sort(animation_properties);
+
+    // 6. For each property name in animation properties,
+    for (auto const& property_name : animation_properties) {
+        // 1. Let raw value be the result of calling the [[Get]] internal method on keyframe input, with property name
+        //    as the property key and keyframe input as the receiver.
+        // 2. Check the completion record of raw value.
+        auto raw_value = TRY(keyframe_input->get(ByteString { property_name }));
+
+        using PropertyValuesType = Conditional<AL == AllowLists::Yes, Vector<String>, String>;
+        PropertyValuesType property_values;
+
+        // 3. Convert raw value to a DOMString or sequence of DOMStrings property values as follows:
+
+        // -> If allow lists is true,
+        if constexpr (AL == AllowLists::Yes) {
+            // Let property values be the result of converting raw value to IDL type (DOMString or sequence<DOMString>)
+            // using the procedures defined for converting an ECMAScript value to an IDL value [WEBIDL].
+            auto intermediate_property_values = TRY(convert_value_to_maybe_list(realm, raw_value, to_string));
+
+            // If property values is a single DOMString, replace property values with a sequence of DOMStrings with the
+            // original value of property values as the only element.
+            if (intermediate_property_values.has<String>())
+                property_values = Vector { intermediate_property_values.get<String>() };
+            else
+                property_values = intermediate_property_values.get<Vector<String>>();
+        }
+        // -> Otherwise,
+        else {
+            // Let property values be the result of converting raw value to a DOMString using the procedure for
+            // converting an ECMAScript value to a DOMString [WEBIDL].
+            property_values = TRY(raw_value.to_string(vm));
+        }
+
+        // 4. Calculate the normalized property name as the result of applying the IDL attribute name to animation
+        //    property name algorithm to property name.
+        // Note: We do not need to do this, since we did not need to do the reverse step (animation property name to IDL
+        //       attribute name) in the steps above.
+
+        // 5. Add a property to keyframe output with normalized property name as the property name, and property values
+        //    as the property value.
+        if constexpr (AL == AllowLists::Yes) {
+            keyframe_output.properties.set(property_name, property_values);
+        } else {
+            keyframe_output.unparsed_properties().set(property_name, property_values);
+        }
+    }
+
+    return keyframe_output;
+}
 
 JS::NonnullGCPtr<KeyframeEffect> KeyframeEffect::create(JS::Realm& realm)
 {
