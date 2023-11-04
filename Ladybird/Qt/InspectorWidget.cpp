@@ -9,6 +9,7 @@
 #include <LibWebView/StylePropertiesModel.h>
 
 #include "InspectorWidget.h"
+#include <AK/JsonObject.h>
 #include <QCloseEvent>
 #include <QHeaderView>
 #include <QSplitter>

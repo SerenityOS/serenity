@@ -11,6 +11,7 @@
 #include "Settings.h"
 #include "StringUtils.h"
 #include "TVGIconEngine.h"
+#include <AK/TemporaryChange.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
 #include <LibWebView/SearchEngine.h>
