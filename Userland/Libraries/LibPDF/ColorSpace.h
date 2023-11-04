@@ -10,6 +10,7 @@
 #include <AK/Forward.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/ICC/Profile.h>
+#include <LibPDF/Function.h>
 #include <LibPDF/Value.h>
 
 #define ENUMERATE_COLOR_SPACE_FAMILIES(V) \
@@ -231,7 +232,12 @@ public:
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Separation; }
 
 private:
-    SeparationColorSpace() = default;
+    SeparationColorSpace(NonnullRefPtr<ColorSpace>, NonnullRefPtr<Function>);
+
+    DeprecatedString m_name;
+    NonnullRefPtr<ColorSpace> m_alternate_space;
+    NonnullRefPtr<Function> m_tint_transform;
+    Vector<Value> mutable m_tint_output_values;
 };
 
 }
