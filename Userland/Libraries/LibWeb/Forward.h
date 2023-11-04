@@ -32,6 +32,7 @@ class AnimationEffect;
 class AnimationPlaybackEvent;
 class AnimationTimeline;
 class DocumentTimeline;
+class KeyframeEffect;
 }
 
 namespace Web::ARIA {

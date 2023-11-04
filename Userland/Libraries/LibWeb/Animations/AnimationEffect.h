@@ -127,6 +127,8 @@ public:
     Optional<double> current_iteration() const;
     Optional<double> transformed_progress() const;
 
+    virtual DOM::Element* target() const { return {}; }
+
 protected:
     AnimationEffect(JS::Realm&);
 
