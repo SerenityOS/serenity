@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Animations/Animation.h>
 #include <LibWeb/Animations/AnimationEffect.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -149,6 +150,16 @@ WebIDL::ExceptionOr<void> AnimationEffect::update_timing(OptionalEffectTiming ti
         m_easing_function = timing.easing.value();
 
     return {};
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-direction
+AnimationDirection AnimationEffect::animation_direction() const
+{
+    // "backwards" if the effect is associated with an animation and the associated animation’s playback rate is less
+    // than zero; in all other cases, the animation direction is "forwards".
+    if (m_associated_animation && m_associated_animation->playback_rate() < 0.0)
+        return AnimationDirection::Backwards;
+    return AnimationDirection::Forwards;
 }
 
 AnimationEffect::AnimationEffect(JS::Realm& realm)
