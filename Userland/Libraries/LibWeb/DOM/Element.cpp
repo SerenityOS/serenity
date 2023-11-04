@@ -176,7 +176,7 @@ JS::GCPtr<Attr> Element::get_attribute_node(FlyString const& name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattribute
-WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& value)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
@@ -193,21 +193,16 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document
     //    is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
-        auto new_attribute = Attr::create(document(), MUST(String::from_deprecated_string(insert_as_lowercase ? name.to_lowercase() : name)), MUST(String::from_deprecated_string(value)));
+        auto new_attribute = Attr::create(document(), insert_as_lowercase ? MUST(Infra::to_ascii_lowercase(name)) : name, value);
         m_attributes->append_attribute(new_attribute);
 
         return {};
     }
 
     // 5. Change attribute to value.
-    attribute->change_attribute(MUST(String::from_deprecated_string(value)));
+    attribute->change_attribute(value);
 
     return {};
-}
-
-WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name, String const& value)
-{
-    return set_attribute(name, value.to_deprecated_string());
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract

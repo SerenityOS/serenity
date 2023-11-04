@@ -234,7 +234,7 @@ void DOMTokenList::set_value(String const& value)
     if (!associated_element)
         return;
 
-    MUST(associated_element->set_attribute(m_associated_attribute.to_deprecated_fly_string(), value.to_deprecated_string()));
+    MUST(associated_element->set_attribute(m_associated_attribute, value));
 }
 
 WebIDL::ExceptionOr<void> DOMTokenList::validate_token(StringView token) const
@@ -253,14 +253,12 @@ void DOMTokenList::run_update_steps()
     if (!associated_element)
         return;
 
-    auto deprecated_attribute = m_associated_attribute.to_deprecated_fly_string();
-
     // 1. If the associated element does not have an associated attribute and token set is empty, then return.
-    if (!associated_element->has_attribute(deprecated_attribute) && m_token_set.is_empty())
+    if (!associated_element->has_attribute(m_associated_attribute) && m_token_set.is_empty())
         return;
 
     // 2. Set an attribute value for the associated element using associated attribute’s local name and the result of running the ordered set serializer for token set.
-    MUST(associated_element->set_attribute(deprecated_attribute, value().to_deprecated_string()));
+    MUST(associated_element->set_attribute(m_associated_attribute, value()));
 }
 
 WebIDL::ExceptionOr<JS::Value> DOMTokenList::item_value(size_t index) const
