@@ -125,6 +125,7 @@ public:
     AnimationDirection current_direction() const;
     Optional<double> simple_iteration_progress() const;
     Optional<double> current_iteration() const;
+    Optional<double> transformed_progress() const;
 
 protected:
     AnimationEffect(JS::Realm&);
