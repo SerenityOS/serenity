@@ -7,6 +7,7 @@ set(SOURCES
     Animations/AnimationPlaybackEvent.cpp
     Animations/AnimationTimeline.cpp
     Animations/DocumentTimeline.cpp
+    Animations/KeyframeEffect.cpp
     Animations/TimingFunction.cpp
     ARIA/AriaData.cpp
     ARIA/ARIAMixin.cpp
