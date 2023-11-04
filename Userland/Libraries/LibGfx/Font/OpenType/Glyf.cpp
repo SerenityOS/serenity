@@ -245,7 +245,7 @@ ReadonlyBytes Glyf::Glyph::program() const
     return m_slice.slice(instructions_start + 2, num_instructions);
 }
 
-void Glyf::Glyph::rasterize_impl(Gfx::Painter& painter, Gfx::AffineTransform const& transform) const
+void Glyf::Glyph::append_path_impl(Gfx::Path& path, Gfx::AffineTransform const& transform) const
 {
     // Get offset for flags, x, and y.
     u16 num_points = be_u16(m_slice.offset((m_num_contours - 1) * 2)) + 1;
@@ -256,7 +256,6 @@ void Glyf::Glyph::rasterize_impl(Gfx::Painter& painter, Gfx::AffineTransform con
     get_ttglyph_offsets(m_slice, num_points, flags_offset, &x_offset, &y_offset);
 
     // Prepare to render glyph.
-    Gfx::Path path;
     PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, transform);
 
     u32 current_point_index = 0;
@@ -297,32 +296,24 @@ void Glyf::Glyph::rasterize_impl(Gfx::Painter& painter, Gfx::AffineTransform con
             }
         }
     }
-
-    constexpr auto base_color = Color::White;
-    Gfx::AntiAliasingPainter aa_painter { painter };
-    aa_painter.fill_path(path, base_color);
 }
 
-RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset) const
+bool Glyf::Glyph::append_simple_path(Gfx::Path& path, i16 font_ascender, i16 font_descender, float x_scale, float y_scale) const
 {
     if (m_xmin > m_xmax) [[unlikely]] {
         dbgln("OpenType: Glyph has invalid xMin ({}) > xMax ({})", m_xmin, m_xmax);
-        return nullptr;
+        return false;
     }
     if (font_descender > font_ascender) [[unlikely]] {
         dbgln("OpenType: Glyph has invalid ascender ({}) > descender ({})", font_ascender, font_descender);
-        return nullptr;
+        return false;
     }
-    u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 2;
-    u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 2;
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
     auto affine = Gfx::AffineTransform()
-                      .translate(subpixel_offset.to_float_point())
+                      .translate(path.last_point())
                       .scale(x_scale, -y_scale)
                       .translate(-m_xmin, -font_ascender);
-    Gfx::Painter painter { bitmap };
-    rasterize_impl(painter, affine);
-    return bitmap;
+    append_path_impl(path, affine);
+    return true;
 }
 
 Optional<Glyf::Glyph> Glyf::glyph(u32 offset) const
