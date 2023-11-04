@@ -84,8 +84,8 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
         MUST(m_current_node->append_child(node));
     }
 
-    for (auto& attribute : attributes)
-        MUST(node->set_attribute(attribute.key, attribute.value));
+    for (auto const& attribute : attributes)
+        MUST(node->set_attribute(MUST(FlyString::from_deprecated_fly_string(attribute.key)), MUST(String::from_deprecated_string(attribute.value))));
 
     m_current_node = node.ptr();
 }
