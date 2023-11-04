@@ -49,6 +49,11 @@ struct ComputedEffectTiming : public EffectTiming {
     Optional<double> current_iteration;
 };
 
+enum class AnimationDirection {
+    Forwards,
+    Backwards,
+};
+
 // https://www.w3.org/TR/web-animations-1/#the-animationeffect-interface
 class AnimationEffect : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(AnimationEffect, Bindings::PlatformObject);
@@ -86,6 +91,8 @@ public:
 
     JS::GCPtr<Animation> associated_animation() const { return m_associated_animation; }
     void set_associated_animation(JS::GCPtr<Animation> value) { m_associated_animation = value; }
+
+    AnimationDirection animation_direction() const;
 
 protected:
     AnimationEffect(JS::Realm&);
