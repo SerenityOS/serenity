@@ -221,8 +221,36 @@ WebIDL::ExceptionOr<void> Animation::set_current_time(Optional<double> const& se
 // https://www.w3.org/TR/web-animations-1/#set-the-playback-rate
 WebIDL::ExceptionOr<void> Animation::set_playback_rate(double new_playback_rate)
 {
-    // FIXME: Implement
-    (void)new_playback_rate;
+    // Setting this attribute follows the procedure to set the playback rate of this object to the new value.
+
+    // 1. Clear any pending playback rate on animation.
+    m_pending_playback_rate = {};
+
+    // 2. Let previous time be the value of the current time of animation before changing the playback rate.
+    auto previous_time = current_time();
+
+    // 3. Let previous playback rate be the current effective playback rate of animation.
+    auto previous_playback_rate = playback_rate();
+
+    // 4. Set the playback rate to new playback rate.
+    m_playback_rate = new_playback_rate;
+
+    // 5. Perform the steps corresponding to the first matching condition from the following, if any:
+
+    // -> If animation is associated with a monotonically increasing timeline and the previous time is resolved,
+    if (m_timeline && m_timeline->is_monotonically_increasing() && previous_time.has_value()) {
+        // set the current time of animation to previous time.
+        TRY(set_current_time(previous_time));
+    }
+    // -> If animation is associated with a non-null timeline that is not monotonically increasing, the start time of
+    //    animation is resolved, associated effect end is not infinity, and either:
+    //    - the previous playback rate < 0 and the new playback rate ≥ 0, or
+    //    - the previous playback rate ≥ 0 and the new playback rate < 0,
+    else if (m_timeline && !m_timeline->is_monotonically_increasing() && m_start_time.has_value() && !isinf(associated_effect_end()) && ((previous_playback_rate < 0.0 && new_playback_rate >= 0.0) || (previous_playback_rate >= 0 && new_playback_rate < 0))) {
+        // Set animation’s start time to the result of evaluating associated effect end - start time for animation.
+        m_start_time = associated_effect_end() - m_start_time.value();
+    }
+
     return {};
 }
 
@@ -231,6 +259,14 @@ Bindings::AnimationPlayState Animation::play_state() const
 {
     // FIXME: Implement
     return Bindings::AnimationPlayState::Idle;
+}
+
+// https://www.w3.org/TR/web-animations-1/#associated-effect-end
+double Animation::associated_effect_end() const
+{
+    // The associated effect end of an animation is equal to the end time of the animation’s associated effect. If the
+    // animation has no associated effect, the associated effect end is zero.
+    return m_effect ? m_effect->end_time() : 0.0;
 }
 
 // https://www.w3.org/TR/web-animations-1/#apply-any-pending-playback-rate
