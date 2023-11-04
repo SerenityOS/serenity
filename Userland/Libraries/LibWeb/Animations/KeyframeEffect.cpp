@@ -304,6 +304,7 @@ static bool is_loosely_sorted_by_offset(Vector<BaseKeyframe> const& keyframes)
 
     // 2. Let processed keyframes be an empty sequence of keyframes.
     Vector<BaseKeyframe> processed_keyframes;
+    Vector<EasingValue> unused_easings;
 
     // 3. Let method be the result of GetMethod(object, @@iterator).
     // 4. Check the completion record of method.
@@ -342,8 +343,142 @@ static bool is_loosely_sorted_by_offset(Vector<BaseKeyframe> const& keyframes)
     }
     // -> Otherwise,
     else {
-        // FIXME: Support processing a single keyframe-like object
-        TODO();
+        // 1. Let property-indexed keyframe be the result of running the procedure to process a keyframe-like object
+        //    passing object as the keyframe input and with the allow lists flag set to true.
+        auto property_indexed_keyframe = TRY(process_a_keyframe_like_object<AllowLists::Yes>(realm, object));
+
+        // 2. For each member, m, in property-indexed keyframe, perform the following steps:
+        for (auto const& [property_name, property_values] : property_indexed_keyframe.properties) {
+            // 1. Let property name be the key for m.
+
+            // 2. If property name is "composite", or "easing", or "offset", skip the remaining steps in this loop and
+            //    continue from the next member in property-indexed keyframe after m.
+            // Note: This will never happen, since these fields have dedicated members on BasePropertyIndexedKeyframe
+
+            // 3. Let property values be the value for m.
+
+            // 4. Let property keyframes be an empty sequence of keyframes.
+            Vector<BaseKeyframe> property_keyframes;
+
+            // 5. For each value, v, in property values perform the following steps:
+            for (auto const& value : property_values) {
+                // 1. Let k be a new keyframe with a null keyframe offset.
+                BaseKeyframe keyframe;
+
+                // 2. Add the property-value pair, property name → v, to k.
+                keyframe.unparsed_properties().set(property_name, value);
+
+                // 3. Append k to property keyframes.
+                property_keyframes.append(keyframe);
+            }
+
+            // 6. Apply the procedure to compute missing keyframe offsets to property keyframes.
+            compute_missing_keyframe_offsets(property_keyframes);
+
+            // 7. Add keyframes in property keyframes to processed keyframes.
+            processed_keyframes.extend(move(property_keyframes));
+        }
+
+        // 3. Sort processed keyframes by the computed keyframe offset of each keyframe in increasing order.
+        quick_sort(processed_keyframes, [](auto const& a, auto const& b) {
+            return a.computed_offset.value() < b.computed_offset.value();
+        });
+
+        // 4. Merge adjacent keyframes in processed keyframes when they have equal computed keyframe offsets.
+        // Note: The spec doesn't specify how to merge them, but WebKit seems to just override the properties of the
+        //       earlier keyframe with the properties of the later keyframe.
+        for (int i = 0; i < static_cast<int>(processed_keyframes.size() - 1); i++) {
+            auto& keyframe_a = processed_keyframes[i];
+            auto& keyframe_b = processed_keyframes[i + 1];
+
+            if (keyframe_a.computed_offset.value() == keyframe_b.computed_offset.value()) {
+                keyframe_a.easing = keyframe_b.easing;
+                keyframe_a.composite = keyframe_b.composite;
+                for (auto const& [property_name, property_value] : keyframe_b.unparsed_properties())
+                    keyframe_a.unparsed_properties().set(property_name, property_value);
+                processed_keyframes.remove(i + 1);
+                i--;
+            }
+        }
+
+        // 5. Let offsets be a sequence of nullable double values assigned based on the type of the "offset" member
+        //    of the property-indexed keyframe as follows:
+        //
+        // -> sequence<double?>,
+        //    The value of "offset" as-is.
+        // -> double?,
+        //    A sequence of length one with the value of "offset" as its single item, i.e. « offset »,
+        auto offsets = property_indexed_keyframe.offset.has<Optional<double>>()
+            ? Vector { property_indexed_keyframe.offset.get<Optional<double>>() }
+            : property_indexed_keyframe.offset.get<Vector<Optional<double>>>();
+
+        // 6. Assign each value in offsets to the keyframe offset of the keyframe with corresponding position in
+        //    processed keyframes until the end of either sequence is reached.
+        for (size_t i = 0; i < offsets.size() && i < processed_keyframes.size(); i++)
+            processed_keyframes[i].offset = offsets[i];
+
+        // 7. Let easings be a sequence of DOMString values assigned based on the type of the "easing" member of the
+        //    property-indexed keyframe as follows:
+        //
+        // -> sequence<DOMString>,
+        //    The value of "easing" as-is.
+        // -> DOMString,
+        //    A sequence of length one with the value of "easing" as its single item, i.e. « easing »,
+        auto easings = property_indexed_keyframe.easing.has<EasingValue>()
+            ? Vector { property_indexed_keyframe.easing.get<EasingValue>() }
+            : property_indexed_keyframe.easing.get<Vector<EasingValue>>();
+
+        // 8. If easings is an empty sequence, let it be a sequence of length one containing the single value "linear",
+        //    i.e. « "linear" ».
+        if (easings.is_empty())
+            easings.append("linear"_string);
+
+        // 9. If easings has fewer items than processed keyframes, repeat the elements in easings successively starting
+        //    from the beginning of the list until easings has as many items as processed keyframes.
+        //
+        //    For example, if processed keyframes has five items, and easings is the sequence « "ease-in", "ease-out" »,
+        //    easings would be repeated to become « "ease-in", "ease-out", "ease-in", "ease-out", "ease-in" ».
+        size_t num_easings = easings.size();
+        size_t index = 0;
+        while (easings.size() < processed_keyframes.size())
+            easings.append(easings[index++ % num_easings]);
+
+        // 10. If easings has more items than processed keyframes, store the excess items as unused easings.
+        while (easings.size() > processed_keyframes.size())
+            unused_easings.append(easings.take_last());
+
+        // 11. Assign each value in easings to a property named "easing" on the keyframe with the corresponding position
+        //     in processed keyframes until the end of processed keyframes is reached.
+        for (size_t i = 0; i < processed_keyframes.size(); i++)
+            processed_keyframes[i].easing = easings[i];
+
+        // 12. If the "composite" member of the property-indexed keyframe is not an empty sequence:
+        auto composite_value = property_indexed_keyframe.composite;
+        if (!composite_value.has<Vector<Bindings::CompositeOperationOrAuto>>() || !composite_value.get<Vector<Bindings::CompositeOperationOrAuto>>().is_empty()) {
+            // 1. Let composite modes be a sequence of CompositeOperationOrAuto values assigned from the "composite"
+            //    member of property-indexed keyframe. If that member is a single CompositeOperationOrAuto value
+            //    operation, let composite modes be a sequence of length one, with the value of the "composite" as its
+            //    single item.
+            auto composite_modes = composite_value.has<Bindings::CompositeOperationOrAuto>()
+                ? Vector { composite_value.get<Bindings::CompositeOperationOrAuto>() }
+                : composite_value.get<Vector<Bindings::CompositeOperationOrAuto>>();
+
+            // 2. As with easings, if composite modes has fewer items than processed keyframes, repeat the elements in
+            //    composite modes successively starting from the beginning of the list until composite modes has as
+            //    many items as processed keyframes.
+            size_t num_composite_modes = composite_modes.size();
+            index = 0;
+            while (composite_modes.size() < processed_keyframes.size())
+                composite_modes.append(composite_modes[index++ % num_composite_modes]);
+
+            // 3. Assign each value in composite modes that is not auto to the keyframe-specific composite operation on
+            //    the keyframe with the corresponding position in processed keyframes until the end of processed
+            //    keyframes is reached.
+            for (size_t i = 0; i < processed_keyframes.size(); i++) {
+                if (composite_modes[i] != Bindings::CompositeOperationOrAuto::Auto)
+                    processed_keyframes[i].composite = composite_modes[i];
+            }
+        }
     }
 
     // 6. If processed keyframes is not loosely sorted by offset, throw a TypeError and abort these steps.
@@ -396,9 +531,14 @@ static bool is_loosely_sorted_by_offset(Vector<BaseKeyframe> const& keyframes)
         keyframe.easing.set(NonnullRefPtr<CSS::StyleValue const> { *easing_value });
     }
 
-    // FIXME:
     // 9. Parse each of the values in unused easings using the CSS syntax defined for easing member of the EffectTiming
     //    interface, and if any of the values fail to parse, throw a TypeError and abort this procedure.
+    for (auto& unused_easing : unused_easings) {
+        auto easing_string = unused_easing.get<String>();
+        auto easing_value = parse_easing_string(easing_string);
+        if (!easing_value)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, MUST(String::formatted("Invalid animation easing value: \"{}\"", easing_string)) };
+    }
 
     return processed_keyframes;
 }
