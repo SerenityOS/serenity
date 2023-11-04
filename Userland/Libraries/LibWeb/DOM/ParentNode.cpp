@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::DOM {
@@ -120,22 +122,9 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::children()
     return *m_children;
 }
 
-JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString const& qualified_name)
-{
-    return get_elements_by_tag_name(qualified_name.to_deprecated_fly_string());
-}
-
-JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(Optional<String> const& nullable_namespace, FlyString const& local_name)
-{
-    DeprecatedFlyString deprecated_nullable_namespace;
-    if (nullable_namespace.has_value())
-        deprecated_nullable_namespace = nullable_namespace->to_deprecated_string();
-    return get_elements_by_tag_name_ns(deprecated_nullable_namespace, local_name.to_deprecated_fly_string());
-}
-
 // https://dom.spec.whatwg.org/#concept-getelementsbytagname
 // NOTE: This method is only exposed on Document and Element, but is in ParentNode to prevent code duplication.
-JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(DeprecatedFlyString const& qualified_name)
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString const& qualified_name)
 {
     // 1. If qualifiedName is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches only descendant elements.
     if (qualified_name == "*") {
@@ -146,33 +135,31 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(Deprecated
 
     // 2. Otherwise, if root’s node document is an HTML document, return a HTMLCollection rooted at root, whose filter matches the following descendant elements:
     if (root().document().document_type() == Document::Type::HTML) {
-        auto qualified_name_in_ascii_lowercase = MUST(FlyString::from_deprecated_fly_string(qualified_name.to_lowercase()));
+        FlyString qualified_name_in_ascii_lowercase = MUST(Infra::to_ascii_lowercase(qualified_name));
         return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [qualified_name, qualified_name_in_ascii_lowercase](Element const& element) {
             // - Whose namespace is the HTML namespace and whose qualified name is qualifiedName, in ASCII lowercase.
             if (element.namespace_uri() == Namespace::HTML)
                 return element.qualified_name() == qualified_name_in_ascii_lowercase;
 
             // - Whose namespace is not the HTML namespace and whose qualified name is qualifiedName.
-            return element.qualified_name().to_deprecated_fly_string() == qualified_name;
+            return element.qualified_name() == qualified_name;
         });
     }
 
     // 3. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose qualified name is qualifiedName.
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [qualified_name](Element const& element) {
-        return element.qualified_name().to_deprecated_fly_string() == qualified_name;
+        return element.qualified_name() == qualified_name;
     });
 }
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagnamens
 // NOTE: This method is only exposed on Document and Element, but is in ParentNode to prevent code duplication.
-JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(DeprecatedFlyString const& nullable_namespace, DeprecatedFlyString const& deprecated_local_name)
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(Optional<String> const& nullable_namespace, FlyString const& local_name)
 {
-    auto local_name = MUST(FlyString::from_deprecated_fly_string(deprecated_local_name));
-
     // 1. If namespace is the empty string, set it to null.
-    DeprecatedFlyString namespace_;
-    if (!nullable_namespace.is_null() && !nullable_namespace.is_empty())
-        namespace_ = nullable_namespace;
+    Optional<FlyString> namespace_;
+    if (nullable_namespace.has_value() && !nullable_namespace->is_empty())
+        namespace_ = nullable_namespace.value();
 
     // 2. If both namespace and localName are "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements.
     if (namespace_ == "*" && local_name == "*") {
@@ -191,13 +178,13 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(Depreca
     // 4. Otherwise, if localName is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements whose namespace is namespace.
     if (local_name == "*") {
         return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [namespace_](Element const& element) {
-            return element.namespace_() == namespace_;
+            return element.namespace_uri() == namespace_;
         });
     }
 
     // 5. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose namespace is namespace and local name is localName.
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [namespace_, local_name](Element const& element) {
-        return element.namespace_() == namespace_ && element.local_name() == local_name;
+        return element.namespace_uri() == namespace_ && element.local_name() == local_name;
     });
 }
 
