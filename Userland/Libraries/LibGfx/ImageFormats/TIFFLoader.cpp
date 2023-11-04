@@ -8,6 +8,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/String.h>
+#include <LibCompress/LZWDecoder.h>
 
 namespace Gfx {
 
@@ -108,10 +109,12 @@ private:
     };
 
     template<typename ByteReader>
-    ErrorOr<void> loop_over_pixels(ByteReader&& byte_reader)
+    ErrorOr<void> loop_over_pixels(ByteReader&& byte_reader, Function<ErrorOr<void>(u32)> initializer = {})
     {
         for (u32 strip_index = 0; strip_index < m_strip_offsets.size(); ++strip_index) {
             TRY(m_stream->seek(m_strip_offsets[strip_index]));
+            if (initializer)
+                TRY(initializer(m_strip_bytes_count[strip_index]));
             for (u32 row = 0; row < m_rows_per_strip; row++) {
                 auto const scanline = row + m_rows_per_strip * strip_index;
                 if (scanline >= static_cast<u32>(m_size.height()))
@@ -145,6 +148,46 @@ private:
         case Compression::NoCompression:
             TRY(loop_over_pixels([this]() { return read_value<u8>(); }));
             break;
+        case Compression::LZW: {
+            Vector<u8> result_buffer {};
+            Optional<Compress::LZWDecoder<BigEndianInputBitStream>> decoder {};
+
+            u16 clear_code {};
+            u16 end_of_information_code {};
+
+            auto initializer = [&](u32 bytes) -> ErrorOr<void> {
+                auto strip_stream = make<FixedMemoryStream>(TRY(m_stream->read_in_place<u8 const>(bytes)));
+                auto lzw_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(move(strip_stream)));
+                decoder = Compress::LZWDecoder { MaybeOwned<BigEndianInputBitStream> { move(lzw_stream) }, 8, -1 };
+
+                clear_code = decoder->add_control_code();
+                end_of_information_code = decoder->add_control_code();
+
+                return {};
+            };
+
+            auto read_lzw_byte = [&]() -> ErrorOr<u8> {
+                while (true) {
+                    if (!result_buffer.is_empty())
+                        return result_buffer.take_first();
+
+                    auto const code = TRY(decoder->next_code());
+
+                    if (code == clear_code) {
+                        decoder->reset();
+                        continue;
+                    }
+
+                    if (code == end_of_information_code)
+                        return Error::from_string_literal("TIFFImageDecoderPlugin: Reached end of LZW stream");
+
+                    result_buffer = decoder->get_output();
+                }
+            };
+
+            TRY(loop_over_pixels([read_lzw_byte = move(read_lzw_byte)]() { return read_lzw_byte(); }, move(initializer)));
+            break;
+        }
         case Compression::PackBits: {
             // Section 9: PackBits Compression
             Optional<i8> n;
