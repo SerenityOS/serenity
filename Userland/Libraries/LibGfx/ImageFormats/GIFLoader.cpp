@@ -6,6 +6,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Error.h>
@@ -183,7 +184,10 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
         if (image->lzw_min_code_size > 8)
             return Error::from_string_literal("LZW minimum code size is greater than 8");
 
-        Compress::LZWDecoder decoder(image->lzw_encoded_bytes, image->lzw_min_code_size);
+        FixedMemoryStream stream { image->lzw_encoded_bytes, FixedMemoryStream::Mode::ReadOnly };
+        auto bit_stream = make<LittleEndianInputBitStream>(MaybeOwned<Stream>(stream));
+
+        Compress::LZWDecoder decoder(MaybeOwned<LittleEndianInputBitStream> { move(bit_stream) }, image->lzw_min_code_size);
 
         // Add GIF-specific control codes
         int const clear_code = decoder.add_control_code();
