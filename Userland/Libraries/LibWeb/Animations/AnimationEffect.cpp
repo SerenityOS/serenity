@@ -214,6 +214,73 @@ double AnimationEffect::after_active_boundary_time() const
     return max(min(m_start_delay + active_duration(), end_time()), 0.0);
 }
 
+// https://www.w3.org/TR/web-animations-1/#animation-effect-before-phase
+bool AnimationEffect::is_in_the_before_phase() const
+{
+    // An animation effect is in the before phase if the animation effect’s local time is not unresolved and either of
+    // the following conditions are met:
+    auto local_time = this->local_time();
+    if (!local_time.has_value())
+        return false;
+
+    // - the local time is less than the before-active boundary time, or
+    auto before_active_boundary_time = this->before_active_boundary_time();
+    if (local_time.value() < before_active_boundary_time)
+        return true;
+
+    // - the animation direction is "backwards" and the local time is equal to the before-active boundary time.
+    return animation_direction() == AnimationDirection::Backwards && local_time.value() == before_active_boundary_time;
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-effect-after-phase
+bool AnimationEffect::is_in_the_after_phase() const
+{
+    // An animation effect is in the after phase if the animation effect’s local time is not unresolved and either of
+    // the following conditions are met:
+    auto local_time = this->local_time();
+    if (!local_time.has_value())
+        return false;
+
+    // - the local time is greater than the active-after boundary time, or
+    auto after_active_boundary_time = this->after_active_boundary_time();
+    if (local_time.value() > after_active_boundary_time)
+        return true;
+
+    // - the animation direction is "forwards" and the local time is equal to the active-after boundary time.
+    return animation_direction() == AnimationDirection::Forwards && local_time.value() == after_active_boundary_time;
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-effect-active-phase
+bool AnimationEffect::is_in_the_active_phase() const
+{
+    // An animation effect is in the active phase if the animation effect’s local time is not unresolved and it is not
+    // in either the before phase nor the after phase.
+    return local_time().has_value() && !is_in_the_before_phase() && !is_in_the_after_phase();
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-effect-idle-phase
+bool AnimationEffect::is_in_the_idle_phase() const
+{
+    // It is often convenient to refer to the case when an animation effect is in none of the above phases as being in
+    // the idle phase
+    return !is_in_the_before_phase() && !is_in_the_active_phase() && !is_in_the_after_phase();
+}
+
+AnimationEffect::Phase AnimationEffect::phase() const
+{
+    // This is a convenience method that returns the phase of the animation effect, to avoid having to call all of the
+    // phase functions separately.
+    // FIXME: There is a lot of duplicated condition checking here which can probably be inlined into this function
+
+    if (is_in_the_before_phase())
+        return Phase::Before;
+    if (is_in_the_active_phase())
+        return Phase::Active;
+    if (is_in_the_after_phase())
+        return Phase::After;
+    return Phase::Idle;
+}
+
 AnimationEffect::AnimationEffect(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
