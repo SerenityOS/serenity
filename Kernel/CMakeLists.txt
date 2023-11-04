@@ -119,6 +119,7 @@ set(KERNEL_SOURCES
     Devices/Storage/ATA/AHCI/InterruptHandler.cpp
     Devices/Storage/ATA/GenericIDE/Controller.cpp
     Devices/Storage/ATA/GenericIDE/Channel.cpp
+    Devices/Storage/ATA/PIIX4IDE/Controller.cpp
     Devices/Storage/ATA/ATAController.cpp
     Devices/Storage/ATA/ATADevice.cpp
     Devices/Storage/ATA/ATADiskDevice.cpp
@@ -420,7 +421,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/ISABus/IDEController.cpp
         Arch/x86_64/ISABus/SerialDevice.cpp
         Arch/x86_64/PCI/Controller/HostBridge.cpp
-        Arch/x86_64/PCI/IDELegacyModeController.cpp
         Arch/x86_64/PCI/Initializer.cpp
         Arch/x86_64/PCI/MSI.cpp
 

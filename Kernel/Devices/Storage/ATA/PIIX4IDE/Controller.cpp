@@ -6,10 +6,10 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86_64/PCI/IDELegacyModeController.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Devices/Storage/ATA/GenericIDE/Channel.h>
+#include <Kernel/Devices/Storage/ATA/PIIX4IDE/Controller.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 

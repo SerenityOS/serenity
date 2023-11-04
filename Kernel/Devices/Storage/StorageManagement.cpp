@@ -11,7 +11,7 @@
 #include <AK/UUID.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/ISABus/IDEController.h>
-#    include <Kernel/Arch/x86_64/PCI/IDELegacyModeController.h>
+#    include <Kernel/Devices/Storage/ATA/PIIX4IDE/Controller.h>
 #endif
 #if ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/SDHostController.h>
