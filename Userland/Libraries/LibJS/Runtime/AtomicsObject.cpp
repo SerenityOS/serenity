@@ -4,6 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+// This file explicitly implements support for JS Atomics API, which can
+// involve slow (non-lock-free) atomic ops.
+#include <AK/Platform.h>
+
+#ifdef AK_COMPILER_CLANG
+#    pragma clang diagnostic ignored "-Watomic-alignment"
+#endif
+
 #include <AK/Atomic.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Endian.h>
