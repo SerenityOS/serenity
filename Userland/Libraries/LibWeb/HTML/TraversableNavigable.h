@@ -69,6 +69,11 @@ public:
         m_session_history_traversal_queue.append(move(steps));
     }
 
+    void append_session_history_synchronous_navigation_steps(JS::NonnullGCPtr<Navigable> target_navigable, JS::SafeFunction<void()> steps)
+    {
+        m_session_history_traversal_queue.append_sync(move(steps), target_navigable);
+    }
+
     void process_session_history_traversal_queue()
     {
         m_session_history_traversal_queue.process();

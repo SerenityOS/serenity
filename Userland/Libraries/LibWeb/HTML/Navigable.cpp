@@ -1492,12 +1492,13 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     auto traversable = traversable_navigable();
 
     // 17. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_traversal_steps([this, traversable, history_entry, entry_to_replace] {
+    traversable->append_session_history_synchronous_navigation_steps(*this, [this, traversable, history_entry, entry_to_replace, navigation_id] {
         // 1. Finalize a same-document navigation given traversable, navigable, historyEntry, and entryToReplace.
         finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace);
 
         // FIXME: 2. Invoke WebDriver BiDi fragment navigated with navigable's active browsing context and a new WebDriver BiDi
         //            navigation status whose id is navigationId, url is url, and status is "complete".
+        (void)navigation_id;
     });
 
     return {};
@@ -1903,7 +1904,7 @@ void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_u
     auto traversable = navigable->traversable_navigable();
 
     // 13. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_traversal_steps([traversable, navigable, new_entry, entry_to_replace] {
+    traversable->append_session_history_synchronous_navigation_steps(*navigable, [traversable, navigable, new_entry, entry_to_replace] {
         // 1. Finalize a same-document navigation given traversable, navigable, newEntry, and entryToReplace.
         finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace);
     });
