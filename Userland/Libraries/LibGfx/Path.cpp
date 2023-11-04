@@ -9,8 +9,11 @@
 #include <AK/Math.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <AK/TypeCasts.h>
+#include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/TextLayout.h>
 
 namespace Gfx {
 
@@ -156,6 +159,25 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rot
         theta_1,
         theta_delta);
 }
+
+void Path::text(Utf8View text, Font const& font)
+{
+    if (!is<ScaledFont>(font)) {
+        // FIXME: This API only accepts Gfx::Font for ease of use.
+        dbgln("Cannot path-ify bitmap fonts!");
+        return;
+    }
+    auto& scaled_font = static_cast<ScaledFont const&>(font);
+    for_each_glyph_position(
+        last_point(), text, font, [&](GlyphPosition glyph_position) {
+            move_to(glyph_position.position);
+            // FIXME: This does not correctly handle multi-codepoint glyphs (i.e. emojis).
+            auto glyph_id = scaled_font.glyph_id_for_code_point(*glyph_position.it);
+            scaled_font.append_glyph_path_to(*this, glyph_id);
+        },
+        IncludeLeftBearing::Yes);
+}
+
 FloatPoint Path::last_point()
 {
     FloatPoint last_point { 0, 0 };

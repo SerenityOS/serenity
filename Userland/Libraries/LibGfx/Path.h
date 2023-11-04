@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Line.h>
 #include <LibGfx/Point.h>
@@ -152,6 +153,8 @@ public:
     {
         elliptical_arc_to(point, { radius, radius }, 0, large_arc, sweep);
     }
+
+    void text(Utf8View, Font const&);
 
     FloatPoint last_point();
 

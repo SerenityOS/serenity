@@ -42,11 +42,6 @@
 
 namespace Gfx {
 
-static bool should_paint_as_space(u32 code_point)
-{
-    return is_ascii_space(code_point) || code_point == 0xa0;
-}
-
 ALWAYS_INLINE static Color color_for_format(BitmapFormat format, ARGB32 value)
 {
     switch (format) {
@@ -2478,33 +2473,9 @@ void Painter::draw_text_run(IntPoint baseline_start, Utf8View const& string, Fon
 
 void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, Color color)
 {
-    float space_width = font.glyph_width(' ') + font.glyph_spacing();
-
-    u32 last_code_point = 0;
-
-    auto point = baseline_start;
-    point.translate_by(0, -font.pixel_metrics().ascent);
-
-    for (auto code_point_iterator = string.begin(); code_point_iterator != string.end(); ++code_point_iterator) {
-        auto code_point = *code_point_iterator;
-        if (should_paint_as_space(code_point)) {
-            point.translate_by(space_width, 0);
-            last_code_point = code_point;
-            continue;
-        }
-
-        auto kerning = font.glyphs_horizontal_kerning(last_code_point, code_point);
-        if (kerning != 0.0f)
-            point.translate_by(kerning, 0);
-
-        auto it = code_point_iterator; // The callback function will advance the iterator, so create a copy for this lookup.
-        auto glyph_width = font.glyph_or_emoji_width(it) + font.glyph_spacing();
-
-        draw_glyph_or_emoji(point, code_point_iterator, font, color);
-
-        point.translate_by(glyph_width, 0);
-        last_code_point = code_point;
-    }
+    for_each_glyph_position(baseline_start, string, font, [&](GlyphPosition glyph_position) {
+        draw_glyph_or_emoji(glyph_position.position, glyph_position.it, font, color);
+    });
 }
 
 void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap const& bitmap, FloatRect const& src_rect, AffineTransform const& transform, float opacity, Painter::ScalingMode scaling_mode)
