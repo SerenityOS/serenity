@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>.
+ * Copyright (c) 2023-2024, Matthew Olsson <mattco@serenityos.org>.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -66,6 +66,8 @@ public:
     void notify_timeline_time_did_change();
 
     void effect_timing_changed(Badge<AnimationEffect>);
+
+    virtual bool is_css_animation() const { return false; }
 
 protected:
     Animation(JS::Realm&);
