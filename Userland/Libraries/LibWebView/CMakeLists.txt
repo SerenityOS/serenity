@@ -8,6 +8,7 @@ set(SOURCES
     Database.cpp
     DOMTreeModel.cpp
     History.cpp
+    PropertyTableModel.cpp
     RequestServerAdapter.cpp
     SearchEngine.cpp
     SourceHighlighter.cpp
