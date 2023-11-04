@@ -154,7 +154,7 @@ private:
     bool consume_next_if_match(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive);
     void create_new_token(HTMLToken::Type);
     bool current_end_tag_token_is_appropriate() const;
-    DeprecatedString consume_current_builder();
+    String consume_current_builder();
 
     static char const* state_name(State state)
     {
