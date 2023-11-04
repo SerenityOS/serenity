@@ -16,7 +16,7 @@ namespace Web::DOM {
 class QualifiedName {
 public:
     QualifiedName(FlyString const& local_name, Optional<FlyString> const& prefix, Optional<FlyString> const& namespace_);
-    QualifiedName(FlyString const& local_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_);
+    QualifiedName(FlyString const& local_name, Optional<FlyString> const& prefix, DeprecatedFlyString const& namespace_);
 
     FlyString const& local_name() const { return m_impl->local_name; }
     Optional<FlyString> const& prefix() const { return m_impl->prefix; }
