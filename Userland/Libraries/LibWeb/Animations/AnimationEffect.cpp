@@ -162,6 +162,44 @@ AnimationDirection AnimationEffect::animation_direction() const
     return AnimationDirection::Forwards;
 }
 
+// https://www.w3.org/TR/web-animations-1/#end-time
+double AnimationEffect::end_time() const
+{
+    // 1. The end time of an animation effect is the result of evaluating
+    //    max(start delay + active duration + end delay, 0).
+    return max(m_start_delay + active_duration() + m_end_delay, 0.0);
+}
+
+// https://www.w3.org/TR/web-animations-1/#local-time
+Optional<double> AnimationEffect::local_time() const
+{
+    // The local time of an animation effect at a given moment is based on the first matching condition from the
+    // following:
+
+    // -> If the animation effect is associated with an animation,
+    if (m_associated_animation) {
+        // the local time is the current time of the animation.
+        return m_associated_animation->current_time();
+    }
+
+    // -> Otherwise,
+    //    the local time is unresolved.
+    return {};
+}
+
+// https://www.w3.org/TR/web-animations-1/#active-duration
+double AnimationEffect::active_duration() const
+{
+    // The active duration is calculated as follows:
+    //     active duration = iteration duration × iteration count
+    // If either the iteration duration or iteration count are zero, the active duration is zero. This clarification is
+    // needed since the result of infinity multiplied by zero is undefined according to IEEE 754-2008.
+    if (m_iteration_duration.has<String>() || m_iteration_duration.get<double>() == 0.0 || m_iteration_count == 0.0)
+        return 0.0;
+
+    return m_iteration_duration.get<double>() * m_iteration_count;
+}
+
 AnimationEffect::AnimationEffect(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
