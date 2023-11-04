@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023-2024, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +15,38 @@
 namespace Web::Animations {
 
 JS_DEFINE_ALLOCATOR(AnimationEffect);
+
+Bindings::FillMode css_fill_mode_to_bindings_fill_mode(CSS::AnimationFillMode mode)
+{
+    switch (mode) {
+    case CSS::AnimationFillMode::Backwards:
+        return Bindings::FillMode::Backwards;
+    case CSS::AnimationFillMode::Both:
+        return Bindings::FillMode::Both;
+    case CSS::AnimationFillMode::Forwards:
+        return Bindings::FillMode::Forwards;
+    case CSS::AnimationFillMode::None:
+        return Bindings::FillMode::None;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+Bindings::PlaybackDirection css_animation_direction_to_bindings_playback_direction(CSS::AnimationDirection direction)
+{
+    switch (direction) {
+    case CSS::AnimationDirection::Alternate:
+        return Bindings::PlaybackDirection::Alternate;
+    case CSS::AnimationDirection::AlternateReverse:
+        return Bindings::PlaybackDirection::AlternateReverse;
+    case CSS::AnimationDirection::Normal:
+        return Bindings::PlaybackDirection::Normal;
+    case CSS::AnimationDirection::Reverse:
+        return Bindings::PlaybackDirection::Reverse;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
 
 JS::NonnullGCPtr<AnimationEffect> AnimationEffect::create(JS::Realm& realm)
 {
