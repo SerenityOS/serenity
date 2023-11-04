@@ -101,6 +101,19 @@ public:
     double before_active_boundary_time() const;
     double after_active_boundary_time() const;
 
+    bool is_in_the_before_phase() const;
+    bool is_in_the_after_phase() const;
+    bool is_in_the_active_phase() const;
+    bool is_in_the_idle_phase() const;
+
+    enum class Phase {
+        Before,
+        Active,
+        After,
+        Idle,
+    };
+    Phase phase() const;
+
 protected:
     AnimationEffect(JS::Realm&);
 
