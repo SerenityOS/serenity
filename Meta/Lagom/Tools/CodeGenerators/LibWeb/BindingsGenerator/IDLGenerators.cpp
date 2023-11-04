@@ -439,7 +439,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @parameter.type.name@ @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(vm));
 )~~~");
         } else {
-            if (optional_default_value.has_value()) {
+            if (optional_default_value.has_value() && optional_default_value != "null"sv) {
                 scoped_generator.append(R"~~~(
     @parameter.type.name@ @cpp_name@;
 )~~~");
@@ -452,7 +452,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_undefined())
         @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(vm));
 )~~~");
-            if (optional_default_value.has_value()) {
+            if (optional_default_value.has_value() && optional_default_value.value() != "null"sv) {
                 scoped_generator.append(R"~~~(
     else
         @cpp_name@ = @parameter.optional_default_value@;
