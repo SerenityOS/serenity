@@ -536,6 +536,9 @@ public:
 
     JS::NonnullGCPtr<Animations::DocumentTimeline> timeline();
 
+    void associate_with_timeline(JS::NonnullGCPtr<Animations::AnimationTimeline>);
+    void disassociate_with_timeline(JS::NonnullGCPtr<Animations::AnimationTimeline>);
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -742,6 +745,9 @@ private:
     JS::GCPtr<HTML::SessionHistoryEntry> m_latest_entry;
 
     HashMap<AK::URL, HTML::SharedImageRequest*> m_shared_image_requests;
+
+    // https://www.w3.org/TR/web-animations-1/#timeline-associated-with-a-document
+    HashTable<JS::NonnullGCPtr<Animations::AnimationTimeline>> m_associated_animation_timelines;
 
     // https://www.w3.org/TR/web-animations-1/#document-default-document-timeline
     JS::GCPtr<Animations::DocumentTimeline> m_default_timeline;

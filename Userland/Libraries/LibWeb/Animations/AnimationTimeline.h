@@ -30,6 +30,7 @@ public:
 
 protected:
     AnimationTimeline(JS::Realm&);
+    virtual ~AnimationTimeline() override;
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
