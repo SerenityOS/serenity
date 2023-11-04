@@ -167,13 +167,16 @@ void Path::text(Utf8View text, Font const& font)
         dbgln("Cannot path-ify bitmap fonts!");
         return;
     }
+
     auto& scaled_font = static_cast<ScaledFont const&>(font);
     for_each_glyph_position(
-        last_point(), text, font, [&](GlyphPosition glyph_position) {
-            move_to(glyph_position.position);
-            // FIXME: This does not correctly handle multi-codepoint glyphs (i.e. emojis).
-            auto glyph_id = scaled_font.glyph_id_for_code_point(*glyph_position.it);
-            scaled_font.append_glyph_path_to(*this, glyph_id);
+        last_point(), text, font, [&](DrawGlyphOrEmoji glyph_or_emoji) {
+            if (glyph_or_emoji.has<DrawGlyph>()) {
+                auto& glyph = glyph_or_emoji.get<DrawGlyph>();
+                move_to(glyph.position);
+                auto glyph_id = scaled_font.glyph_id_for_code_point(glyph.code_point);
+                scaled_font.append_glyph_path_to(*this, glyph_id);
+            }
         },
         IncludeLeftBearing::Yes);
 }
