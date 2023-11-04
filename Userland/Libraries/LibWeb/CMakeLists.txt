@@ -6,6 +6,7 @@ set(SOURCES
     Animations/AnimationEffect.cpp
     Animations/AnimationTimeline.cpp
     Animations/DocumentTimeline.cpp
+    Animations/TimingFunction.cpp
     ARIA/AriaData.cpp
     ARIA/ARIAMixin.cpp
     ARIA/Roles.cpp
