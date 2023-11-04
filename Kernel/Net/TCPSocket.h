@@ -165,6 +165,9 @@ public:
 
     static NetworkOrdered<u16> compute_tcp_checksum(IPv4Address const& source, IPv4Address const& destination, TCPPacket const&, u16 payload_size);
 
+    virtual ErrorOr<void> setsockopt(int level, int option, Userspace<void const*>, socklen_t) override;
+    virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
+
 protected:
     void set_direction(Direction direction) { m_direction = direction; }
 
@@ -226,6 +229,8 @@ private:
     // Default to maximum window size. receive_tcp_packet() will update from the
     // peer's advertised window size.
     u32 m_send_window_size { 64 * KiB };
+
+    bool m_no_delay { false };
 
     IntrusiveListNode<TCPSocket> m_retransmit_list_node;
 

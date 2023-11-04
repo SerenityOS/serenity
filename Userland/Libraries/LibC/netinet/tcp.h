@@ -6,5 +6,4 @@
 
 #pragma once
 
-#define TCP_NODELAY 10
-#define TCP_MAXSEG 11
+#include <Kernel/API/POSIX/netinet/tcp.h>
