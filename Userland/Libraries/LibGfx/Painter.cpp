@@ -1416,48 +1416,14 @@ void Painter::draw_glyph_or_emoji(FloatPoint point, u32 code_point, Font const& 
 
 void Painter::draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font, Color color)
 {
-    u32 code_point = *it;
-    auto next_code_point = it.peek(1);
-
-    ScopeGuard consume_variation_selector = [&, initial_it = it] {
-        static auto const variation_selector = Unicode::property_from_string("Variation_Selector"sv);
-        if (!variation_selector.has_value())
-            return;
-
-        // If we advanced the iterator to consume an emoji sequence, don't look for another variation selector.
-        if (initial_it != it)
-            return;
-
-        // Otherwise, discard one code point if it's a variation selector.
-        if (next_code_point.has_value() && Unicode::code_point_has_property(*next_code_point, *variation_selector))
-            ++it;
-    };
-
-    // NOTE: We don't check for emoji
-    auto font_contains_glyph = font.contains_glyph(code_point);
-    auto check_for_emoji = !font.has_color_bitmaps() && Unicode::could_be_start_of_emoji_sequence(it, font_contains_glyph ? Unicode::SequenceType::EmojiPresentation : Unicode::SequenceType::Any);
-
-    // If the font contains the glyph, and we know it's not the start of an emoji, draw a text glyph.
-    if (font_contains_glyph && !check_for_emoji) {
-        draw_glyph(point, code_point, font, color);
-        return;
+    auto draw_glyph_or_emoji = prepare_draw_glyph_or_emoji(point, it, font);
+    if (draw_glyph_or_emoji.has<DrawGlyph>()) {
+        auto& glyph = draw_glyph_or_emoji.get<DrawGlyph>();
+        draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
+    } else {
+        auto& emoji = draw_glyph_or_emoji.get<DrawEmoji>();
+        draw_emoji(emoji.position, *emoji.emoji, *emoji.font);
     }
-
-    // If we didn't find a text glyph, or have an emoji variation selector or regional indicator, try to draw an emoji glyph.
-    if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it)) {
-        draw_emoji(point.to_type<int>(), *emoji, font);
-        return;
-    }
-
-    // If that failed, but we have a text glyph fallback, draw that.
-    if (font_contains_glyph) {
-        draw_glyph(point, code_point, font, color);
-        return;
-    }
-
-    // No suitable glyph found, draw a replacement character.
-    dbgln_if(EMOJI_DEBUG, "Failed to find a glyph or emoji for code_point {}", code_point);
-    draw_glyph(point, 0xFFFD, font, color);
 }
 
 void Painter::draw_glyph(IntPoint point, u32 code_point, Color color)
@@ -2473,8 +2439,14 @@ void Painter::draw_text_run(IntPoint baseline_start, Utf8View const& string, Fon
 
 void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, Color color)
 {
-    for_each_glyph_position(baseline_start, string, font, [&](GlyphPosition glyph_position) {
-        draw_glyph_or_emoji(glyph_position.position, glyph_position.it, font, color);
+    for_each_glyph_position(baseline_start, string, font, [&](DrawGlyphOrEmoji glyph_or_emoji) {
+        if (glyph_or_emoji.has<DrawGlyph>()) {
+            auto& glyph = glyph_or_emoji.get<DrawGlyph>();
+            draw_glyph(glyph.position, glyph.code_point, *glyph.font, color);
+        } else {
+            auto& emoji = glyph_or_emoji.get<DrawEmoji>();
+            draw_emoji(emoji.position, *emoji.emoji, *emoji.font);
+        }
     });
 }
 

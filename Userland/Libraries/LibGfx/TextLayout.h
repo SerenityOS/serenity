@@ -75,23 +75,33 @@ enum class IncludeLeftBearing {
     No
 };
 
-struct GlyphPosition {
+struct DrawGlyph {
     FloatPoint position;
-    float glyph_width;
-    AK::Utf8CodePointIterator& it;
+    u32 code_point;
+    Font const* font;
 };
 
+struct DrawEmoji {
+    IntPoint position;
+    Gfx::Bitmap const* emoji;
+    Font const* font;
+};
+
+using DrawGlyphOrEmoji = Variant<DrawGlyph, DrawEmoji>;
+
+Variant<DrawGlyph, DrawEmoji> prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font);
+
 template<typename Callback>
-void for_each_glyph_position(FloatPoint start, Utf8View text, Font const& font, Callback callback, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No)
+void for_each_glyph_position(FloatPoint baseline_start, Utf8View string, Font const& font, Callback callback, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No)
 {
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
 
     u32 last_code_point = 0;
 
-    auto point = start;
+    auto point = baseline_start;
     point.translate_by(0, -font.pixel_metrics().ascent);
 
-    for (auto code_point_iterator = text.begin(); code_point_iterator != text.end(); ++code_point_iterator) {
+    for (auto code_point_iterator = string.begin(); code_point_iterator != string.end(); ++code_point_iterator) {
         auto code_point = *code_point_iterator;
         if (should_paint_as_space(code_point)) {
             point.translate_by(space_width, 0);
@@ -106,18 +116,19 @@ void for_each_glyph_position(FloatPoint start, Utf8View text, Font const& font, 
         auto it = code_point_iterator; // The callback function will advance the iterator, so create a copy for this lookup.
         auto glyph_width = font.glyph_or_emoji_width(it) + font.glyph_spacing();
 
-        auto glyph_point = point;
-        if (include_left_bearing == IncludeLeftBearing::Yes)
-            glyph_point += FloatPoint(font.glyph_left_bearing(code_point), 0);
+        auto glyph_or_emoji = prepare_draw_glyph_or_emoji(point, code_point_iterator, font);
+        if (include_left_bearing == IncludeLeftBearing::Yes) {
+            if (glyph_or_emoji.has<DrawGlyph>())
+                glyph_or_emoji.get<DrawGlyph>().position += FloatPoint(font.glyph_left_bearing(code_point), 0);
+        }
 
-        callback(GlyphPosition {
-            .position = glyph_point,
-            .glyph_width = glyph_width,
-            .it = code_point_iterator });
+        callback(glyph_or_emoji);
 
         point.translate_by(glyph_width, 0);
         last_code_point = code_point;
     }
 }
+
+Vector<DrawGlyphOrEmoji> get_glyph_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, IncludeLeftBearing include_left_bearing = IncludeLeftBearing::No);
 
 }
