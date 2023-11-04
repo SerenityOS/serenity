@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Animations/Animation.h>
 #include <LibWeb/Animations/AnimationTimeline.h>
 #include <LibWeb/DOM/Document.h>
 
@@ -20,6 +21,9 @@ WebIDL::ExceptionOr<void> AnimationTimeline::set_current_time(Optional<double> v
     }
 
     m_current_time = value;
+
+    for (auto& animation : m_associated_animations)
+        TRY(animation->set_current_time(value));
 
     return {};
 }
@@ -61,6 +65,8 @@ void AnimationTimeline::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_associated_document);
+    for (auto const& animation : m_associated_animations)
+        visitor.visit(animation);
 }
 
 }
