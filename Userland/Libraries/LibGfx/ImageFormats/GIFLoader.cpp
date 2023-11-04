@@ -46,7 +46,7 @@ struct GIFImageDescriptor {
     bool transparent { false };
     bool user_input { false };
 
-    const IntRect rect() const
+    IntRect rect() const
     {
         return { this->x, this->y, this->width, this->height };
     }
@@ -126,7 +126,7 @@ public:
 
     u16 add_control_code()
     {
-        const u16 control_code = m_code_table.size();
+        u16 const control_code = m_code_table.size();
         m_code_table.append(Vector<u8> {});
         m_original_code_table.append(Vector<u8> {});
         if (m_code_table.size() >= m_table_capacity && m_code_size < max_code_size) {
@@ -258,7 +258,7 @@ static void clear_rect(Bitmap& bitmap, IntRect const& rect, Color color)
         return;
 
     ARGB32* dst = bitmap.scanline(intersection_rect.top()) + intersection_rect.left();
-    const size_t dst_skip = bitmap.pitch() / sizeof(ARGB32);
+    size_t const dst_skip = bitmap.pitch() / sizeof(ARGB32);
 
     for (int i = intersection_rect.height() - 1; i >= 0; --i) {
         fast_u32_fill(dst, color.value(), intersection_rect.width());
