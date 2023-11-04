@@ -200,6 +200,20 @@ double AnimationEffect::active_duration() const
     return m_iteration_duration.get<double>() * m_iteration_count;
 }
 
+// https://www.w3.org/TR/web-animations-1/#before-active-boundary-time
+double AnimationEffect::before_active_boundary_time() const
+{
+    // max(min(start delay, end time), 0)
+    return max(min(m_start_delay, end_time()), 0.0);
+}
+
+// https://www.w3.org/TR/web-animations-1/#active-after-boundary-time
+double AnimationEffect::after_active_boundary_time() const
+{
+    // max(min(start delay + active duration, end time), 0)
+    return max(min(m_start_delay + active_duration(), end_time()), 0.0);
+}
+
 AnimationEffect::AnimationEffect(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
