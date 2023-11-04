@@ -803,8 +803,6 @@ void Navigation::promote_an_upcoming_api_method_tracker_to_ongoing(Optional<Stri
 
     // 3. Otherwise:
     else {
-        VERIFY(m_upcoming_non_traverse_api_method_tracker != nullptr);
-
         // 1. Set navigation's ongoing API method tracker to navigation's upcoming non-traverse API method tracker.
         m_ongoing_api_method_tracker = m_upcoming_non_traverse_api_method_tracker;
 
