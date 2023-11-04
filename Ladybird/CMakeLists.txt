@@ -120,7 +120,6 @@ if (ENABLE_QT)
         Qt/EventLoopImplementationQtEventTarget.cpp
         Qt/InspectorWidget.cpp
         Qt/LocationEdit.cpp
-        Qt/ModelTranslator.cpp
         Qt/Settings.cpp
         Qt/SettingsDialog.cpp
         Qt/Tab.cpp
@@ -178,7 +177,7 @@ target_sources(ladybird PUBLIC FILE_SET ladybird TYPE HEADERS
     BASE_DIRS ${SERENITY_SOURCE_DIR}
     FILES ${LADYBIRD_HEADERS}
 )
-target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibGUI LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebView LibProtocol)
+target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibImageDecoderClient LibIPC LibJS LibMain LibWeb LibWebView LibProtocol)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
