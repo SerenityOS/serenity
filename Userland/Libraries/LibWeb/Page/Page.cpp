@@ -57,14 +57,16 @@ void Page::set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingConte
 
 void Page::load(const AK::URL& url)
 {
-    (void)top_level_traversable()->navigate({ .url = url, .source_document = *top_level_traversable()->active_document() });
+    (void)top_level_traversable()->navigate({ .url = url, .source_document = *top_level_traversable()->active_document(), .user_involvement = HTML::UserNavigationInvolvement::BrowserUI });
 }
 
 void Page::load_html(StringView html)
 {
+
     (void)top_level_traversable()->navigate({ .url = "about:srcdoc"sv,
         .source_document = *top_level_traversable()->active_document(),
-        .document_resource = String::from_utf8(html).release_value_but_fixme_should_propagate_errors() });
+        .document_resource = String::from_utf8(html).release_value_but_fixme_should_propagate_errors(),
+        .user_involvement = HTML::UserNavigationInvolvement::BrowserUI });
 }
 
 Gfx::Palette Page::palette() const
