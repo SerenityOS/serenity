@@ -195,6 +195,69 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
     return keyframe_output;
 }
 
+// https://www.w3.org/TR/web-animations-1/#compute-missing-keyframe-offsets
+[[maybe_unused]] static void compute_missing_keyframe_offsets(Vector<BaseKeyframe>& keyframes)
+{
+    // 1. For each keyframe, in keyframes, let the computed keyframe offset of the keyframe be equal to its keyframe
+    //    offset value.
+    for (auto& keyframe : keyframes)
+        keyframe.computed_offset = keyframe.offset;
+
+    // 2. If keyframes contains more than one keyframe and the computed keyframe offset of the first keyframe in
+    //    keyframes is null, set the computed keyframe offset of the first keyframe to 0.
+    if (keyframes.size() > 1 && !keyframes[0].computed_offset.has_value())
+        keyframes[0].computed_offset = 0.0;
+
+    // 3. If the computed keyframe offset of the last keyframe in keyframes is null, set its computed keyframe offset
+    //    to 1.
+    if (!keyframes.is_empty() && !keyframes.last().computed_offset.has_value())
+        keyframes.last().computed_offset = 1.0;
+
+    // 4. For each pair of keyframes A and B where:
+    //    - A appears before B in keyframes, and
+    //    - A and B have a computed keyframe offset that is not null, and
+    //    - all keyframes between A and B have a null computed keyframe offset,
+    auto find_next_index_of_keyframe_with_computed_offset = [&](size_t starting_index) -> Optional<size_t> {
+        for (size_t index = starting_index; index < keyframes.size(); index++) {
+            if (keyframes[index].computed_offset.has_value())
+                return index;
+        }
+
+        return {};
+    };
+
+    auto maybe_index_a = find_next_index_of_keyframe_with_computed_offset(0);
+    if (!maybe_index_a.has_value())
+        return;
+
+    auto index_a = maybe_index_a.value();
+    auto maybe_index_b = find_next_index_of_keyframe_with_computed_offset(index_a + 1);
+
+    while (maybe_index_b.has_value()) {
+        auto index_b = maybe_index_b.value();
+
+        // calculate the computed keyframe offset of each keyframe between A and B as follows:
+        for (size_t keyframe_index = index_a + 1; keyframe_index < index_b; keyframe_index++) {
+            // 1. Let offsetk be the computed keyframe offset of a keyframe k.
+            auto offset_a = keyframes[index_a].computed_offset.value();
+            auto offset_b = keyframes[index_b].computed_offset.value();
+
+            // 2. Let n be the number of keyframes between and including A and B minus 1.
+            auto n = static_cast<double>(index_b - index_a);
+
+            // 3. Let index refer to the position of keyframe in the sequence of keyframes between A and B such that the
+            //    first keyframe after A has an index of 1.
+            auto index = static_cast<double>(keyframe_index - index_a);
+
+            // 4. Set the computed keyframe offset of keyframe to offsetA + (offsetB − offsetA) × index / n.
+            keyframes[keyframe_index].computed_offset = (offset_a + (offset_b - offset_a)) * index / n;
+        }
+
+        index_a = index_b;
+        maybe_index_b = find_next_index_of_keyframe_with_computed_offset(index_b + 1);
+    }
+}
+
 JS::NonnullGCPtr<KeyframeEffect> KeyframeEffect::create(JS::Realm& realm)
 {
     return realm.heap().allocate<KeyframeEffect>(realm, realm);
