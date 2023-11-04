@@ -17,6 +17,10 @@ class AppFile : public RefCounted<AppFile> {
 public:
     static constexpr auto APP_FILES_DIRECTORY = "/res/apps"sv;
 
+    static bool exists_for_app(StringView app_name);
+    static DeprecatedString file_for_app(StringView app_name);
+    static DeprecatedString app_file_path_for_app(StringView app_name);
+
     static NonnullRefPtr<AppFile> get_for_app(StringView app_name);
     static NonnullRefPtr<AppFile> open(StringView path);
     static void for_each(Function<void(NonnullRefPtr<AppFile>)>, StringView directory = APP_FILES_DIRECTORY);
