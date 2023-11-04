@@ -1,13 +1,13 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
@@ -408,10 +408,10 @@ public:
     static bool is_valid_name(String const&);
 
     struct PrefixAndTagName {
-        DeprecatedFlyString prefix;
-        DeprecatedFlyString tag_name;
+        FlyString prefix;
+        FlyString tag_name;
     };
-    static WebIDL::ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Realm&, DeprecatedString const& qualified_name);
+    static WebIDL::ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Realm&, FlyString const& qualified_name);
 
     JS::NonnullGCPtr<NodeIterator> create_node_iterator(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
     JS::NonnullGCPtr<TreeWalker> create_tree_walker(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
