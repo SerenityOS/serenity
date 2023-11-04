@@ -2,6 +2,7 @@ include(libweb_generators)
 include(accelerated_graphics)
 
 set(SOURCES
+    Animations/AnimationTimeline.cpp
     ARIA/AriaData.cpp
     ARIA/ARIAMixin.cpp
     ARIA/Roles.cpp

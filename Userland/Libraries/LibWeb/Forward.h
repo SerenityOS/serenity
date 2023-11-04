@@ -26,6 +26,10 @@ namespace Web::Painting {
 class RecordingPainter;
 }
 
+namespace Web::Animations {
+class AnimationTimeline;
+}
+
 namespace Web::ARIA {
 class AriaData;
 class ARIAMixin;
