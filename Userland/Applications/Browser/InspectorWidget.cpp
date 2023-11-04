@@ -138,11 +138,12 @@ void InspectorWidget::select_default_node()
 void InspectorWidget::set_dom_json(StringView json)
 {
     m_dom_tree_view->set_model(WebView::DOMTreeModel::create(json, *m_dom_tree_view));
+    m_dom_loaded = true;
+
     if (m_pending_selection.has_value())
         set_selection(m_pending_selection.release_value());
     else
         select_default_node();
-    m_dom_loaded = true;
 }
 
 void InspectorWidget::clear_dom_json()
