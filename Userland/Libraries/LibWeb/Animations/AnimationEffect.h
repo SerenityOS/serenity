@@ -94,6 +94,10 @@ public:
 
     AnimationDirection animation_direction() const;
 
+    double end_time() const;
+    Optional<double> local_time() const;
+    double active_duration() const;
+
 protected:
     AnimationEffect(JS::Realm&);
 
