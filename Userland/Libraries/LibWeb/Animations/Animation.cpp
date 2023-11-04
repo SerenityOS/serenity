@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TemporaryChange.h>
 #include <LibWeb/Animations/Animation.h>
 #include <LibWeb/Animations/AnimationEffect.h>
+#include <LibWeb/Animations/AnimationPlaybackEvent.h>
 #include <LibWeb/Animations/DocumentTimeline.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
@@ -78,8 +80,9 @@ void Animation::set_effect(JS::GCPtr<AnimationEffect> new_effect)
         m_effect->set_associated_animation({});
     m_effect = new_effect;
 
-    // FIXME: 7. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
-    //           false, and the synchronously notify flag set to false.
+    // 7. Run the procedure to update an animation’s finished state for animation with the did seek flag set to false,
+    //    and the synchronously notify flag set to false.
+    update_finished_state(DidSeek::No, SynchronouslyNotify::No);
 }
 
 // https://www.w3.org/TR/web-animations-1/#animation-set-the-timeline-of-an-animation
@@ -104,8 +107,9 @@ void Animation::set_timeline(JS::GCPtr<AnimationTimeline> new_timeline)
     if (m_start_time.has_value())
         m_hold_time = {};
 
-    // FIXME: 5. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
-    //           false, and the synchronously notify flag set to false.
+    // 5. Run the procedure to update an animation’s finished state for animation with the did seek flag set to false,
+    //    and the synchronously notify flag set to false.
+    update_finished_state(DidSeek::No, SynchronouslyNotify::No);
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-animation-starttime
@@ -155,8 +159,9 @@ void Animation::set_start_time(Optional<double> const& new_start_time)
         WebIDL::resolve_promise(realm(), current_ready_promise(), this);
     }
 
-    // FIXME: 8. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
-    //           true, and the synchronously notify flag set to false.
+    // 8. Run the procedure to update an animation’s finished state for animation with the did seek flag set to true,
+    //    and the synchronously notify flag set to false.
+    update_finished_state(DidSeek::Yes, SynchronouslyNotify::No);
 }
 
 // https://www.w3.org/TR/web-animations-1/#animation-current-time
@@ -211,8 +216,9 @@ WebIDL::ExceptionOr<void> Animation::set_current_time(Optional<double> const& se
         WebIDL::resolve_promise(realm(), current_ready_promise(), this);
     }
 
-    // FIXME: 3. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
-    //           true, and the synchronously notify flag set to false.
+    // 3. Run the procedure to update an animation’s finished state for animation with the did seek flag set to true,
+    //    and the synchronously notify flag set to false.
+    update_finished_state(DidSeek::Yes, SynchronouslyNotify::No);
 
     return {};
 }
@@ -429,6 +435,160 @@ WebIDL::ExceptionOr<void> Animation::silently_set_current_time(Optional<double> 
     m_previous_current_time = {};
 
     return {};
+}
+
+// https://www.w3.org/TR/web-animations-1/#update-an-animations-finished-state
+void Animation::update_finished_state(DidSeek did_seek, SynchronouslyNotify synchronously_notify)
+{
+    // 1. Let the unconstrained current time be the result of calculating the current time substituting an unresolved
+    //    time value for the hold time if did seek is false. If did seek is true, the unconstrained current time is
+    //    equal to the current time.
+    //
+    // Note: This is required to accommodate timelines that may change direction. Without this definition, a once-
+    //       finished animation would remain finished even when its timeline progresses in the opposite direction.
+    Optional<double> unconstrained_current_time;
+    if (did_seek == DidSeek::No) {
+        TemporaryChange change(m_hold_time, {});
+        unconstrained_current_time = current_time();
+    } else {
+        unconstrained_current_time = current_time();
+    }
+
+    // 2. If all three of the following conditions are true,
+    //    - the unconstrained current time is resolved, and
+    //    - animation’s start time is resolved, and
+    //    - animation does not have a pending play task or a pending pause task,
+    if (unconstrained_current_time.has_value() && m_start_time.has_value() && !pending()) {
+        // then update animation’s hold time based on the first matching condition for animation from below, if any:
+
+        // -> If playback rate > 0 and unconstrained current time is greater than or equal to associated effect end,
+        auto associated_effect_end = this->associated_effect_end();
+        if (m_playback_rate > 0.0 && unconstrained_current_time.value() > associated_effect_end) {
+            // If did seek is true, let the hold time be the value of unconstrained current time.
+            if (did_seek == DidSeek::Yes) {
+                m_hold_time = unconstrained_current_time;
+            }
+            // If did seek is false, let the hold time be the maximum value of previous current time and associated
+            // effect end. If the previous current time is unresolved, let the hold time be associated effect end.
+            else if (m_previous_current_time.has_value()) {
+                m_hold_time = max(m_previous_current_time.value(), associated_effect_end);
+            } else {
+                m_hold_time = associated_effect_end;
+            }
+        }
+        // -> If playback rate < 0 and unconstrained current time is less than or equal to 0,
+        else if (m_playback_rate < 0.0 && unconstrained_current_time.value() <= 0.0) {
+            // If did seek is true, let the hold time be the value of unconstrained current time.
+            if (did_seek == DidSeek::Yes) {
+                m_hold_time = unconstrained_current_time;
+            }
+            // If did seek is false, let the hold time be the minimum value of previous current time and zero. If the
+            // previous current time is unresolved, let the hold time be zero.
+            else if (m_previous_current_time.has_value()) {
+                m_hold_time = min(m_previous_current_time.value(), 0.0);
+            } else {
+                m_hold_time = 0.0;
+            }
+        }
+        // -> If playback rate ≠ 0, and animation is associated with an active timeline,
+        else if (m_playback_rate != 0.0 && m_timeline && !m_timeline->is_inactive()) {
+            // Perform the following steps:
+
+            // 1. If did seek is true and the hold time is resolved, let animation’s start time be equal to the result
+            //    of evaluating timeline time - (hold time / playback rate) where timeline time is the current time
+            //    value of timeline associated with animation.
+            if (did_seek == DidSeek::Yes && m_hold_time.has_value())
+                m_start_time = m_timeline->current_time().value() - (m_hold_time.value() / m_playback_rate);
+
+            // 2. Let the hold time be unresolved.
+            m_hold_time = {};
+        }
+    }
+
+    // 3. Set the previous current time of animation be the result of calculating its current time.
+    m_previous_current_time = current_time();
+
+    // 4. Let current finished state be true if the play state of animation is finished. Otherwise, let it be false.
+    auto current_finished_state = play_state() == Bindings::AnimationPlayState::Finished;
+
+    // 5. If current finished state is true and the current finished promise is not yet resolved, perform the following
+    //    steps:
+    if (current_finished_state && !m_current_finished_promise_resolved) {
+        // 1. Let finish notification steps refer to the following procedure:
+        JS::SafeFunction<void()> finish_notification_steps = [&]() {
+            if (m_should_abort_finish_notification_microtask) {
+                m_should_abort_finish_notification_microtask = false;
+                m_has_finish_notification_microtask_scheduled = false;
+                return;
+            }
+
+            // 1. If animation’s play state is not equal to finished, abort these steps.
+            if (play_state() != Bindings::AnimationPlayState::Finished)
+                return;
+
+            // 2. Resolve animation’s current finished promise object with animation.
+            WebIDL::resolve_promise(realm(), current_finished_promise(), this);
+            m_current_finished_promise_resolved = true;
+
+            // 3. Create an AnimationPlaybackEvent, finishEvent.
+            // 4. Set finishEvent’s type attribute to finish.
+            // 5. Set finishEvent’s currentTime attribute to the current time of animation.
+            auto& realm = this->realm();
+            AnimationPlaybackEventInit init;
+            init.current_time = current_time();
+            auto finish_event = heap().allocate<AnimationPlaybackEvent>(realm, realm, "finish"_fly_string, init);
+
+            // 6. Set finishEvent’s timelineTime attribute to the current time of the timeline with which animation is
+            //    associated. If animation is not associated with a timeline, or the timeline is inactive, let
+            //    timelineTime be null.
+            if (m_timeline && !m_timeline->is_inactive())
+                finish_event->set_timeline_time(m_timeline->current_time());
+            else
+                finish_event->set_timeline_time({});
+
+            // 7. If animation has a document for timing, then append finishEvent to its document for timing's pending
+            //    animation event queue along with its target, animation. For the scheduled event time, use the result
+            //    of converting animation’s associated effect end to an origin-relative time.
+            if (auto document_for_timing = this->document_for_timing()) {
+                document_for_timing->append_pending_animation_event({ .event = finish_event,
+                    .target = *this,
+                    .scheduled_event_time = convert_a_timeline_time_to_an_origin_relative_time(associated_effect_end()) });
+            }
+            //    Otherwise, queue a task to dispatch finishEvent at animation. The task source for this task is the DOM
+            //    manipulation task source.
+            else {
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, realm.global_object(), [this, finish_event]() {
+                    dispatch_event(finish_event);
+                });
+            }
+
+            m_has_finish_notification_microtask_scheduled = false;
+        };
+
+        // 2. If synchronously notify is true, cancel any queued microtask to run the finish notification steps for this
+        //    animation, and run the finish notification steps immediately.
+        if (synchronously_notify == SynchronouslyNotify::Yes) {
+            m_should_abort_finish_notification_microtask = false;
+            finish_notification_steps();
+            m_should_abort_finish_notification_microtask = true;
+        }
+        //    Otherwise, if synchronously notify is false, queue a microtask to run finish notification steps for
+        //    animation unless there is already a microtask queued to run those steps for animation.
+        else {
+            if (!m_has_finish_notification_microtask_scheduled)
+                HTML::queue_a_microtask({}, move(finish_notification_steps));
+
+            m_has_finish_notification_microtask_scheduled = true;
+            m_should_abort_finish_notification_microtask = false;
+        }
+    }
+
+    // 6. If current finished state is false and animation’s current finished promise is already resolved, set
+    //    animation’s current finished promise to a new promise in the relevant Realm of animation.
+    if (!current_finished_state && m_current_finished_promise_resolved) {
+        m_current_finished_promise = WebIDL::create_promise(realm());
+        m_current_finished_promise_resolved = false;
+    }
 }
 
 JS::NonnullGCPtr<WebIDL::Promise> Animation::current_ready_promise() const

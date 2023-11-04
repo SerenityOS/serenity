@@ -69,11 +69,22 @@ private:
         RunAsSoonAsReady,
     };
 
+    enum class DidSeek {
+        Yes,
+        No,
+    };
+
+    enum class SynchronouslyNotify {
+        Yes,
+        No,
+    };
+
     double associated_effect_end() const;
     double effective_playback_rate() const;
 
     void apply_any_pending_playback_rate();
     WebIDL::ExceptionOr<void> silently_set_current_time(Optional<double>);
+    void update_finished_state(DidSeek, SynchronouslyNotify);
 
     JS::NonnullGCPtr<WebIDL::Promise> current_ready_promise() const;
     JS::NonnullGCPtr<WebIDL::Promise> current_finished_promise() const;
@@ -111,12 +122,18 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#current-finished-promise
     mutable JS::GCPtr<WebIDL::Promise> m_current_finished_promise;
+    bool m_current_finished_promise_resolved { false };
 
     // https://www.w3.org/TR/web-animations-1/#pending-play-task
     TaskState m_pending_play_task { TaskState::None };
 
     // https://www.w3.org/TR/web-animations-1/#pending-pause-task
     TaskState m_pending_pause_task { TaskState::None };
+
+    // Flags used to manage the finish notification microtask and ultimately prevent more than one finish notification
+    // microtask from being queued at any given time
+    bool m_should_abort_finish_notification_microtask { false };
+    bool m_has_finish_notification_microtask_scheduled { false };
 };
 
 }
