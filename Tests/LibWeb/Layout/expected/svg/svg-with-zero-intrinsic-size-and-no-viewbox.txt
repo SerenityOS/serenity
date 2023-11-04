@@ -26,4 +26,4 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
       ImagePaintable (ImageBox<IMG>) [8,21 0x0]
       TextPaintable (TextNode<#text>)
       SVGSVGPaintable (SVGSVGBox<svg>) [16,21 0x0]
-        SVGGeometryPaintable (SVGGeometryBox<rect>) [16,21 1x1]
+        SVGPathPaintable (SVGGeometryBox<rect>) [16,21 1x1]

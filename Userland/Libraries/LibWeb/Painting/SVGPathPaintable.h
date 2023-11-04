@@ -6,22 +6,22 @@
 
 #pragma once
 
-#include <LibWeb/Layout/SVGGeometryBox.h>
+#include <LibWeb/Layout/SVGGraphicsBox.h>
 #include <LibWeb/Painting/SVGGraphicsPaintable.h>
 
 namespace Web::Painting {
 
-class SVGGeometryPaintable final : public SVGGraphicsPaintable {
-    JS_CELL(SVGGeometryPaintable, SVGGraphicsPaintable);
+class SVGPathPaintable final : public SVGGraphicsPaintable {
+    JS_CELL(SVGPathPaintable, SVGGraphicsPaintable);
 
 public:
-    static JS::NonnullGCPtr<SVGGeometryPaintable> create(Layout::SVGGeometryBox const&);
+    static JS::NonnullGCPtr<SVGPathPaintable> create(Layout::SVGGraphicsBox const&);
 
     virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 
-    Layout::SVGGeometryBox const& layout_box() const;
+    Layout::SVGGraphicsBox const& layout_box() const;
 
     void set_computed_path(Gfx::Path path)
     {
@@ -31,7 +31,7 @@ public:
     Optional<Gfx::Path> const& computed_path() const { return m_computed_path; }
 
 protected:
-    SVGGeometryPaintable(Layout::SVGGeometryBox const&);
+    SVGPathPaintable(Layout::SVGGraphicsBox const&);
 
     Optional<Gfx::Path> m_computed_path = {};
 };

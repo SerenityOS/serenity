@@ -6,7 +6,7 @@
  */
 
 #include <LibWeb/Layout/SVGGeometryBox.h>
-#include <LibWeb/Painting/SVGGeometryPaintable.h>
+#include <LibWeb/Painting/SVGPathPaintable.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
@@ -19,7 +19,7 @@ SVGGeometryBox::SVGGeometryBox(DOM::Document& document, SVG::SVGGeometryElement&
 
 JS::GCPtr<Painting::Paintable> SVGGeometryBox::create_paintable() const
 {
-    return Painting::SVGGeometryPaintable::create(*this);
+    return Painting::SVGPathPaintable::create(*this);
 }
 
 }
