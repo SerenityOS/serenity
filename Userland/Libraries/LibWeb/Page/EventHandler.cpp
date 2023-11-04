@@ -285,7 +285,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                     auto url = document->parse_url(href);
                     dbgln("Web::EventHandler: Clicking on a link to {}", url);
                     if (button == GUI::MouseButton::Primary) {
-                        MUST(document->navigable()->navigate({ .url = url, .source_document = document }));
+                        MUST(document->navigable()->navigate({ .url = url, .source_document = document, .user_involvement = HTML::UserNavigationInvolvement::BrowserUI }));
                     } else if (button == GUI::MouseButton::Middle) {
                         if (auto* page = m_browsing_context->page())
                             page->client().page_did_middle_click_link(url, link->target(), modifiers);
