@@ -1174,10 +1174,8 @@ static Optional<UnrealizedSourceRange> get_source_range(ExecutionContext const* 
     // JIT frame
     for (auto address : native_stack) {
         auto range = native_executable->get_source_range(*context->executable, address);
-        if (range.has_value()) {
-            auto realized = range->realize();
+        if (range.has_value())
             return range;
-        }
     }
 
     return {};
