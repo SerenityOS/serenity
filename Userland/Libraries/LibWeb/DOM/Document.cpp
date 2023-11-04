@@ -3,6 +3,7 @@
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2024, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,12 +11,16 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/GenericLexer.h>
+#include <AK/InsertionSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibWeb/Animations/Animation.h>
+#include <LibWeb/Animations/AnimationPlaybackEvent.h>
+#include <LibWeb/Animations/AnimationTimeline.h>
 #include <LibWeb/Animations/DocumentTimeline.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/MediaQueryList.h>
@@ -3750,6 +3755,72 @@ void Document::disassociate_with_timeline(JS::NonnullGCPtr<Animations::Animation
 void Document::append_pending_animation_event(Web::DOM::Document::PendingAnimationEvent const& event)
 {
     m_pending_animation_event_queue.append(event);
+}
+
+// https://www.w3.org/TR/web-animations-1/#update-animations-and-send-events
+void Document::update_animations_and_send_events(Optional<double> const& timestamp)
+{
+    // 1. Update the current time of all timelines associated with doc passing now as the timestamp.
+    //
+    // Note: Due to the hierarchical nature of the timing model, updating the current time of a timeline also involves:
+    // - Updating the current time of any animations associated with the timeline.
+    // - Running the update an animation’s finished state procedure for any animations whose current time has been
+    //   updated.
+    // - Queueing animation events for any such animations.
+    for (auto const& timeline : m_associated_animation_timelines)
+        timeline->set_current_time(timestamp);
+
+    // 2. Remove replaced animations for doc.
+    remove_replaced_animations();
+
+    // 3. Perform a microtask checkpoint.
+    HTML::perform_a_microtask_checkpoint();
+
+    // 4. Let events to dispatch be a copy of doc’s pending animation event queue.
+    // 5. Clear doc’s pending animation event queue.
+    auto events_to_dispatch = move(m_pending_animation_event_queue);
+
+    // 6. Perform a stable sort of the animation events in events to dispatch as follows:
+    auto sort_events_by_composite_order = [](auto const& a, auto const& b) {
+        auto& a_effect = verify_cast<Animations::KeyframeEffect>(*a.target->effect());
+        auto& b_effect = verify_cast<Animations::KeyframeEffect>(*b.target->effect());
+        return Animations::KeyframeEffect::composite_order(a_effect, b_effect) < 0;
+    };
+
+    insertion_sort(events_to_dispatch, [&](auto const& a, auto const& b) {
+        // Sort the events by their scheduled event time such that events that were scheduled to occur earlier, sort
+        // before events scheduled to occur later and events whose scheduled event time is unresolved sort before events
+        // with a resolved scheduled event time.
+        //
+        // Within events with equal scheduled event times, sort by their composite order.
+        if (b.scheduled_event_time.has_value()) {
+            if (!a.scheduled_event_time.has_value())
+                return true;
+
+            auto a_time = a.scheduled_event_time.value();
+            auto b_time = b.scheduled_event_time.value();
+            if (a_time == b_time)
+                return sort_events_by_composite_order(a, b);
+
+            return a.scheduled_event_time.value() < b.scheduled_event_time.value();
+        }
+
+        if (a.scheduled_event_time.has_value())
+            return false;
+
+        return sort_events_by_composite_order(a, b);
+    });
+
+    // 7. Dispatch each of the events in events to dispatch at their corresponding target using the order established in
+    //    the previous step.
+    for (auto const& event : events_to_dispatch)
+        event.target->dispatch_event(event.event);
+}
+
+// https://www.w3.org/TR/web-animations-1/#remove-replaced-animations
+void Document::remove_replaced_animations()
+{
+    // FIXME: Implement this
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-nameditem-filter
