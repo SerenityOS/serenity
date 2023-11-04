@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -73,6 +74,7 @@ public:
         WM_SuperDigitKeyPressed,
         WM_WorkspaceChanged,
         WM_KeymapChanged,
+        WM_AddToQuickLaunch,
         __End_WM_Events,
     };
 
@@ -262,6 +264,20 @@ public:
 
 private:
     const DeprecatedString m_keymap;
+};
+
+class WMAddToQuickLaunchEvent : public WMEvent {
+public:
+    explicit WMAddToQuickLaunchEvent(int client_id, pid_t pid)
+        : WMEvent(Event::Type::WM_AddToQuickLaunch, client_id, 0)
+        , m_pid(pid)
+    {
+    }
+
+    pid_t pid() const { return m_pid; }
+
+private:
+    pid_t m_pid;
 };
 
 class MultiPaintEvent final : public Event {
