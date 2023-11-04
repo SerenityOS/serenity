@@ -32,6 +32,7 @@ set(SOURCES
     CSS/CalculatedOr.cpp
     CSS/Clip.cpp
     CSS/CSS.cpp
+    CSS/CSSAnimation.cpp
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
