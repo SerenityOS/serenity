@@ -97,6 +97,8 @@ public:
     double end_time() const;
     Optional<double> local_time() const;
     double active_duration() const;
+    Optional<double> active_time() const;
+    Optional<double> active_time_using_fill(Bindings::FillMode) const;
 
     double before_active_boundary_time() const;
     double after_active_boundary_time() const;
