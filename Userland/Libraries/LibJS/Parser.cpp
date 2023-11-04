@@ -1643,7 +1643,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         return { move(expression) };
     }
     case TokenType::This:
-        consume();
+        consume_and_allow_division();
         return { create_ast_node<ThisExpression>({ m_source_code, rule_start.position(), position() }) };
     case TokenType::Class:
         return { parse_class_expression(false) };
