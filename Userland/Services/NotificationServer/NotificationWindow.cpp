@@ -18,7 +18,7 @@
 
 namespace NotificationServer {
 
-static HashMap<u32, RefPtr<NotificationWindow>> s_windows;
+static OrderedHashMap<u32, RefPtr<NotificationWindow>> s_windows;
 
 static void update_notification_window_locations(Gfx::IntRect const& screen_rect)
 {
