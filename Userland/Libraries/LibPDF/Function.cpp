@@ -28,14 +28,95 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float>) c
     return Error(Error::Type::RenderingUnsupported, "SampledFunction not yet implemented"_string);
 }
 
+// 3.9.2 Type 2 (Exponential Interpolation) Functions
 class ExponentialInterpolationFunction final : public Function {
 public:
+    static PDFErrorOr<NonnullRefPtr<ExponentialInterpolationFunction>> create(Document*, Vector<Bound> domain, Optional<Vector<Bound>> range, NonnullRefPtr<DictObject>);
     virtual PDFErrorOr<ReadonlySpan<float>> evaluate(ReadonlySpan<float>) const override;
+
+private:
+    Bound m_domain;
+    Optional<Vector<Bound>> m_range;
+
+    Vector<float> m_c0;
+    Vector<float> m_c1;
+    float m_n;
+
+    Vector<float> mutable m_values;
 };
 
-PDFErrorOr<ReadonlySpan<float>> ExponentialInterpolationFunction::evaluate(ReadonlySpan<float>) const
+PDFErrorOr<NonnullRefPtr<ExponentialInterpolationFunction>>
+ExponentialInterpolationFunction::create(Document* document, Vector<Bound> domain, Optional<Vector<Bound>> range, NonnullRefPtr<DictObject> function_dict)
 {
-    return Error(Error::Type::RenderingUnsupported, "ExponentialInterpolationFunction not yet implemented"_string);
+    if (domain.size() != 1)
+        return Error { Error::Type::MalformedPDF, "Function exponential requires domain with 1 entry" };
+
+    // "TABLE 3.37 Additional entries specific to a type 2 function dictionary"
+
+    if (!function_dict->contains(CommonNames::N))
+        return Error { Error::Type::MalformedPDF, "Function exponential requires /N" };
+
+    auto n = TRY(document->resolve(function_dict->get_value(CommonNames::N))).to_float();
+
+    Vector<float> c0;
+    if (function_dict->contains(CommonNames::C0)) {
+        auto c0_array = TRY(function_dict->get_array(document, CommonNames::C0));
+        for (size_t i = 0; i < c0_array->size(); i++)
+            c0.append(c0_array->at(i).to_float());
+    } else {
+        c0.append(0.0f);
+    }
+
+    Vector<float> c1;
+    if (function_dict->contains(CommonNames::C1)) {
+        auto c1_array = TRY(function_dict->get_array(document, CommonNames::C1));
+        for (size_t i = 0; i < c1_array->size(); i++)
+            c1.append(c1_array->at(i).to_float());
+    } else {
+        c1.append(1.0f);
+    }
+
+    if (c0.size() != c1.size())
+        return Error { Error::Type::MalformedPDF, "Function exponential mismatching C0 and C1 arrays" };
+
+    if (range.has_value()) {
+        if (range->size() != c0.size())
+            return Error { Error::Type::MalformedPDF, "Function exponential mismatching Range and C arrays" };
+    }
+
+    // "Values of Domain must constrain x in such a way that if N is not an integer,
+    //  all values of x must be non-negative, and if N is negative, no value of x may be zero."
+    if (n != (int)n && domain[0].lower < 0)
+        return Error { Error::Type::MalformedPDF, "Function exponential requires non-negative bound for non-integer N" };
+    if (n < 0 && (domain[0].lower <= 0 && domain[0].upper >= 0))
+        return Error { Error::Type::MalformedPDF, "Function exponential with negative N requires non-zero domain" };
+
+    auto function = adopt_ref(*new ExponentialInterpolationFunction());
+    function->m_domain = domain[0];
+    function->m_range = move(range);
+    function->m_c0 = move(c0);
+    function->m_c1 = move(c1);
+    function->m_n = n;
+    function->m_values.resize(function->m_c0.size());
+    return function;
+}
+
+PDFErrorOr<ReadonlySpan<float>> ExponentialInterpolationFunction::evaluate(ReadonlySpan<float> xs) const
+{
+    if (xs.size() != 1)
+        return Error { Error::Type::MalformedPDF, "Function argument size does not match domain size" };
+
+    float const x = clamp(xs[0], m_domain.lower, m_domain.upper);
+
+    for (size_t i = 0; i < m_c0.size(); ++i)
+        m_values[i] = m_c0[i] + pow(x, m_n) * (m_c1[i] - m_c0[i]);
+
+    if (m_range.has_value()) {
+        for (size_t i = 0; i < m_c0.size(); ++i)
+            m_values[i] = clamp(m_values[i], m_range.value()[i].lower, m_range.value()[i].upper);
+    }
+
+    return m_values;
 }
 
 class StitchingFunction final : public Function {
@@ -105,7 +186,8 @@ PDFErrorOr<NonnullRefPtr<Function>> Function::create(Document* document, Nonnull
         return adopt_ref(*new SampledFunction());
     // The spec has no entry for `1`.
     case 2:
-        return adopt_ref(*new ExponentialInterpolationFunction());
+        // FIXME: spec is not clear on if this should work with a StreamObject.
+        return ExponentialInterpolationFunction::create(document, move(domain), move(optional_range), function_dict);
     case 3:
         return adopt_ref(*new StitchingFunction());
     case 4:
