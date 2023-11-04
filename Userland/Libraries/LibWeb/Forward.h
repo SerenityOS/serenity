@@ -28,6 +28,7 @@ class RecordingPainter;
 
 namespace Web::Animations {
 class AnimationTimeline;
+class DocumentTimeline;
 }
 
 namespace Web::ARIA {
