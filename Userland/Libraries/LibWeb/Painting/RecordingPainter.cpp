@@ -417,6 +417,21 @@ static Optional<Gfx::IntRect> command_bounding_rectangle(PaintingCommand const& 
 
 void RecordingPainter::execute(PaintingCommandExecutor& executor)
 {
+    if (executor.needs_prepare_glyphs_texture()) {
+        HashMap<Gfx::Font const*, HashTable<u32>> unique_glyphs;
+        for (auto& command : m_painting_commands) {
+            if (command.has<DrawGlyphRun>()) {
+                for (auto const& glyph_or_emoji : command.get<DrawGlyphRun>().glyph_run) {
+                    if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
+                        auto const& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
+                        unique_glyphs.ensure(glyph.font, [] { return HashTable<u32> {}; }).set(glyph.code_point);
+                    }
+                }
+            }
+        }
+        executor.prepare_glyph_texture(unique_glyphs);
+    }
+
     size_t next_command_index = 0;
     while (next_command_index < m_painting_commands.size()) {
         auto& command = m_painting_commands[next_command_index++];
