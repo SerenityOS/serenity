@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/OwnPtr.h>
@@ -322,7 +320,7 @@ public:
 
     Type type() const { return m_type; }
 
-    DeprecatedString to_deprecated_string() const;
+    String to_string() const;
 
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }
