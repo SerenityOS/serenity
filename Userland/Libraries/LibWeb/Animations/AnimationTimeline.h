@@ -28,6 +28,10 @@ public:
     virtual Optional<double> convert_a_timeline_time_to_an_original_relative_time(Optional<double>) { VERIFY_NOT_REACHED(); }
     virtual bool can_convert_a_timeline_time_to_an_original_relative_time() const { return false; }
 
+    void associate_with_animation(JS::NonnullGCPtr<Animation> value) { m_associated_animations.set(value); }
+    void disassociate_with_animation(JS::NonnullGCPtr<Animation> value) { m_associated_animations.remove(value); }
+    HashTable<JS::NonnullGCPtr<Animation>> const& associated_animations() const;
+
 protected:
     AnimationTimeline(JS::Realm&);
     virtual ~AnimationTimeline() override;
@@ -43,6 +47,8 @@ protected:
 
     // https://www.w3.org/TR/web-animations-1/#timeline-associated-with-a-document
     JS::GCPtr<DOM::Document> m_associated_document {};
+
+    HashTable<JS::NonnullGCPtr<Animation>> m_associated_animations {};
 };
 
 }
