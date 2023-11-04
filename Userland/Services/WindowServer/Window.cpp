@@ -94,7 +94,7 @@ Window::Window(Core::EventReceiver& parent, WindowType type)
     frame().window_was_constructed({});
 }
 
-Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode window_mode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window)
+Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode window_mode, int window_id, int process_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window)
     : Core::EventReceiver(&client)
     , m_client(&client)
     , m_type(window_type)
@@ -108,6 +108,7 @@ Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode 
     , m_client_id(client.client_id())
     , m_icon(default_window_icon())
     , m_frame(*this)
+    , m_process_id(process_id)
 {
     if (parent_window)
         set_parent_window(*parent_window);

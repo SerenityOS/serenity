@@ -44,6 +44,7 @@ endpoint WindowServer
 
     create_window(
         i32 window_id,
+        i32 process_id,
         Gfx::IntRect rect,
         bool auto_position,
         bool has_alpha_channel,

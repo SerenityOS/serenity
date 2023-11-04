@@ -611,7 +611,7 @@ Window* ConnectionFromClient::window_from_id(i32 window_id)
     return it->value.ptr();
 }
 
-void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect,
+void ConnectionFromClient::create_window(i32 window_id, i32 process_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool minimizable, bool closeable, bool resizable,
     bool fullscreen, bool frameless, bool forced_shadow,
     float alpha_hit_threshold, Gfx::IntSize base_size, Gfx::IntSize size_increment,
@@ -642,7 +642,7 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
         return;
     }
 
-    auto window = Window::construct(*this, (WindowType)type, (WindowMode)mode, window_id, minimizable, closeable, frameless, resizable, fullscreen, parent_window);
+    auto window = Window::construct(*this, (WindowType)type, (WindowMode)mode, window_id, process_id, minimizable, closeable, frameless, resizable, fullscreen, parent_window);
 
     if (auto* blocker = window->blocking_modal_window(); blocker && mode == to_underlying(WindowMode::Blocking)) {
         did_misbehave("CreateWindow with illegal mode: Reciprocally blocked");
