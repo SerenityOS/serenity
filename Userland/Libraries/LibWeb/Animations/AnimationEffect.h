@@ -98,6 +98,9 @@ public:
     Optional<double> local_time() const;
     double active_duration() const;
 
+    double before_active_boundary_time() const;
+    double after_active_boundary_time() const;
+
 protected:
     AnimationEffect(JS::Realm&);
 
