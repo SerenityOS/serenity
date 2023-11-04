@@ -559,6 +559,8 @@ public:
         Optional<double> scheduled_event_time;
     };
     void append_pending_animation_event(PendingAnimationEvent const&);
+    void update_animations_and_send_events(Optional<double> const& timestamp);
+    void remove_replaced_animations();
 
     bool ready_to_run_scripts() const { return m_ready_to_run_scripts; }
 
