@@ -374,7 +374,7 @@ public:
     void send_move_event_to_client();
 
 private:
-    Window(ConnectionFromClient&, WindowType, WindowMode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window = nullptr);
+    Window(ConnectionFromClient&, WindowType, WindowMode, int window_id, int process_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window = nullptr);
     Window(Core::EventReceiver&, WindowType);
 
     virtual void event(Core::Event&) override;
@@ -459,6 +459,8 @@ private:
     bool m_should_show_menubar { true };
     WindowStack* m_window_stack { nullptr };
     RefPtr<Animation> m_animation;
+
+    Optional<pid_t> m_process_id {};
 
 public:
     using List = IntrusiveList<&Window::m_list_node>;

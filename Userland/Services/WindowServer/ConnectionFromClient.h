@@ -102,7 +102,7 @@ private:
     virtual void update_menu_item(i32, i32, i32, DeprecatedString const&, bool, bool, bool, bool, bool, DeprecatedString const&, Gfx::ShareableBitmap const&) override;
     virtual void remove_menu_item(i32 menu_id, i32 identifier) override;
     virtual void flash_menubar_menu(i32, i32) override;
-    virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool,
+    virtual void create_window(i32, i32, Gfx::IntRect const&, bool, bool, bool,
         bool, bool, bool, bool, bool, float, Gfx::IntSize, Gfx::IntSize, Gfx::IntSize,
         Optional<Gfx::IntSize> const&, i32, i32, DeprecatedString const&, i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::DestroyWindowResponse destroy_window(i32) override;
