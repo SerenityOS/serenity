@@ -257,8 +257,39 @@ WebIDL::ExceptionOr<void> Animation::set_playback_rate(double new_playback_rate)
 // https://www.w3.org/TR/web-animations-1/#animation-play-state
 Bindings::AnimationPlayState Animation::play_state() const
 {
-    // FIXME: Implement
-    return Bindings::AnimationPlayState::Idle;
+    // The play state of animation, animation, at a given moment is the state corresponding to the first matching
+    // condition from the following:
+
+    // -> All of the following conditions are true:
+    //    - The current time of animation is unresolved, and
+    //    - the start time of animation is unresolved, and
+    //    - animation does not have either a pending play task or a pending pause task,
+    auto current_time = this->current_time();
+    if (!current_time.has_value() && !m_start_time.has_value() && !pending()) {
+        // → idle
+        return Bindings::AnimationPlayState::Idle;
+    }
+
+    // -> Either of the following conditions are true:
+    //    - animation has a pending pause task, or
+    //    - both the start time of animation is unresolved and it does not have a pending play task,
+    if (m_pending_pause_task == TaskState::Pending || (!m_start_time.has_value() && m_pending_play_task == TaskState::None)) {
+        // → paused
+        return Bindings::AnimationPlayState::Paused;
+    }
+
+    // -> For animation, current time is resolved and either of the following conditions are true:
+    //    - animation’s effective playback rate > 0 and current time ≥ associated effect end; or
+    //    - animation’s effective playback rate < 0 and current time ≤ 0,
+    auto effective_playback_rate = this->effective_playback_rate();
+    if (current_time.has_value() && ((effective_playback_rate > 0.0 && current_time.value() >= associated_effect_end()) || (effective_playback_rate < 0.0 && current_time.value() <= 0.0))) {
+        // → finished
+        return Bindings::AnimationPlayState::Finished;
+    }
+
+    // -> Otherwise,
+    //    → running
+    return Bindings::AnimationPlayState::Running;
 }
 
 // https://www.w3.org/TR/web-animations-1/#associated-effect-end
@@ -267,6 +298,14 @@ double Animation::associated_effect_end() const
     // The associated effect end of an animation is equal to the end time of the animation’s associated effect. If the
     // animation has no associated effect, the associated effect end is zero.
     return m_effect ? m_effect->end_time() : 0.0;
+}
+
+// https://www.w3.org/TR/web-animations-1/#effective-playback-rate
+double Animation::effective_playback_rate() const
+{
+    // The effective playback rate of an animation is its pending playback rate, if set, otherwise it is the animation’s
+    // playback rate.
+    return m_pending_playback_rate.has_value() ? m_pending_playback_rate.value() : m_playback_rate;
 }
 
 // https://www.w3.org/TR/web-animations-1/#apply-any-pending-playback-rate
