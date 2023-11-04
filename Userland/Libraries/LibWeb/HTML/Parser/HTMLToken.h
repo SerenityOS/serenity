@@ -54,9 +54,9 @@ public:
 
     struct DoctypeData {
         // NOTE: "Missing" is a distinct state from the empty string.
-        DeprecatedString name;
-        DeprecatedString public_identifier;
-        DeprecatedString system_identifier;
+        String name;
+        String public_identifier;
+        String system_identifier;
         bool missing_name { true };
         bool missing_public_identifier { true };
         bool missing_system_identifier { true };
@@ -73,7 +73,7 @@ public:
     static HTMLToken make_start_tag(FlyString const& tag_name)
     {
         HTMLToken token { Type::StartTag };
-        token.set_tag_name(tag_name.to_deprecated_fly_string());
+        token.set_tag_name(tag_name);
         return token;
     }
 
@@ -134,25 +134,25 @@ public:
         m_data.get<u32>() = code_point;
     }
 
-    DeprecatedFlyString const& comment() const
+    String const& comment() const
     {
         VERIFY(is_comment());
+        return m_comment_data;
+    }
+
+    void set_comment(String comment)
+    {
+        VERIFY(is_comment());
+        m_comment_data = move(comment);
+    }
+
+    FlyString const& tag_name() const
+    {
+        VERIFY(is_start_tag() || is_end_tag());
         return m_string_data;
     }
 
-    void set_comment(DeprecatedString comment)
-    {
-        VERIFY(is_comment());
-        m_string_data = move(comment);
-    }
-
-    FlyString tag_name() const
-    {
-        VERIFY(is_start_tag() || is_end_tag());
-        return MUST(FlyString::from_deprecated_fly_string(m_string_data));
-    }
-
-    void set_tag_name(DeprecatedString name)
+    void set_tag_name(FlyString name)
     {
         VERIFY(is_start_tag() || is_end_tag());
         m_string_data = move(name);
@@ -273,10 +273,10 @@ public:
         return !attribute(attribute_name).is_null();
     }
 
-    void adjust_tag_name(DeprecatedFlyString const& old_name, DeprecatedFlyString const& new_name)
+    void adjust_tag_name(FlyString const& old_name, FlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        if (old_name == tag_name().to_deprecated_fly_string())
+        if (old_name == tag_name())
             set_tag_name(new_name);
     }
 
@@ -356,8 +356,11 @@ private:
     bool m_tag_self_closing { false };
     bool m_tag_self_closing_acknowledged { false };
 
-    // Type::Comment (comment data), Type::StartTag and Type::EndTag (tag name)
-    DeprecatedFlyString m_string_data;
+    // Type::StartTag and Type::EndTag (tag name)
+    FlyString m_string_data;
+
+    // Type::Comment (comment data)
+    String m_comment_data;
 
     Variant<Empty, u32, OwnPtr<DoctypeData>, OwnPtr<Vector<Attribute>>> m_data {};
 

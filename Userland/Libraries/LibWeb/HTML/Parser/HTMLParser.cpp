@@ -454,29 +454,29 @@ DOM::QuirksMode HTMLParser::which_quirks_mode(HTMLToken const& doctype_token) co
         return DOM::QuirksMode::Yes;
 
     for (auto& public_id : s_quirks_public_ids) {
-        if (public_identifier.starts_with(public_id, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes(public_id, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
     }
 
     if (doctype_token.doctype_data().missing_system_identifier) {
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
 
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
     }
 
-    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Frameset//"sv, CaseSensitivity::CaseInsensitive))
+    if (public_identifier.starts_with_bytes("-//W3C//DTD XHTML 1.0 Frameset//"sv, CaseSensitivity::CaseInsensitive))
         return DOM::QuirksMode::Limited;
 
-    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Transitional//"sv, CaseSensitivity::CaseInsensitive))
+    if (public_identifier.starts_with_bytes("-//W3C//DTD XHTML 1.0 Transitional//"sv, CaseSensitivity::CaseInsensitive))
         return DOM::QuirksMode::Limited;
 
     if (!doctype_token.doctype_data().missing_system_identifier) {
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Limited;
 
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Limited;
     }
 
@@ -490,16 +490,16 @@ void HTMLParser::handle_initial(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
 
     if (token.is_doctype()) {
         auto doctype = realm().heap().allocate<DOM::DocumentType>(realm(), document());
-        doctype->set_name(String::from_deprecated_string(token.doctype_data().name).release_value());
-        doctype->set_public_id(String::from_deprecated_string(token.doctype_data().public_identifier).release_value());
-        doctype->set_system_id(String::from_deprecated_string(token.doctype_data().system_identifier).release_value());
+        doctype->set_name(token.doctype_data().name);
+        doctype->set_public_id(token.doctype_data().public_identifier);
+        doctype->set_system_id(token.doctype_data().system_identifier);
         MUST(document().append_child(*doctype));
         document().set_quirks_mode(which_quirks_mode(token));
         m_insertion_mode = InsertionMode::BeforeHTML;
@@ -525,7 +525,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> A comment token
     if (token.is_comment()) {
         // Insert a comment as the last child of the Document object.
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
@@ -822,7 +822,7 @@ AnythingElse:
 void HTMLParser::insert_comment(HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment()))), adjusted_insertion_location.insert_before_sibling);
+    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLParser::handle_in_head(HTMLToken& token)
@@ -1142,7 +1142,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 
     if (token.is_comment()) {
         auto& insertion_location = m_stack_of_open_elements.first();
-        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())))));
+        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment())));
         return;
     }
 
@@ -1178,7 +1178,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 void HTMLParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
@@ -2025,7 +2025,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::image) {
         // Parse error. Change the token's tag name to HTML::TagNames::img and reprocess it. (Don't ask.)
         log_parse_error();
-        token.set_tag_name("img");
+        token.set_tag_name("img"_fly_string);
         process_using_the_rules_for(m_insertion_mode, token);
         return;
     }
@@ -2194,41 +2194,41 @@ void HTMLParser::adjust_mathml_attributes(HTMLToken& token)
 
 void HTMLParser::adjust_svg_tag_names(HTMLToken& token)
 {
-    token.adjust_tag_name("altglyph", "altGlyph");
-    token.adjust_tag_name("altglyphdef", "altGlyphDef");
-    token.adjust_tag_name("altglyphitem", "altGlyphItem");
-    token.adjust_tag_name("animatecolor", "animateColor");
-    token.adjust_tag_name("animatemotion", "animateMotion");
-    token.adjust_tag_name("animatetransform", "animateTransform");
-    token.adjust_tag_name("clippath", "clipPath");
-    token.adjust_tag_name("feblend", "feBlend");
-    token.adjust_tag_name("fecolormatrix", "feColorMatrix");
-    token.adjust_tag_name("fecomponenttransfer", "feComponentTransfer");
-    token.adjust_tag_name("fecomposite", "feComposite");
-    token.adjust_tag_name("feconvolvematrix", "feConvolveMatrix");
-    token.adjust_tag_name("fediffuselighting", "feDiffuseLighting");
-    token.adjust_tag_name("fedisplacementmap", "feDisplacementMap");
-    token.adjust_tag_name("fedistantlight", "feDistantLight");
-    token.adjust_tag_name("fedropshadow", "feDropShadow");
-    token.adjust_tag_name("feflood", "feFlood");
-    token.adjust_tag_name("fefunca", "feFuncA");
-    token.adjust_tag_name("fefuncb", "feFuncB");
-    token.adjust_tag_name("fefuncg", "feFuncG");
-    token.adjust_tag_name("fefuncr", "feFuncR");
-    token.adjust_tag_name("fegaussianblur", "feGaussianBlur");
-    token.adjust_tag_name("feimage", "feImage");
-    token.adjust_tag_name("femerge", "feMerge");
-    token.adjust_tag_name("femergenode", "feMergeNode");
-    token.adjust_tag_name("femorphology", "feMorphology");
-    token.adjust_tag_name("feoffset", "feOffset");
-    token.adjust_tag_name("fepointlight", "fePointLight");
-    token.adjust_tag_name("fespecularlighting", "feSpecularLighting");
-    token.adjust_tag_name("fespotlight", "feSpotlight");
-    token.adjust_tag_name("foreignobject", "foreignObject");
-    token.adjust_tag_name("glyphref", "glyphRef");
-    token.adjust_tag_name("lineargradient", "linearGradient");
-    token.adjust_tag_name("radialgradient", "radialGradient");
-    token.adjust_tag_name("textpath", "textPath");
+    token.adjust_tag_name("altglyph"_fly_string, "altGlyph"_fly_string);
+    token.adjust_tag_name("altglyphdef"_fly_string, "altGlyphDef"_fly_string);
+    token.adjust_tag_name("altglyphitem"_fly_string, "altGlyphItem"_fly_string);
+    token.adjust_tag_name("animatecolor"_fly_string, "animateColor"_fly_string);
+    token.adjust_tag_name("animatemotion"_fly_string, "animateMotion"_fly_string);
+    token.adjust_tag_name("animatetransform"_fly_string, "animateTransform"_fly_string);
+    token.adjust_tag_name("clippath"_fly_string, "clipPath"_fly_string);
+    token.adjust_tag_name("feblend"_fly_string, "feBlend"_fly_string);
+    token.adjust_tag_name("fecolormatrix"_fly_string, "feColorMatrix"_fly_string);
+    token.adjust_tag_name("fecomponenttransfer"_fly_string, "feComponentTransfer"_fly_string);
+    token.adjust_tag_name("fecomposite"_fly_string, "feComposite"_fly_string);
+    token.adjust_tag_name("feconvolvematrix"_fly_string, "feConvolveMatrix"_fly_string);
+    token.adjust_tag_name("fediffuselighting"_fly_string, "feDiffuseLighting"_fly_string);
+    token.adjust_tag_name("fedisplacementmap"_fly_string, "feDisplacementMap"_fly_string);
+    token.adjust_tag_name("fedistantlight"_fly_string, "feDistantLight"_fly_string);
+    token.adjust_tag_name("fedropshadow"_fly_string, "feDropShadow"_fly_string);
+    token.adjust_tag_name("feflood"_fly_string, "feFlood"_fly_string);
+    token.adjust_tag_name("fefunca"_fly_string, "feFuncA"_fly_string);
+    token.adjust_tag_name("fefuncb"_fly_string, "feFuncB"_fly_string);
+    token.adjust_tag_name("fefuncg"_fly_string, "feFuncG"_fly_string);
+    token.adjust_tag_name("fefuncr"_fly_string, "feFuncR"_fly_string);
+    token.adjust_tag_name("fegaussianblur"_fly_string, "feGaussianBlur"_fly_string);
+    token.adjust_tag_name("feimage"_fly_string, "feImage"_fly_string);
+    token.adjust_tag_name("femerge"_fly_string, "feMerge"_fly_string);
+    token.adjust_tag_name("femergenode"_fly_string, "feMergeNode"_fly_string);
+    token.adjust_tag_name("femorphology"_fly_string, "feMorphology"_fly_string);
+    token.adjust_tag_name("feoffset"_fly_string, "feOffset"_fly_string);
+    token.adjust_tag_name("fepointlight"_fly_string, "fePointLight"_fly_string);
+    token.adjust_tag_name("fespecularlighting"_fly_string, "feSpecularLighting"_fly_string);
+    token.adjust_tag_name("fespotlight"_fly_string, "feSpotlight"_fly_string);
+    token.adjust_tag_name("foreignobject"_fly_string, "foreignObject"_fly_string);
+    token.adjust_tag_name("glyphref"_fly_string, "glyphRef"_fly_string);
+    token.adjust_tag_name("lineargradient"_fly_string, "linearGradient"_fly_string);
+    token.adjust_tag_name("radialgradient"_fly_string, "radialGradient"_fly_string);
+    token.adjust_tag_name("textpath"_fly_string, "textPath"_fly_string);
 }
 
 void HTMLParser::adjust_svg_attributes(HTMLToken& token)
@@ -3407,7 +3407,7 @@ void HTMLParser::handle_after_frameset(HTMLToken& token)
 void HTMLParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), MUST(String::from_deprecated_string(token.comment())));
+        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment());
         MUST(document().append_child(comment));
         return;
     }
