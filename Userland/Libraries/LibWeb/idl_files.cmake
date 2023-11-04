@@ -3,6 +3,7 @@
 
 libweb_js_bindings(Animations/Animation)
 libweb_js_bindings(Animations/AnimationEffect)
+libweb_js_bindings(Animations/AnimationPlaybackEvent)
 libweb_js_bindings(Animations/AnimationTimeline)
 libweb_js_bindings(Animations/DocumentTimeline)
 libweb_js_bindings(Clipboard/Clipboard)
