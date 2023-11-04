@@ -271,4 +271,10 @@ target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex Lib
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
     target_link_libraries(LibJS PRIVATE LibX86)
 endif()
+
+# TODO: This is probably also needed on RISC-V.
+if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "i.86.*")
+    target_link_libraries(LibJS PRIVATE atomic)
+endif()
+
 target_compile_options(LibJS PRIVATE -fno-omit-frame-pointer)
