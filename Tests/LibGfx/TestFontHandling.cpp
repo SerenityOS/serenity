@@ -176,7 +176,7 @@ TEST_CASE(test_character_set_masking)
     EXPECT(masked_font->glyph_index(0xFFFD).value() == 0x1FD);
 }
 
-TEST_CASE(rasterize_glyph_containing_single_off_curve_point)
+TEST_CASE(resolve_glyph_path_containing_single_off_curve_point)
 {
     Vector<u8> glyph_data {
         0, 5, 0, 205, 255, 51, 7, 51, 6, 225, 0, 3, 0, 6, 0, 9, 0, 12, 0, 15, 0, 31, 64, 13, 13, 2, 15, 5, 7, 2, 8, 5, 10, 3, 0,
@@ -188,8 +188,9 @@ TEST_CASE(rasterize_glyph_containing_single_off_curve_point)
     OpenType::Glyf glyf(glyph_data.span());
     auto glyph = glyf.glyph(118);
     EXPECT(glyph.has_value());
-    EXPECT_NO_CRASH("rasterizing glyph containing single off-curve point should not crash", [&] {
-        (void)glyph->rasterize(0, 0, 1, 1, {}, [&](u16) -> Optional<OpenType::Glyf::Glyph> { VERIFY_NOT_REACHED(); });
+    EXPECT_NO_CRASH("resolving the path of glyph containing single off-curve point should not crash", [&] {
+        Gfx::Path path;
+        (void)glyph->append_path(path, 0, 0, 1, 1, [&](u16) -> Optional<OpenType::Glyf::Glyph> { VERIFY_NOT_REACHED(); });
         return Test::Crash::Failure::DidNotCrash;
     });
 }

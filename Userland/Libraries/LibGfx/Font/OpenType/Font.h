@@ -31,6 +31,7 @@ public:
     virtual Gfx::ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const override;
     virtual float glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const override;
     virtual RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset) const override;
+    virtual bool append_glyph_path_to(Gfx::Path&, u32 glyph_id, float x_scale, float y_scale) const override;
     virtual u32 glyph_count() const override;
     virtual u16 units_per_em() const override;
     virtual u32 glyph_id_for_code_point(u32 code_point) const override;
@@ -47,6 +48,15 @@ public:
     Optional<ReadonlyBytes> glyph_program(u32 glyph_id) const;
 
 private:
+    struct AscenderAndDescender {
+        i16 ascender;
+        i16 descender;
+    };
+
+    AscenderAndDescender resolve_ascender_and_descender() const;
+
+    Optional<Glyf::Glyph> extract_and_append_glyph_path_to(Gfx::Path&, u32 glyph_id, i16 ascender, i16 descender, float x_scale, float y_scale) const;
+
     RefPtr<Gfx::Bitmap> color_bitmap(u32 glyph_id) const;
 
     struct EmbeddedBitmapWithFormat17 {

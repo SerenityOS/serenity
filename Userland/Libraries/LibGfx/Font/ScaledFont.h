@@ -31,6 +31,7 @@ public:
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale, m_point_width, m_point_height); }
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, GlyphSubpixelOffset) const;
+    bool append_glyph_path_to(Gfx::Path&, u32 glyph_id) const;
 
     // ^Gfx::Font
     virtual NonnullRefPtr<Font> clone() const override { return MUST(try_clone()); } // FIXME: clone() should not need to be implemented
