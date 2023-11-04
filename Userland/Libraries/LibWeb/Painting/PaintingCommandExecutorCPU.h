@@ -48,6 +48,9 @@ public:
 
     bool would_be_fully_clipped_by_painter(Gfx::IntRect) const override;
 
+    bool needs_prepare_glyphs_texture() const override { return false; }
+    void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const&) override {};
+
     PaintingCommandExecutorCPU(Gfx::Bitmap& bitmap);
 
 private:
