@@ -256,4 +256,40 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
     }
 }
 
+ErrorOr<bool> QuickLaunchWidget::add_from_pid(pid_t pid_to_add)
+{
+    auto processes_file = TRY(Core::File::open("/sys/kernel/processes"sv, Core::File::OpenMode::Read));
+    auto file_content = TRY(processes_file->read_until_eof());
+    auto json_obj = TRY(JsonValue::from_string(file_content)).as_object();
+    for (auto value : json_obj.get_array("processes"sv).release_value().values()) {
+        auto& process_object = value.as_object();
+        auto pid = process_object.get_i32("pid"sv).value_or(0);
+        if (pid != pid_to_add)
+            continue;
+
+        auto executable = process_object.get_deprecated_string("executable"sv);
+        if (!executable.has_value())
+            break;
+
+        auto maybe_name = process_object.get_deprecated_string("name"sv);
+        if (!maybe_name.has_value())
+            break;
+
+        auto name = maybe_name.release_value();
+        auto path = executable.release_value();
+        if (Desktop::AppFile::exists_for_app(name)) {
+            path = Desktop::AppFile::app_file_path_for_app(name);
+        }
+
+        auto new_entry = QuickLaunchEntry::create_from_path(path);
+        if (!new_entry)
+            break;
+
+        TRY(add_or_adjust_button(name, new_entry.release_nonnull()));
+        return true;
+    }
+
+    return false;
+}
+
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,6 +64,7 @@ enum class WindowMenuAction {
     Close,
     Move,
     ToggleAlwaysOnTop,
+    AddToQuickLaunch,
 };
 
 enum class WindowMenuDefaultAction {
@@ -455,6 +457,7 @@ private:
     MenuItem* m_window_menu_close_item { nullptr };
     MenuItem* m_window_menu_always_on_top_item { nullptr };
     MenuItem* m_window_menu_menubar_visibility_item { nullptr };
+    MenuItem* m_window_menu_add_to_quick_launch_item { nullptr };
     Optional<int> m_progress;
     bool m_should_show_menubar { true };
     WindowStack* m_window_stack { nullptr };

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,6 +22,7 @@
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -358,6 +360,18 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_WorkspaceChanged: {
         auto& changed_event = static_cast<GUI::WMWorkspaceChangedEvent&>(event);
         workspace_change_event(changed_event.current_row(), changed_event.current_column());
+        break;
+    }
+    case GUI::Event::WM_AddToQuickLaunch: {
+        auto add_event = static_cast<GUI::WMAddToQuickLaunchEvent&>(event);
+        auto result = m_quick_launch->add_from_pid(add_event.pid());
+        if (result.is_error()) {
+            dbgln("Couldn't add pid {} to quick launch menu: {}", add_event.pid(), result.error());
+            GUI::MessageBox::show_error(this, String::formatted("Failed to add to Quick Launch: {}", result.release_error()).release_value_but_fixme_should_propagate_errors());
+        } else if (!result.release_value()) {
+            dbgln("Couldn't add pid {} to quick launch menu due to an unexpected error", add_event.pid());
+            GUI::MessageBox::show_error(this, "Failed to add to Quick Launch due to an unexpected error."sv);
+        }
         break;
     }
     default:

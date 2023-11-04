@@ -344,6 +344,8 @@ public:
     void start_tile_window_animation(Gfx::IntRect const&);
     void stop_tile_window_animation();
 
+    void on_add_to_quick_launch(pid_t);
+
 private:
     explicit WindowManager(Gfx::PaletteImpl&);
 
