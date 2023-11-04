@@ -55,6 +55,8 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
+    void apply_any_pending_playback_rate();
+
     JS::NonnullGCPtr<WebIDL::Promise> current_ready_promise() const;
     JS::NonnullGCPtr<WebIDL::Promise> current_finished_promise() const;
 
@@ -75,6 +77,9 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#playback-rate
     double m_playback_rate { 1.0 };
+
+    // https://www.w3.org/TR/web-animations-1/#pending-playback-rate
+    Optional<double> m_pending_playback_rate {};
 
     // https://www.w3.org/TR/web-animations-1/#dom-animation-replacestate
     Bindings::AnimationReplaceState m_replace_state { Bindings::AnimationReplaceState::Active };
