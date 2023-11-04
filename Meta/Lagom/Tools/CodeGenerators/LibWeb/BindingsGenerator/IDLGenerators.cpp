@@ -44,6 +44,7 @@ static bool is_platform_object(Type const& type)
         "ImageData"sv,
         "Instance"sv,
         "IntersectionObserverEntry"sv,
+        "KeyframeEffect"sv,
         "Memory"sv,
         "MessagePort"sv,
         "Module"sv,
