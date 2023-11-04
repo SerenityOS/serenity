@@ -12,6 +12,7 @@ set(SOURCES
     SearchEngine.cpp
     SourceHighlighter.cpp
     StylePropertiesModel.cpp
+    TreeModel.cpp
     URL.cpp
     UserAgent.cpp
     ViewImplementation.cpp
