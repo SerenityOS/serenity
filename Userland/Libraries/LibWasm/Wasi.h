@@ -237,7 +237,8 @@ struct Rights {
         bool sock_shutdown : 1;
         bool sock_accept : 1;
 
-        u64 _unused : 34;
+        u8 _unused1 : 2;
+        u32 _unused2 : 32;
     };
 
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
@@ -331,7 +332,9 @@ struct FDFlags {
         bool nonblock : 1;
         bool rsync : 1;
         bool sync : 1;
-        u16 _unused : 11;
+
+        u8 _unused1 : 3;
+        u8 _unused2 : 8;
     };
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
 
@@ -369,7 +372,9 @@ struct FSTFlags {
         bool atim_now : 1;
         bool mtim : 1;
         bool mtim_now : 1;
-        u16 _unused : 12;
+
+        u8 _unused1 : 4;
+        u8 _unused2 : 8;
     };
 
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
@@ -390,7 +395,10 @@ struct LookupFlags {
 
     struct Bits {
         bool symlink_follow : 1;
-        u32 _unused : 31;
+
+        u8 _unused1 : 7;
+        u8 _unused2 : 8;
+        u16 _unused3 : 16;
     };
 
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
@@ -415,7 +423,8 @@ struct OFlags {
         bool excl : 1;
         bool trunc : 1;
 
-        u16 _unused : 12;
+        u8 _unused1 : 4;
+        u8 _unused2 : 8;
     };
 
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
@@ -465,7 +474,8 @@ struct EventRWFlags {
     struct Bits {
         bool fd_readwrite_hangup : 1;
 
-        u16 _unused : 15;
+        u8 _unused1 : 7;
+        u8 _unused2 : 8;
     };
 
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
@@ -510,7 +520,8 @@ struct SubClockFlags {
     struct Bits {
         bool subscription_clock_abstime : 1;
 
-        u16 _unused : 15;
+        u8 _unused1 : 7;
+        u8 _unused2 : 8;
     };
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
 
@@ -610,7 +621,8 @@ struct RIFlags {
         bool recv_peek : 1;
         bool recv_waitall : 1;
 
-        u16 _unused : 14;
+        u8 _unused1 : 6;
+        u8 _unused2 : 8;
     };
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
 
@@ -629,7 +641,8 @@ struct ROFlags {
     struct Bits {
         bool recv_data_truncated : 1;
 
-        u16 _unused : 15;
+        u8 _unused1 : 7;
+        u8 _unused2 : 8;
     };
     static_assert(sizeof(Bits) == sizeof(CompatibleType));
 

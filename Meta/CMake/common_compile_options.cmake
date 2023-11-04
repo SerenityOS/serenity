@@ -16,6 +16,10 @@ add_compile_options(-fno-exceptions)
 
 add_compile_options(-ffp-contract=off)
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "18")
+    add_compile_options(-Wpadded-bitfield)
+endif()
+
 if (NOT CMAKE_HOST_SYSTEM_NAME MATCHES SerenityOS)
     # FIXME: Something makes this go crazy and flag unused variables that aren't flagged as such when building with the toolchain.
     #        Disable -Werror for now.

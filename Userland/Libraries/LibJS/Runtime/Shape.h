@@ -109,7 +109,7 @@ private:
     u32 m_property_count { 0 };
 
     PropertyAttributes m_attributes { 0 };
-    TransitionType m_transition_type : 6 { TransitionType::Invalid };
+    TransitionType m_transition_type { TransitionType::Invalid };
     bool m_unique { false };
 
     // Since unique shapes never change identity, inline caches use this incrementing serial number
