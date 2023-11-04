@@ -2432,10 +2432,10 @@ void Document::set_window(HTML::Window& window)
 }
 
 // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
-JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definition(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& local_name, Optional<String> const& is) const
+JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definition(Optional<FlyString> const& namespace_, FlyString const& local_name, Optional<String> const& is) const
 {
     // 1. If namespace is not the HTML namespace, return null.
-    if (namespace_ != Namespace::HTML)
+    if (namespace_ != MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)))
         return nullptr;
 
     // 2. If document's browsing context is null, return null.
@@ -2446,8 +2446,8 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
     auto registry = verify_cast<HTML::Window>(relevant_global_object(*this)).custom_elements();
 
     // 4. If there is custom element definition in registry with name and local name both equal to localName, return that custom element definition.
-    auto converted_local_name = String::from_deprecated_string(local_name).release_value_but_fixme_should_propagate_errors();
-    auto maybe_definition = registry->get_definition_with_name_and_local_name(converted_local_name, converted_local_name);
+    auto converted_local_name = local_name;
+    auto maybe_definition = registry->get_definition_with_name_and_local_name(converted_local_name.to_string(), converted_local_name.to_string());
     if (maybe_definition)
         return maybe_definition;
 
@@ -2458,7 +2458,7 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
     if (!is.has_value())
         return nullptr;
 
-    return registry->get_definition_with_name_and_local_name(is.value(), converted_local_name);
+    return registry->get_definition_with_name_and_local_name(is.value(), converted_local_name.to_string());
 }
 
 CSS::StyleSheetList& Document::style_sheets()

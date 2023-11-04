@@ -647,7 +647,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowR
     // 3. If this’s local name is a valid custom element name, or this’s is value is not null, then:
     if (HTML::is_valid_custom_element_name(local_name()) || m_is_value.has_value()) {
         // 1. Let definition be the result of looking up a custom element definition given this’s node document, its namespace, its local name, and its is value.
-        auto definition = document().lookup_custom_element_definition(namespace_(), local_name().to_deprecated_fly_string(), m_is_value);
+        auto definition = document().lookup_custom_element_definition(namespace_uri(), local_name(), m_is_value);
 
         // 2. If definition is not null and definition’s disable shadow is true, then throw a "NotSupportedError" DOMException.
         if (definition && definition->disable_shadow())
@@ -1844,7 +1844,7 @@ JS::ThrowCompletionOr<void> Element::upgrade_element(JS::NonnullGCPtr<HTML::Cust
 void Element::try_to_upgrade()
 {
     // 1. Let definition be the result of looking up a custom element definition given element's node document, element's namespace, element's local name, and element's is value.
-    auto definition = document().lookup_custom_element_definition(namespace_(), local_name().to_deprecated_fly_string(), m_is_value);
+    auto definition = document().lookup_custom_element_definition(namespace_uri(), local_name(), m_is_value);
 
     // 2. If definition is not null, then enqueue a custom element upgrade reaction given element and definition.
     if (definition)

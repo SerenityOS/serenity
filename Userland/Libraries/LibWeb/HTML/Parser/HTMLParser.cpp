@@ -539,7 +539,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> A start tag whose tag name is "html"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
         // Create an element for the token in the HTML namespace, with the Document as the intended parent. Append it to the Document object. Put this element in the stack of open elements.
-        auto element = create_element_for(token, Namespace::HTML, document());
+        auto element = create_element_for(token, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)), document());
         MUST(document().append_child(*element));
         m_stack_of_open_elements.push(move(element));
 
@@ -644,7 +644,7 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
     return adjusted_insertion_location;
 }
 
-JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, DeprecatedFlyString const& namespace_, DOM::Node& intended_parent)
+JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, Optional<FlyString> const& namespace_, DOM::Node& intended_parent)
 {
     // FIXME: 1. If the active speculative HTML parser is not null, then return the result of creating a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
     // FIXME: 2. Otherwise, optionally create a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
@@ -662,7 +662,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
         is_value = String::from_utf8(is_value_deprecated_string).release_value_but_fixme_should_propagate_errors();
 
     // 6. Let definition be the result of looking up a custom element definition given document, given namespace, local name, and is.
-    auto definition = document->lookup_custom_element_definition(namespace_, local_name.to_deprecated_fly_string(), is_value);
+    auto definition = document->lookup_custom_element_definition(namespace_, local_name, is_value);
 
     // 7. If definition is non-null and the parser was not created as part of the HTML fragment parsing algorithm, then let will execute script be true. Otherwise, let it be false.
     bool will_execute_script = definition && !m_parsing_fragment;
@@ -684,7 +684,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
 
     // 9. Let element be the result of creating an element given document, localName, given namespace, null, and is.
     //    If will execute script is true, set the synchronous custom elements flag; otherwise, leave it unset.
-    auto element = create_element(*document, local_name, MUST(FlyString::from_deprecated_fly_string(namespace_)), {}, is_value, will_execute_script).release_value_but_fixme_should_propagate_errors();
+    auto element = create_element(*document, local_name, namespace_, {}, is_value, will_execute_script).release_value_but_fixme_should_propagate_errors();
 
     // 10. Append each attribute in the given token to element.
     // FIXME: This isn't the exact `append` the spec is talking about.
@@ -736,7 +736,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
-JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, DeprecatedFlyString const& namespace_)
+JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, Optional<FlyString> const& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
@@ -772,7 +772,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken cons
 
 JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_html_element(HTMLToken const& token)
 {
-    return insert_foreign_element(token, Namespace::HTML);
+    return insert_foreign_element(token, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)));
 }
 
 void HTMLParser::handle_before_head(HTMLToken& token)
@@ -882,7 +882,7 @@ void HTMLParser::handle_in_head(HTMLToken& token)
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::script) {
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-        auto element = create_element_for(token, Namespace::HTML, *adjusted_insertion_location.parent);
+        auto element = create_element_for(token, MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)), *adjusted_insertion_location.parent);
         auto& script_element = verify_cast<HTMLScriptElement>(*element);
         script_element.set_parser_document(Badge<HTMLParser> {}, document());
         script_element.set_force_async(Badge<HTMLParser> {}, false);
@@ -1383,7 +1383,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
             // 6. Create an element for the token for which the element node was created,
             //    in the HTML namespace, with common ancestor as the intended parent;
             // FIXME: hold onto the real token
-            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name()), Namespace::HTML, *common_ancestor);
+            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name()), MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)), *common_ancestor);
             // replace the entry for node in the list of active formatting elements with an entry for the new element,
             m_list_of_active_formatting_elements.replace(*node, *element);
             // replace the entry for node in the stack of open elements with an entry for the new element,
@@ -1412,7 +1412,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
         // 15. Create an element for the token for which formatting element was created,
         //     in the HTML namespace, with furthest block as the intended parent.
         // FIXME: hold onto the real token
-        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name()), Namespace::HTML, *furthest_block);
+        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name()), MUST(FlyString::from_deprecated_fly_string(Namespace::HTML)), *furthest_block);
 
         // 16. Take all of the child nodes of furthest block and append them to the element created in the last step.
         for (auto& child : furthest_block->children_as_vector())
@@ -1437,9 +1437,9 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#special
-bool HTMLParser::is_special_tag(FlyString const& tag_name, DeprecatedFlyString const& namespace_)
+bool HTMLParser::is_special_tag(FlyString const& tag_name, Optional<FlyString> const& namespace_)
 {
-    if (namespace_ == Namespace::HTML) {
+    if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::HTML))) {
         return tag_name.is_one_of(
             HTML::TagNames::address,
             HTML::TagNames::applet,
@@ -1523,12 +1523,12 @@ bool HTMLParser::is_special_tag(FlyString const& tag_name, DeprecatedFlyString c
             HTML::TagNames::ul,
             HTML::TagNames::wbr,
             HTML::TagNames::xmp);
-    } else if (namespace_ == Namespace::SVG) {
+    } else if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::SVG))) {
         return tag_name.is_one_of(
             SVG::TagNames::desc,
             SVG::TagNames::foreignObject,
             SVG::TagNames::title);
-    } else if (namespace_ == Namespace::MathML) {
+    } else if (namespace_ == MUST(FlyString::from_deprecated_fly_string(Namespace::MathML))) {
         return tag_name.is_one_of(
             MathML::TagNames::mi,
             MathML::TagNames::mo,
@@ -1740,7 +1740,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
                 break;
             }
 
-            if (is_special_tag(node->local_name(), node->namespace_()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
+            if (is_special_tag(node->local_name(), node->namespace_uri()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
         }
 
@@ -1771,7 +1771,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::dt);
                 break;
             }
-            if (is_special_tag(node->local_name(), node->namespace_()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
+            if (is_special_tag(node->local_name(), node->namespace_uri()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
         }
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
@@ -2127,7 +2127,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         adjust_mathml_attributes(token);
         adjust_foreign_attributes(token);
 
-        (void)insert_foreign_element(token, Namespace::MathML);
+        (void)insert_foreign_element(token, MUST(FlyString::from_deprecated_fly_string(Namespace::MathML)));
 
         if (token.is_self_closing()) {
             (void)m_stack_of_open_elements.pop();
@@ -2141,7 +2141,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         adjust_svg_attributes(token);
         adjust_foreign_attributes(token);
 
-        (void)insert_foreign_element(token, Namespace::SVG);
+        (void)insert_foreign_element(token, MUST(FlyString::from_deprecated_fly_string(Namespace::SVG)));
 
         if (token.is_self_closing()) {
             (void)m_stack_of_open_elements.pop();
@@ -2178,7 +2178,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
                 (void)m_stack_of_open_elements.pop();
                 break;
             }
-            if (is_special_tag(node->local_name(), node->namespace_())) {
+            if (is_special_tag(node->local_name(), node->namespace_uri())) {
                 log_parse_error();
                 return;
             }
@@ -3508,7 +3508,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         adjust_foreign_attributes(token);
 
         // Insert a foreign element for the token, in the same namespace as the adjusted current node.
-        (void)insert_foreign_element(token, adjusted_current_node().namespace_());
+        (void)insert_foreign_element(token, adjusted_current_node().namespace_uri());
 
         // If the token has its self-closing flag set, then run the appropriate steps from the following list:
         if (token.is_self_closing()) {
