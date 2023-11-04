@@ -8,7 +8,7 @@
 
 #include <LibWeb/MimeSniff/Resource.h>
 
-TEST_CASE(compute_unknown_mime_type)
+TEST_CASE(determine_computed_mime_type_in_both_none_and_browsing_sniffing_context)
 {
     HashMap<StringView, Vector<StringView>> mime_type_to_headers_map;
 
@@ -61,7 +61,12 @@ TEST_CASE(compute_unknown_mime_type)
         auto mime_type = mime_type_to_headers.key;
 
         for (auto const& header : mime_type_to_headers.value) {
+            // Test in a non-specific sniffing context.
             auto resource = MUST(Web::MimeSniff::Resource::create(header.bytes()));
+            EXPECT_EQ(mime_type, resource.computed_mime_type().essence());
+
+            // Test sniffing in a browsing context.
+            resource = MUST(Web::MimeSniff::Resource::create(header.bytes(), Web::MimeSniff::Resource::SniffingContext::Browsing));
             EXPECT_EQ(mime_type, resource.computed_mime_type().essence());
         }
     }

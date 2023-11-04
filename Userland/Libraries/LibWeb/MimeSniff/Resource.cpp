@@ -383,13 +383,14 @@ ErrorOr<MimeType> rules_for_identifying_an_unknown_mime_type(Resource const& res
 
 namespace Web::MimeSniff {
 
-ErrorOr<Resource> Resource::create(ReadonlyBytes data, StringView scheme, Optional<MimeType> supplied_type, bool no_sniff)
+ErrorOr<Resource> Resource::create(ReadonlyBytes data, SniffingContext sniffing_context, StringView scheme, Optional<MimeType> supplied_type, bool no_sniff)
 {
     // NOTE: Non-standard but for cases where pattern matching fails, let's fall back to the safest MIME type.
     auto default_computed_mime_type = TRY(MimeType::create("application"_string, "octet-stream"_string));
     auto resource = Resource { data, no_sniff, move(default_computed_mime_type) };
+
     TRY(resource.supplied_mime_type_detection_algorithm(scheme, move(supplied_type)));
-    TRY(resource.mime_type_sniffing_algorithm());
+    TRY(resource.context_specific_sniffing_algorithm(sniffing_context));
 
     return resource;
 }
@@ -531,6 +532,20 @@ ErrorOr<void> Resource::mime_type_sniffing_algorithm()
 
     // 10. The computed MIME type is the supplied MIME type.
     m_computed_mime_type = m_supplied_mime_type.value();
+
+    return {};
+}
+
+// https://mimesniff.spec.whatwg.org/#context-specific-sniffing-algorithm
+ErrorOr<void> Resource::context_specific_sniffing_algorithm(SniffingContext sniffing_context)
+{
+    // A context-specific sniffing algorithm determines the computed MIME type of a resource only if
+    // the resource is a MIME type relevant to a particular context.
+    if (sniffing_context == SniffingContext::None || sniffing_context == SniffingContext::Browsing) {
+        // https://mimesniff.spec.whatwg.org/#sniffing-in-a-browsing-context
+        // Use the MIME type sniffing algorithm.
+        return mime_type_sniffing_algorithm();
+    }
 
     return {};
 }
