@@ -206,7 +206,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, String c
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Optional<FlyString> namespace_, DeprecatedFlyString qualified_name)
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Optional<FlyString> namespace_, FlyString const& qualified_name)
 {
     // 1. If namespace is the empty string, then set it to null.
     if (namespace_.has_value() && namespace_.value().is_empty())
@@ -222,10 +222,10 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Option
     auto local_name = qualified_name;
 
     // 5. If qualifiedName contains a U+003A (:), then strictly split the string on it and set prefix to the part before and localName to the part after.
-    if (qualified_name.view().contains(':')) {
-        auto parts = qualified_name.view().split_view(':');
+    if (qualified_name.bytes_as_string_view().contains(':')) {
+        auto parts = qualified_name.bytes_as_string_view().split_view(':');
         prefix = MUST(FlyString::from_utf8(parts[0]));
-        local_name = parts[1];
+        local_name = MUST(FlyString::from_utf8(parts[1]));
     }
 
     // 6. If prefix is non-null and namespace is null, then throw a "NamespaceError" DOMException.
@@ -245,7 +245,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Option
         return WebIDL::NamespaceError::create(realm, "Namespace is the XMLNS namespace and neither qualifiedName nor prefix is 'xmlns'."_fly_string);
 
     // 10. Return namespace, prefix, and localName.
-    return QualifiedName { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, namespace_ };
+    return QualifiedName { local_name, prefix, namespace_ };
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributens
@@ -257,7 +257,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<String> const& name
         namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_fly_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
     set_attribute_value(extracted_qualified_name.local_name(), value.to_deprecated_fly_string(), extracted_qualified_name.prefix(), extracted_qualified_name.namespace_());

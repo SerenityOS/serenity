@@ -1374,7 +1374,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optio
         namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name));
 
     // 2. Let is be null.
     Optional<String> is_value;
@@ -2270,14 +2270,12 @@ bool Document::is_valid_name(String const& name)
 }
 
 // https://dom.spec.whatwg.org/#validate
-WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(JS::Realm& realm, DeprecatedString const& qualified_name)
+WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(JS::Realm& realm, FlyString const& qualified_name)
 {
     if (qualified_name.is_empty())
         return WebIDL::InvalidCharacterError::create(realm, "Empty string is not a valid qualified name."_fly_string);
 
-    Utf8View utf8view { qualified_name };
-    if (!utf8view.validate())
-        return WebIDL::InvalidCharacterError::create(realm, "Invalid qualified name."_fly_string);
+    auto utf8view = qualified_name.code_points();
 
     Optional<size_t> colon_offset;
 
@@ -2311,12 +2309,12 @@ WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_nam
     if (*colon_offset == 0)
         return WebIDL::InvalidCharacterError::create(realm, "Qualified name can't start with colon (:)."_fly_string);
 
-    if (*colon_offset >= (qualified_name.length() - 1))
+    if (*colon_offset >= (qualified_name.bytes_as_string_view().length() - 1))
         return WebIDL::InvalidCharacterError::create(realm, "Qualified name can't end with colon (:)."_fly_string);
 
     return Document::PrefixAndTagName {
-        .prefix = qualified_name.substring_view(0, *colon_offset),
-        .tag_name = qualified_name.substring_view(*colon_offset + 1),
+        .prefix = MUST(FlyString::from_utf8(qualified_name.bytes_as_string_view().substring_view(0, *colon_offset))),
+        .tag_name = MUST(FlyString::from_utf8(qualified_name.bytes_as_string_view().substring_view(*colon_offset + 1))),
     };
 }
 
@@ -3010,7 +3008,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(Option
         namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name));
 
     // 2. Return a new attribute whose namespace is namespace, namespace prefix is prefix, local name is localName, and node document is this.
 
