@@ -129,6 +129,11 @@ public:
     };
     Phase phase() const;
 
+    Phase previous_phase() const { return m_previous_phase; }
+    void set_previous_phase(Phase value) { m_previous_phase = value; }
+    double previous_current_iteration() const { return m_previous_current_iteration; }
+    void set_previous_current_iteration(double value) { m_previous_current_iteration = value; }
+
     Optional<double> overall_progress() const;
     Optional<double> directed_progress() const;
     AnimationDirection current_direction() const;
@@ -173,6 +178,10 @@ protected:
 
     // https://www.w3.org/TR/web-animations-1/#time-transformations
     TimingFunction m_timing_function { linear_timing_function };
+
+    // Used for calculating transitions in StyleComputer
+    Phase m_previous_phase { Phase::Idle };
+    double m_previous_current_iteration { 0.0 };
 };
 
 }
