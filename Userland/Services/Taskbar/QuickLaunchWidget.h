@@ -20,14 +20,16 @@ namespace Taskbar {
 
 class QuickLaunchEntry {
 public:
+    static OwnPtr<QuickLaunchEntry> create_from_config_value(StringView path);
+    static OwnPtr<QuickLaunchEntry> create_from_path(StringView path);
+
     virtual ~QuickLaunchEntry() = default;
     virtual ErrorOr<void> launch() const = 0;
     virtual GUI::Icon icon() const = 0;
     virtual DeprecatedString name() const = 0;
     virtual DeprecatedString file_name_to_watch() const = 0;
 
-    static OwnPtr<QuickLaunchEntry> create_from_config_value(StringView path);
-    static OwnPtr<QuickLaunchEntry> create_from_path(StringView path);
+    virtual DeprecatedString path() = 0;
 
     bool is_hovered() const { return m_hovered; }
     void set_hovered(bool hovered) { m_hovered = hovered; }
@@ -52,6 +54,8 @@ public:
     virtual DeprecatedString name() const override { return m_app_file->name(); }
     virtual DeprecatedString file_name_to_watch() const override { return {}; }
 
+    virtual DeprecatedString path() override { return m_app_file->filename(); }
+
 private:
     NonnullRefPtr<Desktop::AppFile> m_app_file;
 };
@@ -68,6 +72,8 @@ public:
     virtual DeprecatedString name() const override;
     virtual DeprecatedString file_name_to_watch() const override { return m_path; }
 
+    virtual DeprecatedString path() override { return m_path; }
+
 private:
     DeprecatedString m_path;
 };
@@ -83,6 +89,8 @@ public:
     virtual DeprecatedString name() const override;
     virtual DeprecatedString file_name_to_watch() const override { return m_path; }
 
+    virtual DeprecatedString path() override { return m_path; }
+
 private:
     DeprecatedString m_path;
 };
@@ -94,6 +102,8 @@ class QuickLaunchWidget : public GUI::Frame
 public:
     static ErrorOr<NonnullRefPtr<QuickLaunchWidget>> create();
     virtual ~QuickLaunchWidget() override = default;
+
+    void load_entries(bool save = true);
 
     virtual void config_key_was_removed(StringView, StringView, StringView) override;
     virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;
@@ -113,18 +123,22 @@ public:
     ErrorOr<bool> add_from_pid(pid_t pid);
 
 private:
+    static constexpr StringView CONFIG_DOMAIN = "Taskbar"sv;
+    static constexpr StringView CONFIG_GROUP_ENTRIES = "QuickLaunch_Entries"sv;
+    static constexpr int BUTTON_SIZE = 24;
+
     explicit QuickLaunchWidget();
-    ErrorOr<void> add_or_adjust_button(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>);
+    ErrorOr<void> add_or_adjust_button(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>, bool save = true);
     ErrorOr<void> create_context_menu();
-    void add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries);
+    void add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries, bool save = true);
 
     template<typename Callback>
     void for_each_entry(Callback);
 
     void resize();
 
-    void set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry>);
-    void remove_entry(DeprecatedString const&);
+    void set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry>, bool save = true);
+    void remove_entry(DeprecatedString const&, bool save = true);
     void recalculate_order();
 
     bool m_dragging { false };
