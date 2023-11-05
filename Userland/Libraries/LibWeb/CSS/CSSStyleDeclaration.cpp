@@ -27,12 +27,12 @@ void CSSStyleDeclaration::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleDeclarationPrototype>(realm, "CSSStyleDeclaration"));
 }
 
-JS::NonnullGCPtr<PropertyOwningCSSStyleDeclaration> PropertyOwningCSSStyleDeclaration::create(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
+JS::NonnullGCPtr<PropertyOwningCSSStyleDeclaration> PropertyOwningCSSStyleDeclaration::create(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties)
 {
     return realm.heap().allocate<PropertyOwningCSSStyleDeclaration>(realm, realm, move(properties), move(custom_properties));
 }
 
-PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
+PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties)
     : CSSStyleDeclaration(realm)
     , m_properties(move(properties))
     , m_custom_properties(move(custom_properties))
@@ -55,13 +55,13 @@ String PropertyOwningCSSStyleDeclaration::item(size_t index) const
     return MUST(String::from_utf8(CSS::string_from_property_id(m_properties[index].property_id)));
 }
 
-JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration> ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
+JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration> ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties)
 {
     auto& realm = element.realm();
     return realm.heap().allocate<ElementInlineCSSStyleDeclaration>(realm, element, move(properties), move(custom_properties));
 }
 
-ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
+ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties)
     : PropertyOwningCSSStyleDeclaration(element.realm(), move(properties), move(custom_properties))
     , m_element(element.make_weak_ptr<DOM::Element>())
 {
@@ -446,7 +446,7 @@ void PropertyOwningCSSStyleDeclaration::empty_the_declarations()
     m_custom_properties.clear();
 }
 
-void PropertyOwningCSSStyleDeclaration::set_the_declarations(Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
+void PropertyOwningCSSStyleDeclaration::set_the_declarations(Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties)
 {
     m_properties = move(properties);
     m_custom_properties = move(custom_properties);

@@ -724,7 +724,7 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
             needed_capacity += inline_style->custom_properties().size();
     }
 
-    HashMap<DeprecatedFlyString, StyleProperty> custom_properties;
+    HashMap<FlyString, StyleProperty> custom_properties;
     TRY(custom_properties.try_ensure_capacity(needed_capacity));
 
     for (auto const& matching_rule : matching_rules) {

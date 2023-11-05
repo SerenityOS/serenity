@@ -54,7 +54,7 @@ class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<PropertyOwningCSSStyleDeclaration>
-    create(JS::Realm&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty> custom_properties);
+    create(JS::Realm&, Vector<StyleProperty>, HashMap<FlyString, StyleProperty> custom_properties);
 
     virtual ~PropertyOwningCSSStyleDeclaration() override = default;
 
@@ -67,20 +67,20 @@ public:
     virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) override;
 
     Vector<StyleProperty> const& properties() const { return m_properties; }
-    HashMap<DeprecatedString, StyleProperty> const& custom_properties() const { return m_custom_properties; }
-    Optional<StyleProperty> custom_property(DeprecatedString const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
+    HashMap<FlyString, StyleProperty> const& custom_properties() const { return m_custom_properties; }
+    Optional<StyleProperty> custom_property(FlyString const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
     virtual DeprecatedString serialized() const final override;
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;
 
 protected:
-    PropertyOwningCSSStyleDeclaration(JS::Realm&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty>);
+    PropertyOwningCSSStyleDeclaration(JS::Realm&, Vector<StyleProperty>, HashMap<FlyString, StyleProperty>);
 
     virtual void update_style_attribute() { }
 
     void empty_the_declarations();
-    void set_the_declarations(Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
+    void set_the_declarations(Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties);
 
 private:
     bool set_a_css_declaration(PropertyID, NonnullRefPtr<StyleValue const>, Important);
@@ -88,14 +88,14 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     Vector<StyleProperty> m_properties;
-    HashMap<DeprecatedString, StyleProperty> m_custom_properties;
+    HashMap<FlyString, StyleProperty> m_custom_properties;
 };
 
 class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDeclaration {
     WEB_PLATFORM_OBJECT(ElementInlineCSSStyleDeclaration, PropertyOwningCSSStyleDeclaration);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty> custom_properties);
+    [[nodiscard]] static JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element&, Vector<StyleProperty>, HashMap<FlyString, StyleProperty> custom_properties);
 
     virtual ~ElementInlineCSSStyleDeclaration() override = default;
 
@@ -107,7 +107,7 @@ public:
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;
 
 private:
-    ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
+    ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<FlyString, StyleProperty> custom_properties);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

@@ -545,14 +545,14 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         auto serialize_custom_properties_json = [](Web::DOM::Element const& element, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) -> DeprecatedString {
             StringBuilder builder;
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
-            HashTable<DeprecatedString> seen_properties;
+            HashTable<FlyString> seen_properties;
 
             auto const* element_to_check = &element;
             while (element_to_check) {
                 for (auto const& property : element_to_check->custom_properties(pseudo_element)) {
                     if (!seen_properties.contains(property.key)) {
                         seen_properties.set(property.key);
-                        MUST(serializer.add(property.key, property.value.value->to_string().to_deprecated_string()));
+                        MUST(serializer.add(property.key, property.value.value->to_string()));
                     }
                 }
 

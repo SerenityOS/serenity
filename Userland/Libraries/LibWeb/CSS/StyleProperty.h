@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/FlyString.h>
 #include <LibWeb/CSS/PropertyID.h>
 
 namespace Web::CSS {
@@ -22,7 +22,7 @@ struct StyleProperty {
     Important important { Important::No };
     CSS::PropertyID property_id;
     NonnullRefPtr<StyleValue const> value;
-    DeprecatedString custom_name {};
+    FlyString custom_name {};
 };
 
 }
