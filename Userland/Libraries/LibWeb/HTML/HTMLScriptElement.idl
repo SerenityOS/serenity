@@ -1,4 +1,5 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/Scripting/Fetching.idl>
 
 // https://html.spec.whatwg.org/multipage/scripting.html#htmlscriptelement
 [Exposed=Window]
@@ -11,7 +12,7 @@ interface HTMLScriptElement : HTMLElement {
     [CEReactions, Reflect=nomodule] attribute boolean noModule;
     // FIXME: [CEReactions] attribute boolean async;
     [CEReactions, Reflect] attribute boolean defer;
-    [CEReactions, Reflect=crossorigin] attribute DOMString? crossOrigin;
+    [CEReactions, Reflect=crossorigin, Enumerated=CORSSettingsAttribute] attribute DOMString? crossOrigin;
     // FIXME: [CEReactions] attribute DOMString text;
     [CEReactions, Reflect] attribute DOMString integrity;
     [CEReactions, Reflect=referrerpolicy] attribute DOMString referrerPolicy;
