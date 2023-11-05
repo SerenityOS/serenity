@@ -58,6 +58,14 @@ String Resource::filesystem_path() const
     return ResourceImplementation::the().filesystem_path(*this);
 }
 
+String Resource::file_url() const
+{
+    if (m_scheme == Scheme::File)
+        return uri();
+
+    return MUST(String::formatted("file://{}", filesystem_path()));
+}
+
 String Resource::filename() const
 {
     return MUST(String::from_utf8(LexicalPath(m_path.bytes_as_string_view()).basename()));
