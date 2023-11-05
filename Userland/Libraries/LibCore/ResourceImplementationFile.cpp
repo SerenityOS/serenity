@@ -11,6 +11,7 @@
 #include <LibCore/ResourceImplementationFile.h>
 
 namespace Core {
+
 ResourceImplementationFile::ResourceImplementationFile(String base_directory)
     : m_base_directory(move(base_directory))
 {
@@ -33,14 +34,14 @@ ErrorOr<NonnullRefPtr<Resource>> ResourceImplementationFile::load_from_resource_
 Vector<String> ResourceImplementationFile::child_names_for_resource_scheme(Resource const& resource)
 {
     Vector<String> children;
-    Core::DirIterator it(resource.filesystem_path().release_value().to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator it(resource.filesystem_path().to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
     while (it.has_next())
         children.append(MUST(String::from_deprecated_string(it.next_path())));
 
     return children;
 }
 
-Optional<String> ResourceImplementationFile::filesystem_path_for_resource_scheme(String const& relative_path)
+String ResourceImplementationFile::filesystem_path_for_resource_scheme(String const& relative_path)
 {
     return MUST(String::from_deprecated_string(LexicalPath::join(m_base_directory, relative_path).string()));
 }

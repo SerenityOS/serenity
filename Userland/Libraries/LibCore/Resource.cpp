@@ -53,7 +53,7 @@ ErrorOr<NonnullRefPtr<Resource>> Resource::load_from_uri(StringView uri)
     return MUST(String::formatted("{}://{}", m_scheme == Scheme::Resource ? "resource"sv : "file"sv, m_path));
 }
 
-[[nodiscard]] Optional<String> Resource::filesystem_path() const
+[[nodiscard]] String Resource::filesystem_path() const
 {
     return ResourceImplementation::the().filesystem_path(*this);
 }
@@ -97,4 +97,5 @@ ErrorOr<NonnullRefPtr<Resource>> Resource::load_from_uri(StringView uri)
 {
     return FixedMemoryStream(data());
 }
+
 }

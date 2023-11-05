@@ -18,6 +18,7 @@
 #include <LibCore/MappedFile.h>
 
 namespace Core {
+
 class Resource : public RefCounted<Resource> {
 public:
     static ErrorOr<NonnullRefPtr<Resource>> load_from_filesystem(StringView);
@@ -28,7 +29,7 @@ public:
 
     [[nodiscard]] String uri() const;
     [[nodiscard]] String filename() const;
-    [[nodiscard]] Optional<String> filesystem_path() const;
+    [[nodiscard]] String filesystem_path() const;
 
     [[nodiscard]] ByteBuffer clone_data() const;
     [[nodiscard]] ByteBuffer release_data() &&;
