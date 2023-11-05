@@ -211,6 +211,7 @@ struct Typedef {
 struct Enumeration {
     OrderedHashTable<DeprecatedString> values;
     OrderedHashMap<DeprecatedString, DeprecatedString> translated_cpp_names;
+    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
     DeprecatedString first_member;
     bool is_original_definition { true };
 };

@@ -635,12 +635,13 @@ void Parser::parse_namespace(Interface& interface)
     consume_whitespace();
 }
 
-void Parser::parse_enumeration(Interface& interface)
+void Parser::parse_enumeration(HashMap<DeprecatedString, DeprecatedString> extended_attributes, Interface& interface)
 {
     assert_string("enum"sv);
     consume_whitespace();
 
     Enumeration enumeration {};
+    enumeration.extended_attributes = move(extended_attributes);
 
     auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
     consume_whitespace();
@@ -832,7 +833,7 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
         if (lexer.next_is("dictionary")) {
             parse_dictionary(interface);
         } else if (lexer.next_is("enum")) {
-            parse_enumeration(interface);
+            parse_enumeration(extended_attributes, interface);
         } else if (lexer.next_is("typedef")) {
             parse_typedef(interface);
         } else if (lexer.next_is("interface mixin")) {
