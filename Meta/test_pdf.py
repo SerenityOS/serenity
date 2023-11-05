@@ -59,6 +59,7 @@ def main():
 
     results = multiprocessing.Pool().map(test_pdf, files)
 
+    num_files_without_issues = 0
     failed_files = []
     num_crashes = 0
     stack_to_files = {}
@@ -66,6 +67,8 @@ def main():
         print(r.filename)
         print(r.stdout.decode('utf-8'))
         if r.returncode == 0:
+            if b'no issues found' in r.stdout:
+                num_files_without_issues += 1
             continue
         if r.returncode == 1:
             failed_files.append(r.filename)
@@ -83,6 +86,10 @@ def main():
         for file in files:
             print(f'    {file}')
         print()
+
+    percent = 100 * num_files_without_issues / len(results)
+    print(f'{num_files_without_issues} files without issues ({percent:.1f}%)')
+    print()
 
     percent = 100 * num_crashes / len(results)
     print(f'{num_crashes} crashes ({percent:.1f}%)')
