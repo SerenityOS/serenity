@@ -27,6 +27,7 @@ class RecordingPainter;
 }
 
 namespace Web::Animations {
+class Animatable;
 class Animation;
 class AnimationEffect;
 class AnimationPlaybackEvent;
