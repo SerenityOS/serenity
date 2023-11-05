@@ -315,8 +315,7 @@ ErrorOr<void> QuickLaunchWidget::create_context_menu()
     m_context_menu = GUI::Menu::construct();
     m_context_menu_default_action = GUI::Action::create("&Remove", icon, [this](auto&) {
         remove_entry(m_context_menu_app_name);
-        resize();
-        update();
+        repaint();
     });
     m_context_menu->add_action(*m_context_menu_default_action);
 
@@ -333,7 +332,6 @@ void QuickLaunchWidget::load_entries(bool save)
     Vector<ConfigEntry> config_entries;
     auto keys = Config::list_keys(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES);
     for (auto& name : keys) {
-        dbgln("loading key: {}", name);
         auto value = Config::read_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, name);
         auto values = value.split(':');
 
@@ -353,6 +351,7 @@ void QuickLaunchWidget::load_entries(bool save)
         entries.append(entry.release_nonnull());
     }
 
+    m_entries.clear();
     add_entries(move(entries), save);
 }
 
@@ -365,8 +364,7 @@ void QuickLaunchWidget::add_entries(Vector<NonnullOwnPtr<QuickLaunchEntry>> entr
             Config::write_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, sanitize_name(m_entries.last()->name()), entry_to_config_string(m_entries.size() - 1, m_entries.last()));
     }
 
-    resize();
-    update();
+    repaint();
 }
 
 ErrorOr<void> QuickLaunchWidget::update_entry(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry> entry, bool save)
@@ -378,16 +376,14 @@ ErrorOr<void> QuickLaunchWidget::update_entry(DeprecatedString const& button_nam
             m_watcher->on_change = [button_name, save, this](Core::FileWatcherEvent const&) {
                 dbgln("Removing QuickLaunch entry \"{}\"", button_name);
                 remove_entry(button_name, save);
-                resize();
-                update();
+                repaint();
             };
         }
         TRY(m_watcher->add_watch(file_name_to_watch, Core::FileWatcherEvent::Type::Deleted));
     }
 
     set_or_insert_entry(move(entry), save);
-    resize();
-    update();
+    repaint();
 
     return {};
 }
@@ -404,7 +400,13 @@ void QuickLaunchWidget::for_each_entry(Callback callback)
 
 void QuickLaunchWidget::resize()
 {
-    set_fixed_width(m_entries.size() * BUTTON_SIZE);
+    set_fixed_width(static_cast<int>(m_entries.size()) * BUTTON_SIZE);
+}
+
+void QuickLaunchWidget::repaint()
+{
+    resize();
+    update();
 }
 
 void QuickLaunchWidget::set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry> entry, bool save)
