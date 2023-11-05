@@ -34,7 +34,6 @@ public:
 #undef __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE
     };
 
-    StringView type() const;
     TypeAttributeState type_state() const;
     WebIDL::ExceptionOr<void> set_type(String const&);
 
