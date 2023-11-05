@@ -2867,7 +2867,101 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
         }
 
         if (attribute.extended_attributes.contains("Reflect")) {
-            if (attribute.type->name() != "boolean") {
+            if (attribute.type->name() == "DOMString") {
+                if (!attribute.type->is_nullable()) {
+                    // If a reflected IDL attribute has the type DOMString:
+                    // * The getter steps are:
+
+                    // 1. Let element be the result of running this's get the element.
+                    // NOTE: this is "impl" above
+
+                    // 2. Let contentAttributeValue be the result of running this's get the content attribute.
+                    attribute_generator.append(R"~~~(
+    auto contentAttributeValue = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+
+                    // 3. Let attributeDefinition be the attribute definition of element's content attribute whose namespace is null
+                    //    and local name is the reflected content attribute name.
+                    // NOTE: this is "attribute" above
+
+                    // NOTE: We do steps 5 and 6 here to have a field to assign to
+                    // 5. If contentAttributeValue is null, then return the empty string.
+                    // 6. Return contentAttributeValue.
+                    attribute_generator.append(R"~~~(
+    auto retval = contentAttributeValue.value_or(String {});
+)~~~");
+
+                    // 4. If attributeDefinition indicates it is an enumerated attribute and the reflected IDL attribute is defined to be limited to only known values:
+                    if (attribute.extended_attributes.contains("Enumerated")) {
+                        auto valid_enumerations_type = attribute.extended_attributes.get("Enumerated").value();
+                        auto valid_enumerations = interface.enumerations.get(valid_enumerations_type).value();
+
+                        auto missing_value_default = valid_enumerations.extended_attributes.get("MissingValueDefault");
+
+                        attribute_generator.set("has_missing_enum_default", missing_value_default.has_value() ? "true"sv : "false"sv);
+                        attribute_generator.set("missing_enum_default_value", missing_value_default.has_value() ? missing_value_default.value().view() : ""sv);
+                        attribute_generator.set("valid_enum_values", MUST(String::join(", "sv, valid_enumerations.values.values(), "\"{}\"sv"sv)));
+                        attribute_generator.append(R"~~~(
+    auto valid_values = Vector { @valid_enum_values@ };
+)~~~");
+
+                        // 1. If contentAttributeValue does not correspond to any state of attributeDefinition (e.g., it is null and there is no missing value default),
+                        //    or that it is in a state of attributeDefinition with no associated keyword value, then return the empty string.
+                        attribute_generator.append(R"~~~(
+    if (!valid_values.contains_slow(retval)) {
+        retval = {};
+    }
+    )~~~");
+                        attribute_generator.append(R"~~~(
+    auto has_default_value = @has_missing_enum_default@;
+    if (!contentAttributeValue.has_value() && has_default_value) {
+        retval = "@missing_enum_default_value@"_string;
+    }
+    )~~~");
+
+                        // 2. Return the canonical keyword for the state of attributeDefinition that contentAttributeValue corresponds to.
+                        // NOTE: This is known to be a valid keyword at this point, so we can just return "retval"
+                    }
+                } else {
+                    // If a reflected IDL attribute has the type DOMString?:
+                    // * The getter steps are:
+
+                    // 1. Let element be the result of running this's get the element.
+                    // NOTE: this is "impl" above
+
+                    // 2. Let contentAttributeValue be the result of running this's get the content attribute.
+                    // 8. Return the canonical keyword for the state of attributeDefinition that contentAttributeValue corresponds to.
+                    // NOTE: We run step 8 here to have a field to assign to
+                    attribute_generator.append(R"~~~(
+    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    auto contentAttributeValue = retval.value_or(String {});
+)~~~");
+
+                    // 3. Let attributeDefinition be the attribute definition of element's content attribute whose namespace is null
+                    //    and local name is the reflected content attribute name.
+                    // NOTE: this is "attribute" above
+
+                    // 4. Assert: attributeDefinition indicates it is an enumerated attribute.
+                    // 5. Assert: the reflected IDL attribute is limited to only known values.
+                    // NOTE: This is checked by the "Enumerated" extended attribute
+                    auto is_enumerated = attribute.extended_attributes.contains("Enumerated");
+                    VERIFY(is_enumerated);
+
+                    // 6. Assert: contentAttributeValue corresponds to a state of attributeDefinition.
+                    auto valid_enumerations_type = attribute.extended_attributes.get("Enumerated").value();
+                    auto valid_enumerations = interface.enumerations.get(valid_enumerations_type).value();
+
+                    attribute_generator.set("valid_enum_values", MUST(String::join(", "sv, valid_enumerations.values.values(), "\"{}\"sv"sv)));
+                    attribute_generator.append(R"~~~(
+    auto valid_values = Vector { @valid_enum_values@ };
+)~~~");
+                    attribute_generator.append(R"~~~(
+    VERIFY(valid_values.contains_slow(contentAttributeValue));
+)~~~");
+
+                    // FIXME: 7. If contentAttributeValue corresponds to a state of attributeDefinition with no associated keyword value, then return null.
+                }
+            } else if (attribute.type->name() != "boolean") {
                 // FIXME: This should be calling Element::get_attribute_value: https://dom.spec.whatwg.org/#concept-element-attributes-get-value
                 if (attribute.type->is_nullable()) {
                     attribute_generator.append(R"~~~(
