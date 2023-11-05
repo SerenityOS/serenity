@@ -147,6 +147,11 @@ ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, Identifi
 
 ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind)
 {
+    // Better error message than to_object would give
+    if (vm.in_strict_mode() && base.is_nullish())
+        return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, base.to_string_without_side_effects());
+
+    // a. Let baseObj be ? ToObject(V.[[Base]]).
     auto object = TRY(base.to_object(vm));
     if (kind == Op::PropertyKind::Getter || kind == Op::PropertyKind::Setter) {
         // The generator should only pass us functions for getters and setters.
@@ -169,8 +174,11 @@ ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value
     }
     case Op::PropertyKind::KeyValue: {
         bool succeeded = TRY(object->internal_set(name, value, this_value));
-        if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, base.to_string_without_side_effects());
+        if (!succeeded && vm.in_strict_mode()) {
+            if (base.is_object())
+                return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, base.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ReferencePrimitiveSetProperty, name, base.typeof(), base.to_string_without_side_effects());
+        }
         break;
     }
     case Op::PropertyKind::DirectKeyValue:
