@@ -57,20 +57,6 @@ void HTMLButtonElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLButtonElementPrototype>(realm, "HTMLButtonElement"));
 }
 
-StringView HTMLButtonElement::type() const
-{
-    auto value = deprecated_attribute(HTML::AttributeNames::type);
-
-#define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(keyword, _) \
-    if (value.equals_ignoring_ascii_case(#keyword##sv))    \
-        return #keyword##sv;
-    ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTES
-#undef __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE
-
-    // The missing value default and invalid value default are the Submit Button state.
-    return "submit"sv;
-}
-
 HTMLButtonElement::TypeAttributeState HTMLButtonElement::type_state() const
 {
     auto value = deprecated_attribute(HTML::AttributeNames::type);
