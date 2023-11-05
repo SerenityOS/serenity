@@ -9,6 +9,7 @@
 #include <LibCore/EventReceiver.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Property.h>
+#include <LibGUI/PropertyDeserializer.h>
 
 namespace GUI {
 
@@ -58,6 +59,43 @@ protected:
     explicit Object(Core::EventReceiver* parent = nullptr);
 
     void register_property(ByteString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
+
+    template<typename Getter, typename Deserializer, typename Setter>
+    void register_property(StringView name, Getter&& getter, Deserializer&& deserializer, Setter&& setter)
+    {
+        Function<JsonValue()> getter_fn = nullptr;
+        Function<bool(JsonValue const&)> setter_fn = nullptr;
+
+        if constexpr (!SameAs<Getter, nullptr_t>) {
+            static_assert(ConvertibleTo<InvokeResult<Getter>, JsonValue>);
+            getter_fn = [captured_getter = forward<Getter>(getter)]() -> JsonValue {
+                return captured_getter();
+            };
+        }
+
+        static_assert(SameAs<Deserializer, nullptr_t> == SameAs<Setter, nullptr_t>);
+        if constexpr (!SameAs<Deserializer, nullptr_t>) {
+            using DeserializerReturnValue = RemoveReference<InvokeResult<Deserializer, JsonValue const&>>;
+            static_assert(SpecializationOf<DeserializerReturnValue, ErrorOr>);
+            using DeserializedValue = RemoveReference<typename DeserializerReturnValue::ResultType>;
+            // FIXME: Should we allow setter to fail?
+            static_assert(SameAs<InvokeResult<Setter, DeserializedValue&&>, void>);
+
+            setter_fn = [captured_deserializer = forward<Deserializer>(deserializer), captured_setter = forward<Setter>(setter)](JsonValue const& value) -> bool {
+                DeserializerReturnValue deserializer_return_value = captured_deserializer(value);
+                if (deserializer_return_value.is_error()) {
+                    // FIXME: Propagate error up to a place where we have enough context to print/show meaningful message.
+                    dbgln("Got error while deserializing GML property: {}", deserializer_return_value.error());
+                    return false;
+                }
+                DeserializedValue deserialized_value = deserializer_return_value.release_value();
+                captured_setter(move(deserialized_value));
+                return true;
+            };
+        }
+
+        register_property(name, move(getter_fn), move(setter_fn));
+    }
 
 private:
     HashMap<ByteString, NonnullOwnPtr<Property>> m_properties;
