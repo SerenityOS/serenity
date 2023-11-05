@@ -919,7 +919,7 @@ void Compiler::compile_new_class(Bytecode::Op::NewClass const& op)
     store_accumulator(RET);
 }
 
-static Value cxx_get_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, u32 cache_index)
+static Value cxx_get_by_id(VM& vm, Value base, DeprecatedFlyString const& property, u32 cache_index)
 {
     return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm.bytecode_interpreter(), property, base, base, cache_index));
 }
@@ -929,7 +929,7 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
     load_accumulator(ARG1);
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.property().value()));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
         Assembler::Operand::Imm(op.cache_index()));
@@ -1575,7 +1575,7 @@ void Compiler::compile_resolve_super_base(Bytecode::Op::ResolveSuperBase const&)
     check_exception();
 }
 
-static Value cxx_get_by_id_with_this(VM& vm, Bytecode::IdentifierTableIndex property, Value base_value, Value this_value, u32 cache_index)
+static Value cxx_get_by_id_with_this(VM& vm, DeprecatedFlyString const& property, Value base_value, Value this_value, u32 cache_index)
 {
     return TRY_OR_SET_EXCEPTION(get_by_id(vm.bytecode_interpreter(), property, base_value, this_value, cache_index));
 }
@@ -1584,7 +1584,7 @@ void Compiler::compile_get_by_id_with_this(Bytecode::Op::GetByIdWithThis const& 
 {
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(op.property().value()));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
     load_accumulator(ARG2);
     load_vm_register(ARG3, op.this_value());
     m_assembler.mov(
