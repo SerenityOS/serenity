@@ -26,8 +26,15 @@
 
 namespace Taskbar {
 
-constexpr auto quick_launch = "QuickLaunch"sv;
-constexpr int quick_launch_button_size = 24;
+static DeprecatedString sanitize_name(DeprecatedString const& name)
+{
+    return name.replace(" "sv, ""sv).replace("="sv, ""sv);
+}
+
+static DeprecatedString entry_to_config_string(size_t index, NonnullOwnPtr<QuickLaunchEntry> const& entry)
+{
+    return DeprecatedString::formatted("{}:{}", index, entry->path());
+}
 
 ErrorOr<void> QuickLaunchEntryAppFile::launch() const
 {
@@ -88,20 +95,9 @@ DeprecatedString QuickLaunchEntryFile::name() const
 
 ErrorOr<NonnullRefPtr<QuickLaunchWidget>> QuickLaunchWidget::create()
 {
-    Vector<NonnullOwnPtr<QuickLaunchEntry>> entries;
-    auto keys = Config::list_keys("Taskbar"sv, quick_launch);
-    for (auto& name : keys) {
-        auto value = Config::read_string("Taskbar"sv, quick_launch, name);
-        auto entry = QuickLaunchEntry::create_from_config_value(value);
-        if (!entry)
-            continue;
-
-        entries.append(entry.release_nonnull());
-    }
-
     auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) QuickLaunchWidget()));
     TRY(widget->create_context_menu());
-    widget->add_quick_launch_buttons(move(entries));
+    widget->load_entries();
     return widget;
 }
 
@@ -113,12 +109,44 @@ QuickLaunchWidget::QuickLaunchWidget()
     set_fixed_height(24);
 }
 
+void QuickLaunchWidget::load_entries(bool save)
+{
+    struct ConfigEntry {
+        int index;
+        DeprecatedString path;
+    };
+
+    Vector<ConfigEntry> config_entries;
+    auto keys = Config::list_keys(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES);
+    for (auto& name : keys) {
+        dbgln("loading key: {}", name);
+        auto value = Config::read_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, name);
+        auto values = value.split(':');
+
+        config_entries.append({ values[0].to_int().release_value(), values[1] });
+    }
+
+    quick_sort(config_entries, [](ConfigEntry const& a, ConfigEntry const& b) {
+        return a.index < b.index;
+    });
+
+    Vector<NonnullOwnPtr<QuickLaunchEntry>> entries;
+    for (auto const& config_entry : config_entries) {
+        auto entry = QuickLaunchEntry::create_from_config_value(config_entry.path);
+        if (!entry)
+            continue;
+
+        entries.append(entry.release_nonnull());
+    }
+
+    add_quick_launch_buttons(move(entries), save);
+}
+
 ErrorOr<void> QuickLaunchWidget::create_context_menu()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv));
     m_context_menu = GUI::Menu::construct();
     m_context_menu_default_action = GUI::Action::create("&Remove", icon, [this](auto&) {
-        Config::remove_key("Taskbar"sv, quick_launch, m_context_menu_app_name);
         remove_entry(m_context_menu_app_name);
         resize();
         update();
@@ -128,11 +156,14 @@ ErrorOr<void> QuickLaunchWidget::create_context_menu()
     return {};
 }
 
-void QuickLaunchWidget::add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries)
+void QuickLaunchWidget::add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries, bool save)
 {
     size_t size = entries.size();
-    for (size_t i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++) {
         m_entries.append(entries.take(0));
+        if (save)
+            Config::write_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, sanitize_name(m_entries.last()->name()), entry_to_config_string(m_entries.size() - 1, m_entries.last()));
+    }
 
     resize();
     update();
@@ -163,21 +194,15 @@ OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
     return make<QuickLaunchEntryFile>(path);
 }
 
-static DeprecatedString sanitize_entry_name(DeprecatedString const& name)
-{
-    return name.replace(" "sv, ""sv, ReplaceMode::All).replace("="sv, ""sv, ReplaceMode::All);
-}
-
-ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry> entry)
+ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry> entry, bool save)
 {
     auto file_name_to_watch = entry->file_name_to_watch();
     if (!file_name_to_watch.is_empty()) {
         if (!m_watcher) {
             m_watcher = TRY(Core::FileWatcher::create());
-            m_watcher->on_change = [button_name, this](Core::FileWatcherEvent const& event) {
-                auto name = sanitize_entry_name(event.event_path);
-                dbgln("Removing QuickLaunch entry {}", name);
-                remove_entry(button_name);
+            m_watcher->on_change = [button_name, save, this](Core::FileWatcherEvent const&) {
+                dbgln("Removing QuickLaunch entry \"{}\"", button_name);
+                remove_entry(button_name, save);
                 resize();
                 update();
             };
@@ -185,7 +210,7 @@ ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& bu
         TRY(m_watcher->add_watch(file_name_to_watch, Core::FileWatcherEvent::Type::Deleted));
     }
 
-    set_or_insert_entry(move(entry));
+    set_or_insert_entry(move(entry), save);
     resize();
     update();
 
@@ -194,20 +219,14 @@ ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& bu
 
 void QuickLaunchWidget::config_key_was_removed(StringView domain, StringView group, StringView key)
 {
-    if (domain == "Taskbar" && group == quick_launch)
-        remove_entry(key);
+    if (domain == "Taskbar" && group == CONFIG_GROUP_ENTRIES)
+        remove_entry(key, false);
 }
 
-void QuickLaunchWidget::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
+void QuickLaunchWidget::config_string_did_change(StringView domain, StringView group, StringView, StringView)
 {
-    if (domain == "Taskbar" && group == quick_launch) {
-        auto entry = QuickLaunchEntry::create_from_config_value(value);
-        if (!entry)
-            return;
-        auto result = add_or_adjust_button(key, entry.release_nonnull());
-        if (result.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to change quick launch entry: {}", result.release_error()));
-    }
+    if (domain == "Taskbar" && group == CONFIG_GROUP_ENTRIES)
+        load_entries(false);
 }
 
 void QuickLaunchWidget::drag_enter_event(GUI::DragEvent& event)
@@ -227,11 +246,9 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
             auto path = url.serialize_path();
             auto entry = QuickLaunchEntry::create_from_path(path);
             if (entry) {
-                auto item_name = sanitize_entry_name(entry->name());
-                auto result = add_or_adjust_button(item_name, entry.release_nonnull());
+                auto result = add_or_adjust_button(entry->name(), entry.release_nonnull());
                 if (result.is_error())
                     GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to add quick launch entry: {}", result.release_error()));
-                Config::write_string("Taskbar"sv, quick_launch, item_name, path);
             }
         }
     }
@@ -352,10 +369,10 @@ void QuickLaunchWidget::paint_event(GUI::PaintEvent& event)
 template<typename Callback>
 void QuickLaunchWidget::for_each_entry(Callback callback)
 {
-    Gfx::IntRect rect(0, 0, quick_launch_button_size, quick_launch_button_size);
+    Gfx::IntRect rect(0, 0, BUTTON_SIZE, BUTTON_SIZE);
     for (auto const& entry : m_entries) {
         callback(entry, rect);
-        rect.translate_by(quick_launch_button_size, 0);
+        rect.translate_by(BUTTON_SIZE, 0);
     }
 }
 
@@ -397,32 +414,38 @@ ErrorOr<bool> QuickLaunchWidget::add_from_pid(pid_t pid_to_add)
 
 void QuickLaunchWidget::resize()
 {
-    set_fixed_width(m_entries.size() * quick_launch_button_size);
+    set_fixed_width(m_entries.size() * BUTTON_SIZE);
 }
 
-void QuickLaunchWidget::set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry> entry)
+void QuickLaunchWidget::set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry> entry, bool save)
 {
     auto name = entry->name();
-    for (auto& value : m_entries) {
+    for (size_t i = 0; i < m_entries.size(); i++) {
+        auto& value = m_entries[i];
         if (value->name() != name)
             continue;
         value = move(entry);
+        if (save)
+            Config::write_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, sanitize_name(value->name()), entry_to_config_string(i, value));
         return;
     }
 
+    if (save)
+        Config::write_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, sanitize_name(entry->name()), entry_to_config_string(m_entries.size(), entry));
     m_entries.append(move(entry));
 }
 
-void QuickLaunchWidget::remove_entry(DeprecatedString const& name)
+void QuickLaunchWidget::remove_entry(DeprecatedString const& name, bool save)
 {
     for (size_t i = 0; i < m_entries.size(); i++) {
         if (m_entries[i]->name() != name)
             continue;
+        if (save)
+            Config::remove_key(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, m_entries[i]->name());
         m_entries.remove(i);
         return;
     }
 }
-
 void QuickLaunchWidget::recalculate_order()
 {
     if (!m_dragging)
@@ -435,7 +458,7 @@ void QuickLaunchWidget::recalculate_order()
     }
 
     size_t new_index = m_entries.size() + 1;
-    Gfx::IntRect rect(0, 0, quick_launch_button_size, quick_launch_button_size);
+    Gfx::IntRect rect(0, 0, BUTTON_SIZE, BUTTON_SIZE);
     for (size_t i = 0; i < m_entries.size(); i++) {
         auto left_break_point = i == 0 ? rect.x() + rect.width() / 2 : rect.x();
         if (m_mouse_pos.x() < left_break_point) {
@@ -448,7 +471,7 @@ void QuickLaunchWidget::recalculate_order()
             break;
         }
 
-        rect.translate_by(quick_launch_button_size, 0);
+        rect.translate_by(BUTTON_SIZE, 0);
     }
 
     if (new_index >= m_entries.size() + 1 || new_index == dragged_index)
@@ -459,6 +482,9 @@ void QuickLaunchWidget::recalculate_order()
 
     auto entry = m_entries.take(dragged_index);
     m_entries.insert(new_index, move(entry));
+
+    for (size_t i = 0; i < m_entries.size(); i++)
+        Config::write_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, sanitize_name(m_entries[i]->name()), entry_to_config_string(i, m_entries[i]));
 }
 
 }
