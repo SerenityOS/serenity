@@ -13,7 +13,7 @@
 namespace JS::Bytecode {
 
 ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(Bytecode::Interpreter&, Value base_value);
-ThrowCompletionOr<Value> get_by_id(Bytecode::Interpreter&, IdentifierTableIndex, Value base_value, Value this_value, u32 cache_index);
+ThrowCompletionOr<Value> get_by_id(Bytecode::Interpreter&, DeprecatedFlyString const& property, Value base_value, Value this_value, u32 cache_index);
 ThrowCompletionOr<Value> get_by_value(Bytecode::Interpreter&, Value base_value, Value property_key_value);
 ThrowCompletionOr<Value> get_global(Bytecode::Interpreter&, IdentifierTableIndex, u32 cache_index);
 ThrowCompletionOr<void> put_by_property_key(VM&, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind);

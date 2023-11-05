@@ -35,14 +35,13 @@ ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(Bytecode::Interprete
     return base_value.to_object(vm);
 }
 
-ThrowCompletionOr<Value> get_by_id(Bytecode::Interpreter& interpreter, IdentifierTableIndex property, Value base_value, Value this_value, u32 cache_index)
+ThrowCompletionOr<Value> get_by_id(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& property, Value base_value, Value this_value, u32 cache_index)
 {
     auto& vm = interpreter.vm();
-    auto const& name = interpreter.current_executable().get_identifier(property);
     auto& cache = interpreter.current_executable().property_lookup_caches[cache_index];
 
     if (base_value.is_string()) {
-        auto string_value = TRY(base_value.as_string().get(vm, name));
+        auto string_value = TRY(base_value.as_string().get(vm, property));
         if (string_value.has_value())
             return *string_value;
     }
@@ -58,7 +57,7 @@ ThrowCompletionOr<Value> get_by_id(Bytecode::Interpreter& interpreter, Identifie
     }
 
     CacheablePropertyMetadata cacheable_metadata;
-    auto value = TRY(base_obj->internal_get(name, this_value, &cacheable_metadata));
+    auto value = TRY(base_obj->internal_get(property, this_value, &cacheable_metadata));
 
     if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
         cache.shape = shape;
