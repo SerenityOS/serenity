@@ -683,7 +683,10 @@ ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interp
 
 ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(get_variable(interpreter, interpreter.current_executable().get_identifier(m_identifier), m_cache_index));
+    interpreter.accumulator() = TRY(get_variable(
+        interpreter,
+        interpreter.current_executable().get_identifier(m_identifier),
+        interpreter.current_executable().environment_variable_caches[m_cache_index]));
     return {};
 }
 

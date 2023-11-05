@@ -33,6 +33,8 @@ struct GlobalVariableCache : public PropertyLookupCache {
     u64 environment_serial_number { 0 };
 };
 
+using EnvironmentVariableCache = Optional<EnvironmentCoordinate>;
+
 struct SourceRecord {
     u32 source_start_offset {};
     u32 source_end_offset {};
@@ -57,7 +59,7 @@ public:
     DeprecatedFlyString name;
     Vector<PropertyLookupCache> property_lookup_caches;
     Vector<GlobalVariableCache> global_variable_caches;
-    Vector<Optional<EnvironmentCoordinate>> environment_variable_caches;
+    Vector<EnvironmentVariableCache> environment_variable_caches;
     Vector<NonnullOwnPtr<BasicBlock>> basic_blocks;
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
