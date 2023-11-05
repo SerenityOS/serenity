@@ -42,8 +42,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
 
     auto peer_credentials = peer->process().credentials();
     auto caller_credentials = caller.credentials();
-    if ((peer_credentials->uid() != caller_credentials->euid())
-        || (peer_credentials->uid() != peer_credentials->euid())) // Disallow tracing setuid processes
+    if (!caller_credentials->is_superuser() && ((peer_credentials->uid() != caller_credentials->euid()) || (peer_credentials->uid() != peer_credentials->euid()))) // Disallow tracing setuid processes
         return EACCES;
 
     if (!peer->process().is_dumpable())
