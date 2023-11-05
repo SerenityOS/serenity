@@ -48,27 +48,27 @@ ErrorOr<NonnullRefPtr<Resource>> Resource::load_from_uri(StringView uri)
     return ResourceImplementation::the().load_from_uri(uri);
 }
 
-[[nodiscard]] String Resource::uri() const
+String Resource::uri() const
 {
     return MUST(String::formatted("{}://{}", m_scheme == Scheme::Resource ? "resource"sv : "file"sv, m_path));
 }
 
-[[nodiscard]] String Resource::filesystem_path() const
+String Resource::filesystem_path() const
 {
     return ResourceImplementation::the().filesystem_path(*this);
 }
 
-[[nodiscard]] String Resource::filename() const
+String Resource::filename() const
 {
     return MUST(String::from_utf8(LexicalPath(m_path.bytes_as_string_view()).basename()));
 }
 
-[[nodiscard]] Vector<String> Resource::children() const
+Vector<String> Resource::children() const
 {
     return ResourceImplementation::the().child_names(*this);
 }
 
-[[nodiscard]] ByteBuffer Resource::clone_data() const
+ByteBuffer Resource::clone_data() const
 {
     return m_data.visit(
         [](NonnullOwnPtr<Core::MappedFile> const& file) { return MUST(ByteBuffer::copy(file->bytes())); },
@@ -76,7 +76,7 @@ ErrorOr<NonnullRefPtr<Resource>> Resource::load_from_uri(StringView uri)
         [](DirectoryTag) -> ByteBuffer { VERIFY_NOT_REACHED(); });
 }
 
-[[nodiscard]] ByteBuffer Resource::release_data() &&
+ByteBuffer Resource::release_data() &&
 {
     VERIFY(!m_data.has<DirectoryTag>());
 
@@ -85,7 +85,7 @@ ErrorOr<NonnullRefPtr<Resource>> Resource::load_from_uri(StringView uri)
     return move(m_data).get<ByteBuffer>();
 }
 
-[[nodiscard]] ReadonlyBytes Resource::data() const
+ReadonlyBytes Resource::data() const
 {
     return m_data.visit(
         [](NonnullOwnPtr<Core::MappedFile> const& file) { return file->bytes(); },
@@ -93,7 +93,7 @@ ErrorOr<NonnullRefPtr<Resource>> Resource::load_from_uri(StringView uri)
         [](DirectoryTag) -> ReadonlyBytes { VERIFY_NOT_REACHED(); });
 }
 
-[[nodiscard]] FixedMemoryStream Resource::stream() const
+FixedMemoryStream Resource::stream() const
 {
     return FixedMemoryStream(data());
 }
