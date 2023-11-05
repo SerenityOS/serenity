@@ -1,6 +1,13 @@
 #import <HTML/HTMLElement.idl>
 #import <HTML/HTMLFormElement.idl>
 
+[MissingValueDefault=submit, InvalidValueDefault=submit]
+enum ButtonTypeState {
+    "submit",
+    "reset",
+    "button"
+};
+
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlbuttonelement
 [Exposed=Window]
 interface HTMLButtonElement : HTMLElement {
@@ -14,7 +21,7 @@ interface HTMLButtonElement : HTMLElement {
     [CEReactions, Reflect=formnovalidate] attribute boolean formNoValidate;
     [CEReactions, Reflect=formtarget] attribute DOMString formTarget;
     [CEReactions, Reflect] attribute DOMString name;
-    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect, Enumerated=ButtonTypeState] attribute DOMString type;
     [CEReactions, Reflect] attribute DOMString value;
 
     // FIXME: readonly attribute boolean willValidate;
