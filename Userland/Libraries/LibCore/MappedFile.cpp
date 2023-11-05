@@ -15,9 +15,9 @@
 
 namespace Core {
 
-ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map(StringView path, OpenMode mode)
+ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map(StringView path, Mode mode)
 {
-    auto const file_mode = mode == OpenMode::ReadOnly ? O_RDONLY : O_RDWR;
+    auto const file_mode = mode == Mode::ReadOnly ? O_RDONLY : O_RDWR;
     auto fd = TRY(Core::System::open(path, file_mode | O_CLOEXEC, 0));
     return map_from_fd_and_close(fd, path, mode);
 }
@@ -27,7 +27,7 @@ ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_file(NonnullOwnPtr<Core:
     return map_from_fd_and_close(stream->leak_fd(Badge<MappedFile> {}), path);
 }
 
-ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] StringView path, OpenMode mode)
+ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] StringView path, Mode mode)
 {
     TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
 
@@ -41,11 +41,11 @@ ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[m
     int protection;
     int flags;
     switch (mode) {
-    case OpenMode::ReadOnly:
+    case Mode::ReadOnly:
         protection = PROT_READ;
         flags = MAP_SHARED;
         break;
-    case OpenMode::ReadWrite:
+    case Mode::ReadWrite:
         protection = PROT_READ | PROT_WRITE;
         // Don't map a read-write mapping shared as a precaution.
         flags = MAP_PRIVATE;
@@ -57,8 +57,8 @@ ErrorOr<NonnullOwnPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[m
     return adopt_own(*new MappedFile(ptr, size, mode));
 }
 
-MappedFile::MappedFile(void* ptr, size_t size, OpenMode mode)
-    : FixedMemoryStream(Bytes { ptr, size }, mode == OpenMode::ReadWrite)
+MappedFile::MappedFile(void* ptr, size_t size, Mode mode)
+    : FixedMemoryStream(Bytes { ptr, size }, mode)
     , m_data(ptr)
     , m_size(size)
 {

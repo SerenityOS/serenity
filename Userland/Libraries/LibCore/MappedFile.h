@@ -22,15 +22,9 @@ class MappedFile : public FixedMemoryStream {
     AK_MAKE_NONMOVABLE(MappedFile);
 
 public:
-    // Reflects a simplified version of mmap protection and flags.
-    enum class OpenMode {
-        ReadOnly,
-        ReadWrite,
-    };
-
-    static ErrorOr<NonnullOwnPtr<MappedFile>> map(StringView path, OpenMode mode = OpenMode::ReadOnly);
+    static ErrorOr<NonnullOwnPtr<MappedFile>> map(StringView path, Mode mode = Mode::ReadOnly);
     static ErrorOr<NonnullOwnPtr<MappedFile>> map_from_file(NonnullOwnPtr<Core::File>, StringView path);
-    static ErrorOr<NonnullOwnPtr<MappedFile>> map_from_fd_and_close(int fd, StringView path, OpenMode mode = OpenMode::ReadOnly);
+    static ErrorOr<NonnullOwnPtr<MappedFile>> map_from_fd_and_close(int fd, StringView path, Mode mode = Mode::ReadOnly);
     virtual ~MappedFile();
 
     // Non-stream APIs for using MappedFile as a simple POSIX API wrapper.
@@ -39,7 +33,7 @@ public:
     ReadonlyBytes bytes() const { return { m_data, m_size }; }
 
 private:
-    explicit MappedFile(void*, size_t, OpenMode);
+    explicit MappedFile(void*, size_t, Mode);
 
     void* m_data { nullptr };
     size_t m_size { 0 };
