@@ -3,7 +3,6 @@ set(FUZZER_TARGETS
     BLAKE2b
     BMPLoader
     Brotli
-    CyrillicDecoder
     DDSLoader
     DNSPacket
     DeflateCompression
@@ -14,7 +13,6 @@ set(FUZZER_TARGETS
     GIFLoader
     GzipCompression
     GzipDecompression
-    HebrewDecoder
     HttpRequest
     ICCProfile
     ICOLoader
@@ -23,8 +21,6 @@ set(FUZZER_TARGETS
     JPEGLoader
     Js
     JsonParser
-    Latin1Decoder
-    Latin2Decoder
     LzmaDecompression
     LzmaRoundtrip
     Markdown
@@ -53,12 +49,12 @@ set(FUZZER_TARGETS
     ShellPosix
     SQLParser
     Tar
+    TextDecoder
     TGALoader
     TIFFLoader
     TTF
     TinyVGLoader
     URL
-    UTF16BEDecoder
     VP9Decoder
     WasmParser
     WAVLoader
@@ -79,7 +75,6 @@ set(FUZZER_DEPENDENCIES_BLAKE2b LibCrypto)
 set(FUZZER_DEPENDENCIES_BMPLoader LibGfx)
 set(FUZZER_DEPENDENCIES_Brotli LibCompress)
 set(FUZZER_DEPENDENCIES_CSSParser LibWeb)
-set(FUZZER_DEPENDENCIES_CyrillicDecoder LibTextCodec)
 set(FUZZER_DEPENDENCIES_DDSLoader LibGfx)
 set(FUZZER_DEPENDENCIES_DNSPacket LibDNS)
 set(FUZZER_DEPENDENCIES_DeflateCompression LibCompress)
@@ -90,7 +85,6 @@ set(FUZZER_DEPENDENCIES_Gemini LibGemini)
 set(FUZZER_DEPENDENCIES_GIFLoader LibGfx)
 set(FUZZER_DEPENDENCIES_GzipCompression LibCompress)
 set(FUZZER_DEPENDENCIES_GzipDecompression LibCompress)
-set(FUZZER_DEPENDENCIES_HebrewDecoder LibTextCodec)
 set(FUZZER_DEPENDENCIES_HttpRequest LibHTTP)
 set(FUZZER_DEPENDENCIES_ICCProfile LibGfx)
 set(FUZZER_DEPENDENCIES_ICOLoader LibGfx)
@@ -98,8 +92,6 @@ set(FUZZER_DEPENDENCIES_ILBMLoader LibGfx)
 set(FUZZER_DEPENDENCIES_IMAPParser LibIMAP)
 set(FUZZER_DEPENDENCIES_JPEGLoader LibGfx)
 set(FUZZER_DEPENDENCIES_Js LibJS)
-set(FUZZER_DEPENDENCIES_Latin1Decoder LibTextCodec)
-set(FUZZER_DEPENDENCIES_Latin2Decoder LibTextCodec)
 set(FUZZER_DEPENDENCIES_LzmaDecompression LibArchive LibCompress)
 set(FUZZER_DEPENDENCIES_LzmaRoundtrip LibCompress)
 set(FUZZER_DEPENDENCIES_Markdown LibMarkdown)
@@ -128,11 +120,11 @@ set(FUZZER_DEPENDENCIES_Shell LibShell)
 set(FUZZER_DEPENDENCIES_ShellPosix LibShell)
 set(FUZZER_DEPENDENCIES_SQLParser LibSQL)
 set(FUZZER_DEPENDENCIES_Tar LibArchive)
+set(FUZZER_DEPENDENCIES_TextDecoder LibTextCodec)
 set(FUZZER_DEPENDENCIES_TGALoader LibGfx)
 set(FUZZER_DEPENDENCIES_TIFFLoader LibGfx)
 set(FUZZER_DEPENDENCIES_TTF LibGfx)
 set(FUZZER_DEPENDENCIES_TinyVGLoader LibGfx)
-set(FUZZER_DEPENDENCIES_UTF16BEDecoder LibTextCodec)
 set(FUZZER_DEPENDENCIES_VP9Decoder LibVideo)
 set(FUZZER_DEPENDENCIES_WasmParser LibWasm)
 set(FUZZER_DEPENDENCIES_WAVLoader LibAudio)

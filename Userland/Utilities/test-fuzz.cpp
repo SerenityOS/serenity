@@ -17,7 +17,6 @@
     T(BMPLoader)             \
     T(Brotli)                \
     T(CSSParser)             \
-    T(CyrillicDecoder)       \
     T(DDSLoader)             \
     T(DNSPacket)             \
     T(DeflateCompression)    \
@@ -28,7 +27,6 @@
     T(GIFLoader)             \
     T(GzipCompression)       \
     T(GzipDecompression)     \
-    T(HebrewDecoder)         \
     T(HttpRequest)           \
     T(ICCProfile)            \
     T(ICOLoader)             \
@@ -37,8 +35,6 @@
     T(JPEGLoader)            \
     T(Js)                    \
     T(JsonParser)            \
-    T(Latin1Decoder)         \
-    T(Latin2Decoder)         \
     T(LzmaDecompression)     \
     T(LzmaRoundtrip)         \
     T(Markdown)              \
@@ -67,12 +63,12 @@
     T(ShellPosix)            \
     T(SQLParser)             \
     T(Tar)                   \
+    T(TextDecoder)           \
     T(TGALoader)             \
     T(TIFFLoader)            \
     T(TTF)                   \
     T(TinyVGLoader)          \
     T(URL)                   \
-    T(UTF16BEDecoder)        \
     T(VP9Decoder)            \
     T(WasmParser)            \
     T(WAVLoader)             \
