@@ -94,7 +94,7 @@ ThrowCompletionOr<Value> get_by_value(Bytecode::Interpreter& interpreter, Value 
     return TRY(object->internal_get(property_key, base_value));
 }
 
-ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, IdentifierTableIndex identifier, u32 cache_index)
+ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& identifier, u32 cache_index)
 {
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
@@ -114,25 +114,24 @@ ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, Identifi
 
     cache.environment_serial_number = declarative_record.environment_serial_number();
 
-    auto const& name = interpreter.current_executable().get_identifier(identifier);
     if (vm.running_execution_context().script_or_module.has<NonnullGCPtr<Module>>()) {
         // NOTE: GetGlobal is used to access variables stored in the module environment and global environment.
         //       The module environment is checked first since it precedes the global environment in the environment chain.
         auto& module_environment = *vm.running_execution_context().script_or_module.get<NonnullGCPtr<Module>>()->environment();
-        if (TRY(module_environment.has_binding(name))) {
+        if (TRY(module_environment.has_binding(identifier))) {
             // TODO: Cache offset of binding value
-            return TRY(module_environment.get_binding_value(vm, name, vm.in_strict_mode()));
+            return TRY(module_environment.get_binding_value(vm, identifier, vm.in_strict_mode()));
         }
     }
 
-    if (TRY(declarative_record.has_binding(name))) {
+    if (TRY(declarative_record.has_binding(identifier))) {
         // TODO: Cache offset of binding value
-        return TRY(declarative_record.get_binding_value(vm, name, vm.in_strict_mode()));
+        return TRY(declarative_record.get_binding_value(vm, identifier, vm.in_strict_mode()));
     }
 
-    if (TRY(binding_object.has_property(name))) {
+    if (TRY(binding_object.has_property(identifier))) {
         CacheablePropertyMetadata cacheable_metadata;
-        auto value = TRY(binding_object.internal_get(name, js_undefined(), &cacheable_metadata));
+        auto value = TRY(binding_object.internal_get(identifier, js_undefined(), &cacheable_metadata));
         if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
             cache.shape = shape;
             cache.property_offset = cacheable_metadata.property_offset.value();
@@ -141,7 +140,7 @@ ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, Identifi
         return value;
     }
 
-    return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
+    return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, identifier);
 }
 
 ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind)
