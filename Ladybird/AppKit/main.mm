@@ -24,22 +24,6 @@
 #    error "This project requires ARC"
 #endif
 
-static URL rebase_url_on_serenity_resource_root(StringView url_string)
-{
-    URL url { url_string };
-    Vector<DeprecatedString> paths;
-
-    for (auto segment : s_serenity_resource_root.split('/'))
-        paths.append(move(segment));
-
-    for (size_t i = 0; i < url.path_segment_count(); ++i)
-        paths.append(url.path_segment_at_index(i));
-
-    url.set_paths(move(paths));
-
-    return url;
-}
-
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     [Application sharedApplication];
@@ -66,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto database = TRY(WebView::Database::create(move(sql_server_paths)));
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
 
-    auto new_tab_page_url = rebase_url_on_serenity_resource_root(Browser::default_new_tab_url);
+    URL new_tab_page_url = Browser::default_new_tab_url();
     Vector<URL> initial_urls;
 
     for (auto const& raw_url : raw_urls) {

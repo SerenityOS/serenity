@@ -7,27 +7,9 @@
 
 #include "Settings.h"
 #include "StringUtils.h"
-#include <AK/URL.h>
 #include <BrowserSettings/Defaults.h>
-#include <Ladybird/Utilities.h>
 
 namespace Ladybird {
-
-static QString rebase_default_url_on_serenity_resource_root(StringView default_url)
-{
-    URL url { default_url };
-    Vector<DeprecatedString> paths;
-
-    for (auto segment : s_serenity_resource_root.split('/'))
-        paths.append(move(segment));
-
-    for (size_t i = 0; i < url.path_segment_count(); ++i)
-        paths.append(url.path_segment_at_index(i));
-
-    url.set_paths(move(paths));
-
-    return qstring_from_ak_deprecated_string(url.to_deprecated_string());
-}
 
 Settings::Settings()
     : m_search_engine(WebView::default_search_engine())
@@ -100,7 +82,7 @@ void Settings::set_autocomplete_engine(EngineProvider const& engine_provider)
 
 QString Settings::new_tab_page()
 {
-    static auto const default_new_tab_url = rebase_default_url_on_serenity_resource_root(Browser::default_new_tab_url);
+    static auto const default_new_tab_url = qstring_from_ak_string(Browser::default_new_tab_url());
     return m_qsettings->value("new_tab_page", default_new_tab_url).toString();
 }
 
