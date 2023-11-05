@@ -21,6 +21,7 @@
     X(BaseEncoding)               \
     X(BaseFont)                   \
     X(BitsPerComponent)           \
+    X(BitsPerSample)              \
     X(BlackPoint)                 \
     X(Bounds)                     \
     X(C)                          \
@@ -129,6 +130,7 @@
     X(OE)                         \
     X(OP)                         \
     X(OPM)                        \
+    X(Order)                      \
     X(Ordering)                   \
     X(Outlines)                   \
     X(P)                          \
@@ -152,6 +154,7 @@
     X(SM)                         \
     X(SMask)                      \
     X(Separation)                 \
+    X(Size)                       \
     X(StmF)                       \
     X(StrF)                       \
     X(Subject)                    \
