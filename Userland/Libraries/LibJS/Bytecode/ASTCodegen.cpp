@@ -976,7 +976,12 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
             if (property_kind == Bytecode::Op::PropertyKind::ProtoSetter) {
                 TRY(property->value().generate_bytecode(generator));
             } else if (property_kind != Bytecode::Op::PropertyKind::Spread) {
-                auto name = generator.intern_identifier(string_literal.value());
+                DeprecatedString identifier = string_literal.value();
+                if (property_kind == Bytecode::Op::PropertyKind::Getter)
+                    identifier = DeprecatedString::formatted("get {}", identifier);
+                else if (property_kind == Bytecode::Op::PropertyKind::Setter)
+                    identifier = DeprecatedString::formatted("set {}", identifier);
+                auto name = generator.intern_identifier(identifier);
                 TRY(generator.emit_named_evaluation_if_anonymous_function(property->value(), name));
             }
 
