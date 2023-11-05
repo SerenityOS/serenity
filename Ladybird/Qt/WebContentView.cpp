@@ -20,6 +20,7 @@
 #include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Resource.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
@@ -567,7 +568,9 @@ static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget, 
     auto qt_palette = widget.palette();
 
     auto theme_file = mode == WebContentView::PaletteMode::Default ? "Default"sv : "Dark"sv;
-    auto theme = Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/{}.ini", s_serenity_resource_root, theme_file)).release_value_but_fixme_should_propagate_errors();
+    auto theme_ini = MUST(Core::Resource::load_from_uri(MUST(String::formatted("resource://themes/{}.ini", theme_file))));
+    auto theme = Gfx::load_system_theme(theme_ini->filesystem_path().to_deprecated_string()).release_value_but_fixme_should_propagate_errors();
+
     auto palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
     auto palette = Gfx::Palette(move(palette_impl));
 
