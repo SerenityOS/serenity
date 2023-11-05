@@ -90,8 +90,6 @@ public:
 
     void set_prefix(Optional<FlyString> value);
 
-    DeprecatedFlyString namespace_() const { return m_qualified_name.deprecated_namespace_(); }
-
     // NOTE: This is for the JS bindings
     Optional<FlyString> const& namespace_uri() const { return m_qualified_name.namespace_(); }
 
