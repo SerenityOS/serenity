@@ -94,6 +94,7 @@ set(SOURCES
     ProcessChooser.cpp
     Progressbar.cpp
     Property.cpp
+    PropertyDeserializer.cpp
     RadioButton.cpp
     RangeSlider.cpp
     RegularEditingEngine.cpp
