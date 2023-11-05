@@ -221,13 +221,13 @@ describe("naming of anon functions", () => {
         expect({ func() {} }.func.name).toBe("func");
     });
 
-    test.xfail("getter has name", () => {
+    test("getter has name", () => {
         expect(Object.getOwnPropertyDescriptor({ get func() {} }, "func").get.name).toBe(
             "get func"
         );
     });
 
-    test.xfail("setter has name", () => {
+    test("setter has name", () => {
         expect(Object.getOwnPropertyDescriptor({ set func(v) {} }, "func").set.name).toBe(
             "set func"
         );
