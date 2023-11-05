@@ -89,12 +89,11 @@ ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_k
     return TRY(object->internal_get(property_key, base_value));
 }
 
-ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& identifier, u32 cache_index)
+ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& identifier, GlobalVariableCache& cache)
 {
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
-    auto& cache = interpreter.current_executable().global_variable_caches[cache_index];
     auto& binding_object = realm.global_environment().object_record().binding_object();
     auto& declarative_record = realm.global_environment().declarative_record();
 

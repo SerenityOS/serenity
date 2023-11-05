@@ -952,9 +952,9 @@ void Compiler::compile_get_by_value(Bytecode::Op::GetByValue const& op)
     check_exception();
 }
 
-static Value cxx_get_global(VM& vm, DeprecatedFlyString const& identifier, u32 cache_index)
+static Value cxx_get_global(VM& vm, DeprecatedFlyString const& identifier, Bytecode::GlobalVariableCache& cache)
 {
-    return TRY_OR_SET_EXCEPTION(Bytecode::get_global(vm.bytecode_interpreter(), identifier, cache_index));
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_global(vm.bytecode_interpreter(), identifier, cache));
 }
 
 void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
@@ -964,7 +964,7 @@ void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
         Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.cache_index()));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.global_variable_caches[op.cache_index()])));
     native_call((void*)cxx_get_global);
     store_accumulator(RET);
     check_exception();
