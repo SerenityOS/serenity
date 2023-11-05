@@ -72,6 +72,7 @@ if [ "$#" -gt "0" ] && [ "--oss-fuzz" = "$1" ] ; then
         -DBUILD_LAGOM=ON \
         -DBUILD_SHARED_LIBS=OFF \
         -DENABLE_FUZZERS_OSSFUZZ=ON \
+        -DFUZZER_DICTIONARY_DIRECTORY="$OUT" \
         -DCMAKE_C_COMPILER="$CC" \
         -DCMAKE_CXX_COMPILER="$CXX" \
         -DCMAKE_CXX_FLAGS="$CXXFLAGS -DOSS_FUZZ=ON" \
