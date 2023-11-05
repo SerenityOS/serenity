@@ -42,7 +42,7 @@ private:
     void parse_interface(Interface&);
     void parse_namespace(Interface&);
     void parse_non_interface_entities(bool allow_interface, Interface&);
-    void parse_enumeration(Interface&);
+    void parse_enumeration(HashMap<DeprecatedString, DeprecatedString>, Interface&);
     void parse_typedef(Interface&);
     void parse_interface_mixin(Interface&);
     void parse_dictionary(Interface&);
