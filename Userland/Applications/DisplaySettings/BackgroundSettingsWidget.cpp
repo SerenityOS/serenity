@@ -104,7 +104,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
         FileSystemAccessClient::OpenFileOptions options {
             .window_title = "Select Wallpaper"sv,
             .path = "/res/wallpapers"sv,
-            .allowed_file_types = { { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() } }
+            .allowed_file_types = { { GUI::FileTypeFilter::image_files() } }
         };
         auto response = FileSystemAccessClient::Client::the().open_file(window(), options);
         if (response.is_error())
