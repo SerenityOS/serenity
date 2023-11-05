@@ -10,7 +10,7 @@
 #include <AK/Platform.h>
 #include <LibJS/JIT/NativeExecutable.h>
 
-#if ARCH(X86_64)
+#ifdef JIT_ARCH_SUPPORTED
 #    include <LibJIT/Assembler.h>
 #    include <LibJS/Bytecode/Executable.h>
 #    include <LibJS/Bytecode/Op.h>
