@@ -19,7 +19,7 @@ public:
     Declaration(FlyString name, Vector<ComponentValue> values, Important);
     ~Declaration();
 
-    StringView name() const { return m_name; }
+    FlyString const& name() const { return m_name; }
     Vector<ComponentValue> const& values() const { return m_values; }
     Important importance() const { return m_important; }
 

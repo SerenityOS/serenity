@@ -299,7 +299,7 @@ private:
 
     struct PropertiesAndCustomProperties {
         Vector<StyleProperty> properties;
-        HashMap<DeprecatedString, StyleProperty> custom_properties;
+        HashMap<FlyString, StyleProperty> custom_properties;
     };
 
     PropertiesAndCustomProperties extract_properties(Vector<DeclarationOrAtRule> const&);

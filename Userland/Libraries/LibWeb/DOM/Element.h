@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
 #include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
@@ -205,8 +204,8 @@ public:
     ShadowRoot const* shadow_root_internal() const { return m_shadow_root.ptr(); }
     void set_shadow_root(JS::GCPtr<ShadowRoot>);
 
-    void set_custom_properties(Optional<CSS::Selector::PseudoElement>, HashMap<DeprecatedFlyString, CSS::StyleProperty> custom_properties);
-    [[nodiscard]] HashMap<DeprecatedFlyString, CSS::StyleProperty> const& custom_properties(Optional<CSS::Selector::PseudoElement>) const;
+    void set_custom_properties(Optional<CSS::Selector::PseudoElement>, HashMap<FlyString, CSS::StyleProperty> custom_properties);
+    [[nodiscard]] HashMap<FlyString, CSS::StyleProperty> const& custom_properties(Optional<CSS::Selector::PseudoElement>) const;
 
     int queue_an_element_task(HTML::Task::Source, JS::SafeFunction<void()>);
 
@@ -400,8 +399,8 @@ private:
     JS::GCPtr<ShadowRoot> m_shadow_root;
 
     RefPtr<CSS::StyleProperties> m_computed_css_values;
-    HashMap<DeprecatedFlyString, CSS::StyleProperty> m_custom_properties;
-    Array<HashMap<DeprecatedFlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_custom_properties;
+    HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
+    Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_custom_properties;
 
     Vector<FlyString> m_classes;
     Optional<Dir> m_dir;
