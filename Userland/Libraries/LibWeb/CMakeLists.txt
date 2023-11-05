@@ -2,6 +2,7 @@ include(libweb_generators)
 include(accelerated_graphics)
 
 set(SOURCES
+    Animations/Animatable.cpp
     Animations/Animation.cpp
     Animations/AnimationEffect.cpp
     Animations/AnimationPlaybackEvent.cpp
