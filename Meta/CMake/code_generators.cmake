@@ -8,9 +8,10 @@ function(embed_as_string_view name source_file output source_variable_name)
     if (EMBED_STRING_VIEW_NAMESPACE)
         set(namespace_arg "-s ${EMBED_STRING_VIEW_NAMESPACE}")
     endif()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
     add_custom_command(
         OUTPUT "${output}"
-        COMMAND "python3" "${SerenityOS_SOURCE_DIR}/Meta/embed_as_string_view.py" "${source_file}" -o "${output}.tmp" -n "${source_variable_name}" ${namespace_arg}
+        COMMAND "${Python3_EXECUTABLE}" "${SerenityOS_SOURCE_DIR}/Meta/embed_as_string_view.py" "${source_file}" -o "${output}.tmp" -n "${source_variable_name}" ${namespace_arg}
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${output}.tmp" "${output}"
         COMMAND "${CMAKE_COMMAND}" -E remove "${output}.tmp"
         VERBATIM
