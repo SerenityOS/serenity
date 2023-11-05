@@ -125,6 +125,11 @@ private:
 
     void set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry>);
     void remove_entry(DeprecatedString const&);
+    void recalculate_order();
+
+    bool m_dragging { false };
+    Gfx::IntPoint m_mouse_pos;
+    int m_grab_offset { 0 };
 
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Fabian Blatz <fabianblatz@gmail.com>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -239,23 +240,35 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
 void QuickLaunchWidget::mousedown_event(GUI::MouseEvent& event)
 {
     for_each_entry([&](NonnullOwnPtr<QuickLaunchEntry> const& entry, Gfx::IntRect rect) {
+        if (m_dragging && !entry->is_pressed())
+            return;
+
         entry->set_pressed(rect.contains(event.position()));
+        if (entry->is_pressed())
+            m_grab_offset = rect.x() - event.x();
     });
     update();
 }
 
 void QuickLaunchWidget::mousemove_event(GUI::MouseEvent& event)
 {
+    m_mouse_pos = event.position();
     for_each_entry([&](NonnullOwnPtr<QuickLaunchEntry> const& entry, Gfx::IntRect rect) {
         entry->set_hovered(rect.contains(event.position()));
+        if (entry->is_pressed())
+            m_dragging = true;
     });
+
+    if (m_dragging)
+        recalculate_order();
+
     update();
 }
 
 void QuickLaunchWidget::mouseup_event(GUI::MouseEvent& event)
 {
     for_each_entry([&](NonnullOwnPtr<QuickLaunchEntry> const& entry, Gfx::IntRect) {
-        if (entry->is_pressed() && event.button() == GUI::MouseButton::Primary) {
+        if (!m_dragging && entry->is_pressed() && event.button() == GUI::MouseButton::Primary) {
             auto result = entry->launch();
             if (result.is_error()) {
                 // FIXME: This message box is displayed in a weird position
@@ -265,6 +278,8 @@ void QuickLaunchWidget::mouseup_event(GUI::MouseEvent& event)
 
         entry->set_pressed(false);
     });
+
+    m_dragging = false;
 
     update();
 }
@@ -287,6 +302,9 @@ void QuickLaunchWidget::leave_event(Core::Event& event)
         entry->set_hovered(false);
     });
 
+    m_dragging = false;
+    m_grab_offset = 0;
+
     update();
     event.accept();
     Widget::leave_event(event);
@@ -298,7 +316,7 @@ void QuickLaunchWidget::paint_event(GUI::PaintEvent& event)
 
     GUI::Painter painter(*this);
 
-    for_each_entry([&](NonnullOwnPtr<QuickLaunchEntry> const& entry, Gfx::IntRect rect) {
+    auto paint_entry = [this, &painter](NonnullOwnPtr<QuickLaunchEntry> const& entry, Gfx::IntRect rect) {
         Gfx::StylePainter::paint_button(painter, rect, palette(), Gfx::ButtonStyle::Coolbar, entry->is_pressed(), entry->is_hovered());
 
         auto const* icon = entry->icon().bitmap_for_size(16);
@@ -311,7 +329,24 @@ void QuickLaunchWidget::paint_event(GUI::PaintEvent& event)
             painter.blit_brightened(icon_location, *icon, icon->rect());
         else
             painter.blit(icon_location, *icon, icon->rect());
+    };
+
+    NonnullOwnPtr<QuickLaunchEntry> const* dragged_entry = nullptr;
+    Gfx::IntRect dragged_entry_rect;
+
+    for_each_entry([&](NonnullOwnPtr<QuickLaunchEntry> const& entry, Gfx::IntRect rect) {
+        if (m_dragging && entry->is_pressed()) {
+            rect.set_x(m_mouse_pos.x() + m_grab_offset);
+            dragged_entry = &entry;
+            dragged_entry_rect = rect;
+            return;
+        }
+
+        paint_entry(entry, rect);
     });
+
+    if (dragged_entry)
+        paint_entry(*dragged_entry, dragged_entry_rect);
 }
 
 template<typename Callback>
@@ -386,6 +421,44 @@ void QuickLaunchWidget::remove_entry(DeprecatedString const& name)
         m_entries.remove(i);
         return;
     }
+}
+
+void QuickLaunchWidget::recalculate_order()
+{
+    if (!m_dragging)
+        return;
+
+    size_t dragged_index = 0;
+    for (; dragged_index < m_entries.size(); dragged_index++) {
+        if (m_entries[dragged_index]->is_pressed())
+            break;
+    }
+
+    size_t new_index = m_entries.size() + 1;
+    Gfx::IntRect rect(0, 0, quick_launch_button_size, quick_launch_button_size);
+    for (size_t i = 0; i < m_entries.size(); i++) {
+        auto left_break_point = i == 0 ? rect.x() + rect.width() / 2 : rect.x();
+        if (m_mouse_pos.x() < left_break_point) {
+            new_index = i;
+            break;
+        }
+
+        if (i == m_entries.size() - 1 && m_mouse_pos.x() > rect.x() + rect.width() / 2) {
+            new_index = i + 1;
+            break;
+        }
+
+        rect.translate_by(quick_launch_button_size, 0);
+    }
+
+    if (new_index >= m_entries.size() + 1 || new_index == dragged_index)
+        return;
+
+    if (dragged_index < new_index)
+        new_index--;
+
+    auto entry = m_entries.take(dragged_index);
+    m_entries.insert(new_index, move(entry));
 }
 
 }
