@@ -70,14 +70,14 @@ Vector<String> ResourceImplementation::child_names(Resource const& resource)
     VERIFY(resource.m_scheme == Resource::Scheme::File);
 
     Vector<String> children;
-    Core::DirIterator it(resource.filesystem_path().release_value().to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator it(resource.filesystem_path().to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
     while (it.has_next())
         children.append(MUST(String::from_deprecated_string(it.next_path())));
 
     return children;
 }
 
-Optional<String> ResourceImplementation::filesystem_path(Resource const& resource)
+String ResourceImplementation::filesystem_path(Resource const& resource)
 {
     if (resource.m_scheme == Resource::Scheme::Resource)
         return filesystem_path_for_resource_scheme(resource.m_path);

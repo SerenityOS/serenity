@@ -11,11 +11,12 @@
 #include <LibCore/Resource.h>
 
 namespace Core {
+
 class ResourceImplementation {
 public:
     ErrorOr<NonnullRefPtr<Resource>> load_from_uri(StringView);
     Vector<String> child_names(Resource const&);
-    Optional<String> filesystem_path(Resource const&);
+    String filesystem_path(Resource const&);
 
     virtual ~ResourceImplementation() = default;
 
@@ -25,7 +26,7 @@ public:
 protected:
     virtual ErrorOr<NonnullRefPtr<Resource>> load_from_resource_scheme_uri(StringView) = 0;
     virtual Vector<String> child_names_for_resource_scheme(Resource const&) = 0;
-    virtual Optional<String> filesystem_path_for_resource_scheme(String const&) = 0;
+    virtual String filesystem_path_for_resource_scheme(String const&) = 0;
 
     static bool is_directory(StringView filesystem_path);
 
@@ -33,4 +34,5 @@ protected:
     static NonnullRefPtr<Resource> make_resource(String full_path, ByteBuffer);
     static NonnullRefPtr<Resource> make_directory_resource(String full_path);
 };
+
 }
