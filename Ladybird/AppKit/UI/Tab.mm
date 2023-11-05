@@ -8,6 +8,7 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <Ladybird/Utilities.h>
+#include <LibCore/Resource.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ShareableBitmap.h>
 
@@ -50,8 +51,8 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     static dispatch_once_t token;
 
     dispatch_once(&token, ^{
-        auto default_favicon_path = MUST(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
-        auto* ns_default_favicon_path = Ladybird::string_to_ns_string(default_favicon_path);
+        auto default_favicon_path = MUST(Core::Resource::load_from_uri("resource://icons/16x16/app-browser.png"sv));
+        auto* ns_default_favicon_path = Ladybird::string_to_ns_string(default_favicon_path->filesystem_path());
 
         default_favicon = [[NSImage alloc] initWithContentsOfFile:ns_default_favicon_path];
     });
