@@ -23,7 +23,7 @@ ThrowCompletionOr<Value> typeof_variable(VM&, DeprecatedFlyString const&);
 ThrowCompletionOr<void> set_variable(VM&, DeprecatedFlyString const&, Value, Op::EnvironmentMode, Op::SetVariable::InitializationMode);
 Value new_function(VM&, FunctionExpression const&, Optional<IdentifierTableIndex> const& lhs_name, Optional<Register> const& home_object);
 ThrowCompletionOr<void> put_by_value(VM&, Value base, Value property_key_value, Value value, Op::PropertyKind);
-ThrowCompletionOr<Value> get_variable(Bytecode::Interpreter&, DeprecatedFlyString const& name, u32 cache_index);
+ThrowCompletionOr<Value> get_variable(Bytecode::Interpreter&, DeprecatedFlyString const& name, EnvironmentVariableCache&);
 
 struct CalleeAndThis {
     Value callee;
