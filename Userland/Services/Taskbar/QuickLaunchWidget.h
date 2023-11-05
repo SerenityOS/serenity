@@ -138,6 +138,8 @@ private:
 
     void resize();
 
+    void repaint();
+
     void set_or_insert_entry(NonnullOwnPtr<QuickLaunchEntry>, bool save = true);
     void remove_entry(DeprecatedString const&, bool save = true);
     void recalculate_order();
