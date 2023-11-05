@@ -24,13 +24,13 @@ ErrorOr<String> PropertyDeserializer<String>::operator()(JsonValue const& value)
 {
     if (value.is_string()) {
         // FIXME: Port JsonValue to the new String class.
-        return String::from_deprecated_string(value.as_string());
+        return String::from_byte_string(value.as_string());
     }
     return Error::from_string_literal("UTF-8 string is expected");
 }
 
 template<>
-ErrorOr<DeprecatedString> PropertyDeserializer<DeprecatedString>::operator()(JsonValue const& value) const
+ErrorOr<ByteString> PropertyDeserializer<ByteString>::operator()(JsonValue const& value) const
 {
     if (value.is_string())
         return value.as_string();

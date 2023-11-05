@@ -105,59 +105,49 @@ private:
 
 #define REGISTER_INT_PROPERTY(property_name, getter, setter) \
     register_property(                                       \
-        property_name,                                       \
+        property_name##sv,                                   \
         [this] { return this->getter(); },                   \
-        [this](auto& value) {                                \
-            this->setter(value.template to_number<int>());   \
-            return true;                                     \
-        });
+        ::GUI::PropertyDeserializer<int> {},                 \
+        [this](auto const& value) { return setter(value); });
 
 #define REGISTER_BOOL_PROPERTY(property_name, getter, setter) \
     register_property(                                        \
-        property_name,                                        \
+        property_name##sv,                                    \
         [this] { return this->getter(); },                    \
-        [this](auto& value) {                                 \
-            this->setter(value.to_bool());                    \
-            return true;                                      \
-        });
+        ::GUI::PropertyDeserializer<bool> {},                 \
+        [this](auto const& value) { return setter(value); });
 
-// FIXME: Port JsonValue to the new String class.
-#define REGISTER_STRING_PROPERTY(property_name, getter, setter)                                                               \
-    register_property(                                                                                                        \
-        property_name,                                                                                                        \
-        [this]() { return this->getter().to_byte_string(); },                                                                 \
-        [this](auto& value) {                                                                                                 \
-            this->setter(String::from_byte_string(value.to_byte_string()).release_value_but_fixme_should_propagate_errors()); \
-            return true;                                                                                                      \
-        });
+#define REGISTER_STRING_PROPERTY(property_name, getter, setter) \
+    register_property(                                          \
+        property_name##sv,                                      \
+        [this] { return this->getter().to_byte_string(); },     \
+        ::GUI::PropertyDeserializer<String> {},                 \
+        [this](auto const& value) { return setter(value); });
 
 #define REGISTER_DEPRECATED_STRING_PROPERTY(property_name, getter, setter) \
     register_property(                                                     \
-        property_name,                                                     \
+        property_name##sv,                                                 \
         [this] { return this->getter(); },                                 \
-        [this](auto& value) {                                              \
-            this->setter(value.to_byte_string());                          \
-            return true;                                                   \
-        });
+        ::GUI::PropertyDeserializer<ByteString> {},                        \
+        [this](auto const& value) { return setter(value); });
 
 #define REGISTER_READONLY_STRING_PROPERTY(property_name, getter) \
     register_property(                                           \
-        property_name,                                           \
+        property_name##sv,                                       \
         [this] { return this->getter(); },                       \
-        {});
+        nullptr,                                                 \
+        nullptr);
 
 #define REGISTER_WRITE_ONLY_STRING_PROPERTY(property_name, setter) \
     register_property(                                             \
-        property_name,                                             \
-        {},                                                        \
-        [this](auto& value) {                                      \
-            this->setter(value.to_byte_string());                  \
-            return true;                                           \
-        });
+        property_name##sv,                                         \
+        nullptr,                                                   \
+        ::GUI::PropertyDeserializer<ByteString> {},                \
+        [this](auto const& value) { return setter(value); });
 
 #define REGISTER_READONLY_SIZE_PROPERTY(property_name, getter) \
     register_property(                                         \
-        property_name,                                         \
+        property_name##sv,                                     \
         [this] {                                               \
             auto size = this->getter();                        \
             JsonArray size_array;                              \
@@ -165,43 +155,27 @@ private:
             size_array.must_append(size.height());             \
             return size_array;                                 \
         },                                                     \
-        {});
+        nullptr,                                               \
+        nullptr);
 
-#define REGISTER_RECT_PROPERTY(property_name, getter, setter)                       \
-    register_property(                                                              \
-        property_name,                                                              \
-        [this] {                                                                    \
-            auto rect = this->getter();                                             \
-            JsonObject rect_object;                                                 \
-            rect_object.set("x"sv, rect.x());                                       \
-            rect_object.set("y"sv, rect.y());                                       \
-            rect_object.set("width"sv, rect.width());                               \
-            rect_object.set("height"sv, rect.height());                             \
-            return rect_object;                                                     \
-        },                                                                          \
-        [this](auto& value) {                                                       \
-            Gfx::IntRect rect;                                                      \
-            if (value.is_object()) {                                                \
-                rect.set_x(value.as_object().get_i32("x"sv).value_or(0));           \
-                rect.set_y(value.as_object().get_i32("y"sv).value_or(0));           \
-                rect.set_width(value.as_object().get_i32("width"sv).value_or(0));   \
-                rect.set_height(value.as_object().get_i32("height"sv).value_or(0)); \
-            } else if (value.is_array() && value.as_array().size() == 4) {          \
-                rect.set_x(value.as_array()[0].to_i32());                           \
-                rect.set_y(value.as_array()[1].to_i32());                           \
-                rect.set_width(value.as_array()[2].to_i32());                       \
-                rect.set_height(value.as_array()[3].to_i32());                      \
-            } else {                                                                \
-                return false;                                                       \
-            }                                                                       \
-            setter(rect);                                                           \
-                                                                                    \
-            return true;                                                            \
-        });
+#define REGISTER_RECT_PROPERTY(property_name, getter, setter) \
+    register_property(                                        \
+        property_name##sv,                                    \
+        [this] {                                              \
+            auto rect = this->getter();                       \
+            JsonObject rect_object;                           \
+            rect_object.set("x"sv, rect.x());                 \
+            rect_object.set("y"sv, rect.y());                 \
+            rect_object.set("width"sv, rect.width());         \
+            rect_object.set("height"sv, rect.height());       \
+            return rect_object;                               \
+        },                                                    \
+        ::GUI::PropertyDeserializer<Gfx::IntRect> {},         \
+        [this](auto const& value) { return setter(value); });
 
 #define REGISTER_SIZE_PROPERTY(property_name, getter, setter) \
     register_property(                                        \
-        property_name,                                        \
+        property_name##sv,                                    \
         [this] {                                              \
             auto size = this->getter();                       \
             JsonArray size_array;                             \
@@ -209,49 +183,41 @@ private:
             size_array.must_append(size.height());            \
             return size_array;                                \
         },                                                    \
-        [this](auto& value) {                                 \
-            if (!value.is_array())                            \
-                return false;                                 \
-            Gfx::IntSize size;                                \
-            size.set_width(value.as_array()[0].to_i32());     \
-            size.set_height(value.as_array()[1].to_i32());    \
-            setter(size);                                     \
-            return true;                                      \
-        });
+        ::GUI::PropertyDeserializer<Gfx::IntSize> {},         \
+        [this](auto const& value) { return setter(value); });
 
-#define REGISTER_ENUM_PROPERTY(property_name, getter, setter, EnumType, ...) \
-    register_property(                                                       \
-        property_name,                                                       \
-        [this]() -> JsonValue {                                              \
-            struct {                                                         \
-                EnumType enum_value;                                         \
-                ByteString string_value;                                     \
-            } options[] = { __VA_ARGS__ };                                   \
-            auto enum_value = getter();                                      \
-            for (size_t i = 0; i < array_size(options); ++i) {               \
-                auto& option = options[i];                                   \
-                if (enum_value == option.enum_value)                         \
-                    return option.string_value;                              \
-            }                                                                \
-            return JsonValue();                                              \
-        },                                                                   \
-        [this](auto& value) {                                                \
-            struct {                                                         \
-                EnumType enum_value;                                         \
-                ByteString string_value;                                     \
-            } options[] = { __VA_ARGS__ };                                   \
-            if (!value.is_string())                                          \
-                return false;                                                \
-            auto string_value = value.as_string();                           \
-            for (size_t i = 0; i < array_size(options); ++i) {               \
-                auto& option = options[i];                                   \
-                if (string_value == option.string_value) {                   \
-                    setter(option.enum_value);                               \
-                    return true;                                             \
-                }                                                            \
-            }                                                                \
-            return false;                                                    \
-        })
+#define REGISTER_ENUM_PROPERTY(property_name, getter, setter, EnumType, ...)                 \
+    register_property(                                                                       \
+        property_name##sv,                                                                   \
+        [this]() -> JsonValue {                                                              \
+            struct {                                                                         \
+                EnumType enum_value;                                                         \
+                ByteString string_value;                                                     \
+            } options[] = { __VA_ARGS__ };                                                   \
+            auto enum_value = getter();                                                      \
+            for (size_t i = 0; i < array_size(options); ++i) {                               \
+                auto const& option = options[i];                                             \
+                if (enum_value == option.enum_value)                                         \
+                    return option.string_value;                                              \
+            }                                                                                \
+            VERIFY_NOT_REACHED();                                                            \
+        },                                                                                   \
+        [](JsonValue const& value) -> ErrorOr<EnumType> {                                    \
+            if (!value.is_string())                                                          \
+                return Error::from_string_literal("String is expected");                     \
+            auto string = value.as_string();                                                 \
+            struct {                                                                         \
+                EnumType enum_value;                                                         \
+                ByteString string_value;                                                     \
+            } options[] = { __VA_ARGS__ };                                                   \
+            for (size_t i = 0; i < array_size(options); ++i) {                               \
+                auto const& option = options[i];                                             \
+                if (string == option.string_value)                                           \
+                    return option.enum_value;                                                \
+            }                                                                                \
+            return Error::from_string_literal("Value is not a valid option for " #EnumType); \
+        },                                                                                   \
+        [this](auto const& value) { return setter(value); })
 
 #define REGISTER_TEXT_ALIGNMENT_PROPERTY(property_name, getter, setter) \
     REGISTER_ENUM_PROPERTY(                                             \
