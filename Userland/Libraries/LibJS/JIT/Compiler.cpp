@@ -22,7 +22,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#if ARCH(X86_64)
+#ifdef JIT_ARCH_SUPPORTED
 
 #    define LOG_JIT_SUCCESS 0
 #    define LOG_JIT_FAILURE 1
