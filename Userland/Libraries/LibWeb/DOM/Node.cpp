@@ -1379,7 +1379,7 @@ bool Node::is_equal_node(Node const* other_node) const
         // Its namespace, namespace prefix, local name, and its attribute list’s size.
         auto& this_element = verify_cast<Element>(*this);
         auto& other_element = verify_cast<Element>(*other_node);
-        if (this_element.namespace_() != other_element.namespace_()
+        if (this_element.namespace_uri() != other_element.namespace_uri()
             || this_element.prefix() != other_element.prefix()
             || this_element.local_name() != other_element.local_name()
             || this_element.attribute_list_size() != other_element.attribute_list_size())

@@ -3915,7 +3915,7 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
             //    Otherwise, let tagname be current node's qualified name.
             FlyString tag_name;
 
-            if (element.namespace_().is_one_of(Namespace::HTML, Namespace::MathML, Namespace::SVG))
+            if (element.namespace_uri().has_value() && element.namespace_uri()->is_one_of(Namespace::HTML, Namespace::MathML, Namespace::SVG))
                 tag_name = element.local_name();
             else
                 tag_name = element.qualified_name();

@@ -562,10 +562,10 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
             if (!style_sheet_for_rule.has_value() || !style_sheet_for_rule->default_namespace().has_value())
                 return true;
             // "Otherwise it is equivalent to ns|E where ns is the default namespace."
-            return element.namespace_() == style_sheet_for_rule->default_namespace();
+            return element.namespace_uri() == style_sheet_for_rule->default_namespace();
         case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::None:
             // "elements with name E without a namespace"
-            return element.namespace_().is_empty();
+            return !element.namespace_uri().has_value();
         case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Any:
             // "elements with name E in any namespace, including those without a namespace"
             return true;
@@ -578,7 +578,7 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
                 return false;
 
             auto selector_namespace = style_sheet_for_rule->namespace_uri(qualified_name.namespace_);
-            return selector_namespace.has_value() && selector_namespace.value() == element.namespace_();
+            return selector_namespace.has_value() && selector_namespace.value() == element.namespace_uri();
         }
         VERIFY_NOT_REACHED();
     }
