@@ -102,6 +102,11 @@ private:
         PackBits = 32773,
     };
 
+    enum class Predictor {
+        None = 1,
+        HorizontalDifferencing = 2,
+    };
+
     template<typename ByteReader>
     ErrorOr<void> loop_over_pixels(ByteReader&& byte_reader)
     {
@@ -112,8 +117,18 @@ private:
                 if (scanline >= static_cast<u32>(m_size.height()))
                     break;
 
+                Optional<Color> last_color {};
+
                 for (u32 column = 0; column < static_cast<u32>(m_size.width()); ++column) {
-                    auto const color = Color { TRY(byte_reader()), TRY(byte_reader()), TRY(byte_reader()) };
+                    auto color = Color { TRY(byte_reader()), TRY(byte_reader()), TRY(byte_reader()) };
+
+                    if (m_predictor == Predictor::HorizontalDifferencing && last_color.has_value()) {
+                        color.set_red(last_color->red() + color.red());
+                        color.set_green(last_color->green() + color.green());
+                        color.set_blue(last_color->blue() + color.blue());
+                    }
+
+                    last_color = color;
                     m_bitmap->set_pixel(column, scanline, color);
                 }
             }
@@ -528,6 +543,23 @@ private:
                     });
             }
             break;
+        case 317:
+            // Predictor
+            if (type != Type::UnsignedShort || count != 1)
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid tag 317");
+
+            TRY(value[0].visit(
+                [this](u16 const& predictor) -> ErrorOr<void> {
+                    if (predictor != 1 && predictor != 2)
+                        return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid predictor value");
+
+                    m_predictor = static_cast<Predictor>(predictor);
+                    return {};
+                },
+                [&](auto const&) -> ErrorOr<void> {
+                    VERIFY_NOT_REACHED();
+                }));
+            break;
         default:
             dbgln_if(TIFF_DEBUG, "Unknown tag: {}", tag);
         }
@@ -545,6 +577,7 @@ private:
 
     Array<u16, 3> m_bits_per_sample {};
     Compression m_compression {};
+    Predictor m_predictor {};
     Vector<u32> m_strip_offsets {};
     u32 m_rows_per_strip {};
     Vector<u32> m_strip_bytes_count {};
