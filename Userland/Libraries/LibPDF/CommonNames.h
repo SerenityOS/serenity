@@ -21,6 +21,7 @@
     X(BaseEncoding)               \
     X(BaseFont)                   \
     X(BitsPerComponent)           \
+    X(BitsPerSample)              \
     X(BlackPoint)                 \
     X(C)                          \
     X(C0)                         \
@@ -59,6 +60,7 @@
     X(Differences)                \
     X(Domain)                     \
     X(E)                          \
+    X(Encode)                     \
     X(Encoding)                   \
     X(Encrypt)                    \
     X(EncryptMetadata)            \
@@ -126,6 +128,7 @@
     X(OE)                         \
     X(OP)                         \
     X(OPM)                        \
+    X(Order)                      \
     X(Ordering)                   \
     X(Outlines)                   \
     X(P)                          \
@@ -149,6 +152,7 @@
     X(SM)                         \
     X(SMask)                      \
     X(Separation)                 \
+    X(Size)                       \
     X(StmF)                       \
     X(StrF)                       \
     X(Subject)                    \

@@ -18,10 +18,120 @@ struct Bound {
     float upper;
 };
 
+// 3.9.1 Type 0 (Sampled) Functions
 class SampledFunction final : public Function {
 public:
+    static PDFErrorOr<NonnullRefPtr<SampledFunction>> create(Document*, Vector<Bound> domain, Optional<Vector<Bound>> range, NonnullRefPtr<StreamObject>);
     virtual PDFErrorOr<ReadonlySpan<float>> evaluate(ReadonlySpan<float>) const override;
+
+private:
+    Vector<Bound> m_domain;
+    Vector<Bound> m_range;
+
+    Vector<unsigned> m_sizes;
+    int m_bits_per_sample { 0 };
+
+    enum class Order {
+        Linear = 1,
+        Cubic = 3,
+    };
+    Order m_order { Order::Linear };
+
+    Vector<Bound> m_encode;
+    Vector<Bound> m_decode;
 };
+
+PDFErrorOr<NonnullRefPtr<SampledFunction>>
+SampledFunction::create(Document* document, Vector<Bound> domain, Optional<Vector<Bound>> range, NonnullRefPtr<StreamObject> stream)
+{
+    if (!range.has_value())
+        return Error { Error::Type::MalformedPDF, "Function type 0 requires range" };
+
+    // "TABLE 3.36 Additional entries specific to a type 0 function dictionary"
+    auto const& dict = stream->dict();
+
+    if (!dict->contains(CommonNames::Size))
+        return Error { Error::Type::MalformedPDF, "Function type 0 requires /Size" };
+    auto size_array = TRY(dict->get_array(document, CommonNames::Size));
+    Vector<unsigned> sizes;
+    for (auto const& size_value : *size_array) {
+        if (size_value.to_int() <= 0)
+            return Error { Error::Type::MalformedPDF, "Function type 0 /Size entry not positive" };
+        sizes.append(static_cast<unsigned>(size_value.to_int()));
+    }
+    if (sizes.size() != domain.size())
+        return Error { Error::Type::MalformedPDF, "Function type 0 /Size array has invalid size" };
+
+    if (!dict->contains(CommonNames::BitsPerSample))
+        return Error { Error::Type::MalformedPDF, "Function type 0 requires /BitsPerSample" };
+    auto bits_per_sample = TRY(document->resolve_to<int>(dict->get_value(CommonNames::BitsPerSample)));
+    switch (bits_per_sample) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+    case 12:
+    case 16:
+    case 24:
+    case 32:
+        // Ok!
+        break;
+    default:
+        dbgln("invalid /BitsPerSample {}", bits_per_sample);
+        return Error { Error::Type::MalformedPDF, "Function type 0 has invalid /BitsPerSample" };
+    }
+
+    Order order = Order::Linear;
+    if (dict->contains(CommonNames::Order))
+        order = static_cast<Order>(TRY(document->resolve_to<int>(dict->get_value(CommonNames::Order))));
+    if (order != Order::Linear && order != Order::Cubic)
+        return Error { Error::Type::MalformedPDF, "Function type 0 has invalid /Order" };
+
+    Vector<Bound> encode;
+    if (dict->contains(CommonNames::Encode)) {
+        auto encode_array = TRY(dict->get_array(document, CommonNames::Encode));
+        if (encode_array->size() % 2 != 0)
+            return Error { Error::Type::MalformedPDF, "Function type 0 /Encode size not multiple of 2" };
+        for (size_t i = 0; i < encode_array->size(); i += 2)
+            encode.append({ encode_array->at(i).to_float(), encode_array->at(i + 1).to_float() });
+    } else {
+        for (unsigned const size : sizes)
+            encode.append({ 0, static_cast<float>(size - 1) });
+    }
+    if (encode.size() != sizes.size())
+        return Error { Error::Type::MalformedPDF, "Function type 0 /Encode array has invalid size" };
+
+    Vector<Bound> decode;
+    if (dict->contains(CommonNames::Decode)) {
+        auto decode_array = TRY(dict->get_array(document, CommonNames::Decode));
+        if (decode_array->size() % 2 != 0)
+            return Error { Error::Type::MalformedPDF, "Function type 0 /Decode size not multiple of 2" };
+        for (size_t i = 0; i < decode_array->size(); i += 2)
+            decode.append({ decode_array->at(i).to_float(), decode_array->at(i + 1).to_float() });
+    } else {
+        decode = range.value();
+    }
+    if (decode.size() != range.value().size())
+        return Error { Error::Type::MalformedPDF, "Function type 0 /Decode array has invalid size" };
+
+    size_t size_product = 1;
+    for (unsigned const size : sizes)
+        size_product *= size;
+    size_t bits_per_plane = size_product * bits_per_sample;
+    size_t total_bits = bits_per_plane * decode.size();
+    if (stream->bytes().size() < ceil_div(total_bits, 8ull))
+        return Error { Error::Type::MalformedPDF, "Function type 0 stream too small" };
+
+    auto function = adopt_ref(*new SampledFunction());
+    function->m_domain = move(domain);
+    function->m_range = move(range.value());
+    function->m_sizes = move(sizes);
+    function->m_bits_per_sample = bits_per_sample;
+    function->m_order = order;
+    function->m_encode = move(encode);
+    function->m_decode = move(decode);
+    return function;
+}
 
 PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float>) const
 {
@@ -183,7 +293,9 @@ PDFErrorOr<NonnullRefPtr<Function>> Function::create(Document* document, Nonnull
 
     switch (function_type) {
     case 0:
-        return adopt_ref(*new SampledFunction());
+        if (!object->is<StreamObject>())
+            return Error { Error::Type::MalformedPDF, "Function type 0 requires stream object" };
+        return SampledFunction::create(document, move(domain), move(optional_range), object->cast<StreamObject>());
     // The spec has no entry for `1`.
     case 2:
         // FIXME: spec is not clear on if this should work with a StreamObject.
