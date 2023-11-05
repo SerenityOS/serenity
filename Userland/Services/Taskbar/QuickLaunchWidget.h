@@ -20,7 +20,6 @@ namespace Taskbar {
 
 class QuickLaunchEntry {
 public:
-    static OwnPtr<QuickLaunchEntry> create_from_config_value(StringView path);
     static OwnPtr<QuickLaunchEntry> create_from_path(StringView path);
 
     virtual ~QuickLaunchEntry() = default;
@@ -86,7 +85,7 @@ public:
 
     virtual ErrorOr<void> launch() const override;
     virtual GUI::Icon icon() const override;
-    virtual DeprecatedString name() const override;
+    virtual DeprecatedString name() const override { return m_path; }
     virtual DeprecatedString file_name_to_watch() const override { return m_path; }
 
     virtual DeprecatedString path() override { return m_path; }
@@ -103,8 +102,9 @@ public:
     static ErrorOr<NonnullRefPtr<QuickLaunchWidget>> create();
     virtual ~QuickLaunchWidget() override = default;
 
-    void load_entries(bool save = true);
+    ErrorOr<bool> add_from_pid(pid_t pid);
 
+protected:
     virtual void config_key_was_removed(StringView, StringView, StringView) override;
     virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;
 
@@ -120,17 +120,18 @@ public:
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
-    ErrorOr<bool> add_from_pid(pid_t pid);
-
 private:
     static constexpr StringView CONFIG_DOMAIN = "Taskbar"sv;
     static constexpr StringView CONFIG_GROUP_ENTRIES = "QuickLaunch_Entries"sv;
     static constexpr int BUTTON_SIZE = 24;
 
     explicit QuickLaunchWidget();
-    ErrorOr<void> add_or_adjust_button(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>, bool save = true);
+
     ErrorOr<void> create_context_menu();
-    void add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries, bool save = true);
+
+    void load_entries(bool save = true);
+    ErrorOr<void> update_entry(DeprecatedString const&, NonnullOwnPtr<QuickLaunchEntry>, bool save = true);
+    void add_entries(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries, bool save = true);
 
     template<typename Callback>
     void for_each_entry(Callback);

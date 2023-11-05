@@ -36,6 +36,28 @@ static DeprecatedString entry_to_config_string(size_t index, NonnullOwnPtr<Quick
     return DeprecatedString::formatted("{}:{}", index, entry->path());
 }
 
+OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
+{
+    if (path.ends_with(".af"sv)) {
+        auto af_path = path.to_deprecated_string();
+        if (!path.starts_with('/'))
+            af_path = DeprecatedString::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, path);
+
+        return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(af_path));
+    }
+
+    auto stat_or_error = Core::System::stat(path);
+    if (stat_or_error.is_error()) {
+        dbgln("Failed to stat quick launch entry file: {}", stat_or_error.release_error());
+        return {};
+    }
+
+    auto stat = stat_or_error.release_value();
+    if (S_ISREG(stat.st_mode) && ((stat.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) != 0))
+        return make<QuickLaunchEntryExecutable>(path);
+    return make<QuickLaunchEntryFile>(path);
+}
+
 ErrorOr<void> QuickLaunchEntryAppFile::launch() const
 {
     auto executable = m_app_file->executable();
@@ -86,13 +108,6 @@ GUI::Icon QuickLaunchEntryFile::icon() const
 {
     return GUI::FileIconProvider::icon_for_path(m_path);
 }
-
-DeprecatedString QuickLaunchEntryFile::name() const
-{
-    // '=' is a special character in config files
-    return m_path;
-}
-
 ErrorOr<NonnullRefPtr<QuickLaunchWidget>> QuickLaunchWidget::create()
 {
     auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) QuickLaunchWidget()));
@@ -101,120 +116,40 @@ ErrorOr<NonnullRefPtr<QuickLaunchWidget>> QuickLaunchWidget::create()
     return widget;
 }
 
-QuickLaunchWidget::QuickLaunchWidget()
+ErrorOr<bool> QuickLaunchWidget::add_from_pid(pid_t pid_to_add)
 {
-    set_shrink_to_fit(true);
-    set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 0);
-    set_frame_style(Gfx::FrameStyle::NoFrame);
-    set_fixed_height(24);
-}
-
-void QuickLaunchWidget::load_entries(bool save)
-{
-    struct ConfigEntry {
-        int index;
-        DeprecatedString path;
-    };
-
-    Vector<ConfigEntry> config_entries;
-    auto keys = Config::list_keys(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES);
-    for (auto& name : keys) {
-        dbgln("loading key: {}", name);
-        auto value = Config::read_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, name);
-        auto values = value.split(':');
-
-        config_entries.append({ values[0].to_int().release_value(), values[1] });
-    }
-
-    quick_sort(config_entries, [](ConfigEntry const& a, ConfigEntry const& b) {
-        return a.index < b.index;
-    });
-
-    Vector<NonnullOwnPtr<QuickLaunchEntry>> entries;
-    for (auto const& config_entry : config_entries) {
-        auto entry = QuickLaunchEntry::create_from_config_value(config_entry.path);
-        if (!entry)
+    auto processes_file = TRY(Core::File::open("/sys/kernel/processes"sv, Core::File::OpenMode::Read));
+    auto file_content = TRY(processes_file->read_until_eof());
+    auto json_obj = TRY(JsonValue::from_string(file_content)).as_object();
+    for (auto value : json_obj.get_array("processes"sv).release_value().values()) {
+        auto& process_object = value.as_object();
+        auto pid = process_object.get_i32("pid"sv).value_or(0);
+        if (pid != pid_to_add)
             continue;
 
-        entries.append(entry.release_nonnull());
-    }
+        auto executable = process_object.get_deprecated_string("executable"sv);
+        if (!executable.has_value())
+            break;
 
-    add_quick_launch_buttons(move(entries), save);
-}
+        auto maybe_name = process_object.get_deprecated_string("name"sv);
+        if (!maybe_name.has_value())
+            break;
 
-ErrorOr<void> QuickLaunchWidget::create_context_menu()
-{
-    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv));
-    m_context_menu = GUI::Menu::construct();
-    m_context_menu_default_action = GUI::Action::create("&Remove", icon, [this](auto&) {
-        remove_entry(m_context_menu_app_name);
-        resize();
-        update();
-    });
-    m_context_menu->add_action(*m_context_menu_default_action);
-
-    return {};
-}
-
-void QuickLaunchWidget::add_quick_launch_buttons(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries, bool save)
-{
-    size_t size = entries.size();
-    for (size_t i = 0; i < size; i++) {
-        m_entries.append(entries.take(0));
-        if (save)
-            Config::write_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, sanitize_name(m_entries.last()->name()), entry_to_config_string(m_entries.size() - 1, m_entries.last()));
-    }
-
-    resize();
-    update();
-}
-
-OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_config_value(StringView path)
-{
-    if (!path.starts_with('/') && path.ends_with(".af"sv)) {
-        auto af_path = DeprecatedString::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, path);
-        return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(af_path));
-    }
-    return create_from_path(path);
-}
-
-OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
-{
-    if (path.ends_with(".af"sv))
-        return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(path));
-    auto stat_or_error = Core::System::stat(path);
-    if (stat_or_error.is_error()) {
-        dbgln("Failed to stat quick launch entry file: {}", stat_or_error.release_error());
-        return {};
-    }
-
-    auto stat = stat_or_error.release_value();
-    if (S_ISREG(stat.st_mode) && (stat.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
-        return make<QuickLaunchEntryExecutable>(path);
-    return make<QuickLaunchEntryFile>(path);
-}
-
-ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry> entry, bool save)
-{
-    auto file_name_to_watch = entry->file_name_to_watch();
-    if (!file_name_to_watch.is_empty()) {
-        if (!m_watcher) {
-            m_watcher = TRY(Core::FileWatcher::create());
-            m_watcher->on_change = [button_name, save, this](Core::FileWatcherEvent const&) {
-                dbgln("Removing QuickLaunch entry \"{}\"", button_name);
-                remove_entry(button_name, save);
-                resize();
-                update();
-            };
+        auto name = maybe_name.release_value();
+        auto path = executable.release_value();
+        if (Desktop::AppFile::exists_for_app(name)) {
+            path = Desktop::AppFile::app_file_path_for_app(name);
         }
-        TRY(m_watcher->add_watch(file_name_to_watch, Core::FileWatcherEvent::Type::Deleted));
+
+        auto new_entry = QuickLaunchEntry::create_from_path(path);
+        if (!new_entry)
+            break;
+
+        TRY(update_entry(name, new_entry.release_nonnull()));
+        return true;
     }
 
-    set_or_insert_entry(move(entry), save);
-    resize();
-    update();
-
-    return {};
+    return false;
 }
 
 void QuickLaunchWidget::config_key_was_removed(StringView domain, StringView group, StringView key)
@@ -246,7 +181,7 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
             auto path = url.serialize_path();
             auto entry = QuickLaunchEntry::create_from_path(path);
             if (entry) {
-                auto result = add_or_adjust_button(entry->name(), entry.release_nonnull());
+                auto result = update_entry(entry->name(), entry.release_nonnull());
                 if (result.is_error())
                     GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to add quick launch entry: {}", result.release_error()));
             }
@@ -366,6 +301,97 @@ void QuickLaunchWidget::paint_event(GUI::PaintEvent& event)
         paint_entry(*dragged_entry, dragged_entry_rect);
 }
 
+QuickLaunchWidget::QuickLaunchWidget()
+{
+    set_shrink_to_fit(true);
+    set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 0);
+    set_frame_style(Gfx::FrameStyle::NoFrame);
+    set_fixed_height(24);
+}
+
+ErrorOr<void> QuickLaunchWidget::create_context_menu()
+{
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv));
+    m_context_menu = GUI::Menu::construct();
+    m_context_menu_default_action = GUI::Action::create("&Remove", icon, [this](auto&) {
+        remove_entry(m_context_menu_app_name);
+        resize();
+        update();
+    });
+    m_context_menu->add_action(*m_context_menu_default_action);
+
+    return {};
+}
+
+void QuickLaunchWidget::load_entries(bool save)
+{
+    struct ConfigEntry {
+        int index;
+        DeprecatedString path;
+    };
+
+    Vector<ConfigEntry> config_entries;
+    auto keys = Config::list_keys(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES);
+    for (auto& name : keys) {
+        dbgln("loading key: {}", name);
+        auto value = Config::read_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, name);
+        auto values = value.split(':');
+
+        config_entries.append({ values[0].to_int().release_value(), values[1] });
+    }
+
+    quick_sort(config_entries, [](ConfigEntry const& a, ConfigEntry const& b) {
+        return a.index < b.index;
+    });
+
+    Vector<NonnullOwnPtr<QuickLaunchEntry>> entries;
+    for (auto const& config_entry : config_entries) {
+        auto entry = QuickLaunchEntry::create_from_path(config_entry.path);
+        if (!entry)
+            continue;
+
+        entries.append(entry.release_nonnull());
+    }
+
+    add_entries(move(entries), save);
+}
+
+void QuickLaunchWidget::add_entries(Vector<NonnullOwnPtr<QuickLaunchEntry>> entries, bool save)
+{
+    size_t size = entries.size();
+    for (size_t i = 0; i < size; i++) {
+        m_entries.append(entries.take(0));
+        if (save)
+            Config::write_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, sanitize_name(m_entries.last()->name()), entry_to_config_string(m_entries.size() - 1, m_entries.last()));
+    }
+
+    resize();
+    update();
+}
+
+ErrorOr<void> QuickLaunchWidget::update_entry(DeprecatedString const& button_name, NonnullOwnPtr<QuickLaunchEntry> entry, bool save)
+{
+    auto file_name_to_watch = entry->file_name_to_watch();
+    if (!file_name_to_watch.is_empty()) {
+        if (!m_watcher) {
+            m_watcher = TRY(Core::FileWatcher::create());
+            m_watcher->on_change = [button_name, save, this](Core::FileWatcherEvent const&) {
+                dbgln("Removing QuickLaunch entry \"{}\"", button_name);
+                remove_entry(button_name, save);
+                resize();
+                update();
+            };
+        }
+        TRY(m_watcher->add_watch(file_name_to_watch, Core::FileWatcherEvent::Type::Deleted));
+    }
+
+    set_or_insert_entry(move(entry), save);
+    resize();
+    update();
+
+    return {};
+}
+
 template<typename Callback>
 void QuickLaunchWidget::for_each_entry(Callback callback)
 {
@@ -374,42 +400,6 @@ void QuickLaunchWidget::for_each_entry(Callback callback)
         callback(entry, rect);
         rect.translate_by(BUTTON_SIZE, 0);
     }
-}
-
-ErrorOr<bool> QuickLaunchWidget::add_from_pid(pid_t pid_to_add)
-{
-    auto processes_file = TRY(Core::File::open("/sys/kernel/processes"sv, Core::File::OpenMode::Read));
-    auto file_content = TRY(processes_file->read_until_eof());
-    auto json_obj = TRY(JsonValue::from_string(file_content)).as_object();
-    for (auto value : json_obj.get_array("processes"sv).release_value().values()) {
-        auto& process_object = value.as_object();
-        auto pid = process_object.get_i32("pid"sv).value_or(0);
-        if (pid != pid_to_add)
-            continue;
-
-        auto executable = process_object.get_deprecated_string("executable"sv);
-        if (!executable.has_value())
-            break;
-
-        auto maybe_name = process_object.get_deprecated_string("name"sv);
-        if (!maybe_name.has_value())
-            break;
-
-        auto name = maybe_name.release_value();
-        auto path = executable.release_value();
-        if (Desktop::AppFile::exists_for_app(name)) {
-            path = Desktop::AppFile::app_file_path_for_app(name);
-        }
-
-        auto new_entry = QuickLaunchEntry::create_from_path(path);
-        if (!new_entry)
-            break;
-
-        TRY(add_or_adjust_button(name, new_entry.release_nonnull()));
-        return true;
-    }
-
-    return false;
 }
 
 void QuickLaunchWidget::resize()
