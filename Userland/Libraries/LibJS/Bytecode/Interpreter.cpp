@@ -760,7 +760,7 @@ ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter&) const
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto base_value = interpreter.accumulator();
-    interpreter.accumulator() = TRY(get_by_id(interpreter, interpreter.current_executable().get_identifier(m_property), base_value, base_value, m_cache_index));
+    interpreter.accumulator() = TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, base_value, m_cache_index));
     return {};
 }
 
@@ -768,7 +768,7 @@ ThrowCompletionOr<void> GetByIdWithThis::execute_impl(Bytecode::Interpreter& int
 {
     auto base_value = interpreter.accumulator();
     auto this_value = interpreter.reg(m_this_value);
-    interpreter.accumulator() = TRY(get_by_id(interpreter, interpreter.current_executable().get_identifier(m_property), base_value, this_value, m_cache_index));
+    interpreter.accumulator() = TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, this_value, m_cache_index));
     return {};
 }
 
@@ -1071,7 +1071,7 @@ ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) 
 
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(get_by_value(interpreter, interpreter.reg(m_base), interpreter.accumulator()));
+    interpreter.accumulator() = TRY(get_by_value(interpreter.vm(), interpreter.reg(m_base), interpreter.accumulator()));
     return {};
 }
 
