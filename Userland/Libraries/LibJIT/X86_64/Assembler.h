@@ -731,7 +731,7 @@ struct X86_64Assembler {
     }
 
     void native_call(
-        void* callee,
+        u64 callee,
         Vector<Operand> const& preserved_registers = {},
         Vector<Operand> const& stack_arguments = {})
     {
@@ -746,14 +746,14 @@ struct X86_64Assembler {
             push(stack_argument);
 
         // load callee into RAX
-        mov(Operand::Register(Reg::RAX), Operand::Imm(bit_cast<u64>(callee)));
+        mov(Operand::Register(Reg::RAX), Operand::Imm(callee));
 
         // call RAX
         emit8(0xff);
         emit_modrm_slash(2, Operand::Register(Reg::RAX));
 
         if (!stack_arguments.is_empty() || needs_aligning)
-            add(Operand::Register(Reg::RSP), Operand::Imm((stack_arguments.size() + (needs_aligning ? 1 : 0)) * sizeof(void*)));
+            add(Operand::Register(Reg::RSP), Operand::Imm((stack_arguments.size() + (needs_aligning ? 1 : 0)) * sizeof(u64)));
 
         for (auto const& reg : preserved_registers)
             pop(reg);
