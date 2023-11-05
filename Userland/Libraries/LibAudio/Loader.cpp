@@ -44,7 +44,7 @@ static constexpr LoaderPluginInitializer s_initializers[] = {
 
 ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(StringView path)
 {
-    auto stream = TRY(Core::MappedFile::map(path, Core::MappedFile::OpenMode::ReadOnly));
+    auto stream = TRY(Core::MappedFile::map(path, Core::MappedFile::Mode::ReadOnly));
     return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
 }
 

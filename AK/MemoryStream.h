@@ -18,7 +18,12 @@ namespace AK {
 /// using a single read/write head.
 class FixedMemoryStream : public SeekableStream {
 public:
-    explicit FixedMemoryStream(Bytes bytes, bool writing_enabled = true);
+    enum class Mode {
+        ReadOnly,
+        ReadWrite,
+    };
+
+    explicit FixedMemoryStream(Bytes bytes, Mode mode = Mode::ReadWrite);
     explicit FixedMemoryStream(ReadonlyBytes bytes);
 
     virtual bool is_eof() const override;
