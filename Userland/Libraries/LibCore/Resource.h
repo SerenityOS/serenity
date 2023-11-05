@@ -30,6 +30,7 @@ public:
     [[nodiscard]] String uri() const;
     [[nodiscard]] String filename() const;
     [[nodiscard]] String filesystem_path() const;
+    [[nodiscard]] String file_url() const;
 
     [[nodiscard]] ByteBuffer clone_data() const;
     [[nodiscard]] ByteBuffer release_data() &&;
