@@ -7,6 +7,7 @@
 
 #include "BrowserWindow.h"
 #include "ConsoleWidget.h"
+#include "Icon.h"
 #include "InspectorWidget.h"
 #include "Settings.h"
 #include "StringUtils.h"
@@ -32,8 +33,6 @@
 #include <QPainter>
 #include <QPoint>
 #include <QResizeEvent>
-
-extern DeprecatedString s_serenity_resource_root;
 
 namespace Ladybird {
 
@@ -291,14 +290,14 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     };
 
     auto* search_selected_text_action = new QAction("&Search for <query>", this);
-    search_selected_text_action->setIcon(QIcon(QString("%1/res/icons/16x16/find.png").arg(s_serenity_resource_root.characters())));
+    search_selected_text_action->setIcon(load_icon_from_uri("resource://icons/16x16/find.png"sv));
     QObject::connect(search_selected_text_action, &QAction::triggered, this, [this]() {
         auto url = MUST(String::formatted(Settings::the()->search_engine().query_url, URL::percent_encode(*m_page_context_menu_search_text)));
         m_window->new_tab(qstring_from_ak_string(url), Web::HTML::ActivateTab::Yes);
     });
 
     auto* take_visible_screenshot_action = new QAction("Take &Visible Screenshot", this);
-    take_visible_screenshot_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
+    take_visible_screenshot_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
     QObject::connect(take_visible_screenshot_action, &QAction::triggered, this, [this]() {
         if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible); result.is_error()) {
             auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
@@ -307,7 +306,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     });
 
     auto* take_full_screenshot_action = new QAction("Take &Full Screenshot", this);
-    take_full_screenshot_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
+    take_full_screenshot_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
     QObject::connect(take_full_screenshot_action, &QAction::triggered, this, [this]() {
         if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full); result.is_error()) {
             auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
@@ -350,19 +349,19 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     };
 
     auto* open_link_action = new QAction("&Open", this);
-    open_link_action->setIcon(QIcon(QString("%1/res/icons/16x16/go-forward.png").arg(s_serenity_resource_root.characters())));
+    open_link_action->setIcon(load_icon_from_uri("resource://icons/16x16/go-forward.png"sv));
     QObject::connect(open_link_action, &QAction::triggered, this, [this]() {
         open_link(m_link_context_menu_url);
     });
 
     auto* open_link_in_new_tab_action = new QAction("&Open in New &Tab", this);
-    open_link_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    open_link_in_new_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/new-tab.png"sv));
     QObject::connect(open_link_in_new_tab_action, &QAction::triggered, this, [this]() {
         open_link_in_new_tab(m_link_context_menu_url);
     });
 
     auto* copy_url_action = new QAction("Copy &URL", this);
-    copy_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    copy_url_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
     QObject::connect(copy_url_action, &QAction::triggered, this, [this]() {
         copy_link_url(m_link_context_menu_url);
     });
@@ -383,19 +382,19 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     };
 
     auto* open_image_action = new QAction("&Open Image", this);
-    open_image_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
+    open_image_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-image.png"sv));
     QObject::connect(open_image_action, &QAction::triggered, this, [this]() {
         open_link(m_image_context_menu_url);
     });
 
     auto* open_image_in_new_tab_action = new QAction("&Open Image in New &Tab", this);
-    open_image_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    open_image_in_new_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/new-tab.png"sv));
     QObject::connect(open_image_in_new_tab_action, &QAction::triggered, this, [this]() {
         open_link_in_new_tab(m_image_context_menu_url);
     });
 
     auto* copy_image_action = new QAction("&Copy Image", this);
-    copy_image_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    copy_image_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
     QObject::connect(copy_image_action, &QAction::triggered, this, [this]() {
         auto* bitmap = m_image_context_menu_bitmap.bitmap();
         if (bitmap == nullptr)
@@ -414,7 +413,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     });
 
     auto* copy_image_url_action = new QAction("Copy Image &URL", this);
-    copy_image_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    copy_image_url_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
     QObject::connect(copy_image_url_action, &QAction::triggered, this, [this]() {
         copy_link_url(m_image_context_menu_url);
     });
@@ -436,19 +435,19 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_image_context_menu->exec(screen_position);
     };
 
-    m_media_context_menu_play_icon = make<QIcon>(QString("%1/res/icons/16x16/play.png").arg(s_serenity_resource_root.characters()));
-    m_media_context_menu_pause_icon = make<QIcon>(QString("%1/res/icons/16x16/pause.png").arg(s_serenity_resource_root.characters()));
-    m_media_context_menu_mute_icon = make<QIcon>(QString("%1/res/icons/16x16/audio-volume-muted.png").arg(s_serenity_resource_root.characters()));
-    m_media_context_menu_unmute_icon = make<QIcon>(QString("%1/res/icons/16x16/audio-volume-high.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_play_icon = load_icon_from_uri("resource://icons/16x16/play.png"sv);
+    m_media_context_menu_pause_icon = load_icon_from_uri("resource://icons/16x16/pause.png"sv);
+    m_media_context_menu_mute_icon = load_icon_from_uri("resource://icons/16x16/audio-volume-muted.png"sv);
+    m_media_context_menu_unmute_icon = load_icon_from_uri("resource://icons/16x16/audio-volume-high.png"sv);
 
     m_media_context_menu_play_pause_action = make<QAction>("&Play", this);
-    m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_play_icon);
+    m_media_context_menu_play_pause_action->setIcon(m_media_context_menu_play_icon);
     QObject::connect(m_media_context_menu_play_pause_action, &QAction::triggered, this, [this]() {
         view().toggle_media_play_state();
     });
 
     m_media_context_menu_mute_unmute_action = make<QAction>("&Mute", this);
-    m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_mute_icon);
+    m_media_context_menu_mute_unmute_action->setIcon(m_media_context_menu_mute_icon);
     QObject::connect(m_media_context_menu_mute_unmute_action, &QAction::triggered, this, [this]() {
         view().toggle_media_mute_state();
     });
@@ -466,19 +465,19 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     });
 
     auto* open_audio_action = new QAction("&Open Audio", this);
-    open_audio_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-sound.png").arg(s_serenity_resource_root.characters())));
+    open_audio_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-sound.png"sv));
     QObject::connect(open_audio_action, &QAction::triggered, this, [this]() {
         open_link(m_media_context_menu_url);
     });
 
     auto* open_audio_in_new_tab_action = new QAction("Open Audio in New &Tab", this);
-    open_audio_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    open_audio_in_new_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/new-tab.png"sv));
     QObject::connect(open_audio_in_new_tab_action, &QAction::triggered, this, [this]() {
         open_link_in_new_tab(m_media_context_menu_url);
     });
 
     auto* copy_audio_url_action = new QAction("Copy Audio &URL", this);
-    copy_audio_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    copy_audio_url_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
     QObject::connect(copy_audio_url_action, &QAction::triggered, this, [this]() {
         copy_link_url(m_media_context_menu_url);
     });
@@ -497,19 +496,19 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_audio_context_menu->addAction(&m_window->inspect_dom_node_action());
 
     auto* open_video_action = new QAction("&Open Video", this);
-    open_video_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-video.png").arg(s_serenity_resource_root.characters())));
+    open_video_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-video.png"sv));
     QObject::connect(open_video_action, &QAction::triggered, this, [this]() {
         open_link(m_media_context_menu_url);
     });
 
     auto* open_video_in_new_tab_action = new QAction("Open Video in New &Tab", this);
-    open_video_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    open_video_in_new_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/new-tab.png"sv));
     QObject::connect(open_video_in_new_tab_action, &QAction::triggered, this, [this]() {
         open_link_in_new_tab(m_media_context_menu_url);
     });
 
     auto* copy_video_url_action = new QAction("Copy Video &URL", this);
-    copy_video_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    copy_video_url_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
     QObject::connect(copy_video_url_action, &QAction::triggered, this, [this]() {
         copy_link_url(m_media_context_menu_url);
     });
@@ -531,18 +530,18 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_media_context_menu_url = menu.media_url;
 
         if (menu.is_playing) {
-            m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_pause_icon);
+            m_media_context_menu_play_pause_action->setIcon(m_media_context_menu_pause_icon);
             m_media_context_menu_play_pause_action->setText("&Pause");
         } else {
-            m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_play_icon);
+            m_media_context_menu_play_pause_action->setIcon(m_media_context_menu_play_icon);
             m_media_context_menu_play_pause_action->setText("&Play");
         }
 
         if (menu.is_muted) {
-            m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_unmute_icon);
+            m_media_context_menu_mute_unmute_action->setIcon(m_media_context_menu_unmute_icon);
             m_media_context_menu_mute_unmute_action->setText("Un&mute");
         } else {
-            m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_mute_icon);
+            m_media_context_menu_mute_unmute_action->setIcon(m_media_context_menu_mute_icon);
             m_media_context_menu_mute_unmute_action->setText("&Mute");
         }
 

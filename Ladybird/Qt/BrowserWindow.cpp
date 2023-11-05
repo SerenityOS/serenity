@@ -9,6 +9,7 @@
 
 #include "BrowserWindow.h"
 #include "ConsoleWidget.h"
+#include "Icon.h"
 #include "Settings.h"
 #include "SettingsDialog.h"
 #include "StringUtils.h"
@@ -60,17 +61,17 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     auto* menu = menuBar()->addMenu("&File");
 
     auto* new_tab_action = new QAction("New &Tab", this);
-    new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    new_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/new-tab.png"sv));
     new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
     menu->addAction(new_tab_action);
 
     auto* close_current_tab_action = new QAction("&Close Current Tab", this);
-    close_current_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/close-tab.png").arg(s_serenity_resource_root.characters())));
+    close_current_tab_action->setIcon(load_icon_from_uri("resource://icons/16x16/close-tab.png"sv));
     close_current_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Close));
     menu->addAction(close_current_tab_action);
 
     auto* open_file_action = new QAction("&Open File...", this);
-    open_file_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-folder-open.png").arg(s_serenity_resource_root.characters())));
+    open_file_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-folder-open.png"sv));
     open_file_action->setShortcut(QKeySequence(QKeySequence::StandardKey::Open));
     menu->addAction(open_file_action);
 
@@ -83,13 +84,13 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     auto* edit_menu = menuBar()->addMenu("&Edit");
 
     m_copy_selection_action = make<QAction>("&Copy", this);
-    m_copy_selection_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    m_copy_selection_action->setIcon(load_icon_from_uri("resource://icons/16x16/edit-copy.png"sv));
     m_copy_selection_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Copy));
     edit_menu->addAction(m_copy_selection_action);
     QObject::connect(m_copy_selection_action, &QAction::triggered, this, &BrowserWindow::copy_selected_text);
 
     m_select_all_action = make<QAction>("Select &All", this);
-    m_select_all_action->setIcon(QIcon(QString("%1/res/icons/16x16/select-all.png").arg(s_serenity_resource_root.characters())));
+    m_select_all_action->setIcon(load_icon_from_uri("resource://icons/16x16/select-all.png"sv));
     m_select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
     edit_menu->addAction(m_select_all_action);
     QObject::connect(m_select_all_action, &QAction::triggered, this, &BrowserWindow::select_all);
@@ -97,7 +98,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     edit_menu->addSeparator();
 
     auto* settings_action = new QAction("&Settings", this);
-    settings_action->setIcon(QIcon(QString("%1/res/icons/16x16/settings.png").arg(s_serenity_resource_root.characters())));
+    settings_action->setIcon(load_icon_from_uri("resource://icons/16x16/settings.png"sv));
     settings_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Preferences));
     edit_menu->addAction(settings_action);
 
@@ -118,7 +119,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     m_zoom_menu = view_menu->addMenu("&Zoom");
 
     auto* zoom_in_action = new QAction("Zoom &In", this);
-    zoom_in_action->setIcon(QIcon(QString("%1/res/icons/16x16/zoom-in.png").arg(s_serenity_resource_root.characters())));
+    zoom_in_action->setIcon(load_icon_from_uri("resource://icons/16x16/zoom-in.png"sv));
     auto zoom_in_shortcuts = QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomIn);
     zoom_in_shortcuts.append(QKeySequence(Qt::CTRL | Qt::Key_Equal));
     zoom_in_action->setShortcuts(zoom_in_shortcuts);
@@ -126,13 +127,13 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     QObject::connect(zoom_in_action, &QAction::triggered, this, &BrowserWindow::zoom_in);
 
     auto* zoom_out_action = new QAction("Zoom &Out", this);
-    zoom_out_action->setIcon(QIcon(QString("%1/res/icons/16x16/zoom-out.png").arg(s_serenity_resource_root.characters())));
+    zoom_out_action->setIcon(load_icon_from_uri("resource://icons/16x16/zoom-out.png"sv));
     zoom_out_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomOut));
     m_zoom_menu->addAction(zoom_out_action);
     QObject::connect(zoom_out_action, &QAction::triggered, this, &BrowserWindow::zoom_out);
 
     auto* reset_zoom_action = new QAction("&Reset Zoom", this);
-    reset_zoom_action->setIcon(QIcon(QString("%1/res/icons/16x16/zoom-reset.png").arg(s_serenity_resource_root.characters())));
+    reset_zoom_action->setIcon(load_icon_from_uri("resource://icons/16x16/zoom-reset.png"sv));
     reset_zoom_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
     m_zoom_menu->addAction(reset_zoom_action);
     QObject::connect(reset_zoom_action, &QAction::triggered, this, &BrowserWindow::reset_zoom);
@@ -166,7 +167,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     auto* inspect_menu = menuBar()->addMenu("&Inspect");
 
     m_view_source_action = make<QAction>("View &Source", this);
-    m_view_source_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-html.png").arg(s_serenity_resource_root.characters())));
+    m_view_source_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-html.png"sv));
     m_view_source_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
     inspect_menu->addAction(m_view_source_action);
     QObject::connect(m_view_source_action, &QAction::triggered, this, [this] {
@@ -176,7 +177,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     });
 
     auto* js_console_action = new QAction("Show &JS Console", this);
-    js_console_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-javascript.png").arg(s_serenity_resource_root.characters())));
+    js_console_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-javascript.png"sv));
     js_console_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_J));
     inspect_menu->addAction(js_console_action);
     QObject::connect(js_console_action, &QAction::triggered, this, [this] {
@@ -186,7 +187,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     });
 
     auto* inspector_action = new QAction("Open &Inspector", this);
-    inspector_action->setIcon(QIcon(QString("%1/res/icons/browser/dom-tree.png").arg(s_serenity_resource_root.characters())));
+    inspector_action->setIcon(load_icon_from_uri("resource://icons/browser/dom-tree.png"sv));
     inspector_action->setShortcut(QKeySequence("Ctrl+Shift+I"));
     inspect_menu->addAction(inspector_action);
     QObject::connect(inspector_action, &QAction::triggered, this, [this] {
@@ -204,42 +205,42 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
     });
 
     auto* dump_dom_tree_action = new QAction("Dump &DOM Tree", this);
-    dump_dom_tree_action->setIcon(QIcon(QString("%1/res/icons/browser/dom-tree.png").arg(s_serenity_resource_root.characters())));
+    dump_dom_tree_action->setIcon(load_icon_from_uri("resource://icons/browser/dom-tree.png"sv));
     debug_menu->addAction(dump_dom_tree_action);
     QObject::connect(dump_dom_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-dom-tree");
     });
 
     auto* dump_layout_tree_action = new QAction("Dump &Layout Tree", this);
-    dump_layout_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layout.png").arg(s_serenity_resource_root.characters())));
+    dump_layout_tree_action->setIcon(load_icon_from_uri("resource://icons/16x16/layout.png"sv));
     debug_menu->addAction(dump_layout_tree_action);
     QObject::connect(dump_layout_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-layout-tree");
     });
 
     auto* dump_paint_tree_action = new QAction("Dump &Paint Tree", this);
-    dump_paint_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layout.png").arg(s_serenity_resource_root.characters())));
+    dump_paint_tree_action->setIcon(load_icon_from_uri("resource://icons/16x16/layout.png"sv));
     debug_menu->addAction(dump_paint_tree_action);
     QObject::connect(dump_paint_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-paint-tree");
     });
 
     auto* dump_stacking_context_tree_action = new QAction("Dump S&tacking Context Tree", this);
-    dump_stacking_context_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layers.png").arg(s_serenity_resource_root.characters())));
+    dump_stacking_context_tree_action->setIcon(load_icon_from_uri("resource://icons/16x16/layers.png"sv));
     debug_menu->addAction(dump_stacking_context_tree_action);
     QObject::connect(dump_stacking_context_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-stacking-context-tree");
     });
 
     auto* dump_style_sheets_action = new QAction("Dump &Style Sheets", this);
-    dump_style_sheets_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-css.png").arg(s_serenity_resource_root.characters())));
+    dump_style_sheets_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-css.png"sv));
     debug_menu->addAction(dump_style_sheets_action);
     QObject::connect(dump_style_sheets_action, &QAction::triggered, this, [this] {
         debug_request("dump-style-sheets");
     });
 
     auto* dump_styles_action = new QAction("Dump &All Resolved Styles", this);
-    dump_styles_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-css.png").arg(s_serenity_resource_root.characters())));
+    dump_styles_action->setIcon(load_icon_from_uri("resource://icons/16x16/filetype-css.png"sv));
     debug_menu->addAction(dump_styles_action);
     QObject::connect(dump_styles_action, &QAction::triggered, this, [this] {
         debug_request("dump-all-resolved-styles");
@@ -247,21 +248,21 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* dump_history_action = new QAction("Dump &History", this);
     dump_history_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_H));
-    dump_history_action->setIcon(QIcon(QString("%1/res/icons/16x16/history.png").arg(s_serenity_resource_root.characters())));
+    dump_history_action->setIcon(load_icon_from_uri("resource://icons/16x16/history.png"sv));
     debug_menu->addAction(dump_history_action);
     QObject::connect(dump_history_action, &QAction::triggered, this, [this] {
         debug_request("dump-history");
     });
 
     auto* dump_cookies_action = new QAction("Dump C&ookies", this);
-    dump_cookies_action->setIcon(QIcon(QString("%1/res/icons/browser/cookie.png").arg(s_serenity_resource_root.characters())));
+    dump_cookies_action->setIcon(load_icon_from_uri("resource://icons/browser/cookie.png"sv));
     debug_menu->addAction(dump_cookies_action);
     QObject::connect(dump_cookies_action, &QAction::triggered, this, [this] {
         m_cookie_jar.dump_cookies();
     });
 
     auto* dump_local_storage_action = new QAction("Dump Loc&al Storage", this);
-    dump_local_storage_action->setIcon(QIcon(QString("%1/res/icons/browser/local-storage.png").arg(s_serenity_resource_root.characters())));
+    dump_local_storage_action->setIcon(load_icon_from_uri("resource://icons/browser/local-storage.png"sv));
     debug_menu->addAction(dump_local_storage_action);
     QObject::connect(dump_local_storage_action, &QAction::triggered, this, [this] {
         debug_request("dump-local-storage");
@@ -281,7 +282,7 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* collect_garbage_action = new QAction("Collect &Garbage", this);
     collect_garbage_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_G));
-    collect_garbage_action->setIcon(QIcon(QString("%1/res/icons/16x16/trash-can.png").arg(s_serenity_resource_root.characters())));
+    collect_garbage_action->setIcon(load_icon_from_uri("resource://icons/16x16/trash-can.png"sv));
     debug_menu->addAction(collect_garbage_action);
     QObject::connect(collect_garbage_action, &QAction::triggered, this, [this] {
         debug_request("collect-garbage");
@@ -295,14 +296,14 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* clear_cache_action = new QAction("Clear &Cache", this);
     clear_cache_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
-    clear_cache_action->setIcon(QIcon(QString("%1/res/icons/browser/clear-cache.png").arg(s_serenity_resource_root.characters())));
+    clear_cache_action->setIcon(load_icon_from_uri("resource://icons/browser/clear-cache.png"sv));
     debug_menu->addAction(clear_cache_action);
     QObject::connect(clear_cache_action, &QAction::triggered, this, [this] {
         debug_request("clear-cache");
     });
 
     auto* spoof_user_agent_menu = debug_menu->addMenu("Spoof &User Agent");
-    spoof_user_agent_menu->setIcon(QIcon(QString("%1/res/icons/16x16/spoof.png").arg(s_serenity_resource_root.characters())));
+    spoof_user_agent_menu->setIcon(load_icon_from_uri("resource://icons/16x16/spoof.png"sv));
 
     auto* user_agent_group = new QActionGroup(this);
 

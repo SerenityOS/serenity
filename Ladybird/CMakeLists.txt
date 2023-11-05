@@ -118,6 +118,7 @@ if (ENABLE_QT)
         Qt/ConsoleWidget.cpp
         Qt/EventLoopImplementationQt.cpp
         Qt/EventLoopImplementationQtEventTarget.cpp
+        Qt/Icon.cpp
         Qt/InspectorWidget.cpp
         Qt/LocationEdit.cpp
         Qt/Settings.cpp
