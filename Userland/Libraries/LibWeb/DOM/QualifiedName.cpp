@@ -54,11 +54,6 @@ QualifiedName::QualifiedName(FlyString const& local_name, Optional<FlyString> co
 {
 }
 
-QualifiedName::QualifiedName(FlyString const& local_name, Optional<FlyString> const& prefix, DeprecatedFlyString const& namespace_)
-    : QualifiedName(local_name, prefix, namespace_.is_null() ? Optional<FlyString> {} : MUST(FlyString::from_deprecated_fly_string(namespace_)))
-{
-}
-
 QualifiedName::Impl::Impl(FlyString const& a_local_name, Optional<FlyString> const& a_prefix, Optional<FlyString> const& a_namespace)
     : local_name(a_local_name)
     , prefix(a_prefix)
