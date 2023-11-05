@@ -1667,15 +1667,15 @@ PropertyOwningCSSStyleDeclaration* Parser::convert_to_style_declaration(Vector<D
 
 Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
 {
-    auto property_name = declaration.name();
+    auto const& property_name = declaration.name();
     auto property_id = property_id_from_string(property_name);
 
     if (!property_id.has_value()) {
-        if (property_name.starts_with("--"sv)) {
+        if (property_name.bytes_as_string_view().starts_with("--"sv)) {
             property_id = PropertyID::Custom;
         } else if (has_ignored_vendor_prefix(property_name)) {
             return {};
-        } else if (!property_name.starts_with('-')) {
+        } else if (!property_name.bytes_as_string_view().starts_with('-')) {
             dbgln_if(CSS_PARSER_DEBUG, "Unrecognized CSS property '{}'", property_name);
             return {};
         }
@@ -6735,12 +6735,12 @@ NonnullRefPtr<StyleValue> Parser::resolve_unresolved_style_value(DOM::Element& e
 static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element, FlyString const& custom_property_name)
 {
     if (pseudo_element.has_value()) {
-        if (auto it = element.custom_properties(pseudo_element).find(custom_property_name.to_string().to_deprecated_string()); it != element.custom_properties(pseudo_element).end())
+        if (auto it = element.custom_properties(pseudo_element).find(custom_property_name.to_string()); it != element.custom_properties(pseudo_element).end())
             return it->value.value;
     }
 
     for (auto const* current_element = &element; current_element; current_element = current_element->parent_element()) {
-        if (auto it = current_element->custom_properties({}).find(custom_property_name.to_string().to_deprecated_string()); it != current_element->custom_properties({}).end())
+        if (auto it = current_element->custom_properties({}).find(custom_property_name.to_string()); it != current_element->custom_properties({}).end())
             return it->value.value;
     }
     return nullptr;
