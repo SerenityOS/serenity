@@ -78,7 +78,6 @@ public:
     FlyString const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
 
     virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
-    DeprecatedFlyString deprecated_local_name() const { return m_qualified_name.local_name().to_deprecated_fly_string(); }
     FlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
@@ -86,7 +85,6 @@ public:
     DeprecatedString deprecated_tag_name() const { return html_uppercased_qualified_name().to_deprecated_fly_string(); }
 
     Optional<FlyString> const& prefix() const { return m_qualified_name.prefix(); }
-    DeprecatedFlyString deprecated_prefix() const { return m_qualified_name.deprecated_prefix(); }
 
     void set_prefix(Optional<FlyString> value);
 
