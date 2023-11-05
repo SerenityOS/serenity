@@ -159,8 +159,9 @@ PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document*
     // "[ /DeviceN names alternateSpace tintTransform ]
     //  or
     //  [ /DeviceN names alternateSpace tintTransform attributes ]"
-    if (parameters.size() != 4 && parameters.size() != 5)
-        return Error { Error::Type::MalformedPDF, "DevicN color space expects 4 or 5 parameters" };
+    // (`/DeviceN` is already stripped from the array by the time we get here.)
+    if (parameters.size() != 3 && parameters.size() != 4)
+        return Error { Error::Type::MalformedPDF, "DeviceN color space expects 4 or 5 parameters" };
 
     // "The names parameter is an array of name objects specifying the individual color components.
     //  The length of the array determines the number of components in the DeviceN color space"
