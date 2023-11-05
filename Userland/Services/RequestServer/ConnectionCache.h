@@ -137,7 +137,7 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
 
     if (!connection.socket->is_open() || connection.socket->is_eof()) {
         // Create another socket for the connection.
-        auto set_socket = [&](auto socket) -> ErrorOr<void> {
+        auto set_socket = [&](NonnullOwnPtr<SocketStorageType>&& socket) -> ErrorOr<void> {
             connection.socket = TRY(Core::BufferedSocket<SocketStorageType>::create(move(socket)));
             return {};
         };

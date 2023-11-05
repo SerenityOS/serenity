@@ -77,7 +77,7 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
     JsonObject result;
 
     // 3. For each enumerable own property in capability, run the following substeps:
-    TRY(capability.as_object().try_for_each_member([&](auto const& name, auto const& value) -> ErrorOr<void, Error> {
+    TRY(capability.as_object().try_for_each_member([&](auto const& name, JsonValue const& value) -> ErrorOr<void, Error> {
         // a. Let name be the name of the property.
         // b. Let value be the result of getting a property named name from capability.
 

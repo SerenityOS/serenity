@@ -273,7 +273,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
     PropertyKey const* explicit_format_component = nullptr;
 
     // 39. For each row of Table 6, except the header row, in table order, do
-    TRY(for_each_calendar_field(vm, format_options, [&](auto& option, auto const& property, auto const& values) -> ThrowCompletionOr<void> {
+    TRY(for_each_calendar_field(vm, format_options, [&](auto& option, PropertyKey const& property, auto const& values) -> ThrowCompletionOr<void> {
         using ValueType = typename RemoveReference<decltype(option)>::ValueType;
 
         // a. Let prop be the name given in the Property column of the row.
