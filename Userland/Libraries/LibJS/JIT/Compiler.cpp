@@ -1919,7 +1919,7 @@ void Compiler::native_call(void* function_address, Vector<Assembler::Operand> co
 {
     // NOTE: We don't preserve caller-saved registers when making a native call.
     //       This means that they may have changed after we return from the call.
-    m_assembler.native_call(function_address, { Assembler::Operand::Register(ARG0) }, stack_arguments);
+    m_assembler.native_call(bit_cast<u64>(function_address), { Assembler::Operand::Register(ARG0) }, stack_arguments);
 }
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
