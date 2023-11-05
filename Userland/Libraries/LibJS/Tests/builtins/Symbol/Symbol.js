@@ -23,5 +23,5 @@ test("setting new properties on a symbol is an error in strict mode", () => {
     var symbol = Symbol("foo");
     expect(() => {
         symbol.bar = 42;
-    }).toThrowWithMessage(TypeError, "Cannot set property 'bar' of Symbol(foo)");
+    }).toThrowWithMessage(TypeError, "Cannot set property 'bar' of symbol 'Symbol(foo)'");
 });
