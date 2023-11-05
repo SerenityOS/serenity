@@ -14,6 +14,7 @@
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Menu.h>
@@ -209,6 +210,9 @@ void QuickLaunchWidget::mousemove_event(GUI::MouseEvent& event)
         entry->set_hovered(rect.contains(event.position()));
         if (entry->is_pressed())
             m_dragging = true;
+
+        if (entry->is_hovered())
+            GUI::Application::the()->show_tooltip(String::from_deprecated_string(entry->name()).release_value_but_fixme_should_propagate_errors(), this);
     });
 
     if (m_dragging)
