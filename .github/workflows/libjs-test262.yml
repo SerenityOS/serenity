@@ -114,15 +114,8 @@ jobs:
             --test262 ../test262 \
             --test262-parser-tests ../test262-parser-tests \
             --results-json ../libjs-data/test262/results.json \
-            --per-file-output ../libjs-data/test262/per-file-master.json
-
-          python3 run_all_and_update_results.py \
-            --jit \
-            --serenity .. \
-            --test262 ../test262 \
-            --test262-parser-tests ../test262-parser-tests \
-            --results-json ../libjs-data/test262/results-jit.json \
-            --per-file-output ../libjs-data/test262/per-file-master-jit.json
+            --per-file-output ../libjs-data/test262/per-file-master.json \
+            --per-file-jit-output ../libjs-data/test262/per-file-master-jit.json
 
       - name: Run test-wasm
         working-directory: libjs-test262
