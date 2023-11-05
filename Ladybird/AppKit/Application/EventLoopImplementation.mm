@@ -130,7 +130,7 @@ void CFEventLoopManager::register_notifier(Core::Notifier& notifier)
         break;
     }
 
-    CFSocketContext context { .info = &notifier };
+    CFSocketContext context { .version = 0, .info = &notifier, .retain = nullptr, .release = nullptr, .copyDescription = nullptr };
     auto* socket = CFSocketCreateWithNative(kCFAllocatorDefault, notifier.fd(), notification_type, &socket_notifier, &context);
 
     CFOptionFlags sockopt = CFSocketGetSocketFlags(socket);
