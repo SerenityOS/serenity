@@ -355,6 +355,21 @@ void QuickLaunchWidget::load_entries(bool save)
         entries.append(entry.release_nonnull());
     }
 
+    // backwards compatibility since the group and value-format changed
+    auto old_keys = Config::list_keys(CONFIG_DOMAIN, OLD_CONFIG_GROUP_ENTRIES);
+    if (!old_keys.is_empty()) {
+        for (auto& name : old_keys) {
+            auto path = Config::read_string(CONFIG_DOMAIN, OLD_CONFIG_GROUP_ENTRIES, name);
+            auto entry = QuickLaunchEntry::create_from_path(path);
+            if (!entry)
+                continue;
+
+            entries.append(entry.release_nonnull());
+        }
+
+        Config::remove_group(CONFIG_DOMAIN, OLD_CONFIG_GROUP_ENTRIES);
+    }
+
     m_entries.clear();
     add_entries(move(entries), save);
 }
