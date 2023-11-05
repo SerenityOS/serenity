@@ -39,6 +39,10 @@ private:
 
     Vector<Bound> m_encode;
     Vector<Bound> m_decode;
+
+    ReadonlyBytes m_sample_data;
+
+    Vector<float> mutable m_outputs;
 };
 
 PDFErrorOr<NonnullRefPtr<SampledFunction>>
@@ -130,12 +134,45 @@ SampledFunction::create(Document* document, Vector<Bound> domain, Optional<Vecto
     function->m_order = order;
     function->m_encode = move(encode);
     function->m_decode = move(decode);
+    function->m_sample_data = stream->bytes();
+    function->m_outputs.resize(function->m_range.size());
     return function;
 }
 
-PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float>) const
+PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> x) const
 {
-    return Error(Error::Type::RenderingUnsupported, "SampledFunction not yet implemented"_string);
+    if (x.size() != m_domain.size())
+        return Error { Error::Type::MalformedPDF, "Function argument size does not match domain size" };
+
+    if (m_order != Order::Linear)
+        return Error { Error::Type::RenderingUnsupported, "Sample function with cubic order not yet implemented" };
+
+    if (m_domain.size() != 1)
+        return Error { Error::Type::RenderingUnsupported, "Sample function with m > 1 not yet implemented" };
+
+    if (m_bits_per_sample != 8)
+        return Error { Error::Type::RenderingUnsupported, "Sample function with bits per sample != 8 not yet implemented" };
+
+    auto interpolate = [](float x, float x_min, float x_max, float y_min, float y_max) {
+        return y_min + (x - x_min) * (y_max - y_min) / (x_max - x_min);
+    };
+
+    float xc = clamp(x[0], m_domain[0].lower, m_domain[0].upper);
+    float e = interpolate(xc, m_domain[0].lower, m_domain[0].upper, m_encode[0].lower, m_encode[0].upper);
+    float ec = clamp(e, 0.0f, static_cast<float>(m_sizes[0] - 1));
+
+    float e0 = floor(ec);
+    float e1 = ceil(ec);
+    size_t plane_size = m_sizes[0];
+    for (size_t i = 0; i < m_range.size(); ++i) {
+        float s0 = m_sample_data[(size_t)e0 + i * plane_size];
+        float s1 = m_sample_data[(size_t)e1 + i * plane_size];
+        float r0 = interpolate(ec, e0, e1, s0, s1);
+        r0 = interpolate(r0, 0.0f, 255.0f, m_decode[i].lower, m_decode[i].upper);
+        m_outputs[i] = clamp(r0, m_range[i].lower, m_range[i].upper);
+    }
+
+    return m_outputs;
 }
 
 // 3.9.2 Type 2 (Exponential Interpolation) Functions
