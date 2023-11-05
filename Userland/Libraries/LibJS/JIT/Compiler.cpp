@@ -921,7 +921,7 @@ void Compiler::compile_new_class(Bytecode::Op::NewClass const& op)
 
 static Value cxx_get_by_id(VM& vm, Value base, DeprecatedFlyString const& property, u32 cache_index)
 {
-    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm.bytecode_interpreter(), property, base, base, cache_index));
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm, property, base, base, cache_index));
 }
 
 void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
@@ -940,7 +940,7 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
 
 static Value cxx_get_by_value(VM& vm, Value base, Value property)
 {
-    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_value(vm.bytecode_interpreter(), base, property));
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_value(vm, base, property));
 }
 
 void Compiler::compile_get_by_value(Bytecode::Op::GetByValue const& op)
@@ -1577,7 +1577,7 @@ void Compiler::compile_resolve_super_base(Bytecode::Op::ResolveSuperBase const&)
 
 static Value cxx_get_by_id_with_this(VM& vm, DeprecatedFlyString const& property, Value base_value, Value this_value, u32 cache_index)
 {
-    return TRY_OR_SET_EXCEPTION(get_by_id(vm.bytecode_interpreter(), property, base_value, this_value, cache_index));
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm, property, base_value, this_value, cache_index));
 }
 
 void Compiler::compile_get_by_id_with_this(Bytecode::Op::GetByIdWithThis const& op)

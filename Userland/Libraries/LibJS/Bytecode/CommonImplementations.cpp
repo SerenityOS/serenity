@@ -18,9 +18,8 @@
 
 namespace JS::Bytecode {
 
-ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(Bytecode::Interpreter& interpreter, Value base_value)
+ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(VM& vm, Value base_value)
 {
-    auto& vm = interpreter.vm();
     if (base_value.is_object())
         return base_value.as_object();
 
@@ -35,10 +34,9 @@ ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(Bytecode::Interprete
     return base_value.to_object(vm);
 }
 
-ThrowCompletionOr<Value> get_by_id(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& property, Value base_value, Value this_value, u32 cache_index)
+ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& property, Value base_value, Value this_value, u32 cache_index)
 {
-    auto& vm = interpreter.vm();
-    auto& cache = interpreter.current_executable().property_lookup_caches[cache_index];
+    auto& cache = vm.bytecode_interpreter().current_executable().property_lookup_caches[cache_index];
 
     if (base_value.is_string()) {
         auto string_value = TRY(base_value.as_string().get(vm, property));
@@ -46,7 +44,7 @@ ThrowCompletionOr<Value> get_by_id(Bytecode::Interpreter& interpreter, Deprecate
             return *string_value;
     }
 
-    auto base_obj = TRY(base_object_for_get(interpreter, base_value));
+    auto base_obj = TRY(base_object_for_get(vm, base_value));
 
     // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
     // NOTE: Unique shapes don't change identity, so we compare their serial numbers instead.
@@ -68,10 +66,9 @@ ThrowCompletionOr<Value> get_by_id(Bytecode::Interpreter& interpreter, Deprecate
     return value;
 }
 
-ThrowCompletionOr<Value> get_by_value(Bytecode::Interpreter& interpreter, Value base_value, Value property_key_value)
+ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_key_value)
 {
-    auto& vm = interpreter.vm();
-    auto object = TRY(base_object_for_get(interpreter, base_value));
+    auto object = TRY(base_object_for_get(vm, base_value));
 
     // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
     if (property_key_value.is_int32()
