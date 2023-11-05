@@ -34,10 +34,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(VM& vm, Value base_v
     return base_value.to_object(vm);
 }
 
-ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& property, Value base_value, Value this_value, u32 cache_index)
+ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& property, Value base_value, Value this_value, PropertyLookupCache& cache)
 {
-    auto& cache = vm.bytecode_interpreter().current_executable().property_lookup_caches[cache_index];
-
     if (base_value.is_string()) {
         auto string_value = TRY(base_value.as_string().get(vm, property));
         if (string_value.has_value())

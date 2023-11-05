@@ -760,7 +760,8 @@ ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter&) const
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto base_value = interpreter.accumulator();
-    interpreter.accumulator() = TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, base_value, m_cache_index));
+    auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
+    interpreter.accumulator() = TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, base_value, cache));
     return {};
 }
 
@@ -768,7 +769,8 @@ ThrowCompletionOr<void> GetByIdWithThis::execute_impl(Bytecode::Interpreter& int
 {
     auto base_value = interpreter.accumulator();
     auto this_value = interpreter.reg(m_this_value);
-    interpreter.accumulator() = TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, this_value, m_cache_index));
+    auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
+    interpreter.accumulator() = TRY(get_by_id(interpreter.vm(), interpreter.current_executable().get_identifier(m_property), base_value, this_value, cache));
     return {};
 }
 

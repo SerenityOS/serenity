@@ -919,9 +919,9 @@ void Compiler::compile_new_class(Bytecode::Op::NewClass const& op)
     store_accumulator(RET);
 }
 
-static Value cxx_get_by_id(VM& vm, Value base, DeprecatedFlyString const& property, u32 cache_index)
+static Value cxx_get_by_id(VM& vm, Value base, DeprecatedFlyString const& property, Bytecode::PropertyLookupCache& cache)
 {
-    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm, property, base, base, cache_index));
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm, property, base, base, cache));
 }
 
 void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
@@ -932,7 +932,7 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
         Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(op.cache_index()));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])));
     native_call((void*)cxx_get_by_id);
     store_accumulator(RET);
     check_exception();
@@ -1575,9 +1575,9 @@ void Compiler::compile_resolve_super_base(Bytecode::Op::ResolveSuperBase const&)
     check_exception();
 }
 
-static Value cxx_get_by_id_with_this(VM& vm, DeprecatedFlyString const& property, Value base_value, Value this_value, u32 cache_index)
+static Value cxx_get_by_id_with_this(VM& vm, DeprecatedFlyString const& property, Value base_value, Value this_value, Bytecode::PropertyLookupCache& cache)
 {
-    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm, property, base_value, this_value, cache_index));
+    return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm, property, base_value, this_value, cache));
 }
 
 void Compiler::compile_get_by_id_with_this(Bytecode::Op::GetByIdWithThis const& op)
@@ -1589,7 +1589,7 @@ void Compiler::compile_get_by_id_with_this(Bytecode::Op::GetByIdWithThis const& 
     load_vm_register(ARG3, op.this_value());
     m_assembler.mov(
         Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm(op.cache_index()));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])));
     native_call((void*)cxx_get_by_id_with_this);
     store_accumulator(RET);
     check_exception();
