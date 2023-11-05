@@ -12,9 +12,9 @@
 
 namespace AK {
 
-FixedMemoryStream::FixedMemoryStream(Bytes bytes, bool writing_enabled)
+FixedMemoryStream::FixedMemoryStream(Bytes bytes, Mode mode)
     : m_bytes(bytes)
-    , m_writing_enabled(writing_enabled)
+    , m_writing_enabled(mode == Mode::ReadWrite)
 {
 }
 

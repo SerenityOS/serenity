@@ -259,7 +259,7 @@ TEST_CASE(fixed_memory_read_in_place)
     EXPECT_EQ(characters, some_words.bytes());
     EXPECT(readonly_stream.is_eof());
 
-    FixedMemoryStream mutable_stream { Bytes { const_cast<u8*>(some_words.bytes().data()), some_words.bytes().size() }, true };
+    FixedMemoryStream mutable_stream { Bytes { const_cast<u8*>(some_words.bytes().data()), some_words.bytes().size() }, FixedMemoryStream::Mode::ReadWrite };
     // Trying to read mutable values from a mutable stream should succeed.
     TRY_OR_FAIL(mutable_stream.read_in_place<u8>(1));
     EXPECT_EQ(mutable_stream.offset(), 1u);
