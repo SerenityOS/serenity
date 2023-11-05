@@ -752,7 +752,7 @@ WebIDL::ExceptionOr<void> Document::set_title(String const& title)
     }
 
     // -> If the document element is in the HTML namespace
-    else if (document_element && document_element->namespace_() == Namespace::HTML) {
+    else if (document_element && document_element->namespace_uri() == Namespace::HTML) {
         auto title_element = this->title_element();
         auto* head_element = this->head();
 
@@ -984,10 +984,10 @@ void Document::update_layout()
     if (!m_layout_root) {
         Layout::TreeBuilder tree_builder;
         m_layout_root = verify_cast<Layout::Viewport>(*tree_builder.build(*this));
-    }
 
-    if (auto* document_element = this->document_element()) {
-        propagate_overflow_to_viewport(*document_element, *m_layout_root);
+        if (auto* document_element = this->document_element()) {
+            propagate_overflow_to_viewport(*document_element, *m_layout_root);
+        }
     }
 
     Layout::LayoutState layout_state;
@@ -1356,12 +1356,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String c
     }
 
     // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
-    DeprecatedFlyString namespace_;
+    Optional<FlyString> namespace_;
     if (document_type() == Type::HTML || content_type() == "application/xhtml+xml"sv)
         namespace_ = Namespace::HTML;
 
     // 6. Return the result of creating an element given this, localName, namespace, null, is, and with the synchronous custom elements flag set.
-    return TRY(DOM::create_element(*this, MUST(FlyString::from_deprecated_fly_string(local_name)), namespace_, {}, move(is_value), true));
+    return TRY(DOM::create_element(*this, MUST(FlyString::from_deprecated_fly_string(local_name)), move(namespace_), {}, move(is_value), true));
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelementns
@@ -1369,12 +1369,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(String c
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optional<String> const& namespace_, String const& qualified_name, Variant<String, ElementCreationOptions> const& options)
 {
     // FIXME: This conversion is ugly
-    StringView namespace_view;
+    Optional<FlyString> namespace_to_use;
     if (namespace_.has_value())
-        namespace_view = namespace_->bytes_as_string_view();
+        namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_view, qualified_name.to_deprecated_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_string()));
 
     // 2. Let is be null.
     Optional<String> is_value;
@@ -1387,7 +1387,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Optio
     }
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
-    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.deprecated_namespace_(), extracted_qualified_name.deprecated_prefix(), move(is_value), true));
+    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix(), move(is_value), true));
 }
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
@@ -2432,7 +2432,7 @@ void Document::set_window(HTML::Window& window)
 }
 
 // https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
-JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definition(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& local_name, Optional<String> const& is) const
+JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definition(Optional<FlyString> const& namespace_, FlyString const& local_name, Optional<String> const& is) const
 {
     // 1. If namespace is not the HTML namespace, return null.
     if (namespace_ != Namespace::HTML)
@@ -2446,8 +2446,8 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
     auto registry = verify_cast<HTML::Window>(relevant_global_object(*this)).custom_elements();
 
     // 4. If there is custom element definition in registry with name and local name both equal to localName, return that custom element definition.
-    auto converted_local_name = String::from_deprecated_string(local_name).release_value_but_fixme_should_propagate_errors();
-    auto maybe_definition = registry->get_definition_with_name_and_local_name(converted_local_name, converted_local_name);
+    auto converted_local_name = local_name;
+    auto maybe_definition = registry->get_definition_with_name_and_local_name(converted_local_name.to_string(), converted_local_name.to_string());
     if (maybe_definition)
         return maybe_definition;
 
@@ -2458,7 +2458,7 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
     if (!is.has_value())
         return nullptr;
 
-    return registry->get_definition_with_name_and_local_name(is.value(), converted_local_name);
+    return registry->get_definition_with_name_and_local_name(is.value(), converted_local_name.to_string());
 }
 
 CSS::StyleSheetList& Document::style_sheets()
@@ -3005,12 +3005,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(String co
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(Optional<String> const& namespace_, String const& qualified_name)
 {
     // FIXME: This conversion is ugly
-    StringView namespace_view;
+    Optional<FlyString> namespace_to_use;
     if (namespace_.has_value())
-        namespace_view = namespace_->bytes_as_string_view();
+        namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_view, qualified_name.to_deprecated_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_string()));
 
     // 2. Return a new attribute whose namespace is namespace, namespace prefix is prefix, local name is localName, and node document is this.
 

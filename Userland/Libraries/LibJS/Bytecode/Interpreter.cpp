@@ -56,13 +56,6 @@ void Interpreter::visit_edges(Cell::Visitor& visitor)
     }
 }
 
-Optional<InstructionStreamIterator const&> Interpreter::instruction_stream_iterator() const
-{
-    if (m_current_executable && m_current_executable->native_executable())
-        return m_current_executable->native_executable()->instruction_stream_iterator(*m_current_executable);
-    return m_pc;
-}
-
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
 ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Environment> lexical_environment_override)
 {
@@ -371,8 +364,13 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
     else
         push_call_frame(make<CallFrame>(), executable.number_of_registers);
 
+    vm().execution_context_stack().last()->executable = &executable;
+
     if (auto native_executable = executable.get_or_create_native_executable()) {
-        native_executable->run(vm());
+        auto block_index = 0;
+        if (entry_point)
+            block_index = executable.basic_blocks.find_first_index_if([&](auto const& block) { return block.ptr() == entry_point; }).value();
+        native_executable->run(vm(), block_index);
 
 #if 0
         for (size_t i = 0; i < vm().running_execution_context().local_variables.size(); ++i) {
@@ -939,7 +937,7 @@ ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interprete
 {
     auto callee = interpreter.reg(m_callee);
     TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
-    auto argument_values = argument_list_evaluation(interpreter);
+    auto argument_values = argument_list_evaluation(interpreter.vm(), interpreter.accumulator());
     interpreter.accumulator() = TRY(perform_call(interpreter, interpreter.reg(m_this_value), call_type(), callee, move(argument_values)));
     return {};
 }
@@ -1038,14 +1036,6 @@ ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interprete
 {
     // Handled in the interpreter loop.
     __builtin_unreachable();
-}
-
-ThrowCompletionOr<void> PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    auto environment = interpreter.vm().heap().allocate_without_realm<DeclarativeEnvironment>(interpreter.vm().lexical_environment());
-    interpreter.vm().running_execution_context().lexical_environment = environment;
-    interpreter.vm().running_execution_context().variable_environment = environment;
-    return {};
 }
 
 ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1222,7 +1212,7 @@ ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter&
 
 ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = TRY(new_class(interpreter.vm(), m_class_expression, m_lhs_name));
+    interpreter.accumulator() = TRY(new_class(interpreter.vm(), interpreter.accumulator(), m_class_expression, m_lhs_name));
     return {};
 }
 
@@ -1592,21 +1582,6 @@ DeprecatedString LeaveUnwindContext::to_deprecated_string_impl(Bytecode::Executa
 DeprecatedString ContinuePendingUnwind::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
-}
-
-DeprecatedString PushDeclarativeEnvironment::to_deprecated_string_impl(Bytecode::Executable const& executable) const
-{
-    StringBuilder builder;
-    builder.append("PushDeclarativeEnvironment"sv);
-    if (!m_variables.is_empty()) {
-        builder.append(" {"sv);
-        Vector<DeprecatedString> names;
-        for (auto& it : m_variables)
-            names.append(executable.get_string(it.key));
-        builder.append('}');
-        builder.join(", "sv, names);
-    }
-    return builder.to_deprecated_string();
 }
 
 DeprecatedString Yield::to_deprecated_string_impl(Bytecode::Executable const&) const

@@ -13,12 +13,14 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
+#include <LibWeb/DOM/QualifiedName.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -37,6 +39,7 @@
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/MathML/TagNames.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/SVG/SVGScriptElement.h>
 #include <LibWeb/SVG/TagNames.h>
 
 namespace Web::HTML {
@@ -181,7 +184,7 @@ void HTMLParser::run()
         // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction-dispatcher
         // As each token is emitted from the tokenizer, the user agent must follow the appropriate steps from the following list, known as the tree construction dispatcher:
         if (m_stack_of_open_elements.is_empty()
-            || adjusted_current_node().namespace_() == Namespace::HTML
+            || adjusted_current_node().namespace_uri() == Namespace::HTML
             || (is_html_integration_point(adjusted_current_node()) && (token.is_start_tag() || token.is_character()))
             || token.is_end_of_file()) {
             // -> If the stack of open elements is empty
@@ -454,29 +457,29 @@ DOM::QuirksMode HTMLParser::which_quirks_mode(HTMLToken const& doctype_token) co
         return DOM::QuirksMode::Yes;
 
     for (auto& public_id : s_quirks_public_ids) {
-        if (public_identifier.starts_with(public_id, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes(public_id, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
     }
 
     if (doctype_token.doctype_data().missing_system_identifier) {
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
 
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
     }
 
-    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Frameset//"sv, CaseSensitivity::CaseInsensitive))
+    if (public_identifier.starts_with_bytes("-//W3C//DTD XHTML 1.0 Frameset//"sv, CaseSensitivity::CaseInsensitive))
         return DOM::QuirksMode::Limited;
 
-    if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Transitional//"sv, CaseSensitivity::CaseInsensitive))
+    if (public_identifier.starts_with_bytes("-//W3C//DTD XHTML 1.0 Transitional//"sv, CaseSensitivity::CaseInsensitive))
         return DOM::QuirksMode::Limited;
 
     if (!doctype_token.doctype_data().missing_system_identifier) {
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes("-//W3C//DTD HTML 4.01 Frameset//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Limited;
 
-        if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
+        if (public_identifier.starts_with_bytes("-//W3C//DTD HTML 4.01 Transitional//"sv, CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Limited;
     }
 
@@ -490,16 +493,16 @@ void HTMLParser::handle_initial(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
 
     if (token.is_doctype()) {
         auto doctype = realm().heap().allocate<DOM::DocumentType>(realm(), document());
-        doctype->set_name(String::from_deprecated_string(token.doctype_data().name).release_value());
-        doctype->set_public_id(String::from_deprecated_string(token.doctype_data().public_identifier).release_value());
-        doctype->set_system_id(String::from_deprecated_string(token.doctype_data().system_identifier).release_value());
+        doctype->set_name(token.doctype_data().name);
+        doctype->set_public_id(token.doctype_data().public_identifier);
+        doctype->set_system_id(token.doctype_data().system_identifier);
         MUST(document().append_child(*doctype));
         document().set_quirks_mode(which_quirks_mode(token));
         m_insertion_mode = InsertionMode::BeforeHTML;
@@ -525,7 +528,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> A comment token
     if (token.is_comment()) {
         // Insert a comment as the last child of the Document object.
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
@@ -579,8 +582,13 @@ DOM::Element& HTMLParser::current_node()
     return m_stack_of_open_elements.current_node();
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#adjusted-current-node
 DOM::Element& HTMLParser::adjusted_current_node()
 {
+    // The adjusted current node is the context element if the parser was created as part of the
+    // HTML fragment parsing algorithm and the stack of open elements has only one element in it
+    // (fragment case); otherwise, the adjusted current node is the current node.
+
     if (m_parsing_fragment && m_stack_of_open_elements.elements().size() == 1)
         return *m_context_element;
 
@@ -644,7 +652,8 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
     return adjusted_insertion_location;
 }
 
-JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, DeprecatedFlyString const& namespace_, DOM::Node& intended_parent)
+// https://html.spec.whatwg.org/multipage/parsing.html#create-an-element-for-the-token
+JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, Optional<FlyString> const& namespace_, DOM::Node& intended_parent)
 {
     // FIXME: 1. If the active speculative HTML parser is not null, then return the result of creating a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
     // FIXME: 2. Otherwise, optionally create a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
@@ -653,7 +662,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
     JS::NonnullGCPtr<DOM::Document> document = intended_parent.document();
 
     // 4. Let local name be the tag name of the token.
-    auto local_name = token.tag_name();
+    auto const& local_name = token.tag_name();
 
     // 5. Let is be the value of the "is" attribute in the given token, if such an attribute exists, or null otherwise.
     auto is_value_deprecated_string = token.attribute(AttributeNames::is);
@@ -662,7 +671,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
         is_value = String::from_utf8(is_value_deprecated_string).release_value_but_fixme_should_propagate_errors();
 
     // 6. Let definition be the result of looking up a custom element definition given document, given namespace, local name, and is.
-    auto definition = document->lookup_custom_element_definition(namespace_, local_name.to_deprecated_fly_string(), is_value);
+    auto definition = document->lookup_custom_element_definition(namespace_, local_name, is_value);
 
     // 7. If definition is non-null and the parser was not created as part of the HTML fragment parsing algorithm, then let will execute script be true. Otherwise, let it be false.
     bool will_execute_script = definition && !m_parsing_fragment;
@@ -687,9 +696,10 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
     auto element = create_element(*document, local_name, namespace_, {}, is_value, will_execute_script).release_value_but_fixme_should_propagate_errors();
 
     // 10. Append each attribute in the given token to element.
-    // FIXME: This isn't the exact `append` the spec is talking about.
-    token.for_each_attribute([&](auto& attribute) {
-        MUST(element->set_attribute(attribute.local_name, attribute.value));
+    token.for_each_attribute([&](auto const& attribute) {
+        DOM::QualifiedName qualified_name { attribute.local_name, attribute.prefix, attribute.namespace_ };
+        auto dom_attribute = realm().heap().allocate<DOM::Attr>(realm(), *document, move(qualified_name), attribute.value, element);
+        element->append_attribute(dom_attribute);
         return IterationDecision::Continue;
     });
 
@@ -736,7 +746,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
-JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, DeprecatedFlyString const& namespace_)
+JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, Optional<FlyString> const& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
@@ -822,7 +832,7 @@ AnythingElse:
 void HTMLParser::insert_comment(HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment()))), adjusted_insertion_location.insert_before_sibling);
+    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLParser::handle_in_head(HTMLToken& token)
@@ -1142,7 +1152,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 
     if (token.is_comment()) {
         auto& insertion_location = m_stack_of_open_elements.first();
-        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())))));
+        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment())));
         return;
     }
 
@@ -1178,7 +1188,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 void HTMLParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
@@ -1437,7 +1447,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#special
-bool HTMLParser::is_special_tag(FlyString const& tag_name, DeprecatedFlyString const& namespace_)
+bool HTMLParser::is_special_tag(FlyString const& tag_name, Optional<FlyString> const& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(
@@ -1740,7 +1750,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
                 break;
             }
 
-            if (is_special_tag(node->local_name(), node->namespace_()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
+            if (is_special_tag(node->local_name(), node->namespace_uri()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
         }
 
@@ -1771,7 +1781,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::dt);
                 break;
             }
-            if (is_special_tag(node->local_name(), node->namespace_()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
+            if (is_special_tag(node->local_name(), node->namespace_uri()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
         }
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
@@ -2025,7 +2035,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::image) {
         // Parse error. Change the token's tag name to HTML::TagNames::img and reprocess it. (Don't ask.)
         log_parse_error();
-        token.set_tag_name("img");
+        token.set_tag_name("img"_fly_string);
         process_using_the_rules_for(m_insertion_mode, token);
         return;
     }
@@ -2178,7 +2188,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
                 (void)m_stack_of_open_elements.pop();
                 break;
             }
-            if (is_special_tag(node->local_name(), node->namespace_())) {
+            if (is_special_tag(node->local_name(), node->namespace_uri())) {
                 log_parse_error();
                 return;
             }
@@ -2194,41 +2204,41 @@ void HTMLParser::adjust_mathml_attributes(HTMLToken& token)
 
 void HTMLParser::adjust_svg_tag_names(HTMLToken& token)
 {
-    token.adjust_tag_name("altglyph", "altGlyph");
-    token.adjust_tag_name("altglyphdef", "altGlyphDef");
-    token.adjust_tag_name("altglyphitem", "altGlyphItem");
-    token.adjust_tag_name("animatecolor", "animateColor");
-    token.adjust_tag_name("animatemotion", "animateMotion");
-    token.adjust_tag_name("animatetransform", "animateTransform");
-    token.adjust_tag_name("clippath", "clipPath");
-    token.adjust_tag_name("feblend", "feBlend");
-    token.adjust_tag_name("fecolormatrix", "feColorMatrix");
-    token.adjust_tag_name("fecomponenttransfer", "feComponentTransfer");
-    token.adjust_tag_name("fecomposite", "feComposite");
-    token.adjust_tag_name("feconvolvematrix", "feConvolveMatrix");
-    token.adjust_tag_name("fediffuselighting", "feDiffuseLighting");
-    token.adjust_tag_name("fedisplacementmap", "feDisplacementMap");
-    token.adjust_tag_name("fedistantlight", "feDistantLight");
-    token.adjust_tag_name("fedropshadow", "feDropShadow");
-    token.adjust_tag_name("feflood", "feFlood");
-    token.adjust_tag_name("fefunca", "feFuncA");
-    token.adjust_tag_name("fefuncb", "feFuncB");
-    token.adjust_tag_name("fefuncg", "feFuncG");
-    token.adjust_tag_name("fefuncr", "feFuncR");
-    token.adjust_tag_name("fegaussianblur", "feGaussianBlur");
-    token.adjust_tag_name("feimage", "feImage");
-    token.adjust_tag_name("femerge", "feMerge");
-    token.adjust_tag_name("femergenode", "feMergeNode");
-    token.adjust_tag_name("femorphology", "feMorphology");
-    token.adjust_tag_name("feoffset", "feOffset");
-    token.adjust_tag_name("fepointlight", "fePointLight");
-    token.adjust_tag_name("fespecularlighting", "feSpecularLighting");
-    token.adjust_tag_name("fespotlight", "feSpotlight");
-    token.adjust_tag_name("foreignobject", "foreignObject");
-    token.adjust_tag_name("glyphref", "glyphRef");
-    token.adjust_tag_name("lineargradient", "linearGradient");
-    token.adjust_tag_name("radialgradient", "radialGradient");
-    token.adjust_tag_name("textpath", "textPath");
+    token.adjust_tag_name("altglyph"_fly_string, "altGlyph"_fly_string);
+    token.adjust_tag_name("altglyphdef"_fly_string, "altGlyphDef"_fly_string);
+    token.adjust_tag_name("altglyphitem"_fly_string, "altGlyphItem"_fly_string);
+    token.adjust_tag_name("animatecolor"_fly_string, "animateColor"_fly_string);
+    token.adjust_tag_name("animatemotion"_fly_string, "animateMotion"_fly_string);
+    token.adjust_tag_name("animatetransform"_fly_string, "animateTransform"_fly_string);
+    token.adjust_tag_name("clippath"_fly_string, "clipPath"_fly_string);
+    token.adjust_tag_name("feblend"_fly_string, "feBlend"_fly_string);
+    token.adjust_tag_name("fecolormatrix"_fly_string, "feColorMatrix"_fly_string);
+    token.adjust_tag_name("fecomponenttransfer"_fly_string, "feComponentTransfer"_fly_string);
+    token.adjust_tag_name("fecomposite"_fly_string, "feComposite"_fly_string);
+    token.adjust_tag_name("feconvolvematrix"_fly_string, "feConvolveMatrix"_fly_string);
+    token.adjust_tag_name("fediffuselighting"_fly_string, "feDiffuseLighting"_fly_string);
+    token.adjust_tag_name("fedisplacementmap"_fly_string, "feDisplacementMap"_fly_string);
+    token.adjust_tag_name("fedistantlight"_fly_string, "feDistantLight"_fly_string);
+    token.adjust_tag_name("fedropshadow"_fly_string, "feDropShadow"_fly_string);
+    token.adjust_tag_name("feflood"_fly_string, "feFlood"_fly_string);
+    token.adjust_tag_name("fefunca"_fly_string, "feFuncA"_fly_string);
+    token.adjust_tag_name("fefuncb"_fly_string, "feFuncB"_fly_string);
+    token.adjust_tag_name("fefuncg"_fly_string, "feFuncG"_fly_string);
+    token.adjust_tag_name("fefuncr"_fly_string, "feFuncR"_fly_string);
+    token.adjust_tag_name("fegaussianblur"_fly_string, "feGaussianBlur"_fly_string);
+    token.adjust_tag_name("feimage"_fly_string, "feImage"_fly_string);
+    token.adjust_tag_name("femerge"_fly_string, "feMerge"_fly_string);
+    token.adjust_tag_name("femergenode"_fly_string, "feMergeNode"_fly_string);
+    token.adjust_tag_name("femorphology"_fly_string, "feMorphology"_fly_string);
+    token.adjust_tag_name("feoffset"_fly_string, "feOffset"_fly_string);
+    token.adjust_tag_name("fepointlight"_fly_string, "fePointLight"_fly_string);
+    token.adjust_tag_name("fespecularlighting"_fly_string, "feSpecularLighting"_fly_string);
+    token.adjust_tag_name("fespotlight"_fly_string, "feSpotlight"_fly_string);
+    token.adjust_tag_name("foreignobject"_fly_string, "foreignObject"_fly_string);
+    token.adjust_tag_name("glyphref"_fly_string, "glyphRef"_fly_string);
+    token.adjust_tag_name("lineargradient"_fly_string, "linearGradient"_fly_string);
+    token.adjust_tag_name("radialgradient"_fly_string, "radialGradient"_fly_string);
+    token.adjust_tag_name("textpath"_fly_string, "textPath"_fly_string);
 }
 
 void HTMLParser::adjust_svg_attributes(HTMLToken& token)
@@ -2293,21 +2303,22 @@ void HTMLParser::adjust_svg_attributes(HTMLToken& token)
     token.adjust_attribute_name("zoomandpan"_fly_string, "zoomAndPan"_fly_string);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#adjust-foreign-attributes
 void HTMLParser::adjust_foreign_attributes(HTMLToken& token)
 {
-    token.adjust_foreign_attribute("xlink:actuate"_fly_string, "xlink", "actuate"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:arcrole"_fly_string, "xlink", "arcrole"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:href"_fly_string, "xlink", "href"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:role"_fly_string, "xlink", "role"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:show"_fly_string, "xlink", "show"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:title"_fly_string, "xlink", "title"_fly_string, Namespace::XLink);
-    token.adjust_foreign_attribute("xlink:type"_fly_string, "xlink", "type"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:actuate"_fly_string, "xlink"_fly_string, "actuate"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:arcrole"_fly_string, "xlink"_fly_string, "arcrole"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:href"_fly_string, "xlink"_fly_string, "href"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:role"_fly_string, "xlink"_fly_string, "role"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:show"_fly_string, "xlink"_fly_string, "show"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:title"_fly_string, "xlink"_fly_string, "title"_fly_string, Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:type"_fly_string, "xlink"_fly_string, "type"_fly_string, Namespace::XLink);
 
-    token.adjust_foreign_attribute("xml:lang"_fly_string, "xml", "lang"_fly_string, Namespace::XML);
-    token.adjust_foreign_attribute("xml:space"_fly_string, "xml", "space"_fly_string, Namespace::XML);
+    token.adjust_foreign_attribute("xml:lang"_fly_string, "xml"_fly_string, "lang"_fly_string, Namespace::XML);
+    token.adjust_foreign_attribute("xml:space"_fly_string, "xml"_fly_string, "space"_fly_string, Namespace::XML);
 
-    token.adjust_foreign_attribute("xmlns"_fly_string, "", "xmlns"_fly_string, Namespace::XMLNS);
-    token.adjust_foreign_attribute("xmlns:xlink"_fly_string, "xmlns", "xlink"_fly_string, Namespace::XMLNS);
+    token.adjust_foreign_attribute("xmlns"_fly_string, {}, "xmlns"_fly_string, Namespace::XMLNS);
+    token.adjust_foreign_attribute("xmlns:xlink"_fly_string, "xmlns"_fly_string, "xlink"_fly_string, Namespace::XMLNS);
 }
 
 void HTMLParser::increment_script_nesting_level()
@@ -3407,7 +3418,7 @@ void HTMLParser::handle_after_frameset(HTMLToken& token)
 void HTMLParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), MUST(String::from_deprecated_string(token.comment())));
+        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment());
         MUST(document().append_child(comment));
         return;
     }
@@ -3480,7 +3491,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         // While the current node is not a MathML text integration point, an HTML integration point, or an element in the HTML namespace, pop elements from the stack of open elements.
         while (!is_mathml_text_integration_point(current_node())
             && !is_html_integration_point(current_node())
-            && current_node().namespace_() != Namespace::HTML) {
+            && current_node().namespace_uri() != Namespace::HTML) {
             (void)m_stack_of_open_elements.pop();
         }
 
@@ -3492,13 +3503,13 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
     // Any other start tag
     if (token.is_start_tag()) {
         // If the adjusted current node is an element in the MathML namespace, adjust MathML attributes for the token. (This fixes the case of MathML attributes that are not all lowercase.)
-        if (adjusted_current_node().namespace_() == Namespace::MathML) {
+        if (adjusted_current_node().namespace_uri() == Namespace::MathML) {
             adjust_mathml_attributes(token);
         }
         // If the adjusted current node is an element in the SVG namespace, and the token's tag name is one of the ones in the first column of the
         // following table, change the tag name to the name given in the corresponding cell in the second column. (This fixes the case of SVG
         // elements that are not all lowercase.)
-        else if (adjusted_current_node().namespace_() == Namespace::SVG) {
+        else if (adjusted_current_node().namespace_uri() == Namespace::SVG) {
             adjust_svg_tag_names(token);
             // If the adjusted current node is an element in the SVG namespace, adjust SVG attributes for the token. (This fixes the case of SVG attributes that are not all lowercase.)
             adjust_svg_attributes(token);
@@ -3508,13 +3519,16 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         adjust_foreign_attributes(token);
 
         // Insert a foreign element for the token, in the same namespace as the adjusted current node.
-        (void)insert_foreign_element(token, adjusted_current_node().namespace_());
+        (void)insert_foreign_element(token, adjusted_current_node().namespace_uri());
 
         // If the token has its self-closing flag set, then run the appropriate steps from the following list:
         if (token.is_self_closing()) {
 
             // -> If the token's tag name is "script", and the new current node is in the SVG namespace
-            if (token.tag_name() == SVG::TagNames::script && current_node().namespace_() == Namespace::SVG) {
+            if (token.tag_name() == SVG::TagNames::script && current_node().namespace_uri() == Namespace::SVG) {
+                auto& script_element = verify_cast<SVG::SVGScriptElement>(current_node());
+                script_element.set_source_line_number({}, token.start_position().line + 1); // FIXME: This +1 is incorrect for script tags whose script does not start on a new line
+
                 // Acknowledge the token's self-closing flag, and then act as described in the steps for a "script" end tag below.
                 token.acknowledge_self_closing_flag_if_set();
                 goto ScriptEndTag;
@@ -3531,10 +3545,10 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
     }
 
     // -> An end tag whose tag name is "script", if the current node is an SVG script element
-    if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
+    if (token.is_end_tag() && current_node().namespace_uri() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
     ScriptEndTag:
         // Pop the current node off the stack of open elements.
-        (void)m_stack_of_open_elements.pop();
+        auto& script_element = verify_cast<SVG::SVGScriptElement>(*m_stack_of_open_elements.pop());
         // Let the old insertion point have the same value as the current insertion point.
         m_tokenizer.store_insertion_point();
         // Let the insertion point be just before the next input character.
@@ -3544,8 +3558,12 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
         // Set the parser pause flag to true.
         m_parser_pause_flag = true;
 
-        // FIXME: If the active speculative HTML parser is null and the user agent supports SVG, then Process the SVG script element according to the SVG rules. [SVG]
-        dbgln("FIXME: Missing 'Process the SVG script element according to the SVG rules.");
+        // Non-standard: Make sure the <script> element has up-to-date text content before processing the script.
+        flush_character_insertions();
+
+        // If the active speculative HTML parser is null and the user agent supports SVG, then Process the SVG script element according to the SVG rules. [SVG]
+        // FIXME: If the active speculative HTML parser is null
+        script_element.process_the_script_element();
 
         // Decrement the parser's script nesting level by one.
         decrement_script_nesting_level();
@@ -3587,7 +3605,7 @@ void HTMLParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
             node = m_stack_of_open_elements.elements().at(i - 1).ptr();
 
             // 6. If node is not an element in the HTML namespace, return to the step labeled loop.
-            if (node->namespace_() != Namespace::HTML)
+            if (node->namespace_uri() != Namespace::HTML)
                 continue;
 
             // 7. Otherwise, process the token according to the rules given in the section corresponding to the current insertion mode in HTML content.

@@ -280,7 +280,7 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
 {
     // FIXME: Filter out non-default namespace using prefixes
     auto namespace_uri = rule.sheet->default_namespace();
-    if (namespace_uri.has_value() && namespace_uri.value() != element.namespace_()) {
+    if (namespace_uri.has_value() && namespace_uri.value() != element.namespace_uri()) {
         return false;
     }
     return true;
@@ -310,7 +310,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
         if (auto it = rule_cache.rules_by_class.find(class_name); it != rule_cache.rules_by_class.end())
             add_rules_to_run(it->value);
     }
-    if (auto id = element.get_attribute(HTML::AttributeNames::id); id.has_value()) {
+    if (auto id = element.id(); id.has_value()) {
         if (auto it = rule_cache.rules_by_id.find(id.value()); it != rule_cache.rules_by_id.end())
             add_rules_to_run(it->value);
     }
@@ -2023,7 +2023,7 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
         // https://w3c.github.io/mathml-core/#new-display-math-value
         // For elements that are not MathML elements, if the specified value of display is inline math or block math
         // then the computed value is block flow and inline flow respectively.
-        if (element.namespace_() != Namespace::MathML)
+        if (element.namespace_uri() != Namespace::MathML)
             new_display = CSS::Display { display.outside(), CSS::DisplayInside::Flow };
         // For the mtable element the computed value is block table and inline table respectively.
         else if (element.tag_name().equals_ignoring_ascii_case("mtable"sv))

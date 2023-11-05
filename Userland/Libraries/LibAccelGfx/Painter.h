@@ -8,7 +8,9 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
+#include <LibAccelGfx/Canvas.h>
 #include <LibAccelGfx/Forward.h>
+#include <LibAccelGfx/Program.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Forward.h>
 
@@ -19,7 +21,9 @@ class Painter {
     AK_MAKE_NONMOVABLE(Painter);
 
 public:
-    Painter(Canvas&);
+    static OwnPtr<Painter> create();
+
+    Painter(Context&);
     ~Painter();
 
     void clear(Gfx::Color);
@@ -33,10 +37,20 @@ public:
     void fill_rect(Gfx::FloatRect, Gfx::Color);
     void fill_rect(Gfx::IntRect, Gfx::Color);
 
-private:
+    enum class ScalingMode {
+        NearestNeighbor,
+        Bilinear,
+    };
+
+    void draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap const&, Gfx::FloatRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
+    void draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const&, Gfx::IntRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
+
+    void set_canvas(Canvas& canvas) { m_canvas = canvas; }
     void flush();
 
-    Canvas& m_canvas;
+private:
+    Context& m_context;
+    Optional<Canvas> m_canvas;
 
     struct State {
         Gfx::AffineTransform transform;
@@ -48,6 +62,9 @@ private:
     [[nodiscard]] Gfx::FloatRect to_clip_space(Gfx::FloatRect const& screen_rect) const;
 
     Vector<State, 1> m_state_stack;
+
+    Program m_rectangle_program;
+    Program m_blit_program;
 };
 
 }

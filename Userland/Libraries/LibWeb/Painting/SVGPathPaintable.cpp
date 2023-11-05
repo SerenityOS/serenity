@@ -6,27 +6,27 @@
  */
 
 #include <LibGfx/AntiAliasingPainter.h>
-#include <LibWeb/Painting/SVGGeometryPaintable.h>
+#include <LibWeb/Painting/SVGPathPaintable.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web::Painting {
 
-JS::NonnullGCPtr<SVGGeometryPaintable> SVGGeometryPaintable::create(Layout::SVGGeometryBox const& layout_box)
+JS::NonnullGCPtr<SVGPathPaintable> SVGPathPaintable::create(Layout::SVGGraphicsBox const& layout_box)
 {
-    return layout_box.heap().allocate_without_realm<SVGGeometryPaintable>(layout_box);
+    return layout_box.heap().allocate_without_realm<SVGPathPaintable>(layout_box);
 }
 
-SVGGeometryPaintable::SVGGeometryPaintable(Layout::SVGGeometryBox const& layout_box)
+SVGPathPaintable::SVGPathPaintable(Layout::SVGGraphicsBox const& layout_box)
     : SVGGraphicsPaintable(layout_box)
 {
 }
 
-Layout::SVGGeometryBox const& SVGGeometryPaintable::layout_box() const
+Layout::SVGGraphicsBox const& SVGPathPaintable::layout_box() const
 {
-    return static_cast<Layout::SVGGeometryBox const&>(layout_node());
+    return static_cast<Layout::SVGGraphicsBox const&>(layout_node());
 }
 
-Optional<HitTestResult> SVGGeometryPaintable::hit_test(CSSPixelPoint position, HitTestType type) const
+Optional<HitTestResult> SVGPathPaintable::hit_test(CSSPixelPoint position, HitTestType type) const
 {
     auto result = SVGGraphicsPaintable::hit_test(position, type);
     if (!result.has_value() || !computed_path().has_value())
@@ -49,7 +49,7 @@ static Gfx::Painter::WindingRule to_gfx_winding_rule(SVG::FillRule fill_rule)
     }
 }
 
-void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
+void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible() || !computed_path().has_value())
         return;

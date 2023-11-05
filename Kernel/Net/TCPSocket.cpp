@@ -220,7 +220,7 @@ ErrorOr<size_t> TCPSocket::protocol_send(UserOrKernelBuffer const& data, size_t 
     // FIXME: Make this configurable via TCP_NODELAY.
     auto has_unacked_data = m_unacked_packets.with_shared([&](auto const& packets) { return packets.size > 0; });
     if (has_unacked_data && data_length < mss)
-        return 0;
+        return set_so_error(EAGAIN);
 
     data_length = min(data_length, mss);
     TRY(send_tcp_packet(TCPFlags::PSH | TCPFlags::ACK, &data, data_length, &routing_decision));

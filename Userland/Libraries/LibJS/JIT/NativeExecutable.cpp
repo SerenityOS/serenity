@@ -12,15 +12,6 @@
 #include <LibX86/Disassembler.h>
 #include <sys/mman.h>
 
-#if __has_include(<execinfo.h>)
-#    include <execinfo.h>
-#    define EXECINFO_BACKTRACE
-#endif
-
-#if defined(AK_OS_ANDROID) && (__ANDROID_API__ < 33)
-#    undef EXECINFO_BACKTRACE
-#endif
-
 namespace JS::JIT {
 
 NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping)
@@ -28,6 +19,15 @@ NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMappi
     , m_size(size)
     , m_mapping(move(mapping))
 {
+    // Translate block index to instruction address, so the native code can just jump to it.
+    for (auto const& entry : m_mapping) {
+        if (entry.block_index == BytecodeMapping::EXECUTABLE)
+            continue;
+        if (entry.bytecode_offset == 0) {
+            VERIFY(entry.block_index == m_block_entry_points.size());
+            m_block_entry_points.append(bit_cast<FlatPtr>(m_code) + entry.native_offset);
+        }
+    }
 }
 
 NativeExecutable::~NativeExecutable()
@@ -35,12 +35,19 @@ NativeExecutable::~NativeExecutable()
     munmap(m_code, m_size);
 }
 
-void NativeExecutable::run(VM& vm) const
+void NativeExecutable::run(VM& vm, size_t entry_point) const
 {
-    typedef void (*JITCode)(VM&, Value* registers, Value* locals);
+    FlatPtr entry_point_address = 0;
+    if (entry_point != 0) {
+        entry_point_address = m_block_entry_points[entry_point];
+        VERIFY(entry_point_address != 0);
+    }
+
+    typedef void (*JITCode)(VM&, Value* registers, Value* locals, FlatPtr entry_point_address);
     ((JITCode)m_code)(vm,
         vm.bytecode_interpreter().registers().data(),
-        vm.running_execution_context().local_variables.data());
+        vm.running_execution_context().local_variables.data(),
+        entry_point_address);
 }
 
 #if ARCH(X86_64)
@@ -88,9 +95,13 @@ void NativeExecutable::dump_disassembly([[maybe_unused]] Bytecode::Executable co
     auto symbol_provider = JITSymbolProvider(*this);
     auto mapping = m_mapping.begin();
 
-    auto first_instruction = Bytecode::InstructionStreamIterator { executable.basic_blocks[0]->instruction_stream(), &executable };
-    auto source_range = first_instruction.source_range().realize();
-    dbgln("Disassembly of '{}' ({}:{}:{}):", executable.name, source_range.filename(), source_range.start.line, source_range.start.column);
+    if (!executable.basic_blocks.is_empty() && executable.basic_blocks[0]->size() != 0) {
+        auto first_instruction = Bytecode::InstructionStreamIterator { executable.basic_blocks[0]->instruction_stream(), &executable };
+        auto source_range = first_instruction.source_range().realize();
+        dbgln("Disassembly of '{}' ({}:{}:{}):", executable.name, source_range.filename(), source_range.start.line, source_range.start.column);
+    } else {
+        dbgln("Disassembly of '{}':", executable.name);
+    }
 
     while (true) {
         auto offset = stream.offset();
@@ -159,32 +170,20 @@ BytecodeMapping const& NativeExecutable::find_mapping_entry(size_t native_offset
     return m_mapping[nearby_index];
 }
 
-Optional<Bytecode::InstructionStreamIterator const&> NativeExecutable::instruction_stream_iterator([[maybe_unused]] Bytecode::Executable const& executable) const
+Optional<UnrealizedSourceRange> NativeExecutable::get_source_range(Bytecode::Executable const& executable, FlatPtr address) const
 {
-#ifdef EXECINFO_BACKTRACE
-    void* buffer[10];
-    auto count = backtrace(buffer, 10);
     auto start = bit_cast<FlatPtr>(m_code);
     auto end = start + m_size;
-    for (auto i = 0; i < count; i++) {
-        auto address = bit_cast<FlatPtr>(buffer[i]);
-        if (address < start || address >= end)
-            continue;
-        // return address points after the call
-        // let's subtract 1 to make sure we don't hit the next bytecode
-        // (in practice that's not necessary, because our native_call() sequence continues)
-        auto offset = address - start - 1;
-        auto& entry = find_mapping_entry(offset);
-        if (entry.block_index < executable.basic_blocks.size()) {
-            auto const& block = *executable.basic_blocks[entry.block_index];
-            if (entry.bytecode_offset < block.size()) {
-                // This is rather clunky, but Interpreter::instruction_stream_iterator() gives out references, so we need to keep it alive.
-                m_instruction_stream_iterator = make<Bytecode::InstructionStreamIterator>(block.instruction_stream(), &executable, entry.bytecode_offset);
-                return *m_instruction_stream_iterator;
-            }
+    if (address < start || address >= end)
+        return {};
+    auto const& entry = find_mapping_entry(address - start - 1);
+    if (entry.block_index < executable.basic_blocks.size()) {
+        auto const& block = *executable.basic_blocks[entry.block_index];
+        if (entry.bytecode_offset < block.size()) {
+            auto iterator = Bytecode::InstructionStreamIterator { block.instruction_stream(), &executable, entry.bytecode_offset };
+            return iterator.source_range();
         }
     }
-#endif
     return {};
 }
 

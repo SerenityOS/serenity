@@ -145,7 +145,6 @@ private:
     int virt$accept4(FlatPtr);
     u32 virt$allocate_tls(FlatPtr, size_t);
     int virt$anon_create(size_t, int);
-    int virt$beep();
     int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
     u32 virt$bindmount(u32 params_addr);
     int virt$chdir(FlatPtr, size_t);

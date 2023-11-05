@@ -90,7 +90,7 @@ Element* HTMLCollection::named_item(FlyString const& name_) const
     if (auto it = elements.find_if([&](auto& entry) { return entry->deprecated_attribute(HTML::AttributeNames::id) == name; }); it != elements.end())
         return *it;
     //      - it is in the HTML namespace and has a name attribute whose value is key;
-    if (auto it = elements.find_if([&](auto& entry) { return entry->namespace_() == Namespace::HTML && entry->name() == name; }); it != elements.end())
+    if (auto it = elements.find_if([&](auto& entry) { return entry->namespace_uri() == Namespace::HTML && entry->name() == name; }); it != elements.end())
         return *it;
     //    or null if there is no such element.
     return nullptr;
@@ -115,7 +115,7 @@ Vector<DeprecatedString> HTMLCollection::supported_property_names() const
         }
 
         // 2. If element is in the HTML namespace and has a name attribute whose value is neither the empty string nor is in result, append element’s name attribute value to result.
-        if (element->namespace_() == Namespace::HTML && element->has_attribute(HTML::AttributeNames::name)) {
+        if (element->namespace_uri() == Namespace::HTML && element->has_attribute(HTML::AttributeNames::name)) {
             auto name = element->deprecated_attribute(HTML::AttributeNames::name);
 
             if (!name.is_empty() && !result.contains_slow(name))

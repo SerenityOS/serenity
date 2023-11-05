@@ -65,6 +65,11 @@ public:
         return box.display().is_table_row();
     }
 
+    static bool is_table_column_group(Box const& box)
+    {
+        return box.display().is_table_column_group();
+    }
+
     template<typename Matcher, typename Callback>
     static void for_each_child_box_matching(Box const& parent, Matcher matcher, Callback callback)
     {

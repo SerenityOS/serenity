@@ -5,7 +5,7 @@
  */
 
 #include <LibWeb/Layout/SVGTextBox.h>
-#include <LibWeb/Painting/SVGTextPaintable.h>
+#include <LibWeb/Painting/SVGPathPaintable.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web::Layout {
@@ -17,7 +17,7 @@ SVGTextBox::SVGTextBox(DOM::Document& document, SVG::SVGTextPositioningElement& 
 
 JS::GCPtr<Painting::Paintable> SVGTextBox::create_paintable() const
 {
-    return Painting::SVGTextPaintable::create(*this);
+    return Painting::SVGPathPaintable::create(*this);
 }
 
 }

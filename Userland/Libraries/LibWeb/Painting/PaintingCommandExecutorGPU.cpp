@@ -8,16 +8,14 @@
 
 namespace Web::Painting {
 
-PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(Gfx::Bitmap& bitmap)
-    : m_target_bitmap(bitmap)
-    , m_canvas(AccelGfx::Canvas::create(AccelGfx::Context::the(), bitmap))
-    , m_painter(m_canvas)
+PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Painter& painter)
+    : m_painter(painter)
 {
 }
 
 PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
 {
-    m_canvas.flush();
+    m_painter.flush();
 }
 
 CommandResult PaintingCommandExecutorGPU::draw_text_run(Color const&, Gfx::IntPoint const&, String const&, Gfx::Font const&)
@@ -38,9 +36,25 @@ CommandResult PaintingCommandExecutorGPU::fill_rect(Gfx::IntRect const& rect, Co
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const&, Gfx::Bitmap const&, Gfx::IntRect const&, float, Gfx::Painter::ScalingMode)
+CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, float, Gfx::Painter::ScalingMode scaling_mode)
 {
-    // FIXME
+    // FIXME: We should avoid using Gfx::Painter specific enums in painting commands
+    AccelGfx::Painter::ScalingMode accel_scaling_mode;
+    switch (scaling_mode) {
+    case Gfx::Painter::ScalingMode::NearestNeighbor:
+    case Gfx::Painter::ScalingMode::BoxSampling:
+    case Gfx::Painter::ScalingMode::SmoothPixels:
+    case Gfx::Painter::ScalingMode::None:
+        accel_scaling_mode = AccelGfx::Painter::ScalingMode::NearestNeighbor;
+        break;
+    case Gfx::Painter::ScalingMode::BilinearBlend:
+        accel_scaling_mode = AccelGfx::Painter::ScalingMode::Bilinear;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    painter().draw_scaled_bitmap(dst_rect, bitmap, src_rect, accel_scaling_mode);
     return CommandResult::Continue;
 }
 

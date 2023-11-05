@@ -149,7 +149,7 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(Deprecated
         auto qualified_name_in_ascii_lowercase = MUST(FlyString::from_deprecated_fly_string(qualified_name.to_lowercase()));
         return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [qualified_name, qualified_name_in_ascii_lowercase](Element const& element) {
             // - Whose namespace is the HTML namespace and whose qualified name is qualifiedName, in ASCII lowercase.
-            if (element.namespace_() == Namespace::HTML)
+            if (element.namespace_uri() == Namespace::HTML)
                 return element.qualified_name() == qualified_name_in_ascii_lowercase;
 
             // - Whose namespace is not the HTML namespace and whose qualified name is qualifiedName.

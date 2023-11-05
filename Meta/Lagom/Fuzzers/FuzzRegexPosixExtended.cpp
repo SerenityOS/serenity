@@ -11,6 +11,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
     auto pattern = StringView(static_cast<unsigned char const*>(data), size);
     [[maybe_unused]] auto re = Regex<PosixExtended>(pattern);
     return 0;

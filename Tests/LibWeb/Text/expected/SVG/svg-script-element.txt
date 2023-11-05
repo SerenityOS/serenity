@@ -1,1 +1,1 @@
-  Name = SVGScriptElement
+   Hello from SVGScriptElement!

@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/AnimatedBitmapDecodedImageData.h>
 #include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/SharedImageRequest.h>
+#include <LibWeb/MimeSniff/Resource.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
 #include <LibWeb/SVG/SVGDecodedImageData.h>
 
@@ -80,6 +81,19 @@ void SharedImageRequest::fetch_image(JS::Realm& realm, JS::NonnullGCPtr<Fetch::I
         auto process_body = [this, request, response](ByteBuffer data) {
             auto extracted_mime_type = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
             auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
+            // 1. If the supplied MIME type is an XML MIME type, the computed MIME type is the supplied MIME type.
+            if (extracted_mime_type.has_value() && extracted_mime_type.value().is_xml()) {
+                mime_type = extracted_mime_type.value().essence().bytes_as_string_view();
+            } else {
+                // 2. Let image-type-matched be the result of executing the image type pattern matching algorithm with the resource headeras the byte sequence to be matched.
+                auto image_type_matched = Web::MimeSniff::Resource::create(data, Web::MimeSniff::Resource::SniffingContext::Image, "http"sv, {}, false);
+                // 3. If image-type-matched is not undefined, the computed MIME type is image-type-matched.
+                if (!image_type_matched.is_error()) {
+                    mime_type = image_type_matched.release_value_but_fixme_should_propagate_errors().computed_mime_type().essence().bytes_as_string_view();
+                } else {
+                    // 4. The computed MIME type is the supplied MIME type.
+                }
+            }
             handle_successful_fetch(request->url(), mime_type, move(data));
         };
         auto process_body_error = [this](auto) {
@@ -128,11 +142,6 @@ void SharedImageRequest::add_callbacks(Function<void()> on_finish, Function<void
 
 void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, StringView mime_type, ByteBuffer data)
 {
-    // AD-HOC: At this point, things gets very ad-hoc.
-    // FIXME: Bring this closer to spec.
-
-    bool const is_svg_image = mime_type == "image/svg+xml"sv || url_string.basename().ends_with(".svg"sv);
-
     RefPtr<DecodedImageData> image_data;
 
     auto handle_failed_decode = [&] {
@@ -143,7 +152,7 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
         }
     };
 
-    if (is_svg_image) {
+    if (mime_type == "image/svg+xml") {
         auto result = SVG::SVGDecodedImageData::create(m_page, url_string, data);
         if (result.is_error())
             return handle_failed_decode();

@@ -1311,8 +1311,13 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_build_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/build.png"sv));
     return GUI::Action::create("&Build", { Mod_Ctrl, Key_B }, icon, [this](auto&) {
-        if (warn_unsaved_changes("There are unsaved changes, do you want to save before building?") == ContinueDecision::No)
-            return;
+        if (m_auto_save_before_build_or_run) {
+            if (!save_file_changes())
+                return;
+        } else {
+            if (warn_unsaved_changes("There are unsaved changes, do you want to save before building?") == ContinueDecision::No)
+                return;
+        }
 
         reveal_action_tab(*m_terminal_wrapper);
         build();
@@ -1323,8 +1328,13 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_run_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/program-run.png"sv));
     return GUI::Action::create("&Run", { Mod_Ctrl, Key_R }, icon, [this](auto&) {
-        if (warn_unsaved_changes("There are unsaved changes, do you want to save before running?") == ContinueDecision::No)
-            return;
+        if (m_auto_save_before_build_or_run) {
+            if (!save_file_changes())
+                return;
+        } else {
+            if (warn_unsaved_changes("There are unsaved changes, do you want to save before running?") == ContinueDecision::No)
+                return;
+        }
 
         reveal_action_tab(*m_terminal_wrapper);
         run();
@@ -1472,6 +1482,14 @@ ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
     });
     vim_emulation_setting_action->set_checked(false);
     edit_menu->add_action(vim_emulation_setting_action);
+
+    auto auto_save_before_build_or_run_action = GUI::Action::create_checkable("&Auto Save before Build or Run", [this](auto& action) {
+        m_auto_save_before_build_or_run = action.is_checked();
+        Config::write_bool("HackStudio"sv, "Global"sv, "AutoSaveBeforeBuildOrRun"sv, m_auto_save_before_build_or_run);
+    });
+    m_auto_save_before_build_or_run = Config::read_bool("HackStudio"sv, "Global"sv, "AutoSaveBeforeBuildOrRun"sv, false);
+    auto_save_before_build_or_run_action->set_checked(m_auto_save_before_build_or_run);
+    edit_menu->add_action(auto_save_before_build_or_run_action);
 
     edit_menu->add_separator();
     edit_menu->add_action(*m_open_project_configuration_action);
@@ -1679,15 +1697,23 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(Deprec
         return ContinueDecision::No;
 
     if (result == GUI::MessageBox::ExecResult::Yes) {
-        for (auto& editor_wrapper : m_all_editor_wrappers) {
-            if (editor_wrapper->editor().document().is_modified()) {
-                if (!editor_wrapper->save())
-                    return ContinueDecision::No;
-            }
-        }
+        if (!save_file_changes())
+            return ContinueDecision::No;
     }
 
     return ContinueDecision::Yes;
+}
+
+bool HackStudioWidget::save_file_changes()
+{
+    for (auto& editor_wrapper : m_all_editor_wrappers) {
+        if (editor_wrapper->editor().document().is_modified()) {
+            if (!editor_wrapper->save())
+                return false;
+        }
+    }
+
+    return true;
 }
 
 bool HackStudioWidget::any_document_is_dirty() const

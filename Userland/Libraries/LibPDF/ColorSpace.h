@@ -123,6 +123,25 @@ private:
     size_t m_number_of_components { 0 };
 };
 
+class CalGrayColorSpace final : public ColorSpace {
+public:
+    static PDFErrorOr<NonnullRefPtr<CalGrayColorSpace>> create(Document*, Vector<Value>&& parameters);
+
+    ~CalGrayColorSpace() override = default;
+
+    PDFErrorOr<Color> color(ReadonlySpan<Value> arguments) const override;
+    int number_of_components() const override { return 1; }
+    Vector<float> default_decode() const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::CalGray; }
+
+private:
+    CalGrayColorSpace() = default;
+
+    Array<float, 3> m_whitepoint { 0, 0, 0 };
+    Array<float, 3> m_blackpoint { 0, 0, 0 };
+    float m_gamma { 1 };
+};
+
 class CalRGBColorSpace final : public ColorSpace {
 public:
     static PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> create(Document*, Vector<Value>&& parameters);

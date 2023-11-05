@@ -1069,7 +1069,7 @@ void TerminalWidget::beep()
         return;
     }
     if (m_bell_mode == BellMode::AudibleBeep) {
-        sysbeep(440);
+        [[maybe_unused]] auto ret_val = Core::System::beep();
         return;
     }
     m_visual_beep_timer->restart(200);

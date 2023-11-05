@@ -10,6 +10,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
     auto parser = SQL::AST::Parser(SQL::AST::Lexer({ data, size }));
     [[maybe_unused]] auto statement = parser.next_statement();
     return 0;

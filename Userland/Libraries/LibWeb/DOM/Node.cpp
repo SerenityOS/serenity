@@ -46,33 +46,33 @@
 
 namespace Web::DOM {
 
-static IDAllocator s_node_id_allocator;
+static IDAllocator s_unique_id_allocator;
 static HashMap<i32, Node*> s_node_directory;
 
-static i32 allocate_node_id(Node* node)
+static i32 allocate_unique_id(Node* node)
 {
-    i32 id = s_node_id_allocator.allocate();
+    i32 id = s_unique_id_allocator.allocate();
     s_node_directory.set(id, node);
     return id;
 }
 
-static void deallocate_node_id(i32 node_id)
+static void deallocate_unique_id(i32 node_id)
 {
     if (!s_node_directory.remove(node_id))
         VERIFY_NOT_REACHED();
-    s_node_id_allocator.deallocate(node_id);
+    s_unique_id_allocator.deallocate(node_id);
 }
 
-Node* Node::from_id(i32 node_id)
+Node* Node::from_unique_id(i32 unique_id)
 {
-    return s_node_directory.get(node_id).value_or(nullptr);
+    return s_node_directory.get(unique_id).value_or(nullptr);
 }
 
 Node::Node(JS::Realm& realm, Document& document, NodeType type)
     : EventTarget(realm)
     , m_document(&document)
     , m_type(type)
-    , m_id(allocate_node_id(this))
+    , m_unique_id(allocate_unique_id(this))
 {
 }
 
@@ -86,7 +86,7 @@ Node::~Node() = default;
 void Node::finalize()
 {
     Base::finalize();
-    deallocate_node_id(m_id);
+    deallocate_unique_id(m_unique_id);
 }
 
 void Node::visit_edges(Cell::Visitor& visitor)
@@ -456,8 +456,8 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
             auto is_named_shadow_host = element.is_shadow_host()
                 && element.shadow_root_internal()->slot_assignment() == Bindings::SlotAssignmentMode::Named;
 
-            if (is_named_shadow_host && node->is_slottable())
-                assign_a_slot(node->as_slottable());
+            if (is_named_shadow_host && node_to_insert->is_slottable())
+                assign_a_slot(node_to_insert->as_slottable());
         }
 
         // 5. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run
@@ -470,7 +470,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
         }
 
         // 6. Run assign slottables for a tree with node’s root.
-        assign_slottables_for_a_tree(node->root());
+        assign_slottables_for_a_tree(node_to_insert->root());
 
         node_to_insert->invalidate_style();
 
@@ -809,7 +809,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     if (is<Element>(this)) {
         // 1. Let copy be the result of creating an element, given document, node’s local name, node’s namespace, node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset.
         auto& element = *verify_cast<Element>(this);
-        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_(), element.deprecated_prefix(), element.is_value(), false).release_value_but_fixme_should_propagate_errors();
+        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_uri(), element.prefix(), element.is_value(), false).release_value_but_fixme_should_propagate_errors();
 
         // 2. For each attribute in node’s attribute list:
         element.for_each_attribute([&](auto& name, auto& value) {
@@ -1155,7 +1155,7 @@ bool Node::is_uninteresting_whitespace_node() const
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
     MUST(object.add("name"sv, node_name()));
-    MUST(object.add("id"sv, id()));
+    MUST(object.add("id"sv, unique_id()));
     if (is_document()) {
         MUST(object.add("type"sv, "document"));
     } else if (is_element()) {
@@ -1544,14 +1544,8 @@ void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedStrin
     OrderedHashMap<MutationObserver*, Optional<DeprecatedString>> interested_observers;
 
     // 2. Let nodes be the inclusive ancestors of target.
-    Vector<JS::Handle<Node const>> nodes;
-    nodes.append(JS::make_handle(*this));
-
-    for (auto* parent_node = parent(); parent_node; parent_node = parent_node->parent())
-        nodes.append(JS::make_handle(*parent_node));
-
     // 3. For each node in nodes, and then for each registered of node’s registered observer list:
-    for (auto& node : nodes) {
+    for (auto* node = this; node; node = node->parent()) {
         for (auto& registered_observer : node->m_registered_observer_list) {
             // 1. Let options be registered’s options.
             auto& options = registered_observer->options();
@@ -1563,7 +1557,7 @@ void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedStrin
             //      - type is "characterData" and options["characterData"] either does not exist or is false
             //      - type is "childList" and options["childList"] is false
             //    then:
-            if (!(node.ptr() != this && !options.subtree)
+            if (!(node != this && !options.subtree)
                 && !(type == MutationType::attributes && (!options.attributes.has_value() || !options.attributes.value()))
                 && !(type == MutationType::attributes && options.attribute_filter.has_value() && (attribute_namespace.has_value() || !options.attribute_filter->contains_slow(attribute_name.value_or("").view())))
                 && !(type == MutationType::characterData && (!options.character_data.has_value() || !options.character_data.value()))
@@ -1764,7 +1758,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
     auto const* root_node = this;
     auto const* current_node = root_node;
     StringBuilder total_accumulated_text;
-    visited_nodes.set(id());
+    visited_nodes.set(unique_id());
 
     if (is_element()) {
         auto const* element = static_cast<DOM::Element const*>(this);
@@ -1798,7 +1792,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
                 if (!node)
                     continue;
 
-                if (visited_nodes.contains(node->id()))
+                if (visited_nodes.contains(node->unique_id()))
                     continue;
                 // a. Set the current node to the node referenced by the IDREF.
                 current_node = node;
@@ -1848,7 +1842,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
             // iii. For each child node of the current node:
             element->for_each_child([&total_accumulated_text, current_node, target, &document, &visited_nodes](
                                         DOM::Node const& child_node) mutable {
-                if (visited_nodes.contains(child_node.id()))
+                if (visited_nodes.contains(child_node.unique_id()))
                     return;
 
                 // a. Set the current node to the child node.

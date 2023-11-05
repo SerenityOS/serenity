@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 
@@ -24,7 +24,7 @@ class BasicBlock {
     AK_MAKE_NONCOPYABLE(BasicBlock);
 
 public:
-    static NonnullOwnPtr<BasicBlock> create(DeprecatedString name);
+    static NonnullOwnPtr<BasicBlock> create(String name);
     ~BasicBlock();
 
     void dump(Executable const&) const;
@@ -38,7 +38,7 @@ public:
     void terminate(Badge<Generator>) { m_terminated = true; }
     bool is_terminated() const { return m_terminated; }
 
-    DeprecatedString const& name() const { return m_name; }
+    String const& name() const { return m_name; }
 
     void set_handler(BasicBlock const& handler) { m_handler = &handler; }
     void set_finalizer(BasicBlock const& finalizer) { m_finalizer = &finalizer; }
@@ -47,12 +47,12 @@ public:
     BasicBlock const* finalizer() const { return m_finalizer; }
 
 private:
-    explicit BasicBlock(DeprecatedString name);
+    explicit BasicBlock(String name);
 
     Vector<u8> m_buffer;
     BasicBlock const* m_handler { nullptr };
     BasicBlock const* m_finalizer { nullptr };
-    DeprecatedString m_name;
+    String m_name;
     bool m_terminated { false };
 };
 

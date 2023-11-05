@@ -9,6 +9,8 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
+    AK::set_debug_enabled(false);
+
     AllocatingMemoryStream stream {};
 
     auto compressor = MUST(Compress::LzmaCompressor::create_container(MaybeOwned<Stream> { stream }, {}));

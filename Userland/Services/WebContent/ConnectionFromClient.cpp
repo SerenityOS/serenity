@@ -517,7 +517,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         return IterationDecision::Continue;
     });
 
-    Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
+    Web::DOM::Node* node = Web::DOM::Node::from_unique_id(node_id);
     // Note: Nodes without layout (aka non-visible nodes, don't have style computed)
     if (!node || !node->layout_node()) {
         return { false, "", "", "", "", "" };
@@ -642,7 +642,7 @@ Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_h
     if (auto* document = page().top_level_browsing_context().active_document()) {
         auto hovered_node = document->hovered_node();
         if (hovered_node)
-            return hovered_node->id();
+            return hovered_node->unique_id();
     }
     return (i32)0;
 }

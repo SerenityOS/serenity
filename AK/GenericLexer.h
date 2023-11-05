@@ -31,6 +31,13 @@ public:
         return (m_index + offset < m_input.length()) ? m_input[m_index + offset] : '\0';
     }
 
+    Optional<StringView> peek_string(size_t length, size_t offset = 0) const
+    {
+        if (m_index + offset + length > m_input.length())
+            return {};
+        return m_input.substring_view(m_index + offset, length);
+    }
+
     constexpr bool next_is(char expected) const
     {
         return peek() == expected;
@@ -121,6 +128,8 @@ public:
 #ifndef KERNEL
     Optional<DeprecatedString> consume_and_unescape_string(char escape_char = '\\');
 #endif
+    template<Integral T>
+    ErrorOr<T> consume_decimal_integer();
 
     enum class UnicodeEscapeError {
         MalformedUnicodeEscape,

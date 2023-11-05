@@ -83,6 +83,11 @@ RefPtr<Gfx::Bitmap> ScaledFont::rasterize_glyph(u32 glyph_id, GlyphSubpixelOffse
     return glyph_bitmap;
 }
 
+bool ScaledFont::append_glyph_path_to(Gfx::Path& path, u32 glyph_id) const
+{
+    return m_font->append_glyph_path_to(path, glyph_id, m_x_scale, m_y_scale);
+}
+
 Gfx::Glyph ScaledFont::glyph(u32 code_point) const
 {
     return glyph(code_point, GlyphSubpixelOffset { 0, 0 });

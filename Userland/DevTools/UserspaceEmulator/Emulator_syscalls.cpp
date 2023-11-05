@@ -47,8 +47,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$anon_create(arg1, arg2);
     case SC_annotate_mapping:
         return virt$annotate_mapping(arg1);
-    case SC_beep:
-        return virt$beep();
     case SC_bind:
         return virt$bind(arg1, arg2, arg3);
     case SC_bindmount:
@@ -1604,11 +1602,6 @@ u32 Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
     mmu().add_region(move(tcb_region));
     mmu().set_tls_region(move(tls_region));
     return tls_base;
-}
-
-int Emulator::virt$beep()
-{
-    return syscall(SC_beep);
 }
 
 u32 Emulator::virt$sysconf(u32 name)

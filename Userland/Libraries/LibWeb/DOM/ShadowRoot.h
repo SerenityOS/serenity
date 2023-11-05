@@ -48,7 +48,7 @@ private:
 };
 
 template<>
-inline bool Node::fast_is<ShadowRoot>() const { return is_shadow_root(); }
+inline bool Node::fast_is<ShadowRoot>() const { return node_type() == to_underlying(NodeType::DOCUMENT_FRAGMENT_NODE) && is_shadow_root(); }
 
 template<typename Callback>
 inline IterationDecision Node::for_each_shadow_including_inclusive_descendant(Callback callback)

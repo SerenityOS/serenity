@@ -34,11 +34,14 @@
 #include <WebContent/WebDriverConnection.h>
 
 #if defined(HAVE_QT)
-#    include <Ladybird/Qt/AudioCodecPluginQt.h>
 #    include <Ladybird/Qt/EventLoopImplementationQt.h>
 #    include <Ladybird/Qt/RequestManagerQt.h>
 #    include <Ladybird/Qt/WebSocketClientManagerQt.h>
 #    include <QCoreApplication>
+
+#    if defined(HAVE_QT_MULTIMEDIA)
+#        include <Ladybird/Qt/AudioCodecPluginQt.h>
+#    endif
 #endif
 
 static ErrorOr<void> load_content_filters();
@@ -60,10 +63,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPlugin);
 
     Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
-#if defined(AK_OS_MACOS) || defined(HAVE_PULSEAUDIO)
-        return Web::Platform::AudioCodecPluginAgnostic::create(move(loader));
-#elif defined(HAVE_QT)
+#if defined(HAVE_QT_MULTIMEDIA)
         return Ladybird::AudioCodecPluginQt::create(move(loader));
+#elif defined(AK_OS_MACOS) || defined(HAVE_PULSEAUDIO)
+        return Web::Platform::AudioCodecPluginAgnostic::create(move(loader));
 #else
         (void)loader;
         return Error::from_string_literal("Don't know how to initialize audio in this configuration!");

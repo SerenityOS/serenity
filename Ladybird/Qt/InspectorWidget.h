@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "ModelTranslator.h"
+#include "ModelAdapter.h"
 #include "WebContentView.h"
 #include <AK/Optional.h>
 #include <AK/StringView.h>
@@ -49,18 +49,22 @@ public:
     Function<void()> on_close;
 
 private:
-    void set_selection(GUI::ModelIndex);
+    void set_selection(QModelIndex const&);
     void closeEvent(QCloseEvent*) override;
 
     Selection m_selection;
 
-    ModelTranslator m_dom_model {};
-    ModelTranslator m_accessibility_model {};
-    ModelTranslator m_computed_style_model {};
-    ModelTranslator m_resolved_style_model {};
-    ModelTranslator m_custom_properties_model {};
+    OwnPtr<TreeModel> m_dom_model;
+    OwnPtr<TreeModel> m_accessibility_model;
+    OwnPtr<PropertyTableModel> m_computed_style_model;
+    OwnPtr<PropertyTableModel> m_resolved_style_model;
+    OwnPtr<PropertyTableModel> m_custom_properties_model;
 
     QTreeView* m_dom_tree_view { nullptr };
+    QTreeView* m_accessibility_tree_view { nullptr };
+    QTableView* m_computed_style_table { nullptr };
+    QTableView* m_resolved_style_table { nullptr };
+    QTableView* m_custom_properties_table { nullptr };
 
     bool m_dom_loaded { false };
     Optional<Selection> m_pending_selection {};

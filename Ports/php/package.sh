@@ -6,6 +6,7 @@ files=(
     "https://www.php.net/distributions/php-${version}.tar.xz#561dc4acd5386e47f25be76f2c8df6ae854756469159248313bcf276e282fbb3"
 )
 depends=(
+    'curl'
     'libiconv'
     'libxml2'
     'openssl'
@@ -18,6 +19,7 @@ configopts=(
     '--disable-opcache'
     '--enable-fpm'
     "--prefix=${SERENITY_INSTALL_ROOT}/usr/local"
+    '--with-curl'
     "--with-iconv=${SERENITY_INSTALL_ROOT}/usr/local"
     '--with-openssl'
     "--with-readline=${SERENITY_INSTALL_ROOT}/usr/local"

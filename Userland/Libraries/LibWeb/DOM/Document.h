@@ -435,7 +435,7 @@ public:
     bool has_active_favicon() const { return m_active_favicon; }
     void check_favicon_after_loading_link_resource();
 
-    JS::GCPtr<HTML::CustomElementDefinition> lookup_custom_element_definition(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& local_name, Optional<String> const& is) const;
+    JS::GCPtr<HTML::CustomElementDefinition> lookup_custom_element_definition(Optional<FlyString> const& namespace_, FlyString const& local_name, Optional<String> const& is) const;
 
     void increment_throw_on_dynamic_markup_insertion_counter(Badge<HTML::HTMLParser>);
     void decrement_throw_on_dynamic_markup_insertion_counter(Badge<HTML::HTMLParser>);

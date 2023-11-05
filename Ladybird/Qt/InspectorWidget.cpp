@@ -4,11 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWebView/AccessibilityTreeModel.h>
-#include <LibWebView/DOMTreeModel.h>
-#include <LibWebView/StylePropertiesModel.h>
-
 #include "InspectorWidget.h"
+#include <AK/JsonObject.h>
 #include <QCloseEvent>
 #include <QHeaderView>
 #include <QSplitter>
@@ -39,42 +36,40 @@ InspectorWidget::InspectorWidget()
 
     m_dom_tree_view = new QTreeView;
     m_dom_tree_view->setHeaderHidden(true);
-    m_dom_tree_view->setModel(&m_dom_model);
-    QObject::connect(m_dom_tree_view->selectionModel(), &QItemSelectionModel::selectionChanged,
-        [this](QItemSelection const& selected, QItemSelection const&) {
-            auto indexes = selected.indexes();
-            if (indexes.size()) {
-                auto index = m_dom_model.to_gui(indexes.first());
-                set_selection(index);
-            }
-        });
     add_tab(top_tab_widget, m_dom_tree_view, "DOM");
 
-    auto accessibility_tree_view = new QTreeView;
-    accessibility_tree_view->setHeaderHidden(true);
-    accessibility_tree_view->setModel(&m_accessibility_model);
-    add_tab(top_tab_widget, accessibility_tree_view, "Accessibility");
+    m_accessibility_tree_view = new QTreeView;
+    m_accessibility_tree_view->setHeaderHidden(true);
+    add_tab(top_tab_widget, m_accessibility_tree_view, "Accessibility");
 
-    auto add_table_tab = [&](auto* tab_widget, auto& model, auto name) {
-        auto table_view = new QTableView;
-        table_view->setModel(&model);
+    auto add_table_tab = [&](auto* tab_widget, auto name) {
+        auto* table_view = new QTableView;
         table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         table_view->verticalHeader()->setVisible(false);
         table_view->horizontalHeader()->setVisible(false);
         add_tab(tab_widget, table_view, name);
+        return table_view;
     };
 
-    auto node_tabs = new QTabWidget;
-    add_table_tab(node_tabs, m_computed_style_model, "Computed");
-    add_table_tab(node_tabs, m_resolved_style_model, "Resolved");
-    add_table_tab(node_tabs, m_custom_properties_model, "Variables");
+    auto* node_tabs = new QTabWidget;
+    m_computed_style_table = add_table_tab(node_tabs, "Computed");
+    m_resolved_style_table = add_table_tab(node_tabs, "Resolved");
+    m_custom_properties_table = add_table_tab(node_tabs, "Variables");
     splitter->addWidget(node_tabs);
 }
 
 void InspectorWidget::set_dom_json(StringView dom_json)
 {
-    m_dom_model.set_underlying_model(WebView::DOMTreeModel::create(dom_json));
+    m_dom_model = TreeModel::create(TreeModel::Type::DOMTree, dom_json).release_value_but_fixme_should_propagate_errors();
+    m_dom_tree_view->setModel(m_dom_model);
     m_dom_loaded = true;
+
+    QObject::connect(m_dom_tree_view->selectionModel(), &QItemSelectionModel::selectionChanged,
+        [this](QItemSelection const& selected, QItemSelection const&) {
+            if (auto indexes = selected.indexes(); !indexes.empty())
+                set_selection(indexes.first());
+        });
+
     if (m_pending_selection.has_value())
         set_selection(m_pending_selection.release_value());
     else
@@ -83,14 +78,19 @@ void InspectorWidget::set_dom_json(StringView dom_json)
 
 void InspectorWidget::set_accessibility_json(StringView accessibility_json)
 {
-    m_accessibility_model.set_underlying_model(WebView::AccessibilityTreeModel::create(accessibility_json));
+    m_accessibility_model = TreeModel::create(TreeModel::Type::AccessibilityTree, accessibility_json).release_value_but_fixme_should_propagate_errors();
+    m_accessibility_tree_view->setModel(m_accessibility_model);
 }
 
 void InspectorWidget::clear_dom_json()
 {
-    m_dom_model.set_underlying_model(nullptr);
+    m_dom_tree_view->setModel(nullptr);
+    m_dom_model = nullptr;
+
     // The accessibility tree is pretty much another form of the DOM tree, so should be cleared at the time time.
-    m_accessibility_model.set_underlying_model(nullptr);
+    m_accessibility_tree_view->setModel(nullptr);
+    m_accessibility_model = nullptr;
+
     clear_style_json();
     clear_selection();
     m_dom_loaded = false;
@@ -98,16 +98,27 @@ void InspectorWidget::clear_dom_json()
 
 void InspectorWidget::load_style_json(StringView computed_style_json, StringView resolved_style_json, StringView custom_properties_json)
 {
-    m_computed_style_model.set_underlying_model(WebView::StylePropertiesModel::create(computed_style_json));
-    m_resolved_style_model.set_underlying_model(WebView::StylePropertiesModel::create(resolved_style_json));
-    m_custom_properties_model.set_underlying_model(WebView::StylePropertiesModel::create(custom_properties_json));
+    m_computed_style_model = PropertyTableModel::create(PropertyTableModel::Type::StyleProperties, computed_style_json).release_value_but_fixme_should_propagate_errors();
+    m_computed_style_table->setModel(m_computed_style_model);
+
+    m_resolved_style_model = PropertyTableModel::create(PropertyTableModel::Type::StyleProperties, resolved_style_json).release_value_but_fixme_should_propagate_errors();
+    m_resolved_style_table->setModel(m_resolved_style_model);
+
+    m_custom_properties_model = PropertyTableModel::create(PropertyTableModel::Type::StyleProperties, custom_properties_json).release_value_but_fixme_should_propagate_errors();
+    m_custom_properties_table->setModel(m_custom_properties_model);
 }
 
 void InspectorWidget::clear_style_json()
 {
-    m_computed_style_model.set_underlying_model(nullptr);
-    m_resolved_style_model.set_underlying_model(nullptr);
-    m_custom_properties_model.set_underlying_model(nullptr);
+    m_computed_style_table->setModel(nullptr);
+    m_computed_style_model = nullptr;
+
+    m_resolved_style_table->setModel(nullptr);
+    m_resolved_style_model = nullptr;
+
+    m_custom_properties_table->setModel(nullptr);
+    m_custom_properties_model = nullptr;
+
     clear_selection();
 }
 
@@ -132,17 +143,14 @@ void InspectorWidget::set_selection(Selection selection)
         return;
     }
 
-    auto* model = verify_cast<WebView::DOMTreeModel>(m_dom_model.underlying_model().ptr());
-    auto index = model->index_for_node(selection.dom_node_id, selection.pseudo_element);
-    auto qt_index = m_dom_model.to_qt(index);
-
-    if (!qt_index.isValid()) {
+    auto index = m_dom_model->index_for_node(selection.dom_node_id, selection.pseudo_element);
+    if (!index.isValid()) {
         dbgln("Failed to set DOM inspector selection! Could not find valid model index for node: {}", selection.dom_node_id);
         return;
     }
 
-    m_dom_tree_view->scrollTo(qt_index);
-    m_dom_tree_view->setCurrentIndex(qt_index);
+    m_dom_tree_view->scrollTo(index);
+    m_dom_tree_view->setCurrentIndex(index);
 }
 
 void InspectorWidget::select_default_node()
@@ -152,12 +160,12 @@ void InspectorWidget::select_default_node()
     m_dom_tree_view->setCurrentIndex({});
 }
 
-void InspectorWidget::set_selection(GUI::ModelIndex index)
+void InspectorWidget::set_selection(QModelIndex const& index)
 {
-    if (!index.is_valid())
+    if (!index.isValid())
         return;
 
-    auto* json = static_cast<JsonObject const*>(index.internal_data());
+    auto const* json = static_cast<JsonObject const*>(index.constInternalPointer());
     VERIFY(json);
 
     Selection selection {};

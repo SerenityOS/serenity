@@ -421,7 +421,7 @@ _StartOfFunction:
                 if (consume_next_if_match("[CDATA["sv)) {
                     // We keep the parser optional so that syntax highlighting can be lexer-only.
                     // The parser registers itself with the lexer it creates.
-                    if (m_parser != nullptr && m_parser->adjusted_current_node().namespace_() != Namespace::HTML) {
+                    if (m_parser != nullptr && m_parser->adjusted_current_node().namespace_uri() != Namespace::HTML) {
                         SWITCH_TO(CDATASection);
                     } else {
                         create_new_token(HTMLToken::Type::Comment);
@@ -1108,31 +1108,31 @@ _StartOfFunction:
                 ON_WHITESPACE
                 {
                     m_current_token.last_attribute().name_end_position = nth_last_position(1);
-                    m_current_token.last_attribute().local_name = MUST(FlyString::from_deprecated_fly_string(consume_current_builder()));
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('/')
                 {
                     m_current_token.last_attribute().name_end_position = nth_last_position(1);
-                    m_current_token.last_attribute().local_name = MUST(FlyString::from_deprecated_fly_string(consume_current_builder()));
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('>')
                 {
                     m_current_token.last_attribute().name_end_position = nth_last_position(1);
-                    m_current_token.last_attribute().local_name = MUST(FlyString::from_deprecated_fly_string(consume_current_builder()));
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON_EOF
                 {
                     m_current_token.last_attribute().name_end_position = nth_last_position(1);
-                    m_current_token.last_attribute().local_name = MUST(FlyString::from_deprecated_fly_string(consume_current_builder()));
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('=')
                 {
                     m_current_token.last_attribute().name_end_position = nth_last_position(1);
-                    m_current_token.last_attribute().local_name = MUST(FlyString::from_deprecated_fly_string(consume_current_builder()));
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     SWITCH_TO(BeforeAttributeValue);
                 }
                 ON_ASCII_UPPER_ALPHA
@@ -1238,7 +1238,7 @@ _StartOfFunction:
             {
                 ON('"')
                 {
-                    m_current_token.last_attribute().value = MUST(String::from_deprecated_string(consume_current_builder()));
+                    m_current_token.last_attribute().value = consume_current_builder();
                     SWITCH_TO(AfterAttributeValueQuoted);
                 }
                 ON('&')
@@ -1270,7 +1270,7 @@ _StartOfFunction:
             {
                 ON('\'')
                 {
-                    m_current_token.last_attribute().value = MUST(String::from_deprecated_string(consume_current_builder()));
+                    m_current_token.last_attribute().value = consume_current_builder();
                     SWITCH_TO(AfterAttributeValueQuoted);
                 }
                 ON('&')
@@ -1302,7 +1302,7 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.last_attribute().value = MUST(String::from_deprecated_string(consume_current_builder()));
+                    m_current_token.last_attribute().value = consume_current_builder();
                     m_current_token.last_attribute().value_end_position = nth_last_position(1);
                     SWITCH_TO(BeforeAttributeName);
                 }
@@ -1313,7 +1313,7 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    m_current_token.last_attribute().value = MUST(String::from_deprecated_string(consume_current_builder()));
+                    m_current_token.last_attribute().value = consume_current_builder();
                     m_current_token.last_attribute().value_end_position = nth_last_position(1);
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
@@ -2879,9 +2879,9 @@ void HTMLTokenizer::restore_to(Utf8CodePointIterator const& new_iterator)
     m_utf8_iterator = new_iterator;
 }
 
-DeprecatedString HTMLTokenizer::consume_current_builder()
+String HTMLTokenizer::consume_current_builder()
 {
-    auto string = m_current_builder.to_deprecated_string();
+    auto string = MUST(m_current_builder.to_string());
     m_current_builder.clear();
     return string;
 }

@@ -286,7 +286,7 @@ JS::ThrowCompletionOr<void> CustomElementRegistry::define(String const& name, We
 
         auto& inclusive_descendant_element = static_cast<DOM::Element&>(inclusive_descendant);
 
-        if (inclusive_descendant_element.namespace_() == Namespace::HTML && inclusive_descendant_element.local_name() == local_name && (!extends.has_value() || inclusive_descendant_element.is_value() == name))
+        if (inclusive_descendant_element.namespace_uri() == Namespace::HTML && inclusive_descendant_element.local_name() == local_name && (!extends.has_value() || inclusive_descendant_element.is_value() == name))
             upgrade_candidates.append(JS::make_handle(inclusive_descendant_element));
 
         return IterationDecision::Continue;

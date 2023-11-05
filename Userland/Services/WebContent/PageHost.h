@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibAccelGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/PixelUnits.h>
@@ -139,6 +140,10 @@ private:
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
     RefPtr<WebDriverConnection> m_webdriver;
+
+#ifdef HAS_ACCELERATED_GRAPHICS
+    OwnPtr<AccelGfx::Painter> m_accelerated_painter;
+#endif
 };
 
 }

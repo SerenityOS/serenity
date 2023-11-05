@@ -251,36 +251,7 @@ static ErrorOr<bool> parse_and_run(JS::Realm& realm, StringView source, StringVi
 
         if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
             return {};
-        auto const& traceback = static_cast<JS::Error const&>(thrown_value.as_object()).traceback();
-        if (traceback.size() > 1) {
-            unsigned repetitions = 0;
-            for (size_t i = 0; i < traceback.size(); ++i) {
-                auto const& traceback_frame = traceback[i];
-                if (i + 1 < traceback.size()) {
-                    auto const& next_traceback_frame = traceback[i + 1];
-                    if (next_traceback_frame.function_name == traceback_frame.function_name) {
-                        repetitions++;
-                        continue;
-                    }
-                }
-                if (repetitions > 4) {
-                    // If more than 5 (1 + >4) consecutive function calls with the same name, print
-                    // the name only once and show the number of repetitions instead. This prevents
-                    // printing ridiculously large call stacks of recursive functions.
-                    warnln(" -> {}", traceback_frame.function_name);
-                    warnln(" {} more calls", repetitions);
-                } else {
-                    for (size_t j = 0; j < repetitions + 1; ++j) {
-                        warnln(" -> {} ({}:{},{})",
-                            traceback_frame.function_name,
-                            traceback_frame.source_range().code->filename(),
-                            traceback_frame.source_range().start.line,
-                            traceback_frame.source_range().start.column);
-                    }
-                }
-                repetitions = 0;
-            }
-        }
+        warnln("{}", static_cast<JS::Error const&>(thrown_value.as_object()).stack_string(JS::CompactTraceback::Yes));
         return {};
     };
 

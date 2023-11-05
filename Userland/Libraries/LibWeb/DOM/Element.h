@@ -118,9 +118,11 @@ public:
 
     // FIXME: This should be taking an Optional<FlyString>
     WebIDL::ExceptionOr<void> set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value);
-    void set_attribute_value(DeprecatedFlyString const& local_name, DeprecatedString const& value, DeprecatedFlyString const& prefix = {}, DeprecatedFlyString const& namespace_ = {});
+    void set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix = {}, DeprecatedFlyString const& namespace_ = {});
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
+
+    void append_attribute(Attr&);
 
     // FIXME: This should take a 'FlyString cosnt&'
     void remove_attribute(StringView name);
@@ -375,6 +377,8 @@ public:
     };
     Directionality directionality() const;
 
+    Optional<FlyString> const& id() const { return m_id; }
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual void initialize(JS::Realm&) override;
@@ -411,6 +415,8 @@ private:
     Vector<FlyString> m_classes;
     Optional<Dir> m_dir;
 
+    Optional<FlyString> m_id;
+
     Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_nodes;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-reaction-queue
@@ -437,6 +443,6 @@ private:
 template<>
 inline bool Node::fast_is<Element>() const { return is_element(); }
 
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name);
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, Optional<FlyString> namespace_, DeprecatedFlyString qualified_name);
 
 }

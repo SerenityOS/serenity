@@ -185,7 +185,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
-    bool insert_as_lowercase = namespace_() == Namespace::HTML;
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
 
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
@@ -211,17 +211,17 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name)
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Optional<FlyString> namespace_, DeprecatedFlyString qualified_name)
 {
     // 1. If namespace is the empty string, then set it to null.
-    if (namespace_.is_empty())
+    if (namespace_.has_value() && namespace_.value().is_empty())
         namespace_ = {};
 
     // 2. Validate qualifiedName.
     TRY(Document::validate_qualified_name(realm, qualified_name));
 
     // 3. Let prefix be null.
-    DeprecatedFlyString prefix = {};
+    Optional<FlyString> prefix = {};
 
     // 4. Let localName be qualifiedName.
     auto local_name = qualified_name;
@@ -229,12 +229,12 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Deprec
     // 5. If qualifiedName contains a U+003A (:), then strictly split the string on it and set prefix to the part before and localName to the part after.
     if (qualified_name.view().contains(':')) {
         auto parts = qualified_name.view().split_view(':');
-        prefix = parts[0];
+        prefix = MUST(FlyString::from_utf8(parts[0]));
         local_name = parts[1];
     }
 
     // 6. If prefix is non-null and namespace is null, then throw a "NamespaceError" DOMException.
-    if (!prefix.is_null() && namespace_.is_null())
+    if (prefix.has_value() && !namespace_.has_value())
         return WebIDL::NamespaceError::create(realm, "Prefix is non-null and namespace is null."_fly_string);
 
     // 7. If prefix is "xml" and namespace is not the XML namespace, then throw a "NamespaceError" DOMException.
@@ -256,21 +256,28 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, Deprec
 // https://dom.spec.whatwg.org/#dom-element-setattributens
 WebIDL::ExceptionOr<void> Element::set_attribute_ns(Optional<String> const& namespace_, FlyString const& qualified_name, FlyString const& value)
 {
-    DeprecatedFlyString deprecated_namespace;
+    // FIXME: This conversion is ugly
+    Optional<FlyString> namespace_to_use;
     if (namespace_.has_value())
-        deprecated_namespace = namespace_->to_deprecated_string();
+        namespace_to_use = namespace_.value();
 
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(realm(), deprecated_namespace, qualified_name.to_deprecated_fly_string()));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_to_use, qualified_name.to_deprecated_fly_string()));
 
     // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
-    set_attribute_value(extracted_qualified_name.local_name().to_deprecated_fly_string(), value.to_deprecated_fly_string(), extracted_qualified_name.deprecated_prefix(), extracted_qualified_name.deprecated_namespace_());
+    set_attribute_value(extracted_qualified_name.local_name(), value.to_deprecated_fly_string(), extracted_qualified_name.prefix(), extracted_qualified_name.deprecated_namespace_());
 
     return {};
 }
 
+// https://dom.spec.whatwg.org/#concept-element-attributes-append
+void Element::append_attribute(Attr& attribute)
+{
+    m_attributes->append_attribute(attribute);
+}
+
 // https://dom.spec.whatwg.org/#concept-element-attributes-set-value
-void Element::set_attribute_value(DeprecatedFlyString const& local_name, DeprecatedString const& value, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
+void Element::set_attribute_value(FlyString const& local_name, DeprecatedString const& value, Optional<FlyString> const& prefix, DeprecatedFlyString const& namespace_)
 {
     // 1. Let attribute be the result of getting an attribute given namespace, localName, and element.
     auto* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
@@ -279,7 +286,7 @@ void Element::set_attribute_value(DeprecatedFlyString const& local_name, Depreca
     //    is localName, value is value, and node document is element’s node document, then append this attribute to element,
     //    and then return.
     if (!attribute) {
-        QualifiedName name { MUST(FlyString::from_deprecated_fly_string(local_name)), prefix, namespace_ };
+        QualifiedName name { local_name, prefix, namespace_ };
 
         auto new_attribute = Attr::create(document(), move(name), MUST(String::from_deprecated_string(value)));
         m_attributes->append_attribute(new_attribute);
@@ -343,7 +350,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optio
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
-    bool insert_as_lowercase = namespace_() == Namespace::HTML;
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
 
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
@@ -478,7 +485,12 @@ void Element::attribute_changed(FlyString const& name, Optional<DeprecatedString
 {
     auto value_or_empty = value.value_or("");
 
-    if (name == HTML::AttributeNames::class_) {
+    if (name == HTML::AttributeNames::id) {
+        if (!value.has_value())
+            m_id = {};
+        else
+            m_id = MUST(FlyString::from_deprecated_fly_string(value_or_empty));
+    } else if (name == HTML::AttributeNames::class_) {
         auto new_classes = value_or_empty.split_view(Infra::is_ascii_whitespace);
         m_classes.clear();
         m_classes.ensure_capacity(new_classes.size());
@@ -534,6 +546,13 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
         // NOTE: If the computed CSS display property changes, we have to rebuild the entire layout tree.
         //       In the future, we should figure out ways to rebuild a smaller part of the tree.
         if (property_id == CSS::PropertyID::Display) {
+            return Element::RequiredInvalidationAfterStyleChange::full();
+        }
+
+        // NOTE: If one of the overflow properties change, we rebuild the entire layout tree.
+        //       This ensures that overflow propagation from root/body to viewport happens correctly.
+        //       In the future, we can make this invalidation narrower.
+        if (property_id == CSS::PropertyID::OverflowX || property_id == CSS::PropertyID::OverflowY) {
             return Element::RequiredInvalidationAfterStyleChange::full();
         }
 
@@ -620,7 +639,7 @@ DOMTokenList* Element::class_list()
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowRootInit init)
 {
     // 1. If this’s namespace is not the HTML namespace, then throw a "NotSupportedError" DOMException.
-    if (namespace_() != Namespace::HTML)
+    if (namespace_uri() != Namespace::HTML)
         return WebIDL::NotSupportedError::create(realm(), "Element's namespace is not the HTML namespace"_fly_string);
 
     // 2. If this’s local name is not one of the following:
@@ -635,7 +654,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowR
     // 3. If this’s local name is a valid custom element name, or this’s is value is not null, then:
     if (HTML::is_valid_custom_element_name(local_name()) || m_is_value.has_value()) {
         // 1. Let definition be the result of looking up a custom element definition given this’s node document, its namespace, its local name, and its is value.
-        auto definition = document().lookup_custom_element_definition(namespace_(), local_name().to_deprecated_fly_string(), m_is_value);
+        auto definition = document().lookup_custom_element_definition(namespace_uri(), local_name(), m_is_value);
 
         // 2. If definition is not null and definition’s disable shadow is true, then throw a "NotSupportedError" DOMException.
         if (definition && definition->disable_shadow())
@@ -811,7 +830,7 @@ CSS::CSSStyleDeclaration* Element::style_for_bindings()
 void Element::make_html_uppercased_qualified_name()
 {
     // This is allowed by the spec: "User agents could optimize qualified name and HTML-uppercased qualified name by storing them in internal slots."
-    if (namespace_() == Namespace::HTML && document().document_type() == Document::Type::HTML)
+    if (namespace_uri() == Namespace::HTML && document().document_type() == Document::Type::HTML)
         m_html_uppercased_qualified_name = MUST(Infra::to_ascii_uppercase(qualified_name()));
     else
         m_html_uppercased_qualified_name = qualified_name();
@@ -995,7 +1014,7 @@ void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilde
         auto object = MUST(children_array.add_object());
         MUST(object.add("name"sv, DeprecatedString::formatted("::{}", CSS::pseudo_element_name(static_cast<CSS::Selector::PseudoElement>(i)))));
         MUST(object.add("type"sv, "pseudo-element"));
-        MUST(object.add("parent-id"sv, id()));
+        MUST(object.add("parent-id"sv, unique_id()));
         MUST(object.add("pseudo-element"sv, i));
         MUST(object.finish());
     }
@@ -1401,7 +1420,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
     if (!is<Element>(*context)
         || (context->document().document_type() == Document::Type::HTML
             && static_cast<Element const&>(*context).local_name() == "html"sv
-            && static_cast<Element const&>(*context).namespace_() == Namespace::HTML)) {
+            && static_cast<Element const&>(*context).namespace_uri() == Namespace::HTML)) {
         // FIXME: let context be a new Element with
         //        - body as its local name,
         //        - The HTML namespace as its namespace, and
@@ -1832,7 +1851,7 @@ JS::ThrowCompletionOr<void> Element::upgrade_element(JS::NonnullGCPtr<HTML::Cust
 void Element::try_to_upgrade()
 {
     // 1. Let definition be the result of looking up a custom element definition given element's node document, element's namespace, element's local name, and element's is value.
-    auto definition = document().lookup_custom_element_definition(namespace_(), local_name().to_deprecated_fly_string(), m_is_value);
+    auto definition = document().lookup_custom_element_definition(namespace_uri(), local_name(), m_is_value);
 
     // 2. If definition is not null, then enqueue a custom element upgrade reaction given element and definition.
     if (definition)

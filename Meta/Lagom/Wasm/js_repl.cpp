@@ -165,31 +165,7 @@ static ErrorOr<bool> parse_and_run(JS::Realm& realm, StringView source, StringVi
 
         if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
             return;
-        auto& traceback = static_cast<JS::Error const&>(thrown_value.as_object()).traceback();
-        if (traceback.size() > 1) {
-            unsigned repetitions = 0;
-            for (size_t i = 0; i < traceback.size(); ++i) {
-                auto& traceback_frame = traceback[i];
-                if (i + 1 < traceback.size()) {
-                    auto& next_traceback_frame = traceback[i + 1];
-                    if (next_traceback_frame.function_name == traceback_frame.function_name) {
-                        repetitions++;
-                        continue;
-                    }
-                }
-                if (repetitions > 4) {
-                    // If more than 5 (1 + >4) consecutive function calls with the same name, print
-                    // the name only once and show the number of repetitions instead. This prevents
-                    // printing ridiculously large call stacks of recursive functions.
-                    displayln(" -> {}", traceback_frame.function_name);
-                    displayln(" {} more calls", repetitions);
-                } else {
-                    for (size_t j = 0; j < repetitions + 1; ++j)
-                        displayln(" -> {}", traceback_frame.function_name);
-                }
-                repetitions = 0;
-            }
-        }
+        displayln("{}", static_cast<JS::Error const&>(thrown_value.as_object()).stack_string(JS::CompactTraceback::Yes));
     };
 
     if (!result.is_error())

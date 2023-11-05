@@ -57,7 +57,7 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
 
     if (auto it = attributes.find("xmlns"); it != attributes.end()) {
         m_namespace_stack.append({ m_namespace, 1 });
-        m_namespace = it->value;
+        m_namespace = MUST(FlyString::from_deprecated_fly_string(it->value));
     } else {
         m_namespace_stack.last().depth += 1;
     }

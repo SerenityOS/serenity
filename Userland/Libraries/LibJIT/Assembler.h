@@ -105,6 +105,7 @@ struct Assembler {
     };
 
     enum class Condition {
+        Overflow = 0x0,
         EqualTo = 0x4,
         NotEqualTo = 0x5,
         UnsignedGreaterThan = 0x7,
@@ -458,14 +459,18 @@ struct Assembler {
         }
     }
 
-    void jump_if(Operand lhs, Condition condition, Operand rhs, Label& label)
+    void jump_if(Condition condition, Label& label)
     {
-        cmp(lhs, rhs);
-
         emit8(0x0F);
         emit8(0x80 | to_underlying(condition));
         emit32(0xdeadbeef);
         label.add_jump(*this, m_output.size());
+    }
+
+    void jump_if(Operand lhs, Condition condition, Operand rhs, Label& label)
+    {
+        cmp(lhs, rhs);
+        jump_if(condition, label);
     }
 
     void sign_extend_32_to_64_bits(Reg reg)
@@ -520,20 +525,63 @@ struct Assembler {
         }
     }
 
+    void bitwise_xor32(Operand dst, Operand src)
+    {
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
+            emit_rex_for_mr(dst, src, REX_W::No);
+            emit8(0x31);
+            emit_modrm_mr(dst, src);
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit_rex_for_slash(dst, REX_W::No);
+            emit8(0x83);
+            emit_modrm_slash(6, dst);
+            emit8(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::Reg && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+            emit_rex_for_slash(dst, REX_W::No);
+            emit8(0x81);
+            emit_modrm_slash(6, dst);
+            emit32(src.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    void mul32(Operand dest, Operand src, Optional<Label&> overflow_label)
+    {
+        // imul32 dest, src (32-bit signed)
+        if (dest.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
+            emit_rex_for_rm(dest, src, REX_W::No);
+            emit8(0x0f);
+            emit8(0xaf);
+            emit_modrm_rm(dest, src);
+        } else if (dest.type == Operand::Type::Reg && src.type == Operand::Type::Mem64BaseAndOffset) {
+            emit_rex_for_rm(dest, src, REX_W::No);
+            emit8(0x0f);
+            emit8(0xaf);
+            emit_modrm_rm(dest, src);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        if (overflow_label.has_value()) {
+            jump_if(Condition::Overflow, *overflow_label);
+        }
+    }
+
     void enter()
     {
-        push_callee_saved_registers();
-
         push(Operand::Register(Reg::RBP));
         mov(Operand::Register(Reg::RBP), Operand::Register(Reg::RSP));
+
+        push_callee_saved_registers();
     }
 
     void exit()
     {
+        pop_callee_saved_registers();
+
         // leave
         emit8(0xc9);
-
-        pop_callee_saved_registers();
 
         // ret
         emit8(0xc3);
@@ -613,7 +661,7 @@ struct Assembler {
         }
     }
 
-    void add32(Operand dst, Operand src, Optional<Label&> label)
+    void add32(Operand dst, Operand src, Optional<Label&> overflow_label)
     {
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
             emit_rex_for_mr(dst, src, REX_W::No);
@@ -633,12 +681,8 @@ struct Assembler {
             VERIFY_NOT_REACHED();
         }
 
-        if (label.has_value()) {
-            // jo label (RIP-relative 32-bit offset)
-            emit8(0x0f);
-            emit8(0x80);
-            emit32(0xdeadbeef);
-            label->add_jump(*this, m_output.size());
+        if (overflow_label.has_value()) {
+            jump_if(Condition::Overflow, *overflow_label);
         }
     }
 
@@ -660,6 +704,31 @@ struct Assembler {
             emit32(src.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
+        }
+    }
+
+    void sub32(Operand dst, Operand src, Optional<Label&> overflow_label)
+    {
+        if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
+            emit_rex_for_mr(dst, src, REX_W::No);
+            emit8(0x29);
+            emit_modrm_mr(dst, src);
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i8()) {
+            emit_rex_for_slash(dst, REX_W::No);
+            emit8(0x83);
+            emit_modrm_slash(5, dst);
+            emit8(src.offset_or_immediate);
+        } else if (dst.is_register_or_memory() && src.type == Operand::Type::Imm && src.fits_in_i32()) {
+            emit_rex_for_slash(dst, REX_W::No);
+            emit8(0x81);
+            emit_modrm_slash(5, dst);
+            emit32(src.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        if (overflow_label.has_value()) {
+            jump_if(Condition::Overflow, *overflow_label);
         }
     }
 

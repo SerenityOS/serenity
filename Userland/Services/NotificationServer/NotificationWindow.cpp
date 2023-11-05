@@ -18,7 +18,7 @@
 
 namespace NotificationServer {
 
-static HashMap<u32, RefPtr<NotificationWindow>> s_windows;
+static OrderedHashMap<u32, RefPtr<NotificationWindow>> s_windows;
 
 static void update_notification_window_locations(Gfx::IntRect const& screen_rect)
 {
@@ -32,7 +32,6 @@ static void update_notification_window_locations(Gfx::IntRect const& screen_rect
             new_window_location = screen_rect.top_right().translated(-window->rect().width() - 24 - 1, 7);
         if (window->rect().location() != new_window_location) {
             window->move_to(new_window_location);
-            window->set_original_rect(window->rect());
         }
         last_window_rect = window->rect();
     }
@@ -50,8 +49,8 @@ NotificationWindow::NotificationWindow(i32 client_id, String const& text, String
     for (auto& window_entry : s_windows) {
         auto& window = window_entry.value;
         if (!lowest_notification_rect_on_screen.has_value()
-            || (window->m_original_rect.y() > lowest_notification_rect_on_screen.value().y()))
-            lowest_notification_rect_on_screen = window->m_original_rect;
+            || (window->rect().y() > lowest_notification_rect_on_screen.value().y()))
+            lowest_notification_rect_on_screen = window->rect();
     }
 
     s_windows.set(m_id, this);
@@ -65,8 +64,6 @@ NotificationWindow::NotificationWindow(i32 client_id, String const& text, String
         rect.set_location(lowest_notification_rect_on_screen.value().bottom_left().moved_down(9));
 
     set_rect(rect);
-
-    m_original_rect = rect;
 
     auto widget = set_main_widget<GUI::Widget>();
 

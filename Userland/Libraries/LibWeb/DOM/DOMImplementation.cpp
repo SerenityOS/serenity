@@ -70,12 +70,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
     xml_document->set_origin(document().origin());
 
     // 7. document’s content type is determined by namespace:
-    auto deprecated_namespace = namespace_.has_value() ? namespace_->to_deprecated_string() : DeprecatedString::empty();
+    // FIXME: This conversion is ugly
+    Optional<FlyString> namespace_to_use;
+    if (namespace_.has_value())
+        namespace_to_use = namespace_.value();
 
-    if (deprecated_namespace == Namespace::HTML) {
+    if (namespace_to_use == Namespace::HTML) {
         // -> HTML namespace
         xml_document->set_content_type("application/xhtml+xml"_string);
-    } else if (deprecated_namespace == Namespace::SVG) {
+    } else if (namespace_to_use == Namespace::SVG) {
         // -> SVG namespace
         xml_document->set_content_type("image/svg+xml"_string);
     } else {

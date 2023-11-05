@@ -31,11 +31,7 @@ void report_exception_to_console(JS::Value value, JS::Realm& realm, ErrorInPromi
         }
         if (is<JS::Error>(object)) {
             auto const& error_value = static_cast<JS::Error const&>(object);
-            for (auto& traceback_frame : error_value.traceback()) {
-                auto& function_name = traceback_frame.function_name;
-                auto& source_range = traceback_frame.source_range();
-                dbgln("  {} at {}:{}:{}", function_name, source_range.filename(), source_range.start.line, source_range.start.column);
-            }
+            dbgln("{}", error_value.stack_string(JS::CompactTraceback::Yes));
             console.report_exception(error_value, error_in_promise == ErrorInPromise::Yes);
 
             return;

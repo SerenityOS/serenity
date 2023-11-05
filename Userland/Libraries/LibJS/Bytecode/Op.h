@@ -1319,21 +1319,6 @@ private:
     Label m_continuation_label;
 };
 
-class PushDeclarativeEnvironment final : public Instruction {
-public:
-    explicit PushDeclarativeEnvironment(HashMap<u32, Variable> variables)
-        : Instruction(Type::PushDeclarativeEnvironment, sizeof(*this))
-        , m_variables(move(variables))
-    {
-    }
-
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
-
-private:
-    HashMap<u32, Variable> m_variables;
-};
-
 class GetIterator final : public Instruction {
 public:
     GetIterator(IteratorHint hint = IteratorHint::Sync)

@@ -72,11 +72,7 @@ Sheet::Sheet(Workbook& workbook)
                 if (thrown_value.is_object() && is<JS::Error>(thrown_value.as_object())) {
                     auto& error = static_cast<JS::Error const&>(thrown_value.as_object());
                     warnln(" with message '{}'", error.get_without_side_effects(vm.names.message));
-                    for (auto& traceback_frame : error.traceback()) {
-                        auto& function_name = traceback_frame.function_name;
-                        auto& source_range = traceback_frame.source_range();
-                        dbgln("  {} at {}:{}:{}", function_name, source_range.filename(), source_range.start.line, source_range.start.column);
-                    }
+                    dbgln("{}", error.stack_string(JS::CompactTraceback::Yes));
                 } else {
                     warnln();
                 }

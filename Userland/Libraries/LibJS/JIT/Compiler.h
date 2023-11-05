@@ -37,11 +37,10 @@ private:
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
+    static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::R13;
 #    endif
 
 #    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
-        O(Sub, sub)                                             \
-        O(Mul, mul)                                             \
         O(Div, div)                                             \
         O(Exp, exp)                                             \
         O(Mod, mod)                                             \
@@ -54,9 +53,6 @@ private:
         O(LooselyEquals, abstract_equals)                       \
         O(StrictlyInequals, typed_inequals)                     \
         O(StrictlyEquals, typed_equals)                         \
-        O(BitwiseAnd, bitwise_and)                              \
-        O(BitwiseOr, bitwise_or)                                \
-        O(BitwiseXor, bitwise_xor)                              \
         O(LeftShift, left_shift)                                \
         O(RightShift, right_shift)                              \
         O(UnsignedRightShift, unsigned_right_shift)
@@ -139,7 +135,9 @@ private:
         O(HasPrivateId, has_private_id)                                          \
         O(PutByValueWithThis, put_by_value_with_this)                            \
         O(CopyObjectExcludingProperties, copy_object_excluding_properties)       \
-        O(AsyncIteratorClose, async_iterator_close)
+        O(AsyncIteratorClose, async_iterator_close)                              \
+        O(Yield, yield)                                                          \
+        O(Await, await)
 
 #    define DECLARE_COMPILE_OP(OpTitleCase, op_snake_case, ...) \
         void compile_##op_snake_case(Bytecode::Op::OpTitleCase const&);
@@ -153,7 +151,13 @@ private:
     void store_vm_local(size_t, Assembler::Reg);
     void load_vm_local(Assembler::Reg, size_t);
 
+    void reload_cached_accumulator();
+    void flush_cached_accumulator();
+    void load_accumulator(Assembler::Reg);
+    void store_accumulator(Assembler::Reg);
+
     void compile_to_boolean(Assembler::Reg dst, Assembler::Reg src);
+    void compile_continuation(Optional<Bytecode::Label>, bool is_await);
 
     void check_exception();
     void handle_exception();

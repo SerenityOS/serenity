@@ -89,7 +89,6 @@
     O(NewString)                       \
     O(NewTypeError)                    \
     O(Not)                             \
-    O(PushDeclarativeEnvironment)      \
     O(PutById)                         \
     O(PutByIdWithThis)                 \
     O(PutByValue)                      \
