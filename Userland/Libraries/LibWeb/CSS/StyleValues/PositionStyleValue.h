@@ -12,34 +12,35 @@
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/PercentageOr.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 
 namespace Web::CSS {
 
 class PositionStyleValue final : public StyleValueWithDefaultOperators<PositionStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<PositionStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> edge_x, ValueComparingNonnullRefPtr<StyleValue> edge_y)
+    static ValueComparingNonnullRefPtr<PositionStyleValue> create(ValueComparingNonnullRefPtr<EdgeStyleValue> edge_x, ValueComparingNonnullRefPtr<EdgeStyleValue> edge_y)
     {
         return adopt_ref(*new (nothrow) PositionStyleValue(move(edge_x), move(edge_y)));
     }
     virtual ~PositionStyleValue() override = default;
 
-    ValueComparingNonnullRefPtr<StyleValue> edge_x() const { return m_properties.edge_x; }
-    ValueComparingNonnullRefPtr<StyleValue> edge_y() const { return m_properties.edge_y; }
+    ValueComparingNonnullRefPtr<EdgeStyleValue> edge_x() const { return m_properties.edge_x; }
+    ValueComparingNonnullRefPtr<EdgeStyleValue> edge_y() const { return m_properties.edge_y; }
 
     virtual String to_string() const override;
 
     bool properties_equal(PositionStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
-    PositionStyleValue(ValueComparingNonnullRefPtr<StyleValue> edge_x, ValueComparingNonnullRefPtr<StyleValue> edge_y)
+    PositionStyleValue(ValueComparingNonnullRefPtr<EdgeStyleValue> edge_x, ValueComparingNonnullRefPtr<EdgeStyleValue> edge_y)
         : StyleValueWithDefaultOperators(Type::Position)
         , m_properties { .edge_x = edge_x, .edge_y = edge_y }
     {
     }
 
     struct Properties {
-        ValueComparingNonnullRefPtr<StyleValue> edge_x;
-        ValueComparingNonnullRefPtr<StyleValue> edge_y;
+        ValueComparingNonnullRefPtr<EdgeStyleValue> edge_x;
+        ValueComparingNonnullRefPtr<EdgeStyleValue> edge_y;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };

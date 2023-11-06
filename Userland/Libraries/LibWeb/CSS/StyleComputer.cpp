@@ -825,11 +825,13 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
     case StyleValue::Type::Percentage:
         return PercentageStyleValue::create(Percentage(interpolate_raw(from.as_percentage().percentage().value(), to.as_percentage().percentage().value())));
     case StyleValue::Type::Position: {
+        // https://www.w3.org/TR/css-values-4/#combine-positions
+        // FIXME: Interpolation of <position> is defined as the independent interpolation of each component (x, y) normalized as an offset from the top left corner as a <length-percentage>.
         auto& from_position = from.as_position();
         auto& to_position = to.as_position();
         return PositionStyleValue::create(
-            TRY(interpolate_property(from_position.edge_x(), to_position.edge_x(), delta)),
-            TRY(interpolate_property(from_position.edge_y(), to_position.edge_y(), delta)));
+            TRY(interpolate_property(from_position.edge_x(), to_position.edge_x(), delta))->as_edge(),
+            TRY(interpolate_property(from_position.edge_y(), to_position.edge_y(), delta))->as_edge());
     }
     case StyleValue::Type::Rect: {
         auto from_rect = from.as_rect().rect();
