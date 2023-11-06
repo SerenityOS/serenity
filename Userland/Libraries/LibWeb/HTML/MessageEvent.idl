@@ -1,4 +1,8 @@
 #import <DOM/Event.idl>
+#import <HTML/MessagePort.idl>
+
+// FIXME: typedef (WindowProxy or MessagePort or ServiceWorker) MessageEventSource;
+typedef (WindowProxy or MessagePort) MessageEventSource;
 
 // https://html.spec.whatwg.org/multipage/comms.html#messageevent
 [Exposed=(Window,Worker)]
@@ -8,7 +12,7 @@ interface MessageEvent : Event {
     readonly attribute any data;
     readonly attribute USVString origin;
     readonly attribute DOMString lastEventId;
-    // FIXME: readonly attribute MessageEventSource? source;
+    readonly attribute MessageEventSource? source;
     // FIXME: readonly attribute FrozenArray<MessagePort> ports;
 };
 
@@ -16,6 +20,6 @@ dictionary MessageEventInit : EventInit {
     any data = null;
     USVString origin = "";
     DOMString lastEventId = "";
-    // FIXME: MessageEventSource? source = null;
+    MessageEventSource? source = null;
     // FIXME: sequence<MessagePort> ports = [];
 };
