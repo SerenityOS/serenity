@@ -1389,6 +1389,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                         union_generator.append(R"~~~(
     @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? String {} : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
 )~~~");
+                    } else if (optional_default_value->starts_with("\""sv) && optional_default_value->ends_with("\""sv)) {
+                        union_generator.set("default_string_value", optional_default_value.value());
+                        union_generator.append(R"~~~(
+    @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? MUST(String::from_utf8(@default_string_value@sv)) : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
                     } else if (optional_default_value == "{}") {
                         VERIFY(dictionary_type);
                         union_generator.append(R"~~~(
