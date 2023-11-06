@@ -154,7 +154,7 @@ Vector<float> DeviceCMYKColorSpace::default_decode() const
     return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
 }
 
-PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document*, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document* document, Vector<Value>&& parameters)
 {
     // "[ /DeviceN names alternateSpace tintTransform ]
     //  or
@@ -165,24 +165,58 @@ PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> DeviceNColorSpace::create(Document*
 
     // "The names parameter is an array of name objects specifying the individual color components.
     //  The length of the array determines the number of components in the DeviceN color space"
-    auto names = parameters[0].get<NonnullRefPtr<Object>>()->cast<ArrayObject>();
+    auto names_array = TRY(document->resolve_to<ArrayObject>(parameters[0]));
+    Vector<DeprecatedString> names;
+    for (size_t i = 0; i < names_array->size(); ++i)
+        names.append(names_array->get_name_at(i)->name());
 
     // "The alternateSpace parameter is an array or name object that can be any device or CIE-based color space
     //  but not another special color space (Pattern, Indexed, Separation, or DeviceN)."
+    auto alternate_space_object = TRY(document->resolve_to<Object>(parameters[1]));
+    auto alternate_space = TRY(ColorSpace::create(document, alternate_space_object));
 
-    // FIXME: Implement.
+    auto family = alternate_space->family();
+    if (family == ColorSpaceFamily::Pattern || family == ColorSpaceFamily::Indexed || family == ColorSpaceFamily::Separation || family == ColorSpaceFamily::DeviceN)
+        return Error { Error::Type::MalformedPDF, "DeviceN color space has invalid alternate color space" };
 
-    return adopt_ref(*new DeviceNColorSpace(names->size()));
+    // "The tintTransform parameter specifies a function"
+    auto tint_transform_object = TRY(document->resolve_to<Object>(parameters[2]));
+    auto tint_transform = TRY(Function::create(document, tint_transform_object));
+
+    // FIXME: If `attributes` is present and has /Subtype set to /NChannel, possibly
+    //        do slightly different processing.
+
+    auto color_space = adopt_ref(*new DeviceNColorSpace(move(alternate_space), move(tint_transform)));
+    color_space->m_names = move(names);
+    return color_space;
 }
 
-PDFErrorOr<Color> DeviceNColorSpace::color(ReadonlySpan<Value>) const
+DeviceNColorSpace::DeviceNColorSpace(NonnullRefPtr<ColorSpace> alternate_space, NonnullRefPtr<Function> tint_transform)
+    : m_alternate_space(move(alternate_space))
+    , m_tint_transform(move(tint_transform))
 {
-    return Error::rendering_unsupported_error("DeviceN color spaces not yet implemented");
+}
+
+PDFErrorOr<Color> DeviceNColorSpace::color(ReadonlySpan<Value> arguments) const
+{
+    // FIXME: Does this need handling for the special colorant name "None"?
+    // FIXME: When drawing to a printer, do something else.
+    m_tint_input_values.resize(arguments.size());
+    for (size_t i = 0; i < arguments.size(); ++i)
+        m_tint_input_values[i] = arguments[i].to_float();
+
+    auto tint_output = TRY(m_tint_transform->evaluate(m_tint_input_values.span()));
+
+    m_tint_output_values.resize(tint_output.size());
+    for (size_t i = 0; i < tint_output.size(); ++i)
+        m_tint_output_values[i] = tint_output[i];
+
+    return m_alternate_space->color(m_tint_output_values);
 }
 
 int DeviceNColorSpace::number_of_components() const
 {
-    return m_number_of_components;
+    return m_names.size();
 }
 
 Vector<float> DeviceNColorSpace::default_decode() const
@@ -193,11 +227,6 @@ Vector<float> DeviceNColorSpace::default_decode() const
         decoding_ranges.append(1.0);
     }
     return decoding_ranges;
-}
-
-DeviceNColorSpace::DeviceNColorSpace(size_t number_of_components)
-    : m_number_of_components(number_of_components)
-{
 }
 
 constexpr Array<float, 3> matrix_multiply(Array<float, 9> a, Array<float, 3> b)
