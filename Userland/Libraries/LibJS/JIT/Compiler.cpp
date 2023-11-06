@@ -2061,6 +2061,10 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         Assembler::Operand::Register(LOCALS_ARRAY_BASE),
         Assembler::Operand::Register(ARG2));
 
+    compiler.m_assembler.mov(
+        Assembler::Operand::Register(RUNNING_EXECUTION_CONTEXT_BASE),
+        Assembler::Operand::Register(ARG4));
+
     compiler.reload_cached_accumulator();
 
     Assembler::Label normal_entry {};
