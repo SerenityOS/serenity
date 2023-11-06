@@ -69,6 +69,10 @@ public:
     [[nodiscard]] bool equals_ignoring_ascii_case(FlyString const&) const;
     [[nodiscard]] bool equals_ignoring_ascii_case(StringView) const;
 
+    [[nodiscard]] bool starts_with_bytes(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+
+    [[nodiscard]] bool ends_with_bytes(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+
     template<typename... Ts>
     [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts... strings) const
     {

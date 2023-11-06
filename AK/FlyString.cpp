@@ -205,4 +205,14 @@ bool FlyString::equals_ignoring_ascii_case(StringView other) const
     return StringUtils::equals_ignoring_ascii_case(bytes_as_string_view(), other);
 }
 
+bool FlyString::starts_with_bytes(StringView bytes, CaseSensitivity case_sensitivity) const
+{
+    return bytes_as_string_view().starts_with(bytes, case_sensitivity);
+}
+
+bool FlyString::ends_with_bytes(StringView bytes, CaseSensitivity case_sensitivity) const
+{
+    return bytes_as_string_view().ends_with(bytes, case_sensitivity);
+}
+
 }
