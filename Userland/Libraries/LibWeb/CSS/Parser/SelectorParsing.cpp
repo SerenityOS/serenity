@@ -729,10 +729,10 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (!value.is(Token::Type::Ident))
             return false;
         auto ident = value.token().ident();
-        if (!ident.starts_with("n-"sv, CaseSensitivity::CaseInsensitive))
+        if (!ident.starts_with_bytes("n-"sv, CaseSensitivity::CaseInsensitive))
             return false;
-        for (size_t i = 2; i < ident.length(); ++i) {
-            if (!is_ascii_digit(ident[i]))
+        for (size_t i = 2; i < ident.bytes_as_string_view().length(); ++i) {
+            if (!is_ascii_digit(ident.bytes_as_string_view()[i]))
                 return false;
         }
         return true;
@@ -741,12 +741,12 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (!value.is(Token::Type::Ident))
             return false;
         auto ident = value.token().ident();
-        if (!ident.starts_with("-n-"sv, CaseSensitivity::CaseInsensitive))
+        if (!ident.starts_with_bytes("-n-"sv, CaseSensitivity::CaseInsensitive))
             return false;
-        if (ident.length() == 3)
+        if (ident.bytes_as_string_view().length() == 3)
             return false;
-        for (size_t i = 3; i < ident.length(); ++i) {
-            if (!is_ascii_digit(ident[i]))
+        for (size_t i = 3; i < ident.bytes_as_string_view().length(); ++i) {
+            if (!is_ascii_digit(ident.bytes_as_string_view()[i]))
                 return false;
         }
         return true;
@@ -844,7 +844,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     }
     // <dashndashdigit-ident>
     if (is_dashndashdigit_ident(first_value)) {
-        auto maybe_b = first_value.token().ident().substring_view(2).to_int();
+        auto maybe_b = first_value.token().ident().bytes_as_string_view().substring_view(2).to_int();
         if (maybe_b.has_value()) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { -1, maybe_b.value() };
@@ -957,7 +957,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
     // '+'?† <ndashdigit-ident>
     if (is_ndashdigit_ident(first_after_plus)) {
-        auto maybe_b = first_after_plus.token().ident().substring_view(1).to_int();
+        auto maybe_b = first_after_plus.token().ident().bytes_as_string_view().substring_view(1).to_int();
         if (maybe_b.has_value()) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 1, maybe_b.value() };
