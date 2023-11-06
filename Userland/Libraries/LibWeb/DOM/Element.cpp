@@ -155,7 +155,7 @@ DeprecatedString Element::deprecated_get_attribute(StringView name) const
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-get-value
-DeprecatedString Element::get_attribute_value(StringView local_name, DeprecatedFlyString const& namespace_) const
+DeprecatedString Element::get_attribute_value(FlyString const& local_name, Optional<FlyString> const& namespace_) const
 {
     // 1. Let attr be the result of getting an attribute given namespace, localName, and element.
     auto const* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
