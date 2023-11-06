@@ -621,7 +621,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
     auto base_object = param0.get<NonnullRefPtr<Object>>();
     auto base = TRY(ColorSpace::create(document, base_object));
 
-    if (base->family().name() == ColorSpaceFamily::Pattern.name() || base->family().name() == ColorSpaceFamily::Indexed.name())
+    if (base->family() == ColorSpaceFamily::Pattern || base->family() == ColorSpaceFamily::Indexed)
         return Error { Error::Type::MalformedPDF, "Indexed color space has invalid base color space" };
 
     // "The hival parameter is an integer that specifies the maximum valid index value. In other words,
@@ -713,7 +713,7 @@ PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Doc
     auto alternate_space = TRY(ColorSpace::create(document, alternate_space_object));
 
     auto family = alternate_space->family();
-    if (family.name() == ColorSpaceFamily::Pattern.name() || family.name() == ColorSpaceFamily::Indexed.name() || family.name() == ColorSpaceFamily::Separation.name() || family.name() == ColorSpaceFamily::DeviceN.name())
+    if (family == ColorSpaceFamily::Pattern || family == ColorSpaceFamily::Indexed || family == ColorSpaceFamily::Separation || family == ColorSpaceFamily::DeviceN)
         return Error { Error::Type::MalformedPDF, "Separation color space has invalid alternate color space" };
 
     // "The tintTransform parameter must be a function"
