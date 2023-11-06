@@ -6,13 +6,14 @@
 
 #pragma once
 
-#include <LibJIT/X86_64/Assembler.h>
+#include <AK/Platform.h>
 
-namespace JIT {
 #if ARCH(X86_64)
+#    include <LibJIT/X86_64/Assembler.h>
 #    define JIT_ARCH_SUPPORTED 1
-typedef X86_64Assembler Assembler;
+namespace JIT {
+using Assembler = X86_64Assembler;
+}
 #else
 #    undef JIT_ARCH_SUPPORTED
 #endif
-}
