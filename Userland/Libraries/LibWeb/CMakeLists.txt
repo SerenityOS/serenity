@@ -67,7 +67,6 @@ set(SOURCES
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp
     CSS/PercentageOr.cpp
-    CSS/Position.cpp
     CSS/PreferredColorScheme.cpp
     CSS/Ratio.cpp
     CSS/Resolution.cpp
