@@ -18,7 +18,7 @@ HTMLSlotElement::HTMLSlotElement(DOM::Document& document, DOM::QualifiedName qua
     // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext
     add_attribute_change_steps([this](auto const& local_name, auto const& old_value, auto const& value, auto const& namespace_) {
         // 1. If element is a slot, localName is name, and namespace is null, then:
-        if (local_name == AttributeNames::name && namespace_.is_null()) {
+        if (local_name == AttributeNames::name && !namespace_.has_value()) {
             // 1. If value is oldValue, then return.
             if (value == old_value)
                 return;
