@@ -27,6 +27,7 @@ private:
 #    if ARCH(X86_64)
     static constexpr auto GPR0 = Assembler::Reg::RAX;
     static constexpr auto GPR1 = Assembler::Reg::RCX;
+    static constexpr auto GPR2 = Assembler::Reg::R12;
     static constexpr auto ARG0 = Assembler::Reg::RDI;
     static constexpr auto ARG1 = Assembler::Reg::RSI;
     static constexpr auto ARG2 = Assembler::Reg::RDX;
