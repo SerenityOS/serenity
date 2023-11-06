@@ -18,7 +18,7 @@ namespace {
 ErrorOr<String> application_directory()
 {
     auto current_executable_path = TRY(Core::System::current_executable_path());
-    auto dirname = LexicalPath::dirname(current_executable_path.to_deprecated_string());
+    auto dirname = LexicalPath::dirname(current_executable_path);
     return String::from_deprecated_string(dirname);
 }
 
