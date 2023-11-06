@@ -17,8 +17,8 @@ using MessageEventSource = Variant<JS::Handle<WindowProxy>, JS::Handle<MessagePo
 
 struct MessageEventInit : public DOM::EventInit {
     JS::Value data { JS::js_null() };
-    String origin;
-    String last_event_id;
+    String origin {};
+    String last_event_id {};
     Optional<MessageEventSource> source;
 };
 
