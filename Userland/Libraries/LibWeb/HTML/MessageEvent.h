@@ -12,10 +12,14 @@
 
 namespace Web::HTML {
 
+// FIXME: Include ServiceWorker
+using MessageEventSource = Variant<JS::Handle<WindowProxy>, JS::Handle<MessagePort>>;
+
 struct MessageEventInit : public DOM::EventInit {
     JS::Value data { JS::js_null() };
     String origin;
     String last_event_id;
+    Optional<MessageEventSource> source;
 };
 
 class MessageEvent : public DOM::Event {
@@ -31,6 +35,7 @@ public:
     JS::Value data() const { return m_data; }
     String const& origin() const { return m_origin; }
     String const& last_event_id() const { return m_last_event_id; }
+    Variant<JS::Handle<WindowProxy>, JS::Handle<MessagePort>, Empty> source() const;
 
 private:
     virtual void initialize(JS::Realm&) override;
@@ -39,6 +44,7 @@ private:
     JS::Value m_data;
     String m_origin;
     String m_last_event_id;
+    Optional<MessageEventSource> m_source;
 };
 
 }

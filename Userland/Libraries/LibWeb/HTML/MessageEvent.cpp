@@ -24,6 +24,7 @@ MessageEvent::MessageEvent(JS::Realm& realm, FlyString const& event_name, Messag
     , m_data(event_init.data)
     , m_origin(event_init.origin)
     , m_last_event_id(event_init.last_event_id)
+    , m_source(event_init.source)
 {
 }
 
@@ -39,6 +40,14 @@ void MessageEvent::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_data);
+}
+
+Variant<JS::Handle<WindowProxy>, JS::Handle<MessagePort>, Empty> MessageEvent::source() const
+{
+    if (!m_source.has_value())
+        return Empty {};
+
+    return m_source.value().downcast<JS::Handle<WindowProxy>, JS::Handle<MessagePort>>();
 }
 
 }
