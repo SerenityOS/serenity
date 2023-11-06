@@ -42,6 +42,7 @@ static bool is_platform_object(Type const& type)
         "Instance"sv,
         "IntersectionObserverEntry"sv,
         "Memory"sv,
+        "MessagePort"sv,
         "Module"sv,
         "MutationRecord"sv,
         "NamedNodeMap"sv,
