@@ -8,12 +8,12 @@
 #pragma once
 
 #include <AK/Platform.h>
+#include <LibJIT/Assembler.h>
+#include <LibJS/Bytecode/Executable.h>
+#include <LibJS/Bytecode/Op.h>
 #include <LibJS/JIT/NativeExecutable.h>
 
 #ifdef JIT_ARCH_SUPPORTED
-#    include <LibJIT/Assembler.h>
-#    include <LibJS/Bytecode/Executable.h>
-#    include <LibJS/Bytecode/Op.h>
 
 namespace JS::JIT {
 
