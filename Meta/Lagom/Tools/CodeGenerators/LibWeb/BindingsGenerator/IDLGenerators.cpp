@@ -2061,7 +2061,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
     case Type::Kind::Parameterized: {
         auto const& parameterized_type = type.as_parameterized();
         StringBuilder builder;
-        builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, Vector<NonnullRefPtr<IDL::Type const>> {{", type.name(), type.is_nullable());
+        builder.appendff("make_ref_counted<IDL::ParameterizedType>(\"{}\", {}, Vector<NonnullRefPtr<IDL::Type const>> {{", type.name(), type.is_nullable());
         append_type_list(builder, parameterized_type.parameters());
         builder.append("})"sv);
         return builder.to_deprecated_string();
