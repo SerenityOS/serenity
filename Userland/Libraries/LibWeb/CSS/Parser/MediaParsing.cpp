@@ -261,12 +261,12 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<ComponentValue>& 
                 return MediaFeatureName { MediaFeatureName::Type::Normal, id.value() };
             }
 
-            if (allow_min_max_prefix && (name.starts_with("min-"sv, CaseSensitivity::CaseInsensitive) || name.starts_with("max-"sv, CaseSensitivity::CaseInsensitive))) {
-                auto adjusted_name = name.substring_view(4);
+            if (allow_min_max_prefix && (name.starts_with_bytes("min-"sv, CaseSensitivity::CaseInsensitive) || name.starts_with_bytes("max-"sv, CaseSensitivity::CaseInsensitive))) {
+                auto adjusted_name = name.bytes_as_string_view().substring_view(4);
                 if (auto id = media_feature_id_from_string(adjusted_name); id.has_value() && media_feature_type_is_range(id.value())) {
                     transaction.commit();
                     return MediaFeatureName {
-                        name.starts_with("min-"sv, CaseSensitivity::CaseInsensitive) ? MediaFeatureName::Type::Min : MediaFeatureName::Type::Max,
+                        name.starts_with_bytes("min-"sv, CaseSensitivity::CaseInsensitive) ? MediaFeatureName::Type::Min : MediaFeatureName::Type::Max,
                         id.value()
                     };
                 }

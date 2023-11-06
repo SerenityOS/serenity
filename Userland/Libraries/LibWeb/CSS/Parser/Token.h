@@ -59,10 +59,10 @@ public:
     Type type() const { return m_type; }
     bool is(Type type) const { return m_type == type; }
 
-    StringView ident() const
+    FlyString const& ident() const
     {
         VERIFY(m_type == Type::Ident);
-        return m_value.bytes_as_string_view();
+        return m_value;
     }
 
     StringView function() const

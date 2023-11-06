@@ -1574,7 +1574,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             auto token = token_stream.next_token();
             Optional<DeprecatedString> prefix = {};
             if (token.is(Token::Type::Ident)) {
-                prefix = token.token().ident();
+                prefix = token.token().ident().bytes_as_string_view();
                 token_stream.skip_whitespace();
                 token = token_stream.next_token();
             }
@@ -2446,7 +2446,7 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
         else {
             if (!cv.is(Token::Type::Ident))
                 return {};
-            serialization = cv.token().ident();
+            serialization = cv.token().ident().bytes_as_string_view();
         }
 
         // 4. If serialization does not consist of three or six characters, return an error.
@@ -4178,7 +4178,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(TokenStream<ComponentValue>& 
                 (void)tokens.next_token(); // Comma
                 continue;
             }
-            current_name_parts.append(tokens.next_token().token().ident());
+            current_name_parts.append(tokens.next_token().token().ident().bytes_as_string_view());
             continue;
         }
 
@@ -4270,7 +4270,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
                         had_syntax_error = true;
                         break;
                     }
-                    font_family_parts.append(part.token().ident());
+                    font_family_parts.append(part.token().ident().bytes_as_string_view());
                     continue;
                 }
 
@@ -6800,7 +6800,7 @@ bool Parser::expand_variables(DOM::Element& element, Optional<Selector::PseudoEl
         if (!custom_property_name_token.is(Token::Type::Ident))
             return false;
         auto custom_property_name = custom_property_name_token.token().ident();
-        if (!custom_property_name.starts_with("--"sv))
+        if (!custom_property_name.bytes_as_string_view().starts_with("--"sv))
             return false;
 
         // Detect dependency cycles. https://www.w3.org/TR/css-variables-1/#cycles
