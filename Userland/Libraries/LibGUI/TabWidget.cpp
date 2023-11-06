@@ -37,18 +37,7 @@ TabWidget::TabWidget()
         { TabPosition::Bottom, "Bottom" },
         { TabPosition::Left, "Left" },
         { TabPosition::Right, "Right" }, );
-
-    register_property(
-        "text_alignment",
-        [this] { return Gfx::to_string(text_alignment()); },
-        [this](auto& value) {
-            auto alignment = Gfx::text_alignment_from_string(value.to_byte_string());
-            if (alignment.has_value()) {
-                set_text_alignment(alignment.value());
-                return true;
-            }
-            return false;
-        });
+    REGISTER_TEXT_ALIGNMENT_PROPERTY("text_alignment", text_alignment, set_text_alignment);
 }
 
 ErrorOr<void> TabWidget::try_add_widget(Widget& widget)

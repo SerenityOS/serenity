@@ -45,12 +45,12 @@ Widget::Widget()
     REGISTER_DEPRECATED_STRING_PROPERTY("name", name, set_name);
 
     register_property(
-        "address", [this] { return FlatPtr(this); },
-        [](auto&) { return false; });
+        "address"sv, [this] { return FlatPtr(this); },
+        nullptr, nullptr);
 
     register_property(
-        "parent", [this] { return FlatPtr(this->parent()); },
-        [](auto&) { return false; });
+        "parent"sv, [this] { return FlatPtr(this->parent()); },
+        nullptr, nullptr);
 
     REGISTER_RECT_PROPERTY("relative_rect", relative_rect, set_relative_rect);
     REGISTER_BOOL_PROPERTY("fill_with_background_color", fill_with_background_color, set_fill_with_background_color);
@@ -90,119 +90,52 @@ Widget::Widget()
 
     REGISTER_BOOL_PROPERTY("font_fixed_width", is_font_fixed_width, set_font_fixed_width)
     register_property(
-        "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
-        [this](auto& value) {
-            if (value.to_byte_string() == "FixedWidth") {
-                set_font_fixed_width(true);
-                return true;
+        "font_type"sv, [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
+        [](JsonValue const& value) -> ErrorOr<bool> {
+            if (value.is_string()) {
+                auto string = value.as_string();
+                if (string == "FixedWidth")
+                    return true;
+                if (string == "Normal")
+                    return false;
             }
-            if (value.to_byte_string() == "Normal") {
-                set_font_fixed_width(false);
-                return true;
-            }
-            return false;
+            return Error::from_string_literal("\"FixedWidth\" or \"Normal\" is expected");
+        },
+        [this](auto const& value) { return set_font_fixed_width(value); });
+
+    REGISTER_ENUM_PROPERTY("focus_policy", focus_policy, set_focus_policy, GUI::FocusPolicy,
+        { GUI::FocusPolicy::ClickFocus, "ClickFocus" },
+        { GUI::FocusPolicy::NoFocus, "NoFocus" },
+        { GUI::FocusPolicy::TabFocus, "TabFocus" },
+        { GUI::FocusPolicy::StrongFocus, "StrongFocus" });
+
+    register_property(
+        "foreground_color"sv,
+        [this]() { return palette().color(foreground_role()).to_byte_string(); },
+        ::GUI::PropertyDeserializer<Color> {},
+        [this](Gfx::Color const& color) {
+            auto _palette = palette();
+            _palette.set_color(foreground_role(), color);
+            set_palette(_palette);
         });
 
     register_property(
-        "focus_policy", [this]() -> JsonValue {
-        auto policy = focus_policy();
-        if (policy == GUI::FocusPolicy::ClickFocus)
-            return "ClickFocus";
-        if (policy == GUI::FocusPolicy::NoFocus)
-            return "NoFocus";
-        if (policy == GUI::FocusPolicy::TabFocus)
-            return "TabFocus";
-        if (policy == GUI::FocusPolicy::StrongFocus)
-            return "StrongFocus";
-        return JsonValue(); },
-        [this](auto& value) {
-            if (!value.is_string())
-                return false;
-            if (value.as_string() == "ClickFocus") {
-                set_focus_policy(GUI::FocusPolicy::ClickFocus);
-                return true;
-            }
-            if (value.as_string() == "NoFocus") {
-                set_focus_policy(GUI::FocusPolicy::NoFocus);
-                return true;
-            }
-            if (value.as_string() == "TabFocus") {
-                set_focus_policy(GUI::FocusPolicy::TabFocus);
-                return true;
-            }
-            if (value.as_string() == "StrongFocus") {
-                set_focus_policy(GUI::FocusPolicy::StrongFocus);
-                return true;
-            }
-            return false;
+        "background_color"sv,
+        [this]() { return palette().color(background_role()).to_byte_string(); },
+        ::GUI::PropertyDeserializer<Color> {},
+        [this](Gfx::Color const& color) {
+            set_background_color(color);
         });
 
-    register_property(
-        "foreground_color", [this]() -> JsonValue { return palette().color(foreground_role()).to_byte_string(); },
-        [this](auto& value) {
-            auto c = Color::from_string(value.to_byte_string());
-            if (c.has_value()) {
-                auto _palette = palette();
-                _palette.set_color(foreground_role(), c.value());
-                set_palette(_palette);
-                return true;
-            }
-            return false;
-        });
-
-    register_property(
-        "background_color", [this]() -> JsonValue { return palette().color(background_role()).to_byte_string(); },
-        [this](JsonValue const& value) {
-            auto color_str = String::from_byte_string(value.to_byte_string());
-            if (color_str.is_error())
-                return false;
-
-            return set_background_color(color_str.release_value());
-        });
-
-    register_property(
-        "foreground_role", [this]() -> JsonValue { return Gfx::to_string(foreground_role()); },
-        [this](auto& value) {
-            if (!value.is_string())
-                return false;
-            auto str = value.as_string();
-            if (str == "NoRole") {
-                set_foreground_role(Gfx::ColorRole::NoRole);
-                return true;
-            }
+#define __ENUMERATE_COLOR_ROLE(role) \
+    { Gfx::ColorRole::role, #role },
+    REGISTER_ENUM_PROPERTY("foreground_role", foreground_role, set_foreground_role, Gfx::ColorRole,
+        { Gfx::ColorRole::NoRole, "NoRole" },
+        ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE));
+    REGISTER_ENUM_PROPERTY("background_role", background_role, set_background_role, Gfx::ColorRole,
+        { Gfx::ColorRole::NoRole, "NoRole" },
+        ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE));
 #undef __ENUMERATE_COLOR_ROLE
-#define __ENUMERATE_COLOR_ROLE(role)               \
-    else if (str == #role)                         \
-    {                                              \
-        set_foreground_role(Gfx::ColorRole::role); \
-        return true;                               \
-    }
-            ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
-#undef __ENUMERATE_COLOR_ROLE
-            return false;
-        });
-
-    register_property(
-        "background_role", [this]() -> JsonValue { return Gfx::to_string(background_role()); },
-        [this](auto& value) {
-            if (!value.is_string())
-                return false;
-            auto str = value.as_string();
-            if (str == "NoRole") {
-                set_background_role(Gfx::ColorRole::NoRole);
-                return true;
-            }
-#undef __ENUMERATE_COLOR_ROLE
-#define __ENUMERATE_COLOR_ROLE(role)               \
-    else if (str == #role)                         \
-    {                                              \
-        set_background_role(Gfx::ColorRole::role); \
-        return true;                               \
-    }
-            ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
-#undef __ENUMERATE_COLOR_ROLE
-            return false;
-        });
 }
 
 Widget::~Widget() = default;
@@ -1080,15 +1013,6 @@ void Widget::set_foreground_role(ColorRole role)
 {
     m_foreground_role = role;
     update();
-}
-
-bool Widget::set_background_color(String color_str)
-{
-    auto color = Color::from_string(color_str.to_byte_string());
-    if (!color.has_value())
-        return false;
-    set_background_color(color.release_value());
-    return true;
 }
 
 void Widget::set_background_color(Gfx::Color color)
