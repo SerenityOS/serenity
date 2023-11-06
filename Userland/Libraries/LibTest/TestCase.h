@@ -46,7 +46,7 @@ public:
     {
         using namespace Randomized;
 
-        constexpr u8 MAX_GEN_ATTEMPTS_PER_VALUE = 15;
+        constexpr u8 MAX_GEN_ATTEMPTS_PER_VALUE = 30;
 
         TestFunction test_case_function = [test_function = move(test_function)]() {
             u64 max_randomized_runs = randomized_runs();
