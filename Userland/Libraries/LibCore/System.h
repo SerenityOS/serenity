@@ -279,7 +279,7 @@ ErrorOr<String> resolve_executable_from_environment(StringView filename, int fla
 
 char** environment();
 
-ErrorOr<String> current_executable_path();
+ErrorOr<DeprecatedString> current_executable_path();
 
 ErrorOr<Bytes> allocate(size_t count, size_t size);
 

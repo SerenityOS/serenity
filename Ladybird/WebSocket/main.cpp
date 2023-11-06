@@ -21,7 +21,7 @@ ErrorOr<String> find_certificates(StringView serenity_resource_root)
 {
     auto cert_path = TRY(String::formatted("{}/res/ladybird/cacert.pem", serenity_resource_root));
     if (!FileSystem::exists(cert_path)) {
-        auto app_dir = LexicalPath::dirname(TRY(Core::System::current_executable_path()).to_deprecated_string());
+        auto app_dir = LexicalPath::dirname(TRY(Core::System::current_executable_path()));
 
         cert_path = TRY(String::formatted("{}/cacert.pem", LexicalPath(app_dir).parent()));
         if (!FileSystem::exists(cert_path))

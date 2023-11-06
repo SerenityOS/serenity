@@ -1806,7 +1806,7 @@ char** environment()
 #endif
 }
 
-ErrorOr<String> current_executable_path()
+ErrorOr<DeprecatedString> current_executable_path()
 {
     char path[4096] = {};
 #if defined(AK_OS_LINUX) || defined(AK_OS_ANDROID) || defined(AK_OS_SERENITY)
@@ -1827,9 +1827,9 @@ ErrorOr<String> current_executable_path()
         return Error::from_syscall("proc_get_exe"sv, -errno);
     }
 #elif defined(AK_OS_DRAGONFLY)
-    return String::from_deprecated_string(TRY(readlink("/proc/curproc/file"sv)));
+    return TRY(readlink("/proc/curproc/file"sv));
 #elif defined(AK_OS_SOLARIS)
-    return String::from_deprecated_string(TRY(readlink("/proc/self/path/a.out"sv)));
+    return TRY(readlink("/proc/self/path/a.out"sv));
 #elif defined(AK_OS_FREEBSD)
     int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
     size_t len = sizeof(path);
@@ -1862,7 +1862,7 @@ ErrorOr<String> current_executable_path()
     return Error::from_string_view("current_executable_path unknown"sv);
 #endif
     path[sizeof(path) - 1] = '\0';
-    return String::from_utf8({ path, strlen(path) });
+    return DeprecatedString { path, strlen(path) };
 }
 
 ErrorOr<Bytes> allocate(size_t count, size_t size)
