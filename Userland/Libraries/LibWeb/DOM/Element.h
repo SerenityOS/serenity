@@ -146,10 +146,10 @@ public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
 
     // https://dom.spec.whatwg.org/#concept-element-attributes-change-ext
-    using AttributeChangeSteps = Function<void(FlyString const& /*local_name*/, Optional<DeprecatedString> const& /*old_value*/, Optional<DeprecatedString> const& /*value*/, DeprecatedFlyString const& /*namespace_*/)>;
+    using AttributeChangeSteps = Function<void(FlyString const& local_name, Optional<DeprecatedString> const& old_value, Optional<DeprecatedString> const& value, Optional<FlyString> const& namespace_)>;
 
     void add_attribute_change_steps(AttributeChangeSteps steps);
-    void run_attribute_change_steps(FlyString const& local_name, Optional<DeprecatedString> const& old_value, Optional<DeprecatedString> const& value, DeprecatedFlyString const& namespace_);
+    void run_attribute_change_steps(FlyString const& local_name, Optional<DeprecatedString> const& old_value, Optional<DeprecatedString> const& value, Optional<FlyString> const& namespace_);
     virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value);
 
     struct [[nodiscard]] RequiredInvalidationAfterStyleChange {
