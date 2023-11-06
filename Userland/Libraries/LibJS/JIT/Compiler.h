@@ -38,6 +38,7 @@ private:
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
     static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::R13;
+    static constexpr auto RUNNING_EXECUTION_CONTEXT_BASE = Assembler::Reg::R15;
 #    endif
 
 #    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
