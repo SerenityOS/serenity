@@ -27,6 +27,8 @@ static bool is_platform_object(Type const& type)
     // might simply need to add another type here.
     static constexpr Array types = {
         "AbortSignal"sv,
+        "AnimationEffect"sv,
+        "AnimationTimeline"sv,
         "Attr"sv,
         "AudioTrack"sv,
         "Blob"sv,
@@ -3499,7 +3501,9 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#if __has_include(<LibWeb/Crypto/@name@.h>)
+#if __has_include(<LibWeb/Animations/@name@.h>)
+#    include <LibWeb/Animations/@name@.h>
+#elif __has_include(<LibWeb/Crypto/@name@.h>)
 #    include <LibWeb/Crypto/@name@.h>
 #elif __has_include(<LibWeb/CSS/@name@.h>)
 #    include <LibWeb/CSS/@name@.h>
