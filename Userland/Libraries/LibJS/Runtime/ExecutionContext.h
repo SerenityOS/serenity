@@ -30,6 +30,8 @@ struct ExecutionContext {
 
     void visit_edges(Cell::Visitor&);
 
+    static FlatPtr lexical_environment_offset() { return OFFSET_OF(ExecutionContext, lexical_environment); }
+
 private:
     explicit ExecutionContext(MarkedVector<Value> existing_arguments, MarkedVector<Value> existing_local_variables);
 

@@ -19,6 +19,9 @@ class DeclarativeEnvironment : public Environment {
     JS_ENVIRONMENT(DeclarativeEnvironment, Environment);
 
     struct Binding {
+        static FlatPtr value_offset() { return OFFSET_OF(Binding, value); }
+        static FlatPtr initialized_offset() { return OFFSET_OF(Binding, initialized); }
+
         DeprecatedFlyString name;
         Value value;
         bool strict { false };
@@ -66,6 +69,8 @@ public:
     }
 
     [[nodiscard]] u64 environment_serial_number() const { return m_environment_serial_number; }
+
+    static FlatPtr bindings_offset() { return OFFSET_OF(DeclarativeEnvironment, m_bindings); }
 
 private:
     ThrowCompletionOr<Value> get_binding_value_direct(VM&, Binding&, bool strict);
