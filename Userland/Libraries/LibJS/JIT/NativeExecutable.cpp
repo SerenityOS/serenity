@@ -118,9 +118,11 @@ void NativeExecutable::dump_disassembly([[maybe_unused]] Bytecode::Executable co
                 if (mapping->bytecode_offset == 0)
                     dbgln("\nBlock {}:", mapping->block_index + 1);
 
-                VERIFY(mapping->bytecode_offset < block.size());
-                auto const& instruction = *reinterpret_cast<Bytecode::Instruction const*>(block.data() + mapping->bytecode_offset);
-                dbgln("{}:{:x} {}:", mapping->block_index + 1, mapping->bytecode_offset, instruction.to_deprecated_string(executable));
+                if (block.size() != 0) {
+                    VERIFY(mapping->bytecode_offset < block.size());
+                    auto const& instruction = *reinterpret_cast<Bytecode::Instruction const*>(block.data() + mapping->bytecode_offset);
+                    dbgln("{}:{:x} {}:", mapping->block_index + 1, mapping->bytecode_offset, instruction.to_deprecated_string(executable));
+                }
             }
         }
 
