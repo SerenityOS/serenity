@@ -125,9 +125,13 @@ public:
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::DeviceN; }
 
 private:
-    DeviceNColorSpace(size_t number_of_components);
+    DeviceNColorSpace(NonnullRefPtr<ColorSpace>, NonnullRefPtr<Function>);
 
-    size_t m_number_of_components { 0 };
+    Vector<DeprecatedString> m_names;
+    NonnullRefPtr<ColorSpace> m_alternate_space;
+    NonnullRefPtr<Function> m_tint_transform;
+    Vector<float> mutable m_tint_input_values;
+    Vector<Value> mutable m_tint_output_values;
 };
 
 class CalGrayColorSpace final : public ColorSpace {
