@@ -58,8 +58,6 @@ public:
 protected:
     explicit Object(Core::EventReceiver* parent = nullptr);
 
-    void register_property(ByteString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
-
     template<typename Getter, typename Deserializer, typename Setter>
     void register_property(StringView name, Getter&& getter, Deserializer&& deserializer, Setter&& setter)
     {
@@ -98,6 +96,8 @@ protected:
     }
 
 private:
+    void register_property(ByteString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
+
     HashMap<ByteString, NonnullOwnPtr<Property>> m_properties;
 };
 
