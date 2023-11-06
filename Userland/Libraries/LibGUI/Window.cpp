@@ -85,16 +85,12 @@ Window::Window(Core::EventReceiver* parent)
     m_floating_rect = { -5000, -5000, 0, 0 };
     m_title_when_windowless = "GUI::Window";
 
-    register_property(
-        "title",
-        [this] { return title(); },
-        [this](auto& value) {
-            set_title(value.to_byte_string());
-            return true;
-        });
+    REGISTER_DEPRECATED_STRING_PROPERTY("title", title, set_title)
 
-    register_property("visible", [this] { return is_visible(); });
-    register_property("active", [this] { return is_active(); });
+    register_property(
+        "visible"sv, [this] { return is_visible(); }, nullptr, nullptr);
+    register_property(
+        "active"sv, [this] { return is_active(); }, nullptr, nullptr);
 
     REGISTER_BOOL_PROPERTY("minimizable", is_minimizable, set_minimizable);
     REGISTER_BOOL_PROPERTY("resizable", is_resizable, set_resizable);

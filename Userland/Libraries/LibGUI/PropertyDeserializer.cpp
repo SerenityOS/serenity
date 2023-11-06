@@ -7,6 +7,9 @@
 #include "PropertyDeserializer.h"
 #include <AK/JsonObject.h>
 #include <AK/String.h>
+#include <LibGUI/Margins.h>
+#include <LibGUI/UIDimensions.h>
+#include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 
 namespace GUI {
@@ -112,6 +115,75 @@ ErrorOr<Gfx::IntSize> PropertyDeserializer<Gfx::IntSize>::operator()(JsonValue c
     size.set_height(height.to_i32());
 
     return size;
+}
+
+template<>
+ErrorOr<GUI::Margins> PropertyDeserializer<GUI::Margins>::operator()(JsonValue const& value) const
+{
+    if (!value.is_array() || value.as_array().size() < 1 || value.as_array().size() > 4)
+        return Error::from_string_literal("Expected non-empty array with up to 4 integers");
+
+    auto const& array = value.as_array();
+    auto size = array.size();
+
+    int m[4];
+
+    for (size_t i = 0; i < size; ++i) {
+        auto const& margin = array[i];
+        if (!margin.is_integer<i32>())
+            return Error::from_string_literal("Margin value should be an integer");
+        m[i] = margin.to_i32();
+    }
+
+    if (size == 1)
+        return GUI::Margins { m[0] };
+    else if (size == 2)
+        return GUI::Margins { m[0], m[1] };
+    else if (size == 3)
+        return GUI::Margins { m[0], m[1], m[2] };
+    else
+        return GUI::Margins { m[0], m[1], m[2], m[3] };
+}
+
+template<>
+ErrorOr<UIDimension> PropertyDeserializer<UIDimension>::operator()(JsonValue const& value) const
+{
+    auto result = UIDimension::construct_from_json_value(value);
+    if (result.has_value())
+        return result.release_value();
+    return Error::from_string_literal("Value is not a valid UIDimension");
+}
+
+template<>
+ErrorOr<UISize> PropertyDeserializer<UISize>::operator()(JsonValue const& value) const
+{
+    if (!value.is_object() || !value.as_object().has("width"sv) || !value.as_object().has("height"sv))
+        return Error::from_string_literal("Object with keys \"width\" and \"height\" is expected");
+
+    auto const& object = value.as_object();
+
+    auto const& width = object.get("width"sv).value();
+    auto result_width = GUI::UIDimension::construct_from_json_value(width);
+    if (!result_width.has_value())
+        return Error::from_string_literal("width is not a valid UIDimension");
+
+    auto const& height = object.get("height"sv).value();
+    auto result_height = GUI::UIDimension::construct_from_json_value(height);
+    if (!result_height.has_value())
+        return Error::from_string_literal("height is not a valid UIDimension");
+
+    return UISize { result_width.value(), result_height.value() };
+}
+
+template<>
+ErrorOr<Color> PropertyDeserializer<Color>::operator()(JsonValue const& value) const
+{
+    if (value.is_string()) {
+        auto c = Color::from_string(value.as_string());
+        if (c.has_value())
+            return c.release_value();
+    }
+    return Error::from_string_literal("Color is expected");
 }
 
 };

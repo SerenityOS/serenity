@@ -21,7 +21,8 @@ Layout::Layout(Margins initial_margins, int spacing)
     REGISTER_INT_PROPERTY("spacing", spacing, set_spacing);
     REGISTER_MARGINS_PROPERTY("margins", margins, set_margins);
 
-    register_property("entries",
+    register_property(
+        "entries"sv,
         [this] {
             JsonArray entries_array;
             for (auto& entry : m_entries) {
@@ -37,7 +38,8 @@ Layout::Layout(Margins initial_margins, int spacing)
                 entries_array.must_append(move(entry_object));
             }
             return entries_array;
-        });
+        },
+        nullptr, nullptr);
 }
 
 Layout::~Layout() = default;
