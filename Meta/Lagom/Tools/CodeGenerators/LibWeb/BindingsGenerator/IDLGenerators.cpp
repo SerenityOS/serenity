@@ -133,7 +133,7 @@ static DeprecatedString union_type_to_variant(UnionType const& union_type, Inter
 
 CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 {
-    if (is_platform_object(type))
+    if (is_platform_object(type) || type.name() == "WindowProxy"sv)
         return { .name = DeprecatedString::formatted("JS::Handle<{}>", type.name()), .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (is_javascript_builtin(type))
@@ -1100,6 +1100,21 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
             union_generator.append(R"~~~(
             }
+)~~~");
+        }
+
+        bool includes_window_proxy = false;
+        for (auto& type : types) {
+            if (type->name() == "WindowProxy"sv) {
+                includes_window_proxy = true;
+                break;
+            }
+        }
+
+        if (includes_window_proxy) {
+            union_generator.append(R"~~~(
+            if (is<WindowProxy>(@js_name@@js_suffix@_object))
+                return JS::make_handle(static_cast<WindowProxy&>(@js_name@@js_suffix@_object));
 )~~~");
         }
 
@@ -3514,6 +3529,7 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #elif __has_include(<LibWeb/URL/@name@.h>)
 #    include <LibWeb/URL/@name@.h>
 #endif
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/CallbackType.h>
 
 )~~~");
