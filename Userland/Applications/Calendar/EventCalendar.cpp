@@ -36,9 +36,9 @@ void EventCalendar::paint_tile(GUI::Painter& painter, GUI::Calendar::Tile& tile,
             if (!event.has("start_date"sv) || !event.has("start_date"sv) || !event.has("summary"sv))
                 return;
 
-            auto start_date = event.get("start_date"sv).value().to_deprecated_string();
-            auto start_time = event.get("start_time"sv).value().to_deprecated_string();
-            auto summary = event.get("summary"sv).value().to_deprecated_string();
+            auto start_date = event.get("start_date"sv).value().as_string();
+            auto start_time = event.get("start_time"sv).value().as_string();
+            auto summary = event.get("summary"sv).value().as_string();
             auto combined_text = DeprecatedString::formatted("{} {}", start_time, summary);
 
             if (start_date == DeprecatedString::formatted("{}-{:0>2d}-{:0>2d}", tile.year, tile.month, tile.day)) {

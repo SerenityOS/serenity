@@ -22,13 +22,13 @@ PropertyTableModel::PropertyTableModel(Type type, JsonValue const& properties)
             m_values.empend(MUST(String::from_deprecated_string(property_name)), String {});
 
             property_value.as_object().for_each_member([&](auto const& property_name, auto const& property_value) {
-                m_values.empend(MUST(String::from_deprecated_string(property_name)), MUST(String::from_deprecated_string(property_value.to_deprecated_string())));
+                m_values.empend(MUST(String::from_deprecated_string(property_name)), MUST(String::from_deprecated_string(property_value.as_string())));
             });
 
             break;
 
         case PropertyTableModel::Type::StyleProperties:
-            m_values.empend(MUST(String::from_deprecated_string(property_name)), MUST(String::from_deprecated_string(property_value.to_deprecated_string())));
+            m_values.empend(MUST(String::from_deprecated_string(property_name)), MUST(String::from_deprecated_string(property_value.as_string())));
             break;
         }
     });

@@ -133,7 +133,8 @@ HashMap<DeprecatedString, DeprecatedString> Presentation::parse_metadata(JsonObj
     HashMap<DeprecatedString, DeprecatedString> metadata;
 
     metadata_object.for_each_member([&](auto const& key, auto const& value) {
-        metadata.set(key, value.to_deprecated_string());
+        // FIXME: Do not serialize values here just to convert them back to proper types later.
+        metadata.set(key, value.deprecated_to_deprecated_string());
     });
 
     return metadata;

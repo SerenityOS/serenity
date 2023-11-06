@@ -2010,7 +2010,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                     dbgln("LibLine: Unhandled completion kind: {}", kind);
                 }
             } else {
-                suggestions.append(parsed.to_deprecated_string());
+                suggestions.append(parsed.deprecated_to_deprecated_string());
             }
 
             return IterationDecision::Continue;

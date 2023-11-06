@@ -146,7 +146,7 @@ static String dom_tree_text_for_display(JsonObject const& node, StringView type)
             builder.append(name);
             builder.append('=');
             builder.append('"');
-            builder.append(value.to_deprecated_string());
+            builder.append(value.as_string());
             builder.append('"');
         });
     }

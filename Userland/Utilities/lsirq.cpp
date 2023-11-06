@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         out("{:>4}: ", interrupt);
 
         for (size_t i = 0; i < cpu_count; ++i)
-            out("{:>10}", call_counts[i].to_deprecated_string());
+            out("{:>10}", call_counts[i].as_integer<u64>());
 
         outln("  {:10}  {:30}", controller, purpose);
     });

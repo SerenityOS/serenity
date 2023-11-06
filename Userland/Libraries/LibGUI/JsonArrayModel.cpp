@@ -138,7 +138,7 @@ Variant JsonArrayModel::data(ModelIndex const& index, ModelRole role) const
             return "";
         if (data->is_number())
             return data.value();
-        return data->to_deprecated_string();
+        return data->as_string();
     }
 
     if (role == ModelRole::Sort) {
