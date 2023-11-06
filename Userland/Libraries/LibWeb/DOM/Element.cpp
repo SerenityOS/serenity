@@ -75,7 +75,7 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext①
     add_attribute_change_steps([this](auto const& local_name, auto const& old_value, auto const& value, auto const& namespace_) {
         // 1. If localName is slot and namespace is null, then:
-        if (local_name == HTML::AttributeNames::slot && namespace_.is_null()) {
+        if (local_name == HTML::AttributeNames::slot && !namespace_.has_value()) {
             // 1. If value is oldValue, then return.
             if (value == old_value)
                 return;
@@ -466,7 +466,7 @@ void Element::add_attribute_change_steps(AttributeChangeSteps steps)
     m_attribute_change_steps.append(move(steps));
 }
 
-void Element::run_attribute_change_steps(FlyString const& local_name, Optional<DeprecatedString> const& old_value, Optional<DeprecatedString> const& value, DeprecatedFlyString const& namespace_)
+void Element::run_attribute_change_steps(FlyString const& local_name, Optional<DeprecatedString> const& old_value, Optional<DeprecatedString> const& value, Optional<FlyString> const& namespace_)
 {
     for (auto const& attribute_change_steps : m_attribute_change_steps)
         attribute_change_steps(local_name, old_value, value, namespace_);

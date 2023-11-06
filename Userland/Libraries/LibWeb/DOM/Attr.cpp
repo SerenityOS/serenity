@@ -115,7 +115,7 @@ void Attr::handle_attribute_changes(Element& element, Optional<DeprecatedString>
     }
 
     // 3. Run the attribute change steps with element, attribute’s local name, oldValue, newValue, and attribute’s namespace.
-    element.run_attribute_change_steps(local_name(), old_value, new_value, deprecated_namespace_uri);
+    element.run_attribute_change_steps(local_name(), old_value, new_value, namespace_uri());
 }
 
 }
