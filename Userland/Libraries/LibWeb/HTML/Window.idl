@@ -52,9 +52,8 @@ interface Window : EventTarget {
     boolean confirm(optional DOMString message = "");
     DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
 
-    undefined postMessage(any message, USVString targetOrigin);
-    // FIXME: undefined postMessage(any message, USVString targetOrigin, optional sequence<object> transfer = []);
-    // FIXME: undefined postMessage(any message, optional WindowPostMessageOptions options = {});
+    undefined postMessage(any message, USVString targetOrigin, optional sequence<object> transfer = []);
+    undefined postMessage(any message, optional WindowPostMessageOptions options = {});
 
     // https://dom.spec.whatwg.org/#interface-window-extensions
     [Replaceable] readonly attribute (Event or undefined) event; // legacy
@@ -121,4 +120,8 @@ dictionary ScrollOptions {
 dictionary ScrollToOptions : ScrollOptions {
     unrestricted double left;
     unrestricted double top;
+};
+
+dictionary WindowPostMessageOptions : StructuredSerializeOptions {
+    USVString targetOrigin = "/";
 };

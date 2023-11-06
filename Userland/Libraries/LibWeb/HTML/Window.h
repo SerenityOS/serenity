@@ -38,6 +38,11 @@ struct ScrollToOptions : public ScrollOptions {
     Optional<double> top;
 };
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#windowpostmessageoptions
+struct WindowPostMessageOptions : public StructuredSerializeOptions {
+    String target_origin { "/"_string };
+};
+
 class Window final
     : public DOM::EventTarget
     , public GlobalEventHandlers
@@ -146,7 +151,8 @@ public:
     bool confirm(Optional<String> const& message);
     Optional<String> prompt(Optional<String> const& message, Optional<String> const& default_);
 
-    void post_message(JS::Value message, String const&);
+    WebIDL::ExceptionOr<void> post_message(JS::Value message, String const&, Vector<JS::Handle<JS::Object>> const&);
+    WebIDL::ExceptionOr<void> post_message(JS::Value message, WindowPostMessageOptions const&);
 
     Variant<JS::Handle<DOM::Event>, JS::Value> event() const;
 
@@ -214,6 +220,8 @@ private:
         Vector<JS::NonnullGCPtr<DOM::Element>> elements;
     };
     NamedObjects named_objects(StringView name);
+
+    WebIDL::ExceptionOr<void> window_post_message_steps(JS::Value, WindowPostMessageOptions const&);
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     JS::GCPtr<DOM::Document> m_associated_document;
