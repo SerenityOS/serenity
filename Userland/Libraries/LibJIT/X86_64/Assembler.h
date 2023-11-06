@@ -557,6 +557,20 @@ struct X86_64Assembler {
             emit8(0x0f);
             emit8(0xaf);
             emit_modrm_rm(dest, src);
+        } else if (dest.type == Operand::Type::Reg && src.type == Operand::Type::Imm) {
+            if (src.fits_in_i8()) {
+                emit_rex_for_rm(dest, dest, REX_W::No);
+                emit8(0x6b);
+                emit_modrm_rm(dest, dest);
+                emit8(src.offset_or_immediate);
+            } else if (src.fits_in_i32()) {
+                emit_rex_for_rm(dest, dest, REX_W::No);
+                emit8(0x69);
+                emit_modrm_rm(dest, dest);
+                emit32(src.offset_or_immediate);
+            } else {
+                VERIFY_NOT_REACHED();
+            }
         } else {
             VERIFY_NOT_REACHED();
         }
