@@ -16,6 +16,8 @@
 
 #include <AK/Assertions.h>
 
+#define OFFSET_OF(class, member) (reinterpret_cast<ptrdiff_t>(&reinterpret_cast<class*>(0x1000)->member) - 0x1000)
+
 namespace AK {
 
 template<typename T, typename U>
