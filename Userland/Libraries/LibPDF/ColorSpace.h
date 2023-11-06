@@ -44,6 +44,11 @@ public:
     ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE)
 #undef ENUMERATE
 
+    bool operator==(ColorSpaceFamily const& other) const
+    {
+        return m_name == other.m_name;
+    }
+
 private:
     DeprecatedFlyString m_name;
     bool m_may_be_specified_directly;
