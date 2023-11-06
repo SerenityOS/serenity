@@ -750,7 +750,7 @@ StyleComputer::AnimationStepTransition StyleComputer::Animation::step(CSS::Time 
     auto time_step_ms = time_step.to_milliseconds();
 
     if (delay_ms > time_step_ms) {
-        remaining_delay = CSS::Time { static_cast<float>(delay_ms - time_step_ms), CSS::Time::Type::Ms };
+        remaining_delay = CSS::Time { delay_ms - time_step_ms, CSS::Time::Type::Ms };
         return AnimationStepTransition::NoTransition;
     }
 
