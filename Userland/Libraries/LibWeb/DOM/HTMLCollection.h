@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/Function.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
