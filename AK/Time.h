@@ -439,7 +439,14 @@ public:
         this->m_offset = this->m_offset + other;
         return *this;
     }
+
     constexpr UnixDateTime operator-(Duration const& other) const { return UnixDateTime { m_offset - other }; }
+    constexpr UnixDateTime& operator-=(Duration const& other)
+    {
+        m_offset = m_offset - other;
+        return *this;
+    }
+
     // Subtracting two UNIX times yields their time difference.
     constexpr Duration operator-(UnixDateTime const& other) const { return m_offset - other.m_offset; }
 
