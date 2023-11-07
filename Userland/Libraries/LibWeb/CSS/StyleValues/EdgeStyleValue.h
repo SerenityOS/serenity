@@ -16,10 +16,12 @@ class EdgeStyleValue final : public StyleValueWithDefaultOperators<EdgeStyleValu
 public:
     static ValueComparingNonnullRefPtr<EdgeStyleValue> create(PositionEdge edge, LengthPercentage const& offset)
     {
+        VERIFY(edge != PositionEdge::Center);
         return adopt_ref(*new (nothrow) EdgeStyleValue(edge, offset));
     }
     virtual ~EdgeStyleValue() override = default;
 
+    // NOTE: `center` is converted to `left 50%` or `top 50%` in parsing, so is never returned here.
     PositionEdge edge() const { return m_properties.edge; }
     LengthPercentage const& offset() const { return m_properties.offset; }
 

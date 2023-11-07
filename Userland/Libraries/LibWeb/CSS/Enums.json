@@ -334,6 +334,7 @@
     "sticky"
   ],
   "position-edge": [
+    "center",
     "left",
     "right",
     "top",
