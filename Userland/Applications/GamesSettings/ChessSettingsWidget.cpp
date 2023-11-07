@@ -14,6 +14,7 @@
 #include <LibGUI/Frame.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
 
 namespace GamesSettings {
 
@@ -74,12 +75,6 @@ private:
     }
 };
 
-static ErrorOr<RefPtr<Gfx::Bitmap>> load_piece_image(StringView set, StringView image)
-{
-    auto path = TRY(String::formatted("/res/graphics/chess/sets/{}/{}", set, image));
-    return Gfx::Bitmap::load_from_file(path.bytes_as_string_view());
-}
-
 class ChessGamePreview final : public GUI::Frame {
     C_OBJECT_ABSTRACT(ChessGamePreview)
 
@@ -92,30 +87,39 @@ public:
 
     virtual ~ChessGamePreview() = default;
 
-    ErrorOr<void> set_piece_set_name(String piece_set_name)
+    void set_piece_set_name(String piece_set_name)
     {
         if (m_piece_set_name == piece_set_name)
-            return {};
+            return;
 
         m_piece_set_name = move(piece_set_name);
         m_piece_images.clear();
+        m_any_piece_images_are_missing = false;
 
-        m_piece_images.set({ Chess::Color::White, Chess::Type::Pawn }, TRY(load_piece_image(m_piece_set_name, "white-pawn.png"sv)));
-        m_piece_images.set({ Chess::Color::Black, Chess::Type::Pawn }, TRY(load_piece_image(m_piece_set_name, "black-pawn.png"sv)));
-        m_piece_images.set({ Chess::Color::White, Chess::Type::Knight }, TRY(load_piece_image(m_piece_set_name, "white-knight.png"sv)));
-        m_piece_images.set({ Chess::Color::Black, Chess::Type::Knight }, TRY(load_piece_image(m_piece_set_name, "black-knight.png"sv)));
-        m_piece_images.set({ Chess::Color::White, Chess::Type::Bishop }, TRY(load_piece_image(m_piece_set_name, "white-bishop.png"sv)));
-        m_piece_images.set({ Chess::Color::Black, Chess::Type::Bishop }, TRY(load_piece_image(m_piece_set_name, "black-bishop.png"sv)));
-        m_piece_images.set({ Chess::Color::White, Chess::Type::Rook }, TRY(load_piece_image(m_piece_set_name, "white-rook.png"sv)));
-        m_piece_images.set({ Chess::Color::Black, Chess::Type::Rook }, TRY(load_piece_image(m_piece_set_name, "black-rook.png"sv)));
-        m_piece_images.set({ Chess::Color::White, Chess::Type::Queen }, TRY(load_piece_image(m_piece_set_name, "white-queen.png"sv)));
-        m_piece_images.set({ Chess::Color::Black, Chess::Type::Queen }, TRY(load_piece_image(m_piece_set_name, "black-queen.png"sv)));
-        m_piece_images.set({ Chess::Color::White, Chess::Type::King }, TRY(load_piece_image(m_piece_set_name, "white-king.png"sv)));
-        m_piece_images.set({ Chess::Color::Black, Chess::Type::King }, TRY(load_piece_image(m_piece_set_name, "black-king.png"sv)));
+        auto load_piece_image = [&](Chess::Color color, Chess::Type piece, StringView filename) {
+            auto path = MUST(String::formatted("/res/graphics/chess/sets/{}/{}", m_piece_set_name, filename));
+            auto image = Gfx::Bitmap::load_from_file(path.bytes_as_string_view());
+            if (image.is_error()) {
+                m_any_piece_images_are_missing = true;
+                return;
+            }
+            m_piece_images.set({ color, piece }, image.release_value());
+        };
+
+        load_piece_image(Chess::Color::White, Chess::Type::Pawn, "white-pawn.png"sv);
+        load_piece_image(Chess::Color::Black, Chess::Type::Pawn, "black-pawn.png"sv);
+        load_piece_image(Chess::Color::White, Chess::Type::Knight, "white-knight.png"sv);
+        load_piece_image(Chess::Color::Black, Chess::Type::Knight, "black-knight.png"sv);
+        load_piece_image(Chess::Color::White, Chess::Type::Bishop, "white-bishop.png"sv);
+        load_piece_image(Chess::Color::Black, Chess::Type::Bishop, "black-bishop.png"sv);
+        load_piece_image(Chess::Color::White, Chess::Type::Rook, "white-rook.png"sv);
+        load_piece_image(Chess::Color::Black, Chess::Type::Rook, "black-rook.png"sv);
+        load_piece_image(Chess::Color::White, Chess::Type::Queen, "white-queen.png"sv);
+        load_piece_image(Chess::Color::Black, Chess::Type::Queen, "black-queen.png"sv);
+        load_piece_image(Chess::Color::White, Chess::Type::King, "white-king.png"sv);
+        load_piece_image(Chess::Color::Black, Chess::Type::King, "black-king.png"sv);
 
         update();
-
-        return {};
     }
 
     void set_dark_square_color(Gfx::Color dark_square_color)
@@ -197,7 +201,10 @@ private:
         }
 
         auto draw_piece = [&](Chess::Piece const& piece, Chess::Square const& square) {
-            auto& bitmap = *m_piece_images.get(piece).value();
+            auto maybe_bitmap = m_piece_images.get(piece);
+            if (!maybe_bitmap.has_value())
+                return;
+            auto& bitmap = *maybe_bitmap.value();
             painter.draw_scaled_bitmap(
                 rect_for_square(square).shrunken(square_margin, square_margin, square_margin, square_margin),
                 bitmap,
@@ -218,9 +225,17 @@ private:
         draw_piece({ Chess::Color::Black, Chess::Type::Knight }, { 1, 4 });
         draw_piece({ Chess::Color::White, Chess::Type::Pawn }, { 0, 5 });
         draw_piece({ Chess::Color::Black, Chess::Type::Pawn }, { 1, 5 });
+
+        if (m_any_piece_images_are_missing) {
+            auto warning_rect = frame_inner_rect();
+            warning_rect.set_height(coordinate_font.preferred_line_height() + 4);
+            painter.fill_rect(warning_rect, palette().base());
+            painter.draw_text(warning_rect.shrunken(4, 4), "Warning: This set is missing images for some pieces!"sv, coordinate_font, Gfx::TextAlignment::CenterLeft, palette().base_text());
+        }
     }
 
     HashMap<Chess::Piece, RefPtr<Gfx::Bitmap>> m_piece_images;
+    bool m_any_piece_images_are_missing { false };
 
     Gfx::Color m_dark_square_color { s_board_themes[0].dark_square_color };
     Gfx::Color m_light_square_color { s_board_themes[0].light_square_color };
@@ -255,7 +270,7 @@ ErrorOr<void> ChessSettingsWidget::initialize()
     m_piece_set_combobox->set_text(piece_set_name, GUI::AllowCallback::No);
     m_piece_set_combobox->on_change = [&](auto& value, auto&) {
         set_modified(true);
-        m_preview->set_piece_set_name(MUST(String::from_deprecated_string(value))).release_value_but_fixme_should_propagate_errors();
+        m_preview->set_piece_set_name(MUST(String::from_deprecated_string(value)));
     };
 
     m_board_theme_combobox = find_descendant_of_type_named<GUI::ComboBox>("board_theme");
@@ -282,7 +297,7 @@ ErrorOr<void> ChessSettingsWidget::initialize()
         set_modified(true);
     };
 
-    TRY(m_preview->set_piece_set_name(TRY(String::from_deprecated_string(piece_set_name))));
+    m_preview->set_piece_set_name(TRY(String::from_deprecated_string(piece_set_name)));
     m_preview->set_dark_square_color(board_theme.dark_square_color);
     m_preview->set_light_square_color(board_theme.light_square_color);
     m_preview->set_show_coordinates(show_coordinates);
@@ -303,7 +318,7 @@ void ChessSettingsWidget::reset_default_values()
     // FIXME: `set_text()` on a combobox doesn't trigger the `on_change` callback, but it probably should!
     //        Until then, we have to manually tell the preview to update.
     m_piece_set_combobox->set_text("Classic");
-    m_preview->set_piece_set_name("Classic"_string).release_value_but_fixme_should_propagate_errors();
+    m_preview->set_piece_set_name("Classic"_string);
     auto& board_theme = get_board_theme("Beige"sv);
     m_board_theme_combobox->set_text(board_theme.name);
     m_preview->set_dark_square_color(board_theme.dark_square_color);
