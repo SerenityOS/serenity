@@ -229,6 +229,7 @@ ErrorOr<void> setgroups(ReadonlySpan<gid_t>);
 ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev);
 ErrorOr<void> mkfifo(StringView pathname, mode_t mode);
 ErrorOr<void> setenv(StringView, StringView, bool);
+ErrorOr<void> unsetenv(StringView);
 ErrorOr<void> putenv(StringView);
 ErrorOr<int> posix_openpt(int flags);
 ErrorOr<void> grantpt(int fildes);
