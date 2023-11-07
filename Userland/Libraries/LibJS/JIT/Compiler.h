@@ -52,8 +52,7 @@ private:
         O(LooselyInequals, abstract_inequals)                   \
         O(LooselyEquals, abstract_equals)                       \
         O(StrictlyInequals, typed_inequals)                     \
-        O(StrictlyEquals, typed_equals)                         \
-        O(UnsignedRightShift, unsigned_right_shift)
+        O(StrictlyEquals, typed_equals)
 
 #    define JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(O) \
         O(NewTypeError, new_type_error, TypeError)
