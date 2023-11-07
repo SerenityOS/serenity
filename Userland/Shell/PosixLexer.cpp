@@ -250,7 +250,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_operator()
     auto result = TRY(reduce(Reduction::Start));
     tokens.extend(move(result.tokens));
 
-    while (expect_heredoc_entry && tokens.size() == 1) {
+    while (expect_heredoc_entry && tokens.size() == 1 && result.next_reduction != Reduction::None) {
         result = TRY(reduce(result.next_reduction));
         tokens.extend(move(result.tokens));
     }
