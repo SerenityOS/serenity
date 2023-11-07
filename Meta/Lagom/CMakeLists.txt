@@ -681,6 +681,8 @@ if (BUILD_LAGOM)
             lagom_test(../../Tests/LibCore/TestLibCorePromise.cpp LIBS LibThreading)
         endif()
 
+        lagom_test(../../Tests/LibCore/TestLibCoreDateTime.cpp LIBS LibTimeZone)
+
         # RegexLibC test POSIX <regex.h> and contains many Serenity extensions
         # It is therefore not reasonable to run it on Lagom, and we only run the Regex test
         lagom_test(../../Tests/LibRegex/Regex.cpp LIBS LibRegex WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibRegex)
