@@ -11,10 +11,14 @@
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <LibCore/DateTime.h>
+#include <LibTimeZone/DateTime.h>
 #include <errno.h>
 #include <time.h>
 
 namespace Core {
+
+Optional<StringView> __attribute__((weak)) parse_time_zone_name(GenericLexer&) { return {}; }
+void __attribute__((weak)) apply_time_zone_offset(StringView, UnixDateTime&) { }
 
 DateTime DateTime::now()
 {
@@ -293,6 +297,7 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
 
     auto parsing_failed = false;
     auto tm_represents_utc_time = false;
+    Optional<StringView> parsed_time_zone;
 
     GenericLexer string_lexer(string);
 
@@ -500,6 +505,13 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
             tm.tm_min += sign * minutes;
             break;
         }
+        case 'Z':
+            parsed_time_zone = parse_time_zone_name(string_lexer);
+            if (!parsed_time_zone.has_value())
+                return {};
+
+            tm_represents_utc_time = true;
+            break;
         case '%':
             consume('%');
             break;
@@ -517,11 +529,17 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
     if (!string_lexer.is_eof() || format_pos != format.length())
         return {};
 
-    // If an explicit timezone was present, the time in tm was shifted to UTC.
-    // Convert it to local time, since that is what `mktime` expects.
+    // If an explicit time zone offset was present, the time in tm was shifted to UTC. If a time zone name was present,
+    // the time in tm needs to be shifted to UTC. In both cases, convert the result to local time, as that is what is
+    // expected by `mktime`.
     if (tm_represents_utc_time) {
-        auto utc_time = timegm(&tm);
-        localtime_r(&utc_time, &tm);
+        auto utc_time = UnixDateTime::from_seconds_since_epoch(timegm(&tm));
+
+        if (parsed_time_zone.has_value())
+            apply_time_zone_offset(*parsed_time_zone, utc_time);
+
+        time_t utc_time_t = utc_time.seconds_since_epoch();
+        localtime_r(&utc_time_t, &tm);
     }
 
     return DateTime::from_timestamp(mktime(&tm));
