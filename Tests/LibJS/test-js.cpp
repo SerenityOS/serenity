@@ -5,8 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/System.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibTest/JavaScriptTestRunner.h>
+#include <stdlib.h>
+#include <time.h>
 
 TEST_ROOT("Userland/Libraries/LibJS/Tests");
 
@@ -86,6 +89,26 @@ TESTJS_GLOBAL_FUNCTION(detach_array_buffer, detachArrayBuffer)
     auto& array_buffer_object = static_cast<JS::ArrayBuffer&>(array_buffer.as_object());
     TRY(JS::detach_array_buffer(vm, array_buffer_object, vm.argument(1)));
     return JS::js_null();
+}
+
+TESTJS_GLOBAL_FUNCTION(set_time_zone, setTimeZone)
+{
+    auto current_time_zone = JS::js_null();
+
+    if (auto const* time_zone = getenv("TZ"))
+        current_time_zone = JS::PrimitiveString::create(vm, StringView { time_zone, strlen(time_zone) });
+
+    if (auto time_zone = vm.argument(0); time_zone.is_null()) {
+        if (auto result = Core::System::unsetenv("TZ"sv); result.is_error())
+            return vm.throw_completion<JS::InternalError>(MUST(String::formatted("Could not unset time zone: {}", result.error())));
+    } else {
+        if (auto result = Core::System::setenv("TZ"sv, TRY(time_zone.to_string(vm)), true); result.is_error())
+            return vm.throw_completion<JS::InternalError>(MUST(String::formatted("Could not set time zone: {}", result.error())));
+    }
+
+    tzset();
+
+    return current_time_zone;
 }
 
 TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Realm& realm, JS::ExecutionContext&)
