@@ -2558,6 +2558,208 @@ RefPtr<StyleValue> Parser::parse_paint_value(TokenStream<ComponentValue>& tokens
     return nullptr;
 }
 
+// https://www.w3.org/TR/css-values-4/#position
+RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentValue>& tokens)
+{
+    auto parse_position_edge = [](ComponentValue const& token) -> Optional<PositionEdge> {
+        if (!token.is(Token::Type::Ident))
+            return {};
+        auto ident = value_id_from_string(token.token().ident());
+        if (!ident.has_value())
+            return {};
+        return value_id_to_position_edge(*ident);
+    };
+
+    auto parse_length_percentage = [&](ComponentValue const& token) -> Optional<LengthPercentage> {
+        if (token.is(Token::Type::EndOfFile))
+            return {};
+        // FIXME: calc()!
+        auto dimension = parse_dimension(token);
+        if (!dimension.has_value() || !dimension->is_length_percentage())
+            return {};
+        return dimension->length_percentage();
+    };
+
+    auto is_horizontal = [](PositionEdge edge, bool accept_center) -> bool {
+        switch (edge) {
+        case PositionEdge::Left:
+        case PositionEdge::Right:
+            return true;
+        case PositionEdge::Center:
+            return accept_center;
+        default:
+            return false;
+        }
+    };
+
+    auto is_vertical = [](PositionEdge edge, bool accept_center) -> bool {
+        switch (edge) {
+        case PositionEdge::Top:
+        case PositionEdge::Bottom:
+            return true;
+        case PositionEdge::Center:
+            return accept_center;
+        default:
+            return false;
+        }
+    };
+
+    auto make_edge_style_value = [](PositionEdge position_edge, bool is_horizontal) -> NonnullRefPtr<EdgeStyleValue> {
+        if (position_edge == PositionEdge::Center)
+            return EdgeStyleValue::create(is_horizontal ? PositionEdge::Left : PositionEdge::Top, Percentage { 50 });
+        return EdgeStyleValue::create(position_edge, Length::make_px(0));
+    };
+
+    // <position> = [
+    //   [ left | center | right ] || [ top | center | bottom ]
+    // |
+    //   [ left | center | right | <length-percentage> ]
+    //   [ top | center | bottom | <length-percentage> ]?
+    // |
+    //   [ [ left | right ] <length-percentage> ] &&
+    //   [ [ top | bottom ] <length-percentage> ]
+    // ]
+
+    // [ left | center | right ] || [ top | center | bottom ]
+    auto alternative_1 = [&]() -> RefPtr<PositionStyleValue> {
+        auto transaction = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        auto maybe_first_edge = parse_position_edge(tokens.next_token());
+        if (!maybe_first_edge.has_value())
+            return nullptr;
+        auto first_edge = maybe_first_edge.release_value();
+
+        // Try and parse the two-value variant
+        tokens.skip_whitespace();
+        auto maybe_second_edge = parse_position_edge(tokens.peek_token());
+        if (maybe_second_edge.has_value()) {
+            auto second_edge = maybe_second_edge.release_value();
+
+            if (is_horizontal(first_edge, true) && is_vertical(second_edge, true)) {
+                (void)tokens.next_token(); // second_edge
+                transaction.commit();
+                return PositionStyleValue::create(make_edge_style_value(first_edge, true), make_edge_style_value(second_edge, false));
+            } else if (is_vertical(first_edge, true) && is_horizontal(second_edge, true)) {
+                (void)tokens.next_token(); // second_edge
+                transaction.commit();
+                return PositionStyleValue::create(make_edge_style_value(second_edge, true), make_edge_style_value(first_edge, false));
+            }
+
+            // Otherwise, second value isn't valid as part of this position, so ignore it and fall back to single-edge parsing.
+        }
+
+        // Single-value variant
+        transaction.commit();
+        if (is_horizontal(first_edge, false))
+            return PositionStyleValue::create(make_edge_style_value(first_edge, true), make_edge_style_value(PositionEdge::Center, false));
+        if (is_vertical(first_edge, false))
+            return PositionStyleValue::create(make_edge_style_value(PositionEdge::Center, true), make_edge_style_value(first_edge, false));
+        VERIFY(first_edge == PositionEdge::Center);
+        return PositionStyleValue::create(make_edge_style_value(PositionEdge::Center, true), make_edge_style_value(PositionEdge::Center, false));
+    };
+
+    // [ left | center | right | <length-percentage> ]
+    // [ top | center | bottom | <length-percentage> ]?
+    auto alternative_2 = [&]() -> RefPtr<PositionStyleValue> {
+        auto transaction = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        RefPtr<EdgeStyleValue> horizontal_edge;
+        RefPtr<EdgeStyleValue> vertical_edge;
+
+        auto& first_token = tokens.next_token();
+        if (auto edge = parse_position_edge(first_token); edge.has_value() && is_horizontal(*edge, true)) {
+            horizontal_edge = make_edge_style_value(*edge, true);
+        } else {
+            auto length_percentage = parse_length_percentage(first_token);
+            if (!length_percentage.has_value())
+                return nullptr;
+            horizontal_edge = EdgeStyleValue::create(PositionEdge::Left, *length_percentage);
+        }
+
+        auto transaction_optional_parse = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        if (tokens.has_next_token()) {
+            auto& second_token = tokens.next_token();
+            if (auto edge = parse_position_edge(second_token); edge.has_value() && is_vertical(*edge, true)) {
+                transaction_optional_parse.commit();
+                vertical_edge = make_edge_style_value(*edge, false);
+            } else {
+                auto length_percentage = parse_length_percentage(second_token);
+                if (length_percentage.has_value()) {
+                    transaction_optional_parse.commit();
+                    vertical_edge = EdgeStyleValue::create(PositionEdge::Top, *length_percentage);
+                }
+            }
+        }
+
+        transaction.commit();
+        if (!vertical_edge)
+            vertical_edge = make_edge_style_value(PositionEdge::Center, false);
+        return PositionStyleValue::create(horizontal_edge.release_nonnull(), vertical_edge.release_nonnull());
+    };
+
+    // [ [ left | right ] <length-percentage> ] &&
+    // [ [ top | bottom ] <length-percentage> ]
+    auto alternative_3 = [&]() -> RefPtr<PositionStyleValue> {
+        auto transaction = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        RefPtr<EdgeStyleValue> horizontal_edge;
+        RefPtr<EdgeStyleValue> vertical_edge;
+
+        auto parse_horizontal = [&] {
+            // [ left | right ] <length-percentage> ]
+            auto transaction = tokens.begin_transaction();
+            tokens.skip_whitespace();
+            auto edge = parse_position_edge(tokens.next_token());
+            if (!edge.has_value() || !is_horizontal(*edge, false))
+                return false;
+
+            tokens.skip_whitespace();
+            auto length_percentage = parse_length_percentage(tokens.next_token());
+            if (!length_percentage.has_value())
+                return false;
+
+            horizontal_edge = EdgeStyleValue::create(*edge, *length_percentage);
+            transaction.commit();
+            return true;
+        };
+
+        auto parse_vertical = [&] {
+            // [ top | bottom ] <length-percentage> ]
+            auto transaction = tokens.begin_transaction();
+            tokens.skip_whitespace();
+            auto edge = parse_position_edge(tokens.next_token());
+            if (!edge.has_value() || !is_vertical(*edge, false))
+                return false;
+
+            tokens.skip_whitespace();
+            auto length_percentage = parse_length_percentage(tokens.next_token());
+            if (!length_percentage.has_value())
+                return false;
+
+            vertical_edge = EdgeStyleValue::create(*edge, *length_percentage);
+            transaction.commit();
+            return true;
+        };
+
+        if ((parse_horizontal() && parse_vertical()) || (parse_vertical() && parse_horizontal())) {
+            transaction.commit();
+            return PositionStyleValue::create(horizontal_edge.release_nonnull(), vertical_edge.release_nonnull());
+        }
+
+        return nullptr;
+    };
+
+    // Note: The alternatives must be attempted in this order since `alternative_2' can match a prefix of `alternative_3'
+    if (auto position = alternative_3())
+        return position.release_nonnull();
+    if (auto position = alternative_2())
+        return position;
+    if (auto position = alternative_1())
+        return position;
+    return nullptr;
+}
+
 template<typename ParseFunction>
 RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<ComponentValue> const& component_values, ParseFunction parse_one_value)
 {
