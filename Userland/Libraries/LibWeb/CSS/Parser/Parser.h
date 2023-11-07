@@ -217,6 +217,7 @@ private:
     RefPtr<StyleValue> parse_string_value(ComponentValue const&);
     RefPtr<StyleValue> parse_image_value(ComponentValue const&);
     RefPtr<StyleValue> parse_paint_value(TokenStream<ComponentValue>&);
+    RefPtr<PositionStyleValue> parse_position_value(TokenStream<ComponentValue>&);
     template<typename ParseFunction>
     RefPtr<StyleValue> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
     RefPtr<StyleValue> parse_simple_comma_separated_value_list(PropertyID, Vector<ComponentValue> const&);
