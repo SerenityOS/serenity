@@ -92,12 +92,12 @@ public:
 
     virtual ~ChessGamePreview() = default;
 
-    ErrorOr<void> set_piece_set_name(DeprecatedString const& piece_set_name)
+    ErrorOr<void> set_piece_set_name(String piece_set_name)
     {
-        if (m_piece_set_name == piece_set_name.view())
+        if (m_piece_set_name == piece_set_name)
             return {};
 
-        m_piece_set_name = TRY(String::from_deprecated_string(piece_set_name));
+        m_piece_set_name = move(piece_set_name);
         m_piece_images.clear();
 
         m_piece_images.set({ Chess::Color::White, Chess::Type::Pawn }, TRY(load_piece_image(m_piece_set_name, "white-pawn.png"sv)));
@@ -255,7 +255,7 @@ ErrorOr<void> ChessSettingsWidget::initialize()
     m_piece_set_combobox->set_text(piece_set_name, GUI::AllowCallback::No);
     m_piece_set_combobox->on_change = [&](auto& value, auto&) {
         set_modified(true);
-        m_preview->set_piece_set_name(value).release_value_but_fixme_should_propagate_errors();
+        m_preview->set_piece_set_name(MUST(String::from_deprecated_string(value))).release_value_but_fixme_should_propagate_errors();
     };
 
     m_board_theme_combobox = find_descendant_of_type_named<GUI::ComboBox>("board_theme");
@@ -282,7 +282,7 @@ ErrorOr<void> ChessSettingsWidget::initialize()
         set_modified(true);
     };
 
-    TRY(m_preview->set_piece_set_name(piece_set_name));
+    TRY(m_preview->set_piece_set_name(TRY(String::from_deprecated_string(piece_set_name))));
     m_preview->set_dark_square_color(board_theme.dark_square_color);
     m_preview->set_light_square_color(board_theme.light_square_color);
     m_preview->set_show_coordinates(show_coordinates);
@@ -303,7 +303,7 @@ void ChessSettingsWidget::reset_default_values()
     // FIXME: `set_text()` on a combobox doesn't trigger the `on_change` callback, but it probably should!
     //        Until then, we have to manually tell the preview to update.
     m_piece_set_combobox->set_text("Classic");
-    (void)m_preview->set_piece_set_name("Classic");
+    m_preview->set_piece_set_name("Classic"_string).release_value_but_fixme_should_propagate_errors();
     auto& board_theme = get_board_theme("Beige"sv);
     m_board_theme_combobox->set_text(board_theme.name);
     m_preview->set_dark_square_color(board_theme.dark_square_color);
