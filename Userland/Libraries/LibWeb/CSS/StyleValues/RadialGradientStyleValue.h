@@ -11,7 +11,6 @@
 
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Enums.h>
-#include <LibWeb/CSS/Position.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/Painting/GradientPainting.h>
 
@@ -44,10 +43,10 @@ public:
 
     using Size = Variant<Extent, CircleSize, EllipseSize>;
 
-    static ValueComparingNonnullRefPtr<RadialGradientStyleValue> create(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
+    static ValueComparingNonnullRefPtr<RadialGradientStyleValue> create(EndingShape ending_shape, Size size, ValueComparingNonnullRefPtr<PositionStyleValue> position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
-        return adopt_ref(*new (nothrow) RadialGradientStyleValue(ending_shape, size, position, move(color_stop_list), repeating));
+        return adopt_ref(*new (nothrow) RadialGradientStyleValue(ending_shape, size, move(position), move(color_stop_list), repeating));
     }
 
     virtual String to_string() const override;
@@ -72,16 +71,16 @@ public:
     virtual ~RadialGradientStyleValue() override = default;
 
 private:
-    RadialGradientStyleValue(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
+    RadialGradientStyleValue(EndingShape ending_shape, Size size, ValueComparingNonnullRefPtr<PositionStyleValue> position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
         : AbstractImageStyleValue(Type::RadialGradient)
-        , m_properties { .ending_shape = ending_shape, .size = size, .position = position, .color_stop_list = move(color_stop_list), .repeating = repeating }
+        , m_properties { .ending_shape = ending_shape, .size = size, .position = move(position), .color_stop_list = move(color_stop_list), .repeating = repeating }
     {
     }
 
     struct Properties {
         EndingShape ending_shape;
         Size size;
-        PositionValue position;
+        ValueComparingNonnullRefPtr<PositionStyleValue> position;
         Vector<LinearColorStopListElement> color_stop_list;
         GradientRepeating repeating;
         bool operator==(Properties const&) const = default;

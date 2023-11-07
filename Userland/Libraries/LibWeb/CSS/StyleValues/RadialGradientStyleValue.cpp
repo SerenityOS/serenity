@@ -8,6 +8,7 @@
  */
 
 #include "RadialGradientStyleValue.h"
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/Layout/Node.h>
 
 namespace Web::CSS {
@@ -44,10 +45,8 @@ String RadialGradientStyleValue::to_string() const
             builder.appendff("{} {}", ellipse_size.radius_a.to_string(), ellipse_size.radius_b.to_string());
         });
 
-    if (m_properties.position != PositionValue::center()) {
-        builder.appendff(" at "sv);
-        m_properties.position.serialize(builder);
-    }
+    if (!m_properties.position->is_center())
+        builder.appendff(" at {}"sv, m_properties.position->to_string());
 
     builder.append(", "sv);
     serialize_color_stop_list(builder, m_properties.color_stop_list);
@@ -189,7 +188,7 @@ CSSPixelSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, CS
 void RadialGradientStyleValue::resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const& node, CSSPixelSize paint_size) const
 {
     CSSPixelRect gradient_box { { 0, 0 }, paint_size };
-    auto center = m_properties.position.resolved(node, gradient_box);
+    auto center = m_properties.position->resolved(node, gradient_box);
     auto gradient_size = resolve_size(node, center, gradient_box);
     if (m_resolved.has_value() && m_resolved->gradient_size == gradient_size)
         return;
