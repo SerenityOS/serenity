@@ -37,7 +37,7 @@ public:
     static DateTime create(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0);
     static DateTime now();
     static DateTime from_timestamp(time_t);
-    static Optional<DateTime> parse(StringView format, DeprecatedString const& string);
+    static Optional<DateTime> parse(StringView format, StringView string);
 
     bool operator<(DateTime const& other) const { return m_timestamp < other.m_timestamp; }
     bool operator==(DateTime const& other) const { return m_timestamp == other.m_timestamp; }
