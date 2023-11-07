@@ -1098,13 +1098,9 @@ void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
         Assembler::Operand::Register(ARG2),
         Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.environment_variable_caches[op.cache_index()])));
 
-    // FIXME: Figure out a nicer way to load a single byte. :^)
-    m_assembler.mov(
+    m_assembler.mov8(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(ARG2, Bytecode::EnvironmentVariableCache::has_value_offset()));
-    m_assembler.bitwise_and(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm(0xff));
 
     m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
@@ -1122,16 +1118,9 @@ void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
     //     environment = environment->outer_environment();
 
     // GPR0 = hops
-    // FIXME: Load 32 bits directly instead of 64 and masking.
-    m_assembler.mov(
+    m_assembler.mov32(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(ARG2, Bytecode::EnvironmentVariableCache::value_offset() + EnvironmentCoordinate::hops_offset()));
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR2),
-        Assembler::Operand::Imm(0xffffffff));
-    m_assembler.bitwise_and(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Register(GPR2));
 
     {
         // while (GPR0--)
@@ -1157,13 +1146,9 @@ void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
     // GPR1 now points to the environment holding our binding.
 
     // if (environment->is_permanently_screwed_by_eval()) goto slow_case;
-    // FIXME: Load 8 bits here directly instead of loading 64 and masking.
-    m_assembler.mov(
+    m_assembler.mov8(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(GPR1, Environment::is_permanently_screwed_by_eval_offset()));
-    m_assembler.bitwise_and(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm(0xff));
     m_assembler.jump_if(
         Assembler::Operand::Register(GPR0),
         Assembler::Condition::NotEqualTo,
@@ -1176,16 +1161,9 @@ void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
         Assembler::Operand::Mem64BaseAndOffset(GPR1, DeclarativeEnvironment::bindings_offset() + Vector<DeclarativeEnvironment::Binding>::outline_buffer_offset()));
 
     // GPR0 = index
-    // FIXME: Load 32 bits directly instead of 64 and masking.
-    m_assembler.mov(
+    m_assembler.mov32(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Mem64BaseAndOffset(ARG2, Bytecode::EnvironmentVariableCache::value_offset() + EnvironmentCoordinate::index_offset()));
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR2),
-        Assembler::Operand::Imm(0xffffffff));
-    m_assembler.bitwise_and(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Register(GPR2));
 
     // GPR0 *= sizeof(DeclarativeEnvironment::Binding)
     m_assembler.mul32(
