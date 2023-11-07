@@ -83,3 +83,26 @@ TEST_CASE(parse_time_zone_name)
     test("%Y/%m/%d %R %Z"sv, "2023/01/23 10:50 Europe/Paris"sv, 2023, 01, 23, 17, 50);
     test("%Y/%m/%d %R %Z"sv, "2023/01/23 10:50 Australia/Perth"sv, 2023, 01, 23, 10, 50);
 }
+
+TEST_CASE(parse_wildcard_characters)
+{
+    EXPECT(!Core::DateTime::parse("%+"sv, ""sv).has_value());
+    EXPECT(!Core::DateTime::parse("foo%+"sv, "foo"sv).has_value());
+    EXPECT(!Core::DateTime::parse("[%*]"sv, "[foo"sv).has_value());
+    EXPECT(!Core::DateTime::parse("[%*]"sv, "foo]"sv).has_value());
+    EXPECT(!Core::DateTime::parse("%+%b"sv, "fooJan"sv).has_value());
+
+    auto test = [](auto format, auto time, u32 year, u32 month, u32 day) {
+        auto result = Core::DateTime::parse(format, time);
+        VERIFY(result.has_value());
+
+        EXPECT_EQ(year, result->year());
+        EXPECT_EQ(month, result->month());
+        EXPECT_EQ(day, result->day());
+    };
+
+    test("%Y %+ %m %d"sv, "2023 whf 01 23"sv, 2023, 01, 23);
+    test("%Y %m %d %+"sv, "2023 01 23 whf"sv, 2023, 01, 23);
+    test("%Y [%+] %m %d"sv, "2023 [well hello friends!] 01 23"sv, 2023, 01, 23);
+    test("%Y %m %d [%+]"sv, "2023 01 23 [well hello friends!]"sv, 2023, 01, 23);
+}
