@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +18,7 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
+#include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 #include <unistd.h>
 
@@ -103,9 +105,9 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         }
 
         if (!(m_dragging_piece && sq == m_moving_square)) {
-            auto bmp = m_pieces.get(active_board.get_piece(sq));
-            if (bmp.has_value()) {
-                painter.draw_scaled_bitmap(tile_rect.shrunken(square_margin, square_margin, square_margin, square_margin), *bmp.value(), bmp.value()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+            auto bmp = get_piece_graphic(active_board.get_piece(sq));
+            if (bmp) {
+                painter.draw_scaled_bitmap(tile_rect.shrunken(square_margin, square_margin, square_margin, square_margin), *bmp, bmp->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
             }
         }
 
@@ -187,11 +189,18 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         }
         painter.fill_rect(origin_square, m_move_highlight_color);
 
-        auto bmp = m_pieces.get(active_board.get_piece(m_moving_square));
-        if (bmp.has_value()) {
+        auto bmp = get_piece_graphic(active_board.get_piece(m_moving_square));
+        if (bmp) {
             auto center = m_drag_point - Gfx::IntPoint(square_width / 2, square_height / 2);
-            painter.draw_scaled_bitmap({ center, { square_width, square_height } }, *bmp.value(), bmp.value()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+            painter.draw_scaled_bitmap({ center, { square_width, square_height } }, *bmp, bmp->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
         }
+    }
+
+    if (m_any_piece_images_are_missing) {
+        auto warning_rect = rect();
+        warning_rect.set_height(coordinate_font.preferred_line_height() + 4);
+        painter.fill_rect(warning_rect, palette().base());
+        painter.draw_text(warning_rect.shrunken(4, 4), "Warning: This set is missing images for some pieces!"sv, coordinate_font, Gfx::TextAlignment::CenterLeft, palette().base_text());
     }
 }
 
@@ -354,32 +363,33 @@ void ChessWidget::keydown_event(GUI::KeyEvent& event)
     update();
 }
 
-static constexpr StringView set_path = "/res/graphics/chess/sets/"sv;
-
-static RefPtr<Gfx::Bitmap> get_piece(StringView set, StringView image)
-{
-    StringBuilder builder;
-    builder.append(set_path);
-    builder.append(set);
-    builder.append('/');
-    builder.append(image);
-    return Gfx::Bitmap::load_from_file(builder.to_deprecated_string()).release_value_but_fixme_should_propagate_errors();
-}
-
 void ChessWidget::set_piece_set(StringView set)
 {
-    m_pieces.set({ Chess::Color::White, Chess::Type::Pawn }, get_piece(set, "white-pawn.png"sv));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Pawn }, get_piece(set, "black-pawn.png"sv));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Knight }, get_piece(set, "white-knight.png"sv));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Knight }, get_piece(set, "black-knight.png"sv));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Bishop }, get_piece(set, "white-bishop.png"sv));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Bishop }, get_piece(set, "black-bishop.png"sv));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Rook }, get_piece(set, "white-rook.png"sv));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Rook }, get_piece(set, "black-rook.png"sv));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Queen }, get_piece(set, "white-queen.png"sv));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Queen }, get_piece(set, "black-queen.png"sv));
-    m_pieces.set({ Chess::Color::White, Chess::Type::King }, get_piece(set, "white-king.png"sv));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::King }, get_piece(set, "black-king.png"sv));
+    auto load_piece_image = [&](Chess::Color color, Chess::Type piece, StringView filename) {
+        auto path = MUST(String::formatted("/res/graphics/chess/sets/{}/{}", set, filename));
+        auto image = Gfx::Bitmap::load_from_file(path.bytes_as_string_view());
+        if (image.is_error()) {
+            m_any_piece_images_are_missing = true;
+            return;
+        }
+        m_pieces.set({ color, piece }, image.release_value());
+    };
+
+    m_pieces.clear();
+    m_any_piece_images_are_missing = false;
+
+    load_piece_image(Chess::Color::White, Chess::Type::Pawn, "white-pawn.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Pawn, "black-pawn.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::Knight, "white-knight.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Knight, "black-knight.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::Bishop, "white-bishop.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Bishop, "black-bishop.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::Rook, "white-rook.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Rook, "black-rook.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::Queen, "white-queen.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::Queen, "black-queen.png"sv);
+    load_piece_image(Chess::Color::White, Chess::Type::King, "white-king.png"sv);
+    load_piece_image(Chess::Color::Black, Chess::Type::King, "black-king.png"sv);
 }
 
 Optional<Chess::Square> ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
@@ -409,7 +419,7 @@ Optional<Chess::Square> ChessWidget::mouse_to_square(GUI::MouseEvent& event) con
 
 RefPtr<Gfx::Bitmap const> ChessWidget::get_piece_graphic(Chess::Piece const& piece) const
 {
-    return m_pieces.get(piece).value();
+    return m_pieces.get(piece).value_or(nullptr);
 }
 
 void ChessWidget::reset()
