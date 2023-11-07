@@ -396,9 +396,41 @@ static Value cxx_decrement(VM& vm, Value value)
 void Compiler::compile_decrement(Bytecode::Op::Decrement const&)
 {
     load_accumulator(ARG1);
+
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    branch_if_int32(ARG1, [&] {
+        // GPR0 = ARG1;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(ARG1));
+
+        // GPR0--;
+        m_assembler.dec32(
+            Assembler::Operand::Register(GPR0),
+            slow_case);
+
+        // accumulator = GPR0 | SHIFTED_INT32_TAG;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm(SHIFTED_INT32_TAG));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(GPR1));
+
+        // accumulator = GPR0;
+        store_accumulator(GPR0);
+
+        m_assembler.jump(end);
+    });
+
+    slow_case.link(m_assembler);
     native_call((void*)cxx_decrement);
     store_accumulator(RET);
     check_exception();
+
+    end.link(m_assembler);
 }
 
 void Compiler::check_exception()
