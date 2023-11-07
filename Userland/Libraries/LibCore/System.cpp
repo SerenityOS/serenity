@@ -1639,6 +1639,19 @@ ErrorOr<void> setenv(StringView name, StringView value, bool overwrite)
     return {};
 }
 
+ErrorOr<void> unsetenv(StringView name)
+{
+    auto builder = TRY(StringBuilder::create());
+    TRY(builder.try_append(name));
+    TRY(builder.try_append('\0'));
+
+    // Note the explicit null terminator above.
+    auto rc = ::unsetenv(builder.string_view().characters_without_null_termination());
+    if (rc < 0)
+        return Error::from_errno(errno);
+    return {};
+}
+
 ErrorOr<void> putenv(StringView env)
 {
 #ifdef AK_OS_SERENITY
