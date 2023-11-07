@@ -8,6 +8,7 @@
  */
 
 #include "ConicGradientStyleValue.h"
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/Layout/Node.h>
 
 namespace Web::CSS {
@@ -18,15 +19,14 @@ String ConicGradientStyleValue::to_string() const
     if (is_repeating())
         builder.append("repeating-"sv);
     builder.append("conic-gradient("sv);
-    bool has_from_angle = false;
-    bool has_at_position = false;
-    if ((has_from_angle = m_properties.from_angle.to_degrees() != 0))
+    bool has_from_angle = m_properties.from_angle.to_degrees() != 0;
+    bool has_at_position = !m_properties.position->is_center();
+    if (has_from_angle)
         builder.appendff("from {}", m_properties.from_angle.to_string());
-    if ((has_at_position = m_properties.position != PositionValue::center())) {
+    if (has_at_position) {
         if (has_from_angle)
             builder.append(' ');
-        builder.appendff("at "sv);
-        m_properties.position.serialize(builder);
+        builder.appendff("at {}"sv, m_properties.position->to_string());
     }
     if (has_from_angle || has_at_position)
         builder.append(", "sv);
@@ -39,7 +39,7 @@ void ConicGradientStyleValue::resolve_for_size(Layout::NodeWithStyleAndBoxModelM
 {
     if (!m_resolved.has_value())
         m_resolved = ResolvedData { Painting::resolve_conic_gradient_data(node, *this), {} };
-    m_resolved->position = m_properties.position.resolved(node, CSSPixelRect { { 0, 0 }, size });
+    m_resolved->position = m_properties.position->resolved(node, CSSPixelRect { { 0, 0 }, size });
 }
 
 void ConicGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering) const
