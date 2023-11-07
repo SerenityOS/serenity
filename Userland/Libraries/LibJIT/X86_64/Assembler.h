@@ -583,6 +583,23 @@ struct X86_64Assembler {
         }
     }
 
+    void shift_right32(Operand dest, Optional<Operand> count)
+    {
+        VERIFY(dest.type == Operand::Type::Reg);
+        if (count.has_value()) {
+            VERIFY(count->type == Operand::Type::Imm);
+            VERIFY(count->fits_in_u8());
+            emit_rex_for_slash(dest, REX_W::No);
+            emit8(0xc1);
+            emit_modrm_slash(5, dest);
+            emit8(count->offset_or_immediate);
+        } else {
+            emit_rex_for_slash(dest, REX_W::No);
+            emit8(0xd3);
+            emit_modrm_slash(5, dest);
+        }
+    }
+
     void arithmetic_right_shift32(Operand dest, Optional<Operand> count)
     {
         VERIFY(dest.type == Operand::Type::Reg);
