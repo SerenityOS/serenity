@@ -8,6 +8,7 @@
 #include <LibGfx/Gradients.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/GradientPainting.h>

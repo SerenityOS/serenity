@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 
 namespace Web::CSS::Parser {
@@ -403,7 +404,7 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
 
     Size size = Extent::FarthestCorner;
     EndingShape ending_shape = EndingShape::Circle;
-    PositionValue at_position = PositionValue::center();
+    RefPtr<PositionStyleValue> at_position;
 
     auto parse_ending_shape = [&]() -> Optional<EndingShape> {
         auto transaction = tokens.begin_transaction();
@@ -495,10 +496,10 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
     auto& token = tokens.peek_token();
     if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("at"sv)) {
         (void)tokens.next_token();
-        auto position = parse_position(tokens);
-        if (!position.has_value())
+        auto position = parse_position_value(tokens);
+        if (!position)
             return nullptr;
-        at_position = *position;
+        at_position = position;
         expect_comma = true;
     }
 
@@ -513,7 +514,10 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
     if (!color_stops.has_value())
         return nullptr;
 
-    return RadialGradientStyleValue::create(ending_shape, size, at_position, move(*color_stops), repeating_gradient);
+    if (!at_position)
+        at_position = PositionStyleValue::create_center();
+
+    return RadialGradientStyleValue::create(ending_shape, size, at_position.release_nonnull(), move(*color_stops), repeating_gradient);
 }
 
 }
