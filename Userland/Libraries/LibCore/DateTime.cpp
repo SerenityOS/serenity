@@ -294,7 +294,7 @@ DeprecatedString DateTime::to_deprecated_string(StringView format) const
     return MUST(to_string(format)).to_deprecated_string();
 }
 
-Optional<DateTime> DateTime::parse(StringView format, DeprecatedString const& string)
+Optional<DateTime> DateTime::parse(StringView format, StringView string)
 {
     unsigned format_pos = 0;
 
