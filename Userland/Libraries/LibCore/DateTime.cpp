@@ -512,6 +512,24 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
 
             tm_represents_utc_time = true;
             break;
+        case '+': {
+            Optional<char> next_format_character;
+
+            if (format_pos + 1 < format.length()) {
+                next_format_character = format[format_pos + 1];
+
+                // Disallow another formatter directly after %+. This is to avoid ambiguity when parsing a string like
+                // "ignoreJan" with "%+%b", as it would be non-trivial to know that where the %b field begins.
+                if (next_format_character == '%')
+                    return {};
+            }
+
+            auto discarded = string_lexer.consume_until([&](auto ch) { return ch == next_format_character; });
+            if (discarded.is_empty())
+                return {};
+
+            break;
+        }
         case '%':
             consume('%');
             break;
