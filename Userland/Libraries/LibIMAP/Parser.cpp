@@ -147,7 +147,7 @@ ErrorOr<void> Parser::parse_untagged()
     auto number = try_parse_number();
     if (number.has_value()) {
         TRY(consume(" "sv));
-        auto data_type = parse_atom();
+        auto data_type = TRY(parse_atom());
         if (data_type == "EXISTS"sv) {
             m_response.data().set_exists(number.value());
             TRY(consume("\r\n"sv));
@@ -180,7 +180,7 @@ ErrorOr<void> Parser::parse_untagged()
     } else if (consume_if("OK"sv)) {
         TRY(consume(" "sv));
         if (consume_if("["sv)) {
-            auto actual_type = parse_atom();
+            auto actual_type = TRY(parse_atom());
             if (actual_type == "CLOSED"sv) {
                 // No-op.
             } else if (actual_type == "UIDNEXT"sv) {
@@ -230,7 +230,7 @@ ErrorOr<void> Parser::parse_untagged()
         auto status_item = StatusItem();
         status_item.set_mailbox(mailbox);
         while (!consume_if(")"sv)) {
-            auto status_att = parse_atom();
+            auto status_att = TRY(parse_atom());
             TRY(consume(" "sv));
             auto value = TRY(parse_number());
 
@@ -582,14 +582,13 @@ ErrorOr<void> Parser::parse_capability_response()
     auto capability = AK::Vector<DeprecatedString>();
     while (!consume_if("\r\n"sv)) {
         TRY(consume(" "sv));
-        auto x = DeprecatedString(parse_atom());
-        capability.append(x);
+        capability.append(TRY(parse_atom()));
     }
     m_response.data().add_capabilities(move(capability));
     return {};
 }
 
-StringView Parser::parse_atom()
+ErrorOr<StringView> Parser::parse_atom()
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_atom()", m_position);
     auto is_non_atom_char = [](u8 x) {
@@ -604,6 +603,9 @@ StringView Parser::parse_atom()
         m_position++;
     }
 
+    if (count == 0)
+        return Error::from_string_literal("Invalid atom value");
+
     StringView s = StringView(m_buffer.data() + start, count);
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, s);
     return s;
@@ -611,7 +613,7 @@ StringView Parser::parse_atom()
 
 ErrorOr<ResponseStatus> Parser::parse_status()
 {
-    auto atom = parse_atom();
+    auto atom = TRY(parse_atom());
 
     if (atom == "OK"sv) {
         return ResponseStatus::OK;
@@ -733,7 +735,7 @@ ErrorOr<FetchCommand::DataItem> Parser::parse_fetch_data_item()
                     data_item.section->parts->append(num.value());
                     continue;
                 }
-                auto atom = parse_atom();
+                auto atom = TRY(parse_atom());
                 if (atom.equals_ignoring_ascii_case("MIME"sv)) {
                     data_item.section->ends_with_mime = true;
                     continue;
