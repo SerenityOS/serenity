@@ -36,7 +36,6 @@ namespace Core {
 
 struct ArgvList {
     DeprecatedString m_path;
-    DeprecatedString m_working_directory;
     Vector<char const*, 10> m_argv;
 
     ArgvList(DeprecatedString path, size_t size)
@@ -57,64 +56,108 @@ struct ArgvList {
             m_argv.append(nullptr);
         return m_argv;
     }
-
-    void set_working_directory(DeprecatedString const& working_directory)
-    {
-        m_working_directory = working_directory;
-    }
-
-    ErrorOr<pid_t> spawn(Process::KeepAsChild keep_as_child)
-    {
-#ifdef AK_OS_SERENITY
-        posix_spawn_file_actions_t spawn_actions;
-        posix_spawn_file_actions_init(&spawn_actions);
-        ScopeGuard cleanup_spawn_actions = [&] {
-            posix_spawn_file_actions_destroy(&spawn_actions);
-        };
-        if (!m_working_directory.is_empty())
-            posix_spawn_file_actions_addchdir(&spawn_actions, m_working_directory.characters());
-
-        auto pid = TRY(System::posix_spawn(m_path.view(), &spawn_actions, nullptr, const_cast<char**>(get().data()), System::environment()));
-        if (keep_as_child == Process::KeepAsChild::No)
-            TRY(System::disown(pid));
-#else
-        auto pid = TRY(System::posix_spawn(m_path.view(), nullptr, nullptr, const_cast<char**>(get().data()), System::environment()));
-        // FIXME: Support keep_as_child outside Serenity.
-        (void)keep_as_child;
-#endif
-        return pid;
-    }
 };
+
+ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
+{
+#define CHECK(invocation)                  \
+    if (int returned_errno = (invocation)) \
+        return Error::from_errno(returned_errno);
+
+    posix_spawn_file_actions_t spawn_actions;
+    CHECK(posix_spawn_file_actions_init(&spawn_actions));
+    ScopeGuard cleanup_spawn_actions = [&] {
+        posix_spawn_file_actions_destroy(&spawn_actions);
+    };
+
+    if (options.working_directory.has_value()) {
+#ifdef AK_OS_SERENITY
+        CHECK(posix_spawn_file_actions_addchdir(&spawn_actions, options.working_directory->characters()));
+#else
+        // FIXME: Support ProcessSpawnOptions::working_directory n platforms that support it.
+        TODO();
+#endif
+    }
+
+    for (auto const& file_action : options.file_actions) {
+        TRY(file_action.visit(
+            [&](FileAction::OpenFile const& action) -> ErrorOr<void> {
+                CHECK(posix_spawn_file_actions_addopen(
+                    &spawn_actions,
+                    action.fd,
+                    action.path.characters(),
+                    File::open_mode_to_options(action.mode | Core::File::OpenMode::KeepOnExec),
+                    action.permissions));
+                return {};
+            }));
+    }
+
+#undef CHECK
+
+    ArgvList argv_list(options.path, options.arguments.size());
+    for (auto const& argument : options.arguments)
+        argv_list.append(argument.characters());
+
+    auto pid = TRY(System::posix_spawn(options.path.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), System::environment()));
+
+    return Process { pid };
+}
 
 ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<DeprecatedString> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
 {
-    ArgvList argv { path, arguments.size() };
-    for (auto const& arg : arguments)
-        argv.append(arg.characters());
-    argv.set_working_directory(working_directory);
-    return argv.spawn(keep_as_child);
+    auto process = TRY(spawn({
+        .path = path,
+        .arguments = Vector<DeprecatedString> { arguments },
+        .working_directory = working_directory.is_empty() ? Optional<DeprecatedString> {} : Optional<DeprecatedString> { working_directory },
+    }));
+
+    if (keep_as_child == KeepAsChild::No)
+        TRY(process.disown());
+    else {
+        // FIXME: This won't be needed if return value is changed to Process.
+        process.m_should_disown = false;
+    }
+    return process.pid();
 }
 
 ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
 {
     Vector<DeprecatedString> backing_strings;
     backing_strings.ensure_capacity(arguments.size());
-    ArgvList argv { path, arguments.size() };
-    for (auto const& arg : arguments) {
-        backing_strings.append(arg);
-        argv.append(backing_strings.last().characters());
-    }
-    argv.set_working_directory(working_directory);
-    return argv.spawn(keep_as_child);
+    for (auto const& argument : arguments)
+        backing_strings.append(argument);
+
+    auto process = TRY(spawn({
+        .path = path,
+        .arguments = backing_strings,
+        .working_directory = working_directory.is_empty() ? Optional<DeprecatedString> {} : Optional<DeprecatedString> { working_directory },
+    }));
+
+    if (keep_as_child == KeepAsChild::No)
+        TRY(process.disown());
+    else
+        process.m_should_disown = false;
+    return process.pid();
 }
 
 ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
 {
-    ArgvList argv { path, arguments.size() };
-    for (auto arg : arguments)
-        argv.append(arg);
-    argv.set_working_directory(working_directory);
-    return argv.spawn(keep_as_child);
+    Vector<DeprecatedString> backing_strings;
+    backing_strings.ensure_capacity(arguments.size());
+    for (auto const& argument : arguments)
+        backing_strings.append(argument);
+
+    auto process = TRY(spawn({
+        .path = path,
+        .arguments = backing_strings,
+        .working_directory = working_directory.is_empty() ? Optional<DeprecatedString> {} : Optional<DeprecatedString> { working_directory },
+    }));
+
+    if (keep_as_child == KeepAsChild::No)
+        TRY(process.disown());
+    else
+        process.m_should_disown = false;
+    return process.pid();
 }
 
 ErrorOr<String> Process::get_name()
@@ -258,6 +301,45 @@ void Process::wait_for_debugger_and_break()
         }
         ::usleep(100 * 1000);
     }
+}
+
+ErrorOr<void> Process::disown()
+{
+    if (m_pid != 0 && m_should_disown) {
+#ifdef AK_OS_SERENITY
+        TRY(System::disown(m_pid));
+#else
+        // FIXME: Support disown outside Serenity.
+#endif
+        m_should_disown = false;
+        return {};
+    } else {
+        return Error::from_errno(EINVAL);
+    }
+}
+
+ErrorOr<bool> Process::wait_for_termination()
+{
+    VERIFY(m_pid > 0);
+
+    bool exited_with_code_0 = true;
+    int status;
+    if (waitpid(m_pid, &status, 0) == -1)
+        return Error::from_syscall("waitpid"sv, errno);
+
+    if (WIFEXITED(status)) {
+        exited_with_code_0 &= WEXITSTATUS(status) == 0;
+    } else if (WIFSIGNALED(status)) {
+        exited_with_code_0 = false;
+    } else if (WIFSTOPPED(status)) {
+        // This is only possible if the child process is being traced by us.
+        VERIFY_NOT_REACHED();
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    m_should_disown = false;
+    return exited_with_code_0;
 }
 
 }

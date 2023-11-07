@@ -8,20 +8,62 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/Span.h>
+#include <LibCore/File.h>
 
 namespace Core {
 
+namespace FileAction {
+
+struct OpenFile {
+    DeprecatedString path;
+    File::OpenMode mode = File::OpenMode::NotOpen;
+    int fd = -1;
+    mode_t permissions = 0600;
+};
+
+// FIXME: Implement other file actions
+
+}
+
+struct ProcessSpawnOptions {
+    DeprecatedString path;
+    Vector<DeprecatedString> const& arguments = {};
+    Optional<DeprecatedString> working_directory = {};
+    Vector<Variant<FileAction::OpenFile>> const& file_actions = {};
+};
+
 class Process {
+    AK_MAKE_NONCOPYABLE(Process);
+
 public:
     enum class KeepAsChild {
         Yes,
         No
     };
 
+    Process(Process&& other)
+        : m_pid(exchange(other.m_pid, 0))
+        , m_should_disown(exchange(other.m_should_disown, false))
+    {
+    }
+
+    Process& operator=(Process&& other) = delete;
+
+    ~Process()
+    {
+        (void)disown();
+    }
+
+    static ErrorOr<Process> spawn(ProcessSpawnOptions const& options);
+
+    // FIXME: Make the following 2 functions return Process instance or delete them.
     static ErrorOr<pid_t> spawn(StringView path, ReadonlySpan<DeprecatedString> arguments, DeprecatedString working_directory = {}, KeepAsChild keep_as_child = KeepAsChild::No);
     static ErrorOr<pid_t> spawn(StringView path, ReadonlySpan<StringView> arguments, DeprecatedString working_directory = {}, KeepAsChild keep_as_child = KeepAsChild::No);
+
+    // FIXME: Remove this. char const* should not exist on this level of abstraction.
     static ErrorOr<pid_t> spawn(StringView path, ReadonlySpan<char const*> arguments = {}, DeprecatedString working_directory = {}, KeepAsChild keep_as_child = KeepAsChild::No);
 
     static ErrorOr<String> get_name();
@@ -33,6 +75,23 @@ public:
 
     static void wait_for_debugger_and_break();
     static ErrorOr<bool> is_being_debugged();
+
+    pid_t pid() const { return m_pid; }
+
+    ErrorOr<void> disown();
+
+    // FIXME: Make it return an exit code.
+    ErrorOr<bool> wait_for_termination();
+
+private:
+    Process(pid_t pid)
+        : m_pid(pid)
+        , m_should_disown(true)
+    {
+    }
+
+    pid_t m_pid;
+    bool m_should_disown;
 };
 
 }
