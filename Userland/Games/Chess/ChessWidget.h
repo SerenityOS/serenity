@@ -139,6 +139,7 @@ private:
     Color m_marking_secondary_color { Color::from_argb(0x6655dd55) };
     Chess::Color m_side { Chess::Color::White };
     HashMap<Chess::Piece, RefPtr<Gfx::Bitmap const>> m_pieces;
+    bool m_any_piece_images_are_missing { false };
     Chess::Square m_moving_square { 50, 50 };
     Gfx::IntPoint m_drag_point;
     bool m_dragging_piece { false };
