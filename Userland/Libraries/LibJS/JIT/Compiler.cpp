@@ -849,27 +849,47 @@ void Compiler::compile_unsigned_right_shift(Bytecode::Op::UnsignedRightShift con
     load_accumulator(ARG2);
 
     Assembler::Label end {};
+    Assembler::Label slow_case {};
 
     branch_if_both_int32(ARG1, ARG2, [&] {
+        // GPR0 = ARG1
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(ARG1));
+
         // RCX = ARG2
         m_assembler.mov(
             Assembler::Operand::Register(Assembler::Reg::RCX),
             Assembler::Operand::Register(ARG2));
 
-        // ARG1 >>>= CL (32-bit)
-        m_assembler.shift_right32(Assembler::Operand::Register(ARG1), {});
+        // GPR0 >>>= CL (32-bit)
+        m_assembler.shift_right32(Assembler::Operand::Register(GPR0), {});
 
-        // accumulator = ARG1 | SHIFTED_INT32_TAG;
-        m_assembler.mov(
+        // GPR1 = sign_extended(GPR0)
+        m_assembler.mov32(
+            Assembler::Operand::Register(GPR1),
             Assembler::Operand::Register(GPR0),
+            Assembler::Extension::SignExtend);
+
+        // if (GPR1 < 0) goto slow_case;
+        m_assembler.jump_if(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Condition::SignedLessThan,
+            Assembler::Operand::Imm(0),
+            slow_case);
+
+        // accumulator = GPR0 | SHIFTED_INT32_TAG;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
             Assembler::Operand::Imm(SHIFTED_INT32_TAG));
         m_assembler.bitwise_or(
-            Assembler::Operand::Register(ARG1),
-            Assembler::Operand::Register(GPR0));
-        store_accumulator(ARG1);
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(GPR1));
+        store_accumulator(GPR0);
         m_assembler.jump(end);
     });
 
+    slow_case.link(m_assembler);
     native_call((void*)cxx_unsigned_right_shift);
     store_accumulator(RET);
     check_exception();
