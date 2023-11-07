@@ -159,12 +159,14 @@ static double parse_date_string(DeprecatedString const& date_string)
     //        Both Chrome and Firefox seem to support "4/17/2019 11:08 PM +0000" with most parts
     //        being optional, however this is not clearly documented anywhere.
     static constexpr auto extra_formats = AK::Array {
-        "%a %b %e %T %z %Y"sv, // "Wed Apr 17 23:08:53 +0000 2019"
-        "%m/%e/%Y"sv,          // "4/17/2019"
-        "%m/%e/%Y %R %z"sv,    // "12/05/2022 10:00 -0800"
-        "%Y/%m/%e %R"sv,       // "2014/11/14 13:05"
-        "%Y-%m-%e %R"sv,       // "2014-11-14 13:05"
-        "%B %e, %Y %T"sv,      //  "June 5, 2023 17:00:00"
+        "%a %b %d %Y %T GMT%z (%+)"sv, // "Tue Nov 07 2023 10:05:55 GMT-0500 (Eastern Standard Time)"
+        "%a, %d %b %Y %T %Z"sv,        // "Tue, 07 Nov 2023 15:05:55 GMT"
+        "%a %b %e %T %z %Y"sv,         // "Wed Apr 17 23:08:53 +0000 2019"
+        "%m/%e/%Y"sv,                  // "4/17/2019"
+        "%m/%e/%Y %R %z"sv,            // "12/05/2022 10:00 -0800"
+        "%Y/%m/%e %R"sv,               // "2014/11/14 13:05"
+        "%Y-%m-%e %R"sv,               // "2014-11-14 13:05"
+        "%B %e, %Y %T"sv,              //  "June 5, 2023 17:00:00"
     };
 
     for (auto const& format : extra_formats) {

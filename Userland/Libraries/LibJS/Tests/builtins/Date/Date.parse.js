@@ -119,3 +119,67 @@ test("Month dd, yy hh:mm:ss extension", () => {
     expectStringToGiveDate("May 30, 2023 17:00:00", 2023, 5, 30, 17, 0, 0);
     expectStringToGiveDate("June 5, 2023 17:00:00", 2023, 6, 5, 17, 0, 0);
 });
+
+test("Date.prototype.toString extension", () => {
+    function expectStringToGiveDate(input, fullYear, month, dayInMonth, hours) {
+        const date = new Date(Date.parse(input));
+        expect(date.getFullYear()).toBe(fullYear);
+        expect(date.getMonth() + 1).toBe(month);
+        expect(date.getDate()).toBe(dayInMonth);
+        expect(date.getHours()).toBe(hours);
+    }
+
+    const time1 = "Tue Nov 07 2023 10:00:00 GMT-0500 (Eastern Standard Time)";
+    const time2 = "Tue Nov 07 2023 10:00:00 GMT+0100 (Central European Standard Time)";
+    const time3 = "Tue Nov 07 2023 10:00:00 GMT+0800 (Australian Western Standard Time)";
+
+    const originalTimeZone = setTimeZone("UTC");
+    expectStringToGiveDate(time1, 2023, 11, 7, 15);
+    expectStringToGiveDate(time2, 2023, 11, 7, 9);
+    expectStringToGiveDate(time3, 2023, 11, 7, 2);
+
+    setTimeZone("America/New_York");
+    expectStringToGiveDate(time1, 2023, 11, 7, 10);
+    expectStringToGiveDate(time2, 2023, 11, 7, 4);
+    expectStringToGiveDate(time3, 2023, 11, 6, 21);
+
+    setTimeZone("Australia/Perth");
+    expectStringToGiveDate(time1, 2023, 11, 7, 23);
+    expectStringToGiveDate(time2, 2023, 11, 7, 17);
+    expectStringToGiveDate(time3, 2023, 11, 7, 10);
+
+    // FIXME: Create a scoped time zone helper when bytecode supports the `using` declaration.
+    setTimeZone(originalTimeZone);
+});
+
+test("Date.prototype.toUTCString extension", () => {
+    function expectStringToGiveDate(input, fullYear, month, dayInMonth, hours) {
+        const date = new Date(Date.parse(input));
+        expect(date.getFullYear()).toBe(fullYear);
+        expect(date.getMonth() + 1).toBe(month);
+        expect(date.getDate()).toBe(dayInMonth);
+        expect(date.getHours()).toBe(hours);
+    }
+
+    const time = "Tue, 07 Nov 2023 15:00:00 GMT";
+
+    const originalTimeZone = setTimeZone("UTC");
+    expectStringToGiveDate(time, 2023, 11, 7, 15);
+
+    setTimeZone("America/New_York");
+    expectStringToGiveDate(time, 2023, 11, 7, 10);
+
+    setTimeZone("Australia/Perth");
+    expectStringToGiveDate(time, 2023, 11, 7, 23);
+
+    // FIXME: Create a scoped time zone helper when bytecode supports the `using` declaration.
+    setTimeZone(originalTimeZone);
+});
+
+test("Round trip Date.prototype.to*String", () => {
+    const epoch = new Date(0);
+
+    expect(Date.parse(epoch.toString())).toBe(epoch.valueOf());
+    expect(Date.parse(epoch.toISOString())).toBe(epoch.valueOf());
+    expect(Date.parse(epoch.toUTCString())).toBe(epoch.valueOf());
+});
