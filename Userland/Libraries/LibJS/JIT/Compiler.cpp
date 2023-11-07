@@ -356,31 +356,23 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
     Assembler::Label slow_case {};
 
     branch_if_int32(ARG1, [&] {
-        // GPR0 = ARG1 & 0xffffffff;
+        // GPR0 = ARG1
         m_assembler.mov(
             Assembler::Operand::Register(GPR0),
             Assembler::Operand::Register(ARG1));
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Operand::Imm(0xffffffff));
-        m_assembler.bitwise_and(
+        // GPR0++;
+        m_assembler.inc32(
             Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(GPR1));
-
-        // if (GPR0 == 0x7fffffff) goto slow_case;
-        m_assembler.jump_if(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Condition::EqualTo,
-            Assembler::Operand::Imm(0x7fffffff),
             slow_case);
 
-        // ARG1 += 1;
-        m_assembler.add(
-            Assembler::Operand::Register(ARG1),
-            Assembler::Operand::Imm(1));
-
-        // accumulator = ARG1;
-        store_accumulator(ARG1);
+        // accumulator = GPR0 | SHIFTED_INT32_TAG;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm(SHIFTED_INT32_TAG));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(GPR1));
+        store_accumulator(GPR0);
 
         m_assembler.jump(end);
     });
