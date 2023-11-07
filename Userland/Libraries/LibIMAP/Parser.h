@@ -41,7 +41,7 @@ private:
     ErrorOr<void> parse_untagged();
     ErrorOr<void> parse_capability_response();
 
-    StringView parse_atom();
+    ErrorOr<StringView> parse_atom();
     ErrorOr<StringView> parse_quoted_string();
     ErrorOr<StringView> parse_literal_string();
     ErrorOr<StringView> parse_string();
