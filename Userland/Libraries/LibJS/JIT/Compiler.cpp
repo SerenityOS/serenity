@@ -621,53 +621,54 @@ void Compiler::compile_mul(Bytecode::Op::Mul const& op)
     end.link(m_assembler);
 }
 
-static Value cxx_less_than(VM& vm, Value lhs, Value rhs)
-{
-    return TRY_OR_SET_EXCEPTION(less_than(vm, lhs, rhs));
-}
+#    define DO_COMPILE_COMPARISON_OP(TitleCaseName, snake_case_name, AssemblerCondition) \
+        static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                 \
+        {                                                                                \
+            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                  \
+        }                                                                                \
+                                                                                         \
+        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op)  \
+        {                                                                                \
+            load_vm_register(ARG1, op.lhs());                                            \
+            load_accumulator(ARG2);                                                      \
+                                                                                         \
+            Assembler::Label end {};                                                     \
+                                                                                         \
+            branch_if_both_int32(ARG1, ARG2, [&] {                                       \
+                Assembler::Label true_case {};                                           \
+                                                                                         \
+                m_assembler.sign_extend_32_to_64_bits(ARG1);                             \
+                m_assembler.sign_extend_32_to_64_bits(ARG2);                             \
+                                                                                         \
+                m_assembler.jump_if(                                                     \
+                    Assembler::Operand::Register(ARG1),                                  \
+                    Assembler::Condition::AssemblerCondition,                            \
+                    Assembler::Operand::Register(ARG2),                                  \
+                    true_case);                                                          \
+                                                                                         \
+                m_assembler.mov(                                                         \
+                    Assembler::Operand::Register(GPR0),                                  \
+                    Assembler::Operand::Imm(Value(false).encoded()));                    \
+                store_accumulator(GPR0);                                                 \
+                m_assembler.jump(end);                                                   \
+                                                                                         \
+                true_case.link(m_assembler);                                             \
+                m_assembler.mov(                                                         \
+                    Assembler::Operand::Register(GPR0),                                  \
+                    Assembler::Operand::Imm(Value(true).encoded()));                     \
+                store_accumulator(GPR0);                                                 \
+                                                                                         \
+                m_assembler.jump(end);                                                   \
+            });                                                                          \
+                                                                                         \
+            native_call((void*)cxx_##snake_case_name);                                   \
+            store_accumulator(RET);                                                      \
+            check_exception();                                                           \
+            end.link(m_assembler);                                                       \
+        }
 
-void Compiler::compile_less_than(Bytecode::Op::LessThan const& op)
-{
-    load_vm_register(ARG1, op.lhs());
-    load_accumulator(ARG2);
-
-    Assembler::Label end {};
-
-    branch_if_both_int32(ARG1, ARG2, [&] {
-        // if (ARG1 < ARG2) return true;
-        // else return false;
-
-        Assembler::Label true_case {};
-
-        m_assembler.sign_extend_32_to_64_bits(ARG1);
-        m_assembler.sign_extend_32_to_64_bits(ARG2);
-
-        m_assembler.jump_if(
-            Assembler::Operand::Register(ARG1),
-            Assembler::Condition::SignedLessThan,
-            Assembler::Operand::Register(ARG2),
-            true_case);
-
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm(Value(false).encoded()));
-        store_accumulator(GPR0);
-        m_assembler.jump(end);
-
-        true_case.link(m_assembler);
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Imm(Value(true).encoded()));
-        store_accumulator(GPR0);
-
-        m_assembler.jump(end);
-    });
-
-    native_call((void*)cxx_less_than);
-    store_accumulator(RET);
-    check_exception();
-    end.link(m_assembler);
-}
+JS_ENUMERATE_COMPARISON_OPS(DO_COMPILE_COMPARISON_OP)
+#    undef DO_COMPILE_COMPARISON_OP
 
 static Value cxx_bitwise_and(VM& vm, Value lhs, Value rhs)
 {

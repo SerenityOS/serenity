@@ -48,13 +48,16 @@ private:
         O(Mod, mod)                                             \
         O(In, in)                                               \
         O(InstanceOf, instance_of)                              \
-        O(GreaterThan, greater_than)                            \
-        O(GreaterThanEquals, greater_than_equals)               \
-        O(LessThanEquals, less_than_equals)                     \
         O(LooselyInequals, abstract_inequals)                   \
         O(LooselyEquals, abstract_equals)                       \
         O(StrictlyInequals, typed_inequals)                     \
         O(StrictlyEquals, typed_equals)
+
+#    define JS_ENUMERATE_COMPARISON_OPS(O)                           \
+        O(LessThan, less_than, SignedLessThan)                       \
+        O(LessThanEquals, less_than_equals, SignedLessThanOrEqualTo) \
+        O(GreaterThan, greater_than, SignedGreaterThan)              \
+        O(GreaterThanEquals, greater_than_equals, SignedGreaterThanOrEqualTo)
 
 #    define JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(O) \
         O(NewTypeError, new_type_error, TypeError)
