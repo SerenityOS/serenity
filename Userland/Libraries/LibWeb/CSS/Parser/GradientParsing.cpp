@@ -292,7 +292,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
         return nullptr;
 
     Angle from_angle(0, Angle::Type::Deg);
-    PositionValue at_position = PositionValue::center();
+    RefPtr<PositionStyleValue> at_position;
 
     // conic-gradient( [ [ from <angle> ]? [ at <position> ]? ]  ||
     // <color-interpolation-method> , <angular-color-stop-list> )
@@ -333,10 +333,10 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
             // at <position>
             if (got_at_position)
                 return nullptr;
-            auto position = parse_position(tokens);
-            if (!position.has_value())
+            auto position = parse_position_value(tokens);
+            if (!position)
                 return nullptr;
-            at_position = *position;
+            at_position = position;
             got_at_position = true;
         } else if (consume_identifier("in"sv)) {
             // <color-interpolation-method>
@@ -363,7 +363,10 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
     if (!color_stops.has_value())
         return nullptr;
 
-    return ConicGradientStyleValue::create(from_angle, at_position, move(*color_stops), repeating_gradient);
+    if (!at_position)
+        at_position = PositionStyleValue::create_center();
+
+    return ConicGradientStyleValue::create(from_angle, at_position.release_nonnull(), move(*color_stops), repeating_gradient);
 }
 
 RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& component_value)

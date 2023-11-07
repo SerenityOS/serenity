@@ -10,7 +10,6 @@
 #pragma once
 
 #include <LibWeb/CSS/Angle.h>
-#include <LibWeb/CSS/Position.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/Painting/GradientPainting.h>
 
@@ -18,10 +17,10 @@ namespace Web::CSS {
 
 class ConicGradientStyleValue final : public AbstractImageStyleValue {
 public:
-    static ValueComparingNonnullRefPtr<ConicGradientStyleValue> create(Angle from_angle, PositionValue position, Vector<AngularColorStopListElement> color_stop_list, GradientRepeating repeating)
+    static ValueComparingNonnullRefPtr<ConicGradientStyleValue> create(Angle from_angle, ValueComparingNonnullRefPtr<PositionStyleValue> position, Vector<AngularColorStopListElement> color_stop_list, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
-        return adopt_ref(*new (nothrow) ConicGradientStyleValue(from_angle, position, move(color_stop_list), repeating));
+        return adopt_ref(*new (nothrow) ConicGradientStyleValue(from_angle, move(position), move(color_stop_list), repeating));
     }
 
     virtual String to_string() const override;
@@ -46,16 +45,16 @@ public:
     bool is_repeating() const { return m_properties.repeating == GradientRepeating::Yes; }
 
 private:
-    ConicGradientStyleValue(Angle from_angle, PositionValue position, Vector<AngularColorStopListElement> color_stop_list, GradientRepeating repeating)
+    ConicGradientStyleValue(Angle from_angle, ValueComparingNonnullRefPtr<PositionStyleValue> position, Vector<AngularColorStopListElement> color_stop_list, GradientRepeating repeating)
         : AbstractImageStyleValue(Type::ConicGradient)
-        , m_properties { .from_angle = from_angle, .position = position, .color_stop_list = move(color_stop_list), .repeating = repeating }
+        , m_properties { .from_angle = from_angle, .position = move(position), .color_stop_list = move(color_stop_list), .repeating = repeating }
     {
     }
 
     struct Properties {
         // FIXME: Support <color-interpolation-method>
         Angle from_angle;
-        PositionValue position;
+        ValueComparingNonnullRefPtr<PositionStyleValue> position;
         Vector<AngularColorStopListElement> color_stop_list;
         GradientRepeating repeating;
         bool operator==(Properties const&) const = default;
