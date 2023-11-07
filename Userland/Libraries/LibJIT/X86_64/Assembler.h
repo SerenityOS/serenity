@@ -742,6 +742,21 @@ struct X86_64Assembler {
         }
     }
 
+    void inc32(Operand op, Optional<Label&> overflow_label)
+    {
+        if (op.is_register_or_memory()) {
+            emit_rex_for_slash(op, REX_W::No);
+            emit8(0xff);
+            emit_modrm_slash(0, op);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        if (overflow_label.has_value()) {
+            jump_if(Condition::Overflow, *overflow_label);
+        }
+    }
+
     void add(Operand dst, Operand src)
     {
         if (dst.is_register_or_memory() && src.type == Operand::Type::Reg) {
