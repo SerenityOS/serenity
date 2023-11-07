@@ -762,6 +762,44 @@ void Compiler::compile_bitwise_xor(Bytecode::Op::BitwiseXor const& op)
     end.link(m_assembler);
 }
 
+static Value cxx_left_shift(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(left_shift(vm, lhs, rhs));
+}
+
+void Compiler::compile_left_shift(Bytecode::Op::LeftShift const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_accumulator(ARG2);
+
+    Assembler::Label end {};
+
+    branch_if_both_int32(ARG1, ARG2, [&] {
+        // RCX = ARG2
+        m_assembler.mov(
+            Assembler::Operand::Register(Assembler::Reg::RCX),
+            Assembler::Operand::Register(ARG2));
+
+        // ARG1 <<= CL (32-bit)
+        m_assembler.shift_left32(Assembler::Operand::Register(ARG1), {});
+
+        // accumulator = ARG1 | SHIFTED_INT32_TAG;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm(SHIFTED_INT32_TAG));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(ARG1),
+            Assembler::Operand::Register(GPR0));
+        store_accumulator(ARG1);
+        m_assembler.jump(end);
+    });
+
+    native_call((void*)cxx_left_shift);
+    store_accumulator(RET);
+    check_exception();
+    end.link(m_assembler);
+}
+
 static ThrowCompletionOr<Value> not_(VM&, Value value)
 {
     return Value(!value.to_boolean());
