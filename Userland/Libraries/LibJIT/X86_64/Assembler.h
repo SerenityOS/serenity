@@ -324,6 +324,48 @@ struct X86_64Assembler {
         VERIFY_NOT_REACHED();
     }
 
+    enum Extension {
+        ZeroExtend,
+        SignExtend,
+    };
+
+    void mov8(Operand dst, Operand src, Extension extension = Extension::ZeroExtend)
+    {
+        VERIFY(dst.type == Operand::Type::Reg && src.type == Operand::Type::Mem64BaseAndOffset);
+        // mov[sz]x r32, r/m8
+        emit_rex_for_rm(dst, src, REX_W::No);
+        emit8(0x0f);
+        emit8(extension == Extension::ZeroExtend ? 0xb6 : 0xbe);
+        emit_modrm_rm(dst, src);
+    }
+
+    void mov16(Operand dst, Operand src, Extension extension = Extension::ZeroExtend)
+    {
+        VERIFY(dst.type == Operand::Type::Reg && src.is_register_or_memory());
+        // mov[sz]x r32, r/m16
+        emit_rex_for_rm(dst, src, REX_W::No);
+        emit8(0x0f);
+        emit8(extension == Extension::ZeroExtend ? 0xb7 : 0xbf);
+        emit_modrm_rm(dst, src);
+    }
+
+    void mov32(Operand dst, Operand src, Extension extension = Extension::ZeroExtend)
+    {
+        VERIFY(dst.type == Operand::Type::Reg && src.is_register_or_memory());
+        if (extension == Extension::ZeroExtend) {
+            // mov r32, r/m32
+            emit_rex_for_rm(dst, src, REX_W::No);
+            emit8(0x8b);
+            emit_modrm_rm(dst, src);
+            return;
+        }
+        VERIFY(extension == Extension::SignExtend);
+        // movsxd r64, r/m32
+        emit_rex_for_rm(dst, src, REX_W::Yes);
+        emit8(0x63);
+        emit_modrm_rm(dst, src);
+    }
+
     void emit8(u8 value)
     {
         m_output.append(value);
@@ -473,10 +515,7 @@ struct X86_64Assembler {
 
     void sign_extend_32_to_64_bits(Reg reg)
     {
-        // movsxd (reg as 64-bit), (reg as 32-bit)
-        emit_rex_for_rm(Operand::Register(reg), Operand::Register(reg), REX_W::Yes);
-        emit8(0x63);
-        emit_modrm_rm(Operand::Register(reg), Operand::Register(reg));
+        mov32(Operand::Register(reg), Operand::Register(reg), Extension::SignExtend);
     }
 
     void bitwise_and(Operand dst, Operand src)
