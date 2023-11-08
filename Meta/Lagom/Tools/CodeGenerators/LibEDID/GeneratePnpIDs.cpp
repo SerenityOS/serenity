@@ -5,6 +5,7 @@
  */
 
 #include <AK/SourceGenerator.h>
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 
@@ -179,12 +180,11 @@ static ErrorOr<HashMap<DeprecatedString, PnpIdData>> parse_pnp_ids_database(Core
     return pnp_id_data;
 }
 
-static ErrorOr<void> generate_header(Core::File& file, HashMap<DeprecatedString, PnpIdData> const& pnp_ids)
+static ErrorOr<void> generate_header(Core::File& file)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    generator.set("pnp_id_count", DeprecatedString::formatted("{}", pnp_ids.size()));
     generator.append(R"~~~(
 #pragma once
 
@@ -205,7 +205,6 @@ namespace PnpIDs {
 
     Optional<PnpIDData> find_by_manufacturer_id(StringView);
     IterationDecision for_each(Function<IterationDecision(PnpIDData const&)>);
-    static constexpr size_t count = @pnp_id_count@;
 }
 )~~~");
 
@@ -228,9 +227,9 @@ static constexpr PnpIDData s_pnp_ids[] = {)~~~");
     for (auto& pnp_id_data : pnp_ids) {
         generator.set("manufacturer_id", pnp_id_data.key);
         generator.set("manufacturer_name", pnp_id_data.value.manufacturer_name);
-        generator.set("approval_year", DeprecatedString::formatted("{}", pnp_id_data.value.approval_date.year));
-        generator.set("approval_month", DeprecatedString::formatted("{}", pnp_id_data.value.approval_date.month));
-        generator.set("approval_day", DeprecatedString::formatted("{}", pnp_id_data.value.approval_date.day));
+        generator.set("approval_year", MUST(String::number(pnp_id_data.value.approval_date.year)));
+        generator.set("approval_month", MUST(String::number(pnp_id_data.value.approval_date.month)));
+        generator.set("approval_day", MUST(String::number(pnp_id_data.value.approval_date.day)));
 
         generator.append(R"~~~(
     { "@manufacturer_id@"sv, "@manufacturer_name@"sv, { @approval_year@, @approval_month@, @approval_day@ } },)~~~");
@@ -292,7 +291,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto pnp_id_map = TRY(parse_pnp_ids_database(*pnp_ids_file));
 
-    TRY(generate_header(*generated_header_file, pnp_id_map));
+    TRY(generate_header(*generated_header_file));
     TRY(generate_source(*generated_implementation_file, pnp_id_map));
+
     return 0;
 }
