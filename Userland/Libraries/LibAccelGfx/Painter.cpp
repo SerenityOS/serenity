@@ -150,6 +150,42 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
+void Painter::draw_line(Gfx::IntPoint a, Gfx::IntPoint b, float thickness, Gfx::Color color)
+{
+    draw_line(a.to_type<float>(), b.to_type<float>(), thickness, color);
+}
+
+void Painter::draw_line(Gfx::FloatPoint a, Gfx::FloatPoint b, float thickness, Color color)
+{
+    auto midpoint = (a + b) / 2.0f;
+    auto length = a.distance_from(b);
+    auto angle = AK::atan2(b.y() - a.y(), b.x() - a.x());
+    auto offset = Gfx::FloatPoint {
+        (length / 2) * AK::cos(angle) - (thickness / 2) * AK::sin(angle),
+        (length / 2) * AK::sin(angle) + (thickness / 2) * AK::cos(angle),
+    };
+    auto rect = Gfx::FloatRect(midpoint - offset, { length, thickness });
+
+    auto vertices = rect_to_vertices(to_clip_space(transform().map(rect)));
+
+    auto [red, green, blue, alpha] = gfx_color_to_opengl_color(color);
+
+    m_rectangle_program.use();
+
+    GLuint position_attribute = m_rectangle_program.get_attribute_location("aVertexPosition");
+    GLuint color_uniform = m_rectangle_program.get_uniform_location("uColor");
+
+    glUniform4f(color_uniform, red, green, blue, alpha);
+
+    glVertexAttribPointer(position_attribute, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), vertices.data());
+    glEnableVertexAttribArray(position_attribute);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
 void Painter::draw_scaled_bitmap(Gfx::IntRect const& dest_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, ScalingMode scaling_mode)
 {
     draw_scaled_bitmap(dest_rect.to_type<float>(), bitmap, src_rect.to_type<float>(), scaling_mode);
