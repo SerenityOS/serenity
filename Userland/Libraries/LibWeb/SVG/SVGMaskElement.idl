@@ -1,3 +1,4 @@
+// https://drafts.fxtf.org/css-masking/#InterfaceSVGMaskElement
 [Exposed=Window]
 interface SVGMaskElement : SVGElement {
 

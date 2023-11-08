@@ -1,5 +1,6 @@
 #import <HTML/MimeType.idl>
 
+// https://html.spec.whatwg.org/#mimetypearray
 [Exposed=Window, LegacyUnenumerableNamedProperties]
 interface MimeTypeArray {
     readonly attribute unsigned long length;

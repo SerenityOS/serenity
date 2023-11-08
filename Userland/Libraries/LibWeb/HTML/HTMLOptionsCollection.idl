@@ -2,6 +2,7 @@
 #import <HTML/HTMLOptionElement.idl>
 #import <HTML/HTMLOptGroupElement.idl>
 
+// https://html.spec.whatwg.org/#htmloptionscollection
 [Exposed=Window]
 interface HTMLOptionsCollection : HTMLCollection {
     // [CEReactions] attribute unsigned long length; // shadows inherited length
