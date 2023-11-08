@@ -166,9 +166,10 @@ CommandResult PaintingCommandExecutorGPU::fill_ellipse(Gfx::IntRect const&, Colo
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_line(Color const&, Gfx::IntPoint const&, Gfx::IntPoint const&, int, Gfx::Painter::LineStyle, Color const&)
+CommandResult PaintingCommandExecutorGPU::draw_line(Color const& color, Gfx::IntPoint const& a, Gfx::IntPoint const& b, int thickness, Gfx::Painter::LineStyle, Color const&)
 {
-    // FIXME
+    // FIXME: Pass line style and alternate color once AccelGfx::Painter supports it
+    painter().draw_line(a, b, thickness, color);
     return CommandResult::Continue;
 }
 

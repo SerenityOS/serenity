@@ -46,6 +46,9 @@ public:
         Bilinear,
     };
 
+    void draw_line(Gfx::IntPoint a, Gfx::IntPoint b, float thickness, Gfx::Color color);
+    void draw_line(Gfx::FloatPoint a, Gfx::FloatPoint b, float thickness, Gfx::Color color);
+
     void draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap const&, Gfx::FloatRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const&, Gfx::IntRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
 
