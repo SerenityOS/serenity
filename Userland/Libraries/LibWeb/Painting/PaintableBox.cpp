@@ -406,6 +406,10 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
 
 Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
 {
+    if (layout_node().is_viewport()) {
+        return {};
+    }
+
     if (!m_clip_rect.has_value()) {
         // NOTE: stacking context should not be crossed while aggregating rectangle to
         // clip `overflow: hidden` because intersecting rectangles with different
