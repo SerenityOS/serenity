@@ -276,13 +276,13 @@ public:
             m_parent_scope->m_contains_await_expression |= m_contains_await_expression;
         }
 
-        if (m_parent_scope && m_contains_direct_call_to_eval) {
-            m_parent_scope->m_screwed_by_eval_in_scope_chain = true;
-        }
-
         if (!m_node) {
             m_parser.m_state.current_scope_pusher = m_parent_scope;
             return;
+        }
+
+        if (m_parent_scope && m_contains_direct_call_to_eval) {
+            m_parent_scope->m_screwed_by_eval_in_scope_chain = true;
         }
 
         for (auto& it : m_identifier_groups) {
@@ -343,16 +343,7 @@ public:
             }
 
             if (m_type == ScopeType::Program) {
-                auto can_use_global_for_identifier = true;
-                if (identifier_group.used_inside_with_statement)
-                    can_use_global_for_identifier = false;
-                else if (identifier_group.might_be_variable_in_lexical_scope_in_named_function_assignment)
-                    can_use_global_for_identifier = false;
-                else if (m_screwed_by_eval_in_scope_chain)
-                    can_use_global_for_identifier = false;
-                else if (m_parser.m_state.initiated_by_eval)
-                    can_use_global_for_identifier = false;
-
+                auto can_use_global_for_identifier = !(identifier_group.used_inside_with_statement || identifier_group.might_be_variable_in_lexical_scope_in_named_function_assignment || identifier_group.used_inside_scope_with_eval || m_parser.m_state.initiated_by_eval);
                 if (can_use_global_for_identifier) {
                     for (auto& identifier : identifier_group.identifiers)
                         identifier->set_is_global();
@@ -380,6 +371,9 @@ public:
                 if (m_type == ScopeType::With)
                     identifier_group.used_inside_with_statement = true;
 
+                if (m_contains_direct_call_to_eval)
+                    identifier_group.used_inside_scope_with_eval = true;
+
                 if (m_parent_scope) {
                     if (auto maybe_parent_scope_identifier_group = m_parent_scope->m_identifier_groups.get(identifier_group_name); maybe_parent_scope_identifier_group.has_value()) {
                         maybe_parent_scope_identifier_group.value().identifiers.extend(identifier_group.identifiers);
@@ -389,6 +383,8 @@ public:
                             maybe_parent_scope_identifier_group.value().used_inside_with_statement = true;
                         if (identifier_group.might_be_variable_in_lexical_scope_in_named_function_assignment)
                             maybe_parent_scope_identifier_group.value().might_be_variable_in_lexical_scope_in_named_function_assignment = true;
+                        if (identifier_group.used_inside_scope_with_eval)
+                            maybe_parent_scope_identifier_group.value().used_inside_scope_with_eval = true;
                     } else {
                         m_parent_scope->m_identifier_groups.set(identifier_group_name, identifier_group);
                     }
@@ -467,6 +463,7 @@ private:
     struct IdentifierGroup {
         bool captured_by_nested_function { false };
         bool used_inside_with_statement { false };
+        bool used_inside_scope_with_eval { false };
         bool might_be_variable_in_lexical_scope_in_named_function_assignment { false };
         Vector<NonnullRefPtr<Identifier>> identifiers;
     };
