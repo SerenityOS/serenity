@@ -14,12 +14,12 @@
 #include <LibRegex/RegexMatcher.h>
 #include <stdio.h>
 
-static ECMAScriptOptions match_test_api_options(const ECMAScriptOptions options)
+static ECMAScriptOptions match_test_api_options(ECMAScriptOptions const options)
 {
     return options;
 }
 
-static PosixOptions match_test_api_options(const PosixOptions options)
+static PosixOptions match_test_api_options(PosixOptions const options)
 {
     return options;
 }
