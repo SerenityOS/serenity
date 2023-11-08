@@ -57,6 +57,8 @@ private:
 
 class Utf16View {
 public:
+    using Iterator = Utf16CodePointIterator;
+
     static bool is_high_surrogate(u16);
     static bool is_low_surrogate(u16);
     static u32 decode_surrogate_pair(u16 high_surrogate, u16 low_surrogate);
