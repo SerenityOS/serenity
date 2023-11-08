@@ -126,7 +126,17 @@ struct Traits<LittleEndian<T>> : public GenericTraits<LittleEndian<T>> {
 };
 
 template<typename T>
+struct Traits<LittleEndian<T> const> : public GenericTraits<LittleEndian<T> const> {
+    static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
+};
+
+template<typename T>
 struct Traits<BigEndian<T>> : public GenericTraits<BigEndian<T>> {
+    static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
+};
+
+template<typename T>
+struct Traits<BigEndian<T> const> : public GenericTraits<BigEndian<T> const> {
     static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
 };
 
