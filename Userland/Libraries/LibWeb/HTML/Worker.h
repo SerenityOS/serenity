@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Scripting/WorkerEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WorkerAgent.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
@@ -24,12 +25,6 @@
     E(onmessageerror, HTML::EventNames::messageerror)
 
 namespace Web::HTML {
-
-struct WorkerOptions {
-    String type { "classic"_string };
-    String credentials { "same-origin"_string };
-    String name { String {} };
-};
 
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
 class Worker : public DOM::EventTarget {
@@ -49,7 +44,6 @@ public:
 
     virtual ~Worker() = default;
 
-    MessagePort* implicit_message_port() { return m_implicit_port.ptr(); }
     JS::GCPtr<MessagePort> outside_message_port() { return m_outside_port; }
 
 #undef __ENUMERATE
@@ -63,11 +57,6 @@ protected:
     Worker(String const&, const WorkerOptions, DOM::Document&);
 
 private:
-    static HTML::EventLoop& get_vm_event_loop(JS::VM& target_vm)
-    {
-        return static_cast<Bindings::WebEngineCustomData*>(target_vm.custom_data())->event_loop;
-    }
-
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -75,19 +64,9 @@ private:
     WorkerOptions m_options;
 
     JS::GCPtr<DOM::Document> m_document;
-
-    Bindings::WebEngineCustomData m_custom_data;
-
-    NonnullRefPtr<JS::VM> m_worker_vm;
-    JS::GCPtr<WorkerEnvironmentSettingsObject> m_inner_settings;
-    RefPtr<WorkerDebugConsoleClient> m_console;
-
-    JS::NonnullGCPtr<MessagePort> m_implicit_port;
     JS::GCPtr<MessagePort> m_outside_port;
 
-    // NOTE: These are inside the worker VM.
-    JS::GCPtr<JS::Realm> m_worker_realm;
-    JS::GCPtr<JS::Object> m_worker_scope;
+    JS::GCPtr<WorkerAgent> m_agent;
 
     void run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, MessagePort& outside_port, WorkerOptions const& options);
 };
