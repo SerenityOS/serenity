@@ -86,7 +86,7 @@ struct Formatter<NonnullOwnPtr<Kernel::KString>> : Formatter<StringView> {
 };
 
 template<>
-struct Traits<NonnullOwnPtr<Kernel::KString>> : public GenericTraits<NonnullOwnPtr<Kernel::KString>> {
+struct Traits<NonnullOwnPtr<Kernel::KString>> : public DefaultTraits<NonnullOwnPtr<Kernel::KString>> {
     using PeekType = Kernel::KString*;
     using ConstPeekType = Kernel::KString const*;
     static unsigned hash(NonnullOwnPtr<Kernel::KString> const& p) { return string_hash(p->characters(), p->length()); }
@@ -95,7 +95,7 @@ struct Traits<NonnullOwnPtr<Kernel::KString>> : public GenericTraits<NonnullOwnP
 };
 
 template<>
-struct Traits<OwnPtr<Kernel::KString>> : public GenericTraits<OwnPtr<Kernel::KString>> {
+struct Traits<OwnPtr<Kernel::KString>> : public DefaultTraits<OwnPtr<Kernel::KString>> {
     using PeekType = Kernel::KString*;
     using ConstPeekType = Kernel::KString const*;
     static unsigned hash(OwnPtr<Kernel::KString> const& p)

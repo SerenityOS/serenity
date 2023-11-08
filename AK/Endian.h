@@ -121,22 +121,22 @@ requires(HasFormatter<T>) struct Formatter<BigEndian<T>> : Formatter<T> {
 };
 
 template<typename T>
-struct Traits<LittleEndian<T>> : public GenericTraits<LittleEndian<T>> {
+struct Traits<LittleEndian<T>> : public DefaultTraits<LittleEndian<T>> {
     static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
 };
 
 template<typename T>
-struct Traits<LittleEndian<T> const> : public GenericTraits<LittleEndian<T> const> {
+struct Traits<LittleEndian<T> const> : public DefaultTraits<LittleEndian<T> const> {
     static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
 };
 
 template<typename T>
-struct Traits<BigEndian<T>> : public GenericTraits<BigEndian<T>> {
+struct Traits<BigEndian<T>> : public DefaultTraits<BigEndian<T>> {
     static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
 };
 
 template<typename T>
-struct Traits<BigEndian<T> const> : public GenericTraits<BigEndian<T> const> {
+struct Traits<BigEndian<T> const> : public DefaultTraits<BigEndian<T> const> {
     static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
 };
 

@@ -116,7 +116,7 @@ private:
 }
 
 template<>
-struct AK::Traits<JS::TransitionKey> : public GenericTraits<JS::TransitionKey> {
+struct AK::Traits<JS::TransitionKey> : public DefaultTraits<JS::TransitionKey> {
     static unsigned hash(const JS::TransitionKey& key)
     {
         return pair_int_hash(key.attributes.bits(), Traits<JS::StringOrSymbol>::hash(key.property_key));

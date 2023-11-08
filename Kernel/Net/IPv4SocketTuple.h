@@ -56,7 +56,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<Kernel::IPv4SocketTuple> : public GenericTraits<Kernel::IPv4SocketTuple> {
+struct Traits<Kernel::IPv4SocketTuple> : public DefaultTraits<Kernel::IPv4SocketTuple> {
     static unsigned hash(Kernel::IPv4SocketTuple const& tuple)
     {
         auto h1 = pair_int_hash(tuple.local_address().to_u32(), tuple.local_port());

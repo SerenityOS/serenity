@@ -37,7 +37,7 @@ static_assert(AssertSize<TTCHeaderV1, 16>());
 }
 
 template<>
-class AK::Traits<OpenType::TTCHeaderV1> : public GenericTraits<OpenType::TTCHeaderV1> {
+class AK::Traits<OpenType::TTCHeaderV1> : public DefaultTraits<OpenType::TTCHeaderV1> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };

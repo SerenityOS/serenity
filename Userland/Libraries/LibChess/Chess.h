@@ -293,7 +293,7 @@ void Board::generate_moves(Callback callback, Color color) const
 }
 
 template<>
-struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
+struct AK::Traits<Chess::Piece> : public DefaultTraits<Chess::Piece> {
     static unsigned hash(Chess::Piece const& piece)
     {
         return pair_int_hash(static_cast<u32>(piece.color), static_cast<u32>(piece.type));
@@ -301,7 +301,7 @@ struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
 };
 
 template<>
-struct AK::Traits<Chess::Board> : public GenericTraits<Chess::Board> {
+struct AK::Traits<Chess::Board> : public DefaultTraits<Chess::Board> {
     static unsigned hash(Chess::Board const& chess)
     {
         unsigned hash = 0;

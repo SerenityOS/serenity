@@ -200,6 +200,6 @@ private:
 }
 
 template<>
-struct AK::Traits<Maps::MapWidget::TileKey> : public GenericTraits<Maps::MapWidget::TileKey> {
+struct AK::Traits<Maps::MapWidget::TileKey> : public DefaultTraits<Maps::MapWidget::TileKey> {
     static unsigned hash(Maps::MapWidget::TileKey const& t) { return t.hash(); }
 };

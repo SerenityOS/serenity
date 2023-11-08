@@ -326,7 +326,7 @@ struct Formatter<DistinctNumeric<T, X, Opts...>> : Formatter<T> {
     constexpr bool operator==(DN n, E e) { return n.value() == to_underlying(e); }
 
 template<typename T, typename X, typename... Opts>
-struct Traits<AK::DistinctNumeric<T, X, Opts...>> : public GenericTraits<AK::DistinctNumeric<T, X, Opts...>> {
+struct Traits<AK::DistinctNumeric<T, X, Opts...>> : public DefaultTraits<AK::DistinctNumeric<T, X, Opts...>> {
     static constexpr bool is_trivial() { return true; }
     static constexpr auto hash(DistinctNumeric<T, X, Opts...> const& d) { return Traits<T>::hash(d.value()); }
 };

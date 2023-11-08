@@ -90,7 +90,7 @@ struct AK::Formatter<NumberFormat> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<NumberFormat> : public GenericTraits<NumberFormat> {
+struct AK::Traits<NumberFormat> : public DefaultTraits<NumberFormat> {
     static unsigned hash(NumberFormat const& f) { return f.hash(); }
 };
 
@@ -167,7 +167,7 @@ struct AK::Formatter<NumberSystem> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<NumberSystem> : public GenericTraits<NumberSystem> {
+struct AK::Traits<NumberSystem> : public DefaultTraits<NumberSystem> {
     static unsigned hash(NumberSystem const& s) { return s.hash(); }
 };
 
@@ -209,7 +209,7 @@ struct AK::Formatter<Unit> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<Unit> : public GenericTraits<Unit> {
+struct AK::Traits<Unit> : public DefaultTraits<Unit> {
     static unsigned hash(Unit const& u) { return u.hash(); }
 };
 

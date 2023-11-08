@@ -37,7 +37,7 @@ private:
 
 namespace AK {
 template<>
-struct Traits<WindowIdentifier> : public GenericTraits<WindowIdentifier> {
+struct Traits<WindowIdentifier> : public DefaultTraits<WindowIdentifier> {
     static unsigned hash(WindowIdentifier const& w) { return pair_int_hash(w.client_id(), w.window_id()); }
 };
 }

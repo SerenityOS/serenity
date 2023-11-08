@@ -88,6 +88,6 @@ private:
 }
 
 template<>
-struct AK::Traits<Compress::ZlibHeader> : public AK::GenericTraits<Compress::ZlibHeader> {
+struct AK::Traits<Compress::ZlibHeader> : public AK::DefaultTraits<Compress::ZlibHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };

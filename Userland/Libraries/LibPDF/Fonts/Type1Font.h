@@ -41,7 +41,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<PDF::Type1GlyphCacheKey> : public GenericTraits<PDF::Type1GlyphCacheKey> {
+struct Traits<PDF::Type1GlyphCacheKey> : public DefaultTraits<PDF::Type1GlyphCacheKey> {
     static unsigned hash(PDF::Type1GlyphCacheKey const& index)
     {
         return pair_int_hash(pair_int_hash(index.glyph_id, (index.subpixel_offset.x << 8) | index.subpixel_offset.y), int_hash(bit_cast<u32>(index.width)));

@@ -16,7 +16,7 @@
 namespace AK {
 
 template<typename T>
-struct GenericTraits {
+struct DefaultTraits {
     using PeekType = T&;
     using ConstPeekType = T const&;
     static constexpr bool is_trivial() { return false; }
@@ -27,11 +27,11 @@ struct GenericTraits {
 };
 
 template<typename T>
-struct Traits : public GenericTraits<T> {
+struct Traits : public DefaultTraits<T> {
 };
 
 template<Integral T>
-struct Traits<T> : public GenericTraits<T> {
+struct Traits<T> : public DefaultTraits<T> {
     static constexpr bool is_trivial() { return true; }
     static constexpr bool is_trivially_serializable() { return true; }
     static unsigned hash(T value)
@@ -42,7 +42,7 @@ struct Traits<T> : public GenericTraits<T> {
 
 #ifndef KERNEL
 template<FloatingPoint T>
-struct Traits<T> : public GenericTraits<T> {
+struct Traits<T> : public DefaultTraits<T> {
     static constexpr bool is_trivial() { return true; }
     static constexpr bool is_trivially_serializable() { return true; }
     static unsigned hash(T value)
@@ -53,20 +53,20 @@ struct Traits<T> : public GenericTraits<T> {
 #endif
 
 template<typename T>
-requires(IsPointer<T> && !Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTraits<T> {
+requires(IsPointer<T> && !Detail::IsPointerOfType<char, T>) struct Traits<T> : public DefaultTraits<T> {
     static unsigned hash(T p) { return standard_sip_hash(bit_cast<FlatPtr>(p)); }
     static constexpr bool is_trivial() { return true; }
 };
 
 template<Enum T>
-struct Traits<T> : public GenericTraits<T> {
+struct Traits<T> : public DefaultTraits<T> {
     static unsigned hash(T value) { return Traits<UnderlyingType<T>>::hash(to_underlying(value)); }
     static constexpr bool is_trivial() { return Traits<UnderlyingType<T>>::is_trivial(); }
     static constexpr bool is_trivially_serializable() { return Traits<UnderlyingType<T>>::is_trivially_serializable(); }
 };
 
 template<typename T>
-requires(Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTraits<T> {
+requires(Detail::IsPointerOfType<char, T>) struct Traits<T> : public DefaultTraits<T> {
     static unsigned hash(T const value) { return string_hash(value, strlen(value)); }
     static constexpr bool equals(T const a, T const b) { return strcmp(a, b); }
     static constexpr bool is_trivial() { return true; }
@@ -75,6 +75,6 @@ requires(Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTrai
 }
 
 #if USING_AK_GLOBALLY
-using AK::GenericTraits;
+using AK::DefaultTraits;
 using AK::Traits;
 #endif

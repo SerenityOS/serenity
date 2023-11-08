@@ -285,7 +285,7 @@ inline NonnullRefPtr<T> make_ref_counted(Args&&... args)
 }
 
 template<typename T>
-struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
+struct Traits<NonnullRefPtr<T>> : public DefaultTraits<NonnullRefPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = T const*;
     static unsigned hash(NonnullRefPtr<T> const& p) { return ptr_hash(p.ptr()); }

@@ -2470,7 +2470,7 @@ CSSPixels GridFormattingContext::calculate_minimum_contribution(GridItem const& 
 
 namespace AK {
 template<>
-struct Traits<Web::Layout::GridPosition> : public GenericTraits<Web::Layout::GridPosition> {
+struct Traits<Web::Layout::GridPosition> : public DefaultTraits<Web::Layout::GridPosition> {
     static unsigned hash(Web::Layout::GridPosition const& key) { return pair_int_hash(key.row, key.column); }
 };
 }

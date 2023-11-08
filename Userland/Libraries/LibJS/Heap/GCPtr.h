@@ -215,7 +215,7 @@ inline bool operator==(NonnullGCPtr<T> const& a, GCPtr<U> const& b)
 namespace AK {
 
 template<typename T>
-struct Traits<JS::GCPtr<T>> : public GenericTraits<JS::GCPtr<T>> {
+struct Traits<JS::GCPtr<T>> : public DefaultTraits<JS::GCPtr<T>> {
     static unsigned hash(JS::GCPtr<T> const& value)
     {
         return Traits<T*>::hash(value.ptr());
@@ -223,7 +223,7 @@ struct Traits<JS::GCPtr<T>> : public GenericTraits<JS::GCPtr<T>> {
 };
 
 template<typename T>
-struct Traits<JS::NonnullGCPtr<T>> : public GenericTraits<JS::NonnullGCPtr<T>> {
+struct Traits<JS::NonnullGCPtr<T>> : public DefaultTraits<JS::NonnullGCPtr<T>> {
     static unsigned hash(JS::NonnullGCPtr<T> const& value)
     {
         return Traits<T*>::hash(value.ptr());

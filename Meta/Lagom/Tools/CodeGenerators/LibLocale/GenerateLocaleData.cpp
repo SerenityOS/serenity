@@ -61,7 +61,7 @@ struct AK::Formatter<DisplayPattern> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<DisplayPattern> : public GenericTraits<DisplayPattern> {
+struct AK::Traits<DisplayPattern> : public DefaultTraits<DisplayPattern> {
     static unsigned hash(DisplayPattern const& p) { return p.hash(); }
 };
 
@@ -110,7 +110,7 @@ struct AK::Formatter<ListPatterns> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<ListPatterns> : public GenericTraits<ListPatterns> {
+struct AK::Traits<ListPatterns> : public DefaultTraits<ListPatterns> {
     static unsigned hash(ListPatterns const& p) { return p.hash(); }
 };
 
@@ -139,7 +139,7 @@ struct AK::Formatter<TextLayout> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<TextLayout> : public GenericTraits<TextLayout> {
+struct AK::Traits<TextLayout> : public DefaultTraits<TextLayout> {
     static unsigned hash(TextLayout const& t) { return t.hash(); }
 };
 

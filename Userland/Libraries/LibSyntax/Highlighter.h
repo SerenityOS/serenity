@@ -149,7 +149,7 @@ private:
 }
 
 template<>
-struct AK::Traits<Syntax::Highlighter::MatchingTokenPair> : public AK::GenericTraits<Syntax::Highlighter::MatchingTokenPair> {
+struct AK::Traits<Syntax::Highlighter::MatchingTokenPair> : public AK::DefaultTraits<Syntax::Highlighter::MatchingTokenPair> {
     static unsigned hash(Syntax::Highlighter::MatchingTokenPair const& pair)
     {
         return pair_int_hash(u64_hash(pair.open), u64_hash(pair.close));

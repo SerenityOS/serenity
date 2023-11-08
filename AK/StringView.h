@@ -360,7 +360,7 @@ private:
 };
 
 template<>
-struct Traits<StringView> : public GenericTraits<StringView> {
+struct Traits<StringView> : public DefaultTraits<StringView> {
     static unsigned hash(StringView s) { return s.hash(); }
 };
 

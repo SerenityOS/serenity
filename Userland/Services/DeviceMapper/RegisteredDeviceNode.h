@@ -34,7 +34,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<DeviceMapper::RegisteredDeviceNode> : public GenericTraits<DeviceMapper::RegisteredDeviceNode> {
+struct Traits<DeviceMapper::RegisteredDeviceNode> : public DefaultTraits<DeviceMapper::RegisteredDeviceNode> {
     static unsigned hash(DeviceMapper::RegisteredDeviceNode const& node)
     {
         return int_hash(node.minor_number().value());

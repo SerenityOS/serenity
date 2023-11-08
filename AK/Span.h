@@ -296,7 +296,7 @@ public:
 };
 
 template<typename T>
-struct Traits<Span<T>> : public GenericTraits<Span<T>> {
+struct Traits<Span<T>> : public DefaultTraits<Span<T>> {
     static unsigned hash(Span<T> const& span)
     {
         unsigned hash = 0;

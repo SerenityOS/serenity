@@ -313,7 +313,7 @@ ErrorOr<Gfx::IntPoint> decode(Decoder&);
 }
 
 template<typename T>
-struct AK::Traits<Gfx::Point<T>> : public AK::GenericTraits<Gfx::Point<T>> {
+struct AK::Traits<Gfx::Point<T>> : public AK::DefaultTraits<Gfx::Point<T>> {
     static constexpr bool is_trivial() { return false; }
     static unsigned hash(Gfx::Point<T> const& point)
     {

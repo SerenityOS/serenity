@@ -594,7 +594,7 @@ inline size_t find_offset_into_node(StringView unescaped_text, size_t escaped_of
 namespace AK {
 
 template<>
-struct Traits<Shell::Shell::RunnablePath> : public GenericTraits<Shell::Shell::RunnablePath> {
+struct Traits<Shell::Shell::RunnablePath> : public DefaultTraits<Shell::Shell::RunnablePath> {
     static constexpr bool is_trivial() { return false; }
 
     static bool equals(Shell::Shell::RunnablePath const& self, Shell::Shell::RunnablePath const& other)

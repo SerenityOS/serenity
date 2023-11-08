@@ -65,7 +65,7 @@ private:
 }
 
 template<>
-struct AK::Traits<DNS::Answer> : public GenericTraits<DNS::Answer> {
+struct AK::Traits<DNS::Answer> : public DefaultTraits<DNS::Answer> {
     static constexpr bool is_trivial() { return false; }
     static unsigned hash(DNS::Answer a) { return a.hash(); }
 };

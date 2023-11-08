@@ -78,7 +78,7 @@ struct PidAndTid {
 
 namespace AK {
 template<>
-struct Traits<PidAndTid> : public GenericTraits<PidAndTid> {
+struct Traits<PidAndTid> : public DefaultTraits<PidAndTid> {
     static unsigned hash(PidAndTid const& value) { return pair_int_hash(value.pid, value.tid); }
 };
 }

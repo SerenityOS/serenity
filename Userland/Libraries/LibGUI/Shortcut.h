@@ -80,7 +80,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<GUI::Shortcut> : public GenericTraits<GUI::Shortcut> {
+struct Traits<GUI::Shortcut> : public DefaultTraits<GUI::Shortcut> {
     static unsigned hash(const GUI::Shortcut& shortcut)
     {
         auto base_hash = pair_int_hash(shortcut.modifiers(), (u32)shortcut.type());
