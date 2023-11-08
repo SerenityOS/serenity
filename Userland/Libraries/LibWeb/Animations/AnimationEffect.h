@@ -116,6 +116,12 @@ public:
     };
     Phase phase() const;
 
+    Optional<double> overall_progress() const;
+    Optional<double> directed_progress() const;
+    AnimationDirection current_direction() const;
+    Optional<double> simple_iteration_progress() const;
+    Optional<double> current_iteration() const;
+
 protected:
     AnimationEffect(JS::Realm&);
 

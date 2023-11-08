@@ -333,6 +333,135 @@ AnimationEffect::Phase AnimationEffect::phase() const
     return Phase::Idle;
 }
 
+// https://www.w3.org/TR/web-animations-1/#overall-progress
+Optional<double> AnimationEffect::overall_progress() const
+{
+    // 1. If the active time is unresolved, return unresolved.
+    auto active_time = this->active_time();
+    if (!active_time.has_value())
+        return {};
+
+    // 2. Calculate an initial value for overall progress based on the first matching condition from below,
+    double overall_progress;
+
+    // -> If the iteration duration is zero,
+    if (m_iteration_duration.has<String>() || m_iteration_duration.get<double>() == 0.0) {
+        // If the animation effect is in the before phase, let overall progress be zero, otherwise, let it be equal to
+        // the iteration count.
+        if (is_in_the_before_phase())
+            overall_progress = 0.0;
+        else
+            overall_progress = m_iteration_count;
+    }
+    // Otherwise,
+    else {
+        // Let overall progress be the result of calculating active time / iteration duration.
+        overall_progress = active_time.value() / m_iteration_duration.get<double>();
+    }
+
+    // 3. Return the result of calculating overall progress + iteration start.
+    return overall_progress + m_iteration_start;
+}
+
+// https://www.w3.org/TR/web-animations-1/#directed-progress
+Optional<double> AnimationEffect::directed_progress() const
+{
+    // 1. If the simple iteration progress is unresolved, return unresolved.
+    auto simple_iteration_progress = this->simple_iteration_progress();
+    if (!simple_iteration_progress.has_value())
+        return {};
+
+    // 2. Calculate the current direction using the first matching condition from the following list:
+    auto current_direction = this->current_direction();
+
+    // 3. If the current direction is forwards then return the simple iteration progress.
+    if (current_direction == AnimationDirection::Forwards)
+        return simple_iteration_progress;
+
+    //    Otherwise, return 1.0 - simple iteration progress.
+    return 1.0 - simple_iteration_progress.value();
+}
+
+// https://www.w3.org/TR/web-animations-1/#directed-progress
+AnimationDirection AnimationEffect::current_direction() const
+{
+    // 2. Calculate the current direction using the first matching condition from the following list:
+    // -> If playback direction is normal,
+    if (m_playback_direction == Bindings::PlaybackDirection::Normal) {
+        // Let the current direction be forwards.
+        return AnimationDirection::Forwards;
+    }
+
+    // -> If playback direction is reverse,
+    if (m_playback_direction == Bindings::PlaybackDirection::Reverse) {
+        // Let the current direction be reverse.
+        return AnimationDirection::Backwards;
+    }
+    // -> Otherwise,
+    //    1. Let d be the current iteration.
+    double d = current_iteration().value();
+
+    //    2. If playback direction is alternate-reverse increment d by 1.
+    if (m_playback_direction == Bindings::PlaybackDirection::AlternateReverse)
+        d += 1.0;
+
+    //    3. If d % 2 == 0, let the current direction be forwards, otherwise let the current direction be reverse. If d
+    //       is infinity, let the current direction be forwards.
+    if (isinf(d))
+        return AnimationDirection::Forwards;
+    if (fmod(d, 2.0) == 0.0)
+        return AnimationDirection::Forwards;
+    return AnimationDirection::Backwards;
+}
+
+// https://www.w3.org/TR/web-animations-1/#simple-iteration-progress
+Optional<double> AnimationEffect::simple_iteration_progress() const
+{
+    // 1. If the overall progress is unresolved, return unresolved.
+    auto overall_progress = this->overall_progress();
+    if (!overall_progress.has_value())
+        return {};
+
+    // 2. If overall progress is infinity, let the simple iteration progress be iteration start % 1.0, otherwise, let
+    //    the simple iteration progress be overall progress % 1.0.
+    double simple_iteration_progress = isinf(overall_progress.value()) ? fmod(m_iteration_start, 1.0) : fmod(overall_progress.value(), 1.0);
+
+    // 3. If all of the following conditions are true,
+    //    - the simple iteration progress calculated above is zero, and
+    //    - the animation effect is in the active phase or the after phase, and
+    //    - the active time is equal to the active duration, and
+    //    - the iteration count is not equal to zero.
+    auto active_time = this->active_time();
+    if (simple_iteration_progress == 0.0 && (is_in_the_active_phase() || is_in_the_after_phase()) && active_time.has_value() && active_time.value() == active_duration() && m_iteration_count != 0.0) {
+        // let the simple iteration progress be 1.0.
+        simple_iteration_progress = 1.0;
+    }
+
+    // 4. Return simple iteration progress.
+    return simple_iteration_progress;
+}
+
+// https://www.w3.org/TR/web-animations-1/#current-iteration
+Optional<double> AnimationEffect::current_iteration() const
+{
+    // 1. If the active time is unresolved, return unresolved.
+    auto active_time = this->active_time();
+    if (!active_time.has_value())
+        return {};
+
+    // 2. If the animation effect is in the after phase and the iteration count is infinity, return infinity.
+    if (is_in_the_after_phase() && isinf(m_iteration_count))
+        return m_iteration_count;
+
+    // 3. If the simple iteration progress is 1.0, return floor(overall progress) - 1.
+    auto simple_iteration_progress = this->simple_iteration_progress();
+    if (simple_iteration_progress.has_value() && simple_iteration_progress.value() == 1.0)
+        return floor(overall_progress().value()) - 1.0;
+
+    // 4. Otherwise, return floor(overall progress).
+    return floor(overall_progress().value());
+}
+
 AnimationEffect::AnimationEffect(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
