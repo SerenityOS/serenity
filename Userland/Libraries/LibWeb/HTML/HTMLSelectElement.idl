@@ -1,4 +1,5 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/HTMLFormElement.idl>
 #import <HTML/HTMLOptionsCollection.idl>
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#htmlselectelement

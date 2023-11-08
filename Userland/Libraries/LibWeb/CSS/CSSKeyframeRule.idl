@@ -1,4 +1,5 @@
 #import <CSS/CSSRule.idl>
+#import <CSS/CSSStyleDeclaration.idl>
 
 // https://drafts.csswg.org/css-animations-1/#interface-csskeyframerule-idl
 [Exposed=Window]

@@ -1,4 +1,6 @@
+#import <FileAPI/Blob.idl>
 #import <Streams/ReadableStream.idl>
+#import <XHR/FormData.idl>
 
 // https://fetch.spec.whatwg.org/#body
 interface mixin Body {

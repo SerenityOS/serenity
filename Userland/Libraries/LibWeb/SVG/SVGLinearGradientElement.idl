@@ -1,3 +1,4 @@
+#import <SVG/SVGAnimatedLength.idl>
 #import <SVG/SVGGradientElement.idl>
 
 // https://svgwg.org/svg2-draft/single-page.html#pservers-InterfaceSVGLinearGradientElement

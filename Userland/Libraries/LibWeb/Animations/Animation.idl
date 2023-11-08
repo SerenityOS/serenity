@@ -1,5 +1,6 @@
 #import <Animations/AnimationEffect.idl>
 #import <Animations/AnimationTimeline.idl>
+#import <DOM/EventTarget.idl>
 
 // https://www.w3.org/TR/web-animations-1/#the-animation-interface
 [Exposed=Window]
