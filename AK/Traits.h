@@ -30,6 +30,11 @@ template<typename T>
 struct Traits : public DefaultTraits<T> {
 };
 
+template<typename T>
+struct Traits<T const> : public Traits<T> {
+    using PeekType = typename Traits<T>::ConstPeekType;
+};
+
 template<Integral T>
 struct Traits<T> : public DefaultTraits<T> {
     static constexpr bool is_trivial() { return true; }

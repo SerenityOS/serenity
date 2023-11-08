@@ -43,10 +43,8 @@ static constexpr size_t s_max_range_mask_size = s_max_glyph_count / (256 * 8);
 
 }
 
-// FIXME: We define the traits for the const FontFileHeader, because that's the one we use, and defining
-//        Traits<T> doesn't apply to Traits<T const>. Once that's fixed, remove the const here.
 template<>
-class AK::Traits<Gfx::FontFileHeader const> : public DefaultTraits<Gfx::FontFileHeader const> {
+class AK::Traits<Gfx::FontFileHeader> : public DefaultTraits<Gfx::FontFileHeader> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };
