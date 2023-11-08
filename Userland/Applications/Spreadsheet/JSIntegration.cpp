@@ -129,7 +129,7 @@ JS::ThrowCompletionOr<JS::Value> SheetGlobalObject::internal_get(const JS::Prope
     return Base::internal_get(property_name, receiver);
 }
 
-JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_set(const JS::PropertyKey& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_set(const JS::PropertyKey& property_name, JS::Value value, JS::Value receiver, JS::CacheablePropertyMetadata*)
 {
     if (property_name.is_string()) {
         if (auto pos = m_sheet.parse_cell_name(property_name.as_string()); pos.has_value()) {

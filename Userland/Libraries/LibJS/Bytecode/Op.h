@@ -668,11 +668,12 @@ enum class PropertyKind {
 
 class PutById final : public Instruction {
 public:
-    explicit PutById(Register base, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
+    explicit PutById(Register base, IdentifierTableIndex property, PropertyKind kind, u32 cache_index)
         : Instruction(Type::PutById, sizeof(*this))
         , m_base(base)
         , m_property(property)
         , m_kind(kind)
+        , m_cache_index(cache_index)
     {
     }
 
@@ -682,21 +683,24 @@ public:
     Register base() const { return m_base; }
     IdentifierTableIndex property() const { return m_property; }
     PropertyKind kind() const { return m_kind; }
+    u32 cache_index() const { return m_cache_index; }
 
 private:
     Register m_base;
     IdentifierTableIndex m_property;
     PropertyKind m_kind;
+    u32 m_cache_index { 0 };
 };
 
 class PutByIdWithThis final : public Instruction {
 public:
-    PutByIdWithThis(Register base, Register this_value, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
+    PutByIdWithThis(Register base, Register this_value, IdentifierTableIndex property, PropertyKind kind, u32 cache_index)
         : Instruction(Type::PutByIdWithThis, sizeof(*this))
         , m_base(base)
         , m_this_value(this_value)
         , m_property(property)
         , m_kind(kind)
+        , m_cache_index(cache_index)
     {
     }
 
@@ -707,12 +711,14 @@ public:
     Register this_value() const { return m_this_value; }
     IdentifierTableIndex property() const { return m_property; }
     PropertyKind kind() const { return m_kind; }
+    u32 cache_index() const { return m_cache_index; }
 
 private:
     Register m_base;
     Register m_this_value;
     IdentifierTableIndex m_property;
     PropertyKind m_kind;
+    u32 m_cache_index { 0 };
 };
 
 class PutPrivateById final : public Instruction {

@@ -482,9 +482,9 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                     } else if (expression.property().is_identifier()) {
                         auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(expression.property()).string());
                         if (!lhs_is_super_expression)
-                            generator.emit<Bytecode::Op::PutById>(*base_object_register, identifier_table_ref);
+                            generator.emit<Bytecode::Op::PutById>(*base_object_register, identifier_table_ref, Bytecode::Op::PropertyKind::KeyValue, generator.next_property_lookup_cache());
                         else
-                            generator.emit<Bytecode::Op::PutByIdWithThis>(*base_object_register, *this_value_register, identifier_table_ref);
+                            generator.emit<Bytecode::Op::PutByIdWithThis>(*base_object_register, *this_value_register, identifier_table_ref, Bytecode::Op::PropertyKind::KeyValue, generator.next_property_lookup_cache());
                     } else if (expression.property().is_private_identifier()) {
                         auto identifier_table_ref = generator.intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
                         generator.emit<Bytecode::Op::PutPrivateById>(*base_object_register, identifier_table_ref);
@@ -985,7 +985,7 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
                 TRY(generator.emit_named_evaluation_if_anonymous_function(property->value(), name));
             }
 
-            generator.emit<Bytecode::Op::PutById>(object_reg, key_name, property_kind);
+            generator.emit<Bytecode::Op::PutById>(object_reg, key_name, property_kind, generator.next_property_lookup_cache());
         } else {
             TRY(property->key().generate_bytecode(generator));
             auto property_reg = generator.allocate_register();
@@ -1695,7 +1695,7 @@ static void generate_yield(Bytecode::Generator& generator, Bytecode::Label conti
 
     // 5. Return Completion Record { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
     generator.emit<Bytecode::Op::LoadImmediate>(Value(to_underlying(Completion::Type::Return)));
-    generator.emit<Bytecode::Op::PutById>(received_completion_register, type_identifier);
+    generator.emit<Bytecode::Op::PutById>(received_completion_register, type_identifier, Bytecode::Op::PropertyKind::KeyValue, generator.next_property_lookup_cache());
     generator.emit<Bytecode::Op::Jump>(Bytecode::Label { load_completion_and_jump_to_continuation_label_block });
 
     generator.switch_to_basic_block(load_completion_and_jump_to_continuation_label_block);
@@ -2240,7 +2240,7 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     auto raw_strings_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(raw_strings_reg);
 
-    generator.emit<Bytecode::Op::PutById>(strings_reg, generator.intern_identifier("raw"));
+    generator.emit<Bytecode::Op::PutById>(strings_reg, generator.intern_identifier("raw"), Bytecode::Op::PropertyKind::KeyValue, generator.next_property_lookup_cache());
 
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     auto this_reg = generator.allocate_register();

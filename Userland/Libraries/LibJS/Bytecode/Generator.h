@@ -236,6 +236,7 @@ public:
 
     [[nodiscard]] size_t next_global_variable_cache() { return m_next_global_variable_cache++; }
     [[nodiscard]] size_t next_environment_variable_cache() { return m_next_environment_variable_cache++; }
+    [[nodiscard]] size_t next_property_lookup_cache() { return m_next_property_lookup_cache++; }
 
 private:
     enum class JumpType {

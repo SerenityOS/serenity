@@ -1341,10 +1341,9 @@ void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding con
     end.link(m_assembler);
 }
 
-static Value cxx_put_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex property, Value value, Bytecode::Op::PropertyKind kind)
+static Value cxx_put_by_id(VM& vm, Value base, DeprecatedFlyString const& property, Value value, Bytecode::Op::PropertyKind kind, Bytecode::PropertyLookupCache& cache)
 {
-    PropertyKey name = vm.bytecode_interpreter().current_executable().get_identifier(property);
-    TRY_OR_SET_EXCEPTION(Bytecode::put_by_property_key(vm, base, base, value, name, kind));
+    TRY_OR_SET_EXCEPTION(Bytecode::put_by_property_key(vm, base, base, value, property, kind, &cache));
     return value;
 }
 
@@ -1353,11 +1352,14 @@ void Compiler::compile_put_by_id(Bytecode::Op::PutById const& op)
     load_vm_register(ARG1, op.base());
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.property().value()));
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
     load_accumulator(ARG3);
     m_assembler.mov(
         Assembler::Operand::Register(ARG4),
         Assembler::Operand::Imm(to_underlying(op.kind())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG5),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])));
     native_call((void*)cxx_put_by_id);
     store_accumulator(RET);
     check_exception();
@@ -1896,9 +1898,9 @@ void Compiler::compile_delete_by_id_with_this(Bytecode::Op::DeleteByIdWithThis c
     store_accumulator(RET);
 }
 
-static Value cxx_put_by_id_with_this(VM& vm, Value base, Value value, DeprecatedFlyString const& name, Value this_value, Bytecode::Op::PropertyKind kind)
+static Value cxx_put_by_id_with_this(VM& vm, Value base, Value value, DeprecatedFlyString const& name, Value this_value, Bytecode::Op::PropertyKind kind, Bytecode::PropertyLookupCache& cache)
 {
-    TRY_OR_SET_EXCEPTION(Bytecode::put_by_property_key(vm, base, this_value, value, name, kind));
+    TRY_OR_SET_EXCEPTION(Bytecode::put_by_property_key(vm, base, this_value, value, name, kind, &cache));
     return {};
 }
 
@@ -1913,7 +1915,10 @@ void Compiler::compile_put_by_id_with_this(Bytecode::Op::PutByIdWithThis const& 
     m_assembler.mov(
         Assembler::Operand::Register(ARG5),
         Assembler::Operand::Imm(to_underlying(op.kind())));
-    native_call((void*)cxx_put_by_id_with_this);
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])));
+    native_call((void*)cxx_put_by_id_with_this, { Assembler::Operand::Register(GPR0) });
     check_exception();
 }
 
