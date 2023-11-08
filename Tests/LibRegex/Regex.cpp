@@ -757,6 +757,18 @@ TEST_CASE(ECMA262_unicode_match)
         { "(?<\\ud835\\udcd1\\ud835\\udcfb\\ud835\\udcf8\\ud835\\udd00\\ud835\\udcf7>brown)"sv, "brown"sv, true, ECMAScriptFlags::Unicode },
         { "^\\s+$"sv, space_and_line_terminators },
         { "^\\s+$"sv, space_and_line_terminators, true, ECMAScriptFlags::Unicode },
+        { "[\\u0390]"sv, "\u1fd3"sv, false, ECMAScriptFlags::Unicode },
+        { "[\\u1fd3]"sv, "\u0390"sv, false, ECMAScriptFlags::Unicode },
+        { "[\\u0390]"sv, "\u1fd3"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::Insensitive) },
+        { "[\\u1fd3]"sv, "\u0390"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::Insensitive) },
+        { "[\\u03b0]"sv, "\u1fe3"sv, false, ECMAScriptFlags::Unicode },
+        { "[\\u1fe3]"sv, "\u03b0"sv, false, ECMAScriptFlags::Unicode },
+        { "[\\u03b0]"sv, "\u1fe3"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::Insensitive) },
+        { "[\\u1fe3]"sv, "\u03b0"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::Insensitive) },
+        { "[\\ufb05]"sv, "\ufb06"sv, false, ECMAScriptFlags::Unicode },
+        { "[\\ufb06]"sv, "\ufb05"sv, false, ECMAScriptFlags::Unicode },
+        { "[\\ufb05]"sv, "\ufb06"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::Insensitive) },
+        { "[\\ufb06]"sv, "\ufb05"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::Insensitive) },
     };
 
     for (auto& test : tests) {

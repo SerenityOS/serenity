@@ -701,12 +701,19 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(MatchInput const& input, MatchSt
         return;
 
     // FIXME: Figure out how to do this if unicode() without performing a substring split first.
-    auto input_view = input.view.unicode() ? input.view.substring_view(state.string_position, 1)[0] : input.view.code_unit_at(state.string_position_in_code_units);
+    auto input_view = input.view.unicode()
+        ? input.view.substring_view(state.string_position, 1)[0]
+        : input.view.code_unit_at(state.string_position_in_code_units);
+
     bool equal;
-    if (input.regex_options & AllFlags::Insensitive)
-        equal = to_ascii_lowercase(input_view) == to_ascii_lowercase(ch1); // FIXME: Implement case-insensitive matching for non-ascii characters
-    else
+    if (input.regex_options & AllFlags::Insensitive) {
+        if (input.view.unicode())
+            equal = Unicode::equals_ignoring_case(Utf32View { &input_view, 1 }, Utf32View { &ch1, 1 });
+        else
+            equal = to_ascii_lowercase(input_view) == to_ascii_lowercase(ch1);
+    } else {
         equal = input_view == ch1;
+    }
 
     if (equal) {
         if (inverse)
