@@ -20,4 +20,4 @@ dictionary ResizeObserverOptions {
 };
 
 // https://drafts.csswg.org/resize-observer/#resize-observer-callback
-callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
+callback ResizeObserverCallback = undefined (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
