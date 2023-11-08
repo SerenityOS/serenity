@@ -60,6 +60,9 @@ ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView, Optional<StringV
 ErrorOr<String> to_unicode_titlecase_full(StringView, Optional<StringView> const& locale = {}, TrailingCodePointTransformation trailing_code_point_transformation = TrailingCodePointTransformation::Lowercase);
 ErrorOr<String> to_unicode_casefold_full(StringView);
 
+template<typename ViewType>
+bool equals_ignoring_case(ViewType, ViewType);
+
 Optional<GeneralCategory> general_category_from_string(StringView);
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
 
