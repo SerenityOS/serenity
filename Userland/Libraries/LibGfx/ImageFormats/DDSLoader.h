@@ -254,11 +254,11 @@ private:
 }
 
 template<>
-struct AK::Traits<Gfx::DDSHeader> : public AK::GenericTraits<Gfx::DDSHeader> {
+struct AK::Traits<Gfx::DDSHeader> : public AK::DefaultTraits<Gfx::DDSHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-struct AK::Traits<Gfx::DDSHeaderDXT10> : public AK::GenericTraits<Gfx::DDSHeaderDXT10> {
+struct AK::Traits<Gfx::DDSHeaderDXT10> : public AK::DefaultTraits<Gfx::DDSHeaderDXT10> {
     static constexpr bool is_trivially_serializable() { return true; }
 };

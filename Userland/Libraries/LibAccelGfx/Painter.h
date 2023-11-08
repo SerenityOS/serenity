@@ -97,7 +97,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<AccelGfx::Painter::GlyphsTextureKey> : public GenericTraits<AccelGfx::Painter::GlyphsTextureKey> {
+struct Traits<AccelGfx::Painter::GlyphsTextureKey> : public DefaultTraits<AccelGfx::Painter::GlyphsTextureKey> {
     static unsigned hash(AccelGfx::Painter::GlyphsTextureKey const& key)
     {
         return pair_int_hash(ptr_hash(key.font), key.code_point);

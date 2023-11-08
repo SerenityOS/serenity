@@ -271,6 +271,6 @@ private:
 }
 
 template<>
-struct AK::Traits<Compress::LzmaHeader> : public AK::GenericTraits<Compress::LzmaHeader> {
+struct AK::Traits<Compress::LzmaHeader> : public AK::DefaultTraits<Compress::LzmaHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };

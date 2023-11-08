@@ -34,7 +34,7 @@ using CrossOriginPropertyDescriptorMap = HashMap<CrossOriginKey, JS::PropertyDes
 namespace AK {
 
 template<>
-struct Traits<Web::HTML::CrossOriginKey> : public GenericTraits<Web::HTML::CrossOriginKey> {
+struct Traits<Web::HTML::CrossOriginKey> : public DefaultTraits<Web::HTML::CrossOriginKey> {
     static unsigned hash(Web::HTML::CrossOriginKey const& key)
     {
         return pair_int_hash(

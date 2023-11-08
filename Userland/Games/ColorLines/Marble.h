@@ -37,7 +37,7 @@ private:
 
 namespace AK {
 template<>
-struct Traits<Marble> : public GenericTraits<Marble> {
+struct Traits<Marble> : public DefaultTraits<Marble> {
     static unsigned hash(Marble const& marble)
     {
         return Traits<Marble::Point>::hash(marble.position());

@@ -57,7 +57,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<Web::HTML::ListOfAvailableImages::Key> : public GenericTraits<Web::HTML::ListOfAvailableImages::Key> {
+struct Traits<Web::HTML::ListOfAvailableImages::Key> : public DefaultTraits<Web::HTML::ListOfAvailableImages::Key> {
     static unsigned hash(Web::HTML::ListOfAvailableImages::Key const& key)
     {
         return key.hash();

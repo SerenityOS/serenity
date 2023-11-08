@@ -189,7 +189,7 @@ void CppComprehensionEngine::for_each_included_document_recursive(DocumentData c
 namespace AK {
 
 template<>
-struct Traits<CodeComprehension::Cpp::CppComprehensionEngine::SymbolName> : public GenericTraits<CodeComprehension::Cpp::CppComprehensionEngine::SymbolName> {
+struct Traits<CodeComprehension::Cpp::CppComprehensionEngine::SymbolName> : public DefaultTraits<CodeComprehension::Cpp::CppComprehensionEngine::SymbolName> {
     static unsigned hash(CodeComprehension::Cpp::CppComprehensionEngine::SymbolName const& key)
     {
         unsigned hash = 0;

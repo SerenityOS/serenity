@@ -99,6 +99,6 @@ static_assert(sizeof(PacketHeader) == 12);
 }
 
 template<>
-struct AK::Traits<DNS::PacketHeader> : public AK::GenericTraits<DNS::PacketHeader> {
+struct AK::Traits<DNS::PacketHeader> : public AK::DefaultTraits<DNS::PacketHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };

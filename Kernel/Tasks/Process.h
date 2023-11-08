@@ -1098,7 +1098,7 @@ struct AK::Formatter<Kernel::Process> : AK::Formatter<FormatString> {
 
 namespace AK {
 template<>
-struct Traits<Kernel::GlobalFutexKey> : public GenericTraits<Kernel::GlobalFutexKey> {
+struct Traits<Kernel::GlobalFutexKey> : public DefaultTraits<Kernel::GlobalFutexKey> {
     static unsigned hash(Kernel::GlobalFutexKey const& futex_key) { return pair_int_hash(ptr_hash(futex_key.raw.parent), ptr_hash(futex_key.raw.offset)); }
     static bool equals(Kernel::GlobalFutexKey const& a, Kernel::GlobalFutexKey const& b) { return a.raw.parent == b.raw.parent && a.raw.offset == b.raw.offset; }
 };

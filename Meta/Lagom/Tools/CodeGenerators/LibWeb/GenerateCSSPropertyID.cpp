@@ -230,7 +230,7 @@ bool property_has_quirk(PropertyID, Quirk);
 
 namespace AK {
 template<>
-struct Traits<Web::CSS::PropertyID> : public GenericTraits<Web::CSS::PropertyID> {
+struct Traits<Web::CSS::PropertyID> : public DefaultTraits<Web::CSS::PropertyID> {
     static unsigned hash(Web::CSS::PropertyID property_id) { return int_hash((unsigned)property_id); }
 };
 } // namespace AK

@@ -195,7 +195,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<JS::PropertyKey> : public GenericTraits<JS::PropertyKey> {
+struct Traits<JS::PropertyKey> : public DefaultTraits<JS::PropertyKey> {
     static unsigned hash(JS::PropertyKey const& name)
     {
         VERIFY(name.is_valid());

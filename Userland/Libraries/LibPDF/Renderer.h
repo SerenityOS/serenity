@@ -172,7 +172,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<PDF::Renderer::FontCacheKey> : public GenericTraits<PDF::Renderer::FontCacheKey> {
+struct Traits<PDF::Renderer::FontCacheKey> : public DefaultTraits<PDF::Renderer::FontCacheKey> {
     static unsigned hash(PDF::Renderer::FontCacheKey const& key)
     {
         return pair_int_hash(key.font_dictionary_key.hash(), int_hash(bit_cast<u32>(key.font_size)));

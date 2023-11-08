@@ -41,7 +41,7 @@ private:
 };
 
 template<>
-struct AK::Traits<Line> : public GenericTraits<Line> {
+struct AK::Traits<Line> : public DefaultTraits<Line> {
     static unsigned hash(Line l)
     {
         if (l.numeric)

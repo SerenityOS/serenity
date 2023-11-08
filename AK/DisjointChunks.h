@@ -449,7 +449,7 @@ private:
 };
 
 template<typename T>
-struct Traits<DisjointSpans<T>> : public GenericTraits<DisjointSpans<T>> {
+struct Traits<DisjointSpans<T>> : public DefaultTraits<DisjointSpans<T>> {
     static unsigned hash(DisjointSpans<T> const& span)
     {
         unsigned hash = 0;

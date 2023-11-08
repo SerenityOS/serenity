@@ -88,7 +88,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<Kernel::InodeIdentifier> : public GenericTraits<Kernel::InodeIdentifier> {
+struct Traits<Kernel::InodeIdentifier> : public DefaultTraits<Kernel::InodeIdentifier> {
     static unsigned hash(Kernel::InodeIdentifier const& inode) { return pair_int_hash(inode.fsid().value(), inode.index().value()); }
 };
 

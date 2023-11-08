@@ -38,13 +38,13 @@ static_assert(AssertSize<ICONDIRENTRY, 16>());
 };
 
 template<>
-class AK::Traits<Gfx::ICONDIR> : public GenericTraits<Gfx::ICONDIR> {
+class AK::Traits<Gfx::ICONDIR> : public DefaultTraits<Gfx::ICONDIR> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-class AK::Traits<Gfx::ICONDIRENTRY> : public GenericTraits<Gfx::ICONDIRENTRY> {
+class AK::Traits<Gfx::ICONDIRENTRY> : public DefaultTraits<Gfx::ICONDIRENTRY> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };

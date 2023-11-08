@@ -86,7 +86,7 @@ private:
 };
 
 template<>
-struct Traits<FlyString> : public GenericTraits<FlyString> {
+struct Traits<FlyString> : public DefaultTraits<FlyString> {
     static unsigned hash(FlyString const&);
 };
 

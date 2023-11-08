@@ -66,13 +66,13 @@ private:
 namespace AK {
 
 template<>
-struct Traits<Line::Key> : public GenericTraits<Line::Key> {
+struct Traits<Line::Key> : public DefaultTraits<Line::Key> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(Line::Key k) { return pair_int_hash(k.key, k.modifiers); }
 };
 
 template<>
-struct Traits<Vector<Line::Key>> : public GenericTraits<Vector<Line::Key>> {
+struct Traits<Vector<Line::Key>> : public DefaultTraits<Vector<Line::Key>> {
     static constexpr bool is_trivial() { return false; }
     static unsigned hash(Vector<Line::Key> const& ks)
     {

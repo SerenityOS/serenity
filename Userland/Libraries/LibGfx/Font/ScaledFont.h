@@ -97,7 +97,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<Gfx::GlyphIndexWithSubpixelOffset> : public GenericTraits<Gfx::GlyphIndexWithSubpixelOffset> {
+struct Traits<Gfx::GlyphIndexWithSubpixelOffset> : public DefaultTraits<Gfx::GlyphIndexWithSubpixelOffset> {
     static unsigned hash(Gfx::GlyphIndexWithSubpixelOffset const& index)
     {
         return pair_int_hash(index.glyph_id, (index.subpixel_offset.x << 8) | index.subpixel_offset.y);

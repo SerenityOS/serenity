@@ -40,7 +40,7 @@ struct [[gnu::packed]] Socks5VersionIdentifierAndMethodSelectionMessage {
 };
 
 template<>
-struct AK::Traits<Socks5VersionIdentifierAndMethodSelectionMessage> : public AK::GenericTraits<Socks5VersionIdentifierAndMethodSelectionMessage> {
+struct AK::Traits<Socks5VersionIdentifierAndMethodSelectionMessage> : public AK::DefaultTraits<Socks5VersionIdentifierAndMethodSelectionMessage> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
@@ -50,7 +50,7 @@ struct [[gnu::packed]] Socks5InitialResponse {
 };
 
 template<>
-struct AK::Traits<Socks5InitialResponse> : public AK::GenericTraits<Socks5InitialResponse> {
+struct AK::Traits<Socks5InitialResponse> : public AK::DefaultTraits<Socks5InitialResponse> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
@@ -61,7 +61,7 @@ struct [[gnu::packed]] Socks5ConnectRequestHeader {
 };
 
 template<>
-struct AK::Traits<Socks5ConnectRequestHeader> : public AK::GenericTraits<Socks5ConnectRequestHeader> {
+struct AK::Traits<Socks5ConnectRequestHeader> : public AK::DefaultTraits<Socks5ConnectRequestHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
@@ -70,7 +70,7 @@ struct [[gnu::packed]] Socks5ConnectRequestTrailer {
 };
 
 template<>
-struct AK::Traits<Socks5ConnectRequestTrailer> : public AK::GenericTraits<Socks5ConnectRequestTrailer> {
+struct AK::Traits<Socks5ConnectRequestTrailer> : public AK::DefaultTraits<Socks5ConnectRequestTrailer> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
@@ -81,7 +81,7 @@ struct [[gnu::packed]] Socks5ConnectResponseHeader {
 };
 
 template<>
-struct AK::Traits<Socks5ConnectResponseHeader> : public AK::GenericTraits<Socks5ConnectResponseHeader> {
+struct AK::Traits<Socks5ConnectResponseHeader> : public AK::DefaultTraits<Socks5ConnectResponseHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
@@ -95,7 +95,7 @@ struct [[gnu::packed]] Socks5UsernamePasswordResponse {
 };
 
 template<>
-struct AK::Traits<Socks5UsernamePasswordResponse> : public AK::GenericTraits<Socks5UsernamePasswordResponse> {
+struct AK::Traits<Socks5UsernamePasswordResponse> : public AK::DefaultTraits<Socks5UsernamePasswordResponse> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 

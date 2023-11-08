@@ -95,7 +95,7 @@ private:
 };
 
 template<>
-struct Traits<DeprecatedFlyString> : public GenericTraits<DeprecatedFlyString> {
+struct Traits<DeprecatedFlyString> : public DefaultTraits<DeprecatedFlyString> {
     static unsigned hash(DeprecatedFlyString const& s) { return s.hash(); }
 };
 

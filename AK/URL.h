@@ -197,7 +197,7 @@ struct Formatter<URL> : Formatter<StringView> {
 };
 
 template<>
-struct Traits<URL> : public GenericTraits<URL> {
+struct Traits<URL> : public DefaultTraits<URL> {
     static unsigned hash(URL const& url) { return url.to_deprecated_string().hash(); }
 };
 

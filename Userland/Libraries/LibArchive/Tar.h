@@ -157,6 +157,6 @@ private:
 }
 
 template<>
-struct AK::Traits<Archive::TarFileHeader> : public AK::GenericTraits<Archive::TarFileHeader> {
+struct AK::Traits<Archive::TarFileHeader> : public AK::DefaultTraits<Archive::TarFileHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };

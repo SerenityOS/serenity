@@ -111,7 +111,7 @@ static_assert(sizeof(MACAddress) == 6u);
 namespace AK {
 
 template<>
-struct Traits<MACAddress> : public GenericTraits<MACAddress> {
+struct Traits<MACAddress> : public DefaultTraits<MACAddress> {
     static unsigned hash(MACAddress const& address) { return string_hash((char const*)&address, sizeof(address)); }
 };
 

@@ -69,7 +69,7 @@ private:
 
 namespace AK {
 template<>
-struct Traits<UserspaceEmulator::Range> : public GenericTraits<UserspaceEmulator::Range> {
+struct Traits<UserspaceEmulator::Range> : public DefaultTraits<UserspaceEmulator::Range> {
     static constexpr bool is_trivial() { return true; }
 };
 }

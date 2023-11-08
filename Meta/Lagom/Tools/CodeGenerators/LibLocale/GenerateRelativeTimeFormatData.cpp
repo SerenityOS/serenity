@@ -61,7 +61,7 @@ struct AK::Formatter<RelativeTimeFormat> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<RelativeTimeFormat> : public GenericTraits<RelativeTimeFormat> {
+struct AK::Traits<RelativeTimeFormat> : public DefaultTraits<RelativeTimeFormat> {
     static unsigned hash(RelativeTimeFormat const& format) { return format.hash(); }
 };
 

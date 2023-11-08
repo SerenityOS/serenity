@@ -54,7 +54,7 @@ public:
 namespace AK {
 
 template<typename T>
-requires(IsBaseOf<Manual::Node, T>) struct Traits<T> : public GenericTraits<T> {
+requires(IsBaseOf<Manual::Node, T>) struct Traits<T> : public DefaultTraits<T> {
     static unsigned hash(T p) { return Traits::hash(p.path()); }
 };
 

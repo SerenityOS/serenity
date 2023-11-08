@@ -89,7 +89,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<Web::Layout::TableGrid::GridPosition> : public GenericTraits<Web::Layout::TableGrid::GridPosition> {
+struct Traits<Web::Layout::TableGrid::GridPosition> : public DefaultTraits<Web::Layout::TableGrid::GridPosition> {
     static unsigned hash(Web::Layout::TableGrid::GridPosition const& key)
     {
         return pair_int_hash(key.x, key.y);

@@ -257,7 +257,7 @@ private:
 };
 
 template<>
-struct Traits<String> : public GenericTraits<String> {
+struct Traits<String> : public DefaultTraits<String> {
     static unsigned hash(String const&);
 };
 

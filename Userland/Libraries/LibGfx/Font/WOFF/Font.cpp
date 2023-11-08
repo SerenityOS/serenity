@@ -47,13 +47,13 @@ static_assert(AssertSize<TableDirectoryEntry, 20>());
 }
 
 template<>
-class AK::Traits<WOFF::Header> : public GenericTraits<WOFF::Header> {
+class AK::Traits<WOFF::Header> : public DefaultTraits<WOFF::Header> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-class AK::Traits<WOFF::TableDirectoryEntry> : public GenericTraits<WOFF::TableDirectoryEntry> {
+class AK::Traits<WOFF::TableDirectoryEntry> : public DefaultTraits<WOFF::TableDirectoryEntry> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };

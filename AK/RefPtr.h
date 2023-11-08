@@ -293,7 +293,7 @@ struct Formatter<RefPtr<T>> : Formatter<T const*> {
 };
 
 template<typename T>
-struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
+struct Traits<RefPtr<T>> : public DefaultTraits<RefPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = T const*;
     static unsigned hash(RefPtr<T> const& p) { return ptr_hash(p.ptr()); }

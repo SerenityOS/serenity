@@ -23,7 +23,7 @@ struct CellCoordinates {
 
 namespace AK {
 template<>
-struct Traits<CellCoordinates> : public GenericTraits<CellCoordinates> {
+struct Traits<CellCoordinates> : public DefaultTraits<CellCoordinates> {
     static unsigned hash(CellCoordinates const& key) { return pair_int_hash(key.row_index, key.column_index); }
 };
 }

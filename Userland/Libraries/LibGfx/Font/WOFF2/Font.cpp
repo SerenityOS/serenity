@@ -42,7 +42,7 @@ static_assert(AssertSize<Header, 48>());
 }
 
 template<>
-class AK::Traits<WOFF2::Header> : public GenericTraits<WOFF2::Header> {
+class AK::Traits<WOFF2::Header> : public DefaultTraits<WOFF2::Header> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };
@@ -496,7 +496,7 @@ static_assert(AssertSize<TransformedGlyfTable, 36>());
 }
 
 template<>
-class AK::Traits<WOFF2::TransformedGlyfTable> : public GenericTraits<WOFF2::TransformedGlyfTable> {
+class AK::Traits<WOFF2::TransformedGlyfTable> : public DefaultTraits<WOFF2::TransformedGlyfTable> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };
