@@ -1,3 +1,4 @@
+// https://html.spec.whatwg.org/#storage-2
 [Exposed=Window]
 interface Storage {
 

@@ -1,3 +1,4 @@
+// https://html.spec.whatwg.org/#canvaspattern
 [Exposed=(Window,Worker)]
 interface CanvasPattern {
     // opaque object
