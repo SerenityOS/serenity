@@ -106,8 +106,8 @@ interface Document : Node {
     [CEReactions] attribute DOMString title;
 
     boolean queryCommandSupported(DOMString commandId);
-    readonly boolean hidden;
-    readonly DOMString visibilityState;
+    readonly attribute boolean hidden;
+    readonly attribute DOMString visibilityState;
 
     [NewObject] NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
     [NewObject] TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);

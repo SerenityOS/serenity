@@ -2,7 +2,7 @@
 [Exposed=*]
 interface ReadableStreamBYOBRequest {
     // FIXME: This should be an ArrayBufferView
-    readonly attribute any? view;
+    readonly attribute any view;
 
     // FIXME: undefined respond([EnforceRange] unsigned long long bytesWritten);
     // FIXME: undefined respondWithNewView(ArrayBufferView view);
