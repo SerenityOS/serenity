@@ -118,7 +118,7 @@ struct AK::Formatter<CalendarPattern> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<CalendarPattern> : public GenericTraits<CalendarPattern> {
+struct AK::Traits<CalendarPattern> : public DefaultTraits<CalendarPattern> {
     static unsigned hash(CalendarPattern const& c) { return c.hash(); }
 };
 
@@ -185,7 +185,7 @@ struct AK::Formatter<CalendarRangePattern> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<CalendarRangePattern> : public GenericTraits<CalendarRangePattern> {
+struct AK::Traits<CalendarRangePattern> : public DefaultTraits<CalendarRangePattern> {
     static unsigned hash(CalendarRangePattern const& c) { return c.hash(); }
 };
 
@@ -226,7 +226,7 @@ struct AK::Formatter<CalendarFormat> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<CalendarFormat> : public GenericTraits<CalendarFormat> {
+struct AK::Traits<CalendarFormat> : public DefaultTraits<CalendarFormat> {
     static unsigned hash(CalendarFormat const& c) { return c.hash(); }
 };
 
@@ -265,7 +265,7 @@ struct AK::Formatter<CalendarSymbols> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<CalendarSymbols> : public GenericTraits<CalendarSymbols> {
+struct AK::Traits<CalendarSymbols> : public DefaultTraits<CalendarSymbols> {
     static unsigned hash(CalendarSymbols const& c) { return c.hash(); }
 };
 
@@ -329,7 +329,7 @@ struct AK::Formatter<Calendar> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<Calendar> : public GenericTraits<Calendar> {
+struct AK::Traits<Calendar> : public DefaultTraits<Calendar> {
     static unsigned hash(Calendar const& c) { return c.hash(); }
 };
 
@@ -381,7 +381,7 @@ struct AK::Formatter<TimeZoneNames> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<TimeZoneNames> : public GenericTraits<TimeZoneNames> {
+struct AK::Traits<TimeZoneNames> : public DefaultTraits<TimeZoneNames> {
     static unsigned hash(TimeZoneNames const& t) { return t.hash(); }
 };
 
@@ -432,7 +432,7 @@ struct AK::Formatter<TimeZoneFormat> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<TimeZoneFormat> : public GenericTraits<TimeZoneFormat> {
+struct AK::Traits<TimeZoneFormat> : public DefaultTraits<TimeZoneFormat> {
     static unsigned hash(TimeZoneFormat const& t) { return t.hash(); }
 };
 
@@ -470,7 +470,7 @@ struct AK::Formatter<DayPeriod> : Formatter<FormatString> {
 };
 
 template<>
-struct AK::Traits<DayPeriod> : public GenericTraits<DayPeriod> {
+struct AK::Traits<DayPeriod> : public DefaultTraits<DayPeriod> {
     static unsigned hash(DayPeriod const& d) { return d.hash(); }
 };
 

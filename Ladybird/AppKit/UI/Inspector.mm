@@ -28,7 +28,7 @@ static NSString* const CSS_PROPERTY_COLUMN = @"Property";
 static NSString* const CSS_VALUE_COLUMN = @"Value";
 
 template<>
-struct AK::Traits<NSDictionary*> : public GenericTraits<NSDictionary*> {
+struct AK::Traits<NSDictionary*> : public DefaultTraits<NSDictionary*> {
     static unsigned hash(NSDictionary* dictionary)
     {
         return [dictionary hash];

@@ -122,7 +122,7 @@ private:
 
 namespace AK {
 template<>
-struct Traits<Web::HTML::Origin> : public GenericTraits<Web::HTML::Origin> {
+struct Traits<Web::HTML::Origin> : public DefaultTraits<Web::HTML::Origin> {
     static unsigned hash(Web::HTML::Origin const& origin)
     {
         auto hash_without_host = pair_int_hash(origin.scheme().hash(), origin.port());

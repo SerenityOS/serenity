@@ -460,7 +460,7 @@ struct Formatter<LockRefPtr<T>> : Formatter<T const*> {
 };
 
 template<typename T>
-struct Traits<LockRefPtr<T>> : public GenericTraits<LockRefPtr<T>> {
+struct Traits<LockRefPtr<T>> : public DefaultTraits<LockRefPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = T const*;
     static unsigned hash(LockRefPtr<T> const& p) { return ptr_hash(p.ptr()); }

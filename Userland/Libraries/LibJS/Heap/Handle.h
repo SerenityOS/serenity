@@ -195,12 +195,12 @@ inline Handle<Value> make_handle(Value value, SourceLocation location = SourceLo
 namespace AK {
 
 template<typename T>
-struct Traits<JS::Handle<T>> : public GenericTraits<JS::Handle<T>> {
+struct Traits<JS::Handle<T>> : public DefaultTraits<JS::Handle<T>> {
     static unsigned hash(JS::Handle<T> const& handle) { return Traits<T>::hash(handle); }
 };
 
 template<>
-struct Traits<JS::Handle<JS::Value>> : public GenericTraits<JS::Handle<JS::Value>> {
+struct Traits<JS::Handle<JS::Value>> : public DefaultTraits<JS::Handle<JS::Value>> {
     static unsigned hash(JS::Handle<JS::Value> const& handle) { return Traits<JS::Value>::hash(handle.value()); }
 };
 

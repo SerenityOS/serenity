@@ -106,7 +106,7 @@ enum class DHCPMessageType : u8 {
 };
 
 template<>
-struct AK::Traits<DHCPOption> : public GenericTraits<DHCPOption> {
+struct AK::Traits<DHCPOption> : public DefaultTraits<DHCPOption> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(DHCPOption u) { return int_hash((u8)u); }
 };

@@ -48,7 +48,7 @@ private:
 }
 
 template<>
-struct AK::Traits<SpiceAgent::MessageHeader> : public AK::GenericTraits<SpiceAgent::MessageHeader> {
+struct AK::Traits<SpiceAgent::MessageHeader> : public AK::DefaultTraits<SpiceAgent::MessageHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 

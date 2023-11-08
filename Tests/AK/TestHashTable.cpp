@@ -155,7 +155,7 @@ TEST_CASE(many_strings)
 
 TEST_CASE(many_collisions)
 {
-    struct StringCollisionTraits : public GenericTraits<DeprecatedString> {
+    struct StringCollisionTraits : public DefaultTraits<DeprecatedString> {
         static unsigned hash(DeprecatedString const&) { return 0; }
     };
 
@@ -176,7 +176,7 @@ TEST_CASE(many_collisions)
 
 TEST_CASE(space_reuse)
 {
-    struct StringCollisionTraits : public GenericTraits<DeprecatedString> {
+    struct StringCollisionTraits : public DefaultTraits<DeprecatedString> {
         static unsigned hash(DeprecatedString const&) { return 0; }
     };
 

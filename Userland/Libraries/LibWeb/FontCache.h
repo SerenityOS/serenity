@@ -45,7 +45,7 @@ private:
 
 namespace AK {
 template<>
-struct Traits<Web::FontSelector> : public GenericTraits<Web::FontSelector> {
+struct Traits<Web::FontSelector> : public DefaultTraits<Web::FontSelector> {
     static unsigned hash(Web::FontSelector const& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.point_size); }
 };
 }

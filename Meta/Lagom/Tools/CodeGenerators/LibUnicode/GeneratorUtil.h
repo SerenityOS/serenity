@@ -33,7 +33,7 @@ template<typename T>
 concept IntegralOrEnum = Integral<T> || Enum<T>;
 
 template<IntegralOrEnum T>
-struct AK::Traits<Vector<T>> : public GenericTraits<Vector<T>> {
+struct AK::Traits<Vector<T>> : public DefaultTraits<Vector<T>> {
     static unsigned hash(Vector<T> const& list)
     {
         auto hash = int_hash(static_cast<u32>(list.size()));

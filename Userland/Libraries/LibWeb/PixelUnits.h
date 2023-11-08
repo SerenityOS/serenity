@@ -462,7 +462,7 @@ template<>
 namespace AK {
 
 template<>
-struct Traits<Web::CSSPixels> : public GenericTraits<Web::CSSPixels> {
+struct Traits<Web::CSSPixels> : public DefaultTraits<Web::CSSPixels> {
     static unsigned hash(Web::CSSPixels const& key)
     {
         return Traits<int>::hash(key.raw_value());
@@ -475,7 +475,7 @@ struct Traits<Web::CSSPixels> : public GenericTraits<Web::CSSPixels> {
 };
 
 template<>
-struct Traits<Web::DevicePixels> : public GenericTraits<Web::DevicePixels> {
+struct Traits<Web::DevicePixels> : public DefaultTraits<Web::DevicePixels> {
     static unsigned hash(Web::DevicePixels const& key)
     {
         return Traits<Web::DevicePixels::Type>::hash(key.value());

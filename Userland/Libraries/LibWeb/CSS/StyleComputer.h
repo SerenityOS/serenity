@@ -250,7 +250,7 @@ private:
 }
 
 template<>
-struct AK::Traits<Web::CSS::StyleComputer::AnimationKey> : public AK::GenericTraits<Web::CSS::StyleComputer::AnimationKey> {
+struct AK::Traits<Web::CSS::StyleComputer::AnimationKey> : public AK::DefaultTraits<Web::CSS::StyleComputer::AnimationKey> {
     static unsigned hash(Web::CSS::StyleComputer::AnimationKey const& k) { return pair_int_hash(ptr_hash(k.source_declaration), ptr_hash(k.element)); }
     static bool equals(Web::CSS::StyleComputer::AnimationKey const& a, Web::CSS::StyleComputer::AnimationKey const& b)
     {

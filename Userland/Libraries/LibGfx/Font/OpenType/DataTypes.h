@@ -55,19 +55,19 @@ static_assert(AssertSize<Version16Dot16, 4>());
 
 namespace AK {
 template<>
-struct Traits<OpenType::Fixed const> : public GenericTraits<OpenType::Fixed const> {
+struct Traits<OpenType::Fixed const> : public DefaultTraits<OpenType::Fixed const> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 template<>
-struct Traits<OpenType::LongDateTime const> : public GenericTraits<OpenType::LongDateTime const> {
+struct Traits<OpenType::LongDateTime const> : public DefaultTraits<OpenType::LongDateTime const> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 template<>
-struct Traits<OpenType::Tag const> : public GenericTraits<OpenType::Tag const> {
+struct Traits<OpenType::Tag const> : public DefaultTraits<OpenType::Tag const> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 template<>
-struct Traits<OpenType::Version16Dot16 const> : public GenericTraits<OpenType::Version16Dot16 const> {
+struct Traits<OpenType::Version16Dot16 const> : public DefaultTraits<OpenType::Version16Dot16 const> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 }

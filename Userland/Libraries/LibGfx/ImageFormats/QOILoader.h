@@ -59,6 +59,6 @@ private:
 }
 
 template<>
-struct AK::Traits<Gfx::QOIHeader> : public GenericTraits<Gfx::QOIHeader> {
+struct AK::Traits<Gfx::QOIHeader> : public DefaultTraits<Gfx::QOIHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };

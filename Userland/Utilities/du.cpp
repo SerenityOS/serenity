@@ -43,7 +43,7 @@ struct VisitedFile {
 };
 
 template<>
-struct AK::Traits<VisitedFile> : public GenericTraits<VisitedFile> {
+struct AK::Traits<VisitedFile> : public DefaultTraits<VisitedFile> {
     static unsigned hash(VisitedFile const& visited_file)
     {
         return pair_int_hash(u64_hash(visited_file.device), u64_hash(visited_file.inode));

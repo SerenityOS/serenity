@@ -88,7 +88,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<Web::LoadRequest> : public GenericTraits<Web::LoadRequest> {
+struct Traits<Web::LoadRequest> : public DefaultTraits<Web::LoadRequest> {
     static unsigned hash(Web::LoadRequest const& request) { return request.hash(); }
 };
 

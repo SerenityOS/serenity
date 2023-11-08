@@ -269,7 +269,7 @@ private:
 static_assert(sizeof(IPv6Address) == 16);
 
 template<>
-struct Traits<IPv6Address> : public GenericTraits<IPv6Address> {
+struct Traits<IPv6Address> : public DefaultTraits<IPv6Address> {
     // SipHash-4-8 is considered conservatively secure, even if not cryptographically secure.
     static unsigned hash(IPv6Address const& address) { return sip_hash_bytes<4, 8>({ &address.to_in6_addr_t(), sizeof(address.to_in6_addr_t()) }); }
 };

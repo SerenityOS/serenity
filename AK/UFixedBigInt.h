@@ -581,7 +581,7 @@ private:
 };
 
 template<size_t M>
-struct Traits<UFixedBigInt<M>> : public GenericTraits<UFixedBigInt<M>> {
+struct Traits<UFixedBigInt<M>> : public DefaultTraits<UFixedBigInt<M>> {
     static constexpr bool is_trivially_serializable() { return true; }
     static constexpr bool is_trivial() { return true; }
 };

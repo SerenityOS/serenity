@@ -39,6 +39,6 @@ private:
 }
 
 template<>
-struct AK::Traits<SpiceAgent::ChunkHeader> : public AK::GenericTraits<SpiceAgent::ChunkHeader> {
+struct AK::Traits<SpiceAgent::ChunkHeader> : public AK::DefaultTraits<SpiceAgent::ChunkHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };

@@ -162,7 +162,7 @@ private:
 static_assert(sizeof(IPv4Address) == 4);
 
 template<>
-struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
+struct Traits<IPv4Address> : public DefaultTraits<IPv4Address> {
     static unsigned hash(IPv4Address const& address) { return secure_sip_hash(static_cast<u64>(address.to_u32())); }
 };
 

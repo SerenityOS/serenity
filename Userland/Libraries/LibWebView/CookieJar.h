@@ -91,7 +91,7 @@ private:
 }
 
 template<>
-struct AK::Traits<WebView::CookieStorageKey> : public AK::GenericTraits<WebView::CookieStorageKey> {
+struct AK::Traits<WebView::CookieStorageKey> : public AK::DefaultTraits<WebView::CookieStorageKey> {
     static unsigned hash(WebView::CookieStorageKey const& key)
     {
         unsigned hash = 0;

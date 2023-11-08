@@ -44,7 +44,7 @@ static_assert(sizeof(TGAHeader) == 18);
 }
 
 template<>
-struct AK::Traits<Gfx::TGAHeader> : public GenericTraits<Gfx::TGAHeader> {
+struct AK::Traits<Gfx::TGAHeader> : public DefaultTraits<Gfx::TGAHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 

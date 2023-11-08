@@ -77,6 +77,6 @@ private:
 }
 
 template<>
-struct AK::Traits<Video::Track> : public GenericTraits<Video::Track> {
+struct AK::Traits<Video::Track> : public DefaultTraits<Video::Track> {
     static unsigned hash(Video::Track const& t) { return t.hash(); }
 };

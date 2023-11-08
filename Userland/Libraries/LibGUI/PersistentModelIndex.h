@@ -81,7 +81,7 @@ struct Formatter<GUI::PersistentModelIndex> : Formatter<FormatString> {
 };
 
 template<>
-struct Traits<GUI::PersistentModelIndex> : public GenericTraits<GUI::PersistentModelIndex> {
+struct Traits<GUI::PersistentModelIndex> : public DefaultTraits<GUI::PersistentModelIndex> {
     static unsigned hash(const GUI::PersistentModelIndex& index)
     {
         if (index.has_valid_handle())

@@ -162,16 +162,16 @@ private:
 }
 
 template<>
-struct AK::Traits<Compress::XzStreamHeader> : public AK::GenericTraits<Compress::XzStreamHeader> {
+struct AK::Traits<Compress::XzStreamHeader> : public AK::DefaultTraits<Compress::XzStreamHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-struct AK::Traits<Compress::XzStreamFooter> : public AK::GenericTraits<Compress::XzStreamFooter> {
+struct AK::Traits<Compress::XzStreamFooter> : public AK::DefaultTraits<Compress::XzStreamFooter> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-struct AK::Traits<Compress::XzBlockFlags> : public AK::GenericTraits<Compress::XzBlockFlags> {
+struct AK::Traits<Compress::XzBlockFlags> : public AK::DefaultTraits<Compress::XzBlockFlags> {
     static constexpr bool is_trivially_serializable() { return true; }
 };

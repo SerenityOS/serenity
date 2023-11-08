@@ -308,7 +308,7 @@ private:
 };
 
 template<>
-struct Traits<DeprecatedString> : public GenericTraits<DeprecatedString> {
+struct Traits<DeprecatedString> : public DefaultTraits<DeprecatedString> {
     static unsigned hash(DeprecatedString const& s) { return s.impl() ? s.impl()->hash() : 0; }
 };
 
