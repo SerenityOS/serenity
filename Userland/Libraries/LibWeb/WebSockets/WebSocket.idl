@@ -1,5 +1,6 @@
 #import <DOM/EventTarget.idl>
 #import <DOM/EventHandler.idl>
+#import <FileAPI/Blob.idl>
 
 // https://websockets.spec.whatwg.org/#websocket
 [Exposed=(Window,Worker)]

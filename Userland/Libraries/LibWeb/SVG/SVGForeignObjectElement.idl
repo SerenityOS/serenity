@@ -1,4 +1,5 @@
 #import <SVG/SVGAnimatedLength.idl>
+#import <SVG/SVGGraphicsElement.idl>
 
 // https://svgwg.org/svg2-draft/single-page.html#embedded-InterfaceSVGForeignObjectElement
 [Exposed=Window]
