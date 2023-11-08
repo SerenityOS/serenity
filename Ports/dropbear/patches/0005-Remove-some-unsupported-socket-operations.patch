@@ -21,20 +21,7 @@ index 2ed9bb1..e0e9962 100644
  		#define IOV_MAX 1024
  	#elif defined(__sgi)
  		#define IOV_MAX 512 
-@@ -346,11 +346,7 @@ void packet_queue_consume(struct Queue *queue, ssize_t written) {
- }
- 
- void set_sock_nodelay(int sock) {
--	int val;
--
--	/* disable nagle */
--	val = 1;
--	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
-+	(void)sock;
- }
- 
- #if DROPBEAR_SERVER_TCP_FAST_OPEN
-@@ -469,7 +465,6 @@ int dropbear_listen(const char* address, const char* port,
+@@ -469,7 +469,6 @@ int dropbear_listen(const char* address, const char* port,
  	struct addrinfo hints, *res = NULL, *res0 = NULL;
  	int err;
  	unsigned int nsock;
@@ -42,7 +29,7 @@ index 2ed9bb1..e0e9962 100644
  	int val;
  	int sock;
  	uint16_t *allocated_lport_p = NULL;
-@@ -548,9 +543,6 @@ int dropbear_listen(const char* address, const char* port,
+@@ -548,9 +547,6 @@ int dropbear_listen(const char* address, const char* port,
  		val = 1;
  		/* set to reuse, quick timeout */
  		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void*) &val, sizeof(val));
