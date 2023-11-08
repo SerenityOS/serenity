@@ -811,7 +811,8 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     auto value = interpreter.accumulator();
     auto base = interpreter.reg(m_base);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
-    TRY(put_by_property_key(vm, base, base, value, name, m_kind));
+    auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
+    TRY(put_by_property_key(vm, base, base, value, name, m_kind, &cache));
     interpreter.accumulator() = value;
     return {};
 }
@@ -823,7 +824,8 @@ ThrowCompletionOr<void> PutByIdWithThis::execute_impl(Bytecode::Interpreter& int
     auto value = interpreter.accumulator();
     auto base = interpreter.reg(m_base);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
-    TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, name, m_kind));
+    auto& cache = interpreter.current_executable().property_lookup_caches[m_cache_index];
+    TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, name, m_kind, &cache));
     interpreter.accumulator() = value;
     return {};
 }

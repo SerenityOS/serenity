@@ -419,14 +419,14 @@ JS::ThrowCompletionOr<JS::Value> CSSStyleDeclaration::internal_get(JS::PropertyK
     return { JS::PrimitiveString::create(vm(), String {}) };
 }
 
-JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_set(JS::PropertyKey const& name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_set(JS::PropertyKey const& name, JS::Value value, JS::Value receiver, JS::CacheablePropertyMetadata* cacheable_metadata)
 {
     auto& vm = this->vm();
     if (!name.is_string())
-        return Base::internal_set(name, value, receiver);
+        return Base::internal_set(name, value, receiver, cacheable_metadata);
     auto property_id = property_id_from_name(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
-        return Base::internal_set(name, value, receiver);
+        return Base::internal_set(name, value, receiver, cacheable_metadata);
 
     auto css_text = TRY(value.to_deprecated_string(vm));
 

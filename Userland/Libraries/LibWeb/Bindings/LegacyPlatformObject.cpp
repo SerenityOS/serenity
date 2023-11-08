@@ -156,7 +156,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LegacyPlatformObject::in
 }
 
 // https://webidl.spec.whatwg.org/#legacy-platform-object-set
-JS::ThrowCompletionOr<bool> LegacyPlatformObject::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> LegacyPlatformObject::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver, JS::CacheablePropertyMetadata*)
 {
     auto& vm = this->vm();
 

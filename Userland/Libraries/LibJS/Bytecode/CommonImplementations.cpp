@@ -137,7 +137,7 @@ ThrowCompletionOr<Value> get_global(Bytecode::Interpreter& interpreter, Deprecat
     return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, identifier);
 }
 
-ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind)
+ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind, PropertyLookupCache* cache)
 {
     // Better error message than to_object would give
     if (vm.in_strict_mode() && base.is_nullish())
@@ -165,7 +165,22 @@ ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value
         break;
     }
     case Op::PropertyKind::KeyValue: {
-        bool succeeded = TRY(object->internal_set(name, value, this_value));
+        if (cache
+            && cache->shape == &object->shape()
+            && (!object->shape().is_unique() || object->shape().unique_shape_serial_number() == cache->unique_shape_serial_number)) {
+            object->put_direct(*cache->property_offset, value);
+            return {};
+        }
+
+        CacheablePropertyMetadata cacheable_metadata;
+        bool succeeded = TRY(object->internal_set(name, value, this_value, &cacheable_metadata));
+
+        if (succeeded && cache && cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
+            cache->shape = object->shape();
+            cache->property_offset = cacheable_metadata.property_offset.value();
+            cache->unique_shape_serial_number = object->shape().unique_shape_serial_number();
+        }
+
         if (!succeeded && vm.in_strict_mode()) {
             if (base.is_object())
                 return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, base.to_string_without_side_effects());
