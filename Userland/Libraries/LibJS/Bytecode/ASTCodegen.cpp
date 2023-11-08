@@ -525,7 +525,7 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
     VERIFY(m_lhs.has<NonnullRefPtr<Expression const>>());
     auto& lhs = m_lhs.get<NonnullRefPtr<Expression const>>();
 
-    auto reference_registers = TRY(generator.emit_load_from_reference(lhs));
+    auto reference_registers = TRY(generator.emit_load_from_reference(lhs, Bytecode::Generator::CollectRegisters::Yes));
 
     Bytecode::BasicBlock* rhs_block_ptr { nullptr };
     Bytecode::BasicBlock* end_block_ptr { nullptr };
@@ -1057,7 +1057,7 @@ Bytecode::CodeGenerationErrorOr<void> ArrayExpression::generate_bytecode(Bytecod
 Bytecode::CodeGenerationErrorOr<void> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    (void)TRY(generator.emit_load_from_reference(*this));
+    (void)TRY(generator.emit_load_from_reference(*this, Bytecode::Generator::CollectRegisters::No));
     return {};
 }
 
@@ -2258,7 +2258,7 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
 Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     Bytecode::Generator::SourceLocationScope scope(generator, *this);
-    auto reference_registers = TRY(generator.emit_load_from_reference(*m_argument));
+    auto reference_registers = TRY(generator.emit_load_from_reference(*m_argument, Bytecode::Generator::CollectRegisters::Yes));
 
     Optional<Bytecode::Register> previous_value_for_postfix_reg;
     if (!m_prefixed) {
