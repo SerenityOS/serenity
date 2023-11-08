@@ -48,7 +48,7 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
 
     pid_t child_pid = TRY(Core::System::fork());
 
-    if (!child_pid) {
+    if (child_pid == 0) {
         TRY(Core::System::close(pipe_fds[0]));
         TRY(Core::System::dup2(pipe_fds[1], STDOUT_FILENO));
 
@@ -69,7 +69,7 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
             VERIFY_NOT_REACHED();
         }
 
-        for (auto& source : sources)
+        for (auto const& source : sources)
             file_operation_args.append(source.view());
 
         if (operation != FileOperation::Delete)
@@ -112,38 +112,47 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
 
 ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& destination, GUI::Window* window)
 {
-    bool has_accepted_drop = false;
-
     if (!event.mime_data().has_urls())
-        return has_accepted_drop;
+        return false;
+
     auto const urls = event.mime_data().urls();
     if (urls.is_empty()) {
         dbgln("No files to drop");
-        return has_accepted_drop;
+        return false;
     }
 
     auto const target = LexicalPath::canonicalized_path(destination);
 
     if (!FileSystem::is_directory(target))
-        return has_accepted_drop;
+        return false;
 
     Vector<DeprecatedString> paths_to_copy;
-    for (auto& url_to_copy : urls) {
+    for (auto const& url_to_copy : urls) {
+        if (!url_to_copy.is_valid()) {
+            dbgln("Invalid URL {}", TRY(url_to_copy.to_string()));
+            continue;
+        }
+
         auto file_path = url_to_copy.serialize_path();
-        if (!url_to_copy.is_valid() || file_path == target)
-            continue;
+
+        if (file_path == target) {
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Copying the directory, '{}', to itself is not allowed."sv, target).view(), "Error"sv, GUI::MessageBox::Type::Error);
+            return false;
+        }
+
         auto new_path = DeprecatedString::formatted("{}/{}", target, LexicalPath::basename(file_path));
-        if (file_path == new_path)
+        if (file_path == new_path) {
+            dbgln("Target path, '{}' already exists.", file_path);
             continue;
+        }
 
         paths_to_copy.append(file_path);
-        has_accepted_drop = true;
     }
 
     if (!paths_to_copy.is_empty())
         TRY(run_file_operation(FileOperation::Copy, paths_to_copy, target, window));
 
-    return has_accepted_drop;
+    return true;
 }
 
 }
