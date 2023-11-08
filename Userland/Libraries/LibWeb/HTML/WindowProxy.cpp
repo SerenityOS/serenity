@@ -169,7 +169,7 @@ JS::ThrowCompletionOr<JS::Value> WindowProxy::internal_get(JS::PropertyKey const
 }
 
 // 7.4.8 [[Set]] ( P, V, Receiver ), https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-set
-JS::ThrowCompletionOr<bool> WindowProxy::internal_set(JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> WindowProxy::internal_set(JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver, JS::CacheablePropertyMetadata*)
 {
     auto& vm = this->vm();
 

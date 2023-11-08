@@ -24,7 +24,7 @@ public:
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const override;
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const&, PropertyDescriptor const&) override;
     virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver, CacheablePropertyMetadata*) const override;
-    virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver) override;
+    virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver, CacheablePropertyMetadata*) override;
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
 
     virtual bool may_interfere_with_indexed_property_access() const final { return true; }

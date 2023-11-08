@@ -887,7 +887,7 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, V
 }
 
 // 10.1.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver
-ThrowCompletionOr<bool> Object::internal_set(PropertyKey const& property_key, Value value, Value receiver)
+ThrowCompletionOr<bool> Object::internal_set(PropertyKey const& property_key, Value value, Value receiver, CacheablePropertyMetadata* cacheable_metadata)
 {
     VERIFY(property_key.is_valid());
     VERIFY(!value.is_empty());
@@ -897,11 +897,11 @@ ThrowCompletionOr<bool> Object::internal_set(PropertyKey const& property_key, Va
     auto own_descriptor = TRY(internal_get_own_property(property_key));
 
     // 3. Return ? OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc).
-    return ordinary_set_with_own_descriptor(property_key, value, receiver, own_descriptor);
+    return ordinary_set_with_own_descriptor(property_key, value, receiver, own_descriptor, cacheable_metadata);
 }
 
 // 10.1.9.2 OrdinarySetWithOwnDescriptor ( O, P, V, Receiver, ownDesc ), https://tc39.es/ecma262/#sec-ordinarysetwithowndescriptor
-ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey const& property_key, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor)
+ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey const& property_key, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor, CacheablePropertyMetadata* cacheable_metadata)
 {
     VERIFY(property_key.is_valid());
     VERIFY(!value.is_empty());
@@ -956,6 +956,13 @@ ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey con
 
             // iii. Let valueDesc be the PropertyDescriptor { [[Value]]: V }.
             auto value_descriptor = PropertyDescriptor { .value = value };
+
+            if (cacheable_metadata && own_descriptor.has_value() && own_descriptor->property_offset.has_value()) {
+                *cacheable_metadata = CacheablePropertyMetadata {
+                    .type = CacheablePropertyMetadata::Type::OwnProperty,
+                    .property_offset = own_descriptor->property_offset.value(),
+                };
+            }
 
             // iv. Return ? Receiver.[[DefineOwnProperty]](P, valueDesc).
             return TRY(receiver.as_object().internal_define_own_property(property_key, value_descriptor));

@@ -1153,6 +1153,8 @@ template void async_function_start(VM&, PromiseCapability const&, NonnullRefPtr<
 template void async_block_start(VM&, SafeFunction<Completion()> const& async_body, PromiseCapability const&, ExecutionContext&);
 template void async_function_start(VM&, PromiseCapability const&, SafeFunction<Completion()> const& async_function_body);
 
+static HashMap<NonnullRefPtr<Statement const>, RefPtr<Bytecode::Executable>> executable_cache;
+
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
 // 15.8.4 Runtime Semantics: EvaluateAsyncFunctionBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatefunctionbody
 Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
@@ -1166,14 +1168,18 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     //       This is why FunctionDeclarationInstantiation is invoked in the middle.
     //       The issue is that FunctionDeclarationInstantiation may mark certain functions as hoisted
     //       per Annex B. This affects code generation for FunctionDeclaration nodes.
-
     if (!m_bytecode_executable) {
-        size_t default_parameter_index = 0;
-        for (auto& parameter : m_formal_parameters) {
-            if (!parameter.default_value)
-                continue;
-            auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
-            m_default_parameter_bytecode_executables.append(move(executable));
+        auto maybe_cached_executable = executable_cache.get(m_ecmascript_code);
+        if (maybe_cached_executable.has_value()) {
+            m_bytecode_executable = maybe_cached_executable.value();
+        } else {
+            size_t default_parameter_index = 0;
+            for (auto& parameter : m_formal_parameters) {
+                if (!parameter.default_value)
+                    continue;
+                auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
+                m_default_parameter_bytecode_executables.append(move(executable));
+            }
         }
     }
 
@@ -1184,8 +1190,10 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             return declaration_result.release_error();
     }
 
-    if (!m_bytecode_executable)
+    if (!m_bytecode_executable) {
         m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
+        executable_cache.set(m_ecmascript_code, m_bytecode_executable);
+    }
 
     if (m_kind == FunctionKind::Async) {
         if (declaration_result.is_throw_completion()) {

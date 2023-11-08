@@ -297,7 +297,7 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
             } else {
                 // 3. Let propertyKey be StringValue of IdentifierName.
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
-                emit<Bytecode::Op::PutByIdWithThis>(super_reference.base, super_reference.this_value, identifier_table_ref);
+                emit<Bytecode::Op::PutByIdWithThis>(super_reference.base, super_reference.this_value, identifier_table_ref, Bytecode::Op::PropertyKind::KeyValue, next_property_lookup_cache());
             }
         } else {
             TRY(expression.object().generate_bytecode(*this));
@@ -314,7 +314,7 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
             } else if (expression.property().is_identifier()) {
                 emit<Bytecode::Op::Load>(value_reg);
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
-                emit<Bytecode::Op::PutById>(object_reg, identifier_table_ref);
+                emit<Bytecode::Op::PutById>(object_reg, identifier_table_ref, Bytecode::Op::PropertyKind::KeyValue, next_property_lookup_cache());
             } else if (expression.property().is_private_identifier()) {
                 emit<Bytecode::Op::Load>(value_reg);
                 auto identifier_table_ref = intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());

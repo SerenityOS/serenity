@@ -507,13 +507,13 @@ JS::ThrowCompletionOr<JS::Value> Location::internal_get(JS::PropertyKey const& p
 }
 
 // 7.10.5.8 [[Set]] ( P, V, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-set
-JS::ThrowCompletionOr<bool> Location::internal_set(JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> Location::internal_set(JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver, JS::CacheablePropertyMetadata* cacheable_metadata)
 {
     auto& vm = this->vm();
 
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return ? OrdinarySet(this, P, V, Receiver).
     if (HTML::is_platform_object_same_origin(*this))
-        return JS::Object::internal_set(property_key, value, receiver);
+        return JS::Object::internal_set(property_key, value, receiver, cacheable_metadata);
 
     // 2. Return ? CrossOriginSet(this, P, V, Receiver).
     return HTML::cross_origin_set(vm, static_cast<JS::Object&>(*this), property_key, value, receiver);
