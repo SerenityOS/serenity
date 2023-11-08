@@ -1,3 +1,4 @@
+// https://drafts.fxtf.org/css-masking/#InterfaceSVGClipPathElement
 [Exposed=Window]
 interface SVGClipPathElement : SVGElement {
 

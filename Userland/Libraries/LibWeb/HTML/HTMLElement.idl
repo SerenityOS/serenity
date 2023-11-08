@@ -48,6 +48,7 @@ HTMLElement includes GlobalEventHandlers;
 HTMLElement includes ElementContentEditable;
 HTMLElement includes HTMLOrSVGElement;
 
+// https://html.spec.whatwg.org/#elementcontenteditable
 interface mixin ElementContentEditable {
     [CEReactions] attribute DOMString contentEditable;
     // FIXME: [CEReactions] attribute DOMString enterKeyHint;
@@ -55,6 +56,7 @@ interface mixin ElementContentEditable {
     // FIXME: [CEReactions] attribute DOMString inputMode;
 };
 
+// https://html.spec.whatwg.org/#htmlorsvgelement
 interface mixin HTMLOrSVGElement {
     [SameObject] readonly attribute DOMStringMap dataset;
     // FIXME: attribute DOMString nonce; // intentionally no [CEReactions]

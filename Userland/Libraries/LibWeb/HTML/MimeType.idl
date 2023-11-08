@@ -1,5 +1,6 @@
 #import <HTML/Plugin.idl>
 
+// https://html.spec.whatwg.org/#mimetype
 [Exposed=Window]
 interface MimeType {
     readonly attribute DOMString type;

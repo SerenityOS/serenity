@@ -1,5 +1,6 @@
 #import <DOM/Document.idl>
 
+// https://html.spec.whatwg.org/#htmldocument
 [Exposed=Window]
 interface HTMLDocument : Document {
 };

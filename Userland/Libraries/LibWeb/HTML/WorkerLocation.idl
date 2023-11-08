@@ -1,3 +1,4 @@
+// https://html.spec.whatwg.org/#workerlocation
 [Exposed=Worker]
 interface WorkerLocation {
     stringifier readonly attribute USVString href;

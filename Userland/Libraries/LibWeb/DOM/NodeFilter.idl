@@ -1,5 +1,6 @@
 #import <DOM/Node.idl>
 
+// https://dom.spec.whatwg.org/#callbackdef-nodefilter
 [Exposed=Window]
 interface NodeFilter {
 

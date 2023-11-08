@@ -1,5 +1,6 @@
 #import <DOM/Event.idl>
 
+// https://html.spec.whatwg.org/#errorevent
 [Exposed=(Window,Worker)]
 interface ErrorEvent : Event {
     constructor(DOMString type, optional ErrorEventInit eventInitDict = {});

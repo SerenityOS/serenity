@@ -13,6 +13,7 @@ dictionary WebGLContextAttributes {
     boolean desynchronized = false;
 };
 
+// https://registry.khronos.org/webgl/specs/latest/1.0/#5.14
 interface mixin WebGLRenderingContextBase {
     // NOTE: Functions that have the [WebGLHandlesContextLoss] extended attribute in the spec do not have them here.
     //       This is because context loss is handled manually on a function by function basis instead of having to add it to the
