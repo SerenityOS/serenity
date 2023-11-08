@@ -48,13 +48,13 @@ static_assert(AssertSize<TableRecord, 16>());
 }
 
 template<>
-class AK::Traits<OpenType::TableDirectory const> : public DefaultTraits<OpenType::TableDirectory const> {
+class AK::Traits<OpenType::TableDirectory> : public DefaultTraits<OpenType::TableDirectory> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-class AK::Traits<OpenType::TableRecord const> : public DefaultTraits<OpenType::TableRecord const> {
+class AK::Traits<OpenType::TableRecord> : public DefaultTraits<OpenType::TableRecord> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };
@@ -788,47 +788,47 @@ private:
 
 namespace AK {
 template<>
-struct Traits<OpenType::Kern::Header const> : public DefaultTraits<OpenType::Kern::Header const> {
+struct Traits<OpenType::Kern::Header> : public DefaultTraits<OpenType::Kern::Header> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 template<>
-struct Traits<OpenType::Kern::SubtableHeader const> : public DefaultTraits<OpenType::Kern::SubtableHeader const> {
+struct Traits<OpenType::Kern::SubtableHeader> : public DefaultTraits<OpenType::Kern::SubtableHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 template<>
-struct Traits<OpenType::Kern::Format0 const> : public DefaultTraits<OpenType::Kern::Format0 const> {
+struct Traits<OpenType::Kern::Format0> : public DefaultTraits<OpenType::Kern::Format0> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 template<>
-struct Traits<OpenType::Kern::Format0Pair const> : public DefaultTraits<OpenType::Kern::Format0Pair const> {
-    static constexpr bool is_trivially_serializable() { return true; }
-};
-
-template<>
-struct Traits<OpenType::GPOS::Version1_0 const> : public DefaultTraits<OpenType::GPOS::Version1_0 const> {
+struct Traits<OpenType::Kern::Format0Pair> : public DefaultTraits<OpenType::Kern::Format0Pair> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-struct Traits<OpenType::FeatureList const> : public DefaultTraits<OpenType::FeatureList const> {
-    static constexpr bool is_trivially_serializable() { return true; }
-};
-template<>
-struct Traits<OpenType::FeatureRecord const> : public DefaultTraits<OpenType::FeatureRecord const> {
+struct Traits<OpenType::GPOS::Version1_0> : public DefaultTraits<OpenType::GPOS::Version1_0> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-struct Traits<OpenType::LookupList const> : public DefaultTraits<OpenType::LookupList const> {
+struct Traits<OpenType::FeatureList> : public DefaultTraits<OpenType::FeatureList> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+template<>
+struct Traits<OpenType::FeatureRecord> : public DefaultTraits<OpenType::FeatureRecord> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 
 template<>
-struct Traits<OpenType::ScriptList const> : public DefaultTraits<OpenType::ScriptList const> {
+struct Traits<OpenType::LookupList> : public DefaultTraits<OpenType::LookupList> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+struct Traits<OpenType::ScriptList> : public DefaultTraits<OpenType::ScriptList> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 template<>
-struct Traits<OpenType::ScriptRecord const> : public DefaultTraits<OpenType::ScriptRecord const> {
+struct Traits<OpenType::ScriptRecord> : public DefaultTraits<OpenType::ScriptRecord> {
     static constexpr bool is_trivially_serializable() { return true; }
 };
 }
