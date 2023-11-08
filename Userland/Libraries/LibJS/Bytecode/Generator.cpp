@@ -205,7 +205,7 @@ CodeGenerationErrorOr<Generator::ReferenceRegisters> Generator::emit_super_refer
     };
 }
 
-CodeGenerationErrorOr<Optional<Generator::ReferenceRegisters>> Generator::emit_load_from_reference(JS::ASTNode const& node)
+CodeGenerationErrorOr<Optional<Generator::ReferenceRegisters>> Generator::emit_load_from_reference(JS::ASTNode const& node, CollectRegisters collect_registers)
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
@@ -238,15 +238,20 @@ CodeGenerationErrorOr<Optional<Generator::ReferenceRegisters>> Generator::emit_l
                 emit<Bytecode::Op::Store>(object_reg);
 
                 TRY(expression.property().generate_bytecode(*this));
-                auto property_reg = allocate_register();
-                emit<Bytecode::Op::Store>(property_reg);
+                Optional<Register> property_reg {};
+                if (collect_registers == CollectRegisters::Yes) {
+                    property_reg = allocate_register();
+                    emit<Bytecode::Op::Store>(property_reg.value());
+                }
 
                 emit<Bytecode::Op::GetByValue>(object_reg);
-                return ReferenceRegisters {
-                    .base = object_reg,
-                    .referenced_name = property_reg,
-                    .this_value = object_reg,
-                };
+                if (collect_registers == CollectRegisters::Yes)
+                    return ReferenceRegisters {
+                        .base = object_reg,
+                        .referenced_name = property_reg.value(),
+                        .this_value = object_reg,
+                    };
+                return Optional<ReferenceRegisters> {};
             } else if (expression.property().is_identifier()) {
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
                 emit_get_by_id(identifier_table_ref);

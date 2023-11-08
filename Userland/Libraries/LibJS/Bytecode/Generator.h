@@ -98,7 +98,11 @@ public:
         Register this_value;                // [[ThisValue]]
     };
 
-    CodeGenerationErrorOr<Optional<ReferenceRegisters>> emit_load_from_reference(JS::ASTNode const&);
+    enum class CollectRegisters {
+        Yes,
+        No
+    };
+    CodeGenerationErrorOr<Optional<ReferenceRegisters>> emit_load_from_reference(JS::ASTNode const&, CollectRegisters);
     CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
     CodeGenerationErrorOr<void> emit_store_to_reference(ReferenceRegisters const&);
     CodeGenerationErrorOr<void> emit_delete_reference(JS::ASTNode const&);
