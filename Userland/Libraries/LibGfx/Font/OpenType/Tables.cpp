@@ -526,7 +526,7 @@ ErrorOr<GPOS> GPOS::from_slice(ReadonlyBytes slice)
 
     TRY(stream.seek(header.lookup_list_offset, SeekMode::SetPosition));
     auto const& lookup_list = *TRY(stream.read_in_place<LookupList const>());
-    auto lookup_records = TRY(stream.read_in_place<Offset16>(lookup_list.lookup_count));
+    auto lookup_records = TRY(stream.read_in_place<Offset16 const>(lookup_list.lookup_count));
 
     return GPOS { slice, header, script_list, script_records, feature_list, feature_records, lookup_list, lookup_records };
 }
