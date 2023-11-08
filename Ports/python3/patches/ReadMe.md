@@ -21,13 +21,3 @@ Include `sys/uio.h` in `socketmodule.c`
 
 This is to ensure that `struct iovec` is defined, which is required by
 the `socket` module.
-
-## `0004-Workaround-for-unsupported-socket-option.patch`
-
-Workaround for unsupported socket option
-
-This is a workaround for ignoring the result of `setsockopt` call when
-given `TCP_NODELAY` as an argument. This TCP socket option is used in
-many applications (like pip and requests) for optimization purposes.
-For now, it can be safely ignored until it's supported in the kernel.
-
