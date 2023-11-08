@@ -197,9 +197,9 @@ namespace PnpIDs {
         StringView manufacturer_id;
         StringView manufacturer_name;
         struct {
-            u16 year{};
-            u8 month{};
-            u8 day{};
+            u16 year { 0 };
+            u8 month { 0 };
+            u8 day { 0 };
         } approval_date;
     };
 
@@ -223,8 +223,7 @@ static ErrorOr<void> generate_source(Core::File& file, HashMap<DeprecatedString,
 
 namespace PnpIDs {
 
-static constexpr PnpIDData s_pnp_ids[] = {
-)~~~");
+static constexpr PnpIDData s_pnp_ids[] = {)~~~");
 
     for (auto& pnp_id_data : pnp_ids) {
         generator.set("manufacturer_id", pnp_id_data.key);
@@ -234,8 +233,7 @@ static constexpr PnpIDData s_pnp_ids[] = {
         generator.set("approval_day", DeprecatedString::formatted("{}", pnp_id_data.value.approval_date.day));
 
         generator.append(R"~~~(
-{ "@manufacturer_id@"sv, "@manufacturer_name@"sv, { @approval_year@, @approval_month@, @approval_day@ } },
-)~~~");
+    { "@manufacturer_id@"sv, "@manufacturer_name@"sv, { @approval_year@, @approval_month@, @approval_day@ } },)~~~");
     }
 
     generator.append(R"~~~(
