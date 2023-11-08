@@ -1,3 +1,4 @@
+#import <FileAPI/Blob.idl>
 #import <HTML/CanvasRenderingContext2D.idl>
 #import <HTML/HTMLElement.idl>
 #import <WebGL/WebGLRenderingContext.idl>

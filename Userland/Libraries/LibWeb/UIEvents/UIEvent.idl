@@ -1,4 +1,5 @@
 #import <DOM/Event.idl>
+#import <HTML/Window.idl>
 
 // https://w3c.github.io/uievents/#uievent
 [Exposed=Window]

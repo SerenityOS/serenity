@@ -1,5 +1,6 @@
 #import <CSS/ElementCSSInlineStyle.idl>
 #import <HTML/DOMStringMap.idl>
+#import <DOM/Element.idl>
 #import <DOM/EventHandler.idl>
 
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlelement
