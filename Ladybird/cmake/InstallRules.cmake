@@ -4,7 +4,7 @@ include(GNUInstallDirs)
 
 set(package ladybird)
 
-set(ladybird_applications ladybird SQLServer WebContent WebDriver WebSocketServer RequestServer ImageDecoder headless-browser)
+set(ladybird_applications ladybird SQLServer WebContent WebDriver WebSocketServer RequestServer ImageDecoder WebWorker headless-browser)
 
 set(app_install_targets ${ladybird_applications})
 
@@ -45,7 +45,7 @@ macro(install_service_lib service)
       endif()
     endif()
 endmacro()
-foreach(service IN LISTS webcontent requestserver websocket)
+foreach(service IN LISTS webcontent requestserver websocket webworker)
     install_service_lib(${service})
 endforeach()
 

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/URL.h>
-#include <LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Forward.h>
 
@@ -18,27 +17,13 @@ class WorkerEnvironmentSettingsObject final
     JS_CELL(WindowEnvironmentSettingsObject, EnvironmentSettingsObject);
 
 public:
-    WorkerEnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> execution_context)
+    WorkerEnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> execution_context, JS::NonnullGCPtr<WorkerGlobalScope> global_scope)
         : EnvironmentSettingsObject(move(execution_context))
+        , m_global_scope(global_scope)
     {
     }
 
-    static JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> setup(NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
-    {
-        auto realm = execution_context->realm;
-        VERIFY(realm);
-        auto settings_object = realm->heap().allocate<WorkerEnvironmentSettingsObject>(*realm, move(execution_context));
-        settings_object->target_browsing_context = nullptr;
-
-        auto intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm);
-        auto host_defined = make<Bindings::HostDefined>(settings_object, intrinsics);
-        realm->set_host_defined(move(host_defined));
-
-        // FIXME: Shared workers should use the shared worker method
-        Bindings::add_dedicated_worker_exposed_interfaces(realm->global_object());
-
-        return settings_object;
-    }
+    static JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> setup(NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */);
 
     virtual ~WorkerEnvironmentSettingsObject() override = default;
 
@@ -47,13 +32,17 @@ public:
     AK::URL api_base_url() override { return m_url; }
     Origin origin() override { return m_origin; }
     PolicyContainer policy_container() override { return m_policy_container; }
-    CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { TODO(); }
+    CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { return CanUseCrossOriginIsolatedAPIs::No; }
 
 private:
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+
     DeprecatedString m_api_url_character_encoding;
     AK::URL m_url;
     HTML::Origin m_origin;
     HTML::PolicyContainer m_policy_container;
+
+    JS::NonnullGCPtr<WorkerGlobalScope> m_global_scope;
 };
 
 }

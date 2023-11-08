@@ -41,6 +41,16 @@ public:
     virtual Bindings::PlatformObject& this_impl() override { return *this; }
     virtual Bindings::PlatformObject const& this_impl() const override { return *this; }
 
+    using WindowOrWorkerGlobalScopeMixin::atob;
+    using WindowOrWorkerGlobalScopeMixin::btoa;
+    using WindowOrWorkerGlobalScopeMixin::clear_interval;
+    using WindowOrWorkerGlobalScopeMixin::clear_timeout;
+    using WindowOrWorkerGlobalScopeMixin::fetch;
+    using WindowOrWorkerGlobalScopeMixin::queue_microtask;
+    using WindowOrWorkerGlobalScopeMixin::set_interval;
+    using WindowOrWorkerGlobalScopeMixin::set_timeout;
+    using WindowOrWorkerGlobalScopeMixin::structured_clone;
+
     // Following methods are from the WorkerGlobalScope IDL definition
     // https://html.spec.whatwg.org/multipage/workers.html#the-workerglobalscope-common-interface
 
@@ -67,16 +77,17 @@ public:
     //            this is not problematic as it cannot be observed from script.
     void set_location(JS::NonnullGCPtr<WorkerLocation> loc) { m_location = move(loc); }
 
+    void initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>);
+
+    Web::Page* page() { return &m_page; }
+
 protected:
-    explicit WorkerGlobalScope(JS::Realm&);
+    explicit WorkerGlobalScope(JS::Realm&, Web::Page&);
 
 private:
-    virtual void initialize(JS::Realm&) override;
-
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<WorkerLocation> m_location;
-
     JS::GCPtr<WorkerNavigator> m_navigator;
 
     // FIXME: Add all these internal slots
@@ -110,6 +121,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-cross-origin-isolated-capability
     bool m_cross_origin_isolated_capability { false };
+
+    Web::Page& m_page;
 };
 
 }

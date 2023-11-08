@@ -5,7 +5,9 @@
  */
 
 #include <AK/Vector.h>
+#include <LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -16,17 +18,26 @@
 
 namespace Web::HTML {
 
-WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm)
+WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm, Web::Page& page)
     : DOM::EventTarget(realm)
-
+    , m_page(page)
 {
 }
 
 WorkerGlobalScope::~WorkerGlobalScope() = default;
 
-void WorkerGlobalScope::initialize(JS::Realm& realm)
+void WorkerGlobalScope::initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>)
 {
+    auto& realm = this->realm();
     Base::initialize(realm);
+
+    // FIXME: Handle shared worker
+    add_dedicated_worker_exposed_interfaces(*this);
+
+    Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerGlobalScopePrototype>(realm, "WorkerGlobalScope"));
+
+    WindowOrWorkerGlobalScopeMixin::initialize(realm);
+
     m_navigator = WorkerNavigator::create(*this);
 }
 

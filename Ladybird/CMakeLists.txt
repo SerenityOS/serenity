@@ -215,7 +215,8 @@ add_subdirectory(SQLServer)
 add_subdirectory(WebContent)
 add_subdirectory(WebDriver)
 add_subdirectory(WebSocket)
-add_dependencies(ladybird ImageDecoder RequestServer SQLServer WebContent WebDriver WebSocketServer headless-browser)
+add_subdirectory(WebWorker)
+add_dependencies(ladybird ImageDecoder RequestServer SQLServer WebContent WebDriver WebSocketServer WebWorker headless-browser)
 
 function(create_ladybird_bundle target_name)
     set_target_properties(${target_name} PROPERTIES
@@ -240,6 +241,7 @@ function(create_ladybird_bundle target_name)
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebContent>" "${app_dir}"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebDriver>" "${app_dir}"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebSocketServer>" "${app_dir}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebWorker>" "${app_dir}"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:headless-browser>" "${app_dir}"
             COMMAND "mkdir" -p "${bundle_dir}/Contents/Resources"
             COMMAND "iconutil" --convert icns "${SERENITY_SOURCE_DIR}/Ladybird/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"

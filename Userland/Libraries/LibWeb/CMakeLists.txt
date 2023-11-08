@@ -382,6 +382,7 @@ set(SOURCES
     HTML/Scripting/Script.cpp
     HTML/Scripting/TemporaryExecutionContext.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
+    HTML/Scripting/WorkerEnvironmentSettingsObject.cpp
     HTML/SessionHistoryEntry.cpp
     HTML/SharedImageRequest.cpp
     HTML/SourceSet.cpp
@@ -403,6 +404,7 @@ set(SOURCES
     HTML/WindowOrWorkerGlobalScope.cpp
     HTML/WindowProxy.cpp
     HTML/Worker.cpp
+    HTML/WorkerAgent.cpp
     HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp
     HTML/WorkerLocation.cpp
@@ -632,7 +634,11 @@ set(SOURCES
     XHR/XMLHttpRequestUpload.cpp
     XML/XMLDocumentBuilder.cpp
     XLink/AttributeNames.cpp
+    Worker/WebWorkerClient.cpp
 )
+
+compile_ipc(Worker/WebWorkerClient.ipc Worker/WebWorkerClientEndpoint.h)
+compile_ipc(Worker/WebWorkerServer.ipc Worker/WebWorkerServerEndpoint.h)
 
 invoke_generator(
         "AriaRoles.cpp"
@@ -659,6 +665,8 @@ set(GENERATED_SOURCES
     CSS/ValueID.cpp
     MathML/MathMLStyleSheetSource.cpp
     SVG/SVGStyleSheetSource.cpp
+    Worker/WebWorkerClientEndpoint.h
+    Worker/WebWorkerServerEndpoint.h
 )
 
 serenity_lib(LibWeb web)
