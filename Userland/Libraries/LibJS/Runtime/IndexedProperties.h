@@ -74,6 +74,8 @@ public:
 
     Vector<Value> const& elements() const { return m_packed_elements; }
 
+    static FlatPtr elements_offset() { return OFFSET_OF(SimpleIndexedPropertyStorage, m_packed_elements); }
+
 private:
     friend GenericIndexedPropertyStorage;
 
@@ -171,6 +173,8 @@ public:
                 callback(element.value.value);
         }
     }
+
+    static FlatPtr storage_offset() { return OFFSET_OF(IndexedProperties, m_storage); }
 
 private:
     void switch_to_generic_storage();
