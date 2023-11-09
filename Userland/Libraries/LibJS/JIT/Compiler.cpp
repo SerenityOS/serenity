@@ -1085,16 +1085,118 @@ static Value cxx_get_by_id(VM& vm, Value base, DeprecatedFlyString const& proper
 
 void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
 {
+    auto& cache = m_bytecode_executable.property_lookup_caches[op.cache_index()];
+    Assembler::Label end;
+    Assembler::Label slow_case;
+
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG5),
+        Assembler::Operand::Imm(bit_cast<u64>(&cache)));
+
     load_accumulator(ARG1);
+
+    branch_if_object(ARG1, [&] {
+        extract_object_pointer(GPR0, ARG1);
+
+        // if (cache.shape != &object->shape()) goto slow_case;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR2),
+            Assembler::Operand::Mem64BaseAndOffset(GPR0, Object::shape_offset()));
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(ARG5, Bytecode::PropertyLookupCache::shape_offset()));
+
+        m_assembler.jump_if(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Condition::EqualTo,
+            Assembler::Operand::Imm(0),
+            slow_case);
+
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(GPR1, AK::WeakLink::ptr_offset()));
+
+        m_assembler.jump_if(
+            Assembler::Operand::Register(GPR2),
+            Assembler::Condition::NotEqualTo,
+            Assembler::Operand::Register(GPR1),
+            slow_case);
+
+        // (!object->shape().is_unique() || object->shape().unique_shape_serial_number() == cache.unique_shape_serial_number)) {
+        Assembler::Label fast_case;
+
+        // GPR1 = object->shape().is_unique()
+        m_assembler.mov8(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(GPR2, Shape::is_unique_offset()));
+
+        m_assembler.jump_if(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Condition::EqualTo,
+            Assembler::Operand::Imm(0),
+            fast_case);
+
+        // GPR1 = object->shape().unique_shape_serial_number()
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(GPR2, Shape::unique_shape_serial_number_offset()));
+
+        // GPR2 = cache.unique_shape_serial_number
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR2),
+            Assembler::Operand::Mem64BaseAndOffset(ARG5, Bytecode::PropertyLookupCache::unique_shape_serial_number_offset()));
+
+        // if (GPR1 != GPR2) goto slow_case;
+        m_assembler.jump_if(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Condition::NotEqualTo,
+            Assembler::Operand::Register(GPR2),
+            slow_case);
+
+        fast_case.link(m_assembler);
+
+        // return object->get_direct(*cache.property_offset);
+        // GPR0 = object
+        // GPR1 = *cache.property_offset * sizeof(Value)
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(ARG5, Bytecode::PropertyLookupCache::property_offset_offset() + decltype(cache.property_offset)::value_offset()));
+        m_assembler.mul32(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm(sizeof(Value)),
+            slow_case);
+
+        // GPR0 = object->m_storage.outline_buffer
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Mem64BaseAndOffset(GPR0, Object::storage_offset() + Vector<Value>::outline_buffer_offset()));
+
+        // GPR0 = &object->m_storage.outline_buffer[*cache.property_offset]
+        m_assembler.add(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(GPR1));
+
+        // *GPR0 = value
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(GPR0, 0));
+        store_accumulator(GPR1);
+
+        m_assembler.jump(end);
+    });
+
+    slow_case.link(m_assembler);
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
         Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])));
+        Assembler::Operand::Imm(bit_cast<u64>(&cache)));
     native_call((void*)cxx_get_by_id);
     store_accumulator(RET);
     check_exception();
+
+    end.link(m_assembler);
 }
 
 static Value cxx_get_by_value(VM& vm, Value base, Value property)
