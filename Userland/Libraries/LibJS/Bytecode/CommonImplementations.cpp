@@ -233,7 +233,8 @@ static Completion throw_type_error_for_callee(Bytecode::Interpreter& interpreter
 
 ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter, Value callee, Op::CallType call_type, Optional<StringTableIndex> const& expression_string)
 {
-    if (call_type == Op::CallType::Call && !callee.is_function())
+    if ((call_type == Op::CallType::Call || call_type == Op::CallType::DirectEval)
+        && !callee.is_function())
         return throw_type_error_for_callee(interpreter, callee, "function"sv, expression_string);
     if (call_type == Op::CallType::Construct && !callee.is_constructor())
         return throw_type_error_for_callee(interpreter, callee, "constructor"sv, expression_string);
