@@ -9,21 +9,56 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <AK/UFixedBigInt.h>
+#include <AK/UFixedBigIntDivision.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/Curves/SECP256r1.h>
 
 namespace Crypto::Curves {
 
-static constexpr u256 REDUCE_PRIME { u128 { 0x0000000000000001ull, 0xffffffff00000000ull }, u128 { 0xffffffffffffffffull, 0x00000000fffffffe } };
-static constexpr u256 REDUCE_ORDER { u128 { 0x0c46353d039cdaafull, 0x4319055258e8617bull }, u128 { 0x0000000000000000ull, 0x00000000ffffffff } };
-static constexpr u256 PRIME_INVERSE_MOD_R { u128 { 0x0000000000000001ull, 0x0000000100000000ull }, u128 { 0x0000000000000000ull, 0xffffffff00000002ull } };
-static constexpr u256 PRIME { u128 { 0xffffffffffffffffull, 0x00000000ffffffffull }, u128 { 0x0000000000000000ull, 0xffffffff00000001ull } };
-static constexpr u256 R2_MOD_PRIME { u128 { 0x0000000000000003ull, 0xfffffffbffffffffull }, u128 { 0xfffffffffffffffeull, 0x00000004fffffffdull } };
-static constexpr u256 ONE { 1u };
-static constexpr u256 B_MONTGOMERY { u128 { 0xd89cdf6229c4bddfull, 0xacf005cd78843090ull }, u128 { 0xe5a220abf7212ed6ull, 0xdc30061d04874834ull } };
-static constexpr u256 ORDER { u128 { 0xf3b9cac2fc632551ull, 0xbce6faada7179e84ull }, u128 { 0xffffffffffffffffull, 0xffffffff00000000ull } };
-static constexpr u256 ORDER_INVERSE_MOD_R { u128 { 0xccd1c8aaee00bc4full, 0x48c944087d74d2e4ull }, u128 { 0x50fe77ecc588c6f6ull, 0x60d06633a9d6281cull } };
-static constexpr u256 R2_MOD_ORDER { u128 { 0x83244c95be79eea2ull, 0x4699799c49bd6fa6ull }, u128 { 0x2845b2392b6bec59ull, 0x66e12d94f3d95620ull } };
+static constexpr u256 calculate_modular_inverse_mod_r(u256 value)
+{
+    // Calculate the modular multiplicative inverse of value mod 2^256 using the extended euclidean algorithm
+    u512 old_r = value;
+    u512 r = static_cast<u512>(1u) << 256u;
+    u512 old_s = 1u;
+    u512 s = 0u;
+
+    while (!r.is_zero_constant_time()) {
+        u512 quotient = old_r / r;
+        u512 temp = r;
+        r = old_r - quotient * r;
+        old_r = temp;
+
+        temp = s;
+        s = old_s - quotient * s;
+        old_s = temp;
+    }
+
+    return old_s.low();
+}
+
+static constexpr u256 calculate_r2_mod(u256 modulus)
+{
+    // Calculate the value of R^2 mod modulus, where R = 2^256
+    u1024 r = static_cast<u1024>(1u) << 256u;
+    u1024 r2 = r * r;
+    u1024 result = r2 % static_cast<u1024>(modulus);
+    return result.low().low();
+}
+
+// SECP256r1 curve parameters
+static constexpr u256 PRIME { { 0xffffffffffffffffull, 0x00000000ffffffffull, 0x0000000000000000ull, 0xffffffff00000001ull } };
+static constexpr u256 A { { 0xfffffffffffffffcull, 0x00000000ffffffffull, 0x0000000000000000ull, 0xffffffff00000001ull } };
+static constexpr u256 B { { 0x3bce3c3e27d2604bull, 0x651d06b0cc53b0f6ull, 0xb3ebbd55769886bcull, 0x5ac635d8aa3a93e7ull } };
+static constexpr u256 ORDER { { 0xf3b9cac2fc632551ull, 0xbce6faada7179e84ull, 0xffffffffffffffffull, 0xffffffff00000000ull } };
+
+// Precomputed helper values for reduction and Montgomery multiplication
+static constexpr u256 REDUCE_PRIME = u256 { 0 } - PRIME;
+static constexpr u256 REDUCE_ORDER = u256 { 0 } - ORDER;
+static constexpr u256 PRIME_INVERSE_MOD_R = u256 { 0 } - calculate_modular_inverse_mod_r(PRIME);
+static constexpr u256 ORDER_INVERSE_MOD_R = u256 { 0 } - calculate_modular_inverse_mod_r(ORDER);
+static constexpr u256 R2_MOD_PRIME = calculate_r2_mod(PRIME);
+static constexpr u256 R2_MOD_ORDER = calculate_r2_mod(ORDER);
 
 static u256 import_big_endian(ReadonlyBytes data)
 {
@@ -50,7 +85,7 @@ static void export_big_endian(u256 const& value, Bytes data)
     ByteReader::store(data.offset_pointer(0 * sizeof(u64)), d);
 }
 
-static u256 select(u256 const& left, u256 const& right, bool condition)
+static constexpr u256 select(u256 const& left, u256 const& right, bool condition)
 {
     // If condition = 0 return left else right
     u256 mask = (u256)condition - 1;
@@ -58,12 +93,12 @@ static u256 select(u256 const& left, u256 const& right, bool condition)
     return (left & mask) | (right & ~mask);
 }
 
-static u512 multiply(u256 const& left, u256 const& right)
+static constexpr u512 multiply(u256 const& left, u256 const& right)
 {
     return left.wide_multiply(right);
 }
 
-static u256 modular_reduce(u256 const& value)
+static constexpr u256 modular_reduce(u256 const& value)
 {
     // Add -prime % 2^256 = 2^224-2^192-2^96+1
     bool carry = false;
@@ -73,7 +108,7 @@ static u256 modular_reduce(u256 const& value)
     return select(value, other, carry);
 }
 
-static u256 modular_reduce_order(u256 const& value)
+static constexpr u256 modular_reduce_order(u256 const& value)
 {
     // Add -order % 2^256
     bool carry = false;
@@ -83,7 +118,7 @@ static u256 modular_reduce_order(u256 const& value)
     return select(value, other, carry);
 }
 
-static u256 modular_add(u256 const& left, u256 const& right, bool carry_in = false)
+static constexpr u256 modular_add(u256 const& left, u256 const& right, bool carry_in = false)
 {
     bool carry = carry_in;
     u256 output = left.addc(right, carry);
@@ -100,7 +135,7 @@ static u256 modular_add(u256 const& left, u256 const& right, bool carry_in = fal
     return output + addend;
 }
 
-static u256 modular_sub(u256 const& left, u256 const& right)
+static constexpr u256 modular_sub(u256 const& left, u256 const& right)
 {
     bool borrow = false;
     u256 output = left.subc(right, borrow);
@@ -117,7 +152,7 @@ static u256 modular_sub(u256 const& left, u256 const& right)
     return output - sub;
 }
 
-static u256 modular_multiply(u256 const& left, u256 const& right)
+static constexpr u256 modular_multiply(u256 const& left, u256 const& right)
 {
     // Modular multiplication using the Montgomery method: https://en.wikipedia.org/wiki/Montgomery_modular_multiplication
     // This requires that the inputs to this function are in Montgomery form.
@@ -139,22 +174,22 @@ static u256 modular_multiply(u256 const& left, u256 const& right)
     return modular_add(mult.high(), mp.high(), carry);
 }
 
-static u256 modular_square(u256 const& value)
+static constexpr u256 modular_square(u256 const& value)
 {
     return modular_multiply(value, value);
 }
 
-static u256 to_montgomery(u256 const& value)
+static constexpr u256 to_montgomery(u256 const& value)
 {
     return modular_multiply(value, R2_MOD_PRIME);
 }
 
-static u256 from_montgomery(u256 const& value)
+static constexpr u256 from_montgomery(u256 const& value)
 {
-    return modular_multiply(value, ONE);
+    return modular_multiply(value, 1u);
 }
 
-static u256 modular_inverse(u256 const& value)
+static constexpr u256 modular_inverse(u256 const& value)
 {
     // Modular inverse modulo the curve prime can be computed using Fermat's little theorem: a^(p-2) mod p = a^-1 mod p.
     // Calculating a^(p-2) mod p can be done using the square-and-multiply exponentiation method, as p-2 is constant.
@@ -203,7 +238,7 @@ static u256 modular_inverse(u256 const& value)
     return result;
 }
 
-static u256 modular_add_order(u256 const& left, u256 const& right, bool carry_in = false)
+static constexpr u256 modular_add_order(u256 const& left, u256 const& right, bool carry_in = false)
 {
     bool carry = carry_in;
     u256 output = left.addc(right, carry);
@@ -220,7 +255,7 @@ static u256 modular_add_order(u256 const& left, u256 const& right, bool carry_in
     return select(output, temp_output, did_carry);
 }
 
-static u256 modular_multiply_order(u256 const& left, u256 const& right)
+static constexpr u256 modular_multiply_order(u256 const& left, u256 const& right)
 {
     // Modular multiplication using the Montgomery method: https://en.wikipedia.org/wiki/Montgomery_modular_multiplication
     // This requires that the inputs to this function are in Montgomery form.
@@ -242,31 +277,28 @@ static u256 modular_multiply_order(u256 const& left, u256 const& right)
     return modular_add_order(mult.high(), mp.high(), carry);
 }
 
-static u256 modular_square_order(u256 const& value)
+static constexpr u256 modular_square_order(u256 const& value)
 {
     return modular_multiply_order(value, value);
 }
 
-static u256 to_montgomery_order(u256 const& value)
+static constexpr u256 to_montgomery_order(u256 const& value)
 {
     return modular_multiply_order(value, R2_MOD_ORDER);
 }
 
-static u256 from_montgomery_order(u256 const& value)
+static constexpr u256 from_montgomery_order(u256 const& value)
 {
-    return modular_multiply_order(value, ONE);
+    return modular_multiply_order(value, 1u);
 }
 
-static u256 modular_inverse_order(u256 const& value)
+static constexpr u256 modular_inverse_order(u256 const& value)
 {
     // Modular inverse modulo the curve order can be computed using Fermat's little theorem: a^(n-2) mod n = a^-1 mod n.
     // Calculating a^(n-2) mod n can be done using the square-and-multiply exponentiation method, as n-2 is constant.
-    // n-2 = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc63254f
-
     u256 base = value;
     u256 result = to_montgomery_order(1u);
-
-    u256 order_minus_2 = u256 { u128 { 0xf3b9cac2fc63254full, 0xbce6faada7179e84ull }, u128 { 0xffffffffffffffffull, 0xffffffff00000000ull } };
+    u256 order_minus_2 = ORDER - 2u;
 
     for (size_t i = 0; i < 256; i++) {
         if ((order_minus_2 & 1u) == 1u) {
@@ -427,7 +459,7 @@ static bool is_point_on_curve(JacobianPoint const& point)
     temp = modular_add(temp, point.x);
     temp = modular_add(temp, point.x);
     temp = modular_add(temp, point.x);
-    temp = modular_sub(temp, B_MONTGOMERY);
+    temp = modular_sub(temp, to_montgomery(B));
     temp = modular_reduce(temp);
 
     return temp.is_zero_constant_time();
