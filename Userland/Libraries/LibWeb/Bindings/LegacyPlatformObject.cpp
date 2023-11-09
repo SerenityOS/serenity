@@ -12,7 +12,7 @@
 namespace Web::Bindings {
 
 LegacyPlatformObject::LegacyPlatformObject(JS::Realm& realm)
-    : PlatformObject(realm)
+    : PlatformObject(realm, MayInterfereWithIndexedPropertyAccess::Yes)
 {
 }
 

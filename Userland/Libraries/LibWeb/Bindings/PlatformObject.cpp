@@ -11,13 +11,13 @@
 
 namespace Web::Bindings {
 
-PlatformObject::PlatformObject(JS::Realm& realm)
-    : JS::Object(realm, nullptr)
+PlatformObject::PlatformObject(JS::Realm& realm, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : JS::Object(realm, nullptr, may_interfere_with_indexed_property_access)
 {
 }
 
-PlatformObject::PlatformObject(JS::Object& prototype)
-    : JS::Object(ConstructWithPrototypeTag::Tag, prototype)
+PlatformObject::PlatformObject(JS::Object& prototype, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : JS::Object(ConstructWithPrototypeTag::Tag, prototype, may_interfere_with_indexed_property_access)
 {
 }
 

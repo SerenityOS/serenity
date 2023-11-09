@@ -22,7 +22,7 @@ NonnullGCPtr<ProxyObject> ProxyObject::create(Realm& realm, Object& target, Obje
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)
-    : FunctionObject(prototype)
+    : FunctionObject(prototype, MayInterfereWithIndexedPropertyAccess::Yes)
     , m_target(target)
     , m_handler(handler)
 {

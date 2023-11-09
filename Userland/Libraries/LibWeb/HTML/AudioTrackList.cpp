@@ -14,7 +14,7 @@
 namespace Web::HTML {
 
 AudioTrackList::AudioTrackList(JS::Realm& realm)
-    : DOM::EventTarget(realm)
+    : DOM::EventTarget(realm, MayInterfereWithIndexedPropertyAccess::Yes)
     , m_audio_tracks(realm.heap())
 {
 }

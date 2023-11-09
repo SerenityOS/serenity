@@ -31,8 +31,6 @@ public:
     virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const override;
     virtual void initialize(Realm&) override;
 
-    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
-
 private:
     ModuleNamespaceObject(Realm&, Module* module, Vector<DeprecatedFlyString> exports);
 

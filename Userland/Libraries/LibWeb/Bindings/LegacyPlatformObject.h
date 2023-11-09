@@ -29,8 +29,6 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
-    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
-
     enum class IgnoreNamedProps {
         No,
         Yes,
