@@ -240,15 +240,13 @@ static constexpr u256 modular_add_order(u256 const& left, u256 const& right, boo
     u256 output = left.addc(right, carry);
 
     // If there is a carry, subtract n by adding 2^256 - n
-    bool did_carry = carry;
+    u256 addend = select(0u, REDUCE_ORDER, carry);
     carry = false;
-    u256 temp_output = output.addc(REDUCE_ORDER, carry);
-    output = select(output, temp_output, did_carry);
+    output = output.addc(addend, carry);
 
     // If there is still a carry, subtract n by adding 2^256 - n
-    did_carry = carry;
-    temp_output = output + REDUCE_ORDER;
-    return select(output, temp_output, did_carry);
+    addend = select(0u, REDUCE_ORDER, carry);
+    return output + addend;
 }
 
 static constexpr u256 modular_multiply_order(u256 const& left, u256 const& right)
