@@ -124,14 +124,12 @@ static constexpr u256 modular_add(u256 const& left, u256 const& right, bool carr
     u256 output = left.addc(right, carry);
 
     // If there is a carry, subtract p by adding 2^256 - p
-    u64 t = carry;
+    u256 addend = select(0u, REDUCE_PRIME, carry);
     carry = false;
-    u256 addend { u128 { t, -(t << 32) }, u128 { -t, (t << 32) - (t << 1) } };
     output = output.addc(addend, carry);
 
     // If there is still a carry, subtract p by adding 2^256 - p
-    t = carry;
-    addend = { u128 { t, -(t << 32) }, u128 { -t, (t << 32) - (t << 1) } };
+    addend = select(0u, REDUCE_PRIME, carry);
     return output + addend;
 }
 
@@ -141,14 +139,12 @@ static constexpr u256 modular_sub(u256 const& left, u256 const& right)
     u256 output = left.subc(right, borrow);
 
     // If there is a borrow, add p by subtracting 2^256 - p
-    u64 t = borrow;
+    u256 sub = select(0u, REDUCE_PRIME, borrow);
     borrow = false;
-    u256 sub { u128 { t, -(t << 32) }, u128 { -t, (t << 32) - (t << 1) } };
     output = output.subc(sub, borrow);
 
     // If there is still a borrow, add p by subtracting 2^256 - p
-    t = borrow;
-    sub = { u128 { t, -(t << 32) }, u128 { -t, (t << 32) - (t << 1) } };
+    sub = select(0u, REDUCE_PRIME, borrow);
     return output - sub;
 }
 
