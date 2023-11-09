@@ -459,7 +459,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     }                                                                                                                       \
                                                                                                                             \
     PrototypeName::PrototypeName(Object& prototype)                                                                         \
-        : Object(ConstructWithPrototypeTag::Tag, prototype)                                                                 \
+        : Object(ConstructWithPrototypeTag::Tag, prototype, MayInterfereWithIndexedPropertyAccess::Yes)                     \
     {                                                                                                                       \
     }                                                                                                                       \
                                                                                                                             \

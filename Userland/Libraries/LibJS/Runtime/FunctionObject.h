@@ -41,8 +41,8 @@ public:
     virtual Vector<DeprecatedFlyString> const& local_variables_names() const { VERIFY_NOT_REACHED(); }
 
 protected:
-    explicit FunctionObject(Realm&, Object* prototype);
-    explicit FunctionObject(Object& prototype);
+    explicit FunctionObject(Realm&, Object* prototype, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
+    explicit FunctionObject(Object& prototype, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
 
 private:
     virtual bool is_function() const override { return true; }

@@ -30,7 +30,7 @@ NonnullGCPtr<StringObject> StringObject::create(Realm& realm, PrimitiveString& p
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)
-    : Object(ConstructWithPrototypeTag::Tag, prototype)
+    : Object(ConstructWithPrototypeTag::Tag, prototype, MayInterfereWithIndexedPropertyAccess::Yes)
     , m_string(string)
 {
 }

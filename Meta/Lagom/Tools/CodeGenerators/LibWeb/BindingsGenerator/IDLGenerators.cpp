@@ -2490,8 +2490,6 @@ private:
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
 
-    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
-
     JS::Realm& m_realm; // [[Realm]]
 };
 )~~~");
@@ -2511,7 +2509,7 @@ static void generate_named_properties_object_definitions(IDL::Interface const& i
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
 @named_properties_class@::@named_properties_class@(JS::Realm& realm)
-  : JS::Object(realm, nullptr)
+  : JS::Object(realm, nullptr, MayInterfereWithIndexedPropertyAccess::Yes)
   , m_realm(realm)
 {
 }

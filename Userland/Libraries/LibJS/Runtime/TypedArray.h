@@ -62,7 +62,7 @@ public:
 
 protected:
     TypedArrayBase(Object& prototype, IntrinsicConstructor intrinsic_constructor)
-        : Object(ConstructWithPrototypeTag::Tag, prototype)
+        : Object(ConstructWithPrototypeTag::Tag, prototype, MayInterfereWithIndexedPropertyAccess::Yes)
         , m_intrinsic_constructor(intrinsic_constructor)
     {
     }
@@ -413,8 +413,6 @@ public:
         // 5. Return keys.
         return { move(keys) };
     }
-
-    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
 
     ReadonlySpan<UnderlyingBufferDataType> data() const
     {

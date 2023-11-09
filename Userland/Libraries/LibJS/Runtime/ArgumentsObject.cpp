@@ -11,7 +11,7 @@
 namespace JS {
 
 ArgumentsObject::ArgumentsObject(Realm& realm, Environment& environment)
-    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype(), MayInterfereWithIndexedPropertyAccess::Yes)
     , m_environment(environment)
 {
 }

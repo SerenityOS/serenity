@@ -59,7 +59,7 @@ public:
     bool has_event_listeners() const;
 
 protected:
-    explicit EventTarget(JS::Realm&);
+    explicit EventTarget(JS::Realm&, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
 
     void element_event_handler_attribute_changed(FlyString const& local_name, Optional<String> const& value);
 

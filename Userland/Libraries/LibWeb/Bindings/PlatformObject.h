@@ -40,8 +40,8 @@ public:
     [[nodiscard]] virtual bool implements_interface(DeprecatedString const&) const { return false; }
 
 protected:
-    explicit PlatformObject(JS::Realm&);
-    explicit PlatformObject(JS::Object& prototype);
+    explicit PlatformObject(JS::Realm&, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
+    explicit PlatformObject(JS::Object& prototype, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
 };
 
 }

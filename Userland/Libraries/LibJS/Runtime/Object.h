@@ -76,6 +76,11 @@ public:
         Yes,
     };
 
+    enum class MayInterfereWithIndexedPropertyAccess {
+        No,
+        Yes,
+    };
+
     // Please DO NOT make up your own non-standard methods unless you
     // have a very good reason to do so. If any object abstract
     // operation from the spec is missing, add it instead.
@@ -139,7 +144,7 @@ public:
     //       to customize access to indexed properties (properties where the name is a positive integer)
     //       must return true for this, to opt out of optimizations that rely on assumptions that
     //       might not hold when property access behaves differently.
-    virtual bool may_interfere_with_indexed_property_access() const { return false; }
+    bool may_interfere_with_indexed_property_access() const { return m_may_interfere_with_indexed_property_access; }
 
     ThrowCompletionOr<bool> ordinary_set_with_own_descriptor(PropertyKey const&, Value, Value, Optional<PropertyDescriptor>, CacheablePropertyMetadata* = nullptr);
 
@@ -218,11 +223,11 @@ protected:
     enum class ConstructWithoutPrototypeTag { Tag };
     enum class ConstructWithPrototypeTag { Tag };
 
-    Object(GlobalObjectTag, Realm&);
-    Object(ConstructWithoutPrototypeTag, Realm&);
-    Object(Realm&, Object* prototype);
-    Object(ConstructWithPrototypeTag, Object& prototype);
-    explicit Object(Shape&);
+    Object(GlobalObjectTag, Realm&, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
+    Object(ConstructWithoutPrototypeTag, Realm&, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
+    Object(Realm&, Object* prototype, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
+    Object(ConstructWithPrototypeTag, Object& prototype, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
+    explicit Object(Shape&, MayInterfereWithIndexedPropertyAccess = MayInterfereWithIndexedPropertyAccess::No);
 
     // [[Extensible]]
     bool m_is_extensible { true };
@@ -235,6 +240,8 @@ private:
 
     Object* prototype() { return shape().prototype(); }
     Object const* prototype() const { return shape().prototype(); }
+
+    bool m_may_interfere_with_indexed_property_access { false };
 
     // True if this object has lazily allocated intrinsic properties.
     bool m_has_intrinsic_accessors { false };

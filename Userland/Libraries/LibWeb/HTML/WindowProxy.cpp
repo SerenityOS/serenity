@@ -22,7 +22,7 @@ namespace Web::HTML {
 
 // 7.4 The WindowProxy exotic object, https://html.spec.whatwg.org/multipage/window-object.html#the-windowproxy-exotic-object
 WindowProxy::WindowProxy(JS::Realm& realm)
-    : JS::Object(realm, nullptr)
+    : JS::Object(realm, nullptr, MayInterfereWithIndexedPropertyAccess::Yes)
 {
 }
 
