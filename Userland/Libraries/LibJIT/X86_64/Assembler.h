@@ -135,10 +135,15 @@ struct X86_64Assembler {
         UnsignedGreaterThanOrEqualTo = 0x3,
         UnsignedLessThan = 0x2,
         UnsignedLessThanOrEqualTo = 0x6,
+        ParityEven = 0xA,
+        ParityOdd = 0xB,
         SignedGreaterThan = 0xF,
         SignedGreaterThanOrEqualTo = 0xD,
         SignedLessThan = 0xC,
         SignedLessThanOrEqualTo = 0xE,
+
+        Unordered = ParityEven,
+        NotUnordered = ParityOdd,
     };
 
     static constexpr u8 encode_reg(Reg reg)
@@ -521,6 +526,13 @@ struct X86_64Assembler {
             emit8(0x81);
             emit_modrm_slash(7, lhs);
             emit32(rhs.offset_or_immediate);
+        } else if (lhs.type == Operand::Type::FReg && (rhs.type == Operand::Type::FReg || rhs.type == Operand::Type::Mem64BaseAndOffset)) {
+            // ucomisd lhs, rhs
+            emit8(0x66);
+            emit_rex_for_mr(lhs, rhs, REX_W::No);
+            emit8(0x0f);
+            emit8(0x2e);
+            emit_modrm_mr(lhs, rhs);
         } else {
             VERIFY_NOT_REACHED();
         }
