@@ -46,6 +46,8 @@ public:
 
     bool is_simple_storage() const { return m_is_simple_storage; }
 
+    static FlatPtr is_simple_storage_offset() { return OFFSET_OF(IndexedPropertyStorage, m_is_simple_storage); }
+
 protected:
     explicit IndexedPropertyStorage(IsSimpleStorage is_simple_storage)
         : m_is_simple_storage(is_simple_storage == IsSimpleStorage::Yes) {};
