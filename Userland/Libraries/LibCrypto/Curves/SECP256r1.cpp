@@ -69,7 +69,7 @@ static u256 import_big_endian(ReadonlyBytes data)
     u64 b = AK::convert_between_host_and_big_endian(ByteReader::load64(data.offset_pointer(2 * sizeof(u64))));
     u64 a = AK::convert_between_host_and_big_endian(ByteReader::load64(data.offset_pointer(3 * sizeof(u64))));
 
-    return u256 { u128 { a, b }, u128 { c, d } };
+    return u256 { { a, b, c, d } };
 }
 
 static void export_big_endian(u256 const& value, Bytes data)
