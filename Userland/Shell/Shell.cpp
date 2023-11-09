@@ -2149,7 +2149,7 @@ bool Shell::has_history_event(StringView source)
 void Shell::setup_keybinds()
 {
     m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
-        auto ast = parse(editor.line(), false);
+        auto ast = parse(editor.line(), m_is_interactive);
         if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
             return true;
 
