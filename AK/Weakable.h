@@ -42,6 +42,8 @@ public:
 
     void revoke() { m_ptr = nullptr; }
 
+    static FlatPtr ptr_offset() { return OFFSET_OF(WeakLink, m_ptr); }
+
 private:
     template<typename T>
     explicit WeakLink(T& weakable)
