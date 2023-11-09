@@ -57,6 +57,8 @@ public:
     void add_property_without_transition(PropertyKey const&, PropertyAttributes);
 
     bool is_unique() const { return m_unique; }
+    static FlatPtr is_unique_offset() { return OFFSET_OF(Shape, m_unique); }
+
     Shape* create_unique_clone() const;
 
     Realm& realm() const { return m_realm; }
@@ -80,6 +82,7 @@ public:
     void reconfigure_property_in_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes);
 
     [[nodiscard]] u64 unique_shape_serial_number() const { return m_unique_shape_serial_number; }
+    static FlatPtr unique_shape_serial_number_offset() { return OFFSET_OF(Shape, m_unique_shape_serial_number); }
 
 private:
     explicit Shape(Realm&);
@@ -106,7 +109,7 @@ private:
 
     PropertyAttributes m_attributes { 0 };
     TransitionType m_transition_type : 6 { TransitionType::Invalid };
-    bool m_unique : 1 { false };
+    bool m_unique { false };
 
     // Since unique shapes never change identity, inline caches use this incrementing serial number
     // to know whether its property table has been modified since last time we checked.

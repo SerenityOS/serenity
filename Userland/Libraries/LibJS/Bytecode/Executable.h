@@ -24,6 +24,10 @@ class NativeExecutable;
 namespace JS::Bytecode {
 
 struct PropertyLookupCache {
+    static FlatPtr shape_offset() { return OFFSET_OF(PropertyLookupCache, shape); }
+    static FlatPtr property_offset_offset() { return OFFSET_OF(PropertyLookupCache, property_offset); }
+    static FlatPtr unique_shape_serial_number_offset() { return OFFSET_OF(PropertyLookupCache, unique_shape_serial_number); }
+
     WeakPtr<Shape> shape;
     Optional<u32> property_offset;
     u64 unique_shape_serial_number { 0 };

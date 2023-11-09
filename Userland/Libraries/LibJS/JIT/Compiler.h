@@ -27,7 +27,7 @@ private:
 #    if ARCH(X86_64)
     static constexpr auto GPR0 = Assembler::Reg::RAX;
     static constexpr auto GPR1 = Assembler::Reg::RCX;
-    static constexpr auto GPR2 = Assembler::Reg::R12;
+    static constexpr auto GPR2 = Assembler::Reg::R13;
     static constexpr auto ARG0 = Assembler::Reg::RDI;
     static constexpr auto ARG1 = Assembler::Reg::RSI;
     static constexpr auto ARG2 = Assembler::Reg::RDX;
@@ -38,7 +38,7 @@ private:
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
-    static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::R13;
+    static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::R12;
     static constexpr auto RUNNING_EXECUTION_CONTEXT_BASE = Assembler::Reg::R15;
 #    endif
 
@@ -171,7 +171,21 @@ private:
     void jump_if_int32(Assembler::Reg, Assembler::Label&);
 
     template<typename Codegen>
-    void branch_if_int32(Assembler::Reg, Codegen);
+    void branch_if_type(Assembler::Reg, u16 type_tag, Codegen);
+
+    template<typename Codegen>
+    void branch_if_int32(Assembler::Reg reg, Codegen codegen)
+    {
+        branch_if_type(reg, INT32_TAG, codegen);
+    }
+
+    template<typename Codegen>
+    void branch_if_object(Assembler::Reg reg, Codegen codegen)
+    {
+        branch_if_type(reg, OBJECT_TAG, codegen);
+    }
+
+    void extract_object_pointer(Assembler::Reg dst_object, Assembler::Reg src_value);
 
     template<typename Codegen>
     void branch_if_both_int32(Assembler::Reg, Assembler::Reg, Codegen);
