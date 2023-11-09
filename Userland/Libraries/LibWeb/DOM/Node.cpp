@@ -1333,7 +1333,7 @@ WebIDL::ExceptionOr<DeprecatedString> Node::serialize_fragment(DOMParsing::Requi
 
     // 2. If context document is an HTML document, return an HTML serialization of node.
     if (context_document.is_html_document())
-        return HTML::HTMLParser::serialize_html_fragment(*this);
+        return HTML::HTMLParser::serialize_html_fragment(*this).to_deprecated_string();
 
     // 3. Otherwise, context document is an XML document; return an XML serialization of node passing the flag require well-formed.
     return DOMParsing::serialize_node_to_xml_string(*this, require_well_formed);
