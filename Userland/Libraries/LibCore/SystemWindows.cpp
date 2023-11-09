@@ -481,4 +481,18 @@ ErrorOr<void> rename(StringView old_path, StringView new_path)
     return {};
 }
 
+ErrorOr<void> unsetenv(StringView name)
+{
+    auto builder = TRY(StringBuilder::create());
+    TRY(builder.try_append(name));
+    TRY(builder.try_append('\0'));
+
+    // Note the explicit null terminator above.
+    const auto *c_name = builder.string_view().characters_without_null_termination();
+
+    SetEnvironmentVariable(c_name, nullptr);
+
+    return {};
+}
+
 }
