@@ -76,6 +76,7 @@ public:
 
     Vector<Value> const& elements() const { return m_packed_elements; }
 
+    static FlatPtr array_size_offset() { return OFFSET_OF(SimpleIndexedPropertyStorage, m_array_size); }
     static FlatPtr elements_offset() { return OFFSET_OF(SimpleIndexedPropertyStorage, m_packed_elements); }
 
 private:
