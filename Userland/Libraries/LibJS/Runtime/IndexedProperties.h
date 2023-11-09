@@ -27,6 +27,11 @@ class IndexedPropertyStorage {
 public:
     virtual ~IndexedPropertyStorage() = default;
 
+    enum class IsSimpleStorage {
+        No,
+        Yes,
+    };
+
     virtual bool has_index(u32 index) const = 0;
     virtual Optional<ValueAndAttributes> get(u32 index) const = 0;
     virtual void put(u32 index, Value value, PropertyAttributes attributes = default_attributes) = 0;
@@ -39,12 +44,20 @@ public:
     virtual size_t array_like_size() const = 0;
     virtual bool set_array_like_size(size_t new_size) = 0;
 
-    virtual bool is_simple_storage() const { return false; }
+    bool is_simple_storage() const { return m_is_simple_storage; }
+
+protected:
+    explicit IndexedPropertyStorage(IsSimpleStorage is_simple_storage)
+        : m_is_simple_storage(is_simple_storage == IsSimpleStorage::Yes) {};
+
+private:
+    bool m_is_simple_storage { false };
 };
 
 class SimpleIndexedPropertyStorage final : public IndexedPropertyStorage {
 public:
-    SimpleIndexedPropertyStorage() = default;
+    SimpleIndexedPropertyStorage()
+        : IndexedPropertyStorage(IsSimpleStorage::Yes) {};
     explicit SimpleIndexedPropertyStorage(Vector<Value>&& initial_values);
 
     virtual bool has_index(u32 index) const override;
@@ -59,7 +72,6 @@ public:
     virtual size_t array_like_size() const override { return m_array_size; }
     virtual bool set_array_like_size(size_t new_size) override;
 
-    virtual bool is_simple_storage() const override { return true; }
     Vector<Value> const& elements() const { return m_packed_elements; }
 
 private:
@@ -74,7 +86,8 @@ private:
 class GenericIndexedPropertyStorage final : public IndexedPropertyStorage {
 public:
     explicit GenericIndexedPropertyStorage(SimpleIndexedPropertyStorage&&);
-    explicit GenericIndexedPropertyStorage() = default;
+    explicit GenericIndexedPropertyStorage()
+        : IndexedPropertyStorage(IsSimpleStorage::No) {};
 
     virtual bool has_index(u32 index) const override;
     virtual Optional<ValueAndAttributes> get(u32 index) const override;

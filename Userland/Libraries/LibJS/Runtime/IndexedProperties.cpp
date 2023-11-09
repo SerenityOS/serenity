@@ -14,7 +14,8 @@ constexpr const size_t SPARSE_ARRAY_HOLE_THRESHOLD = 200;
 constexpr const size_t LENGTH_SETTER_GENERIC_STORAGE_THRESHOLD = 4 * MiB;
 
 SimpleIndexedPropertyStorage::SimpleIndexedPropertyStorage(Vector<Value>&& initial_values)
-    : m_array_size(initial_values.size())
+    : IndexedPropertyStorage(IsSimpleStorage::Yes)
+    , m_array_size(initial_values.size())
     , m_packed_elements(move(initial_values))
 {
 }
@@ -83,6 +84,7 @@ bool SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
 }
 
 GenericIndexedPropertyStorage::GenericIndexedPropertyStorage(SimpleIndexedPropertyStorage&& storage)
+    : IndexedPropertyStorage(IsSimpleStorage::No)
 {
     m_array_size = storage.array_like_size();
     for (size_t i = 0; i < storage.m_packed_elements.size(); ++i) {
