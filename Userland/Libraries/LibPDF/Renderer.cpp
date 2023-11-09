@@ -10,15 +10,10 @@
 #include <LibPDF/Fonts/PDFFont.h>
 #include <LibPDF/Interpolation.h>
 #include <LibPDF/Renderer.h>
+#include <LibPDF/Shading.h>
 
 #define RENDERER_HANDLER(name) \
     PDFErrorOr<void> Renderer::handle_##name([[maybe_unused]] ReadonlySpan<Value> args, [[maybe_unused]] Optional<NonnullRefPtr<DictObject>> extra_resources)
-
-#define RENDERER_TODO(name)                                                        \
-    RENDERER_HANDLER(name)                                                         \
-    {                                                                              \
-        return Error(Error::Type::RenderingUnsupported, "draw operation: " #name); \
-    }
 
 namespace PDF {
 
@@ -735,7 +730,24 @@ RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
     return {};
 }
 
-RENDERER_TODO(shade)
+RENDERER_HANDLER(shade)
+{
+    VERIFY(args.size() == 1);
+    auto shading_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
+    auto resources = extra_resources.value_or(m_page.resources);
+    auto shading_resource_dict = TRY(resources->get_dict(m_document, CommonNames::Shading));
+    if (!shading_resource_dict->contains(shading_name)) {
+        dbgln("missing shade {}", shading_name);
+        return Error::malformed_error("Missing entry for shade name");
+    }
+
+    auto shading_dict_or_stream = TRY(shading_resource_dict->get_object(m_document, shading_name));
+    auto shading = TRY(Shading::create(m_document, shading_dict_or_stream));
+
+    // FIXME: Draw something with `shading`.
+
+    return Error(Error::Type::RenderingUnsupported, "draw operation: shade");
+}
 
 RENDERER_HANDLER(inline_image_begin)
 {
