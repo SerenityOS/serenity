@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/JsonObject.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -79,10 +80,10 @@ static PDF::PDFErrorOr<void> save_rendered_page(PDF::Document& document, int pag
     return {};
 }
 
-// Takes a sorted non-empty vector of ints like `1 1 3 4 5 5 5` and returns a RLE-y summary string like " 1 (2x) 3 4 5 (3x)" (with a leading space).
-static ErrorOr<String> summary_string(Vector<int> const& pages)
+// Takes a sorted non-empty vector of ints like `1 1 3 4 5 5 5` and returns a RLE vector with alternating elements and counts like `1 2 3 1 4 1 5 3`.
+static Vector<int> rle_vector(Vector<int> const& pages)
 {
-    StringBuilder builder;
+    Vector<int> rle;
     int last_page = 0;
     int page_count = 0;
     for (int page : pages) {
@@ -92,25 +93,38 @@ static ErrorOr<String> summary_string(Vector<int> const& pages)
         }
 
         if (last_page != 0) {
-            builder.appendff(" {}", last_page);
-            if (page_count > 1)
-                builder.appendff(" ({}x)", page_count);
+            rle.append(last_page);
+            rle.append(page_count);
         }
         last_page = page;
         page_count = 1;
     }
-    builder.appendff(" {}", last_page);
-    if (page_count > 1)
-        builder.appendff(" ({}x)", page_count);
+    rle.append(last_page);
+    rle.append(page_count);
+    return rle;
+}
+
+// Takes a sorted non-empty vector of ints like `1 1 3 4 5 5 5` and returns a RLE-y summary string like " 1 (2x) 3 4 5 (3x)" (with a leading space).
+static ErrorOr<String> summary_string(Vector<int> const& pages)
+{
+    StringBuilder builder;
+    auto rle = rle_vector(pages);
+    for (size_t i = 0; i < rle.size(); i += 2) {
+        builder.appendff(" {}", rle[i]);
+        if (rle[i + 1] > 1)
+            builder.appendff(" ({}x)", rle[i + 1]);
+    }
     return builder.to_string();
 }
 
-static PDF::PDFErrorOr<void> print_debugging_stats(PDF::Document& document)
+static PDF::PDFErrorOr<void> print_debugging_stats(PDF::Document& document, bool json)
 {
     HashMap<DeprecatedString, Vector<int>> diags_to_pages;
     for (u32 page_number = 1; page_number <= document.get_page_count(); ++page_number) {
-        out("page number {} / {}", page_number, document.get_page_count());
-        fflush(stdout);
+        if (!json) {
+            out("page number {} / {}", page_number, document.get_page_count());
+            fflush(stdout);
+        }
         auto page = TRY(document.get_page(page_number - 1));
         auto page_size = Gfx::IntSize { 200, round_to<int>(200 * page.media_box.height() / page.media_box.width()) };
         auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
@@ -119,21 +133,39 @@ static PDF::PDFErrorOr<void> print_debugging_stats(PDF::Document& document)
             for (auto const& error : errors.error().errors())
                 diags_to_pages.ensure(error.message()).append(page_number);
         }
-        out("\r");
+        if (!json)
+            out("\r");
     }
-    outln();
+    if (!json)
+        outln();
 
-    if (diags_to_pages.is_empty()) {
+    JsonObject json_output;
+    json_output.set("num_pages", document.get_page_count());
+
+    if (diags_to_pages.is_empty() && !json) {
         outln("no issues found");
         return {};
     }
 
+    JsonObject issues;
     auto keys = diags_to_pages.keys();
     quick_sort(keys, [&](auto& k1, auto& k2) { return diags_to_pages.get(k1)->size() < diags_to_pages.get(k2)->size(); });
     for (auto const& key : keys.in_reverse()) {
         auto const& value = diags_to_pages.get(key).value();
-        outln("{} times: {}", value.size(), key);
-        outln("    on pages:{}", TRY(summary_string(value)));
+        if (json) {
+            JsonArray page_counts;
+            auto rle = rle_vector(value);
+            for (size_t i = 0; i < rle.size(); i += 2)
+                page_counts.must_append(JsonArray { Vector { rle[i], rle[i + 1] } });
+            issues.set(key, page_counts);
+        } else {
+            outln("{} times: {}", value.size(), key);
+            outln("    on pages:{}", TRY(summary_string(value)));
+        }
+    }
+    if (json) {
+        json_output.set("issues", issues);
+        outln("{}", json_output.to_deprecated_string());
     }
     return {};
 }
@@ -156,6 +188,10 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 
     bool dump_outline = false;
     args_parser.add_option(dump_outline, "Dump document outline", "dump-outline", {});
+
+    // FIXME: Currently only honored for --debugging-stats, should be honored for no-arg output too.
+    bool json = false;
+    args_parser.add_option(json, "Print output as json", "json", {});
 
     u32 page_number = 1;
     args_parser.add_option(page_number, "Page number (1-based)", "page", {}, "PAGE");
@@ -194,7 +230,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 #endif
 
     if (debugging_stats) {
-        TRY(print_debugging_stats(*document));
+        TRY(print_debugging_stats(*document, json));
         return 0;
     }
 
