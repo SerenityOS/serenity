@@ -35,18 +35,21 @@ NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
     return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
 }
 
-Object::Object(GlobalObjectTag, Realm& realm)
+Object::Object(GlobalObjectTag, Realm& realm, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : m_may_interfere_with_indexed_property_access(may_interfere_with_indexed_property_access == MayInterfereWithIndexedPropertyAccess::Yes)
 {
     // This is the global object
     m_shape = heap().allocate_without_realm<Shape>(realm);
 }
 
-Object::Object(ConstructWithoutPrototypeTag, Realm& realm)
+Object::Object(ConstructWithoutPrototypeTag, Realm& realm, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : m_may_interfere_with_indexed_property_access(may_interfere_with_indexed_property_access == MayInterfereWithIndexedPropertyAccess::Yes)
 {
     m_shape = heap().allocate_without_realm<Shape>(realm);
 }
 
-Object::Object(Realm& realm, Object* prototype)
+Object::Object(Realm& realm, Object* prototype, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : m_may_interfere_with_indexed_property_access(may_interfere_with_indexed_property_access == MayInterfereWithIndexedPropertyAccess::Yes)
 {
     m_shape = realm.intrinsics().empty_object_shape();
     VERIFY(m_shape);
@@ -54,15 +57,17 @@ Object::Object(Realm& realm, Object* prototype)
         set_prototype(prototype);
 }
 
-Object::Object(ConstructWithPrototypeTag, Object& prototype)
+Object::Object(ConstructWithPrototypeTag, Object& prototype, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : m_may_interfere_with_indexed_property_access(may_interfere_with_indexed_property_access == MayInterfereWithIndexedPropertyAccess::Yes)
 {
     m_shape = prototype.shape().realm().intrinsics().empty_object_shape();
     VERIFY(m_shape);
     set_prototype(&prototype);
 }
 
-Object::Object(Shape& shape)
-    : m_shape(&shape)
+Object::Object(Shape& shape, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : m_may_interfere_with_indexed_property_access(may_interfere_with_indexed_property_access == MayInterfereWithIndexedPropertyAccess::Yes)
+    , m_shape(&shape)
 {
     m_storage.resize(shape.property_count());
 }

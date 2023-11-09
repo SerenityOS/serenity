@@ -31,8 +31,6 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
-    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
-
     JS::GCPtr<Window> window() const { return m_window; }
     void set_window(JS::NonnullGCPtr<Window>);
 

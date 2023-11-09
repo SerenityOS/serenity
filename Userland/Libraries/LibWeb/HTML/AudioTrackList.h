@@ -51,8 +51,6 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyKey const& property_name) const override;
 
-    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
-
     JS::MarkedVector<JS::NonnullGCPtr<AudioTrack>> m_audio_tracks;
 };
 

@@ -45,8 +45,6 @@ public:
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
     virtual ThrowCompletionOr<NonnullGCPtr<Object>> internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target) override;
 
-    virtual bool may_interfere_with_indexed_property_access() const final { return true; }
-
 private:
     ProxyObject(Object& target, Object& handler, Object& prototype);
 

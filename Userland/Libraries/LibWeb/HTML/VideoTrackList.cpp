@@ -14,7 +14,7 @@
 namespace Web::HTML {
 
 VideoTrackList::VideoTrackList(JS::Realm& realm)
-    : DOM::EventTarget(realm)
+    : DOM::EventTarget(realm, MayInterfereWithIndexedPropertyAccess::Yes)
     , m_video_tracks(realm.heap())
 {
 }

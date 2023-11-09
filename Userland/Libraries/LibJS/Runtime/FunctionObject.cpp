@@ -13,13 +13,13 @@
 
 namespace JS {
 
-FunctionObject::FunctionObject(Realm& realm, Object* prototype)
-    : Object(realm, prototype)
+FunctionObject::FunctionObject(Realm& realm, Object* prototype, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : Object(realm, prototype, may_interfere_with_indexed_property_access)
 {
 }
 
-FunctionObject::FunctionObject(Object& prototype)
-    : Object(ConstructWithPrototypeTag::Tag, prototype)
+FunctionObject::FunctionObject(Object& prototype, MayInterfereWithIndexedPropertyAccess may_interfere_with_indexed_property_access)
+    : Object(ConstructWithPrototypeTag::Tag, prototype, may_interfere_with_indexed_property_access)
 {
 }
 
