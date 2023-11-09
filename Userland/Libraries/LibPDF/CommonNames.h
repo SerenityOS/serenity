@@ -170,6 +170,8 @@
     X(SMask)                      \
     X(SMaskInData)                \
     X(Separation)                 \
+    X(Shading)                    \
+    X(ShadingType)                \
     X(Size)                       \
     X(StmF)                       \
     X(StrF)                       \

@@ -23,6 +23,7 @@ set(SOURCES
     Parser.cpp
     Reader.cpp
     Renderer.cpp
+    Shading.cpp
     Value.cpp
     )
 
