@@ -219,6 +219,7 @@ public:
     void set_prototype(Object*);
 
     static FlatPtr may_interfere_with_indexed_property_access_offset() { return OFFSET_OF(Object, m_may_interfere_with_indexed_property_access); }
+    static FlatPtr indexed_properties_offset() { return OFFSET_OF(Object, m_indexed_properties); }
 
 protected:
     enum class GlobalObjectTag { Tag };
