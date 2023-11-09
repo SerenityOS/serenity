@@ -256,15 +256,16 @@ void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> co
     int current_y = 0;
     int row_height = 0;
     int texture_width = 512;
+    int padding = 1;
     for (auto const& glyphs_texture_key : glyphs_sorted_by_height) {
         auto const& bitmap = *glyph_bitmaps.get(glyphs_texture_key);
         if (current_x + bitmap->width() > texture_width) {
             current_x = 0;
-            current_y += row_height;
+            current_y += row_height + padding;
             row_height = 0;
         }
         m_glyphs_texture_map.set(glyphs_texture_key, { current_x, current_y, bitmap->width(), bitmap->height() });
-        current_x += bitmap->width();
+        current_x += bitmap->width() + padding;
         row_height = max(row_height, bitmap->height());
     }
 
