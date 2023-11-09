@@ -195,12 +195,16 @@ public:
     Value get_direct(size_t index) const { return m_storage[index]; }
     void put_direct(size_t index, Value value) { m_storage[index] = value; }
 
+    static FlatPtr storage_offset() { return OFFSET_OF(Object, m_storage); }
+
     IndexedProperties const& indexed_properties() const { return m_indexed_properties; }
     IndexedProperties& indexed_properties() { return m_indexed_properties; }
     void set_indexed_property_elements(Vector<Value>&& values) { m_indexed_properties = IndexedProperties(move(values)); }
 
     Shape& shape() { return *m_shape; }
     Shape const& shape() const { return *m_shape; }
+
+    static FlatPtr shape_offset() { return OFFSET_OF(Object, m_shape); }
 
     void ensure_shape_is_unique();
 
