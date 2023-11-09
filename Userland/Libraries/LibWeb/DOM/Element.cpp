@@ -1885,12 +1885,17 @@ void Element::set_prefix(Optional<FlyString> value)
     m_qualified_name.set_prefix(move(value));
 }
 
+void Element::for_each_attribute(Function<void(Attr const&)> callback) const
+{
+    for (size_t i = 0; i < m_attributes->length(); ++i)
+        callback(*m_attributes->item(i));
+}
+
 void Element::for_each_attribute(Function<void(FlyString const&, DeprecatedString const&)> callback) const
 {
-    for (size_t i = 0; i < m_attributes->length(); ++i) {
-        auto const* attribute = m_attributes->item(i);
-        callback(attribute->name(), attribute->value().to_deprecated_string());
-    }
+    for_each_attribute([&callback](Attr const& attr) {
+        callback(attr.name(), attr.value().to_deprecated_string());
+    });
 }
 
 Layout::NodeWithStyle* Element::layout_node()
