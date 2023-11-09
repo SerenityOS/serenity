@@ -13,3 +13,8 @@ test("variable named 'eval' pointing to real eval works as a direct eval", funct
     var eval = globalThis.eval;
     expect(eval("testValue")).toEqual("inner");
 });
+
+test("variable named 'eval' pointing to a non-function raises a TypeError", function () {
+    var eval = "borked";
+    expect(() => eval("something").toThrowWithMessage(TypeError, "borked is not a function"));
+});
