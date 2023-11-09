@@ -3849,19 +3849,19 @@ JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringV
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm
-DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
+String HTMLParser::serialize_html_fragment(DOM::Node const& node)
 {
     // The algorithm takes as input a DOM Element, Document, or DocumentFragment referred to as the node.
     VERIFY(node.is_element() || node.is_document() || node.is_document_fragment());
     JS::NonnullGCPtr<DOM::Node const> actual_node = node;
 
     if (is<DOM::Element>(node)) {
-        auto& element = verify_cast<DOM::Element>(node);
+        auto const& element = verify_cast<DOM::Element>(node);
 
         // 1. If the node serializes as void, then return the empty string.
         //    (NOTE: serializes as void is defined only on elements in the spec)
         if (element.serializes_as_void())
-            return DeprecatedString::empty();
+            return String {};
 
         // 3. If the node is a template element, then let the node instead be the template element's template contents (a DocumentFragment node).
         //    (NOTE: This is out of order of the spec to avoid another dynamic cast. The second step just creates a string builder, so it shouldn't matter)
@@ -3874,7 +3874,7 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
         Yes,
     };
 
-    auto escape_string = [](StringView string, AttributeMode attribute_mode) -> DeprecatedString {
+    auto escape_string = [](StringView string, AttributeMode attribute_mode) -> String {
         // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
         StringBuilder builder;
         for (auto code_point : Utf8View { string }) {
@@ -3895,7 +3895,7 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
             else
                 builder.append_code_point(code_point);
         }
-        return builder.to_deprecated_string();
+        return MUST(builder.to_string());
     };
 
     // 2. Let s be a string, and initialize it to the empty string.
@@ -4048,7 +4048,7 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
     });
 
     // 5. Return s.
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#current-dimension-value

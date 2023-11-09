@@ -58,7 +58,7 @@ public:
     DOM::Document& document();
 
     static Vector<JS::Handle<DOM::Node>> parse_html_fragment(DOM::Element& context_element, StringView);
-    static DeprecatedString serialize_html_fragment(DOM::Node const& node);
+    static String serialize_html_fragment(DOM::Node const& node);
 
     enum class InsertionMode {
 #define __ENUMERATE_INSERTION_MODE(mode) mode,
