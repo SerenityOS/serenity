@@ -137,6 +137,8 @@ public:
     int client_width() const;
     int client_height() const;
 
+    void for_each_attribute(Function<void(Attr const&)>) const;
+
     void for_each_attribute(Function<void(FlyString const&, DeprecatedString const&)>) const;
 
     bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
