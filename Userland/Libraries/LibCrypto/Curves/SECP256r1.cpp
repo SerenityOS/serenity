@@ -189,46 +189,16 @@ static constexpr u256 modular_inverse(u256 const& value)
 {
     // Modular inverse modulo the curve prime can be computed using Fermat's little theorem: a^(p-2) mod p = a^-1 mod p.
     // Calculating a^(p-2) mod p can be done using the square-and-multiply exponentiation method, as p-2 is constant.
-    //
-    // p-2 = 2^256 - 2^224 + 2^192 + 2^96 - 3, or written as binary:
-    // 1111111111111111111111111111111100000000000000000000000000000001
-    // 0000000000000000000000000000000000000000000000000000000000000000
-    // 0000000000000000000000000000000011111111111111111111111111111111
-    // 1111111111111111111111111111111111111111111111111111111111111101
-
     u256 base = value;
+    u256 result = to_montgomery(1u);
+    u256 prime_minus_2 = PRIME - 2u;
 
-    // 1
-    u256 result = value;
-    base = modular_square(base);
-
-    // 0
-    base = modular_square(base);
-
-    // 94*1
-    for (auto i = 0; i < 94; i++) {
-        result = modular_multiply(result, base);
+    for (size_t i = 0; i < 256; i++) {
+        if ((prime_minus_2 & 1u) == 1u) {
+            result = modular_multiply(result, base);
+        }
         base = modular_square(base);
-    }
-
-    // 96*0
-    for (auto i = 0; i < 96; i++) {
-        base = modular_square(base);
-    }
-
-    // 1
-    result = modular_multiply(result, base);
-    base = modular_square(base);
-
-    // 31*0
-    for (auto i = 0; i < 31; i++) {
-        base = modular_square(base);
-    }
-
-    // 32*1
-    for (auto i = 0; i < 32; i++) {
-        result = modular_multiply(result, base);
-        base = modular_square(base);
+        prime_minus_2 >>= 1u;
     }
 
     return result;
