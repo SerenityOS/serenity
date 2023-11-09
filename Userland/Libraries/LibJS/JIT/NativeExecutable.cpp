@@ -37,11 +37,8 @@ NativeExecutable::~NativeExecutable()
 
 void NativeExecutable::run(VM& vm, size_t entry_point) const
 {
-    FlatPtr entry_point_address = 0;
-    if (entry_point != 0) {
-        entry_point_address = m_block_entry_points[entry_point];
-        VERIFY(entry_point_address != 0);
-    }
+    FlatPtr entry_point_address = m_block_entry_points[entry_point];
+    VERIFY(entry_point_address != 0);
 
     typedef void (*JITCode)(VM&, Value* registers, Value* locals, FlatPtr entry_point_address, ExecutionContext&);
     ((JITCode)m_code)(vm,
@@ -189,5 +186,4 @@ Optional<UnrealizedSourceRange> NativeExecutable::get_source_range(Bytecode::Exe
     }
     return {};
 }
-
 }
