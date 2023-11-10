@@ -164,10 +164,12 @@ struct Options {
         { HashAlgorithm::SHA256, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA1, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA256, SignatureAlgorithm::ECDSA },
+        { HashAlgorithm::SHA384, SignatureAlgorithm::ECDSA },
         { HashAlgorithm::INTRINSIC, SignatureAlgorithm::ED25519 });
     OPTION_WITH_DEFAULTS(Vector<SupportedGroup>, elliptic_curves,
         SupportedGroup::X25519,
         SupportedGroup::SECP256R1,
+        SupportedGroup::SECP384R1,
         SupportedGroup::X448)
     OPTION_WITH_DEFAULTS(Vector<ECPointFormat>, supported_ec_point_formats, ECPointFormat::UNCOMPRESSED)
 
