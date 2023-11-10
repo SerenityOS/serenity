@@ -134,7 +134,7 @@ public:
     bool is_sequence() const { return is_parameterized() && m_name == "sequence"; }
 
     // https://webidl.spec.whatwg.org/#dfn-distinguishable
-    bool is_distinguishable_from(Type const& other) const;
+    bool is_distinguishable_from(Interface const&, Type const& other) const;
 
     bool is_json(Interface const&) const;
 

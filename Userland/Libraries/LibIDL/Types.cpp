@@ -71,13 +71,12 @@ bool Type::includes_undefined() const
 }
 
 // https://webidl.spec.whatwg.org/#dfn-distinguishable
-bool Type::is_distinguishable_from(IDL::Type const& other) const
+bool Type::is_distinguishable_from(IDL::Interface const& interface, IDL::Type const& other) const
 {
     // 1. If one type includes a nullable type and the other type either includes a nullable type,
     //    is a union type with flattened member types including a dictionary type, or is a dictionary type,
     //    return false.
-    // FIXME: "is a union type with flattened member types including a dictionary type, or is a dictionary type,"
-    if (includes_nullable_type() && other.includes_nullable_type())
+    if (includes_nullable_type() && (other.includes_nullable_type() || (other.is_union() && any_of(other.as_union().flattened_member_types(), [&interface](auto const& type) { return interface.dictionaries.contains(type->name()); })) || interface.dictionaries.contains(other.name())))
         return false;
 
     // 2. If both types are either a union type or nullable union type, return true if each member type
@@ -88,7 +87,7 @@ bool Type::is_distinguishable_from(IDL::Type const& other) const
 
         for (auto& this_member_type : this_union.member_types()) {
             for (auto& other_member_type : other_union.member_types()) {
-                if (!this_member_type->is_distinguishable_from(other_member_type))
+                if (!this_member_type->is_distinguishable_from(interface, other_member_type))
                     return false;
             }
         }
@@ -102,7 +101,7 @@ bool Type::is_distinguishable_from(IDL::Type const& other) const
         auto const& non_union = is_union() ? other : *this;
 
         for (auto& member_type : the_union.member_types()) {
-            if (!non_union.is_distinguishable_from(member_type))
+            if (!non_union.is_distinguishable_from(interface, member_type))
                 return false;
         }
         return true;
@@ -148,7 +147,7 @@ bool Type::is_distinguishable_from(IDL::Type const& other) const
     };
     // clang-format on
 
-    auto determine_category = [](Type const& type) -> DistinguishabilityCategory {
+    auto determine_category = [&interface](Type const& type) -> DistinguishabilityCategory {
         if (type.is_undefined())
             return DistinguishabilityCategory::Undefined;
         if (type.is_boolean())
@@ -165,7 +164,12 @@ bool Type::is_distinguishable_from(IDL::Type const& other) const
             return DistinguishabilityCategory::Symbol;
         // FIXME: InterfaceLike - see below
         // FIXME: CallbackFunction
-        // FIXME: DictionaryLike
+        // DictionaryLike
+        // * Dictionary Types
+        // * Record Types
+        // FIXME: * Callback Interface Types
+        if (interface.dictionaries.contains(type.name()) || (type.is_parameterized() && type.name() == "record"sv))
+            return DistinguishabilityCategory::DictionaryLike;
         // FIXME: Frozen array types are included in "sequence-like"
         if (type.is_sequence())
             return DistinguishabilityCategory::SequenceLike;
