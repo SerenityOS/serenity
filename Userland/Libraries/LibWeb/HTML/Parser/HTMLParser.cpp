@@ -1550,38 +1550,64 @@ bool HTMLParser::is_special_tag(FlyString const& tag_name, Optional<FlyString> c
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inbody
 void HTMLParser::handle_in_body(HTMLToken& token)
 {
     if (token.is_character()) {
+        // -> A character token that is U+0000 NULL
         if (token.code_point() == 0) {
+            // Parse error. Ignore the token.
             log_parse_error();
             return;
         }
+
+        // -> A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF), U+000C FORM FEED (FF), U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
         if (token.is_parser_whitespace()) {
+            // Reconstruct the active formatting elements, if any.
             reconstruct_the_active_formatting_elements();
+
+            // Insert the token's character.
             insert_character(token.code_point());
             return;
         }
+
+        // -> Any other character token
+
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert the token's character.
         insert_character(token.code_point());
+
+        // Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
         return;
     }
 
+    // -> A comment token
     if (token.is_comment()) {
         insert_comment(token);
         return;
     }
 
+    // -> A DOCTYPE token
     if (token.is_doctype()) {
+        // Parse error. Ignore the token.
         log_parse_error();
         return;
     }
 
+    // -> A start tag whose tag name is "html"`
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
+        // Parse error.
         log_parse_error();
+
+        // If there is a template element on the stack of open elements, then ignore the token.
         if (m_stack_of_open_elements.contains(HTML::TagNames::template_))
             return;
+
+        // Otherwise, for each attribute on the token, check to see if the attribute is already present on the top element of the stack of open elements.
+        // If it is not, add the attribute and its corresponding value to that element.
         token.for_each_attribute([&](auto& attribute) {
             if (!current_node().has_attribute(attribute.local_name))
                 MUST(current_node().set_attribute(attribute.local_name, attribute.value));
@@ -1589,24 +1615,39 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         });
         return;
     }
+
+    // -> A start tag whose tag name is one of: "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::base, HTML::TagNames::basefont, HTML::TagNames::bgsound, HTML::TagNames::link, HTML::TagNames::meta, HTML::TagNames::noframes, HTML::TagNames::script, HTML::TagNames::style, HTML::TagNames::template_, HTML::TagNames::title)) {
+        // Process the token using the rules for the "in head" insertion mode.
         process_using_the_rules_for(InsertionMode::InHead, token);
         return;
     }
 
+    // -> An end tag whose tag name is "template"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_) {
+        // Process the token using the rules for the "in head" insertion mode.
         process_using_the_rules_for(InsertionMode::InHead, token);
         return;
     }
 
+    // -> A start tag whose tag name is "body"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::body) {
+
+        // Parse error.
         log_parse_error();
+
+        // If the stack of open elements has only one node on it, if the second element on the stack of open elements is not a body element,
+        // or if there is a template element on the stack of open elements, then ignore the token. (fragment case)
         if (m_stack_of_open_elements.elements().size() == 1
             || m_stack_of_open_elements.elements().at(1)->local_name() != HTML::TagNames::body
             || m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
             VERIFY(m_parsing_fragment);
             return;
         }
+
+        // Otherwise, set the frameset-ok flag to "not ok"; then, for each attribute on the token, check to see if the attribute is already
+        // present on the body element (the second element) on the stack of open elements, and if it is not, add the attribute and its
+        // corresponding value to that element.
         m_frameset_ok = false;
         auto& body_element = m_stack_of_open_elements.elements().at(1);
         token.for_each_attribute([&](auto& attribute) {
@@ -1617,27 +1658,42 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    // A start tag whose tag name is "frameset"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::frameset) {
+        // Parse error.
         log_parse_error();
 
+        // If the stack of open elements has only one node on it, or if the second element on the stack of open elements is not a body element, then ignore the token. (fragment case)
         if (m_stack_of_open_elements.elements().size() == 1
             || m_stack_of_open_elements.elements().at(1)->local_name() != HTML::TagNames::body) {
             VERIFY(m_parsing_fragment);
             return;
         }
 
+        // If the frameset-ok flag is set to "not ok", ignore the token.
         if (!m_frameset_ok)
             return;
 
+        // FIXME: Otherwise, run the following steps:
+        // 1. Remove the second element on the stack of open elements from its parent node, if it has one.
+        // 2. Pop all the nodes from the bottom of the stack of open elements, from the current node up to, but not including, the root html element.
+        // 3. Insert an HTML element for the token.
+        // 4. Switch the insertion mode to "in frameset".
         TODO();
     }
 
+    // -> An end-of-file token
     if (token.is_end_of_file()) {
+        // If the stack of template insertion modes is not empty, then process the token using the rules for the "in template" insertion mode.
         if (!m_stack_of_template_insertion_modes.is_empty()) {
             process_using_the_rules_for(InsertionMode::InTemplate, token);
             return;
         }
 
+        // Otherwise, follow these steps:
+        // 1. If there is a node in the stack of open elements that is not either a dd element, a dt element, an li element, an optgroup element,
+        //    an option element, a p element, an rb element, an rp element, an rt element, an rtc element, a tbody element, a td element, a tfoot
+        //    element, a th element, a thead element, a tr element, the body element, or the html element, then this is a parse error.
         for (auto& node : m_stack_of_open_elements.elements()) {
             if (!node->local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::body, HTML::TagNames::html)) {
                 log_parse_error();
@@ -1645,16 +1701,22 @@ void HTMLParser::handle_in_body(HTMLToken& token)
             }
         }
 
+        // 2. Stop parsing.
         stop_parsing();
         return;
     }
 
+    // -> An end tag whose tag name is "body"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::body) {
+        // If the stack of open elements does not have a body element in scope, this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_scope(HTML::TagNames::body)) {
             log_parse_error();
             return;
         }
 
+        // Otherwise, if there is a node in the stack of open elements that is not either a dd element, a dt element, an li element, an optgroup element,
+        // an option element, a p element, an rb element, an rp element, an rt element, an rtc element, a tbody element, a td element, a tfoot element, a
+        // th element, a thead element, a tr element, the body element, or the html element, then this is a parse error.
         for (auto& node : m_stack_of_open_elements.elements()) {
             if (!node->local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::body, HTML::TagNames::html)) {
                 log_parse_error();
@@ -1662,16 +1724,22 @@ void HTMLParser::handle_in_body(HTMLToken& token)
             }
         }
 
+        // Switch the insertion mode to "after body".
         m_insertion_mode = InsertionMode::AfterBody;
         return;
     }
 
+    // -> An end tag whose tag name is "html"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::html) {
+        // If the stack of open elements does not have a body element in scope, this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_scope(HTML::TagNames::body)) {
             log_parse_error();
             return;
         }
 
+        // Otherwise, if there is a node in the stack of open elements that is not either a dd element, a dt element, an li element, an optgroup element, an
+        // option element, a p element, an rb element, an rp element, an rt element, an rtc element, a tbody element, a td element, a tfoot element, a th element,
+        // a thead element, a tr element, the body element, or the html element, then this is a parse error.
         for (auto& node : m_stack_of_open_elements.elements()) {
             if (!node->local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::body, HTML::TagNames::html)) {
                 log_parse_error();
@@ -1679,36 +1747,50 @@ void HTMLParser::handle_in_body(HTMLToken& token)
             }
         }
 
+        // Switch the insertion mode to "after body".
         m_insertion_mode = InsertionMode::AfterBody;
+
+        // Reprocess the token.
         process_using_the_rules_for(m_insertion_mode, token);
         return;
     }
 
+    // -> A start tag whose tag name is one of: "address", "article", "aside", "blockquote", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p", "search", "section", "summary", "ul"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::address, HTML::TagNames::article, HTML::TagNames::aside, HTML::TagNames::blockquote, HTML::TagNames::center, HTML::TagNames::details, HTML::TagNames::dialog, HTML::TagNames::dir, HTML::TagNames::div, HTML::TagNames::dl, HTML::TagNames::fieldset, HTML::TagNames::figcaption, HTML::TagNames::figure, HTML::TagNames::footer, HTML::TagNames::header, HTML::TagNames::hgroup, HTML::TagNames::main, HTML::TagNames::menu, HTML::TagNames::nav, HTML::TagNames::ol, HTML::TagNames::p, HTML::TagNames::section, HTML::TagNames::summary, HTML::TagNames::ul)) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
+
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6)) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
+
+        // If the current node is an HTML element whose tag name is one of "h1", "h2", "h3", "h4", "h5", or "h6", then this is a parse error; pop the current node off the stack of open elements.
         if (current_node().local_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6)) {
             log_parse_error();
             (void)m_stack_of_open_elements.pop();
         }
+
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is one of: "pre", "listing"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::pre, HTML::TagNames::listing)) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
 
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
-
-        m_frameset_ok = false;
 
         // If the next token is a U+000A LINE FEED (LF) character token,
         // then ignore that token and move on to the next one.
@@ -1719,177 +1801,299 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         } else {
             process_using_the_rules_for(m_insertion_mode, next_token.value());
         }
+
+        // Set the frameset-ok flag to "not ok".
+        m_frameset_ok = false;
         return;
     }
 
+    // -> A start tag whose tag name is "form"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::form) {
+        // If the form element pointer is not null, and there is no template element on the stack of open elements, then this is a parse error; ignore the token.
         if (m_form_element.ptr() && !m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
             log_parse_error();
             return;
         }
+
+        // Otherwise:
+        // If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
+
+        // Insert an HTML element for the token, and, if there is no template element on the stack of open elements, set the form element pointer to point to the element created.
         auto element = insert_html_element(token);
         if (!m_stack_of_open_elements.contains(HTML::TagNames::template_))
             m_form_element = JS::make_handle(verify_cast<HTMLFormElement>(*element));
         return;
     }
 
+    // -> A start tag whose tag name is "li"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::li) {
+        // 1. Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
 
+        // 2. Initialize node to be the current node (the bottommost node of the stack).
+        // 3. Loop: If node is an li element, then run these substeps:
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
             JS::GCPtr<DOM::Element> node = m_stack_of_open_elements.elements()[i].ptr();
-
             if (node->local_name() == HTML::TagNames::li) {
+                // 1. Generate implied end tags, except for li elements.
                 generate_implied_end_tags(HTML::TagNames::li);
+
+                // 2. If the current node is not an li element, then this is a parse error.
                 if (current_node().local_name() != HTML::TagNames::li) {
                     log_parse_error();
                 }
+
+                // 3. Pop elements from the stack of open elements until an li element has been popped from the stack.
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::li);
+
+                // 4. Jump to the step labeled done below.
                 break;
             }
 
+            // 4. If node is in the special category, but is not an address, div, or p element, then jump to the step labeled done below.
             if (is_special_tag(node->local_name(), node->namespace_uri()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
+
+            // 5. Otherwise, set node to the previous entry in the stack of open elements and return to the step labeled loop.
         }
 
+        // 6. Done: If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
 
+        // 7. Finally, insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is one of: "dd", "dt"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt)) {
+        // 1. Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
+
+        // 2. Initialize node to be the current node (the bottommost node of the stack).
+        // 3. Loop: If node is a dd element, then run these substeps:
+        // 4. If node is a dt element, then run these substeps:
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
+            // 1. Generate implied end tags, except for dd elements.
             JS::GCPtr<DOM::Element> node = m_stack_of_open_elements.elements()[i].ptr();
             if (node->local_name() == HTML::TagNames::dd) {
                 generate_implied_end_tags(HTML::TagNames::dd);
+                // 2. If the current node is not a dd element, then this is a parse error.
                 if (current_node().local_name() != HTML::TagNames::dd) {
                     log_parse_error();
                 }
+
+                // 3. Pop elements from the stack of open elements until a dd element has been popped from the stack.
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::dd);
+
+                // 4. Jump to the step labeled done below.
                 break;
             }
+
+            // 1. Generate implied end tags, except for dt elements.
             if (node->local_name() == HTML::TagNames::dt) {
+                // 2. If the current node is not a dt element, then this is a parse error.
                 generate_implied_end_tags(HTML::TagNames::dt);
                 if (current_node().local_name() != HTML::TagNames::dt) {
                     log_parse_error();
                 }
+                // 3. Pop elements from the stack of open elements until a dt element has been popped from the stack.
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::dt);
+
+                // 4. Jump to the step labeled done below.
                 break;
             }
+
+            // 5. If node is in the special category, but is not an address, div, or p element, then jump to the step labeled done below.
             if (is_special_tag(node->local_name(), node->namespace_uri()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
+
+            // 6. Otherwise, set node to the previous entry in the stack of open elements and return to the step labeled loop.
         }
+
+        // 7: Done: If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
+
+        // 8: Finally, insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is "plaintext"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::plaintext) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
+
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
+
+        // Switch the tokenizer to the PLAINTEXT state.
         m_tokenizer.switch_to({}, HTMLTokenizer::State::PLAINTEXT);
         return;
     }
 
+    // -> A start tag whose tag name is "button"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::button) {
+        // 1. If the stack of open elements has a button element in scope, then run these substeps:
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::button)) {
+            // 1. Parse error.
             log_parse_error();
+
+            // 2. Generate implied end tags.
             generate_implied_end_tags();
+
+            // 3. Pop elements from the stack of open elements until a button element has been popped from the stack.
             m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::button);
         }
+
+        // 2. Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // 3. Insert an HTML element for the token.
         (void)insert_html_element(token);
+
+        // 4. Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
         return;
     }
 
+    // -> An end tag whose tag name is one of: "address", "article", "aside", "blockquote", "button", "center", "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "main", "menu", "nav", "ol", "pre", "search", "section", "summary", "ul"
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::address, HTML::TagNames::article, HTML::TagNames::aside, HTML::TagNames::blockquote, HTML::TagNames::button, HTML::TagNames::center, HTML::TagNames::details, HTML::TagNames::dialog, HTML::TagNames::dir, HTML::TagNames::div, HTML::TagNames::dl, HTML::TagNames::fieldset, HTML::TagNames::figcaption, HTML::TagNames::figure, HTML::TagNames::footer, HTML::TagNames::header, HTML::TagNames::hgroup, HTML::TagNames::listing, HTML::TagNames::main, HTML::TagNames::menu, HTML::TagNames::nav, HTML::TagNames::ol, HTML::TagNames::pre, HTML::TagNames::section, HTML::TagNames::summary, HTML::TagNames::ul)) {
+        // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token, then this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
             log_parse_error();
             return;
         }
 
+        // Otherwise, run these steps:
+        // 1. Generate implied end tags.
         generate_implied_end_tags();
 
+        // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
         if (current_node().local_name() != token.tag_name()) {
             log_parse_error();
         }
 
+        // 3. Pop elements from the stack of open elements until an HTML element with the same tag name as the token has been popped from the stack.
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
         return;
     }
 
+    // -> An end tag whose tag name is "form"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::form) {
+        // If there is no template element on the stack of open elements, then run these substeps:
         if (!m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
+            // 1. Let node be the element that the form element pointer is set to, or null if it is not set to an element.
             auto node = m_form_element;
+
+            // 2. Set the form element pointer to null.
             m_form_element = {};
+
+            // 3. If node is null or if the stack of open elements does not have node in scope, then this is a parse error; return and ignore the token.
             if (!node || !m_stack_of_open_elements.has_in_scope(*node)) {
                 log_parse_error();
                 return;
             }
+
+            // 4. Generate implied end tags.
             generate_implied_end_tags();
+
+            // 5. If the current node is not node, then this is a parse error.
             if (&current_node() != node.ptr()) {
                 log_parse_error();
             }
+
+            // 6. Remove node from the stack of open elements.
             m_stack_of_open_elements.elements().remove_first_matching([&](auto& entry) { return entry.ptr() == node.ptr(); });
-        } else {
+        }
+        // If there is a template element on the stack of open elements, then run these substeps instead:
+        else {
+            // 1. If the stack of open elements does not have a form element in scope, then this is a parse error; return and ignore the token.
             if (!m_stack_of_open_elements.has_in_scope(HTML::TagNames::form)) {
                 log_parse_error();
                 return;
             }
+
+            // 2. Generate implied end tags.
             generate_implied_end_tags();
+
+            // 3. If the current node is not a form element, then this is a parse error.
             if (current_node().local_name() != HTML::TagNames::form) {
                 log_parse_error();
             }
+
+            // 4. Pop elements from the stack of open elements until a form element has been popped from the stack.
             m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::form);
         }
         return;
     }
 
+    // -> An end tag whose tag name is "p"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::p) {
+        // If the stack of open elements does not have a p element in button scope, then this is a parse error; insert an HTML element for a "p" start tag token with no attributes.
         if (!m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p)) {
             log_parse_error();
             (void)insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::p));
         }
+
+        // Close a p element.
         close_a_p_element();
         return;
     }
 
+    // -> An end tag whose tag name is "li"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::li) {
+        // If the stack of open elements does not have an li element in list item scope, then this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_list_item_scope(HTML::TagNames::li)) {
             log_parse_error();
             return;
         }
+
+        // Otherwise, run these steps:
+        // 1. Generate implied end tags, except for li elements.
         generate_implied_end_tags(HTML::TagNames::li);
+
+        // 2. If the current node is not an li element, then this is a parse error.
         if (current_node().local_name() != HTML::TagNames::li) {
             log_parse_error();
             dbgln("Expected <li> current node, but had <{}>", current_node().local_name());
         }
+
+        // 3. Pop elements from the stack of open elements until an li element has been popped from the stack.
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::li);
         return;
     }
 
+    // -> An end tag whose tag name is one of: "dd", "dt"
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt)) {
+        // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token, then this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
             log_parse_error();
             return;
         }
+
+        // Otherwise, run these steps:
+        // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
         generate_implied_end_tags(token.tag_name());
+
+        // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
         if (current_node().local_name() != token.tag_name()) {
             log_parse_error();
         }
+
+        // 3. Pop elements from the stack of open elements until an HTML element with the same tag name as the token has been popped from the stack.
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
         return;
     }
 
+    // 3. An end tag whose tag name is one of: "h1", "h2", "h3", "h4", "h5", "h6"
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6)) {
+        // If the stack of open elements does not have an element in scope that is an HTML element and whose tag name is one of "h1", "h2", "h3", "h4", "h5", or "h6", then this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_scope(HTML::TagNames::h1)
             && !m_stack_of_open_elements.has_in_scope(HTML::TagNames::h2)
             && !m_stack_of_open_elements.has_in_scope(HTML::TagNames::h3)
@@ -1900,11 +2104,16 @@ void HTMLParser::handle_in_body(HTMLToken& token)
             return;
         }
 
+        // Otherwise, run these steps:
+        // 1. Generate implied end tags.
         generate_implied_end_tags();
+
+        // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
         if (current_node().local_name() != token.tag_name()) {
             log_parse_error();
         }
 
+        // 3. Pop elements from the stack of open elements until an HTML element whose tag name is one of "h1", "h2", "h3", "h4", "h5", or "h6" has been popped from the stack.
         for (;;) {
             auto popped_element = m_stack_of_open_elements.pop();
             if (popped_element->local_name().is_one_of(HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6))
@@ -1913,7 +2122,11 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    // -> A start tag whose tag name is "a"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::a) {
+        // If the list of active formatting elements contains an a element between the end of the list and the last marker on the list (or the start of the list if there
+        // is no marker on the list), then this is a parse error; run the adoption agency algorithm for the token, then remove that element from the list of active formatting
+        // elements and the stack of open elements if the adoption agency algorithm didn't already remove it (it might not have if the element is not in table scope).
         if (auto* element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker(HTML::TagNames::a)) {
             log_parse_error();
             if (run_the_adoption_agency_algorithm(token) == AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps)
@@ -1923,91 +2136,155 @@ void HTMLParser::handle_in_body(HTMLToken& token)
                 return entry.ptr() == element;
             });
         }
+
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert an HTML element for the token. Push onto the list of active formatting elements that element.
         auto element = insert_html_element(token);
         m_list_of_active_formatting_elements.add(*element);
         return;
     }
 
+    // -> A start tag whose tag name is one of: "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::b, HTML::TagNames::big, HTML::TagNames::code, HTML::TagNames::em, HTML::TagNames::font, HTML::TagNames::i, HTML::TagNames::s, HTML::TagNames::small, HTML::TagNames::strike, HTML::TagNames::strong, HTML::TagNames::tt, HTML::TagNames::u)) {
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert an HTML element for the token. Push onto the list of active formatting elements that element.
         auto element = insert_html_element(token);
         m_list_of_active_formatting_elements.add(*element);
         return;
     }
 
+    // -> A start tag whose tag name is "nobr"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::nobr) {
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // If the stack of open elements has a nobr element in scope, then this is a parse error; run the adoption agency algorithm for the token, then once again reconstruct the active formatting elements, if any.
         if (m_stack_of_open_elements.has_in_scope(HTML::TagNames::nobr)) {
             log_parse_error();
             run_the_adoption_agency_algorithm(token);
             reconstruct_the_active_formatting_elements();
         }
+
+        // Insert an HTML element for the token. Push onto the list of active formatting elements that element.
         auto element = insert_html_element(token);
         m_list_of_active_formatting_elements.add(*element);
         return;
     }
 
+    // -> An end tag whose tag name is one of: "a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::a, HTML::TagNames::b, HTML::TagNames::big, HTML::TagNames::code, HTML::TagNames::em, HTML::TagNames::font, HTML::TagNames::i, HTML::TagNames::nobr, HTML::TagNames::s, HTML::TagNames::small, HTML::TagNames::strike, HTML::TagNames::strong, HTML::TagNames::tt, HTML::TagNames::u)) {
+        // Run the adoption agency algorithm for the token.
         if (run_the_adoption_agency_algorithm(token) == AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps)
             goto AnyOtherEndTag;
         return;
     }
 
+    // -> A start tag whose tag name is one of: "applet", "marquee", "object"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::applet, HTML::TagNames::marquee, HTML::TagNames::object)) {
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
+
+        // Insert a marker at the end of the list of active formatting elements.
         m_list_of_active_formatting_elements.add_marker();
+
+        // Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
         return;
     }
 
+    // -> An end tag token whose tag name is one of: "applet", "marquee", "object"
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::applet, HTML::TagNames::marquee, HTML::TagNames::object)) {
+        // If the stack of open elements does not have an element in scope that is an HTML element with the same tag name as that of the token, then this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_scope(token.tag_name())) {
             log_parse_error();
             return;
         }
 
+        // Otherwise, run these steps:
+        // 1. Generate implied end tags.
         generate_implied_end_tags();
+
+        // 2. If the current node is not an HTML element with the same tag name as that of the token, then this is a parse error.
         if (current_node().local_name() != token.tag_name()) {
             log_parse_error();
         }
+
+        // 3. Pop elements from the stack of open elements until an HTML element with the same tag name as the token has been popped from the stack.
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(token.tag_name());
+
+        // 4. Clear the list of active formatting elements up to the last marker.
         m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
         return;
     }
 
+    // -> A start tag whose tag name is "table"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::table) {
+
+        // If the Document is not set to quirks mode, and the stack of open elements has a p element in button scope, then close a p element.
         if (!document().in_quirks_mode()) {
             if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
                 close_a_p_element();
         }
+
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
+
+        // Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
+
+        // Switch the insertion mode to "in table".`
         m_insertion_mode = InsertionMode::InTable;
         return;
     }
 
+    // -> An end tag whose tag name is "br"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::br) {
+        // Parse error. Drop the attributes from the token, and act as described in the next entry; i.e. act as if this was a "br" start tag token with no attributes, rather than the end tag token that it actually is.
+        log_parse_error();
         token.drop_attributes();
         goto BRStartTag;
     }
 
+    // -> A start tag whose tag name is one of: "area", "br", "embed", "img", "keygen", "wbr"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::area, HTML::TagNames::br, HTML::TagNames::embed, HTML::TagNames::img, HTML::TagNames::keygen, HTML::TagNames::wbr)) {
     BRStartTag:
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
         (void)insert_html_element(token);
+
+        // Acknowledge the token's self-closing flag, if it is set.
         (void)m_stack_of_open_elements.pop();
+
+        // Acknowledge the token's self-closing flag, if it is set.
         token.acknowledge_self_closing_flag_if_set();
+
+        // Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
         return;
     }
 
+    // -> A start tag whose tag name is "input"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::input) {
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
         (void)insert_html_element(token);
         (void)m_stack_of_open_elements.pop();
+
+        // Acknowledge the token's self-closing flag, if it is set.
         token.acknowledge_self_closing_flag_if_set();
+
+        // If the token does not have an attribute with the name "type", or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden", then: set the frameset-ok flag to "not ok".
         auto type_attribute = token.attribute(HTML::AttributeNames::type);
         if (type_attribute.is_null() || !type_attribute.equals_ignoring_ascii_case("hidden"sv)) {
             m_frameset_ok = false;
@@ -2015,23 +2292,36 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    // -> A start tag whose tag name is one of: "param", "source", "track"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::param, HTML::TagNames::source, HTML::TagNames::track)) {
+        // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
         (void)insert_html_element(token);
         (void)m_stack_of_open_elements.pop();
+
+        // Acknowledge the token's self-closing flag, if it is set.
         token.acknowledge_self_closing_flag_if_set();
         return;
     }
 
+    // -> A start tag whose tag name is "hr"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::hr) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
             close_a_p_element();
+
+        // Insert an HTML element for the token. Immediately pop the current node off the stack of open elements.
         (void)insert_html_element(token);
         (void)m_stack_of_open_elements.pop();
+
+        // Acknowledge the token's self-closing flag, if it is set.
         token.acknowledge_self_closing_flag_if_set();
+
+        // Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
         return;
     }
 
+    // -> A start tag whose tag name is "image"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::image) {
         // Parse error. Change the token's tag name to HTML::TagNames::img and reprocess it. (Don't ask.)
         log_parse_error();
@@ -2040,9 +2330,14 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    // -> A start tag whose tag name is "textarea"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::textarea) {
+        // 1. Insert an HTML element for the token.
         (void)insert_html_element(token);
 
+        // FIXME: 2. If the next token is a U+000A LINE FEED (LF) character token, then ignore that token and move on to the next one. (Newlines at the start of textarea elements are ignored as an authoring convenience.)
+
+        // 3. Switch the tokenizer to the RCDATA state.
         m_tokenizer.switch_to({}, HTMLTokenizer::State::RCDATA);
 
         // If the next token is a U+000A LINE FEED (LF) character token,
@@ -2050,10 +2345,16 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         // (Newlines at the start of pre blocks are ignored as an authoring convenience.)
         auto next_token = m_tokenizer.next_token();
 
+        // 4. Let the original insertion mode be the current insertion mode.
         m_original_insertion_mode = m_insertion_mode;
+
+        // 5. Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
+
+        // 6. Switch the insertion mode to "text".
         m_insertion_mode = InsertionMode::Text;
 
+        // FIXME: This step is not in the spec.
         if (next_token.has_value() && next_token.value().is_character() && next_token.value().code_point() == '\n') {
             // Ignore it.
         } else {
@@ -2062,31 +2363,54 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    // -> A start tag whose tag name is "xmp"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::xmp) {
+        // If the stack of open elements has a p element in button scope, then close a p element.
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p)) {
             close_a_p_element();
         }
+
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
+
+        // Follow the generic raw text element parsing algorithm.
         parse_generic_raw_text_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is "iframe"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::iframe) {
+        // Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
+
+        // Follow the generic raw text element parsing algorithm.
         parse_generic_raw_text_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is "noembed"
+    // -> A start tag whose tag name is "noscript", if the scripting flag is enabled
     if (token.is_start_tag() && ((token.tag_name() == HTML::TagNames::noembed) || (token.tag_name() == HTML::TagNames::noscript && m_scripting_enabled))) {
+        // Follow the generic raw text element parsing algorithm.
         parse_generic_raw_text_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is "select"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::select) {
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
+
+        // Set the frameset-ok flag to "not ok".
         m_frameset_ok = false;
+
+        // If the insertion mode is one of "in table", "in caption", "in table body", "in row", or "in cell", then switch the insertion mode to "in select in table". Otherwise, switch the insertion mode to "in select".
         switch (m_insertion_mode) {
         case InsertionMode::InTable:
         case InsertionMode::InCaption:
@@ -2102,43 +2426,61 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    // -> A start tag whose tag name is one of: "optgroup", "option"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::optgroup, HTML::TagNames::option)) {
+        // If the current node is an option element, then pop the current node off the stack of open elements.
         if (current_node().local_name() == HTML::TagNames::option)
             (void)m_stack_of_open_elements.pop();
+
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is one of: "rb", "rtc"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::rb, HTML::TagNames::rtc)) {
+        // If the stack of open elements has a ruby element in scope, then generate implied end tags. If the current node is not now a ruby element, this is a parse error.
         if (m_stack_of_open_elements.has_in_scope(HTML::TagNames::ruby))
             generate_implied_end_tags();
-
         if (current_node().local_name() != HTML::TagNames::ruby)
             log_parse_error();
 
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is one of: "rp", "rt"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::rp, HTML::TagNames::rt)) {
+        // If the stack of open elements has a ruby element in scope, then generate implied end tags, except for rtc elements. If the current node is not now a rtc element or a ruby element, this is a parse error.
         if (m_stack_of_open_elements.has_in_scope(HTML::TagNames::ruby))
             generate_implied_end_tags(HTML::TagNames::rtc);
-
         if (current_node().local_name() != HTML::TagNames::rtc || current_node().local_name() != HTML::TagNames::ruby)
             log_parse_error();
 
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> A start tag whose tag name is "math"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::math) {
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Adjust MathML attributes for the token. (This fixes the case of MathML attributes that are not all lowercase.)
         adjust_mathml_attributes(token);
+
+        // Adjust foreign attributes for the token. (This fixes the use of namespaced attributes, in particular XLink.)
         adjust_foreign_attributes(token);
 
+        // Insert a foreign element for the token, with MathML namespace and false.
         (void)insert_foreign_element(token, Namespace::MathML);
 
+        // If the token has its self-closing flag set, pop the current node off the stack of open elements and acknowledge the token's self-closing flag.
         if (token.is_self_closing()) {
             (void)m_stack_of_open_elements.pop();
             token.acknowledge_self_closing_flag_if_set();
@@ -2146,13 +2488,22 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    // -> A start tag whose tag name is "svg"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::svg) {
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Adjust SVG attributes for the token. (This fixes the case of SVG attributes that are not all lowercase.)
         adjust_svg_attributes(token);
+
+        // Adjust foreign attributes for the token. (This fixes the use of namespaced attributes, in particular XLink in SVG.)
         adjust_foreign_attributes(token);
 
+        // FIXME: We are not setting the 'onlyAddToElementStack' flag here.
+        // Insert a foreign element for the token, with SVG namespace and false.
         (void)insert_foreign_element(token, Namespace::SVG);
 
+        // If the token has its self-closing flag set, pop the current node off the stack of open elements and acknowledge the token's self-closing flag.
         if (token.is_self_closing()) {
             (void)m_stack_of_open_elements.pop();
             token.acknowledge_self_closing_flag_if_set();
@@ -2160,38 +2511,57 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         return;
     }
 
+    // -> A start tag whose tag name is one of: "caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"
     if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::frame, HTML::TagNames::head, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr))) {
+        // Parse error. Ignore the token.
         log_parse_error();
         return;
     }
 
-    // Any other start tag
+    // -> Any other start tag
     if (token.is_start_tag()) {
+        // Reconstruct the active formatting elements, if any.
         reconstruct_the_active_formatting_elements();
+
+        // Insert an HTML element for the token.
         (void)insert_html_element(token);
         return;
     }
 
+    // -> Any other end tag
     if (token.is_end_tag()) {
     AnyOtherEndTag:
+        // 1. Initialize node to be the current node (the bottommost node of the stack).
         JS::GCPtr<DOM::Element> node;
+
+        // 2. Loop: If node is an HTML element with the same tag name as the token, then:
         for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
             node = m_stack_of_open_elements.elements()[i].ptr();
             if (node->local_name() == token.tag_name()) {
+                // 1. Generate implied end tags, except for HTML elements with the same tag name as the token.
                 generate_implied_end_tags(token.tag_name());
+
+                // 2. If node is not the current node, then this is a parse error.
                 if (node.ptr() != &current_node()) {
                     log_parse_error();
                 }
+
+                // 3. Pop all the nodes from the current node up to node, including node, then stop these steps.
                 while (&current_node() != node.ptr()) {
                     (void)m_stack_of_open_elements.pop();
                 }
                 (void)m_stack_of_open_elements.pop();
                 break;
             }
+
+            // 3. Otherwise, if node is in the special category, then this is a parse error; ignore the token, and return.
             if (is_special_tag(node->local_name(), node->namespace_uri())) {
                 log_parse_error();
                 return;
             }
+
+            // 4. Set node to the previous entry in the stack of open elements.
+            // 5. Return to the step labeled loop.
         }
         return;
     }
