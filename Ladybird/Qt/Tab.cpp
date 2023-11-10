@@ -30,6 +30,7 @@
 #include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QPainter>
 #include <QPoint>
 #include <QResizeEvent>
@@ -287,6 +288,16 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     view().on_received_accessibility_tree = [this](auto& accessibility_tree) {
         if (m_inspector_widget)
             m_inspector_widget->set_accessibility_json(accessibility_tree);
+    };
+
+    view().on_insert_clipboard_entry = [](auto const& data, auto const&, auto const& mime_type) {
+        QByteArray qdata { data.bytes_as_string_view().characters_without_null_termination(), static_cast<qsizetype>(data.bytes_as_string_view().length()) };
+
+        auto* mime_data = new QMimeData();
+        mime_data->setData(qstring_from_ak_string(mime_type), qdata);
+
+        auto* clipboard = QGuiApplication::clipboard();
+        clipboard->setMimeData(mime_data);
     };
 
     auto* search_selected_text_action = new QAction("&Search for <query>", this);
