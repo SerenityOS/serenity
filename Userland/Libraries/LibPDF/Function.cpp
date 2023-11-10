@@ -122,8 +122,91 @@ PDFErrorOr<ReadonlySpan<float>> ExponentialInterpolationFunction::evaluate(Reado
 
 class StitchingFunction final : public Function {
 public:
+    static PDFErrorOr<NonnullRefPtr<StitchingFunction>> create(Document*, Vector<Bound> domain, Optional<Vector<Bound>> range, NonnullRefPtr<DictObject>);
     virtual PDFErrorOr<ReadonlySpan<float>> evaluate(ReadonlySpan<float>) const override;
+
+private:
+    StitchingFunction(Vector<NonnullRefPtr<Function>>);
+
+    Bound m_domain;
+    Optional<Vector<Bound>> m_range;
+
+    Vector<NonnullRefPtr<Function>> m_functions;
+    Vector<float> m_bounds;
+    Vector<Bound> m_encode;
+    Vector<float> mutable m_result;
 };
+
+StitchingFunction::StitchingFunction(Vector<NonnullRefPtr<Function>> functions)
+    : m_functions(move(functions))
+{
+}
+
+PDFErrorOr<NonnullRefPtr<StitchingFunction>>
+StitchingFunction::create(Document* document, Vector<Bound> domain, Optional<Vector<Bound>> range, NonnullRefPtr<DictObject> dict)
+{
+    if (domain.size() != 1)
+        return Error { Error::Type::MalformedPDF, "Function stitching requires domain with 1 entry" };
+
+    // "TABLE 3.38 Additional entries specific to a type 3 function dictionary"
+
+    if (!dict->contains(CommonNames::Functions))
+        return Error { Error::Type::MalformedPDF, "Function stitching requires /Functions" };
+    auto functions_array = TRY(dict->get_array(document, CommonNames::Functions));
+
+    Vector<NonnullRefPtr<Function>> functions;
+    for (size_t i = 0; i < functions_array->size(); i++) {
+        auto function = TRY(Function::create(document, functions_array->get_object_at(i)));
+        functions.append(move(function));
+    }
+
+    if (functions.is_empty())
+        return Error { Error::Type::MalformedPDF, "Function stitching requires at least one function" };
+
+    if (!dict->contains(CommonNames::Bounds))
+        return Error { Error::Type::MalformedPDF, "Function stitching requires /Bounds" };
+    auto bounds_array = TRY(dict->get_array(document, CommonNames::Bounds));
+
+    if (bounds_array->size() != functions.size() - 1)
+        return Error { Error::Type::MalformedPDF, "Function stitching /Bounds size does not match /Functions size" };
+
+    Vector<float> bounds;
+    for (size_t i = 0; i < bounds_array->size(); i++) {
+        bounds.append(bounds_array->at(i).to_float());
+        if (i > 0 && bounds[i - 1] >= bounds[i])
+            return Error { Error::Type::MalformedPDF, "Function stitching /Bounds not strictly increasing" };
+    }
+
+    if (!bounds.is_empty()) {
+        if (domain[0].lower == domain[0].upper)
+            return Error { Error::Type::MalformedPDF, "Function stitching /Bounds requires non-zero domain" };
+        if (domain[0].lower >= bounds[0] || bounds.last() >= domain[0].upper)
+            return Error { Error::Type::MalformedPDF, "Function stitching /Bounds out of domain" };
+    }
+
+    if (!dict->contains(CommonNames::Encode))
+        return Error { Error::Type::MalformedPDF, "Function stitching requires /Encode" };
+    auto encode_array = TRY(dict->get_array(document, CommonNames::Encode));
+
+    if (encode_array->size() != functions.size() * 2)
+        return Error { Error::Type::MalformedPDF, "Function stitching /Encode size does not match /Functions size" };
+
+    Vector<Bound> encode;
+    for (size_t i = 0; i < encode_array->size(); i += 2) {
+        encode.append({ encode_array->at(i).to_float(), encode_array->at(i + 1).to_float() });
+        if (encode.last().lower > encode.last().upper)
+            return Error { Error::Type::MalformedPDF, "Function stitching /Encode lower bound > upper bound" };
+    }
+
+    auto function = adopt_ref(*new StitchingFunction(move(functions)));
+    function->m_domain = domain[0];
+    function->m_range = move(range);
+    function->m_bounds = move(bounds);
+    function->m_encode = move(encode);
+    if (function->m_range.has_value())
+        function->m_result.resize(function->m_range.value().size());
+    return function;
+}
 
 PDFErrorOr<ReadonlySpan<float>> StitchingFunction::evaluate(ReadonlySpan<float>) const
 {
@@ -715,7 +798,8 @@ PDFErrorOr<NonnullRefPtr<Function>> Function::create(Document* document, Nonnull
         // FIXME: spec is not clear on if this should work with a StreamObject.
         return ExponentialInterpolationFunction::create(document, move(domain), move(optional_range), function_dict);
     case 3:
-        return adopt_ref(*new StitchingFunction());
+        // FIXME: spec is not clear on if this should work with a StreamObject.
+        return StitchingFunction::create(document, move(domain), move(optional_range), function_dict);
     case 4:
         if (!object->is<StreamObject>())
             return Error { Error::Type::MalformedPDF, "Function type 4 requires stream object" };
