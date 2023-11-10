@@ -5,13 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define GL_GLEXT_PROTOTYPES
-
-#include "Painter.h"
-#include "Canvas.h"
 #include <AK/QuickSort.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <LibAccelGfx/Canvas.h>
+#include <LibAccelGfx/GL.h>
+#include <LibAccelGfx/Painter.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Painter.h>
 
@@ -89,10 +86,9 @@ Painter::Painter(Context& context)
     : m_context(context)
     , m_rectangle_program(Program::create(vertex_shader_source, solid_color_fragment_shader_source))
     , m_blit_program(Program::create(blit_vertex_shader_source, blit_fragment_shader_source))
+    , m_glyphs_texture(GL::create_texture())
 {
     m_state_stack.empend(State());
-
-    glGenTextures(1, &m_glyphs_texture);
 }
 
 Painter::~Painter()
@@ -102,9 +98,7 @@ Painter::~Painter()
 
 void Painter::clear(Gfx::Color color)
 {
-    auto [red, green, blue, alpha] = gfx_color_to_opengl_color(color);
-    glClearColor(red, green, blue, alpha);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::clear_color(color);
 }
 
 void Painter::fill_rect(Gfx::IntRect rect, Gfx::Color color)
@@ -136,18 +130,13 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
 
     m_rectangle_program.use();
 
-    GLuint position_attribute = m_rectangle_program.get_attribute_location("aVertexPosition");
-    GLuint color_uniform = m_rectangle_program.get_uniform_location("uColor");
+    auto position_attribute = m_rectangle_program.get_attribute_location("aVertexPosition");
+    auto color_uniform = m_rectangle_program.get_uniform_location("uColor");
 
-    glUniform4f(color_uniform, red, green, blue, alpha);
-
-    glVertexAttribPointer(position_attribute, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), vertices.data());
-    glEnableVertexAttribArray(position_attribute);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    GL::set_uniform(color_uniform, red, green, blue, alpha);
+    GL::set_vertex_attribute(position_attribute, vertices, 2);
+    GL::enable_blending();
+    GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 }
 
 void Painter::draw_line(Gfx::IntPoint a, Gfx::IntPoint b, float thickness, Gfx::Color color)
@@ -172,18 +161,13 @@ void Painter::draw_line(Gfx::FloatPoint a, Gfx::FloatPoint b, float thickness, C
 
     m_rectangle_program.use();
 
-    GLuint position_attribute = m_rectangle_program.get_attribute_location("aVertexPosition");
-    GLuint color_uniform = m_rectangle_program.get_uniform_location("uColor");
+    auto position_attribute = m_rectangle_program.get_attribute_location("aVertexPosition");
+    auto color_uniform = m_rectangle_program.get_uniform_location("uColor");
 
-    glUniform4f(color_uniform, red, green, blue, alpha);
-
-    glVertexAttribPointer(position_attribute, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), vertices.data());
-    glEnableVertexAttribArray(position_attribute);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    GL::set_uniform(color_uniform, red, green, blue, alpha);
+    GL::set_vertex_attribute(position_attribute, vertices, 2);
+    GL::enable_blending();
+    GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 }
 
 void Painter::draw_scaled_bitmap(Gfx::IntRect const& dest_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, ScalingMode scaling_mode)
@@ -201,13 +185,13 @@ static Gfx::FloatRect to_texture_space(Gfx::FloatRect rect, Gfx::IntSize image_s
     return { x, y, width, height };
 }
 
-static GLenum to_gl_scaling_mode(Painter::ScalingMode scaling_mode)
+static GL::ScalingMode to_gl_scaling_mode(Painter::ScalingMode scaling_mode)
 {
     switch (scaling_mode) {
     case Painter::ScalingMode::NearestNeighbor:
-        return GL_NEAREST;
+        return GL::ScalingMode::Nearest;
     case Painter::ScalingMode::Bilinear:
-        return GL_LINEAR;
+        return GL::ScalingMode::Linear;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -217,19 +201,12 @@ void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap con
 {
     m_blit_program.use();
 
-    GLuint texture;
-
     // FIXME: We should reuse textures across repaints if possible.
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, bitmap.width(), bitmap.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, bitmap.scanline(0));
+    auto texture = GL::create_texture();
+    GL::upload_texture_data(texture, bitmap);
 
-    GLenum scaling_mode_gl = to_gl_scaling_mode(scaling_mode);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scaling_mode_gl);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scaling_mode_gl);
+    auto scaling_mode_gl = to_gl_scaling_mode(scaling_mode);
+    GL::set_texture_scale_mode(scaling_mode_gl);
 
     auto dst_rect_in_clip_space = to_clip_space(transform().map(dst_rect));
     auto src_rect_in_texture_space = to_texture_space(src_rect, bitmap.size());
@@ -249,18 +226,16 @@ void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap con
     add_vertex(dst_rect_in_clip_space.bottom_right(), src_rect_in_texture_space.bottom_right());
     add_vertex(dst_rect_in_clip_space.top_right(), src_rect_in_texture_space.top_right());
 
-    GLuint vertex_position_attribute = m_blit_program.get_attribute_location("aVertexPosition");
-    glVertexAttribPointer(vertex_position_attribute, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), vertices.data());
-    glEnableVertexAttribArray(vertex_position_attribute);
+    auto vertex_position_attribute = m_blit_program.get_attribute_location("aVertexPosition");
+    GL::set_vertex_attribute(vertex_position_attribute, vertices, 4);
 
-    GLuint color_uniform = m_blit_program.get_uniform_location("uColor");
-    glUniform4f(color_uniform, 1, 1, 1, 1);
+    auto color_uniform = m_blit_program.get_uniform_location("uColor");
+    GL::set_uniform(color_uniform, 1, 1, 1, 1);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    GL::enable_blending();
+    GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 
-    glDeleteTextures(1, &texture);
+    GL::delete_texture(texture);
 }
 
 void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
@@ -314,8 +289,7 @@ void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> co
 
     m_glyphs_texture_size = glyphs_texture_bitmap->size();
 
-    glBindTexture(GL_TEXTURE_2D, m_glyphs_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, glyphs_texture_bitmap->width(), glyphs_texture_bitmap->height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, glyphs_texture_bitmap->scanline(0));
+    GL::upload_texture_data(m_glyphs_texture, *glyphs_texture_bitmap);
 }
 
 void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
@@ -379,21 +353,15 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
 
     m_blit_program.use();
 
-    glBindTexture(GL_TEXTURE_2D, m_glyphs_texture);
+    GL::bind_texture(m_glyphs_texture);
+    GL::set_texture_scale_mode(GL::ScalingMode::Nearest);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    auto position_attribute = m_blit_program.get_attribute_location("aVertexPosition");
+    auto color_uniform = m_blit_program.get_uniform_location("uColor");
 
-    GLuint position_attribute = m_blit_program.get_attribute_location("aVertexPosition");
-    GLuint color_uniform = m_blit_program.get_uniform_location("uColor");
-
-    glUniform4f(color_uniform, red, green, blue, alpha);
-
-    glVertexAttribPointer(position_attribute, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), vertices.data());
-    glEnableVertexAttribArray(position_attribute);
-
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 4);
+    GL::set_uniform(color_uniform, red, green, blue, alpha);
+    GL::set_vertex_attribute(position_attribute, vertices, 4);
+    GL::draw_arrays(GL::DrawPrimitive::Triangles, vertices.size() / 4);
 }
 
 void Painter::save()
