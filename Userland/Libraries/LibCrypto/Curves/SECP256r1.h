@@ -12,12 +12,6 @@
 
 namespace Crypto::Curves {
 
-struct JacobianPoint {
-    u256 x { 0u };
-    u256 y { 0u };
-    u256 z { 0u };
-};
-
 class SECP256r1 : public EllipticCurve {
 public:
     size_t key_size() override { return 1 + 2 * 32; }
