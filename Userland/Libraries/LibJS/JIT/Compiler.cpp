@@ -660,36 +660,29 @@ void Compiler::compile_sub(Bytecode::Op::Sub const& op)
     load_vm_register(ARG1, op.lhs());
     load_accumulator(ARG2);
 
-    Assembler::Label end {};
-    Assembler::Label slow_case {};
-
-    branch_if_both_int32(ARG1, ARG2, [&] {
-        // GPR0 = ARG1 + ARG2 (32-bit)
-        // if (overflow) goto slow_case;
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(ARG1));
-        m_assembler.sub32(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(ARG2),
-            slow_case);
-
-        // accumulator = GPR0 | SHIFTED_INT32_TAG;
-        m_assembler.mov(
-            Assembler::Operand::Register(GPR1),
-            Assembler::Operand::Imm(SHIFTED_INT32_TAG));
-        m_assembler.bitwise_or(
-            Assembler::Operand::Register(GPR0),
-            Assembler::Operand::Register(GPR1));
-        store_accumulator(GPR0);
-        m_assembler.jump(end);
-    });
-
-    slow_case.link(m_assembler);
-    native_call((void*)cxx_sub);
-    store_accumulator(RET);
-    check_exception();
-    end.link(m_assembler);
+    branch_if_both_numbers(
+        ARG1, ARG2,
+        [&](auto lhs, auto rhs, auto& slow_case) {
+            m_assembler.sub32(
+                Assembler::Operand::Register(lhs),
+                Assembler::Operand::Register(rhs),
+                slow_case);
+            return lhs; },
+        [&](auto lhs, auto rhs) {
+            m_assembler.sub(
+                Assembler::Operand::FloatRegister(lhs),
+                Assembler::Operand::FloatRegister(rhs));
+            return lhs; },
+        [&](auto lhs, auto rhs) {
+            m_assembler.mov(
+                Assembler::Operand::Register(ARG1),
+                Assembler::Operand::Register(lhs));
+            m_assembler.mov(
+                Assembler::Operand::Register(ARG2),
+                Assembler::Operand::Register(rhs));
+            native_call((void*)cxx_sub);
+            return RET;
+        });
 }
 
 static Value cxx_mul(VM& vm, Value lhs, Value rhs)

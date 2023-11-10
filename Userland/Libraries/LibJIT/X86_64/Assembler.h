@@ -929,6 +929,11 @@ struct X86_64Assembler {
             emit8(0x81);
             emit_modrm_slash(5, dst);
             emit32(src.offset_or_immediate);
+        } else if (dst.type == Operand::Type::FReg && src.type == Operand::Type::FReg) {
+            emit8(0xf2);
+            emit8(0x0f);
+            emit8(0x5c);
+            emit_modrm_rm(dst, src);
         } else {
             VERIFY_NOT_REACHED();
         }
