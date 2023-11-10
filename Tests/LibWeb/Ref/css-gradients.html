@@ -204,6 +204,10 @@
   .grad-radial-repeat-3 {
     background-image: repeating-radial-gradient(circle at 100%, #333, #333 10px, #eee 10px, #eee 20px);
   }
+
+  .grad-radial-calc {
+    background-image: repeating-radial-gradient(circle at calc(100% - 10px) calc(20% + 10px), #333, #333 10px, #eee 10px, #eee 20px);
+  }
 </style>
 <body>
   <div class="box grad-0"></div>
@@ -245,5 +249,6 @@
   <div class="rect grad-radial-repeat-1"></div>
   <div class="rect grad-radial-repeat-2"></div>
   <div class="rect grad-radial-repeat-3"></div>
+  <div class="rect grad-radial-calc"></div>
 </body>
 </html>
