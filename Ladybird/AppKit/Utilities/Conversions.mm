@@ -16,8 +16,12 @@ String ns_string_to_string(NSString* string)
 
 NSString* string_to_ns_string(StringView string)
 {
-    auto* data = [NSData dataWithBytes:string.characters_without_null_termination() length:string.length()];
-    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    return [[NSString alloc] initWithData:string_to_ns_data(string) encoding:NSUTF8StringEncoding];
+}
+
+NSData* string_to_ns_data(StringView string)
+{
+    return [NSData dataWithBytes:string.characters_without_null_termination() length:string.length()];
 }
 
 NSDictionary* deserialize_json_to_dictionary(StringView json)

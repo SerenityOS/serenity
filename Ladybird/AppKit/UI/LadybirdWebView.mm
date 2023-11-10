@@ -189,6 +189,15 @@ struct HideCursor {
 
 #pragma mark - Private methods
 
+static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_type)
+{
+    auto* ns_data = Ladybird::string_to_ns_data(data);
+
+    auto* pasteBoard = [NSPasteboard generalPasteboard];
+    [pasteBoard clearContents];
+    [pasteBoard setData:ns_data forType:pasteboard_type];
+}
+
 - (void)updateViewportRect:(Ladybird::WebViewBridge::ForResize)for_resize
 {
     auto content_rect = [self frame];
@@ -667,6 +676,21 @@ struct HideCursor {
                                                alpha:1.0];
         [self.observer onThemeColorChange:color];
     };
+
+    m_web_view_bridge->on_insert_clipboard_entry = [](auto const& data, auto const&, auto const& mime_type) {
+        NSPasteboardType pasteboard_type = nil;
+
+        // https://w3c.github.io/clipboard-apis/#os-specific-well-known-format
+        if (mime_type == "text/plain"sv)
+            pasteboard_type = NSPasteboardTypeString;
+        else if (mime_type == "text/html"sv)
+            pasteboard_type = NSPasteboardTypeHTML;
+        else if (mime_type == "text/png"sv)
+            pasteboard_type = NSPasteboardTypePNG;
+
+        if (pasteboard_type)
+            copy_data_to_clipboard(data, pasteboard_type);
+    };
 }
 
 - (void)colorPickerClosed:(NSNotification*)notification
@@ -679,18 +703,9 @@ struct HideCursor {
     return (NSScrollView*)[self superview];
 }
 
-static void copy_text_to_clipboard(StringView text)
-{
-    auto* string = Ladybird::string_to_ns_string(text);
-
-    auto* pasteBoard = [NSPasteboard generalPasteboard];
-    [pasteBoard clearContents];
-    [pasteBoard setString:string forType:NSPasteboardTypeString];
-}
-
 - (void)copy:(id)sender
 {
-    copy_text_to_clipboard(m_web_view_bridge->selected_text());
+    copy_data_to_clipboard(m_web_view_bridge->selected_text(), NSPasteboardTypeString);
 }
 
 - (void)selectAll:(id)sender
@@ -730,7 +745,7 @@ static void copy_text_to_clipboard(StringView text)
 
 - (void)copyLink:(id)sender
 {
-    copy_text_to_clipboard(m_context_menu_url.serialize());
+    copy_data_to_clipboard(m_context_menu_url.serialize(), NSPasteboardTypeString);
 }
 
 - (void)copyImage:(id)sender

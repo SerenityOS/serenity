@@ -20,6 +20,8 @@ namespace Ladybird {
 String ns_string_to_string(NSString*);
 NSString* string_to_ns_string(StringView);
 
+NSData* string_to_ns_data(StringView);
+
 NSDictionary* deserialize_json_to_dictionary(StringView);
 
 Gfx::IntRect ns_rect_to_gfx_rect(NSRect);
