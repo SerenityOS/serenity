@@ -2359,11 +2359,17 @@ RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentVal
     auto parse_length_percentage = [&](ComponentValue const& token) -> Optional<LengthPercentage> {
         if (token.is(Token::Type::EndOfFile))
             return {};
-        // FIXME: calc()!
-        auto dimension = parse_dimension(token);
-        if (!dimension.has_value() || !dimension->is_length_percentage())
+
+        if (auto dimension = parse_dimension(token); dimension.has_value()) {
+            if (dimension->is_length_percentage())
+                return dimension->length_percentage();
             return {};
-        return dimension->length_percentage();
+        }
+
+        if (auto calc = parse_calculated_value(token); calc && calc->resolves_to_length_percentage())
+            return LengthPercentage { calc.release_nonnull() };
+
+        return {};
     };
 
     auto is_horizontal = [](PositionEdge edge, bool accept_center) -> bool {
