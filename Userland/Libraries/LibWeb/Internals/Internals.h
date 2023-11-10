@@ -21,6 +21,8 @@ public:
     void gc();
     JS::Object* hit_test(double x, double y);
 
+    WebIDL::ExceptionOr<bool> dispatch_user_activated_event(DOM::EventTarget&, DOM::Event& event);
+
 private:
     explicit Internals(JS::Realm&);
     virtual void initialize(JS::Realm&) override;

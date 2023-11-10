@@ -1,7 +1,10 @@
+#import <DOM/EventTarget.idl>
+
 [Exposed=Nobody] interface Internals {
 
     undefined signalTextTestIsDone();
     undefined gc();
     object hitTest(double x, double y);
+    boolean dispatchUserActivatedEvent(EventTarget target, Event event);
 
 };
