@@ -208,9 +208,35 @@ StitchingFunction::create(Document* document, Vector<Bound> domain, Optional<Vec
     return function;
 }
 
-PDFErrorOr<ReadonlySpan<float>> StitchingFunction::evaluate(ReadonlySpan<float>) const
+PDFErrorOr<ReadonlySpan<float>> StitchingFunction::evaluate(ReadonlySpan<float> xs) const
 {
-    return Error(Error::Type::RenderingUnsupported, "StitchingFunction not yet implemented"_string);
+    if (xs.size() != 1)
+        return Error { Error::Type::MalformedPDF, "Function argument size does not match domain size" };
+
+    float x = clamp(xs[0], m_domain.lower, m_domain.upper);
+
+    // FIXME: binary search
+    size_t i = 0;
+    for (; i < m_bounds.size(); ++i) {
+        if (x < m_bounds[i])
+            break;
+    }
+    float left_bound = i == 0 ? m_domain.lower : m_bounds[i - 1];
+    float right_bound = i == m_bounds.size() ? m_domain.upper : m_bounds[i];
+
+    auto interpolate = [](float x, float x_min, float x_max, float y_min, float y_max) {
+        return y_min + (x - x_min) * (y_max - y_min) / (x_max - x_min);
+    };
+    x = interpolate(x, left_bound, right_bound, m_encode[i].lower, m_encode[i].upper);
+    auto result = TRY(m_functions[i]->evaluate({ &x, 1 }));
+    if (!m_range.has_value())
+        return result;
+
+    if (result.size() != m_range.value().size())
+        return Error { Error::Type::MalformedPDF, "Function stitching result size does not match range size" };
+    for (size_t i = 0; i < result.size(); ++i)
+        m_result[i] = clamp(result[i], m_range.value()[i].lower, m_range.value()[i].upper);
+    return m_result;
 }
 
 class PostScriptCalculatorFunction final : public Function {
