@@ -954,6 +954,17 @@ struct X86_64Assembler {
         }
     }
 
+    void convert_i32_to_double(Operand dst, Operand src)
+    {
+        VERIFY(dst.type == Operand::Type::FReg);
+        VERIFY(src.is_register_or_memory());
+
+        emit8(0xf2);
+        emit8(0x0f);
+        emit8(0x2a);
+        emit_modrm_rm(dst, src);
+    }
+
     void native_call(
         u64 callee,
         Vector<Operand> const& preserved_registers = {},
