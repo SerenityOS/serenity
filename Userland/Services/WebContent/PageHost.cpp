@@ -499,4 +499,9 @@ void PageHost::page_did_change_theme_color(Gfx::Color color)
     m_client.async_did_change_theme_color(color);
 }
 
+void PageHost::page_did_insert_clipboard_entry(String data, String presentation_style, String mime_type)
+{
+    m_client.async_did_insert_clipboard_entry(move(data), move(presentation_style), move(mime_type));
+}
+
 }

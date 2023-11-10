@@ -63,6 +63,7 @@ endpoint WebContentClient
     did_request_color_picker(Color current_color) =|
     did_finish_handling_input_event(bool event_was_accepted) =|
     did_change_theme_color(Gfx::Color color) =|
+    did_insert_clipboard_entry(String data, String presentation_style, String mime_type) =|
 
     did_output_js_console_message(i32 message_index) =|
     did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages) =|
