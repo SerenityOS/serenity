@@ -4,78 +4,41 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define GL_GLEXT_PROTOTYPES
-
 #include <AK/Assertions.h>
 #include <AK/Format.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <LibAccelGfx/GL.h>
 #include <LibAccelGfx/Program.h>
 
 namespace AccelGfx {
 
-static GLuint create_shader(GLenum type, char const* source)
-{
-    GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
-    glCompileShader(shader);
-
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char buffer[512];
-        glGetShaderInfoLog(shader, sizeof(buffer), nullptr, buffer);
-        dbgln("GLSL shader compilation failed: {}", buffer);
-        VERIFY_NOT_REACHED();
-    }
-
-    return shader;
-}
-
 Program Program::create(char const* vertex_shader_source, char const* fragment_shader_source)
 {
-    GLuint program = glCreateProgram();
+    auto vertex_shader = GL::create_shader(GL::ShaderType::Vertex, vertex_shader_source);
+    auto fragment_shader = GL::create_shader(GL::ShaderType::Fragment, fragment_shader_source);
 
-    auto vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_shader_source);
-    auto fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_shader_source);
-
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-
-    int linked;
-    glGetProgramiv(program, GL_LINK_STATUS, &linked);
-    if (!linked) {
-        char buffer[512];
-        glGetProgramInfoLog(program, sizeof(buffer), nullptr, buffer);
-        dbgln("GLSL program linking failed: {}", buffer);
-        VERIFY_NOT_REACHED();
-    }
-
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    auto program = GL::create_program(vertex_shader, fragment_shader);
 
     return Program { program };
 }
 
 void Program::use()
 {
-    glUseProgram(m_id);
+    GL::use_program(m_program);
 }
 
-GLuint Program::get_attribute_location(char const* name)
+GL::VertexAttribute Program::get_attribute_location(char const* name)
 {
-    return glGetAttribLocation(m_id, name);
+    return GL::get_attribute_location(m_program, name);
 }
 
-GLuint Program::get_uniform_location(char const* name)
+GL::Uniform Program::get_uniform_location(char const* name)
 {
-    return glGetUniformLocation(m_id, name);
+    return GL::get_uniform_location(m_program, name);
 }
 
 Program::~Program()
 {
-    glDeleteProgram(m_id);
+    GL::delete_program(m_program);
 }
 
 }

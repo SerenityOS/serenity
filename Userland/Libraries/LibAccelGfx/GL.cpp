@@ -1,0 +1,176 @@
+/*
+ * Copyright (c) 2023, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#define GL_GLEXT_PROTOTYPES
+
+#include <LibAccelGfx/GL.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Rect.h>
+
+namespace AccelGfx::GL {
+
+static void verify_no_error()
+{
+    VERIFY(glGetError() == GL_NO_ERROR);
+}
+
+void set_viewport(Gfx::IntRect rect)
+{
+    glViewport(rect.left(), rect.top(), rect.width(), rect.height());
+    verify_no_error();
+}
+
+void enable_blending()
+{
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    verify_no_error();
+}
+
+void read_pixels(Gfx::IntRect rect, Gfx::Bitmap& bitmap)
+{
+    VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRA8888);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(rect.left(), rect.top(), rect.width(), rect.height(), GL_BGRA, GL_UNSIGNED_BYTE, bitmap.scanline(0));
+    verify_no_error();
+}
+
+Shader create_shader(ShaderType type, char const* source)
+{
+    GLuint shader = glCreateShader(type == ShaderType::Vertex ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
+    glShaderSource(shader, 1, &source, nullptr);
+    glCompileShader(shader);
+
+    int success;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char buffer[512];
+        glGetShaderInfoLog(shader, sizeof(buffer), nullptr, buffer);
+        dbgln("GLSL shader compilation failed: {}", buffer);
+        VERIFY_NOT_REACHED();
+    }
+
+    verify_no_error();
+
+    return { shader };
+}
+
+Program create_program(Shader const& vertex_shader, Shader const& fragment_shader)
+{
+    GLuint program = glCreateProgram();
+
+    glAttachShader(program, vertex_shader.id);
+    glAttachShader(program, fragment_shader.id);
+    glLinkProgram(program);
+
+    int linked;
+    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+    if (!linked) {
+        char buffer[512];
+        glGetProgramInfoLog(program, sizeof(buffer), nullptr, buffer);
+        dbgln("GLSL program linking failed: {}", buffer);
+        VERIFY_NOT_REACHED();
+    }
+
+    glDeleteShader(vertex_shader.id);
+    glDeleteShader(fragment_shader.id);
+
+    verify_no_error();
+
+    return { program };
+}
+
+void use_program(Program const& program)
+{
+    glUseProgram(program.id);
+    verify_no_error();
+}
+
+VertexAttribute get_attribute_location(Program const& program, char const* name)
+{
+    auto id = glGetAttribLocation(program.id, name);
+    verify_no_error();
+    return { id };
+}
+
+Uniform get_uniform_location(Program const& program, char const* name)
+{
+    auto id = glGetUniformLocation(program.id, name);
+    verify_no_error();
+    return { id };
+}
+
+void delete_program(Program const& program)
+{
+    glDeleteProgram(program.id);
+    verify_no_error();
+}
+
+Texture create_texture()
+{
+    GLuint texture;
+    glGenTextures(1, &texture);
+    verify_no_error();
+    return { texture };
+}
+
+void bind_texture(Texture const& texture)
+{
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+    verify_no_error();
+}
+
+void upload_texture_data(Texture const& texture, Gfx::Bitmap const& bitmap)
+{
+    VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRx8888 || bitmap.format() == Gfx::BitmapFormat::BGRA8888);
+    bind_texture(texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmap.width(), bitmap.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, bitmap.scanline(0));
+    verify_no_error();
+}
+
+void delete_texture(Texture const& texture)
+{
+    glDeleteTextures(1, &texture.id);
+    verify_no_error();
+}
+
+void set_uniform(Uniform const& uniform, float value1, float value2, float value3, float value4)
+{
+    glUniform4f(uniform.id, value1, value2, value3, value4);
+    verify_no_error();
+}
+
+void set_vertex_attribute(VertexAttribute const& attribute, Span<float> values, int number_of_components)
+{
+    glVertexAttribPointer(attribute.id, number_of_components, GL_FLOAT, GL_FALSE, number_of_components * sizeof(float), values.data());
+    glEnableVertexAttribArray(attribute.id);
+    verify_no_error();
+}
+
+void set_texture_scale_mode(ScalingMode scaling_mode)
+{
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scaling_mode == ScalingMode::Nearest ? GL_NEAREST : GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scaling_mode == ScalingMode::Nearest ? GL_NEAREST : GL_LINEAR);
+    verify_no_error();
+}
+
+void clear_color(Gfx::Color const& color)
+{
+    glClearColor(color.red() / 255.0f, color.green() / 255.0f, color.blue() / 255.0f, color.alpha() / 255.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    verify_no_error();
+}
+
+void draw_arrays(DrawPrimitive draw_primitive, size_t count)
+{
+    GLenum mode = GL_TRIANGLES;
+    if (draw_primitive == DrawPrimitive::TriangleFan)
+        mode = GL_TRIANGLE_FAN;
+    glDrawArrays(mode, 0, count);
+    verify_no_error();
+}
+
+}

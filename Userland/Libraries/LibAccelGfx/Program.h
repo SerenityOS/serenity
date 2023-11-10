@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
-#include <GL/gl.h>
+#include <LibAccelGfx/GL.h>
 
 namespace AccelGfx {
 
@@ -18,18 +18,18 @@ public:
     static Program create(char const* vertex_shader_source, char const* fragment_shader_source);
 
     void use();
-    GLuint get_attribute_location(char const* name);
-    GLuint get_uniform_location(char const* name);
+    GL::VertexAttribute get_attribute_location(char const* name);
+    GL::Uniform get_uniform_location(char const* name);
 
     ~Program();
 
 private:
-    Program(GLuint id)
-        : m_id(id)
+    Program(GL::Program program)
+        : m_program(program)
     {
     }
 
-    GLuint m_id { 0 };
+    GL::Program m_program;
 };
 
 }
