@@ -20,6 +20,7 @@ set(SOURCES
     Bindings/MainThreadVM.cpp
     Bindings/OptionConstructor.cpp
     Bindings/PlatformObject.cpp
+    Clipboard/Clipboard.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
     CSS/Angle.cpp
