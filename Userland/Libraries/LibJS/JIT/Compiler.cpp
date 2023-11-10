@@ -175,7 +175,7 @@ void Compiler::compile_jump(Bytecode::Op::Jump const& op)
 
 static bool cxx_to_boolean(VM&, Value value)
 {
-    return value.to_boolean();
+    return value.to_boolean_slow_case();
 }
 
 void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)

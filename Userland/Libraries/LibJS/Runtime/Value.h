@@ -439,8 +439,9 @@ public:
         return static_cast<i32>(m_value.encoded & 0xFFFFFFFF);
     }
 
-private:
     bool to_boolean_slow_case() const;
+
+private:
     ThrowCompletionOr<Value> to_number_slow_case(VM&) const;
     ThrowCompletionOr<Value> to_numeric_slow_case(VM&) const;
     ThrowCompletionOr<Value> to_primitive_slow_case(VM&, PreferredType) const;
