@@ -22,11 +22,13 @@ private:
     static constexpr int max_code_size = 12;
 
 public:
-    explicit LZWDecoder(MaybeOwned<InputStream> lzw_stream, u8 min_code_size)
+    explicit LZWDecoder(MaybeOwned<InputStream> lzw_stream, u8 min_code_size, i32 offset_for_size_change = 0)
         : m_bit_stream(move(lzw_stream))
         , m_code_size(min_code_size)
         , m_original_code_size(min_code_size)
         , m_table_capacity(AK::exp2<u32>(min_code_size))
+        , m_offset_for_size_change(offset_for_size_change)
+
     {
         init_code_table();
     }
@@ -102,7 +104,7 @@ private:
     {
         if (entry.size() > 1 && m_code_table.size() < 4096) {
             m_code_table.append(entry);
-            if (m_code_table.size() >= m_table_capacity && m_code_size < max_code_size) {
+            if (m_code_table.size() >= (m_table_capacity + m_offset_for_size_change) && m_code_size < max_code_size) {
                 ++m_code_size;
                 m_table_capacity *= 2;
             }
@@ -118,6 +120,7 @@ private:
     u8 m_original_code_size { 0 };
 
     u32 m_table_capacity { 0 };
+    i32 m_offset_for_size_change {};
 
     u16 m_current_code { 0 };
     Vector<u8> m_output {};
