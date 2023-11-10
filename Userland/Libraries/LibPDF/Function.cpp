@@ -619,7 +619,7 @@ PDFErrorOr<void> PostScriptCalculatorFunction::execute(Vector<Token> const& toke
             TRY(stack.pop());
             break;
         case OperatorType::Roll: {
-            int j = -(int)TRY(stack.pop());
+            int j = (int)TRY(stack.pop());
             int n = (int)TRY(stack.pop());
             if (n < 0)
                 return Error { Error::Type::RenderingUnsupported, "PostScript roll with negative argument"_string };
@@ -633,9 +633,9 @@ PDFErrorOr<void> PostScriptCalculatorFunction::execute(Vector<Token> const& toke
                 return Error { Error::Type::RenderingUnsupported, "PostScript roll with argument larger than stack"_string };
             // http://pointer-overloading.blogspot.com/2013/09/algorithms-rotating-one-dimensional.html
             auto elements = stack.stack.span().slice(stack.top - n, n);
+            elements.reverse();
             elements.slice(0, j).reverse();
             elements.slice(j).reverse();
-            elements.reverse();
             break;
         }
         }
