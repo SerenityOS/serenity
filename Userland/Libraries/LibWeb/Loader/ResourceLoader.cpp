@@ -234,8 +234,10 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         if (request.page().has_value())
             m_page = request.page().value();
 
-        if (!m_page.has_value())
+        if (!m_page.has_value()) {
+            log_failure(request, "INTERNAL ERROR: No Page for request");
             return;
+        }
 
         FileRequest file_request(url.serialize_path(), [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request](ErrorOr<i32> file_or_error) {
             --m_pending_loads;
