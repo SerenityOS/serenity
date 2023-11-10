@@ -97,19 +97,51 @@ static PDF::Value make_array(Vector<float> floats)
     return PDF::Value { adopt_ref(*new PDF::ArrayObject(move(values))) };
 }
 
-static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_postscript_function(StringView program, Vector<float> domain, Vector<float> range)
+static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_function(int type, ReadonlyBytes data, Vector<float> domain, Vector<float> range, Function<void(HashMap<DeprecatedFlyString, PDF::Value>&)> extra_keys = nullptr)
 {
     HashMap<DeprecatedFlyString, PDF::Value> map;
-    map.set(PDF::CommonNames::FunctionType, PDF::Value { 4 });
+    map.set(PDF::CommonNames::FunctionType, PDF::Value { type });
     map.set(PDF::CommonNames::Domain, make_array(move(domain)));
     map.set(PDF::CommonNames::Range, make_array(move(range)));
+    if (extra_keys)
+        extra_keys(map);
     auto dict = adopt_ref(*new PDF::DictObject(move(map)));
-    auto stream = adopt_ref(*new PDF::StreamObject(dict, MUST(ByteBuffer::copy(program.bytes()))));
+    auto stream = adopt_ref(*new PDF::StreamObject(dict, MUST(ByteBuffer::copy(data))));
 
     // document isn't used for anything, but UBSan complains about a (harmless) method call on a null object without it.
     auto file = MUST(Core::MappedFile::map("linearized.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     return PDF::Function::create(document, stream);
+}
+
+static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_sampled_function(ReadonlyBytes data, Vector<float> domain, Vector<float> range, Vector<float> sizes)
+{
+    return make_function(0, data, move(domain), move(range), [&sizes](auto& map) {
+        map.set(PDF::CommonNames::Size, make_array(sizes));
+        map.set(PDF::CommonNames::BitsPerSample, PDF::Value { 8 });
+    });
+}
+
+TEST_CASE(sampled)
+{
+    auto f1 = MUST(make_sampled_function(Vector<u8> { { 0, 255, 0 } }, { 0.0f, 1.0f }, { 0.0f, 10.0f }, { 3 }));
+    EXPECT_EQ(MUST(f1->evaluate(Vector<float> { 0.0f })), Vector<float> { 0.0f });
+    EXPECT_EQ(MUST(f1->evaluate(Vector<float> { 0.25f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f1->evaluate(Vector<float> { 0.5f })), Vector<float> { 10.0f });
+    EXPECT_EQ(MUST(f1->evaluate(Vector<float> { 0.75f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f1->evaluate(Vector<float> { 1.0f })), Vector<float> { 0.0f });
+
+    auto f2 = MUST(make_sampled_function(Vector<u8> { { 0, 255, 0, 255, 0, 255 } }, { 0.0f, 1.0f }, { 0.0f, 10.0f, 0.0f, 8.0f }, { 3 }));
+    EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.0f })), (Vector<float> { 0.0f, 8.0f }));
+    EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.25f })), (Vector<float> { 5.0f, 4.0f }));
+    EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.5f })), (Vector<float> { 10.0f, 0.0f }));
+    EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.75f })), (Vector<float> { 5.0f, 4.0f }));
+    EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 1.0f })), (Vector<float> { 0.0f, 8.0f }));
+}
+
+static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_postscript_function(StringView program, Vector<float> domain, Vector<float> range)
+{
+    return make_function(4, program.bytes(), move(domain), move(range));
 }
 
 static NonnullRefPtr<PDF::Function> check_postscript_function(StringView program, Vector<float> domain, Vector<float> range)

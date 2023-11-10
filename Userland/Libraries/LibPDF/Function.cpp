@@ -26,6 +26,8 @@ public:
     virtual PDFErrorOr<ReadonlySpan<float>> evaluate(ReadonlySpan<float>) const override;
 
 private:
+    SampledFunction(NonnullRefPtr<StreamObject>);
+
     Vector<Bound> m_domain;
     Vector<Bound> m_range;
 
@@ -41,10 +43,17 @@ private:
     Vector<Bound> m_encode;
     Vector<Bound> m_decode;
 
+    NonnullRefPtr<StreamObject> m_stream;
     ReadonlyBytes m_sample_data;
 
     Vector<float> mutable m_outputs;
 };
+
+SampledFunction::SampledFunction(NonnullRefPtr<StreamObject> stream)
+    : m_stream(move(stream))
+    , m_sample_data(m_stream->bytes())
+{
+}
 
 PDFErrorOr<NonnullRefPtr<SampledFunction>>
 SampledFunction::create(Document* document, Vector<Bound> domain, Optional<Vector<Bound>> range, NonnullRefPtr<StreamObject> stream)
@@ -127,7 +136,7 @@ SampledFunction::create(Document* document, Vector<Bound> domain, Optional<Vecto
     if (stream->bytes().size() < ceil_div(total_bits, 8ull))
         return Error { Error::Type::MalformedPDF, "Function type 0 stream too small" };
 
-    auto function = adopt_ref(*new SampledFunction());
+    auto function = adopt_ref(*new SampledFunction(stream));
     function->m_domain = move(domain);
     function->m_range = move(range.value());
     function->m_sizes = move(sizes);
@@ -135,7 +144,6 @@ SampledFunction::create(Document* document, Vector<Bound> domain, Optional<Vecto
     function->m_order = order;
     function->m_encode = move(encode);
     function->m_decode = move(decode);
-    function->m_sample_data = stream->bytes();
     function->m_outputs.resize(function->m_range.size());
     return function;
 }
@@ -164,6 +172,12 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> x)
 
     float e0 = floor(ec);
     float e1 = ceil(ec);
+    if (e0 == e1) {
+        if (e0 == 0.0f)
+            e1 = 1.0f;
+        else
+            e0 = e1 - 1.0f;
+    }
     size_t plane_size = m_sizes[0];
     for (size_t i = 0; i < m_range.size(); ++i) {
         float s0 = m_sample_data[(size_t)e0 + i * plane_size];
