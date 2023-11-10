@@ -16,6 +16,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Bytecode/CodeGenerationError.h>
+#include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
@@ -153,6 +154,12 @@ public:
         : ASTNode(move(source_range))
     {
     }
+
+    Bytecode::Executable const* bytecode_executable() const { return m_bytecode_executable; }
+    void set_bytecode_executable(Bytecode::Executable const* bytecode_executable) { m_bytecode_executable = bytecode_executable; }
+
+private:
+    RefPtr<Bytecode::Executable> m_bytecode_executable;
 };
 
 // 14.13 Labelled Statements, https://tc39.es/ecma262/#sec-labelled-statements
@@ -678,6 +685,7 @@ struct FunctionParameter {
     Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>> binding;
     RefPtr<Expression const> default_value;
     bool is_rest { false };
+    RefPtr<Bytecode::Executable> bytecode_executable {};
 };
 
 class FunctionNode {
@@ -721,7 +729,7 @@ private:
     DeprecatedString m_source_text;
     NonnullRefPtr<Statement const> m_body;
     Vector<FunctionParameter> const m_parameters;
-    const i32 m_function_length;
+    i32 const m_function_length;
     FunctionKind m_kind;
     bool m_is_strict_mode : 1 { false };
     bool m_might_need_arguments_object : 1 { false };

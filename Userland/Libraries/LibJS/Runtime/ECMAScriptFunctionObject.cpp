@@ -1174,8 +1174,13 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         for (auto& parameter : m_formal_parameters) {
             if (!parameter.default_value)
                 continue;
-            auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
-            m_default_parameter_bytecode_executables.append(move(executable));
+            if (parameter.bytecode_executable.is_null()) {
+                auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index++, m_name)));
+                const_cast<FunctionParameter&>(parameter).bytecode_executable = executable;
+                m_default_parameter_bytecode_executables.append(move(executable));
+            } else {
+                m_default_parameter_bytecode_executables.append(*parameter.bytecode_executable);
+            }
         }
     }
 
@@ -1186,8 +1191,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             return declaration_result.release_error();
     }
 
-    if (!m_bytecode_executable)
-        m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
+    if (!m_bytecode_executable) {
+        if (!m_ecmascript_code->bytecode_executable())
+            const_cast<Statement&>(*m_ecmascript_code).set_bytecode_executable(TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name)));
+        m_bytecode_executable = m_ecmascript_code->bytecode_executable();
+    }
 
     if (m_kind == FunctionKind::Async) {
         if (declaration_result.is_throw_completion()) {
