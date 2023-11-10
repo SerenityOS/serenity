@@ -9,6 +9,8 @@
         println(structuredClone(BigInt("0x1fffffffffffff")));
         println(structuredClone(Date.UTC(2023, 7, 23)));
         println(structuredClone(/abc/gimsuy));
+        println(structuredClone(new Error()));
+        println(structuredClone(new URIError("hello")));
 
         {
             let arrayBuffer = new ArrayBuffer(6);
