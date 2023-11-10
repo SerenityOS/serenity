@@ -36,11 +36,28 @@ struct X86_64Assembler {
         R13 = 13,
         R14 = 14,
         R15 = 15,
+        XMM0 = 0,
+        XMM1 = 1,
+        XMM2 = 2,
+        XMM3 = 3,
+        XMM4 = 4,
+        XMM5 = 5,
+        XMM6 = 6,
+        XMM7 = 7,
+        XMM8 = 8,
+        XMM9 = 9,
+        XMM10 = 10,
+        XMM11 = 11,
+        XMM12 = 12,
+        XMM13 = 13,
+        XMM14 = 14,
+        XMM15 = 15,
     };
 
     struct Operand {
         enum class Type {
             Reg,
+            FReg,
             Imm,
             Mem64BaseAndOffset,
         };
@@ -54,6 +71,14 @@ struct X86_64Assembler {
         {
             Operand operand;
             operand.type = Type::Reg;
+            operand.reg = reg;
+            return operand;
+        }
+
+        static Operand FloatRegister(Reg reg)
+        {
+            Operand operand;
+            operand.type = Type::FReg;
             operand.reg = reg;
             return operand;
         }
@@ -149,7 +174,7 @@ struct X86_64Assembler {
 
     void emit_modrm_rm(Operand dst, Operand src, Patchable patchable = Patchable::No)
     {
-        VERIFY(dst.type == Operand::Type::Reg);
+        VERIFY(dst.type == Operand::Type::Reg || dst.type == Operand::Type::FReg);
         ModRM raw {};
         raw.reg = encode_reg(dst.reg);
         raw.rm = encode_reg(src.reg);
@@ -158,7 +183,7 @@ struct X86_64Assembler {
 
     void emit_modrm_mr(Operand dst, Operand src, Patchable patchable = Patchable::No)
     {
-        VERIFY(src.type == Operand::Type::Reg);
+        VERIFY(src.type == Operand::Type::Reg || src.type == Operand::Type::FReg);
         ModRM raw {};
         raw.reg = encode_reg(src.reg);
         raw.rm = encode_reg(dst.reg);
@@ -171,6 +196,7 @@ struct X86_64Assembler {
         VERIFY(rm.type != Operand::Type::Imm);
 
         switch (rm.type) {
+        case Operand::Type::FReg:
         case Operand::Type::Reg:
             // FIXME: There is mod:00,rm:101(EBP?) -> disp32, that might be something else
             raw.mode = ModRM::Reg;
@@ -239,8 +265,8 @@ struct X86_64Assembler {
     }
     void emit_rex_for_mr(Operand dst, Operand src, REX_W W)
     {
-        VERIFY(dst.is_register_or_memory());
-        VERIFY(src.type == Operand::Type::Reg);
+        VERIFY(dst.is_register_or_memory() || dst.type == Operand::Type::FReg);
+        VERIFY(src.type == Operand::Type::Reg || src.type == Operand::Type::FReg);
         if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
             return;
         REX rex {
@@ -254,8 +280,8 @@ struct X86_64Assembler {
 
     void emit_rex_for_rm(Operand dst, Operand src, REX_W W)
     {
-        VERIFY(src.is_register_or_memory());
-        VERIFY(dst.type == Operand::Type::Reg);
+        VERIFY(src.is_register_or_memory() || src.type == Operand::Type::FReg);
+        VERIFY(dst.type == Operand::Type::Reg || dst.type == Operand::Type::FReg);
         if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
             return;
         REX rex {
@@ -318,6 +344,24 @@ struct X86_64Assembler {
             emit_rex_for_rm(dst, src, REX_W::Yes);
             emit8(0x8b);
             emit_modrm_rm(dst, src, patchable);
+            return;
+        }
+
+        if (dst.type == Operand::Type::FReg && src.is_register_or_memory()) {
+            emit8(0x66);
+            emit_rex_for_rm(dst, src, REX_W::Yes);
+            emit8(0x0f);
+            emit8(0x6e);
+            emit_modrm_rm(dst, src, patchable);
+            return;
+        }
+
+        if (dst.is_register_or_memory() && src.type == Operand::Type::FReg) {
+            emit8(0x66);
+            emit_rex_for_mr(dst, src, REX_W::Yes);
+            emit8(0x0f);
+            emit8(0x7e);
+            emit_modrm_mr(dst, src, patchable);
             return;
         }
 
