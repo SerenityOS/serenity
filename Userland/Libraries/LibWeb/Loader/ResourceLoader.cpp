@@ -391,13 +391,6 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         error_callback(not_implemented_error, {}, {}, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, SuccessCallback success_callback, ErrorCallback error_callback, Optional<u32> timeout, TimeoutCallback timeout_callback)
-{
-    LoadRequest request;
-    request.set_url(url);
-    load(request, move(success_callback), move(error_callback), timeout, move(timeout_callback));
-}
-
 bool ResourceLoader::is_port_blocked(int port)
 {
     int ports[] { 1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42,
