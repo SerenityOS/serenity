@@ -60,12 +60,12 @@ public:
         m_current_code = TRY(m_bit_stream->template read_bits<u16>(m_code_size));
 
         if (m_current_code > m_code_table.size()) {
-            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, invalid code: {}, code table size: {}",
+            dbgln_if(LZW_DEBUG, "Corrupted LZW stream, invalid code: {}, code table size: {}",
                 m_current_code,
                 m_code_table.size());
             return Error::from_string_literal("Corrupted LZW stream, invalid code");
         } else if (m_current_code == m_code_table.size() && m_output.is_empty()) {
-            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, valid new code but output buffer is empty: {}, code table size: {}",
+            dbgln_if(LZW_DEBUG, "Corrupted LZW stream, valid new code but output buffer is empty: {}, code table size: {}",
                 m_current_code,
                 m_code_table.size());
             return Error::from_string_literal("Corrupted LZW stream, valid new code but output buffer is empty");
