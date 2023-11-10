@@ -17,8 +17,6 @@ struct X86_64Assembler {
     {
     }
 
-    Vector<u8>& m_output;
-
     enum class Reg {
         RAX = 0,
         RCX = 1,
@@ -160,144 +158,6 @@ struct X86_64Assembler {
         Yes,
         No,
     };
-
-    union ModRM {
-        static constexpr u8 Mem = 0b00;
-        static constexpr u8 MemDisp8 = 0b01;
-        static constexpr u8 MemDisp32 = 0b10;
-        static constexpr u8 Reg = 0b11;
-        struct {
-            u8 rm : 3;
-            u8 reg : 3;
-            u8 mode : 2;
-        };
-        u8 raw;
-    };
-
-    void emit_modrm_slash(u8 slash, Operand rm, Patchable patchable = Patchable::No)
-    {
-        ModRM raw;
-        raw.rm = encode_reg(rm.reg);
-        raw.reg = slash;
-        emit_modrm(raw, rm, patchable);
-    }
-
-    void emit_modrm_rm(Operand dst, Operand src, Patchable patchable = Patchable::No)
-    {
-        VERIFY(dst.type == Operand::Type::Reg || dst.type == Operand::Type::FReg);
-        ModRM raw {};
-        raw.reg = encode_reg(dst.reg);
-        raw.rm = encode_reg(src.reg);
-        emit_modrm(raw, src, patchable);
-    }
-
-    void emit_modrm_mr(Operand dst, Operand src, Patchable patchable = Patchable::No)
-    {
-        VERIFY(src.type == Operand::Type::Reg || src.type == Operand::Type::FReg);
-        ModRM raw {};
-        raw.reg = encode_reg(src.reg);
-        raw.rm = encode_reg(dst.reg);
-        emit_modrm(raw, dst, patchable);
-    }
-
-    void emit_modrm(ModRM raw, Operand rm, Patchable patchable)
-    {
-        // FIXME: rm:100 (RSP) is reserved as the SIB marker
-        VERIFY(rm.type != Operand::Type::Imm);
-
-        switch (rm.type) {
-        case Operand::Type::FReg:
-        case Operand::Type::Reg:
-            // FIXME: There is mod:00,rm:101(EBP?) -> disp32, that might be something else
-            raw.mode = ModRM::Reg;
-            emit8(raw.raw);
-            break;
-        case Operand::Type::Mem64BaseAndOffset: {
-            auto disp = rm.offset_or_immediate;
-            if (patchable == Patchable::Yes || !rm.fits_in_i8()) {
-                raw.mode = ModRM::MemDisp32;
-                emit8(raw.raw);
-                emit32(disp);
-            } else if (disp == 0) {
-                raw.mode = ModRM::Mem;
-                emit8(raw.raw);
-            } else {
-                raw.mode = ModRM::MemDisp8;
-                emit8(raw.raw);
-                emit8(disp & 0xff);
-            }
-            break;
-        }
-        case Operand::Type::Imm:
-            VERIFY_NOT_REACHED();
-        }
-    }
-
-    union REX {
-        struct {
-            u8 B : 1; // ModRM::RM
-            u8 X : 1; // SIB::Index
-            u8 R : 1; // ModRM::Reg
-            u8 W : 1; // Operand size override
-            u8 _ : 4 { 0b0100 };
-        };
-        u8 raw;
-    };
-
-    enum class REX_W : bool {
-        No = 0,
-        Yes = 1
-    };
-
-    void emit_rex_for_OI(Operand arg, REX_W W)
-    {
-        emit_rex_for_slash(arg, W);
-    }
-
-    void emit_rex_for_slash(Operand arg, REX_W W)
-    {
-        VERIFY(arg.is_register_or_memory());
-
-        if (W == REX_W::No && to_underlying(arg.reg) < 8)
-            return;
-
-        REX rex {
-            .B = to_underlying(arg.reg) >= 8,
-            .X = 0,
-            .R = 0,
-            .W = to_underlying(W)
-        };
-        emit8(rex.raw);
-    }
-    void emit_rex_for_mr(Operand dst, Operand src, REX_W W)
-    {
-        VERIFY(dst.is_register_or_memory() || dst.type == Operand::Type::FReg);
-        VERIFY(src.type == Operand::Type::Reg || src.type == Operand::Type::FReg);
-        if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
-            return;
-        REX rex {
-            .B = to_underlying(dst.reg) >= 8,
-            .X = 0,
-            .R = to_underlying(src.reg) >= 8,
-            .W = to_underlying(W)
-        };
-        emit8(rex.raw);
-    }
-
-    void emit_rex_for_rm(Operand dst, Operand src, REX_W W)
-    {
-        VERIFY(src.is_register_or_memory() || src.type == Operand::Type::FReg);
-        VERIFY(dst.type == Operand::Type::Reg || dst.type == Operand::Type::FReg);
-        if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
-            return;
-        REX rex {
-            .B = to_underlying(src.reg) >= 8,
-            .X = 0,
-            .R = to_underlying(dst.reg) >= 8,
-            .W = to_underlying(W)
-        };
-        emit8(rex.raw);
-    }
 
     void shift_right(Operand dst, Operand count)
     {
@@ -442,15 +302,7 @@ struct X86_64Assembler {
     }
 
     struct Label {
-        Optional<size_t> offset_of_label_in_instruction_stream;
-        Vector<size_t> jump_slot_offsets_in_instruction_stream;
-
-        void add_jump(X86_64Assembler& assembler, size_t offset)
-        {
-            jump_slot_offsets_in_instruction_stream.append(offset);
-            if (offset_of_label_in_instruction_stream.has_value())
-                link_jump(assembler, offset);
-        }
+        friend struct X86_64Assembler;
 
         void link(X86_64Assembler& assembler)
         {
@@ -466,6 +318,16 @@ struct X86_64Assembler {
         }
 
     private:
+        Optional<size_t> offset_of_label_in_instruction_stream;
+        Vector<size_t> jump_slot_offsets_in_instruction_stream;
+
+        void add_jump(X86_64Assembler& assembler, size_t offset)
+        {
+            jump_slot_offsets_in_instruction_stream.append(offset);
+            if (offset_of_label_in_instruction_stream.has_value())
+                link_jump(assembler, offset);
+        }
+
         void link_jump(X86_64Assembler& assembler, size_t offset_in_instruction_stream)
         {
             auto offset = offset_of_label_in_instruction_stream.value() - offset_in_instruction_stream;
@@ -534,23 +396,6 @@ struct X86_64Assembler {
             emit8(0x0f);
             emit8(0x2e);
             emit_modrm_rm(lhs, rhs);
-        } else {
-            VERIFY_NOT_REACHED();
-        }
-    }
-
-    void test(Operand lhs, Operand rhs)
-    {
-        if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Reg) {
-            emit_rex_for_mr(lhs, rhs, REX_W::Yes);
-            emit8(0x85);
-            emit_modrm_mr(lhs, rhs);
-        } else if (lhs.type != Operand::Type::Imm && rhs.type == Operand::Type::Imm) {
-            VERIFY(rhs.fits_in_i32());
-            emit_rex_for_slash(lhs, REX_W::Yes);
-            emit8(0xf7);
-            emit_modrm_slash(0, lhs);
-            emit32(rhs.offset_or_immediate);
         } else {
             VERIFY_NOT_REACHED();
         }
@@ -672,12 +517,7 @@ struct X86_64Assembler {
     void mul32(Operand dest, Operand src, Optional<Label&> overflow_label)
     {
         // imul32 dest, src (32-bit signed)
-        if (dest.type == Operand::Type::Reg && src.type == Operand::Type::Reg) {
-            emit_rex_for_rm(dest, src, REX_W::No);
-            emit8(0x0f);
-            emit8(0xaf);
-            emit_modrm_rm(dest, src);
-        } else if (dest.type == Operand::Type::Reg && src.type == Operand::Type::Mem64BaseAndOffset) {
+        if (dest.type == Operand::Type::Reg && src.is_register_or_memory()) {
             emit_rex_for_rm(dest, src, REX_W::No);
             emit8(0x0f);
             emit8(0xaf);
@@ -1046,6 +886,164 @@ struct X86_64Assembler {
     {
         // int3
         emit8(0xcc);
+    }
+
+private:
+    Vector<u8>& m_output;
+
+    union ModRM {
+        static constexpr u8 Mem = 0b00;
+        static constexpr u8 MemDisp8 = 0b01;
+        static constexpr u8 MemDisp32 = 0b10;
+        static constexpr u8 Reg = 0b11;
+        struct {
+            u8 rm : 3;
+            u8 reg : 3;
+            u8 mode : 2;
+        };
+        u8 raw;
+    };
+
+    void emit_modrm_slash(u8 slash, Operand rm, Patchable patchable = Patchable::No)
+    {
+        ModRM raw;
+        raw.rm = encode_reg(rm.reg);
+        raw.reg = slash;
+        emit_modrm(raw, rm, patchable);
+    }
+
+    void emit_modrm_rm(Operand dst, Operand src, Patchable patchable = Patchable::No)
+    {
+        VERIFY(dst.type == Operand::Type::Reg || dst.type == Operand::Type::FReg);
+        ModRM raw {};
+        raw.reg = encode_reg(dst.reg);
+        raw.rm = encode_reg(src.reg);
+        emit_modrm(raw, src, patchable);
+    }
+
+    void emit_modrm_mr(Operand dst, Operand src, Patchable patchable = Patchable::No)
+    {
+        VERIFY(src.type == Operand::Type::Reg || src.type == Operand::Type::FReg);
+        ModRM raw {};
+        raw.reg = encode_reg(src.reg);
+        raw.rm = encode_reg(dst.reg);
+        emit_modrm(raw, dst, patchable);
+    }
+
+    void emit_modrm(ModRM raw, Operand rm, Patchable patchable)
+    {
+        // FIXME: rm:100 (RSP) is reserved as the SIB marker
+        VERIFY(rm.type != Operand::Type::Imm);
+
+        switch (rm.type) {
+        case Operand::Type::FReg:
+        case Operand::Type::Reg:
+            // FIXME: There is mod:00,rm:101(EBP?) -> disp32, that might be something else
+            raw.mode = ModRM::Reg;
+            emit8(raw.raw);
+            break;
+        case Operand::Type::Mem64BaseAndOffset: {
+            auto disp = rm.offset_or_immediate;
+            if (patchable == Patchable::Yes || !rm.fits_in_i8()) {
+                raw.mode = ModRM::MemDisp32;
+                emit8(raw.raw);
+                emit32(disp);
+            } else if (disp == 0) {
+                raw.mode = ModRM::Mem;
+                emit8(raw.raw);
+            } else {
+                raw.mode = ModRM::MemDisp8;
+                emit8(raw.raw);
+                emit8(disp & 0xff);
+            }
+            break;
+        }
+        case Operand::Type::Imm:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    union REX {
+        struct {
+            u8 B : 1; // ModRM::RM
+            u8 X : 1; // SIB::Index
+            u8 R : 1; // ModRM::Reg
+            u8 W : 1; // Operand size override
+            u8 _ : 4 { 0b0100 };
+        };
+        u8 raw;
+    };
+
+    enum class REX_W : bool {
+        No = 0,
+        Yes = 1
+    };
+
+    void emit_rex_for_OI(Operand arg, REX_W W)
+    {
+        emit_rex_for_slash(arg, W);
+    }
+
+    void emit_rex_for_slash(Operand arg, REX_W W)
+    {
+        VERIFY(arg.is_register_or_memory());
+
+        if (W == REX_W::No && to_underlying(arg.reg) < 8)
+            return;
+
+        REX rex {
+            .B = to_underlying(arg.reg) >= 8,
+            .X = 0,
+            .R = 0,
+            .W = to_underlying(W)
+        };
+        emit8(rex.raw);
+    }
+    void emit_rex_for_mr(Operand dst, Operand src, REX_W W)
+    {
+        VERIFY(dst.is_register_or_memory() || dst.type == Operand::Type::FReg);
+        VERIFY(src.type == Operand::Type::Reg || src.type == Operand::Type::FReg);
+        if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
+            return;
+        REX rex {
+            .B = to_underlying(dst.reg) >= 8,
+            .X = 0,
+            .R = to_underlying(src.reg) >= 8,
+            .W = to_underlying(W)
+        };
+        emit8(rex.raw);
+    }
+
+    void emit_rex_for_rm(Operand dst, Operand src, REX_W W)
+    {
+        VERIFY(src.is_register_or_memory() || src.type == Operand::Type::FReg);
+        VERIFY(dst.type == Operand::Type::Reg || dst.type == Operand::Type::FReg);
+        if (W == REX_W::No && to_underlying(dst.reg) < 8 && to_underlying(src.reg) < 8)
+            return;
+        REX rex {
+            .B = to_underlying(src.reg) >= 8,
+            .X = 0,
+            .R = to_underlying(dst.reg) >= 8,
+            .W = to_underlying(W)
+        };
+        emit8(rex.raw);
+    }
+
+    void test(Operand lhs, Operand rhs)
+    {
+        if (lhs.is_register_or_memory() && rhs.type == Operand::Type::Reg) {
+            emit_rex_for_mr(lhs, rhs, REX_W::Yes);
+            emit8(0x85);
+            emit_modrm_mr(lhs, rhs);
+        } else if (lhs.type != Operand::Type::Imm && rhs.type == Operand::Type::Imm) {
+            VERIFY(rhs.fits_in_i32());
+            emit_rex_for_slash(lhs, REX_W::Yes);
+            emit8(0xf7);
+            emit_modrm_slash(0, lhs);
+            emit32(rhs.offset_or_immediate);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
     }
 };
 
