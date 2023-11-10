@@ -137,6 +137,29 @@ TEST_CASE(sampled)
     EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.5f })), (Vector<float> { 10.0f, 0.0f }));
     EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.75f })), (Vector<float> { 5.0f, 4.0f }));
     EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 1.0f })), (Vector<float> { 0.0f, 8.0f }));
+
+    auto f3 = MUST(make_sampled_function(Vector<u8> { { 0, 255, 0, 255, 0, 255 } }, { 0.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 10.0f }, { 3, 2 }));
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.0f, 0.0f })), Vector<float> { 0.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.25f, 0.0f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.5f, 0.0f })), Vector<float> { 10.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.75f, 0.0f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 1.0f, 0.0f })), Vector<float> { 0.0f });
+
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.0f, 0.5f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.25f, 0.5f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.5f, 0.5f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.75f, 0.5f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 1.0f, 0.5f })), Vector<float> { 5.0f });
+
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.0f, 1.0f })), Vector<float> { 10.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.25f, 1.0f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.5f, 1.0f })), Vector<float> { 0.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 0.75f, 1.0f })), Vector<float> { 5.0f });
+    EXPECT_EQ(MUST(f3->evaluate(Vector<float> { 1.0f, 1.0f })), Vector<float> { 10.0f });
+
+    auto f4 = MUST(make_sampled_function(Vector<u8> { { 0, 255, 255, 0, 0, 255, 255, 0 } }, { 0.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 10.0f, 0.0f, 8.0f }, { 2, 2 }));
+    EXPECT_EQ(MUST(f4->evaluate(Vector<float> { 0.0f, 0.0f })), (Vector<float> { 0.0f, 8.0f }));
+    EXPECT_EQ(MUST(f4->evaluate(Vector<float> { 0.5f, 0.5f })), (Vector<float> { 5.0f, 4.0f }));
 }
 
 static PDF::PDFErrorOr<NonnullRefPtr<PDF::Function>> make_postscript_function(StringView program, Vector<float> domain, Vector<float> range)
