@@ -361,7 +361,7 @@ private:
     void update_packet(ByteBuffer& packet);
     void update_hash(ReadonlyBytes in, size_t header_size);
 
-    void write_packet(ByteBuffer& packet);
+    void write_packet(ByteBuffer& packet, bool immediately = false);
 
     ByteBuffer build_client_key_exchange();
     ByteBuffer build_server_key_exchange();

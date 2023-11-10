@@ -32,11 +32,11 @@ ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 void TLSv12::alert(AlertLevel level, AlertDescription code)
 {
     auto the_alert = build_alert(level == AlertLevel::FATAL, (u8)code);
-    write_packet(the_alert);
+    write_packet(the_alert, true);
     MUST(flush());
 }
 
-void TLSv12::write_packet(ByteBuffer& packet)
+void TLSv12::write_packet(ByteBuffer& packet, bool immediately)
 {
     auto schedule_or_perform_flush = [&](bool immediate) {
         if (m_context.connection_status > ConnectionStatus::Disconnected) {
@@ -61,7 +61,7 @@ void TLSv12::write_packet(ByteBuffer& packet)
         // Toooooo bad, drop the record on the ground.
         return;
     }
-    schedule_or_perform_flush(false);
+    schedule_or_perform_flush(immediately);
 }
 
 void TLSv12::update_packet(ByteBuffer& packet)
