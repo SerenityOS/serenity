@@ -264,7 +264,21 @@ public:
                 TRY(serialize_string(m_serialized, *message));
         }
 
-        // 15, 16, 18 - 24: FIXME: Serialize other data types
+        // 20. Otherwise, if value is a platform object, then throw a "DataCloneError" DOMException.
+        else if (value.is_object() && is<Bindings::PlatformObject>(value.as_object())) {
+            return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize platform objects"_fly_string));
+        }
+
+        // 21. Otherwise, if IsCallable(value) is true, then throw a "DataCloneError" DOMException.
+        else if (value.is_function()) {
+            return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize functions"_fly_string));
+        }
+
+        // FIXME: 22. Otherwise, if value has any internal slot other than [[Prototype]] or [[Extensible]], then throw a "DataCloneError" DOMException.
+
+        // FIXME: 23. Otherwise, if value is an exotic object and value is not the %Object.prototype% intrinsic object associated with any realm, then throw a "DataCloneError" DOMException.
+
+        // 15, 16, 18, 19, 24: FIXME: Serialize other data types
         else {
             return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"_fly_string));
         }
