@@ -408,6 +408,8 @@ static void convert_jacobian_to_affine(JacobianPoint& point)
     temp = modular_multiply(temp, point.z);
     temp = modular_inverse(temp);
     point.y = modular_multiply(point.y, temp);
+    // Z' = 1
+    point.z = to_montgomery(1u);
 }
 
 static bool is_point_on_curve(JacobianPoint const& point)
@@ -426,7 +428,7 @@ static bool is_point_on_curve(JacobianPoint const& point)
     temp = modular_sub(temp, to_montgomery(B));
     temp = modular_reduce(temp);
 
-    return temp.is_zero_constant_time();
+    return temp.is_zero_constant_time() && point.z.is_equal_to_constant_time(to_montgomery(1u));
 }
 
 ErrorOr<ByteBuffer> SECP256r1::generate_private_key()
