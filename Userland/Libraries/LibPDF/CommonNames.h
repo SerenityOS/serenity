@@ -22,6 +22,7 @@
     X(BaseFont)                   \
     X(BitsPerComponent)           \
     X(BlackPoint)                 \
+    X(Bounds)                     \
     X(C)                          \
     X(C0)                         \
     X(C1)                         \
@@ -59,6 +60,7 @@
     X(Differences)                \
     X(Domain)                     \
     X(E)                          \
+    X(Encode)                     \
     X(Encoding)                   \
     X(Encrypt)                    \
     X(EncryptMetadata)            \
@@ -83,6 +85,7 @@
     X(FontFile2)                  \
     X(FontFile3)                  \
     X(FunctionType)               \
+    X(Functions)                  \
     X(Gamma)                      \
     X(H)                          \
     X(Height)                     \
