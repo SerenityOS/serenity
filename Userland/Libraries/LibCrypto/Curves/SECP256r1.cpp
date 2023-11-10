@@ -52,6 +52,9 @@ static constexpr u256 A { { 0xfffffffffffffffcull, 0x00000000ffffffffull, 0x0000
 static constexpr u256 B { { 0x3bce3c3e27d2604bull, 0x651d06b0cc53b0f6ull, 0xb3ebbd55769886bcull, 0x5ac635d8aa3a93e7ull } };
 static constexpr u256 ORDER { { 0xf3b9cac2fc632551ull, 0xbce6faada7179e84ull, 0xffffffffffffffffull, 0xffffffff00000000ull } };
 
+// Verify that A = -3 mod p, which is required for some optimizations
+static_assert(A == PRIME - 3);
+
 // Precomputed helper values for reduction and Montgomery multiplication
 static constexpr u256 REDUCE_PRIME = u256 { 0 } - PRIME;
 static constexpr u256 REDUCE_ORDER = u256 { 0 } - ORDER;
