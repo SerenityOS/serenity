@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Canvas.h"
-#include <GL/gl.h>
+#include <LibAccelGfx/Canvas.h>
+#include <LibAccelGfx/GL.h>
 #include <LibGfx/Bitmap.h>
 
 namespace AccelGfx {
@@ -28,13 +28,12 @@ void Canvas::initialize()
 {
     m_surface = m_context.create_surface(width(), height());
     m_context.set_active_surface(m_surface);
-    glViewport(0, 0, width(), height());
+    GL::set_viewport({ 0, 0, width(), height() });
 }
 
 void Canvas::flush()
 {
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(0, 0, width(), height(), GL_BGRA, GL_UNSIGNED_BYTE, m_bitmap->scanline(0));
+    GL::read_pixels({ 0, 0, width(), height() }, *m_bitmap);
 }
 
 Canvas::~Canvas()

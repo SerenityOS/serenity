@@ -12,6 +12,7 @@
 #include <AK/Vector.h>
 #include <LibAccelGfx/Canvas.h>
 #include <LibAccelGfx/Forward.h>
+#include <LibAccelGfx/GL.h>
 #include <LibAccelGfx/Program.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Font/Font.h>
@@ -89,7 +90,7 @@ private:
 
     HashMap<GlyphsTextureKey, Gfx::IntRect> m_glyphs_texture_map;
     Gfx::IntSize m_glyphs_texture_size;
-    GLuint m_glyphs_texture;
+    GL::Texture m_glyphs_texture;
 };
 
 }

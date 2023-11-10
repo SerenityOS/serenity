@@ -2,6 +2,7 @@ include(accelerated_graphics)
 
 if (HAS_ACCELERATED_GRAPHICS)
     set(SOURCES
+        GL.cpp
         Canvas.cpp
         Context.cpp
         Painter.cpp
