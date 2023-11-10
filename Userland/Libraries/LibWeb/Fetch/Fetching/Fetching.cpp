@@ -36,6 +36,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -1728,6 +1729,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
     auto& global_object = realm.global_object();
     if (is<HTML::Window>(global_object))
         page = static_cast<HTML::Window&>(global_object).page();
+    else if (is<HTML::WorkerGlobalScope>(global_object))
+        page = static_cast<HTML::WorkerGlobalScope&>(global_object).page();
 
     // NOTE: Using LoadRequest::create_for_url_on_page here will unconditionally add cookies as long as there's a page available.
     //       However, it is up to http_network_or_cache_fetch to determine if cookies should be added to the request.
