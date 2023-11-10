@@ -538,7 +538,10 @@ if (BUILD_LAGOM)
         add_executable(gzip ../../Userland/Utilities/gzip.cpp)
         target_link_libraries(gzip LibCompress LibCore LibMain)
 
-        if (ENABLE_LAGOM_LADYBIRD)
+        # FIXME: Use PROJECT_IS_TOPLEVEL with cmake 3.21
+        #     Work around bug in JetBrains distributed CMake 3.27.2 where this causes infinite recursion in
+        #     export_components() when called from CLion Nova by checking if we already have Ladybird included
+        if (ENABLE_LAGOM_LADYBIRD AND NOT ladybird_SOURCE_DIR)
             add_serenity_subdirectory(Ladybird)
         endif()
 
