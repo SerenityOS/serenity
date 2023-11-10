@@ -37,6 +37,13 @@ struct Array {
         return array;
     }
 
+    static constexpr Array from_repeated_value(T const& value)
+    {
+        Array array;
+        array.fill(value);
+        return array;
+    }
+
     [[nodiscard]] constexpr T const* data() const { return __data; }
     [[nodiscard]] constexpr T* data() { return __data; }
 
