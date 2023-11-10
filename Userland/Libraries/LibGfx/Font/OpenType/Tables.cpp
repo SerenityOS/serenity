@@ -32,6 +32,17 @@ ErrorOr<Head> Head::from_slice(ReadonlyBytes slice)
         return Error::from_string_literal("Could not load Head: Not enough data");
 
     auto const& font_header_table = *bit_cast<FontHeaderTable const*>(slice.data());
+
+    static constexpr u32 HEADER_TABLE_MAGIC_NUMBER = 0x5F0F3CF5;
+    if (font_header_table.major_version != 1)
+        return Error::from_string_literal("Unknown major version. Expected 1");
+    if (font_header_table.minor_version != 0)
+        return Error::from_string_literal("Unknown minor version. Expected 0");
+    if (font_header_table.magic_number != HEADER_TABLE_MAGIC_NUMBER)
+        return Error::from_string_literal("Invalid magic number");
+    if (font_header_table.index_to_loc_format != 0 && font_header_table.index_to_loc_format != 1)
+        return Error::from_string_literal("Invalid IndexToLocFormat value");
+
     return Head(font_header_table);
 }
 
