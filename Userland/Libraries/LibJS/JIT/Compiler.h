@@ -34,6 +34,8 @@ private:
     static constexpr auto ARG3 = Assembler::Reg::RCX;
     static constexpr auto ARG4 = Assembler::Reg::R8;
     static constexpr auto ARG5 = Assembler::Reg::R9;
+    static constexpr auto FPR0 = Assembler::Reg::XMM0;
+    static constexpr auto FPR1 = Assembler::Reg::XMM1;
     static constexpr auto RET = Assembler::Reg::RAX;
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
@@ -186,9 +188,15 @@ private:
     }
 
     void extract_object_pointer(Assembler::Reg dst_object, Assembler::Reg src_value);
+    void convert_to_double(Assembler::Reg dst, Assembler::Reg src, Assembler::Reg nan, Assembler::Reg temp, Assembler::Label& not_number);
 
     template<typename Codegen>
     void branch_if_both_int32(Assembler::Reg, Assembler::Reg, Codegen);
+
+    void jump_if_not_double(Assembler::Reg reg, Assembler::Reg nan, Assembler::Reg temp, Assembler::Label&);
+
+    template<typename CodegenI32, typename CodegenDouble, typename CodegenValue>
+    void branch_if_both_numbers(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32, CodegenDouble, CodegenValue);
 
     explicit Compiler(Bytecode::Executable& bytecode_executable)
         : m_bytecode_executable(bytecode_executable)
