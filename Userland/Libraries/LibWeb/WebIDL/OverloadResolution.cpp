@@ -56,6 +56,8 @@ static bool has_overload_with_argument_type_or_subtype_matching(IDL::EffectiveOv
 // https://webidl.spec.whatwg.org/#es-overloads
 JS::ThrowCompletionOr<ResolvedOverload> resolve_overload(JS::VM& vm, IDL::EffectiveOverloadSet& overloads)
 {
+    // FIXME: The vast majority of this algorithm can be (and must be, in order to resolve the dictionary
+    //  related FIXMEs below) evaluated at code-generation time.
     // 1. Let maxarg be the length of the longest type list of the entries in S.
     // 2. Let n be the size of args.
     // 3. Initialize argcount to be min(maxarg, n).

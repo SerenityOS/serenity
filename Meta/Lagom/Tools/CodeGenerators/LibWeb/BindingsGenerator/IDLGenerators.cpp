@@ -1925,7 +1925,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffi
 }
 
 // https://webidl.spec.whatwg.org/#compute-the-effective-overload-set
-static EffectiveOverloadSet compute_the_effective_overload_set(auto const& overload_set)
+static Vector<EffectiveOverloadSet::Item> compute_the_effective_overload_set(auto const& overload_set)
 {
     // 1. Let S be an ordered set.
     Vector<EffectiveOverloadSet::Item> overloads;
@@ -2048,7 +2048,7 @@ static EffectiveOverloadSet compute_the_effective_overload_set(auto const& overl
         overload_id++;
     }
 
-    return EffectiveOverloadSet { move(overloads) };
+    return overloads;
 }
 
 static DeprecatedString generate_constructor_for_idl_type(Type const& type)
@@ -2090,6 +2090,30 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
     VERIFY_NOT_REACHED();
 }
 
+// https://webidl.spec.whatwg.org/#dfn-distinguishing-argument-index
+static size_t resolve_distinguishing_argument_index(Vector<EffectiveOverloadSet::Item> const& items, size_t argument_count)
+{
+    for (auto argument_index = 0u; argument_index < argument_count; ++argument_index) {
+        bool found_indistinguishable = false;
+
+        for (auto first_item_index = 0u; first_item_index < items.size(); ++first_item_index) {
+            for (auto second_item_index = first_item_index + 1; second_item_index < items.size(); ++second_item_index) {
+                if (!items[first_item_index].types[argument_index]->is_distinguishable_from(items[second_item_index].types[argument_index])) {
+                    found_indistinguishable = true;
+                    break;
+                }
+            }
+            if (found_indistinguishable)
+                break;
+        }
+
+        if (!found_indistinguishable)
+            return argument_index;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 static void generate_overload_arbiter(SourceGenerator& generator, auto const& overload_set, DeprecatedString const& class_name)
 {
     auto function_generator = generator.fork();
@@ -2102,8 +2126,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     Optional<IDL::EffectiveOverloadSet> effective_overload_set;
 )~~~");
 
-    auto all_possible_effective_overloads = compute_the_effective_overload_set(overload_set);
-    auto overloads_set = all_possible_effective_overloads.items();
+    auto overloads_set = compute_the_effective_overload_set(overload_set);
     auto maximum_argument_count = 0u;
     for (auto const& overload : overloads_set)
         maximum_argument_count = max(maximum_argument_count, overload.types.size());
@@ -2115,29 +2138,28 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     // Namely, since that discards any overloads that don't have the exact number of arguments that were given,
     // we simply only provide the overloads that do have that number of arguments.
     for (auto argument_count = 0u; argument_count <= maximum_argument_count; ++argument_count) {
-        // FIXME: Calculate the distinguishing argument index now instead of at runtime.
-
-        auto effective_overload_count = 0;
+        Vector<EffectiveOverloadSet::Item> effective_overload_set;
         for (auto const& overload : overloads_set) {
             if (overload.types.size() == argument_count)
-                effective_overload_count++;
+                effective_overload_set.append(overload);
         }
 
-        if (effective_overload_count == 0)
+        if (effective_overload_set.size() == 0)
             continue;
 
+        auto distinguishing_argument_index = 0u;
+        if (effective_overload_set.size() > 1)
+            distinguishing_argument_index = resolve_distinguishing_argument_index(effective_overload_set, argument_count);
+
         function_generator.set("current_argument_count", DeprecatedString::number(argument_count));
-        function_generator.set("overload_count", DeprecatedString::number(effective_overload_count));
+        function_generator.set("overload_count", DeprecatedString::number(effective_overload_set.size()));
         function_generator.appendln(R"~~~(
     case @current_argument_count@: {
         Vector<IDL::EffectiveOverloadSet::Item> overloads;
         overloads.ensure_capacity(@overload_count@);
 )~~~");
 
-        for (auto& overload : overloads_set) {
-            if (overload.types.size() != argument_count)
-                continue;
-
+        for (auto& overload : effective_overload_set) {
             StringBuilder types_builder;
             types_builder.append("Vector<NonnullRefPtr<IDL::Type const>> { "sv);
             StringBuilder optionality_builder;
@@ -2175,8 +2197,9 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
             function_generator.appendln("        overloads.empend(@overload.callable_id@, @overload.types@, @overload.optionality_values@);");
         }
 
+        function_generator.set("overload_set.distinguishing_argument_index", DeprecatedString::number(distinguishing_argument_index));
         function_generator.append(R"~~~(
-        effective_overload_set.emplace(move(overloads));
+        effective_overload_set.emplace(move(overloads), @overload_set.distinguishing_argument_index@);
         break;
     }
 )~~~");

@@ -415,9 +415,9 @@ public:
         Vector<Optionality> optionality_values;
     };
 
-    EffectiveOverloadSet(Vector<Item> items)
+    EffectiveOverloadSet(Vector<Item> items, size_t distinguishing_argument_index)
         : m_items(move(items))
-        , m_argument_count(m_items.is_empty() ? 0 : m_items.first().types.size())
+        , m_distinguishing_argument_index(distinguishing_argument_index)
     {
     }
 
@@ -433,7 +433,7 @@ public:
     bool is_empty() const { return m_items.is_empty(); }
     size_t size() const { return m_items.size(); }
 
-    int distinguishing_argument_index();
+    size_t distinguishing_argument_index() const { return m_distinguishing_argument_index; }
 
     template<typename Matches>
     bool has_overload_with_matching_argument_at_index(size_t index, Matches matches)
@@ -454,7 +454,7 @@ public:
 private:
     // FIXME: This should be an "ordered set".
     Vector<Item> m_items;
-    size_t m_argument_count;
+    size_t m_distinguishing_argument_index { 0 };
 
     Optional<size_t> m_last_matching_item_index;
 };
