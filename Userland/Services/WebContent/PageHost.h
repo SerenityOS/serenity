@@ -120,6 +120,7 @@ private:
     virtual void page_did_request_color_picker(Color current_color) override;
     virtual void page_did_finish_text_test() override;
     virtual void page_did_change_theme_color(Gfx::Color color) override;
+    virtual void page_did_insert_clipboard_entry(String data, String presentation_style, String mime_type) override;
 
     explicit PageHost(ConnectionFromClient&);
 
