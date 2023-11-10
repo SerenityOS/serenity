@@ -639,6 +639,18 @@ struct X86_64Assembler {
         }
     }
 
+    void mul(Operand dest, Operand src)
+    {
+        if (dest.type == Operand::Type::FReg && src.type == Operand::Type::FReg) {
+            emit8(0xf2);
+            emit8(0x0f);
+            emit8(0x59);
+            emit_modrm_rm(dest, src);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
     void mul32(Operand dest, Operand src, Optional<Label&> overflow_label)
     {
         // imul32 dest, src (32-bit signed)
