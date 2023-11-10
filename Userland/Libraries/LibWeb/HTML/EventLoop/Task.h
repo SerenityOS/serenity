@@ -47,6 +47,12 @@ public:
         // https://html.spec.whatwg.org/multipage/canvas.html#canvas-blob-serialisation-task-source
         CanvasBlobSerializationTask,
 
+        // https://w3c.github.io/clipboard-apis/#clipboard-task-source
+        Clipboard,
+
+        // https://w3c.github.io/permissions/#permissions-task-source
+        Permissions,
+
         // !!! IMPORTANT: Keep this field last!
         // This serves as the base value of all unique task sources.
         // Some elements, such as the HTMLMediaElement, must have a unique task source per instance.
