@@ -131,7 +131,7 @@ TEST_CASE(sampled)
     EXPECT_EQ(MUST(f1->evaluate(Vector<float> { 0.75f })), Vector<float> { 5.0f });
     EXPECT_EQ(MUST(f1->evaluate(Vector<float> { 1.0f })), Vector<float> { 0.0f });
 
-    auto f2 = MUST(make_sampled_function(Vector<u8> { { 0, 255, 0, 255, 0, 255 } }, { 0.0f, 1.0f }, { 0.0f, 10.0f, 0.0f, 8.0f }, { 3 }));
+    auto f2 = MUST(make_sampled_function(Vector<u8> { { 0, 255, 255, 0, 0, 255 } }, { 0.0f, 1.0f }, { 0.0f, 10.0f, 0.0f, 8.0f }, { 3 }));
     EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.0f })), (Vector<float> { 0.0f, 8.0f }));
     EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.25f })), (Vector<float> { 5.0f, 4.0f }));
     EXPECT_EQ(MUST(f2->evaluate(Vector<float> { 0.5f })), (Vector<float> { 10.0f, 0.0f }));
