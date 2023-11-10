@@ -1544,13 +1544,13 @@ void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
     end.link(m_assembler);
 }
 
-static Value cxx_get_callee_and_this_from_environment(VM& vm, DeprecatedFlyString const& name, u32 cache_index, Bytecode::Register callee_reg, Bytecode::Register this_reg)
+static Value cxx_get_callee_and_this_from_environment(VM& vm, DeprecatedFlyString const& name, Bytecode::Register callee_reg, Bytecode::Register this_reg, Bytecode::EnvironmentVariableCache& cache)
 {
     auto& bytecode_interpreter = vm.bytecode_interpreter();
     auto callee_and_this = TRY_OR_SET_EXCEPTION(Bytecode::get_callee_and_this_from_environment(
         bytecode_interpreter,
         name,
-        cache_index));
+        cache));
 
     bytecode_interpreter.reg(callee_reg) = callee_and_this.callee;
     bytecode_interpreter.reg(this_reg) = callee_and_this.this_value;
@@ -1564,13 +1564,13 @@ void Compiler::compile_get_callee_and_this_from_environment(Bytecode::Op::GetCal
         Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.cache_index()));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
         Assembler::Operand::Imm(op.callee().index()));
     m_assembler.mov(
-        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Register(ARG3),
         Assembler::Operand::Imm(op.this_().index()));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG4),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.environment_variable_caches[op.cache_index()])));
     native_call((void*)cxx_get_callee_and_this_from_environment);
     check_exception();
 }

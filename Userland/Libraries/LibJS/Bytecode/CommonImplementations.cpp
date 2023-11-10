@@ -345,22 +345,21 @@ ThrowCompletionOr<Value> get_variable(Bytecode::Interpreter& interpreter, Deprec
     return TRY(reference.get_value(vm));
 }
 
-ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& name, u32 cache_index)
+ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& name, EnvironmentVariableCache& cache)
 {
     auto& vm = interpreter.vm();
 
     Value callee = js_undefined();
     Value this_value = js_undefined();
 
-    auto& cached_environment_coordinate = interpreter.current_executable().environment_variable_caches[cache_index];
-    if (cached_environment_coordinate.has_value()) {
+    if (cache.has_value()) {
         auto environment = vm.running_execution_context().lexical_environment;
-        for (size_t i = 0; i < cached_environment_coordinate->hops; ++i)
+        for (size_t i = 0; i < cache->hops; ++i)
             environment = environment->outer_environment();
         VERIFY(environment);
         VERIFY(environment->is_declarative_environment());
         if (!environment->is_permanently_screwed_by_eval()) {
-            callee = TRY(verify_cast<DeclarativeEnvironment>(*environment).get_binding_value_direct(vm, cached_environment_coordinate.value().index, vm.in_strict_mode()));
+            callee = TRY(verify_cast<DeclarativeEnvironment>(*environment).get_binding_value_direct(vm, cache.value().index, vm.in_strict_mode()));
             this_value = js_undefined();
             if (auto base_object = environment->with_base_object())
                 this_value = base_object;
@@ -369,12 +368,12 @@ ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::
                 .this_value = this_value,
             };
         }
-        cached_environment_coordinate = {};
+        cache = {};
     }
 
     auto reference = TRY(vm.resolve_binding(name));
     if (reference.environment_coordinate().has_value())
-        cached_environment_coordinate = reference.environment_coordinate();
+        cache = reference.environment_coordinate();
 
     callee = TRY(reference.get_value(vm));
 
