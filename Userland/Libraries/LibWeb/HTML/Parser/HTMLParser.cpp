@@ -4303,33 +4303,29 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
             // 4. For each attribute that the element has, append a U+0020 SPACE character, the attribute's serialized name as described below, a U+003D EQUALS SIGN character (=),
             //    a U+0022 QUOTATION MARK character ("), the attribute's value, escaped as described below in attribute mode, and a second U+0022 QUOTATION MARK character (").
             //    NOTE: The order of attributes is implementation-defined. The only constraint is that the order must be stable.
-            element.for_each_attribute([&](auto& name, auto& value) {
+            element.for_each_attribute([&](auto const& attribute) {
                 builder.append(' ');
 
                 // An attribute's serialized name for the purposes of the previous paragraph must be determined as follows:
 
-                // FIXME: -> If the attribute has no namespace:
-                //              The attribute's serialized name is the attribute's local name.
-                //           (We currently always do this)
-                builder.append(name);
-
-                // FIXME: -> If the attribute is in the XML namespace:
-                //             The attribute's serialized name is the string "xml:" followed by the attribute's local name.
-
-                // FIXME: -> If the attribute is in the XMLNS namespace and the attribute's local name is xmlns:
-                //             The attribute's serialized name is the string "xmlns".
-
-                // FIXME: -> If the attribute is in the XMLNS namespace and the attribute's local name is not xmlns:
-                //             The attribute's serialized name is the string "xmlns:" followed by the attribute's local name.
-
-                // FIXME: -> If the attribute is in the XLink namespace:
-                //             The attribute's serialized name is the string "xlink:" followed by the attribute's local name.
-
-                // FIXME: -> If the attribute is in some other namespace:
-                //             The attribute's serialized name is the attribute's qualified name.
+                // NOTE: As far as I can tell, these steps are equivalent to just using the qualified name.
+                //
+                // -> If the attribute has no namespace:
+                //         The attribute's serialized name is the attribute's local name.
+                // -> If the attribute is in the XML namespace:
+                //         The attribute's serialized name is the string "xml:" followed by the attribute's local name.
+                // -> If the attribute is in the XMLNS namespace and the attribute's local name is xmlns:
+                //         The attribute's serialized name is the string "xmlns".
+                // -> If the attribute is in the XMLNS namespace and the attribute's local name is not xmlns:
+                //         The attribute's serialized name is the string "xmlns:" followed by the attribute's local name.
+                // -> If the attribute is in the XLink namespace:
+                //         The attribute's serialized name is the string "xlink:" followed by the attribute's local name.
+                // -> If the attribute is in some other namespace:
+                //         The attribute's serialized name is the attribute's qualified name.
+                builder.append(attribute.name());
 
                 builder.append("=\""sv);
-                builder.append(escape_string(value, AttributeMode::Yes));
+                builder.append(escape_string(attribute.value(), AttributeMode::Yes));
                 builder.append('"');
             });
 
