@@ -178,10 +178,10 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> x)
         else
             e0 = e1 - 1.0f;
     }
-    size_t plane_size = m_sizes[0];
+    size_t plane_size = m_range.size();
     for (size_t i = 0; i < m_range.size(); ++i) {
-        float s0 = m_sample_data[(size_t)e0 + i * plane_size];
-        float s1 = m_sample_data[(size_t)e1 + i * plane_size];
+        float s0 = m_sample_data[(size_t)e0 * plane_size + i];
+        float s1 = m_sample_data[(size_t)e1 * plane_size + i];
         float r0 = interpolate(ec, e0, e1, s0, s1);
         r0 = interpolate(r0, 0.0f, 255.0f, m_decode[i].lower, m_decode[i].upper);
         m_outputs[i] = clamp(r0, m_range[i].lower, m_range[i].upper);
