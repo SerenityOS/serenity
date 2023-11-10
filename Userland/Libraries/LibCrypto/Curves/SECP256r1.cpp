@@ -15,6 +15,12 @@
 
 namespace Crypto::Curves {
 
+struct JacobianPoint {
+    u256 x { 0u };
+    u256 y { 0u };
+    u256 z { 0u };
+};
+
 static constexpr u256 calculate_modular_inverse_mod_r(u256 value)
 {
     // Calculate the modular multiplicative inverse of value mod 2^256 using the extended euclidean algorithm
