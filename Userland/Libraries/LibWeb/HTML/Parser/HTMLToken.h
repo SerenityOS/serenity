@@ -245,7 +245,7 @@ public:
         }
     }
 
-    StringView attribute(FlyString const& attribute_name) const
+    Optional<String> attribute(FlyString const& attribute_name) const
     {
         if (auto result = raw_attribute(attribute_name); result.has_value())
             return result->value;
@@ -268,7 +268,7 @@ public:
 
     bool has_attribute(FlyString const& attribute_name) const
     {
-        return !attribute(attribute_name).is_null();
+        return attribute(attribute_name).has_value();
     }
 
     void adjust_tag_name(FlyString const& old_name, FlyString const& new_name)
