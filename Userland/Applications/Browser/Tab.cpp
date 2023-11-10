@@ -620,6 +620,10 @@ Tab::Tab(BrowserWindow& window)
         on_tab_close_request(*this);
     };
 
+    view().on_insert_clipboard_entry = [](auto const& data, auto const&, auto const& mime_type) {
+        GUI::Clipboard::the().set_data(data.bytes(), mime_type.to_deprecated_string());
+    };
+
     m_tab_context_menu = GUI::Menu::construct();
     m_tab_context_menu->add_action(GUI::CommonActions::make_reload_action([this](auto&) {
         reload();
