@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/BitStream.h>
+#include <AK/Concepts.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
@@ -15,12 +16,13 @@
 
 namespace Compress {
 
+template<InputBitStream InputStream>
 class LZWDecoder {
 private:
     static constexpr int max_code_size = 12;
 
 public:
-    explicit LZWDecoder(MaybeOwned<LittleEndianInputBitStream> lzw_stream, u8 min_code_size)
+    explicit LZWDecoder(MaybeOwned<InputStream> lzw_stream, u8 min_code_size)
         : m_bit_stream(move(lzw_stream))
         , m_code_size(min_code_size)
         , m_original_code_size(min_code_size)
@@ -53,7 +55,7 @@ public:
 
     ErrorOr<u16> next_code()
     {
-        m_current_code = TRY(m_bit_stream->read_bits<u16>(m_code_size));
+        m_current_code = TRY(m_bit_stream->template read_bits<u16>(m_code_size));
 
         if (m_current_code > m_code_table.size()) {
             dbgln_if(GIF_DEBUG, "Corrupted LZW stream, invalid code: {}, code table size: {}",
@@ -107,7 +109,7 @@ private:
         }
     }
 
-    MaybeOwned<LittleEndianInputBitStream> m_bit_stream;
+    MaybeOwned<InputStream> m_bit_stream;
 
     Vector<Vector<u8>> m_code_table {};
     Vector<Vector<u8>> m_original_code_table {};
