@@ -44,6 +44,25 @@ private:
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
     static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::R12;
     static constexpr auto RUNNING_EXECUTION_CONTEXT_BASE = Assembler::Reg::R15;
+#    elif ARCH(AARCH64)
+    static constexpr auto GPR0 = Assembler::Reg::X9;
+    static constexpr auto GPR1 = Assembler::Reg::X10;
+    static constexpr auto GPR2 = Assembler::Reg::X11;
+    static constexpr auto ARG0 = Assembler::Reg::X0;
+    static constexpr auto ARG1 = Assembler::Reg::X1;
+    static constexpr auto ARG2 = Assembler::Reg::X2;
+    static constexpr auto ARG3 = Assembler::Reg::X3;
+    static constexpr auto ARG4 = Assembler::Reg::X4;
+    static constexpr auto ARG5 = Assembler::Reg::X5;
+    static constexpr auto FPR0 = Assembler::Reg::Q0;
+    static constexpr auto FPR1 = Assembler::Reg::Q1;
+    static constexpr auto RET = Assembler::Reg::X0;
+    static constexpr auto VM_POINTER = Assembler::Reg::X23;
+    static constexpr auto STACK_POINTER = Assembler::Reg::SP;
+    static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::X19;
+    static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::X20;
+    static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::X21;
+    static constexpr auto RUNNING_EXECUTION_CONTEXT_BASE = Assembler::Reg::X22;
 #    endif
 
     static Assembler::Reg argument_register(u32);
