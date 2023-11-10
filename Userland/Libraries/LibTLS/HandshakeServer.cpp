@@ -14,6 +14,7 @@
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/EllipticCurve.h>
 #include <LibCrypto/Curves/SECP256r1.h>
+#include <LibCrypto/Curves/SECP384r1.h>
 #include <LibCrypto/Curves/X25519.h>
 #include <LibCrypto/Curves/X448.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
@@ -317,6 +318,9 @@ ssize_t TLSv12::handle_ecdhe_server_key_exchange(ReadonlyBytes buffer, u8& serve
     case SupportedGroup::SECP256R1:
         m_context.server_key_exchange_curve = make<Crypto::Curves::SECP256r1>();
         break;
+    case SupportedGroup::SECP384R1:
+        m_context.server_key_exchange_curve = make<Crypto::Curves::SECP384r1>();
+        break;
     default:
         return (i8)Error::NotUnderstood;
     }
@@ -490,6 +494,15 @@ ssize_t TLSv12::verify_ecdsa_server_key_exchange(ReadonlyBytes server_key_info_b
         auto digest = manager.digest();
 
         Crypto::Curves::SECP256r1 curve;
+        res = curve.verify(digest.bytes(), server_point, signature);
+        break;
+    }
+    case SupportedGroup::SECP384R1: {
+        Crypto::Hash::Manager manager(hash_kind);
+        manager.update(message);
+        auto digest = manager.digest();
+
+        Crypto::Curves::SECP384r1 curve;
         res = curve.verify(digest.bytes(), server_point, signature);
         break;
     }

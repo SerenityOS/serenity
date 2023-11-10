@@ -16,6 +16,7 @@
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/Curves/Ed25519.h>
 #include <LibCrypto/Curves/SECP256r1.h>
+#include <LibCrypto/Curves/SECP384r1.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibFileSystem/FileSystem.h>
@@ -409,6 +410,19 @@ bool Context::verify_certificate_pair(Certificate const& subject, Certificate co
         auto result = curve.verify(hash.bytes(), issuer.public_key.raw_key, subject.signature_value);
         if (result.is_error()) {
             dbgln("verify_certificate_pair: Failed to check SECP256r1 signature {}", result.release_error());
+            return false;
+        }
+        return result.value();
+    }
+    case SupportedGroup::SECP384R1: {
+        Crypto::Hash::Manager hasher(kind);
+        hasher.update(subject.tbs_asn1.bytes());
+        auto hash = hasher.digest();
+
+        Crypto::Curves::SECP384r1 curve;
+        auto result = curve.verify(hash.bytes(), issuer.public_key.raw_key, subject.signature_value);
+        if (result.is_error()) {
+            dbgln("verify_certificate_pair: Failed to check SECP384r1 signature {}", result.release_error());
             return false;
         }
         return result.value();
