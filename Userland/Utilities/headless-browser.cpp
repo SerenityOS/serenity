@@ -234,7 +234,7 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     return TestResult::Fail;
 }
 
-static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, int timeout_in_milliseconds = 15000)
+static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, bool dump_failed_ref_tests, int timeout_in_milliseconds = 15000)
 {
     Core::EventLoop loop;
     bool did_timeout = false;
@@ -269,17 +269,35 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
     if (actual_screenshot->visually_equals(*expectation_screenshot))
         return TestResult::Pass;
 
+    if (dump_failed_ref_tests) {
+        warnln("\033[33;1mRef test {} failed; dumping screenshots\033[0m", input_path);
+        auto title = LexicalPath::title(input_path);
+        auto dump_screenshot = [&](Gfx::Bitmap& bitmap, StringView path) -> ErrorOr<void> {
+            auto screenshot_file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
+            auto encoded_data = TRY(Gfx::PNGWriter::encode(bitmap));
+            TRY(screenshot_file->write_until_depleted(encoded_data));
+            warnln("\033[33;1mDumped {}\033[0m", TRY(FileSystem::real_path(path)));
+            return {};
+        };
+
+        auto mkdir_result = Core::System::mkdir("test-dumps"sv, 0755);
+        if (mkdir_result.is_error() && mkdir_result.error().code() != EEXIST)
+            return mkdir_result.release_error();
+        TRY(dump_screenshot(*actual_screenshot, TRY(String::formatted("test-dumps/{}.png", title))));
+        TRY(dump_screenshot(*expectation_screenshot, TRY(String::formatted("test-dumps/{}-ref.png", title))));
+    }
+
     return TestResult::Fail;
 }
 
-static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode)
+static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, bool dump_failed_ref_tests)
 {
     switch (mode) {
     case TestMode::Text:
     case TestMode::Layout:
         return run_dump_test(view, input_path, expectation_path, mode);
     case TestMode::Ref:
-        return run_ref_test(view, input_path);
+        return run_ref_test(view, input_path, dump_failed_ref_tests);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -325,7 +343,7 @@ static ErrorOr<void> collect_ref_tests(Vector<Test>& tests, StringView path)
     return {};
 }
 
-static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path)
+static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path, bool dump_failed_ref_tests)
 {
     view.clear_content_filters();
 
@@ -356,7 +374,7 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
         else
             outln("");
 
-        test.result = TRY(run_test(view, test.input_path, test.expectation_path, test.mode));
+        test.result = TRY(run_test(view, test.input_path, test.expectation_path, test.mode, dump_failed_ref_tests));
         switch (*test.result) {
         case TestResult::Pass:
             ++pass_count;
@@ -395,6 +413,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView raw_url;
     auto resources_folder = "/res"sv;
     StringView web_driver_ipc_path;
+    bool dump_failed_ref_tests = false;
     bool dump_layout_tree = false;
     bool dump_text = false;
     bool is_layout_test_mode = false;
@@ -406,6 +425,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dump_layout_tree, "Dump layout tree and exit", "dump-layout-tree", 'd');
     args_parser.add_option(dump_text, "Dump text and exit", "dump-text", 'T');
     args_parser.add_option(test_root_path, "Run tests in path", "run-tests", 'R', "test-root-path");
+    args_parser.add_option(dump_failed_ref_tests, "Dump screenshots of failing ref tests", "dump-failed-ref-tests", 'D');
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
@@ -433,7 +453,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RefPtr<Core::Timer> timer;
 
     if (!test_root_path.is_empty()) {
-        return run_tests(*view, test_root_path);
+        return run_tests(*view, test_root_path, dump_failed_ref_tests);
     }
 
     if (dump_layout_tree) {

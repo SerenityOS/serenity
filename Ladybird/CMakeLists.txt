@@ -260,7 +260,7 @@ include(CTest)
 if (BUILD_TESTING)
     add_test(
         NAME LibWeb
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../bin/headless-browser --resources "${SERENITY_SOURCE_DIR}/Base/res" --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../bin/headless-browser --resources "${SERENITY_SOURCE_DIR}/Base/res" --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb --dump-failed-ref-tests
     )
     add_test(
         NAME WPT
