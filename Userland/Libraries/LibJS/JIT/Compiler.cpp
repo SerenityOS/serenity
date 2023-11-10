@@ -348,6 +348,102 @@ void Compiler::branch_if_both_int32(Assembler::Reg lhs, Assembler::Reg rhs, Code
     not_int32_case.link(m_assembler);
 }
 
+void Compiler::jump_if_not_double(Assembler::Reg reg, Assembler::Reg nan, Assembler::Reg temp, Assembler::Label& label)
+{
+    Assembler::Label is_double {};
+    // if (reg == nan) goto is_double
+    m_assembler.jump_if(
+        Assembler::Operand::Register(reg),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Register(nan),
+        is_double);
+    // temp = reg
+    m_assembler.mov(Assembler::Operand::Register(temp), Assembler::Operand::Register(reg));
+    // if (temp & CANON_NAN_BITS == CANON_NAN_BITS) goto label
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(temp),
+        Assembler::Operand::Register(nan));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(temp),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Register(nan),
+        label);
+    is_double.link(m_assembler);
+}
+
+void Compiler::convert_to_double(Assembler::Reg dst, Assembler::Reg src, Assembler::Reg nan, Assembler::Reg temp, Assembler::Label& not_number)
+{
+    Assembler::Label is_i32;
+    Assembler::Label end;
+    jump_if_int32(src, is_i32);
+    jump_if_not_double(src, nan, temp, not_number);
+    m_assembler.mov(
+        Assembler::Operand::FloatRegister(dst),
+        Assembler::Operand::Register(src));
+    m_assembler.jump(end);
+    is_i32.link(m_assembler);
+    m_assembler.convert_i32_to_double(
+        Assembler::Operand::FloatRegister(dst),
+        Assembler::Operand::Register(src));
+    end.link(m_assembler);
+}
+
+template<typename CodegenI32, typename CodegenDouble, typename CodegenValue>
+void Compiler::branch_if_both_numbers(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32 codegen_i32, CodegenDouble codegen_double, CodegenValue codegen_value)
+{
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    // The only case where we can take the int32 fastpath
+    branch_if_both_int32(lhs, rhs, [&] {
+        // use GPR0 to preserve lhs for the slow case
+        m_assembler.mov32(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(lhs));
+        store_accumulator(codegen_i32(GPR0, rhs, slow_case));
+
+        // accumulator |= SHIFTED_INT32_TAG;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm(SHIFTED_INT32_TAG));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(CACHED_ACCUMULATOR),
+            Assembler::Operand::Register(GPR0));
+        m_assembler.jump(end);
+    });
+
+    // accumulator = op_double(lhs.to_double(), rhs.to_double()) [if not numeric goto slow_case]
+    auto temp_register = GPR0;
+    auto nan_register = GPR1;
+    m_assembler.mov(Assembler::Operand::Register(nan_register), Assembler::Operand::Imm(CANON_NAN_BITS));
+    convert_to_double(FPR0, ARG1, nan_register, temp_register, slow_case);
+    convert_to_double(FPR1, ARG2, nan_register, temp_register, slow_case);
+    auto result_fp_register = codegen_double(FPR0, FPR1);
+    // if result != result then result = nan (canonical)
+    Assembler::Label nan_case;
+    m_assembler.jump_if(
+        Assembler::Operand::FloatRegister(result_fp_register),
+        Assembler::Condition::Unordered,
+        Assembler::Operand::FloatRegister(result_fp_register),
+        nan_case);
+    m_assembler.mov(
+        Assembler::Operand::Register(CACHED_ACCUMULATOR),
+        Assembler::Operand::FloatRegister(result_fp_register));
+    m_assembler.jump(end);
+    nan_case.link(m_assembler);
+    m_assembler.mov(
+        Assembler::Operand::Register(CACHED_ACCUMULATOR),
+        Assembler::Operand::Register(nan_register));
+    m_assembler.jump(end);
+
+    slow_case.link(m_assembler);
+
+    // accumulator = TRY(op_value(lhs, rhs))
+    store_accumulator(codegen_value(lhs, rhs));
+    check_exception();
+    end.link(m_assembler);
+}
+
 void Compiler::compile_increment(Bytecode::Op::Increment const&)
 {
     load_accumulator(ARG1);
