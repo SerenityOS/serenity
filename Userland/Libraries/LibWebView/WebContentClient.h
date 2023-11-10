@@ -86,6 +86,7 @@ private:
     virtual void did_finish_handling_input_event(bool event_was_accepted) override;
     virtual void did_finish_text_test() override;
     virtual void did_change_theme_color(Gfx::Color color) override;
+    virtual void did_insert_clipboard_entry(String const& data, String const& presentation_style, String const& mime_type) override;
 
     ViewImplementation& m_view;
 };

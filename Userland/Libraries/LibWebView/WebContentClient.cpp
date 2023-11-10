@@ -402,4 +402,10 @@ void WebContentClient::did_change_theme_color(Gfx::Color color)
         m_view.on_theme_color_change(color);
 }
 
+void WebContentClient::did_insert_clipboard_entry(String const& data, String const& presentation_style, String const& mime_type)
+{
+    if (m_view.on_insert_clipboard_entry)
+        m_view.on_insert_clipboard_entry(data, presentation_style, mime_type);
+}
+
 }
