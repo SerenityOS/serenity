@@ -2091,14 +2091,14 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
 }
 
 // https://webidl.spec.whatwg.org/#dfn-distinguishing-argument-index
-static size_t resolve_distinguishing_argument_index(Vector<EffectiveOverloadSet::Item> const& items, size_t argument_count)
+static size_t resolve_distinguishing_argument_index(Interface const& interface, Vector<EffectiveOverloadSet::Item> const& items, size_t argument_count)
 {
     for (auto argument_index = 0u; argument_index < argument_count; ++argument_index) {
         bool found_indistinguishable = false;
 
         for (auto first_item_index = 0u; first_item_index < items.size(); ++first_item_index) {
             for (auto second_item_index = first_item_index + 1; second_item_index < items.size(); ++second_item_index) {
-                if (!items[first_item_index].types[argument_index]->is_distinguishable_from(items[second_item_index].types[argument_index])) {
+                if (!items[first_item_index].types[argument_index]->is_distinguishable_from(interface, items[second_item_index].types[argument_index])) {
                     found_indistinguishable = true;
                     break;
                 }
@@ -2114,7 +2114,7 @@ static size_t resolve_distinguishing_argument_index(Vector<EffectiveOverloadSet:
     VERIFY_NOT_REACHED();
 }
 
-static void generate_overload_arbiter(SourceGenerator& generator, auto const& overload_set, DeprecatedString const& class_name)
+static void generate_overload_arbiter(SourceGenerator& generator, auto const& overload_set, IDL::Interface const& interface, DeprecatedString const& class_name)
 {
     auto function_generator = generator.fork();
     function_generator.set("class_name", class_name);
@@ -2149,7 +2149,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 
         auto distinguishing_argument_index = 0u;
         if (effective_overload_set.size() > 1)
-            distinguishing_argument_index = resolve_distinguishing_argument_index(effective_overload_set, argument_count);
+            distinguishing_argument_index = resolve_distinguishing_argument_index(interface, effective_overload_set, argument_count);
 
         function_generator.set("current_argument_count", DeprecatedString::number(argument_count));
         function_generator.set("overload_count", DeprecatedString::number(effective_overload_set.size()));
@@ -3200,7 +3200,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     for (auto const& overload_set : interface.overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
-        generate_overload_arbiter(generator, overload_set, class_name);
+        generate_overload_arbiter(generator, overload_set, interface, class_name);
     }
 
     if (interface.has_stringifier) {
@@ -3442,7 +3442,7 @@ void @namespace_class@::visit_edges(JS::Cell::Visitor& visitor)
     for (auto const& overload_set : interface.overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
-        generate_overload_arbiter(generator, overload_set, interface.namespace_class);
+        generate_overload_arbiter(generator, overload_set, interface, interface.namespace_class);
     }
 
     generator.append(R"~~~(
@@ -3846,7 +3846,7 @@ void @constructor_class@::initialize(JS::Realm& realm)
     for (auto const& overload_set : interface.static_overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
-        generate_overload_arbiter(generator, overload_set, interface.constructor_class);
+        generate_overload_arbiter(generator, overload_set, interface, interface.constructor_class);
     }
 
     generator.append(R"~~~(
