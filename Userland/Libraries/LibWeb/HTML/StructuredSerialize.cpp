@@ -85,11 +85,31 @@ enum ValueTag {
 
     ArrayBufferView,
 
+    ErrorObject,
+
     // TODO: Define many more types
 
     // This tag or higher are understood to be errors
     ValueTagMax,
 };
+
+enum ErrorType {
+    Error,
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    ClassName,
+    JS_ENUMERATE_NATIVE_ERRORS
+#undef __JS_ENUMERATE
+};
+
+static ErrorType error_name_to_type(String const& name)
+{
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    if (name == #ClassName##sv)                                                          \
+        return ErrorType::ClassName;
+    JS_ENUMERATE_NATIVE_ERRORS
+#undef __JS_ENUMERATE
+    return Error;
+}
 
 // Serializing and deserializing are each two passes:
 // 1. Fill up the memory with all the values, but without translating references
@@ -215,7 +235,36 @@ public:
             TRY(serialize_viewed_array_buffer(m_serialized, static_cast<JS::DataView&>(value.as_object())));
         }
 
-        // 15 - 24: FIXME: Serialize other data types
+        // 17. Otherwise, if value has an [[ErrorData]] internal slot and value is not a platform object, then:
+        else if (value.is_object() && is<JS::Error>(value.as_object()) && !is<Bindings::PlatformObject>(value.as_object())) {
+            // 1. Let name be ? Get(value, "name").
+            auto name_property = TRY(value.as_object().get(m_vm.names.name));
+
+            // FIXME: Spec bug - https://github.com/whatwg/html/issues/9923
+            // MISSING STEP: Set name to ? ToString(name).
+            auto name = TRY(name_property.to_string(m_vm));
+
+            // 2. If name is not one of "Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", or "URIError", then set name to "Error".
+            auto type = error_name_to_type(name);
+
+            // 3. Let valueMessageDesc be ? value.[[GetOwnProperty]]("message").
+            auto value_message_descriptor = TRY(value.as_object().internal_get_own_property(m_vm.names.message));
+
+            // 4. Let message be undefined if IsDataDescriptor(valueMessageDesc) is false, and ? ToString(valueMessageDesc.[[Value]]) otherwise.
+            Optional<String> message;
+            if (value_message_descriptor.has_value() && value_message_descriptor->is_data_descriptor())
+                message = TRY(value_message_descriptor->value->to_string(m_vm));
+
+            // 5. Set serialized to { [[Type]]: "Error", [[Name]]: name, [[Message]]: message }.
+            // FIXME: 6. User agents should attach a serialized representation of any interesting accompanying data which are not yet specified, notably the stack property, to serialized.
+            m_serialized.append(ValueTag::ErrorObject);
+            m_serialized.append(type);
+            m_serialized.append(message.has_value());
+            if (message.has_value())
+                TRY(serialize_string(m_serialized, *message));
+        }
+
+        // 15, 16, 18 - 24: FIXME: Serialize other data types
         else {
             return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"_fly_string));
         }
@@ -498,6 +547,38 @@ public:
                     typed_array_ptr->set_byte_length(byte_length);
                     typed_array_ptr->set_byte_offset(byte_offset);
                     m_memory.append(typed_array_ptr);
+                }
+                break;
+            }
+            case ValueTag::ErrorObject: {
+                auto& realm = *m_vm.current_realm();
+                auto type = static_cast<ErrorType>(m_vector[position++]);
+                auto has_message = static_cast<bool>(m_vector[position++]);
+                if (has_message) {
+                    auto message = TRY(deserialize_string(m_vm, m_vector, position));
+                    switch (type) {
+                    case ErrorType::Error:
+                        m_memory.append(JS::Error::create(realm, message));
+                        break;
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    case ErrorType::ClassName:                                                           \
+        m_memory.append(JS::ClassName::create(realm, message));                          \
+        break;
+                        JS_ENUMERATE_NATIVE_ERRORS
+#undef __JS_ENUMERATE
+                    }
+                } else {
+                    switch (type) {
+                    case ErrorType::Error:
+                        m_memory.append(JS::Error::create(realm));
+                        break;
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    case ErrorType::ClassName:                                                           \
+        m_memory.append(JS::ClassName::create(realm));                                   \
+        break;
+                        JS_ENUMERATE_NATIVE_ERRORS
+#undef __JS_ENUMERATE
+                    }
                 }
                 break;
             }
