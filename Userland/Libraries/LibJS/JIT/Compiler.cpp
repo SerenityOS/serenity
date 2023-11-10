@@ -12,6 +12,7 @@
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/RegexTable.h>
 #include <LibJS/JIT/Compiler.h>
+#include <LibJS/JIT/RuntimeStats.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
@@ -2594,6 +2595,10 @@ void Compiler::jump_to_exit()
 
 void Compiler::native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments)
 {
+#    if COLLECT_RUNTIME_STATS
+    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm((u64)&s_runtime_stats));
+    m_assembler.inc64(Assembler::Operand::Mem64BaseAndOffset(GPR0, RuntimeStats::native_calls_offset()), Optional<Assembler::Label&>());
+#    endif
     // NOTE: We don't preserve caller-saved registers when making a native call.
     //       This means that they may have changed after we return from the call.
     m_assembler.native_call(bit_cast<u64>(function_address), { Assembler::Operand::Register(ARG0) }, stack_arguments);

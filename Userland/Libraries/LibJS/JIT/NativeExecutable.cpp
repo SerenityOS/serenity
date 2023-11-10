@@ -8,11 +8,16 @@
 #include <AK/BinarySearch.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/JIT/NativeExecutable.h>
+#include <LibJS/JIT/RuntimeStats.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibX86/Disassembler.h>
 #include <sys/mman.h>
 
 namespace JS::JIT {
+
+#if COLLECT_RUNTIME_STATS
+RuntimeStats s_runtime_stats;
+#endif
 
 NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping)
     : m_code(code)
@@ -35,6 +40,20 @@ NativeExecutable::~NativeExecutable()
     munmap(m_code, m_size);
 }
 
+void NativeExecutable::reset_stats()
+{
+#if COLLECT_RUNTIME_STATS
+    s_runtime_stats = {};
+#endif
+}
+
+void NativeExecutable::dump_stats() const
+{
+#if COLLECT_RUNTIME_STATS
+    dbgln("JIT native calls: {}", s_runtime_stats.native_calls);
+#endif
+}
+
 void NativeExecutable::run(VM& vm, size_t entry_point) const
 {
     FlatPtr entry_point_address = 0;
@@ -49,6 +68,10 @@ void NativeExecutable::run(VM& vm, size_t entry_point) const
         vm.running_execution_context().local_variables.data(),
         entry_point_address,
         vm.running_execution_context());
+
+#if COLLECT_RUNTIME_STATS
+    dump_stats();
+#endif
 }
 
 #if ARCH(X86_64)
@@ -189,5 +212,4 @@ Optional<UnrealizedSourceRange> NativeExecutable::get_source_range(Bytecode::Exe
     }
     return {};
 }
-
 }

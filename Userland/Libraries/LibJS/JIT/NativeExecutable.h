@@ -31,6 +31,8 @@ public:
     NativeExecutable(void* code, size_t size, Vector<BytecodeMapping>);
     ~NativeExecutable();
 
+    void reset_stats();
+    void dump_stats() const;
     void run(VM&, size_t entry_point) const;
     void dump_disassembly(Bytecode::Executable const& executable) const;
     BytecodeMapping const& find_mapping_entry(size_t native_offset) const;
@@ -41,6 +43,7 @@ public:
 private:
     void* m_code { nullptr };
     size_t m_size { 0 };
+    size_t m_native_calls { 0 };
     Vector<BytecodeMapping> m_mapping;
     Vector<FlatPtr> m_block_entry_points;
     mutable OwnPtr<Bytecode::InstructionStreamIterator> m_instruction_stream_iterator;
