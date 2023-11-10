@@ -8,6 +8,8 @@
 #include <LibWeb/Bindings/InternalsPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Internals/Internals.h>
@@ -56,6 +58,12 @@ JS::Object* Internals::hit_test(double x, double y)
         return hit_tеsting_result;
     }
     return nullptr;
+}
+
+WebIDL::ExceptionOr<bool> Internals::dispatch_user_activated_event(DOM::EventTarget& target, DOM::Event& event)
+{
+    event.set_is_trusted(true);
+    return target.dispatch_event(event);
 }
 
 }
