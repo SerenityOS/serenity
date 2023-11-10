@@ -8,6 +8,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Clipboard/Clipboard.h>
 #include <LibWeb/HTML/Navigator.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
@@ -57,6 +58,7 @@ void Navigator::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_mime_type_array);
     visitor.visit(m_plugin_array);
+    visitor.visit(m_clipboard);
 }
 
 JS::NonnullGCPtr<MimeTypeArray> Navigator::mime_types()
@@ -71,6 +73,13 @@ JS::NonnullGCPtr<PluginArray> Navigator::plugins()
     if (!m_plugin_array)
         m_plugin_array = heap().allocate<PluginArray>(realm(), realm());
     return *m_plugin_array;
+}
+
+JS::NonnullGCPtr<Clipboard::Clipboard> Navigator::clipboard()
+{
+    if (!m_clipboard)
+        m_clipboard = heap().allocate<Clipboard::Clipboard>(realm(), realm());
+    return *m_clipboard;
 }
 
 }

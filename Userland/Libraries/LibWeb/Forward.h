@@ -65,6 +65,10 @@ enum class ResponseType;
 enum class XMLHttpRequestResponseType;
 }
 
+namespace Web::Clipboard {
+class Clipboard;
+}
+
 namespace Web::Cookie {
 struct Cookie;
 struct ParsedCookie;

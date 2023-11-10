@@ -45,6 +45,7 @@ public:
 
     [[nodiscard]] JS::NonnullGCPtr<MimeTypeArray> mime_types();
     [[nodiscard]] JS::NonnullGCPtr<PluginArray> plugins();
+    [[nodiscard]] JS::NonnullGCPtr<Clipboard::Clipboard> clipboard();
 
     virtual ~Navigator() override;
 
@@ -58,6 +59,9 @@ private:
 
     JS::GCPtr<PluginArray> m_plugin_array;
     JS::GCPtr<MimeTypeArray> m_mime_type_array;
+
+    // https://w3c.github.io/clipboard-apis/#dom-navigator-clipboard
+    JS::GCPtr<Clipboard::Clipboard> m_clipboard;
 };
 
 }
