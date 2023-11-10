@@ -113,7 +113,6 @@ public:
     using TimeoutCallback = Function<void()>;
 
     void load(LoadRequest&, SuccessCallback success_callback, ErrorCallback error_callback = nullptr, Optional<u32> timeout = {}, TimeoutCallback timeout_callback = nullptr);
-    void load(const AK::URL&, SuccessCallback success_callback, ErrorCallback error_callback = nullptr, Optional<u32> timeout = {}, TimeoutCallback timeout_callback = nullptr);
 
     ResourceLoaderConnector& connector() { return *m_connector; }
 
