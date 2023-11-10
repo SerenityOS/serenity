@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/Scripting/ImportMap.h>
@@ -15,9 +16,16 @@
 
 namespace Web::HTML {
 
+enum class IsTopLevel {
+    No,
+    Yes,
+};
+
 using OnFetchScriptComplete = JS::NonnullGCPtr<JS::HeapFunction<void(JS::GCPtr<Script>)>>;
+using PerformTheFetchHook = JS::GCPtr<JS::HeapFunction<WebIDL::ExceptionOr<void>(JS::NonnullGCPtr<Fetch::Infrastructure::Request>, IsTopLevel, Fetch::Infrastructure::FetchAlgorithms::ProcessResponseConsumeBodyFunction)>>;
 
 OnFetchScriptComplete create_on_fetch_script_complete(JS::Heap& heap, Function<void(JS::GCPtr<Script>)> function);
+PerformTheFetchHook create_perform_the_fetch_hook(JS::Heap& heap, Function<WebIDL::ExceptionOr<void>(JS::NonnullGCPtr<Fetch::Infrastructure::Request>, IsTopLevel, Fetch::Infrastructure::FetchAlgorithms::ProcessResponseConsumeBodyFunction)> function);
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#script-fetch-options
 struct ScriptFetchOptions {
@@ -67,6 +75,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString co
 Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& specifier, AK::URL const& base_url);
 
 WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElement>, AK::URL const&, EnvironmentSettingsObject& settings_object, ScriptFetchOptions options, CORSSettingAttribute cors_setting, String character_encoding, OnFetchScriptComplete on_complete);
+WebIDL::ExceptionOr<void> fetch_classic_worker_script(AK::URL const&, EnvironmentSettingsObject& fetch_client, Fetch::Infrastructure::Request::Destination, EnvironmentSettingsObject& settings_object, PerformTheFetchHook, OnFetchScriptComplete);
 void fetch_internal_module_script_graph(JS::Realm&, JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, Fetch::Infrastructure::Request::Destination, ScriptFetchOptions const&, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete);
 void fetch_external_module_script_graph(JS::Realm&, AK::URL const&, EnvironmentSettingsObject& settings_object, ScriptFetchOptions const&, OnFetchScriptComplete on_complete);
 void fetch_inline_module_script_graph(JS::Realm&, DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete);
