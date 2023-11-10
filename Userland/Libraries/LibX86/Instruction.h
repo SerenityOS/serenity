@@ -296,6 +296,7 @@ extern InstructionDescriptor s_table[3][256];
 extern InstructionDescriptor s_0f_table[3][256];
 extern InstructionDescriptor s_sse_table_np[256];
 extern InstructionDescriptor s_sse_table_66[256];
+extern InstructionDescriptor s_sse_table_f2[256];
 extern InstructionDescriptor s_sse_table_f3[256];
 
 struct Prefix {
@@ -1066,7 +1067,9 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, ProcessorM
     }
 
     if (m_descriptor->format == __SSE) {
-        if (m_rep_prefix == 0xF3) {
+        if (m_rep_prefix == 0xF2) {
+            m_descriptor = &s_sse_table_f2[m_sub_op];
+        } else if (m_rep_prefix == 0xF3) {
             m_descriptor = &s_sse_table_f3[m_sub_op];
         } else if (m_has_operand_size_override_prefix) {
             // This was unset while parsing the prefix initially
