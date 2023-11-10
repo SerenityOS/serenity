@@ -665,10 +665,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
     auto const& local_name = token.tag_name();
 
     // 5. Let is be the value of the "is" attribute in the given token, if such an attribute exists, or null otherwise.
-    auto is_value_deprecated_string = token.attribute(AttributeNames::is);
-    Optional<String> is_value;
-    if (!is_value_deprecated_string.is_null())
-        is_value = String::from_utf8(is_value_deprecated_string).release_value_but_fixme_should_propagate_errors();
+    auto is_value = token.attribute(AttributeNames::is);
 
     // 6. Let definition be the result of looking up a custom element definition given document, given namespace, local name, and is.
     auto definition = document->lookup_custom_element_definition(namespace_, local_name, is_value);
@@ -2286,7 +2283,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
 
         // If the token does not have an attribute with the name "type", or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden", then: set the frameset-ok flag to "not ok".
         auto type_attribute = token.attribute(HTML::AttributeNames::type);
-        if (type_attribute.is_null() || !type_attribute.equals_ignoring_ascii_case("hidden"sv)) {
+        if (!type_attribute.has_value() || !type_attribute->equals_ignoring_ascii_case("hidden"sv)) {
             m_frameset_ok = false;
         }
         return;
@@ -3285,7 +3282,7 @@ void HTMLParser::handle_in_table(HTMLToken& token)
         // or if it does, but that attribute's value is not an ASCII case-insensitive match for the string "hidden",
         // then: act as described in the "anything else" entry below.
         auto type_attribute = token.attribute(HTML::AttributeNames::type);
-        if (type_attribute.is_null() || !type_attribute.equals_ignoring_ascii_case("hidden"sv)) {
+        if (!type_attribute.has_value() || !type_attribute->equals_ignoring_ascii_case("hidden"sv)) {
             goto AnythingElse;
         }
 
