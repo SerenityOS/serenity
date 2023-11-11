@@ -694,7 +694,11 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     // encoding, should the need arise, without having to define a new tag type."
     if (record_size < sizeof(MultiLocalizedUnicodeRawRecord))
         return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType record size too small");
-    if (bytes.size() < 16 + number_of_records * record_size)
+
+    Checked<size_t> records_size_in_bytes = number_of_records;
+    records_size_in_bytes *= record_size;
+    records_size_in_bytes += 16;
+    if (records_size_in_bytes.has_overflow() || bytes.size() < records_size_in_bytes.value())
         return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType not enough data for records");
 
     Vector<Record> records;
@@ -715,7 +719,7 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
         if (record.string_length_in_bytes % 2 != 0)
             return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType odd UTF-16 byte length");
 
-        if (record.string_offset_in_bytes + record.string_length_in_bytes > bytes.size())
+        if (static_cast<u64>(record.string_offset_in_bytes) + record.string_length_in_bytes > bytes.size())
             return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType string offset out of bounds");
 
         StringView utf_16be_data { bytes.data() + record.string_offset_in_bytes, record.string_length_in_bytes };
