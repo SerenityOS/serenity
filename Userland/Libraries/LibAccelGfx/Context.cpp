@@ -49,6 +49,12 @@ OwnPtr<Context> Context::create()
     EGLint minor;
     eglInitialize(egl_display, &major, &minor);
 
+    EGLBoolean ok = eglBindAPI(EGL_OPENGL_API);
+    if (ok == EGL_FALSE) {
+        dbgln("eglBindAPI failed");
+        VERIFY_NOT_REACHED();
+    }
+
     static EGLint const config_attributes[] = {
         EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
         EGL_BLUE_SIZE, 8,
@@ -64,10 +70,15 @@ OwnPtr<Context> Context::create()
     eglChooseConfig(egl_display, config_attributes, &egl_config, 1, &num_configs);
 
     static EGLint const context_attributes[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_CONTEXT_MAJOR_VERSION, 3,
+        EGL_CONTEXT_MINOR_VERSION, 3,
         EGL_NONE
     };
     EGLContext egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attributes);
+    if (egl_context == EGL_FALSE) {
+        dbgln("eglCreateContext failed");
+        VERIFY_NOT_REACHED();
+    }
 
     EGLBoolean result = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
     if (result == EGL_FALSE) {
