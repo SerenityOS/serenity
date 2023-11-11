@@ -2397,7 +2397,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
 
     auto& target_block = generator.make_block();
     generator.switch_to_basic_block(saved_block);
-    generator.emit<Bytecode::Op::EnterUnwindContext>(Bytecode::Label { target_block }, handler_target, finalizer_target);
+    generator.emit<Bytecode::Op::EnterUnwindContext>(Bytecode::Label { target_block });
     generator.start_boundary(Bytecode::Generator::BlockBoundaryType::Unwind);
     if (m_finalizer)
         generator.start_boundary(Bytecode::Generator::BlockBoundaryType::ReturnToFinally);

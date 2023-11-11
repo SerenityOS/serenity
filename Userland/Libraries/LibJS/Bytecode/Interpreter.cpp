@@ -1572,9 +1572,7 @@ DeprecatedString ThrowIfNullish::to_deprecated_string_impl(Bytecode::Executable 
 
 DeprecatedString EnterUnwindContext::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    auto handler_string = m_handler_target.has_value() ? DeprecatedString::formatted("{}", *m_handler_target) : "<empty>";
-    auto finalizer_string = m_finalizer_target.has_value() ? DeprecatedString::formatted("{}", *m_finalizer_target) : "<empty>";
-    return DeprecatedString::formatted("EnterUnwindContext handler:{} finalizer:{} entry:{}", handler_string, finalizer_string, m_entry_point);
+    return DeprecatedString::formatted("EnterUnwindContext entry:{}", m_entry_point);
 }
 
 DeprecatedString ScheduleJump::to_deprecated_string_impl(Bytecode::Executable const&) const
