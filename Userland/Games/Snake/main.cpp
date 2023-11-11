@@ -6,9 +6,9 @@
  */
 
 #include "Game.h"
+#include "MainWidget.h"
 #include "Skins/SnakeSkin.h"
 #include <AK/URL.h>
-#include <Games/Snake/SnakeGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
@@ -52,8 +52,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Snake");
     window->resize(324, 345);
 
-    auto widget = window->set_main_widget<GUI::Widget>();
-    TRY(widget->load_from_gml(snake_gml));
+    auto widget = TRY(Snake::MainWidget::try_create());
+    window->set_main_widget(widget);
 
     auto& game = *widget->find_descendant_of_type_named<Snake::Game>("game");
     game.set_focus(true);
