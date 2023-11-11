@@ -577,22 +577,22 @@ void Compiler::compile_throw(Bytecode::Op::Throw const&)
     check_exception();
 }
 
-static ThrowCompletionOr<Value> abstract_inequals(VM& vm, Value src1, Value src2)
+static ThrowCompletionOr<Value> loosely_inequals(VM& vm, Value src1, Value src2)
 {
     return Value(!TRY(is_loosely_equal(vm, src1, src2)));
 }
 
-static ThrowCompletionOr<Value> abstract_equals(VM& vm, Value src1, Value src2)
+static ThrowCompletionOr<Value> loosely_equals(VM& vm, Value src1, Value src2)
 {
     return Value(TRY(is_loosely_equal(vm, src1, src2)));
 }
 
-static ThrowCompletionOr<Value> typed_inequals(VM&, Value src1, Value src2)
+static ThrowCompletionOr<Value> strict_inequals(VM&, Value src1, Value src2)
 {
     return Value(!is_strictly_equal(src1, src2));
 }
 
-static ThrowCompletionOr<Value> typed_equals(VM&, Value src1, Value src2)
+static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
 {
     return Value(is_strictly_equal(src1, src2));
 }

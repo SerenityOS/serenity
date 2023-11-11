@@ -50,10 +50,10 @@ private:
         O(Mod, mod)                                             \
         O(In, in)                                               \
         O(InstanceOf, instance_of)                              \
-        O(LooselyInequals, abstract_inequals)                   \
-        O(LooselyEquals, abstract_equals)                       \
-        O(StrictlyInequals, typed_inequals)                     \
-        O(StrictlyEquals, typed_equals)
+        O(LooselyInequals, loosely_inequals)                    \
+        O(LooselyEquals, loosely_equals)                        \
+        O(StrictlyInequals, strict_inequals)                    \
+        O(StrictlyEquals, strict_equals)
 
 #    define JS_ENUMERATE_COMPARISON_OPS(O)                           \
         O(LessThan, less_than, SignedLessThan)                       \
