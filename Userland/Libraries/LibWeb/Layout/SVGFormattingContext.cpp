@@ -188,11 +188,24 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
     box.for_each_in_subtree([&](Node const& descendant) {
         if (is<SVGGraphicsBox>(descendant)) {
             auto const& graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
-            auto& graphics_box_state = m_state.get_mutable(graphics_box);
             auto& dom_node = const_cast<SVGGraphicsBox&>(graphics_box).dom_node();
+            auto viewbox = dom_node.view_box();
 
+            // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
+            if (viewbox.has_value()) {
+                if (viewbox->width < 0 || viewbox->height < 0) {
+                    // A negative value for <width> or <height> is an error and invalidates the ‘viewBox’ attribute.
+                    viewbox = {};
+                } else if (viewbox->width == 0 || viewbox->height == 0) {
+                    // A value of zero disables rendering of the element.
+                    return IterationDecision::Continue;
+                }
+            }
+
+            auto& graphics_box_state = m_state.get_mutable(graphics_box);
             auto svg_transform = dom_node.get_transform();
-            Gfx::AffineTransform viewbox_transform = compute_viewbox_transform(dom_node.view_box());
+
+            Gfx::AffineTransform viewbox_transform = compute_viewbox_transform(viewbox);
             graphics_box_state.set_computed_svg_transforms(Painting::SVGGraphicsPaintable::ComputedTransforms(viewbox_transform, svg_transform));
             auto to_css_pixels_transform = Gfx::AffineTransform {}.multiply(viewbox_transform).multiply(svg_transform);
 
