@@ -45,6 +45,11 @@ struct VertexArray {
     GLuint id;
 };
 
+struct Framebuffer {
+    GLuint fbo_id;
+    GLuint texture_id;
+};
+
 void set_viewport(Gfx::IntRect);
 void enable_blending();
 
@@ -88,5 +93,9 @@ void delete_buffer(Buffer const&);
 VertexArray create_vertex_array();
 void bind_vertex_array(VertexArray const&);
 void delete_vertex_array(VertexArray const&);
+
+Framebuffer create_framebuffer(Gfx::IntSize);
+void bind_framebuffer(Framebuffer const& framebuffer);
+void delete_framebuffer(Framebuffer const& framebuffer);
 
 }

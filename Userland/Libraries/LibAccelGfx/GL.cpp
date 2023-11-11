@@ -220,4 +220,39 @@ void delete_vertex_array(VertexArray const& vertex_array)
     verify_no_error();
 }
 
+Framebuffer create_framebuffer(Gfx::IntSize size)
+{
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.width(), size.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        VERIFY_NOT_REACHED();
+    }
+
+    verify_no_error();
+
+    return { fbo, texture };
+}
+
+void bind_framebuffer(Framebuffer const& framebuffer)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.fbo_id);
+    verify_no_error();
+}
+
+void delete_framebuffer(Framebuffer const& framebuffer)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.fbo_id);
+    glDeleteFramebuffers(1, &framebuffer.fbo_id);
+    glDeleteTextures(1, &framebuffer.texture_id);
+    verify_no_error();
+}
+
 }

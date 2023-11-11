@@ -16,31 +16,6 @@ Context& Context::the()
     return *s_the;
 }
 
-Context::Surface Context::create_surface(int width, int height)
-{
-    EGLint const pbuffer_attributes[] = {
-        EGL_WIDTH,
-        width,
-        EGL_HEIGHT,
-        height,
-        EGL_NONE,
-    };
-
-    auto egl_surface = eglCreatePbufferSurface(m_egl_display, m_egl_config, pbuffer_attributes);
-    return { egl_surface };
-}
-
-void Context::destroy_surface(Surface surface)
-{
-    if (surface.egl_surface)
-        eglDestroySurface(m_egl_display, surface.egl_surface);
-}
-
-void Context::set_active_surface(Surface surface)
-{
-    VERIFY(eglMakeCurrent(m_egl_display, surface.egl_surface, surface.egl_surface, m_egl_context));
-}
-
 OwnPtr<Context> Context::create()
 {
     EGLDisplay egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);

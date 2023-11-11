@@ -6,7 +6,6 @@
  */
 
 #include <AK/QuickSort.h>
-#include <LibAccelGfx/Canvas.h>
 #include <LibAccelGfx/GL.h>
 #include <LibAccelGfx/Painter.h>
 #include <LibGfx/Color.h>
@@ -33,11 +32,11 @@ static ColorComponents gfx_color_to_opengl_color(Gfx::Color color)
 
 Gfx::FloatRect Painter::to_clip_space(Gfx::FloatRect const& screen_rect) const
 {
-    float x = 2.0f * screen_rect.x() / m_canvas->width() - 1.0f;
-    float y = -1.0f + 2.0f * screen_rect.y() / m_canvas->height();
+    float x = 2.0f * screen_rect.x() / m_target_bitmap->width() - 1.0f;
+    float y = -1.0f + 2.0f * screen_rect.y() / m_target_bitmap->height();
 
-    float width = 2.0f * screen_rect.width() / m_canvas->width();
-    float height = 2.0f * screen_rect.height() / m_canvas->height();
+    float width = 2.0f * screen_rect.width() / m_target_bitmap->width();
+    float height = 2.0f * screen_rect.height() / m_target_bitmap->height();
 
     return { x, y, width, height };
 }
@@ -418,9 +417,24 @@ void Painter::restore()
     m_state_stack.take_last();
 }
 
+void Painter::set_target_bitmap(Gfx::Bitmap& bitmap)
+{
+    if (m_target_framebuffer.has_value()) {
+        GL::delete_framebuffer(*m_target_framebuffer);
+        m_target_framebuffer = {};
+    }
+
+    m_target_framebuffer = GL::create_framebuffer(bitmap.size());
+    GL::bind_framebuffer(*m_target_framebuffer);
+    GL::set_viewport({ 0, 0, bitmap.width(), bitmap.height() });
+    m_target_bitmap = bitmap;
+}
+
 void Painter::flush()
 {
-    m_canvas->flush();
+    VERIFY(m_target_bitmap.has_value());
+    GL::bind_framebuffer(*m_target_framebuffer);
+    GL::read_pixels({ 0, 0, m_target_bitmap->width(), m_target_bitmap->height() }, *m_target_bitmap);
 }
 
 }
