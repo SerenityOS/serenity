@@ -29,8 +29,8 @@ public:
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
             bytes[0] = m_current_byte.release_value();
-            // FIXME: This accidentally slices off the first byte of the returned span.
-            return m_stream->read_some(bytes.slice(1));
+            auto freshly_read_bytes = TRY(m_stream->read_some(bytes.slice(1)));
+            return bytes.trim(1 + freshly_read_bytes.size());
         }
         align_to_byte_boundary();
         return m_stream->read_some(bytes);
