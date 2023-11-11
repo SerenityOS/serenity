@@ -806,6 +806,13 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
         COMMAND ${CMAKE_OBJCOPY} -O binary Kernel kernel8.img
         BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel8.img
     )
+elseif ("${SERENITY_ARCH}" STREQUAL "riscv64")
+    add_custom_command(
+        TARGET Kernel POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY} -O binary Kernel Kernel.bin
+        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel.bin
+    )
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.bin" DESTINATION boot)
 endif()
 
 serenity_install_headers(Kernel)
