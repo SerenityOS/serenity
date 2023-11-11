@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,10 +46,14 @@ public:
     bool is_auto_collecting() const { return m_auto_collect; }
     void set_auto_collect(bool collect) { m_auto_collect = collect; }
 
+    bool can_solve();
+    void start_solving();
+
     Function<void(uint32_t)> on_score_update;
     Function<void()> on_game_start;
     Function<void(GameOverReason, uint32_t)> on_game_end;
     Function<void(bool)> on_undo_availability_change;
+    Function<void()> on_move;
 
 private:
     Game();
@@ -188,6 +193,7 @@ private:
     void check_for_game_over();
     void clear_hovered_stack();
     void deal_next_card();
+    void step_solve();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -211,6 +217,7 @@ private:
         GameInProgress,
         StartGameOverAnimationNextFrame,
         GameOverAnimation,
+        Solving,
     };
     State m_state { State::WaitingForNewGame };
 
