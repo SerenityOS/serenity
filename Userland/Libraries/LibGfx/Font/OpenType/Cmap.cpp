@@ -68,6 +68,8 @@ Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
         return {};
     }
     u32 record_offset = (u32)Sizes::TableHeader + index * (u32)Sizes::EncodingRecord;
+    if (record_offset + (u32)Offsets::EncodingRecord_Offset >= m_slice.size())
+        return {};
     u16 platform_id = be_u16(m_slice.offset(record_offset));
     u16 encoding_id = be_u16(m_slice.offset(record_offset + (u32)Offsets::EncodingRecord_EncodingID));
     u32 subtable_offset = be_u32(m_slice.offset(record_offset + (u32)Offsets::EncodingRecord_Offset));
