@@ -560,14 +560,25 @@ void Compiler::check_exception()
     }
 }
 
+static void cxx_enter_unwind_context(VM& vm)
+{
+    vm.bytecode_interpreter().enter_unwind_context();
+}
+
 void Compiler::compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const& op)
 {
+    native_call((void*)cxx_enter_unwind_context);
     m_assembler.jump(label_for(op.entry_point().block()));
+}
+
+static void cxx_leave_unwind_context(VM& vm)
+{
+    vm.bytecode_interpreter().leave_unwind_context();
 }
 
 void Compiler::compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&)
 {
-    /* Nothing */
+    native_call((void*)cxx_leave_unwind_context);
 }
 
 void Compiler::compile_throw(Bytecode::Op::Throw const&)
@@ -575,6 +586,16 @@ void Compiler::compile_throw(Bytecode::Op::Throw const&)
     load_accumulator(GPR0);
     store_vm_register(Bytecode::Register::exception(), GPR0);
     check_exception();
+}
+
+static void cxx_catch(VM& vm)
+{
+    vm.bytecode_interpreter().catch_exception();
+}
+
+void Compiler::compile_catch(Bytecode::Op::Catch const&)
+{
+    native_call((void*)cxx_catch);
 }
 
 static ThrowCompletionOr<Value> loosely_inequals(VM& vm, Value src1, Value src2)
