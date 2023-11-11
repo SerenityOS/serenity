@@ -21,7 +21,7 @@ private:
     static PDFErrorOr<ByteBuffer> decode_ascii_hex(ReadonlyBytes bytes);
     static PDFErrorOr<ByteBuffer> decode_ascii85(ReadonlyBytes bytes);
     static PDFErrorOr<ByteBuffer> decode_png_prediction(Bytes bytes, int bytes_per_row);
-    static PDFErrorOr<ByteBuffer> decode_lzw(ReadonlyBytes bytes);
+    static PDFErrorOr<ByteBuffer> decode_lzw(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component, int early_change);
     static PDFErrorOr<ByteBuffer> decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component);
     static PDFErrorOr<ByteBuffer> decode_run_length(ReadonlyBytes bytes);
     static PDFErrorOr<ByteBuffer> decode_ccitt(ReadonlyBytes bytes);

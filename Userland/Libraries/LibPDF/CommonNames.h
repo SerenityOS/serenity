@@ -61,6 +61,7 @@
     X(Differences)                \
     X(Domain)                     \
     X(E)                          \
+    X(EarlyChange)                \
     X(Encode)                     \
     X(Encoding)                   \
     X(Encrypt)                    \
