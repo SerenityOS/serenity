@@ -189,8 +189,31 @@ Optional<double> Animation::current_time() const
 // https://www.w3.org/TR/web-animations-1/#animation-set-the-current-time
 WebIDL::ExceptionOr<void> Animation::set_current_time(Optional<double> const& seek_time)
 {
-    // FIXME: Implement
-    (void)seek_time;
+    // 1. Run the steps to silently set the current time of animation to seek time.
+    TRY(silently_set_current_time(seek_time));
+
+    // 2. If animation has a pending pause task, synchronously complete the pause operation by performing the following
+    //    steps:
+    if (m_pending_pause_task == TaskState::Pending) {
+        // 1. Set animation’s hold time to seek time.
+        m_hold_time = seek_time;
+
+        // 2. Apply any pending playback rate to animation.
+        apply_any_pending_playback_rate();
+
+        // 3. Make animation’s start time unresolved.
+        m_start_time = {};
+
+        // 4. Cancel the pending pause task.
+        m_pending_pause_task = TaskState::None;
+
+        // 5 Resolve animation’s current ready promise with animation.
+        WebIDL::resolve_promise(realm(), current_ready_promise(), this);
+    }
+
+    // FIXME: 3. Run the procedure to update an animation’s finished state for animation with the did seek flag set to
+    //           true, and the synchronously notify flag set to false.
+
     return {};
 }
 
@@ -222,6 +245,52 @@ void Animation::apply_any_pending_playback_rate()
 
     // 3. Clear animation’s pending playback rate.
     m_pending_playback_rate = {};
+}
+
+// https://www.w3.org/TR/web-animations-1/#animation-silently-set-the-current-time
+WebIDL::ExceptionOr<void> Animation::silently_set_current_time(Optional<double> seek_time)
+{
+    // 1. If seek time is an unresolved time value, then perform the following steps.
+    if (!seek_time.has_value()) {
+        // 1. If the current time is resolved, then throw a TypeError.
+        if (current_time().has_value()) {
+            return WebIDL::SimpleException {
+                WebIDL::SimpleExceptionType::TypeError,
+                "Cannot change an animation's current time from a resolve value to an unresolved value"sv
+            };
+        }
+
+        // 2. Abort these steps.
+        return {};
+    }
+
+    // 2. Update either animation’s hold time or start time as follows:
+
+    // -> If any of the following conditions are true:
+    //    - animation’s hold time is resolved, or
+    //    - animation’s start time is unresolved, or
+    //    - animation has no associated timeline or the associated timeline is inactive, or
+    //    - animation’s playback rate is 0,
+    if (m_hold_time.has_value() || !m_start_time.has_value() || !m_timeline || m_timeline->is_inactive() || m_playback_rate == 0.0) {
+        // Set animation’s hold time to seek time.
+        m_hold_time = seek_time;
+    }
+    // -> Otherwise,
+    else {
+        // Set animation’s start time to the result of evaluating timeline time - (seek time / playback rate) where
+        // timeline time is the current time value of timeline associated with animation.
+        m_start_time = m_timeline->current_time().value() - (seek_time.value() / m_playback_rate);
+    }
+
+    // 3. If animation has no associated timeline or the associated timeline is inactive, make animation’s start time
+    //    unresolved.
+    if (!m_timeline || m_timeline->is_inactive())
+        m_start_time = {};
+
+    // 4. Make animation’s previous current time unresolved.
+    m_previous_current_time = {};
+
+    return {};
 }
 
 JS::NonnullGCPtr<WebIDL::Promise> Animation::current_ready_promise() const
