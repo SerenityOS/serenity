@@ -254,6 +254,9 @@ public:
     Gfx::ColorRole foreground_role() const { return m_foreground_role; }
     void set_foreground_role(Gfx::ColorRole);
 
+    bool set_background_color(String);
+    void set_background_color(Gfx::Color);
+
     void set_autofill(bool b) { set_fill_with_background_color(b); }
 
     Window* window()
