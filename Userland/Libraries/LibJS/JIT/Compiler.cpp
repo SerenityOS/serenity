@@ -1988,6 +1988,20 @@ void Compiler::compile_leave_lexical_environment(Bytecode::Op::LeaveLexicalEnvir
     native_call((void*)cxx_leave_lexical_environment);
 }
 
+static Value cxx_enter_object_environment(VM& vm, Value value)
+{
+    auto object = TRY_OR_SET_EXCEPTION(value.to_object(vm));
+    vm.bytecode_interpreter().enter_object_environment(*object);
+    return {};
+}
+
+void Compiler::compile_enter_object_environment(Bytecode::Op::EnterObjectEnvironment const&)
+{
+    load_accumulator(ARG1);
+    native_call((void*)cxx_enter_object_environment);
+    check_exception();
+}
+
 static Value cxx_concat_string(VM& vm, Value lhs, Value rhs)
 {
     auto string = TRY_OR_SET_EXCEPTION(rhs.to_primitive_string(vm));

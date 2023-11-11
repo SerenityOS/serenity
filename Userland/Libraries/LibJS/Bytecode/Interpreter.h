@@ -76,6 +76,8 @@ public:
     void leave_unwind_context();
     void catch_exception();
 
+    void enter_object_environment(Object&);
+
     Executable& current_executable() { return *m_current_executable; }
     Executable const& current_executable() const { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
