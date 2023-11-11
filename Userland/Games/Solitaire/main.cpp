@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -90,6 +91,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& game = *widget->find_descendant_of_type_named<Solitaire::Game>("game");
     game.set_focus(true);
 
+    auto& action_bar = *widget->find_descendant_of_type_named<GUI::Widget>("game_action_bar");
+    action_bar.set_background_color(game.background_color());
+    action_bar.set_visible(false);
+
+    auto& solve_button = *action_bar.find_descendant_of_type_named<GUI::Button>("solve_button");
+    solve_button.on_click = [&](auto) {
+        game.start_solving();
+        solve_button.set_enabled(false);
+    };
+
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, "Score: 0"_string);
     statusbar.set_text(1, TRY(String::formatted("High Score: {}", high_score())));
@@ -115,13 +126,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
 
     game.on_game_start = [&]() {
+        solve_button.set_enabled(false);
+        action_bar.set_visible(false);
         seconds_elapsed = 0;
         timer->start();
         statusbar.set_text(2, "Time: 00:00"_string);
     };
+    game.on_move = [&]() {
+        solve_button.set_enabled(true);
+        action_bar.set_visible(game.can_solve());
+    };
     game.on_game_end = [&](Solitaire::GameOverReason reason, uint32_t score) {
         if (timer->is_active())
             timer->stop();
+
+        solve_button.set_enabled(false);
 
         if (reason == Solitaire::GameOverReason::Victory) {
             if (seconds_elapsed >= 30) {
@@ -228,7 +247,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu->add_action(GUI::CommonActions::make_about_action("Solitaire"_string, app_icon, window));
 
     window->set_resizable(false);
-    window->resize(Solitaire::Game::width, Solitaire::Game::height + statusbar.max_height().as_int());
+    window->resize(Solitaire::Game::width, Solitaire::Game::height + statusbar.max_height().as_int() + action_bar.height());
     window->set_icon(app_icon.bitmap_for_size(16));
     window->show();
 

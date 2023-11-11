@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,7 @@ namespace Solitaire {
 
 static constexpr uint8_t new_game_animation_delay = 2;
 static constexpr int s_timer_interval_ms = 1000 / 60;
+static constexpr int s_timer_solving_interval_ms = 100;
 
 ErrorOr<NonnullRefPtr<Game>> Game::try_create()
 {
@@ -98,6 +100,10 @@ void Game::timer_event(Core::TimerEvent&)
             m_new_game_animation_delay = 0;
             deal_next_card();
         }
+        break;
+    }
+    case State::Solving: {
+        step_solve();
         break;
     }
     default:
@@ -270,10 +276,16 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                         start_timer_if_necessary();
                         update(top_card.rect());
                         remember_flip_for_undo(top_card);
+
+                        if (on_move)
+                            on_move();
                     }
                 } else if (!is_moving_cards()) {
-                    if (is_auto_collecting() && attempt_to_move_card_to_foundations(to_check))
+                    if (is_auto_collecting() && attempt_to_move_card_to_foundations(to_check)) {
+                        if (on_move)
+                            on_move();
                         break;
+                    }
 
                     if (event.button() == GUI::MouseButton::Secondary) {
                         preview_card(to_check, click_location);
@@ -316,6 +328,9 @@ void Game::mouseup_event(GUI::MouseEvent& event)
 
         score_move(*moving_cards_source_stack(), stack);
         rebound = false;
+
+        if (on_move)
+            on_move();
     }
 
     if (rebound) {
@@ -400,6 +415,8 @@ void Game::check_for_game_over()
             return;
     }
 
+    if (has_timer())
+        stop_timer();
     start_game_over_animation();
 }
 
@@ -660,6 +677,50 @@ void Game::perform_undo()
     if (on_undo_availability_change)
         on_undo_availability_change(false);
     invalidate_layout();
+}
+
+bool Game::can_solve()
+{
+    if (m_state != State::GameInProgress)
+        return false;
+
+    for (auto const& stack : stacks()) {
+        switch (stack->type()) {
+        case Cards::CardStack::Type::Waste:
+        case Cards::CardStack::Type::Stock:
+            if (!stack->is_empty())
+                return false;
+            break;
+        case Cards::CardStack::Type::Normal:
+            if (!stack->is_empty() && stack->stack().first()->is_upside_down())
+                return false;
+            break;
+        default:
+            break;
+        }
+    }
+
+    return true;
+}
+
+void Game::start_solving()
+{
+    if (!can_solve())
+        return;
+
+    m_state = State::Solving;
+    start_timer(s_timer_solving_interval_ms);
+}
+
+void Game::step_solve()
+{
+    for (auto& stack : stacks()) {
+        if (stack->type() != Cards::CardStack::Type::Normal)
+            continue;
+
+        if (attempt_to_move_card_to_foundations(stack))
+            break;
+    }
 }
 
 void Game::clear_hovered_stack()
