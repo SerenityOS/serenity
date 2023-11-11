@@ -21,17 +21,14 @@
 namespace Web::HTML {
 
 using SerializationRecord = Vector<u32>;
-struct SerializationRange {
-    u64 start = 0;
-    u64 end = 0;
-};
-using SerializationMemory = HashMap<JS::Handle<JS::Value>, SerializationRange>;
+using SerializationMemory = HashMap<JS::Handle<JS::Value>, u32>;
+using DeserializationMemory = JS::MarkedVector<JS::Value>;
 
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize(JS::VM& vm, JS::Value);
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize_for_storage(JS::VM& vm, JS::Value);
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& vm, JS::Value, bool for_storage, SerializationMemory&);
 
-WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationRecord const& serialized, JS::Realm& target_realm, Optional<SerializationMemory>);
+WebIDL::ExceptionOr<JS::Value> structured_deserialize(JS::VM& vm, SerializationRecord const& serialized, JS::Realm& target_realm, Optional<DeserializationMemory>);
 
 // TODO: structured_[de]serialize_with_transfer
 

@@ -84,7 +84,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PerformanceMark>> PerformanceMark::construc
         auto record = TRY(HTML::structured_serialize(vm, mark_options.detail));
 
         // 2. Set entry's detail to the result of calling the StructuredDeserialize algorithm on record and the current realm.
-        detail = TRY(HTML::structured_deserialize(vm, record, realm, Optional<HTML::SerializationMemory> {}));
+        detail = TRY(HTML::structured_deserialize(vm, record, realm, Optional<HTML::DeserializationMemory> {}));
     }
 
     // 2. Create a new PerformanceMark object (entry) with the current global object's realm.
