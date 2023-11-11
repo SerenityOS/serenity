@@ -272,6 +272,8 @@ void Parser::parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extend
 
     if (lexer.consume_specific("attribute"))
         consume_whitespace();
+    else
+        report_parsing_error("expected 'attribute'"sv, filename, input, lexer.tell());
 
     auto type = parse_type();
     consume_whitespace();
