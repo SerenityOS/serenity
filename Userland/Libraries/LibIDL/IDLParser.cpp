@@ -187,8 +187,16 @@ NonnullRefPtr<Type const> Parser::parse_type()
         assert_specific(')');
 
         bool nullable = lexer.consume_specific('?');
+        auto type = adopt_ref(*new UnionType("", nullable, move(union_member_types)));
 
-        return adopt_ref(*new UnionType("", nullable, move(union_member_types)));
+        if (nullable) {
+            if (type->number_of_nullable_member_types() > 0)
+                report_parsing_error("nullable union type cannot contain another nullable type"sv, filename, input, lexer.tell());
+
+            // FIXME: A nullable union type cannot include a dictionary type as one of its flattened member types.
+        }
+
+        return type;
     }
 
     bool unsigned_ = lexer.consume_specific("unsigned");
@@ -223,6 +231,28 @@ NonnullRefPtr<Type const> Parser::parse_type()
     if (unsigned_)
         builder.append("unsigned "sv);
     builder.append(name);
+
+    if (nullable) {
+        // https://webidl.spec.whatwg.org/#dfn-nullable-type
+        // The inner type must not be:
+        //   - any,
+        if (name == "any"sv)
+            report_parsing_error("'any' cannot be nullable"sv, filename, input, lexer.tell());
+
+        //   - a promise type,
+        if (name == "Promise"sv)
+            report_parsing_error("'Promise' cannot be nullable"sv, filename, input, lexer.tell());
+
+        //   - an observable array type,
+        if (name == "ObservableArray")
+            report_parsing_error("'ObservableArray' cannot be nullable"sv, filename, input, lexer.tell());
+
+        //   - another nullable type, or
+
+        //   - a union type that itself includes a nullable type or has a dictionary type as one of its flattened
+        //     member types
+        // Note: This case is handled above
+    }
 
     if (is_parameterized_type)
         return adopt_ref(*new ParameterizedType(builder.to_deprecated_string(), nullable, move(parameters)));
