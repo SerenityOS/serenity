@@ -1192,11 +1192,9 @@ class EnterUnwindContext final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
 
-    EnterUnwindContext(Label entry_point, Optional<Label> handler_target, Optional<Label> finalizer_target)
+    EnterUnwindContext(Label entry_point)
         : Instruction(Type::EnterUnwindContext, sizeof(*this))
         , m_entry_point(move(entry_point))
-        , m_handler_target(move(handler_target))
-        , m_finalizer_target(move(finalizer_target))
     {
     }
 
@@ -1204,13 +1202,9 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
     auto& entry_point() const { return m_entry_point; }
-    auto& handler_target() const { return m_handler_target; }
-    auto& finalizer_target() const { return m_finalizer_target; }
 
 private:
     Label m_entry_point;
-    Optional<Label> m_handler_target;
-    Optional<Label> m_finalizer_target;
 };
 
 class ScheduleJump final : public Instruction {
