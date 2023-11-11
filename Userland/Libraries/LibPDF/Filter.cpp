@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitStream.h>
 #include <AK/Hex.h>
 #include <LibCompress/Deflate.h>
+#include <LibCompress/LZWDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
@@ -18,6 +20,7 @@ PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString c
     int columns = 1;
     int colors = 1;
     int bits_per_component = 8;
+    int early_change = 1;
 
     if (decode_parms) {
         if (decode_parms->contains(CommonNames::Predictor))
@@ -28,6 +31,8 @@ PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString c
             colors = decode_parms->get_value(CommonNames::Colors).get<int>();
         if (decode_parms->contains(CommonNames::BitsPerComponent))
             bits_per_component = decode_parms->get_value(CommonNames::BitsPerComponent).get<int>();
+        if (decode_parms->contains(CommonNames::EarlyChange))
+            early_change = decode_parms->get_value(CommonNames::EarlyChange).get<int>();
     }
 
     if (encoding_type == CommonNames::ASCIIHexDecode)
@@ -35,7 +40,7 @@ PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString c
     if (encoding_type == CommonNames::ASCII85Decode)
         return decode_ascii85(bytes);
     if (encoding_type == CommonNames::LZWDecode)
-        return decode_lzw(bytes);
+        return decode_lzw(bytes, predictor, columns, colors, bits_per_component, early_change);
     if (encoding_type == CommonNames::FlateDecode)
         return decode_flate(bytes, predictor, columns, colors, bits_per_component);
     if (encoding_type == CommonNames::RunLengthDecode)
@@ -227,9 +232,32 @@ PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer
     return decode_png_prediction(buffer, bytes_per_row);
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component, int early_change)
 {
-    return Error::rendering_unsupported_error("LZW Filter is not supported");
+    auto memory_stream = make<FixedMemoryStream>(bytes);
+    auto lzw_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(move(memory_stream)));
+    Compress::LZWDecoder lzw_decoder { MaybeOwned<BigEndianInputBitStream> { move(lzw_stream) }, 8, -early_change };
+
+    ByteBuffer decoded;
+
+    u16 const clear_code = lzw_decoder.add_control_code();
+    u16 const end_of_data_code = lzw_decoder.add_control_code();
+
+    while (true) {
+        auto const code = TRY(lzw_decoder.next_code());
+
+        if (code == clear_code) {
+            lzw_decoder.reset();
+            continue;
+        }
+
+        if (code == end_of_data_code)
+            break;
+
+        TRY(decoded.try_append(lzw_decoder.get_output()));
+    }
+
+    return handle_lzw_and_flate_parameters(move(decoded), predictor, columns, colors, bits_per_component);
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component)
