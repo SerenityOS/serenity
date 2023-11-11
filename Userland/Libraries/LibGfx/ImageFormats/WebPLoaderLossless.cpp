@@ -26,7 +26,7 @@ ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(ReadonlyBytes vp8l_data)
         return Error::from_string_literal("WebPImageDecoderPlugin: VP8L chunk too small");
 
     FixedMemoryStream memory_stream { vp8l_data.trim(5) };
-    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
+    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream), LittleEndianInputBitStream::UnsatisfiableReadBehavior::FillWithZero };
 
     u8 signature = TRY(bit_stream.read_bits(8));
     if (signature != 0x2f)
@@ -931,7 +931,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<B
 ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const& vp8l_header)
 {
     FixedMemoryStream memory_stream { vp8l_header.lossless_data };
-    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
+    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream), LittleEndianInputBitStream::UnsatisfiableReadBehavior::FillWithZero };
 
     // image-stream = optional-transform spatially-coded-image
 

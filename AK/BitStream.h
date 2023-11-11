@@ -156,7 +156,7 @@ public:
         FillWithZero,
     };
 
-    explicit LittleEndianInputBitStream(MaybeOwned<Stream> stream, UnsatisfiableReadBehavior unsatisfiable_read_behavior = UnsatisfiableReadBehavior::FillWithZero)
+    explicit LittleEndianInputBitStream(MaybeOwned<Stream> stream, UnsatisfiableReadBehavior unsatisfiable_read_behavior = UnsatisfiableReadBehavior::Reject)
         : LittleEndianBitStream(move(stream))
         , m_unsatisfiable_read_behavior(unsatisfiable_read_behavior)
     {
