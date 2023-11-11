@@ -152,15 +152,12 @@ Widget::Widget()
 
     register_property(
         "background_color", [this]() -> JsonValue { return palette().color(background_role()).to_deprecated_string(); },
-        [this](auto& value) {
-            auto c = Color::from_string(value.to_deprecated_string());
-            if (c.has_value()) {
-                auto _palette = palette();
-                _palette.set_color(background_role(), c.value());
-                set_palette(_palette);
-                return true;
-            }
-            return false;
+        [this](JsonValue const& value) {
+            auto color_str = String::from_deprecated_string(value.to_deprecated_string());
+            if (color_str.is_error())
+                return false;
+
+            return set_background_color(color_str.release_value());
         });
 
     register_property(
@@ -1083,6 +1080,22 @@ void Widget::set_foreground_role(ColorRole role)
 {
     m_foreground_role = role;
     update();
+}
+
+bool Widget::set_background_color(String color_str)
+{
+    auto color = Color::from_string(color_str.to_deprecated_string());
+    if (!color.has_value())
+        return false;
+    set_background_color(color.release_value());
+    return true;
+}
+
+void Widget::set_background_color(Gfx::Color color)
+{
+    auto _palette = palette();
+    _palette.set_color(background_role(), color);
+    set_palette(_palette);
 }
 
 Gfx::Palette Widget::palette() const
