@@ -37,6 +37,14 @@ struct Texture {
     GLuint id;
 };
 
+struct Buffer {
+    GLuint id;
+};
+
+struct VertexArray {
+    GLuint id;
+};
+
 void set_viewport(Gfx::IntRect);
 void enable_blending();
 
@@ -55,7 +63,7 @@ void upload_texture_data(Texture const& texture, Gfx::Bitmap const& bitmap);
 void delete_texture(Texture const&);
 
 void set_uniform(Uniform const& uniform, float, float, float, float);
-void set_vertex_attribute(VertexAttribute const& attribute, Span<float> values, int number_of_components);
+void set_vertex_attribute(VertexAttribute const& attribute, u32 offset, int number_of_components);
 
 enum class ScalingMode {
     Nearest,
@@ -71,5 +79,14 @@ enum class DrawPrimitive {
 };
 
 void draw_arrays(DrawPrimitive, size_t count);
+
+Buffer create_buffer();
+void bind_buffer(Buffer const&);
+void upload_to_buffer(Buffer const&, Span<float> values);
+void delete_buffer(Buffer const&);
+
+VertexArray create_vertex_array();
+void bind_vertex_array(VertexArray const&);
+void delete_vertex_array(VertexArray const&);
 
 }
