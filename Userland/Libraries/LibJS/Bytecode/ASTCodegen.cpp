@@ -2337,6 +2337,8 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
         auto& handler_block = generator.make_block();
         generator.switch_to_basic_block(handler_block);
 
+        generator.emit<Bytecode::Op::Catch>();
+
         if (!m_finalizer)
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
 

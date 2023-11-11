@@ -294,13 +294,7 @@ void Interpreter::run_bytecode()
                 VERIFY(unwind_context.executable == m_current_executable);
 
                 if (handler) {
-                    VERIFY(!unwind_context.handler_called);
-                    vm().running_execution_context().lexical_environment = unwind_context.lexical_environment;
                     m_current_block = handler;
-                    unwind_context.handler_called = true;
-
-                    accumulator = reg(Register::exception());
-                    reg(Register::exception()) = {};
                     goto start;
                 }
                 if (finalizer) {
@@ -437,6 +431,17 @@ void Interpreter::enter_unwind_context()
 void Interpreter::leave_unwind_context()
 {
     unwind_contexts().take_last();
+}
+
+void Interpreter::catch_exception()
+{
+    accumulator() = reg(Register::exception());
+    reg(Register::exception()) = {};
+    auto& context = unwind_contexts().last();
+    VERIFY(!context.handler_called);
+    VERIFY(context.executable == &current_executable());
+    context.handler_called = true;
+    vm().running_execution_context().lexical_environment = context.lexical_environment;
 }
 
 ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
@@ -743,6 +748,12 @@ ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpret
     interpreter.saved_lexical_environment_stack().append(old_environment);
     auto object = TRY(interpreter.accumulator().to_object(vm));
     vm.running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
+    return {};
+}
+
+ThrowCompletionOr<void> Catch::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.catch_exception();
     return {};
 }
 
@@ -1731,6 +1742,11 @@ DeprecatedString BlockDeclarationInstantiation::to_deprecated_string_impl(Byteco
 DeprecatedString ImportCall::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("ImportCall specifier:{} options:{}"sv, m_specifier, m_options);
+}
+
+DeprecatedString Catch::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "Catch"sv;
 }
 
 }

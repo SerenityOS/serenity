@@ -74,6 +74,7 @@ public:
 
     void enter_unwind_context();
     void leave_unwind_context();
+    void catch_exception();
 
     Executable& current_executable() { return *m_current_executable; }
     Executable const& current_executable() const { return *m_current_executable; }
