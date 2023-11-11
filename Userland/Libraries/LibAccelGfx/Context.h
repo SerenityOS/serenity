@@ -20,14 +20,6 @@ class Context {
 public:
     static Context& the();
 
-    struct Surface {
-        EGLSurface egl_surface { 0 };
-    };
-
-    Surface create_surface(int width, int height);
-    void destroy_surface(Surface surface);
-    void set_active_surface(Surface surface);
-
     static OwnPtr<Context> create();
 
     Context(EGLDisplay egl_display, EGLContext egl_context, EGLConfig egl_config)

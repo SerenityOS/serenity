@@ -10,7 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
-#include <LibAccelGfx/Canvas.h>
+#include <LibAccelGfx/Context.h>
 #include <LibAccelGfx/Forward.h>
 #include <LibAccelGfx/GL.h>
 #include <LibAccelGfx/Program.h>
@@ -67,12 +67,11 @@ public:
 
     void draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color);
 
-    void set_canvas(Canvas& canvas) { m_canvas = canvas; }
+    void set_target_bitmap(Gfx::Bitmap&);
     void flush();
 
 private:
     Context& m_context;
-    Optional<Canvas> m_canvas;
 
     struct State {
         Gfx::AffineTransform transform;
@@ -91,6 +90,9 @@ private:
     HashMap<GlyphsTextureKey, Gfx::IntRect> m_glyphs_texture_map;
     Gfx::IntSize m_glyphs_texture_size;
     GL::Texture m_glyphs_texture;
+
+    Optional<Gfx::Bitmap&> m_target_bitmap;
+    Optional<GL::Framebuffer> m_target_framebuffer;
 };
 
 }
