@@ -86,6 +86,7 @@ private:
         O(Catch, catch)                                                          \
         O(CreateLexicalEnvironment, create_lexical_environment)                  \
         O(LeaveLexicalEnvironment, leave_lexical_environment)                    \
+        O(EnterObjectEnvironment, enter_object_environment)                      \
         O(ToNumeric, to_numeric)                                                 \
         O(ResolveThisBinding, resolve_this_binding)                              \
         O(Return, return)                                                        \
