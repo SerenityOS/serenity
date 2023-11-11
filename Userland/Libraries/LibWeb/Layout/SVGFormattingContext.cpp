@@ -215,8 +215,6 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             } else if (is<SVGTextBox>(descendant)) {
                 auto& text_element = static_cast<SVG::SVGTextPositioningElement&>(dom_node);
 
-                // FIXME: Support arbitrary path transforms for fonts.
-                // FIMXE: This assumes transform->x_scale() == transform->y_scale().
                 auto& font = graphics_box.font();
                 auto text_contents = text_element.text_contents();
                 Utf8View text_utf8 { text_contents };
