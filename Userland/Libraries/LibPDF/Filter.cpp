@@ -114,33 +114,18 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
 
         u32 number = 0;
 
-        if (byte_index + 5 >= bytes.size()) {
-            auto to_write = bytes.size() - byte_index;
-            for (int i = 0; i < 5; i++) {
-                auto byte = byte_index >= bytes.size() ? 'u' : bytes[byte_index++];
-                if (Reader::is_whitespace(byte)) {
-                    i--;
-                    continue;
-                }
-                number = number * 85 + byte - 33;
-            }
+        auto const to_write = byte_index + 5 >= bytes.size() ? bytes.size() - byte_index : 5;
 
-            for (size_t i = 0; i < to_write - 1; i++)
-                buffer.append(reinterpret_cast<u8*>(&number)[3 - i]);
-
-            break;
-        } else {
-            for (int i = 0; i < 5; i++) {
-                auto byte = bytes[byte_index++];
-                if (Reader::is_whitespace(byte)) {
-                    i--;
-                    continue;
-                }
-                number = number * 85 + byte - 33;
+        for (int i = 0; i < 5; i++) {
+            auto byte = byte_index >= bytes.size() ? 'u' : bytes[byte_index++];
+            if (Reader::is_whitespace(byte)) {
+                i--;
+                continue;
             }
+            number = number * 85 + byte - 33;
         }
 
-        for (int i = 0; i < 4; i++)
+        for (size_t i = 0; i < to_write - 1; i++)
             buffer.append(reinterpret_cast<u8*>(&number)[3 - i]);
     }
 
