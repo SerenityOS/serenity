@@ -43,23 +43,26 @@ Gfx::FloatRect Painter::to_clip_space(Gfx::FloatRect const& screen_rect) const
 }
 
 char const* vertex_shader_source = R"(
-attribute vec2 aVertexPosition;
+#version 330 core
+in vec2 aVertexPosition;
 void main() {
     gl_Position = vec4(aVertexPosition, 0.0, 1.0);
 }
 )";
 
 char const* solid_color_fragment_shader_source = R"(
-precision mediump float;
+#version 330 core
 uniform vec4 uColor;
+out vec4 fragColor;
 void main() {
-    gl_FragColor = uColor;
+    fragColor = uColor;
 }
 )";
 
 char const* blit_vertex_shader_source = R"(
-attribute vec4 aVertexPosition;
-varying vec2 vTextureCoord;
+#version 330 core
+in vec4 aVertexPosition;
+out vec2 vTextureCoord;
 void main() {
     gl_Position = vec4(aVertexPosition.xy, 0.0, 1.0);
     vTextureCoord = aVertexPosition.zw;
@@ -67,12 +70,13 @@ void main() {
 )";
 
 char const* blit_fragment_shader_source = R"(
-precision mediump float;
+#version 330 core
 uniform vec4 uColor;
-varying vec2 vTextureCoord;
+in vec2 vTextureCoord;
 uniform sampler2D uSampler;
+out vec4 fragColor;
 void main() {
-    gl_FragColor = texture2D(uSampler, vTextureCoord) * uColor;
+    fragColor = texture2D(uSampler, vTextureCoord) * uColor;
 }
 )";
 
