@@ -1151,7 +1151,10 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
     u8 macintosh_description_length = *cursor;
     cursor += 1;
 
-    if (macintosh_description_length > 67)
+    Checked<u32> macintosh_description_end = unicode_desciption_end;
+    macintosh_description_end += 3;
+    macintosh_description_end += macintosh_description_length;
+    if (macintosh_description_length > 67 || macintosh_description_end.has_overflow() || macintosh_description_end.value() > bytes.size())
         return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode description too long");
 
     u8 const* macintosh_description_data = cursor;
