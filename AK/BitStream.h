@@ -151,8 +151,14 @@ protected:
 /// in little-endian order from another stream.
 class LittleEndianInputBitStream : public LittleEndianBitStream {
 public:
-    explicit LittleEndianInputBitStream(MaybeOwned<Stream> stream)
+    enum UnsatisfiableReadBehavior {
+        Reject,
+        FillWithZero,
+    };
+
+    explicit LittleEndianInputBitStream(MaybeOwned<Stream> stream, UnsatisfiableReadBehavior unsatisfiable_read_behavior = UnsatisfiableReadBehavior::FillWithZero)
         : LittleEndianBitStream(move(stream))
+        , m_unsatisfiable_read_behavior(unsatisfiable_read_behavior)
     {
     }
 
@@ -209,8 +215,15 @@ public:
     template<Unsigned T = u64>
     ErrorOr<T> peek_bits(size_t count)
     {
-        if (count > m_bit_count)
-            TRY(refill_buffer_from_stream());
+        while (count > m_bit_count) {
+            if (TRY(refill_buffer_from_stream()))
+                continue;
+
+            if (m_unsatisfiable_read_behavior == UnsatisfiableReadBehavior::Reject)
+                return Error::from_string_literal("Reached end-of-stream without collecting the required number of bits");
+
+            break;
+        }
 
         return m_bit_buffer & lsb_mask<T>(min(count, m_bit_count));
     }
@@ -218,6 +231,7 @@ public:
     ALWAYS_INLINE void discard_previously_peeked_bits(u8 count)
     {
         // We allow "retrieving" more bits than we can provide, but we need to make sure that we don't underflow the current bit counter.
+        // This only affects certain "modes", but all the relevant checks have been handled in the respective `peek_bits` call.
         if (count > m_bit_count)
             count = m_bit_count;
 
@@ -240,8 +254,11 @@ public:
     }
 
 private:
-    ErrorOr<void> refill_buffer_from_stream()
+    ErrorOr<bool> refill_buffer_from_stream()
     {
+        if (m_stream->is_eof())
+            return false;
+
         size_t bits_to_read = bit_buffer_size - m_bit_count;
         size_t bytes_to_read = bits_to_read / bits_per_byte;
 
@@ -251,8 +268,10 @@ private:
         m_bit_buffer |= (buffer << m_bit_count);
         m_bit_count += bytes.size() * bits_per_byte;
 
-        return {};
+        return true;
     }
+
+    UnsatisfiableReadBehavior m_unsatisfiable_read_behavior;
 };
 
 /// A stream wrapper class that allows you to write arbitrary amounts of bits

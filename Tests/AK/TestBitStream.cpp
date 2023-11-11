@@ -137,10 +137,30 @@ TEST_CASE(bit_reads_beyond_stream_limits)
     Array<u8, 1> const test_data { 0xFF };
 
     {
-        // LittleEndianInputBitStream allows reading null bits beyond the original data
-        // for compatibility purposes.
         auto memory_stream = make<FixedMemoryStream>(test_data);
-        auto bit_stream = make<LittleEndianInputBitStream>(move(memory_stream));
+        auto bit_stream = make<LittleEndianInputBitStream>(move(memory_stream), LittleEndianInputBitStream::UnsatisfiableReadBehavior::Reject);
+
+        {
+            auto result = TRY_OR_FAIL(bit_stream->read_bits<u8>(6));
+            EXPECT_EQ(result, 0b111111);
+        }
+
+        {
+            auto result = bit_stream->read_bits<u8>(6);
+            EXPECT(result.is_error());
+        }
+
+        {
+            auto result = bit_stream->read_bits<u8>(6);
+            EXPECT(result.is_error());
+        }
+    }
+
+    {
+        // LittleEndianInputBitStream allows reading null bits beyond the original data
+        // for compatibility purposes if enabled.
+        auto memory_stream = make<FixedMemoryStream>(test_data);
+        auto bit_stream = make<LittleEndianInputBitStream>(move(memory_stream), LittleEndianInputBitStream::UnsatisfiableReadBehavior::FillWithZero);
 
         {
             auto result = TRY_OR_FAIL(bit_stream->read_bits<u8>(6));
