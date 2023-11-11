@@ -94,6 +94,8 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
 
 PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
 {
+    // 3.3.2 ASCII85Decode Filter
+
     ByteBuffer buffer;
     TRY(buffer.try_ensure_capacity(bytes.size()));
 
@@ -114,10 +116,21 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
 
         u32 number = 0;
 
-        auto const to_write = byte_index + 5 >= bytes.size() ? bytes.size() - byte_index : 5;
+        auto to_write = byte_index + 5 >= bytes.size() ? bytes.size() - byte_index : 5;
+
+        Optional<u32> end_of_data_index {};
 
         for (int i = 0; i < 5; i++) {
-            auto byte = byte_index >= bytes.size() ? 'u' : bytes[byte_index++];
+            // We check for the EOD sequence '~>', but as '~' can only appear in
+            // this sequence, there is no need to check for '>'.
+            if (!end_of_data_index.has_value() && bytes[byte_index] == '~') {
+                end_of_data_index = i;
+                to_write = i + 1;
+            }
+
+            bool const should_fake_end = byte_index >= bytes.size() || end_of_data_index.has_value();
+            auto const byte = should_fake_end ? 'u' : bytes[byte_index++];
+
             if (Reader::is_whitespace(byte)) {
                 i--;
                 continue;
@@ -127,6 +140,9 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
 
         for (size_t i = 0; i < to_write - 1; i++)
             buffer.append(reinterpret_cast<u8*>(&number)[3 - i]);
+
+        if (end_of_data_index.has_value())
+            break;
     }
 
     return buffer;
