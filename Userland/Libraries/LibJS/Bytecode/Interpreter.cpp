@@ -444,6 +444,13 @@ void Interpreter::catch_exception()
     vm().running_execution_context().lexical_environment = context.lexical_environment;
 }
 
+void Interpreter::enter_object_environment(Object& object)
+{
+    auto& old_environment = vm().running_execution_context().lexical_environment;
+    saved_lexical_environment_stack().append(old_environment);
+    vm().running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
+}
+
 ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
 {
     auto executable_result = Bytecode::Generator::generate(node, kind);
@@ -743,11 +750,8 @@ ThrowCompletionOr<void> CreateLexicalEnvironment::execute_impl(Bytecode::Interpr
 
 ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
-    auto& old_environment = vm.running_execution_context().lexical_environment;
-    interpreter.saved_lexical_environment_stack().append(old_environment);
-    auto object = TRY(interpreter.accumulator().to_object(vm));
-    vm.running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
+    auto object = TRY(interpreter.accumulator().to_object(interpreter.vm()));
+    interpreter.enter_object_environment(*object);
     return {};
 }
 
