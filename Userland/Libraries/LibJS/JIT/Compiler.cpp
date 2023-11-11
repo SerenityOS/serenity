@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2023, Simon Wanner <simon@skyrising.xyz>
+ * Copyright (c) 2023, Jesús Lapastora <cyber.gsuscode@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/OwnPtr.h>
 #include <AK/Platform.h>
+#include <LibJIT/GDB.h>
 #include <LibJS/Bytecode/CommonImplementations.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
@@ -3757,7 +3759,14 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         dbgln("\033[32;1mJIT compilation succeeded!\033[0m {}", bytecode_executable.name);
     }
 
-    auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size(), mapping);
+    auto const code = ReadonlyBytes {
+        executable_memory,
+        compiler.m_output.size(),
+    };
+
+    auto gdb_object = ::JIT::GDB::build_gdb_image(code, "LibJS JIT"sv, "LibJS JITted code"sv);
+
+    auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size(), mapping, move(gdb_object));
     if constexpr (DUMP_JIT_DISASSEMBLY)
         executable->dump_disassembly(bytecode_executable);
     return executable;

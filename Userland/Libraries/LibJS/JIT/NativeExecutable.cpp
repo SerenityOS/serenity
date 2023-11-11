@@ -6,6 +6,7 @@
  */
 
 #include <AK/BinarySearch.h>
+#include <LibJIT/GDB.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/JIT/NativeExecutable.h>
 #include <LibJS/Runtime/VM.h>
@@ -14,10 +15,11 @@
 
 namespace JS::JIT {
 
-NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping)
+NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMapping> mapping, Optional<FixedArray<u8>> gdb_object)
     : m_code(code)
     , m_size(size)
     , m_mapping(move(mapping))
+    , m_gdb_object(move(gdb_object))
 {
     // Translate block index to instruction address, so the native code can just jump to it.
     for (auto const& entry : m_mapping) {
@@ -28,10 +30,14 @@ NativeExecutable::NativeExecutable(void* code, size_t size, Vector<BytecodeMappi
             m_block_entry_points.append(bit_cast<FlatPtr>(m_code) + entry.native_offset);
         }
     }
+    if (m_gdb_object.has_value())
+        ::JIT::GDB::register_into_gdb(m_gdb_object.value().span());
 }
 
 NativeExecutable::~NativeExecutable()
 {
+    if (m_gdb_object.has_value())
+        ::JIT::GDB::unregister_from_gdb(m_gdb_object.value().span());
     munmap(m_code, m_size);
 }
 

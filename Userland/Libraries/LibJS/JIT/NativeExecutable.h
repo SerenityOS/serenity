@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/Noncopyable.h>
 #include <AK/Types.h>
 #include <LibJS/Bytecode/Instruction.h>
@@ -28,7 +29,7 @@ class NativeExecutable {
     AK_MAKE_NONMOVABLE(NativeExecutable);
 
 public:
-    NativeExecutable(void* code, size_t size, Vector<BytecodeMapping>);
+    NativeExecutable(void* code, size_t size, Vector<BytecodeMapping>, Optional<FixedArray<u8>> gdb_object = {});
     ~NativeExecutable();
 
     void run(VM&, size_t entry_point) const;
@@ -44,6 +45,7 @@ private:
     Vector<BytecodeMapping> m_mapping;
     Vector<FlatPtr> m_block_entry_points;
     mutable OwnPtr<Bytecode::InstructionStreamIterator> m_instruction_stream_iterator;
+    Optional<FixedArray<u8>> m_gdb_object;
 };
 
 }
