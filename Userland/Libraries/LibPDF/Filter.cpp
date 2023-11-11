@@ -11,6 +11,7 @@
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
+#include <LibPDF/Reader.h>
 
 namespace PDF {
 
@@ -99,7 +100,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
     size_t byte_index = 0;
 
     while (byte_index < bytes.size()) {
-        if (bytes[byte_index] == ' ') {
+        if (Reader::is_whitespace(bytes[byte_index])) {
             byte_index++;
             continue;
         }
@@ -117,7 +118,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
             auto to_write = bytes.size() - byte_index;
             for (int i = 0; i < 5; i++) {
                 auto byte = byte_index >= bytes.size() ? 'u' : bytes[byte_index++];
-                if (byte == ' ') {
+                if (Reader::is_whitespace(byte)) {
                     i--;
                     continue;
                 }
@@ -131,7 +132,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
         } else {
             for (int i = 0; i < 5; i++) {
                 auto byte = bytes[byte_index++];
-                if (byte == ' ') {
+                if (Reader::is_whitespace(byte)) {
                     i--;
                     continue;
                 }
