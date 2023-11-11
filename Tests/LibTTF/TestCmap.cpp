@@ -11,7 +11,7 @@ TEST_CASE(test_cmap_format_4)
 {
     // clang-format off
     // Big endian.
-    u8 cmap_table[] =
+    Array<u8, 52> const cmap_table =
     {
         // https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#cmap-header
         0, 0,  // uint16 version
@@ -54,7 +54,7 @@ TEST_CASE(test_cmap_format_4)
         0, 0,
     };
     // clang-format on
-    auto cmap = OpenType::Cmap::from_slice({ cmap_table, sizeof cmap_table }).value();
+    auto cmap = OpenType::Cmap::from_slice(cmap_table.span()).value();
     cmap.set_active_index(0);
 
     // Format 4 can't handle code points > 0xffff.
@@ -78,4 +78,11 @@ TEST_CASE(test_cmap_format_4)
     EXPECT_EQ(cmap.glyph_id_for_code_point(0xfeff), 0u);
     EXPECT_EQ(cmap.glyph_id_for_code_point(0xffff), 0xffffu);
     EXPECT_EQ(cmap.glyph_id_for_code_point(0x1'0000), 0u);
+
+    // Set the number of subtables to a value, where the record offset for the last subtable is greater than the
+    // total table size. We should not crash if a Cmap table is truncated in this way.
+    auto malformed_cmap_table = cmap_table;
+    malformed_cmap_table[3] = 13;
+    auto cmap_with_invalid_subtable_offset = OpenType::Cmap::from_slice(malformed_cmap_table.span()).value();
+    EXPECT(!cmap_with_invalid_subtable_offset.subtable(12).has_value());
 }
