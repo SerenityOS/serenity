@@ -206,16 +206,12 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
     return decoded;
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer, int predictor, int columns, int colors, int bits_per_component)
 {
-    return Error::rendering_unsupported_error("LZW Filter is not supported");
-}
+    // Table 3.7 Optional parameters for LZWDecode and FlateDecode filters
 
-PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component)
-{
-    auto buff = TRY(Compress::DeflateDecompressor::decompress_all(bytes.slice(2)));
     if (predictor == 1)
-        return buff;
+        return buffer;
 
     // Check if we are dealing with a PNG prediction
     if (predictor == 2)
@@ -224,11 +220,22 @@ PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, 
         return AK::Error::from_string_literal("Invalid predictor value");
 
     // Rows are always a whole number of bytes long, starting with an algorithm tag
-    int bytes_per_row = AK::ceil_div(columns * colors * bits_per_component, 8) + 1;
-    if (buff.size() % bytes_per_row)
+    int const bytes_per_row = AK::ceil_div(columns * colors * bits_per_component, 8) + 1;
+    if (buffer.size() % bytes_per_row)
         return AK::Error::from_string_literal("Flate input data is not divisible into columns");
 
-    return decode_png_prediction(buff, bytes_per_row);
+    return decode_png_prediction(buffer, bytes_per_row);
+}
+
+PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)
+{
+    return Error::rendering_unsupported_error("LZW Filter is not supported");
+}
+
+PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component)
+{
+    auto buff = TRY(Compress::DeflateDecompressor::decompress_all(bytes.slice(2)));
+    return handle_lzw_and_flate_parameters(move(buff), predictor, columns, colors, bits_per_component);
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
