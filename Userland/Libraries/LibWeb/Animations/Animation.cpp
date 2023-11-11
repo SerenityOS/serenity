@@ -162,8 +162,28 @@ void Animation::set_start_time(Optional<double> const& new_start_time)
 // https://www.w3.org/TR/web-animations-1/#animation-current-time
 Optional<double> Animation::current_time() const
 {
-    // FIXME: Implement
-    return {};
+    // The current time is calculated from the first matching condition from below:
+
+    // -> If the animation’s hold time is resolved,
+    if (m_hold_time.has_value()) {
+        // The current time is the animation’s hold time.
+        return m_hold_time.value();
+    }
+
+    // -> If any of the following are true:
+    //    - the animation has no associated timeline, or
+    //    - the associated timeline is inactive, or
+    //    - the animation’s start time is unresolved.
+    if (!m_timeline || m_timeline->is_inactive() || !m_start_time.has_value()) {
+        // The current time is an unresolved time value.
+        return {};
+    }
+
+    // -> Otherwise,
+    //    current time = (timeline time - start time) × playback rate
+    //    Where timeline time is the current time value of the associated timeline. The playback rate value is defined
+    //    in §4.4.15 Speed control.
+    return (m_timeline->current_time().value() - m_start_time.value()) * playback_rate();
 }
 
 // https://www.w3.org/TR/web-animations-1/#animation-set-the-current-time
