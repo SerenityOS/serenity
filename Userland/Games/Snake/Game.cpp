@@ -16,8 +16,6 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 
-REGISTER_WIDGET(Snake, Game);
-
 namespace Snake {
 
 ErrorOr<NonnullRefPtr<Game>> Game::try_create()

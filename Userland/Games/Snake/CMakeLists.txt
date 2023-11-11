@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Snake
 )
 
-stringify_gml(Snake.gml SnakeGML.h snake_gml)
+compile_gml(Snake.gml SnakeGML.cpp)
 
 set(SOURCES
     Game.cpp
@@ -12,10 +12,7 @@ set(SOURCES
     Skins/ClassicSkin.cpp
     Skins/ImageSkin.cpp
     Skins/SnakeSkin.cpp
-)
-
-set(GENERATED_SOURCES
-    SnakeGML.h
+    SnakeGML.cpp
 )
 
 serenity_app(Snake ICON app-snake)

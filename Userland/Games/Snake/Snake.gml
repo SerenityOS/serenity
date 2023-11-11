@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Snake::MainWidget {
     layout: @GUI::VerticalBoxLayout {}
     fill_with_background_color: true
 
