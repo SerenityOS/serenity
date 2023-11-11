@@ -29,6 +29,8 @@ private:
     static PDFErrorOr<ByteBuffer> decode_dct(ReadonlyBytes bytes);
     static PDFErrorOr<ByteBuffer> decode_jpx(ReadonlyBytes bytes);
     static PDFErrorOr<ByteBuffer> decode_crypt(ReadonlyBytes bytes);
+
+    static PDFErrorOr<ByteBuffer> handle_lzw_and_flate_parameters(ByteBuffer buffer, int predictor, int columns, int colors, int bits_per_component);
 };
 
 }
