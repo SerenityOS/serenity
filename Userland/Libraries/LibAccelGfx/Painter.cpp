@@ -126,6 +126,13 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
 
     auto vertices = rect_to_vertices(to_clip_space(transform().map(rect)));
 
+    auto vbo = GL::create_buffer();
+    GL::upload_to_buffer(vbo, vertices);
+
+    auto vao = GL::create_vertex_array();
+    GL::bind_vertex_array(vao);
+    GL::bind_buffer(vbo);
+
     auto [red, green, blue, alpha] = gfx_color_to_opengl_color(color);
 
     m_rectangle_program.use();
@@ -134,9 +141,12 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
     auto color_uniform = m_rectangle_program.get_uniform_location("uColor");
 
     GL::set_uniform(color_uniform, red, green, blue, alpha);
-    GL::set_vertex_attribute(position_attribute, vertices, 2);
+    GL::set_vertex_attribute(position_attribute, 0, 2);
     GL::enable_blending();
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
+
+    GL::delete_buffer(vbo);
+    GL::delete_vertex_array(vao);
 }
 
 void Painter::draw_line(Gfx::IntPoint a, Gfx::IntPoint b, float thickness, Gfx::Color color)
@@ -157,6 +167,13 @@ void Painter::draw_line(Gfx::FloatPoint a, Gfx::FloatPoint b, float thickness, C
 
     auto vertices = rect_to_vertices(to_clip_space(transform().map(rect)));
 
+    auto vbo = GL::create_buffer();
+    GL::upload_to_buffer(vbo, vertices);
+
+    auto vao = GL::create_vertex_array();
+    GL::bind_vertex_array(vao);
+    GL::bind_buffer(vbo);
+
     auto [red, green, blue, alpha] = gfx_color_to_opengl_color(color);
 
     m_rectangle_program.use();
@@ -165,9 +182,12 @@ void Painter::draw_line(Gfx::FloatPoint a, Gfx::FloatPoint b, float thickness, C
     auto color_uniform = m_rectangle_program.get_uniform_location("uColor");
 
     GL::set_uniform(color_uniform, red, green, blue, alpha);
-    GL::set_vertex_attribute(position_attribute, vertices, 2);
+    GL::set_vertex_attribute(position_attribute, 0, 2);
     GL::enable_blending();
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
+
+    GL::delete_buffer(vbo);
+    GL::delete_vertex_array(vao);
 }
 
 void Painter::draw_scaled_bitmap(Gfx::IntRect const& dest_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, ScalingMode scaling_mode)
@@ -226,8 +246,15 @@ void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap con
     add_vertex(dst_rect_in_clip_space.bottom_right(), src_rect_in_texture_space.bottom_right());
     add_vertex(dst_rect_in_clip_space.top_right(), src_rect_in_texture_space.top_right());
 
+    auto vbo = GL::create_buffer();
+    GL::upload_to_buffer(vbo, vertices);
+
+    auto vao = GL::create_vertex_array();
+    GL::bind_vertex_array(vao);
+    GL::bind_buffer(vbo);
+
     auto vertex_position_attribute = m_blit_program.get_attribute_location("aVertexPosition");
-    GL::set_vertex_attribute(vertex_position_attribute, vertices, 4);
+    GL::set_vertex_attribute(vertex_position_attribute, 0, 4);
 
     auto color_uniform = m_blit_program.get_uniform_location("uColor");
     GL::set_uniform(color_uniform, 1, 1, 1, 1);
@@ -236,6 +263,8 @@ void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap con
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 
     GL::delete_texture(texture);
+    GL::delete_buffer(vbo);
+    GL::delete_vertex_array(vao);
 }
 
 void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
@@ -349,6 +378,13 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
         }
     }
 
+    auto vbo = GL::create_buffer();
+    GL::upload_to_buffer(vbo, vertices);
+
+    auto vao = GL::create_vertex_array();
+    GL::bind_vertex_array(vao);
+    GL::bind_buffer(vbo);
+
     auto [red, green, blue, alpha] = gfx_color_to_opengl_color(color);
 
     m_blit_program.use();
@@ -360,8 +396,11 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
     auto color_uniform = m_blit_program.get_uniform_location("uColor");
 
     GL::set_uniform(color_uniform, red, green, blue, alpha);
-    GL::set_vertex_attribute(position_attribute, vertices, 4);
+    GL::set_vertex_attribute(position_attribute, 0, 4);
     GL::draw_arrays(GL::DrawPrimitive::Triangles, vertices.size() / 4);
+
+    GL::delete_buffer(vbo);
+    GL::delete_vertex_array(vao);
 }
 
 void Painter::save()

@@ -143,9 +143,9 @@ void set_uniform(Uniform const& uniform, float value1, float value2, float value
     verify_no_error();
 }
 
-void set_vertex_attribute(VertexAttribute const& attribute, Span<float> values, int number_of_components)
+void set_vertex_attribute(VertexAttribute const& attribute, u32 offset, int number_of_components)
 {
-    glVertexAttribPointer(attribute.id, number_of_components, GL_FLOAT, GL_FALSE, number_of_components * sizeof(float), values.data());
+    glVertexAttribPointer(attribute.id, number_of_components, GL_FLOAT, GL_FALSE, number_of_components * sizeof(float), reinterpret_cast<void*>(offset));
     glEnableVertexAttribArray(attribute.id);
     verify_no_error();
 }
@@ -170,6 +170,53 @@ void draw_arrays(DrawPrimitive draw_primitive, size_t count)
     if (draw_primitive == DrawPrimitive::TriangleFan)
         mode = GL_TRIANGLE_FAN;
     glDrawArrays(mode, 0, count);
+    verify_no_error();
+}
+
+Buffer create_buffer()
+{
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    verify_no_error();
+    return { buffer };
+}
+
+void bind_buffer(Buffer const& buffer)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, buffer.id);
+    verify_no_error();
+}
+
+void upload_to_buffer(Buffer const& buffer, Span<float> values)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, buffer.id);
+    glBufferData(GL_ARRAY_BUFFER, values.size() * sizeof(float), values.data(), GL_STATIC_DRAW);
+    verify_no_error();
+}
+
+void delete_buffer(Buffer const& buffer)
+{
+    glDeleteBuffers(1, &buffer.id);
+    verify_no_error();
+}
+
+VertexArray create_vertex_array()
+{
+    GLuint vertex_array;
+    glGenVertexArrays(1, &vertex_array);
+    verify_no_error();
+    return { vertex_array };
+}
+
+void bind_vertex_array(VertexArray const& vertex_array)
+{
+    glBindVertexArray(vertex_array.id);
+    verify_no_error();
+}
+
+void delete_vertex_array(VertexArray const& vertex_array)
+{
+    glDeleteVertexArrays(1, &vertex_array.id);
     verify_no_error();
 }
 
