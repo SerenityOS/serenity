@@ -407,6 +407,17 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 };
 
+class Catch final : public Instruction {
+public:
+    explicit Catch()
+        : Instruction(Type::Catch, sizeof(*this))
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+};
+
 class CreateVariable final : public Instruction {
 public:
     explicit CreateVariable(IdentifierTableIndex identifier, EnvironmentMode mode, bool is_immutable, bool is_global = false, bool is_strict = false)

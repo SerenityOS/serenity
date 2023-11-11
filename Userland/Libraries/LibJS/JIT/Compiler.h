@@ -83,6 +83,7 @@ private:
         O(EnterUnwindContext, enter_unwind_context)                              \
         O(LeaveUnwindContext, leave_unwind_context)                              \
         O(Throw, throw)                                                          \
+        O(Catch, catch)                                                          \
         O(CreateLexicalEnvironment, create_lexical_environment)                  \
         O(LeaveLexicalEnvironment, leave_lexical_environment)                    \
         O(ToNumeric, to_numeric)                                                 \
