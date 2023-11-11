@@ -62,6 +62,7 @@ private:
     };
 
     void apply_any_pending_playback_rate();
+    WebIDL::ExceptionOr<void> silently_set_current_time(Optional<double>);
 
     JS::NonnullGCPtr<WebIDL::Promise> current_ready_promise() const;
     JS::NonnullGCPtr<WebIDL::Promise> current_finished_promise() const;
@@ -80,6 +81,9 @@ private:
 
     // https://www.w3.org/TR/web-animations-1/#animation-hold-time
     Optional<double> m_hold_time {};
+
+    // https://www.w3.org/TR/web-animations-1/#previous-current-time
+    Optional<double> m_previous_current_time {};
 
     // https://www.w3.org/TR/web-animations-1/#playback-rate
     double m_playback_rate { 1.0 };
