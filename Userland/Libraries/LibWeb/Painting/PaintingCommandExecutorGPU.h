@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibAccelGfx/Canvas.h>
 #include <LibAccelGfx/Painter.h>
 #include <LibWeb/Painting/RecordingPainter.h>
 

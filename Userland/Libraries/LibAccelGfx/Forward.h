@@ -8,7 +8,6 @@
 
 namespace AccelGfx {
 
-class Canvas;
 class Painter;
 
 }
