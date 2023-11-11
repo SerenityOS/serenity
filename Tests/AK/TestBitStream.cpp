@@ -132,6 +132,53 @@ TEST_CASE(big_endian_bit_stream_input_output_match)
     }
 }
 
+TEST_CASE(bit_reads_beyond_stream_limits)
+{
+    Array<u8, 1> const test_data { 0xFF };
+
+    {
+        // LittleEndianInputBitStream allows reading null bits beyond the original data
+        // for compatibility purposes.
+        auto memory_stream = make<FixedMemoryStream>(test_data);
+        auto bit_stream = make<LittleEndianInputBitStream>(move(memory_stream));
+
+        {
+            auto result = TRY_OR_FAIL(bit_stream->read_bits<u8>(6));
+            EXPECT_EQ(result, 0b111111);
+        }
+
+        {
+            auto result = TRY_OR_FAIL(bit_stream->read_bits<u8>(6));
+            EXPECT_EQ(result, 0b000011);
+        }
+
+        {
+            auto result = TRY_OR_FAIL(bit_stream->read_bits<u8>(6));
+            EXPECT_EQ(result, 0b000000);
+        }
+    }
+
+    {
+        auto memory_stream = make<FixedMemoryStream>(test_data);
+        auto bit_stream = make<BigEndianInputBitStream>(move(memory_stream));
+
+        {
+            auto result = TRY_OR_FAIL(bit_stream->read_bits<u8>(6));
+            EXPECT_EQ(result, 0b111111);
+        }
+
+        {
+            auto result = bit_stream->read_bits<u8>(6);
+            EXPECT(result.is_error());
+        }
+
+        {
+            auto result = bit_stream->read_bits<u8>(6);
+            EXPECT(result.is_error());
+        }
+    }
+}
+
 RANDOMIZED_TEST_CASE(roundtrip_u8_little_endian)
 {
     GEN(n, Gen::unsigned_int(NumericLimits<u8>::max()));
