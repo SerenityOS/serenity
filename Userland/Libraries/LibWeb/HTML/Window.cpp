@@ -1057,7 +1057,7 @@ WebIDL::ExceptionOr<void> Window::window_post_message_steps(JS::Value message, W
         // FIXME: Don't use a temporary execution context here.
         auto& settings_object = Bindings::host_defined_environment_settings_object(target_realm);
         auto temporary_execution_context = TemporaryExecutionContext { settings_object };
-        auto deserialize_record_or_error = structured_deserialize(vm(), serialize_with_transfer_result, target_realm, Optional<HTML::SerializationMemory> {});
+        auto deserialize_record_or_error = structured_deserialize(vm(), serialize_with_transfer_result, target_realm, Optional<HTML::DeserializationMemory> {});
 
         // If this throws an exception, catch it, fire an event named messageerror at targetWindow, using MessageEvent,
         // with the origin attribute initialized to origin and the source attribute initialized to source, and then return.

@@ -11,6 +11,15 @@
         println(structuredClone(/abc/gimsuy));
         println(structuredClone(new Error()));
         println(structuredClone(new URIError("hello")));
+        println(structuredClone(JSON.stringify({"a": "b", 1: 2})));
+        println(structuredClone([1, 4, "aaaa"]));
+        println(structuredClone(new Set(["a", "b", "c"])).has("b"));
+        println(structuredClone(new Map([["a", 0], ["b", 1], ["c", 2]])).get("b"));
+
+        const obj = {"a": 1, "c": 3};
+        obj["b"] = obj;
+        const result = structuredClone(obj);
+        println(result === result["b"]);
 
         {
             let arrayBuffer = new ArrayBuffer(6);
