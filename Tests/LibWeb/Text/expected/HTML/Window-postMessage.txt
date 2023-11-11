@@ -8,7 +8,7 @@ originParsedBeforeSerializeError.message: Invalid URL for targetOrigin: 'aaaa'
 originParsedBeforeSerializeError.constructor === window.DOMException: true
 serializeError instanceof DOMException: true
 serializeError.name: DataCloneError
-serializeError.message: Unsupported type
+serializeError.message: Cannot serialize platform objects
 serializeError.constructor === window.DOMException: true
 originIframeError instanceof DOMException: false
 originIframeError instanceof iframe.contentWindow.DOMException: true
@@ -25,7 +25,7 @@ originParsedBeforeSerializeIframeError.constructor === iframe.contentWindow.DOME
 serializeIframeError instanceof DOMException: false
 serializeIframeError instanceof iframe.contentWindow.DOMException: true
 serializeIframeError.name: DataCloneError
-serializeIframeError.message: Unsupported type
+serializeIframeError.message: Cannot serialize platform objects
 serializeIframeError.constructor === DOMException: false
 serializeIframeError.constructor === iframe.contentWindow.DOMException: true
 Message 1 data: undefined
