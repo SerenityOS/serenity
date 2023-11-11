@@ -93,8 +93,8 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
 
 PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
 {
-    Vector<u8> buff;
-    buff.ensure_capacity(bytes.size());
+    ByteBuffer buffer;
+    TRY(buffer.try_ensure_capacity(bytes.size()));
 
     size_t byte_index = 0;
 
@@ -107,7 +107,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
         if (bytes[byte_index] == 'z') {
             byte_index++;
             for (int i = 0; i < 4; i++)
-                buff.append(0);
+                buffer.append(0);
             continue;
         }
 
@@ -125,7 +125,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
             }
 
             for (size_t i = 0; i < to_write - 1; i++)
-                buff.append(reinterpret_cast<u8*>(&number)[3 - i]);
+                buffer.append(reinterpret_cast<u8*>(&number)[3 - i]);
 
             break;
         } else {
@@ -140,10 +140,10 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
         }
 
         for (int i = 0; i < 4; i++)
-            buff.append(reinterpret_cast<u8*>(&number)[3 - i]);
+            buffer.append(reinterpret_cast<u8*>(&number)[3 - i]);
     }
 
-    return TRY(ByteBuffer::copy(buff.span()));
+    return buffer;
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_row)
