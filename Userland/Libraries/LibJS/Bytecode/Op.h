@@ -92,10 +92,10 @@ private:
     O(GreaterThanEquals, greater_than_equals) \
     O(LessThan, less_than)                    \
     O(LessThanEquals, less_than_equals)       \
-    O(LooselyInequals, abstract_inequals)     \
-    O(LooselyEquals, abstract_equals)         \
-    O(StrictlyInequals, typed_inequals)       \
-    O(StrictlyEquals, typed_equals)           \
+    O(LooselyInequals, loosely_inequals)      \
+    O(LooselyEquals, loosely_equals)          \
+    O(StrictlyInequals, strict_inequals)      \
+    O(StrictlyEquals, strict_equals)          \
     O(BitwiseAnd, bitwise_and)                \
     O(BitwiseOr, bitwise_or)                  \
     O(BitwiseXor, bitwise_xor)                \
