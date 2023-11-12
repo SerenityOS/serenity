@@ -119,6 +119,14 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     on_link_middle_click = [this](AK::URL const& url, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) {
         ladybird_web_view_activate_url(m_widget, url.serialize().characters(), true);
     };
+    on_insert_clipboard_entry = [this](AK::String const& data, [[maybe_unused]] AK::String const& presentation_style, AK::String const& mime_type) {
+        GdkClipboard* clipboard = gtk_widget_get_clipboard(GTK_WIDGET(m_widget));
+        GBytes* bytes = g_bytes_new(data.bytes().data(), data.bytes().size());
+        GdkContentProvider* content_provider = gdk_content_provider_new_for_bytes(mime_type.to_deprecated_string().characters(), bytes);
+        g_bytes_unref(bytes);
+        gdk_clipboard_set_content(clipboard, content_provider);
+        g_object_unref(content_provider);
+    };
 
     AdwStyleManager* style_manager = adw_style_manager_get_default();
 
