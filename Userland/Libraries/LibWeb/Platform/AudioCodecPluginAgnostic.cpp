@@ -37,8 +37,10 @@ ErrorOr<NonnullOwnPtr<AudioCodecPluginAgnostic>> AudioCodecPluginAgnostic::creat
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AudioCodecPluginAgnostic(loader, duration, move(update_timer))));
 
     constexpr u32 latency_ms = 100;
+    // FIXME: Audio loaders are hard-coded to output stereo audio. Once that changes, the channel count provided
+    //        below should be retrieved from the audio loader instead of being hard-coded to 2.
     RefPtr<Audio::PlaybackStream> output = TRY(Audio::PlaybackStream::create(
-        Audio::OutputState::Suspended, loader->sample_rate(), loader->num_channels(), latency_ms,
+        Audio::OutputState::Suspended, loader->sample_rate(), /* channels = */ 2, latency_ms,
         [&plugin = *plugin, loader](Bytes buffer, Audio::PcmSampleFormat format, size_t sample_count) -> ReadonlyBytes {
             VERIFY(format == Audio::PcmSampleFormat::Float32);
             auto samples = loader->get_more_samples(sample_count).release_value_but_fixme_should_propagate_errors();
