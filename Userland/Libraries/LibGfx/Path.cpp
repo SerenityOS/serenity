@@ -10,6 +10,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/TypeCasts.h>
+#include <LibGfx/BoundingBox.h>
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
@@ -307,37 +308,18 @@ DeprecatedString Path::to_deprecated_string() const
 void Path::segmentize_path()
 {
     Vector<FloatLine> segments;
-    float min_x = 0;
-    float min_y = 0;
-    float max_x = 0;
-    float max_y = 0;
-
-    bool first = true;
-    auto add_point_to_bbox = [&](Gfx::FloatPoint point) {
-        float x = point.x();
-        float y = point.y();
-        if (first) {
-            min_x = max_x = x;
-            min_y = max_y = y;
-            first = false;
-        } else {
-            min_x = min(min_x, x);
-            min_y = min(min_y, y);
-            max_x = max(max_x, x);
-            max_y = max(max_y, y);
-        }
-    };
+    FloatBoundingBox bounding_box;
 
     auto add_line = [&](auto const& p0, auto const& p1) {
         segments.append({ p0, p1 });
-        add_point_to_bbox(p1);
+        bounding_box.add_point(p1);
     };
 
     FloatPoint cursor { 0, 0 };
     for (auto& segment : m_segments) {
         switch (segment->type()) {
         case Segment::Type::MoveTo:
-            add_point_to_bbox(segment->point());
+            bounding_box.add_point(segment->point());
             cursor = segment->point();
             break;
         case Segment::Type::LineTo: {
@@ -366,12 +348,10 @@ void Path::segmentize_path()
         case Segment::Type::Invalid:
             VERIFY_NOT_REACHED();
         }
-
-        first = false;
     }
 
     m_split_lines = move(segments);
-    m_bounding_box = Gfx::FloatRect { min_x, min_y, max_x - min_x, max_y - min_y };
+    m_bounding_box = bounding_box;
 }
 
 Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
