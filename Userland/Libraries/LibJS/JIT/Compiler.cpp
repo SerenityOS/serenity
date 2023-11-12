@@ -618,6 +618,51 @@ static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
     return Value(is_strictly_equal(src1, src2));
 }
 
+static Value cxx_loosely_equals(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(loosely_equals(vm, lhs, rhs));
+}
+
+void Compiler::compile_loosely_equals(Bytecode::Op::LooselyEquals const& op)
+{
+    Assembler::Label end;
+
+    load_vm_register(ARG1, op.lhs());
+    load_accumulator(ARG2);
+
+    // Fast path if both sides are objects.
+    branch_if_object(ARG1, [&] {
+        branch_if_object(ARG2, [&] {
+            Assembler::Label true_case;
+
+            m_assembler.jump_if(
+                Assembler::Operand::Register(ARG1),
+                Assembler::Condition::EqualTo,
+                Assembler::Operand::Register(ARG2),
+                true_case);
+
+            m_assembler.mov(
+                Assembler::Operand::Register(GPR0),
+                Assembler::Operand::Imm(Value(false).encoded()));
+            store_accumulator(GPR0);
+            m_assembler.jump(end);
+
+            true_case.link(m_assembler);
+            m_assembler.mov(
+                Assembler::Operand::Register(GPR0),
+                Assembler::Operand::Imm(Value(true).encoded()));
+            store_accumulator(GPR0);
+            m_assembler.jump(end);
+        });
+    });
+
+    native_call((void*)cxx_loosely_equals);
+    store_accumulator(RET);
+    check_exception();
+
+    end.link(m_assembler);
+}
+
 #    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                 \
         static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                \
         {                                                                               \
