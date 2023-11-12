@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -79,6 +80,8 @@ static constexpr Gfx::CharacterBitmap s_club {
     9, 9
 };
 
+static constexpr u8 s_disabled_alpha = 90;
+
 NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front(Suit suit, Rank rank)
 {
     auto suit_id = to_underlying(suit);
@@ -120,6 +123,21 @@ NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front_highlighted(Suit suit, Rank r
     return *m_cards_highlighted[suit_id][rank_id];
 }
 
+NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front_disabled(Suit suit, Rank rank)
+{
+    auto suit_id = to_underlying(suit);
+    auto rank_id = to_underlying(rank);
+
+    auto& existing_bitmap = m_cards_disabled[suit_id][rank_id];
+    if (!existing_bitmap.is_null())
+        return *existing_bitmap;
+
+    m_cards_disabled[suit_id][rank_id] = create_card_bitmap();
+    paint_disabled_card(*m_cards_disabled[suit_id][rank_id], card_front(suit, rank));
+
+    return *m_cards_disabled[suit_id][rank_id];
+}
+
 NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front_inverted(Suit suit, Rank rank)
 {
     auto suit_id = to_underlying(suit);
@@ -144,6 +162,17 @@ NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back_inverted()
     paint_inverted_card(card_back(), *m_card_back_inverted);
 
     return *m_card_back_inverted;
+}
+
+NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back_disabled()
+{
+    if (!m_card_back_disabled.is_null())
+        return *m_card_back_disabled;
+
+    m_card_back_disabled = create_card_bitmap();
+    paint_disabled_card(*m_card_back_disabled, card_back());
+
+    return *m_card_back_disabled;
 }
 
 void CardPainter::set_back_image_path(StringView path)
@@ -465,6 +494,17 @@ void CardPainter::paint_highlighted_card(Gfx::Bitmap& bitmap, Gfx::Bitmap const&
     paint_rect.shrink(4, 4);
     painter.fill_rect_with_rounded_corners(paint_rect, Color::White, Card::card_radius - 1);
     painter.blit({ 4, 4 }, source_to_highlight, source_to_highlight.rect().shrunken(8, 8));
+}
+
+void CardPainter::paint_disabled_card(Gfx::Bitmap& bitmap, Gfx::Bitmap const& source_to_disable)
+{
+    Gfx::Painter painter { bitmap };
+    auto disabled_color = Color(Color::Black);
+    disabled_color.set_alpha(s_disabled_alpha);
+
+    painter.blit_filtered(Gfx::IntPoint {}, source_to_disable, source_to_disable.rect(), [&](Color color) {
+        return color.blend(disabled_color);
+    });
 }
 
 }
