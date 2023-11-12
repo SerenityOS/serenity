@@ -119,6 +119,35 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     on_link_middle_click = [this](AK::URL const& url, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) {
         ladybird_web_view_activate_url(m_widget, url.serialize().characters(), true);
     };
+    on_request_color_picker = [this](Gfx::Color current_color) {
+        GtkColorDialog* dialog = gtk_color_dialog_new();
+        gtk_color_dialog_set_with_alpha(dialog, false);
+        GtkRoot* root = gtk_widget_get_root(GTK_WIDGET(m_widget));
+        GtkWindow* parent = GTK_IS_WINDOW(root) ? GTK_WINDOW(root) : nullptr;
+        GdkRGBA initial_color {
+            current_color.red() / 255.f,
+            current_color.green() / 255.f,
+            current_color.blue() / 255.f,
+            1.0
+        };
+        gtk_color_dialog_choose_rgba(
+            dialog, parent, &initial_color, nullptr, +[](GObject* obj, GAsyncResult* res, void* data) {
+                GdkRGBA* chosen_color = gtk_color_dialog_choose_rgba_finish(GTK_COLOR_DIALOG(obj), res, nullptr);
+                LadybirdViewImpl* self = reinterpret_cast<LadybirdViewImpl*>(data);
+                if (chosen_color) {
+                    Gfx::Color gfx_chosen_color {
+                        static_cast<u8>(chosen_color->red * 255.0),
+                        static_cast<u8>(chosen_color->green * 255.0),
+                        static_cast<u8>(chosen_color->blue * 255.0),
+                        255
+                    };
+                    self->color_picker_closed(gfx_chosen_color);
+                } else {
+                    self->color_picker_closed({});
+                }
+            },
+            this);
+    };
     on_insert_clipboard_entry = [this](AK::String const& data, [[maybe_unused]] AK::String const& presentation_style, AK::String const& mime_type) {
         GdkClipboard* clipboard = gtk_widget_get_clipboard(GTK_WIDGET(m_widget));
         GBytes* bytes = g_bytes_new(data.bytes().data(), data.bytes().size());
