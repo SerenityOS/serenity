@@ -10,8 +10,12 @@
 
 namespace Audio {
 
-ErrorOr<NonnullRefPtr<PlaybackStream>> PlaybackStreamSerenity::create(OutputState initial_state, u32 sample_rate, [[maybe_unused]] u8 channels, [[maybe_unused]] u32 target_latency_ms, AudioDataRequestCallback&& data_request_callback)
+ErrorOr<NonnullRefPtr<PlaybackStream>> PlaybackStreamSerenity::create(OutputState initial_state, u32 sample_rate, u8 channels, [[maybe_unused]] u32 target_latency_ms, AudioDataRequestCallback&& data_request_callback)
 {
+    // ConnectionToServer can only handle stereo audio currently. If it is able to accept mono audio
+    // later, this can be removed.
+    VERIFY(channels == 2);
+
     VERIFY(data_request_callback);
     auto connection = TRY(ConnectionToServer::try_create());
     if (auto result = connection->try_set_self_sample_rate(sample_rate); result.is_error())
