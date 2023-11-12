@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -99,6 +100,7 @@ public:
     bool is_upside_down() const { return m_upside_down; }
     bool is_inverted() const { return m_inverted; }
     bool is_previewed() const { return m_previewed; }
+    bool is_disabled() const { return m_disabled; }
     Gfx::Color color() const { return (m_suit == Suit::Diamonds || m_suit == Suit::Hearts) ? Color::Red : Color::Black; }
 
     void set_position(const Gfx::IntPoint p) { m_rect.set_location(p); }
@@ -106,6 +108,7 @@ public:
     void set_upside_down(bool upside_down) { m_upside_down = upside_down; }
     void set_inverted(bool inverted) { m_inverted = inverted; }
     void set_previewed(bool previewed) { m_previewed = previewed; }
+    void set_disabled(bool disabled) { m_disabled = disabled; }
 
     void save_old_position();
 
@@ -125,6 +128,7 @@ private:
     bool m_upside_down { false };
     bool m_inverted { false };
     bool m_previewed { false };
+    bool m_disabled { false };
 };
 
 enum class Shuffle {

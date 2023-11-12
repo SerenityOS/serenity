@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +23,8 @@ Card::Card(Suit suit, Rank rank)
 
 void Card::paint(GUI::Painter& painter, bool highlighted) const
 {
+    VERIFY(!(highlighted && m_disabled));
+
     auto& card_painter = CardPainter::the();
     auto bitmap = [&]() {
         if (m_inverted)
@@ -29,6 +32,9 @@ void Card::paint(GUI::Painter& painter, bool highlighted) const
         if (highlighted) {
             VERIFY(!m_upside_down);
             return card_painter.card_front_highlighted(m_suit, m_rank);
+        }
+        if (m_disabled) {
+            return m_upside_down ? card_painter.card_back_disabled() : card_painter.card_front_disabled(m_suit, m_rank);
         }
         return m_upside_down ? card_painter.card_back() : card_painter.card_front(m_suit, m_rank);
     }();
