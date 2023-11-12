@@ -51,7 +51,6 @@ private:
         O(In, in)                                               \
         O(InstanceOf, instance_of)                              \
         O(LooselyInequals, loosely_inequals)                    \
-        O(LooselyEquals, loosely_equals)                        \
         O(StrictlyInequals, strict_inequals)                    \
         O(StrictlyEquals, strict_equals)
 
