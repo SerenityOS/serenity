@@ -32,7 +32,12 @@ public:
     void set_background_color(Color);
 
 private:
+    using PaintCache = Array<Array<RefPtr<Gfx::Bitmap>, to_underlying(Rank::__Count)>, to_underlying(Suit::__Count)>;
+
     CardPainter();
+
+    NonnullRefPtr<Gfx::Bitmap> get_bitmap_or_create(Suit, Rank, PaintCache&, Function<void(Gfx::Bitmap&)>);
+
     NonnullRefPtr<Gfx::Bitmap> create_card_bitmap();
     void paint_card_front(Gfx::Bitmap&, Suit, Rank);
     void paint_card_front_pips(Gfx::Bitmap&, Suit, Rank);
@@ -43,10 +48,12 @@ private:
 
     Array<RefPtr<Gfx::Bitmap>, to_underlying(Suit::__Count)> m_suit_pips;
     Array<RefPtr<Gfx::Bitmap>, to_underlying(Suit::__Count)> m_suit_pips_flipped_vertically;
-    Array<Array<RefPtr<Gfx::Bitmap>, to_underlying(Rank::__Count)>, to_underlying(Suit::__Count)> m_cards;
-    Array<Array<RefPtr<Gfx::Bitmap>, to_underlying(Rank::__Count)>, to_underlying(Suit::__Count)> m_cards_inverted;
-    Array<Array<RefPtr<Gfx::Bitmap>, to_underlying(Rank::__Count)>, to_underlying(Suit::__Count)> m_cards_highlighted;
-    Array<Array<RefPtr<Gfx::Bitmap>, to_underlying(Rank::__Count)>, to_underlying(Suit::__Count)> m_cards_disabled;
+
+    PaintCache m_cards;
+    PaintCache m_cards_inverted;
+    PaintCache m_cards_highlighted;
+    PaintCache m_cards_disabled;
+
     RefPtr<Gfx::Bitmap> m_card_back;
     RefPtr<Gfx::Bitmap> m_card_back_inverted;
     RefPtr<Gfx::Bitmap> m_card_back_disabled;

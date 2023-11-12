@@ -82,19 +82,26 @@ static constexpr Gfx::CharacterBitmap s_club {
 
 static constexpr u8 s_disabled_alpha = 90;
 
-NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front(Suit suit, Rank rank)
+NonnullRefPtr<Gfx::Bitmap> CardPainter::get_bitmap_or_create(Suit suit, Rank rank, CardPainter::PaintCache& cache, Function<void(Gfx::Bitmap&)> creator)
 {
     auto suit_id = to_underlying(suit);
     auto rank_id = to_underlying(rank);
 
-    auto& existing_bitmap = m_cards[suit_id][rank_id];
+    auto& existing_bitmap = cache[suit_id][rank_id];
     if (!existing_bitmap.is_null())
         return *existing_bitmap;
 
-    m_cards[suit_id][rank_id] = create_card_bitmap();
-    paint_card_front(*m_cards[suit_id][rank_id], suit, rank);
+    auto bitmap = create_card_bitmap();
+    creator(bitmap);
+    cache[suit_id][rank_id] = move(bitmap);
+    return *cache[suit_id][rank_id];
+}
 
-    return *m_cards[suit_id][rank_id];
+NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front(Suit suit, Rank rank)
+{
+    return get_bitmap_or_create(suit, rank, m_cards, [this, suit, rank](auto& bitmap) {
+        paint_card_front(bitmap, suit, rank);
+    });
 }
 
 NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back()
@@ -110,47 +117,23 @@ NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back()
 
 NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front_highlighted(Suit suit, Rank rank)
 {
-    auto suit_id = to_underlying(suit);
-    auto rank_id = to_underlying(rank);
-
-    auto& existing_bitmap = m_cards_highlighted[suit_id][rank_id];
-    if (!existing_bitmap.is_null())
-        return *existing_bitmap;
-
-    m_cards_highlighted[suit_id][rank_id] = create_card_bitmap();
-    paint_highlighted_card(*m_cards_highlighted[suit_id][rank_id], card_front(suit, rank));
-
-    return *m_cards_highlighted[suit_id][rank_id];
+    return get_bitmap_or_create(suit, rank, m_cards_highlighted, [this, suit, rank](auto& bitmap) {
+        paint_highlighted_card(bitmap, card_front(suit, rank));
+    });
 }
 
 NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front_disabled(Suit suit, Rank rank)
 {
-    auto suit_id = to_underlying(suit);
-    auto rank_id = to_underlying(rank);
-
-    auto& existing_bitmap = m_cards_disabled[suit_id][rank_id];
-    if (!existing_bitmap.is_null())
-        return *existing_bitmap;
-
-    m_cards_disabled[suit_id][rank_id] = create_card_bitmap();
-    paint_disabled_card(*m_cards_disabled[suit_id][rank_id], card_front(suit, rank));
-
-    return *m_cards_disabled[suit_id][rank_id];
+    return get_bitmap_or_create(suit, rank, m_cards_disabled, [this, suit, rank](auto& bitmap) {
+        paint_disabled_card(bitmap, card_front(suit, rank));
+    });
 }
 
 NonnullRefPtr<Gfx::Bitmap> CardPainter::card_front_inverted(Suit suit, Rank rank)
 {
-    auto suit_id = to_underlying(suit);
-    auto rank_id = to_underlying(rank);
-
-    auto& existing_bitmap = m_cards_inverted[suit_id][rank_id];
-    if (!existing_bitmap.is_null())
-        return *existing_bitmap;
-
-    m_cards_inverted[suit_id][rank_id] = create_card_bitmap();
-    paint_inverted_card(*m_cards_inverted[suit_id][rank_id], card_front(suit, rank));
-
-    return *m_cards_inverted[suit_id][rank_id];
+    return get_bitmap_or_create(suit, rank, m_cards_inverted, [this, suit, rank](auto& bitmap) {
+        paint_inverted_card(bitmap, card_front(suit, rank));
+    });
 }
 
 NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back_inverted()
