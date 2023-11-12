@@ -56,7 +56,7 @@ public:
 
     IntSize size() const
     {
-        return m_size;
+        return m_metadata.size;
     }
 
     State state() const
@@ -108,24 +108,34 @@ private:
         HorizontalDifferencing = 2,
     };
 
+    struct Metadata {
+        IntSize size {};
+        Array<u16, 3> bits_per_sample {};
+        Compression compression {};
+        Predictor predictor {};
+        Vector<u32> strip_offsets {};
+        u32 rows_per_strip {};
+        Vector<u32> strip_bytes_count {};
+    };
+
     template<typename ByteReader>
     ErrorOr<void> loop_over_pixels(ByteReader&& byte_reader, Function<ErrorOr<void>(u32)> initializer = {})
     {
-        for (u32 strip_index = 0; strip_index < m_strip_offsets.size(); ++strip_index) {
-            TRY(m_stream->seek(m_strip_offsets[strip_index]));
+        for (u32 strip_index = 0; strip_index < m_metadata.strip_offsets.size(); ++strip_index) {
+            TRY(m_stream->seek(m_metadata.strip_offsets[strip_index]));
             if (initializer)
-                TRY(initializer(m_strip_bytes_count[strip_index]));
-            for (u32 row = 0; row < m_rows_per_strip; row++) {
-                auto const scanline = row + m_rows_per_strip * strip_index;
-                if (scanline >= static_cast<u32>(m_size.height()))
+                TRY(initializer(m_metadata.strip_bytes_count[strip_index]));
+            for (u32 row = 0; row < m_metadata.rows_per_strip; row++) {
+                auto const scanline = row + m_metadata.rows_per_strip * strip_index;
+                if (scanline >= static_cast<u32>(m_metadata.size.height()))
                     break;
 
                 Optional<Color> last_color {};
 
-                for (u32 column = 0; column < static_cast<u32>(m_size.width()); ++column) {
+                for (u32 column = 0; column < static_cast<u32>(m_metadata.size.width()); ++column) {
                     auto color = Color { TRY(byte_reader()), TRY(byte_reader()), TRY(byte_reader()) };
 
-                    if (m_predictor == Predictor::HorizontalDifferencing && last_color.has_value()) {
+                    if (m_metadata.predictor == Predictor::HorizontalDifferencing && last_color.has_value()) {
                         color.set_red(last_color->red() + color.red());
                         color.set_green(last_color->green() + color.green());
                         color.set_blue(last_color->blue() + color.blue());
@@ -142,9 +152,9 @@ private:
 
     ErrorOr<void> decode_frame_impl()
     {
-        m_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, m_size));
+        m_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, m_metadata.size));
 
-        switch (m_compression) {
+        switch (m_metadata.compression) {
         case Compression::NoCompression:
             TRY(loop_over_pixels([this]() { return read_value<u8>(); }));
             break;
@@ -469,7 +479,7 @@ private:
 
             value[0].visit(
                 [this]<OneOf<u16, u32> T>(T const& width) {
-                    m_size.set_width(width);
+                    m_metadata.size.set_width(width);
                 },
                 [&](auto const&) {
                     VERIFY_NOT_REACHED();
@@ -483,7 +493,7 @@ private:
 
             value[0].visit(
                 [this]<OneOf<u16, u32> T>(T const& width) {
-                    m_size.set_height(width);
+                    m_metadata.size.set_height(width);
                 },
                 [&](auto const&) {
                     VERIFY_NOT_REACHED();
@@ -495,10 +505,10 @@ private:
             if (type != Type::UnsignedShort || count != 3)
                 return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid tag 258");
 
-            for (u8 i = 0; i < m_bits_per_sample.size(); ++i) {
+            for (u8 i = 0; i < m_metadata.bits_per_sample.size(); ++i) {
                 value[i].visit(
                     [this, i](u16 const& bits_per_sample) {
-                        m_bits_per_sample[i] = bits_per_sample;
+                        m_metadata.bits_per_sample[i] = bits_per_sample;
                     },
                     [&](auto const&) {
                         VERIFY_NOT_REACHED();
@@ -516,7 +526,7 @@ private:
                     if (compression > 6 && compression != to_underlying(Compression::PackBits))
                         return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid compression value");
 
-                    m_compression = static_cast<Compression>(compression);
+                    m_metadata.compression = static_cast<Compression>(compression);
                     return {};
                 },
                 [&](auto const&) -> ErrorOr<void> {
@@ -529,11 +539,11 @@ private:
             if (type != Type::UnsignedShort && type != Type::UnsignedLong)
                 return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid tag 273");
 
-            TRY(m_strip_offsets.try_ensure_capacity(count));
+            TRY(m_metadata.strip_offsets.try_ensure_capacity(count));
             for (u32 i = 0; i < count; ++i) {
                 value[i].visit(
                     [this]<OneOf<u16, u32> T>(T const& offset) {
-                        m_strip_offsets.append(offset);
+                        m_metadata.strip_offsets.append(offset);
                     },
                     [&](auto const&) {
                         VERIFY_NOT_REACHED();
@@ -563,7 +573,7 @@ private:
 
             value[0].visit(
                 [this]<OneOf<u16, u32> T>(T const& rows_per_strip) {
-                    m_rows_per_strip = rows_per_strip;
+                    m_metadata.rows_per_strip = rows_per_strip;
                 },
                 [&](auto const&) {
                     VERIFY_NOT_REACHED();
@@ -575,11 +585,11 @@ private:
             if (type != Type::UnsignedShort && type != Type::UnsignedLong)
                 return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid tag 279");
 
-            TRY(m_strip_bytes_count.try_ensure_capacity(count));
+            TRY(m_metadata.strip_bytes_count.try_ensure_capacity(count));
             for (u32 i = 0; i < count; ++i) {
                 value[i].visit(
                     [this]<OneOf<u16, u32> T>(T const& offset) {
-                        m_strip_bytes_count.append(offset);
+                        m_metadata.strip_bytes_count.append(offset);
                     },
                     [&](auto const&) {
                         VERIFY_NOT_REACHED();
@@ -596,7 +606,7 @@ private:
                     if (predictor != 1 && predictor != 2)
                         return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid predictor value");
 
-                    m_predictor = static_cast<Predictor>(predictor);
+                    m_metadata.predictor = static_cast<Predictor>(predictor);
                     return {};
                 },
                 [&](auto const&) -> ErrorOr<void> {
@@ -611,19 +621,13 @@ private:
     }
 
     NonnullOwnPtr<FixedMemoryStream> m_stream;
-    IntSize m_size {};
     State m_state {};
     RefPtr<Bitmap> m_bitmap {};
 
     ByteOrder m_byte_order {};
     Optional<u32> m_next_ifd {};
 
-    Array<u16, 3> m_bits_per_sample {};
-    Compression m_compression {};
-    Predictor m_predictor {};
-    Vector<u32> m_strip_offsets {};
-    u32 m_rows_per_strip {};
-    Vector<u32> m_strip_bytes_count {};
+    Metadata m_metadata {};
 };
 
 TIFFImageDecoderPlugin::TIFFImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
