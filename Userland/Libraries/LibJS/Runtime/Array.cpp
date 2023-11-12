@@ -64,6 +64,7 @@ NonnullGCPtr<Array> Array::create_from(Realm& realm, Vector<Value> const& elemen
 Array::Array(Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
 {
+    m_has_magical_length_property = true;
 }
 
 // 10.4.2.4 ArraySetLength ( A, Desc ), https://tc39.es/ecma262/#sec-arraysetlength

@@ -1239,6 +1239,66 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
     branch_if_object(ARG1, [&] {
         extract_object_pointer(GPR0, ARG1);
 
+        // NOTE: Fast path for Array.length which magically reflects
+        //       the "array-like size" of the array object's property storage.
+
+        if (m_bytecode_executable.get_identifier(op.property()) == "length"sv) {
+            Assembler::Label no_magical_length_property_case;
+
+            // if (!object.has_magical_length_property) goto no_magical_length_property_case;
+            m_assembler.mov8(
+                Assembler::Operand::Register(GPR1),
+                Assembler::Operand::Mem64BaseAndOffset(GPR0, Object::has_magical_length_property_offset()));
+            m_assembler.jump_if(
+                Assembler::Operand::Register(GPR1),
+                Assembler::Condition::EqualTo,
+                Assembler::Operand::Imm(0),
+                no_magical_length_property_case);
+
+            // NOTE: The base object has a magical "length" property, so now we just need
+            //       to extract the "array-like size" from the object property storage.
+            //       If we run into any issues, we'll jump to the slow case and figure things out in C++.
+
+            // GPR0 = object->indexed_properties().storage()
+            m_assembler.mov(
+                Assembler::Operand::Register(GPR0),
+                Assembler::Operand::Mem64BaseAndOffset(GPR0, Object::indexed_properties_offset() + IndexedProperties::storage_offset()));
+
+            // if (GPR0 == nullptr) goto slow_case;
+            m_assembler.jump_if(
+                Assembler::Operand::Register(GPR0),
+                Assembler::Condition::EqualTo,
+                Assembler::Operand::Imm(0),
+                slow_case);
+
+            // if (!GPR0->is_simple_storage()) goto slow_case;
+            m_assembler.mov8(
+                Assembler::Operand::Register(GPR1),
+                Assembler::Operand::Mem64BaseAndOffset(GPR0, IndexedPropertyStorage::is_simple_storage_offset()));
+            m_assembler.jump_if(
+                Assembler::Operand::Register(GPR1),
+                Assembler::Condition::EqualTo,
+                Assembler::Operand::Imm(0),
+                slow_case);
+
+            // accumulator = GPR0->array_like_size() | SHIFT_INT32_TAG
+            // return
+            m_assembler.mov(
+                Assembler::Operand::Register(GPR1),
+                Assembler::Operand::Mem64BaseAndOffset(GPR0, SimpleIndexedPropertyStorage::array_size_offset()));
+            m_assembler.mov(
+                Assembler::Operand::Register(GPR0),
+                Assembler::Operand::Imm(SHIFTED_INT32_TAG));
+            m_assembler.bitwise_or(
+                Assembler::Operand::Register(GPR1),
+                Assembler::Operand::Register(GPR0));
+
+            store_accumulator(GPR1);
+            m_assembler.jump(end);
+
+            no_magical_length_property_case.link(m_assembler);
+        }
+
         // if (cache.shape != &object->shape()) goto slow_case;
         m_assembler.mov(
             Assembler::Operand::Register(GPR2),
