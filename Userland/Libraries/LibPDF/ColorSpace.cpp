@@ -314,7 +314,7 @@ PDFErrorOr<NonnullRefPtr<CalGrayColorSpace>> CalGrayColorSpace::create(Document*
     if (parameters.size() != 1)
         return Error { Error::Type::MalformedPDF, "Gray color space expects one parameter" };
 
-    auto param = parameters[0];
+    auto param = TRY(document->resolve(parameters[0]));
     if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
         return Error { Error::Type::MalformedPDF, "Gray color space expects a dict parameter" };
 
@@ -384,7 +384,7 @@ PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* d
     if (parameters.size() != 1)
         return Error { Error::Type::MalformedPDF, "RGB color space expects one parameter" };
 
-    auto param = parameters[0];
+    auto param = TRY(document->resolve(parameters[0]));
     if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
         return Error { Error::Type::MalformedPDF, "RGB color space expects a dict parameter" };
 
@@ -554,7 +554,7 @@ PDFErrorOr<NonnullRefPtr<LabColorSpace>> LabColorSpace::create(Document* documen
     if (parameters.size() != 1)
         return Error { Error::Type::MalformedPDF, "Lab color space expects one parameter" };
 
-    auto param = parameters[0];
+    auto param = TRY(document->resolve(parameters[0]));
     if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
         return Error { Error::Type::MalformedPDF, "Lab color space expects a dict parameter" };
 
