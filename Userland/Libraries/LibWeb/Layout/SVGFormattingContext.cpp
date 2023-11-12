@@ -8,6 +8,7 @@
  */
 
 #include <AK/Debug.h>
+#include <LibGfx/BoundingBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
@@ -275,31 +276,19 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         if (is<SVGGraphicsBox>(descendant) && !is<SVGGeometryBox>(descendant) && !is<SVGTextBox>(descendant)) {
             auto const& svg_graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
             auto& graphics_box_state = m_state.get_mutable(svg_graphics_box);
-            auto smallest_x_position = CSSPixels(0);
-            auto smallest_y_position = CSSPixels(0);
-            auto greatest_x_position = CSSPixels(0);
-            auto greatest_y_position = CSSPixels(0);
 
+            Gfx::BoundingBox<CSSPixels> bounding_box;
             descendant.for_each_in_subtree_of_type<Box>([&](Box const& child_of_svg_container) {
-                auto& box_state = m_state.get_mutable(child_of_svg_container);
-                smallest_x_position = box_state.offset.x();
-                smallest_y_position = box_state.offset.y();
-                return IterationDecision::Break;
-            });
-
-            descendant.for_each_in_subtree_of_type<Box>([&](Box const& child_of_svg_container) {
-                auto& box_state = m_state.get_mutable(child_of_svg_container);
-                smallest_x_position = min(smallest_x_position, box_state.offset.x());
-                smallest_y_position = min(smallest_y_position, box_state.offset.y());
-                greatest_x_position = max(greatest_x_position, box_state.offset.x() + box_state.content_width());
-                greatest_y_position = max(greatest_y_position, box_state.offset.y() + box_state.content_height());
+                auto& box_state = m_state.get(child_of_svg_container);
+                bounding_box.add_point(box_state.offset);
+                bounding_box.add_point(box_state.offset.translated(box_state.content_width(), box_state.content_height()));
                 return IterationDecision::Continue;
             });
 
-            graphics_box_state.set_content_x(smallest_x_position);
-            graphics_box_state.set_content_y(smallest_y_position);
-            graphics_box_state.set_content_width(greatest_x_position - smallest_x_position);
-            graphics_box_state.set_content_height(greatest_y_position - smallest_y_position);
+            graphics_box_state.set_content_x(bounding_box.x());
+            graphics_box_state.set_content_y(bounding_box.y());
+            graphics_box_state.set_content_width(bounding_box.width());
+            graphics_box_state.set_content_height(bounding_box.height());
         }
         return IterationDecision::Continue;
     });
