@@ -221,6 +221,8 @@ public:
     static FlatPtr may_interfere_with_indexed_property_access_offset() { return OFFSET_OF(Object, m_may_interfere_with_indexed_property_access); }
     static FlatPtr indexed_properties_offset() { return OFFSET_OF(Object, m_indexed_properties); }
 
+    static FlatPtr has_magical_length_property_offset() { return OFFSET_OF(Object, m_has_magical_length_property); }
+
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
@@ -237,6 +239,8 @@ protected:
 
     // [[ParameterMap]]
     bool m_has_parameter_map { false };
+
+    bool m_has_magical_length_property { false };
 
 private:
     void set_shape(Shape& shape) { m_shape = &shape; }
