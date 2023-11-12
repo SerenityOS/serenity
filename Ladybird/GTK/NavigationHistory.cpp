@@ -34,10 +34,19 @@ void ladybird_navigation_history_push(LadybirdNavigationHistory* self, LadybirdH
     g_return_if_fail(LADYBIRD_IS_NAVIGATION_HISTORY(self));
     g_return_if_fail(LADYBIRD_IS_HISTORY_ENTRY(entry));
 
+    size_t remove_count = 0;
+    if (!self->entries.is_empty()) {
+        for (size_t i = self->current_position + 1; i < self->entries.size(); i++)
+            g_object_unref(self->entries[i]);
+        remove_count = self->entries.size() - self->current_position - 1;
+        self->entries.remove(self->current_position + 1, remove_count);
+        VERIFY(self->current_position + 1 == self->entries.size());
+    }
+
     self->entries.append(g_object_ref_sink(entry));
     self->current_position = self->entries.size() - 1;
 
-    g_list_model_items_changed(G_LIST_MODEL(self), self->current_position, 0, 1);
+    g_list_model_items_changed(G_LIST_MODEL(self), self->current_position, remove_count, 1);
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_N_ITEMS]);
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CAN_NAVIGATE_BACK]);
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_CAN_NAVIGATE_FORWARD]);
