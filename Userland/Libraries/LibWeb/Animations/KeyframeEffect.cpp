@@ -130,8 +130,27 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
 
 void KeyframeEffect::set_pseudo_element(Optional<String> pseudo_element)
 {
-    // FIXME: Implement this
-    (void)pseudo_element;
+    // On setting, sets the target pseudo-selector of the animation effect to the provided value after applying the
+    // following exceptions:
+
+    // FIXME:
+    // - If the provided value is not null and is an invalid <pseudo-element-selector>, the user agent must throw a
+    //   DOMException with error name SyntaxError and leave the target pseudo-selector of this animation effect
+    //   unchanged.
+
+    // - If one of the legacy Selectors Level 2 single-colon selectors (':before', ':after', ':first-letter', or
+    //   ':first-line') is specified, the target pseudo-selector must be set to the equivalent two-colon selector
+    //   (e.g. '::before').
+    if (pseudo_element.has_value()) {
+        auto value = pseudo_element.value();
+
+        if (value == ":before" || value == ":after" || value == ":first-letter" || value == ":first-line") {
+            m_target_pseudo_selector = MUST(String::formatted(":{}", value));
+            return;
+        }
+    }
+
+    m_target_pseudo_selector = pseudo_element;
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-keyframeeffect-getkeyframes
