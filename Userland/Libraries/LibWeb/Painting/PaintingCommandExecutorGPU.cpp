@@ -15,7 +15,6 @@ PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Painter& painte
 
 PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
 {
-    m_painter.flush();
 }
 
 CommandResult PaintingCommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
