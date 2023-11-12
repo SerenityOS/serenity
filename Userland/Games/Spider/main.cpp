@@ -7,9 +7,9 @@
  */
 
 #include "Game.h"
+#include "MainWidget.h"
 #include <AK/NumberFormat.h>
 #include <AK/URL.h>
-#include <Games/Spider/SpiderGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
@@ -116,8 +116,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (statistic_display >= StatisticDisplay::__Count)
         update_statistic_display(StatisticDisplay::HighScore);
 
-    auto widget = window->set_main_widget<GUI::Widget>();
-    TRY(widget->load_from_gml(spider_gml));
+    auto widget = TRY(Spider::MainWidget::try_create());
+    window->set_main_widget(widget);
 
     auto& game = *widget->find_descendant_of_type_named<Spider::Game>("game");
     game.set_focus(true);
