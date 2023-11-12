@@ -9,10 +9,12 @@
 #include <AK/Assertions.h>
 #include <AK/OwnPtr.h>
 
+#ifndef AK_OS_MACOS
 // Make sure egl.h doesn't give us definitions from X11 headers
-#define EGL_NO_X11
-#include <EGL/egl.h>
-#undef EGL_NO_X11
+#    define EGL_NO_X11
+#    include <EGL/egl.h>
+#    undef EGL_NO_X11
+#endif
 
 namespace AccelGfx {
 
@@ -22,17 +24,9 @@ public:
 
     static OwnPtr<Context> create();
 
-    Context(EGLDisplay egl_display, EGLContext egl_context, EGLConfig egl_config)
-        : m_egl_display(egl_display)
-        , m_egl_context(egl_context)
-        , m_egl_config(egl_config)
+    Context()
     {
     }
-
-private:
-    EGLDisplay m_egl_display { nullptr };
-    EGLContext m_egl_context { nullptr };
-    EGLConfig m_egl_config { nullptr };
 };
 
 }

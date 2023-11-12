@@ -12,3 +12,8 @@ if (OPENGL_FOUND)
 else()
     set(HAS_ACCELERATED_GRAPHICS OFF CACHE BOOL "" FORCE)
 endif()
+
+if (APPLE)
+    set(HAS_ACCELERATED_GRAPHICS ON CACHE BOOL "" FORCE)
+    set(ACCEL_GFX_LIBS "-framework OpenGL" CACHE STRING "" FORCE)
+endif()
