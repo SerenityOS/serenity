@@ -545,89 +545,99 @@ struct X86_64Assembler {
         }
     }
 
-    void shift_left(Operand dest, Optional<Operand> count)
+    // NOTE: If count is a register, RCX gets clobbered
+    void shift_left(Operand dest, Operand count)
     {
         VERIFY(dest.type == Operand::Type::Reg);
-        if (count.has_value()) {
-            VERIFY(count->type == Operand::Type::Imm);
-            VERIFY(count->fits_in_u8());
-            emit_rex_for_slash(dest, REX_W::Yes);
-            emit8(0xc1);
-            emit_modrm_slash(4, dest);
-            emit8(count->offset_or_immediate);
-        } else {
+        if (count.type == Operand::Type::Reg) {
+            mov(Operand::Register(Reg::RCX), count);
             emit_rex_for_slash(dest, REX_W::Yes);
             emit8(0xd3);
             emit_modrm_slash(4, dest);
-        }
-    }
-
-    void shift_left32(Operand dest, Optional<Operand> count)
-    {
-        VERIFY(dest.type == Operand::Type::Reg);
-        if (count.has_value()) {
-            VERIFY(count->type == Operand::Type::Imm);
-            VERIFY(count->fits_in_u8());
-            emit_rex_for_slash(dest, REX_W::No);
+        } else if (count.type == Operand::Type::Imm) {
+            VERIFY(count.fits_in_u8());
+            emit_rex_for_slash(dest, REX_W::Yes);
             emit8(0xc1);
             emit_modrm_slash(4, dest);
-            emit8(count->offset_or_immediate);
-        } else {
+            emit8(count.offset_or_immediate);
+        } else
+            VERIFY_NOT_REACHED();
+    }
+
+    // See: NOTE in shift_left
+    void shift_left32(Operand dest, Operand count)
+    {
+        VERIFY(dest.type == Operand::Type::Reg);
+        if (count.type == Operand::Type::Reg) {
+            mov(Operand::Register(Reg::RCX), count);
             emit_rex_for_slash(dest, REX_W::No);
             emit8(0xd3);
             emit_modrm_slash(4, dest);
-        }
+        } else if (count.type == Operand::Type::Imm) {
+            VERIFY(count.fits_in_u8());
+            emit_rex_for_slash(dest, REX_W::No);
+            emit8(0xc1);
+            emit_modrm_slash(4, dest);
+            emit8(count.offset_or_immediate);
+        } else
+            VERIFY_NOT_REACHED();
     }
 
-    void shift_right32(Operand dest, Optional<Operand> count)
+    // See: NOTE in shift_left
+    void shift_right32(Operand dest, Operand count)
     {
         VERIFY(dest.type == Operand::Type::Reg);
-        if (count.has_value()) {
-            VERIFY(count->type == Operand::Type::Imm);
-            VERIFY(count->fits_in_u8());
+        if (count.type == Operand::Type::Reg) {
+            mov(Operand::Register(Reg::RCX), count);
+            emit_rex_for_slash(dest, REX_W::No);
+            emit8(0xd3);
+            emit_modrm_slash(5, dest);
+        } else if (count.type == Operand::Type::Imm) {
+            VERIFY(count.fits_in_u8());
             emit_rex_for_slash(dest, REX_W::No);
             emit8(0xc1);
             emit_modrm_slash(5, dest);
-            emit8(count->offset_or_immediate);
-        } else {
-            emit_rex_for_slash(dest, REX_W::No);
-            emit8(0xd3);
-            emit_modrm_slash(5, dest);
-        }
+            emit8(count.offset_or_immediate);
+        } else
+            VERIFY_NOT_REACHED();
     }
 
-    void arithmetic_right_shift(Operand dest, Optional<Operand> count)
+    // See: NOTE in shift_left
+    void arithmetic_right_shift(Operand dest, Operand count)
     {
         VERIFY(dest.type == Operand::Type::Reg);
-        if (count.has_value()) {
-            VERIFY(count->type == Operand::Type::Imm);
-            VERIFY(count->fits_in_u8());
-            emit_rex_for_slash(dest, REX_W::Yes);
-            emit8(0xc1);
-            emit_modrm_slash(7, dest);
-            emit8(count->offset_or_immediate);
-        } else {
+        if (count.type == Operand::Type::Reg) {
+            mov(Operand::Register(Reg::RCX), count);
             emit_rex_for_slash(dest, REX_W::Yes);
             emit8(0xd3);
             emit_modrm_slash(7, dest);
-        }
-    }
-
-    void arithmetic_right_shift32(Operand dest, Optional<Operand> count)
-    {
-        VERIFY(dest.type == Operand::Type::Reg);
-        if (count.has_value()) {
-            VERIFY(count->type == Operand::Type::Imm);
-            VERIFY(count->fits_in_u8());
-            emit_rex_for_slash(dest, REX_W::No);
+        } else if (count.type == Operand::Type::Imm) {
+            VERIFY(count.fits_in_u8());
+            emit_rex_for_slash(dest, REX_W::Yes);
             emit8(0xc1);
             emit_modrm_slash(7, dest);
-            emit8(count->offset_or_immediate);
-        } else {
+            emit8(count.offset_or_immediate);
+        } else
+            VERIFY_NOT_REACHED();
+    }
+
+    // See: NOTE in shift_left
+    void arithmetic_right_shift32(Operand dest, Operand count)
+    {
+        VERIFY(dest.type == Operand::Type::Reg);
+        if (count.type == Operand::Type::Reg) {
+            mov(Operand::Register(Reg::RCX), count);
             emit_rex_for_slash(dest, REX_W::No);
             emit8(0xd3);
             emit_modrm_slash(7, dest);
-        }
+        } else if (count.type == Operand::Type::Imm) {
+            VERIFY(count.fits_in_u8());
+            emit_rex_for_slash(dest, REX_W::No);
+            emit8(0xc1);
+            emit_modrm_slash(7, dest);
+            emit8(count.offset_or_immediate);
+        } else
+            VERIFY_NOT_REACHED();
     }
 
     void enter()

@@ -1258,13 +1258,8 @@ void Compiler::compile_left_shift(Bytecode::Op::LeftShift const& op)
     Assembler::Label end {};
 
     branch_if_both_int32(ARG1, ARG2, [&] {
-        // RCX = ARG2
-        m_assembler.mov(
-            Assembler::Operand::Register(Assembler::Reg::RCX),
-            Assembler::Operand::Register(ARG2));
-
-        // ARG1 <<= CL (32-bit)
-        m_assembler.shift_left32(Assembler::Operand::Register(ARG1), {});
+        // ARG1 <<= ARG2 (32-bit)
+        m_assembler.shift_left32(Assembler::Operand::Register(ARG1), Assembler::Operand::Register(ARG2));
 
         // accumulator = ARG1 | SHIFTED_INT32_TAG;
         m_assembler.mov(
@@ -1296,13 +1291,8 @@ void Compiler::compile_right_shift(Bytecode::Op::RightShift const& op)
     Assembler::Label end {};
 
     branch_if_both_int32(ARG1, ARG2, [&] {
-        // RCX = ARG2
-        m_assembler.mov(
-            Assembler::Operand::Register(Assembler::Reg::RCX),
-            Assembler::Operand::Register(ARG2));
-
-        // ARG1 >>= CL (32-bit)
-        m_assembler.arithmetic_right_shift32(Assembler::Operand::Register(ARG1), {});
+        // ARG1 >>= ARG2 (32-bit)
+        m_assembler.arithmetic_right_shift32(Assembler::Operand::Register(ARG1), Assembler::Operand::Register(ARG2));
 
         // accumulator = ARG1 | SHIFTED_INT32_TAG;
         m_assembler.mov(
@@ -1340,13 +1330,8 @@ void Compiler::compile_unsigned_right_shift(Bytecode::Op::UnsignedRightShift con
             Assembler::Operand::Register(GPR0),
             Assembler::Operand::Register(ARG1));
 
-        // RCX = ARG2
-        m_assembler.mov(
-            Assembler::Operand::Register(Assembler::Reg::RCX),
-            Assembler::Operand::Register(ARG2));
-
-        // GPR0 >>>= CL (32-bit)
-        m_assembler.shift_right32(Assembler::Operand::Register(GPR0), {});
+        // GPR0 >>>= ARG2 (32-bit)
+        m_assembler.shift_right32(Assembler::Operand::Register(GPR0), Assembler::Operand::Register(ARG2));
 
         // GPR1 = sign_extended(GPR0)
         m_assembler.mov32(
