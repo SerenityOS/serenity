@@ -7,7 +7,13 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <GL/gl.h>
+#ifdef AK_OS_MACOS
+#    define GL_SILENCE_DEPRECATION
+#    include <OpenGL/OpenGL.h>
+#    include <OpenGL/gl3.h>
+#else
+#    include <GL/gl.h>
+#endif
 #include <LibGfx/Forward.h>
 
 namespace AccelGfx::GL {

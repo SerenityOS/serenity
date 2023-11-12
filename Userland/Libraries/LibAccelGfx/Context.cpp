@@ -6,6 +6,14 @@
 
 #include <LibAccelGfx/Context.h>
 
+#ifdef AK_OS_MACOS
+#    define GL_SILENCE_DEPRECATION
+#    include <OpenGL/CGLRenderers.h>
+#    include <OpenGL/CGLTypes.h>
+#    include <OpenGL/OpenGL.h>
+#    include <OpenGL/gl3.h>
+#endif
+
 namespace AccelGfx {
 
 Context& Context::the()
@@ -16,7 +24,38 @@ Context& Context::the()
     return *s_the;
 }
 
-OwnPtr<Context> Context::create()
+#ifdef AK_OS_MACOS
+static void make_context_cgl()
+{
+    CGLContextObj context = NULL;
+    CGLPixelFormatAttribute attributes[4] = {
+        kCGLPFAOpenGLProfile,
+        (CGLPixelFormatAttribute)kCGLOGLPVersion_3_2_Core,
+        kCGLPFAAccelerated,
+        (CGLPixelFormatAttribute)0
+    };
+
+    CGLPixelFormatObj pixelFormat = NULL;
+    GLint numPixelFormats = 0;
+    CGLError error = CGLChoosePixelFormat(attributes, &pixelFormat, &numPixelFormats);
+    if (error) {
+        VERIFY_NOT_REACHED();
+    }
+
+    error = CGLCreateContext(pixelFormat, NULL, &context);
+    if (error) {
+        VERIFY_NOT_REACHED();
+    }
+
+    error = CGLSetCurrentContext(context);
+    if (error) {
+        VERIFY_NOT_REACHED();
+    }
+
+    VERIFY(glGetError() == GL_NO_ERROR);
+}
+#else
+static void make_context_egl()
 {
     EGLDisplay egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
@@ -60,8 +99,18 @@ OwnPtr<Context> Context::create()
         dbgln("eglMakeCurrent failed");
         VERIFY_NOT_REACHED();
     }
+}
+#endif
 
-    return make<Context>(egl_display, egl_context, egl_config);
+OwnPtr<Context> Context::create()
+{
+#ifdef AK_OS_MACOS
+    make_context_cgl();
+#else
+    make_context_egl();
+#endif
+
+    return make<Context>();
 }
 
 }

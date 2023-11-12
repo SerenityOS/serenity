@@ -75,7 +75,7 @@ in vec2 vTextureCoord;
 uniform sampler2D uSampler;
 out vec4 fragColor;
 void main() {
-    fragColor = texture2D(uSampler, vTextureCoord) * uColor;
+    fragColor = texture(uSampler, vTextureCoord) * uColor;
 }
 )";
 
