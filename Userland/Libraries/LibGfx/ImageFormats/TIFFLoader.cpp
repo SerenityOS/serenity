@@ -12,6 +12,8 @@
 
 namespace Gfx {
 
+namespace TIFF {
+
 class TIFFLoadingContext {
 public:
     enum class State {
@@ -630,9 +632,11 @@ private:
     Metadata m_metadata {};
 };
 
+}
+
 TIFFImageDecoderPlugin::TIFFImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
 {
-    m_context = make<TIFFLoadingContext>(move(stream));
+    m_context = make<TIFF::TIFFLoadingContext>(move(stream));
 }
 
 bool TIFFImageDecoderPlugin::sniff(ReadonlyBytes bytes)
@@ -662,10 +666,10 @@ ErrorOr<ImageFrameDescriptor> TIFFImageDecoderPlugin::frame(size_t index, Option
     if (index > 0)
         return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid frame index");
 
-    if (m_context->state() == TIFFLoadingContext::State::Error)
+    if (m_context->state() == TIFF::TIFFLoadingContext::State::Error)
         return Error::from_string_literal("TIFFImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state() < TIFFLoadingContext::State::FrameDecoded)
+    if (m_context->state() < TIFF::TIFFLoadingContext::State::FrameDecoded)
         TRY(m_context->decode_frame());
 
     return ImageFrameDescriptor { m_context->bitmap(), 0 };
@@ -673,8 +677,8 @@ ErrorOr<ImageFrameDescriptor> TIFFImageDecoderPlugin::frame(size_t index, Option
 }
 
 template<typename T>
-struct AK::Formatter<Gfx::TIFFLoadingContext::Rational<T>> : Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, Gfx::TIFFLoadingContext::Rational<T> value)
+struct AK::Formatter<Gfx::TIFF::TIFFLoadingContext::Rational<T>> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::TIFF::TIFFLoadingContext::Rational<T> value)
     {
         return Formatter<FormatString>::format(builder, "{} ({}/{})"sv, static_cast<double>(value.numerator) / value.denominator, value.numerator, value.denominator);
     }

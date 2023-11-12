@@ -13,7 +13,9 @@ namespace Gfx {
 
 // https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf
 
+namespace TIFF {
 class TIFFLoadingContext;
+}
 
 class TIFFImageDecoderPlugin : public ImageDecoderPlugin {
 public:
@@ -29,7 +31,7 @@ public:
 private:
     TIFFImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream>);
 
-    OwnPtr<TIFFLoadingContext> m_context;
+    OwnPtr<TIFF::TIFFLoadingContext> m_context;
 };
 
 }
