@@ -4,15 +4,12 @@ serenity_component(
     TARGETS Spider
 )
 
-stringify_gml(Spider.gml SpiderGML.h spider_gml)
+compile_gml(Spider.gml SpiderGML.cpp spider_gml)
 
 set(SOURCES
     Game.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    SpiderGML.h
+    SpiderGML.cpp
 )
 
 serenity_app(Spider ICON app-spider)
