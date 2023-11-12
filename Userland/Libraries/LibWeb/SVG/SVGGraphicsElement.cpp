@@ -116,42 +116,42 @@ Gfx::AffineTransform SVGGraphicsElement::get_transform() const
     return transform;
 }
 
+struct NamedPropertyID {
+    NamedPropertyID(CSS::PropertyID property_id)
+        : id(property_id)
+        , name(CSS::string_from_property_id(property_id))
+    {
+    }
+
+    CSS::PropertyID id;
+    StringView name;
+};
+
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
+    static const Array attribute_style_properties {
+        // FIXME: The `fill` attribute and CSS `fill` property are not the same! But our support is limited enough that they are equivalent for now.
+        NamedPropertyID(CSS::PropertyID::Fill),
+        // FIXME: The `stroke` attribute and CSS `stroke` property are not the same! But our support is limited enough that they are equivalent for now.
+        NamedPropertyID(CSS::PropertyID::Stroke),
+        NamedPropertyID(CSS::PropertyID::StrokeWidth),
+        NamedPropertyID(CSS::PropertyID::FillRule),
+        NamedPropertyID(CSS::PropertyID::FillOpacity),
+        NamedPropertyID(CSS::PropertyID::StrokeOpacity),
+        NamedPropertyID(CSS::PropertyID::Opacity),
+        NamedPropertyID(CSS::PropertyID::TextAnchor),
+        NamedPropertyID(CSS::PropertyID::FontSize),
+        NamedPropertyID(CSS::PropertyID::Mask)
+    };
+
     CSS::Parser::ParsingContext parsing_context { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
     for_each_attribute([&](auto& name, auto& value) {
-        if (name.equals_ignoring_ascii_case("fill"sv)) {
-            // FIXME: The `fill` attribute and CSS `fill` property are not the same! But our support is limited enough that they are equivalent for now.
-            if (auto fill_value = parse_css_value(parsing_context, value, CSS::PropertyID::Fill))
-                style.set_property(CSS::PropertyID::Fill, fill_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("stroke"sv)) {
-            // FIXME: The `stroke` attribute and CSS `stroke` property are not the same! But our support is limited enough that they are equivalent for now.
-            if (auto stroke_value = parse_css_value(parsing_context, value, CSS::PropertyID::Stroke))
-                style.set_property(CSS::PropertyID::Stroke, stroke_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("stroke-width"sv)) {
-            if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth))
-                style.set_property(CSS::PropertyID::StrokeWidth, stroke_width_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("fill-rule"sv)) {
-            if (auto fill_rule_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillRule))
-                style.set_property(CSS::PropertyID::FillRule, fill_rule_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("fill-opacity"sv)) {
-            if (auto fill_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillOpacity))
-                style.set_property(CSS::PropertyID::FillOpacity, fill_opacity_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("stroke-opacity"sv)) {
-            if (auto stroke_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeOpacity))
-                style.set_property(CSS::PropertyID::StrokeOpacity, stroke_opacity_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case(SVG::AttributeNames::opacity)) {
-            if (auto opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::Opacity))
-                style.set_property(CSS::PropertyID::Opacity, opacity_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("text-anchor"sv)) {
-            if (auto text_anchor_value = parse_css_value(parsing_context, value, CSS::PropertyID::TextAnchor))
-                style.set_property(CSS::PropertyID::TextAnchor, text_anchor_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("font-size"sv)) {
-            if (auto font_size_value = parse_css_value(parsing_context, value, CSS::PropertyID::FontSize))
-                style.set_property(CSS::PropertyID::FontSize, font_size_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("mask"sv)) {
-            if (auto mask_value = parse_css_value(parsing_context, value, CSS::PropertyID::Mask))
-                style.set_property(CSS::PropertyID::Mask, mask_value.release_nonnull());
+        for (auto property : attribute_style_properties) {
+            if (!name.equals_ignoring_ascii_case(property.name))
+                continue;
+            if (auto style_value = parse_css_value(parsing_context, value, property.id))
+                style.set_property(property.id, style_value.release_nonnull());
+            break;
         }
     });
 }
