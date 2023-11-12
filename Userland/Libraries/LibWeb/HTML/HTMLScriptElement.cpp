@@ -6,7 +6,16 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/DeprecatedString.h>
+#include <AK/JsonObject.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/StringBuilder.h>
+#include <AK/URL.h>
+#include <LibJS/Console.h>
+#include <LibJS/Heap/GCPtr.h>
+#include <LibJS/Runtime/ConsoleObject.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
@@ -17,6 +26,8 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
+#include <LibWeb/HTML/Scripting/ImportMap.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/MimeSniff/MimeType.h>
@@ -127,8 +138,14 @@ void HTMLScriptElement::execute_script()
         // 2. Run the module script given by el's result.
         (void)verify_cast<JavaScriptModuleScript>(*m_result.get<JS::NonnullGCPtr<Script>>()).run();
     } else if (m_script_type == ScriptType::ImportMap) {
-        // FIXME: 1. Register an import map given el's relevant global object and el's result.
-        dbgln("FIXME: HTMLScriptElement import map support");
+        //  1. Register an import map given el's relevant global object and el's result.
+        if (m_result.has<ImportMap>()) {
+            Variant<ImportMap, JS::NonnullGCPtr<JS::TypeError>> import_map = m_result.get<ImportMap>();
+            document->window().register_an_import_map(import_map);
+        } else {
+            Variant<ImportMap, JS::NonnullGCPtr<JS::TypeError>> error_to_rethrow = m_result.get<JS::NonnullGCPtr<JS::TypeError>>();
+            document->window().register_an_import_map(error_to_rethrow);
+        }
     }
 
     // 7. Decrement the ignore-destructive-writes counter of document, if it was incremented in the earlier step.
@@ -434,13 +451,23 @@ void HTMLScriptElement::prepare_script()
         }
         // -> "importmap"
         else if (m_script_type == ScriptType::ImportMap) {
-            // FIXME: 1. If el's relevant global object's import maps allowed is false, then queue an element task on the DOM manipulation task source given el to fire an event named error at el, and return.
-
-            // FIXME: 2. Set el's relevant global object's import maps allowed to false.
-
-            // FIXME: 3. Let result be the result of creating an import map parse result given source text and base URL.
-
-            // FIXME: 4. Mark as ready el given result.
+            // 1. If el's relevant global object's import maps allowed is false, then queue an element task on the DOM manipulation task source given el to fire an event named error at el, and return.
+            if (!document().window().import_maps_allowed()) {
+                queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
+                });
+                return;
+            }
+            // 2. Set el's relevant global object's import maps allowed to false.
+            document().window().set_import_maps_allowed(false);
+            // 3. Let result be the result of creating an import map parse result given source text and base URL.
+            auto result = parse_an_import_map_string(child_text_content().view(), base_url);
+            // 4. Mark as ready el given result.
+            if (result.is_error()) {
+                mark_as_ready(result.release_error());
+            } else {
+                mark_as_ready(result.release_value());
+            }
         }
     }
 
@@ -556,6 +583,153 @@ void HTMLScriptElement::inserted()
         }
     }
     HTMLElement::inserted();
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#parse-an-import-map-string
+ErrorOr<ImportMap, JS::NonnullGCPtr<JS::TypeError>> HTMLScriptElement::parse_an_import_map_string(StringView source_text, AK::URL const& base_url)
+{
+    // 1. Let parsed by the result of parsing a JSON string to an Infra value given input.
+    auto parsed = JsonValue::from_string(source_text);
+    // 2. If parsed is not an ordered map, then throw a TypeError indicating that the top-level value needs to be a JSON object.
+    if (parsed.is_error() || !parsed.value().is_object()) {
+        return JS::TypeError::create(realm(), "importmap top-level value must be a JSON object"sv);
+    }
+    JsonObject const& parsed_obj = parsed.value().as_object();
+    // 3. Let sortedAndNormalizedImports be an empty ordered map.
+    ImportMap sorted_and_normalized;
+    auto& sorted_and_normalized_imports = sorted_and_normalized.imports();
+    // 4. If parsed["imports"] exists, then:
+    constexpr StringView imports_key = "imports"sv;
+    if (parsed_obj.has(imports_key)) {
+        // 1. If parsed["imports"] is not an ordered map, then throw a TypeError indicating that the value for the "imports" top-level key needs to be a JSON object.
+        if (!parsed_obj.has_object(imports_key)) {
+            return JS::TypeError::create(realm(), "importmap['imports'] must be a JSON object"sv);
+        }
+        // 2. Set sortedAndNormalizedImports to the result of sorting and normalizing a module specifier map given parsed["imports"] and baseURL.
+        sorted_and_normalized_imports = sort_and_normalize_module_specifier_map(
+            parsed_obj.get_object(imports_key).release_value(), base_url);
+    }
+
+    // 5. Let sortedAndNormalizedScopes be an empty ordered map.
+    auto& sorted_and_normalized_scopes = sorted_and_normalized.scopes();
+    // 6. If parsed["scopes"] exists, then:
+    constexpr StringView scopes_key = "scopes"sv;
+    if (parsed_obj.has(scopes_key)) {
+        // 1. If parsed["scopes"] is not an ordered map, then throw a TypeError indicating that the value for the "scopes" top-level key needs to be a JSON object.
+        if (!parsed_obj.has_object(scopes_key)) {
+            return JS::TypeError::create(realm(), "importmap['scopes'] must be a JSON object"sv);
+        }
+        // 2. Set sortedAndNormalizedScopes to the result of sorting and normalizing scopes given parsed["scopes"] and baseURL.
+        sorted_and_normalized_scopes = sort_and_normalize_scopes(parsed_obj.get_object(scopes_key).release_value(), base_url);
+    }
+    // 7. FIXME If parsed's keys contains any items besides "imports" or "scopes", then the user agent should report a warning to the console indicating that an invalid top-level key was present in the import map.
+
+    // 8. Return an import map whose imports are sortedAndNormalizedImports and whose scopes are sortedAndNormalizedScopes.
+    return sorted_and_normalized;
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#sorting-and-normalizing-a-module-specifier-map
+ModuleSpecifierMap HTMLScriptElement::sort_and_normalize_module_specifier_map(JsonObject const& import_obj, AK::URL const& base_url) const
+{
+    // 1. Let normalized be an empty ordered map
+    ModuleSpecifierMap normalized;
+    // 2. For each specifierKey → value of originalMap
+    import_obj.for_each_member([this, &normalized, &base_url](DeprecatedString const& specifier_key, JsonValue const& value) {
+        // 1. Let normalizedSpecifierKey be the result of normalizing a specifier key given specifierKey and baseURL.
+        auto const normalized_specifier_key = normalize_a_specifier_key(specifier_key, base_url);
+        // 2. If normalizedSpecifierKey is null, then continue.
+        if (!normalized_specifier_key.has_value()) {
+            return;
+        }
+        // 3. If value is not a string, then:
+        if (!value.is_string()) {
+            // 1. FIXME The user agent may report a warning to the console indicating that addresses need to be strings.
+
+            // 2. Set normalized[normalizedSpecifierKey] to null.
+            normalized.set(normalized_specifier_key.value(), OptionalNone());
+            // 3. Continue
+            return;
+        }
+        // 4. Let addressURL be the result of resolving a URL-like module specifier given value and baseURL.
+        AK::URL const address_url = resolve_a_url_like_module_specifier(value.as_string(), base_url);
+        // 5. If addressURL is null, then:
+        if (!address_url.is_valid()) {
+            // 1. The user agent may report a warning to the console indicating that the address was invalid.
+
+            dbgln("addressURL was invalid");
+            // 2. Set normalized[normalizedSpecifierKey] to null
+            normalized.set(normalized_specifier_key.value(), OptionalNone());
+            // 3. Continue
+            return;
+        }
+        // 6. If specifierKey ends with U+002F (/), and the serialization of addressURL does not end with U+002F (/), then
+        if (specifier_key.ends_with('/') &&
+            // address_url is valid from 5.
+            address_url.to_string().release_value().ends_with('/')) {
+            // 1. FIXME The user agent may report a warning to the console indicating that an invalid address was given for the specifier key specifierKey; since specifierKey ends with a slash, the address needs to as well.
+            dbgln("specifierKey ends with a slash, so address needs to as well");
+            // 2. Set normalized[normalizedSpecifierKey] to null.
+            normalized.set(normalized_specifier_key.value(), OptionalNone());
+            // 3. Continue
+            return;
+        }
+        // 7. Set normalized[normalizedSpecifierKey] to addressURL.
+        normalized.set(normalized_specifier_key.value(), address_url);
+    });
+    // 3. FIXME Return the result of sorting in descending order normalized, with an entry a being less than an entry b if a's key is code unit less than b's key.
+    return normalized;
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#normalizing-a-specifier-key
+Optional<DeprecatedString> HTMLScriptElement::normalize_a_specifier_key(DeprecatedString const& specifier_key, AK::URL const& base_url) const
+{
+    // 1. If specifierKey is the empty string, then:
+    if (specifier_key.is_empty()) {
+        // 1. FIXME The user agent may report a warning to the console indicating that specifier keys may not be the empty string.
+        dbgln("empty specifier key in import map");
+        // 2. Return null
+        return OptionalNone();
+    }
+    // 2. Let url be the result of resolving a URL-like module specifier, given specifierKey and baseURL.
+    AK::URL const url = resolve_a_url_like_module_specifier(specifier_key, base_url);
+    // 3. If url is not null, then return the serialization of url.
+    if (url.is_valid()) {
+        return url.to_deprecated_string();
+    }
+    // 4. Return specifierKey.
+    return specifier_key;
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#resolving-a-url-like-module-specifier
+AK::URL HTMLScriptElement::resolve_a_url_like_module_specifier(DeprecatedString const& specifier_key, AK::URL const& base_url) const
+{
+    // 1. If specifier starts with "/", "./", or "../", then:
+    if (specifier_key.starts_with("/"sv) || specifier_key.starts_with("./"sv) || specifier_key.starts_with("../"sv)) {
+        //  1. Let url be the result of URL parsing specifier with baseURL.
+        const AK::URL url { base_url.complete_url(specifier_key) };
+        //  2. If url is failure, then return null.
+        if (!url.is_valid()) {
+            dbgln("invalid import_map url {} + {}", base_url, specifier_key);
+        }
+        return url;
+    }
+    // 2. Let url be the result of URL parsing specifier (with no base URL).
+    AK::URL url(specifier_key);
+    // 3. If url is failure, then return null.
+    if (!url.is_valid()) {
+        dbgln("invalid import_map url {}", specifier_key);
+        // Note: Treat !url.is_valid() as equivalent to null
+        return url;
+    }
+    // 4. Return url
+    return url;
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#sorting-and-normalizing-scopes
+HashMap<AK::URL, ModuleSpecifierMap> HTMLScriptElement::sort_and_normalize_scopes(JsonObject const&, AK::URL const&) const
+{
+    // FIXME: Implement ^^
+    return HashMap<AK::URL, ModuleSpecifierMap> {};
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#mark-as-ready

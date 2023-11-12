@@ -7,9 +7,13 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/URL.h>
+#include <LibJS/Heap/GCPtr.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/Scripting/Script.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
@@ -69,12 +73,24 @@ private:
 
     void begin_delaying_document_load_event(DOM::Document&);
 
+    ErrorOr<ImportMap, JS::NonnullGCPtr<JS::TypeError>> parse_an_import_map_string(StringView source_text, AK::URL const& base_url);
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#sorting-and-normalizing-a-module-specifier-map
+    ModuleSpecifierMap sort_and_normalize_module_specifier_map(JsonObject const& import_obj, AK::URL const& base_url) const;
+    // https://html.spec.whatwg.org/multipage/webappapis.html#sorting-and-normalizing-scopes
+    HashMap<AK::URL, ModuleSpecifierMap> sort_and_normalize_scopes(JsonObject const& import_obj, AK::URL const& base_url) const;
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#normalizing-a-specifier-key
+    Optional<DeprecatedString> normalize_a_specifier_key(DeprecatedString const& specifier_key, AK::URL const& base_url) const;
+    // https://html.spec.whatwg.org/multipage/webappapis.html#resolving-a-url-like-module-specifier
+    AK::URL resolve_a_url_like_module_specifier(DeprecatedString const& specifier_key, AK::URL const& base_url) const;
+
     struct ResultState {
         struct Uninitialized { };
         struct Null { };
     };
 
-    using Result = Variant<ResultState::Uninitialized, ResultState::Null, JS::NonnullGCPtr<HTML::Script>>;
+    using Result = Variant<ResultState::Uninitialized, ResultState::Null, JS::NonnullGCPtr<HTML::Script>, Web::HTML::ImportMap, JS::NonnullGCPtr<JS::TypeError>>;
 
     // https://html.spec.whatwg.org/multipage/scripting.html#mark-as-ready
     void mark_as_ready(Result);

@@ -10,9 +10,13 @@
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/Utf8View.h>
+#include <AK/Variant.h>
+#include <LibJS/Console.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
@@ -50,6 +54,7 @@
 #include <LibWeb/HTML/PageTransitionEvent.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
@@ -676,6 +681,23 @@ JS::GCPtr<Navigable> Window::navigable() const
 {
     // A Window's navigable is the navigable whose active document is the Window's associated Document's, or null if there is no such navigable.
     return Navigable::navigable_with_active_document(*m_associated_document);
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#register-an-import-map
+void Window::register_an_import_map(Variant<ImportMap, JS::NonnullGCPtr<JS::TypeError>>& import_map_or_error_to_rethrow)
+{
+    import_map_or_error_to_rethrow.visit(
+        [this](JS::NonnullGCPtr<JS::TypeError>& error_to_rethrow) {
+            // 1. If result's error to rethrow is not null, then report the exception given by result's error to rethrow and return.
+            auto& console = realm().intrinsics().console_object()->console();
+            console.report_exception(*error_to_rethrow, false);
+        },
+        [this](ImportMap& import_map) {
+            // 2. Assert: global's import map is an empty import map.
+            VERIFY(m_import_map.is_empty());
+            // 3. Set global's import map to result's import map.
+            m_import_map = import_map;
+        });
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-plugin-objects

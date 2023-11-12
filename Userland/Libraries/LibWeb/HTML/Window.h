@@ -11,7 +11,10 @@
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/URL.h>
+#include <AK/Variant.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/WindowGlobalMixin.h>
 #include <LibWeb/DOM/EventTarget.h>
@@ -91,6 +94,8 @@ public:
     JS::GCPtr<Navigable> navigable() const;
 
     ImportMap const& import_map() const { return m_import_map; }
+
+    void register_an_import_map(Variant<ImportMap, JS::NonnullGCPtr<JS::TypeError>>& import_map_or_error_to_rethrow);
 
     bool import_maps_allowed() const { return m_import_maps_allowed; }
     void set_import_maps_allowed(bool import_maps_allowed) { m_import_maps_allowed = import_maps_allowed; }

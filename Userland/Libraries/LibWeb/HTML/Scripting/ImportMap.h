@@ -23,6 +23,8 @@ public:
     HashMap<AK::URL, ModuleSpecifierMap> const& scopes() const { return m_scopes; }
     HashMap<AK::URL, ModuleSpecifierMap>& scopes() { return m_scopes; }
 
+    bool is_empty() const { return m_imports.is_empty() && m_scopes.is_empty(); }
+
 private:
     ModuleSpecifierMap m_imports;
     HashMap<AK::URL, ModuleSpecifierMap> m_scopes;
