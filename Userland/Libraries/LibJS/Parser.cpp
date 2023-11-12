@@ -3061,12 +3061,14 @@ RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicat
             if (allow_member_expressions == AllowMemberExpressions::Yes && is_rest) {
                 auto expression_position = position();
                 auto expression = parse_expression(2, Associativity::Right, { TokenType::Equals });
-                if (is<MemberExpression>(*expression))
+                if (is<MemberExpression>(*expression)) {
                     alias = static_ptr_cast<MemberExpression const>(expression);
-                else if (is<Identifier>(*expression))
+                } else if (is<Identifier>(*expression)) {
                     name = static_ptr_cast<Identifier const>(expression);
-                else
+                } else {
                     syntax_error("Invalid destructuring assignment target", expression_position);
+                    return {};
+                }
             } else if (match_identifier_name() || match(TokenType::StringLiteral) || match(TokenType::NumericLiteral) || match(TokenType::BigIntLiteral)) {
                 if (match(TokenType::StringLiteral) || match(TokenType::NumericLiteral))
                     needs_alias = true;
@@ -3099,16 +3101,19 @@ RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicat
                     auto expression_position = position();
                     auto expression = parse_expression(2, Associativity::Right, { TokenType::Equals });
                     if (is<ArrayExpression>(*expression) || is<ObjectExpression>(*expression)) {
-                        if (auto synthesized_binding_pattern = synthesize_binding_pattern(*expression))
+                        if (auto synthesized_binding_pattern = synthesize_binding_pattern(*expression)) {
                             alias = synthesized_binding_pattern.release_nonnull();
-                        else
+                        } else {
                             syntax_error("Invalid destructuring assignment target", expression_position);
+                            return {};
+                        }
                     } else if (is<MemberExpression>(*expression)) {
                         alias = static_ptr_cast<MemberExpression const>(expression);
                     } else if (is<Identifier>(*expression)) {
                         alias = static_ptr_cast<Identifier const>(expression);
                     } else {
                         syntax_error("Invalid destructuring assignment target", expression_position);
+                        return {};
                     }
                 } else if (match(TokenType::CurlyOpen) || match(TokenType::BracketOpen)) {
                     auto binding_pattern = parse_binding_pattern(allow_duplicates, allow_member_expressions);
@@ -3131,16 +3136,19 @@ RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicat
                 auto expression = parse_expression(2, Associativity::Right, { TokenType::Equals });
 
                 if (is<ArrayExpression>(*expression) || is<ObjectExpression>(*expression)) {
-                    if (auto synthesized_binding_pattern = synthesize_binding_pattern(*expression))
+                    if (auto synthesized_binding_pattern = synthesize_binding_pattern(*expression)) {
                         alias = synthesized_binding_pattern.release_nonnull();
-                    else
+                    } else {
                         syntax_error("Invalid destructuring assignment target", expression_position);
+                        return {};
+                    }
                 } else if (is<MemberExpression>(*expression)) {
                     alias = static_ptr_cast<MemberExpression const>(expression);
                 } else if (is<Identifier>(*expression)) {
                     alias = static_ptr_cast<Identifier const>(expression);
                 } else {
                     syntax_error("Invalid destructuring assignment target", expression_position);
+                    return {};
                 }
             } else if (match(TokenType::BracketOpen) || match(TokenType::CurlyOpen)) {
                 auto pattern = parse_binding_pattern(allow_duplicates, allow_member_expressions);
