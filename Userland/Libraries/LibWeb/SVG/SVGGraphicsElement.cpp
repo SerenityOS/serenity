@@ -141,7 +141,8 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         NamedPropertyID(CSS::PropertyID::Opacity),
         NamedPropertyID(CSS::PropertyID::TextAnchor),
         NamedPropertyID(CSS::PropertyID::FontSize),
-        NamedPropertyID(CSS::PropertyID::Mask)
+        NamedPropertyID(CSS::PropertyID::Mask),
+        NamedPropertyID(CSS::PropertyID::MaskType)
     };
 
     CSS::Parser::ParsingContext parsing_context { document(), CSS::Parser::ParsingContext::Mode::SVGPresentationAttribute };
