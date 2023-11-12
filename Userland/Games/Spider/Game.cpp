@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2022, Jonas Höpner <me@jonashoepner.de>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -102,6 +103,8 @@ void Game::perform_undo()
     m_last_move = {};
     if (on_undo_availability_change)
         on_undo_availability_change(false);
+
+    update_disabled_cards();
     invalidate_layout();
 }
 
@@ -181,6 +184,7 @@ void Game::detect_full_stacks()
         }
     }
 
+    update_disabled_cards();
     detect_victory();
 }
 
@@ -333,6 +337,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
         update(moving_cards_source_stack()->bounding_box());
     }
 
+    update_disabled_cards();
     m_mouse_down = false;
 }
 
@@ -406,9 +411,20 @@ void Game::deal_next_card()
             stock_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
 
         update(stock_pile.bounding_box());
+        update_disabled_cards();
 
         m_state = State::WaitingForNewGame;
         stop_timer();
+    }
+}
+
+void Game::update_disabled_cards()
+{
+    for (auto& stack : stacks()) {
+        if (stack->type() != CardStack::Type::Normal)
+            continue;
+        stack->update_disabled_cards(CardStack::MovementRule::Same);
+        update(stack->bounding_box());
     }
 }
 
@@ -434,6 +450,7 @@ void Game::timer_event(Core::TimerEvent&)
             ++m_draw_animation_pile;
 
             if (m_draw_animation_pile == piles.size()) {
+                update_disabled_cards();
                 update(m_original_stock_rect);
                 detect_full_stacks();
 

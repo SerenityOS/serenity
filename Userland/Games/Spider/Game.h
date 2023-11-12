@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,6 +94,7 @@ private:
     void move_focused_cards(CardStack& stack);
     void clear_hovered_stack();
     void deal_next_card();
+    void update_disabled_cards();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
