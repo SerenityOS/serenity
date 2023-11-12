@@ -15,6 +15,8 @@
 #include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/Layout/SVGTextBox.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
+#include <LibWeb/SVG/SVGGElement.h>
+#include <LibWeb/SVG/SVGMaskElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 #include <LibWeb/SVG/SVGSymbolElement.h>
 #include <LibWeb/SVG/SVGUseElement.h>
@@ -134,16 +136,20 @@ static ViewBoxTransform scale_and_align_viewbox_content(SVG::PreserveAspectRatio
     return viewbox_transform;
 }
 
-static bool should_ensure_creation_of_paintable(Node const& node)
+static bool is_container_element(Node const& node)
 {
-    if (is<SVGGraphicsBox>(node))
+    // https://svgwg.org/svg2-draft/struct.html#GroupsOverview
+    auto* dom_node = node.dom_node();
+    if (!dom_node)
+        return false;
+    if (is<SVG::SVGUseElement>(dom_node))
         return true;
-    if (node.dom_node()) {
-        if (is<SVG::SVGUseElement>(*node.dom_node()))
-            return true;
-        if (is<SVG::SVGSymbolElement>(*node.dom_node()))
-            return true;
-    }
+    if (is<SVG::SVGSymbolElement>(dom_node))
+        return true;
+    if (is<SVG::SVGGElement>(dom_node))
+        return true;
+    if (is<SVG::SVGMaskElement>(dom_node))
+        return true;
     return false;
 }
 
@@ -260,10 +266,6 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         } else if (is<SVGSVGBox>(descendant)) {
             SVGFormattingContext nested_context(m_state, static_cast<SVGSVGBox const&>(descendant), this);
             nested_context.run(static_cast<SVGSVGBox const&>(descendant), layout_mode, available_space);
-        } else if (should_ensure_creation_of_paintable(descendant)) {
-            // NOTE: This hack creates a layout state to ensure the existence of
-            //       a paintable in LayoutState::commit().
-            m_state.get_mutable(static_cast<NodeWithStyleAndBoxModelMetrics const&>(descendant));
         }
 
         return IterationDecision::Continue;
@@ -273,10 +275,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
     // 5.2. Grouping: the ‘g’ element
     // The ‘g’ element is a container element for grouping together related graphics elements.
     box.for_each_in_subtree_of_type<Box>([&](Box const& descendant) {
-        if (is<SVGGraphicsBox>(descendant) && !is<SVGGeometryBox>(descendant) && !is<SVGTextBox>(descendant)) {
-            auto const& svg_graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
-            auto& graphics_box_state = m_state.get_mutable(svg_graphics_box);
-
+        if (is_container_element(descendant)) {
             Gfx::BoundingBox<CSSPixels> bounding_box;
             descendant.for_each_in_subtree_of_type<Box>([&](Box const& child_of_svg_container) {
                 auto& box_state = m_state.get(child_of_svg_container);
@@ -285,10 +284,11 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
                 return IterationDecision::Continue;
             });
 
-            graphics_box_state.set_content_x(bounding_box.x());
-            graphics_box_state.set_content_y(bounding_box.y());
-            graphics_box_state.set_content_width(bounding_box.width());
-            graphics_box_state.set_content_height(bounding_box.height());
+            auto& box_state = m_state.get_mutable(descendant);
+            box_state.set_content_x(bounding_box.x());
+            box_state.set_content_y(bounding_box.y());
+            box_state.set_content_width(bounding_box.width());
+            box_state.set_content_height(bounding_box.height());
         }
         return IterationDecision::Continue;
     });
