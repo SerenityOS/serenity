@@ -9,6 +9,7 @@
 #include <AK/Endian.h>
 #include <AK/String.h>
 #include <LibCompress/LZWDecoder.h>
+#include <LibGfx/ImageFormats/TIFFMetadata.h>
 
 namespace Gfx {
 
@@ -21,13 +22,6 @@ public:
         Error,
         HeaderDecoded,
         FrameDecoded,
-    };
-
-    template<OneOf<u32, i32> x32>
-    struct Rational {
-        using Type = x32;
-        x32 numerator;
-        x32 denominator;
     };
 
     TIFFLoadingContext(NonnullOwnPtr<FixedMemoryStream> stream)
@@ -75,49 +69,6 @@ private:
     enum class ByteOrder {
         LittleEndian,
         BigEndian,
-    };
-
-    enum class Type {
-        Byte = 1,
-        ASCII = 2,
-        UnsignedShort = 3,
-        UnsignedLong = 4,
-        UnsignedRational = 5,
-        Undefined = 7,
-        SignedLong = 9,
-        SignedRational = 10,
-        Float = 11,
-        Double = 12,
-        UTF8 = 129,
-    };
-
-    using Value = Variant<u8, String, u16, u32, Rational<u32>, i32, Rational<i32>>;
-
-    // This enum is progessively defined across sections but summarized in:
-    // Appendix A: TIFF Tags Sorted by Number
-    enum class Compression {
-        NoCompression = 1,
-        CCITT = 2,
-        Group3Fax = 3,
-        Group4Fax = 4,
-        LZW = 5,
-        JPEG = 6,
-        PackBits = 32773,
-    };
-
-    enum class Predictor {
-        None = 1,
-        HorizontalDifferencing = 2,
-    };
-
-    struct Metadata {
-        IntSize size {};
-        Array<u16, 3> bits_per_sample {};
-        Compression compression {};
-        Predictor predictor {};
-        Vector<u32> strip_offsets {};
-        u32 rows_per_strip {};
-        Vector<u32> strip_bytes_count {};
     };
 
     template<typename ByteReader>
@@ -677,8 +628,8 @@ ErrorOr<ImageFrameDescriptor> TIFFImageDecoderPlugin::frame(size_t index, Option
 }
 
 template<typename T>
-struct AK::Formatter<Gfx::TIFF::TIFFLoadingContext::Rational<T>> : Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, Gfx::TIFF::TIFFLoadingContext::Rational<T> value)
+struct AK::Formatter<Gfx::TIFF::Rational<T>> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::TIFF::Rational<T> value)
     {
         return Formatter<FormatString>::format(builder, "{} ({}/{})"sv, static_cast<double>(value.numerator) / value.denominator, value.numerator, value.denominator);
     }
