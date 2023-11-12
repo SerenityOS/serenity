@@ -830,7 +830,8 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
         if (filter_object->is<NameObject>())
             return filter_object->cast<NameObject>()->name() == name;
         auto filters = filter_object->cast<ArrayObject>();
-        return MUST(filters->get_name_at(m_document, 0))->name() == name;
+        auto last_filter_index = filters->elements().size() - 1;
+        return MUST(filters->get_name_at(m_document, last_filter_index))->name() == name;
     };
     if (TRY(is_filter(CommonNames::JPXDecode))) {
         return Error(Error::Type::RenderingUnsupported, "JPXDecode filter");
