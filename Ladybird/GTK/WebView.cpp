@@ -142,7 +142,11 @@ void ladybird_web_view_on_load_start(LadybirdWebView* self, char const* url, boo
 
     self->loading = true;
 
-    if (!g_set_str(&self->page_url, url)) {
+    // Hack to hide the initial about:blank page. This should probably
+    // be handled at WebContent side somehow.
+    bool is_initial_about_blank = self->page_url == nullptr && !g_strcmp0(url, "about:blank") && g_list_model_get_n_items(G_LIST_MODEL(self->navigation_history)) == 0;
+
+    if (is_initial_about_blank || !g_set_str(&self->page_url, url)) {
         g_object_notify_by_pspec(G_OBJECT(self), props[PROP_LOADING]);
         return;
     }
