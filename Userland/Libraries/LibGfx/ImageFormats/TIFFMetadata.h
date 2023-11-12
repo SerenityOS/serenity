@@ -12,6 +12,8 @@
 
 namespace Gfx {
 
+struct Metadata;
+
 namespace TIFF {
 
 enum class Type {
@@ -53,6 +55,8 @@ enum class Predictor {
     None = 1,
     HorizontalDifferencing = 2,
 };
+
+ErrorOr<void> handle_tag(Metadata& metadata, u16 tag, Type type, u32 count, Vector<Value> const& value);
 
 }
 
