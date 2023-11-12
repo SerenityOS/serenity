@@ -36,6 +36,7 @@ set(SOURCES
     ImageFormats/BMPWriter.cpp
     ImageFormats/BooleanDecoder.cpp
     ImageFormats/TIFFLoader.cpp
+    ImageFormats/TIFFTagHandler.cpp
     ImageFormats/DDSLoader.cpp
     ImageFormats/GIFLoader.cpp
     ImageFormats/ICOLoader.cpp
