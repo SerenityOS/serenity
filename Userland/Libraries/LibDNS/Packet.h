@@ -24,7 +24,7 @@ class Packet {
 public:
     Packet() = default;
 
-    static Optional<Packet> from_raw_packet(ReadonlyBytes bytes);
+    static ErrorOr<Packet> from_raw_packet(ReadonlyBytes bytes);
     ErrorOr<ByteBuffer> to_byte_buffer() const;
 
     bool is_query() const { return !m_query_or_response; }

@@ -21,15 +21,15 @@ Name::Name(DeprecatedString const& name)
         m_name = name;
 }
 
-Name Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_level)
+ErrorOr<Name> Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_level)
 {
     if (recursion_level > 4)
-        return {};
+        return Name {};
 
     StringBuilder builder;
     while (true) {
         if (offset >= data.size())
-            return {};
+            return Error::from_string_literal("Unexpected EOF when parsing name");
         u8 b = data[offset++];
         if (b == '\0') {
             // This terminates the name.
@@ -37,15 +37,15 @@ Name Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_level)
         } else if ((b & 0xc0) == 0xc0) {
             // The two bytes tell us the offset when to continue from.
             if (offset >= data.size())
-                return {};
+                return Error::from_string_literal("Unexpected EOF when parsing name");
             size_t dummy = (b & 0x3f) << 8 | data[offset++];
-            auto rest_of_name = parse(data, dummy, recursion_level + 1);
+            auto rest_of_name = TRY(parse(data, dummy, recursion_level + 1));
             builder.append(rest_of_name.as_string());
             return builder.to_deprecated_string();
         } else {
             // This is the length of a part.
             if (offset + b >= data.size())
-                return {};
+                return Error::from_string_literal("Unexpected EOF when parsing name");
             builder.append({ data.offset_pointer(offset), b });
             builder.append('.');
             offset += b;
