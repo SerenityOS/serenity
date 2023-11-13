@@ -10,7 +10,7 @@
 
 namespace Gfx::TIFF {
 
-ErrorOr<void> handle_tag(Metadata& metadata, u16 tag, Type type, u32 count, Vector<Value> const& value)
+ErrorOr<void> handle_tag(Metadata& metadata, u16 tag, Type type, u32 count, Vector<Value>&& value)
 {
     // FIXME: Make that easy to extend
     switch (tag) {

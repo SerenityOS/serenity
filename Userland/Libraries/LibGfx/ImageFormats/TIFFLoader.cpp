@@ -386,7 +386,7 @@ private:
         if (checked_size.has_overflow())
             return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid tag with too large data");
 
-        auto const tiff_value = TRY(([=, this]() -> ErrorOr<Vector<Value>> {
+        auto tiff_value = TRY(([=, this]() -> ErrorOr<Vector<Value>> {
             if (checked_size.value() <= 4) {
                 auto value = TRY(read_tiff_value(type, count, TRY(m_stream->tell())));
                 TRY(m_stream->discard(4));
@@ -416,7 +416,7 @@ private:
             }
         }
 
-        TRY(handle_tag(m_metadata, tag, type, count, tiff_value));
+        TRY(handle_tag(m_metadata, tag, type, count, move(tiff_value)));
 
         return {};
     }
