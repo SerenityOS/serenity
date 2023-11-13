@@ -17,7 +17,7 @@ public:
     Name() = default;
     Name(DeprecatedString const&);
 
-    static Name parse(ReadonlyBytes data, size_t& offset, size_t recursion_level = 0);
+    static ErrorOr<Name> parse(ReadonlyBytes data, size_t& offset, size_t recursion_level = 0);
 
     size_t serialized_size() const;
     DeprecatedString const& as_string() const { return m_name; }

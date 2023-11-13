@@ -269,11 +269,11 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString 
 
     did_get_response = true;
 
-    auto o_response = Packet::from_raw_packet({ response_buffer, nrecv });
-    if (!o_response.has_value())
+    auto response_or_error = Packet::from_raw_packet({ response_buffer, nrecv });
+    if (response_or_error.is_error())
         return Vector<Answer> {};
 
-    auto& response = o_response.value();
+    auto response = response_or_error.release_value();
 
     if (response.id() != request.id()) {
         dbgln("LookupServer: ID mismatch ({} vs {}) :(", response.id(), request.id());

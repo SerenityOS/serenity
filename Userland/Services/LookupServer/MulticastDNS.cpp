@@ -56,13 +56,7 @@ MulticastDNS::MulticastDNS(Core::EventReceiver* parent)
 ErrorOr<void> MulticastDNS::handle_packet()
 {
     auto buffer = TRY(receive(1024));
-    auto optional_packet = Packet::from_raw_packet(buffer);
-    if (!optional_packet.has_value()) {
-        dbgln("Got an invalid mDNS packet");
-        return {};
-    }
-    auto& packet = optional_packet.value();
-
+    auto packet = TRY(Packet::from_raw_packet(buffer));
     if (packet.is_query())
         handle_query(packet);
     return {};
@@ -175,12 +169,12 @@ ErrorOr<Vector<Answer>> MulticastDNS::lookup(Name const& name, RecordType record
         auto buffer = TRY(receive(1024));
         if (buffer.is_empty())
             return Vector<Answer> {};
-        auto optional_packet = Packet::from_raw_packet(buffer);
-        if (!optional_packet.has_value()) {
-            dbgln("Got an invalid mDNS packet");
+        auto packet_or_error = Packet::from_raw_packet(buffer);
+        if (packet_or_error.is_error()) {
+            dbgln("Got an invalid mDNS packet: {}", packet_or_error.release_error());
             continue;
         }
-        auto& packet = optional_packet.value();
+        auto packet = packet_or_error.release_value();
 
         if (packet.is_query())
             continue;
