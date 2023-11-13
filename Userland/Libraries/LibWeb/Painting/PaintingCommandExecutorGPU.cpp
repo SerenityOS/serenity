@@ -57,15 +57,15 @@ CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const&
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::set_clip_rect(Gfx::IntRect const&)
+CommandResult PaintingCommandExecutorGPU::set_clip_rect(Gfx::IntRect const& rect)
 {
-    // FIXME
+    painter().set_clip_rect(rect);
     return CommandResult::Continue;
 }
 
 CommandResult PaintingCommandExecutorGPU::clear_clip_rect()
 {
-    // FIXME
+    painter().clear_clip_rect();
     return CommandResult::Continue;
 }
 

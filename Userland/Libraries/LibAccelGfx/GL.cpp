@@ -255,4 +255,17 @@ void delete_framebuffer(Framebuffer const& framebuffer)
     verify_no_error();
 }
 
+void enable_scissor_test(Gfx::IntRect rect)
+{
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(rect.left(), rect.top(), rect.width(), rect.height());
+    verify_no_error();
+}
+
+void disable_scissor_test()
+{
+    glDisable(GL_SCISSOR_TEST);
+    verify_no_error();
+}
+
 }
