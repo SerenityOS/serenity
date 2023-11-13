@@ -217,8 +217,7 @@ static GType ladybird_navigation_history_get_item_type(GListModel* model)
     return LADYBIRD_TYPE_HISTORY_ENTRY;
 }
 
-static guint
-ladybird_navigation_history_get_n_items(GListModel* model)
+static guint ladybird_navigation_history_get_n_items(GListModel* model)
 {
     LadybirdNavigationHistory* self = LADYBIRD_NAVIGATION_HISTORY(model);
 
