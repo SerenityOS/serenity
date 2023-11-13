@@ -93,7 +93,6 @@ namespace JS {
     P(byteOffset)                            \
     P(calendar)                              \
     P(calendarName)                          \
-    P(calendars)                             \
     P(call)                                  \
     P(callee)                                \
     P(caller)                                \
@@ -108,7 +107,6 @@ namespace JS {
     P(clz32)                                 \
     P(codePointAt)                           \
     P(collation)                             \
-    P(collations)                            \
     P(compactDisplay)                        \
     P(compareExchange)                       \
     P(compile)                               \
@@ -222,12 +220,15 @@ namespace JS {
     P(get)                                   \
     P(getBigInt64)                           \
     P(getBigUint64)                          \
+    P(getCalendars)                          \
     P(getCanonicalLocales)                   \
+    P(getCollations)                         \
     P(getDate)                               \
     P(getDay)                                \
     P(getFloat32)                            \
     P(getFloat64)                            \
     P(getFullYear)                           \
+    P(getHourCycles)                         \
     P(getHours)                              \
     P(getInstantFor)                         \
     P(getInt8)                               \
@@ -238,6 +239,7 @@ namespace JS {
     P(getMinutes)                            \
     P(getMonth)                              \
     P(getNextTransition)                     \
+    P(getNumberingSystems)                   \
     P(getOffsetNanosecondsFor)               \
     P(getOffsetStringFor)                    \
     P(getOwnPropertyDescriptor)              \
@@ -249,8 +251,10 @@ namespace JS {
     P(getPreviousTransition)                 \
     P(getPrototypeOf)                        \
     P(getSeconds)                            \
+    P(getTextInfo)                           \
     P(getTime)                               \
     P(getTimezoneOffset)                     \
+    P(getTimeZones)                          \
     P(getUint8)                              \
     P(getUint16)                             \
     P(getUint32)                             \
@@ -262,6 +266,7 @@ namespace JS {
     P(getUTCMinutes)                         \
     P(getUTCMonth)                           \
     P(getUTCSeconds)                         \
+    P(getWeekInfo)                           \
     P(getYear)                               \
     P(global)                                \
     P(globalThis)                            \
@@ -278,7 +283,6 @@ namespace JS {
     P(hour)                                  \
     P(hour12)                                \
     P(hourCycle)                             \
-    P(hourCycles)                            \
     P(hours)                                 \
     P(hoursDisplay)                          \
     P(hoursInDay)                            \
@@ -385,7 +389,6 @@ namespace JS {
     P(notation)                              \
     P(now)                                   \
     P(numberingSystem)                       \
-    P(numberingSystems)                      \
     P(numeric)                               \
     P(of)                                    \
     P(offset)                                \
@@ -507,7 +510,6 @@ namespace JS {
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \
-    P(textInfo)                              \
     P(then)                                  \
     P(time)                                  \
     P(timeEnd)                               \
@@ -515,7 +517,6 @@ namespace JS {
     P(timeStyle)                             \
     P(timeZone)                              \
     P(timeZoneName)                          \
-    P(timeZones)                             \
     P(toArray)                               \
     P(toDateString)                          \
     P(toExponential)                         \
@@ -575,7 +576,6 @@ namespace JS {
     P(valueOf)                               \
     P(values)                                \
     P(warn)                                  \
-    P(weekInfo)                              \
     P(weekOfYear)                            \
     P(weekday)                               \
     P(weekend)                               \
