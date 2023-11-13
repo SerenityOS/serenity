@@ -309,7 +309,7 @@ Vector<DeprecatedString> Shell::expand_globs(Vector<StringView> path_segments, S
         if (is_glob_directory)
             first_segment = first_segment.substring_view(0, first_segment.length() - 1);
 
-        Core::DirIterator di(base, Core::DirIterator::SkipParentAndBaseDir);
+        Core::DirIterator di(base);
         if (di.has_error())
             return {};
 
