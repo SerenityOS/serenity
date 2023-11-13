@@ -23,6 +23,9 @@ Name::Name(DeprecatedString const& name)
 
 ErrorOr<Name> Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_level)
 {
+    static constexpr size_t MAX_LABEL_SIZE = 63;
+    static constexpr size_t MAX_NAME_SIZE = 253;
+
     if (recursion_level > 4)
         return Name {};
 
@@ -32,6 +35,8 @@ ErrorOr<Name> Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_l
             return Error::from_string_literal("Unexpected EOF when parsing name");
         u8 b = data[offset++];
         if (b == '\0') {
+            if (builder.length() > MAX_NAME_SIZE)
+                return Error::from_string_literal("Domain name exceeds maximum allowed length");
             // This terminates the name.
             return builder.to_deprecated_string();
         } else if ((b & 0xc0) == 0xc0) {
@@ -41,13 +46,19 @@ ErrorOr<Name> Name::parse(ReadonlyBytes data, size_t& offset, size_t recursion_l
             size_t dummy = (b & 0x3f) << 8 | data[offset++];
             auto rest_of_name = TRY(parse(data, dummy, recursion_level + 1));
             builder.append(rest_of_name.as_string());
+            if (builder.length() > MAX_NAME_SIZE)
+                return Error::from_string_literal("Domain name exceeds maximum allowed length");
             return builder.to_deprecated_string();
         } else {
             // This is the length of a part.
             if (offset + b >= data.size())
                 return Error::from_string_literal("Unexpected EOF when parsing name");
+            if (b > MAX_LABEL_SIZE)
+                return Error::from_string_literal("DNS label exceeds maximum allowed length");
             builder.append({ data.offset_pointer(offset), b });
             builder.append('.');
+            if (builder.length() > MAX_NAME_SIZE)
+                return Error::from_string_literal("Domain name exceeds maximum allowed length");
             offset += b;
         }
     }
