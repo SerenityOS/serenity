@@ -171,7 +171,7 @@ static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value,
             return move(input_value);
         }
 
-        auto index_values = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+        auto index_values = TRY(value->resolve_as_list(shell));
         Vector<size_t> indices;
         indices.ensure_capacity(index_values.size());
 
@@ -200,7 +200,7 @@ static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value,
         for (auto& index : indices)
             builder.append(input_value.bytes_as_string_view()[index]);
 
-        input_value = builder.to_string().release_value_but_fixme_should_propagate_errors();
+        input_value = TRY(builder.to_string());
     }
 
     return move(input_value);
@@ -221,7 +221,7 @@ static ErrorOr<Vector<String>> resolve_slices(RefPtr<Shell> shell, Vector<String
             return move(values);
         }
 
-        auto index_values = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+        auto index_values = TRY(value->resolve_as_list(shell));
         Vector<size_t> indices;
         indices.ensure_capacity(index_values.size());
 
@@ -288,7 +288,7 @@ ErrorOr<void> Node::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iterati
     }
 
     if (value->is_list_without_resolution()) {
-        auto list = value->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
+        auto list = TRY(value->resolve_without_cast(shell));
         for (auto& element : static_cast<ListValue*>(list.ptr())->values()) {
             if (TRY(callback(element)) == IterationDecision::Break)
                 break;
@@ -296,7 +296,7 @@ ErrorOr<void> Node::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iterati
         return {};
     }
 
-    auto list = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+    auto list = TRY(value->resolve_as_list(shell));
     for (auto& element : list) {
         if (TRY(callback(make_ref_counted<StringValue>(move(element)))) == IterationDecision::Break)
             break;
@@ -494,8 +494,8 @@ ErrorOr<RefPtr<Value>> ListConcatenate::run(RefPtr<Shell> shell)
 
         if (result->is_command() || element_value->is_command()) {
             auto joined_commands = join_commands(
-                result->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors(),
-                element_value->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors());
+                TRY(result->resolve_as_commands(shell)),
+                TRY(element_value->resolve_as_commands(shell)));
 
             if (joined_commands.size() == 1) {
                 auto& command = joined_commands[0];
@@ -1049,7 +1049,7 @@ ErrorOr<RefPtr<Value>> DynamicEvaluate::run(RefPtr<Shell> shell)
     // Dynamic Evaluation behaves differently between strings and lists.
     // Strings are treated as variables, and Lists are treated as commands.
     if (result->is_string()) {
-        auto name_part = result->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+        auto name_part = TRY(result->resolve_as_list(shell));
         VERIFY(name_part.size() == 1);
         return make_ref_counted<SimpleVariableValue>(name_part[0]);
     }
@@ -2271,9 +2271,9 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    auto list = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+    auto list = TRY(value->resolve_as_list(shell));
 
-    auto list_matches = [&](auto&& pattern, auto& spans) {
+    auto list_matches = [&](auto&& pattern, auto& spans) -> ErrorOr<bool> {
         if constexpr (IsSame<RemoveCVReference<decltype(pattern)>, Regex<ECMA262>>) {
             if (list.size() != 1)
                 return false;
@@ -2285,7 +2285,7 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
             spans.ensure_capacity(match.n_capture_groups);
             for (size_t i = 0; i < match.n_capture_groups; ++i) {
                 auto& capture = match.capture_group_matches[0][i];
-                spans.append(capture.view.to_string().release_value_but_fixme_should_propagate_errors());
+                spans.append(TRY(capture.view.to_string()));
             }
             return true;
         } else {
@@ -2297,7 +2297,7 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
                 if (!list[i].bytes_as_string_view().matches(pattern[i], mask_spans))
                     return false;
                 for (auto& span : mask_spans)
-                    spans.append(list[i].substring_from_byte_offset(span.start, span.length).release_value_but_fixme_should_propagate_errors());
+                    spans.append(TRY(list[i].substring_from_byte_offset(span.start, span.length)));
             }
 
             return true;
@@ -2341,7 +2341,7 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
         auto result = TRY(entry.options.visit([&](auto& options) -> ErrorOr<Variant<IterationDecision, RefPtr<Value>>> {
             for (auto& option : options) {
                 Vector<String> spans;
-                if (list_matches(TRY(resolve_pattern(option)), spans)) {
+                if (TRY(list_matches(TRY(resolve_pattern(option)), spans))) {
                     if (entry.body) {
                         if (entry.match_names.has_value()) {
                             size_t i = 0;
@@ -2620,7 +2620,7 @@ ErrorOr<void> PathRedirectionNode::highlight_in_editor(Line::Editor& editor, She
         auto& position = m_path->position();
         auto& path = path_text[0];
         if (!path.starts_with('/'))
-            path = String::formatted("{}/{}", shell.cwd, path).release_value_but_fixme_should_propagate_errors();
+            path = TRY(String::formatted("{}/{}", shell.cwd, path));
         auto url = URL::create_with_file_scheme(path.to_deprecated_string());
         url.set_host(TRY(String::from_deprecated_string(shell.hostname)));
         editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
@@ -2667,12 +2667,12 @@ ErrorOr<void> Range::dump(int level) const
 
 ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
 {
-    auto interpolate = [position = position()](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> Vector<NonnullRefPtr<Value>> {
+    auto interpolate = [position = position()](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> ErrorOr<Vector<NonnullRefPtr<Value>>> {
         Vector<NonnullRefPtr<Value>> values;
 
         if (start->is_string() && end->is_string()) {
-            auto start_str = start->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
-            auto end_str = end->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
+            auto start_str = TRY(start->resolve_as_list(shell))[0];
+            auto end_str = TRY(end->resolve_as_list(shell))[0];
 
             Utf8View start_view { start_str }, end_view { end_str };
             if (start_view.validate() && end_view.validate()) {
@@ -2685,12 +2685,12 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
                     for (u32 code_point = start_code_point; code_point != end_code_point; code_point += step) {
                         builder.clear();
                         builder.append_code_point(code_point);
-                        values.append(make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors()));
+                        values.append(make_ref_counted<StringValue>(TRY(builder.to_string())));
                     }
                     // Append the ending code point too, most shells treat this as inclusive.
                     builder.clear();
                     builder.append_code_point(end_code_point);
-                    values.append(make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors()));
+                    values.append(make_ref_counted<StringValue>(TRY(builder.to_string())));
                 } else {
                     // Could be two numbers?
                     auto start_int = start_str.bytes_as_string_view().to_int();
@@ -2700,9 +2700,9 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
                         auto end = end_int.value();
                         auto step = start > end ? -1 : 1;
                         for (int value = start; value != end; value += step)
-                            values.append(make_ref_counted<StringValue>(String::number(value).release_value_but_fixme_should_propagate_errors()));
+                            values.append(make_ref_counted<StringValue>(TRY(String::number(value))));
                         // Append the range end too, most shells treat this as inclusive.
-                        values.append(make_ref_counted<StringValue>(String::number(end).release_value_but_fixme_should_propagate_errors()));
+                        values.append(make_ref_counted<StringValue>(TRY(String::number(end))));
                     } else {
                         goto yield_start_end;
                     }
@@ -2733,7 +2733,7 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
     if (!start_value || !end_value)
         return make_ref_counted<ListValue>({});
 
-    return make_ref_counted<ListValue>(interpolate(*start_value, *end_value, shell));
+    return make_ref_counted<ListValue>(TRY(interpolate(*start_value, *end_value, shell)));
 }
 
 ErrorOr<void> Range::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2795,7 +2795,7 @@ ErrorOr<RefPtr<Value>> ReadRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::Read));
+    command.redirections.append(PathRedirection::create(TRY(builder.to_string()), m_fd, PathRedirection::Read));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -2826,7 +2826,7 @@ ErrorOr<RefPtr<Value>> ReadWriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::ReadWrite));
+    command.redirections.append(PathRedirection::create(TRY(builder.to_string()), m_fd, PathRedirection::ReadWrite));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3020,7 +3020,7 @@ ErrorOr<RefPtr<Value>> SimpleVariable::run(RefPtr<Shell>)
 {
     NonnullRefPtr<Value> value = make_ref_counted<SimpleVariableValue>(m_name);
     if (m_slice)
-        value = value->with_slices(*m_slice).release_value_but_fixme_should_propagate_errors();
+        value = TRY(value->with_slices(*m_slice));
     return value;
 }
 
@@ -3090,7 +3090,7 @@ ErrorOr<RefPtr<Value>> SpecialVariable::run(RefPtr<Shell>)
 {
     NonnullRefPtr<Value> value = make_ref_counted<SpecialVariableValue>(m_name);
     if (m_slice)
-        value = value->with_slices(*m_slice).release_value_but_fixme_should_propagate_errors();
+        value = TRY(value->with_slices(*m_slice));
     return value;
 }
 
@@ -3143,8 +3143,8 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    auto left = left_value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
-    auto right = right_value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+    auto left = TRY(left_value->resolve_as_list(shell));
+    auto right = TRY(right_value->resolve_as_list(shell));
 
     if (m_mode == Mode::StringExpand) {
         Vector<String> result;
@@ -3155,7 +3155,7 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
 
         if (!result.is_empty() && !right.is_empty()) {
             auto& last = result.last();
-            last = String::formatted("{}{}", last, right.first()).release_value_but_fixme_should_propagate_errors();
+            last = TRY(String::formatted("{}{}", last, right.first()));
             right.take_first();
         }
         for (auto& right_item : right)
@@ -3173,7 +3173,7 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
         builder.append(left[0]);
         builder.append(right[0]);
 
-        return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
+        return make_ref_counted<StringValue>(TRY(builder.to_string()));
     }
 
     // Otherwise, treat them as lists and create a list product (or just append).
@@ -3188,7 +3188,7 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
         for (auto& right_element : right) {
             builder.append(left_element);
             builder.append(right_element);
-            result.append(builder.to_string().release_value_but_fixme_should_propagate_errors());
+            result.append(TRY(builder.to_string()));
             builder.clear();
         }
     }
@@ -3350,7 +3350,7 @@ ErrorOr<RefPtr<Value>> StringPartCompose::run(RefPtr<Shell> shell)
     builder.join(' ', left);
     builder.join(' ', right);
 
-    return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
+    return make_ref_counted<StringValue>(TRY(builder.to_string()));
 }
 
 ErrorOr<void> StringPartCompose::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -3520,7 +3520,7 @@ ErrorOr<RefPtr<Value>> WriteAppendRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::WriteAppend));
+    command.redirections.append(PathRedirection::create(TRY(builder.to_string()), m_fd, PathRedirection::WriteAppend));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3551,7 +3551,7 @@ ErrorOr<RefPtr<Value>> WriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::Write));
+    command.redirections.append(PathRedirection::create(TRY(builder.to_string()), m_fd, PathRedirection::Write));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3791,7 +3791,7 @@ ErrorOr<Vector<String>> GlobValue::resolve_as_list(RefPtr<Shell> shell)
     if (!shell)
         return resolve_slices(shell, Vector { m_glob }, m_slices);
 
-    auto results = shell->expand_globs(m_glob, shell->cwd);
+    auto results = TRY(shell->expand_globs(m_glob, shell->cwd));
     if (results.is_empty())
         shell->raise_error(Shell::ShellError::InvalidGlobError, "Glob did not match anything!", m_generation_position);
 

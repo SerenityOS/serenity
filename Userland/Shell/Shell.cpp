@@ -252,7 +252,7 @@ bool Shell::is_glob(StringView s)
     return false;
 }
 
-Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
+ErrorOr<Vector<DeprecatedString>> Shell::expand_globs(StringView path, StringView base)
 {
     auto explicitly_set_base = false;
     if (path.starts_with('/')) {
@@ -261,15 +261,10 @@ Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
     }
 
     auto parts = path.split_view('/', SplitBehavior::KeepTrailingSeparator);
-    DeprecatedString base_string = base;
-    struct stat statbuf;
-    if (lstat(base_string.characters(), &statbuf) < 0) {
-        perror("lstat");
-        return {};
-    }
+    struct stat statbuf = TRY(Core::System::lstat(base));
 
     StringBuilder resolved_base_path_builder;
-    resolved_base_path_builder.append(FileSystem::real_path(base).release_value_but_fixme_should_propagate_errors());
+    resolved_base_path_builder.append(TRY(FileSystem::real_path(base)));
     if (S_ISDIR(statbuf.st_mode))
         resolved_base_path_builder.append('/');
 
