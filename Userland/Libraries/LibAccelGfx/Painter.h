@@ -67,6 +67,9 @@ public:
 
     void draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color);
 
+    void set_clip_rect(Gfx::IntRect);
+    void clear_clip_rect();
+
     void set_target_bitmap(Gfx::Bitmap&);
     void flush();
 
