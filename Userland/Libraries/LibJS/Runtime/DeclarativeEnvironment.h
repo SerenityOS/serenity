@@ -71,6 +71,7 @@ public:
     [[nodiscard]] u64 environment_serial_number() const { return m_environment_serial_number; }
 
     static FlatPtr bindings_offset() { return OFFSET_OF(DeclarativeEnvironment, m_bindings); }
+    static FlatPtr environment_serial_number_offset() { return OFFSET_OF(DeclarativeEnvironment, m_environment_serial_number); }
 
 private:
     ThrowCompletionOr<Value> get_binding_value_direct(VM&, Binding&, bool strict);

@@ -34,6 +34,8 @@ struct PropertyLookupCache {
 };
 
 struct GlobalVariableCache : public PropertyLookupCache {
+    static FlatPtr environment_serial_number_offset() { return OFFSET_OF(GlobalVariableCache, environment_serial_number); }
+
     u64 environment_serial_number { 0 };
 };
 
