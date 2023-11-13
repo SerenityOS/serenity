@@ -417,6 +417,16 @@ void Painter::restore()
     m_state_stack.take_last();
 }
 
+void Painter::set_clip_rect(Gfx::IntRect rect)
+{
+    GL::enable_scissor_test(rect);
+}
+
+void Painter::clear_clip_rect()
+{
+    GL::disable_scissor_test();
+}
+
 void Painter::set_target_bitmap(Gfx::Bitmap& bitmap)
 {
     if (m_target_framebuffer.has_value()) {

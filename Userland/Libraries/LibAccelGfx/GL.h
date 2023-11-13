@@ -98,4 +98,7 @@ Framebuffer create_framebuffer(Gfx::IntSize);
 void bind_framebuffer(Framebuffer const& framebuffer);
 void delete_framebuffer(Framebuffer const& framebuffer);
 
+void enable_scissor_test(Gfx::IntRect);
+void disable_scissor_test();
+
 }
