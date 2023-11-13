@@ -2428,15 +2428,6 @@ void Compiler::compile_put_by_value(Bytecode::Op::PutByValue const& op)
                 Assembler::Operand::Register(GPR2),
                 Assembler::Operand::Mem64BaseAndOffset(GPR0, 0));
 
-            // if (GPR2.is_empty()) goto slow_case;
-            m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Register(GPR2));
-            m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(TAG_SHIFT));
-            m_assembler.jump_if(
-                Assembler::Operand::Register(GPR1),
-                Assembler::Condition::EqualTo,
-                Assembler::Operand::Imm(EMPTY_TAG),
-                slow_case);
-
             // if (GPR2.is_accessor()) goto slow_case;
             m_assembler.mov(Assembler::Operand::Register(GPR1), Assembler::Operand::Register(GPR2));
             m_assembler.shift_right(Assembler::Operand::Register(GPR1), Assembler::Operand::Imm(TAG_SHIFT));
