@@ -28,6 +28,8 @@ git fetch origin
 git checkout $GIT_REV
 
 ./build/gen.py --out-path="$BUILD_DIR" --allow-warnings
+ninja -C "$BUILD_DIR"
+
 mkdir -p "$PREFIX_DIR/bin"
 cp "$BUILD_DIR/gn" "$PREFIX_DIR/bin"
 
