@@ -146,7 +146,7 @@ config("compiler_defaults") {
     }
   }
 
-  if (current_os == "mac" && sysroot != "") {
+  if (current_os == "mac") {
     sdk_path = mac_sdk_path
     cflags += [
       "-isysroot",
