@@ -21,6 +21,7 @@
 #include <LibWebView/Database.h>
 #include <LibWebView/URL.h>
 #include <QApplication>
+#include <QFileOpenEvent>
 
 namespace Ladybird {
 
@@ -54,9 +55,40 @@ static ErrorOr<void> handle_attached_debugger()
     return {};
 }
 
+class LadybirdApplication : public QApplication {
+public:
+    LadybirdApplication(int& argc, char** argv)
+        : QApplication(argc, argv)
+    {
+    }
+
+    Function<void(URL)> on_open_file;
+
+    bool event(QEvent* event) override
+    {
+        switch (event->type()) {
+        case QEvent::FileOpen: {
+            if (!on_open_file)
+                break;
+
+            auto const& open_event = *static_cast<QFileOpenEvent const*>(event);
+            auto file = MUST(ak_string_from_qstring(open_event.file()));
+
+            if (auto file_url = WebView::sanitize_url(file); file_url.has_value())
+                on_open_file(file_url.release_value());
+        }
+
+        default:
+            break;
+        }
+
+        return QApplication::event(event);
+    }
+};
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    QApplication app(arguments.argc, arguments.argv);
+    LadybirdApplication app(arguments.argc, arguments.argv);
 
     Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
     Core::EventLoop event_loop;
@@ -110,6 +142,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Ladybird::BrowserWindow window(initial_urls, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No, use_gpu_painting ? WebView::EnableGPUPainting::Yes : WebView::EnableGPUPainting::No);
     window.setWindowTitle("Ladybird");
+
+    app.on_open_file = [&](auto file_url) {
+        window.view().load(file_url);
+    };
 
     if (Ladybird::Settings::the()->is_maximized()) {
         window.showMaximized();
