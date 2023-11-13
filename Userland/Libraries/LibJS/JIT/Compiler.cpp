@@ -17,6 +17,8 @@
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
+#include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <sys/mman.h>
@@ -1533,15 +1535,152 @@ static Value cxx_get_global(VM& vm, DeprecatedFlyString const& identifier, Bytec
 
 void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
 {
+    auto& cache = m_bytecode_executable.global_variable_caches[op.cache_index()];
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
         Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.global_variable_caches[op.cache_index()])));
+        Assembler::Operand::Imm(bit_cast<u64>(&cache)));
+
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    // GPR0 = vm.running_execution_context().realm;
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(RUNNING_EXECUTION_CONTEXT_BASE, ExecutionContext::realm_offset()));
+
+    // GPR0 = GPR0->global_environment();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(GPR0, Realm::global_environment_offset()));
+
+    // GPR1 = GPR0->object_record();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Mem64BaseAndOffset(GPR0, GlobalEnvironment::object_record_offset()));
+
+    // GPR1 = GPR1->binding_object();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Mem64BaseAndOffset(GPR1, ObjectEnvironment::binding_object_offset()));
+
+    // GPR0 = GPR0->declarative_record();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(GPR0, GlobalEnvironment::declarative_record_offset()));
+
+    // GPR0 = GPR0->environment_serial_number();
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(GPR0, DeclarativeEnvironment::environment_serial_number_offset()));
+
+    // GPR2 = cache.environment_serial_number
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Operand::Mem64BaseAndOffset(ARG2, Bytecode::GlobalVariableCache::environment_serial_number_offset()));
+
+    // if (GPR2 != GPR0) goto slow_case;
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Register(GPR0),
+        slow_case);
+
+    // GPR0 = GPR1->shape()
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(GPR1, Object::shape_offset()));
+
+    // GPR2 = cache.shape.ptr()
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Operand::Mem64BaseAndOffset(ARG2, Bytecode::PropertyLookupCache::shape_offset()));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(0),
+        slow_case);
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Operand::Mem64BaseAndOffset(GPR2, AK::WeakLink::ptr_offset()));
+
+    // if (GPR2 != GPR0) goto slow_case;
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Register(GPR0),
+        slow_case);
+
+    Assembler::Label fast_case {};
+
+    // GPR2 = shape->unique()
+    m_assembler.mov8(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Operand::Mem64BaseAndOffset(GPR0, Shape::is_unique_offset()));
+    // if (!GPR2) goto fast_case;
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(0),
+        fast_case);
+
+    // GPR2 = shape->unique_shape_serial_number()
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Operand::Mem64BaseAndOffset(GPR0, Shape::unique_shape_serial_number_offset()));
+
+    // GPR0 = cache.unique_shape_serial_number
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(ARG2, Bytecode::PropertyLookupCache::unique_shape_serial_number_offset()));
+
+    // if (GPR2 != GPR0) goto slow_case;
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Register(GPR0),
+        slow_case);
+
+    fast_case.link(m_assembler);
+
+    // accumulator = GPR1->get_direct(*cache.property_offset);
+    // GPR0 = GPR1
+    // GPR1 = *cache.property_offset * sizeof(Value)
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(GPR1));
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Mem64BaseAndOffset(ARG2, Bytecode::PropertyLookupCache::property_offset_offset() + decltype(cache.property_offset)::value_offset()));
+    m_assembler.mul32(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm(sizeof(Value)),
+        slow_case);
+
+    // GPR0 = GPR0->m_storage.outline_buffer
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(GPR0, Object::storage_offset() + Vector<Value>::outline_buffer_offset()));
+
+    // GPR0 = &GPR0[*cache.property_offset]
+    m_assembler.add(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(GPR1));
+
+    // accumulator = *GPR0
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(GPR0, 0));
+    store_accumulator(GPR0);
+    m_assembler.jump(end);
+
+    slow_case.link(m_assembler);
     native_call((void*)cxx_get_global);
     store_accumulator(RET);
     check_exception();
+    end.link(m_assembler);
 }
 
 static Value cxx_get_variable(VM& vm, DeprecatedFlyString const& name, Bytecode::EnvironmentVariableCache& cache)
