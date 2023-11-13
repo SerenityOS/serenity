@@ -620,6 +620,278 @@ static ThrowCompletionOr<Value> strict_equals(VM&, Value src1, Value src2)
     return Value(is_strictly_equal(src1, src2));
 }
 
+template<typename Codegen>
+void Compiler::branch_if_same_type_for_equality(Assembler::Reg lhs, Assembler::Reg rhs, Codegen codegen)
+{
+    Assembler::Label same_type_case {};
+    Assembler::Label not_same_type_case {};
+
+    // GPR0 = lhs & TAG_EXTRACTION
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(lhs));
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm(TAG_EXTRACTION));
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(GPR1));
+
+    // GPR1 = rhs & TAG_EXTRACTION
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Register(rhs));
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR2),
+        Assembler::Operand::Imm(TAG_EXTRACTION));
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Register(GPR2));
+
+    // if (GPR0 == GPR1) goto same_type_case
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Register(GPR1),
+        same_type_case);
+
+    Assembler::Label lhs_is_number {};
+    // if (lhs & CANON_NAN_BITS != CANON_NAN_BITS) goto lhs_is_number
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(lhs));
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm(CANON_NAN_BITS));
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(GPR1));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Register(GPR1),
+        lhs_is_number);
+
+    // if (lhs == CANON_NAN_BITS) goto lhs_is_number
+    m_assembler.jump_if(
+        Assembler::Operand::Register(lhs),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Register(GPR1),
+        lhs_is_number);
+
+    // if (lhs >> TAG_SHIFT == INT32_TAG) goto lhs_is_number
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(lhs));
+    m_assembler.shift_right(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(TAG_SHIFT));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(INT32_TAG),
+        lhs_is_number);
+    m_assembler.jump(not_same_type_case);
+    lhs_is_number.link(m_assembler);
+
+    Assembler::Label rhs_is_number {};
+
+    // if (rhs & CANON_NAN_BITS != CANON_NAN_BITS) goto rhs_is_number
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(rhs));
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(GPR1));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Register(GPR1),
+        rhs_is_number);
+
+    // if (rhs == CANON_NAN_BITS) goto rhs_is_number
+    m_assembler.jump_if(
+        Assembler::Operand::Register(rhs),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Register(GPR1),
+        rhs_is_number);
+
+    // if (rhs >> TAG_SHIFT == INT32_TAG) goto rhs_is_number
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(rhs));
+    m_assembler.shift_right(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(TAG_SHIFT));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(INT32_TAG),
+        rhs_is_number);
+
+    m_assembler.jump(not_same_type_case);
+    same_type_case.link(m_assembler);
+    rhs_is_number.link(m_assembler);
+    codegen();
+
+    not_same_type_case.link(m_assembler);
+}
+
+void Compiler::compile_is_strictly_equal(Assembler::Reg lhs, Assembler::Reg rhs, Assembler::Label& slow_case)
+{
+    Assembler::Label end {};
+    Assembler::Label general_case {};
+    Assembler::Label false_case {};
+
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Imm(CANON_NAN_BITS));
+    convert_to_double(FPR0, lhs, GPR1, GPR0, general_case);
+    convert_to_double(FPR1, rhs, GPR1, GPR0, general_case);
+    // if (FPR0 == nan || FPR1 == nan) goto false_case;
+    m_assembler.jump_if(
+        Assembler::Operand::FloatRegister(FPR0),
+        Assembler::Condition::Unordered,
+        Assembler::Operand::FloatRegister(FPR1),
+        false_case);
+    // if (FPR0 != FPR1) goto false_case;
+    m_assembler.jump_if(
+        Assembler::Operand::FloatRegister(FPR0),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::FloatRegister(FPR1),
+        false_case);
+    m_assembler.mov(
+        Assembler::Operand::Register(RET),
+        Assembler::Operand::Imm(1));
+    m_assembler.jump(end);
+
+    general_case.link(m_assembler);
+    // if (lhs.is_bigint()) goto slow_case;
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(lhs));
+    m_assembler.shift_right(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(TAG_SHIFT));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(BIGINT_TAG),
+        slow_case);
+
+    // if (lhs.is_string()) goto slow_case;
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(STRING_TAG),
+        slow_case);
+
+    m_assembler.jump_if(
+        Assembler::Operand::Register(lhs),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Register(rhs),
+        false_case);
+    m_assembler.mov(
+        Assembler::Operand::Register(RET),
+        Assembler::Operand::Imm(1));
+    m_assembler.jump(end);
+
+    false_case.link(m_assembler);
+    m_assembler.mov(
+        Assembler::Operand::Register(RET),
+        Assembler::Operand::Imm(0));
+    end.link(m_assembler);
+}
+
+static Value cxx_strict_equals(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(strict_equals(vm, lhs, rhs));
+}
+
+void Compiler::compile_strict_equals(Bytecode::Op::StrictlyEquals const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_accumulator(ARG2);
+
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    branch_if_same_type_for_equality(ARG1, ARG2, [&] {
+        compile_is_strictly_equal(ARG1, ARG2, slow_case);
+
+        // RET = RET | BOOLEAN_TAG << TAG_SHIFT;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm(BOOLEAN_TAG << TAG_SHIFT));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(RET),
+            Assembler::Operand::Register(GPR1));
+
+        store_accumulator(RET);
+        m_assembler.jump(end);
+    });
+
+    // RET = false
+    m_assembler.mov(
+        Assembler::Operand::Register(RET),
+        Assembler::Operand::Imm(Value(false).encoded()));
+    store_accumulator(RET);
+    m_assembler.jump(end);
+
+    slow_case.link(m_assembler);
+    native_call((void*)cxx_strict_equals);
+    store_accumulator(RET);
+    check_exception();
+
+    end.link(m_assembler);
+}
+
+static Value cxx_strict_inequals(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(strict_inequals(vm, lhs, rhs));
+}
+
+void Compiler::compile_strict_inequals(Bytecode::Op::StrictlyInequals const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_accumulator(ARG2);
+
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    branch_if_same_type_for_equality(ARG1, ARG2, [&] {
+        compile_is_strictly_equal(ARG1, ARG2, slow_case);
+
+        // RET = (RET ^ 1) | BOOLEAN_TAG << TAG_SHIFT;
+        m_assembler.bitwise_xor32(
+            Assembler::Operand::Register(RET),
+            Assembler::Operand::Imm(1));
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm(BOOLEAN_TAG << TAG_SHIFT));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(RET),
+            Assembler::Operand::Register(GPR1));
+
+        store_accumulator(RET);
+        m_assembler.jump(end);
+    });
+
+    // RET = true
+    m_assembler.mov(
+        Assembler::Operand::Register(RET),
+        Assembler::Operand::Imm(Value(true).encoded()));
+    store_accumulator(RET);
+    m_assembler.jump(end);
+
+    slow_case.link(m_assembler);
+    native_call((void*)cxx_strict_inequals);
+    store_accumulator(RET);
+    check_exception();
+
+    end.link(m_assembler);
+}
+
 static Value cxx_loosely_equals(VM& vm, Value lhs, Value rhs)
 {
     return TRY_OR_SET_EXCEPTION(loosely_equals(vm, lhs, rhs));
@@ -627,38 +899,68 @@ static Value cxx_loosely_equals(VM& vm, Value lhs, Value rhs)
 
 void Compiler::compile_loosely_equals(Bytecode::Op::LooselyEquals const& op)
 {
-    Assembler::Label end;
-
     load_vm_register(ARG1, op.lhs());
     load_accumulator(ARG2);
 
-    // Fast path if both sides are objects.
-    branch_if_object(ARG1, [&] {
-        branch_if_object(ARG2, [&] {
-            Assembler::Label true_case;
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
 
-            m_assembler.jump_if(
-                Assembler::Operand::Register(ARG1),
-                Assembler::Condition::EqualTo,
-                Assembler::Operand::Register(ARG2),
-                true_case);
+    branch_if_same_type_for_equality(ARG1, ARG2, [&] {
+        compile_is_strictly_equal(ARG1, ARG2, slow_case);
 
-            m_assembler.mov(
-                Assembler::Operand::Register(GPR0),
-                Assembler::Operand::Imm(Value(false).encoded()));
-            store_accumulator(GPR0);
-            m_assembler.jump(end);
+        // RET = RET | BOOLEAN_TAG << TAG_SHIFT;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm(BOOLEAN_TAG << TAG_SHIFT));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(RET),
+            Assembler::Operand::Register(GPR1));
 
-            true_case.link(m_assembler);
-            m_assembler.mov(
-                Assembler::Operand::Register(GPR0),
-                Assembler::Operand::Imm(Value(true).encoded()));
-            store_accumulator(GPR0);
-            m_assembler.jump(end);
-        });
+        store_accumulator(RET);
+        m_assembler.jump(end);
     });
 
+    slow_case.link(m_assembler);
     native_call((void*)cxx_loosely_equals);
+    store_accumulator(RET);
+    check_exception();
+
+    end.link(m_assembler);
+}
+
+static Value cxx_loosely_inequals(VM& vm, Value lhs, Value rhs)
+{
+    return TRY_OR_SET_EXCEPTION(loosely_inequals(vm, lhs, rhs));
+}
+
+void Compiler::compile_loosely_inequals(Bytecode::Op::LooselyInequals const& op)
+{
+    load_vm_register(ARG1, op.lhs());
+    load_accumulator(ARG2);
+
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    branch_if_same_type_for_equality(ARG1, ARG2, [&] {
+        compile_is_strictly_equal(ARG1, ARG2, slow_case);
+
+        // RET = (RET ^ 1) | BOOLEAN_TAG << TAG_SHIFT;
+        m_assembler.bitwise_xor32(
+            Assembler::Operand::Register(RET),
+            Assembler::Operand::Imm(1));
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Imm(BOOLEAN_TAG << TAG_SHIFT));
+        m_assembler.bitwise_or(
+            Assembler::Operand::Register(RET),
+            Assembler::Operand::Register(GPR1));
+
+        store_accumulator(RET);
+        m_assembler.jump(end);
+    });
+
+    slow_case.link(m_assembler);
+    native_call((void*)cxx_loosely_inequals);
     store_accumulator(RET);
     check_exception();
 
