@@ -29,28 +29,28 @@ void LocalePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.maximize, maximize, 0, attr);
     define_native_function(realm, vm.names.minimize, minimize, 0, attr);
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
+    define_native_function(realm, vm.names.getCalendars, get_calendars, 0, attr);
+    define_native_function(realm, vm.names.getCollations, get_collations, 0, attr);
+    define_native_function(realm, vm.names.getHourCycles, get_hour_cycles, 0, attr);
+    define_native_function(realm, vm.names.getNumberingSystems, get_numbering_systems, 0, attr);
+    define_native_function(realm, vm.names.getTimeZones, get_time_zones, 0, attr);
+    define_native_function(realm, vm.names.getTextInfo, get_text_info, 0, attr);
+    define_native_function(realm, vm.names.getWeekInfo, get_week_info, 0, attr);
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.Locale"_string), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.baseName, base_name, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.calendar, calendar, {}, Attribute::Configurable);
-    define_native_accessor(realm, vm.names.calendars, calendars, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.caseFirst, case_first, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.collation, collation, {}, Attribute::Configurable);
-    define_native_accessor(realm, vm.names.collations, collations, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.firstDayOfWeek, first_day_of_week, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
-    define_native_accessor(realm, vm.names.hourCycles, hour_cycles, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
-    define_native_accessor(realm, vm.names.numberingSystems, numbering_systems, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.numeric, numeric, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.language, language, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.script, script, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.region, region, {}, Attribute::Configurable);
-    define_native_accessor(realm, vm.names.timeZones, time_zones, {}, Attribute::Configurable);
-    define_native_accessor(realm, vm.names.textInfo, text_info, {}, Attribute::Configurable);
-    define_native_accessor(realm, vm.names.weekInfo, week_info, {}, Attribute::Configurable);
 }
 
 // 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize
@@ -229,21 +229,21 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
     __JS_ENUMERATE(hour_cycles)             \
     __JS_ENUMERATE(numbering_systems)
 
-// 1.4.17 get Intl.Locale.prototype.calendars, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.calendars
-// 1.4.18 get Intl.Locale.prototype.collations, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.collations
-// 1.4.19 get Intl.Locale.prototype.hourCycles, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.hourCycles
-// 1.4.20 get Intl.Locale.prototype.numberingSystems, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.numberingSystems
-#define __JS_ENUMERATE(keyword)                          \
-    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)  \
-    {                                                    \
-        auto locale_object = TRY(typed_this_object(vm)); \
-        return keyword##_of_locale(vm, locale_object);   \
+// 1.4.17 Intl.Locale.prototype.getCalendars, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.getCalendars
+// 1.4.18 Intl.Locale.prototype.getCollations, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.getCollations
+// 1.4.19 Intl.Locale.prototype.getHourCycles, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.getHourCycles
+// 1.4.20 Intl.Locale.prototype.getNumberingSystems, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.getNumberingSystems
+#define __JS_ENUMERATE(keyword)                               \
+    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::get_##keyword) \
+    {                                                         \
+        auto locale_object = TRY(typed_this_object(vm));      \
+        return keyword##_of_locale(vm, locale_object);        \
     }
 JS_ENUMERATE_LOCALE_INFO_PROPERTIES
 #undef __JS_ENUMERATE
 
-// 1.4.21 get Intl.Locale.prototype.timeZones, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.timeZones
-JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
+// 1.4.21 Intl.Locale.prototype.getTimeZones, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.getTimeZones
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::get_time_zones)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
@@ -260,8 +260,8 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
     return time_zones_of_locale(vm, locale->language_id.region.value());
 }
 
-// 1.4.22 get Intl.Locale.prototype.textInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.textInfo
-JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
+// 1.4.22 Intl.Locale.prototype.getTextInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.getTextInfo
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::get_text_info)
 {
     auto& realm = *vm.current_realm();
 
@@ -282,8 +282,8 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
     return info;
 }
 
-// 1.4.23 get Intl.Locale.prototype.weekInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.weekInfo
-JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::week_info)
+// 1.4.23 Intl.Locale.prototype.getWeekInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.getWeekInfo
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::get_week_info)
 {
     auto& realm = *vm.current_realm();
 
