@@ -19,6 +19,12 @@ global_idl_files = [ "//Userland/Libraries/LibWeb/HTML/Window.idl" ]
 
 # Standard idl files are neither iterable, namespaces, or global
 standard_idl_files = [
+  "//Userland/Libraries/LibWeb/Animations/Animation.idl",
+  "//Userland/Libraries/LibWeb/Animations/AnimationEffect.idl",
+  "//Userland/Libraries/LibWeb/Animations/AnimationPlaybackEvent.idl",
+  "//Userland/Libraries/LibWeb/Animations/AnimationTimeline.idl",
+  "//Userland/Libraries/LibWeb/Animations/DocumentTimeline.idl",
+  "//Userland/Libraries/LibWeb/Clipboard/Clipboard.idl",
   "//Userland/Libraries/LibWeb/Crypto/Crypto.idl",
   "//Userland/Libraries/LibWeb/Crypto/SubtleCrypto.idl",
   "//Userland/Libraries/LibWeb/CSS/CSSConditionRule.idl",
