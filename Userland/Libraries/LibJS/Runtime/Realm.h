@@ -48,6 +48,8 @@ public:
     HostDefined* host_defined() { return m_host_defined; }
     void set_host_defined(OwnPtr<HostDefined> host_defined) { m_host_defined = move(host_defined); }
 
+    static FlatPtr global_environment_offset() { return OFFSET_OF(Realm, m_global_environment); }
+
 private:
     Realm() = default;
 
