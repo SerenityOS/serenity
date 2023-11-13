@@ -36,7 +36,6 @@ set(SOURCES
     ImageFormats/BMPWriter.cpp
     ImageFormats/BooleanDecoder.cpp
     ImageFormats/TIFFLoader.cpp
-    ImageFormats/TIFFTagHandler.cpp
     ImageFormats/DDSLoader.cpp
     ImageFormats/GIFLoader.cpp
     ImageFormats/ICOLoader.cpp
@@ -78,3 +77,22 @@ set(SOURCES
 
 serenity_lib(LibGfx gfx)
 target_link_libraries(LibGfx PRIVATE LibCompress LibCore LibCrypto LibFileSystem LibTextCodec LibIPC LibUnicode)
+
+set(generated_sources TIFFMetadata.h TIFFTagHandler.cpp)
+list(TRANSFORM generated_sources PREPEND "ImageFormats/")
+
+find_package(Python COMPONENTS Interpreter REQUIRED)
+
+add_custom_command(
+        OUTPUT  ${generated_sources}
+        COMMAND ${Python_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/TIFFGenerator.py" -o "${CMAKE_CURRENT_BINARY_DIR}/ImageFormats"
+        DEPENDS "TIFFGenerator.py"
+        VERBATIM
+)
+target_sources(LibGfx PRIVATE ${generated_sources})
+add_custom_target(generate_tiff_files_handler DEPENDS ${generated_sources})
+add_dependencies(all_generated generate_tiff_files_handler)
+add_dependencies(LibGfx generate_tiff_files_handler)
+
+list(TRANSFORM generated_sources PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
+install(FILES ${generated_sources} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibGfx/ImageFormats")
