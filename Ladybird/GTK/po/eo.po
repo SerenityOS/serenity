@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-10 01:57+0200\n"
+"POT-Creation-Date: 2023-11-13 12:15+0300\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -12,16 +12,16 @@ msgstr ""
 
 #. Translators: this is a format string for the zoom-percent label in the main menu.
 #. For most languages, it doesn't need translating.
-#: Window.cpp:539
+#: Window.cpp:550
 #, c-format
 msgid "%d%%"
 msgstr ""
 
-#: Window.cpp:445
+#: Window.cpp:456
 msgid "A script closed the web page"
 msgstr ""
 
-#: window.blp:205 window.blp:306
+#: window.blp:206 window.blp:307
 msgid "Bookmarks"
 msgstr "Legosignoj"
 
@@ -57,7 +57,7 @@ msgstr ""
 msgid "Enter a JavaScript expression to evaluate"
 msgstr "Entajpi Ĝavoskriptan esprimon por plenumi"
 
-#: Window.cpp:234
+#: Window.cpp:245
 msgid "Failed to pick file"
 msgstr "Malsukcesis elekti dosieron"
 
@@ -83,15 +83,15 @@ msgstr ""
 "Ĝavoskripto-motoro, estigita de granda teamo kontribuantoj kiel parto de la "
 "SerenityOS-projekto."
 
-#: window.blp:218
+#: window.blp:219
 msgid "Main Menu"
 msgstr "Ĉefa menuo"
 
-#: window.blp:145 window.blp:282
+#: window.blp:146 window.blp:283
 msgid "Navigate Back"
 msgstr "Navigi malantaŭ"
 
-#: window.blp:157 window.blp:288
+#: window.blp:158 window.blp:289
 msgid "Navigate Forward"
 msgstr "Navigi antaŭ"
 
@@ -107,7 +107,7 @@ msgstr "Navigi antaŭ"
 msgid "Navigation"
 msgstr "Navigado"
 
-#: window.blp:175
+#: window.blp:176
 msgid "New Tab"
 msgstr "Nova langeto"
 
@@ -119,7 +119,7 @@ msgstr "Nova _inkognita fenestro"
 msgid "New incognito window"
 msgstr "Nova inkognita fenestro"
 
-#: Window.cpp:101 shortcuts-dialog.blp:58
+#: Window.cpp:102 shortcuts-dialog.blp:58
 msgid "New tab"
 msgstr "Nova langeto"
 
@@ -131,7 +131,7 @@ msgstr "Nova fenestro"
 msgid "Next tab"
 msgstr "Sekva langeto"
 
-#: Window.cpp:236 Tab.cpp:194
+#: Window.cpp:247 Tab.cpp:194
 msgid "OK"
 msgstr "Bone"
 
@@ -152,7 +152,7 @@ msgstr "Antaŭa langeto"
 msgid "Quit"
 msgstr "Ĉesi"
 
-#: window.blp:169 window.blp:294
+#: window.blp:170 window.blp:295
 msgid "Reload Page"
 msgstr "Reŝargi paĝon"
 
@@ -164,7 +164,7 @@ msgstr "Reŝargi aktualan paĝon"
 msgid "Reset zoom"
 msgstr "Reagordi zomon"
 
-#: window.blp:236
+#: window.blp:237
 msgid "Restore Zoom"
 msgstr "Restaŭri zomon"
 
@@ -173,7 +173,7 @@ msgid "Sam Atkins"
 msgstr "Sam Atkins"
 
 #. Translators: this is the placeholder text for the main location entry.
-#: window.blp:188
+#: window.blp:189
 msgid "Search or enter a URL to open…"
 msgstr "Serĉi aŭ entajpi URL-on…"
 
@@ -194,7 +194,7 @@ msgstr "Sergey Bugaev"
 msgid "Show shortcuts"
 msgstr "Montri klavkombinoj"
 
-#: window.blp:212
+#: window.blp:213
 msgid "Tab Overview"
 msgstr "Langeta superrigardo"
 
@@ -223,11 +223,11 @@ msgstr ""
 msgid "Zoom"
 msgstr "Zomi"
 
-#: window.blp:246
+#: window.blp:247
 msgid "Zoom In"
 msgstr "Zomi"
 
-#: window.blp:231
+#: window.blp:232
 msgid "Zoom Out"
 msgstr "Malzomi"
 

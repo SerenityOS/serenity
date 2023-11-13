@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-10 01:57+0200\n"
+"POT-Creation-Date: 2023-11-13 12:15+0300\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -12,16 +12,16 @@ msgstr ""
 
 #. Translators: this is a format string for the zoom-percent label in the main menu.
 #. For most languages, it doesn't need translating.
-#: Window.cpp:539
+#: Window.cpp:550
 #, c-format
 msgid "%d%%"
 msgstr ""
 
-#: Window.cpp:445
+#: Window.cpp:456
 msgid "A script closed the web page"
 msgstr "Ett skript stängde webbsidan"
 
-#: window.blp:205 window.blp:306
+#: window.blp:206 window.blp:307
 msgid "Bookmarks"
 msgstr "Bokmärken"
 
@@ -57,7 +57,7 @@ msgstr "Ange"
 msgid "Enter a JavaScript expression to evaluate"
 msgstr "Ange ett JavaScript-uttryck att utvärdera"
 
-#: Window.cpp:234
+#: Window.cpp:245
 msgid "Failed to pick file"
 msgstr "Misslyckades med att öppna filen"
 
@@ -82,15 +82,15 @@ msgstr ""
 "Ladybird är en webbläsare baserat på LibWeb och LibJS, utvecklat inom "
 "projektet SerenityOS."
 
-#: window.blp:218
+#: window.blp:219
 msgid "Main Menu"
 msgstr "Huvudmeny"
 
-#: window.blp:145 window.blp:282
+#: window.blp:146 window.blp:283
 msgid "Navigate Back"
 msgstr "Navigera bakåt"
 
-#: window.blp:157 window.blp:288
+#: window.blp:158 window.blp:289
 msgid "Navigate Forward"
 msgstr "Navigera framåt"
 
@@ -106,7 +106,7 @@ msgstr "Navigera framåt"
 msgid "Navigation"
 msgstr "Navigation"
 
-#: window.blp:175
+#: window.blp:176
 msgid "New Tab"
 msgstr "Ny flik"
 
@@ -118,7 +118,7 @@ msgstr "Nytt _privat fönster"
 msgid "New incognito window"
 msgstr "Nytt privat fönster"
 
-#: Window.cpp:101 shortcuts-dialog.blp:58
+#: Window.cpp:102 shortcuts-dialog.blp:58
 msgid "New tab"
 msgstr "Ny flik"
 
@@ -130,7 +130,7 @@ msgstr "Nytt fönster"
 msgid "Next tab"
 msgstr "Nästa flik"
 
-#: Window.cpp:236 Tab.cpp:194
+#: Window.cpp:247 Tab.cpp:194
 msgid "OK"
 msgstr "Ok"
 
@@ -151,7 +151,7 @@ msgstr "Föregående flik"
 msgid "Quit"
 msgstr "Avsluta"
 
-#: window.blp:169 window.blp:294
+#: window.blp:170 window.blp:295
 msgid "Reload Page"
 msgstr "Ladda om sidan"
 
@@ -163,7 +163,7 @@ msgstr "Ladda om aktuell sida"
 msgid "Reset zoom"
 msgstr "Återställ zoom"
 
-#: window.blp:236
+#: window.blp:237
 msgid "Restore Zoom"
 msgstr "Återställ zoom"
 
@@ -172,7 +172,7 @@ msgid "Sam Atkins"
 msgstr "Sam Atkins"
 
 #. Translators: this is the placeholder text for the main location entry.
-#: window.blp:188
+#: window.blp:189
 msgid "Search or enter a URL to open…"
 msgstr "Sök eller ange en URL…"
 
@@ -193,7 +193,7 @@ msgstr "Sergey Bugaev"
 msgid "Show shortcuts"
 msgstr "Visa genvägar"
 
-#: window.blp:212
+#: window.blp:213
 msgid "Tab Overview"
 msgstr "Flikar översikt"
 
@@ -222,11 +222,11 @@ msgstr "Webbsidan ber dig bekräfta:"
 msgid "Zoom"
 msgstr "Zoom"
 
-#: window.blp:246
+#: window.blp:247
 msgid "Zoom In"
 msgstr "Zooma in"
 
-#: window.blp:231
+#: window.blp:232
 msgid "Zoom Out"
 msgstr "Zooma ut"
 

@@ -3,6 +3,7 @@
 #include "BitmapPaintable.h"
 #include "LocationEntry.h"
 #include "NavigationHistory.h"
+#include "NavigationHistorySlice.h"
 #include "Tab.h"
 #include "WebView.h"
 #include <glib/gi18n.h>
@@ -176,7 +177,7 @@ static void on_navigate_back_right_clicked(LadybirdWindow* self, [[maybe_unused]
     gtk_widget_set_parent(GTK_WIDGET(self->navigation_history_popover), button);
 
     LadybirdNavigationHistory* history = ladybird_web_view_get_navigation_history(self->last_selected_web_view);
-    GtkNoSelection* selection = gtk_no_selection_new(G_LIST_MODEL(g_object_ref(history)));
+    GtkNoSelection* selection = gtk_no_selection_new(ladybird_navigation_history_slice_new_back(history));
     gtk_list_view_set_model(self->navigation_history_list_view, GTK_SELECTION_MODEL(selection));
     g_object_unref(selection);
 
@@ -190,7 +191,7 @@ static void on_navigate_forward_right_clicked(LadybirdWindow* self, [[maybe_unus
     gtk_widget_set_parent(GTK_WIDGET(self->navigation_history_popover), button);
 
     LadybirdNavigationHistory* history = ladybird_web_view_get_navigation_history(self->last_selected_web_view);
-    GtkNoSelection* selection = gtk_no_selection_new(G_LIST_MODEL(g_object_ref(history)));
+    GtkNoSelection* selection = gtk_no_selection_new(ladybird_navigation_history_slice_new_forward(history));
     gtk_list_view_set_model(self->navigation_history_list_view, GTK_SELECTION_MODEL(selection));
     g_object_unref(selection);
 
@@ -199,11 +200,21 @@ static void on_navigate_forward_right_clicked(LadybirdWindow* self, [[maybe_unus
 
 static void on_navigation_history_activate(LadybirdWindow* self, guint position)
 {
+    GtkSelectionModel* selection_model = gtk_list_view_get_model(self->navigation_history_list_view);
+    LadybirdNavigationHistorySlice* slice = LADYBIRD_NAVIGATION_HISTORY_SLICE(gtk_no_selection_get_model(GTK_NO_SELECTION(selection_model)));
+    position = ladybird_navigation_history_slice_map_position(slice, position);
+
     gtk_popover_popdown(self->navigation_history_popover);
     gtk_widget_unparent(GTK_WIDGET(self->navigation_history_popover));
 
     LadybirdNavigationHistory* history = ladybird_web_view_get_navigation_history(self->last_selected_web_view);
     ladybird_navigation_history_set_current_position(history, position);
+}
+
+static void on_navigation_history_popover_closed(LadybirdWindow* self)
+{
+    // Unref the navigation history slice model.
+    gtk_list_view_set_model(self->navigation_history_list_view, nullptr);
 }
 
 static void win_new_tab_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -582,6 +593,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_callback(widget_class, on_navigate_back_right_clicked);
     gtk_widget_class_bind_template_callback(widget_class, on_navigate_forward_right_clicked);
     gtk_widget_class_bind_template_callback(widget_class, on_navigation_history_activate);
+    gtk_widget_class_bind_template_callback(widget_class, on_navigation_history_popover_closed);
     gtk_widget_class_bind_template_callback(widget_class, format_zoom_percent_label);
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", nullptr, win_new_tab_action);

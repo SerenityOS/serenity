@@ -62,6 +62,7 @@ Popover bookmarks_popover {
 
 Popover navigation_history_popover {
   styles ["menu"]
+  closed => $on_navigation_history_popover_closed(template) swapped;
 
   ScrolledWindow {
     hscrollbar-policy: never;
