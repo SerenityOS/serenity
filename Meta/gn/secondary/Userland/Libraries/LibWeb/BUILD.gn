@@ -289,8 +289,10 @@ shared_library("LibWeb") {
   deps = [
            ":all_generated",
            "ARIA",
+           "Animations",
            "Bindings",
            "CSS",
+           "Clipboard",
            "Cookie",
            "Crypto",
            "DOM",
@@ -331,6 +333,7 @@ shared_library("LibWeb") {
            "WebIDL",
            "WebSockets",
            "XHR",
+           "XLink",
            "XML",
            "//AK",
            "//Userland/Libraries/LibAudio",

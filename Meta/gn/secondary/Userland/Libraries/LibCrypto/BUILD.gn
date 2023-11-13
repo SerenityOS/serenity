@@ -8,6 +8,7 @@ shared_library("LibCrypto") {
     "//Userland/Libraries/LibFileSystem",
   ]
   sources = [
+    "AEAD/ChaCha20Poly1305.cpp",
     "ASN1/ASN1.cpp",
     "ASN1/DER.cpp",
     "ASN1/PEM.cpp",
@@ -30,6 +31,7 @@ shared_library("LibCrypto") {
     "Curves/Curve25519.cpp",
     "Curves/Ed25519.cpp",
     "Curves/SECP256r1.cpp",
+    "Curves/SECP384r1.cpp",
     "Curves/X25519.cpp",
     "Curves/X448.cpp",
     "Hash/BLAKE2b.cpp",
