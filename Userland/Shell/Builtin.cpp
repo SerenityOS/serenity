@@ -685,7 +685,7 @@ ErrorOr<int> Shell::builtin_glob(Main::Arguments arguments)
         return 1;
 
     for (auto& glob : globs) {
-        for (auto& expanded : expand_globs(glob, cwd))
+        for (auto& expanded : TRY(expand_globs(glob, cwd)))
             outln("{}", expanded);
     }
 

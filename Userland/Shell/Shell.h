@@ -182,7 +182,7 @@ public:
     DeprecatedString prompt() const;
 
     static DeprecatedString expand_tilde(StringView expression);
-    static Vector<DeprecatedString> expand_globs(StringView path, StringView base);
+    static ErrorOr<Vector<DeprecatedString>> expand_globs(StringView path, StringView base);
     static Vector<DeprecatedString> expand_globs(Vector<StringView> path_segments, StringView base);
     ErrorOr<Vector<AST::Command>> expand_aliases(Vector<AST::Command>);
     DeprecatedString resolve_path(DeprecatedString) const;
