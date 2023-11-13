@@ -1098,27 +1098,19 @@ void Compiler::compile_mul(Bytecode::Op::Mul const& op)
             Assembler::Label end {};                                                     \
                                                                                          \
             branch_if_both_int32(ARG1, ARG2, [&] {                                       \
-                Assembler::Label true_case {};                                           \
-                                                                                         \
                 m_assembler.sign_extend_32_to_64_bits(ARG1);                             \
                 m_assembler.sign_extend_32_to_64_bits(ARG2);                             \
                                                                                          \
-                m_assembler.jump_if(                                                     \
+                /* accumulator = SHIFTED_BOOLEAN_TAG | (arg1 condition arg2) */          \
+                m_assembler.mov(                                                         \
+                    Assembler::Operand::Register(GPR0),                                  \
+                    Assembler::Operand::Imm(SHIFTED_BOOLEAN_TAG));                       \
+                m_assembler.cmp(                                                         \
                     Assembler::Operand::Register(ARG1),                                  \
+                    Assembler::Operand::Register(ARG2));                                 \
+                m_assembler.set_if(                                                      \
                     Assembler::Condition::AssemblerCondition,                            \
-                    Assembler::Operand::Register(ARG2),                                  \
-                    true_case);                                                          \
-                                                                                         \
-                m_assembler.mov(                                                         \
-                    Assembler::Operand::Register(GPR0),                                  \
-                    Assembler::Operand::Imm(Value(false).encoded()));                    \
-                store_accumulator(GPR0);                                                 \
-                m_assembler.jump(end);                                                   \
-                                                                                         \
-                true_case.link(m_assembler);                                             \
-                m_assembler.mov(                                                         \
-                    Assembler::Operand::Register(GPR0),                                  \
-                    Assembler::Operand::Imm(Value(true).encoded()));                     \
+                    Assembler::Operand::Register(GPR0)); /* sets only first byte */      \
                 store_accumulator(GPR0);                                                 \
                                                                                          \
                 m_assembler.jump(end);                                                   \
