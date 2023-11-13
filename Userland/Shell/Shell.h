@@ -294,7 +294,6 @@ public:
     static SpecialCharacterEscapeMode special_character_escape_mode(u32 c, EscapeMode);
 
     static bool is_glob(StringView);
-    static Vector<StringView> split_path(StringView);
 
     enum class ExecutableOnly {
         Yes,

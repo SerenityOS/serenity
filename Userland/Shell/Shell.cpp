@@ -252,28 +252,6 @@ bool Shell::is_glob(StringView s)
     return false;
 }
 
-Vector<StringView> Shell::split_path(StringView path)
-{
-    Vector<StringView> parts;
-
-    size_t substart = 0;
-    for (size_t i = 0; i < path.length(); i++) {
-        char ch = path[i];
-        if (ch != '/')
-            continue;
-        size_t sublen = i - substart;
-        if (sublen != 0)
-            parts.append(path.substring_view(substart, sublen));
-        substart = i + 1;
-    }
-
-    size_t taillen = path.length() - substart;
-    if (taillen != 0)
-        parts.append(path.substring_view(substart, taillen));
-
-    return parts;
-}
-
 Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
 {
     auto explicitly_set_base = false;
@@ -281,7 +259,8 @@ Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
         base = "/"sv;
         explicitly_set_base = true;
     }
-    auto parts = split_path(path);
+
+    auto parts = path.split_view('/', SplitBehavior::KeepTrailingSeparator);
     DeprecatedString base_string = base;
     struct stat statbuf;
     if (lstat(base_string.characters(), &statbuf) < 0) {
@@ -326,12 +305,19 @@ Vector<DeprecatedString> Shell::expand_globs(Vector<StringView> path_segments, S
     if (is_glob(first_segment)) {
         Vector<DeprecatedString> result;
 
+        auto const is_glob_directory = first_segment.ends_with('/');
+        if (is_glob_directory)
+            first_segment = first_segment.substring_view(0, first_segment.length() - 1);
+
         Core::DirIterator di(base, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error())
             return {};
 
         while (di.has_next()) {
-            DeprecatedString path = di.next_path();
+            auto const entry = di.next().release_value();
+            auto const path = entry.name;
+            if (is_glob_directory && entry.type != Core::DirectoryEntry::Type::Directory)
+                continue;
 
             // Dotfiles have to be explicitly requested
             if (path[0] == '.' && first_segment[0] != '.')
@@ -343,6 +329,8 @@ Vector<DeprecatedString> Shell::expand_globs(Vector<StringView> path_segments, S
                 if (!base.ends_with('/'))
                     builder.append('/');
                 builder.append(path);
+                if (is_glob_directory)
+                    builder.append('/');
                 result.extend(expand_globs(path_segments, builder.string_view()));
             }
         }
