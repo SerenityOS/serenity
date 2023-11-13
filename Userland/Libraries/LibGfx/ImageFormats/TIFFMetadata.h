@@ -56,7 +56,7 @@ enum class Predictor {
     HorizontalDifferencing = 2,
 };
 
-ErrorOr<void> handle_tag(Metadata& metadata, u16 tag, Type type, u32 count, Vector<Value> const& value);
+ErrorOr<void> handle_tag(Metadata& metadata, u16 tag, Type type, u32 count, Vector<Value>&& value);
 
 }
 
