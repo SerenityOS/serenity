@@ -49,10 +49,7 @@ private:
         O(Exp, exp)                                             \
         O(Mod, mod)                                             \
         O(In, in)                                               \
-        O(InstanceOf, instance_of)                              \
-        O(LooselyInequals, loosely_inequals)                    \
-        O(StrictlyInequals, strict_inequals)                    \
-        O(StrictlyEquals, strict_equals)
+        O(InstanceOf, instance_of)
 
 #    define JS_ENUMERATE_COMPARISON_OPS(O)                           \
         O(LessThan, less_than, SignedLessThan)                       \
@@ -163,6 +160,10 @@ private:
 
     void compile_to_boolean(Assembler::Reg dst, Assembler::Reg src);
     void compile_continuation(Optional<Bytecode::Label>, bool is_await);
+
+    template<typename Codegen>
+    void branch_if_same_type_for_equality(Assembler::Reg, Assembler::Reg, Codegen);
+    void compile_is_strictly_equal(Assembler::Reg, Assembler::Reg, Assembler::Label& slow_case);
 
     void check_exception();
     void handle_exception();
