@@ -52,7 +52,7 @@ public:
 
     IntSize size() const
     {
-        return m_metadata.size;
+        return { *m_metadata.image_width(), *m_metadata.image_height() };
     }
 
     State state() const
@@ -74,21 +74,24 @@ private:
     template<typename ByteReader>
     ErrorOr<void> loop_over_pixels(ByteReader&& byte_reader, Function<ErrorOr<void>(u32)> initializer = {})
     {
-        for (u32 strip_index = 0; strip_index < m_metadata.strip_offsets.size(); ++strip_index) {
-            TRY(m_stream->seek(m_metadata.strip_offsets[strip_index]));
+        auto const strips_offset = *m_metadata.strip_offsets();
+        auto const strip_byte_counts = *m_metadata.strip_byte_counts();
+
+        for (u32 strip_index = 0; strip_index < strips_offset.size(); ++strip_index) {
+            TRY(m_stream->seek(strips_offset[strip_index]));
             if (initializer)
-                TRY(initializer(m_metadata.strip_bytes_count[strip_index]));
-            for (u32 row = 0; row < m_metadata.rows_per_strip; row++) {
-                auto const scanline = row + m_metadata.rows_per_strip * strip_index;
-                if (scanline >= static_cast<u32>(m_metadata.size.height()))
+                TRY(initializer(strip_byte_counts[strip_index]));
+            for (u32 row = 0; row < *m_metadata.rows_per_strip(); row++) {
+                auto const scanline = row + *m_metadata.rows_per_strip() * strip_index;
+                if (scanline >= *m_metadata.image_height())
                     break;
 
                 Optional<Color> last_color {};
 
-                for (u32 column = 0; column < static_cast<u32>(m_metadata.size.width()); ++column) {
+                for (u32 column = 0; column < *m_metadata.image_width(); ++column) {
                     auto color = Color { TRY(byte_reader()), TRY(byte_reader()), TRY(byte_reader()) };
 
-                    if (m_metadata.predictor == Predictor::HorizontalDifferencing && last_color.has_value()) {
+                    if (m_metadata.predictor() == Predictor::HorizontalDifferencing && last_color.has_value()) {
                         color.set_red(last_color->red() + color.red());
                         color.set_green(last_color->green() + color.green());
                         color.set_blue(last_color->blue() + color.blue());
@@ -105,9 +108,9 @@ private:
 
     ErrorOr<void> decode_frame_impl()
     {
-        m_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, m_metadata.size));
+        m_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, size()));
 
-        switch (m_metadata.compression) {
+        switch (*m_metadata.compression()) {
         case Compression::NoCompression:
             TRY(loop_over_pixels([this]() { return read_value<u8>(); }));
             break;
@@ -341,7 +344,7 @@ private:
                     result.empend(T { TRY(read_value<typename T::Type>()), TRY(read_value<typename T::Type>()) });
             } else {
                 for (u32 i = 0; i < count; ++i)
-                    result.empend(TRY(read_value<T>()));
+                    result.empend(typename TypePromoter<T>::Type(TRY(read_value<T>())));
             }
             return result;
         };
