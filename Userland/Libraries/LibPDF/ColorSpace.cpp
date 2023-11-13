@@ -314,11 +314,7 @@ PDFErrorOr<NonnullRefPtr<CalGrayColorSpace>> CalGrayColorSpace::create(Document*
     if (parameters.size() != 1)
         return Error { Error::Type::MalformedPDF, "Gray color space expects one parameter" };
 
-    auto param = TRY(document->resolve(parameters[0]));
-    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
-        return Error { Error::Type::MalformedPDF, "Gray color space expects a dict parameter" };
-
-    auto dict = param.get<NonnullRefPtr<Object>>()->cast<DictObject>();
+    auto dict = TRY(document->resolve_to<DictObject>(parameters[0]));
     if (!dict->contains(CommonNames::WhitePoint))
         return Error { Error::Type::MalformedPDF, "Gray color space expects a Whitepoint key" };
 
@@ -384,11 +380,7 @@ PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* d
     if (parameters.size() != 1)
         return Error { Error::Type::MalformedPDF, "RGB color space expects one parameter" };
 
-    auto param = TRY(document->resolve(parameters[0]));
-    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
-        return Error { Error::Type::MalformedPDF, "RGB color space expects a dict parameter" };
-
-    auto dict = param.get<NonnullRefPtr<Object>>()->cast<DictObject>();
+    auto dict = TRY(document->resolve_to<DictObject>(parameters[0]));
     if (!dict->contains(CommonNames::WhitePoint))
         return Error { Error::Type::MalformedPDF, "RGB color space expects a Whitepoint key" };
 
@@ -478,11 +470,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* docum
     if (parameters.is_empty())
         return Error { Error::Type::MalformedPDF, "ICCBased color space expected one parameter" };
 
-    auto param = TRY(document->resolve(parameters[0]));
-    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<StreamObject>())
-        return Error { Error::Type::MalformedPDF, "ICCBased color space expects a stream parameter" };
-
-    auto stream = param.get<NonnullRefPtr<Object>>()->cast<StreamObject>();
+    auto stream = TRY(document->resolve_to<StreamObject>(parameters[0]));
     auto dict = stream->dict();
 
     auto maybe_profile = Gfx::ICC::Profile::try_load_from_externally_owned_memory(stream->bytes());
@@ -554,11 +542,7 @@ PDFErrorOr<NonnullRefPtr<LabColorSpace>> LabColorSpace::create(Document* documen
     if (parameters.size() != 1)
         return Error { Error::Type::MalformedPDF, "Lab color space expects one parameter" };
 
-    auto param = TRY(document->resolve(parameters[0]));
-    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<DictObject>())
-        return Error { Error::Type::MalformedPDF, "Lab color space expects a dict parameter" };
-
-    auto dict = param.get<NonnullRefPtr<Object>>()->cast<DictObject>();
+    auto dict = TRY(document->resolve_to<DictObject>(parameters[0]));
     if (!dict->contains(CommonNames::WhitePoint))
         return Error { Error::Type::MalformedPDF, "Lab color space expects a Whitepoint key" };
 
@@ -644,10 +628,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
     //  in the color table are to be interpreted. It can be any device or CIE-based color space or (in PDF 1.3)
     //  a Separation or DeviceN space, but not a Pattern space or another Indexed space."
 
-    auto param0 = TRY(document->resolve(parameters[0]));
-    if (!param0.has<NonnullRefPtr<Object>>())
-        return Error { Error::Type::MalformedPDF, "Indexed color space expects object for first arg" };
-    auto base_object = param0.get<NonnullRefPtr<Object>>();
+    auto base_object = TRY(document->resolve_to<Object>(parameters[0]));
     auto base = TRY(ColorSpace::create(document, base_object));
 
     if (base->family() == ColorSpaceFamily::Pattern || base->family() == ColorSpaceFamily::Indexed)
@@ -655,10 +636,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
 
     // "The hival parameter is an integer that specifies the maximum valid index value. In other words,
     // the color table is to be indexed by integers in the range 0 to hival. hival can be no greater than 255"
-    auto param1 = TRY(document->resolve(parameters[1]));
-    if (!param1.has<int>())
-        return Error { Error::Type::MalformedPDF, "Indexed color space expects int for second arg" };
-    auto hival = param1.get<int>();
+    auto hival = TRY(document->resolve_to<int>(parameters[1]));
 
     // "The color table is defined by the lookup parameter, which can be either a stream or (in PDF 1.2) a byte string.
     //  It provides the mapping between index values and the corresponding colors in the base color space.
@@ -666,10 +644,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
     //  base color space. Each byte is an unsigned integer in the range 0 to 255 that is scaled to the range of
     //  the corresponding color component in the base color space; that is, 0 corresponds to the minimum value
     //  in the range for that component, and 255 corresponds to the maximum."
-    auto param2 = TRY(document->resolve(parameters[2]));
-    if (!param2.has<NonnullRefPtr<Object>>())
-        return Error { Error::Type::MalformedPDF, "Indexed color space expects object for third arg" };
-    auto lookup_object = param2.get<NonnullRefPtr<Object>>();
+    auto lookup_object = TRY(document->resolve_to<Object>(parameters[2]));
 
     Vector<u8> lookup;
     if (lookup_object->is<StreamObject>()) {
@@ -724,21 +699,13 @@ PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Doc
 
     // "The name parameter is a name object specifying the name of the colorant that this Separation color space
     //  is intended to represent (or one of the special names All or None; see below)"
-    auto param0 = TRY(document->resolve(parameters[0]));
-    if (!param0.has<NonnullRefPtr<Object>>())
-        return Error { Error::Type::MalformedPDF, "Separation color space expects object for first arg" };
-    auto name_object = param0.get<NonnullRefPtr<Object>>();
-    if (!name_object->is<NameObject>())
-        return Error { Error::Type::MalformedPDF, "Separation color space expects name object for first arg" };
+    auto name_object = TRY(document->resolve_to<NameObject>(parameters[0]));
     auto name = name_object->cast<NameObject>()->name();
 
     // "The alternateSpace parameter must be an array or name object that identifies the alternate color space,
     //  which can be any device or CIE-based color space but not another special color space
     //  (Pattern, Indexed, Separation, or DeviceN)."
-    auto param1 = TRY(document->resolve(parameters[1]));
-    if (!param1.has<NonnullRefPtr<Object>>())
-        return Error { Error::Type::MalformedPDF, "Separation color space expects object for second arg" };
-    auto alternate_space_object = param1.get<NonnullRefPtr<Object>>();
+    auto alternate_space_object = TRY(document->resolve_to<Object>(parameters[1]));
     auto alternate_space = TRY(ColorSpace::create(document, alternate_space_object));
 
     auto family = alternate_space->family();
@@ -746,10 +713,7 @@ PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Doc
         return Error { Error::Type::MalformedPDF, "Separation color space has invalid alternate color space" };
 
     // "The tintTransform parameter must be a function"
-    auto param2 = TRY(document->resolve(parameters[2]));
-    if (!param2.has<NonnullRefPtr<Object>>())
-        return Error { Error::Type::MalformedPDF, "Separation color space expects object for third arg" };
-    auto tint_transform_object = param2.get<NonnullRefPtr<Object>>();
+    auto tint_transform_object = TRY(document->resolve_to<Object>(parameters[2]));
     auto tint_transform = TRY(Function::create(document, tint_transform_object));
 
     auto color_space = adopt_ref(*new SeparationColorSpace(move(alternate_space), move(tint_transform)));
