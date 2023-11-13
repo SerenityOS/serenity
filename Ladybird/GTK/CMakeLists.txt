@@ -104,6 +104,7 @@ set(SOURCES
     EventLoopImplementationGLib.cpp
     HistoryEntry.cpp
     NavigationHistory.cpp
+    NavigationHistorySlice.cpp
     "${SERENITY_SOURCE_DIR}/Ladybird/Utilities.cpp"
     "${SERENITY_SOURCE_DIR}/Ladybird/HelperProcess.cpp"
     $<TARGET_OBJECTS:resources>
