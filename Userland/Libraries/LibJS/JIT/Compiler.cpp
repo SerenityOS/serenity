@@ -626,27 +626,21 @@ void Compiler::branch_if_same_type_for_equality(Assembler::Reg lhs, Assembler::R
     Assembler::Label same_type_case {};
     Assembler::Label not_same_type_case {};
 
-    // GPR0 = lhs & TAG_EXTRACTION
+    // GPR0 = lhs >> TAG_SHIFT
     m_assembler.mov(
         Assembler::Operand::Register(GPR0),
         Assembler::Operand::Register(lhs));
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Imm(TAG_EXTRACTION));
-    m_assembler.bitwise_and(
+    m_assembler.shift_right(
         Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Register(GPR1));
+        Assembler::Operand::Imm(TAG_SHIFT));
 
-    // GPR1 = rhs & TAG_EXTRACTION
+    // GPR1 = rhs >> TAG_SHIFT
     m_assembler.mov(
         Assembler::Operand::Register(GPR1),
         Assembler::Operand::Register(rhs));
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR2),
-        Assembler::Operand::Imm(TAG_EXTRACTION));
-    m_assembler.bitwise_and(
+    m_assembler.shift_right(
         Assembler::Operand::Register(GPR1),
-        Assembler::Operand::Register(GPR2));
+        Assembler::Operand::Imm(TAG_SHIFT));
 
     // if (GPR0 == GPR1) goto same_type_case
     m_assembler.jump_if(
