@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FixedArray.h>
 #include <AK/OwnPtr.h>
 #include <AK/Platform.h>
 #include <LibJIT/GDB.h>
@@ -3772,7 +3773,11 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
         compiler.m_output.size(),
     };
 
-    auto gdb_object = ::JIT::GDB::build_gdb_image(code, "LibJS JIT"sv, "LibJS JITted code"sv);
+    Optional<FixedArray<u8>> gdb_object {};
+
+    if (getenv("LIBJS_JIT_GDB")) {
+        gdb_object = ::JIT::GDB::build_gdb_image(code, "LibJS JIT"sv, "LibJS JITted code"sv);
+    }
 
     auto executable = make<NativeExecutable>(executable_memory, compiler.m_output.size(), mapping, move(gdb_object));
     if constexpr (DUMP_JIT_DISASSEMBLY)
