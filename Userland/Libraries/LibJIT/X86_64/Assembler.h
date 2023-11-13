@@ -569,6 +569,14 @@ struct X86_64Assembler {
         jump_if(condition, label);
     }
 
+    void set_if(Condition condition, Operand dst)
+    {
+        emit_rex_for_slash(dst, REX_W::No);
+        emit8(0x0f);
+        emit8(0x90 | to_underlying(condition));
+        emit_modrm_slash(0, dst);
+    }
+
     void sign_extend_32_to_64_bits(Reg reg)
     {
         mov32(Operand::Register(reg), Operand::Register(reg), Extension::SignExtend);
