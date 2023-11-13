@@ -9,10 +9,10 @@
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     AK::set_debug_enabled(false);
-    auto maybe_packet = DNS::Packet::from_raw_packet({ data, size });
-    if (!maybe_packet.has_value())
+    auto packet_or_error = DNS::Packet::from_raw_packet({ data, size });
+    if (packet_or_error.is_error())
         return 0;
 
-    (void)maybe_packet.value().to_byte_buffer();
+    (void)packet_or_error.release_value().to_byte_buffer();
     return 0;
 }

@@ -97,11 +97,11 @@ private:
 
 static_assert(sizeof(DNSRecordWithoutName) == 10);
 
-Optional<Packet> Packet::from_raw_packet(ReadonlyBytes bytes)
+ErrorOr<Packet> Packet::from_raw_packet(ReadonlyBytes bytes)
 {
     if (bytes.size() < sizeof(PacketHeader)) {
-        dbgln("DNS response not large enough ({} out of {}) to be a DNS packet.", bytes.size(), sizeof(PacketHeader));
-        return {};
+        dbgln_if(LOOKUPSERVER_DEBUG, "DNS response not large enough ({} out of {}) to be a DNS packet", bytes.size(), sizeof(PacketHeader));
+        return Error::from_string_literal("DNS response not large enough to be a DNS packet");
     }
 
     auto const& header = *bit_cast<PacketHeader const*>(bytes.data());
@@ -123,13 +123,13 @@ Optional<Packet> Packet::from_raw_packet(ReadonlyBytes bytes)
     size_t offset = sizeof(PacketHeader);
 
     for (u16 i = 0; i < header.question_count(); i++) {
-        auto name = Name::parse(bytes, offset);
+        auto name = TRY(Name::parse(bytes, offset));
         struct RawDNSAnswerQuestion {
             NetworkOrdered<u16> record_type;
             NetworkOrdered<u16> class_code;
         };
         if (offset >= bytes.size() || bytes.size() - offset < sizeof(RawDNSAnswerQuestion))
-            return {};
+            return Error::from_string_literal("Unexpected EOF when parsing DNS packet");
 
         auto const& record_and_class = *bit_cast<RawDNSAnswerQuestion const*>(bytes.offset_pointer(offset));
         u16 class_code = record_and_class.class_code & ~MDNS_WANTS_UNICAST_RESPONSE;
@@ -141,21 +141,21 @@ Optional<Packet> Packet::from_raw_packet(ReadonlyBytes bytes)
     }
 
     for (u16 i = 0; i < header.answer_count(); ++i) {
-        auto name = Name::parse(bytes, offset);
+        auto name = TRY(Name::parse(bytes, offset));
         if (offset >= bytes.size() || bytes.size() - offset < sizeof(DNSRecordWithoutName))
-            return {};
+            return Error::from_string_literal("Unexpected EOF when parsing DNS packet");
 
         auto const& record = *bit_cast<DNSRecordWithoutName const*>(bytes.offset_pointer(offset));
         offset += sizeof(DNSRecordWithoutName);
         if (record.data_length() > bytes.size() - offset)
-            return {};
+            return Error::from_string_literal("Unexpected EOF when parsing DNS packet");
 
         DeprecatedString data;
 
         switch ((RecordType)record.type()) {
         case RecordType::PTR: {
             size_t dummy_offset = offset;
-            data = Name::parse(bytes, dummy_offset).as_string();
+            data = TRY(Name::parse(bytes, dummy_offset)).as_string();
             break;
         }
         case RecordType::CNAME:
