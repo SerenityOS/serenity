@@ -68,11 +68,11 @@ __complete_job_spec() {
 }
 
 _complete_kill() {
-  if test $*[-1] = '--' {
-    __complete_job_spec ''
-  } else {
-    __complete_job_spec $*[-1]
-  }
+    if test $*[-1] = '--' {
+        __complete_job_spec ''
+    } else {
+        __complete_job_spec $*[-1]
+    }
 }
 
 _complete_cd() {
