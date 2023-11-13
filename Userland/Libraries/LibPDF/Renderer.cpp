@@ -518,16 +518,15 @@ RENDERER_HANDLER(text_next_line_show_string_set_spacing)
 RENDERER_HANDLER(text_show_string_array)
 {
     auto elements = MUST(m_document->resolve_to<ArrayObject>(args[0]))->elements();
-    float next_shift = 0.0f;
 
     for (auto& element : elements) {
         if (element.has<int>()) {
-            next_shift = element.get<int>();
-        } else if (element.has<float>()) {
-            next_shift = element.get<float>();
-        } else {
-            auto shift = next_shift / 1000.0f;
+            float shift = (float)element.get<int>() / 1000.0f;
             m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
+        } else if (element.has<float>()) {
+            float shift = element.get<float>() / 1000.0f;
+            m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
+        } else {
             auto str = element.get<NonnullRefPtr<Object>>()->cast<StringObject>()->string();
             TRY(show_text(str));
         }
