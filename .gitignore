@@ -16,7 +16,6 @@ Toolchain/Build
 Toolchain/Local
 .vscode
 .ccls-cache
-.DS_Store
 compile_commands.json
 .cache
 .clang_complete
@@ -46,3 +45,6 @@ Tests/LibWeb/WPT/MANIFEST.json
 
 # Ensure that all files in /Base can be tracked, even if they match one of the above rules
 !/Base/**
+
+# Keep last to ensure .DS_Store is never tracked, even if otherwise allowed by any exception above.
+.DS_Store
