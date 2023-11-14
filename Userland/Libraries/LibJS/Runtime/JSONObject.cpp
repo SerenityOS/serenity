@@ -434,8 +434,6 @@ Value JSONObject::parse_json_value(VM& vm, JsonValue const& value)
         return Value(parse_json_array(vm, value.as_array()));
     if (value.is_null())
         return js_null();
-    if (value.is_i32())
-        return Value(value.as_i32());
     if (value.is_number())
         return Value(value.to_double(0));
     if (value.is_string())
