@@ -16,7 +16,7 @@ class TrueTypeFont : public SimpleFont {
 public:
     Optional<float> get_glyph_width(u8 char_code) const override;
     void set_font_size(float font_size) override;
-    PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8, Color) override;
+    PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8, Renderer const&) override;
 
     DeprecatedFlyString base_font_name() const { return m_base_font_name; }
 

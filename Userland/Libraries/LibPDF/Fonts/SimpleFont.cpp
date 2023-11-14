@@ -48,8 +48,6 @@ PDFErrorOr<void> SimpleFont::initialize(Document* document, NonnullRefPtr<DictOb
 
 PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Renderer const& renderer)
 {
-    Color const& paint_color = renderer.state().paint_color;
-
     auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
     auto font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size;
 
@@ -68,7 +66,7 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         else
             glyph_width = m_missing_width; // FIXME: times m_font_matrix.x_scale() probably?
 
-        TRY(draw_glyph(painter, glyph_position, glyph_width, char_code, paint_color));
+        TRY(draw_glyph(painter, glyph_position, glyph_width, char_code, renderer));
 
         auto tx = glyph_width;
         tx += character_spacing;

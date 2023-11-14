@@ -18,7 +18,7 @@ public:
 protected:
     PDFErrorOr<void> initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size) override;
     virtual Optional<float> get_glyph_width(u8 char_code) const = 0;
-    virtual PDFErrorOr<void> draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color) = 0;
+    virtual PDFErrorOr<void> draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const&) = 0;
     RefPtr<Encoding>& encoding() { return m_encoding; }
     RefPtr<Encoding> const& encoding() const { return m_encoding; }
 
