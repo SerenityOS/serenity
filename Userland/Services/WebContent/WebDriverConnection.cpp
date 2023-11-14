@@ -247,9 +247,9 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' is not a Boolean", key));
         return property->as_bool();
     } else if constexpr (IsSame<PropertyType, u32>) {
-        if (!property->is_u32())
+        if (!property->is_integer<u32>())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' is not a Number", key));
-        return property->as_u32();
+        return property->to_u32();
     } else if constexpr (IsSame<PropertyType, JsonArray const*>) {
         if (!property->is_array())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, ByteString::formatted("Property '{}' is not an Array", key));

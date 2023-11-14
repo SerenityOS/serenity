@@ -162,16 +162,16 @@ inline void JsonValue::serialize(Builder& builder) const
         break;
 #endif
     case Type::Int32:
-        builder.appendff("{}", as_i32());
+        builder.appendff("{}", m_value.as_i32);
         break;
     case Type::Int64:
-        builder.appendff("{}", as_i64());
+        builder.appendff("{}", m_value.as_i64);
         break;
     case Type::UnsignedInt32:
-        builder.appendff("{}", as_u32());
+        builder.appendff("{}", m_value.as_u32);
         break;
     case Type::UnsignedInt64:
-        builder.appendff("{}", as_u64());
+        builder.appendff("{}", m_value.as_u64);
         break;
     case Type::Null:
         builder.append("null"sv);
