@@ -64,8 +64,8 @@ void FavoritesPanel::load_favorites()
     Vector<GUI::JsonArrayModel::FieldSpec> favorites_fields;
     favorites_fields.empend("name", "Name"_string, Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) -> GUI::Variant {
         DeprecatedString name = object.get_deprecated_string("name"sv).release_value();
-        double latitude = object.get_double("latitude"sv).release_value();
-        double longitude = object.get_double("longitude"sv).release_value();
+        double latitude = object.get_double_with_precision_loss("latitude"sv).release_value();
+        double longitude = object.get_double_with_precision_loss("longitude"sv).release_value();
         return DeprecatedString::formatted("{}\n{:.5}, {:.5}", name, latitude, longitude);
     });
     favorites_fields.empend("latitude", "Latitude"_string, Gfx::TextAlignment::CenterLeft);

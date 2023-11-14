@@ -85,8 +85,8 @@ public:
     Optional<JsonArray const&> get_array(StringView key) const;
 
 #if !defined(KERNEL)
-    Optional<double> get_double(StringView key) const;
-    Optional<float> get_float(StringView key) const;
+    Optional<double> get_double_with_precision_loss(StringView key) const;
+    Optional<float> get_float_with_precision_loss(StringView key) const;
 #endif
 
     void set(DeprecatedString const& key, JsonValue value);
