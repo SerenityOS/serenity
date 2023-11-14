@@ -210,15 +210,15 @@ static ErrorOr<String> generate_initializer_for(Optional<StringView> property_na
 
         return String::formatted(R"~~~("{}"_string)~~~", TRY(escape_string(value)));
     }
-    // No need to handle the smaller integer types separately.
-    if (value.is_integer<i64>())
-        return String::formatted("static_cast<i64>({})", value.as_integer<i64>());
-    if (value.is_integer<u64>())
-        return String::formatted("static_cast<u64>({})", value.as_integer<u64>());
     if (value.is_bool())
         return String::formatted("{}", value.as_bool());
-    if (value.is_double())
-        return String::formatted("static_cast<double>({})", value.as_double());
+    if (value.is_number()) {
+        return value.as_number().visit(
+            // NOTE: Passing by mutable reference here in order to disallow implicit casts.
+            [](u64& value) { return String::formatted("static_cast<u64>({})", value); },
+            [](i64& value) { return String::formatted("static_cast<i64>({})", value); },
+            [](double& value) { return String::formatted("static_cast<double>({})", value); });
+    }
     if (value.is_array()) {
         auto const& array = value.as_array();
         auto child_type = Optional<StringView> {};
