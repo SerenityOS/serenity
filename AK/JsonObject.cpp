@@ -135,19 +135,19 @@ Optional<JsonArray const&> JsonObject::get_array(StringView key) const
 }
 
 #if !defined(KERNEL)
-Optional<double> JsonObject::get_double(StringView key) const
+Optional<double> JsonObject::get_double_with_precision_loss(StringView key) const
 {
     auto maybe_value = get(key);
-    if (maybe_value.has_value() && maybe_value->is_double())
-        return maybe_value->as_double();
+    if (maybe_value.has_value() && maybe_value->is_number())
+        return maybe_value->to_number<double>();
     return {};
 }
 
-Optional<float> JsonObject::get_float(StringView key) const
+Optional<float> JsonObject::get_float_with_precision_loss(StringView key) const
 {
     auto maybe_value = get(key);
-    if (maybe_value.has_value() && maybe_value->is_double())
-        return static_cast<float>(maybe_value->as_double());
+    if (maybe_value.has_value() && maybe_value->is_number())
+        return maybe_value->to_number<float>();
     return {};
 }
 #endif
