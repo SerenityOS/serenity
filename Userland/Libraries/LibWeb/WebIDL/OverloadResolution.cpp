@@ -186,7 +186,7 @@ JS::ThrowCompletionOr<ResolvedOverload> resolve_overload(JS::VM& vm, IDL::Effect
         //    then remove from S all other entries.
         else if (value.is_object() && is<JS::ArrayBuffer>(value.as_object())
             && has_overload_with_argument_type_or_subtype_matching(overloads, i, [](IDL::Type const& type) {
-                   if (type.is_plain() && type.name() == "ArrayBuffer")
+                   if (type.is_plain() && (type.name() == "ArrayBuffer" || type.name() == "BufferSource"))
                        return true;
                    if (type.is_object())
                        return true;
@@ -204,7 +204,7 @@ JS::ThrowCompletionOr<ResolvedOverload> resolve_overload(JS::VM& vm, IDL::Effect
         //    then remove from S all other entries.
         else if (value.is_object() && is<JS::DataView>(value.as_object())
             && has_overload_with_argument_type_or_subtype_matching(overloads, i, [](IDL::Type const& type) {
-                   if (type.is_plain() && type.name() == "DataView")
+                   if (type.is_plain() && (type.name() == "DataView" || type.name() == "BufferSource"))
                        return true;
                    if (type.is_object())
                        return true;
@@ -222,7 +222,7 @@ JS::ThrowCompletionOr<ResolvedOverload> resolve_overload(JS::VM& vm, IDL::Effect
         //    then remove from S all other entries.
         else if (value.is_object() && value.as_object().is_typed_array()
             && has_overload_with_argument_type_or_subtype_matching(overloads, i, [&](IDL::Type const& type) {
-                   if (type.is_plain() && type.name() == static_cast<JS::TypedArrayBase const&>(value.as_object()).element_name())
+                   if (type.is_plain() && (type.name() == static_cast<JS::TypedArrayBase const&>(value.as_object()).element_name() || type.name() == "BufferSource"))
                        return true;
                    if (type.is_object())
                        return true;
