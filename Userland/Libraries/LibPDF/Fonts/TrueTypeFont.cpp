@@ -17,6 +17,8 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
 {
     TRY(SimpleFont::initialize(document, dict, font_size));
 
+    m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
+
     // If there's an embedded font program we use that; otherwise we try to find a replacement font
     if (dict->contains(CommonNames::FontDescriptor)) {
         auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));

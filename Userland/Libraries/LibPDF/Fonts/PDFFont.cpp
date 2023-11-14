@@ -54,9 +54,8 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
     return font.release_nonnull();
 }
 
-PDFErrorOr<void> PDFFont::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float)
+PDFErrorOr<void> PDFFont::initialize(Document*, NonnullRefPtr<DictObject> const&, float)
 {
-    m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
     return {};
 }
 

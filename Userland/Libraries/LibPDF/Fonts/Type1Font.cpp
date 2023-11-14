@@ -17,6 +17,8 @@ PDFErrorOr<void> Type1Font::initialize(Document* document, NonnullRefPtr<DictObj
 {
     TRY(SimpleFont::initialize(document, dict, font_size));
 
+    m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
+
     // auto is_standard_font = is_standard_latin_font(font->base_font_name());
 
     // If there's an embedded font program we use that; otherwise we try to find a replacement font
