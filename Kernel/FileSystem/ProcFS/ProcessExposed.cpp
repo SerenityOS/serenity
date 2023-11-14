@@ -6,7 +6,6 @@
 
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
 #include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/ProcFS/Inode.h>
