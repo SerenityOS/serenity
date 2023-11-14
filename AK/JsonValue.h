@@ -118,30 +118,6 @@ public:
         return as_bool();
     }
 
-    i32 as_i32() const
-    {
-        VERIFY(is_i32());
-        return m_value.as_i32;
-    }
-
-    u32 as_u32() const
-    {
-        VERIFY(is_u32());
-        return m_value.as_u32;
-    }
-
-    i64 as_i64() const
-    {
-        VERIFY(is_i64());
-        return m_value.as_i64;
-    }
-
-    u64 as_u64() const
-    {
-        VERIFY(is_u64());
-        return m_value.as_u64;
-    }
-
     bool as_bool() const
     {
         VERIFY(is_bool());
@@ -217,15 +193,15 @@ public:
     T to_number(T default_value = 0) const
     {
         if (is_double())
-            return (T)as_double();
+            return (T)m_value.as_double;
         if (type() == Type::Int32)
-            return (T)as_i32();
+            return (T)m_value.as_i32;
         if (type() == Type::UnsignedInt32)
-            return (T)as_u32();
+            return (T)m_value.as_u32;
         if (type() == Type::Int64)
-            return (T)as_i64();
+            return (T)m_value.as_i64;
         if (type() == Type::UnsignedInt64)
-            return (T)as_u64();
+            return (T)m_value.as_u64;
         return default_value;
     }
 

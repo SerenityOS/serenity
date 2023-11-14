@@ -99,8 +99,11 @@ TEST_CASE(json_64_bit_value)
 {
     auto big_value = 0x12345678aabbccddull;
     JsonValue big_json_value(big_value);
+    EXPECT(big_json_value.is_integer<u64>());
+    EXPECT_EQ(big_json_value.as_integer<u64>(), big_value);
+
     JsonValue big_json_value_copy = big_json_value;
-    EXPECT_EQ(big_json_value.as_u64(), big_json_value_copy.as_u64());
+    EXPECT(big_json_value.equals(big_json_value_copy));
 }
 
 TEST_CASE(json_duplicate_keys)
@@ -118,7 +121,7 @@ TEST_CASE(json_u64_roundtrip)
     auto json = JsonValue(big_value).serialized<StringBuilder>();
     auto value = JsonValue::from_string(json);
     EXPECT_EQ_FORCE(value.is_error(), false);
-    EXPECT_EQ(value.value().as_u64(), big_value);
+    EXPECT_EQ(value.value().as_integer<u64>(), big_value);
 }
 
 TEST_CASE(json_parse_empty_string)
