@@ -1,6 +1,7 @@
 #import <SVG/SVGAnimatedLength.idl>
 #import <SVG/SVGElement.idl>
 #import <SVG/SVGGraphicsElement.idl>
+#import <SVG/SVGURIReference.idl>
 
 // https://svgwg.org/svg2-draft/struct.html#InterfaceSVGUseElement
 [Exposed=Window]
@@ -13,4 +14,4 @@ interface SVGUseElement : SVGGraphicsElement {
   [SameObject] readonly attribute SVGElement? animatedInstanceRoot;
 };
 
-// FIXME: SVGUseElement includes SVGURIReference;
+SVGUseElement includes SVGURIReference;

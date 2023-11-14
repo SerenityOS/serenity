@@ -11,10 +11,13 @@
 #include <LibWeb/DOM/DocumentObserver.h>
 #include <LibWeb/SVG/SVGAnimatedLength.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
+#include <LibWeb/SVG/SVGURIReference.h>
 
 namespace Web::SVG {
 
-class SVGUseElement final : public SVGGraphicsElement {
+class SVGUseElement final
+    : public SVGGraphicsElement
+    , public SVGURIReferenceMixin<SupportsXLinkHref::Yes> {
     WEB_PLATFORM_OBJECT(SVGUseElement, SVGGraphicsElement);
     JS_DECLARE_ALLOCATOR(SVGUseElement);
 
