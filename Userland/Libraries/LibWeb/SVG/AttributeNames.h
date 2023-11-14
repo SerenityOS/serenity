@@ -90,6 +90,7 @@ namespace Web::SVG::AttributeNames {
     E(x1)                           \
     E(x2)                           \
     E(xChannelSelector)             \
+    E(xlink_href)                   \
     E(y)                            \
     E(y1)                           \
     E(y2)                           \
