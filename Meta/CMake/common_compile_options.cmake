@@ -25,6 +25,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     add_compile_options(-Wno-implicit-const-int-float-conversion)
     add_compile_options(-Wno-user-defined-literals)
     add_compile_options(-Wno-vla-cxx-extension)
+    
+    # Fixes rounding problems on macOS/Clang
+    add_compile_options(-ffast-math)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Only ignore expansion-to-defined for g++, clang's implementation doesn't complain about function-like macros
     add_compile_options(-Wno-expansion-to-defined)
