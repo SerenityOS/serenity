@@ -764,11 +764,11 @@ size_t property_maximum_value_count(PropertyID property_id)
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         if (value.as_object().has("max-values"sv)) {
-            auto max_values = value.as_object().get("max-values"sv);
-            VERIFY(max_values.has_value() && max_values->is_number() && !max_values->is_double());
+            JsonValue max_values = value.as_object().get("max-values"sv).release_value();
+            VERIFY(max_values.is_integer<size_t>());
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));
-            property_generator.set("max_values", max_values->template serialized<StringBuilder>());
+            property_generator.set("max_values", MUST(String::formatted("{}", max_values.as_integer<size_t>())));
             property_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
         return @max_values@;
