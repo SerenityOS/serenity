@@ -802,12 +802,10 @@ PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
     if (!text_state().font)
         return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");
 
-    auto& text_rendering_matrix = calculate_text_rendering_matrix();
-
-    auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
+    auto const& text_rendering_matrix = calculate_text_rendering_matrix();
 
     auto start_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
-    auto end_position = TRY(text_state().font->draw_string(m_painter, start_position, string, state().paint_color, font_size, text_state().character_spacing * text_rendering_matrix.x_scale(), text_state().word_spacing * text_rendering_matrix.x_scale(), text_state().horizontal_scaling));
+    auto end_position = TRY(text_state().font->draw_string(m_painter, start_position, string, *this));
 
     // Update text matrix
     auto delta_x = end_position.x() - start_position.x();
@@ -983,7 +981,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(No
     return ColorSpace::create(m_document, color_space_object);
 }
 
-Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()
+Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
 {
     if (m_text_rendering_matrix_is_dirty) {
         m_text_rendering_matrix = Gfx::AffineTransform(
