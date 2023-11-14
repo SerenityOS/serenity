@@ -39,18 +39,6 @@ static bool contains_only_http_quoted_string_token_code_points(StringView string
     return true;
 }
 
-MimeType::MimeType(String type, String subtype)
-    : m_type(move(type))
-    , m_subtype(move(subtype))
-{
-    // https://mimesniff.spec.whatwg.org/#parameters
-    // A MIME type’s parameters is an ordered map whose keys are ASCII strings and values are strings limited to HTTP quoted-string token code points.
-    VERIFY(contains_only_http_quoted_string_token_code_points(type));
-    VERIFY(contains_only_http_quoted_string_token_code_points(subtype));
-}
-
-MimeType::~MimeType() = default;
-
 static bool contains_only_http_token_code_points(StringView string)
 {
     // https://mimesniff.spec.whatwg.org/#http-token-code-point
@@ -63,6 +51,19 @@ static bool contains_only_http_token_code_points(StringView string)
     }
     return true;
 }
+
+MimeType::MimeType(String type, String subtype)
+    : m_type(move(type))
+    , m_subtype(move(subtype))
+{
+    // NOTE: type and subtype are expected to be non-empty and contain only
+    // http token code points in the MIME type parsing algorithm. That's
+    // why we are performing the same checks here.
+    VERIFY(!m_type.is_empty() && contains_only_http_token_code_points(m_type));
+    VERIFY(!m_subtype.is_empty() && contains_only_http_token_code_points(m_subtype));
+}
+
+MimeType::~MimeType() = default;
 
 ErrorOr<MimeType> MimeType::create(String type, String value)
 {
