@@ -317,7 +317,7 @@ Optional<CSSPixels> FormattingContext::compute_auto_height_for_absolutely_positi
     // NOTE: For anything else, we use the fit-content height.
     //       This should eventually be replaced by the new absolute positioning model:
     //       https://www.w3.org/TR/css-position-3/#abspos-layout
-    return calculate_fit_content_height(box, available_space);
+    return calculate_fit_content_height(box, m_state.get(box).available_inner_space_or_constraints_from(available_space));
 }
 
 // https://www.w3.org/TR/CSS22/visudet.html#root-height
