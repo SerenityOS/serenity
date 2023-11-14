@@ -17,7 +17,6 @@ public:
     Optional<float> get_glyph_width(u8 char_code) const override;
     void set_font_size(float font_size) override;
     void draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8, Color) override;
-    Type type() const override { return PDFFont::Type::TrueType; }
 
 protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float font_size) override;
