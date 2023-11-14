@@ -235,7 +235,8 @@ static ErrorOr<String> generate_initializer_for(Optional<StringView> property_na
             HANDLE_TYPE(i64, is_integer<i64>)
             HANDLE_TYPE(u64, is_integer<u64>)
             HANDLE_TYPE(bool, is_bool)
-            HANDLE_TYPE(double, is_double)
+            // FIXME: Do we want to allow precision loss when C++ compiler parses these doubles?
+            HANDLE_TYPE(double, is_number)
             return Error::from_string_view("Inconsistent contained type in JSON array"sv);
 #undef HANDLE_TYPE
         }

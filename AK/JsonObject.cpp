@@ -241,14 +241,6 @@ bool JsonObject::has_object(StringView key) const
     return value.has_value() && value->is_object();
 }
 
-#ifndef KERNEL
-bool JsonObject::has_double(StringView key) const
-{
-    auto value = get(key);
-    return value.has_value() && value->is_double();
-}
-#endif
-
 void JsonObject::set(ByteString const& key, JsonValue value)
 {
     m_members.set(key, move(value));

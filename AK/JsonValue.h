@@ -182,11 +182,6 @@ public:
     bool is_null() const { return m_type == Type::Null; }
     bool is_bool() const { return m_type == Type::Bool; }
     bool is_string() const { return m_type == Type::String; }
-    bool is_i32() const { return m_type == Type::Int32; }
-    bool is_u32() const { return m_type == Type::UnsignedInt32; }
-    bool is_i64() const { return m_type == Type::Int64; }
-    bool is_u64() const { return m_type == Type::UnsignedInt64; }
-    bool is_double() const { return m_type == Type::Double; }
     bool is_array() const { return m_type == Type::Array; }
     bool is_object() const { return m_type == Type::Object; }
     bool is_number() const
@@ -206,7 +201,7 @@ public:
     template<typename T>
     T to_number(T default_value = 0) const
     {
-        if (is_double())
+        if (type() == Type::Double)
             return (T)m_value.as_double;
         if (type() == Type::Int32)
             return (T)m_value.as_i32;

@@ -51,9 +51,6 @@ public:
     [[nodiscard]] bool has_number(StringView key) const;
     [[nodiscard]] bool has_array(StringView key) const;
     [[nodiscard]] bool has_object(StringView key) const;
-#ifndef KERNEL
-    [[nodiscard]] bool has_double(StringView key) const;
-#endif
 
     Optional<JsonValue const&> get(StringView key) const;
 
