@@ -53,7 +53,7 @@ void Type3Font::set_font_size(float)
 {
 }
 
-PDFErrorOr<void> Type3Font::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8 char_code, Color)
+PDFErrorOr<void> Type3Font::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8 char_code, Renderer const&)
 {
     // "For each character code shown by a text-showing operator that uses a Type 3 font,
     //  the consumer application does the following:""

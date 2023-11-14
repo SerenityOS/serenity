@@ -10,6 +10,7 @@
 #include <LibPDF/Fonts/CFF.h>
 #include <LibPDF/Fonts/PS1FontProgram.h>
 #include <LibPDF/Fonts/Type1Font.h>
+#include <LibPDF/Renderer.h>
 
 namespace PDF {
 
@@ -64,8 +65,10 @@ void Type1Font::set_font_size(float font_size)
         m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
-PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color)
+PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
+    auto color = renderer.state().paint_color;
+
     if (!m_font_program) {
         // Account for the reversed font baseline
         auto position = point.translated(0, -m_font->baseline());
