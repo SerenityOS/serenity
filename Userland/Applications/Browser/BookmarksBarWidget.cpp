@@ -27,15 +27,20 @@ namespace Browser {
 
 namespace {
 
+enum class PerformEditOn {
+    NewBookmark,
+    ExistingBookmark
+};
+
 class BookmarkEditor final : public GUI::Dialog {
     C_OBJECT(BookmarkEditor)
 
 public:
     static Vector<JsonValue>
-    edit_bookmark(Window* parent_window, StringView title, StringView url, BookmarksBarWidget::PerformEditOn perform_edit_on)
+    edit_bookmark(Window* parent_window, StringView title, StringView url, PerformEditOn perform_edit_on)
     {
         auto editor = BookmarkEditor::construct(parent_window, title, url);
-        if (perform_edit_on == BookmarksBarWidget::PerformEditOn::NewBookmark) {
+        if (perform_edit_on == PerformEditOn::NewBookmark) {
             editor->set_title("Add Bookmark");
         } else {
             editor->set_title("Edit Bookmark");
