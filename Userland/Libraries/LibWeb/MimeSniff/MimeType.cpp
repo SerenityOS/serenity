@@ -64,6 +64,12 @@ MimeType::MimeType(String type, String subtype)
     VERIFY(!m_subtype.is_empty() && contains_only_http_token_code_points(m_subtype));
 }
 
+MimeType::MimeType(MimeType const& other) = default;
+MimeType& MimeType::operator=(MimeType const& other) = default;
+
+MimeType::MimeType(MimeType&& other) = default;
+MimeType& MimeType::operator=(MimeType&& other) = default;
+
 MimeType::~MimeType() = default;
 
 ErrorOr<MimeType> MimeType::create(String type, String subtype)

@@ -20,6 +20,12 @@ public:
     static ErrorOr<MimeType> create(String type, String subtype);
     static ErrorOr<Optional<MimeType>> parse(StringView);
 
+    MimeType(MimeType const&);
+    MimeType& operator=(MimeType const&);
+
+    MimeType(MimeType&&);
+    MimeType& operator=(MimeType&&);
+
     ~MimeType();
 
     String const& type() const { return m_type; }
