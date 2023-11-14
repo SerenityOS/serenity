@@ -2,6 +2,11 @@ import("//Ladybird/compile_qt_resource_file.gni")
 import("//Ladybird/link_qt.gni")
 import("//Ladybird/moc_qt_objects.gni")
 
+declare_args() {
+  # Build the Ladybird application using the Qt chrome.
+  enable_qt = current_os != "mac"
+}
+
 group("Ladybird") {
   if (current_os == "mac") {
     deps = [ ":Ladybird.app" ]
@@ -47,10 +52,7 @@ config("ladybird_config") {
 }
 
 executable("ladybird_executable") {
-  configs += [
-    ":ladybird_config",
-    ":ladybird_qt_components",
-  ]
+  configs += [ ":ladybird_config" ]
   data_deps = [
     ":headless-browser",
     "ImageDecoder",
@@ -61,8 +63,6 @@ executable("ladybird_executable") {
     "WebSocket",
   ]
   deps = [
-    ":compile_resource_file",
-    ":generate_moc",
     "//AK",
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibFileSystem",
@@ -79,25 +79,72 @@ executable("ladybird_executable") {
   ]
   sources = [
     "HelperProcess.cpp",
-    "Qt/AutoComplete.cpp",
-    "Qt/BrowserWindow.cpp",
-    "Qt/ConsoleWidget.cpp",
-    "Qt/EventLoopImplementationQt.cpp",
-    "Qt/EventLoopImplementationQtEventTarget.cpp",
-    "Qt/Icon.cpp",
-    "Qt/InspectorWidget.cpp",
-    "Qt/LocationEdit.cpp",
-    "Qt/Settings.cpp",
-    "Qt/SettingsDialog.cpp",
-    "Qt/StringUtils.cpp",
-    "Qt/TVGIconEngine.cpp",
-    "Qt/Tab.cpp",
-    "Qt/WebContentView.cpp",
-    "Qt/main.cpp",
     "Utilities.cpp",
   ]
-  sources += get_target_outputs(":generate_moc") +
-             get_target_outputs(":compile_resource_file")
+
+  if (enable_qt) {
+    configs += [ ":ladybird_qt_components" ]
+
+    sources += [
+      "Qt/AutoComplete.cpp",
+      "Qt/BrowserWindow.cpp",
+      "Qt/ConsoleWidget.cpp",
+      "Qt/EventLoopImplementationQt.cpp",
+      "Qt/EventLoopImplementationQtEventTarget.cpp",
+      "Qt/Icon.cpp",
+      "Qt/InspectorWidget.cpp",
+      "Qt/LocationEdit.cpp",
+      "Qt/Settings.cpp",
+      "Qt/SettingsDialog.cpp",
+      "Qt/StringUtils.cpp",
+      "Qt/TVGIconEngine.cpp",
+      "Qt/Tab.cpp",
+      "Qt/WebContentView.cpp",
+      "Qt/main.cpp",
+    ]
+
+    sources += get_target_outputs(":generate_moc") +
+               get_target_outputs(":compile_resource_file")
+
+    deps += [
+      ":compile_resource_file",
+      ":generate_moc",
+    ]
+  } else {
+    sources += [
+      "AppKit/Application/Application.mm",
+      "AppKit/Application/ApplicationDelegate.mm",
+      "AppKit/Application/EventLoopImplementation.mm",
+      "AppKit/UI/Console.mm",
+      "AppKit/UI/ConsoleController.mm",
+      "AppKit/UI/Event.mm",
+      "AppKit/UI/Inspector.mm",
+      "AppKit/UI/InspectorController.mm",
+      "AppKit/UI/LadybirdWebView.mm",
+      "AppKit/UI/LadybirdWebViewBridge.cpp",
+      "AppKit/UI/Palette.mm",
+      "AppKit/UI/Tab.mm",
+      "AppKit/UI/TabController.mm",
+      "AppKit/Utilities/Conversions.mm",
+      "AppKit/Utilities/NSString+Ladybird.mm",
+      "AppKit/main.mm",
+    ]
+
+    deps += [ "//Userland/Libraries/LibUnicode" ]
+
+    cflags_objcc = [
+      "-fobjc-arc",
+      "-Wno-deprecated-anon-enum-enum-conversion",  # Required for CGImageCreate
+    ]
+
+    include_dirs = [
+      "AppKit",
+      "//Userland",
+    ]
+
+    frameworks = [ "Cocoa.framework" ]
+  }
+
   output_name = "Ladybird"
 }
 
