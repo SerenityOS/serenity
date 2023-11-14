@@ -6,13 +6,14 @@
 
 #pragma once
 
+#ifdef KERNEL
+#    error "JsonValue does not propagate allocation failures, so it is not safe to use in the kernel."
+#endif
+
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
-
-#ifndef KERNEL
-#    include <AK/DeprecatedString.h>
-#endif
 
 namespace AK {
 
@@ -24,9 +25,7 @@ public:
         UnsignedInt32,
         Int64,
         UnsignedInt64,
-#if !defined(KERNEL)
         Double,
-#endif
         Bool,
         String,
         Array,
@@ -51,13 +50,9 @@ public:
     JsonValue(long long);
     JsonValue(long long unsigned);
 
-#if !defined(KERNEL)
     JsonValue(double);
-#endif
     JsonValue(char const*);
-#ifndef KERNEL
     JsonValue(DeprecatedString const&);
-#endif
     JsonValue(StringView);
 
     template<typename T>
@@ -83,7 +78,6 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-#ifndef KERNEL
     DeprecatedString as_string_or(DeprecatedString const& alternative) const
     {
         if (is_string())
@@ -97,25 +91,16 @@ public:
             return as_string();
         return serialized<StringBuilder>();
     }
-#endif
 
-    int to_int(int default_value = 0) const
-    {
-        return to_i32(default_value);
-    }
+    int to_int(int default_value = 0) const { return to_i32(default_value); }
     i32 to_i32(i32 default_value = 0) const { return to_number<i32>(default_value); }
     i64 to_i64(i64 default_value = 0) const { return to_number<i64>(default_value); }
 
     unsigned to_uint(unsigned default_value = 0) const { return to_u32(default_value); }
     u32 to_u32(u32 default_value = 0) const { return to_number<u32>(default_value); }
     u64 to_u64(u64 default_value = 0) const { return to_number<u64>(default_value); }
-#if !defined(KERNEL)
-    float to_float(float default_value = 0) const
-    {
-        return to_number<float>(default_value);
-    }
+    float to_float(float default_value = 0) const { return to_number<float>(default_value); }
     double to_double(double default_value = 0) const { return to_number<double>(default_value); }
-#endif
 
     FlatPtr to_addr(FlatPtr default_value = 0) const
     {
@@ -163,13 +148,11 @@ public:
         return m_value.as_bool;
     }
 
-#ifndef KERNEL
     DeprecatedString as_string() const
     {
         VERIFY(is_string());
         return *m_value.as_string;
     }
-#endif
 
     JsonObject& as_object()
     {
@@ -195,13 +178,11 @@ public:
         return *m_value.as_array;
     }
 
-#if !defined(KERNEL)
     double as_double() const
     {
         VERIFY(is_double());
         return m_value.as_double;
     }
-#endif
 
     Type type() const
     {
@@ -215,16 +196,8 @@ public:
     bool is_u32() const { return m_type == Type::UnsignedInt32; }
     bool is_i64() const { return m_type == Type::Int64; }
     bool is_u64() const { return m_type == Type::UnsignedInt64; }
-#if !defined(KERNEL)
-    bool is_double() const
-    {
-        return m_type == Type::Double;
-    }
-#endif
-    bool is_array() const
-    {
-        return m_type == Type::Array;
-    }
+    bool is_double() const { return m_type == Type::Double; }
+    bool is_array() const { return m_type == Type::Array; }
     bool is_object() const { return m_type == Type::Object; }
     bool is_number() const
     {
@@ -233,9 +206,7 @@ public:
         case Type::UnsignedInt32:
         case Type::Int64:
         case Type::UnsignedInt64:
-#if !defined(KERNEL)
         case Type::Double:
-#endif
             return true;
         default:
             return false;
@@ -245,10 +216,8 @@ public:
     template<typename T>
     T to_number(T default_value = 0) const
     {
-#if !defined(KERNEL)
         if (is_double())
             return (T)as_double();
-#endif
         if (type() == Type::Int32)
             return (T)as_i32();
         if (type() == Type::UnsignedInt32)
@@ -305,14 +274,10 @@ private:
     Type m_type { Type::Null };
 
     union {
-#ifndef KERNEL
         StringImpl* as_string { nullptr };
-#endif
         JsonArray* as_array;
         JsonObject* as_object;
-#if !defined(KERNEL)
         double as_double;
-#endif
         i32 as_i32;
         u32 as_u32;
         i64 as_i64;
@@ -321,7 +286,6 @@ private:
     } m_value;
 };
 
-#ifndef KERNEL
 template<>
 struct Formatter<JsonValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JsonValue const& value)
@@ -329,7 +293,6 @@ struct Formatter<JsonValue> : Formatter<StringView> {
         return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
-#endif
 
 }
 
