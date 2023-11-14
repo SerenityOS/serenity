@@ -51,11 +51,11 @@ private:
         O(In, in)                                               \
         O(InstanceOf, instance_of)
 
-#    define JS_ENUMERATE_COMPARISON_OPS(O)                           \
-        O(LessThan, less_than, SignedLessThan)                       \
-        O(LessThanEquals, less_than_equals, SignedLessThanOrEqualTo) \
-        O(GreaterThan, greater_than, SignedGreaterThan)              \
-        O(GreaterThanEquals, greater_than_equals, SignedGreaterThanOrEqualTo)
+#    define JS_ENUMERATE_COMPARISON_OPS(O)                                         \
+        O(LessThan, less_than, SignedLessThan, Below)                              \
+        O(LessThanEquals, less_than_equals, SignedLessThanOrEqualTo, BelowOrEqual) \
+        O(GreaterThan, greater_than, SignedGreaterThan, Above)                     \
+        O(GreaterThanEquals, greater_than_equals, SignedGreaterThanOrEqualTo, AboveOrEqual)
 
 #    define JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(O) \
         O(NewTypeError, new_type_error, TypeError)
@@ -198,7 +198,9 @@ private:
     void jump_if_not_double(Assembler::Reg reg, Assembler::Reg nan, Assembler::Reg temp, Assembler::Label&);
 
     template<typename CodegenI32, typename CodegenDouble, typename CodegenValue>
-    void branch_if_both_numbers(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32, CodegenDouble, CodegenValue);
+    void compile_binary_op_fastpaths(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32, CodegenDouble, CodegenValue);
+    template<typename CodegenI32, typename CodegenDouble, typename CodegenValue>
+    void compiler_comparison_fastpaths(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32, CodegenDouble, CodegenValue);
 
     explicit Compiler(Bytecode::Executable& bytecode_executable)
         : m_bytecode_executable(bytecode_executable)

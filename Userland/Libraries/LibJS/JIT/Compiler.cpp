@@ -391,7 +391,7 @@ void Compiler::convert_to_double(Assembler::Reg dst, Assembler::Reg src, Assembl
 }
 
 template<typename CodegenI32, typename CodegenDouble, typename CodegenValue>
-void Compiler::branch_if_both_numbers(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32 codegen_i32, CodegenDouble codegen_double, CodegenValue codegen_value)
+void Compiler::compile_binary_op_fastpaths(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32 codegen_i32, CodegenDouble codegen_double, CodegenValue codegen_value)
 {
     Assembler::Label end {};
     Assembler::Label slow_case {};
@@ -436,6 +436,37 @@ void Compiler::branch_if_both_numbers(Assembler::Reg lhs, Assembler::Reg rhs, Co
     m_assembler.mov(
         Assembler::Operand::Register(CACHED_ACCUMULATOR),
         Assembler::Operand::Register(nan_register));
+    m_assembler.jump(end);
+
+    slow_case.link(m_assembler);
+
+    // accumulator = TRY(op_value(lhs, rhs))
+    store_accumulator(codegen_value(lhs, rhs));
+    check_exception();
+    end.link(m_assembler);
+}
+
+template<typename CodegenI32, typename CodegenDouble, typename CodegenValue>
+void Compiler::compiler_comparison_fastpaths(Assembler::Reg lhs, Assembler::Reg rhs, CodegenI32 codegen_i32, CodegenDouble codegen_double, CodegenValue codegen_value)
+{
+    Assembler::Label end {};
+    Assembler::Label slow_case {};
+
+    // The only case where we can take the int32 fastpath
+    branch_if_both_int32(lhs, rhs, [&] {
+        store_accumulator(codegen_i32(lhs, rhs));
+
+        // accumulator |= SHIFTED_BOOLEAN_TAG;
+        m_assembler.jump(end);
+    });
+
+    // accumulator = op_double(lhs.to_double(), rhs.to_double())
+    auto temp_register = GPR0;
+    auto nan_register = GPR1;
+    m_assembler.mov(Assembler::Operand::Register(nan_register), Assembler::Operand::Imm(CANON_NAN_BITS));
+    convert_to_double(FPR0, ARG1, nan_register, temp_register, slow_case);
+    convert_to_double(FPR1, ARG2, nan_register, temp_register, slow_case);
+    store_accumulator(codegen_double(FPR0, FPR1));
     m_assembler.jump(end);
 
     slow_case.link(m_assembler);
@@ -989,7 +1020,7 @@ void Compiler::compile_add(Bytecode::Op::Add const& op)
     load_vm_register(ARG1, op.lhs());
     load_accumulator(ARG2);
 
-    branch_if_both_numbers(
+    compile_binary_op_fastpaths(
         ARG1, ARG2,
         [&](auto lhs, auto rhs, auto& slow_case) {
         m_assembler.add32(
@@ -1024,7 +1055,7 @@ void Compiler::compile_sub(Bytecode::Op::Sub const& op)
     load_vm_register(ARG1, op.lhs());
     load_accumulator(ARG2);
 
-    branch_if_both_numbers(
+    compile_binary_op_fastpaths(
         ARG1, ARG2,
         [&](auto lhs, auto rhs, auto& slow_case) {
             m_assembler.sub32(
@@ -1059,7 +1090,7 @@ void Compiler::compile_mul(Bytecode::Op::Mul const& op)
     load_vm_register(ARG1, op.lhs());
     load_accumulator(ARG2);
 
-    branch_if_both_numbers(
+    compile_binary_op_fastpaths(
         ARG1, ARG2,
         [&](auto lhs, auto rhs, auto& slow_case) {
             m_assembler.mul32(
@@ -1084,42 +1115,63 @@ void Compiler::compile_mul(Bytecode::Op::Mul const& op)
         });
 }
 
-#    define DO_COMPILE_COMPARISON_OP(TitleCaseName, snake_case_name, AssemblerCondition) \
-        static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                 \
-        {                                                                                \
-            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                  \
-        }                                                                                \
-                                                                                         \
-        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op)  \
-        {                                                                                \
-            load_vm_register(ARG1, op.lhs());                                            \
-            load_accumulator(ARG2);                                                      \
-                                                                                         \
-            Assembler::Label end {};                                                     \
-                                                                                         \
-            branch_if_both_int32(ARG1, ARG2, [&] {                                       \
-                m_assembler.sign_extend_32_to_64_bits(ARG1);                             \
-                m_assembler.sign_extend_32_to_64_bits(ARG2);                             \
-                                                                                         \
-                /* accumulator = SHIFTED_BOOLEAN_TAG | (arg1 condition arg2) */          \
-                m_assembler.mov(                                                         \
-                    Assembler::Operand::Register(GPR0),                                  \
-                    Assembler::Operand::Imm(SHIFTED_BOOLEAN_TAG));                       \
-                m_assembler.cmp(                                                         \
-                    Assembler::Operand::Register(ARG1),                                  \
-                    Assembler::Operand::Register(ARG2));                                 \
-                m_assembler.set_if(                                                      \
-                    Assembler::Condition::AssemblerCondition,                            \
-                    Assembler::Operand::Register(GPR0)); /* sets only first byte */      \
-                store_accumulator(GPR0);                                                 \
-                                                                                         \
-                m_assembler.jump(end);                                                   \
-            });                                                                          \
-                                                                                         \
-            native_call((void*)cxx_##snake_case_name);                                   \
-            store_accumulator(RET);                                                      \
-            check_exception();                                                           \
-            end.link(m_assembler);                                                       \
+#    define DO_COMPILE_COMPARISON_OP(TitleCaseName, snake_case_name, IntegerCondition, FloatCondition) \
+        static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                               \
+        {                                                                                              \
+            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                                \
+        }                                                                                              \
+                                                                                                       \
+        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op)                \
+        {                                                                                              \
+            load_vm_register(ARG1, op.lhs());                                                          \
+            load_accumulator(ARG2);                                                                    \
+                                                                                                       \
+            compiler_comparison_fastpaths(                                                             \
+                ARG1, ARG2,                                                                            \
+                [&](auto lhs, auto rhs) {                                                              \
+                    m_assembler.sign_extend_32_to_64_bits(lhs);                                        \
+                    m_assembler.sign_extend_32_to_64_bits(rhs);                                        \
+                                                                                                       \
+                    /* accumulator = SHIFTED_BOOLEAN_TAG | (arg1 condition arg2) */                    \
+                    m_assembler.mov(                                                                   \
+                        Assembler::Operand::Register(GPR0),                                            \
+                        Assembler::Operand::Imm(SHIFTED_BOOLEAN_TAG));                                 \
+                    m_assembler.cmp(                                                                   \
+                        Assembler::Operand::Register(lhs),                                             \
+                        Assembler::Operand::Register(rhs));                                            \
+                    m_assembler.set_if(                                                                \
+                        Assembler::Condition::IntegerCondition,                                        \
+                        Assembler::Operand::Register(GPR0)); /* sets only first byte */                \
+                    return GPR0;                                                                       \
+                },                                                                                     \
+                [&](auto lhs, auto rhs) {                                                              \
+                    Assembler::Label is_nan;                                                           \
+                    /* accumulator = SHIFTED_BOOLEAN_TAG | (arg1 condition arg2) */                    \
+                    m_assembler.mov(                                                                   \
+                        Assembler::Operand::Register(GPR0),                                            \
+                        Assembler::Operand::Imm(SHIFTED_BOOLEAN_TAG));                                 \
+                    m_assembler.cmp(                                                                   \
+                        Assembler::Operand::FloatRegister(lhs),                                        \
+                        Assembler::Operand::FloatRegister(rhs));                                       \
+                    m_assembler.jump_if(                                                               \
+                        Assembler::Condition::Unordered,                                               \
+                        is_nan);                                                                       \
+                    m_assembler.set_if(                                                                \
+                        Assembler::Condition::FloatCondition,                                          \
+                        Assembler::Operand::Register(GPR0)); /* sets only first byte */                \
+                    is_nan.link(m_assembler);                                                          \
+                    return GPR0;                                                                       \
+                },                                                                                     \
+                [&](auto lhs, auto rhs) {                                                              \
+                    m_assembler.mov(                                                                   \
+                        Assembler::Operand::Register(ARG1),                                            \
+                        Assembler::Operand::Register(lhs));                                            \
+                    m_assembler.mov(                                                                   \
+                        Assembler::Operand::Register(ARG2),                                            \
+                        Assembler::Operand::Register(rhs));                                            \
+                    native_call((void*)cxx_##snake_case_name);                                         \
+                    return RET;                                                                        \
+                });                                                                                    \
         }
 
 JS_ENUMERATE_COMPARISON_OPS(DO_COMPILE_COMPARISON_OP)
