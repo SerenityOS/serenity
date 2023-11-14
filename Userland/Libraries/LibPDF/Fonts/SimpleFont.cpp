@@ -58,7 +58,7 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         else
             glyph_width = m_missing_width;
 
-        draw_glyph(painter, glyph_position, glyph_width, char_code, paint_color);
+        TRY(draw_glyph(painter, glyph_position, glyph_width, char_code, paint_color));
 
         auto tx = glyph_width;
         tx += character_spacing;

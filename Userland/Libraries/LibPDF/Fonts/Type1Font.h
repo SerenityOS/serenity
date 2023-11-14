@@ -24,7 +24,7 @@ class Type1Font : public SimpleFont {
 public:
     Optional<float> get_glyph_width(u8 char_code) const override;
     void set_font_size(float font_size) override;
-    void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color) override;
+    PDFErrorOr<void> draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color) override;
 
 protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float font_size) override;
