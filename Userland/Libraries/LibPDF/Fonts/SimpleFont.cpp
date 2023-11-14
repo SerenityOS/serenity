@@ -11,6 +11,7 @@
 #include <LibPDF/Fonts/SimpleFont.h>
 #include <LibPDF/Fonts/TrueTypeFont.h>
 #include <LibPDF/Fonts/Type1Font.h>
+#include <LibPDF/Renderer.h>
 
 namespace PDF {
 
@@ -45,8 +46,17 @@ PDFErrorOr<void> SimpleFont::initialize(Document* document, NonnullRefPtr<DictOb
     return {};
 }
 
-PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Color const& paint_color, float font_size, float character_spacing, float word_spacing, float horizontal_scaling)
+PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Renderer const& renderer)
 {
+    Color const& paint_color = renderer.state().paint_color;
+
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    auto font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size;
+
+    auto character_spacing = text_rendering_matrix.x_scale() * renderer.text_state().character_spacing;
+    auto word_spacing = text_rendering_matrix.x_scale() * renderer.text_state().word_spacing;
+    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+
     for (auto char_code : string.bytes()) {
         // Use the width specified in the font's dictionary if available,
         // and use the default width for the given font otherwise.

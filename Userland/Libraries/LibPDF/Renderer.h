@@ -107,6 +107,10 @@ public:
         bool operator==(FontCacheKey const&) const = default;
     };
 
+    ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
+    ALWAYS_INLINE TextState const& text_state() const { return state().text_state; }
+
+    Gfx::AffineTransform const& calculate_text_rendering_matrix() const;
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences);
 
@@ -130,9 +134,7 @@ private:
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>);
 
-    ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
-    ALWAYS_INLINE TextState const& text_state() const { return state().text_state; }
     ALWAYS_INLINE TextState& text_state() { return state().text_state; }
 
     template<typename T>
@@ -144,7 +146,6 @@ private:
     template<typename T>
     ALWAYS_INLINE Gfx::Rect<T> map(Gfx::Rect<T>) const;
 
-    Gfx::AffineTransform const& calculate_text_rendering_matrix();
     Gfx::AffineTransform calculate_image_space_transformation(int width, int height);
 
     PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&, Optional<NonnullRefPtr<DictObject>> extra_resources);
@@ -161,8 +162,8 @@ private:
     Gfx::AffineTransform m_text_matrix;
     Gfx::AffineTransform m_text_line_matrix;
 
-    bool m_text_rendering_matrix_is_dirty { true };
-    Gfx::AffineTransform m_text_rendering_matrix;
+    bool mutable m_text_rendering_matrix_is_dirty { true };
+    Gfx::AffineTransform mutable m_text_rendering_matrix;
 
     HashMap<FontCacheKey, NonnullRefPtr<PDFFont>> m_font_cache;
 };
