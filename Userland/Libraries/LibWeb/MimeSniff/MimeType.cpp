@@ -65,9 +65,9 @@ MimeType::MimeType(String type, String subtype)
 
 MimeType::~MimeType() = default;
 
-ErrorOr<MimeType> MimeType::create(String type, String value)
+ErrorOr<MimeType> MimeType::create(String type, String subtype)
 {
-    auto mime_type = MimeType { move(type), move(value) };
+    auto mime_type = MimeType { move(type), move(subtype) };
     mime_type.m_cached_essence = TRY(String::formatted("{}/{}", mime_type.m_type, mime_type.m_subtype));
     return mime_type;
 }
