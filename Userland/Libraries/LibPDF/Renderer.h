@@ -150,6 +150,8 @@ private:
 
     PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&);
 
+    class ScopedState;
+
     RefPtr<Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
     Page const& m_page;

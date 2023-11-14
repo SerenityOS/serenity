@@ -21,6 +21,30 @@
 
 namespace PDF {
 
+// Use a RAII object to restore the graphics state, to make sure it gets restored even if
+// a TRY(handle_operator()) causes us to exit the operators loop early.
+// Explicitly resize stack size at the end so that if the recursive document contains
+// `q q unsupportedop Q Q`, we undo the stack pushes from the inner `q q` even if
+// `unsupportedop` terminates processing the inner instruction stream before `Q Q`
+// would normally pop state.
+class Renderer::ScopedState {
+public:
+    ScopedState(Renderer& renderer)
+        : m_renderer(renderer)
+        , m_starting_stack_depth(m_renderer.m_graphics_state_stack.size())
+    {
+        MUST(m_renderer.handle_save_state({}));
+    }
+    ~ScopedState()
+    {
+        m_renderer.m_graphics_state_stack.shrink(m_starting_stack_depth);
+    }
+
+private:
+    Renderer& m_renderer;
+    size_t m_starting_stack_depth;
+};
+
 PDFErrorsOr<void> Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, RenderingPreferences rendering_preferences)
 {
     return Renderer(document, page, bitmap, rendering_preferences).render();
@@ -655,29 +679,6 @@ RENDERER_HANDLER(paint_xobject)
         return {};
     }
 
-    // Use a RAII object to restore the graphics state, to make sure it gets restored even if
-    // a TRY(handle_operator()) causes us to exit the operators loop early.
-    // Explicitly resize stack size at the end so that if the recursive document contains
-    // `q q unsupportedop Q Q`, we undo the stack pushes from the inner `q q` even if
-    // `unsupportedop` terminates processing the inner instruction stream before `Q Q`
-    // would normally pop state.
-    class ScopedState {
-    public:
-        ScopedState(Renderer& renderer)
-            : m_renderer(renderer)
-            , m_starting_stack_depth(m_renderer.m_graphics_state_stack.size())
-        {
-            MUST(m_renderer.handle_save_state({}));
-        }
-        ~ScopedState()
-        {
-            m_renderer.m_graphics_state_stack.shrink(m_starting_stack_depth);
-        }
-
-    private:
-        Renderer& m_renderer;
-        size_t m_starting_stack_depth;
-    };
     ScopedState scoped_state { *this };
 
     Vector<Value> matrix;
