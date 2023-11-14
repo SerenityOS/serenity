@@ -244,15 +244,16 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
     };
 
     // Potential font width parsing for some commands (type2 only)
-    bool is_first_command = true;
     enum EvenOrOdd {
         Even,
         Odd
     };
     auto maybe_read_width = [&](EvenOrOdd required_argument_count) {
-        if (!is_type2 || !is_first_command || state.sp % 2 != required_argument_count)
+        if (!is_type2 || !state.is_first_command)
             return;
-        state.glyph.set_width(pop_front());
+        state.is_first_command = false;
+        if (state.sp % 2 == required_argument_count)
+            state.glyph.set_width(pop_front());
     };
 
     // Parse the stream of parameters and commands that make up a glyph outline.
@@ -717,8 +718,6 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 dbgln("Unhandled command: {}", v);
                 return error("Unhandled command");
             }
-
-            is_first_command = false;
         }
     }
 

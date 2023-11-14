@@ -79,6 +79,8 @@ protected:
 
         size_t postscript_sp { 0 };
         Array<float, 24> postscript_stack;
+
+        bool is_first_command { true };
     };
 
     static PDFErrorOr<Glyph> parse_glyph(ReadonlyBytes const&, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines, GlyphParserState&, bool is_type2);
