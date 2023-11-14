@@ -520,17 +520,20 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
     Vector<Operator> operators;
     Vector<Value> operator_args;
 
-    constexpr static auto is_operator_char = [](char ch) {
+    constexpr static auto is_operator_char_start = [](char ch) {
         return isalpha(ch) || ch == '*' || ch == '\'' || ch == '"';
+    };
+    constexpr static auto is_operator_char_continuation = [](char ch) {
+        return is_operator_char_start(ch) || ch == '0' || ch == '1';
     };
 
     m_reader.consume_whitespace();
 
     while (!m_reader.done()) {
         auto ch = m_reader.peek();
-        if (is_operator_char(ch)) {
+        if (is_operator_char_start(ch)) {
             auto operator_start = m_reader.offset();
-            while (is_operator_char(ch)) {
+            while (is_operator_char_continuation(ch)) {
                 m_reader.consume();
                 if (m_reader.done())
                     break;
