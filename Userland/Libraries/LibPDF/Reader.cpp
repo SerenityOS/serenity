@@ -9,14 +9,25 @@
 
 namespace PDF {
 
+bool Reader::is_eol(char c)
+{
+    return c == 0xa || c == 0xd;
+}
+
+bool Reader::is_whitespace(char c)
+{
+    // 3.1.1 Character Set
+    return is_eol(c) || c == 0 || c == 0x9 || c == 0xc || c == ' ';
+}
+
 bool Reader::matches_eol() const
 {
-    return matches_any(0xa, 0xd);
+    return !done() && is_eol(peek());
 }
 
 bool Reader::matches_whitespace() const
 {
-    return matches_eol() || matches_any(0, 0x9, 0xc, ' ');
+    return !done() && is_whitespace(peek());
 }
 
 bool Reader::matches_number() const
