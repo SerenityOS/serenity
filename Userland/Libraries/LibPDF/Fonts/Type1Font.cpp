@@ -62,13 +62,13 @@ void Type1Font::set_font_size(float font_size)
         m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
-void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color)
+PDFErrorOr<void> Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color)
 {
     if (!m_font_program) {
         // Account for the reversed font baseline
         auto position = point.translated(0, -m_font->baseline());
         painter.draw_glyph(position, char_code, *m_font, color);
-        return;
+        return {};
     }
 
     auto effective_encoding = encoding();
@@ -95,5 +95,6 @@ void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float w
     painter.blit_filtered(glyph_position.blit_position, *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
         return pixel.multiply(color);
     });
+    return {};
 }
 }

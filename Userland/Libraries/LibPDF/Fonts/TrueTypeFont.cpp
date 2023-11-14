@@ -45,11 +45,12 @@ void TrueTypeFont::set_font_size(float font_size)
     m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
-void TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float, u8 char_code, Color color)
+PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float, u8 char_code, Color color)
 {
     // Account for the reversed font baseline
     auto position = point.translated(0, -m_font->baseline());
     painter.draw_glyph(position, char_code, *m_font, color);
+    return {};
 }
 
 }
