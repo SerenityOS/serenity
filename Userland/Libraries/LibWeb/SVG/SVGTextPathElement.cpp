@@ -33,6 +33,12 @@ void SVGTextPathElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextPathElementPrototype>(realm, "SVGTextPathElement"_fly_string));
 }
 
+void SVGTextPathElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    SVGURIReferenceMixin::visit_edges(visitor);
+}
+
 JS::GCPtr<Layout::Node> SVGTextPathElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     return heap().allocate_without_realm<Layout::SVGTextPathBox>(document(), *this, move(style));
