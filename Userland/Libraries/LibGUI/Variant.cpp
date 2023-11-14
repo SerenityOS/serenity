@@ -13,54 +13,6 @@
 
 namespace GUI {
 
-Variant::Variant(JsonValue const& value)
-{
-    *this = value;
-}
-
-Variant& Variant::operator=(JsonValue const& value)
-{
-    if (value.is_null())
-        return *this;
-
-    if (value.is_i32()) {
-        set(value.as_i32());
-        return *this;
-    }
-
-    if (value.is_u32()) {
-        set(value.as_u32());
-        return *this;
-    }
-
-    if (value.is_i64()) {
-        set(value.as_i64());
-        return *this;
-    }
-
-    if (value.is_u64()) {
-        set(value.as_u64());
-        return *this;
-    }
-
-    if (value.is_double()) {
-        set(value.as_double());
-        return *this;
-    }
-
-    if (value.is_string()) {
-        set(value.as_string());
-        return *this;
-    }
-
-    if (value.is_bool()) {
-        set(Detail::Boolean { value.as_bool() });
-        return *this;
-    }
-
-    VERIFY_NOT_REACHED();
-}
-
 bool Variant::operator==(Variant const& other) const
 {
     return visit([&]<typename T>(T const& own_value) {
