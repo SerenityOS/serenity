@@ -44,6 +44,7 @@ void SVGUseElement::initialize(JS::Realm& realm)
 void SVGUseElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    SVGURIReferenceMixin::visit_edges(visitor);
     visitor.visit(m_document_observer);
 }
 
