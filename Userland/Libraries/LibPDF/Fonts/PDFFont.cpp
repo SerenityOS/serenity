@@ -41,9 +41,11 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
         font = adopt_ref(*new Type1Font());
     } else if (subtype == "TrueType") {
         font = adopt_ref(*new TrueTypeFont());
-    } else if (subtype == "Type0")
+    } else if (subtype == "Type0") {
         font = adopt_ref(*new Type0Font());
-    else {
+    } else if (subtype == "Type3") {
+        return Error { Error::Type::RenderingUnsupported, "Type3 fonts not yet implemented" };
+    } else {
         dbgln_if(PDF_DEBUG, "Unhandled font subtype: {}", subtype);
         return Error::internal_error("Unhandled font subtype");
     }
