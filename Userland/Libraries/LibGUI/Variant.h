@@ -29,8 +29,6 @@ public:
     using Detail::VariantUnderlyingType::Variant;
     using Detail::VariantUnderlyingType::operator=;
 
-    Variant(JsonValue const&);
-    Variant& operator=(JsonValue const&);
     Variant(bool v)
         : Variant(Detail::Boolean { v })
     {
