@@ -12,6 +12,7 @@
 #include <LibPDF/Fonts/TrueTypeFont.h>
 #include <LibPDF/Fonts/Type0Font.h>
 #include <LibPDF/Fonts/Type1Font.h>
+#include <LibPDF/Fonts/Type3Font.h>
 
 namespace PDF {
 
@@ -44,7 +45,7 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
     } else if (subtype == "Type0") {
         font = adopt_ref(*new Type0Font());
     } else if (subtype == "Type3") {
-        return Error { Error::Type::RenderingUnsupported, "Type3 fonts not yet implemented" };
+        font = adopt_ref(*new Type3Font());
     } else {
         dbgln_if(PDF_DEBUG, "Unhandled font subtype: {}", subtype);
         return Error::internal_error("Unhandled font subtype");
