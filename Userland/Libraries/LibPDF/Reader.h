@@ -131,6 +131,9 @@ public:
         move_until([&predicate](char t) { return !predicate(t); });
     }
 
+    static bool is_eol(char);
+    static bool is_whitespace(char);
+
     bool matches_eol() const;
     bool matches_whitespace() const;
     bool matches_number() const;
