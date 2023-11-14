@@ -10,9 +10,13 @@ CompileFlags:
 
 You also need to configure the clangd server to detect headers properly from the Serenity toolchain. To do this, create a `.helix/languages.toml` file in the project root:
 ```toml
+[language-server.serenity]
+command = "clangd"
+args = ["--query-driver=/path/to/serenity/Toolchain/Local/**/*", "--header-insertion=never"]
+
 [[language]]
 name = "cpp"
-language-server = { command = "clangd", args=["--query-driver=/path/to/serenity/Toolchain/Local/**/*", "--header-insertion=never"] }
+language-servers = ["serenity"]
 ```
 
 > Make sure to replace `/path/to/serenity` with the actual path in the snippet above!
