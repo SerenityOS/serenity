@@ -32,11 +32,6 @@ public:
         InNewWindow
     };
 
-    enum class PerformEditOn {
-        NewBookmark,
-        ExistingBookmark
-    };
-
     Function<void(DeprecatedString const& url, Open)> on_bookmark_click;
     Function<void(DeprecatedString const&, DeprecatedString const&)> on_bookmark_hover;
     Function<void()> on_bookmark_change;
