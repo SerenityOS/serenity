@@ -37,6 +37,7 @@
     X(CIDFontType2)               \
     X(CIDSystemInfo)              \
     X(CIDToGIDMap)                \
+    X(CharProcs)                  \
     X(Colors)                     \
     X(ColorSpace)                 \
     X(Columns)                    \
@@ -86,6 +87,7 @@
     X(FontFile)                   \
     X(FontFile2)                  \
     X(FontFile3)                  \
+    X(FontMatrix)                 \
     X(FunctionType)               \
     X(Functions)                  \
     X(Gamma)                      \
