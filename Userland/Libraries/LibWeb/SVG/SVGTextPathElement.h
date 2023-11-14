@@ -8,11 +8,14 @@
 
 #include <LibWeb/SVG/SVGGeometryElement.h>
 #include <LibWeb/SVG/SVGTextContentElement.h>
+#include <LibWeb/SVG/SVGURIReference.h>
 
 namespace Web::SVG {
 
 // https://svgwg.org/svg2-draft/text.html#TextPathElement
-class SVGTextPathElement : public SVGTextContentElement {
+class SVGTextPathElement
+    : public SVGTextContentElement
+    , public SVGURIReferenceMixin<SupportsXLinkHref::Yes> {
     WEB_PLATFORM_OBJECT(SVGTextPathElement, SVGTextContentElement);
     JS_DECLARE_ALLOCATOR(SVGTextPathElement);
 
@@ -25,6 +28,7 @@ protected:
     SVGTextPathElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 };
 
 }
