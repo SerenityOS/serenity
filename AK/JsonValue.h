@@ -154,10 +154,24 @@ public:
         return *m_value.as_array;
     }
 
-    double as_double() const
+    Variant<u64, i64, double> as_number() const
     {
-        VERIFY(is_double());
-        return m_value.as_double;
+        VERIFY(is_number());
+
+        switch (m_type) {
+        case Type::Int32:
+            return static_cast<i64>(m_value.as_i32);
+        case Type::UnsignedInt32:
+            return static_cast<i64>(m_value.as_u32);
+        case Type::Int64:
+            return m_value.as_i64;
+        case Type::UnsignedInt64:
+            return m_value.as_u64;
+        case Type::Double:
+            return m_value.as_double;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     Type type() const
