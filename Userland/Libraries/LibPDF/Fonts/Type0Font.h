@@ -28,12 +28,15 @@ public:
     void set_font_size(float font_size) override;
     PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint pos, DeprecatedString const&, Color const&, float, float, float, float) override;
 
+    DeprecatedFlyString base_font_name() const { return m_base_font_name; }
+
 protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float) override;
 
 private:
     float get_char_width(u16 char_code) const;
 
+    DeprecatedFlyString m_base_font_name;
     CIDSystemInfo m_system_info;
     HashMap<u16, u16> m_widths;
     u16 m_missing_width;

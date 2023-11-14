@@ -95,6 +95,8 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
 {
     TRY(PDFFont::initialize(document, dict, font_size));
 
+    m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
+
     // FIXME: Support arbitrary CMaps
     auto cmap_value = TRY(dict->get_object(document, CommonNames::Encoding));
     if (!cmap_value->is<NameObject>() || cmap_value->cast<NameObject>()->name() != CommonNames::IdentityH)
