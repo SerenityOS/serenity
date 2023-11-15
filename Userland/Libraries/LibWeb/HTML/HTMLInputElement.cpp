@@ -953,10 +953,8 @@ String HTMLInputElement::value_sanitization_algorithm(String const& value) const
         }
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Number) {
         // If the value of the element is not a valid floating-point number, then set it to the empty string instead.
-        // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-floating-point-number-values
-        // 6. Skip ASCII whitespace within input given position.
-        auto maybe_double = value.bytes_as_string_view().to_double(TrimWhitespace::Yes);
-        if (!maybe_double.has_value() || !isfinite(maybe_double.value()))
+        auto maybe_value = parse_floating_point_number(value);
+        if (!maybe_value.has_value() || !isfinite(maybe_value.value()))
             return String {};
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Date) {
         // https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date):value-sanitization-algorithm
@@ -981,9 +979,16 @@ String HTMLInputElement::value_sanitization_algorithm(String const& value) const
         return String {};
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Range) {
         // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):value-sanitization-algorithm
-        auto maybe_double = value.bytes_as_string_view().to_double(TrimWhitespace::Yes);
-        if (!maybe_double.has_value() || !isfinite(maybe_double.value()))
-            return JS::number_to_string(maybe_double.value_or(0));
+        // If the value of the element is not a valid floating-point number, then set it to the best representation, as a floating-point number, of the default value.
+        auto maybe_value = parse_floating_point_number(value);
+        if (!maybe_value.has_value() || !isfinite(maybe_value.value())) {
+            // The default value is the minimum plus half the difference between the minimum and the maximum, unless the maximum is less than the minimum, in which case the default value is the minimum.
+            auto min = parse_floating_point_number(get_attribute(HTML::AttributeNames::min).value_or("0"_string)).value_or(0);
+            auto max = parse_floating_point_number(get_attribute(HTML::AttributeNames::max).value_or("1"_string)).value_or(1);
+            if (max > min)
+                return JS::number_to_string(min);
+            return JS::number_to_string(min + (max - min) / 2);
+        }
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
         // If the value of the element is a valid simple color, then set it to the value of the element converted to ASCII lowercase;

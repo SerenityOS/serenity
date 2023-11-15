@@ -8,6 +8,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Progress.h>
@@ -51,26 +52,21 @@ void HTMLProgressElement::progress_position_updated()
         document().invalidate_layout();
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-progress-value
 double HTMLProgressElement::value() const
 {
-    auto const& value_characters = deprecated_attribute(HTML::AttributeNames::value);
-    if (value_characters == nullptr)
+    auto maybe_value_string = get_attribute(HTML::AttributeNames::value);
+    if (!maybe_value_string.has_value())
         return 0;
-
-    // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-floating-point-number-values
-    // 6. Skip ASCII whitespace within input given position.
-    auto maybe_double = value_characters.to_double(AK::TrimWhitespace::Yes);
-    if (!maybe_double.has_value())
+    auto maybe_value = parse_floating_point_number(maybe_value_string.value());
+    if (!maybe_value.has_value())
         return 0;
-    if (!isfinite(maybe_double.value()) || maybe_double.value() < 0)
-        return 0;
-
-    return min(maybe_double.value(), max());
+    return clamp(maybe_value.value(), 0, max());
 }
 
 WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
 {
-    if (value < 0)
+    if (value < 0 || value > max())
         return {};
 
     TRY(set_attribute(HTML::AttributeNames::value, MUST(String::number(value))));
@@ -78,21 +74,16 @@ WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-progress-max
 double HTMLProgressElement::max() const
 {
-    auto const& max_characters = deprecated_attribute(HTML::AttributeNames::max);
-    if (max_characters == nullptr)
+    auto maybe_max_string = get_attribute(HTML::AttributeNames::max);
+    if (!maybe_max_string.has_value())
         return 1;
-
-    // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-floating-point-number-values
-    // 6. Skip ASCII whitespace within input given position.
-    auto double_or_none = max_characters.to_double(AK::TrimWhitespace::Yes);
-    if (!double_or_none.has_value())
+    auto maybe_max = parse_floating_point_number(maybe_max_string.value());
+    if (!maybe_max.has_value())
         return 1;
-    if (!isfinite(double_or_none.value()) || double_or_none.value() <= 0)
-        return 1;
-
-    return double_or_none.value();
+    return AK::max(maybe_max.value(), 0);
 }
 
 WebIDL::ExceptionOr<void> HTMLProgressElement::set_max(double value)
