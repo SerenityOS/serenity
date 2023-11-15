@@ -22,11 +22,18 @@ protected:
     RefPtr<Encoding>& encoding() { return m_encoding; }
     RefPtr<Encoding> const& encoding() const { return m_encoding; }
 
+    Gfx::AffineTransform& font_matrix() { return m_font_matrix; }
+
 private:
     RefPtr<Encoding> m_encoding;
     RefPtr<StreamObject> m_to_unicode;
     HashMap<u8, u16> m_widths;
     u16 m_missing_width { 0 };
+
+    // "For all font types except Type 3, the units of glyph space are one-thousandth of a unit of text space;
+    // for a Type 3 font, the transformation from glyph space to text space is defined by a font matrix specified
+    // in an explicit FontMatrix entry in the font."
+    Gfx::AffineTransform m_font_matrix { 1.0f / 1000.0f, 0, 0, 1.0f / 1000.0f, 0, 0 };
 };
 
 }
