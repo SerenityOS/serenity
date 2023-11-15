@@ -111,6 +111,9 @@ public:
     ALWAYS_INLINE TextState const& text_state() const { return state().text_state; }
 
     Gfx::AffineTransform const& calculate_text_rendering_matrix() const;
+
+    PDFErrorOr<void> render_type3_glyph(Gfx::FloatPoint, StreamObject const&, Gfx::AffineTransform const&, Optional<NonnullRefPtr<DictObject>>);
+
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences);
 

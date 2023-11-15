@@ -1008,4 +1008,21 @@ Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix() const
     return m_text_rendering_matrix;
 }
 
+PDFErrorOr<void> Renderer::render_type3_glyph(Gfx::FloatPoint point, StreamObject const& glyph_data, Gfx::AffineTransform const& font_matrix, Optional<NonnullRefPtr<DictObject>> resources)
+{
+    ScopedState scoped_state { *this };
+
+    auto text_rendering_matrix = calculate_text_rendering_matrix();
+    text_rendering_matrix.set_translation(point);
+    state().ctm = text_rendering_matrix;
+    state().ctm.scale(text_state().font_size, text_state().font_size);
+    state().ctm.multiply(font_matrix);
+    m_text_rendering_matrix_is_dirty = true;
+
+    auto operators = TRY(Parser::parse_operators(m_document, glyph_data.bytes()));
+    for (auto& op : operators)
+        TRY(handle_operator(op, resources));
+    return {};
+}
+
 }
