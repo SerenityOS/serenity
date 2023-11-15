@@ -271,7 +271,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
 PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
     if (Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() })) {
-        auto decoder = TRY(Gfx::JPEGImageDecoderPlugin::create({ bytes.data(), bytes.size() }));
+        auto decoder = TRY(Gfx::JPEGImageDecoderPlugin::create_with_options({ bytes.data(), bytes.size() }, { .cmyk = Gfx::JPEGDecoderOptions::CMYK::PDF }));
         auto frame = TRY(decoder->frame(0));
         return TRY(frame.image->serialize_to_byte_buffer());
     }

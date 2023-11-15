@@ -16,10 +16,22 @@ struct JPEGLoadingContext;
 
 // For the specification, see: https://www.w3.org/Graphics/JPEG/itu-t81.pdf
 
+struct JPEGDecoderOptions {
+    enum class CMYK {
+        // For standalone jpeg files.
+        Normal,
+
+        // For jpeg data embedded in PDF files.
+        PDF,
+    };
+    CMYK cmyk { CMYK::Normal };
+};
+
 class JPEGImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create_with_options(ReadonlyBytes, JPEGDecoderOptions = {});
 
     virtual ~JPEGImageDecoderPlugin() override;
     virtual IntSize size() override;
