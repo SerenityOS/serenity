@@ -575,6 +575,8 @@ namespace JS {
     P(value)                                 \
     P(valueOf)                               \
     P(values)                                \
+    P(wait)                                  \
+    P(waitAsync)                             \
     P(warn)                                  \
     P(weekOfYear)                            \
     P(weekday)                               \
