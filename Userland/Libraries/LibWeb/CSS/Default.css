@@ -787,10 +787,10 @@ progress {
 progress::-webkit-progress-bar {
     width: inherit;
     height: inherit;
-    background-color: grey;
+    background-color: hsl(0, 0%, 96%);
 }
 
 progress::-webkit-progress-value {
     height: inherit;
-    background-color: green;
+    background-color: hsl(204, 86%, 53%);
 }
