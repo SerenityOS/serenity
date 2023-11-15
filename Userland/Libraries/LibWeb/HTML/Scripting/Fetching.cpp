@@ -380,8 +380,12 @@ WebIDL::ExceptionOr<void> fetch_classic_worker_script(AK::URL const& url, Enviro
         // - response's URL's scheme is an HTTP(S) scheme; and
         // - the result of extracting a MIME type from response's header list is not a JavaScript MIME type,
         auto maybe_mime_type = MUST(response->header_list()->extract_mime_type());
-        if (response->url().has_value() && Fetch::Infrastructure::is_http_or_https_scheme(response->url()->scheme()) && (!maybe_mime_type.has_value() || maybe_mime_type->is_javascript())) {
-            dbgln("Invalid non-javascript mime type for worker script at {}", response->url().value());
+        auto mime_type_is_javascript = maybe_mime_type.has_value() && maybe_mime_type->is_javascript();
+
+        if (response->url().has_value() && Fetch::Infrastructure::is_http_or_https_scheme(response->url()->scheme()) && !mime_type_is_javascript) {
+            auto mime_type_serialized = maybe_mime_type.has_value() ? MUST(maybe_mime_type->serialized()) : "unknown"_string;
+            dbgln("Invalid non-javascript mime type \"{}\" for worker script at {}", mime_type_serialized, response->url().value());
+
             // then run onComplete given null, and abort these steps.
             on_complete->function()(nullptr);
             return;
