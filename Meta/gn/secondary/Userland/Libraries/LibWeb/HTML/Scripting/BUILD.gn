@@ -11,5 +11,6 @@ source_set("Scripting") {
     "Script.cpp",
     "TemporaryExecutionContext.cpp",
     "WindowEnvironmentSettingsObject.cpp",
+    "WorkerEnvironmentSettingsObject.cpp",
   ]
 }
