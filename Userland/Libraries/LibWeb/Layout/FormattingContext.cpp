@@ -1123,7 +1123,12 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     used_offset.set_x(box_state.inset_left + box_state.margin_box_left());
     used_offset.set_y(box_state.inset_top + box_state.margin_box_top());
     // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
-    used_offset.translate_by(-containing_block_state.padding_left, -containing_block_state.padding_top);
+    //       Padding offset only need to be compensated when top/left/bottom/right is not auto because otherwise
+    //       the box is positioned at the static position of the containing block.
+    if (!box.computed_values().inset().top().is_auto() || !box.computed_values().inset().bottom().is_auto())
+        used_offset.translate_by(0, -containing_block_state.padding_top);
+    if (!box.computed_values().inset().left().is_auto() || !box.computed_values().inset().right().is_auto())
+        used_offset.translate_by(-containing_block_state.padding_left, 0);
     box_state.set_content_offset(used_offset);
 
     if (independent_formatting_context)
