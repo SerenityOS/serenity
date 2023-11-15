@@ -55,8 +55,9 @@ void Type3Font::set_font_size(float)
 
 PDFErrorOr<void> Type3Font::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8 char_code, Renderer const&)
 {
+    // PDF 1.7 spec, 5.5.4 Type 3 Fonts:
     // "For each character code shown by a text-showing operator that uses a Type 3 font,
-    //  the consumer application does the following:""
+    //  the consumer application does the following:"
 
     // "1. Looks up the character code in the font’s Encoding entry, as described in Sec-
     //  tion 5.5.5, “Character Encoding,” to obtain a character name."

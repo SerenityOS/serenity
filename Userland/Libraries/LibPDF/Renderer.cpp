@@ -559,8 +559,17 @@ RENDERER_HANDLER(text_show_string_array)
     return {};
 }
 
-RENDERER_TODO(type3_font_set_glyph_width)
-RENDERER_TODO(type3_font_set_glyph_width_and_bbox)
+RENDERER_HANDLER(type3_font_set_glyph_width)
+{
+    // FIXME: Do something with this.
+    return {};
+}
+
+RENDERER_HANDLER(type3_font_set_glyph_width_and_bbox)
+{
+    // FIXME: Do something with this.
+    return {};
+}
 
 RENDERER_HANDLER(set_stroking_space)
 {
