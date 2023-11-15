@@ -35,6 +35,7 @@ set(SOURCES
     Print.cpp
     Runtime/AbstractOperations.cpp
     Runtime/Accessor.cpp
+    Runtime/Agent.cpp
     Runtime/AggregateError.cpp
     Runtime/AggregateErrorConstructor.cpp
     Runtime/AggregateErrorPrototype.cpp

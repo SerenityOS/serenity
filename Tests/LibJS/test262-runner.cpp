@@ -18,6 +18,7 @@
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Parser.h>
+#include <LibJS/Runtime/Agent.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/Script.h>
@@ -169,12 +170,19 @@ enum class StrictMode {
     OnlyStrict
 };
 
+enum class SkipTest {
+    No,
+    Yes,
+};
+
 static constexpr auto sta_harness_file = "sta.js"sv;
 static constexpr auto assert_harness_file = "assert.js"sv;
 static constexpr auto async_include = "doneprintHandle.js"sv;
 
 struct TestMetadata {
     Vector<StringView> harness_files { sta_harness_file, assert_harness_file };
+
+    SkipTest skip_test { SkipTest::No };
 
     StrictMode strict_mode { StrictMode::Both };
     JS::Program::Type program_type { JS::Program::Type::Script };
@@ -364,6 +372,9 @@ static Result<TestMetadata, DeprecatedString> extract_metadata(StringView source
                 } else if (flag == "async"sv) {
                     metadata.harness_files.append(async_include);
                     metadata.is_async = true;
+                } else if (flag == "CanBlockIsFalse"sv) {
+                    if (JS::agent_can_suspend())
+                        metadata.skip_test = SkipTest::Yes;
                 }
             }
         } else if (line.starts_with("includes:"sv)) {
@@ -733,6 +744,10 @@ int main(int argc, char** argv)
         }
 
         auto& metadata = metadata_or_error.value();
+        if (metadata.skip_test == SkipTest::Yes) {
+            result_object.set("result", "skipped");
+            continue;
+        }
 
         bool passed = true;
 
