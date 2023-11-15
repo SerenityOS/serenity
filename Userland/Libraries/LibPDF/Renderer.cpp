@@ -816,6 +816,21 @@ PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
     return {};
 }
 
+static Vector<u8> upsample_to_8_bit(ReadonlyBytes content, int bits_per_component)
+{
+    VERIFY(bits_per_component == 1 || bits_per_component == 2 || bits_per_component == 4);
+    Vector<u8> upsampled_storage;
+    upsampled_storage.ensure_capacity(content.size() * 8 / bits_per_component);
+    u8 const mask = (1 << bits_per_component) - 1;
+    for (auto byte : content) {
+        for (int i = 0; i < 8; i += bits_per_component) {
+            auto value = (byte >> (8 - bits_per_component - i)) & mask;
+            upsampled_storage.append(value * (255 / mask));
+        }
+    }
+    return upsampled_storage;
+}
+
 PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<StreamObject> image)
 {
     auto image_dict = image->dict();
@@ -854,8 +869,28 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
 
     // "Valid values are 1, 2, 4, 8, and (in PDF 1.5) 16."
     auto bits_per_component = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::BitsPerComponent)));
-    if (bits_per_component != 8) {
-        return Error(Error::Type::RenderingUnsupported, "Image's bit per component != 8");
+    switch (bits_per_component) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+    case 16:
+        // Ok!
+        break;
+    default:
+        return Error(Error::Type::MalformedPDF, "Image's /BitsPerComponent invalid");
+    }
+    auto content = image->bytes();
+
+    Vector<u8> upsampled_storage;
+    if (bits_per_component < 8) {
+        upsampled_storage = upsample_to_8_bit(content, bits_per_component);
+        content = upsampled_storage;
+        bits_per_component = 8;
+    }
+
+    if (bits_per_component == 16) {
+        return Error(Error::Type::RenderingUnsupported, "16 bpp images not yet supported");
     }
 
     Vector<float> decode_array;
@@ -884,7 +919,6 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
     auto const bytes_per_component = bits_per_component / 8;
     Vector<Value> component_values;
     component_values.resize(n_components);
-    auto content = image->bytes();
     while (!content.is_empty() && y < height) {
         auto sample = content.slice(0, bytes_per_component * n_components);
         content = content.slice(bytes_per_component * n_components);
