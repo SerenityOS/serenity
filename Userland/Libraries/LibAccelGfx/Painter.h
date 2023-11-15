@@ -17,6 +17,7 @@
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Gradients.h>
 #include <LibGfx/TextLayout.h>
 
 namespace AccelGfx {
@@ -73,6 +74,9 @@ public:
     void set_target_bitmap(Gfx::Bitmap&);
     void flush();
 
+    void fill_rect_with_linear_gradient(Gfx::IntRect const&, ReadonlySpan<Gfx::ColorStop>, float angle, Optional<float> repeat_length = {});
+    void fill_rect_with_linear_gradient(Gfx::FloatRect const&, ReadonlySpan<Gfx::ColorStop>, float angle, Optional<float> repeat_length = {});
+
 private:
     Context& m_context;
 
@@ -89,6 +93,7 @@ private:
 
     Program m_rectangle_program;
     Program m_blit_program;
+    Program m_linear_gradient_program;
 
     HashMap<GlyphsTextureKey, Gfx::IntRect> m_glyphs_texture_map;
     Gfx::IntSize m_glyphs_texture_size;
