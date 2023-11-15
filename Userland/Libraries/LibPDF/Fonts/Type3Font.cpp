@@ -7,6 +7,7 @@
 #include <LibGfx/Painter.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/Type3Font.h>
+#include <LibPDF/Renderer.h>
 
 namespace PDF {
 
@@ -53,7 +54,7 @@ void Type3Font::set_font_size(float)
 {
 }
 
-PDFErrorOr<void> Type3Font::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8 char_code, Renderer const&)
+PDFErrorOr<void> Type3Font::draw_glyph(Gfx::Painter&, Gfx::FloatPoint point, float, u8 char_code, Renderer const& renderer)
 {
     // PDF 1.7 spec, 5.5.4 Type 3 Fonts:
     // "For each character code shown by a text-showing operator that uses a Type 3 font,
@@ -71,8 +72,9 @@ PDFErrorOr<void> Type3Font::draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8
         return {};
 
     // "3. Invokes the glyph description, as described below."
-    // FIXME
-
-    return Error { Error::Type::RenderingUnsupported, "Type3 fonts not yet implemented" };
+    // The Gfx::Painter isn't used because `renderer` paints to it already.
+    // FIXME: Do color things dependent on if the glyph data starts with d0 or d1.
+    // FIXME: Glyph caching.
+    return const_cast<Renderer&>(renderer).render_type3_glyph(point, *char_proc.value(), font_matrix(), m_resources);
 }
 }
