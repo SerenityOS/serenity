@@ -210,6 +210,10 @@
 #    cmakedefine01 ICO_DEBUG
 #endif
 
+#ifndef IDL_DEBUG
+#    cmakedefine01 IDL_DEBUG
+#endif
+
 #ifndef ILBM_DEBUG
 #    cmakedefine01 ILBM_DEBUG
 #endif
