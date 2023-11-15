@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <LibIDL/Types.h>
 
 namespace IDL {
@@ -175,7 +176,7 @@ bool Type::is_distinguishable_from(IDL::Interface const& interface, IDL::Type co
             return DistinguishabilityCategory::SequenceLike;
 
         // FIXME: For lack of a better way of determining if something is an interface type, this just assumes anything we don't recognise is one.
-        dbgln("Unable to determine category for type named '{}', assuming it's an interface type.", type.name());
+        dbgln_if(IDL_DEBUG, "Unable to determine category for type named '{}', assuming it's an interface type.", type.name());
         return DistinguishabilityCategory::InterfaceLike;
     };
 
