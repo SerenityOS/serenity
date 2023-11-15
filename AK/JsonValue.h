@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, Dan Klishch <danilklishch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <AK/StringBuilder.h>
 
 namespace AK {
@@ -21,12 +23,8 @@ class JsonValue {
 public:
     enum class Type {
         Null,
-        Int32,
-        UnsignedInt32,
-        Int64,
-        UnsignedInt64,
-        Double,
         Bool,
+        Number,
         String,
         Array,
         Object,
@@ -34,8 +32,8 @@ public:
 
     static ErrorOr<JsonValue> from_string(StringView);
 
-    JsonValue() = default;
-    ~JsonValue() { clear(); }
+    JsonValue();
+    ~JsonValue();
 
     JsonValue(JsonValue const&);
     JsonValue(JsonValue&&);
@@ -58,8 +56,7 @@ public:
     template<typename T>
     requires(SameAs<RemoveCVReference<T>, bool>)
     JsonValue(T value)
-        : m_type(Type::Bool)
-        , m_value { .as_bool = value }
+        : m_value { static_cast<bool>(value) }
     {
     }
 
@@ -69,9 +66,11 @@ public:
     JsonValue(JsonArray&&);
     JsonValue(JsonObject&&);
 
-    // FIXME: Implement these
-    JsonValue& operator=(JsonArray&&) = delete;
-    JsonValue& operator=(JsonObject&&) = delete;
+    JsonValue& operator=(JsonArray const&);
+    JsonValue& operator=(JsonObject const&);
+
+    JsonValue& operator=(JsonArray&&);
+    JsonValue& operator=(JsonObject&&);
 
     template<typename Builder>
     typename Builder::OutputType serialized() const;
@@ -126,166 +125,117 @@ public:
 
     bool as_bool() const
     {
-        VERIFY(is_bool());
-        return m_value.as_bool;
+        return m_value.get<bool>();
     }
 
     ByteString as_string() const
     {
-        VERIFY(is_string());
-        return *m_value.as_string;
+        return m_value.get<ByteString>();
     }
 
     JsonObject& as_object()
     {
-        VERIFY(is_object());
-        return *m_value.as_object;
+        return *m_value.get<NonnullOwnPtr<JsonObject>>();
     }
 
     JsonObject const& as_object() const
     {
-        VERIFY(is_object());
-        return *m_value.as_object;
+        return *m_value.get<NonnullOwnPtr<JsonObject>>();
     }
 
     JsonArray& as_array()
     {
-        VERIFY(is_array());
-        return *m_value.as_array;
+        return *m_value.get<NonnullOwnPtr<JsonArray>>();
     }
 
     JsonArray const& as_array() const
     {
-        VERIFY(is_array());
-        return *m_value.as_array;
+        return *m_value.get<NonnullOwnPtr<JsonArray>>();
     }
 
     Variant<u64, i64, double> as_number() const
     {
-        VERIFY(is_number());
-
-        switch (m_type) {
-        case Type::Int32:
-            return static_cast<i64>(m_value.as_i32);
-        case Type::UnsignedInt32:
-            return static_cast<i64>(m_value.as_u32);
-        case Type::Int64:
-            return m_value.as_i64;
-        case Type::UnsignedInt64:
-            return m_value.as_u64;
-        case Type::Double:
-            return m_value.as_double;
-        default:
-            VERIFY_NOT_REACHED();
-        }
+        return m_value.downcast<u64, i64, double>();
     }
 
     Type type() const
     {
-        return m_type;
+        return m_value.visit(
+            [](Empty const&) { return Type::Null; },
+            [](bool const&) { return Type::Bool; },
+            [](Arithmetic auto const&) { return Type::Number; },
+            [](ByteString const&) { return Type::String; },
+            [](NonnullOwnPtr<JsonArray> const&) { return Type::Array; },
+            [](NonnullOwnPtr<JsonObject> const&) { return Type::Object; });
     }
 
-    bool is_null() const { return m_type == Type::Null; }
-    bool is_bool() const { return m_type == Type::Bool; }
-    bool is_string() const { return m_type == Type::String; }
-    bool is_array() const { return m_type == Type::Array; }
-    bool is_object() const { return m_type == Type::Object; }
+    bool is_null() const { return m_value.has<Empty>(); }
+    bool is_bool() const { return m_value.has<bool>(); }
+    bool is_string() const { return m_value.has<ByteString>(); }
+    bool is_array() const { return m_value.has<NonnullOwnPtr<JsonArray>>(); }
+    bool is_object() const { return m_value.has<NonnullOwnPtr<JsonObject>>(); }
     bool is_number() const
     {
-        switch (m_type) {
-        case Type::Int32:
-        case Type::UnsignedInt32:
-        case Type::Int64:
-        case Type::UnsignedInt64:
-        case Type::Double:
-            return true;
-        default:
-            return false;
-        }
+        return m_value.visit(
+            [](bool const&) { return false; },
+            []<Arithmetic U>(U const&) { return true; },
+            [](auto const&) { return false; });
     }
 
     template<typename T>
     Optional<T> get_number_with_precision_loss() const
     {
-        switch (m_type) {
-        case Type::Double:
-            return static_cast<T>(m_value.as_double);
-        case Type::Int32:
-            return static_cast<T>(m_value.as_i32);
-        case Type::UnsignedInt32:
-            return static_cast<T>(m_value.as_u32);
-        case Type::Int64:
-            return static_cast<T>(m_value.as_i64);
-        case Type::UnsignedInt64:
-            return static_cast<T>(m_value.as_u64);
-        default:
-            return {};
-        }
+        return m_value.visit(
+            [](bool const&) { return Optional<T> {}; },
+            []<Arithmetic U>(U const& value) { return Optional<T> { static_cast<T>(value) }; },
+            [](auto const&) { return Optional<T> {}; });
     }
 
     template<Integral T>
     bool is_integer() const
     {
-        switch (m_type) {
-        case Type::Int32:
-            return is_within_range<T>(m_value.as_i32);
-        case Type::UnsignedInt32:
-            return is_within_range<T>(m_value.as_u32);
-        case Type::Int64:
-            return is_within_range<T>(m_value.as_i64);
-        case Type::UnsignedInt64:
-            return is_within_range<T>(m_value.as_u64);
-        default:
-            return false;
-        }
+        return get_integer<T>().has_value();
     }
 
     template<Integral T>
     T as_integer() const
     {
-        VERIFY(is_integer<T>());
-
-        switch (m_type) {
-        case Type::Int32:
-            return static_cast<T>(m_value.as_i32);
-        case Type::UnsignedInt32:
-            return static_cast<T>(m_value.as_u32);
-        case Type::Int64:
-            return static_cast<T>(m_value.as_i64);
-        case Type::UnsignedInt64:
-            return static_cast<T>(m_value.as_u64);
-        default:
-            VERIFY_NOT_REACHED();
-        }
+        return get_integer<T>().value();
     }
 
     template<Integral T>
     Optional<T> get_integer() const
     {
-        if (!is_integer<T>())
-            return {};
-        return as_integer<T>();
+        return m_value.visit(
+            [](bool const&) { return Optional<T> {}; },
+            []<Arithmetic U>(U const& value) -> Optional<T> {
+                if constexpr (Integral<U>) {
+                    if (!is_within_range<T>(value))
+                        return {};
+                    return static_cast<T>(value);
+                } else {
+                    // FIXME: Make is_within_range work with floating point numbers.
+                    if (static_cast<U>(static_cast<T>(value)) != value)
+                        return {};
+                    return static_cast<T>(value);
+                }
+            },
+            [](auto const&) { return Optional<T> {}; });
     }
 
     bool equals(JsonValue const& other) const;
 
 private:
-    void clear();
-    void copy_from(JsonValue const&);
-
-    Type m_type { Type::Null };
-
-    union {
-        StringImpl* as_string { nullptr };
-        JsonArray* as_array;
-        JsonObject* as_object;
-        double as_double;
-        i32 as_i32;
-        u32 as_u32;
-        i64 as_i64;
-        u64 as_u64;
-        bool as_bool;
-    } m_value;
+    Variant<
+        Empty,
+        bool,
+        i64,
+        u64,
+        double,
+        ByteString,
+        NonnullOwnPtr<JsonArray>,
+        NonnullOwnPtr<JsonObject>>
+        m_value;
 };
 
 template<>
