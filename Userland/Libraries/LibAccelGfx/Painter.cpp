@@ -79,6 +79,26 @@ void main() {
 }
 )";
 
+char const* linear_gradient_vertex_shader_source = R"(
+#version 330 core
+layout (location = 0) in vec2 aVertexPosition;
+layout (location = 1) in vec4 aColor;
+out vec4 vColor;
+void main() {
+    gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+    vColor = aColor;
+}
+)";
+
+char const* linear_gradient_fragment_shader_source = R"(
+#version 330 core
+out vec4 FragColor;
+in vec4 vColor;
+void main() {
+    FragColor = vec4(vColor);
+}
+)";
+
 OwnPtr<Painter> Painter::create()
 {
     auto& context = Context::the();
@@ -89,6 +109,7 @@ Painter::Painter(Context& context)
     : m_context(context)
     , m_rectangle_program(Program::create(vertex_shader_source, solid_color_fragment_shader_source))
     , m_blit_program(Program::create(blit_vertex_shader_source, blit_fragment_shader_source))
+    , m_linear_gradient_program(Program::create(linear_gradient_vertex_shader_source, linear_gradient_fragment_shader_source))
     , m_glyphs_texture(GL::create_texture())
 {
     m_state_stack.empend(State());
@@ -404,6 +425,97 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
 
     GL::delete_buffer(vbo);
     GL::delete_vertex_array(vao);
+}
+
+void Painter::fill_rect_with_linear_gradient(Gfx::IntRect const& rect, ReadonlySpan<Gfx::ColorStop> stops, float angle, Optional<float> repeat_length)
+{
+    fill_rect_with_linear_gradient(rect.to_type<float>(), stops, angle, repeat_length);
+}
+
+void Painter::fill_rect_with_linear_gradient(Gfx::FloatRect const& rect, ReadonlySpan<Gfx::ColorStop> stops, float angle, Optional<float> repeat_length)
+{
+    // FIXME: Implement support for angle and repeat_length
+    (void)angle;
+    (void)repeat_length;
+
+    Vector<GLfloat> vertices;
+    Vector<GLfloat> colors;
+    for (size_t stop_index = 0; stop_index < stops.size() - 1; stop_index++) {
+        auto const& stop_start = stops[stop_index];
+        auto const& stop_end = stops[stop_index + 1];
+
+        // The gradient is divided into segments that represent linear gradients between adjacent pairs of stops.
+        auto segment_rect_location = rect.location();
+        segment_rect_location.set_x(segment_rect_location.x() + stop_start.position * rect.width());
+        auto segment_rect_width = (stop_end.position - stop_start.position) * rect.width();
+        auto segment_rect_height = rect.height();
+        auto segment_rect = Gfx::FloatRect { segment_rect_location.x(), segment_rect_location.y(), segment_rect_width, segment_rect_height };
+
+        auto rect_in_clip_space = to_clip_space(segment_rect);
+
+        // p0 --- p1
+        // | \     |
+        // |   \   |
+        // |     \ |
+        // p2 --- p3
+
+        auto p0 = rect_in_clip_space.top_left();
+        auto p1 = rect_in_clip_space.top_right();
+        auto p2 = rect_in_clip_space.bottom_left();
+        auto p3 = rect_in_clip_space.bottom_right();
+
+        auto c0 = gfx_color_to_opengl_color(stop_start.color);
+        auto c1 = gfx_color_to_opengl_color(stop_end.color);
+        auto c2 = gfx_color_to_opengl_color(stop_start.color);
+        auto c3 = gfx_color_to_opengl_color(stop_end.color);
+
+        auto add_triangle = [&](auto& p1, auto& p2, auto& p3, auto& c1, auto& c2, auto& c3) {
+            vertices.append(p1.x());
+            vertices.append(p1.y());
+            colors.append(c1.red);
+            colors.append(c1.green);
+            colors.append(c1.blue);
+            colors.append(c1.alpha);
+
+            vertices.append(p2.x());
+            vertices.append(p2.y());
+            colors.append(c2.red);
+            colors.append(c2.green);
+            colors.append(c2.blue);
+            colors.append(c2.alpha);
+
+            vertices.append(p3.x());
+            vertices.append(p3.y());
+            colors.append(c3.red);
+            colors.append(c3.green);
+            colors.append(c3.blue);
+            colors.append(c3.alpha);
+        };
+
+        add_triangle(p0, p1, p3, c0, c1, c3);
+        add_triangle(p0, p3, p2, c0, c3, c2);
+    }
+
+    auto vao = GL::create_vertex_array();
+    GL::bind_vertex_array(vao);
+
+    auto vbo_vertices = GL::create_buffer();
+    GL::upload_to_buffer(vbo_vertices, vertices);
+
+    auto vbo_colors = GL::create_buffer();
+    GL::upload_to_buffer(vbo_colors, colors);
+
+    m_linear_gradient_program.use();
+    auto position_attribute = m_linear_gradient_program.get_attribute_location("aVertexPosition");
+    auto color_attribute = m_linear_gradient_program.get_attribute_location("aColor");
+
+    GL::bind_buffer(vbo_vertices);
+    GL::set_vertex_attribute(position_attribute, 0, 2);
+
+    GL::bind_buffer(vbo_colors);
+    GL::set_vertex_attribute(color_attribute, 0, 4);
+
+    GL::draw_arrays(GL::DrawPrimitive::Triangles, vertices.size() / 2);
 }
 
 void Painter::save()
