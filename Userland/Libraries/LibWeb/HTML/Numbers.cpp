@@ -7,6 +7,7 @@
 #include <AK/GenericLexer.h>
 #include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <math.h>
 
 namespace Web::HTML {
 
@@ -77,6 +78,18 @@ Optional<u32> parse_non_negative_integer(StringView string)
 
     // 5. Return value.
     return static_cast<u32>(optional_value.value());
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-floating-point-number-values
+Optional<double> parse_floating_point_number(StringView string)
+{
+    // FIXME: Implement spec compliant floating point number parsing
+    auto maybe_double = MUST(String::from_utf8(string)).to_number<double>(TrimWhitespace::Yes);
+    if (!maybe_double.has_value())
+        return {};
+    if (!isfinite(maybe_double.value()))
+        return {};
+    return maybe_double.value();
 }
 
 }
