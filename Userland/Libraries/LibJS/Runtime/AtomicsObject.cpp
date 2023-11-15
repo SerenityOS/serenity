@@ -213,6 +213,7 @@ void AtomicsObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.sub, sub, 3, attr);
     define_native_function(realm, vm.names.wait, wait, 4, attr);
     define_native_function(realm, vm.names.waitAsync, wait_async, 4, attr);
+    define_native_function(realm, vm.names.notify, notify, 3, attr);
     define_native_function(realm, vm.names.xor_, xor_, 3, attr);
 
     // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
@@ -484,6 +485,51 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::wait_async)
 
     // 1. Return ? DoWait(async, typedArray, index, value, timeout).
     return TRY(do_wait(vm, WaitMode::Async, *typed_array, index, value, timeout));
+}
+
+// 25.4.15 Atomics.notify ( typedArray, index, count ), https://tc39.es/ecma262/#sec-atomics.notify
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::notify)
+{
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
+    auto index = vm.argument(1);
+    auto count_value = vm.argument(2);
+
+    // 1. Let byteIndexInBuffer be ? ValidateAtomicAccessOnIntegerTypedArray(typedArray, index, true).
+    // FIXME: ValidateAtomicAccessOnIntegerTypedArray is a new AO from the resizable array buffer proposal. Use it when the proposal is implemented.
+    TRY(validate_integer_typed_array(vm, *typed_array, true));
+    auto byte_index_in_buffer = TRY(validate_atomic_access(vm, *typed_array, index));
+
+    // 2. If count is undefined, then
+    double count = 0.0;
+    if (count_value.is_undefined()) {
+        // a. Let c be +∞.
+        count = js_infinity().as_double();
+    }
+    // 3. Else,
+    else {
+        // a. Let intCount be ? ToIntegerOrInfinity(count).
+        auto int_count = TRY(count_value.to_integer_or_infinity(vm));
+
+        // b. Let c be max(intCount, 0).
+        count = max(int_count, 0.0);
+    }
+
+    // 4. Let buffer be typedArray.[[ViewedArrayBuffer]].
+    auto* buffer = typed_array->viewed_array_buffer();
+
+    // 5. Let block be buffer.[[ArrayBufferData]].
+    auto& block = buffer->buffer();
+
+    // 6. If IsSharedArrayBuffer(buffer) is false, return +0𝔽.
+    if (!buffer->is_shared_array_buffer())
+        return Value { 0 };
+
+    // FIXME: Implement the remaining steps when we support SharedArrayBuffer.
+    (void)byte_index_in_buffer;
+    (void)count;
+    (void)block;
+
+    return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "SharedArrayBuffer"sv);
 }
 
 // 25.4.14 Atomics.xor ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.xor

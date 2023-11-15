@@ -387,6 +387,7 @@ namespace JS {
     P(next)                                  \
     P(normalize)                             \
     P(notation)                              \
+    P(notify)                                \
     P(now)                                   \
     P(numberingSystem)                       \
     P(numeric)                               \
