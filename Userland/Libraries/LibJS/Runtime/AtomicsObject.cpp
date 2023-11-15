@@ -16,10 +16,12 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Endian.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/Agent.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS {
 
@@ -110,6 +112,61 @@ static ThrowCompletionOr<Value> atomic_read_modify_write(VM& vm, TypedArrayBase&
     return typed_array.get_modify_set_value_in_buffer(indexed_position, value_to_set, move(operation));
 }
 
+enum class WaitMode {
+    Sync,
+    Async,
+};
+
+// 25.4.3.14 DoWait ( mode, typedArray, index, value, timeout ), https://tc39.es/ecma262/#sec-dowait
+static ThrowCompletionOr<Value> do_wait(VM& vm, WaitMode mode, TypedArrayBase& typed_array, Value index_value, Value expected_value, Value timeout_value)
+{
+    // 1. Let iieoRecord be ? ValidateIntegerTypedArray(typedArray, true).
+    // 2. Let buffer be iieoRecord.[[Object]].[[ViewedArrayBuffer]].
+    // FIXME: An IIEO record is a new structure from the resizable array buffer proposal. Use it when the proposal is implemented.
+    auto* buffer = TRY(validate_integer_typed_array(vm, typed_array, true));
+
+    // 3. If IsSharedArrayBuffer(buffer) is false, throw a TypeError exception.
+    if (!buffer->is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::NotASharedArrayBuffer);
+
+    // 4. Let i be ? ValidateAtomicAccess(iieoRecord, index).
+    auto index = TRY(validate_atomic_access(vm, typed_array, index_value));
+
+    // 5. Let arrayTypeName be typedArray.[[TypedArrayName]].
+    auto const& array_type_name = typed_array.element_name();
+
+    // 6. If arrayTypeName is "BigInt64Array", let v be ? ToBigInt64(value).
+    i64 value = 0;
+    if (array_type_name == vm.names.BigInt64Array.as_string())
+        value = TRY(expected_value.to_bigint_int64(vm));
+    // 7. Else, let v be ? ToInt32(value).
+    else
+        value = TRY(expected_value.to_i32(vm));
+
+    // 8. Let q be ? ToNumber(timeout).
+    auto timeout_number = TRY(timeout_value.to_number(vm));
+
+    // 9. If q is either NaN or +∞𝔽, let t be +∞; else if q is -∞𝔽, let t be 0; else let t be max(ℝ(q), 0).
+    double timeout = 0;
+    if (timeout_number.is_nan() || timeout_number.is_positive_infinity())
+        timeout = js_infinity().as_double();
+    else if (timeout_number.is_negative_infinity())
+        timeout = 0.0;
+    else
+        timeout = max(timeout_number.as_double(), 0.0);
+
+    // 10. If mode is sync and AgentCanSuspend() is false, throw a TypeError exception.
+    if (mode == WaitMode::Sync && !agent_can_suspend())
+        return vm.throw_completion<TypeError>(ErrorType::AgentCannotSuspend);
+
+    // FIXME: Implement the remaining steps when we support SharedArrayBuffer.
+    (void)index;
+    (void)value;
+    (void)timeout;
+
+    return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "SharedArrayBuffer"sv);
+}
+
 template<typename T, typename AtomicFunction>
 static ThrowCompletionOr<Value> perform_atomic_operation(VM& vm, TypedArrayBase& typed_array, AtomicFunction&& operation)
 {
@@ -154,6 +211,8 @@ void AtomicsObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.or_, or_, 3, attr);
     define_native_function(realm, vm.names.store, store, 3, attr);
     define_native_function(realm, vm.names.sub, sub, 3, attr);
+    define_native_function(realm, vm.names.wait, wait, 4, attr);
+    define_native_function(realm, vm.names.waitAsync, wait_async, 4, attr);
     define_native_function(realm, vm.names.xor_, xor_, 3, attr);
 
     // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
@@ -401,6 +460,30 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
 #undef __JS_ENUMERATE
 
     VERIFY_NOT_REACHED();
+}
+
+// 25.4.13 Atomics.wait ( typedArray, index, value, timeout ), https://tc39.es/ecma262/#sec-atomics.wait
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::wait)
+{
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
+    auto index = vm.argument(1);
+    auto value = vm.argument(2);
+    auto timeout = vm.argument(3);
+
+    // 1. Return ? DoWait(sync, typedArray, index, value, timeout).
+    return TRY(do_wait(vm, WaitMode::Sync, *typed_array, index, value, timeout));
+}
+
+// 25.4.14 Atomics.waitAsync ( typedArray, index, value, timeout ), https://tc39.es/ecma262/#sec-atomics.waitasync
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::wait_async)
+{
+    auto* typed_array = TRY(typed_array_from(vm, vm.argument(0)));
+    auto index = vm.argument(1);
+    auto value = vm.argument(2);
+    auto timeout = vm.argument(3);
+
+    // 1. Return ? DoWait(async, typedArray, index, value, timeout).
+    return TRY(do_wait(vm, WaitMode::Async, *typed_array, index, value, timeout));
 }
 
 // 25.4.14 Atomics.xor ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.xor

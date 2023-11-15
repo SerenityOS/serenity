@@ -12,6 +12,7 @@
     M(ArrayMaxSize, "Maximum array size exceeded")                                                                                      \
     M(AccessorBadField, "Accessor descriptor's '{}' field must be a function or undefined")                                             \
     M(AccessorValueOrWritable, "Accessor property descriptor cannot specify a value or writable key")                                   \
+    M(AgentCannotSuspend, "Agent is not allowed to suspend")                                                                            \
     M(BigIntBadOperator, "Cannot use {} operator with BigInt")                                                                          \
     M(BigIntBadOperatorOtherType, "Cannot use {} operator with BigInt and other type")                                                  \
     M(BigIntFromNonIntegral, "Cannot convert non-integral number to BigInt")                                                            \
@@ -94,6 +95,7 @@
     M(NotAnObjectOfType, "Not an object of type {}")                                                                                    \
     M(NotAnObjectOrNull, "{} is neither an object nor null")                                                                            \
     M(NotAnObjectOrString, "{} is neither an object nor a string")                                                                      \
+    M(NotASharedArrayBuffer, "The TypedArray's underlying buffer must be a SharedArrayBuffer")                                          \
     M(NotAString, "{} is not a string")                                                                                                 \
     M(NotASymbol, "{} is not a symbol")                                                                                                 \
     M(NotImplemented, "TODO({} is not implemented in LibJS)")                                                                           \
