@@ -416,15 +416,16 @@ enum class ColorTransform {
 };
 
 struct JPEGLoadingContext {
-    JPEGLoadingContext(JPEGStream jpeg_stream)
+    JPEGLoadingContext(JPEGStream jpeg_stream, JPEGDecoderOptions options)
         : stream(move(jpeg_stream))
+        , options(options)
     {
     }
 
-    static ErrorOr<NonnullOwnPtr<JPEGLoadingContext>> create(NonnullOwnPtr<Stream> stream)
+    static ErrorOr<NonnullOwnPtr<JPEGLoadingContext>> create(NonnullOwnPtr<Stream> stream, JPEGDecoderOptions options)
     {
         auto jpeg_stream = TRY(JPEGStream::create(move(stream)));
-        return make<JPEGLoadingContext>(move(jpeg_stream));
+        return make<JPEGLoadingContext>(move(jpeg_stream), options);
     }
 
     enum State {
@@ -453,6 +454,7 @@ struct JPEGLoadingContext {
     Array<i16, 4> previous_dc_values {};
     MacroblockMeta mblock_meta;
     JPEGStream stream;
+    JPEGDecoderOptions options;
 
     Optional<ColorTransform> color_transform {};
 
@@ -1640,7 +1642,8 @@ static void invert_colors_for_adobe_images(JPEGLoadingContext const& context, Ve
 
 static void cmyk_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
-    invert_colors_for_adobe_images(context, macroblocks);
+    if (context.options.cmyk == JPEGDecoderOptions::CMYK::Normal)
+        invert_colors_for_adobe_images(context, macroblocks);
 
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
@@ -1945,8 +1948,13 @@ bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(ReadonlyBytes data)
 {
+    return create_with_options(data, {});
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create_with_options(ReadonlyBytes data, JPEGDecoderOptions options)
+{
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    auto context = TRY(JPEGLoadingContext::create(move(stream)));
+    auto context = TRY(JPEGLoadingContext::create(move(stream), options));
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(context))));
     TRY(decode_header(*plugin->m_context));
     return plugin;
