@@ -37,6 +37,28 @@ idl_sources_targets = [
   ":global_idl_bindings_sources",
 ]
 
+compiled_action("WebWorkerClientEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Libraries/LibWeb/Worker/WebWorkerClient.ipc" ]
+  outputs = [ "$root_gen_dir/LibWeb/Worker/WebWorkerClientEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
+compiled_action("WebWorkerServerEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Libraries/LibWeb/Worker/WebWorkerServer.ipc" ]
+  outputs = [ "$root_gen_dir/LibWeb/Worker/WebWorkerServerEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
 compiled_action("generate_window_or_worker_interfaces") {
   tool = "//Meta/Lagom/Tools/CodeGenerators/LibWeb:GenerateWindowOrWorkerInterfaces"
   inputs = standard_idl_files + iterable_idl_files + namespace_idl_files +
@@ -246,6 +268,8 @@ embed_as_string_view("generate_quirks_mode_stylesheet_source") {
 
 source_set("all_generated") {
   generated_deps = [
+    ":WebWorkerClientEndpoint",
+    ":WebWorkerServerEndpoint",
     ":generate_aria_roles",
     ":generate_css_easing_functions",
     ":generate_css_enums",
@@ -332,6 +356,7 @@ shared_library("LibWeb") {
            "WebGL",
            "WebIDL",
            "WebSockets",
+           "Worker",
            "XHR",
            "XLink",
            "XML",
