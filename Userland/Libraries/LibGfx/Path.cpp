@@ -127,7 +127,7 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rot
     } else {
         double numerator = rx_sq * ry_sq - rx_sq * y1p_sq - ry_sq * x1p_sq;
         double denominator = rx_sq * y1p_sq + ry_sq * x1p_sq;
-        multiplier = AK::sqrt(numerator / denominator);
+        multiplier = AK::sqrt(AK::max(0., numerator) / denominator);
     }
 
     if (large_arc == sweep)
