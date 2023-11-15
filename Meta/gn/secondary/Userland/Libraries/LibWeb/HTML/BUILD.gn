@@ -159,6 +159,7 @@ source_set("HTML") {
     "WindowOrWorkerGlobalScope.cpp",
     "WindowProxy.cpp",
     "Worker.cpp",
+    "WorkerAgent.cpp",
     "WorkerDebugConsoleClient.cpp",
     "WorkerGlobalScope.cpp",
     "WorkerLocation.cpp",

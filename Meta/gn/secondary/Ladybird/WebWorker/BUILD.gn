@@ -1,0 +1,31 @@
+executable("WebWorker") {
+  configs += [ "//Ladybird:ladybird_config" ]
+  include_dirs = [
+    "//Userland/Libraries",
+    "//Userland/Services",
+  ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibFileSystem",
+    "//Userland/Libraries/LibGfx",
+    "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibImageDecoderClient",
+    "//Userland/Libraries/LibJS",
+    "//Userland/Libraries/LibLocale",
+    "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibProtocol",
+    "//Userland/Libraries/LibWeb",
+    "//Userland/Libraries/LibWeb:WebWorkerClientEndpoint",
+    "//Userland/Libraries/LibWeb:WebWorkerServerEndpoint",
+    "//Userland/Libraries/LibWebView",
+  ]
+  sources = [
+    "//Ladybird/HelperProcess.cpp",
+    "//Ladybird/Utilities.cpp",
+    "//Userland/Services/WebWorker/ConnectionFromClient.cpp",
+    "//Userland/Services/WebWorker/DedicatedWorkerHost.cpp",
+    "//Userland/Services/WebWorker/PageHost.cpp",
+    "main.cpp",
+  ]
+}
