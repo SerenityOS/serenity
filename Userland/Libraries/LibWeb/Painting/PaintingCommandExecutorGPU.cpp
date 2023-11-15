@@ -99,9 +99,9 @@ CommandResult PaintingCommandExecutorGPU::pop_stacking_context_with_mask(Gfx::In
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::paint_linear_gradient(Gfx::IntRect const&, Web::Painting::LinearGradientData const&)
+CommandResult PaintingCommandExecutorGPU::paint_linear_gradient(Gfx::IntRect const& rect, Web::Painting::LinearGradientData const& data)
 {
-    // FIXME
+    painter().fill_rect_with_linear_gradient(rect, data.color_stops.list, data.gradient_angle, data.color_stops.repeat_length);
     return CommandResult::Continue;
 }
 
