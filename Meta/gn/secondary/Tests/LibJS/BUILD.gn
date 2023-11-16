@@ -1,0 +1,16 @@
+import("//Tests/unittest.gni")
+
+unittest("test-js") {
+  use_js_main = true
+  include_dirs = [ "//Userland/Libraries" ]
+  sources = [ "test-js.cpp" ]
+  deps = [
+    "//Userland/Libraries/LibFileSystem",
+    "//Userland/Libraries/LibJS",
+  ]
+}
+
+group("LibJS") {
+  deps = [ ":test-js" ]
+  testonly = true
+}
