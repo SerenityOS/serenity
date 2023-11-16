@@ -472,11 +472,12 @@ public:
         Initialize,
         Set,
     };
-    explicit SetVariable(IdentifierTableIndex identifier, InitializationMode initialization_mode = InitializationMode::Set, EnvironmentMode mode = EnvironmentMode::Lexical)
+    explicit SetVariable(IdentifierTableIndex identifier, u32 cache_index, InitializationMode initialization_mode = InitializationMode::Set, EnvironmentMode mode = EnvironmentMode::Lexical)
         : Instruction(Type::SetVariable, sizeof(*this))
         , m_identifier(identifier)
         , m_mode(mode)
         , m_initialization_mode(initialization_mode)
+        , m_cache_index(cache_index)
     {
     }
 
@@ -486,11 +487,13 @@ public:
     IdentifierTableIndex identifier() const { return m_identifier; }
     EnvironmentMode mode() const { return m_mode; }
     InitializationMode initialization_mode() const { return m_initialization_mode; }
+    u32 cache_index() const { return m_cache_index; }
 
 private:
     IdentifierTableIndex m_identifier;
     EnvironmentMode m_mode;
     InitializationMode m_initialization_mode { InitializationMode::Set };
+    u32 m_cache_index { 0 };
 };
 
 class SetLocal final : public Instruction {
