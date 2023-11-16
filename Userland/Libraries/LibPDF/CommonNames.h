@@ -122,6 +122,7 @@
     X(Limits)                     \
     X(Linearized)                 \
     X(ML)                         \
+    X(Mask)                       \
     X(Matrix)                     \
     X(MediaBox)                   \
     X(MissingWidth)               \
