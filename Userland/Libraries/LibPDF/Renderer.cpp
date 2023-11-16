@@ -1198,6 +1198,13 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
                 image_bitmap->set_pixel(i, j, image_color);
             }
         }
+    } else if (image_dict->contains(CommonNames::Mask)) {
+        auto mask_object = TRY(image_dict->get_object(m_document, CommonNames::Mask));
+        if (mask_object->is<StreamObject>()) {
+            return Error::rendering_unsupported_error("/Mask stream objects not yet implemented");
+        } else if (mask_object->is<ArrayObject>()) {
+            return Error::rendering_unsupported_error("/Mask array objects not yet implemented");
+        }
     }
 
     auto image_space = calculate_image_space_transformation(width, height);
