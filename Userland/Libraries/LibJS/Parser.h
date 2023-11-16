@@ -305,6 +305,7 @@ private:
     struct ParserState {
         Lexer lexer;
         Token current_token;
+        bool previous_token_was_period { false };
         Vector<ParserError> errors;
         ScopePusher* current_scope_pusher { nullptr };
 

@@ -4252,6 +4252,7 @@ Token Parser::consume()
     if (old_token.is_identifier_name() && (m_state.current_token.type() == TokenType::Slash || m_state.current_token.type() == TokenType::SlashEquals)) {
         m_state.current_token = m_state.lexer.force_slash_as_regex();
     }
+    m_state.previous_token_was_period = old_token.type() == TokenType::Period;
     return old_token;
 }
 
@@ -4259,11 +4260,17 @@ Token Parser::consume_and_allow_division()
 {
     auto old_token = m_state.current_token;
     m_state.current_token = m_state.lexer.next();
-    // NOTE: This is the bare minimum needed to decide whether we might need an arguments object
-    // in a function expression or declaration. ("might" because the AST implements some further
-    // conditions from the spec that rule out the need for allocating one)
-    if (old_token.type() == TokenType::Identifier && old_token.value().is_one_of("arguments"sv, "eval"sv))
+
+    // NOTE: This is the bare minimum needed to decide whether we might need an `arguments` object
+    //       in a function expression or declaration. ("Might" because ESFO implements some further
+    //       conditions from the spec that rule out the need for allocating one.)
+    //       Basically any freestanding use of `arguments` in a function body. This is not perfect
+    //       but avoids a lot of unnecessary arguments objects. We check if the previous token was
+    //       a period to avoid creating `arguments` due to an unrelated property access (`o.arguments`)
+    if (old_token.type() == TokenType::Identifier && old_token.value().is_one_of("arguments"sv, "eval"sv) && !m_state.previous_token_was_period)
         m_state.function_might_need_arguments_object = true;
+
+    m_state.previous_token_was_period = old_token.type() == TokenType::Period;
     return old_token;
 }
 
