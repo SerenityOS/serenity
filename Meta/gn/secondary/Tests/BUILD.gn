@@ -1,4 +1,7 @@
 group("Tests") {
-  deps = [ "//Tests/AK" ]
+  deps = [
+    "//Tests/AK",
+    "//Tests/LibJS",
+  ]
   testonly = true
 }
