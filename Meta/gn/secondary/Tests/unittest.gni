@@ -8,8 +8,6 @@ template("unittest") {
     assert(!defined(invoker.output_dir), "cannot set unittest output_dir")
     assert(!defined(invoker.testonly), "cannot set unittest testonly")
 
-    output_dir = target_out_dir
-
     deps = [ "//AK" ]
     if (has_custom_main) {
       deps += [ "//Userland/Libraries/LibTest" ]
