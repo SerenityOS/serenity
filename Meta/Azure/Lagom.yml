@@ -159,6 +159,17 @@ jobs:
           UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
           TESTS_ONLY: 1
 
+      # Detect if any test dumps exist, which enables the next step to publish them as an artifact.
+      - bash: |
+          if [[ -d $(Build.SourcesDirectory)/Meta/Lagom/Build/Ladybird/test-dumps ]]; then
+            echo "##vso[task.setvariable variable=TestDumpsExist]true"
+          fi
+        condition: always()
+
+      - publish: $(Build.SourcesDirectory)/Meta/Lagom/Build/Ladybird/test-dumps
+        artifact: 'test-dumps-${{ parameters.os }}-${{ parameters.fuzzer }}'
+        condition: eq(variables.TestDumpsExist, 'true')
+
     - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), eq(parameters.os, 'Linux') ) }}:
       - script: |
           ./run.sh
