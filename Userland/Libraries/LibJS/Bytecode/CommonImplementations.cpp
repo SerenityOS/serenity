@@ -264,10 +264,13 @@ ThrowCompletionOr<void> set_variable(
     DeprecatedFlyString const& name,
     Value value,
     Op::EnvironmentMode mode,
-    Op::SetVariable::InitializationMode initialization_mode)
+    Op::SetVariable::InitializationMode initialization_mode,
+    EnvironmentVariableCache& cache)
 {
     auto environment = mode == Op::EnvironmentMode::Lexical ? vm.running_execution_context().lexical_environment : vm.running_execution_context().variable_environment;
     auto reference = TRY(vm.resolve_binding(name, environment));
+    if (reference.environment_coordinate().has_value())
+        cache = reference.environment_coordinate();
     switch (initialization_mode) {
     case Op::SetVariable::InitializationMode::Initialize:
         TRY(reference.initialize_referenced_binding(vm, value));

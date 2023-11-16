@@ -414,7 +414,7 @@ void Generator::emit_set_variable(JS::Identifier const& identifier, Bytecode::Op
     if (identifier.is_local()) {
         emit<Bytecode::Op::SetLocal>(identifier.local_variable_index());
     } else {
-        emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()), initialization_mode, mode);
+        emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()), next_environment_variable_cache(), initialization_mode, mode);
     }
 }
 

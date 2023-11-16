@@ -32,6 +32,7 @@ struct ExecutionContext {
 
     static FlatPtr realm_offset() { return OFFSET_OF(ExecutionContext, realm); }
     static FlatPtr lexical_environment_offset() { return OFFSET_OF(ExecutionContext, lexical_environment); }
+    static FlatPtr variable_environment_offset() { return OFFSET_OF(ExecutionContext, variable_environment); }
 
 private:
     explicit ExecutionContext(MarkedVector<Value> existing_arguments, MarkedVector<Value> existing_local_variables);

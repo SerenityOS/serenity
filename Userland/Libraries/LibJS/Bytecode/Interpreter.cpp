@@ -771,7 +771,12 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
 {
     auto& vm = interpreter.vm();
     auto const& name = interpreter.current_executable().get_identifier(m_identifier);
-    TRY(set_variable(vm, name, interpreter.accumulator(), m_mode, m_initialization_mode));
+    TRY(set_variable(vm,
+        name,
+        interpreter.accumulator(),
+        m_mode,
+        m_initialization_mode,
+        interpreter.current_executable().environment_variable_caches[m_cache_index]));
     return {};
 }
 

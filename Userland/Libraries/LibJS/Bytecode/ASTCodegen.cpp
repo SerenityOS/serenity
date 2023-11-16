@@ -1067,7 +1067,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Byt
         Bytecode::Generator::SourceLocationScope scope(generator, *this);
         auto index = generator.intern_identifier(name());
         generator.emit<Bytecode::Op::GetVariable>(index, generator.next_environment_variable_cache());
-        generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
+        generator.emit<Bytecode::Op::SetVariable>(index, generator.next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
     }
     return {};
 }
@@ -1088,7 +1088,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode_with
     generator.emit_new_function(*this, lhs_name);
 
     if (has_name) {
-        generator.emit<Bytecode::Op::SetVariable>(*name_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
+        generator.emit<Bytecode::Op::SetVariable>(*name_identifier, generator.next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
         generator.end_variable_scope();
     }
 
@@ -2352,7 +2352,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
                     did_create_variable_scope_for_catch_clause = true;
                     auto parameter_identifier = generator.intern_identifier(parameter);
                     generator.emit<Bytecode::Op::CreateVariable>(parameter_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
-                    generator.emit<Bytecode::Op::SetVariable>(parameter_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize);
+                    generator.emit<Bytecode::Op::SetVariable>(parameter_identifier, generator.next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize);
                 }
                 return {};
             },
@@ -3180,7 +3180,7 @@ Bytecode::CodeGenerationErrorOr<void> ExportStatement::generate_bytecode(Bytecod
         TRY(generator.emit_named_evaluation_if_anonymous_function(static_cast<ClassExpression const&>(*m_statement), generator.intern_identifier("default"sv)));
 
         if (!static_cast<ClassExpression const&>(*m_statement).has_name())
-            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(ExportStatement::local_name_for_default), Bytecode::Op::SetVariable::InitializationMode::Initialize);
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(ExportStatement::local_name_for_default), generator.next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize);
 
         return {};
     }
@@ -3188,7 +3188,7 @@ Bytecode::CodeGenerationErrorOr<void> ExportStatement::generate_bytecode(Bytecod
     // ExportDeclaration : export default AssignmentExpression ;
     VERIFY(is<Expression>(*m_statement));
     TRY(generator.emit_named_evaluation_if_anonymous_function(static_cast<Expression const&>(*m_statement), generator.intern_identifier("default"sv)));
-    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(ExportStatement::local_name_for_default), Bytecode::Op::SetVariable::InitializationMode::Initialize);
+    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(ExportStatement::local_name_for_default), generator.next_environment_variable_cache(), Bytecode::Op::SetVariable::InitializationMode::Initialize);
     return {};
 }
 

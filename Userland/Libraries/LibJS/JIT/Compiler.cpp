@@ -2563,18 +2563,140 @@ static Value cxx_set_variable(
     DeprecatedFlyString const& identifier,
     Value value,
     Bytecode::Op::EnvironmentMode environment_mode,
-    Bytecode::Op::SetVariable::InitializationMode initialization_mode)
+    Bytecode::Op::SetVariable::InitializationMode initialization_mode,
+    Bytecode::EnvironmentVariableCache& cache)
 {
-    TRY_OR_SET_EXCEPTION(Bytecode::set_variable(vm, identifier, value, environment_mode, initialization_mode));
+    TRY_OR_SET_EXCEPTION(Bytecode::set_variable(vm, identifier, value, environment_mode, initialization_mode, cache));
     return {};
 }
 
 void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
 {
+    Assembler::Label slow_case;
+
+    // Load the identifier in ARG1 for both cases
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
         Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
+
+    // Load the value in ARG2 for both cases
     load_accumulator(ARG2);
+
+    // if (!cache.has_value()) goto slow_case;
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG5),
+        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.environment_variable_caches[op.cache_index()])));
+
+    m_assembler.mov8(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(ARG5, Bytecode::EnvironmentVariableCache::has_value_offset()));
+
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(0),
+        slow_case);
+
+    if (op.mode() == Bytecode::Op::EnvironmentMode::Lexical) {
+        // auto environment = vm.running_execution_context().lexical_environment;
+        // GPR1 = current lexical environment
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(RUNNING_EXECUTION_CONTEXT_BASE, ExecutionContext::lexical_environment_offset()));
+    } else {
+        // auto environment = vm.running_execution_context().variable_environment;
+        // GPR1 = current variable environment
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(RUNNING_EXECUTION_CONTEXT_BASE, ExecutionContext::variable_environment_offset()));
+    }
+
+    // for (size_t i = 0; i < cache->hops; ++i)
+    //     environment = environment->outer_environment();
+
+    // GPR0 = hops
+    m_assembler.mov32(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(ARG5, Bytecode::EnvironmentVariableCache::value_offset() + EnvironmentCoordinate::hops_offset()));
+
+    {
+        // while (GPR0--)
+        //     GPR1 = GPR1->outer_environment()
+        Assembler::Label loop_start;
+        Assembler::Label loop_end;
+        loop_start.link(m_assembler);
+        m_assembler.jump_if(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Condition::EqualTo,
+            Assembler::Operand::Imm(0),
+            loop_end);
+        m_assembler.sub(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Imm(1));
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR1),
+            Assembler::Operand::Mem64BaseAndOffset(GPR1, Environment::outer_environment_offset()));
+        m_assembler.jump(loop_start);
+        loop_end.link(m_assembler);
+    }
+
+    // GPR1 now points to the environment holding our binding.
+
+    // if (environment->is_permanently_screwed_by_eval()) goto slow_case;
+    m_assembler.mov8(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(GPR1, Environment::is_permanently_screwed_by_eval_offset()));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::NotEqualTo,
+        Assembler::Operand::Imm(0),
+        slow_case);
+
+    // GPR1 = environment->m_bindings.outline_buffer()
+    m_assembler.mov(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Mem64BaseAndOffset(GPR1, DeclarativeEnvironment::bindings_offset() + Vector<DeclarativeEnvironment::Binding>::outline_buffer_offset()));
+
+    // GPR0 = index
+    m_assembler.mov32(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(ARG5, Bytecode::EnvironmentVariableCache::value_offset() + EnvironmentCoordinate::index_offset()));
+
+    // GPR0 *= sizeof(DeclarativeEnvironment::Binding)
+    m_assembler.mul32(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(sizeof(DeclarativeEnvironment::Binding)),
+        slow_case);
+
+    // GPR1 = &binding
+    m_assembler.add(
+        Assembler::Operand::Register(GPR1),
+        Assembler::Operand::Register(GPR0));
+
+    // if (!binding.initialized) goto slow_case;
+    m_assembler.mov(
+        Assembler ::Operand::Register(GPR0),
+        Assembler::Operand::Mem64BaseAndOffset(GPR1, DeclarativeEnvironment::Binding::initialized_offset()));
+    m_assembler.bitwise_and(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Imm(0xff));
+    m_assembler.jump_if(
+        Assembler::Operand::Register(GPR0),
+        Assembler::Condition::EqualTo,
+        Assembler::Operand::Imm(0),
+        slow_case);
+
+    // binding.value = accumulator;
+    m_assembler.mov(
+        Assembler::Operand::Mem64BaseAndOffset(GPR1, DeclarativeEnvironment::Binding::value_offset()),
+        Assembler::Operand::Register(ARG2));
+
+    Assembler::Label end;
+    m_assembler.jump(end);
+
+    // Slow case: Uncached access. Call C++ helper.
+    slow_case.link(m_assembler);
+
     m_assembler.mov(
         Assembler::Operand::Register(ARG3),
         Assembler::Operand::Imm(to_underlying(op.mode())));
@@ -2583,6 +2705,8 @@ void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
         Assembler::Operand::Imm(to_underlying(op.initialization_mode())));
     native_call((void*)cxx_set_variable);
     check_exception();
+
+    end.link(m_assembler);
 }
 
 void Compiler::compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwind const& op)
