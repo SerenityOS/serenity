@@ -45,7 +45,7 @@ static void wc_out(Count const& count)
     outln("{:>14}", count.name);
 }
 
-static ErrorOr<Count> get_count(StringView file_specifier)
+static ErrorOr<Count> get_count(StringView file_specifier, bool only_bytes)
 {
     Count count;
 
@@ -58,8 +58,12 @@ static ErrorOr<Count> get_count(StringView file_specifier)
     }
 
     auto file = TRY(Core::InputBufferedFile::create(maybe_file.release_value()));
-
     count.name = file_specifier;
+
+    if (only_bytes) {
+        count.bytes = TRY(file->seek(0, SeekMode::FromEndPosition));
+        return count;
+    }
 
     bool start_a_new_word = true;
     unsigned current_line_length = 0;
@@ -118,14 +122,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!g_output_line && !g_output_byte && !g_output_word && !g_output_max_line_length)
         g_output_line = g_output_byte = g_output_word = true;
 
+    bool only_bytes = !g_output_line && !g_output_word && !g_output_max_line_length;
+
     Vector<Count> counts;
     for (auto const& file_specifier : file_specifiers)
-        counts.append(TRY(get_count(file_specifier)));
+        counts.append(TRY(get_count(file_specifier, only_bytes)));
 
     TRY(Core::System::pledge("stdio"));
 
     if (file_specifiers.is_empty())
-        counts.append(TRY(get_count(""sv)));
+        counts.append(TRY(get_count(""sv, only_bytes)));
     else if (file_specifiers.size() > 1)
         counts.append(get_total_count(counts));
 
