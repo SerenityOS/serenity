@@ -16,8 +16,10 @@
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
+#include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
+#include <AK/Tuple.h>
 #include <AK/URL.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
@@ -1341,11 +1343,35 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     }
 }
 
-static DeprecatedString do_escape(Shell::EscapeMode escape_mode, auto& token)
+template<typename... Offsets>
+static DeprecatedString do_escape(Shell::EscapeMode escape_mode, auto& token, Offsets&... offsets)
 {
     StringBuilder builder;
+    size_t offset_from_original = 0;
+
+    auto set_offset = [&](auto& offset) {
+        offset.value() = builder.length();
+        offset.clear();
+        return true;
+    };
+    auto check_offset = [&](auto& offset) {
+        if (offset == offset_from_original)
+            set_offset(offset);
+    };
+
+    auto maybe_offsets = Tuple { Optional<Offsets&> { offsets }... };
+    auto check_offsets = [&] {
+        maybe_offsets.apply_as_args([&]<typename... Args>(Args&... args) {
+            (check_offset(args), ...);
+        });
+    };
+
     for (auto c : token) {
         static_assert(sizeof(c) == sizeof(u32) || sizeof(c) == sizeof(u8));
+
+        check_offsets();
+        offset_from_original++;
+
         switch (Shell::special_character_escape_mode(c, escape_mode)) {
         case Shell::SpecialCharacterEscapeMode::Untouched:
             if constexpr (sizeof(c) == sizeof(u8))
@@ -1402,7 +1428,7 @@ static DeprecatedString do_escape(Shell::EscapeMode escape_mode, auto& token)
             break;
         }
     }
-
+    check_offsets();
     return builder.to_deprecated_string();
 }
 
@@ -2019,13 +2045,20 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                     dbgln("Proxy completion for {}", argv);
                     suggestions.extend(complete(argv));
                 } else if (kind == "plain") {
-                    Line::CompletionSuggestion suggestion {
-                        object.get_deprecated_string("completion"sv).value_or(""),
-                        object.get_deprecated_string("trailing_trivia"sv).value_or(""),
-                        object.get_deprecated_string("display_trivia"sv).value_or(""),
-                    };
-                    suggestion.static_offset = object.get_u64("static_offset"sv).value_or(0);
-                    suggestion.invariant_offset = object.get_u64("invariant_offset"sv).value_or(0);
+                    auto completion_text = object.get_deprecated_string("completion"sv).value_or("");
+                    auto trailing_text = object.get_deprecated_string("trailing_trivia"sv).value_or("");
+                    auto display_text = object.get_deprecated_string("display_trivia"sv).value_or("");
+                    auto static_offset = object.get_u64("static_offset"sv).value_or(0);
+                    auto invariant_offset = object.get_u64("invariant_offset"sv).value_or(0);
+                    if (!object.get_bool("treat_as_code"sv).value_or(false)) {
+                        completion_text = do_escape(EscapeMode::Bareword, completion_text, static_offset, invariant_offset);
+                        trailing_text = escape_token(trailing_text, EscapeMode::Bareword);
+                        display_text = escape_token(display_text, EscapeMode::Bareword);
+                    }
+                    Line::CompletionSuggestion suggestion { move(completion_text), move(trailing_text), move(display_text) };
+
+                    suggestion.static_offset = static_offset;
+                    suggestion.invariant_offset = invariant_offset;
                     suggestion.allow_commit_without_listing = object.get_bool("allow_commit_without_listing"sv).value_or(true);
                     suggestions.append(move(suggestion));
                 } else {
