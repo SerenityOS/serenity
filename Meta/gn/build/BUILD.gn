@@ -84,6 +84,8 @@ config("compiler_defaults") {
   }
   cflags += [ "-fdiagnostics-color" ]
 
+  cflags += [ "-ffp-contract=off" ]
+
   if (use_lld) {
     ldflags += [ "-Wl,--color-diagnostics" ]
   }
