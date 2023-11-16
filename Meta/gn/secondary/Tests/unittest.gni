@@ -8,7 +8,11 @@ template("unittest") {
     assert(!defined(invoker.output_dir), "cannot set unittest output_dir")
     assert(!defined(invoker.testonly), "cannot set unittest testonly")
 
-    deps = [ "//AK" ]
+    if (!defined(invoker.deps)) {
+      deps = []
+    }
+
+    deps += [ "//AK" ]
     if (has_custom_main) {
       deps += [ "//Userland/Libraries/LibTest" ]
     } else if (use_js_main) {
