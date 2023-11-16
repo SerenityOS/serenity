@@ -47,15 +47,11 @@ def extract_directory(file, destination, path):
     destination_path.mkdir(parents=True, exist_ok=True)
     if not isinstance(file, zipfile.ZipFile):
         raise NotImplementedError
+
     # FIXME: This loops over the entire archive len(args.paths) times. Decrease complexity
     for entry in file.namelist():
         if entry.startswith(path):
-            entry_destination = destination / entry
-            if entry.endswith('/'):
-                entry_destination.mkdir(exist_ok=True)
-                continue
-            with file.open(entry) as member:
-                entry_destination.write_text(member.read().decode('utf-8'))
+            file.extract(entry, destination)
 
 
 def main():
