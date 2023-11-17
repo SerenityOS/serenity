@@ -106,15 +106,20 @@ StringView current_time_zone()
 #ifdef AK_OS_SERENITY
     return system_time_zone();
 #else
-    static constexpr auto zoneinfo = "/zoneinfo/"sv;
+    static constexpr auto zoneinfo = "/zoneinfo"sv;
+
     char* real_path = realpath("/etc/localtime", nullptr);
     ScopeGuard free_path = [real_path]() { free(real_path); };
 
     if (real_path) {
         auto time_zone = StringView { real_path, strlen(real_path) };
 
+        // The zoneinfo file may be located in paths like /usr/share/zoneinfo/ or /usr/share/zoneinfo.default/.
+        // We want to strip any such prefix from the path to arrive at the time zone name.
         if (auto index = time_zone.find(zoneinfo); index.has_value())
             time_zone = time_zone.substring_view(*index + zoneinfo.length());
+        if (auto index = time_zone.find('/'); index.has_value())
+            time_zone = time_zone.substring_view(*index + 1);
 
         if (auto maybe_time_zone = canonicalize_time_zone(time_zone); maybe_time_zone.has_value())
             return *maybe_time_zone;
