@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Math.h>
+#include <LibGfx/AffineTransform.h>
 #include <LibGfx/Matrix.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
@@ -74,6 +75,13 @@ constexpr static Matrix4x4<T> rotation_matrix(Vector3<T> const& axis, T angle)
         t * x * y + z * s, t * y * y + c, t * y * z - x * s, 0,
         t * x * z - y * s, t * y * z + x * s, t * z * z + c, 0,
         0, 0, 0, 1);
+}
+
+template<typename T>
+Gfx::AffineTransform extract_2d_affine_transform(Matrix4x4<T> const& matrix)
+{
+    auto* m = matrix.elements();
+    return Gfx::AffineTransform(m[0][0], m[1][0], m[0][1], m[1][1], m[0][3], m[1][3]);
 }
 
 typedef Matrix4x4<float> FloatMatrix4x4;
