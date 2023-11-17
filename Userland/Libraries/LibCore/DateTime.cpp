@@ -95,6 +95,11 @@ void DateTime::set_time_only(int hour, int minute, Optional<int> second)
     set_time(year(), month(), day(), hour, minute, second.has_value() ? second.release_value() : this->second());
 }
 
+void DateTime::set_date(Core::DateTime const& other)
+{
+    set_time(other.year(), other.month(), other.day(), hour(), minute(), second());
+}
+
 ErrorOr<String> DateTime::to_string(StringView format) const
 {
     struct tm tm;
