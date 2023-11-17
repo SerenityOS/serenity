@@ -325,19 +325,7 @@ static void unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, Reado
             u8 left = (i < bytes_per_complete_pixel) ? 0 : scanline_data[i - bytes_per_complete_pixel];
             u8 above = previous_scanlines_data[i];
             u8 upper_left = (i < bytes_per_complete_pixel) ? 0 : previous_scanlines_data[i - bytes_per_complete_pixel];
-            i32 predictor = left + above - upper_left;
-            u32 predictor_left = abs(predictor - left);
-            u32 predictor_above = abs(predictor - above);
-            u32 predictor_upper_left = abs(predictor - upper_left);
-            u8 nearest;
-            if (predictor_left <= predictor_above && predictor_left <= predictor_upper_left) {
-                nearest = left;
-            } else if (predictor_above <= predictor_upper_left) {
-                nearest = above;
-            } else {
-                nearest = upper_left;
-            }
-            scanline_data[i] += nearest;
+            scanline_data[i] += PNG::paeth_predictor(left, above, upper_left);
         }
         break;
     default:
