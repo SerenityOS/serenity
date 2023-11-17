@@ -67,7 +67,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                                webdriverContentIPCPath:webdriver_content_ipc_path];
 
     [NSApp setDelegate:delegate];
-    [NSApp activateIgnoringOtherApps:YES];
 
     return event_loop.exec();
 }
