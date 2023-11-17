@@ -1133,18 +1133,10 @@ private:
     Vector<NonnullRefPtr<Expression const>> m_expressions;
 };
 
-class Literal : public Expression {
-protected:
-    explicit Literal(SourceRange source_range)
-        : Expression(move(source_range))
-    {
-    }
-};
-
-class BooleanLiteral final : public Literal {
+class BooleanLiteral final : public Expression {
 public:
     explicit BooleanLiteral(SourceRange source_range, bool value)
-        : Literal(move(source_range))
+        : Expression(move(source_range))
         , m_value(value)
     {
     }
@@ -1156,10 +1148,10 @@ private:
     bool m_value { false };
 };
 
-class NumericLiteral final : public Literal {
+class NumericLiteral final : public Expression {
 public:
     explicit NumericLiteral(SourceRange source_range, double value)
-        : Literal(move(source_range))
+        : Expression(move(source_range))
         , m_value(value)
     {
     }
@@ -1171,10 +1163,10 @@ private:
     Value m_value;
 };
 
-class BigIntLiteral final : public Literal {
+class BigIntLiteral final : public Expression {
 public:
     explicit BigIntLiteral(SourceRange source_range, DeprecatedString value)
-        : Literal(move(source_range))
+        : Expression(move(source_range))
         , m_value(move(value))
     {
     }
@@ -1186,10 +1178,10 @@ private:
     DeprecatedString m_value;
 };
 
-class StringLiteral final : public Literal {
+class StringLiteral final : public Expression {
 public:
     explicit StringLiteral(SourceRange source_range, DeprecatedString value)
-        : Literal(move(source_range))
+        : Expression(move(source_range))
         , m_value(move(value))
     {
     }
@@ -1205,10 +1197,10 @@ private:
     DeprecatedString m_value;
 };
 
-class NullLiteral final : public Literal {
+class NullLiteral final : public Expression {
 public:
     explicit NullLiteral(SourceRange source_range)
-        : Literal(move(source_range))
+        : Expression(move(source_range))
     {
     }
 
@@ -1216,10 +1208,10 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 };
 
-class RegExpLiteral final : public Literal {
+class RegExpLiteral final : public Expression {
 public:
     RegExpLiteral(SourceRange source_range, regex::Parser::Result parsed_regex, DeprecatedString parsed_pattern, regex::RegexOptions<ECMAScriptFlags> parsed_flags, DeprecatedString pattern, DeprecatedString flags)
-        : Literal(move(source_range))
+        : Expression(move(source_range))
         , m_parsed_regex(move(parsed_regex))
         , m_parsed_pattern(move(parsed_pattern))
         , m_parsed_flags(parsed_flags)
