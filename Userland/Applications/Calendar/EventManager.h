@@ -32,8 +32,6 @@ public:
 
     String const& current_filename() const { return m_current_filename; }
     void set_filename(String const& filename) { m_current_filename = filename; }
-    bool dirty() const { return m_dirty; }
-    void set_dirty(bool dirty) { m_dirty = dirty; }
 
     ErrorOr<void> save(FileSystemAccessClient::File& file);
     ErrorOr<void> load_file(FileSystemAccessClient::File& file);
@@ -41,6 +39,7 @@ public:
     void set_events(Vector<Event>);
     void clear() { m_events.clear(); }
 
+    bool is_dirty() const { return m_dirty; }
     Span<Event const> events() const { return m_events.span(); }
 
     Function<void()> on_events_change;
@@ -53,8 +52,8 @@ private:
 
     Vector<Event> m_events;
 
-    String m_current_filename;
     bool m_dirty { false };
+    String m_current_filename;
 };
 
 }

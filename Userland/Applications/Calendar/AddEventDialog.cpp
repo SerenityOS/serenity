@@ -119,8 +119,6 @@ ErrorOr<void> AddEventDialog::add_event_to_calendar()
         .end = m_end_date_time,
     });
 
-    m_event_manager.set_dirty(true);
-
     return {};
 }
 

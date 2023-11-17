@@ -26,25 +26,27 @@ OwnPtr<EventManager> EventManager::create()
 void EventManager::add_event(Event event)
 {
     m_events.append(move(event));
-    set_dirty(true);
+    m_dirty = true;
     on_events_change();
 }
 
 void EventManager::set_events(Vector<Event> events)
 {
     m_events = move(events);
+    m_dirty = true;
     on_events_change();
 }
 
 ErrorOr<void> EventManager::save(FileSystemAccessClient::File& file)
 {
     set_filename(file.filename());
-    set_dirty(false);
 
     auto stream = file.release_stream();
     auto json = TRY(serialize_events());
     TRY(stream->write_some(json.to_byte_string().bytes()));
     stream->close();
+
+    m_dirty = false;
 
     return {};
 }
@@ -95,12 +97,13 @@ ErrorOr<Vector<Event>> EventManager::deserialize_events(JsonArray const& json)
 ErrorOr<void> EventManager::load_file(FileSystemAccessClient::File& file)
 {
     set_filename(file.filename());
-    set_dirty(false);
 
     auto content = TRY(file.stream().read_until_eof());
     auto json = TRY(AK::JsonParser(content).parse());
     auto events = TRY(deserialize_events(json.as_array()));
     set_events(events);
+
+    m_dirty = false;
 
     return {};
 }
