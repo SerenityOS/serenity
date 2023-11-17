@@ -1425,6 +1425,10 @@ ErrorOr<void> Heredoc::dump(int level) const
 
 ErrorOr<RefPtr<Value>> Heredoc::run(RefPtr<Shell> shell)
 {
+    if (shell && shell->posix_mode() && !m_contents) {
+        m_contents = make_ref_counted<StringLiteral>(position(), ""_string, StringLiteral::EnclosureType::None);
+    }
+
     if (!m_contents) {
         if (shell)
             shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Attempt to evaluate an unresolved heredoc"sv, position());
