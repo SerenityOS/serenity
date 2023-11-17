@@ -416,7 +416,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
     // (three samples, two bytes per sample); for color type 0 with a bit depth of 2,
     // bpp is equal to 1 (rounding up); for color type 4 with a bit depth of 16, bpp
     // is equal to 4 (two-byte grayscale sample, plus two-byte alpha sample)."
-    u8 bytes_per_complete_pixel = (context.bit_depth + 7) / 8 * context.channels;
+    u8 bytes_per_complete_pixel = ceil_div(context.bit_depth, (u8)8) * context.channels;
 
     u8 dummy_scanline_bytes[bytes_per_scanline];
     memset(dummy_scanline_bytes, 0, sizeof(dummy_scanline_bytes));
