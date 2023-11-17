@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,6 +25,8 @@ public:
     void update_window_title();
     void load_file(FileSystemAccessClient::File file);
 
+    bool request_close();
+
 private:
     void create_on_tile_doubleclick();
 
@@ -43,6 +46,7 @@ private:
     ErrorOr<NonnullRefPtr<GUI::Action>> create_open_settings_action();
 
     OwnPtr<GUI::ActionGroup> m_view_type_action_group;
+    RefPtr<GUI::Action> m_save_action;
 
     RefPtr<EventCalendar> m_event_calendar;
 };
