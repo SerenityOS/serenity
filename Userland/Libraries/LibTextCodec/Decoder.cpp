@@ -232,6 +232,12 @@ StringView get_output_encoding(StringView encoding)
     return encoding;
 }
 
+bool Decoder::validate(StringView)
+{
+    // By-default we assume that any input sequence is valid, character encodings that do not accept all inputs may override this
+    return true;
+}
+
 ErrorOr<String> Decoder::to_utf8(StringView input)
 {
     StringBuilder builder(input.length());
@@ -245,6 +251,11 @@ ErrorOr<void> UTF8Decoder::process(StringView input, Function<ErrorOr<void>(u32)
         TRY(on_code_point(c));
     }
     return {};
+}
+
+bool UTF8Decoder::validate(StringView input)
+{
+    return Utf8View(input).validate();
 }
 
 ErrorOr<String> UTF8Decoder::to_utf8(StringView input)
@@ -299,6 +310,26 @@ ErrorOr<void> UTF16BEDecoder::process(StringView input, Function<ErrorOr<void>(u
     return {};
 }
 
+bool UTF16BEDecoder::validate(StringView input)
+{
+    size_t utf16_length = input.length() - (input.length() % 2);
+    for (size_t i = 0; i < utf16_length; i += 2) {
+        u16 w1 = (static_cast<u8>(input[i]) << 8) | static_cast<u8>(input[i + 1]);
+        if (!is_unicode_surrogate(w1))
+            continue;
+
+        if (!Utf16View::is_high_surrogate(w1) || i + 2 == utf16_length)
+            return false;
+
+        u16 w2 = (static_cast<u8>(input[i + 2]) << 8) | static_cast<u8>(input[i + 3]);
+        if (!Utf16View::is_low_surrogate(w2))
+            return false;
+
+        i += 2;
+    }
+    return true;
+}
+
 ErrorOr<String> UTF16BEDecoder::to_utf8(StringView input)
 {
     // Discard the BOM
@@ -350,6 +381,26 @@ ErrorOr<void> UTF16LEDecoder::process(StringView input, Function<ErrorOr<void>(u
     }
 
     return {};
+}
+
+bool UTF16LEDecoder::validate(StringView input)
+{
+    size_t utf16_length = input.length() - (input.length() % 2);
+    for (size_t i = 0; i < utf16_length; i += 2) {
+        u16 w1 = static_cast<u8>(input[i]) | (static_cast<u8>(input[i + 1]) << 8);
+        if (!is_unicode_surrogate(w1))
+            continue;
+
+        if (!Utf16View::is_high_surrogate(w1) || i + 2 == utf16_length)
+            return false;
+
+        u16 w2 = static_cast<u8>(input[i + 2]) | (static_cast<u8>(input[i + 3]) << 8);
+        if (!Utf16View::is_low_surrogate(w2))
+            return false;
+
+        i += 2;
+    }
+    return true;
 }
 
 ErrorOr<String> UTF16LEDecoder::to_utf8(StringView input)
