@@ -10,6 +10,7 @@
 
 #include <AK/StdLibExtras.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibJS/Bytecode/Builtins.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Label.h>
@@ -984,7 +985,7 @@ enum class CallType {
 
 class Call final : public Instruction {
 public:
-    Call(CallType type, Register callee, Register this_value, Register first_argument, u32 argument_count, Optional<StringTableIndex> expression_string = {})
+    Call(CallType type, Register callee, Register this_value, Register first_argument, u32 argument_count, Optional<StringTableIndex> expression_string = {}, Optional<Builtin> builtin = {})
         : Instruction(Type::Call, sizeof(*this))
         , m_callee(callee)
         , m_this_value(this_value)
@@ -992,6 +993,7 @@ public:
         , m_argument_count(argument_count)
         , m_type(type)
         , m_expression_string(expression_string)
+        , m_builtin(builtin)
     {
     }
 
@@ -1003,6 +1005,8 @@ public:
     Register first_argument() const { return m_first_argument; }
     u32 argument_count() const { return m_argument_count; }
 
+    Optional<Builtin> const& builtin() const { return m_builtin; }
+
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 
@@ -1013,6 +1017,7 @@ private:
     u32 m_argument_count { 0 };
     CallType m_type;
     Optional<StringTableIndex> m_expression_string;
+    Optional<Builtin> m_builtin;
 };
 
 class CallWithArgumentArray final : public Instruction {

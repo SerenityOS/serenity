@@ -2,6 +2,7 @@ set(SOURCES
     AST.cpp
     Bytecode/ASTCodegen.cpp
     Bytecode/BasicBlock.cpp
+    Bytecode/Builtins.cpp
     Bytecode/CodeGenerationError.cpp
     Bytecode/CommonImplementations.cpp
     Bytecode/Executable.cpp

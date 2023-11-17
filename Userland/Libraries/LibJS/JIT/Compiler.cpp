@@ -2518,9 +2518,56 @@ static Value cxx_call(VM& vm, Value callee, u32 first_argument_index, u32 argume
     return TRY_OR_SET_EXCEPTION(perform_call(vm.bytecode_interpreter(), this_value, call_type, callee, move(argument_values)));
 }
 
+Assembler::Reg Compiler::argument_register(u32 index)
+{
+    switch (index) {
+    case 0:
+        return ARG0;
+    case 1:
+        return ARG1;
+    case 2:
+        return ARG2;
+    case 3:
+        return ARG3;
+    case 4:
+        return ARG4;
+    case 5:
+        return ARG5;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 void Compiler::compile_call(Bytecode::Op::Call const& op)
 {
+    Assembler::Label slow_case {};
+    Assembler::Label end {};
     load_vm_register(ARG1, op.callee());
+    if (op.call_type() == Bytecode::Op::CallType::Call && op.builtin().has_value() && op.argument_count() == Bytecode::builtin_argument_count(op.builtin().value())) {
+        auto builtin = op.builtin().value();
+
+        // GPR0 = vm.running_execution_context().realm;
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Mem64BaseAndOffset(RUNNING_EXECUTION_CONTEXT_BASE, ExecutionContext::realm_offset()));
+
+        // GPR0 = GPR0->m_builtins[to_underlying(builtin)]
+        m_assembler.mov(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Mem64BaseAndOffset(GPR0, Realm::builtins_offset() + sizeof(Value) * to_underlying(builtin)));
+
+        // if (callee != GPR0) goto slow_case;
+        m_assembler.jump_if(
+            Assembler::Operand::Register(ARG1),
+            Assembler::Condition::NotEqualTo,
+            Assembler::Operand::Register(GPR0),
+            slow_case);
+
+        // Load arguments into ARG2, ARG3, ...
+        for (u32 arg = 0; arg < op.argument_count(); arg++)
+            load_vm_register(argument_register(arg + 2), Bytecode::Register { op.first_argument().index() + arg });
+        compile_builtin(builtin, slow_case, end);
+    }
+    slow_case.link(m_assembler);
     m_assembler.mov(
         Assembler::Operand::Register(ARG2),
         Assembler::Operand::Imm(op.first_argument().index()));
@@ -2537,6 +2584,21 @@ void Compiler::compile_call(Bytecode::Op::Call const& op)
     native_call((void*)cxx_call, { Assembler::Operand::Register(GPR0) });
     store_accumulator(RET);
     check_exception();
+    end.link(m_assembler);
+}
+
+void Compiler::compile_builtin(Bytecode::Builtin builtin, [[maybe_unused]] Assembler::Label& slow_case, [[maybe_unused]] Assembler::Label& end)
+{
+    switch (builtin) {
+#    define DEFINE_BUILTIN_CASE(name, snake_case_name, ...) \
+    case Bytecode::Builtin::name:                           \
+        compile_builtin_##snake_case_name(slow_case, end);  \
+        break;
+        JS_ENUMERATE_BUILTINS(DEFINE_BUILTIN_CASE)
+#    undef DEFINE_BUILTIN_CASE
+    case Bytecode::Builtin::__Count:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 static Value cxx_call_with_argument_array(VM& vm, Value arguments, Value callee, Value this_value, Bytecode::Op::CallType call_type, Optional<Bytecode::StringTableIndex> const& expression_string)
