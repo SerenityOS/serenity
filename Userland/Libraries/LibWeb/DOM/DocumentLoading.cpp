@@ -147,10 +147,17 @@ static bool build_gemini_document(DOM::Document& document, ByteBuffer const& dat
     return true;
 }
 
-bool build_xml_document(DOM::Document& document, ByteBuffer const& data)
+bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optional<String> content_encoding)
 {
-    auto encoding = HTML::run_encoding_sniffing_algorithm(document, data);
-    auto decoder = TextCodec::decoder_for(encoding);
+    Optional<TextCodec::Decoder&> decoder;
+    // The actual HTTP headers and other metadata, not the headers as mutated or implied by the algorithms given in this specification,
+    // are the ones that must be used when determining the character encoding according to the rules given in the above specifications.
+    if (content_encoding.has_value())
+        decoder = TextCodec::decoder_for(*content_encoding);
+    if (!decoder.has_value()) {
+        auto encoding = HTML::run_encoding_sniffing_algorithm(document, data);
+        decoder = TextCodec::decoder_for(encoding);
+    }
     VERIFY(decoder.has_value());
     auto source = decoder->to_utf8(data).release_value_but_fixme_should_propagate_errors();
     XML::Parser parser(source, { .resolve_external_resource = resolve_xml_resource });
@@ -199,7 +206,7 @@ static bool build_audio_document(DOM::Document& document)
     return true;
 }
 
-bool parse_document(DOM::Document& document, ByteBuffer const& data)
+bool parse_document(DOM::Document& document, ByteBuffer const& data, Optional<String> content_encoding)
 {
     auto& mime_type = document.content_type();
     if (mime_type == "text/html") {
@@ -208,7 +215,7 @@ bool parse_document(DOM::Document& document, ByteBuffer const& data)
         return true;
     }
     if (mime_type.ends_with_bytes("+xml"sv) || mime_type.is_one_of("text/xml", "application/xml"))
-        return build_xml_document(document, data);
+        return build_xml_document(document, data, move(content_encoding));
     if (mime_type.starts_with_bytes("image/"sv))
         return build_image_document(document, data);
     if (mime_type.starts_with_bytes("video/"sv))
@@ -252,20 +259,22 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
     VERIFY(navigation_params.has_value());
 
     auto extracted_mime_type = navigation_params->response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
-    auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
-
-    if (!is_supported_document_mime_type(mime_type)) {
+    if (!extracted_mime_type.has_value())
         return nullptr;
-    }
+
+    auto mime_type = extracted_mime_type.release_value();
+    if (!is_supported_document_mime_type(mime_type.essence()))
+        return nullptr;
 
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", *navigation_params).release_value_but_fixme_should_propagate_errors();
-    document->set_content_type(String::from_utf8(mime_type).release_value_but_fixme_should_propagate_errors());
+    document->set_content_type(mime_type.essence());
 
     auto& realm = document->realm();
 
     if (navigation_params->response->body()) {
-        auto process_body = [document, url = navigation_params->response->url().value()](ByteBuffer bytes) {
-            if (parse_document(*document, bytes))
+        Optional<String> content_encoding = mime_type.parameters().get("charset"sv);
+        auto process_body = [document, url = navigation_params->response->url().value(), encoding = move(content_encoding)](ByteBuffer bytes) {
+            if (parse_document(*document, bytes, move(encoding)))
                 return;
             document->remove_all_children(true);
             auto error_html = load_error_page(url).release_value_but_fixme_should_propagate_errors();
