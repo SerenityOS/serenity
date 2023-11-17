@@ -159,6 +159,9 @@ bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optiona
         decoder = TextCodec::decoder_for(encoding);
     }
     VERIFY(decoder.has_value());
+    // Well-formed XML documents contain only properly encoded characters
+    if (!decoder->validate(data))
+        return false;
     auto source = decoder->to_utf8(data).release_value_but_fixme_should_propagate_errors();
     XML::Parser parser(source, { .resolve_external_resource = resolve_xml_resource });
     XMLDocumentBuilder builder { document };
