@@ -404,7 +404,7 @@ ErrorOr<void> initialize_main_thread_vm()
     };
 
     // 8.1.6.5.3 HostLoadImportedModule(referrer, moduleRequest, loadState, payload), https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
-    s_main_thread_vm->host_load_imported_module = [](JS::Realm& realm, Variant<JS::NonnullGCPtr<JS::Script>, JS::NonnullGCPtr<JS::CyclicModule>> referrer, JS::ModuleRequest const& module_request, JS::GCPtr<JS::GraphLoadingState::HostDefined> load_state, JS::GraphLoadingState& payload) -> void {
+    s_main_thread_vm->host_load_imported_module = [](JS::Realm& realm, Variant<JS::NonnullGCPtr<JS::Script>, JS::NonnullGCPtr<JS::CyclicModule>> referrer, JS::ModuleRequest const& module_request, JS::GCPtr<JS::GraphLoadingState::HostDefined> load_state, JS::NonnullGCPtr<JS::GraphLoadingState> payload) -> void {
         // 1. Let settingsObject be the current settings object.
         Optional<HTML::EnvironmentSettingsObject&> settings_object = HTML::current_settings_object();
 
@@ -470,7 +470,7 @@ ErrorOr<void> initialize_main_thread_vm()
             fetch_client = fetch_context.fetch_client;
         }
 
-        auto on_single_fetch_complete = HTML::create_on_fetch_script_complete(realm.heap(), [&referrer, &realm, &load_state, &module_request, &payload](JS::GCPtr<HTML::Script> const& module_script) -> void {
+        auto on_single_fetch_complete = HTML::create_on_fetch_script_complete(realm.heap(), [referrer, &realm, load_state, &module_request, payload](JS::GCPtr<HTML::Script> const& module_script) -> void {
             // onSingleFetchComplete given moduleScript is the following algorithm:
             // 1. Let completion be null.
             // NOTE: Our JS::Completion does not support non JS::Value types for its [[Value]], a such we
