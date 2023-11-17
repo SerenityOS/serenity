@@ -2587,7 +2587,7 @@ void Compiler::compile_call(Bytecode::Op::Call const& op)
     end.link(m_assembler);
 }
 
-void Compiler::compile_builtin(Bytecode::Builtin builtin, [[maybe_unused]] Assembler::Label& slow_case, [[maybe_unused]] Assembler::Label& end)
+void Compiler::compile_builtin(Bytecode::Builtin builtin, Assembler::Label& slow_case, Assembler::Label& end)
 {
     switch (builtin) {
 #    define DEFINE_BUILTIN_CASE(name, snake_case_name, ...) \
@@ -2599,6 +2599,43 @@ void Compiler::compile_builtin(Bytecode::Builtin builtin, [[maybe_unused]] Assem
     case Bytecode::Builtin::__Count:
         VERIFY_NOT_REACHED();
     }
+}
+
+void Compiler::compile_builtin_math_abs(Assembler::Label& slow_case, Assembler::Label& end)
+{
+    branch_if_int32(ARG2, [&] {
+        // ARG2 &= 0xffffffff
+        m_assembler.mov32(Assembler::Operand::Register(ARG2), Assembler::Operand::Register(ARG2), Assembler::Extension::SignExtend);
+
+        // if (ARG2 == INT32_MIN) goto slow_case;
+        m_assembler.jump_if(
+            Assembler::Operand::Register(ARG2),
+            Assembler::Condition::EqualTo,
+            Assembler::Operand::Imm(NumericLimits<i32>::min()),
+            slow_case);
+
+        // accumulator = ARG2 < 0 ? -ARG2 : ARG2;
+        m_assembler.mov(Assembler::Operand::Register(CACHED_ACCUMULATOR), Assembler::Operand::Register(ARG2));
+        m_assembler.neg32(Assembler::Operand::Register(CACHED_ACCUMULATOR));
+        m_assembler.mov_if(Assembler::Condition::SignedLessThan, Assembler::Operand::Register(CACHED_ACCUMULATOR), Assembler::Operand::Register(ARG2));
+
+        // accumulator |= SHIFTED_INT32_TAG;
+        m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(SHIFTED_INT32_TAG));
+        m_assembler.bitwise_or(Assembler::Operand::Register(CACHED_ACCUMULATOR), Assembler::Operand::Register(GPR0));
+
+        m_assembler.jump(end);
+    });
+
+    // if (ARG2.is_double()) goto slow_case;
+    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(CANON_NAN_BITS));
+    jump_if_not_double(ARG2, GPR0, GPR1, slow_case);
+
+    // accumulator = ARG2 & 0x7fffffffffffffff
+    m_assembler.mov(Assembler::Operand::Register(GPR0), Assembler::Operand::Imm(0x7fffffffffffffff));
+    m_assembler.bitwise_and(Assembler::Operand::Register(ARG2), Assembler::Operand::Register(GPR0));
+    store_accumulator(ARG2);
+
+    m_assembler.jump(end);
 }
 
 static Value cxx_call_with_argument_array(VM& vm, Value arguments, Value callee, Value this_value, Bytecode::Op::CallType call_type, Optional<Bytecode::StringTableIndex> const& expression_string)

@@ -582,6 +582,15 @@ struct X86_64Assembler {
         emit_modrm_slash(0, dst);
     }
 
+    void mov_if(Condition condition, Operand dst, Operand src)
+    {
+        VERIFY(dst.type == Operand::Type::Reg && src.type == Operand::Type::Reg);
+        emit_rex_for_rm(dst, src, REX_W::Yes);
+        emit8(0x0f);
+        emit8(0x40 | to_underlying(condition));
+        emit_modrm_rm(dst, src);
+    }
+
     void sign_extend_32_to_64_bits(Reg reg)
     {
         mov32(Operand::Register(reg), Operand::Register(reg), Extension::SignExtend);
@@ -987,6 +996,14 @@ struct X86_64Assembler {
         if (overflow_label.has_value()) {
             jump_if(Condition::Overflow, *overflow_label);
         }
+    }
+
+    void neg32(Operand reg)
+    {
+        VERIFY(reg.type == Operand::Type::Reg);
+        emit_rex_for_slash(reg, REX_W::No);
+        emit8(0xf7);
+        emit_modrm_slash(3, reg);
     }
 
     void convert_i32_to_double(Operand dst, Operand src)
