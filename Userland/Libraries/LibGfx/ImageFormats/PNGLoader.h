@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/PNGShared.h>
 
 namespace Gfx {
 
@@ -27,6 +28,8 @@ public:
     virtual size_t first_animated_frame_index() override;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
+
+    static void unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, ReadonlyBytes previous_scanlines_data, u8 bytes_per_complete_pixel);
 
 private:
     PNGImageDecoderPlugin(u8 const*, size_t);
