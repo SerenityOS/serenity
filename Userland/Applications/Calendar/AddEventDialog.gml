@@ -51,13 +51,13 @@
             name: "start_hour"
             fixed_size: [50, 20]
             min: 1
-            max: 12
+            max: 24
         }
 
         @GUI::SpinBox {
             name: "start_minute"
             fixed_size: [40, 20]
-            min: 1
+            min: 0
             max: 59
         }
     }
@@ -91,13 +91,13 @@
             name: "end_hour"
             fixed_size: [50, 20]
             min: 1
-            max: 12
+            max: 24
         }
 
         @GUI::SpinBox {
             name: "end_minute"
             fixed_size: [40, 20]
-            min: 1
+            min: 0
             max: 59
         }
     }
