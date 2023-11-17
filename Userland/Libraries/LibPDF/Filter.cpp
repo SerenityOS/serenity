@@ -220,7 +220,7 @@ PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer
         return AK::Error::from_string_literal("Invalid predictor value");
 
     // Rows are always a whole number of bytes long, starting with an algorithm tag
-    size_t const bytes_per_row = AK::ceil_div(columns * colors * bits_per_component, 8) + 1;
+    size_t const bytes_per_row = ceil_div(columns * colors * bits_per_component, 8) + 1;
     if (buffer.size() % bytes_per_row)
         return AK::Error::from_string_literal("Flate input data is not divisible into columns");
 
