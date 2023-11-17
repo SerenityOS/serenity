@@ -76,10 +76,6 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     auto& starting_minute_input = *widget->find_descendant_of_type_named<GUI::SpinBox>("start_minute");
     starting_minute_input.set_value(m_start_date_time.minute());
 
-    auto& starting_meridiem_input = *widget->find_descendant_of_type_named<GUI::ComboBox>("start_meridiem");
-    starting_meridiem_input.set_model(MeridiemListModel::create());
-    starting_meridiem_input.set_selected_index(0);
-
     auto& end_date_box = *widget->find_descendant_of_type_named<GUI::TextBox>("end_date");
     end_date_box.set_text(MUST(m_start_date_time.to_string("%Y-%m-%d"sv)));
 
@@ -98,27 +94,20 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     auto& ending_minute_input = *widget->find_descendant_of_type_named<GUI::SpinBox>("end_minute");
     ending_minute_input.set_value(m_end_date_time.minute());
 
-    auto& ending_meridiem_input = *widget->find_descendant_of_type_named<GUI::ComboBox>("end_meridiem");
-    ending_meridiem_input.set_model(MeridiemListModel::create());
-    ending_meridiem_input.set_selected_index(0);
-
     auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.on_click = [&](auto) {
         add_event_to_calendar().release_value_but_fixme_should_propagate_errors();
-
         done(ExecResult::OK);
     };
 
     auto update_starting_input_values = [&, this]() {
         auto hour = starting_hour_input.value();
         auto minute = starting_minute_input.value();
-
         m_start_date_time.set_time_only(hour, minute);
     };
     auto update_ending_input_values = [&, this]() {
         auto hour = ending_hour_input.value();
         auto minute = ending_minute_input.value();
-
         m_end_date_time.set_time_only(hour, minute);
     };
     starting_hour_input.on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
@@ -191,7 +180,7 @@ GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, 
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     };
 
-    auto& month = short_month_names[index.row()];
+    auto const& month = short_month_names[index.row()];
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Month:
@@ -209,7 +198,7 @@ GUI::Variant AddEventDialog::MeridiemListModel::data(const GUI::ModelIndex& inde
         "AM", "PM"
     };
 
-    auto& meridiem = meridiem_names[index.row()];
+    auto const& meridiem = meridiem_names[index.row()];
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Meridiem:
