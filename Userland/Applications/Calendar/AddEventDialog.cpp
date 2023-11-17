@@ -14,6 +14,7 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/DatePicker.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
@@ -23,6 +24,8 @@
 #include <LibGfx/Font/FontDatabase.h>
 
 namespace Calendar {
+
+static constexpr StringView DATE_FORMAT = "%Y-%m-%d"sv;
 
 AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window)
     : Dialog(parent_window)
@@ -46,8 +49,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     auto& event_title_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("event_title_textbox");
     event_title_textbox.set_focus(true);
 
-    auto& start_date_box = *widget->find_descendant_of_type_named<GUI::TextBox>("start_date");
-    start_date_box.set_text(MUST(m_start_date_time.to_string("%Y-%m-%d"sv)));
+    m_start_date_box = *widget->find_descendant_of_type_named<GUI::TextBox>("start_date");
 
     auto calendar_date_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv).release_value_but_fixme_should_propagate_errors();
 
@@ -55,38 +57,43 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     pick_start_date_button.set_icon(calendar_date_icon);
     pick_start_date_button.on_click = [&](auto) {
         if (auto new_date = GUI::DatePicker::show(this, "Pick Start Date"_string, m_start_date_time); new_date.has_value()) {
-            m_start_date_time.set_date(new_date.release_value());
-            start_date_box.set_text(MUST(m_start_date_time.to_string("%Y-%m-%d"sv)));
+            m_start_date_time.set_date(new_date.value());
+            if (m_end_date_time < m_start_date_time) {
+                m_end_date_time.set_date(new_date.value());
+                update_end_date();
+            }
+
+            m_start_date_box->set_text(MUST(m_start_date_time.to_string(DATE_FORMAT)));
         }
     };
 
-    auto& starting_hour_input = *widget->find_descendant_of_type_named<GUI::SpinBox>("start_hour");
-    starting_hour_input.set_value(m_start_date_time.hour());
+    m_start_hour_box = *widget->find_descendant_of_type_named<GUI::SpinBox>("start_hour");
+    m_start_minute_box = *widget->find_descendant_of_type_named<GUI::SpinBox>("start_minute");
 
-    auto& starting_minute_input = *widget->find_descendant_of_type_named<GUI::SpinBox>("start_minute");
-    starting_minute_input.set_value(m_start_date_time.minute());
-
-    auto& end_date_box = *widget->find_descendant_of_type_named<GUI::TextBox>("end_date");
-    end_date_box.set_text(MUST(m_start_date_time.to_string("%Y-%m-%d"sv)));
+    m_end_date_box = *widget->find_descendant_of_type_named<GUI::TextBox>("end_date");
 
     auto& pick_end_date_button = *widget->find_descendant_of_type_named<GUI::Button>("pick_end_date");
     pick_end_date_button.set_icon(calendar_date_icon);
     pick_end_date_button.on_click = [&](auto) {
         if (auto new_date = GUI::DatePicker::show(this, "Pick End Date"_string, m_end_date_time); new_date.has_value()) {
-            m_end_date_time.set_date(new_date.release_value());
-            end_date_box.set_text(MUST(m_end_date_time.to_string("%Y-%m-%d"sv)));
+            m_end_date_time.set_date(new_date.value());
+            if (m_end_date_time < m_start_date_time) {
+                m_start_date_time.set_date(new_date.value());
+                update_start_date();
+            }
+
+            m_end_date_box->set_text(MUST(m_end_date_time.to_string(DATE_FORMAT)));
         }
     };
 
-    auto& ending_hour_input = *widget->find_descendant_of_type_named<GUI::SpinBox>("end_hour");
-    ending_hour_input.set_value(m_end_date_time.hour());
-
-    auto& ending_minute_input = *widget->find_descendant_of_type_named<GUI::SpinBox>("end_minute");
-    ending_minute_input.set_value(m_end_date_time.minute());
+    m_end_hour_box = *widget->find_descendant_of_type_named<GUI::SpinBox>("end_hour");
+    m_end_minute_box = *widget->find_descendant_of_type_named<GUI::SpinBox>("end_minute");
 
     auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.on_click = [&](auto) {
-        add_event_to_calendar().release_value_but_fixme_should_propagate_errors();
+        auto successful = add_event_to_calendar().release_value_but_fixme_should_propagate_errors();
+        if (!successful)
+            return;
         done(ExecResult::OK);
     };
 
@@ -94,24 +101,40 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     cancel_button.on_click = [&](auto) { done(ExecResult::Cancel); };
 
     auto update_starting_input_values = [&, this]() {
-        auto hour = starting_hour_input.value();
-        auto minute = starting_minute_input.value();
+        auto hour = m_start_hour_box->value();
+        auto minute = m_start_minute_box->value();
         m_start_date_time.set_time_only(hour, minute);
+        if (m_end_date_time < m_start_date_time) {
+            m_end_date_time.set_time_only(hour, minute);
+            update_end_date();
+        }
     };
     auto update_ending_input_values = [&, this]() {
-        auto hour = ending_hour_input.value();
-        auto minute = ending_minute_input.value();
+        auto hour = m_end_hour_box->value();
+        auto minute = m_end_minute_box->value();
         m_end_date_time.set_time_only(hour, minute);
+        if (m_end_date_time < m_start_date_time) {
+            m_start_date_time.set_time_only(hour, minute);
+            update_start_date();
+        }
     };
-    starting_hour_input.on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
-    starting_minute_input.on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
 
-    ending_hour_input.on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
-    ending_minute_input.on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
+    m_start_hour_box->on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
+    m_start_minute_box->on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
+    m_end_hour_box->on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
+    m_end_minute_box->on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
+
+    update_start_date();
+    update_end_date();
 }
 
-ErrorOr<void> AddEventDialog::add_event_to_calendar()
+ErrorOr<bool> AddEventDialog::add_event_to_calendar()
 {
+    if (m_end_date_time < m_start_date_time) {
+        GUI::MessageBox::show_error(this, "The end date has to be after the start date."sv);
+        return false;
+    }
+
     auto summary = find_descendant_of_type_named<GUI::TextBox>("event_title_textbox")->get_text();
     m_event_manager.add_event(Event {
         .summary = TRY(String::from_byte_string(summary)),
@@ -119,7 +142,21 @@ ErrorOr<void> AddEventDialog::add_event_to_calendar()
         .end = m_end_date_time,
     });
 
-    return {};
+    return true;
+}
+
+void AddEventDialog::update_start_date()
+{
+    m_start_date_box->set_text(MUST(m_start_date_time.to_string(DATE_FORMAT)));
+    m_start_hour_box->set_value(m_start_date_time.hour(), GUI::AllowCallback::No);
+    m_start_minute_box->set_value(m_start_date_time.minute(), GUI::AllowCallback::No);
+}
+
+void AddEventDialog::update_end_date()
+{
+    m_end_date_box->set_text(MUST(m_end_date_time.to_string(DATE_FORMAT)));
+    m_end_hour_box->set_value(m_end_date_time.hour(), GUI::AllowCallback::No);
+    m_end_minute_box->set_value(m_end_date_time.minute(), GUI::AllowCallback::No);
 }
 
 }
