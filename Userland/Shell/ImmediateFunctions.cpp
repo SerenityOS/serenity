@@ -598,8 +598,17 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_reexpand(AST::ImmediateExpression& i
         return nullptr;
     }
 
-    auto value = TRY(TRY(const_cast<AST::Node&>(*arguments.first()).run(*this))->resolve_as_string(*this));
-    return parse(value, m_is_interactive, false);
+    auto values = TRY(TRY(const_cast<AST::Node&>(*arguments.first()).run(*this))->resolve_as_list(*this));
+    auto result = Vector<NonnullRefPtr<AST::Node>> {};
+    for (auto& value : values) {
+        if (auto node = parse(value, m_is_interactive, false))
+            result.append(node.release_nonnull());
+    }
+
+    if (values.size() == 1)
+        return result.take_first();
+
+    return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), move(result));
 }
 
 ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_of_variable(AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const& arguments)

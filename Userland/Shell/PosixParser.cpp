@@ -123,6 +123,20 @@ static inline bool is_valid_name(StringView word)
 }
 
 namespace Shell::Posix {
+
+template<typename... Args>
+static NonnullRefPtr<AST::Node> reexpand(AST::Position position, Args&&... args)
+{
+    return make_ref_counted<AST::ImmediateExpression>(
+        position,
+        AST::NameWithPosition {
+            "reexpand"_string,
+            position,
+        },
+        Vector<NonnullRefPtr<AST::Node>> { forward<Args>(args)... },
+        Optional<AST::Position> {});
+}
+
 ErrorOr<void> Parser::fill_token_buffer(Optional<Reduction> starting_reduction)
 {
     for (;;) {
@@ -1444,8 +1458,10 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_for_clause()
         iterated_expression = TRY(Parser { "\"$@\""_string }.parse_word());
     }
 
-    if (saw_in && !saw_newline)
-        iterated_expression = parse_word_list();
+    if (saw_in && !saw_newline) {
+        if (auto list = parse_word_list())
+            iterated_expression = reexpand(peek().position.value_or(empty_position()), list.release_nonnull());
+    }
 
     if (saw_in) {
         if (peek().type == Token::Type::Semicolon || peek().type == Token::Type::Newline)
@@ -1583,19 +1599,13 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
                 token.position.value_or(empty_position()),
             },
             Vector<NonnullRefPtr<AST::Node>> {
-                make_ref_counted<AST::ImmediateExpression>(
+                reexpand(
                     token.position.value_or(empty_position()),
-                    AST::NameWithPosition {
-                        "reexpand"_string,
+                    make_ref_counted<AST::StringLiteral>(
                         token.position.value_or(empty_position()),
-                    },
-                    Vector<NonnullRefPtr<AST::Node>> {
-                        make_ref_counted<AST::StringLiteral>(
-                            token.position.value_or(empty_position()),
-                            TRY(String::from_utf8(x.source_expression)),
-                            AST::StringLiteral::EnclosureType::DoubleQuotes),
-                    },
-                    Optional<AST::Position> {}) },
+                        TRY(String::from_utf8(x.source_expression)),
+                        AST::StringLiteral::EnclosureType::DoubleQuotes)),
+            },
             Optional<AST::Position> {});
 
         if (word) {
@@ -1714,16 +1724,8 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
                 Optional<AST::Position> {});
         }
 
-        if (x.expand == ResolvedParameterExpansion::Expand::Word) {
-            node = make_ref_counted<AST::ImmediateExpression>(
-                token.position.value_or(empty_position()),
-                AST::NameWithPosition {
-                    "reexpand"_string,
-                    token.position.value_or(empty_position()),
-                },
-                Vector { node.release_nonnull() },
-                Optional<AST::Position> {});
-        }
+        if (x.expand == ResolvedParameterExpansion::Expand::Word)
+            node = reexpand(token.position.value_or(empty_position()), node.release_nonnull());
 
         if (word) {
             word = make_ref_counted<AST::Juxtaposition>(
@@ -1990,19 +1992,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
         }
 
         auto position = peek().position.value_or(empty_position());
-        nodes.append(make_ref_counted<AST::ImmediateExpression>(
-            position,
-            AST::NameWithPosition {
-                "reexpand"_string,
-                position,
-            },
-            Vector<NonnullRefPtr<AST::Node>> {
-                make_ref_counted<AST::StringLiteral>(
-                    position,
-                    TRY(String::formatted("-e{}", consume().value)),
-                    AST::StringLiteral::EnclosureType::DoubleQuotes),
-            },
-            Optional<AST::Position> {}));
+        nodes.append(reexpand(position, make_ref_counted<AST::StringLiteral>(position, TRY(String::formatted("-e{}", consume().value)), AST::StringLiteral::EnclosureType::DoubleQuotes)));
     }
 
     if (!definitions.is_empty()) {
@@ -2026,19 +2016,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
                     TRY(definition.substring_from_byte_offset_with_shared_superstring(0, split_offset)));
 
                 auto position = peek().position.value_or(empty_position());
-                auto expanded_value = make_ref_counted<AST::ImmediateExpression>(
-                    position,
-                    AST::NameWithPosition {
-                        "reexpand"_string,
-                        position,
-                    },
-                    Vector<NonnullRefPtr<AST::Node>> {
-                        make_ref_counted<AST::StringLiteral>(
-                            position,
-                            TRY(definition.substring_from_byte_offset_with_shared_superstring(split_offset + 1)),
-                            AST::StringLiteral::EnclosureType::DoubleQuotes),
-                    },
-                    Optional<AST::Position> {});
+                auto expanded_value = reexpand(position, make_ref_counted<AST::StringLiteral>(position, TRY(definition.substring_from_byte_offset_with_shared_superstring(split_offset + 1)), AST::StringLiteral::EnclosureType::DoubleQuotes));
 
                 variables.append({ move(name), move(expanded_value) });
             }
