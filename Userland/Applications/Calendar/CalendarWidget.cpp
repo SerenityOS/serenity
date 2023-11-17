@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,9 +94,13 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
 
     file_menu->add_separator();
 
-    file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        if (!widget->request_close())
+            return;
         GUI::Application::the()->quit();
     }));
+
+    widget->m_save_action = save_action;
 
     auto event_menu = parent_window->add_menu("&Event"_string);
     event_menu->add_action(add_event_action);
@@ -112,6 +117,23 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
     help_menu->add_action(GUI::CommonActions::make_about_action("Calendar"_string, TRY(GUI::Icon::try_create_default_icon("app-calendar"sv)), parent_window));
 
     return widget;
+}
+
+bool CalendarWidget::request_close()
+{
+    if (!m_event_calendar->event_manager().is_dirty())
+        return true;
+
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_event_calendar->event_manager().current_filename());
+    if (result == GUI::MessageBox::ExecResult::Yes) {
+        m_save_action->activate();
+        return !m_event_calendar->event_manager().is_dirty();
+    }
+
+    if (result == GUI::MessageBox::ExecResult::No)
+        return true;
+
+    return false;
 }
 
 void CalendarWidget::create_on_events_change()

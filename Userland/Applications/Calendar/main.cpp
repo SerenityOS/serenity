@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -66,6 +67,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto calendar_widget = TRY(Calendar::CalendarWidget::create(window));
     window->set_main_widget(calendar_widget);
+
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (calendar_widget->request_close())
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
 
     window->show();
 
