@@ -54,6 +54,8 @@ public:
     T& operator*() { return *ptr(); }
     T const& operator*() const { return *ptr(); }
 
+    bool is_owned() const { return m_handle.template has<NonnullOwnPtr<T>>(); }
+
 private:
     Variant<NonnullOwnPtr<T>, T*> m_handle;
 };
