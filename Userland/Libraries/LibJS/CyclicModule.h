@@ -72,7 +72,7 @@ protected:
     void async_module_execution_fulfilled(VM& vm);
     void async_module_execution_rejected(VM& vm, Value error);
 
-    ModuleStatus m_status { ModuleStatus::Unlinked };   // [[Status]]
+    ModuleStatus m_status { ModuleStatus::New };        // [[Status]]
     ThrowCompletionOr<void> m_evaluation_error;         // [[EvaluationError]]
     Optional<u32> m_dfs_index;                          // [[DFSIndex]]
     Optional<u32> m_dfs_ancestor_index;                 // [[DFSAncestorIndex]]
