@@ -31,25 +31,6 @@ private:
 
     ErrorOr<void> add_event_to_calendar();
 
-    class MeridiemListModel final : public GUI::Model {
-    public:
-        enum Column {
-            Meridiem,
-            __Count,
-        };
-
-        static NonnullRefPtr<MeridiemListModel> create() { return adopt_ref(*new MeridiemListModel); }
-        virtual ~MeridiemListModel() override = default;
-
-        virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
-        virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
-        virtual ErrorOr<String> column_name(int) const override;
-        virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
-
-    private:
-        MeridiemListModel() = default;
-    };
-
     Core::DateTime m_start_date_time;
     Core::DateTime m_end_date_time;
     EventManager& m_event_manager;
