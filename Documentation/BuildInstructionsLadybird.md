@@ -156,10 +156,19 @@ To automatically run in gdb:
 ninja -C Build/ladybird debug
 ```
 
-To run without ninja rule:
+To run without ninja rule on non-macOS systems:
 ```
 export SERENITY_SOURCE_DIR=$(realpath ../)
-./Build/ladybird/bin/Ladybird # or, in macOS: open ./Build/ladybird/bin/Ladybird.app
+./Build/ladybird/bin/Ladybird
+```
+
+To run without ninja rule on macOS:
+```
+export SERENITY_SOURCE_DIR=$(realpath ../)
+open -W --stdout $(tty) --stderr $(tty) ./Build/ladybird/bin/Ladybird.app
+
+# Or to launch with arguments:
+open -W --stdout $(tty) --stderr $(tty) ./Build/ladybird/bin/Ladybird.app --args https://ladybird.dev
 ```
 
 ### Debugging with CLion
