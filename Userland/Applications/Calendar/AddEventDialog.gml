@@ -60,12 +60,6 @@
             min: 1
             max: 59
         }
-
-        @GUI::ComboBox {
-            name: "start_meridiem"
-            model_only: true
-            fixed_size: [55, 20]
-        }
     }
 
     @GUI::Widget {
@@ -105,12 +99,6 @@
             fixed_size: [40, 20]
             min: 1
             max: 59
-        }
-
-        @GUI::ComboBox {
-            name: "end_meridiem"
-            model_only: true
-            fixed_size: [55, 20]
         }
     }
 
