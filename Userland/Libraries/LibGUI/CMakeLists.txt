@@ -1,9 +1,5 @@
 stringify_gml(AboutDialog.gml AboutDialogGML.h about_dialog_gml)
-<<<<<<< HEAD
-stringify_gml(DatePickerDialog.gml  DatePickerDialogGML.h date_picker_dialog_gml)
-=======
 stringify_gml(DatePickerDialog.gml DatePickerDialogGML.h date_picker_dialog_gml)
->>>>>>> b8a7c5c792 (LibGUI: Add a date picker dialog)
 stringify_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
 stringify_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
 stringify_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
