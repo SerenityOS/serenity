@@ -35,8 +35,17 @@ void CyclicModule::visit_edges(Cell::Visitor& visitor)
         visitor.visit(loaded_module.module);
 }
 
+void GraphLoadingState::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(promise_capability);
+    visitor.visit(host_defined);
+    for (auto* module : visited)
+        visitor.visit(*module);
+}
+
 // 16.2.1.5.1 LoadRequestedModules ( [ hostDefined ] ), https://tc39.es/ecma262/#sec-LoadRequestedModules
-PromiseCapability& CyclicModule::load_requested_modules(JS::Realm& realm, Optional<GraphLoadingState::HostDefined> host_defined)
+PromiseCapability& CyclicModule::load_requested_modules(JS::Realm& realm, GCPtr<GraphLoadingState::HostDefined> host_defined)
 {
     // 1. If hostDefined is not present, let hostDefined be EMPTY.
     // NOTE: The empty state is handled by hostDefined being an optional without value.
@@ -45,7 +54,7 @@ PromiseCapability& CyclicModule::load_requested_modules(JS::Realm& realm, Option
     auto promise_capability = MUST(new_promise_capability(realm.vm(), realm.intrinsics().promise_constructor()));
 
     // 3. Let state be the GraphLoadingState Record { [[IsLoading]]: true, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
-    auto state = GraphLoadingState { .promise_capability = promise_capability, .is_loading = true, .pending_module_count = 1, .visited = {}, .host_defined = move(host_defined) };
+    auto state = heap().allocate_without_realm<GraphLoadingState>(promise_capability, true, 1, HashTable<CyclicModule*> {}, move(host_defined));
 
     // 4. Perform InnerModuleLoading(state, module).
     inner_module_loading(state);
