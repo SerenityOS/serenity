@@ -9,6 +9,7 @@
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Painter.h>
 #include <LibPDF/CommonNames.h>
+#include <LibPDF/Fonts/AdobeGlyphList.h>
 #include <LibPDF/Fonts/TrueTypeFont.h>
 #include <LibPDF/Renderer.h>
 
@@ -17,6 +18,15 @@ namespace PDF {
 PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size)
 {
     TRY(SimpleFont::initialize(document, dict, font_size));
+
+    if (dict->contains(CommonNames::Encoding)) {
+        auto encoding_object = MUST(dict->get_object(document, CommonNames::Encoding));
+        if (encoding_object->is<NameObject>()) {
+            auto name = encoding_object->cast<NameObject>()->name();
+            if (name == "MacRomanEncoding" || name == "WinAnsiEncoding")
+                m_encoding_is_mac_roman_or_win_ansi = true;
+        }
+    }
 
     m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
 
@@ -33,8 +43,26 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
     if (!m_font) {
         m_font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
     }
-
     VERIFY(m_font);
+
+    // See long spec comment in TrueTypeFont::draw_glyp().
+    if (!dict->contains(CommonNames::Encoding) || is_symbolic()) {
+        // FIXME: Looks like this is never hit in the test set (?).
+        for (u8 prefix : { 0x00, 0xF0, 0xF1, 0xF2 }) {
+            bool has_all = true;
+            for (unsigned suffix = 0x00; suffix <= 0xFF; ++suffix) {
+                if (!m_font->contains_glyph((prefix << 8) | suffix)) {
+                    has_all = false;
+                    break;
+                }
+            }
+            if (has_all) {
+                m_high_byte = prefix;
+                break;
+            }
+        }
+    }
+
     return {};
 }
 
@@ -48,6 +76,18 @@ void TrueTypeFont::set_font_size(float font_size)
     m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
+static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint position, float width, u32 unicode, Gfx::Font const& font, ColorOrStyle const& style)
+{
+    if (style.has<Color>()) {
+        painter.draw_glyph(position, unicode, font, style.get<Color>());
+    } else {
+        // FIXME: Bounding box and sample point look to be pretty wrong
+        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
+            painter.draw_glyph(position, unicode, font, sample(Gfx::IntPoint(position.x(), position.y())));
+        });
+    }
+}
+
 PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     auto style = renderer.state().paint_style;
@@ -55,14 +95,71 @@ PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
     // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
     auto position = point.translated(0, -m_font->pixel_metrics().ascent);
 
-    if (style.has<Color>()) {
-        painter.draw_glyph(position, char_code, *m_font, style.get<Color>());
+    // 5.5.5 Character Encoding, Encodings for TrueType Fonts
+    u32 unicode;
+
+    // "If the font has a named Encoding entry of either MacRomanEncoding or WinAnsiEncoding,
+    //  or if the font descriptor’s Nonsymbolic flag (see Table 5.20) is set, the viewer creates
+    //  a table that maps from character codes to glyph names:
+    if (m_encoding_is_mac_roman_or_win_ansi || is_nonsymbolic()) {
+        //  • If the Encoding entry is one of the names MacRomanEncoding or WinAnsiEncoding,
+        //    the table is initialized with the mappings described in Appendix D.
+        //  • If the Encoding entry is a dictionary, the table is initialized with the entries
+        //    from the dictionary’s BaseEncoding entry (see Table 5.11). Any entries in the
+        //    Differences array are used to update the table. Finally, any undefined entries in
+        //    the table are filled using StandardEncoding."
+        // Implementor's note: This is (mostly) done in SimpleFont::initialize() and encoding() returns the result.
+        auto effective_encoding = encoding();
+        if (!effective_encoding)
+            effective_encoding = Encoding::standard_encoding();
+
+        // "If a (3, 1) “cmap” subtable (Microsoft Unicode) is present:
+        //  • A character code is first mapped to a glyph name using the table described above.
+        //  • The glyph name is then mapped to a Unicode value by consulting the Adobe Glyph List (see the Bibliography).
+        //  • Finally, the Unicode value is mapped to a glyph description according to the (3, 1) subtable.
+        //
+        //  If no (3, 1) subtable is present but a (1, 0) subtable (Macintosh Roman) is present:
+        //  • A character code is first mapped to a glyph name using the table described above.
+        //  • The glyph name is then mapped back to a character code according to the standard
+        //    Roman encoding used on Mac OS (see note below).
+        //  • Finally, the code is mapped to a glyph description according to the (1, 0) subtable."
+        // Implementor's note: We currently don't know which tables are present, so we for now we always
+        // use the (3, 1) algorithm.
+        // FIXME: Implement (1, 0) subtable support.
+        auto char_name = effective_encoding->get_name(char_code);
+        u32 unicode = glyph_name_to_unicode(char_name).value_or(char_code);
+        if (m_font->contains_glyph(unicode)) {
+            do_draw_glyph(painter, position, width, unicode, *m_font, style);
+            return {};
+        }
+
+        // "In either of the cases above, if the glyph name cannot be mapped as specified, the glyph name is looked up
+        //  in the font program’s “post” table (if one is present) and the associated glyph description is used."
+        // FIXME: Implement this.
+        return Error::rendering_unsupported_error("Looking up glyph in 'post' table not yet implemented.");
+    } else if (m_high_byte.has_value()) {
+        // "When the font has no Encoding entry, or the font descriptor’s Symbolic flag is set (in which case the
+        //  Encoding entry is ignored), the following occurs:
+        //
+        //  • If the font contains a (3, 0) subtable, the range of character codes must be one of the following:
+        //    0x0000 - 0x00FF, 0xF000 - 0xF0FF, 0xF100 - 0xF1FF, or 0xF200 - 0xF2FF. Depending on the range of codes,
+        //    each byte from the string is prepended with the high byte of the range, to form a two-byte character,
+        //    which is used to select the associated glyph description from the subtable.
+        //  • Otherwise, if the font contains a (1, 0) subtable, single bytes from the string are used to look up the
+        //    associated glyph descriptions from the subtable."
+        // Implementor's note: We currently don't know which tables are present, so we for now we always use the (3, 0) algorithm.
+        unicode = (m_high_byte.value() << 8) | char_code;
     } else {
-        // FIXME: Bounding box and sample point look to be pretty wrong
-        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
-            painter.draw_glyph(position, char_code, *m_font, sample(Gfx::IntPoint(position.x(), position.y())));
-        });
+        // "If a character cannot be mapped in any of the ways described above, the results are implementation-dependent."
+        // FIXME: Do something smarter?
+        auto effective_encoding = encoding();
+        if (!effective_encoding)
+            effective_encoding = Encoding::standard_encoding();
+        auto char_name = effective_encoding->get_name(char_code);
+        unicode = glyph_name_to_unicode(char_name).value_or(char_code);
     }
+
+    do_draw_glyph(painter, position, width, unicode, *m_font, style);
     return {};
 }
 

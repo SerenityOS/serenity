@@ -26,6 +26,8 @@ protected:
 private:
     DeprecatedFlyString m_base_font_name;
     RefPtr<Gfx::Font> m_font;
+    bool m_encoding_is_mac_roman_or_win_ansi { false };
+    Optional<u8> m_high_byte;
 };
 
 }

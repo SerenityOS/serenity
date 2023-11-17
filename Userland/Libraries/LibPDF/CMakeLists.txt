@@ -6,6 +6,7 @@ set(SOURCES
     Encoding.cpp
     Encryption.cpp
     Filter.cpp
+    Fonts/AdobeGlyphList.cpp
     Fonts/CFF.cpp
     Fonts/PDFFont.cpp
     Fonts/PS1FontProgram.cpp
