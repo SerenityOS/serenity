@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/StdLibExtras.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Bytecode/Builtins.h>
@@ -311,6 +312,23 @@ public:
 private:
     size_t m_element_count { 0 };
     Register m_elements[];
+};
+
+class NewPrimitiveArray final : public Instruction {
+public:
+    explicit NewPrimitiveArray(FixedArray<Value> values)
+        : Instruction(Type::NewPrimitiveArray, sizeof(*this))
+        , m_values(move(values))
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+
+    ReadonlySpan<Value> values() const { return m_values.span(); }
+
+private:
+    FixedArray<Value> m_values;
 };
 
 class Append final : public Instruction {

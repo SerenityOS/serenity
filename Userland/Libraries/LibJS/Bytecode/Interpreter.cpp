@@ -605,6 +605,15 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
     return {};
 }
 
+ThrowCompletionOr<void> NewPrimitiveArray::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto array = MUST(Array::create(interpreter.realm(), 0));
+    for (size_t i = 0; i < m_values.size(); i++)
+        array->indexed_properties().put(i, m_values[i], default_attributes);
+    interpreter.accumulator() = array;
+    return {};
+}
+
 ThrowCompletionOr<void> Append::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     return append(interpreter.vm(), interpreter.reg(m_lhs), interpreter.accumulator(), m_is_spread);
@@ -1304,6 +1313,11 @@ DeprecatedString NewArray::to_deprecated_string_impl(Bytecode::Executable const&
         builder.appendff(" [{}-{}]", m_elements[0], m_elements[1]);
     }
     return builder.to_deprecated_string();
+}
+
+DeprecatedString NewPrimitiveArray::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("NewPrimitiveArray {}"sv, m_values.span());
 }
 
 DeprecatedString Append::to_deprecated_string_impl(Bytecode::Executable const&) const

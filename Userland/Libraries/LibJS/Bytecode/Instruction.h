@@ -86,6 +86,7 @@
     O(NewClass)                        \
     O(NewFunction)                     \
     O(NewObject)                       \
+    O(NewPrimitiveArray)               \
     O(NewRegExp)                       \
     O(NewString)                       \
     O(NewTypeError)                    \

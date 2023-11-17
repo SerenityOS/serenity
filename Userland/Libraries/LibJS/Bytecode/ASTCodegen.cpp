@@ -1012,6 +1012,19 @@ Bytecode::CodeGenerationErrorOr<void> ArrayExpression::generate_bytecode(Bytecod
         return {};
     }
 
+    if (all_of(m_elements, [](auto element) { return !element || is<PrimitiveLiteral>(*element); })) {
+        // If all elements are constant primitives, we can just emit a single instruction to initialize the array,
+        // instead of emitting instructions to manually evaluate them one-by-one
+        auto values = MUST(FixedArray<Value>::create(m_elements.size()));
+        for (auto i = 0u; i < m_elements.size(); ++i) {
+            if (!m_elements[i])
+                continue;
+            values[i] = static_cast<PrimitiveLiteral const&>(*m_elements[i]).value();
+        }
+        generator.emit<Bytecode::Op::NewPrimitiveArray>(move(values));
+        return {};
+    }
+
     auto first_spread = find_if(m_elements.begin(), m_elements.end(), [](auto el) { return el && is<SpreadExpression>(*el); });
 
     Bytecode::Register args_start_reg { 0 };
