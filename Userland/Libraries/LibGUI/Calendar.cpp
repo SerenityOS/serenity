@@ -2,6 +2,7 @@
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
  * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -855,6 +856,30 @@ bool Calendar::is_day_in_weekend(DayOfWeek day)
         day_index += 7;
 
     return day_index < weekend_end_index;
+}
+
+ErrorOr<String> MonthListModel::column_name(int column) const
+{
+    switch (column) {
+    case Column::Month:
+        return "Month"_string;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+GUI::Variant MonthListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+{
+    auto const& month = (m_mode == MonthListModel::DisplayMode::Short ? AK::short_month_names : AK::long_month_names)[index.row()];
+    if (role == GUI::ModelRole::Display) {
+        switch (index.column()) {
+        case Column::Month:
+            return month;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+    return {};
 }
 
 }

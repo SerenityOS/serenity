@@ -31,25 +31,6 @@ private:
 
     ErrorOr<void> add_event_to_calendar();
 
-    class MonthListModel final : public GUI::Model {
-    public:
-        enum Column {
-            Month,
-            __Count,
-        };
-
-        static NonnullRefPtr<MonthListModel> create() { return adopt_ref(*new MonthListModel); }
-        virtual ~MonthListModel() override = default;
-
-        virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
-        virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
-        virtual ErrorOr<String> column_name(int) const override;
-        virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
-
-    private:
-        MonthListModel() = default;
-    };
-
     class MeridiemListModel final : public GUI::Model {
     public:
         enum Column {
