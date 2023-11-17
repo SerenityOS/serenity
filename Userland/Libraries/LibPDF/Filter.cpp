@@ -9,6 +9,7 @@
 #include <LibCompress/Deflate.h>
 #include <LibCompress/LZWDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
+#include <LibGfx/ImageFormats/PNGShared.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
 #include <LibPDF/Reader.h>
@@ -191,15 +192,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
                     upper_left = previous_row[i - 1];
                 }
                 u8 above = previous_row[i];
-                u8 p = left + above - upper_left;
-
-                int left_distance = abs(p - left);
-                int above_distance = abs(p - above);
-                int upper_left_distance = abs(p - upper_left);
-
-                u8 paeth = min(left_distance, min(above_distance, upper_left_distance));
-
-                row[i] += paeth;
+                row[i] += Gfx::PNG::paeth_predictor(left, above, upper_left);
             }
             break;
         default:
