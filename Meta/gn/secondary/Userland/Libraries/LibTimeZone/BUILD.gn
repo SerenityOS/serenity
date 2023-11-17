@@ -69,6 +69,8 @@ source_set("LibTimeZone") {
     "$target_gen_dir/..",
   ]
   sources = [
+    "DateTime.cpp",
+    "DateTime.h",
     "Forward.h",
     "TimeZone.cpp",
     "TimeZone.h",
