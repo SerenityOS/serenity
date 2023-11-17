@@ -11,7 +11,6 @@
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
-#include <LibGfx/ImageFormats/PNGShared.h>
 #include <LibGfx/Painter.h>
 
 namespace Gfx {
@@ -290,7 +289,7 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
-static void unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, ReadonlyBytes previous_scanlines_data, u8 bytes_per_complete_pixel)
+void PNGImageDecoderPlugin::unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, ReadonlyBytes previous_scanlines_data, u8 bytes_per_complete_pixel)
 {
     VERIFY(filter != PNG::FilterType::None);
 
@@ -431,7 +430,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
             context.scanlines[y].data.copy_to(scanline_data_slice);
             context.scanlines[y].data = scanline_data_slice;
 
-            unfilter_scanline(context.scanlines[y].filter, scanline_data_slice, previous_scanlines_data, bytes_per_complete_pixel);
+            PNGImageDecoderPlugin::unfilter_scanline(context.scanlines[y].filter, scanline_data_slice, previous_scanlines_data, bytes_per_complete_pixel);
 
             data_start += bytes_per_scanline;
         }
