@@ -1518,37 +1518,164 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_text(String const& where, Str
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#scroll-an-element-into-view
-static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings::ScrollBehavior behavior, Bindings::ScrollLogicalPosition block, Bindings::ScrollLogicalPosition inline_)
+static ErrorOr<void> scroll_an_element_into_view(DOM::Element& target, Bindings::ScrollBehavior behavior, Bindings::ScrollLogicalPosition block, Bindings::ScrollLogicalPosition inline_)
 {
-    // FIXME: The below is ad-hoc, since we don't yet have scrollable elements.
-    //        Return here and implement this according to spec once all overflow is made scrollable.
+    // To scroll a target into view target, which is an Element or Range, with a scroll behavior behavior, a block flow
+    // direction position block, and an inline base direction position inline, means to run these steps for each ancestor
+    // element or viewport that establishes a scrolling box scrolling box, in order of innermost to outermost scrolling box:
+    auto ancestor = target.parent();
+    Vector<DOM::Node&> scrollable_nodes;
+    while (ancestor) {
+        if (ancestor->paintable_box() && ancestor->paintable_box()->has_scrollable_overflow())
+            scrollable_nodes.append(*static_cast<DOM::Element*>(ancestor));
+        ancestor = ancestor->parent();
+    }
 
-    (void)behavior;
-    (void)block;
-    (void)inline_;
+    for (auto& scrollable_node : scrollable_nodes) {
+        // 1. If the Document associated with target is not same origin with the Document
+        //    associated with the element or viewport associated with scrolling box, terminate these steps.
+        if (target.document().origin() != scrollable_node.document().origin()) {
+            break;
+        }
 
-    if (!element.document().browsing_context())
-        return Error::from_string_view("Element has no browsing context."sv);
+        CSSPixelRect scrolling_box = *scrollable_node.paintable_box()->scrollable_overflow_rect();
 
-    auto* page = element.document().browsing_context()->page();
-    if (!page)
-        return Error::from_string_view("Element has no page."sv);
+        // 2. Let target bounding border box be the box represented by the return value of invoking Element’s
+        //    getBoundingClientRect(), if target is an Element, or Range’s getBoundingClientRect(),
+        //    if target is a Range.
+        auto target_bounding_border_box = target.get_bounding_client_rect();
 
-    // If this element doesn't have a layout node, we can't scroll it into view.
-    element.document().update_layout();
-    if (!element.layout_node())
-        return Error::from_string_view("Element has no layout node."sv);
+        // 3. Let scrolling box edge A be the beginning edge in the block flow direction of scrolling box, and
+        //    let element edge A be target bounding border box’s edge on the same physical side as that of
+        //    scrolling box edge A.
+        CSSPixels element_edge_a = CSSPixels::nearest_value_for(target_bounding_border_box->top());
+        CSSPixels scrolling_box_edge_a = scrolling_box.top();
 
-    // Find the nearest layout node that is a box (since we need a box to get a usable rect)
-    auto* layout_node = element.layout_node();
-    while (layout_node && !layout_node->is_box())
-        layout_node = layout_node->parent();
+        // 4. Let scrolling box edge B be the ending edge in the block flow direction of scrolling box, and let
+        //    element edge B be target bounding border box’s edge on the same physical side as that of scrolling
+        //    box edge B.
+        CSSPixels element_edge_b = CSSPixels::nearest_value_for(target_bounding_border_box->bottom());
+        CSSPixels scrolling_box_edge_b = scrolling_box.bottom();
 
-    if (!layout_node)
-        return Error::from_string_view("Element has no parent layout node that is a box."sv);
+        // 5. Let scrolling box edge C be the beginning edge in the inline base direction of scrolling box, and
+        //    let element edge C be target bounding border box’s edge on the same physical side as that of scrolling
+        //    box edge C.
+        CSSPixels element_edge_c = CSSPixels::nearest_value_for(target_bounding_border_box->left());
+        CSSPixels scrolling_box_edge_c = scrolling_box.left();
 
-    if (auto navigable = element.document().navigable()) {
-        element.document().navigable()->traversable_navigable()->page()->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
+        // 6. Let scrolling box edge D be the ending edge in the inline base direction of scrolling box, and let element
+        //    edge D be target bounding border box’s edge on the same physical side as that of scrolling box edge D.
+        CSSPixels element_edge_d = CSSPixels::nearest_value_for(target_bounding_border_box->right());
+        CSSPixels scrolling_box_edge_d = scrolling_box.right();
+
+        // 7. Let element height be the distance between element edge A and element edge B.
+        CSSPixels element_height = element_edge_b - element_edge_a;
+
+        // 8. Let scrolling box height be the distance between scrolling box edge A and scrolling box edge B.
+        CSSPixels scrolling_box_height = scrolling_box_edge_b - scrolling_box_edge_a;
+
+        // 9. Let element width be the distance between element edge C and element edge D.
+        CSSPixels element_width = element_edge_d - element_edge_c;
+
+        // 10. Let scrolling box width be the distance between scrolling box edge C and scrolling box edge D.
+        CSSPixels scrolling_box_width = scrolling_box_edge_d - scrolling_box_edge_c;
+
+        // 11. Let position be the scroll position scrolling box would have by following these steps:
+        auto position = [&]() -> CSSPixelRect {
+            auto result_edge_a = scrolling_box_edge_a;
+            auto result_edge_b = scrolling_box_edge_b;
+            auto result_edge_c = scrolling_box_edge_c;
+            auto result_edge_d = scrolling_box_edge_d;
+
+            // 1. If block is "start", then align element edge A with scrolling box edge A.
+            if (block == Bindings::ScrollLogicalPosition::Start) {
+                result_edge_a = element_edge_a;
+                result_edge_d = scrolling_box_edge_a + scrolling_box_height;
+            }
+            // 2. Otherwise, if block is "end", then align element edge B with scrolling box edge B.
+            else if (block == Bindings::ScrollLogicalPosition::End) {
+                result_edge_b = element_edge_b;
+                result_edge_a = scrolling_box_edge_b - scrolling_box_height;
+            }
+            // 3. Otherwise, if block is "center", then align the center of target bounding border box with the center of scrolling box in scrolling box’s block flow direction.
+            else if (block == Bindings::ScrollLogicalPosition::Center) {
+                TODO();
+            }
+            // 4. Otherwise, block is "nearest":
+            else {
+                // If element edge A and element edge B are both outside scrolling box edge A and scrolling box edge B
+                if (element_edge_a >= scrolling_box_edge_a && element_edge_b <= scrolling_box_edge_b) {
+                    // Do nothing.
+                }
+                // If element edge A is outside scrolling box edge A and element height is less than scrolling box height
+                // If element edge B is outside scrolling box edge B and element height is greater than scrolling box height
+                if ((element_edge_a >= scrolling_box_edge_a && element_height < scrolling_box_height)
+                    || (element_edge_b <= scrolling_box_edge_b && element_height > scrolling_box_height)) {
+                    // Align element edge A with scrolling box edge A.
+                    result_edge_a = element_edge_a;
+                    result_edge_b = scrolling_box_edge_a + scrolling_box_height;
+                }
+                // If element edge A is outside scrolling box edge A and element height is greater than scrolling box height
+                // If element edge B is outside scrolling box edge B and element height is less than scrolling box height
+                if ((element_edge_a <= scrolling_box_edge_a && element_height > scrolling_box_height)
+                    || (element_edge_b >= scrolling_box_edge_b && element_height < scrolling_box_height)) {
+                    // Align element edge B with scrolling box edge B.
+                    result_edge_b = element_edge_b;
+                    result_edge_a = scrolling_box_edge_b - scrolling_box_height;
+                }
+            }
+
+            if (inline_ == Bindings::ScrollLogicalPosition::Nearest) {
+                // If element edge C and element edge D are both outside scrolling box edge C and scrolling box edge D
+                if (element_edge_c >= scrolling_box_edge_c && element_edge_d <= scrolling_box_edge_d) {
+                    // Do nothing.
+                }
+                // If element edge C is outside scrolling box edge C and element width is less than scrolling box width
+                // If element edge D is outside scrolling box edge D and element width is greater than scrolling box width
+                if ((element_edge_c >= scrolling_box_edge_c && element_width < scrolling_box_width)
+                    || (element_edge_d <= scrolling_box_edge_d && element_width > scrolling_box_width)) {
+                    // Align element edge C with scrolling box edge C.
+                    result_edge_c = element_edge_c;
+                    result_edge_d = scrolling_box_edge_c + scrolling_box_width;
+                }
+
+                // If element edge C is outside scrolling box edge C and element width is greater than scrolling box width
+                // If element edge D is outside scrolling box edge D and element width is less than scrolling box width
+                if ((element_edge_c <= scrolling_box_edge_c && element_width > scrolling_box_width)
+                    || (element_edge_d >= scrolling_box_edge_d && element_width < scrolling_box_width)) {
+                    // Align element edge D with scrolling box edge D.
+                    result_edge_d = element_edge_d;
+                    result_edge_c = scrolling_box_edge_d - scrolling_box_width;
+                }
+            }
+
+            auto result_width = result_edge_d - result_edge_c;
+            auto result_height = result_edge_b - result_edge_a;
+            return { result_edge_c, result_edge_a, result_width, result_height };
+        }();
+
+        // FIXME: 12. If position is the same as scrolling box’s current scroll position, and scrolling box does not
+        //            have an ongoing smooth scroll, then return.
+
+        // 13. If scrolling box is associated with a viewport
+        if (scrollable_node.is_document()) {
+            // 1. Let document be the viewport’s associated Document.
+            auto& document = static_cast<DOM::Document&>(scrollable_node);
+
+            // FIXME: 2. Let root element be document’s root element, if there is one, or null otherwise.
+            // FIXME: 3. Perform a scroll of the viewport to position, with root element as the associated element and behavior as the scroll behavior.
+            (void)behavior;
+
+            // AD-HOC:
+            auto* page = document.navigable()->traversable_navigable()->page();
+            auto scale = page->client().device_pixels_per_css_pixel();
+            page->client().page_did_request_scroll_to({ position.left() * scale, position.top() * scale });
+        }
+        // If scrolling box is associated with an element
+        else {
+            // FIXME: Perform a scroll of the element’s scrolling box to position, with the element as the associated
+            //        element and behavior as the scroll behavior.
+        }
     }
 
     return {};
