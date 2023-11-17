@@ -32,6 +32,7 @@ public:
 
     void set_time(int year, int month = 1, int day = 1, int hour = 0, int minute = 0, int second = 0);
     void set_time_only(int hour, int minute, Optional<int> second = {});
+    void set_date(Core::DateTime const& other);
     ErrorOr<String> to_string(StringView format = "%Y-%m-%d %H:%M:%S"sv) const;
     DeprecatedString to_deprecated_string(StringView format = "%Y-%m-%d %H:%M:%S"sv) const;
 
