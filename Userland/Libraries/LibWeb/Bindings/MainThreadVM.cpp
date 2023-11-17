@@ -404,7 +404,7 @@ ErrorOr<void> initialize_main_thread_vm()
     };
 
     // 8.1.6.5.3 HostLoadImportedModule(referrer, moduleRequest, loadState, payload), https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
-    s_main_thread_vm->host_load_imported_module = [](JS::Realm& realm, Variant<JS::NonnullGCPtr<JS::Script>, JS::NonnullGCPtr<JS::CyclicModule>> referrer, JS::ModuleRequest const& module_request, Optional<JS::GraphLoadingState::HostDefined> load_state, JS::GraphLoadingState& payload) -> void {
+    s_main_thread_vm->host_load_imported_module = [](JS::Realm& realm, Variant<JS::NonnullGCPtr<JS::Script>, JS::NonnullGCPtr<JS::CyclicModule>> referrer, JS::ModuleRequest const& module_request, JS::GCPtr<JS::GraphLoadingState::HostDefined> load_state, JS::GraphLoadingState& payload) -> void {
         // 1. Let settingsObject be the current settings object.
         Optional<HTML::EnvironmentSettingsObject&> settings_object = HTML::current_settings_object();
 
@@ -460,8 +460,8 @@ ErrorOr<void> initialize_main_thread_vm()
         Optional<HTML::EnvironmentSettingsObject&> fetch_client = *settings_object;
 
         // 12. If loadState is not undefined, then:
-        if (load_state.has_value()) {
-            auto fetch_context = static_cast<HTML::FetchContext&>(load_state.value());
+        if (load_state) {
+            auto& fetch_context = static_cast<HTML::FetchContext&>(*load_state);
 
             // 1. Set destination to loadState.[[Destination]].
             destination = fetch_context.destination;
@@ -490,9 +490,9 @@ ErrorOr<void> initialize_main_thread_vm()
                 completion = JS::throw_completion(parse_error);
 
                 // 3. If loadState is not undefined and loadState.[[ParseError]] is null, set loadState.[[ParseError]] to parseError.
-                if (load_state.has_value()) {
-                    auto load_state_as_fetch_context = static_cast<HTML::FetchContext&>(load_state.value());
-                    if (load_state_as_fetch_context.parse_error->is_empty()) {
+                if (load_state) {
+                    auto& load_state_as_fetch_context = static_cast<HTML::FetchContext&>(*load_state);
+                    if (load_state_as_fetch_context.parse_error.is_null()) {
                         load_state_as_fetch_context.parse_error = parse_error;
                     }
                 }

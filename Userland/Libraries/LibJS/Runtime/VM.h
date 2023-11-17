@@ -228,7 +228,7 @@ public:
     //       Our implementation of this proposal is outdated however, as such we try to adapt the proposal and living standard
     //       to match our implementation for now.
     // 16.2.1.8 HostLoadImportedModule ( referrer, moduleRequest, hostDefined, payload ), https://tc39.es/proposal-import-attributes/#sec-HostLoadImportedModule
-    Function<void(Realm&, Variant<NonnullGCPtr<Script>, NonnullGCPtr<CyclicModule>>, ModuleRequest const&, Optional<GraphLoadingState::HostDefined>, GraphLoadingState&)> host_load_imported_module;
+    Function<void(Realm&, Variant<NonnullGCPtr<Script>, NonnullGCPtr<CyclicModule>>, ModuleRequest const&, GCPtr<GraphLoadingState::HostDefined>, GraphLoadingState&)> host_load_imported_module;
 
     Function<ThrowCompletionOr<NonnullGCPtr<Module>>(ScriptOrModule, ModuleRequest const&)> host_resolve_imported_module;
     Function<ThrowCompletionOr<void>(ScriptOrModule, ModuleRequest, PromiseCapability const&)> host_import_module_dynamically;

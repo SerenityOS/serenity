@@ -54,8 +54,17 @@ struct ScriptFetchOptions {
 // https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options
 ScriptFetchOptions default_classic_script_fetch_options();
 
-struct FetchContext : JS::GraphLoadingState::HostDefined {
-    FetchContext(JS::GCPtr<JS::Value> parse_error, Fetch::Infrastructure::Request::Destination destination, JS::GCPtr<JS::Promise> perform_fetch, EnvironmentSettingsObject& fetch_client)
+class FetchContext : public JS::GraphLoadingState::HostDefined {
+    JS_CELL(FetchContext, JS::GraphLoadingState::HostDefined);
+
+public:
+    JS::Value parse_error;                                   // [[ParseError]]
+    Fetch::Infrastructure::Request::Destination destination; // [[Destination]]
+    JS::GCPtr<JS::Promise> perform_fetch;                    // [[PerformFetch]]
+    EnvironmentSettingsObject& fetch_client;                 // [[FetchClient]]
+
+private:
+    FetchContext(JS::Value parse_error, Fetch::Infrastructure::Request::Destination destination, JS::GCPtr<JS::Promise> perform_fetch, EnvironmentSettingsObject& fetch_client)
         : parse_error(parse_error)
         , destination(destination)
         , perform_fetch(perform_fetch)
@@ -63,10 +72,13 @@ struct FetchContext : JS::GraphLoadingState::HostDefined {
     {
     }
 
-    JS::GCPtr<JS::Value> parse_error;                        // [[ParseError]]
-    Fetch::Infrastructure::Request::Destination destination; // [[Destination]]
-    JS::GCPtr<JS::Promise> perform_fetch;                    // [[PerformFetch]]
-    EnvironmentSettingsObject& fetch_client;                 // [[FetchClient]]
+    void visit_edges(Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+        visitor.visit(parse_error);
+        visitor.visit(perform_fetch);
+        visitor.visit(fetch_client);
+    }
 };
 
 DeprecatedString module_type_from_module_request(JS::ModuleRequest const&);
