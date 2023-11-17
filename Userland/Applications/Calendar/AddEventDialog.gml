@@ -112,6 +112,12 @@
         @GUI::Layout::Spacer {}
 
         @GUI::Button {
+            name: "cancel_button"
+            text: "Cancel"
+            fixed_size: [80, 20]
+        }
+
+        @GUI::Button {
             name: "ok_button"
             text: "OK"
             fixed_size: [80, 20]

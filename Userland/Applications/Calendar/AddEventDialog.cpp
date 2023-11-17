@@ -100,6 +100,9 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
         done(ExecResult::OK);
     };
 
+    auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
+    cancel_button.on_click = [&](auto) { done(ExecResult::Cancel); };
+
     auto update_starting_input_values = [&, this]() {
         auto hour = starting_hour_input.value();
         auto minute = starting_minute_input.value();
