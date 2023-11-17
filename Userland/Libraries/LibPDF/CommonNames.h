@@ -11,9 +11,9 @@
 #define ENUMERATE_COMMON_NAMES(X) \
     X(A)                          \
     X(AIS)                        \
-    X(Alternate)                  \
     X(ASCII85Decode)              \
     X(ASCIIHexDecode)             \
+    X(Alternate)                  \
     X(Author)                     \
     X(BG)                         \
     X(BG2)                        \
@@ -31,15 +31,15 @@
     X(CCITTFaxDecode)             \
     X(CF)                         \
     X(CFM)                        \
-    X(CalGray)                    \
-    X(CalRGB)                     \
     X(CIDFontType0)               \
     X(CIDFontType2)               \
     X(CIDSystemInfo)              \
     X(CIDToGIDMap)                \
+    X(CalGray)                    \
+    X(CalRGB)                     \
     X(CharProcs)                  \
-    X(Colors)                     \
     X(ColorSpace)                 \
+    X(Colors)                     \
     X(Columns)                    \
     X(Contents)                   \
     X(Count)                      \
@@ -48,10 +48,10 @@
     X(CropBox)                    \
     X(Crypt)                      \
     X(D)                          \
-    X(DW)                         \
     X(DCTDecode)                  \
-    X(DecodeParms)                \
+    X(DW)                         \
     X(Decode)                     \
+    X(DecodeParms)                \
     X(DescendantFonts)            \
     X(Dest)                       \
     X(Dests)                      \
@@ -92,9 +92,9 @@
     X(Functions)                  \
     X(Gamma)                      \
     X(H)                          \
-    X(Height)                     \
     X(HT)                         \
     X(HTO)                        \
+    X(Height)                     \
     X(ICCBased)                   \
     X(ID)                         \
     X(Image)                      \
@@ -172,8 +172,8 @@
     X(Type)                       \
     X(Type1C)                     \
     X(U)                          \
-    X(UE)                         \
     X(UCR)                        \
+    X(UE)                         \
     X(UseBlackPTComp)             \
     X(UserUnit)                   \
     X(V)                          \
