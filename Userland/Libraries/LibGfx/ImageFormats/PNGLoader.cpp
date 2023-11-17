@@ -698,18 +698,18 @@ static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context, ByteBu
     Streamer streamer(decompression_buffer.data(), decompression_buffer.size());
 
     for (int y = 0; y < context.height; ++y) {
-        PNG::FilterType filter;
-        if (!streamer.read(filter)) {
+        u8 filter_byte;
+        if (!streamer.read(filter_byte)) {
             context.state = PNGLoadingContext::State::Error;
             return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
 
-        if (to_underlying(filter) > 4) {
+        if (filter_byte > 4) {
             context.state = PNGLoadingContext::State::Error;
             return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
         }
 
-        context.scanlines.append({ filter });
+        context.scanlines.append({ MUST(PNG::filter_type(filter_byte)) });
         auto& scanline_buffer = context.scanlines.last().data;
         auto row_size = context.compute_row_size_for_width(context.width);
         if (row_size.has_overflow())
@@ -784,18 +784,18 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
         return {};
 
     for (int y = 0; y < subimage_context.height; ++y) {
-        PNG::FilterType filter;
-        if (!streamer.read(filter)) {
+        u8 filter_byte;
+        if (!streamer.read(filter_byte)) {
             context.state = PNGLoadingContext::State::Error;
             return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
         }
 
-        if (to_underlying(filter) > 4) {
+        if (filter_byte > 4) {
             context.state = PNGLoadingContext::State::Error;
             return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
         }
 
-        subimage_context.scanlines.append({ filter });
+        subimage_context.scanlines.append({ MUST(PNG::filter_type(filter_byte)) });
         auto& scanline_buffer = subimage_context.scanlines.last().data;
 
         auto row_size = context.compute_row_size_for_width(subimage_context.width);

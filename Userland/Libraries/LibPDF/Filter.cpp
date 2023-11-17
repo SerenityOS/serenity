@@ -162,19 +162,19 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
     for (int row_index = 0; row_index < number_of_rows; ++row_index) {
         auto row = bytes.data() + row_index * bytes_per_row;
 
-        u8 algorithm_tag = row[0];
-        switch (algorithm_tag) {
-        case 0:
+        auto filter = TRY(Gfx::PNG::filter_type(row[0]));
+        switch (filter) {
+        case Gfx::PNG::FilterType::None:
             break;
-        case 1:
+        case Gfx::PNG::FilterType::Sub:
             for (int i = 2; i < bytes_per_row; ++i)
                 row[i] += row[i - 1];
             break;
-        case 2:
+        case Gfx::PNG::FilterType::Up:
             for (int i = 1; i < bytes_per_row; ++i)
                 row[i] += previous_row[i];
             break;
-        case 3:
+        case Gfx::PNG::FilterType::Average:
             for (int i = 1; i < bytes_per_row; ++i) {
                 u8 left = 0;
                 if (i > 1)
@@ -183,7 +183,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
                 row[i] += (left + above) / 2;
             }
             break;
-        case 4:
+        case Gfx::PNG::FilterType::Paeth:
             for (int i = 1; i < bytes_per_row; ++i) {
                 u8 left = 0;
                 u8 upper_left = 0;
@@ -195,8 +195,6 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
                 row[i] += Gfx::PNG::paeth_predictor(left, above, upper_left);
             }
             break;
-        default:
-            return AK::Error::from_string_literal("Unknown PNG algorithm tag");
         }
 
         previous_row = row;

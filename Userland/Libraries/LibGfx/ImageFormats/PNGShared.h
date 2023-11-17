@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/Error.h>
 #include <AK/SIMD.h>
 
 namespace Gfx::PNG {
@@ -31,6 +32,13 @@ enum class FilterType : u8 {
     Average,
     Paeth,
 };
+
+inline ErrorOr<FilterType> filter_type(u8 byte)
+{
+    if (byte <= 4)
+        return static_cast<FilterType>(byte);
+    return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
+}
 
 // https://www.w3.org/TR/PNG/#9Filter-type-4-Paeth
 ALWAYS_INLINE u8 paeth_predictor(u8 a, u8 b, u8 c)
