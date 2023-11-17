@@ -9,7 +9,7 @@
 #include <LibCompress/Deflate.h>
 #include <LibCompress/LZWDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
-#include <LibGfx/ImageFormats/PNGShared.h>
+#include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
 #include <LibPDF/Reader.h>
@@ -149,7 +149,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
     return buffer;
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_per_row)
+PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_per_row, size_t bytes_per_pixel)
 {
     int number_of_rows = bytes.size() / bytes_per_row;
 
@@ -165,39 +165,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_p
         auto filter = TRY(Gfx::PNG::filter_type(row[0]));
         row = row.slice(1);
 
-        switch (filter) {
-        case Gfx::PNG::FilterType::None:
-            break;
-        case Gfx::PNG::FilterType::Sub:
-            for (size_t i = 1; i < row.size(); ++i)
-                row[i] += row[i - 1];
-            break;
-        case Gfx::PNG::FilterType::Up:
-            for (size_t i = 0; i < row.size(); ++i)
-                row[i] += previous_row[i];
-            break;
-        case Gfx::PNG::FilterType::Average:
-            for (size_t i = 0; i < row.size(); ++i) {
-                u8 left = 0;
-                if (i > 0)
-                    left = row[i - 1];
-                u8 above = previous_row[i];
-                row[i] += (left + above) / 2;
-            }
-            break;
-        case Gfx::PNG::FilterType::Paeth:
-            for (size_t i = 0; i < row.size(); ++i) {
-                u8 left = 0;
-                u8 upper_left = 0;
-                if (i > 0) {
-                    left = row[i - 1];
-                    upper_left = previous_row[i - 1];
-                }
-                u8 above = previous_row[i];
-                row[i] += Gfx::PNG::paeth_predictor(left, above, upper_left);
-            }
-            break;
-        }
+        Gfx::PNGImageDecoderPlugin::unfilter_scanline(filter, row, previous_row, bytes_per_pixel);
 
         previous_row = row;
         decoded.append(row);
@@ -224,7 +192,8 @@ PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer
     if (buffer.size() % bytes_per_row)
         return AK::Error::from_string_literal("Flate input data is not divisible into columns");
 
-    return decode_png_prediction(buffer, bytes_per_row);
+    size_t bytes_per_pixel = ceil_div(colors * bits_per_component, 8);
+    return decode_png_prediction(buffer, bytes_per_row, bytes_per_pixel);
 }
 
 PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component, int early_change)
