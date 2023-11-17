@@ -9,6 +9,7 @@
 
 #include <AK/Platform.h>
 #include <LibJIT/Assembler.h>
+#include <LibJS/Bytecode/Builtins.h>
 #include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/JIT/NativeExecutable.h>
@@ -43,6 +44,8 @@ private:
     static constexpr auto CACHED_ACCUMULATOR = Assembler::Reg::R12;
     static constexpr auto RUNNING_EXECUTION_CONTEXT_BASE = Assembler::Reg::R15;
 #    endif
+
+    static Assembler::Reg argument_register(u32);
 
 #    define JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(O) \
         O(Div, div)                                             \
@@ -146,6 +149,12 @@ private:
 
     JS_ENUMERATE_IMPLEMENTED_JIT_OPS(DECLARE_COMPILE_OP)
 #    undef DECLARE_COMPILE_OP
+
+    void compile_builtin(Bytecode::Builtin, Assembler::Label& slow_case, Assembler::Label& end);
+#    define DECLARE_COMPILE_BUILTIN(name, snake_case_name, ...) \
+        void compile_builtin_##snake_case_name(Assembler::Label& slow_case, Assembler::Label& end);
+    JS_ENUMERATE_BUILTINS(DECLARE_COMPILE_BUILTIN)
+#    undef DECLARE_COMPILE_BUILTIN
 
     void store_vm_register(Bytecode::Register, Assembler::Reg);
     void load_vm_register(Assembler::Reg, Bytecode::Register);

@@ -1269,10 +1269,12 @@ Value Object::get_without_side_effects(PropertyKey const& property_key) const
     return {};
 }
 
-void Object::define_native_function(Realm& realm, PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&)> native_function, i32 length, PropertyAttributes attribute)
+void Object::define_native_function(Realm& realm, PropertyKey const& property_key, Function<ThrowCompletionOr<Value>(VM&)> native_function, i32 length, PropertyAttributes attribute, Optional<Bytecode::Builtin> builtin)
 {
     auto function = NativeFunction::create(realm, move(native_function), length, property_key, &realm);
     define_direct_property(property_key, function, attribute);
+    if (builtin.has_value())
+        realm.define_builtin(builtin.value(), function);
 }
 
 // 20.1.2.3.1 ObjectDefineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-objectdefineproperties

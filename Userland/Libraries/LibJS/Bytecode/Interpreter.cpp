@@ -1514,6 +1514,8 @@ static StringView call_type_to_string(CallType type)
 DeprecatedString Call::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     auto type = call_type_to_string(m_type);
+    if (m_builtin.has_value())
+        return DeprecatedString::formatted("Call{} callee:{}, this:{}, first_arg:{} (builtin {})", type, m_callee, m_this_value, m_first_argument, m_builtin.value());
     if (m_expression_string.has_value())
         return DeprecatedString::formatted("Call{} callee:{}, this:{}, first_arg:{} ({})", type, m_callee, m_this_value, m_first_argument, executable.get_string(m_expression_string.value()));
     return DeprecatedString::formatted("Call{} callee:{}, this:{}, first_arg:{}", type, m_callee, m_first_argument, m_this_value);

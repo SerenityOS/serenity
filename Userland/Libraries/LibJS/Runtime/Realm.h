@@ -11,8 +11,10 @@
 #include <AK/OwnPtr.h>
 #include <AK/StringView.h>
 #include <AK/Weakable.h>
+#include <LibJS/Bytecode/Builtins.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Intrinsics.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
@@ -48,7 +50,13 @@ public:
     HostDefined* host_defined() { return m_host_defined; }
     void set_host_defined(OwnPtr<HostDefined> host_defined) { m_host_defined = move(host_defined); }
 
+    void define_builtin(Bytecode::Builtin builtin, Value value)
+    {
+        m_builtins[to_underlying(builtin)] = value;
+    }
+
     static FlatPtr global_environment_offset() { return OFFSET_OF(Realm, m_global_environment); }
+    static FlatPtr builtins_offset() { return OFFSET_OF(Realm, m_builtins); }
 
 private:
     Realm() = default;
@@ -59,6 +67,7 @@ private:
     GCPtr<Object> m_global_object;                 // [[GlobalObject]]
     GCPtr<GlobalEnvironment> m_global_environment; // [[GlobalEnv]]
     OwnPtr<HostDefined> m_host_defined;            // [[HostDefined]]
+    AK::Array<Value, to_underlying(Bytecode::Builtin::__Count)> m_builtins;
 };
 
 }

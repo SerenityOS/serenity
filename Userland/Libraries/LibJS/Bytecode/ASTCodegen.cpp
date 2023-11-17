@@ -1521,6 +1521,8 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     generator.emit<Bytecode::Op::Store>(this_reg);
 
+    Optional<Bytecode::Builtin> builtin;
+
     if (is<NewExpression>(this)) {
         TRY(m_callee->generate_bytecode(generator));
         generator.emit<Bytecode::Op::Store>(callee_reg);
@@ -1528,6 +1530,7 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
         TRY(get_base_and_value_from_member_expression(generator, member_expression, this_reg));
         generator.emit<Bytecode::Op::Store>(callee_reg);
+        builtin = Bytecode::get_builtin(member_expression);
     } else if (is<OptionalChain>(*m_callee)) {
         auto& optional_chain = static_cast<OptionalChain const&>(*m_callee);
         TRY(generate_optional_chain(generator, optional_chain, callee_reg, this_reg));
@@ -1581,7 +1584,7 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
             generator.emit<Bytecode::Op::Store>(Bytecode::Register { first_argument_reg.value().index() + register_offset });
             register_offset += 1;
         }
-        generator.emit<Bytecode::Op::Call>(call_type, callee_reg, this_reg, first_argument_reg.value_or(Bytecode::Register { 0 }), arguments().size(), expression_string_index);
+        generator.emit<Bytecode::Op::Call>(call_type, callee_reg, this_reg, first_argument_reg.value_or(Bytecode::Register { 0 }), arguments().size(), expression_string_index, builtin);
     }
 
     return {};
