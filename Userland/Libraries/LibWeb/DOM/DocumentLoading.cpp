@@ -17,6 +17,7 @@
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/Loader/GeneratedPagesLoader.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
@@ -263,10 +264,14 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
     auto& realm = document->realm();
 
     if (navigation_params->response->body()) {
-        auto process_body = [document](ByteBuffer bytes) {
-            if (!parse_document(*document, bytes)) {
-                dbgln("FIXME: Load html page with an error if parsing failed.");
-            }
+        auto process_body = [document, url = navigation_params->response->url().value()](ByteBuffer bytes) {
+            if (parse_document(*document, bytes))
+                return;
+            document->remove_all_children(true);
+            auto error_html = load_error_page(url).release_value_but_fixme_should_propagate_errors();
+            auto parser = HTML::HTMLParser::create(document, error_html, "utf-8");
+            document->set_url(AK::URL("about:error"));
+            parser->run();
         };
 
         auto process_body_error = [](auto) {
