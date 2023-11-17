@@ -1133,31 +1133,46 @@ private:
     Vector<NonnullRefPtr<Expression const>> m_expressions;
 };
 
-class BooleanLiteral final : public Expression {
+class PrimitiveLiteral : public Expression {
+public:
+    virtual Value value() const = 0;
+
+protected:
+    explicit PrimitiveLiteral(SourceRange source_range)
+        : Expression(move(source_range))
+    {
+    }
+};
+
+class BooleanLiteral final : public PrimitiveLiteral {
 public:
     explicit BooleanLiteral(SourceRange source_range, bool value)
-        : Expression(move(source_range))
+        : PrimitiveLiteral(move(source_range))
         , m_value(value)
     {
     }
 
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+    virtual Value value() const override { return Value(m_value); }
 
 private:
     bool m_value { false };
 };
 
-class NumericLiteral final : public Expression {
+class NumericLiteral final : public PrimitiveLiteral {
 public:
     explicit NumericLiteral(SourceRange source_range, double value)
-        : Expression(move(source_range))
+        : PrimitiveLiteral(move(source_range))
         , m_value(value)
     {
     }
 
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+    virtual Value value() const override { return m_value; }
 
 private:
     Value m_value;
@@ -1197,15 +1212,17 @@ private:
     DeprecatedString m_value;
 };
 
-class NullLiteral final : public Expression {
+class NullLiteral final : public PrimitiveLiteral {
 public:
     explicit NullLiteral(SourceRange source_range)
-        : Expression(move(source_range))
+        : PrimitiveLiteral(move(source_range))
     {
     }
 
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+    virtual Value value() const override { return js_null(); }
 };
 
 class RegExpLiteral final : public Expression {

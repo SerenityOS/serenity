@@ -1528,6 +1528,28 @@ void Compiler::compile_new_array(Bytecode::Op::NewArray const& op)
     store_accumulator(RET);
 }
 
+static Value cxx_new_primitive_array(VM& vm, Value* values, size_t element_count)
+{
+    auto& realm = *vm.current_realm();
+    auto array = MUST(Array::create(realm, 0));
+    for (size_t i = 0; i < element_count; ++i) {
+        array->indexed_properties().put(i, values[i], default_attributes);
+    }
+    return array;
+}
+
+void Compiler::compile_new_primitive_array(Bytecode::Op::NewPrimitiveArray const& op)
+{
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG1),
+        Assembler::Operand::Imm(bit_cast<u64>(op.values().data())));
+    m_assembler.mov(
+        Assembler::Operand::Register(ARG2),
+        Assembler::Operand::Imm(op.values().size()));
+    native_call((void*)cxx_new_primitive_array);
+    store_accumulator(RET);
+}
+
 void Compiler::compile_new_function(Bytecode::Op::NewFunction const& op)
 {
     m_assembler.mov(

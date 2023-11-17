@@ -92,6 +92,7 @@ private:
         O(NewString, new_string)                                                 \
         O(NewObject, new_object)                                                 \
         O(NewArray, new_array)                                                   \
+        O(NewPrimitiveArray, new_primitive_array)                                \
         O(NewFunction, new_function)                                             \
         O(NewRegExp, new_regexp)                                                 \
         O(NewBigInt, new_bigint)                                                 \
