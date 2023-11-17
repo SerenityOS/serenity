@@ -156,38 +156,40 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_p
     ByteBuffer decoded;
     decoded.ensure_capacity(bytes.size() - number_of_rows);
 
-    auto empty_row = TRY(ByteBuffer::create_zeroed(bytes_per_row));
+    auto empty_row = TRY(ByteBuffer::create_zeroed(bytes_per_row - 1));
     auto previous_row = empty_row.bytes();
 
     for (int row_index = 0; row_index < number_of_rows; ++row_index) {
         auto row = Bytes { bytes.data() + row_index * bytes_per_row, bytes_per_row };
 
         auto filter = TRY(Gfx::PNG::filter_type(row[0]));
+        row = row.slice(1);
+
         switch (filter) {
         case Gfx::PNG::FilterType::None:
             break;
         case Gfx::PNG::FilterType::Sub:
-            for (size_t i = 2; i < row.size(); ++i)
+            for (size_t i = 1; i < row.size(); ++i)
                 row[i] += row[i - 1];
             break;
         case Gfx::PNG::FilterType::Up:
-            for (size_t i = 1; i < row.size(); ++i)
+            for (size_t i = 0; i < row.size(); ++i)
                 row[i] += previous_row[i];
             break;
         case Gfx::PNG::FilterType::Average:
-            for (size_t i = 1; i < row.size(); ++i) {
+            for (size_t i = 0; i < row.size(); ++i) {
                 u8 left = 0;
-                if (i > 1)
+                if (i > 0)
                     left = row[i - 1];
                 u8 above = previous_row[i];
                 row[i] += (left + above) / 2;
             }
             break;
         case Gfx::PNG::FilterType::Paeth:
-            for (size_t i = 1; i < row.size(); ++i) {
+            for (size_t i = 0; i < row.size(); ++i) {
                 u8 left = 0;
                 u8 upper_left = 0;
-                if (i > 1) {
+                if (i > 0) {
                     left = row[i - 1];
                     upper_left = previous_row[i - 1];
                 }
@@ -198,7 +200,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_p
         }
 
         previous_row = row;
-        decoded.append(row.slice(1));
+        decoded.append(row);
     }
 
     return decoded;
