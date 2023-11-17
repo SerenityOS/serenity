@@ -45,7 +45,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     event_title_textbox->set_focus(true);
 
     auto starting_month_input = widget->find_descendant_of_type_named<GUI::ComboBox>("start_month");
-    starting_month_input->set_model(MonthListModel::create());
+    starting_month_input->set_model(GUI::MonthListModel::create());
     starting_month_input->set_selected_index(m_start_date_time.month() - 1);
 
     auto starting_day_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_day");
@@ -65,7 +65,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     starting_meridiem_input->set_selected_index(0);
 
     auto ending_month_input = widget->find_descendant_of_type_named<GUI::ComboBox>("end_month");
-    ending_month_input->set_model(MonthListModel::create());
+    ending_month_input->set_model(GUI::MonthListModel::create());
     ending_month_input->set_selected_index(m_end_date_time.month() - 1);
 
     auto ending_day_input = widget->find_descendant_of_type_named<GUI::SpinBox>("end_day");
@@ -172,24 +172,9 @@ ErrorOr<void> AddEventDialog::add_event_to_calendar()
     return {};
 }
 
-int AddEventDialog::MonthListModel::row_count(const GUI::ModelIndex&) const
-{
-    return 12;
-}
-
 int AddEventDialog::MeridiemListModel::row_count(const GUI::ModelIndex&) const
 {
     return 2;
-}
-
-ErrorOr<String> AddEventDialog::MonthListModel::column_name(int column) const
-{
-    switch (column) {
-    case Column::Month:
-        return "Month"_string;
-    default:
-        VERIFY_NOT_REACHED();
-    }
 }
 
 ErrorOr<String> AddEventDialog::MeridiemListModel::column_name(int column) const
@@ -200,25 +185,6 @@ ErrorOr<String> AddEventDialog::MeridiemListModel::column_name(int column) const
     default:
         VERIFY_NOT_REACHED();
     }
-}
-
-GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
-{
-    constexpr Array short_month_names = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
-
-    auto& month = short_month_names[index.row()];
-    if (role == GUI::ModelRole::Display) {
-        switch (index.column()) {
-        case Column::Month:
-            return month;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    }
-    return {};
 }
 
 GUI::Variant AddEventDialog::MeridiemListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
