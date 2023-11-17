@@ -42,6 +42,9 @@ public:
     static Optional<DateTime> parse(StringView format, StringView string);
 
     bool operator<(DateTime const& other) const { return m_timestamp < other.m_timestamp; }
+    bool operator>(DateTime const& other) const { return m_timestamp > other.m_timestamp; }
+    bool operator<=(DateTime const& other) const { return m_timestamp <= other.m_timestamp; }
+    bool operator>=(DateTime const& other) const { return m_timestamp >= other.m_timestamp; }
     bool operator==(DateTime const& other) const { return m_timestamp == other.m_timestamp; }
 
 private:
