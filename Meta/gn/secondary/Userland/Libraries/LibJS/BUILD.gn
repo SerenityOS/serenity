@@ -16,6 +16,7 @@ shared_library("LibJS") {
     "//Userland/Libraries/LibLocale",
     "//Userland/Libraries/LibRegex",
     "//Userland/Libraries/LibSyntax",
+    "//Userland/Libraries/LibTimeZone",
     "//Userland/Libraries/LibUnicode",
   ]
   if (current_cpu == "x86" || current_cpu == "x64") {
