@@ -149,7 +149,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
     return buffer;
 }
 
-PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_row)
+PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_per_row)
 {
     int number_of_rows = bytes.size() / bytes_per_row;
 
@@ -157,25 +157,25 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
     decoded.ensure_capacity(bytes.size() - number_of_rows);
 
     auto empty_row = TRY(ByteBuffer::create_zeroed(bytes_per_row));
-    auto previous_row = empty_row.data();
+    auto previous_row = empty_row.bytes();
 
     for (int row_index = 0; row_index < number_of_rows; ++row_index) {
-        auto row = bytes.data() + row_index * bytes_per_row;
+        auto row = Bytes { bytes.data() + row_index * bytes_per_row, bytes_per_row };
 
         auto filter = TRY(Gfx::PNG::filter_type(row[0]));
         switch (filter) {
         case Gfx::PNG::FilterType::None:
             break;
         case Gfx::PNG::FilterType::Sub:
-            for (int i = 2; i < bytes_per_row; ++i)
+            for (size_t i = 2; i < row.size(); ++i)
                 row[i] += row[i - 1];
             break;
         case Gfx::PNG::FilterType::Up:
-            for (int i = 1; i < bytes_per_row; ++i)
+            for (size_t i = 1; i < row.size(); ++i)
                 row[i] += previous_row[i];
             break;
         case Gfx::PNG::FilterType::Average:
-            for (int i = 1; i < bytes_per_row; ++i) {
+            for (size_t i = 1; i < row.size(); ++i) {
                 u8 left = 0;
                 if (i > 1)
                     left = row[i - 1];
@@ -184,7 +184,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
             }
             break;
         case Gfx::PNG::FilterType::Paeth:
-            for (int i = 1; i < bytes_per_row; ++i) {
+            for (size_t i = 1; i < row.size(); ++i) {
                 u8 left = 0;
                 u8 upper_left = 0;
                 if (i > 1) {
@@ -198,7 +198,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
         }
 
         previous_row = row;
-        decoded.append(row + 1, bytes_per_row - 1);
+        decoded.append(row.slice(1));
     }
 
     return decoded;
@@ -218,7 +218,7 @@ PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer
         return AK::Error::from_string_literal("Invalid predictor value");
 
     // Rows are always a whole number of bytes long, starting with an algorithm tag
-    int const bytes_per_row = AK::ceil_div(columns * colors * bits_per_component, 8) + 1;
+    size_t const bytes_per_row = AK::ceil_div(columns * colors * bits_per_component, 8) + 1;
     if (buffer.size() % bytes_per_row)
         return AK::Error::from_string_literal("Flate input data is not divisible into columns");
 
