@@ -39,7 +39,7 @@ constexpr void div_mod_internal(
     if (dividend_len < divisor_len) { // dividend < divisor
         StorageOperations::set(0, quotient);
         if constexpr (restore_remainder)
-            remainder = operand1;
+            StorageOperations::copy(operand1, remainder);
         return;
     }
 
