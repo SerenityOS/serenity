@@ -36,23 +36,15 @@
             font_weight: "Bold"
         }
 
-        @GUI::ComboBox {
-            name: "start_month"
-            model_only: true
-            fixed_size: [50, 20]
+        @GUI::TextBox {
+            name: "start_date"
+            mode: "ReadOnly"
+            fixed_width: 80
         }
 
-        @GUI::SpinBox {
-            name: "start_day"
-            fixed_size: [40, 20]
-            min: 1
-        }
-
-        @GUI::SpinBox {
-            name: "start_year"
-            fixed_size: [55, 20]
-            min: 0
-            max: 9999
+        @GUI::Button {
+            name: "pick_start_date"
+            fixed_width: 20
         }
 
         @GUI::SpinBox {
@@ -90,23 +82,15 @@
             font_weight: "Bold"
         }
 
-        @GUI::ComboBox {
-            name: "end_month"
-            model_only: true
-            fixed_size: [50, 20]
+        @GUI::TextBox {
+            name: "end_date"
+            mode: "ReadOnly"
+            fixed_width: 80
         }
 
-        @GUI::SpinBox {
-            name: "end_day"
-            fixed_size: [40, 20]
-            min: 1
-        }
-
-        @GUI::SpinBox {
-            name: "end_year"
-            fixed_size: [55, 20]
-            min: 0
-            max: 9999
+        @GUI::Button {
+            name: "pick_end_date"
+            fixed_width: 20
         }
 
         @GUI::SpinBox {

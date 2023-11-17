@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
  * Copyright (c) 2022-2023, the SerenityOS developers.
+ * Copyright (c) 2023, David Ganz <david.g.ganz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/DatePickerDialog.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
@@ -21,6 +23,16 @@
 #include <LibGfx/Font/FontDatabase.h>
 
 namespace Calendar {
+
+static Optional<Core::DateTime> pick_date(GUI::Window* parent_window, String const& title)
+{
+    Core::DateTime date;
+    auto result = GUI::DatePickerDialog::show(parent_window, title, date);
+    if (result != GUI::DatePickerDialog::ExecResult::OK)
+        return {};
+
+    return date;
+}
 
 AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window)
     : Dialog(parent_window)
@@ -44,15 +56,19 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     auto event_title_textbox = widget->find_descendant_of_type_named<GUI::TextBox>("event_title_textbox");
     event_title_textbox->set_focus(true);
 
-    auto starting_month_input = widget->find_descendant_of_type_named<GUI::ComboBox>("start_month");
-    starting_month_input->set_model(MonthListModel::create());
-    starting_month_input->set_selected_index(m_start_date_time.month() - 1);
+    auto start_date_box = widget->find_descendant_of_type_named<GUI::TextBox>("start_date");
+    start_date_box->set_text(MUST(m_start_date_time.to_string("%Y-%m-%d"sv)));
 
-    auto starting_day_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_day");
-    starting_day_input->set_value(m_start_date_time.day());
+    auto calendar_date_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv).release_value_but_fixme_should_propagate_errors();
 
-    auto starting_year_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_year");
-    starting_year_input->set_value(m_start_date_time.year());
+    auto& pick_start_date_button = *widget->find_descendant_of_type_named<GUI::Button>("pick_start_date");
+    pick_start_date_button.set_icon(calendar_date_icon);
+    pick_start_date_button.on_click = [&](auto) {
+        if (auto new_date = pick_date(this, "Pick Start Date"_string); new_date.has_value()) {
+            m_start_date_time.set_date(new_date.release_value());
+            start_date_box->set_text(MUST(m_start_date_time.to_string("%Y-%m-%d"sv)));
+        }
+    };
 
     auto starting_hour_input = widget->find_descendant_of_type_named<GUI::SpinBox>("start_hour");
     starting_hour_input->set_value(m_start_date_time.hour());
@@ -64,15 +80,17 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     starting_meridiem_input->set_model(MeridiemListModel::create());
     starting_meridiem_input->set_selected_index(0);
 
-    auto ending_month_input = widget->find_descendant_of_type_named<GUI::ComboBox>("end_month");
-    ending_month_input->set_model(MonthListModel::create());
-    ending_month_input->set_selected_index(m_end_date_time.month() - 1);
+    auto end_date_box = widget->find_descendant_of_type_named<GUI::TextBox>("end_date");
+    end_date_box->set_text(MUST(m_start_date_time.to_string("%Y-%m-%d"sv)));
 
-    auto ending_day_input = widget->find_descendant_of_type_named<GUI::SpinBox>("end_day");
-    ending_day_input->set_value(m_end_date_time.day());
-
-    auto ending_year_input = widget->find_descendant_of_type_named<GUI::SpinBox>("end_year");
-    ending_year_input->set_value(m_end_date_time.year());
+    auto& pick_end_date_button = *widget->find_descendant_of_type_named<GUI::Button>("pick_end_date");
+    pick_end_date_button.set_icon(calendar_date_icon);
+    pick_end_date_button.on_click = [&](auto) {
+        if (auto new_date = pick_date(this, "Pick End Date"_string); new_date.has_value()) {
+            m_end_date_time.set_date(new_date.release_value());
+            end_date_box->set_text(MUST(m_end_date_time.to_string("%Y-%m-%d"sv)));
+        }
+    };
 
     auto ending_hour_input = widget->find_descendant_of_type_named<GUI::SpinBox>("end_hour");
     ending_hour_input->set_value(m_end_date_time.hour());
@@ -91,57 +109,21 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
         done(ExecResult::OK);
     };
 
-    auto update_starting_day_range = [=]() {
-        auto year = starting_year_input->value();
-        auto month = starting_month_input->selected_index();
-
-        starting_day_input->set_range(1, days_in_month(year, month + 1));
-    };
-    auto update_ending_day_range = [=]() {
-        auto year = ending_year_input->value();
-        auto month = ending_month_input->selected_index();
-
-        ending_day_input->set_range(1, days_in_month(year, month + 1));
-    };
     auto update_starting_input_values = [=, this]() {
-        auto year = starting_year_input->value();
-        auto month = starting_month_input->selected_index() + 1;
-        auto day = starting_day_input->value();
         auto hour = starting_hour_input->value();
         auto minute = starting_minute_input->value();
 
-        m_start_date_time = Core::DateTime::create(year, month, day, hour, minute);
+        m_start_date_time.set_time_only(hour, minute);
     };
     auto update_ending_input_values = [=, this]() {
-        auto year = ending_year_input->value();
-        auto month = ending_month_input->selected_index() + 1;
-        auto day = ending_day_input->value();
         auto hour = ending_hour_input->value();
         auto minute = ending_minute_input->value();
 
-        m_end_date_time = Core::DateTime::create(year, month, day, hour, minute);
+        m_end_date_time.set_time_only(hour, minute);
     };
-    starting_year_input->on_change = [update_starting_input_values, update_starting_day_range](auto) {
-        update_starting_input_values();
-        update_starting_day_range();
-    };
-    starting_month_input->on_change = [update_starting_input_values, update_starting_day_range](auto, auto) {
-        update_starting_input_values();
-        update_starting_day_range();
-    };
-    starting_day_input->on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
     starting_hour_input->on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
     starting_minute_input->on_change = [update_starting_input_values](auto) { update_starting_input_values(); };
 
-    ending_year_input->on_change = [update_ending_input_values, update_ending_day_range](auto) {
-        update_ending_input_values();
-        update_ending_day_range();
-    };
-    ending_month_input->on_change = [update_ending_input_values, update_ending_day_range](auto, auto) {
-        update_ending_input_values();
-        update_ending_day_range();
-    };
-    ending_day_input->on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
     ending_hour_input->on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
     ending_minute_input->on_change = [update_ending_input_values](auto) { update_ending_input_values(); };
 }
