@@ -406,17 +406,13 @@ RENDERER_HANDLER(text_set_leading)
     return {};
 }
 
-PDFErrorOr<NonnullRefPtr<PDFFont>> Renderer::get_font(FontCacheKey const& key, Optional<NonnullRefPtr<DictObject>> extra_resources)
+PDFErrorOr<NonnullRefPtr<PDFFont>> Renderer::get_font(FontCacheKey const& key)
 {
     auto it = m_font_cache.find(key);
     if (it != m_font_cache.end())
         return it->value;
 
-    auto resources = extra_resources.value_or(m_page.resources);
-    auto fonts_dictionary = MUST(resources->get_dict(m_document, CommonNames::Font));
-    auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, key.font_dictionary_key));
-
-    auto font = TRY(PDFFont::create(m_document, font_dictionary, key.font_size));
+    auto font = TRY(PDFFont::create(m_document, key.font_dictionary, key.font_size));
     m_font_cache.set(key, font);
     return font;
 }
@@ -430,8 +426,12 @@ RENDERER_HANDLER(text_set_font)
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
     auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
 
-    FontCacheKey cache_key { target_font_name, font_size };
-    text_state().font = TRY(get_font(cache_key, extra_resources));
+    auto resources = extra_resources.value_or(m_page.resources);
+    auto fonts_dictionary = MUST(resources->get_dict(m_document, CommonNames::Font));
+    auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
+
+    FontCacheKey cache_key { move(font_dictionary), font_size };
+    text_state().font = TRY(get_font(cache_key));
 
     m_text_rendering_matrix_is_dirty = true;
     return {};

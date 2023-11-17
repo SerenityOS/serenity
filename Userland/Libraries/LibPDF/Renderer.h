@@ -101,7 +101,7 @@ public:
     static PDFErrorsOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences preferences);
 
     struct FontCacheKey {
-        DeprecatedString font_dictionary_key;
+        NonnullRefPtr<DictObject> font_dictionary;
         float font_size;
 
         bool operator==(FontCacheKey const&) const = default;
@@ -147,7 +147,7 @@ private:
     Gfx::AffineTransform const& calculate_text_rendering_matrix();
     Gfx::AffineTransform calculate_image_space_transformation(int width, int height);
 
-    PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&, Optional<NonnullRefPtr<DictObject>> extra_resources);
+    PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&);
 
     RefPtr<Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
@@ -175,7 +175,7 @@ template<>
 struct Traits<PDF::Renderer::FontCacheKey> : public DefaultTraits<PDF::Renderer::FontCacheKey> {
     static unsigned hash(PDF::Renderer::FontCacheKey const& key)
     {
-        return pair_int_hash(key.font_dictionary_key.hash(), int_hash(bit_cast<u32>(key.font_size)));
+        return pair_int_hash(ptr_hash(key.font_dictionary.ptr()), int_hash(bit_cast<u32>(key.font_size)));
     }
 };
 
