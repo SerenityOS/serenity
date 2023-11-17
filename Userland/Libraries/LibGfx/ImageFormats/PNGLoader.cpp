@@ -291,9 +291,9 @@ static_assert(AssertSize<Pixel, 4>());
 
 void PNGImageDecoderPlugin::unfilter_scanline(PNG::FilterType filter, Bytes scanline_data, ReadonlyBytes previous_scanlines_data, u8 bytes_per_complete_pixel)
 {
-    VERIFY(filter != PNG::FilterType::None);
-
     switch (filter) {
+    case PNG::FilterType::None:
+        break;
     case PNG::FilterType::Sub:
         // This loop starts at bytes_per_complete_pixel because all bytes before that are
         // guaranteed to have no valid byte at index (i - bytes_per_complete pixel).
@@ -327,8 +327,6 @@ void PNGImageDecoderPlugin::unfilter_scanline(PNG::FilterType filter, Bytes scan
             scanline_data[i] += PNG::paeth_predictor(left, above, upper_left);
         }
         break;
-    default:
-        VERIFY_NOT_REACHED();
     }
 }
 
