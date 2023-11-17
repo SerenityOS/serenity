@@ -90,6 +90,11 @@ void DateTime::set_time(int year, int month, int day, int hour, int minute, int 
     m_second = tm.tm_sec;
 }
 
+void DateTime::set_time_only(int hour, int minute, Optional<int> second)
+{
+    set_time(year(), month(), day(), hour, minute, second.has_value() ? second.release_value() : this->second());
+}
+
 ErrorOr<String> DateTime::to_string(StringView format) const
 {
     struct tm tm;
