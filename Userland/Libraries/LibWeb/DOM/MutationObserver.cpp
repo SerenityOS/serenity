@@ -85,26 +85,30 @@ WebIDL::ExceptionOr<void> MutationObserver::observe(Node& target, MutationObserv
 
     // 7. For each registered of target’s registered observer list, if registered’s observer is this:
     bool updated_existing_observer = false;
-    for (auto& registered_observer : target.registered_observers_list()) {
-        if (registered_observer->observer().ptr() != this)
-            continue;
-
-        updated_existing_observer = true;
-
-        // 1. For each node of this’s node list, remove all transient registered observers whose source is registered from node’s registered observer list.
-        for (auto& node : m_node_list) {
-            // FIXME: Is this correct?
-            if (node.is_null())
+    if (target.registered_observer_list()) {
+        for (auto& registered_observer : *target.registered_observer_list()) {
+            if (registered_observer->observer().ptr() != this)
                 continue;
 
-            node->registered_observers_list().remove_all_matching([&registered_observer](RegisteredObserver& observer) {
-                return is<TransientRegisteredObserver>(observer) && verify_cast<TransientRegisteredObserver>(observer).source().ptr() == registered_observer;
-            });
-        }
+            updated_existing_observer = true;
 
-        // 2. Set registered’s options to options.
-        registered_observer->set_options(options);
-        break;
+            // 1. For each node of this’s node list, remove all transient registered observers whose source is registered from node’s registered observer list.
+            for (auto& node : m_node_list) {
+                // FIXME: Is this correct?
+                if (node.is_null())
+                    continue;
+
+                if (node->registered_observer_list()) {
+                    node->registered_observer_list()->remove_all_matching([&registered_observer](RegisteredObserver& observer) {
+                        return is<TransientRegisteredObserver>(observer) && verify_cast<TransientRegisteredObserver>(observer).source().ptr() == registered_observer;
+                    });
+                }
+            }
+
+            // 2. Set registered’s options to options.
+            registered_observer->set_options(options);
+            break;
+        }
     }
 
     // 8. Otherwise:
@@ -129,9 +133,11 @@ void MutationObserver::disconnect()
         if (node.is_null())
             continue;
 
-        node->registered_observers_list().remove_all_matching([this](RegisteredObserver& registered_observer) {
-            return registered_observer.observer().ptr() == this;
-        });
+        if (node->registered_observer_list()) {
+            node->registered_observer_list()->remove_all_matching([this](RegisteredObserver& registered_observer) {
+                return registered_observer.observer().ptr() == this;
+            });
+        }
     }
 
     // 2. Empty this’s record queue.

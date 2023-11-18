@@ -103,8 +103,10 @@ void Node::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_layout_node);
     visitor.visit(m_paintable);
 
-    for (auto& registered_observer : m_registered_observer_list)
-        visitor.visit(registered_observer);
+    if (m_registered_observer_list) {
+        for (auto& registered_observer : *m_registered_observer_list)
+            visitor.visit(registered_observer);
+    }
 }
 
 // https://dom.spec.whatwg.org/#dom-node-baseuri
@@ -686,10 +688,12 @@ void Node::remove(bool suppress_observers)
     //     if registered’s options["subtree"] is true, then append a new transient registered observer
     //     whose observer is registered’s observer, options is registered’s options, and source is registered to node’s registered observer list.
     for (auto* inclusive_ancestor = parent; inclusive_ancestor; inclusive_ancestor = inclusive_ancestor->parent()) {
-        for (auto& registered : inclusive_ancestor->m_registered_observer_list) {
+        if (!inclusive_ancestor->m_registered_observer_list)
+            continue;
+        for (auto& registered : *inclusive_ancestor->m_registered_observer_list) {
             if (registered->options().subtree) {
                 auto transient_observer = TransientRegisteredObserver::create(registered->observer(), registered->options(), registered);
-                m_registered_observer_list.append(move(transient_observer));
+                m_registered_observer_list->append(move(transient_observer));
             }
         }
     }
@@ -1546,7 +1550,9 @@ void Node::queue_mutation_record(FlyString const& type, Optional<FlyString> cons
     // 2. Let nodes be the inclusive ancestors of target.
     // 3. For each node in nodes, and then for each registered of node’s registered observer list:
     for (auto* node = this; node; node = node->parent()) {
-        for (auto& registered_observer : node->m_registered_observer_list) {
+        if (!node->m_registered_observer_list)
+            continue;
+        for (auto& registered_observer : *node->m_registered_observer_list) {
             // 1. Let options be registered’s options.
             auto& options = registered_observer->options();
 
@@ -1993,6 +1999,13 @@ ErrorOr<void> Node::prepend_with_space(StringBuilder x, StringView const& result
         TRY(x.try_append(temp));
     }
     return {};
+}
+
+void Node::add_registered_observer(RegisteredObserver& registered_observer)
+{
+    if (!m_registered_observer_list)
+        m_registered_observer_list = make<Vector<JS::NonnullGCPtr<RegisteredObserver>>>();
+    m_registered_observer_list->append(registered_observer);
 }
 
 }

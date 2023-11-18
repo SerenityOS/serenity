@@ -254,10 +254,10 @@ public:
 
     size_t length() const;
 
-    auto& registered_observers_list() { return m_registered_observer_list; }
-    auto const& registered_observers_list() const { return m_registered_observer_list; }
+    auto& registered_observer_list() { return m_registered_observer_list; }
+    auto const& registered_observer_list() const { return m_registered_observer_list; }
 
-    void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
+    void add_registered_observer(RegisteredObserver&);
 
     void queue_mutation_record(FlyString const& type, Optional<FlyString> const& attribute_name, Optional<FlyString> const& attribute_namespace, Optional<String> const& old_value, Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling) const;
 
@@ -693,7 +693,7 @@ protected:
 
     // https://dom.spec.whatwg.org/#registered-observer-list
     // "Nodes have a strong reference to registered observers in their registered observer list." https://dom.spec.whatwg.org/#garbage-collection
-    Vector<JS::NonnullGCPtr<RegisteredObserver>> m_registered_observer_list;
+    OwnPtr<Vector<JS::NonnullGCPtr<RegisteredObserver>>> m_registered_observer_list;
 
     void build_accessibility_tree(AccessibilityTreeNode& parent);
 
