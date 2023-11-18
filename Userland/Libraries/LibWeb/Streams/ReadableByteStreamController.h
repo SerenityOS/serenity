@@ -76,6 +76,7 @@ class ReadableByteStreamController : public Bindings::PlatformObject {
 public:
     virtual ~ReadableByteStreamController() override = default;
 
+    JS::GCPtr<ReadableStreamBYOBRequest const> byob_request() const { return m_byob_request; }
     JS::GCPtr<ReadableStreamBYOBRequest> byob_request() { return m_byob_request; }
     void set_byob_request(JS::GCPtr<ReadableStreamBYOBRequest> request) { m_byob_request = request; }
 
@@ -102,6 +103,7 @@ public:
     void set_pulling(bool value) { m_pulling = value; }
 
     SinglyLinkedList<PullIntoDescriptor>& pending_pull_intos() { return m_pending_pull_intos; }
+    SinglyLinkedList<PullIntoDescriptor> const& pending_pull_intos() const { return m_pending_pull_intos; }
 
     SinglyLinkedList<ReadableByteStreamQueueEntry>& queue() { return m_queue; }
 
