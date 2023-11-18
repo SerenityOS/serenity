@@ -1026,17 +1026,17 @@ constexpr T pow(T x, T y)
     return exp2<T>(y * log2<T>(x));
 }
 
-template<typename T>
-constexpr int clamp_to_int(T value)
+template<Integral I, typename T>
+constexpr I clamp_to(T value)
 {
-    if (value >= static_cast<T>(NumericLimits<int>::max()))
-        return NumericLimits<int>::max();
+    if (value >= static_cast<T>(NumericLimits<I>::max()))
+        return NumericLimits<I>::max();
 
-    if (value <= static_cast<T>(NumericLimits<int>::min()))
-        return NumericLimits<int>::min();
+    if (value <= static_cast<T>(NumericLimits<I>::min()))
+        return NumericLimits<I>::min();
 
     if constexpr (IsFloatingPoint<T>)
-        return round_to<int>(value);
+        return round_to<I>(value);
 
     return value;
 }
