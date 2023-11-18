@@ -45,7 +45,8 @@ public:
 
     Vector<JS::Handle<DOMEventListener>> event_listener_list();
 
-    Function<void(Event const&)> activation_behavior;
+    virtual bool has_activation_behavior() const;
+    virtual void activation_behavior(Event const&);
 
     // NOTE: These only exist for checkbox and radio input elements.
     virtual void legacy_pre_activation_behavior() { }

@@ -242,7 +242,7 @@ bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& even
         bool is_activation_event = is<UIEvents::MouseEvent>(event) && event.type() == HTML::EventNames::click;
 
         // 5. If isActivationEvent is true and target has activation behavior, then set activationTarget to target.
-        if (is_activation_event && target->activation_behavior)
+        if (is_activation_event && target->has_activation_behavior())
             activation_target = target;
 
         // 6. Let slottable be target, if target is a slottable and is assigned, and null otherwise.
@@ -293,7 +293,7 @@ bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& even
             if (is<HTML::Window>(parent)
                 || (is<Node>(parent) && verify_cast<Node>(*target).root().is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*parent)))) {
                 // 1. If isActivationEvent is true, event’s bubbles attribute is true, activationTarget is null, and parent has activation behavior, then set activationTarget to parent.
-                if (is_activation_event && event.bubbles() && !activation_target && parent->activation_behavior)
+                if (is_activation_event && event.bubbles() && !activation_target && parent->has_activation_behavior())
                     activation_target = parent;
 
                 // 2. Append to an event path with event, parent, null, relatedTarget, touchTargets, and slot-in-closed-tree.
@@ -309,7 +309,7 @@ bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& even
                 target = *parent;
 
                 // 1. If isActivationEvent is true, activationTarget is null, and target has activation behavior, then set activationTarget to target.
-                if (is_activation_event && !activation_target && target->activation_behavior)
+                if (is_activation_event && !activation_target && target->has_activation_behavior())
                     activation_target = target;
 
                 // 2. Append to an event path with event, parent, target, relatedTarget, touchTargets, and slot-in-closed-tree.

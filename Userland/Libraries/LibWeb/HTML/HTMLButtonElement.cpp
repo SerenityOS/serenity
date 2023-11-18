@@ -15,40 +15,6 @@ JS_DEFINE_ALLOCATOR(HTMLButtonElement);
 HTMLButtonElement::HTMLButtonElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    // https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:activation-behaviour
-    activation_behavior = [this](auto&) {
-        // 1. If element is disabled, then return.
-        if (!enabled())
-            return;
-
-        // 2. If element does not have a form owner, then return.
-        if (!form())
-            return;
-
-        // 3. If element's node document is not fully active, then return.
-        if (!this->document().is_fully_active())
-            return;
-
-        // 4. Switch on element's type attribute's state:
-        switch (type_state()) {
-        case TypeAttributeState::Submit:
-            // Submit Button
-            // Submit element's form owner from element.
-            form()->submit_form(*this).release_value_but_fixme_should_propagate_errors();
-            break;
-        case TypeAttributeState::Reset:
-            // Reset Button
-            // Reset element's form owner.
-            form()->reset_form();
-            break;
-        case TypeAttributeState::Button:
-            // Button
-            // Do nothing.
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    };
 }
 
 HTMLButtonElement::~HTMLButtonElement() = default;
@@ -99,6 +65,47 @@ DeprecatedString HTMLButtonElement::value() const
     if (!has_attribute(AttributeNames::value))
         return DeprecatedString::empty();
     return deprecated_attribute(AttributeNames::value);
+}
+
+bool HTMLButtonElement::has_activation_behavior() const
+{
+    return true;
+}
+
+void HTMLButtonElement::activation_behavior(DOM::Event const&)
+{
+    // https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:activation-behaviour
+    // 1. If element is disabled, then return.
+    if (!enabled())
+        return;
+
+    // 2. If element does not have a form owner, then return.
+    if (!form())
+        return;
+
+    // 3. If element's node document is not fully active, then return.
+    if (!this->document().is_fully_active())
+        return;
+
+    // 4. Switch on element's type attribute's state:
+    switch (type_state()) {
+    case TypeAttributeState::Submit:
+        // Submit Button
+        // Submit element's form owner from element.
+        form()->submit_form(*this).release_value_but_fixme_should_propagate_errors();
+        break;
+    case TypeAttributeState::Reset:
+        // Reset Button
+        // Reset element's form owner.
+        form()->reset_form();
+        break;
+    case TypeAttributeState::Button:
+        // Button
+        // Do nothing.
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 }
