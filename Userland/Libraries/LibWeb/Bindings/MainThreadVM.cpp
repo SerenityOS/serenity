@@ -608,9 +608,11 @@ void queue_mutation_observer_microtask(DOM::Document const& document)
                 if (node.is_null())
                     continue;
 
-                node->registered_observers_list().remove_all_matching([&mutation_observer](DOM::RegisteredObserver& registered_observer) {
-                    return is<DOM::TransientRegisteredObserver>(registered_observer) && static_cast<DOM::TransientRegisteredObserver&>(registered_observer).observer().ptr() == mutation_observer.ptr();
-                });
+                if (node->registered_observer_list()) {
+                    node->registered_observer_list()->remove_all_matching([&mutation_observer](DOM::RegisteredObserver& registered_observer) {
+                        return is<DOM::TransientRegisteredObserver>(registered_observer) && static_cast<DOM::TransientRegisteredObserver&>(registered_observer).observer().ptr() == mutation_observer.ptr();
+                    });
+                }
             }
 
             // 4. If records is not empty, then invoke mo’s callback with « records, mo », and mo. If this throws an exception, catch it, and report the exception.
