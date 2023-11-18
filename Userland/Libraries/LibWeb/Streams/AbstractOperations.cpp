@@ -346,7 +346,7 @@ void readable_stream_error(ReadableStream& stream, JS::Value error)
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-add-read-request
-void readable_stream_add_read_request(ReadableStream& stream, ReadRequest& read_request)
+void readable_stream_add_read_request(ReadableStream& stream, JS::NonnullGCPtr<ReadRequest> read_request)
 {
     // 1. Assert: stream.[[reader]] implements ReadableStreamDefaultReader.
     VERIFY(stream.reader().has_value() && stream.reader()->has<JS::NonnullGCPtr<ReadableStreamDefaultReader>>());
