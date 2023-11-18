@@ -1313,10 +1313,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
     return {};
 }
 
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String navigation_id)
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String)
 {
-    (void)navigation_id;
-
     // FIXME: 1. Let navigation be navigable's active window's navigation API.
     // FIXME: 2. Let destinationNavigationAPIState be navigable's active session history entry's navigation API state.
     // FIXME: 3. If navigationAPIState is not null, then set destinationNavigationAPIState to navigationAPIState.
@@ -1374,12 +1372,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     auto traversable = traversable_navigable();
 
     // 17. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_traversal_steps([this, traversable, history_entry, entry_to_replace, navigation_id] {
-        if (this->ongoing_navigation() != navigation_id) {
-            // NOTE: This check is not in the spec but we should not continue navigation if ongoing navigation id has changed.
-            return;
-        }
-
+    traversable->append_session_history_traversal_steps([this, traversable, history_entry, entry_to_replace] {
         // 1. Finalize a same-document navigation given traversable, navigable, historyEntry, and entryToReplace.
         finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace);
 
