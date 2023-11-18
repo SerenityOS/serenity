@@ -8,8 +8,12 @@
  */
 
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/DataView.h>
+#include <LibJS/Runtime/DataViewConstructor.h>
+#include <LibJS/Runtime/Intrinsics.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Streams/AbstractOperations.h>
@@ -652,6 +656,159 @@ JS::Value readable_byte_stream_controller_convert_pull_into_descriptor(JS::Realm
 
     // 6. Return ! Construct(pullIntoDescriptor’s view constructor, « buffer, pullIntoDescriptor’s byte offset, bytesFilled ÷ elementSize »).
     return MUST(JS::construct(vm, *pull_into_descriptor.view_constructor, buffer, JS::Value(pull_into_descriptor.byte_offset), JS::Value(bytes_filled / element_size)));
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-pull-into
+void readable_byte_stream_controller_pull_into(ReadableByteStreamController& controller, JS::Value view_value, ReadIntoRequest& read_into_request)
+{
+    auto& vm = controller.vm();
+    auto& realm = controller.realm();
+
+    // FIXME: Support DataView
+    auto& view_object = view_value.as_object();
+    auto const& view = verify_cast<JS::TypedArrayBase>(view_object);
+
+    // 1. Let stream be controller.[[stream]].
+    auto stream = controller.stream();
+
+    // 2. Let elementSize be 1.
+    size_t element_size = 1;
+
+    // 3. Let ctor be %DataView%.
+    JS::NativeFunction* ctor = realm.intrinsics().data_view_constructor();
+
+    // 4. If view has a [[TypedArrayName]] internal slot (i.e., it is not a DataView),
+    if (!is<JS::DataView>(view_object)) {
+        // 1. Set elementSize to the element size specified in the typed array constructors table for view.[[TypedArrayName]].
+        element_size = view.element_size();
+
+        // 2. Set ctor to the constructor specified in the typed array constructors table for view.[[TypedArrayName]].
+        if (is<JS::Int16Array>(view_object))
+            ctor = realm.intrinsics().int16_array_constructor();
+        else if (is<JS::Int32Array>(view_object))
+            ctor = realm.intrinsics().int32_array_constructor();
+        else if (is<JS::Int8Array>(view_object))
+            ctor = realm.intrinsics().int8_array_constructor();
+        else if (is<JS::Uint8Array>(view_object))
+            ctor = realm.intrinsics().uint8_array_constructor();
+        else if (is<JS::Uint16Array>(view_object))
+            ctor = realm.intrinsics().uint16_array_constructor();
+        else if (is<JS::Uint32Array>(view_object))
+            ctor = realm.intrinsics().uint32_array_constructor();
+        else if (is<JS::Uint8ClampedArray>(view_object))
+            ctor = realm.intrinsics().uint8_clamped_array_constructor();
+        else if (is<JS::BigInt64Array>(view_object))
+            ctor = realm.intrinsics().big_int64_array_constructor();
+        else if (is<JS::BigUint64Array>(view_object))
+            ctor = realm.intrinsics().big_uint64_array_constructor();
+        else if (is<JS::Float32Array>(view_object))
+            ctor = realm.intrinsics().float32_array_constructor();
+        else if (is<JS::Float64Array>(view_object))
+            ctor = realm.intrinsics().float64_array_constructor();
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    // 5. Let byteOffset be view.[[ByteOffset]].
+    auto byte_offset = view.byte_offset();
+
+    // 6. Let byteLength be view.[[ByteLength]].
+    auto byte_length = view.byte_length();
+
+    // 7. Let bufferResult be TransferArrayBuffer(view.[[ViewedArrayBuffer]]).
+    auto buffer_result = transfer_array_buffer(realm, *view.viewed_array_buffer());
+
+    // 8. If bufferResult is an abrupt completion,
+    if (buffer_result.is_exception()) {
+        // 1. Perform readIntoRequest’s error steps, given bufferResult.[[Value]].
+        auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, buffer_result.exception());
+        read_into_request.on_error(*throw_completion.release_value());
+
+        // 2. Return.
+        return;
+    }
+
+    // 9. Let buffer be bufferResult.[[Value]].
+    auto buffer = buffer_result.value();
+
+    // 10. Let pullIntoDescriptor be a new pull-into descriptor with buffer buffer, buffer byte length buffer.[[ArrayBufferByteLength]],
+    //     byte offset byteOffset, byte length byteLength, bytes filled 0, element size elementSize, view constructor ctor, and reader type "byob".
+    PullIntoDescriptor pull_into_descriptor {
+        .buffer = buffer,
+        .buffer_byte_length = buffer->byte_length(),
+        .byte_offset = byte_offset,
+        .byte_length = byte_length,
+        .bytes_filled = 0,
+        .element_size = element_size,
+        .view_constructor = *ctor,
+        .reader_type = ReaderType::Byob,
+    };
+
+    // 11. If controller.[[pendingPullIntos]] is not empty,
+    if (!controller.pending_pull_intos().is_empty()) {
+        // 1. Append pullIntoDescriptor to controller.[[pendingPullIntos]].
+        controller.pending_pull_intos().append(pull_into_descriptor);
+
+        // 2. Perform ! ReadableStreamAddReadIntoRequest(stream, readIntoRequest).
+        readable_stream_add_read_into_request(*stream, read_into_request);
+
+        // 3. Return.
+        return;
+    }
+
+    // 12. If stream.[[state]] is "closed",
+    if (stream->is_closed()) {
+        // 1. Let emptyView be ! Construct(ctor, « pullIntoDescriptor’s buffer, pullIntoDescriptor’s byte offset, 0 »).
+        auto empty_view = MUST(JS::construct(vm, *ctor, pull_into_descriptor.buffer, JS::Value(pull_into_descriptor.byte_offset), JS::Value(0)));
+
+        // 2. Perform readIntoRequest’s close steps, given emptyView.
+        read_into_request.on_close(empty_view);
+
+        // 3. Return.
+        return;
+    }
+
+    // 13. If controller.[[queueTotalSize]] > 0,
+    if (controller.queue_total_size() > 0) {
+        // 1. If ! ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(controller, pullIntoDescriptor) is true,
+        if (readable_byte_stream_controller_fill_pull_into_descriptor_from_queue(controller, pull_into_descriptor)) {
+            // 1. Let filledView be ! ReadableByteStreamControllerConvertPullIntoDescriptor(pullIntoDescriptor).
+            auto filled_view = readable_byte_stream_controller_convert_pull_into_descriptor(realm, pull_into_descriptor);
+
+            // 2. Perform ! ReadableByteStreamControllerHandleQueueDrain(controller).
+            MUST(readable_byte_stream_controller_handle_queue_drain(controller));
+
+            // 3. Perform readIntoRequest’s chunk steps, given filledView.
+            read_into_request.on_chunk(filled_view);
+
+            // 4. Return.
+            return;
+        }
+
+        // 2. If controller.[[closeRequested]] is true,
+        if (controller.close_requested()) {
+            // 1. Let e be a TypeError exception.
+            auto error = JS::TypeError::create(realm, "Reader has been released"sv);
+
+            // 2. Perform ! ReadableByteStreamControllerError(controller, e).
+            readable_byte_stream_controller_error(controller, error);
+
+            // 3. Perform readIntoRequest’s error steps, given e.
+            read_into_request.on_error(error);
+
+            // 4. Return.
+            return;
+        }
+    }
+
+    // 14. Append pullIntoDescriptor to controller.[[pendingPullIntos]].
+    controller.pending_pull_intos().append(pull_into_descriptor);
+
+    // 15. Perform ! ReadableStreamAddReadIntoRequest(stream, readIntoRequest).
+    readable_stream_add_read_into_request(*stream, read_into_request);
+
+    // 16. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+    MUST(readable_byte_stream_controller_call_pull_if_needed(controller));
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreaderrelease

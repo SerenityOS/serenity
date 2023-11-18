@@ -54,6 +54,7 @@ WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamG
 void readable_stream_default_reader_error_read_requests(ReadableStreamDefaultReader&, JS::Value error);
 void readable_stream_byob_reader_error_read_into_requests(ReadableStreamBYOBReader&, JS::Value error);
 JS::Value readable_byte_stream_controller_convert_pull_into_descriptor(JS::Realm&, PullIntoDescriptor const&);
+void readable_byte_stream_controller_pull_into(ReadableByteStreamController&, JS::Value view_value, ReadIntoRequest&);
 void readable_byte_stream_controller_fill_head_pull_into_descriptor(ReadableByteStreamController const&, u64 size, PullIntoDescriptor&);
 
 WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefaultReader&, ReadRequest&);
