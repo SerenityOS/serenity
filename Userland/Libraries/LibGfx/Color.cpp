@@ -39,14 +39,14 @@ static Optional<Color> parse_rgb_color(StringView string)
     if (parts.size() != 3)
         return {};
 
-    auto r = parts[0].to_uint().value_or(256);
-    auto g = parts[1].to_uint().value_or(256);
-    auto b = parts[2].to_uint().value_or(256);
+    auto r = parts[0].to_double().map(AK::clamp_to<u8, double>);
+    auto g = parts[1].to_double().map(AK::clamp_to<u8, double>);
+    auto b = parts[2].to_double().map(AK::clamp_to<u8, double>);
 
-    if (r > 255 || g > 255 || b > 255)
+    if (!r.has_value() || !g.has_value() || !b.has_value())
         return {};
 
-    return Color(r, g, b);
+    return Color(*r, *g, *b);
 }
 
 static Optional<Color> parse_rgba_color(StringView string)
@@ -60,9 +60,9 @@ static Optional<Color> parse_rgba_color(StringView string)
     if (parts.size() != 4)
         return {};
 
-    auto r = parts[0].to_int().value_or(256);
-    auto g = parts[1].to_int().value_or(256);
-    auto b = parts[2].to_int().value_or(256);
+    auto r = parts[0].to_double().map(AK::clamp_to<u8, double>);
+    auto g = parts[1].to_double().map(AK::clamp_to<u8, double>);
+    auto b = parts[2].to_double().map(AK::clamp_to<u8, double>);
 
     double alpha = 0;
     auto alpha_str = parts[3].trim_whitespace();
@@ -73,10 +73,10 @@ static Optional<Color> parse_rgba_color(StringView string)
 
     unsigned a = alpha * 255;
 
-    if (r > 255 || g > 255 || b > 255 || a > 255)
+    if (!r.has_value() || !g.has_value() || !b.has_value() || a > 255)
         return {};
 
-    return Color(r, g, b, a);
+    return Color(*r, *g, *b, a);
 }
 
 Optional<Color> Color::from_named_css_color_string(StringView string)
