@@ -811,6 +811,28 @@ void readable_byte_stream_controller_pull_into(ReadableByteStreamController& con
     MUST(readable_byte_stream_controller_call_pull_if_needed(controller));
 }
 
+// https://streams.spec.whatwg.org/#readable-stream-byob-reader-read
+void readable_stream_byob_reader_read(ReadableStreamBYOBReader& reader, JS::Value view, ReadIntoRequest& read_into_request)
+{
+    // 1. Let stream be reader.[[stream]].
+    auto stream = reader.stream();
+
+    // 2. Assert: stream is not undefined.
+    VERIFY(stream);
+
+    // 3. Set stream.[[disturbed]] to true.
+    stream->set_disturbed(true);
+
+    // 4. If stream.[[state]] is "errored", perform readIntoRequest’s error steps given stream.[[storedError]].
+    if (stream->is_errored()) {
+        read_into_request.on_error(stream->stored_error());
+    }
+    // 5. Otherwise, perform ! ReadableByteStreamControllerPullInto(stream.[[controller]], view, readIntoRequest).
+    else {
+        readable_byte_stream_controller_pull_into(*stream->controller()->get<JS::NonnullGCPtr<ReadableByteStreamController>>(), view, read_into_request);
+    }
+}
+
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreaderrelease
 WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamDefaultReader& reader)
 {
