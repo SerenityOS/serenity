@@ -1,0 +1,3 @@
+About to read! [object ReadableStreamBYOBReader]
+Total bytes: 34
+'This is some data to be read! 🦬'
