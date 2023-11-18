@@ -67,6 +67,9 @@ public:
 
     virtual DeprecatedString value() const override;
 
+    virtual bool has_activation_behavior() const override;
+    virtual void activation_behavior(DOM::Event const&) override;
+
 private:
     virtual bool is_html_button_element() const override { return true; }
 

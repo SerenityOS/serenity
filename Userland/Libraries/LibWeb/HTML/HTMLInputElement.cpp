@@ -38,14 +38,6 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_value(DeprecatedString::empty())
 {
-    activation_behavior = [this](auto&) {
-        // The activation behavior for input elements are these steps:
-
-        // FIXME: 1. If this element is not mutable and is not in the Checkbox state and is not in the Radio state, then return.
-
-        // 2. Run this element's input activation behavior, if any, and do nothing otherwise.
-        run_input_activation_behavior().release_value_but_fixme_should_propagate_errors();
-    };
 }
 
 HTMLInputElement::~HTMLInputElement() = default;
@@ -1284,4 +1276,20 @@ bool HTMLInputElement::is_submit_button() const
     return type_state() == TypeAttributeState::SubmitButton
         || type_state() == TypeAttributeState::ImageButton;
 }
+
+bool HTMLInputElement::has_activation_behavior() const
+{
+    return true;
+}
+
+void HTMLInputElement::activation_behavior(DOM::Event const&)
+{
+    // The activation behavior for input elements are these steps:
+
+    // FIXME: 1. If this element is not mutable and is not in the Checkbox state and is not in the Radio state, then return.
+
+    // 2. Run this element's input activation behavior, if any, and do nothing otherwise.
+    run_input_activation_behavior().release_value_but_fixme_should_propagate_errors();
+}
+
 }

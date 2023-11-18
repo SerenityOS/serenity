@@ -16,9 +16,6 @@ JS_DEFINE_ALLOCATOR(HTMLAnchorElement);
 HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    activation_behavior = [this](auto const& event) {
-        run_activation_behavior(event);
-    };
 }
 
 HTMLAnchorElement::~HTMLAnchorElement() = default;
@@ -47,7 +44,12 @@ WebIDL::ExceptionOr<void> HTMLAnchorElement::set_hyperlink_element_utils_href(St
     return set_attribute(HTML::AttributeNames::href, move(href));
 }
 
-void HTMLAnchorElement::run_activation_behavior(Web::DOM::Event const&)
+bool HTMLAnchorElement::has_activation_behavior() const
+{
+    return true;
+}
+
+void HTMLAnchorElement::activation_behavior(Web::DOM::Event const&)
 {
     // The activation behavior of an a element element given an event event is:
 

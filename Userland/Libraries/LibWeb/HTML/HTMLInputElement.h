@@ -149,6 +149,9 @@ public:
     JS::GCPtr<Element> placeholder_element() { return m_placeholder_element; }
     JS::GCPtr<Element const> placeholder_element() const { return m_placeholder_element; }
 
+    virtual bool has_activation_behavior() const override;
+    virtual void activation_behavior(DOM::Event const&) override;
+
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
 

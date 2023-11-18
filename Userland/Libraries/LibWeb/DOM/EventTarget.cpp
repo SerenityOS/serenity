@@ -816,4 +816,13 @@ bool EventTarget::has_event_listeners() const
     return !m_event_listener_list.is_empty();
 }
 
+bool EventTarget::has_activation_behavior() const
+{
+    return false;
+}
+
+void EventTarget::activation_behavior(Event const&)
+{
+}
+
 }

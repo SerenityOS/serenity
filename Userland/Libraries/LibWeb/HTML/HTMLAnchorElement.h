@@ -41,7 +41,8 @@ private:
 
     virtual void initialize(JS::Realm&) override;
 
-    void run_activation_behavior(Web::DOM::Event const&);
+    virtual bool has_activation_behavior() const override;
+    virtual void activation_behavior(Web::DOM::Event const&) override;
 
     // ^DOM::Element
     virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;

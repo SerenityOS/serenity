@@ -23,6 +23,9 @@ public:
 
     bool is_summary_for_its_parent_details();
 
+    virtual bool has_activation_behavior() const override;
+    virtual void activation_behavior(DOM::Event const&) override;
+
 private:
     HTMLSummaryElement(DOM::Document&, DOM::QualifiedName);
 
