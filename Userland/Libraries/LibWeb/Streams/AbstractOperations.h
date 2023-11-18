@@ -38,6 +38,7 @@ WebIDL::ExceptionOr<double> extract_high_water_mark(QueuingStrategy const&, doub
 void readable_stream_close(ReadableStream&);
 void readable_stream_error(ReadableStream&, JS::Value error);
 void readable_stream_add_read_request(ReadableStream&, JS::NonnullGCPtr<ReadRequest>);
+void readable_stream_add_read_into_request(ReadableStream&, JS::NonnullGCPtr<ReadIntoRequest>);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(ReadableStream&, JS::Value reason);
 void readable_stream_fulfill_read_into_request(ReadableStream&, JS::Value chunk, bool done);
 void readable_stream_fulfill_read_request(ReadableStream&, JS::Value chunk, bool done);
