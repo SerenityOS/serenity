@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/MaybeOwned.h>
 #include <LibWeb/Painting/RecordingPainter.h>
 
 namespace Web::Painting {
@@ -19,10 +20,8 @@ public:
     CommandResult set_clip_rect(Gfx::IntRect const& rect) override;
     CommandResult clear_clip_rect() override;
     CommandResult set_font(Gfx::Font const&) override;
-    CommandResult push_stacking_context(bool semitransparent_or_has_non_identity_transform, float opacity, Gfx::FloatRect const& source_rect, Gfx::FloatRect const& transformed_destination_rect, Gfx::IntPoint const& painter_location) override;
-    CommandResult pop_stacking_context(bool semitransparent_or_has_non_identity_transform, Gfx::Painter::ScalingMode scaling_mode) override;
-    CommandResult push_stacking_context_with_mask(Gfx::IntRect const&) override;
-    CommandResult pop_stacking_context_with_mask(Gfx::IntRect const&, RefPtr<Gfx::Bitmap> const& mask_bitmap, Gfx::Bitmap::MaskKind mask_kind, float opacity) override;
+    CommandResult push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering image_rendering, StackingContextTransform transform, Optional<StackingContextMask> mask) override;
+    CommandResult pop_stacking_context() override;
     CommandResult paint_linear_gradient(Gfx::IntRect const&, Web::Painting::LinearGradientData const&) override;
     CommandResult paint_outer_box_shadow(PaintOuterBoxShadowParams const&) override;
     CommandResult paint_inner_box_shadow(PaintOuterBoxShadowParams const&) override;
@@ -57,13 +56,15 @@ private:
     Gfx::Bitmap& m_target_bitmap;
 
     struct StackingContext {
-        Gfx::Painter painter;
-        Gfx::IntRect destination;
+        MaybeOwned<Gfx::Painter> painter;
         float opacity;
+        Gfx::IntRect destination;
+        Gfx::Painter::ScalingMode scaling_mode;
+        Optional<StackingContextMask> mask = {};
     };
 
-    [[nodiscard]] Gfx::Painter const& painter() const { return stacking_contexts.last().painter; }
-    [[nodiscard]] Gfx::Painter& painter() { return stacking_contexts.last().painter; }
+    [[nodiscard]] Gfx::Painter const& painter() const { return *stacking_contexts.last().painter; }
+    [[nodiscard]] Gfx::Painter& painter() { return *stacking_contexts.last().painter; }
 
     Vector<StackingContext> stacking_contexts;
 };
