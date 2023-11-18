@@ -1,4 +1,5 @@
 #import <Streams/ReadableStream.idl>
+#import <Streams/ReadableStreamDefaultReader.idl>
 #import <Streams/ReadableStreamGenericReader.idl>
 
 // https://streams.spec.whatwg.org/#readablestreambyobreader
@@ -6,7 +7,9 @@
 interface ReadableStreamBYOBReader {
     constructor(ReadableStream stream);
 
-    // FIXME: Promise<ReadableStreamReadResult> read(ArrayBufferView view);
+    // FIXME: This should accept an ArrayBufferView
+    Promise<ReadableStreamReadResult> read(any view);
+
     undefined releaseLock();
 };
 ReadableStreamBYOBReader includes ReadableStreamGenericReader;

@@ -44,6 +44,8 @@ public:
 
     virtual ~ReadableStreamBYOBReader() override = default;
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> read(JS::Value);
+
     void release_lock();
 
     Vector<JS::NonnullGCPtr<ReadIntoRequest>>& read_into_requests() { return m_read_into_requests; }
