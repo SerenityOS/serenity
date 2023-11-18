@@ -61,6 +61,7 @@ shared_library("LibGfx") {
     "ImageFormats/QOIWriter.cpp",
     "ImageFormats/TGALoader.cpp",
     "ImageFormats/TIFFLoader.cpp",
+    "ImageFormats/TIFFTagHandler.cpp",
     "ImageFormats/TinyVGLoader.cpp",
     "ImageFormats/WebPLoader.cpp",
     "ImageFormats/WebPLoaderLossless.cpp",
