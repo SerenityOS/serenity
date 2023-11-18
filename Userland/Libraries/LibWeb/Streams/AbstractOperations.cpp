@@ -1848,6 +1848,35 @@ void readable_byte_stream_controller_commit_pull_into_descriptor(ReadableStream&
     }
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-process-pull-into-descriptors-using-queue
+void readable_byte_stream_controller_process_pull_into_descriptors_using_queue(ReadableByteStreamController& controller)
+{
+    // 1. Assert: controller.[[closeRequested]] is false.
+    VERIFY(!controller.close_requested());
+
+    // 2. While controller.[[pendingPullIntos]] is not empty,
+    while (!controller.pending_pull_intos().is_empty()) {
+        // 1. If controller.[[queueTotalSize]] is 0, return.
+        if (controller.queue_total_size() == 0)
+            return;
+
+        // 2. Let pullIntoDescriptor be controller.[[pendingPullIntos]][0].
+        auto& pull_into_descriptor = controller.pending_pull_intos().first();
+
+        // 3. If ! ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(controller, pullIntoDescriptor) is true,
+        if (readable_byte_stream_controller_fill_pull_into_descriptor_from_queue(controller, pull_into_descriptor)) {
+            // NOTE: We store the returned pull into descriptor here as the 'shift pending pull into' will remove
+            //       the first entry into the list which we have a reference to above.
+
+            // 1. Perform ! ReadableByteStreamControllerShiftPendingPullInto(controller).
+            auto descriptor = readable_byte_stream_controller_shift_pending_pull_into(controller);
+
+            // 2. Perform ! ReadableByteStreamControllerCommitPullIntoDescriptor(controller.[[stream]], pullIntoDescriptor).
+            readable_byte_stream_controller_commit_pull_into_descriptor(*controller.stream(), descriptor);
+        }
+    }
+}
+
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerprocessreadrequestsusingqueue
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_process_read_requests_using_queue(ReadableByteStreamController& controller)
 {
