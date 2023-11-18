@@ -2128,14 +2128,17 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
                 continue;
             }
             m_incomplete_data.append(c);
+            state = Free;
             continue;
         case SawBracket:
             if (is_ascii_digit(c)) {
                 state = InFirstCoordinate;
+                coordinate_buffer.clear_with_capacity();
                 coordinate_buffer.append(c);
                 continue;
             }
             m_incomplete_data.append(c);
+            state = Free;
             continue;
         case InFirstCoordinate:
             if (is_ascii_digit(c)) {
@@ -2152,6 +2155,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
                 continue;
             }
             m_incomplete_data.append(c);
+            state = Free;
             continue;
         case SawSemicolon:
             if (is_ascii_digit(c)) {
@@ -2160,6 +2164,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
                 continue;
             }
             m_incomplete_data.append(c);
+            state = Free;
             continue;
         case InSecondCoordinate:
             if (is_ascii_digit(c)) {
@@ -2176,6 +2181,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
                 continue;
             }
             m_incomplete_data.append(c);
+            state = Free;
             continue;
         case SawR:
             m_incomplete_data.append(c);
