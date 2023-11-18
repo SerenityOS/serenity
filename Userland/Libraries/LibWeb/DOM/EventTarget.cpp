@@ -66,17 +66,21 @@ void EventTarget::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
 
-    for (auto& event_listener : m_event_listener_list)
-        visitor.visit(event_listener);
+    if (auto const* data = m_data.ptr()) {
+        for (auto& event_listener : data->event_listener_list)
+            visitor.visit(event_listener);
 
-    for (auto& it : m_event_handler_map)
-        visitor.visit(it.value);
+        for (auto& it : data->event_handler_map)
+            visitor.visit(it.value);
+    }
 }
 
 Vector<JS::Handle<DOMEventListener>> EventTarget::event_listener_list()
 {
     Vector<JS::Handle<DOMEventListener>> list;
-    for (auto& listener : m_event_listener_list)
+    if (!m_data)
+        return list;
+    for (auto& listener : m_data->event_listener_list)
         list.append(*listener);
     return list;
 }
@@ -170,6 +174,8 @@ void EventTarget::add_an_event_listener(DOMEventListener& listener)
     //           and listener’s type matches the type attribute value of any of the service worker events, then report a warning to the console
     //           that this might not give the expected results. [SERVICE-WORKERS]
 
+    auto& event_listener_list = ensure_data().event_listener_list;
+
     // 2. If listener’s signal is not null and is aborted, then return.
     if (listener.signal && listener.signal->aborted())
         return;
@@ -180,13 +186,13 @@ void EventTarget::add_an_event_listener(DOMEventListener& listener)
 
     // 4. If eventTarget’s event listener list does not contain an event listener whose type is listener’s type, callback is listener’s callback,
     //    and capture is listener’s capture, then append listener to eventTarget’s event listener list.
-    auto it = m_event_listener_list.find_if([&](auto& entry) {
+    auto it = event_listener_list.find_if([&](auto& entry) {
         return entry->type == listener.type
             && entry->callback->callback().callback == listener.callback->callback().callback
             && entry->capture == listener.capture;
     });
-    if (it == m_event_listener_list.end())
-        m_event_listener_list.append(listener);
+    if (it == event_listener_list.end())
+        event_listener_list.append(listener);
 
     // 5. If listener’s signal is not null, then add the following abort steps to it:
     if (listener.signal) {
@@ -201,6 +207,8 @@ void EventTarget::add_an_event_listener(DOMEventListener& listener)
 // https://dom.spec.whatwg.org/#dom-eventtarget-removeeventlistener
 void EventTarget::remove_event_listener(FlyString const& type, IDLEventListener* callback, Variant<EventListenerOptions, bool> const& options)
 {
+    auto& event_listener_list = ensure_data().event_listener_list;
+
     // 1. Let capture be the result of flattening options.
     bool capture = flatten_event_listener_options(options);
 
@@ -213,12 +221,12 @@ void EventTarget::remove_event_listener(FlyString const& type, IDLEventListener*
             return false;
         return entry.callback->callback().callback == callback->callback().callback;
     };
-    auto it = m_event_listener_list.find_if([&](auto& entry) {
+    auto it = event_listener_list.find_if([&](auto& entry) {
         return entry->type == type
             && callbacks_match(*entry)
             && entry->capture == capture;
     });
-    if (it != m_event_listener_list.end())
+    if (it != event_listener_list.end())
         remove_an_event_listener(**it);
 }
 
@@ -235,12 +243,15 @@ void EventTarget::remove_an_event_listener(DOMEventListener& listener)
 
     // 2. Set listener’s removed to true and remove listener from eventTarget’s event listener list.
     listener.removed = true;
-    m_event_listener_list.remove_first_matching([&](auto& entry) { return entry.ptr() == &listener; });
+    VERIFY(m_data);
+    m_data->event_listener_list.remove_first_matching([&](auto& entry) { return entry.ptr() == &listener; });
 }
 
 void EventTarget::remove_from_event_listener_list(DOMEventListener& listener)
 {
-    m_event_listener_list.remove_first_matching([&](auto& entry) { return entry.ptr() == &listener; });
+    if (!m_data)
+        return;
+    m_data->event_listener_list.remove_first_matching([&](auto& entry) { return entry.ptr() == &listener; });
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
@@ -337,16 +348,17 @@ WebIDL::CallbackType* EventTarget::event_handler_attribute(FlyString const& name
 WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString const& name)
 {
     // 1. Let handlerMap be eventTarget's event handler map. (NOTE: Not necessary)
+    auto& handler_map = ensure_data().event_handler_map;
 
     // 2. Let eventHandler be handlerMap[name].
-    auto event_handler_iterator = m_event_handler_map.find(name);
+    auto event_handler_iterator = handler_map.find(name);
 
     // Optimization: The spec creates all the event handlers exposed on an object up front and has the initial value of the handler set to null.
     //               If the event handler hasn't been set, null would be returned in step 4.
     //               However, this would be very allocation heavy. For example, each DOM::Element includes GlobalEventHandlers, which defines 60+(!) event handler attributes.
     //               Plus, the vast majority of these allocations would be likely wasted, as I imagine web content will only use a handful of these attributes on certain elements, if any at all.
     //               Thus, we treat the event handler not being in the event handler map as being equivalent to an event handler with an initial null value.
-    if (event_handler_iterator == m_event_handler_map.end())
+    if (event_handler_iterator == handler_map.end())
         return nullptr;
 
     auto& event_handler = event_handler_iterator->value;
@@ -418,7 +430,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
         if (parser.has_errors()) {
             // 1. Set eventHandler's value to null.
             //    Note: This does not deactivate the event handler, which additionally removes the event handler's listener (if present).
-            m_event_handler_map.remove(event_handler_iterator);
+            handler_map.remove(event_handler_iterator);
 
             // FIXME: 2. Report the error for the appropriate script and with the appropriate position (line number and column number) given by location, using settings object's global object.
             //           If the error is still not handled after this, then the error may be reported to a developer console.
@@ -510,7 +522,7 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, WebIDL::Cal
 
     // 4. Otherwise:
     //  1. Let handlerMap be eventTarget's event handler map.
-    auto& handler_map = event_target->m_event_handler_map;
+    auto& handler_map = event_target->ensure_data().event_handler_map;
 
     //  2. Let eventHandler be handlerMap[name].
     auto event_handler_iterator = handler_map.find(name);
@@ -592,13 +604,14 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
 
 void EventTarget::deactivate_event_handler(FlyString const& name)
 {
-    // 1. Let handlerMap be eventTarget's event handler map. (NOTE: Not necessary)
+    // 1. Let handlerMap be eventTarget's event handler map.
+    auto& handler_map = ensure_data().event_handler_map;
 
     // 2. Let eventHandler be handlerMap[name].
-    auto event_handler_iterator = m_event_handler_map.find(name);
+    auto event_handler_iterator = handler_map.find(name);
 
     // NOTE: See the optimization comment in get_current_value_of_event_handler about why this is done.
-    if (event_handler_iterator == m_event_handler_map.end())
+    if (event_handler_iterator == handler_map.end())
         return;
 
     auto& event_handler = event_handler_iterator->value;
@@ -616,7 +629,7 @@ void EventTarget::deactivate_event_handler(FlyString const& name)
     // 3. Set eventHandler's value to null.
     // NOTE: This is done out of order since our equivalent of setting value to null is removing the event handler from the map.
     //       Given that event_handler is a reference to an entry, this would invalidate event_handler if we did it in order.
-    m_event_handler_map.remove(event_handler_iterator);
+    handler_map.remove(event_handler_iterator);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#the-event-handler-processing-algorithm
@@ -721,7 +734,7 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
     //  FIXME: 1. If the Should element's inline behavior be blocked by Content Security Policy? algorithm returns "Blocked" when executed upon element, "script attribute", and value, then return. [CSP]
 
     //  2. Let handlerMap be eventTarget's event handler map.
-    auto& handler_map = event_target->m_event_handler_map;
+    auto& handler_map = event_target->ensure_data().event_handler_map;
 
     //  3. Let eventHandler be handlerMap[localName].
     auto event_handler_iterator = handler_map.find(local_name);
@@ -804,7 +817,9 @@ bool EventTarget::dispatch_event(Event& event)
 
 bool EventTarget::has_event_listener(FlyString const& type) const
 {
-    for (auto& listener : m_event_listener_list) {
+    if (!m_data)
+        return false;
+    for (auto& listener : m_data->event_listener_list) {
         if (listener->type == type)
             return true;
     }
@@ -813,7 +828,7 @@ bool EventTarget::has_event_listener(FlyString const& type) const
 
 bool EventTarget::has_event_listeners() const
 {
-    return !m_event_listener_list.is_empty();
+    return m_data && !m_data->event_listener_list.is_empty();
 }
 
 bool EventTarget::has_activation_behavior() const
@@ -823,6 +838,13 @@ bool EventTarget::has_activation_behavior() const
 
 void EventTarget::activation_behavior(Event const&)
 {
+}
+
+auto EventTarget::ensure_data() -> Data&
+{
+    if (!m_data)
+        m_data = make<Data>();
+    return *m_data;
 }
 
 }
