@@ -1719,6 +1719,45 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue_detached_pull_
     return {};
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-commit-pull-into-descriptor
+void readable_byte_stream_controller_commit_pull_into_descriptor(ReadableStream& stream, PullIntoDescriptor const& pull_into_descriptor)
+{
+    // 1. Assert: stream.[[state]] is not "errored".
+    VERIFY(!stream.is_errored());
+
+    // 2. Assert: pullIntoDescriptor.reader type is not "none".
+    VERIFY(pull_into_descriptor.reader_type != ReaderType::None);
+
+    // 3. Let done be false.
+    bool done = false;
+
+    // 4. If stream.[[state]] is "closed",
+    if (stream.is_closed()) {
+        // 1. Assert: pullIntoDescriptor’s bytes filled is 0.
+        VERIFY(pull_into_descriptor.bytes_filled == 0);
+
+        // 2. Set done to true.
+        done = true;
+    }
+
+    // 5. Let filledView be ! ReadableByteStreamControllerConvertPullIntoDescriptor(pullIntoDescriptor).
+    auto filled_view = readable_byte_stream_controller_convert_pull_into_descriptor(stream.realm(), pull_into_descriptor);
+
+    // 6. If pullIntoDescriptor’s reader type is "default",
+    if (pull_into_descriptor.reader_type == ReaderType::Default) {
+        // 1. Perform ! ReadableStreamFulfillReadRequest(stream, filledView, done).
+        readable_stream_fulfill_read_request(stream, filled_view, done);
+    }
+    // 7. Otherwise,
+    else {
+        // 1. Assert: pullIntoDescriptor’s reader type is "byob".
+        VERIFY(pull_into_descriptor.reader_type == ReaderType::Byob);
+
+        // 2. Perform ! ReadableStreamFulfillReadIntoRequest(stream, filledView, done).
+        readable_stream_fulfill_read_into_request(stream, filled_view, done);
+    }
+}
+
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerprocessreadrequestsusingqueue
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_process_read_requests_using_queue(ReadableByteStreamController& controller)
 {
