@@ -506,6 +506,96 @@ void readable_byte_stream_controller_fill_head_pull_into_descriptor(ReadableByte
     pull_into_descriptor.bytes_filled += size;
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-fill-pull-into-descriptor-from-queue
+bool readable_byte_stream_controller_fill_pull_into_descriptor_from_queue(ReadableByteStreamController& controller, PullIntoDescriptor& pull_into_descriptor)
+{
+    // 1. Let elementSize be pullIntoDescriptor.[[elementSize]].
+    auto element_size = pull_into_descriptor.element_size;
+
+    // 2. Let currentAlignedBytes be pullIntoDescriptor’s bytes filled − (pullIntoDescriptor’s bytes filled mod elementSize).
+    auto current_aligned_bytes = pull_into_descriptor.bytes_filled - (pull_into_descriptor.bytes_filled % pull_into_descriptor.element_size);
+
+    // 3. Let maxBytesToCopy be min(controller.[[queueTotalSize]], pullIntoDescriptor’s byte length − pullIntoDescriptor’s bytes filled).
+    auto max_bytes_to_copy = min(controller.queue_total_size(), pull_into_descriptor.byte_length - pull_into_descriptor.bytes_filled);
+
+    // 4. Let maxBytesFilled be pullIntoDescriptor’s bytes filled + maxBytesToCopy.
+    u64 max_bytes_filled = pull_into_descriptor.bytes_filled + max_bytes_to_copy;
+
+    // 5. Let maxAlignedBytes be maxBytesFilled − (maxBytesFilled mod elementSize).
+    auto max_aligned_bytes = max_bytes_filled - (max_bytes_filled % element_size);
+
+    // 6. Let totalBytesToCopyRemaining be maxBytesToCopy.
+    auto total_bytes_to_copy_remaining = max_bytes_to_copy;
+
+    // 7. Let ready be false.
+    bool ready = false;
+
+    // 8. If maxAlignedBytes > currentAlignedBytes,
+    if (max_aligned_bytes > current_aligned_bytes) {
+        // 1. Set totalBytesToCopyRemaining to maxAlignedBytes − pullIntoDescriptor’s bytes filled.
+        total_bytes_to_copy_remaining = max_aligned_bytes - pull_into_descriptor.bytes_filled;
+
+        // 2. Set ready to true.
+        ready = true;
+    }
+
+    // 9. Let queue be controller.[[queue]].
+    auto& queue = controller.queue();
+
+    // 10. While totalBytesToCopyRemaining > 0,
+    while (total_bytes_to_copy_remaining > 0) {
+        // 1. Let headOfQueue be queue[0].
+        auto& head_of_queue = queue.first();
+
+        // 2. Let bytesToCopy be min(totalBytesToCopyRemaining, headOfQueue’s byte length).
+        auto bytes_to_copy = min(total_bytes_to_copy_remaining, head_of_queue.byte_length);
+
+        // 3. Let destStart be pullIntoDescriptor’s byte offset + pullIntoDescriptor’s bytes filled.
+        auto dest_start = pull_into_descriptor.byte_offset + pull_into_descriptor.bytes_filled;
+
+        // 4. Perform ! CopyDataBlockBytes(pullIntoDescriptor’s buffer.[[ArrayBufferData]], destStart, headOfQueue’s buffer.[[ArrayBufferData]], headOfQueue’s byte offset, bytesToCopy).
+        JS::copy_data_block_bytes(pull_into_descriptor.buffer->buffer(), dest_start, head_of_queue.buffer->buffer(), head_of_queue.byte_offset, bytes_to_copy);
+
+        // 5. If headOfQueue’s byte length is bytesToCopy,
+        if (head_of_queue.byte_length == bytes_to_copy) {
+            // 1. Remove queue[0].
+            queue.take_first();
+        }
+        // 6. Otherwise,
+        else {
+            // 1. Set headOfQueue’s byte offset to headOfQueue’s byte offset + bytesToCopy.
+            head_of_queue.byte_offset += bytes_to_copy;
+
+            // 2. Set headOfQueue’s byte length to headOfQueue’s byte length − bytesToCopy.
+            head_of_queue.byte_length -= bytes_to_copy;
+        }
+
+        // 7. Set controller.[[queueTotalSize]] to controller.[[queueTotalSize]] − bytesToCopy.
+        controller.set_queue_total_size(controller.queue_total_size() - bytes_to_copy);
+
+        // 8, Perform ! ReadableByteStreamControllerFillHeadPullIntoDescriptor(controller, bytesToCopy, pullIntoDescriptor).
+        readable_byte_stream_controller_fill_head_pull_into_descriptor(controller, bytes_to_copy, pull_into_descriptor);
+
+        // 9. Set totalBytesToCopyRemaining to totalBytesToCopyRemaining − bytesToCopy.
+        total_bytes_to_copy_remaining -= bytes_to_copy;
+    }
+
+    // 11. If ready is false,
+    if (!ready) {
+        // 1. Assert: controller.[[queueTotalSize]] is 0.
+        VERIFY(controller.queue_total_size() == 0);
+
+        // 2. Assert: pullIntoDescriptor’s bytes filled > 0.
+        VERIFY(pull_into_descriptor.bytes_filled > 0);
+
+        // 3. Assert: pullIntoDescriptor’s bytes filled < pullIntoDescriptor’s element size.
+        VERIFY(pull_into_descriptor.bytes_filled < pull_into_descriptor.element_size);
+    }
+
+    // 12. Return ready.
+    return ready;
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-reader-read
 WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, ReadRequest& read_request)
 {

@@ -93,6 +93,7 @@ void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStream
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_close(ReadableByteStreamController&);
 void readable_byte_stream_controller_error(ReadableByteStreamController&, JS::Value error);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController&, JS::NonnullGCPtr<ReadRequest>);
+bool readable_byte_stream_controller_fill_pull_into_descriptor_from_queue(ReadableByteStreamController&, PullIntoDescriptor&);
 Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const&);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController&);
 void readable_byte_stream_controller_invalidate_byob_request(ReadableByteStreamController&);
