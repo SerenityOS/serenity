@@ -266,33 +266,26 @@ void RecordingPainter::restore()
 void RecordingPainter::push_stacking_context(PushStackingContextParams params)
 {
     push_command(PushStackingContext {
-        .semitransparent_or_has_non_identity_transform = params.semitransparent_or_has_non_identity_transform,
-        .has_fixed_position = params.has_fixed_position,
         .opacity = params.opacity,
-        .source_rect = state().translation.map(params.source_rect),
-        .transformed_destination_rect = state().translation.map(params.transformed_destination_rect),
-        .painter_location = state().translation.map(params.painter_location),
-    });
-
-    if (params.has_fixed_position) {
-        state().translation.set_translation(0, 0);
-    }
-
-    if (params.semitransparent_or_has_non_identity_transform) {
-        m_state_stack.append(State());
-    }
+        .is_fixed_position = params.is_fixed_position,
+        .source_paintable_rect = params.source_paintable_rect,
+        // No translations apply to fixed-position stacking contexts.
+        .post_transform_translation = params.is_fixed_position
+            ? Gfx::IntPoint {}
+            : state().translation.translation().to_rounded<int>(),
+        .image_rendering = params.image_rendering,
+        .transform = {
+            .origin = params.transform.origin,
+            .matrix = params.transform.matrix,
+        },
+        .mask = params.mask });
+    m_state_stack.append(State());
 }
 
-void RecordingPainter::pop_stacking_context(PopStackingContextParams params)
+void RecordingPainter::pop_stacking_context()
 {
-    push_command(PopStackingContext {
-        .semitransparent_or_has_non_identity_transform = params.semitransparent_or_has_non_identity_transform,
-        .scaling_mode = params.scaling_mode,
-    });
-
-    if (params.semitransparent_or_has_non_identity_transform) {
-        m_state_stack.take_last();
-    }
+    push_command(PopStackingContext {});
+    m_state_stack.take_last();
 }
 
 void RecordingPainter::paint_progressbar(Gfx::IntRect frame_rect, Gfx::IntRect progress_rect, Palette palette, int min, int max, int value, StringView text)
@@ -380,20 +373,6 @@ void RecordingPainter::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect
         { bottom_left_radius, bottom_left_radius });
 }
 
-void RecordingPainter::push_stacking_context_with_mask(Gfx::IntRect paint_rect)
-{
-    push_command(PushStackingContextWithMask { .paint_rect = state().translation.map(paint_rect) });
-}
-
-void RecordingPainter::pop_stacking_context_with_mask(RefPtr<Gfx::Bitmap> mask_bitmap, Gfx::Bitmap::MaskKind mask_kind, Gfx::IntRect paint_rect, float opacity)
-{
-    push_command(PopStackingContextWithMask {
-        .paint_rect = state().translation.map(paint_rect),
-        .mask_bitmap = mask_bitmap,
-        .mask_kind = mask_kind,
-        .opacity = opacity });
-}
-
 void RecordingPainter::draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2, Color color, int amplitude, int thickness = 1)
 {
     push_command(DrawTriangleWave {
@@ -463,16 +442,10 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
                 return executor.set_font(command.font);
             },
             [&](PushStackingContext const& command) {
-                return executor.push_stacking_context(command.semitransparent_or_has_non_identity_transform, command.opacity, command.source_rect, command.transformed_destination_rect, command.painter_location);
+                return executor.push_stacking_context(command.opacity, command.is_fixed_position, command.source_paintable_rect, command.post_transform_translation, command.image_rendering, command.transform, command.mask);
             },
-            [&](PopStackingContext const& command) {
-                return executor.pop_stacking_context(command.semitransparent_or_has_non_identity_transform, command.scaling_mode);
-            },
-            [&](PushStackingContextWithMask const& command) {
-                return executor.push_stacking_context_with_mask(command.paint_rect);
-            },
-            [&](PopStackingContextWithMask const& command) {
-                return executor.pop_stacking_context_with_mask(command.paint_rect, command.mask_bitmap, command.mask_kind, command.opacity);
+            [&](PopStackingContext const&) {
+                return executor.pop_stacking_context();
             },
             [&](PaintLinearGradient const& command) {
                 return executor.paint_linear_gradient(command.gradient_rect, command.linear_gradient_data);

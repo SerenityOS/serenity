@@ -282,72 +282,52 @@ Gfx::FloatMatrix4x4 StackingContext::combine_transformations(Vector<CSS::Transfo
 //  Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
 Gfx::AffineTransform StackingContext::affine_transform_matrix() const
 {
-    auto* m = m_transform.elements();
-    return Gfx::AffineTransform(m[0][0], m[1][0], m[0][1], m[1][1], m[0][3], m[1][3]);
+    return Gfx::extract_2d_affine_transform(m_transform);
+}
+
+static Gfx::FloatMatrix4x4 matrix_with_scaled_translation(Gfx::FloatMatrix4x4 matrix, float scale)
+{
+    auto* m = matrix.elements();
+    m[0][3] *= scale;
+    m[1][3] *= scale;
+    m[2][3] *= scale;
+    return matrix;
 }
 
 void StackingContext::paint(PaintContext& context) const
 {
-    RecordingPainterStateSaver saver(context.painter());
-
     auto opacity = paintable_box().computed_values().opacity();
     if (opacity == 0.0f)
         return;
 
+    RecordingPainterStateSaver saver(context.painter());
+
+    auto to_device_pixels_scale = float(context.device_pixels_per_css_pixel());
+    RecordingPainter::PushStackingContextParams push_stacking_context_params {
+        .opacity = opacity,
+        .is_fixed_position = paintable_box().is_fixed_position(),
+        .source_paintable_rect = context.enclosing_device_rect(paintable_box().absolute_paint_rect()).to_type<int>(),
+        .image_rendering = paintable_box().computed_values().image_rendering(),
+        .transform = {
+            .origin = transform_origin().scaled(to_device_pixels_scale),
+            .matrix = matrix_with_scaled_translation(transform_matrix(), to_device_pixels_scale),
+        },
+    };
+
     if (auto masking_area = paintable_box().get_masking_area(); masking_area.has_value()) {
-        // TODO: Support masks and CSS transforms at the same time.
-        // Note: Currently only SVG masking is implemented (which does not use CSS transforms anyway).
         if (masking_area->is_empty())
             return;
-        auto paint_rect = context.enclosing_device_rect(*masking_area);
-        context.painter().push_stacking_context_with_mask(paint_rect.to_type<int>());
-        paint_internal(context);
-
         auto mask_bitmap = paintable_box().calculate_mask(context, *masking_area);
-        auto mask_type = paintable_box().get_mask_type();
-        context.painter().pop_stacking_context_with_mask(mask_bitmap, *mask_type, paint_rect.to_type<int>(), opacity);
-        return;
+        push_stacking_context_params.source_paintable_rect = context.enclosing_device_rect(*masking_area).to_type<int>();
+        push_stacking_context_params.mask = StackingContextMask {
+            .mask_bitmap = mask_bitmap.release_nonnull(),
+            .mask_kind = *paintable_box().get_mask_type()
+        };
     }
 
-    auto affine_transform = affine_transform_matrix();
-    auto translation = context.rounded_device_point(affine_transform.translation().to_type<CSSPixels>()).to_type<int>().to_type<float>();
-    affine_transform.set_translation(translation);
-
-    auto transform_origin = this->transform_origin();
-    auto source_rect = context.enclosing_device_rect(paintable_box().absolute_paint_rect()).to_type<int>().to_type<float>().translated(-transform_origin);
-    auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
-    auto destination_rect = transformed_destination_rect.to_rounded<int>();
-
-    RecordingPainter::PushStackingContextParams push_stacking_context_params {
-        .semitransparent_or_has_non_identity_transform = false,
-        .has_fixed_position = false,
-        .opacity = opacity,
-        .source_rect = source_rect,
-        .transformed_destination_rect = transformed_destination_rect,
-        .painter_location = context.rounded_device_point(-paintable_box().absolute_paint_rect().location()).to_type<int>()
-    };
-
-    RecordingPainter::PopStackingContextParams pop_stacking_context_params {
-        .semitransparent_or_has_non_identity_transform = false,
-        .scaling_mode = CSS::to_gfx_scaling_mode(paintable_box().computed_values().image_rendering(), destination_rect, destination_rect)
-    };
-
-    if (paintable_box().is_fixed_position()) {
-        push_stacking_context_params.has_fixed_position = true;
-    }
-
-    if (opacity < 1.0f || !affine_transform.is_identity_or_translation()) {
-        push_stacking_context_params.semitransparent_or_has_non_identity_transform = true;
-        pop_stacking_context_params.semitransparent_or_has_non_identity_transform = true;
-        context.painter().push_stacking_context(push_stacking_context_params);
-        paint_internal(context);
-        context.painter().pop_stacking_context(pop_stacking_context_params);
-    } else {
-        context.painter().translate(affine_transform.translation().to_rounded<int>());
-        context.painter().push_stacking_context(push_stacking_context_params);
-        paint_internal(context);
-        context.painter().pop_stacking_context(pop_stacking_context_params);
-    }
+    context.painter().push_stacking_context(push_stacking_context_params);
+    paint_internal(context);
+    context.painter().pop_stacking_context();
 }
 
 Gfx::FloatPoint StackingContext::compute_transform_origin() const
