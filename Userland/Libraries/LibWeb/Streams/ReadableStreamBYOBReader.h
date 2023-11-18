@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -49,6 +50,8 @@ public:
 
 private:
     explicit ReadableStreamBYOBReader(JS::Realm&);
+
+    virtual void initialize(JS::Realm&) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 

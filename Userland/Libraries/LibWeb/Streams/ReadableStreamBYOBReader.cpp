@@ -6,6 +6,7 @@
  */
 
 #include <LibJS/Runtime/PromiseCapability.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamBYOBReader.h>
@@ -17,6 +18,12 @@ ReadableStreamBYOBReader::ReadableStreamBYOBReader(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
     , ReadableStreamGenericReaderMixin(realm)
 {
+}
+
+void ReadableStreamBYOBReader::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamBYOBReaderPrototype>(realm, "ReadableStreamBYOBReader"));
 }
 
 // https://streams.spec.whatwg.org/#byob-reader-constructor
