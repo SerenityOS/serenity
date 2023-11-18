@@ -26,8 +26,8 @@ public:
 
     void transform(ReadonlySpan<float> data, Span<float> output)
     {
-        assert(N == 2 * data.size());
-        assert(N == output.size());
+        VERIFY(N == 2 * data.size());
+        VERIFY(N == output.size());
         for (size_t n = 0; n < N; n++) {
             output[n] = 0;
             for (size_t k = 0; k < N / 2; k++) {
