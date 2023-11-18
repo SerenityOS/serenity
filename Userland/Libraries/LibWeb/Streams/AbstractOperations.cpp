@@ -527,6 +527,30 @@ WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefa
     return {};
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-convert-pull-into-descriptor
+JS::Value readable_byte_stream_controller_convert_pull_into_descriptor(JS::Realm& realm, PullIntoDescriptor const& pull_into_descriptor)
+{
+    auto& vm = realm.vm();
+
+    // 1. Let bytesFilled be pullIntoDescriptor’s bytes filled.
+    auto bytes_filled = pull_into_descriptor.bytes_filled;
+
+    // 2. Let elementSize be pullIntoDescriptor’s element size.
+    auto element_size = pull_into_descriptor.element_size;
+
+    // 3. Assert: bytesFilled ≤ pullIntoDescriptor’s byte length.
+    VERIFY(bytes_filled <= pull_into_descriptor.byte_length);
+
+    // 4. Assert: bytesFilled mod elementSize is 0.
+    VERIFY(bytes_filled % element_size == 0);
+
+    // 5. Let buffer be ! TransferArrayBuffer(pullIntoDescriptor’s buffer).
+    auto buffer = MUST(transfer_array_buffer(realm, pull_into_descriptor.buffer));
+
+    // 6. Return ! Construct(pullIntoDescriptor’s view constructor, « buffer, pullIntoDescriptor’s byte offset, bytesFilled ÷ elementSize »).
+    return MUST(JS::construct(vm, *pull_into_descriptor.view_constructor, buffer, JS::Value(pull_into_descriptor.byte_offset), JS::Value(bytes_filled / element_size)));
+}
+
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreaderrelease
 WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamDefaultReader& reader)
 {
