@@ -493,6 +493,19 @@ void readable_stream_byob_reader_error_read_into_requests(ReadableStreamBYOBRead
     }
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-fill-head-pull-into-descriptor
+void readable_byte_stream_controller_fill_head_pull_into_descriptor(ReadableByteStreamController const& controller, u64 size, PullIntoDescriptor& pull_into_descriptor)
+{
+    // 1. Assert: either controller.[[pendingPullIntos]] is empty, or controller.[[pendingPullIntos]][0] is pullIntoDescriptor.
+    VERIFY(controller.pending_pull_intos().is_empty() || &controller.pending_pull_intos().first() == &pull_into_descriptor);
+
+    // 2. Assert: controller.[[byobRequest]] is null.
+    VERIFY(!controller.byob_request());
+
+    // 3. Set pullIntoDescriptor’s bytes filled to bytes filled + size.
+    pull_into_descriptor.bytes_filled += size;
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-reader-read
 WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, ReadRequest& read_request)
 {
