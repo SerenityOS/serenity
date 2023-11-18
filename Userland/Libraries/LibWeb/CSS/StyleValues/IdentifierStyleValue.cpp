@@ -194,8 +194,6 @@ Color IdentifierStyleValue::to_color(Optional<Layout::NodeWithStyle const&> node
         return SystemColor::highlight();
     case ValueID::Highlighttext:
         return SystemColor::highlight_text();
-    case ValueID::Linktext:
-        return SystemColor::link_text();
     case ValueID::Mark:
         return SystemColor::mark();
     case ValueID::Marktext:
@@ -216,7 +214,7 @@ Color IdentifierStyleValue::to_color(Optional<Layout::NodeWithStyle const&> node
     }
 
     auto& document = node->document();
-    if (id() == CSS::ValueID::LibwebLink)
+    if (id() == CSS::ValueID::LibwebLink || id() == ValueID::Linktext)
         return document.link_color();
 
     if (!document.page())
