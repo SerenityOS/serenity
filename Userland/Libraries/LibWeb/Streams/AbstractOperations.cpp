@@ -124,6 +124,32 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(Re
     return WebIDL::create_resolved_promise(realm, react_result);
 }
 
+// https://streams.spec.whatwg.org/#readable-stream-fulfill-read-into-request
+void readable_stream_fulfill_read_into_request(ReadableStream& stream, JS::Value chunk, bool done)
+{
+    // 1. Assert: ! ReadableStreamHasBYOBReader(stream) is true.
+    VERIFY(readable_stream_has_byob_reader(stream));
+
+    // 2. Let reader be stream.[[reader]].
+    auto reader = stream.reader()->get<JS::NonnullGCPtr<ReadableStreamBYOBReader>>();
+
+    // 3. Assert: reader.[[readIntoRequests]] is not empty.
+    VERIFY(!reader->read_into_requests().is_empty());
+
+    // 4. Let readIntoRequest be reader.[[readIntoRequests]][0].
+    // 5. Remove readIntoRequest from reader.[[readIntoRequests]].
+    auto read_into_request = reader->read_into_requests().take_first();
+
+    // 6. If done is true, perform readIntoRequest’s close steps, given chunk.
+    if (done) {
+        read_into_request->on_close(chunk);
+    }
+    // 7. Otherwise, perform readIntoRequest’s chunk steps, given chunk.
+    else {
+        read_into_request->on_chunk(chunk);
+    }
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-fulfill-read-request
 void readable_stream_fulfill_read_request(ReadableStream& stream, JS::Value chunk, bool done)
 {
