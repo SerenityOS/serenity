@@ -1935,9 +1935,11 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
     }
     // 10. Otherwise, if ! ReadableStreamHasBYOBReader(stream) is true,
     else if (readable_stream_has_byob_reader(*stream)) {
-        // FIXME: 1. Perform ! ReadableByteStreamControllerEnqueueChunkToQueue(controller, transferredBuffer, byteOffset, byteLength).
-        // FIXME: 2. Perform ! ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(controller).
-        TODO();
+        // 1. Perform ! ReadableByteStreamControllerEnqueueChunkToQueue(controller, transferredBuffer, byteOffset, byteLength).
+        readable_byte_stream_controller_enqueue_chunk_to_queue(controller, transferred_buffer, byte_offset, byte_length);
+
+        // 2. Perform ! ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(controller).
+        readable_byte_stream_controller_process_pull_into_descriptors_using_queue(controller);
     }
     // 11. Otherwise,
     else {
