@@ -358,6 +358,19 @@ void readable_stream_add_read_request(ReadableStream& stream, JS::NonnullGCPtr<R
     stream.reader()->get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>()->read_requests().append(read_request);
 }
 
+// https://streams.spec.whatwg.org/#readable-stream-add-read-into-request
+void readable_stream_add_read_into_request(ReadableStream& stream, JS::NonnullGCPtr<ReadIntoRequest> read_into_request)
+{
+    // 1. Assert: stream.[[reader]] implements ReadableStreamBYOBReader.
+    VERIFY(stream.reader().has_value() && stream.reader()->has<JS::NonnullGCPtr<ReadableStreamBYOBReader>>());
+
+    // 2. Assert: stream.[[state]] is "readable" or "closed".
+    VERIFY(stream.is_readable() || stream.is_closed());
+
+    // 3. Append readRequest to stream.[[reader]].[[readIntoRequests]].
+    stream.reader()->get<JS::NonnullGCPtr<ReadableStreamBYOBReader>>()->read_into_requests().append(read_into_request);
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-cancel
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin& reader, JS::Value reason)
 {
