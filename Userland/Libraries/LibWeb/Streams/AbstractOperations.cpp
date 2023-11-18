@@ -1664,7 +1664,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> transfer_array_buffer(JS:
     TRY(JS::detach_array_buffer(vm, buffer));
 
     // 5. Return a new ArrayBuffer object, created in the current Realm, whose [[ArrayBufferData]] internal slot value is arrayBufferData and whose [[ArrayBufferByteLength]] internal slot value is arrayBufferByteLength.
-    return JS::ArrayBuffer::create(realm, array_buffer);
+    return JS::ArrayBuffer::create(realm, move(array_buffer));
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerenqueuedetachedpullintotoqueue
