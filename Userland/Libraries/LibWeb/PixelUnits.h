@@ -88,7 +88,7 @@ public:
     {
         i32 raw_value = 0;
         if (!isnan(value))
-            raw_value = AK::clamp_to_int(value * fixed_point_denominator);
+            raw_value = AK::clamp_to<int>(value * fixed_point_denominator);
         // Note: The resolution of CSSPixels is 0.015625, so care must be taken when converting
         // floats/doubles to CSSPixels as small values (such as scale factors) can underflow to zero,
         // or otherwise produce inaccurate results (when scaled back up).
@@ -181,7 +181,7 @@ public:
         i64 value = raw_value();
         value *= other.raw_value();
 
-        int int_value = AK::clamp_to_int(value >> fractional_bits);
+        int int_value = AK::clamp_to<int>(value >> fractional_bits);
 
         // Rounding:
         // If last bit cut off was 1:
@@ -321,7 +321,7 @@ public:
         i64 wide_value = m_numerator.raw_value();
         wide_value <<= CSSPixels::fractional_bits;
         wide_value = rounding_divide<i64>(wide_value, m_denominator.raw_value());
-        return CSSPixels::from_raw(AK::clamp_to_int(wide_value));
+        return CSSPixels::from_raw(AK::clamp_to<int>(wide_value));
     }
 
     constexpr CSSPixels operator-(CSSPixels const& other) const
@@ -373,7 +373,7 @@ constexpr CSSPixels CSSPixels::operator*(CSSPixelFraction const& other) const
     i64 wide_value = raw_value();
     wide_value *= other.numerator().raw_value();
     wide_value = rounding_divide<i64>(wide_value, other.denominator().raw_value());
-    return CSSPixels::from_raw(AK::clamp_to_int(wide_value));
+    return CSSPixels::from_raw(AK::clamp_to<int>(wide_value));
 }
 
 constexpr CSSPixelFraction CSSPixels::operator/(CSSPixels const& other) const
@@ -385,7 +385,7 @@ constexpr CSSPixels CSSPixels::operator/(CSSPixelFraction const& other) const
     i64 wide_value = raw_value();
     wide_value *= other.denominator().raw_value();
     wide_value = rounding_divide<i64>(wide_value, other.numerator().raw_value());
-    return CSSPixels::from_raw(AK::clamp_to_int(wide_value));
+    return CSSPixels::from_raw(AK::clamp_to<int>(wide_value));
 }
 
 template<Integral T>
