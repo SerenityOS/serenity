@@ -598,6 +598,7 @@ class ReadableStreamBYOBRequest;
 class ReadableStreamDefaultController;
 class ReadableStreamDefaultReader;
 class ReadableStreamGenericReaderMixin;
+class ReadIntoRequest;
 class ReadRequest;
 class TransformStream;
 class TransformStreamDefaultController;
