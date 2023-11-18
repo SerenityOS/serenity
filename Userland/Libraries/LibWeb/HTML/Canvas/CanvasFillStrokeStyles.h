@@ -27,7 +27,13 @@ public:
     {
         return style.visit(
             [&](String const& string) -> CanvasState::FillOrStrokeStyle {
-                return Gfx::Color::from_string(string).value_or(Color::Black);
+                // FIXME: This should parse color strings the same as CSS
+                auto color = Gfx::Color::from_string(string);
+
+                if (!color.has_value())
+                    dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasFillStrokeStyles: Unsupported canvas fill or stroke style \"{}\". Defaulting to Color::Black.", string);
+
+                return color.value_or(Color::Black);
             },
             [&](auto fill_or_stroke_style) -> CanvasState::FillOrStrokeStyle {
                 return fill_or_stroke_style;
