@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/ValueInlines.h>
 #include <LibJS/Script.h>
 #include <LibJS/SourceTextModule.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>

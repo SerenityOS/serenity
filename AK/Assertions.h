@@ -9,7 +9,6 @@
 #if defined(KERNEL)
 #    include <Kernel/Library/Assertions.h>
 #else
-#    include <assert.h>
 extern "C" __attribute__((noreturn)) void ak_verification_failed(char const*);
 #    define __stringify_helper(x) #x
 #    define __stringify(x) __stringify_helper(x)
