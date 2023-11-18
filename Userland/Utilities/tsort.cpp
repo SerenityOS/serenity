@@ -53,7 +53,7 @@ static void prioritize_nodes(Node& start, NodeMap& node_map, NodeStack& stack, b
     // chains, this function does not call itself recursively. Instead, the recursive
     // algorithm is implemented on a provided stack.
 
-    assert(stack.is_empty());
+    VERIFY(stack.is_empty());
     stack.append(start);
 
     while (!stack.is_empty()) {
