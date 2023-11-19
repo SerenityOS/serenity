@@ -17,6 +17,7 @@
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/DOMTokenList.h>
@@ -45,6 +46,7 @@
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
+#include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
@@ -551,6 +553,14 @@ Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
 
     // FIXME propagate errors
     auto new_computed_css_values = MUST(document().style_computer().compute_style(*this));
+
+    // Tables must not inherit -libweb-* values for text-align.
+    // FIXME: Find the spec for this.
+    if (is<HTML::HTMLTableElement>(*this)) {
+        auto text_align = new_computed_css_values->text_align();
+        if (text_align.has_value() && (text_align.value() == CSS::TextAlign::LibwebLeft || text_align.value() == CSS::TextAlign::LibwebCenter || text_align.value() == CSS::TextAlign::LibwebRight))
+            new_computed_css_values->set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::Start));
+    }
 
     RequiredInvalidationAfterStyleChange invalidation;
     if (m_computed_css_values)
