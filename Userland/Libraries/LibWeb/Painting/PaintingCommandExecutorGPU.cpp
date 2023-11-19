@@ -222,10 +222,39 @@ CommandResult PaintingCommandExecutorGPU::blit_corner_clipping(BorderRadiusCorne
 
 CommandResult PaintingCommandExecutorGPU::paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
 {
-    // FIXME
-    (void)border_rect;
+    // FIXME: Add support for corner radiuses
     (void)corner_radii;
-    (void)borders_data;
+
+    Gfx::IntRect top_border_rect = {
+        border_rect.x(),
+        border_rect.y(),
+        border_rect.width(),
+        borders_data.top.width
+    };
+    Gfx::IntRect right_border_rect = {
+        border_rect.x() + (border_rect.width() - borders_data.right.width),
+        border_rect.y(),
+        borders_data.right.width,
+        border_rect.height()
+    };
+    Gfx::IntRect bottom_border_rect = {
+        border_rect.x(),
+        border_rect.y() + (border_rect.height() - borders_data.bottom.width),
+        border_rect.width(),
+        borders_data.bottom.width
+    };
+    Gfx::IntRect left_border_rect = {
+        border_rect.x(),
+        border_rect.y(),
+        borders_data.left.width,
+        border_rect.height()
+    };
+
+    painter().fill_rect(top_border_rect, borders_data.top.color);
+    painter().fill_rect(right_border_rect, borders_data.right.color);
+    painter().fill_rect(bottom_border_rect, borders_data.bottom.color);
+    painter().fill_rect(left_border_rect, borders_data.left.color);
+
     return CommandResult::Continue;
 }
 
