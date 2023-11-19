@@ -11,6 +11,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSKeyframeRule);
+
 JS::NonnullGCPtr<CSSKeyframeRule> CSSKeyframeRule::create(JS::Realm& realm, CSS::Percentage key, Web::CSS::CSSStyleDeclaration& declarations)
 {
     return realm.heap().allocate<CSSKeyframeRule>(realm, realm, key, declarations);

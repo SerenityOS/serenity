@@ -12,6 +12,7 @@ namespace Web::SVG {
 
 class SVGSymbolElement final : public SVGGraphicsElement {
     WEB_PLATFORM_OBJECT(SVGSymbolElement, SVGGraphicsElement);
+    JS_DECLARE_ALLOCATOR(SVGSymbolElement);
 
 public:
     virtual ~SVGSymbolElement() override = default;

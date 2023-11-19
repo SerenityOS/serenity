@@ -21,6 +21,7 @@ struct PerformanceMeasureOptions {
 // https://w3c.github.io/user-timing/#dom-performancemeasure
 class PerformanceMeasure final : public PerformanceTimeline::PerformanceEntry {
     WEB_PLATFORM_OBJECT(PerformanceMeasure, PerformanceTimeline::PerformanceEntry);
+    JS_DECLARE_ALLOCATOR(PerformanceMeasure);
 
 public:
     virtual ~PerformanceMeasure();

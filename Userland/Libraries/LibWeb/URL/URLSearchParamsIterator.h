@@ -13,6 +13,7 @@ namespace Web::URL {
 
 class URLSearchParamsIterator : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URLSearchParamsIterator, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(URLSearchParamsIterator);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParamsIterator>> create(URLSearchParams const&, JS::Object::PropertyKind iteration_kind);

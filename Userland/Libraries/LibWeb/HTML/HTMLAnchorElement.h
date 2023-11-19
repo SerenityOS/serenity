@@ -15,6 +15,7 @@ class HTMLAnchorElement final
     : public HTMLElement
     , public HTMLHyperlinkElementUtils {
     WEB_PLATFORM_OBJECT(HTMLAnchorElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLAnchorElement);
 
 public:
     virtual ~HTMLAnchorElement() override;

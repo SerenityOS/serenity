@@ -30,6 +30,7 @@ enum class ScrollRestorationMode {
 // https://html.spec.whatwg.org/multipage/history.html#session-history-entry
 struct SessionHistoryEntry final : public JS::Cell {
     JS_CELL(SessionHistoryEntry, JS::Cell);
+    JS_DECLARE_ALLOCATOR(SessionHistoryEntry);
 
     SessionHistoryEntry();
 

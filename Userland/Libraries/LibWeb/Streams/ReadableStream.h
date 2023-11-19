@@ -29,6 +29,7 @@ struct ReadableStreamGetReaderOptions {
 // https://streams.spec.whatwg.org/#readablestream
 class ReadableStream final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ReadableStream, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ReadableStream);
 
 public:
     enum class State {

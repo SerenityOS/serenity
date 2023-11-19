@@ -18,6 +18,8 @@
 
 namespace Web::Internals {
 
+JS_DEFINE_ALLOCATOR(Internals);
+
 Internals::Internals(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {

@@ -21,6 +21,7 @@ struct PerformanceObserverInit {
 // https://w3c.github.io/performance-timeline/#dom-performanceobserver
 class PerformanceObserver final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(PerformanceObserver, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(PerformanceObserver);
 
 public:
     enum class ObserverType {

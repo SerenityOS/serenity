@@ -14,6 +14,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/web-messaging.html#message-channels
 class MessageChannel final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MessageChannel, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(MessageChannel);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<MessageChannel>> construct_impl(JS::Realm&);

@@ -13,6 +13,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(History);
+
 JS::NonnullGCPtr<History> History::create(JS::Realm& realm, DOM::Document& document)
 {
     return realm.heap().allocate<History>(realm, realm, document);

@@ -10,6 +10,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(WorkerLocation);
+
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerlocation-href
 WebIDL::ExceptionOr<String> WorkerLocation::href() const
 {

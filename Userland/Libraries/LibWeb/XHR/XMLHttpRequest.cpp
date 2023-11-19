@@ -53,6 +53,8 @@
 
 namespace Web::XHR {
 
+JS_DEFINE_ALLOCATOR(XMLHttpRequest);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<XMLHttpRequest>> XMLHttpRequest::construct_impl(JS::Realm& realm)
 {
     auto upload_object = realm.heap().allocate<XMLHttpRequestUpload>(realm, realm);

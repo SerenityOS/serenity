@@ -32,6 +32,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(HTMLInputElement);
+
 HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
     , m_value(DeprecatedString::empty())
@@ -499,6 +501,7 @@ Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
 
 class PlaceholderElement final : public HTMLDivElement {
     JS_CELL(PlaceholderElement, HTMLDivElement);
+    JS_DECLARE_ALLOCATOR(PlaceholderElement);
 
 public:
     PlaceholderElement(DOM::Document& document)
@@ -507,6 +510,8 @@ public:
     }
     virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::Placeholder; }
 };
+
+JS_DEFINE_ALLOCATOR(PlaceholderElement);
 
 void HTMLInputElement::create_shadow_tree_if_needed()
 {

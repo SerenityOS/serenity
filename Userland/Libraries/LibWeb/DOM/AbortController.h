@@ -14,6 +14,7 @@ namespace Web::DOM {
 // https://dom.spec.whatwg.org/#abortcontroller
 class AbortController final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(AbortController, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(AbortController);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortController>> construct_impl(JS::Realm&);

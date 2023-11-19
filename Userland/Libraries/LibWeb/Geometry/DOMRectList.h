@@ -16,6 +16,7 @@ namespace Web::Geometry {
 // https://drafts.fxtf.org/geometry-1/#DOMRectList
 class DOMRectList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMRectList, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMRectList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<DOMRectList> create(JS::Realm&, Vector<JS::Handle<DOMRect>>);

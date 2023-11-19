@@ -29,6 +29,7 @@ class WebSocketClientManager;
 
 class WebSocket final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(WebSocket, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(WebSocket);
 
 public:
     enum class ReadyState : u16 {

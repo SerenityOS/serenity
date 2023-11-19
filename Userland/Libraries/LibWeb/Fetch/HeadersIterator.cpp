@@ -23,6 +23,8 @@ void Intrinsics::create_web_prototype_and_constructor<HeadersIteratorPrototype>(
 
 namespace Web::Fetch {
 
+JS_DEFINE_ALLOCATOR(HeadersIterator);
+
 JS::NonnullGCPtr<HeadersIterator> HeadersIterator::create(Headers const& headers, JS::Object::PropertyKind iteration_kind)
 {
     return headers.heap().allocate<HeadersIterator>(headers.realm(), headers, iteration_kind);

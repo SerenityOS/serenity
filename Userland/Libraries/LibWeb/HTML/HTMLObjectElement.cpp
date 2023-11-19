@@ -19,6 +19,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(HTMLObjectElement);
+
 HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : NavigableContainer(document, move(qualified_name))
 {

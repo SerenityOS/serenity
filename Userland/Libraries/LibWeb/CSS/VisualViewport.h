@@ -13,6 +13,7 @@ namespace Web::CSS {
 // https://drafts.csswg.org/cssom-view/#visualviewport
 class VisualViewport final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(VisualViewport, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(VisualViewport);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<VisualViewport> create(DOM::Document&);

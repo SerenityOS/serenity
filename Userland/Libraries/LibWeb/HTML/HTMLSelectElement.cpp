@@ -13,6 +13,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(HTMLSelectElement);
+
 HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {

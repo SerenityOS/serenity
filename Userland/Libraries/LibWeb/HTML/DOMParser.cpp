@@ -15,6 +15,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(DOMParser);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::construct_impl(JS::Realm& realm)
 {
     return realm.heap().allocate<DOMParser>(realm, realm);

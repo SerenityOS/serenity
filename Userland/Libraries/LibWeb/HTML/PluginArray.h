@@ -13,6 +13,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/system-state.html#pluginarray
 class PluginArray : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(PluginArray, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(PluginArray);
 
 public:
     virtual ~PluginArray() override;

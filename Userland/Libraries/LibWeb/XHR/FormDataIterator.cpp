@@ -23,6 +23,8 @@ void Intrinsics::create_web_prototype_and_constructor<FormDataIteratorPrototype>
 
 namespace Web::XHR {
 
+JS_DEFINE_ALLOCATOR(FormDataIterator);
+
 JS::NonnullGCPtr<FormDataIterator> FormDataIterator::create(FormData const& form_data, JS::Object::PropertyKind iterator_kind)
 {
     return form_data.heap().allocate<FormDataIterator>(form_data.realm(), form_data, iterator_kind);

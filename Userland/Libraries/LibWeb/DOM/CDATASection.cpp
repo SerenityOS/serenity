@@ -9,6 +9,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(CDATASection);
+
 CDATASection::CDATASection(Document& document, String const& data)
     : Text(document, NodeType::CDATA_SECTION_NODE, data)
 {

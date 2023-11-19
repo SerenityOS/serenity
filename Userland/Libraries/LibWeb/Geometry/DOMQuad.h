@@ -24,6 +24,7 @@ struct DOMQuadInit {
 // https://drafts.fxtf.org/geometry/#domquad
 class DOMQuad : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMQuad, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMQuad);
 
 public:
     static JS::NonnullGCPtr<DOMQuad> construct_impl(JS::Realm&, DOMPointInit const& p1, DOMPointInit const& p2, DOMPointInit const& p3, DOMPointInit const& p4);

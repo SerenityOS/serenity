@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class HTMLTemplateElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLTemplateElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLTemplateElement);
 
 public:
     virtual ~HTMLTemplateElement() override;

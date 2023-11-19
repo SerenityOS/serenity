@@ -13,6 +13,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(JavaScriptModuleScript);
+
 ModuleScript::~ModuleScript() = default;
 
 ModuleScript::ModuleScript(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object)

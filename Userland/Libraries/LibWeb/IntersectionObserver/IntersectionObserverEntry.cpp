@@ -10,6 +10,8 @@
 
 namespace Web::IntersectionObserver {
 
+JS_DEFINE_ALLOCATOR(IntersectionObserverEntry);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<IntersectionObserverEntry>> IntersectionObserverEntry::construct_impl(JS::Realm& realm, Web::IntersectionObserver::IntersectionObserverEntryInit const& options)
 {
     auto& vm = realm.vm();

@@ -21,6 +21,7 @@ class CSSStyleSheet final
     : public StyleSheet
     , public Weakable<CSSStyleSheet> {
     WEB_PLATFORM_OBJECT(CSSStyleSheet, StyleSheet);
+    JS_DECLARE_ALLOCATOR(CSSStyleSheet);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CSSStyleSheet> create(JS::Realm&, CSSRuleList&, MediaList&, Optional<AK::URL> location);

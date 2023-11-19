@@ -12,6 +12,7 @@ namespace Web::DOM {
 
 class XMLDocument final : public Document {
     WEB_PLATFORM_OBJECT(XMLDocument, Document);
+    JS_DECLARE_ALLOCATOR(XMLDocument);
 
 public:
     static JS::NonnullGCPtr<XMLDocument> create(JS::Realm&, AK::URL const&);

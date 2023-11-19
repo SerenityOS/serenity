@@ -17,6 +17,7 @@ namespace Web::DOM {
 // NOTE: The spec calls this "event listener", and it's *importantly* not the same as "EventListener"
 class DOMEventListener : public JS::Cell {
     JS_CELL(DOMEventListener, JS::Cell);
+    JS_DECLARE_ALLOCATOR(DOMEventListener);
 
 public:
     DOMEventListener();

@@ -45,6 +45,7 @@ class HTMLInputElement final
     , public FormAssociatedElement
     , public DOM::EditableTextNodeOwner {
     WEB_PLATFORM_OBJECT(HTMLInputElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLInputElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLInputElement)
 
 public:

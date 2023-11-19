@@ -12,6 +12,8 @@
 
 namespace Web::Geometry {
 
+JS_DEFINE_ALLOCATOR(DOMRectList);
+
 JS::NonnullGCPtr<DOMRectList> DOMRectList::create(JS::Realm& realm, Vector<JS::Handle<DOMRect>> rect_handles)
 {
     Vector<JS::NonnullGCPtr<DOMRect>> rects;

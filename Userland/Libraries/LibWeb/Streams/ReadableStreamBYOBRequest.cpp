@@ -9,6 +9,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(ReadableStreamBYOBRequest);
+
 // https://streams.spec.whatwg.org/#rs-byob-request-view
 JS::GCPtr<JS::TypedArrayBase> ReadableStreamBYOBRequest::view()
 {

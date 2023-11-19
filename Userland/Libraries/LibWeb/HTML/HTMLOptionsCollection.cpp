@@ -13,6 +13,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(HTMLOptionsCollection);
+
 JS::NonnullGCPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
 {
     return root.heap().allocate<HTMLOptionsCollection>(root.realm(), root, move(filter));

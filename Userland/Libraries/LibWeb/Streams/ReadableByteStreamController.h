@@ -72,6 +72,7 @@ struct ReadableByteStreamQueueEntry {
 // https://streams.spec.whatwg.org/#readablebytestreamcontroller
 class ReadableByteStreamController : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ReadableByteStreamController, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ReadableByteStreamController);
 
 public:
     virtual ~ReadableByteStreamController() override = default;

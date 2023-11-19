@@ -33,6 +33,7 @@ class WorkerGlobalScope
     : public DOM::EventTarget
     , public WindowOrWorkerGlobalScopeMixin {
     WEB_PLATFORM_OBJECT(WorkerGlobalScope, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(WorkerGlobalScope);
 
 public:
     virtual ~WorkerGlobalScope() override;

@@ -15,6 +15,7 @@ namespace Web::CSS {
 
 class Screen final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Screen, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Screen);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Screen> create(HTML::Window&);

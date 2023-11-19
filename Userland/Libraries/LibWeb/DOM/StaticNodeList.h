@@ -13,6 +13,7 @@ namespace Web::DOM {
 
 class StaticNodeList final : public NodeList {
     WEB_PLATFORM_OBJECT(StaticNodeList, NodeList);
+    JS_DECLARE_ALLOCATOR(StaticNodeList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<NodeList> create(JS::Realm&, Vector<JS::Handle<Node>>);

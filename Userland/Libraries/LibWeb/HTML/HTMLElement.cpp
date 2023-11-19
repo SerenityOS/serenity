@@ -36,6 +36,8 @@
 
 namespace Web::HTML {
 
+JS_DECLARE_ALLOCATOR(HTMLElement);
+
 HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : Element(document, move(qualified_name))
 {

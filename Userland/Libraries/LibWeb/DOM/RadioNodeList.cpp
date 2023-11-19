@@ -12,6 +12,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(RadioNodeList);
+
 JS::NonnullGCPtr<RadioNodeList> RadioNodeList::create(JS::Realm& realm, Node& root, Scope scope, Function<bool(Node const&)> filter)
 {
     return realm.heap().allocate<RadioNodeList>(realm, realm, root, scope, move(filter));

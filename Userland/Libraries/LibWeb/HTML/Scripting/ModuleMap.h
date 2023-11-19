@@ -37,6 +37,7 @@ private:
 // https://html.spec.whatwg.org/multipage/webappapis.html#module-map
 class ModuleMap final : public JS::Cell {
     JS_CELL(ModuleMap, Cell);
+    JS_DECLARE_ALLOCATOR(ModuleMap);
 
 public:
     ModuleMap() = default;

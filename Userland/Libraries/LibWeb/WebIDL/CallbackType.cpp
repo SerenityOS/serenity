@@ -10,6 +10,8 @@
 
 namespace Web::WebIDL {
 
+JS_DEFINE_ALLOCATOR(CallbackType);
+
 CallbackType::CallbackType(JS::Object& callback, HTML::EnvironmentSettingsObject& callback_context, OperationReturnsPromise operation_returns_promise)
     : callback(callback)
     , callback_context(callback_context)

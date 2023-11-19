@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(CanvasPattern);
+
 void CanvasPatternPaintStyle::paint(Gfx::IntRect physical_bounding_box, PaintFunction paint) const
 {
     // 1. Create an infinite transparent black bitmap.

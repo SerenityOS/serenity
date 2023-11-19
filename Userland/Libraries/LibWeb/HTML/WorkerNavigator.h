@@ -20,6 +20,7 @@ class WorkerNavigator : public Bindings::PlatformObject
     , public NavigatorLanguageMixin
     , public NavigatorOnLineMixin {
     WEB_PLATFORM_OBJECT(WorkerNavigator, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(WorkerNavigator);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<WorkerNavigator> create(WorkerGlobalScope&);

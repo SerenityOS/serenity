@@ -14,6 +14,7 @@ namespace Web::HTML {
 
 class HTMLMeterElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLMeterElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLMeterElement);
 
 public:
     virtual ~HTMLMeterElement() override;

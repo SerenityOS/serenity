@@ -22,6 +22,7 @@ struct PromiseRejectionEventInit : public DOM::EventInit {
 
 class PromiseRejectionEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(PromiseRejectionEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(PromiseRejectionEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<PromiseRejectionEvent> create(JS::Realm&, FlyString const& event_name, PromiseRejectionEventInit const& = {});

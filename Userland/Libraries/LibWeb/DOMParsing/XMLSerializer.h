@@ -12,6 +12,7 @@ namespace Web::DOMParsing {
 
 class XMLSerializer final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(XMLSerializer, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(XMLSerializer);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<XMLSerializer>> construct_impl(JS::Realm&);

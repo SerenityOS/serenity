@@ -19,6 +19,7 @@ struct ElementDefinitionOptions {
 // https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry
 class CustomElementRegistry : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(CustomElementRegistry, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(CustomElementRegistry);
 
 public:
     virtual ~CustomElementRegistry() override;

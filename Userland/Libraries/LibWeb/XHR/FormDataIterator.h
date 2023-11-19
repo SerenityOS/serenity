@@ -13,6 +13,7 @@ namespace Web::XHR {
 
 class FormDataIterator : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(FormDataIterator, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(FormDataIterator);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<FormDataIterator> create(FormData const&, JS::Object::PropertyKind iterator_kind);

@@ -30,6 +30,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(HTMLLinkElement);
+
 HTMLLinkElement::HTMLLinkElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {

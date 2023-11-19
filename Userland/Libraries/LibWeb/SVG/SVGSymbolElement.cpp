@@ -17,6 +17,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGSymbolElement);
+
 SVGSymbolElement::SVGSymbolElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, qualified_name)
 {

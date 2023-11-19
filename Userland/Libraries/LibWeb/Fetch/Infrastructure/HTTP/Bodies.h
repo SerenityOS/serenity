@@ -23,6 +23,7 @@ namespace Web::Fetch::Infrastructure {
 // https://fetch.spec.whatwg.org/#concept-body
 class Body final : public JS::Cell {
     JS_CELL(Body, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Body);
 
 public:
     using SourceType = Variant<Empty, ByteBuffer, JS::Handle<FileAPI::Blob>>;

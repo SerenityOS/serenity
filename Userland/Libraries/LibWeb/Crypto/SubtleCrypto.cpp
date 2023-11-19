@@ -14,6 +14,8 @@
 
 namespace Web::Crypto {
 
+JS_DEFINE_ALLOCATOR(SubtleCrypto);
+
 JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(JS::Realm& realm)
 {
     return realm.heap().allocate<SubtleCrypto>(realm, realm);

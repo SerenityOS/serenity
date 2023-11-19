@@ -16,6 +16,8 @@
 
 namespace Web::PerformanceTimeline {
 
+JS_DEFINE_ALLOCATOR(PerformanceObserver);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<PerformanceObserver>> PerformanceObserver::construct_impl(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback)
 {
     return realm.heap().allocate<PerformanceObserver>(realm, realm, callback);

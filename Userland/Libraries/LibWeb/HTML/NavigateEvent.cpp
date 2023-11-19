@@ -23,6 +23,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(NavigateEvent);
+
 JS::NonnullGCPtr<NavigateEvent> NavigateEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, NavigateEventInit const& event_init)
 {
     return realm.heap().allocate<NavigateEvent>(realm, realm, event_name, event_init);

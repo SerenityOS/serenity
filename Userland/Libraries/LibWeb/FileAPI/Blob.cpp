@@ -22,6 +22,8 @@
 
 namespace Web::FileAPI {
 
+JS_DEFINE_ALLOCATOR(Blob);
+
 JS::NonnullGCPtr<Blob> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, String type)
 {
     return realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type));

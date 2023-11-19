@@ -24,6 +24,7 @@ class HTMLSlotElement final
     : public HTMLElement
     , public DOM::Slot {
     WEB_PLATFORM_OBJECT(HTMLSlotElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLSlotElement);
 
 public:
     virtual ~HTMLSlotElement() override;

@@ -20,6 +20,7 @@ class CSSImportRule final
     : public CSSRule
     , public ResourceClient {
     WEB_PLATFORM_OBJECT(CSSImportRule, CSSRule);
+    JS_DECLARE_ALLOCATOR(CSSImportRule);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CSSImportRule> create(AK::URL, DOM::Document&);

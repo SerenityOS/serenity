@@ -13,6 +13,7 @@ namespace Web::SVG {
 
 class SVGStyleElement final : public SVGElement {
     WEB_PLATFORM_OBJECT(HTMLStyleElement, SVGElement);
+    JS_DECLARE_ALLOCATOR(SVGStyleElement);
 
 public:
     virtual ~SVGStyleElement() override;

@@ -13,6 +13,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(TreeWalker);
+
 TreeWalker::TreeWalker(Node& root)
     : PlatformObject(root.realm())
     , m_root(root)

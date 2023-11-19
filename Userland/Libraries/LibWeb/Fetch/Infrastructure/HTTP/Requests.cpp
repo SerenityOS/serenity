@@ -13,6 +13,8 @@
 
 namespace Web::Fetch::Infrastructure {
 
+JS_DEFINE_ALLOCATOR(Request);
+
 Request::Request(JS::NonnullGCPtr<HeaderList> header_list)
     : m_header_list(header_list)
 {

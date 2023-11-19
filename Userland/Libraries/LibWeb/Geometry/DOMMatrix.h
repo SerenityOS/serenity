@@ -14,6 +14,7 @@ namespace Web::Geometry {
 // https://drafts.fxtf.org/geometry/#dommatrix
 class DOMMatrix : public DOMMatrixReadOnly {
     WEB_PLATFORM_OBJECT(DOMMatrix, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMMatrix);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> construct_impl(JS::Realm&, Optional<Variant<String, Vector<double>>> const& init);

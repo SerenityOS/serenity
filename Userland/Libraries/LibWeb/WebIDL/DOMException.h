@@ -91,6 +91,7 @@ static u16 get_legacy_code_for_name(FlyString const& name)
 // https://webidl.spec.whatwg.org/#idl-DOMException
 class DOMException final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMException, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMException);
 
 public:
     static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& name, FlyString const& message);

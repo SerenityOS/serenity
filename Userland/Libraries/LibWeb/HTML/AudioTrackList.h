@@ -16,6 +16,7 @@ namespace Web::HTML {
 
 class AudioTrackList final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(AudioTrackList, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(AudioTrackList);
 
 public:
     ErrorOr<void> add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<AudioTrack>);

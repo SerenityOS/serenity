@@ -14,6 +14,7 @@ namespace Web::Fetch {
 
 class HeadersIterator final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(HeadersIterator, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(HeadersIterator);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<HeadersIterator> create(Headers const&, JS::Object::PropertyKind iteration_kind);

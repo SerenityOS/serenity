@@ -10,6 +10,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(DocumentObserver);
+
 DocumentObserver::DocumentObserver(JS::Realm& realm, DOM::Document& document)
     : Bindings::PlatformObject(realm)
     , m_document(document)

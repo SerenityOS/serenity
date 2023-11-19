@@ -13,6 +13,8 @@
 
 namespace Web::Fetch::Infrastructure {
 
+JS_DEFINE_ALLOCATOR(FetchController);
+
 FetchController::FetchController() = default;
 
 JS::NonnullGCPtr<FetchController> FetchController::create(JS::VM& vm)

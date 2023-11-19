@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLLabelElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLLabelElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLLabelElement);
 
 public:
     virtual ~HTMLLabelElement() override;

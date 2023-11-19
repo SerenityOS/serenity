@@ -17,6 +17,7 @@ struct SubmitEventInit : public DOM::EventInit {
 
 class SubmitEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(SubmitEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(SubmitEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<SubmitEvent> create(JS::Realm&, FlyString const& event_name, SubmitEventInit const& event_init);

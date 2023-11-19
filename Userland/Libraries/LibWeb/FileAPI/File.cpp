@@ -12,6 +12,8 @@
 
 namespace Web::FileAPI {
 
+JS_DEFINE_ALLOCATOR(File);
+
 File::File(JS::Realm& realm, ByteBuffer byte_buffer, String file_name, String type, i64 last_modified)
     : Blob(realm, move(byte_buffer), move(type))
     , m_name(move(file_name))

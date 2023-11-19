@@ -15,6 +15,7 @@ namespace Web::HTML {
 class WorkerEnvironmentSettingsObject final
     : public EnvironmentSettingsObject {
     JS_CELL(WindowEnvironmentSettingsObject, EnvironmentSettingsObject);
+    JS_DECLARE_ALLOCATOR(WorkerEnvironmentSettingsObject);
 
 public:
     WorkerEnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> execution_context, JS::NonnullGCPtr<WorkerGlobalScope> global_scope)

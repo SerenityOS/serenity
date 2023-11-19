@@ -9,6 +9,8 @@
 
 namespace Web::WebIDL {
 
+JS_DEFINE_ALLOCATOR(DOMException);
+
 JS::NonnullGCPtr<DOMException> DOMException::create(JS::Realm& realm, FlyString const& name, FlyString const& message)
 {
     return realm.heap().allocate<DOMException>(realm, realm, name, message);

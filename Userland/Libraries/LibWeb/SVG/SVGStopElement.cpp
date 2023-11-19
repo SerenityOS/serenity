@@ -14,6 +14,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGStopElement);
+
 SVGStopElement::SVGStopElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGElement(document, qualified_name)
 {

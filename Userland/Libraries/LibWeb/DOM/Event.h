@@ -20,6 +20,7 @@ struct EventInit {
 
 class Event : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Event, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Event);
 
 public:
     enum Phase : u16 {

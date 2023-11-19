@@ -13,6 +13,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-plugin
 class Plugin : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(Plugin, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(Plugin);
 
 public:
     virtual ~Plugin() override;

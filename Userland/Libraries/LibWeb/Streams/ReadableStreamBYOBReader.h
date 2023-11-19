@@ -38,6 +38,7 @@ class ReadableStreamBYOBReader final
     : public Bindings::PlatformObject
     , public ReadableStreamGenericReaderMixin {
     WEB_PLATFORM_OBJECT(ReadableStreamBYOBReader, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ReadableStreamBYOBReader);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamBYOBReader>> construct_impl(JS::Realm&, JS::NonnullGCPtr<ReadableStream>);

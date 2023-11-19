@@ -18,6 +18,7 @@ namespace Web::XHR {
 // https://xhr.spec.whatwg.org/#interface-formdata
 class FormData : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(FormData, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(FormData);
 
 public:
     virtual ~FormData() override;

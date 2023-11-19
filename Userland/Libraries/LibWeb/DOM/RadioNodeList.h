@@ -13,6 +13,7 @@ namespace Web::DOM {
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#radionodelist
 class RadioNodeList : public LiveNodeList {
     WEB_PLATFORM_OBJECT(RadioNodeList, LiveNodeList);
+    JS_DECLARE_ALLOCATOR(RadioNodeList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<RadioNodeList> create(JS::Realm& realm, Node& root, Scope scope, Function<bool(Node const&)> filter);

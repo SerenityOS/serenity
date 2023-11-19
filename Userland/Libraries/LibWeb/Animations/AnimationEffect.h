@@ -58,6 +58,7 @@ enum class AnimationDirection {
 // https://www.w3.org/TR/web-animations-1/#the-animationeffect-interface
 class AnimationEffect : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(AnimationEffect, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(AnimationEffect);
 
 public:
     static JS::NonnullGCPtr<AnimationEffect> create(JS::Realm&);

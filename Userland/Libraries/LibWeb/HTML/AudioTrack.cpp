@@ -20,6 +20,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(AudioTrack);
+
 static IDAllocator s_audio_track_id_allocator;
 
 AudioTrack::AudioTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> media_element, NonnullRefPtr<Audio::Loader> loader)

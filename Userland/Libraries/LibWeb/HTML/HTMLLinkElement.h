@@ -22,6 +22,7 @@ class HTMLLinkElement final
     : public HTMLElement
     , public ResourceClient {
     WEB_PLATFORM_OBJECT(HTMLLinkElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLLinkElement);
 
 public:
     virtual ~HTMLLinkElement() override;

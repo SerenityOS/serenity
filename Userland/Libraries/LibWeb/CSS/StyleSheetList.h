@@ -12,8 +12,9 @@
 
 namespace Web::CSS {
 
-class StyleSheetList : public Bindings::LegacyPlatformObject {
+class StyleSheetList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(StyleSheetList, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(StyleSheetList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<StyleSheetList> create(DOM::Document&);

@@ -19,6 +19,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/images.html#image-request
 class ImageRequest final : public JS::Cell {
     JS_CELL(ImageRequest, JS::Cell);
+    JS_DECLARE_ALLOCATOR(ImageRequest);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<ImageRequest> create(JS::Realm&, Page&);

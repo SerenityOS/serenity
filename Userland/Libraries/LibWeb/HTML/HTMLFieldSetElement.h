@@ -16,6 +16,7 @@ class HTMLFieldSetElement final
     : public HTMLElement
     , public FormAssociatedElement {
     WEB_PLATFORM_OBJECT(HTMLFieldSetElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLFieldSetElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLFieldSetElement)
 
 public:

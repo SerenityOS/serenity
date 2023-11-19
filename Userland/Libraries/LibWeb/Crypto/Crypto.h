@@ -14,6 +14,7 @@ namespace Web::Crypto {
 
 class Crypto : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Crypto, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Crypto);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Crypto> create(JS::Realm&);

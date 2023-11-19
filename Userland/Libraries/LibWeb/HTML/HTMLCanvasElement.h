@@ -15,6 +15,7 @@ namespace Web::HTML {
 
 class HTMLCanvasElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLCanvasElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLCanvasElement);
 
 public:
     using RenderingContext = Variant<JS::Handle<CanvasRenderingContext2D>, JS::Handle<WebGL::WebGLRenderingContext>, Empty>;

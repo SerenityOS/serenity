@@ -13,6 +13,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGRectElement);
+
 SVGRectElement::SVGRectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {

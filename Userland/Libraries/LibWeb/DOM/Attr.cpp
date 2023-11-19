@@ -15,6 +15,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(Attr);
+
 JS::NonnullGCPtr<Attr> Attr::create(Document& document, FlyString local_name, String value, Element* owner_element)
 {
     return document.heap().allocate<Attr>(document.realm(), document, QualifiedName(move(local_name), Optional<FlyString> {}, Optional<FlyString> {}), move(value), owner_element);

@@ -14,6 +14,7 @@ namespace Web::HTML {
 
 class CanvasGradient final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(CanvasGradient, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(CanvasGradient);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasGradient>> create_radial(JS::Realm&, double x0, double y0, double r0, double x1, double y1, double r1);

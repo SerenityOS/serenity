@@ -11,6 +11,8 @@
 
 namespace Web::UIEvents {
 
+JS_DEFINE_ALLOCATOR(KeyboardEvent);
+
 // https://www.w3.org/TR/uievents/#determine-keydown-keyup-keyCode
 static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
 {

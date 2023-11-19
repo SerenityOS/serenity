@@ -64,6 +64,7 @@ class Request final
     : public Bindings::PlatformObject
     , public BodyMixin {
     WEB_PLATFORM_OBJECT(Request, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Request);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Request> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Request>, Headers::Guard);

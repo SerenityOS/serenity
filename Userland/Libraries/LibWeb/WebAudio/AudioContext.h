@@ -25,6 +25,7 @@ struct AudioTimestamp {
 // https://webaudio.github.io/web-audio-api/#AudioContext
 class AudioContext final : public BaseAudioContext {
     WEB_PLATFORM_OBJECT(AudioContext, BaseAudioContext);
+    JS_DECLARE_ALLOCATOR(AudioContext);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioContext>> construct_impl(JS::Realm&, AudioContextOptions const& context_options = {});

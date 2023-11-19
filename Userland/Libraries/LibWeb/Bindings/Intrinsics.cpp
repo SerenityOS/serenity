@@ -12,6 +12,8 @@
 
 namespace Web::Bindings {
 
+JS_DEFINE_ALLOCATOR(Intrinsics);
+
 void Intrinsics::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

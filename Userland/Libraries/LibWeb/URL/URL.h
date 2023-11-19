@@ -17,6 +17,7 @@ namespace Web::URL {
 
 class URL : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URL, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(URL);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<URL> create(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);

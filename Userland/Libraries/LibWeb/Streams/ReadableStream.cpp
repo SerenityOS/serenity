@@ -18,6 +18,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(ReadableStream);
+
 // https://streams.spec.whatwg.org/#rs-constructor
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_impl(JS::Realm& realm, Optional<JS::Handle<JS::Object>> const& underlying_source_object, QueuingStrategy const& strategy)
 {

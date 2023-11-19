@@ -12,6 +12,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(MimeTypeArray);
+
 MimeTypeArray::MimeTypeArray(JS::Realm& realm)
     : Bindings::LegacyPlatformObject(realm)
 {

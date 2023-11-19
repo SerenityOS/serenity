@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class HTMLTableRowElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLTableRowElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLTableRowElement);
 
 public:
     virtual ~HTMLTableRowElement() override;

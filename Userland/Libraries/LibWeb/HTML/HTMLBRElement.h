@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLBRElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLBRElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLBRElement);
 
 public:
     virtual ~HTMLBRElement() override;

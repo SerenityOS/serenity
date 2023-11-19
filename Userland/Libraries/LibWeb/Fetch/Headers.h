@@ -23,6 +23,7 @@ using HeadersInit = Variant<Vector<Vector<String>>, OrderedHashMap<String, Strin
 // https://fetch.spec.whatwg.org/#headers-class
 class Headers final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Headers, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Headers);
 
 public:
     enum class Guard {

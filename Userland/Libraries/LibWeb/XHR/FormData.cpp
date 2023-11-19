@@ -15,6 +15,8 @@
 
 namespace Web::XHR {
 
+JS_DEFINE_ALLOCATOR(FormData);
+
 // https://xhr.spec.whatwg.org/#dom-formdata
 WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, Optional<JS::NonnullGCPtr<HTML::HTMLFormElement>> form)
 {

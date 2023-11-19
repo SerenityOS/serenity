@@ -10,6 +10,8 @@
 
 namespace Web::Animations {
 
+JS_DEFINE_ALLOCATOR(AnimationTimeline);
+
 WebIDL::ExceptionOr<void> AnimationTimeline::set_current_time(Optional<double> value)
 {
     if (value == m_current_time)

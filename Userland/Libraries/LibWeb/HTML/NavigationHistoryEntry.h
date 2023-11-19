@@ -13,6 +13,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigationhistoryentry
 class NavigationHistoryEntry : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(NavigationHistoryEntry, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(NavigationHistoryEntry);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<NavigationHistoryEntry> create(JS::Realm&, JS::NonnullGCPtr<SessionHistoryEntry>);

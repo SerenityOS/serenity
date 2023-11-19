@@ -19,6 +19,7 @@ namespace Web::HTML {
 
 class SharedImageRequest : public JS::Cell {
     JS_CELL(ImageRequest, JS::Cell);
+    JS_DECLARE_ALLOCATOR(SharedImageRequest);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<SharedImageRequest> get_or_create(JS::Realm&, Page&, AK::URL const&);

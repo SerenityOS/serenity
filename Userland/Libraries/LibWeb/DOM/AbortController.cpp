@@ -10,6 +10,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(AbortController);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortController>> AbortController::construct_impl(JS::Realm& realm)
 {
     auto signal = TRY(AbortSignal::construct_impl(realm));

@@ -22,6 +22,7 @@ struct ProgressEventInit : public DOM::EventInit {
 
 class ProgressEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(ProgressEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(ProgressEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<ProgressEvent> create(JS::Realm&, FlyString const& event_name, ProgressEventInit const& event_init);

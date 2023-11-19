@@ -65,6 +65,7 @@ class ReadableStreamDefaultReader final
     : public Bindings::PlatformObject
     , public ReadableStreamGenericReaderMixin {
     WEB_PLATFORM_OBJECT(ReadableStreamDefaultReader, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ReadableStreamDefaultReader);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> construct_impl(JS::Realm&, JS::NonnullGCPtr<ReadableStream>);

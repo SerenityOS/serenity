@@ -16,6 +16,7 @@ namespace Web::SVG {
 
 class SVGUseElement final : public SVGGraphicsElement {
     WEB_PLATFORM_OBJECT(SVGUseElement, SVGGraphicsElement);
+    JS_DECLARE_ALLOCATOR(SVGUseElement);
 
 public:
     virtual ~SVGUseElement() override = default;

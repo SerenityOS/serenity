@@ -13,6 +13,8 @@
 
 namespace Web::Animations {
 
+JS_DEFINE_ALLOCATOR(DocumentTimeline);
+
 JS::NonnullGCPtr<DocumentTimeline> DocumentTimeline::create(JS::Realm& realm, DOM::Document& document, HighResolutionTime::DOMHighResTimeStamp origin_time)
 {
     return realm.heap().allocate<DocumentTimeline>(realm, realm, document, origin_time);

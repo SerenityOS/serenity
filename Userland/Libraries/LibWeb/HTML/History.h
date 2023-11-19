@@ -15,6 +15,7 @@ namespace Web::HTML {
 
 class History final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(History, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(History);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<History> create(JS::Realm&, DOM::Document&);

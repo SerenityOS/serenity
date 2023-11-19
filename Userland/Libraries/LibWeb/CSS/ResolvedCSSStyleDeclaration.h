@@ -12,6 +12,7 @@ namespace Web::CSS {
 
 class ResolvedCSSStyleDeclaration final : public CSSStyleDeclaration {
     WEB_PLATFORM_OBJECT(ResolvedCSSStyleDeclaration, CSSStyleDeclaration);
+    JS_DECLARE_ALLOCATOR(ResolvedCSSStyleDeclaration);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<ResolvedCSSStyleDeclaration> create(DOM::Element&);

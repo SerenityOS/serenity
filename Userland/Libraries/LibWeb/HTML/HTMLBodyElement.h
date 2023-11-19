@@ -16,6 +16,7 @@ class HTMLBodyElement final
     : public HTMLElement
     , public WindowEventHandlers {
     WEB_PLATFORM_OBJECT(HTMLBodyElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLBodyElement);
 
 public:
     virtual ~HTMLBodyElement() override;

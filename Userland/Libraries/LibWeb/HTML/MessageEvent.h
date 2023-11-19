@@ -24,6 +24,7 @@ struct MessageEventInit : public DOM::EventInit {
 
 class MessageEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(MessageEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(MessageEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MessageEvent> create(JS::Realm&, FlyString const& event_name, MessageEventInit const& = {});

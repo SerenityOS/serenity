@@ -17,6 +17,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(DOMImplementation);
+
 JS::NonnullGCPtr<DOMImplementation> DOMImplementation::create(Document& document)
 {
     auto& realm = document.realm();

@@ -12,6 +12,7 @@ namespace Web::SVG {
 
 class SVGTitleElement final : public SVGElement {
     WEB_PLATFORM_OBJECT(SVGTitleElement, SVGElement);
+    JS_DECLARE_ALLOCATOR(SVGTitleElement);
 
 private:
     SVGTitleElement(DOM::Document&, DOM::QualifiedName);

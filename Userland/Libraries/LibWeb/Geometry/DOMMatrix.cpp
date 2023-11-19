@@ -12,6 +12,8 @@
 
 namespace Web::Geometry {
 
+JS_DEFINE_ALLOCATOR(DOMMatrix);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::construct_impl(JS::Realm& realm, Optional<Variant<String, Vector<double>>> const& init)
 {
     auto& vm = realm.vm();

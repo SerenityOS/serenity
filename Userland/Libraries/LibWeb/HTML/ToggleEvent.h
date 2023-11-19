@@ -19,6 +19,7 @@ struct ToggleEventInit : public DOM::EventInit {
 
 class ToggleEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(ToggleEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(ToggleEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<ToggleEvent> create(JS::Realm&, FlyString const& event_name, ToggleEventInit = {});

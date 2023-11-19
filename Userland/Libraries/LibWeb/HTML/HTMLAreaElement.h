@@ -16,6 +16,7 @@ class HTMLAreaElement final
     : public HTMLElement
     , public HTMLHyperlinkElementUtils {
     WEB_PLATFORM_OBJECT(HTMLAreaElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLAreaElement);
 
 public:
     virtual ~HTMLAreaElement() override;

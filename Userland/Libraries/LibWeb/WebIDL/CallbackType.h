@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::WebIDL {
@@ -20,6 +21,7 @@ enum class OperationReturnsPromise {
 // https://webidl.spec.whatwg.org/#idl-callback-interface
 class CallbackType final : public JS::Cell {
     JS_CELL(CallbackType, JS::Cell);
+    JS_DECLARE_ALLOCATOR(CallbackType);
 
 public:
     CallbackType(JS::Object& callback, HTML::EnvironmentSettingsObject& callback_context, OperationReturnsPromise = OperationReturnsPromise::No);

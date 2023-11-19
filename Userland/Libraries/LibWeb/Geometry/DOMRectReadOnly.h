@@ -23,6 +23,7 @@ struct DOMRectInit {
 // https://drafts.fxtf.org/geometry/#domrectreadonly
 class DOMRectReadOnly : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMRectReadOnly, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMRectReadOnly);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRectReadOnly>> construct_impl(JS::Realm&, double x = 0, double y = 0, double width = 0, double height = 0);

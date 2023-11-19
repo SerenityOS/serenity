@@ -34,6 +34,7 @@ struct PendingAbortRequest {
 // https://streams.spec.whatwg.org/#writablestream
 class WritableStream final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(WritableStream, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(WritableStream);
 
 public:
     enum class State {

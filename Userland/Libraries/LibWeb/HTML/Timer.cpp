@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Timer);
+
 JS::NonnullGCPtr<Timer> Timer::create(JS::Object& window_or_worker_global_scope, i32 milliseconds, Function<void()> callback, i32 id)
 {
     auto heap_function_callback = JS::create_heap_function(window_or_worker_global_scope.heap(), move(callback));

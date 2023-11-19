@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(BrowsingContextGroup);
+
 // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context-group-set
 static HashTable<JS::NonnullGCPtr<BrowsingContextGroup>>& user_agent_browsing_context_group_set()
 {

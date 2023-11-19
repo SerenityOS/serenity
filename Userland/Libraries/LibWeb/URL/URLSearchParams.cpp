@@ -17,6 +17,8 @@
 
 namespace Web::URL {
 
+JS_DEFINE_ALLOCATOR(URLSearchParams);
+
 URLSearchParams::URLSearchParams(JS::Realm& realm, Vector<QueryParam> list)
     : PlatformObject(realm)
     , m_list(move(list))

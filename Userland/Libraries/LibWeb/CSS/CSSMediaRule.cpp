@@ -12,6 +12,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSMediaRule);
+
 JS::NonnullGCPtr<CSSMediaRule> CSSMediaRule::create(JS::Realm& realm, MediaList& media_queries, CSSRuleList& rules)
 {
     return realm.heap().allocate<CSSMediaRule>(realm, realm, media_queries, rules);

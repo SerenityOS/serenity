@@ -9,6 +9,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGClipPathElement);
+
 SVGClipPathElement::SVGClipPathElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGElement(document, move(qualified_name))
 {

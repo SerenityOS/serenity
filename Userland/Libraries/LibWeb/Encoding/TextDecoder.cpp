@@ -12,6 +12,8 @@
 
 namespace Web::Encoding {
 
+JS_DEFINE_ALLOCATOR(TextDecoder);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(JS::Realm& realm, FlyString encoding, Optional<TextDecoderOptions> const& options)
 {
     auto& vm = realm.vm();

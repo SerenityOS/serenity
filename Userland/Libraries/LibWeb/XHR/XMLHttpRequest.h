@@ -30,6 +30,7 @@ using DocumentOrXMLHttpRequestBodyInit = Variant<JS::Handle<Web::DOM::Document>,
 
 class XMLHttpRequest final : public XMLHttpRequestEventTarget {
     WEB_PLATFORM_OBJECT(XMLHttpRequest, XMLHttpRequestEventTarget);
+    JS_DECLARE_ALLOCATOR(XMLHttpRequest);
 
 public:
     enum class State : u16 {

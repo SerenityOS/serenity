@@ -18,6 +18,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(SharedImageRequest);
+
 JS::NonnullGCPtr<SharedImageRequest> SharedImageRequest::get_or_create(JS::Realm& realm, Page& page, AK::URL const& url)
 {
     auto document = Bindings::host_defined_environment_settings_object(realm).responsible_document();

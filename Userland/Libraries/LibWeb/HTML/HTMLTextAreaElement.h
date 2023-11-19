@@ -19,6 +19,7 @@ class HTMLTextAreaElement final
     , public FormAssociatedElement
     , public DOM::EditableTextNodeOwner {
     WEB_PLATFORM_OBJECT(HTMLTextAreaElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLTextAreaElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLTextAreaElement)
 
 public:

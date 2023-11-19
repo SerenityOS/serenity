@@ -16,6 +16,7 @@ namespace Web::DOM {
 
 class LiveNodeList : public NodeList {
     WEB_PLATFORM_OBJECT(LiveNodeList, NodeList);
+    JS_DECLARE_ALLOCATOR(LiveNodeList);
 
 public:
     enum class Scope {

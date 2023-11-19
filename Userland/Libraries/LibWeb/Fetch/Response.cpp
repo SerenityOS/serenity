@@ -18,6 +18,8 @@
 
 namespace Web::Fetch {
 
+JS_DEFINE_ALLOCATOR(Response);
+
 Response::Response(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Response> response)
     : PlatformObject(realm)
     , m_response(response)

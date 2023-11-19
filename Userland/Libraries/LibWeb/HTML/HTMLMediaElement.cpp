@@ -553,6 +553,7 @@ enum class SelectMode {
 
 class SourceElementSelector final : public JS::Cell {
     JS_CELL(SourceElementSelector, JS::Cell);
+    JS_DECLARE_ALLOCATOR(SourceElementSelector);
 
 public:
     SourceElementSelector(JS::NonnullGCPtr<HTMLMediaElement> media_element, JS::NonnullGCPtr<HTMLSourceElement> candidate)
@@ -726,6 +727,8 @@ private:
     JS::NonnullGCPtr<HTMLSourceElement> m_candidate;
     JS::GCPtr<DOM::Node> m_previously_failed_candidate;
 };
+
+JS_DEFINE_ALLOCATOR(SourceElementSelector);
 
 void HTMLMediaElement::children_changed()
 {

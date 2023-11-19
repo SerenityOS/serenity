@@ -27,6 +27,7 @@ struct WheelEventInit : public MouseEventInit {
 
 class WheelEvent final : public MouseEvent {
     WEB_PLATFORM_OBJECT(WheelEvent, MouseEvent);
+    JS_DECLARE_ALLOCATOR(WheelEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<WheelEvent> create(JS::Realm&, FlyString const& event_name, WheelEventInit const& event_init = {}, double page_x = 0, double page_y = 0, double offset_x = 0, double offset_y = 0, unsigned modifiers = 0);

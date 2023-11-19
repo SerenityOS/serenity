@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Storage);
+
 JS::NonnullGCPtr<Storage> Storage::create(JS::Realm& realm)
 {
     return realm.heap().allocate<Storage>(realm, realm);

@@ -16,6 +16,7 @@ namespace Web::DOM {
 
 class DocumentObserver final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DocumentObserver, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DocumentObserver);
 
 public:
     [[nodiscard]] JS::GCPtr<JS::HeapFunction<void()>> document_became_inactive() const { return m_document_became_inactive; }

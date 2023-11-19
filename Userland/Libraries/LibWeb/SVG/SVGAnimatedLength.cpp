@@ -9,6 +9,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGAnimatedLength);
+
 JS::NonnullGCPtr<SVGAnimatedLength> SVGAnimatedLength::create(JS::Realm& realm, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val)
 {
     return realm.heap().allocate<SVGAnimatedLength>(realm, realm, move(base_val), move(anim_val));

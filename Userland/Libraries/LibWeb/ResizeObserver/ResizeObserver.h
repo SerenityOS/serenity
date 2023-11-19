@@ -17,6 +17,7 @@ struct ResizeObserverOptions {
 // https://drafts.csswg.org/resize-observer/#resize-observer-interface
 class ResizeObserver : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ResizeObserver, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ResizeObserver);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<ResizeObserver>> construct_impl(JS::Realm&, WebIDL::CallbackType* callback);

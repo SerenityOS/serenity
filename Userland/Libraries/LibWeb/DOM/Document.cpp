@@ -106,6 +106,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(Document);
+
 // https://html.spec.whatwg.org/multipage/origin.html#obtain-browsing-context-navigation
 static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_for_a_navigation_response(
     HTML::BrowsingContext& browsing_context,

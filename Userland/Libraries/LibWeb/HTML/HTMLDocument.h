@@ -16,6 +16,7 @@ namespace Web::HTML {
 //       https://github.com/whatwg/dom/issues/221
 class HTMLDocument final : public DOM::Document {
     JS_CELL(HTMLDocument, DOM::Document);
+    JS_DECLARE_ALLOCATOR(HTMLDocument);
 
 public:
     virtual ~HTMLDocument() override;

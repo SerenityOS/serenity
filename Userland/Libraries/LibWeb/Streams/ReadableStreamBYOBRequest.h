@@ -16,6 +16,7 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#readablestreambyobrequest
 class ReadableStreamBYOBRequest : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ReadableStreamBYOBRequest, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ReadableStreamBYOBRequest);
 
 public:
     virtual ~ReadableStreamBYOBRequest() override = default;

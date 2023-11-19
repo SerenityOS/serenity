@@ -13,6 +13,7 @@ namespace Web::SVG {
 
 class SVGEllipseElement final : public SVGGeometryElement {
     WEB_PLATFORM_OBJECT(SVGEllipseElement, SVGGeometryElement);
+    JS_DECLARE_ALLOCATOR(SVGEllipseElement);
 
 public:
     virtual ~SVGEllipseElement() override = default;

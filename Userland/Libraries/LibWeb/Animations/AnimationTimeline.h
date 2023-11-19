@@ -13,6 +13,7 @@ namespace Web::Animations {
 // https://www.w3.org/TR/web-animations-1/#animationtimeline
 class AnimationTimeline : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(AnimationTimeline, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(AnimationTimeline);
 
 public:
     Optional<double> current_time() const { return m_current_time; }

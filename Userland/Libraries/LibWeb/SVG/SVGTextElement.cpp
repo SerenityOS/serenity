@@ -9,6 +9,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGTextElement);
+
 SVGTextElement::SVGTextElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGTextPositioningElement(document, move(qualified_name))
 {

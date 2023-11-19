@@ -15,6 +15,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/webappapis.html#classic-script
 class ClassicScript final : public Script {
     JS_CELL(ClassicScript, Script);
+    JS_DECLARE_ALLOCATOR(ClassicScript);
 
 public:
     virtual ~ClassicScript() override;

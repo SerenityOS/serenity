@@ -9,6 +9,8 @@
 
 namespace Web::XHR {
 
+JS_DEFINE_ALLOCATOR(ProgressEvent);
+
 JS::NonnullGCPtr<ProgressEvent> ProgressEvent::create(JS::Realm& realm, FlyString const& event_name, ProgressEventInit const& event_init)
 {
     return realm.heap().allocate<ProgressEvent>(realm, realm, event_name, event_init);

@@ -13,6 +13,7 @@ namespace Web::SVG {
 
 class SVGMaskElement final : public SVGGraphicsElement {
     WEB_PLATFORM_OBJECT(SVGMaskElement, SVGGraphicsElement);
+    JS_DECLARE_ALLOCATOR(SVGMaskElement);
 
 public:
     virtual ~SVGMaskElement() override;

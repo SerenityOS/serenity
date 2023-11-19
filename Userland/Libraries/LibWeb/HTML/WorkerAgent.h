@@ -25,6 +25,7 @@ struct WorkerOptions {
 
 struct WorkerAgent : JS::Cell {
     JS_CELL(Agent, JS::Cell);
+    JS_DECLARE_ALLOCATOR(WorkerAgent);
 
     WorkerAgent(AK::URL url, WorkerOptions const& options);
 

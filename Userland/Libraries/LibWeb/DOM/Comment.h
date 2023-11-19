@@ -12,6 +12,7 @@ namespace Web::DOM {
 
 class Comment final : public CharacterData {
     WEB_PLATFORM_OBJECT(Comment, CharacterData);
+    JS_DECLARE_ALLOCATOR(Comment);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Comment>> construct_impl(JS::Realm&, String const& data);

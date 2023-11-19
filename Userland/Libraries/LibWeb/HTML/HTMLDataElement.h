@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class HTMLDataElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLDataElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLDataElement);
 
 public:
     virtual ~HTMLDataElement() override;

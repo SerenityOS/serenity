@@ -24,6 +24,7 @@ RelativeBoundaryPointPosition position_of_boundary_point_relative_to_other_bound
 
 class Range final : public AbstractRange {
     WEB_PLATFORM_OBJECT(Range, AbstractRange);
+    JS_DECLARE_ALLOCATOR(Range);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Range> create(Document&);

@@ -23,6 +23,7 @@ class HTMLElement
     : public DOM::Element
     , public HTML::GlobalEventHandlers {
     WEB_PLATFORM_OBJECT(HTMLElement, DOM::Element);
+    JS_DECLARE_ALLOCATOR(HTMLElement);
 
 public:
     virtual ~HTMLElement() override;

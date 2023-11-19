@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLUnknownElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLUnknownElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLUnknownElement);
 
 public:
     virtual ~HTMLUnknownElement() override;

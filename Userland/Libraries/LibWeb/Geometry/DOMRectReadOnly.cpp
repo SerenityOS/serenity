@@ -10,6 +10,8 @@
 
 namespace Web::Geometry {
 
+JS_DEFINE_ALLOCATOR(DOMRectReadOnly);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRectReadOnly>> DOMRectReadOnly::construct_impl(JS::Realm& realm, double x, double y, double width, double height)
 {
     return realm.heap().allocate<DOMRectReadOnly>(realm, realm, x, y, width, height);

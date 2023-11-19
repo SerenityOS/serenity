@@ -10,6 +10,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(TransformStreamDefaultController);
+
 TransformStreamDefaultController::TransformStreamDefaultController(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {

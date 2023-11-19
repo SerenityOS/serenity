@@ -14,6 +14,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSNamespaceRule);
+
 CSSNamespaceRule::CSSNamespaceRule(JS::Realm& realm, Optional<DeprecatedString> prefix, StringView namespace_uri)
     : CSSRule(realm)
     , m_namespace_uri(namespace_uri)

@@ -10,6 +10,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGDefsElement);
+
 SVGDefsElement::SVGDefsElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, move(qualified_name))
 {

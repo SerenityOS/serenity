@@ -30,6 +30,7 @@ namespace Web::HTML {
 
 class HTMLFormElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLFormElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLFormElement);
 
 public:
     virtual ~HTMLFormElement() override;

@@ -19,6 +19,7 @@ namespace Web::HTML {
 
 class Location final : public Bindings::PlatformObject {
     JS_OBJECT(Location, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Location);
 
 public:
     virtual ~Location() override;

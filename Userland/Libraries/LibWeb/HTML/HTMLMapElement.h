@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLMapElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLMapElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLMapElement);
 
 public:
     virtual ~HTMLMapElement() override;

@@ -12,6 +12,7 @@ namespace Web::Internals {
 
 class Internals final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Internals, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Internals);
 
 public:
     virtual ~Internals() override;

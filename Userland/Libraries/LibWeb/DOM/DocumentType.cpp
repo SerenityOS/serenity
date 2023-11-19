@@ -9,6 +9,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(DocumentType);
+
 JS::NonnullGCPtr<DocumentType> DocumentType::create(Document& document)
 {
     return document.heap().allocate<DocumentType>(document.realm(), document);

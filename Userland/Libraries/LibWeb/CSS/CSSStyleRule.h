@@ -16,6 +16,7 @@ namespace Web::CSS {
 
 class CSSStyleRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSStyleRule, CSSRule);
+    JS_DECLARE_ALLOCATOR(CSSStyleRule);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CSSStyleRule> create(JS::Realm&, Vector<NonnullRefPtr<Selector>>&&, CSSStyleDeclaration&);

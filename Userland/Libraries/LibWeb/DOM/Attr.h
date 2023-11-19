@@ -15,6 +15,7 @@ namespace Web::DOM {
 // https://dom.spec.whatwg.org/#attr
 class Attr final : public Node {
     WEB_PLATFORM_OBJECT(Attr, Node);
+    JS_DECLARE_ALLOCATOR(Attr);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Attr> create(Document&, QualifiedName, String value = {}, Element* = nullptr);

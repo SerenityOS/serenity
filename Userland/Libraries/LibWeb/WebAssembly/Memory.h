@@ -24,6 +24,7 @@ struct MemoryDescriptor {
 
 class Memory : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Memory, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Memory);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Memory>> construct_impl(JS::Realm&, MemoryDescriptor& descriptor);

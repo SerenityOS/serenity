@@ -23,6 +23,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(ReadableStreamDefaultReader);
+
 void ReadLoopReadRequest::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);

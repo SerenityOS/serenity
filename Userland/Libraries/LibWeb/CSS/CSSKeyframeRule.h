@@ -18,6 +18,7 @@ namespace Web::CSS {
 // https://drafts.csswg.org/css-animations/#interface-csskeyframerule
 class CSSKeyframeRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSKeyframeRule, CSSRule);
+    JS_DECLARE_ALLOCATOR(CSSKeyframeRule);
 
 public:
     static JS::NonnullGCPtr<CSSKeyframeRule> create(JS::Realm&, CSS::Percentage key, CSSStyleDeclaration&);

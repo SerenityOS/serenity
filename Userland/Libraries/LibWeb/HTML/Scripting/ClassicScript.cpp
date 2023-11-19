@@ -15,6 +15,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(ClassicScript);
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
 JS::NonnullGCPtr<ClassicScript> ClassicScript::create(DeprecatedString filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, size_t source_line_number, MutedErrors muted_errors)
 {

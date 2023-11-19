@@ -17,6 +17,7 @@ namespace Web::Clipboard {
 
 class Clipboard final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(Clipboard, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(Clipboard);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Clipboard>> construct_impl(JS::Realm&);

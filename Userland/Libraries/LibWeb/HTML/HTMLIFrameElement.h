@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLIFrameElement final : public NavigableContainer {
     WEB_PLATFORM_OBJECT(HTMLIFrameElement, NavigableContainer);
+    JS_DECLARE_ALLOCATOR(HTMLIFrameElement);
 
 public:
     virtual ~HTMLIFrameElement() override;

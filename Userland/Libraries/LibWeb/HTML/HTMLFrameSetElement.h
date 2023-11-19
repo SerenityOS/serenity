@@ -16,6 +16,7 @@ class HTMLFrameSetElement final
     : public HTMLElement
     , public WindowEventHandlers {
     WEB_PLATFORM_OBJECT(HTMLFrameSetElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLFrameSetElement);
 
 public:
     virtual ~HTMLFrameSetElement() override;

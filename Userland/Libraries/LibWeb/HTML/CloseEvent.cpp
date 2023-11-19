@@ -9,6 +9,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(CloseEvent);
+
 JS::NonnullGCPtr<CloseEvent> CloseEvent::create(JS::Realm& realm, FlyString const& event_name, CloseEventInit const& event_init)
 {
     return realm.heap().allocate<CloseEvent>(realm, realm, event_name, event_init);

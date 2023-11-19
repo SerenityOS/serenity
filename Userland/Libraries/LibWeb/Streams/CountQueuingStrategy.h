@@ -17,6 +17,7 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#countqueuingstrategy
 class CountQueuingStrategy final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(CountQueuingStrategy, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(CountQueuingStrategy);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<CountQueuingStrategy>> construct_impl(JS::Realm&, QueuingStrategyInit const&);

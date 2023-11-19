@@ -9,6 +9,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(WorkerEnvironmentSettingsObject);
+
 JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> WorkerEnvironmentSettingsObject::setup(NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
 {
     auto realm = execution_context->realm;

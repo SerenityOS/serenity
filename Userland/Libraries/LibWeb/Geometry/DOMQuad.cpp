@@ -9,6 +9,8 @@
 
 namespace Web::Geometry {
 
+JS_DEFINE_ALLOCATOR(DOMQuad);
+
 JS::NonnullGCPtr<DOMQuad> DOMQuad::construct_impl(JS::Realm& realm, DOMPointInit const& p1, DOMPointInit const& p2, DOMPointInit const& p3, DOMPointInit const& p4)
 {
     return realm.heap().allocate<DOMQuad>(realm, realm, p1, p2, p3, p4);

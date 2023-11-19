@@ -14,6 +14,8 @@
 
 namespace Web::WebAssembly {
 
+JS_DEFINE_ALLOCATOR(Memory);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Memory>> Memory::construct_impl(JS::Realm& realm, MemoryDescriptor& descriptor)
 {
     auto& vm = realm.vm();

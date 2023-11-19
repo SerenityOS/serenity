@@ -23,6 +23,8 @@
 
 namespace Web::DOMParsing {
 
+JS_DEFINE_ALLOCATOR(XMLSerializer);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<XMLSerializer>> XMLSerializer::construct_impl(JS::Realm& realm)
 {
     return realm.heap().allocate<XMLSerializer>(realm, realm);

@@ -14,6 +14,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(NavigationTransition);
+
 JS::NonnullGCPtr<NavigationTransition> NavigationTransition::create(JS::Realm& realm, Bindings::NavigationType navigation_type, JS::NonnullGCPtr<NavigationHistoryEntry> from_entry, JS::GCPtr<JS::Promise> finished_promise)
 {
     return realm.heap().allocate<NavigationTransition>(realm, realm, navigation_type, from_entry, finished_promise);

@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(MimeType);
+
 MimeType::MimeType(JS::Realm& realm, String type)
     : Bindings::PlatformObject(realm)
     , m_type(move(type))

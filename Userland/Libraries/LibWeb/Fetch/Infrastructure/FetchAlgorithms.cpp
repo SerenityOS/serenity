@@ -10,6 +10,8 @@
 
 namespace Web::Fetch::Infrastructure {
 
+JS_DEFINE_ALLOCATOR(FetchAlgorithms);
+
 JS::NonnullGCPtr<FetchAlgorithms> FetchAlgorithms::create(JS::VM& vm, Input input)
 {
     auto process_request_body_chunk_length = JS::create_heap_function(vm.heap(), move(input.process_request_body_chunk_length));

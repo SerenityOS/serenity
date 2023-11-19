@@ -21,6 +21,7 @@ ErrorOr<Vector<QueryParam>> url_decode(StringView);
 
 class URLSearchParams : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URLSearchParams, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(URLSearchParams);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> create(JS::Realm&, Vector<QueryParam> list);

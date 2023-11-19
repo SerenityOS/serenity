@@ -14,6 +14,7 @@ namespace Web::SVG {
 // https://svgwg.org/svg2-draft/text.html#InterfaceSVGTextElement
 class SVGTextElement : public SVGTextPositioningElement {
     WEB_PLATFORM_OBJECT(SVGTextElement, SVGTextPositioningElement);
+    JS_DECLARE_ALLOCATOR(SVGTextElement);
 
 public:
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;

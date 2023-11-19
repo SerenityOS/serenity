@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class HTMLTimeElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLTimeElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLTimeElement);
 
 public:
     virtual ~HTMLTimeElement() override;

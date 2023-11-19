@@ -50,6 +50,7 @@ class Window final
     , public WindowOrWorkerGlobalScopeMixin
     , public Bindings::WindowGlobalMixin {
     WEB_PLATFORM_OBJECT(Window, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(Window);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Window> create(JS::Realm&);

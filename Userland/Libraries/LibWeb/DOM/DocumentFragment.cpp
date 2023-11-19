@@ -9,6 +9,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(DocumentFragment);
+
 DocumentFragment::DocumentFragment(Document& document)
     : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
 {

@@ -12,6 +12,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(PluginArray);
+
 PluginArray::PluginArray(JS::Realm& realm)
     : Bindings::LegacyPlatformObject(realm)
 {

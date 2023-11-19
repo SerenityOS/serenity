@@ -20,6 +20,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(HTMLVideoElement);
+
 HTMLVideoElement::HTMLVideoElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLMediaElement(document, move(qualified_name))
 {

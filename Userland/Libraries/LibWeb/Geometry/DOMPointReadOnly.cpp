@@ -12,6 +12,8 @@
 
 namespace Web::Geometry {
 
+JS_DEFINE_ALLOCATOR(DOMPointReadOnly);
+
 JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::construct_impl(JS::Realm& realm, double x, double y, double z, double w)
 {
     return realm.heap().allocate<DOMPointReadOnly>(realm, realm, x, y, z, w);

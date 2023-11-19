@@ -14,6 +14,7 @@ namespace Web::DOM {
 // https://dom.spec.whatwg.org/#mutationrecord
 class MutationRecord : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MutationRecord, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(MutationRecord);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MutationRecord> create(JS::Realm&, FlyString const& type, Node const& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, Optional<String> const& attribute_name, Optional<String> const& attribute_namespace, Optional<String> const& old_value);

@@ -46,6 +46,7 @@ struct TargetSnapshotParams {
 // https://html.spec.whatwg.org/multipage/document-sequences.html#navigable
 class Navigable : public JS::Cell {
     JS_CELL(Navigable, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Navigable);
 
 public:
     virtual ~Navigable() override;

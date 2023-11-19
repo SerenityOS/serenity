@@ -9,6 +9,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(PromiseRejectionEvent);
+
 JS::NonnullGCPtr<PromiseRejectionEvent> PromiseRejectionEvent::create(JS::Realm& realm, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
 {
     return realm.heap().allocate<PromiseRejectionEvent>(realm, realm, event_name, event_init);

@@ -29,6 +29,7 @@ struct MutationObserverInit {
 // https://dom.spec.whatwg.org/#mutationobserver
 class MutationObserver final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MutationObserver, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(MutationObserver);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<MutationObserver>> construct_impl(JS::Realm&, JS::GCPtr<WebIDL::CallbackType>);

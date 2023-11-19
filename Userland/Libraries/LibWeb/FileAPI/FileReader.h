@@ -17,6 +17,7 @@ namespace Web::FileAPI {
 // https://w3c.github.io/FileAPI/#dfn-filereader
 class FileReader : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(FileReader, EventTarget);
+    JS_DECLARE_ALLOCATOR(FileReader);
 
 public:
     using Result = Variant<Empty, String, JS::Handle<JS::ArrayBuffer>>;

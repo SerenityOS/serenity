@@ -44,6 +44,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(HTMLParser);
+
 static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln_if(HTML_PARSER_DEBUG, "Parse error! {}", location);

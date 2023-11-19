@@ -18,6 +18,7 @@ namespace Web::DOM {
 
 class Position final : public JS::Cell {
     JS_CELL(Position, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Position);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Position> create(JS::Realm& realm, JS::NonnullGCPtr<Node> node, unsigned offset)

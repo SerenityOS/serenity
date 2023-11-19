@@ -25,6 +25,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(Range);
+
 HashTable<Range*>& Range::live_ranges()
 {
     static HashTable<Range*> ranges;

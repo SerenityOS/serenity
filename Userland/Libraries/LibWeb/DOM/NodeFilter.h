@@ -13,6 +13,7 @@ namespace Web::DOM {
 
 class NodeFilter final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(NodeFilter, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(NodeFilter);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<NodeFilter> create(JS::Realm&, WebIDL::CallbackType&);

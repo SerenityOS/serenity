@@ -18,6 +18,7 @@ namespace Web::CSS {
 // https://www.w3.org/TR/cssom-1/#the-medialist-interface
 class MediaList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(MediaList, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(MediaList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MediaList> create(JS::Realm&, Vector<NonnullRefPtr<MediaQuery>>&&);

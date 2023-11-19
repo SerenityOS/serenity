@@ -26,6 +26,7 @@ struct MouseEventInit : public EventModifierInit {
 
 class MouseEvent : public UIEvent {
     WEB_PLATFORM_OBJECT(MouseEvent, UIEvent);
+    JS_DECLARE_ALLOCATOR(MouseEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MouseEvent> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& = {}, double page_x = 0, double page_y = 0, double offset_x = 0, double offset_y = 0, unsigned modifiers = 0);

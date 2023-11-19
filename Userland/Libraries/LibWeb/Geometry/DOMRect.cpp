@@ -10,6 +10,8 @@
 
 namespace Web::Geometry {
 
+JS_DEFINE_ALLOCATOR(DOMRect);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRect>> DOMRect::construct_impl(JS::Realm& realm, double x, double y, double width, double height)
 {
     return create(realm, Gfx::FloatRect { x, y, width, height });

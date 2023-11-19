@@ -15,6 +15,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Worker);
+
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
 Worker::Worker(String const& script_url, WorkerOptions const options, DOM::Document& document)
     : DOM::EventTarget(document.realm())

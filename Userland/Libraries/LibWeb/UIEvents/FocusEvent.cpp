@@ -9,6 +9,8 @@
 
 namespace Web::UIEvents {
 
+JS_DEFINE_ALLOCATOR(FocusEvent);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<FocusEvent>> FocusEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, FocusEventInit const& event_init)
 {
     return realm.heap().allocate<FocusEvent>(realm, realm, event_name, event_init);

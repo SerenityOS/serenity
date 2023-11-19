@@ -19,6 +19,7 @@ struct PerformanceMarkOptions {
 // https://w3c.github.io/user-timing/#dom-performancemark
 class PerformanceMark final : public PerformanceTimeline::PerformanceEntry {
     WEB_PLATFORM_OBJECT(PerformanceMark, PerformanceTimeline::PerformanceEntry);
+    JS_DECLARE_ALLOCATOR(PerformanceMark);
 
 public:
     virtual ~PerformanceMark();

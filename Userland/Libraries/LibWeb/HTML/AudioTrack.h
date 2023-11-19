@@ -15,6 +15,7 @@ namespace Web::HTML {
 
 class AudioTrack final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(AudioTrack, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(AudioTrack);
 
 public:
     virtual ~AudioTrack() override;

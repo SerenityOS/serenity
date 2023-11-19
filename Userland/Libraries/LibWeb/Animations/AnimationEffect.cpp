@@ -12,6 +12,8 @@
 
 namespace Web::Animations {
 
+JS_DEFINE_ALLOCATOR(AnimationEffect);
+
 JS::NonnullGCPtr<AnimationEffect> AnimationEffect::create(JS::Realm& realm)
 {
     return realm.heap().allocate<AnimationEffect>(realm, realm);
