@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(IteratorConstructor);
+
 // 3.1.1.1 The Iterator Constructor, https://tc39.es/proposal-iterator-helpers/#sec-iterator-constructor
 IteratorConstructor::IteratorConstructor(Realm& realm)
     : Base(realm.vm().names.Iterator.as_string(), realm.intrinsics().function_prototype())

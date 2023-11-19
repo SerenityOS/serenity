@@ -13,6 +13,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ProxyConstructor);
+
 // 10.5.14 ProxyCreate ( target, handler ), https://tc39.es/ecma262/#sec-proxycreate
 static ThrowCompletionOr<ProxyObject*> proxy_create(VM& vm, Value target, Value handler)
 {

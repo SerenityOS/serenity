@@ -18,6 +18,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(RelativeTimeFormatConstructor);
+
 // 17.1 The Intl.RelativeTimeFormat Constructor, https://tc39.es/ecma402/#sec-intl-relativetimeformat-constructor
 RelativeTimeFormatConstructor::RelativeTimeFormatConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.RelativeTimeFormat.as_string(), realm.intrinsics().function_prototype())

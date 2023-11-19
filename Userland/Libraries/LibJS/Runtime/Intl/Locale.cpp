@@ -14,6 +14,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(Locale);
+
 NonnullGCPtr<Locale> Locale::create(Realm& realm, ::Locale::LocaleID locale_id)
 {
     auto locale = realm.heap().allocate<Locale>(realm, realm.intrinsics().intl_locale_prototype());

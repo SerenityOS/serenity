@@ -9,6 +9,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(RegExpStringIterator);
+
 // 22.2.9.1 CreateRegExpStringIterator ( R, S, global, fullUnicode ), https://tc39.es/ecma262/#sec-createregexpstringiterator
 NonnullGCPtr<RegExpStringIterator> RegExpStringIterator::create(Realm& realm, Object& regexp_object, Utf16String string, bool global, bool unicode)
 {

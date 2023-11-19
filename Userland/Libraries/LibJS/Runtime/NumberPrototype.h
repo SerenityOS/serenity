@@ -12,6 +12,7 @@ namespace JS {
 
 class NumberPrototype final : public NumberObject {
     JS_OBJECT(NumberPrototype, NumberObject);
+    JS_DECLARE_ALLOCATOR(NumberPrototype);
 
 public:
     virtual void initialize(Realm&) override;

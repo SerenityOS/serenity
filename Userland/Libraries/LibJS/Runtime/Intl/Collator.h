@@ -16,6 +16,7 @@ namespace JS::Intl {
 
 class Collator final : public Object {
     JS_OBJECT(Collator, Object);
+    JS_DECLARE_ALLOCATOR(Collator);
 
 public:
     enum class Usage {

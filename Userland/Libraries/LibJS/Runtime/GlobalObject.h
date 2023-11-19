@@ -15,6 +15,7 @@ namespace JS {
 
 class GlobalObject : public Object {
     JS_OBJECT(GlobalObject, Object);
+    JS_DECLARE_ALLOCATOR(GlobalObject);
 
     friend class Intrinsics;
 

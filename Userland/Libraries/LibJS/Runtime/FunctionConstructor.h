@@ -13,6 +13,7 @@ namespace JS {
 
 class FunctionConstructor final : public NativeFunction {
     JS_OBJECT(FunctionConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(FunctionConstructor);
 
 public:
     static ThrowCompletionOr<ECMAScriptFunctionObject*> create_dynamic_function(VM&, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedVector<Value> const& args);

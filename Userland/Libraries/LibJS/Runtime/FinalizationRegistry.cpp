@@ -9,6 +9,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(FinalizationRegistry);
+
 FinalizationRegistry::FinalizationRegistry(Realm& realm, JobCallback cleanup_callback, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
     , WeakContainer(heap())

@@ -19,6 +19,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(PrimitiveString);
+
 PrimitiveString::PrimitiveString(PrimitiveString& lhs, PrimitiveString& rhs)
     : m_is_rope(true)
     , m_lhs(&lhs)

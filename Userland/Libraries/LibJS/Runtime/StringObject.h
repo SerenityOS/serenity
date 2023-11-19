@@ -12,6 +12,7 @@ namespace JS {
 
 class StringObject : public Object {
     JS_OBJECT(StringObject, Object);
+    JS_DECLARE_ALLOCATOR(StringObject);
 
 public:
     [[nodiscard]] static NonnullGCPtr<StringObject> create(Realm&, PrimitiveString&, Object& prototype);

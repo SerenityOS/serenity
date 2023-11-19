@@ -12,6 +12,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ConsoleObject);
+
 ConsoleObject::ConsoleObject(Realm& realm)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
     , m_console(make<Console>(realm))

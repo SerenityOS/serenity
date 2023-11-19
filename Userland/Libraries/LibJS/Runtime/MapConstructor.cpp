@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(MapConstructor);
+
 MapConstructor::MapConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.Map.as_string(), realm.intrinsics().function_prototype())
 {

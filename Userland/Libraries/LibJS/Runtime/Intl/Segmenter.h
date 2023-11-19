@@ -14,6 +14,7 @@ namespace JS::Intl {
 
 class Segmenter final : public Object {
     JS_OBJECT(Segmenter, Object);
+    JS_DECLARE_ALLOCATOR(Segmenter);
 
 public:
     enum class SegmenterGranularity {

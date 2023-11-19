@@ -19,6 +19,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Promise);
+
 // 27.2.4.7.1 PromiseResolve ( C, x ), https://tc39.es/ecma262/#sec-promise-resolve
 ThrowCompletionOr<Object*> promise_resolve(VM& vm, Object& constructor, Value value)
 {

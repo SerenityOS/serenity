@@ -10,6 +10,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ArgumentsObject);
+
 ArgumentsObject::ArgumentsObject(Realm& realm, Environment& environment)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype(), MayInterfereWithIndexedPropertyAccess::Yes)
     , m_environment(environment)

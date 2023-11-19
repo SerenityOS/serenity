@@ -12,6 +12,7 @@ namespace JS::Intl {
 
 class RelativeTimeFormatConstructor final : public NativeFunction {
     JS_OBJECT(RelativeTimeFormatConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(RelativeTimeFormatConstructor);
 
 public:
     virtual void initialize(Realm&) override;

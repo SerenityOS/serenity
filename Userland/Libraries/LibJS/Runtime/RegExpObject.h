@@ -25,6 +25,7 @@ ThrowCompletionOr<DeprecatedString> parse_regex_pattern(VM& vm, StringView patte
 
 class RegExpObject : public Object {
     JS_OBJECT(RegExpObject, Object);
+    JS_DECLARE_ALLOCATOR(RegExpObject);
 
 public:
     // JS regexps are all 'global' by default as per our definition, but the "global" flag enables "stateful".

@@ -20,6 +20,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(Temporal);
+
 // 1 The Temporal Object, https://tc39.es/proposal-temporal/#sec-temporal-objects
 Temporal::Temporal(Realm& realm)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())

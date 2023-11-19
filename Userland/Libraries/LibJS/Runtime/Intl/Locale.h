@@ -20,6 +20,7 @@ namespace JS::Intl {
 
 class Locale final : public Object {
     JS_OBJECT(Locale, Object);
+    JS_DECLARE_ALLOCATOR(Locale);
 
 public:
     static NonnullGCPtr<Locale> create(Realm&, ::Locale::LocaleID);

@@ -11,6 +11,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(CollatorCompareFunction);
+
 NonnullGCPtr<CollatorCompareFunction> CollatorCompareFunction::create(Realm& realm, Collator& collator)
 {
     return realm.heap().allocate<CollatorCompareFunction>(realm, realm, collator);

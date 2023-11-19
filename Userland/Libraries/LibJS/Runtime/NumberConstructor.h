@@ -12,6 +12,7 @@ namespace JS {
 
 class NumberConstructor final : public NativeFunction {
     JS_OBJECT(NumberConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(NumberConstructor);
 
 public:
     virtual void initialize(Realm&) override;

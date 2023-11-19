@@ -12,6 +12,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AsyncGeneratorPrototype);
+
 // 27.6.1 Properties of the AsyncGenerator Prototype Object, https://tc39.es/ecma262/#sec-properties-of-asyncgenerator-prototype
 AsyncGeneratorPrototype::AsyncGeneratorPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().async_iterator_prototype())

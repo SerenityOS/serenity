@@ -13,6 +13,7 @@ namespace JS {
 
 class WrappedFunction final : public FunctionObject {
     JS_OBJECT(WrappedFunction, FunctionObject);
+    JS_DECLARE_ALLOCATOR(WrappedFunction);
 
 public:
     static ThrowCompletionOr<NonnullGCPtr<WrappedFunction>> create(Realm&, Realm& caller_realm, FunctionObject& target_function);

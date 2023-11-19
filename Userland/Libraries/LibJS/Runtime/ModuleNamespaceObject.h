@@ -14,6 +14,7 @@ namespace JS {
 
 class ModuleNamespaceObject final : public Object {
     JS_OBJECT(ModuleNamespaceObject, Object);
+    JS_DECLARE_ALLOCATOR(ModuleNamespaceObject);
 
 public:
     // 10.4.6 Module Namespace Exotic Objects, https://tc39.es/ecma262/#sec-module-namespace-exotic-objects

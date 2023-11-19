@@ -15,6 +15,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(BigIntConstructor);
+
 static const Crypto::SignedBigInteger BIGINT_ONE { 1 };
 
 BigIntConstructor::BigIntConstructor(Realm& realm)

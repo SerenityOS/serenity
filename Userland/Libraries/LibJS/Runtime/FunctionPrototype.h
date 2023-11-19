@@ -12,6 +12,7 @@ namespace JS {
 
 class FunctionPrototype final : public FunctionObject {
     JS_OBJECT(FunctionPrototype, FunctionObject);
+    JS_DECLARE_ALLOCATOR(FunctionPrototype);
 
 public:
     virtual void initialize(Realm&) override;

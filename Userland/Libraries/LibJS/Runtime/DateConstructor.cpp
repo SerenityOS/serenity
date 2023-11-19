@@ -23,6 +23,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(DateConstructor);
+
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
 static double parse_simplified_iso8601(DeprecatedString const& iso_8601)
 {

@@ -13,6 +13,7 @@
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
@@ -21,6 +22,7 @@ namespace JS {
 
 class PrimitiveString final : public Cell {
     JS_CELL(PrimitiveString, Cell);
+    JS_DECLARE_ALLOCATOR(PrimitiveString);
 
 public:
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, Utf16String);

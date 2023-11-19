@@ -12,6 +12,7 @@ namespace JS {
 
 class JSONObject final : public Object {
     JS_OBJECT(JSONObject, Object);
+    JS_DECLARE_ALLOCATOR(JSONObject);
 
 public:
     virtual void initialize(Realm&) override;

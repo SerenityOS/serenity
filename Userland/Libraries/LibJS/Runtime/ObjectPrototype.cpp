@@ -21,6 +21,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ObjectPrototype);
+
 ObjectPrototype::ObjectPrototype(Realm& realm)
     : Object(Object::ConstructWithoutPrototypeTag::Tag, realm)
 {

@@ -21,6 +21,8 @@
 
 namespace JS::Test262 {
 
+JS_DEFINE_ALLOCATOR($262Object);
+
 $262Object::$262Object(Realm& realm)
     : Object(Object::ConstructWithoutPrototypeTag::Tag, realm)
 {

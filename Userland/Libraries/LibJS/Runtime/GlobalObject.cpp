@@ -87,6 +87,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(GlobalObject);
+
 GlobalObject::GlobalObject(Realm& realm)
     : Object(GlobalObjectTag::Tag, realm)
 {

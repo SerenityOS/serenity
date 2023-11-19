@@ -17,6 +17,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(TimeZonePrototype);
+
 // 11.4 Properties of the Temporal.TimeZone Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-timezone-prototype-object
 TimeZonePrototype::TimeZonePrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())

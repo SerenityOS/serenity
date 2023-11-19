@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DECLARE_ALLOCATOR(AsyncFromSyncIteratorPrototype);
+
 AsyncFromSyncIteratorPrototype::AsyncFromSyncIteratorPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().async_iterator_prototype())
 {

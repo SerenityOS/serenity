@@ -16,6 +16,7 @@ namespace JS::Intl {
 
 class DisplayNames final : public Object {
     JS_OBJECT(DisplayNames, Object);
+    JS_DECLARE_ALLOCATOR(DisplayNames);
 
     enum class Type {
         Invalid,

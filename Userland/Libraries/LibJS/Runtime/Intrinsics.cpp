@@ -133,6 +133,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Intrinsics);
+
 static void initialize_constructor(VM& vm, PropertyKey const& property_key, Object& constructor, Object* prototype, PropertyAttributes constructor_property_attributes = Attribute::Writable | Attribute::Configurable)
 {
     constructor.define_direct_property(vm.names.name, PrimitiveString::create(vm, property_key.as_string()), Attribute::Configurable);

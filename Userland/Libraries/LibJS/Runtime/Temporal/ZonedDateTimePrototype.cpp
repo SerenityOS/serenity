@@ -20,6 +20,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(ZonedDateTimePrototype);
+
 // 6.3 Properties of the Temporal.ZonedDateTime Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-zoneddatetime-prototype-object
 ZonedDateTimePrototype::ZonedDateTimePrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())

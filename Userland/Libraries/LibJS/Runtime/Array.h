@@ -21,6 +21,7 @@ namespace JS {
 
 class Array : public Object {
     JS_OBJECT(Array, Object);
+    JS_DECLARE_ALLOCATOR(Array);
 
 public:
     static ThrowCompletionOr<NonnullGCPtr<Array>> create(Realm&, u64 length, Object* prototype = nullptr);

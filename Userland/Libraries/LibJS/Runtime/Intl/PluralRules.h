@@ -17,6 +17,7 @@ namespace JS::Intl {
 
 class PluralRules final : public NumberFormatBase {
     JS_OBJECT(PluralRules, NumberFormatBase);
+    JS_DECLARE_ALLOCATOR(PluralRules);
 
 public:
     virtual ~PluralRules() override = default;

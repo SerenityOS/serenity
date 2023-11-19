@@ -12,6 +12,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(WeakRefConstructor);
+
 WeakRefConstructor::WeakRefConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.WeakRef.as_string(), realm.intrinsics().function_prototype())
 {

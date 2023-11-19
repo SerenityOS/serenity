@@ -17,6 +17,7 @@ class WeakSet final
     : public Object
     , public WeakContainer {
     JS_OBJECT(WeakSet, Object);
+    JS_DECLARE_ALLOCATOR(WeakSet);
 
 public:
     static NonnullGCPtr<WeakSet> create(Realm&);

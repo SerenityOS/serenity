@@ -42,6 +42,7 @@ struct GraphLoadingState {
 // 16.2.1.5 Cyclic Module Records, https://tc39.es/ecma262/#cyclic-module-record
 class CyclicModule : public Module {
     JS_CELL(CyclicModule, Module);
+    JS_DECLARE_ALLOCATOR(CyclicModule);
 
 public:
     // Note: Do not call these methods directly unless you are HostResolveImportedModule.

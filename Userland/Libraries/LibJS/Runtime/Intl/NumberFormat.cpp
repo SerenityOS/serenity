@@ -22,6 +22,9 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(NumberFormatBase);
+JS_DEFINE_ALLOCATOR(NumberFormat);
+
 NumberFormatBase::NumberFormatBase(Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
 {

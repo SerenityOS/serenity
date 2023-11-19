@@ -38,6 +38,7 @@ class Shape final
     : public Cell
     , public Weakable<Shape> {
     JS_CELL(Shape, Cell);
+    JS_DECLARE_ALLOCATOR(Shape);
 
 public:
     virtual ~Shape() override = default;

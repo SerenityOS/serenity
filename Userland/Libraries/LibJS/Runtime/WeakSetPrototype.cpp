@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(WeakSetPrototype);
+
 WeakSetPrototype::WeakSetPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())
 {

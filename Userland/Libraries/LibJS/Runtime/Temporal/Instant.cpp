@@ -22,6 +22,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(Instant);
+
 // 8 Temporal.Instant Objects, https://tc39.es/proposal-temporal/#sec-temporal-instant-objects
 Instant::Instant(BigInt const& nanoseconds, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(DataViewPrototype);
+
 DataViewPrototype::DataViewPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())
 {

@@ -20,6 +20,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(ZonedDateTime);
+
 // 6 Temporal.ZonedDateTime Objects, https://tc39.es/proposal-temporal/#sec-temporal-zoneddatetime-objects
 ZonedDateTime::ZonedDateTime(BigInt const& nanoseconds, Object& time_zone, Object& calendar, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

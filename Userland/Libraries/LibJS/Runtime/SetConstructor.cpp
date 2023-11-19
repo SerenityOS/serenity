@@ -13,6 +13,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(SetConstructor);
+
 SetConstructor::SetConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.Set.as_string(), realm.intrinsics().function_prototype())
 {

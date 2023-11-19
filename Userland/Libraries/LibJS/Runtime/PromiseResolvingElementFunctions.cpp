@@ -13,6 +13,13 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(RemainingElements);
+JS_DEFINE_ALLOCATOR(PromiseValueList);
+JS_DEFINE_ALLOCATOR(PromiseResolvingElementFunction);
+JS_DEFINE_ALLOCATOR(PromiseAllResolveElementFunction);
+JS_DEFINE_ALLOCATOR(PromiseAllSettledRejectElementFunction);
+JS_DEFINE_ALLOCATOR(PromiseAnyRejectElementFunction);
+
 void PromiseValueList::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);

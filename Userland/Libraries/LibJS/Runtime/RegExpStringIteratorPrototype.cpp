@@ -12,6 +12,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(RegExpStringIteratorPrototype);
+
 RegExpStringIteratorPrototype::RegExpStringIteratorPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().iterator_prototype())
 {

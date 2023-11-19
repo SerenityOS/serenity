@@ -16,6 +16,7 @@ namespace JS {
 
 class AsyncFunctionDriverWrapper final : public Promise {
     JS_OBJECT(AsyncFunctionDriverWrapper, Promise);
+    JS_DECLARE_ALLOCATOR(AsyncFunctionDriverWrapper);
 
 public:
     enum class IsInitialExecution {

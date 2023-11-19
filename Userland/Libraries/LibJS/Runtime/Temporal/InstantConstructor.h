@@ -12,6 +12,7 @@ namespace JS::Temporal {
 
 class InstantConstructor final : public NativeFunction {
     JS_OBJECT(InstantConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(InstantConstructor);
 
 public:
     virtual void initialize(Realm&) override;

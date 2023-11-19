@@ -23,6 +23,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AtomicsObject);
+
 // 25.4.2.1 ValidateIntegerTypedArray ( typedArray [ , waitable ] ), https://tc39.es/ecma262/#sec-validateintegertypedarray
 static ThrowCompletionOr<ArrayBuffer*> validate_integer_typed_array(VM& vm, TypedArrayBase& typed_array, bool waitable = false)
 {

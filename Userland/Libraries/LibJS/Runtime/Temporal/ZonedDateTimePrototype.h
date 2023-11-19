@@ -13,6 +13,7 @@ namespace JS::Temporal {
 
 class ZonedDateTimePrototype final : public PrototypeObject<ZonedDateTimePrototype, ZonedDateTime> {
     JS_PROTOTYPE_OBJECT(ZonedDateTimePrototype, ZonedDateTime, Temporal.ZonedDateTime);
+    JS_DECLARE_ALLOCATOR(ZonedDateTimePrototype);
 
 public:
     virtual void initialize(Realm&) override;

@@ -16,6 +16,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(SourceTextModule);
+
 // 2.7 Static Semantics: AssertClauseToAssertions, https://tc39.es/proposal-import-assertions/#sec-assert-clause-to-assertions
 static Vector<ModuleRequest::Assertion> assert_clause_to_assertions(Vector<ModuleRequest::Assertion> const& source_assertions, Vector<DeprecatedString> const& supported_import_assertions)
 {

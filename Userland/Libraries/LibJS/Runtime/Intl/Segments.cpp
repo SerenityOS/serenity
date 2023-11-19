@@ -10,6 +10,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(Segments);
+
 // 18.5.1 CreateSegmentsObject ( segmenter, string ), https://tc39.es/ecma402/#sec-createsegmentsobject
 NonnullGCPtr<Segments> Segments::create(Realm& realm, Segmenter& segmenter, Utf16String string)
 {

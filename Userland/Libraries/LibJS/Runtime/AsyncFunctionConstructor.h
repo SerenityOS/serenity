@@ -12,6 +12,7 @@ namespace JS {
 
 class AsyncFunctionConstructor final : public NativeFunction {
     JS_OBJECT(AsyncFunctionConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(AsyncFunctionConstructor);
 
 public:
     virtual void initialize(Realm&) override;

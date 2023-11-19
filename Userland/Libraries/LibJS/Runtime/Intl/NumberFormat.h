@@ -19,6 +19,7 @@ namespace JS::Intl {
 
 class NumberFormatBase : public Object {
     JS_OBJECT(NumberFormatBase, Object);
+    JS_DECLARE_ALLOCATOR(NumberFormatBase);
 
 public:
     enum class RoundingType {
@@ -129,6 +130,7 @@ private:
 
 class NumberFormat final : public NumberFormatBase {
     JS_OBJECT(NumberFormat, NumberFormatBase);
+    JS_DECLARE_ALLOCATOR(NumberFormat);
 
 public:
     enum class Style {

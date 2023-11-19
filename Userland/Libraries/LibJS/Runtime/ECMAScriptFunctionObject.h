@@ -24,6 +24,7 @@ void async_function_start(VM&, PromiseCapability const&, T const& async_function
 // 10.2 ECMAScript Function Objects, https://tc39.es/ecma262/#sec-ecmascript-function-objects
 class ECMAScriptFunctionObject final : public FunctionObject {
     JS_OBJECT(ECMAScriptFunctionObject, FunctionObject);
+    JS_DECLARE_ALLOCATOR(ECMAScriptFunctionObject);
 
 public:
     enum class ConstructorKind : u8 {

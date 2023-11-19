@@ -20,6 +20,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(DurationFormat);
+
 // 1 DurationFormat Objects, https://tc39.es/proposal-intl-duration-format/#durationformat-objects
 DurationFormat::DurationFormat(Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

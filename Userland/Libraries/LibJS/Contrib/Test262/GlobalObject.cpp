@@ -14,6 +14,8 @@
 
 namespace JS::Test262 {
 
+JS_DEFINE_ALLOCATOR(GlobalObject);
+
 void GlobalObject::initialize(Realm& realm)
 {
     Base::initialize(realm);

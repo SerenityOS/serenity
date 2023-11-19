@@ -14,6 +14,7 @@ namespace JS {
 
 class ErrorPrototype final : public PrototypeObject<ErrorPrototype, Error> {
     JS_PROTOTYPE_OBJECT(ErrorPrototype, Error, Error);
+    JS_DECLARE_ALLOCATOR(ErrorPrototype);
 
 public:
     virtual void initialize(Realm&) override;

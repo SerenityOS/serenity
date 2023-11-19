@@ -19,6 +19,7 @@ namespace JS::Intl {
 
 class RelativeTimeFormat final : public Object {
     JS_OBJECT(RelativeTimeFormat, Object);
+    JS_DECLARE_ALLOCATOR(RelativeTimeFormat);
 
 public:
     enum class Numeric {

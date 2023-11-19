@@ -14,6 +14,7 @@ namespace JS {
 
 class ProxyObject final : public FunctionObject {
     JS_OBJECT(ProxyObject, FunctionObject);
+    JS_DECLARE_ALLOCATOR(ProxyObject);
 
 public:
     static NonnullGCPtr<ProxyObject> create(Realm&, Object& target, Object& handler);

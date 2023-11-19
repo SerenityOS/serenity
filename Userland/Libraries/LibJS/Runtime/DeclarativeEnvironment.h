@@ -17,6 +17,7 @@ namespace JS {
 
 class DeclarativeEnvironment : public Environment {
     JS_ENVIRONMENT(DeclarativeEnvironment, Environment);
+    JS_DECLARE_ALLOCATOR(DeclarativeEnvironment);
 
     struct Binding {
         static FlatPtr value_offset() { return OFFSET_OF(Binding, value); }

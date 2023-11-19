@@ -15,6 +15,7 @@ namespace JS::Temporal {
 
 class TimeZone final : public Object {
     JS_OBJECT(TimeZone, Object);
+    JS_DECLARE_ALLOCATOR(TimeZone);
 
 public:
     // Needs to store values in the range -8.64 * 10^13 to 8.64 * 10^13

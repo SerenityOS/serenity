@@ -12,6 +12,7 @@ namespace JS {
 
 class DataViewConstructor final : public NativeFunction {
     JS_OBJECT(DataViewConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(DataViewConstructor);
 
 public:
     virtual void initialize(Realm&) override;

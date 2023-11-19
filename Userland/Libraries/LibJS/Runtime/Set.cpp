@@ -8,6 +8,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Set);
+
 NonnullGCPtr<Set> Set::create(Realm& realm)
 {
     return realm.heap().allocate<Set>(realm, realm.intrinsics().set_prototype());

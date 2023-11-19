@@ -12,6 +12,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(DurationFormatPrototype);
+
 // 1.4 Properties of the Intl.DurationFormat Prototype Object, https://tc39.es/proposal-intl-duration-format/#sec-properties-of-intl-durationformat-prototype-object
 DurationFormatPrototype::DurationFormatPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())

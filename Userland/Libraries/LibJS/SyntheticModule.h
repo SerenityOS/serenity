@@ -13,6 +13,7 @@ namespace JS {
 // 1.2 Synthetic Module Records, https://tc39.es/proposal-json-modules/#sec-synthetic-module-records
 class SyntheticModule final : public Module {
     JS_CELL(SyntheticModule, Module);
+    JS_DECLARE_ALLOCATOR(SyntheticModule);
 
 public:
     using EvaluationFunction = Function<ThrowCompletionOr<void>(SyntheticModule&)>;

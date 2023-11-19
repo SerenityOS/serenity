@@ -12,6 +12,7 @@ namespace JS {
 
 class SetConstructor final : public NativeFunction {
     JS_OBJECT(SetConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(SetConstructor);
 
 public:
     virtual void initialize(Realm&) override;

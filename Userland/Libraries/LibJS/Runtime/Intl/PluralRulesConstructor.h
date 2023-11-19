@@ -12,6 +12,7 @@ namespace JS::Intl {
 
 class PluralRulesConstructor final : public NativeFunction {
     JS_OBJECT(PluralRulesConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(PluralRulesConstructor);
 
 public:
     virtual void initialize(Realm&) override;

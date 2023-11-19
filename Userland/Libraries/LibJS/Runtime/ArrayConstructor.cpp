@@ -22,6 +22,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ArrayConstructor);
+
 ArrayConstructor::ArrayConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.Array.as_string(), realm.intrinsics().function_prototype())
 {

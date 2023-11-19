@@ -14,6 +14,7 @@ namespace JS::Intl {
 
 class SegmentIterator final : public Object {
     JS_OBJECT(SegmentIterator, Object);
+    JS_DECLARE_ALLOCATOR(SegmentIterator);
 
 public:
     static NonnullGCPtr<SegmentIterator> create(Realm&, Segmenter&, Utf16View const&, Segments const&);

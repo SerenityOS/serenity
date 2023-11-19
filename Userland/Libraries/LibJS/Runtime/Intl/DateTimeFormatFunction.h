@@ -14,6 +14,7 @@ namespace JS::Intl {
 
 class DateTimeFormatFunction final : public NativeFunction {
     JS_OBJECT(DateTimeFormatFunction, NativeFunction);
+    JS_DECLARE_ALLOCATOR(DateTimeFormatFunction);
 
 public:
     static NonnullGCPtr<DateTimeFormatFunction> create(Realm&, DateTimeFormat&);

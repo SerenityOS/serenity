@@ -24,6 +24,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(DateTimeFormat);
+
 static Crypto::SignedBigInteger const s_one_million_bigint { 1'000'000 };
 
 // 11 DateTimeFormat Objects, https://tc39.es/ecma402/#datetimeformat-objects

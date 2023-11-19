@@ -10,6 +10,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Shape);
+
 Shape* Shape::create_unique_clone() const
 {
     auto new_shape = heap().allocate_without_realm<Shape>(m_realm);

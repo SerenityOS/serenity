@@ -12,6 +12,7 @@ namespace JS {
 
 class DateConstructor final : public NativeFunction {
     JS_OBJECT(DateConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(DateConstructor);
 
 public:
     virtual void initialize(Realm&) override;

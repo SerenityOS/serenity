@@ -16,6 +16,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Iterator);
+
 NonnullGCPtr<Iterator> Iterator::create(Realm& realm, Object& prototype, IteratorRecord iterated)
 {
     return realm.heap().allocate<Iterator>(realm, prototype, move(iterated));

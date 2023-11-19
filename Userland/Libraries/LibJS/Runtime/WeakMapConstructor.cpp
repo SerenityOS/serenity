@@ -13,6 +13,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(WeakMapConstructor);
+
 WeakMapConstructor::WeakMapConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.WeakMap.as_string(), realm.intrinsics().function_prototype())
 {

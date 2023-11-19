@@ -8,6 +8,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(WeakRef);
+
 NonnullGCPtr<WeakRef> WeakRef::create(Realm& realm, Object& value)
 {
     return realm.heap().allocate<WeakRef>(realm, value, realm.intrinsics().weak_ref_prototype());

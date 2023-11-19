@@ -12,6 +12,7 @@ namespace JS {
 
 class GlobalEnvironment final : public Environment {
     JS_ENVIRONMENT(GlobalEnvironment, Environment);
+    JS_DECLARE_ALLOCATOR(GlobalEnvironment);
 
 public:
     virtual bool has_this_binding() const final { return true; }

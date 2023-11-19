@@ -10,6 +10,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 
 namespace JS {
 
@@ -29,6 +30,7 @@ struct PrivateName {
 
 class PrivateEnvironment : public Cell {
     JS_CELL(PrivateEnvironment, Cell);
+    JS_DECLARE_ALLOCATOR(PrivateEnvironment);
 
 public:
     PrivateName resolve_private_identifier(DeprecatedFlyString const& identifier) const;

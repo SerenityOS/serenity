@@ -21,6 +21,7 @@ class FinalizationRegistry final
     : public Object
     , public WeakContainer {
     JS_OBJECT(FinalizationRegistry, Object);
+    JS_DECLARE_ALLOCATOR(FinalizationRegistry);
 
 public:
     virtual ~FinalizationRegistry() override = default;

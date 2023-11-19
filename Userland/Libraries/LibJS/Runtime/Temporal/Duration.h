@@ -19,6 +19,7 @@ namespace JS::Temporal {
 
 class Duration final : public Object {
     JS_OBJECT(Duration, Object);
+    JS_DECLARE_ALLOCATOR(Duration);
 
 public:
     virtual ~Duration() override = default;

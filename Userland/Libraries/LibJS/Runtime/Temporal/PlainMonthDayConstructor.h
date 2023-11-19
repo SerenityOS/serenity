@@ -12,6 +12,7 @@ namespace JS::Temporal {
 
 class PlainMonthDayConstructor final : public NativeFunction {
     JS_OBJECT(PlainMonthDayConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(PlainMonthDayConstructor);
 
 public:
     virtual void initialize(Realm&) override;

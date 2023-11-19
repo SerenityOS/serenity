@@ -17,6 +17,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(BigIntPrototype);
+
 BigIntPrototype::BigIntPrototype(Realm& realm)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {

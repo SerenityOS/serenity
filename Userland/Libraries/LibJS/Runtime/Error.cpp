@@ -15,6 +15,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Error);
+
 SourceRange const& TracebackFrame::source_range() const
 {
     if (auto* unrealized = source_range_storage.get_pointer<UnrealizedSourceRange>()) {
@@ -156,6 +158,7 @@ String Error::stack_string(CompactTraceback compact) const
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                   \
+    JS_DEFINE_ALLOCATOR(ClassName);                                                                        \
     NonnullGCPtr<ClassName> ClassName::create(Realm& realm)                                                \
     {                                                                                                      \
         return realm.heap().allocate<ClassName>(realm, realm.intrinsics().snake_name##_prototype());       \

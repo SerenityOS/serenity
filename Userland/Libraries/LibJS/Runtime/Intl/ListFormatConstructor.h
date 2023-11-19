@@ -12,6 +12,7 @@ namespace JS::Intl {
 
 class ListFormatConstructor final : public NativeFunction {
     JS_OBJECT(ListFormatConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(ListFormatConstructor);
 
 public:
     virtual void initialize(Realm&) override;

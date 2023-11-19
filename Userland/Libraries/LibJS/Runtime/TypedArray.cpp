@@ -421,6 +421,9 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
 }
 
 #define JS_DEFINE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                                  \
+    JS_DEFINE_ALLOCATOR(ClassName);                                                                                         \
+    JS_DEFINE_ALLOCATOR(PrototypeName);                                                                                     \
+    JS_DEFINE_ALLOCATOR(ConstructorName);                                                                                   \
     ThrowCompletionOr<NonnullGCPtr<ClassName>> ClassName::create(Realm& realm, u32 length, FunctionObject& new_target)      \
     {                                                                                                                       \
         auto* prototype = TRY(get_prototype_from_constructor(realm.vm(), new_target, &Intrinsics::snake_name##_prototype)); \

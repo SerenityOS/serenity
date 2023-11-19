@@ -12,6 +12,7 @@ namespace JS {
 
 class BooleanPrototype final : public BooleanObject {
     JS_OBJECT(BooleanPrototype, BooleanObject);
+    JS_DECLARE_ALLOCATOR(BooleanPrototype);
 
 public:
     virtual void initialize(Realm&) override;

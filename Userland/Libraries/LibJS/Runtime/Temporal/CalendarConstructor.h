@@ -12,6 +12,7 @@ namespace JS::Temporal {
 
 class CalendarConstructor final : public NativeFunction {
     JS_OBJECT(CalendarConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(CalendarConstructor);
 
 public:
     virtual void initialize(Realm&) override;

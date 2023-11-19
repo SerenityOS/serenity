@@ -8,6 +8,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AsyncIteratorPrototype);
+
 AsyncIteratorPrototype::AsyncIteratorPrototype(Realm& realm)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {

@@ -12,6 +12,7 @@ namespace JS {
 
 class SuppressedErrorConstructor final : public NativeFunction {
     JS_OBJECT(SuppressedErrorConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(SuppressedErrorConstructor);
 
 public:
     virtual void initialize(Realm&) override;

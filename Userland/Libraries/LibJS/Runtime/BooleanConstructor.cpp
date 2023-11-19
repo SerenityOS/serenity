@@ -13,6 +13,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(BooleanConstructor);
+
 BooleanConstructor::BooleanConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.Boolean.as_string(), realm.intrinsics().function_prototype())
 {

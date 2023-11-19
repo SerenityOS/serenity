@@ -16,6 +16,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(RegExpObject);
+
 Result<regex::RegexOptions<ECMAScriptFlags>, DeprecatedString> regex_flags_from_string(StringView flags)
 {
     bool d = false, g = false, i = false, m = false, s = false, u = false, y = false, v = false;

@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(SymbolConstructor);
+
 SymbolConstructor::SymbolConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.Symbol.as_string(), realm.intrinsics().function_prototype())
 {

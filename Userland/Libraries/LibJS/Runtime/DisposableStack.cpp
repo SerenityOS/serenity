@@ -8,6 +8,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(DisposableStack);
+
 DisposableStack::DisposableStack(Vector<DisposableResource> stack, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_disposable_resource_stack(move(stack))

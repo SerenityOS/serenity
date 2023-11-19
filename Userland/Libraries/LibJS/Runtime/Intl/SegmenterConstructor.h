@@ -12,6 +12,7 @@ namespace JS::Intl {
 
 class SegmenterConstructor final : public NativeFunction {
     JS_OBJECT(SegmenterConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(SegmenterConstructor);
 
 public:
     virtual void initialize(Realm&) override;
