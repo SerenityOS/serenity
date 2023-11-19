@@ -402,7 +402,10 @@ private:
 
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
-    Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_custom_properties;
+
+    using PseudoElementCustomProperties = Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)>;
+    mutable OwnPtr<PseudoElementCustomProperties> m_pseudo_element_custom_properties;
+    PseudoElementCustomProperties& pseudo_element_custom_properties() const;
 
     Vector<FlyString> m_classes;
     Optional<Dir> m_dir;
