@@ -482,6 +482,7 @@ set(SOURCES
     Painting/BorderRadiiData.cpp
     Painting/BorderPainting.cpp
     Painting/BorderRadiusCornerClipper.cpp
+    Painting/BordersData.cpp
     Painting/ButtonPaintable.cpp
     Painting/CanvasPaintable.cpp
     Painting/CheckBoxPaintable.cpp

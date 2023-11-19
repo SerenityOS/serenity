@@ -85,7 +85,7 @@ static Color dark_color_for_inset_and_outset(Color const& color)
     return Color::from_hsv({ hsv.hue, hsv.saturation, hsv.value - dark_light_absolute_value_difference });
 }
 
-Gfx::Color border_color(BorderEdge edge, BordersData const& borders_data)
+Gfx::Color border_color(BorderEdge edge, BordersDataDevicePixels const& borders_data)
 {
     auto const& border_data = [&] {
         switch (edge) {
@@ -115,7 +115,7 @@ Gfx::Color border_color(BorderEdge edge, BordersData const& borders_data)
     return border_data.color;
 }
 
-void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const& rect, Gfx::AntiAliasingPainter::CornerRadius const& radius, Gfx::AntiAliasingPainter::CornerRadius const& opposite_radius, BordersData const& borders_data, Gfx::Path& path, bool last)
+void paint_border(RecordingPainter& painter, BorderEdge edge, DevicePixelRect const& rect, Gfx::AntiAliasingPainter::CornerRadius const& radius, Gfx::AntiAliasingPainter::CornerRadius const& opposite_radius, BordersDataDevicePixels const& borders_data, Gfx::Path& path, bool last)
 {
     auto const& border_data = [&] {
         switch (edge) {
@@ -130,13 +130,11 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
         }
     }();
 
-    CSSPixels width = border_data.width;
-    if (width <= 0)
+    if (border_data.width <= 0)
         return;
 
     auto color = border_color(edge, borders_data);
     auto border_style = border_data.line_style;
-    auto device_pixel_width = context.rounded_device_pixels(width);
 
     struct Points {
         DevicePixelPoint p1;
@@ -183,27 +181,27 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
         auto [p1, p2] = points_for_edge(edge, rect);
         switch (edge) {
         case BorderEdge::Top:
-            p1.translate_by(device_pixel_width / 2, device_pixel_width / 2);
-            p2.translate_by(-device_pixel_width / 2, device_pixel_width / 2);
+            p1.translate_by(border_data.width / 2, border_data.width / 2);
+            p2.translate_by(-border_data.width / 2, border_data.width / 2);
             break;
         case BorderEdge::Right:
-            p1.translate_by(-device_pixel_width / 2, device_pixel_width / 2);
-            p2.translate_by(-device_pixel_width / 2, -device_pixel_width / 2);
+            p1.translate_by(-border_data.width / 2, border_data.width / 2);
+            p2.translate_by(-border_data.width / 2, -border_data.width / 2);
             break;
         case BorderEdge::Bottom:
-            p1.translate_by(device_pixel_width / 2, -device_pixel_width / 2);
-            p2.translate_by(-device_pixel_width / 2, -device_pixel_width / 2);
+            p1.translate_by(border_data.width / 2, -border_data.width / 2);
+            p2.translate_by(-border_data.width / 2, -border_data.width / 2);
             break;
         case BorderEdge::Left:
-            p1.translate_by(device_pixel_width / 2, device_pixel_width / 2);
-            p2.translate_by(device_pixel_width / 2, -device_pixel_width / 2);
+            p1.translate_by(border_data.width / 2, border_data.width / 2);
+            p2.translate_by(border_data.width / 2, -border_data.width / 2);
             break;
         }
         if (border_style == CSS::LineStyle::Dotted) {
-            context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, device_pixel_width.value(), gfx_line_style);
+            painter.draw_line(p1.to_type<int>(), p2.to_type<int>(), color, border_data.width.value(), gfx_line_style);
             return;
         }
-        context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, device_pixel_width.value(), gfx_line_style);
+        painter.draw_line(p1.to_type<int>(), p2.to_type<int>(), color, border_data.width.value(), gfx_line_style);
         return;
     }
 
@@ -245,7 +243,7 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
         // If joined borders have the same color, combine them to draw together.
         if (ready_to_draw) {
             path.close_all_subpaths();
-            context.painter().fill_path({ .path = path, .color = color, .winding_rule = Gfx::Painter::WindingRule::EvenOdd });
+            painter.fill_path({ .path = path, .color = color, .winding_rule = Gfx::Painter::WindingRule::EvenOdd });
             path.clear();
         }
     };
@@ -285,10 +283,10 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
      */
     switch (edge) {
     case BorderEdge::Top: {
-        auto joined_border_width = context.enclosing_device_pixels(borders_data.left.width);
-        auto opposite_joined_border_width = context.enclosing_device_pixels(borders_data.right.width);
-        bool joined_corner_has_inner_corner = device_pixel_width < radius.vertical_radius && joined_border_width < radius.horizontal_radius;
-        bool opposite_joined_corner_has_inner_corner = device_pixel_width < opposite_radius.vertical_radius && opposite_joined_border_width < opposite_radius.horizontal_radius;
+        auto joined_border_width = borders_data.left.width;
+        auto opposite_joined_border_width = borders_data.right.width;
+        bool joined_corner_has_inner_corner = border_data.width < radius.vertical_radius && joined_border_width < radius.horizontal_radius;
+        bool opposite_joined_corner_has_inner_corner = border_data.width < opposite_radius.vertical_radius && opposite_joined_border_width < opposite_radius.horizontal_radius;
 
         Gfx::FloatPoint joined_corner_endpoint_offset;
         Gfx::FloatPoint opposite_joined_border_corner_offset;
@@ -310,11 +308,11 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
         if (joined_corner_has_inner_corner) {
             Gfx::FloatPoint midpoint = compute_midpoint(
                 radius.horizontal_radius - joined_border_width.value(),
-                radius.vertical_radius - device_pixel_width.value(),
+                radius.vertical_radius - border_data.width.value(),
                 joined_border_width.value());
             Gfx::FloatPoint inner_corner_endpoint_offset = Gfx::FloatPoint(
                 -midpoint.x(),
-                radius.vertical_radius - device_pixel_width.value() - midpoint.y());
+                radius.vertical_radius - border_data.width.value() - midpoint.y());
             points.append(Gfx::FloatPoint(rect.bottom_left().to_type<int>()) + inner_corner_endpoint_offset);
             points.append(Gfx::FloatPoint(rect.bottom_left().to_type<int>()));
         } else {
@@ -327,11 +325,11 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
         if (opposite_joined_corner_has_inner_corner) {
             Gfx::FloatPoint midpoint = compute_midpoint(
                 opposite_radius.horizontal_radius - opposite_joined_border_width.value(),
-                opposite_radius.vertical_radius - device_pixel_width.value(),
+                opposite_radius.vertical_radius - border_data.width.value(),
                 opposite_joined_border_width.value());
             Gfx::FloatPoint inner_corner_endpoint_offset = Gfx::FloatPoint(
                 midpoint.x(),
-                opposite_radius.vertical_radius - device_pixel_width.value() - midpoint.y());
+                opposite_radius.vertical_radius - border_data.width.value() - midpoint.y());
             points.append(Gfx::FloatPoint(rect.bottom_right().to_type<int>()));
             points.append(Gfx::FloatPoint(rect.bottom_right().to_type<int>()) + inner_corner_endpoint_offset);
         } else {
@@ -348,16 +346,16 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
             points,
             joined_corner_has_inner_corner,
             opposite_joined_corner_has_inner_corner,
-            Gfx::FloatSize(joined_border_width.value(), device_pixel_width.value()),
-            Gfx::FloatSize(opposite_joined_border_width.value(), device_pixel_width.value()),
+            Gfx::FloatSize(joined_border_width.value(), border_data.width.value()),
+            Gfx::FloatSize(opposite_joined_border_width.value(), border_data.width.value()),
             last || color != border_color(BorderEdge::Right, borders_data));
         break;
     }
     case BorderEdge::Right: {
-        auto joined_border_width = context.enclosing_device_pixels(borders_data.top.width);
-        auto opposite_joined_border_width = context.enclosing_device_pixels(borders_data.bottom.width);
-        bool joined_corner_has_inner_corner = device_pixel_width < radius.horizontal_radius && joined_border_width < radius.vertical_radius;
-        bool opposite_joined_corner_has_inner_corner = device_pixel_width < opposite_radius.horizontal_radius && opposite_joined_border_width < opposite_radius.vertical_radius;
+        auto joined_border_width = borders_data.top.width;
+        auto opposite_joined_border_width = borders_data.bottom.width;
+        bool joined_corner_has_inner_corner = border_data.width < radius.horizontal_radius && joined_border_width < radius.vertical_radius;
+        bool opposite_joined_corner_has_inner_corner = border_data.width < opposite_radius.horizontal_radius && opposite_joined_border_width < opposite_radius.vertical_radius;
 
         Gfx::FloatPoint joined_corner_endpoint_offset;
         Gfx::FloatPoint opposite_joined_border_corner_offset;
@@ -378,11 +376,11 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
 
         if (joined_corner_has_inner_corner) {
             auto midpoint = compute_midpoint(
-                radius.horizontal_radius - device_pixel_width.value(),
+                radius.horizontal_radius - border_data.width.value(),
                 radius.vertical_radius - joined_border_width.value(),
                 joined_border_width.value());
             Gfx::FloatPoint inner_corner = Gfx::FloatPoint(
-                -(radius.horizontal_radius - midpoint.x() - device_pixel_width.value()),
+                -(radius.horizontal_radius - midpoint.x() - border_data.width.value()),
                 -midpoint.y());
             points.append(Gfx::FloatPoint(rect.top_left().to_type<int>()) + inner_corner);
             points.append(Gfx::FloatPoint(rect.top_left().to_type<int>()));
@@ -393,11 +391,11 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
 
         if (opposite_joined_corner_has_inner_corner) {
             auto midpoint = compute_midpoint(
-                opposite_radius.horizontal_radius - device_pixel_width.value(),
+                opposite_radius.horizontal_radius - border_data.width.value(),
                 opposite_radius.vertical_radius - opposite_joined_border_width.value(),
                 opposite_joined_border_width.value());
             Gfx::FloatPoint inner_corner = Gfx::FloatPoint(
-                -(opposite_radius.horizontal_radius - midpoint.x() - device_pixel_width.value()),
+                -(opposite_radius.horizontal_radius - midpoint.x() - border_data.width.value()),
                 midpoint.y());
             points.append(Gfx::FloatPoint(rect.bottom_left().to_type<int>()));
             points.append(Gfx::FloatPoint(rect.bottom_left().to_type<int>()) + inner_corner);
@@ -413,16 +411,16 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
             points,
             joined_corner_has_inner_corner,
             opposite_joined_corner_has_inner_corner,
-            Gfx::FloatSize(device_pixel_width.value(), joined_border_width.value()),
-            Gfx::FloatSize(device_pixel_width.value(), opposite_joined_border_width.value()),
+            Gfx::FloatSize(border_data.width.value(), joined_border_width.value()),
+            Gfx::FloatSize(border_data.width.value(), opposite_joined_border_width.value()),
             last || color != border_color(BorderEdge::Bottom, borders_data));
         break;
     }
     case BorderEdge::Bottom: {
-        auto joined_border_width = context.enclosing_device_pixels(borders_data.right.width);
-        auto opposite_joined_border_width = context.enclosing_device_pixels(borders_data.left.width);
-        bool joined_corner_has_inner_corner = device_pixel_width < radius.vertical_radius && joined_border_width < radius.horizontal_radius;
-        bool opposite_joined_corner_has_inner_corner = device_pixel_width < opposite_radius.vertical_radius && opposite_joined_border_width < opposite_radius.horizontal_radius;
+        auto joined_border_width = borders_data.right.width;
+        auto opposite_joined_border_width = borders_data.left.width;
+        bool joined_corner_has_inner_corner = border_data.width < radius.vertical_radius && joined_border_width < radius.horizontal_radius;
+        bool opposite_joined_corner_has_inner_corner = border_data.width < opposite_radius.vertical_radius && opposite_joined_border_width < opposite_radius.horizontal_radius;
 
         Gfx::FloatPoint joined_corner_endpoint_offset;
         Gfx::FloatPoint opposite_joined_border_corner_offset;
@@ -444,9 +442,9 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
         if (joined_corner_has_inner_corner) {
             auto midpoint = compute_midpoint(
                 radius.horizontal_radius - joined_border_width.value(),
-                radius.vertical_radius - device_pixel_width.value(),
+                radius.vertical_radius - border_data.width.value(),
                 joined_border_width.value());
-            Gfx::FloatPoint inner_corner = Gfx::FloatPoint(midpoint.x(), -(radius.vertical_radius - midpoint.y() - device_pixel_width.value()));
+            Gfx::FloatPoint inner_corner = Gfx::FloatPoint(midpoint.x(), -(radius.vertical_radius - midpoint.y() - border_data.width.value()));
             points.append(Gfx::FloatPoint(rect.top_right().to_type<int>()) + inner_corner);
             points.append(Gfx::FloatPoint(rect.top_right().to_type<int>()));
         } else {
@@ -457,11 +455,11 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
         if (opposite_joined_corner_has_inner_corner) {
             auto midpoint = compute_midpoint(
                 opposite_radius.horizontal_radius - opposite_joined_border_width.value(),
-                opposite_radius.vertical_radius - device_pixel_width.value(),
+                opposite_radius.vertical_radius - border_data.width.value(),
                 opposite_joined_border_width.value());
             Gfx::FloatPoint inner_corner = Gfx::FloatPoint(
                 -midpoint.x(),
-                -(opposite_radius.vertical_radius - midpoint.y() - device_pixel_width.value()));
+                -(opposite_radius.vertical_radius - midpoint.y() - border_data.width.value()));
             points.append(Gfx::FloatPoint(rect.top_left().to_type<int>()));
             points.append(Gfx::FloatPoint(rect.top_left().to_type<int>()) + inner_corner);
         } else {
@@ -475,16 +473,16 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
             points,
             joined_corner_has_inner_corner,
             opposite_joined_corner_has_inner_corner,
-            Gfx::FloatSize(joined_border_width.value(), device_pixel_width.value()),
-            Gfx::FloatSize(opposite_joined_border_width.value(), device_pixel_width.value()),
+            Gfx::FloatSize(joined_border_width.value(), border_data.width.value()),
+            Gfx::FloatSize(opposite_joined_border_width.value(), border_data.width.value()),
             last || color != border_color(BorderEdge::Left, borders_data));
         break;
     }
     case BorderEdge::Left: {
-        auto joined_border_width = context.enclosing_device_pixels(borders_data.bottom.width);
-        auto opposite_joined_border_width = context.enclosing_device_pixels(borders_data.top.width);
-        bool joined_corner_has_inner_corner = device_pixel_width < radius.horizontal_radius && joined_border_width < radius.vertical_radius;
-        bool opposite_joined_corner_has_inner_corner = device_pixel_width < opposite_radius.horizontal_radius && opposite_joined_border_width < opposite_radius.vertical_radius;
+        auto joined_border_width = borders_data.bottom.width;
+        auto opposite_joined_border_width = borders_data.top.width;
+        bool joined_corner_has_inner_corner = border_data.width < radius.horizontal_radius && joined_border_width < radius.vertical_radius;
+        bool opposite_joined_corner_has_inner_corner = border_data.width < opposite_radius.horizontal_radius && opposite_joined_border_width < opposite_radius.vertical_radius;
 
         Gfx::FloatPoint joined_corner_endpoint_offset;
         Gfx::FloatPoint opposite_joined_border_corner_offset;
@@ -505,10 +503,10 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
 
         if (joined_corner_has_inner_corner) {
             auto midpoint = compute_midpoint(
-                radius.horizontal_radius - device_pixel_width.value(),
+                radius.horizontal_radius - border_data.width.value(),
                 radius.vertical_radius - joined_border_width.value(),
                 joined_border_width.value());
-            Gfx::FloatPoint inner_corner = Gfx::FloatPoint(radius.horizontal_radius - device_pixel_width.value() - midpoint.x(), midpoint.y());
+            Gfx::FloatPoint inner_corner = Gfx::FloatPoint(radius.horizontal_radius - border_data.width.value() - midpoint.x(), midpoint.y());
             points.append(Gfx::FloatPoint(rect.bottom_right().to_type<int>()) + inner_corner);
             points.append(Gfx::FloatPoint(rect.bottom_right().to_type<int>()));
         } else {
@@ -518,11 +516,11 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
 
         if (opposite_joined_corner_has_inner_corner) {
             auto midpoint = compute_midpoint(
-                opposite_radius.horizontal_radius - device_pixel_width.value(),
+                opposite_radius.horizontal_radius - border_data.width.value(),
                 opposite_radius.vertical_radius - opposite_joined_border_width.value(),
                 opposite_joined_border_width.value());
             Gfx::FloatPoint inner_corner = Gfx::FloatPoint(
-                opposite_radius.horizontal_radius - device_pixel_width.value() - midpoint.x(),
+                opposite_radius.horizontal_radius - border_data.width.value() - midpoint.x(),
                 -midpoint.y());
             points.append(Gfx::FloatPoint(rect.top_right().to_type<int>()));
             points.append(Gfx::FloatPoint(rect.top_right().to_type<int>()) + inner_corner);
@@ -537,23 +535,23 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
             points,
             joined_corner_has_inner_corner,
             opposite_joined_corner_has_inner_corner,
-            Gfx::FloatSize(device_pixel_width.value(), joined_border_width.value()),
-            Gfx::FloatSize(device_pixel_width.value(), opposite_joined_border_width.value()),
+            Gfx::FloatSize(border_data.width.value(), joined_border_width.value()),
+            Gfx::FloatSize(border_data.width.value(), opposite_joined_border_width.value()),
             last || color != border_color(BorderEdge::Top, borders_data));
         break;
     }
     }
 }
 
-void paint_all_borders(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
+void paint_all_borders(RecordingPainter& painter, DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
 {
     if (borders_data.top.width <= 0 && borders_data.right.width <= 0 && borders_data.left.width <= 0 && borders_data.bottom.width <= 0)
         return;
 
-    auto top_left = border_radii_data.top_left.as_corner(context);
-    auto top_right = border_radii_data.top_right.as_corner(context);
-    auto bottom_right = border_radii_data.bottom_right.as_corner(context);
-    auto bottom_left = border_radii_data.bottom_left.as_corner(context);
+    auto top_left = corner_radii.top_left;
+    auto top_right = corner_radii.top_right;
+    auto bottom_right = corner_radii.bottom_right;
+    auto bottom_left = corner_radii.bottom_left;
 
     // Disable border radii if the corresponding borders don't exist:
     if (borders_data.bottom.width <= 0 && borders_data.left.width <= 0)
@@ -569,24 +567,24 @@ void paint_all_borders(PaintContext& context, DevicePixelRect const& border_rect
         border_rect.x() + top_left.horizontal_radius,
         border_rect.y(),
         border_rect.width() - top_left.horizontal_radius - top_right.horizontal_radius,
-        context.enclosing_device_pixels(borders_data.top.width)
+        borders_data.top.width
     };
     DevicePixelRect right_border_rect = {
-        border_rect.x() + (border_rect.width() - context.enclosing_device_pixels(borders_data.right.width)),
+        border_rect.x() + (border_rect.width() - borders_data.right.width),
         border_rect.y() + top_right.vertical_radius,
-        context.enclosing_device_pixels(borders_data.right.width),
+        borders_data.right.width,
         border_rect.height() - top_right.vertical_radius - bottom_right.vertical_radius
     };
     DevicePixelRect bottom_border_rect = {
         border_rect.x() + bottom_left.horizontal_radius,
-        border_rect.y() + (border_rect.height() - context.enclosing_device_pixels(borders_data.bottom.width)),
+        border_rect.y() + (border_rect.height() - borders_data.bottom.width),
         border_rect.width() - bottom_left.horizontal_radius - bottom_right.horizontal_radius,
-        context.enclosing_device_pixels(borders_data.bottom.width)
+        borders_data.bottom.width
     };
     DevicePixelRect left_border_rect = {
         border_rect.x(),
         border_rect.y() + top_left.vertical_radius,
-        context.enclosing_device_pixels(borders_data.left.width),
+        borders_data.left.width,
         border_rect.height() - top_left.vertical_radius - bottom_left.vertical_radius
     };
 
@@ -611,16 +609,16 @@ void paint_all_borders(PaintContext& context, DevicePixelRect const& border_rect
     for (BorderEdge edge : borders) {
         switch (edge) {
         case BorderEdge::Top:
-            paint_border(context, BorderEdge::Top, top_border_rect, top_left, top_right, borders_data, path, edge == borders.last());
+            paint_border(painter, BorderEdge::Top, top_border_rect, top_left, top_right, borders_data, path, edge == borders.last());
             break;
         case BorderEdge::Right:
-            paint_border(context, BorderEdge::Right, right_border_rect, top_right, bottom_right, borders_data, path, edge == borders.last());
+            paint_border(painter, BorderEdge::Right, right_border_rect, top_right, bottom_right, borders_data, path, edge == borders.last());
             break;
         case BorderEdge::Bottom:
-            paint_border(context, BorderEdge::Bottom, bottom_border_rect, bottom_right, bottom_left, borders_data, path, edge == borders.last());
+            paint_border(painter, BorderEdge::Bottom, bottom_border_rect, bottom_right, bottom_left, borders_data, path, edge == borders.last());
             break;
         case BorderEdge::Left:
-            paint_border(context, BorderEdge::Left, left_border_rect, bottom_left, top_left, borders_data, path, edge == borders.last());
+            paint_border(painter, BorderEdge::Left, left_border_rect, bottom_left, top_left, borders_data, path, edge == borders.last());
             break;
         default:
             VERIFY_NOT_REACHED();
