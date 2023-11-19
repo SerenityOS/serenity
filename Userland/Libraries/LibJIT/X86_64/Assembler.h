@@ -231,6 +231,15 @@ struct X86_64Assembler {
             return;
         }
 
+        if (dst.type == Operand::Type::Mem64BaseAndOffset && src.type == Operand::Type::Imm) {
+            VERIFY(src.fits_in_i32());
+            emit_rex_for_slash(dst, REX_W::No);
+            emit8(0xc7);
+            emit_modrm_slash(0, dst);
+            emit32(src.offset_or_immediate);
+            return;
+        }
+
         VERIFY_NOT_REACHED();
     }
 
@@ -691,11 +700,14 @@ struct X86_64Assembler {
             if (op.fits_in_i8()) {
                 emit8(0x6a);
                 emit8(op.offset_or_immediate);
-            } else if (op.fits_in_i32()) {
-                emit8(0x68);
-                emit32(op.offset_or_immediate);
             } else {
-                VERIFY_NOT_REACHED();
+                emit8(0x68);
+                emit32(op.offset_or_immediate & 0xffffffff);
+                if (!op.fits_in_i32()) {
+                    // If the operand doesn't fit in an i32 we just pushed the bottom half of our immediate, sign-extended to 64-bits.
+                    // All we have to do now is movd [rsp+4], high to overwrite the upper half with what we actually want.
+                    mov(Operand::Mem64BaseAndOffset(Reg::RSP, 4), Operand::Imm(op.offset_or_immediate >> 32));
+                }
             }
         } else {
             VERIFY_NOT_REACHED();
