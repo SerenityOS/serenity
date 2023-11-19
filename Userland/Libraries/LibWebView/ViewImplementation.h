@@ -63,6 +63,10 @@ public:
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
 
+    void set_dom_node_text(i32 node_id, String text);
+    Optional<i32> set_dom_node_tag(i32 node_id, String name);
+    void replace_dom_node_attribute(i32 node_id, String name, Vector<Attribute> replacement_attributes);
+
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
 
     void run_javascript(StringView);

@@ -18,6 +18,7 @@ class OutOfProcessWebView;
 class ViewImplementation;
 class WebContentClient;
 
+struct Attribute;
 struct CookieStorageKey;
 struct SearchEngine;
 
