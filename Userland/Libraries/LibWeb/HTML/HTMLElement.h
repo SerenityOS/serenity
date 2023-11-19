@@ -81,14 +81,14 @@ private:
     // ^HTML::GlobalEventHandlers
     virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
 
+    JS::GCPtr<DOMStringMap> m_dataset;
+
     enum class ContentEditableState {
         True,
         False,
         Inherit,
     };
     ContentEditableState m_content_editable_state { ContentEditableState::Inherit };
-
-    JS::GCPtr<DOMStringMap> m_dataset;
 
     // https://html.spec.whatwg.org/multipage/interaction.html#locked-for-focus
     bool m_locked_for_focus { false };
