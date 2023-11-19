@@ -50,18 +50,18 @@ void Event::initialize(JS::Realm& realm)
 void Event::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_target.ptr());
-    visitor.visit(m_related_target.ptr());
-    visitor.visit(m_current_target.ptr());
+    visitor.visit(m_target);
+    visitor.visit(m_related_target);
+    visitor.visit(m_current_target);
     for (auto& it : m_path) {
-        visitor.visit(it.invocation_target.ptr());
-        visitor.visit(it.shadow_adjusted_target.ptr());
-        visitor.visit(it.related_target.ptr());
+        visitor.visit(it.invocation_target);
+        visitor.visit(it.shadow_adjusted_target);
+        visitor.visit(it.related_target);
         for (auto& itit : it.touch_target_list)
-            visitor.visit(itit.ptr());
+            visitor.visit(itit);
     }
     for (auto& it : m_touch_target_list)
-        visitor.visit(it.ptr());
+        visitor.visit(it);
 }
 
 // https://dom.spec.whatwg.org/#concept-event-path-append

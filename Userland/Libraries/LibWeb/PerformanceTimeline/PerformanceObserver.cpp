@@ -38,7 +38,7 @@ void PerformanceObserver::initialize(JS::Realm& realm)
 void PerformanceObserver::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_callback.ptr());
+    visitor.visit(m_callback);
     for (auto& entry : m_observer_buffer)
         visitor.visit(entry);
 }

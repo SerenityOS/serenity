@@ -47,7 +47,7 @@ void Attr::initialize(JS::Realm& realm)
 void Attr::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_owner_element.ptr());
+    visitor.visit(m_owner_element);
 }
 
 Element* Attr::owner_element()

@@ -37,7 +37,7 @@ void MediaQueryList::initialize(JS::Realm& realm)
 void MediaQueryList::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_document.ptr());
+    visitor.visit(m_document);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-media

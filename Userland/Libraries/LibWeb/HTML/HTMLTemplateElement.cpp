@@ -29,7 +29,7 @@ void HTMLTemplateElement::initialize(JS::Realm& realm)
 void HTMLTemplateElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_content.ptr());
+    visitor.visit(m_content);
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#the-template-element:concept-node-adopt-ext

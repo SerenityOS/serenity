@@ -36,7 +36,7 @@ void SubmitEvent::initialize(JS::Realm& realm)
 void SubmitEvent::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_submitter.ptr());
+    visitor.visit(m_submitter);
 }
 
 }

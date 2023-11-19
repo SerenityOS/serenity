@@ -35,7 +35,7 @@ void DOMStringMap::initialize(JS::Realm& realm)
 void DOMStringMap::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_associated_element.ptr());
+    visitor.visit(m_associated_element);
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#concept-domstringmap-pairs

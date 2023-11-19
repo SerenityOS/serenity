@@ -46,10 +46,10 @@ void HTMLCanvasElement::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     m_context.visit(
         [&](JS::NonnullGCPtr<CanvasRenderingContext2D>& context) {
-            visitor.visit(context.ptr());
+            visitor.visit(context);
         },
         [&](JS::NonnullGCPtr<WebGL::WebGLRenderingContext>& context) {
-            visitor.visit(context.ptr());
+            visitor.visit(context);
         },
         [](Empty) {
         });

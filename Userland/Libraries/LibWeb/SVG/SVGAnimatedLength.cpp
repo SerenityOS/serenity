@@ -34,8 +34,8 @@ void SVGAnimatedLength::initialize(JS::Realm& realm)
 void SVGAnimatedLength::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_base_val.ptr());
-    visitor.visit(m_anim_val.ptr());
+    visitor.visit(m_base_val);
+    visitor.visit(m_anim_val);
 }
 
 }

@@ -74,7 +74,7 @@ WebIDL::ExceptionOr<String> Crypto::random_uuid() const
 void Crypto::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_subtle.ptr());
+    visitor.visit(m_subtle);
 }
 
 // https://w3c.github.io/webcrypto/#dfn-generate-a-random-uuid

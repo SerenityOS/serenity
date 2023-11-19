@@ -109,10 +109,10 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     WindowOrWorkerGlobalScopeMixin::visit_edges(visitor);
 
-    visitor.visit(m_associated_document.ptr());
-    visitor.visit(m_current_event.ptr());
-    visitor.visit(m_performance.ptr());
-    visitor.visit(m_screen.ptr());
+    visitor.visit(m_associated_document);
+    visitor.visit(m_current_event);
+    visitor.visit(m_performance);
+    visitor.visit(m_screen);
     visitor.visit(m_location);
     visitor.visit(m_crypto);
     visitor.visit(m_navigator);

@@ -23,7 +23,7 @@ WindowEnvironmentSettingsObject::~WindowEnvironmentSettingsObject() = default;
 void WindowEnvironmentSettingsObject::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window.ptr());
+    visitor.visit(m_window);
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#set-up-a-window-environment-settings-object

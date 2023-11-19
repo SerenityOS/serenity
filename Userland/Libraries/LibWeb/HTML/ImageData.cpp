@@ -49,7 +49,7 @@ void ImageData::initialize(JS::Realm& realm)
 void ImageData::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_data.ptr());
+    visitor.visit(m_data);
 }
 
 unsigned ImageData::width() const

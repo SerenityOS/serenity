@@ -42,11 +42,11 @@ void MutationRecord::initialize(JS::Realm& realm)
 void MutationRecord::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_target.ptr());
-    visitor.visit(m_added_nodes.ptr());
-    visitor.visit(m_removed_nodes.ptr());
-    visitor.visit(m_previous_sibling.ptr());
-    visitor.visit(m_next_sibling.ptr());
+    visitor.visit(m_target);
+    visitor.visit(m_added_nodes);
+    visitor.visit(m_removed_nodes);
+    visitor.visit(m_previous_sibling);
+    visitor.visit(m_next_sibling);
 }
 
 }

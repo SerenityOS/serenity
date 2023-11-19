@@ -92,12 +92,12 @@ void Node::finalize()
 void Node::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_document.ptr());
-    visitor.visit(m_parent.ptr());
-    visitor.visit(m_first_child.ptr());
-    visitor.visit(m_last_child.ptr());
-    visitor.visit(m_next_sibling.ptr());
-    visitor.visit(m_previous_sibling.ptr());
+    visitor.visit(m_document);
+    visitor.visit(m_parent);
+    visitor.visit(m_first_child);
+    visitor.visit(m_last_child);
+    visitor.visit(m_next_sibling);
+    visitor.visit(m_previous_sibling);
     visitor.visit(m_child_nodes);
 
     visitor.visit(m_layout_node);

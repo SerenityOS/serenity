@@ -49,7 +49,7 @@ void CanvasRenderingContext2D::initialize(JS::Realm& realm)
 void CanvasRenderingContext2D::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_element.ptr());
+    visitor.visit(m_element);
 }
 
 HTMLCanvasElement& CanvasRenderingContext2D::canvas_element()

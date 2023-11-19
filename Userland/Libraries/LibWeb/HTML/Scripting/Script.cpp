@@ -20,7 +20,7 @@ Script::~Script() = default;
 
 void Script::visit_host_defined_self(JS::Cell::Visitor& visitor)
 {
-    visitor.visit(this);
+    visitor.visit(*this);
 }
 
 void Script::visit_edges(Visitor& visitor)

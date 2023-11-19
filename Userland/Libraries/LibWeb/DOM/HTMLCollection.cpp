@@ -37,7 +37,7 @@ void HTMLCollection::initialize(JS::Realm& realm)
 void HTMLCollection::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_root.ptr());
+    visitor.visit(m_root);
 }
 
 JS::MarkedVector<Element*> HTMLCollection::collect_matching_elements() const

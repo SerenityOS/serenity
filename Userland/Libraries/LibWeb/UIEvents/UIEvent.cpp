@@ -42,7 +42,7 @@ void UIEvent::initialize(JS::Realm& realm)
 void UIEvent::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_view.ptr());
+    visitor.visit(m_view);
 }
 
 }

@@ -49,7 +49,7 @@ void HTMLFormElement::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_elements);
     for (auto& element : m_associated_elements)
-        visitor.visit(element.ptr());
+        visitor.visit(element);
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit

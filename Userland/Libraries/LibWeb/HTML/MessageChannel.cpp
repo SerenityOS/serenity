@@ -34,8 +34,8 @@ MessageChannel::~MessageChannel() = default;
 void MessageChannel::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_port1.ptr());
-    visitor.visit(m_port2.ptr());
+    visitor.visit(m_port1);
+    visitor.visit(m_port2);
 }
 
 void MessageChannel::initialize(JS::Realm& realm)
