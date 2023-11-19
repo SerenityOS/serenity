@@ -61,6 +61,15 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
                 style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
             return;
         }
+        if (name == HTML::AttributeNames::align) {
+            if (value.equals_ignoring_ascii_case("center"sv)) {
+                style.set_property(CSS::PropertyID::MarginLeft, CSS::IdentifierStyleValue::create(CSS::ValueID::Auto));
+                style.set_property(CSS::PropertyID::MarginRight, CSS::IdentifierStyleValue::create(CSS::ValueID::Auto));
+            } else if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::Float)) {
+                style.set_property(CSS::PropertyID::Float, parsed_value.release_nonnull());
+            }
+            return;
+        }
         if (name == HTML::AttributeNames::bgcolor) {
             // https://html.spec.whatwg.org/multipage/rendering.html#tables-2:rules-for-parsing-a-legacy-colour-value
             auto color = parse_legacy_color_value(value);
