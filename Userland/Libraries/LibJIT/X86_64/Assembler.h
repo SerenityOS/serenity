@@ -914,6 +914,16 @@ private:
         u8 raw;
     };
 
+    union SIB {
+        static constexpr u8 IndexNone = 0b100;
+        struct {
+            u8 base : 3;
+            u8 index : 3;
+            u8 scale : 2;
+        };
+        u8 raw;
+    };
+
     void emit_modrm_slash(u8 slash, Operand rm, Patchable patchable = Patchable::No)
     {
         ModRM raw;
@@ -942,7 +952,6 @@ private:
 
     void emit_modrm(ModRM raw, Operand rm, Patchable patchable)
     {
-        // FIXME: rm:100 (RSP) is reserved as the SIB marker
         VERIFY(rm.type != Operand::Type::Imm);
 
         switch (rm.type) {
@@ -954,16 +963,27 @@ private:
             break;
         case Operand::Type::Mem64BaseAndOffset: {
             auto disp = rm.offset_or_immediate;
+            // Default SIB byte with index none and scale 1, in case we're displacing RSP
+            SIB sib {};
+            sib.scale = 0;
+            sib.index = SIB::IndexNone;
+            sib.base = raw.rm;
             if (patchable == Patchable::Yes || !rm.fits_in_i8()) {
                 raw.mode = ModRM::MemDisp32;
                 emit8(raw.raw);
+                if ((raw.raw & 7) == 0b100)
+                    emit8(sib.raw);
                 emit32(disp);
             } else if (disp == 0) {
                 raw.mode = ModRM::Mem;
+                if ((raw.raw & 7) == 0b100)
+                    emit8(sib.raw);
                 emit8(raw.raw);
             } else {
                 raw.mode = ModRM::MemDisp8;
                 emit8(raw.raw);
+                if ((raw.raw & 7) == 0b100)
+                    emit8(sib.raw);
                 emit8(disp & 0xff);
             }
             break;
