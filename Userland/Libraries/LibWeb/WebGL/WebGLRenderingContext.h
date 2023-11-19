@@ -14,6 +14,7 @@ namespace Web::WebGL {
 
 class WebGLRenderingContext final : public WebGLRenderingContextBase {
     WEB_PLATFORM_OBJECT(WebGLRenderingContext, WebGLRenderingContextBase);
+    JS_DECLARE_ALLOCATOR(WebGLRenderingContext);
 
 public:
     static JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> create(JS::Realm&, HTML::HTMLCanvasElement& canvas_element, JS::Value options);

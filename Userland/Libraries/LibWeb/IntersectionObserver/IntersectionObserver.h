@@ -38,6 +38,7 @@ struct IntersectionObserverRegistration {
 // https://w3c.github.io/IntersectionObserver/#intersection-observer-interface
 class IntersectionObserver final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(IntersectionObserver, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(IntersectionObserver);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<IntersectionObserver>> construct_impl(JS::Realm&, JS::GCPtr<WebIDL::CallbackType> callback, IntersectionObserverInit const& options = {});

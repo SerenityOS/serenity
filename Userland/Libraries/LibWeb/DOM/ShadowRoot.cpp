@@ -12,6 +12,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(ShadowRoot);
+
 ShadowRoot::ShadowRoot(Document& document, Element& host, Bindings::ShadowRootMode mode)
     : DocumentFragment(document)
     , m_mode(mode)

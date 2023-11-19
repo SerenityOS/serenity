@@ -81,6 +81,7 @@ class Document
     , public NonElementParentNode<Document>
     , public HTML::GlobalEventHandlers {
     WEB_PLATFORM_OBJECT(Document, ParentNode);
+    JS_DECLARE_ALLOCATOR(Document);
 
 public:
     enum class Type {

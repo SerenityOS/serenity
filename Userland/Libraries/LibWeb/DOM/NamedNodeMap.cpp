@@ -13,6 +13,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(NamedNodeMap);
+
 JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 {
     auto& realm = element.realm();

@@ -35,6 +35,7 @@ class BrowsingContext final
     : public AbstractBrowsingContext
     , public Weakable<BrowsingContext> {
     JS_CELL(BrowsingContext, AbstractBrowsingContext);
+    JS_DECLARE_ALLOCATOR(BrowsingContext);
 
 public:
     struct BrowsingContextAndDocument {

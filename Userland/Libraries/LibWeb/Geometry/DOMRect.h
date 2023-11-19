@@ -13,6 +13,7 @@ namespace Web::Geometry {
 // https://drafts.fxtf.org/geometry/#DOMRect
 class DOMRect final : public DOMRectReadOnly {
     WEB_PLATFORM_OBJECT(DOMRect, DOMRectReadOnly);
+    JS_DECLARE_ALLOCATOR(DOMRect);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRect>> construct_impl(JS::Realm&, double x = 0, double y = 0, double width = 0, double height = 0);

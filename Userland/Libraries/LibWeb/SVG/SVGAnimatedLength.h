@@ -14,6 +14,7 @@ namespace Web::SVG {
 // https://www.w3.org/TR/SVG11/types.html#InterfaceSVGAnimatedLength
 class SVGAnimatedLength final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(SVGAnimatedLength, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(SVGAnimatedLength);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<SVGAnimatedLength> create(JS::Realm&, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val);

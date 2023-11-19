@@ -13,6 +13,7 @@ namespace Web::SVG {
 
 class SVGLineElement final : public SVGGeometryElement {
     WEB_PLATFORM_OBJECT(SVGLineElement, SVGGeometryElement);
+    JS_DECLARE_ALLOCATOR(SVGLineElement);
 
 public:
     virtual ~SVGLineElement() override = default;

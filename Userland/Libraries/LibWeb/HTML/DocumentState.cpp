@@ -10,6 +10,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(DocumentState);
+
 DocumentState::DocumentState() = default;
 
 DocumentState::~DocumentState() = default;

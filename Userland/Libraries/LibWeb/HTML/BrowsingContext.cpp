@@ -37,6 +37,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(BrowsingContext);
+
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:blank
 bool url_matches_about_blank(AK::URL const& url)
 {

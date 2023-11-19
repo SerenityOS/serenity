@@ -13,6 +13,7 @@ namespace Web::SVG {
 // https://www.w3.org/TR/SVG11/shapes.html#RectElement
 class SVGRectElement final : public SVGGeometryElement {
     WEB_PLATFORM_OBJECT(SVGRectElement, SVGGeometryElement);
+    JS_DECLARE_ALLOCATOR(SVGRectElement);
 
 public:
     virtual ~SVGRectElement() override = default;

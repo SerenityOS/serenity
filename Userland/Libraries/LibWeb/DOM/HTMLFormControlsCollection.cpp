@@ -12,6 +12,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(HTMLFormControlsCollection);
+
 JS::NonnullGCPtr<HTMLFormControlsCollection> HTMLFormControlsCollection::create(ParentNode& root, Scope scope, Function<bool(Element const&)> filter)
 {
     return root.heap().allocate<HTMLFormControlsCollection>(root.realm(), root, scope, move(filter));

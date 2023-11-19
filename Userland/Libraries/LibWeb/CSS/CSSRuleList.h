@@ -21,6 +21,7 @@ namespace Web::CSS {
 // https://www.w3.org/TR/cssom/#the-cssrulelist-interface
 class CSSRuleList : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(CSSRuleList, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(CSSRuleList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CSSRuleList> create(JS::Realm&, JS::MarkedVector<CSSRule*> const&);

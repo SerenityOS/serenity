@@ -11,6 +11,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(ProcessingInstruction);
+
 ProcessingInstruction::ProcessingInstruction(Document& document, DeprecatedString const& data, DeprecatedString const& target)
     : CharacterData(document, NodeType::PROCESSING_INSTRUCTION_NODE, MUST(String::from_deprecated_string(data)))
     , m_target(target)

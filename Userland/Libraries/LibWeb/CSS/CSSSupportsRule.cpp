@@ -11,6 +11,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSSupportsRule);
+
 JS::NonnullGCPtr<CSSSupportsRule> CSSSupportsRule::create(JS::Realm& realm, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
 {
     return realm.heap().allocate<CSSSupportsRule>(realm, realm, move(supports), rules);

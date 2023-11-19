@@ -11,6 +11,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(NodeIterator);
+
 NodeIterator::NodeIterator(Node& root)
     : PlatformObject(root.realm())
     , m_root(root)

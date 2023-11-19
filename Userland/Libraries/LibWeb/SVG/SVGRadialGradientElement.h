@@ -14,6 +14,7 @@ namespace Web::SVG {
 
 class SVGRadialGradientElement : public SVGGradientElement {
     WEB_PLATFORM_OBJECT(SVGRadialGradientElement, SVGGradientElement);
+    JS_DECLARE_ALLOCATOR(SVGRadialGradientElement);
 
 public:
     virtual ~SVGRadialGradientElement() override = default;

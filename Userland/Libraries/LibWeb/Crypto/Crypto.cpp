@@ -15,6 +15,8 @@
 
 namespace Web::Crypto {
 
+JS_DEFINE_ALLOCATOR(Crypto);
+
 JS::NonnullGCPtr<Crypto> Crypto::create(JS::Realm& realm)
 {
     return realm.heap().allocate<Crypto>(realm, realm);

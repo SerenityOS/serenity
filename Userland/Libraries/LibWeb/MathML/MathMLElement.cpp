@@ -10,6 +10,8 @@
 
 namespace Web::MathML {
 
+JS_DEFINE_ALLOCATOR(MathMLElement);
+
 MathMLElement::~MathMLElement() = default;
 
 MathMLElement::MathMLElement(DOM::Document& document, DOM::QualifiedName qualified_name)

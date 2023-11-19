@@ -13,6 +13,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(Text);
+
 Text::Text(Document& document, String const& data)
     : CharacterData(document, NodeType::TEXT_NODE, data)
 {

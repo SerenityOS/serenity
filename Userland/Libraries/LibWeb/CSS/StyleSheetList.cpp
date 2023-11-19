@@ -13,6 +13,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(StyleSheetList);
+
 void StyleSheetList::add_sheet(CSSStyleSheet& sheet)
 {
     sheet.set_style_sheet_list({}, this);

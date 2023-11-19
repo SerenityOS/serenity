@@ -16,6 +16,7 @@ namespace Web::CSS {
 // https://www.w3.org/TR/css-conditional-3/#the-cssmediarule-interface
 class CSSMediaRule final : public CSSConditionRule {
     WEB_PLATFORM_OBJECT(CSSMediaRule, CSSConditionRule);
+    JS_DECLARE_ALLOCATOR(CSSMediaRule);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CSSMediaRule> create(JS::Realm&, MediaList& media_queries, CSSRuleList&);

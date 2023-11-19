@@ -13,6 +13,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/system-state.html#mimetypearray
 class MimeTypeArray : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(MimeTypeArray, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(MimeTypeArray);
 
 public:
     virtual ~MimeTypeArray() override;

@@ -12,6 +12,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Plugin);
+
 Plugin::Plugin(JS::Realm& realm, String name)
     : Bindings::LegacyPlatformObject(realm)
     , m_name(move(name))

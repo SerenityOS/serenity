@@ -15,6 +15,7 @@ namespace Web::SVG {
 
 class SVGSVGElement final : public SVGGraphicsElement {
     WEB_PLATFORM_OBJECT(SVGSVGElement, SVGGraphicsElement);
+    JS_DECLARE_ALLOCATOR(SVGSVGElement);
 
 public:
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;

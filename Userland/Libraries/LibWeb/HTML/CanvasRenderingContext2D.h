@@ -58,6 +58,7 @@ class CanvasRenderingContext2D
     , public CanvasTextDrawingStyles<CanvasRenderingContext2D> {
 
     WEB_PLATFORM_OBJECT(CanvasRenderingContext2D, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(CanvasRenderingContext2D);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CanvasRenderingContext2D> create(JS::Realm&, HTMLCanvasElement&);

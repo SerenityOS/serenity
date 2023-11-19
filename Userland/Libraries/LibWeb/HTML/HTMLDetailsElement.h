@@ -17,6 +17,7 @@ namespace Web::HTML {
 
 class HTMLDetailsElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLDetailsElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLDetailsElement);
 
 public:
     virtual ~HTMLDetailsElement() override;

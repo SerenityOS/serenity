@@ -16,6 +16,7 @@ namespace Web::FileAPI {
 
 class FileList : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(FileList, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(FileList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<FileList> create(JS::Realm&, Vector<JS::NonnullGCPtr<File>>&&);

@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class HTMLSummaryElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLSummaryElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLSummaryElement);
 
 public:
     virtual ~HTMLSummaryElement() override;

@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLAudioElement final : public HTMLMediaElement {
     WEB_PLATFORM_OBJECT(HTMLAudioElement, HTMLMediaElement);
+    JS_DECLARE_ALLOCATOR(HTMLAudioElement);
 
 public:
     virtual ~HTMLAudioElement() override;

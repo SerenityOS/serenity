@@ -9,12 +9,14 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Variant.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibWeb/WebIDL/CallbackType.h>
 
 namespace Web::HTML {
 
 class EventHandler final : public JS::Cell {
     JS_CELL(EventHandler, JS::Cell);
+    JS_DECLARE_ALLOCATOR(EventHandler);
 
 public:
     explicit EventHandler(DeprecatedString);

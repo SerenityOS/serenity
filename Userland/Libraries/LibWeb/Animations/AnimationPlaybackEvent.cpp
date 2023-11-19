@@ -9,6 +9,8 @@
 
 namespace Web::Animations {
 
+JS_DEFINE_ALLOCATOR(AnimationPlaybackEvent);
+
 JS::NonnullGCPtr<AnimationPlaybackEvent> AnimationPlaybackEvent::create(JS::Realm& realm, FlyString const& event_name, AnimationPlaybackEventInit const& event_init)
 {
     return realm.heap().allocate<AnimationPlaybackEvent>(realm, realm, event_name, event_init);

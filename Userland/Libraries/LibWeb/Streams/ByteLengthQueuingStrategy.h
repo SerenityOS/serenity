@@ -17,6 +17,7 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#bytelengthqueuingstrategy
 class ByteLengthQueuingStrategy final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ByteLengthQueuingStrategy, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ByteLengthQueuingStrategy);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<ByteLengthQueuingStrategy>> construct_impl(JS::Realm&, QueuingStrategyInit const&);

@@ -14,6 +14,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigationtransition
 class NavigationTransition : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(NavigationTransition, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(NavigationTransition);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<NavigationTransition> create(JS::Realm&, Bindings::NavigationType, JS::NonnullGCPtr<NavigationHistoryEntry>, JS::GCPtr<JS::Promise>);

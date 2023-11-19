@@ -9,6 +9,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(SubmitEvent);
+
 JS::NonnullGCPtr<SubmitEvent> SubmitEvent::create(JS::Realm& realm, FlyString const& event_name, SubmitEventInit const& event_init)
 {
     return realm.heap().allocate<SubmitEvent>(realm, realm, event_name, event_init);

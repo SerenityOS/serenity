@@ -14,6 +14,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(StaticRange);
+
 StaticRange::StaticRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {

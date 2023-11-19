@@ -15,6 +15,7 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller
 class WritableStreamDefaultController final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(WritableStreamDefaultController, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(WritableStreamDefaultController);
 
 public:
     virtual ~WritableStreamDefaultController() override = default;

@@ -17,6 +17,7 @@ class HTMLOutputElement final
     : public HTMLElement
     , public FormAssociatedElement {
     WEB_PLATFORM_OBJECT(HTMLOutputElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLOutputElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLOutputElement)
 
 public:

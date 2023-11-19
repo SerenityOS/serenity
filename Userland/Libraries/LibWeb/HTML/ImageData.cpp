@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(ImageData);
+
 JS::GCPtr<ImageData> ImageData::create_with_size(JS::Realm& realm, int width, int height)
 {
 

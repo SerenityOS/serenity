@@ -16,6 +16,7 @@ namespace Web::HTML {
 
 class VideoTrack final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(VideoTrack, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(VideoTrack);
 
 public:
     virtual ~VideoTrack() override;

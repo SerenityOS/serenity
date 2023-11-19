@@ -16,6 +16,8 @@
 
 namespace Web::UserTiming {
 
+JS_DEFINE_ALLOCATOR(PerformanceMeasure);
+
 PerformanceMeasure::PerformanceMeasure(JS::Realm& realm, String const& name, HighResolutionTime::DOMHighResTimeStamp start_time, HighResolutionTime::DOMHighResTimeStamp duration, JS::Value detail)
     : PerformanceTimeline::PerformanceEntry(realm, name, start_time, duration)
     , m_detail(detail)

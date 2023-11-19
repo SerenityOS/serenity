@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLTrackElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLTrackElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLTrackElement);
 
 public:
     virtual ~HTMLTrackElement() override;

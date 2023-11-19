@@ -13,6 +13,7 @@ namespace Web::DOM {
 // https://dom.spec.whatwg.org/#treewalker
 class TreeWalker final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TreeWalker, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(TreeWalker);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<TreeWalker> create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);

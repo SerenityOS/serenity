@@ -18,6 +18,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSRuleList);
+
 JS::NonnullGCPtr<CSSRuleList> CSSRuleList::create(JS::Realm& realm, JS::MarkedVector<CSSRule*> const& rules)
 {
     auto rule_list = realm.heap().allocate<CSSRuleList>(realm, realm);

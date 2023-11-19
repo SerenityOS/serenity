@@ -52,6 +52,8 @@ inline void replace_in_ordered_set(Vector<String>& set, String const& item, Stri
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(DOMTokenList);
+
 JS::NonnullGCPtr<DOMTokenList> DOMTokenList::create(Element& associated_element, FlyString associated_attribute)
 {
     auto& realm = associated_element.realm();

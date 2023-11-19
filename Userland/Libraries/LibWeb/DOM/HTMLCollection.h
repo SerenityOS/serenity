@@ -27,6 +27,7 @@ namespace Web::DOM {
 
 class HTMLCollection : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(HTMLCollection, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(HTMLCollection);
 
 public:
     enum class Scope {

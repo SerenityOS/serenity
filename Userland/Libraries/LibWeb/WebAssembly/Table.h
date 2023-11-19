@@ -26,6 +26,7 @@ struct TableDescriptor {
 
 class Table : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Table, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Table);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Table>> construct_impl(JS::Realm&, TableDescriptor& descriptor, JS::Value value);

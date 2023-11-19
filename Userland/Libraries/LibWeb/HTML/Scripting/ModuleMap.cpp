@@ -8,6 +8,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(ModuleMap);
+
 void ModuleMap::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);

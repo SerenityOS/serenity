@@ -18,6 +18,7 @@ class HTMLSelectElement final
     : public HTMLElement
     , public FormAssociatedElement {
     WEB_PLATFORM_OBJECT(HTMLSelectElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLSelectElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLSelectElement)
 
 public:

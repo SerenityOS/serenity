@@ -19,6 +19,7 @@ namespace Web::CSS {
 // https://drafts.csswg.org/css-animations/#interface-csskeyframesrule
 class CSSKeyframesRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSKeyframesRule, CSSRule);
+    JS_DECLARE_ALLOCATOR(CSSKeyframesRule);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CSSKeyframesRule> create(JS::Realm&, FlyString name, JS::MarkedVector<JS::NonnullGCPtr<CSSKeyframeRule>>);

@@ -17,6 +17,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#domparser
 class DOMParser final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMParser, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMParser);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> construct_impl(JS::Realm&);

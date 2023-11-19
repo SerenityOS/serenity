@@ -8,6 +8,8 @@
 
 namespace Web::HTML {
 
+JS_DECLARE_ALLOCATOR(HTMLDocument);
+
 HTMLDocument::HTMLDocument(JS::Realm& realm, AK::URL const& url)
     : Document(realm, url)
 {

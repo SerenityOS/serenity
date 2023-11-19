@@ -21,6 +21,7 @@ namespace Web::Fetch::Infrastructure {
 // https://fetch.spec.whatwg.org/#fetch-params
 class FetchParams : public JS::Cell {
     JS_CELL(FetchParams, JS::Cell);
+    JS_DECLARE_ALLOCATOR(FetchParams);
 
 public:
     struct PreloadedResponseCandidatePendingTag { };

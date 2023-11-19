@@ -20,6 +20,8 @@
 
 namespace Web::WebAssembly {
 
+JS_DEFINE_ALLOCATOR(Instance);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Instance>> Instance::construct_impl(JS::Realm& realm, Module& module, Optional<JS::Handle<JS::Object>>& import_object)
 {
     // FIXME: Implement the importObject parameter.

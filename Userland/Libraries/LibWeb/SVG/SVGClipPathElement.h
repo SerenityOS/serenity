@@ -12,6 +12,7 @@ namespace Web::SVG {
 
 class SVGClipPathElement final : public SVGElement {
     WEB_PLATFORM_OBJECT(SVGClipPathElement, SVGElement);
+    JS_DECLARE_ALLOCATOR(SVGClipPathElement);
 
 public:
     virtual ~SVGClipPathElement();

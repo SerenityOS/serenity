@@ -18,6 +18,7 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#writablestreamdefaultwriter
 class WritableStreamDefaultWriter final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(WritableStreamDefaultWriter, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(WritableStreamDefaultWriter);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> construct_impl(JS::Realm&, JS::NonnullGCPtr<WritableStream>);

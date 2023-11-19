@@ -16,6 +16,7 @@ namespace Web::Streams {
 
 class TransformStream final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TransformStream, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(TransformStream);
 
 public:
     virtual ~TransformStream() override;

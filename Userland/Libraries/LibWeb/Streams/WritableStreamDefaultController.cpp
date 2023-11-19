@@ -10,6 +10,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(WritableStreamDefaultController);
+
 void WritableStreamDefaultController::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);

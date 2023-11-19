@@ -10,6 +10,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSKeyframesRule);
+
 JS::NonnullGCPtr<CSSKeyframesRule> CSSKeyframesRule::create(JS::Realm& realm, FlyString name, JS::MarkedVector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes)
 {
     return realm.heap().allocate<CSSKeyframesRule>(realm, realm, move(name), move(keyframes));

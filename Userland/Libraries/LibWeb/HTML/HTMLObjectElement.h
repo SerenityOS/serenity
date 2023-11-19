@@ -22,6 +22,7 @@ class HTMLObjectElement final
     , public ResourceClient
     , public Layout::ImageProvider {
     WEB_PLATFORM_OBJECT(HTMLObjectElement, NavigableContainer)
+    JS_DECLARE_ALLOCATOR(HTMLObjectElement);
     FORM_ASSOCIATED_ELEMENT(NavigableContainer, HTMLObjectElement)
 
     enum class Representation {

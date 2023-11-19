@@ -11,6 +11,8 @@
 
 namespace Web::Fetch {
 
+JS_DEFINE_ALLOCATOR(Headers);
+
 // https://fetch.spec.whatwg.org/#dom-headers
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::construct_impl(JS::Realm& realm, Optional<HeadersInit> const& init)
 {

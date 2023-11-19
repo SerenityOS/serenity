@@ -18,6 +18,7 @@ namespace Web::Fetch::Infrastructure {
 // https://fetch.spec.whatwg.org/#fetch-elsewhere-fetch
 class FetchAlgorithms : public JS::Cell {
     JS_CELL(FetchAlgorithms, JS::Cell);
+    JS_DECLARE_ALLOCATOR(FetchAlgorithms);
 
 public:
     struct ConsumeBodyFailureTag { };

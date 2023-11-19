@@ -25,6 +25,7 @@ struct StructuredSerializeOptions {
 // https://html.spec.whatwg.org/multipage/web-messaging.html#message-ports
 class MessagePort final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(MessagePort, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(MessagePort);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MessagePort> create(JS::Realm&);

@@ -41,6 +41,7 @@ private:
 
 class CanvasPattern final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(CanvasPattern, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(CanvasPattern);
 
 public:
     static WebIDL::ExceptionOr<JS::GCPtr<CanvasPattern>> create(JS::Realm&, CanvasImageSource const& image, StringView repetition);

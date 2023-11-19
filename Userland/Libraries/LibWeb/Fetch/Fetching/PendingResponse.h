@@ -20,6 +20,7 @@ namespace Web::Fetch::Fetching {
 // therefore we use callbacks to run portions of the spec that require waiting for an HTTP load.
 class PendingResponse : public JS::Cell {
     JS_CELL(PendingResponse, JS::Cell);
+    JS_DECLARE_ALLOCATOR(PendingResponse);
 
 public:
     using Callback = JS::SafeFunction<void(JS::NonnullGCPtr<Infrastructure::Response>)>;

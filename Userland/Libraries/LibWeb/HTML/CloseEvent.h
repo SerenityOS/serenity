@@ -20,6 +20,7 @@ struct CloseEventInit : public DOM::EventInit {
 
 class CloseEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(CloseEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(CloseEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CloseEvent> create(JS::Realm&, FlyString const& event_name, CloseEventInit const& event_init = {});

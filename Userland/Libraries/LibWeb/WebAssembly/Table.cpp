@@ -14,6 +14,8 @@
 
 namespace Web::WebAssembly {
 
+JS_DEFINE_ALLOCATOR(Table);
+
 static Wasm::ValueType table_kind_to_value_type(Bindings::TableKind kind)
 {
     switch (kind) {

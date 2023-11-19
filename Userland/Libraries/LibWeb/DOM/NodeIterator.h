@@ -14,6 +14,7 @@ namespace Web::DOM {
 // https://dom.spec.whatwg.org/#nodeiterator
 class NodeIterator final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(NodeIterator, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(NodeIterator);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeIterator>> create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);

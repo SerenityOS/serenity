@@ -15,6 +15,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(ReadableStreamBYOBReader);
+
 ReadableStreamBYOBReader::ReadableStreamBYOBReader(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
     , ReadableStreamGenericReaderMixin(realm)

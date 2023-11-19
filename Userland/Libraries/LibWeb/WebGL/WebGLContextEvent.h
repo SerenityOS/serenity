@@ -18,6 +18,7 @@ struct WebGLContextEventInit final : public DOM::EventInit {
 
 class WebGLContextEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(WebGLContextEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(WebGLContextEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<WebGLContextEvent> create(JS::Realm&, FlyString const& type, WebGLContextEventInit const&);

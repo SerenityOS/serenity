@@ -17,6 +17,7 @@ namespace Web::HTML {
 
 class HTMLScriptElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLScriptElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLScriptElement);
 
 public:
     virtual ~HTMLScriptElement() override;

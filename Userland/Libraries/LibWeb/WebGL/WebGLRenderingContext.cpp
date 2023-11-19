@@ -13,6 +13,8 @@
 
 namespace Web::WebGL {
 
+JS_DEFINE_ALLOCATOR(WebGLRenderingContext);
+
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#fire-a-webgl-context-event
 static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, FlyString const& type)
 {

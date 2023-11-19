@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class ImageData final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ImageData, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ImageData);
 
 public:
     static JS::GCPtr<ImageData> create_with_size(JS::Realm&, int width, int height);

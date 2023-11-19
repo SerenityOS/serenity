@@ -19,6 +19,7 @@ struct UIEventInit : public DOM::EventInit {
 
 class UIEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(UIEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(UIEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<UIEvent> create(JS::Realm&, FlyString const& type);

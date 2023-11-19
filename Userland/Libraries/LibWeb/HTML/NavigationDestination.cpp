@@ -13,6 +13,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(NavigationDestination);
+
 JS::NonnullGCPtr<NavigationDestination> NavigationDestination::create(JS::Realm& realm)
 {
     return realm.heap().allocate<NavigationDestination>(realm, realm);

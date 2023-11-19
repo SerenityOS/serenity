@@ -16,6 +16,7 @@ namespace Web::HTML {
 
 class WindowProxy final : public JS::Object {
     JS_OBJECT(WindowProxy, JS::Object);
+    JS_DECLARE_ALLOCATOR(WindowProxy);
 
 public:
     virtual ~WindowProxy() override = default;

@@ -14,6 +14,8 @@
 
 namespace Web::UIEvents {
 
+JS_DEFINE_ALLOCATOR(MouseEvent);
+
 MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y, unsigned modifiers)
     : UIEvent(realm, event_name, event_init)
     , m_screen_x(event_init.screen_x)

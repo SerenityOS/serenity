@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLTableCellElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLTableCellElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLTableCellElement);
 
 public:
     virtual ~HTMLTableCellElement() override;

@@ -29,6 +29,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
 class Worker : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(Worker, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(Worker);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(String const& script_url, WorkerOptions const options, DOM::Document& document);

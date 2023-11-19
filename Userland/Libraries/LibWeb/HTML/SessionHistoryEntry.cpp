@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(SessionHistoryEntry);
+
 void SessionHistoryEntry::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

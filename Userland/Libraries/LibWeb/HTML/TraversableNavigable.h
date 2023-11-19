@@ -16,6 +16,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/document-sequences.html#traversable-navigable
 class TraversableNavigable final : public Navigable {
     JS_CELL(TraversableNavigable, Navigable);
+    JS_DECLARE_ALLOCATOR(TraversableNavigable);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> create_a_new_top_level_traversable(Page&, JS::GCPtr<BrowsingContext> opener, String target_name);

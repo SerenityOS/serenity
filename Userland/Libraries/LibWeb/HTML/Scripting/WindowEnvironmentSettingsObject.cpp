@@ -12,6 +12,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(WindowEnvironmentSettingsObject);
+
 WindowEnvironmentSettingsObject::WindowEnvironmentSettingsObject(Window& window, NonnullOwnPtr<JS::ExecutionContext> execution_context)
     : EnvironmentSettingsObject(move(execution_context))
     , m_window(window)

@@ -15,6 +15,7 @@ namespace Web::HTML {
 
 class Storage : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(Storage, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(Storage);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Storage> create(JS::Realm&);

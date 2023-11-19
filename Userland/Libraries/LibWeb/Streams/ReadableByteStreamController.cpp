@@ -11,6 +11,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(ReadableByteStreamController);
+
 // https://streams.spec.whatwg.org/#rbs-controller-desired-size
 Optional<double> ReadableByteStreamController::desired_size() const
 {

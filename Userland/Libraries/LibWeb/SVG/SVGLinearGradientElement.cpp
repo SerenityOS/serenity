@@ -13,6 +13,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGLinearGradientElement);
+
 SVGLinearGradientElement::SVGLinearGradientElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGradientElement(document, qualified_name)
 {

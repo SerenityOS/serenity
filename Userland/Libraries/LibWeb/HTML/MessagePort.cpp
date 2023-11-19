@@ -14,6 +14,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(MessagePort);
+
 JS::NonnullGCPtr<MessagePort> MessagePort::create(JS::Realm& realm)
 {
     return realm.heap().allocate<MessagePort>(realm, realm);

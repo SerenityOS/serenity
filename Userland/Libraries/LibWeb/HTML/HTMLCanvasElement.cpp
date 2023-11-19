@@ -26,6 +26,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(HTMLCanvasElement);
+
 static constexpr auto max_canvas_area = 16384 * 16384;
 
 HTMLCanvasElement::HTMLCanvasElement(DOM::Document& document, DOM::QualifiedName qualified_name)

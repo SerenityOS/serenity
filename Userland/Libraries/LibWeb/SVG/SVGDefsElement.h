@@ -12,6 +12,7 @@ namespace Web::SVG {
 
 class SVGDefsElement final : public SVGGraphicsElement {
     WEB_PLATFORM_OBJECT(SVGDefsElement, SVGGraphicsElement);
+    JS_DECLARE_ALLOCATOR(SVGDefsElement);
 
 public:
     virtual ~SVGDefsElement();

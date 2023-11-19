@@ -40,6 +40,7 @@ struct NavigationInterceptOptions {
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigateevent
 class NavigateEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(NavigateEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(NavigateEvent);
 
 public:
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigateevent-interception-state

@@ -26,6 +26,8 @@
 
 namespace Web::WebSockets {
 
+JS_DEFINE_ALLOCATOR(WebSocket);
+
 static RefPtr<WebSocketClientManager> s_websocket_client_manager;
 
 void WebSocketClientManager::initialize(RefPtr<WebSocketClientManager> websocket_client_manager)

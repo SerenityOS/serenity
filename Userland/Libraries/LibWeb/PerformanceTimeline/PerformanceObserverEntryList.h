@@ -13,6 +13,7 @@ namespace Web::PerformanceTimeline {
 // https://w3c.github.io/performance-timeline/#performanceobserverentrylist-interface
 class PerformanceObserverEntryList final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(PerformanceObserverEntryList, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(PerformanceObserverEntryList);
 
 public:
     virtual ~PerformanceObserverEntryList() override;

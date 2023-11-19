@@ -14,6 +14,7 @@ namespace Web::SVG {
 // https://www.w3.org/TR/SVG11/types.html#InterfaceSVGLength
 class SVGLength : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(SVGLength, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(SVGLength);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<SVGLength> create(JS::Realm&, u8 unit_type, float value);

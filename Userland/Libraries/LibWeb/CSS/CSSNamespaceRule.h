@@ -12,6 +12,7 @@ namespace Web::CSS {
 
 class CSSNamespaceRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSNamespaceRule, CSSRule);
+    JS_DECLARE_ALLOCATOR(CSSNamespaceRule);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CSSNamespaceRule> create(JS::Realm&, Optional<DeprecatedString> prefix, StringView namespace_uri);

@@ -22,6 +22,7 @@ class Text
     : public CharacterData
     , public SlottableMixin {
     WEB_PLATFORM_OBJECT(Text, CharacterData);
+    JS_DECLARE_ALLOCATOR(Text);
 
 public:
     virtual ~Text() override = default;

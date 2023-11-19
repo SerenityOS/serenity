@@ -19,6 +19,7 @@ struct CustomEventInit : public EventInit {
 // https://dom.spec.whatwg.org/#customevent
 class CustomEvent : public Event {
     WEB_PLATFORM_OBJECT(CustomEvent, Event);
+    JS_DECLARE_ALLOCATOR(CustomEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<CustomEvent> create(JS::Realm&, FlyString const& event_name, CustomEventInit const& = {});

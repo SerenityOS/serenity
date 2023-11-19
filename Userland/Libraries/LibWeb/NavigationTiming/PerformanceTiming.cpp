@@ -8,6 +8,8 @@
 
 namespace Web::NavigationTiming {
 
+JS_DEFINE_ALLOCATOR(PerformanceTiming);
+
 PerformanceTiming::PerformanceTiming(HTML::Window& window)
     : PlatformObject(window.realm())
     , m_window(window)

@@ -9,6 +9,8 @@
 
 namespace Web::UIEvents {
 
+JS_DEFINE_ALLOCATOR(UIEvent);
+
 JS::NonnullGCPtr<UIEvent> UIEvent::create(JS::Realm& realm, FlyString const& event_name)
 {
     return realm.heap().allocate<UIEvent>(realm, realm, event_name);

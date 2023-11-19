@@ -16,6 +16,7 @@ namespace Web::HighResolutionTime {
 
 class Performance final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(Performance, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(Performance);
 
 public:
     virtual ~Performance() override;

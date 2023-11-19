@@ -20,6 +20,7 @@ struct AnimationPlaybackEventInit : public DOM::EventInit {
 // https://www.w3.org/TR/web-animations-1/#animationplaybackevent
 class AnimationPlaybackEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(AnimationPlaybackEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(AnimationPlaybackEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<AnimationPlaybackEvent> create(JS::Realm&, FlyString const& event_name, AnimationPlaybackEventInit const& event_init = {});

@@ -2502,6 +2502,7 @@ static void generate_named_properties_object_declarations(IDL::Interface const& 
     generator.append(R"~~~(
 class @named_properties_class@ : public JS::Object {
     JS_OBJECT(@named_properties_class@, JS::Object);
+    JS_DECLARE_ALLOCATOR(@named_properties_class@);
 public:
     explicit @named_properties_class@(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
@@ -3298,7 +3299,7 @@ namespace Web::Bindings {
 
 class @namespace_class@ final : public JS::Object {
     JS_OBJECT(@namespace_class@, JS::Object);
-
+    JS_DECLARE_ALLOCATOR(@namespace_class@);
 public:
     explicit @namespace_class@(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
@@ -3395,6 +3396,8 @@ using namespace Web::WebIDL;
 
 namespace Web::Bindings {
 
+JS_DEFINE_ALLOCATOR(@namespace_class@);
+
 @namespace_class@::@namespace_class@(JS::Realm& realm)
     : Object(ConstructWithoutPrototypeTag::Tag, realm)
 {
@@ -3467,6 +3470,7 @@ namespace Web::Bindings {
 
 class @constructor_class@ : public JS::NativeFunction {
     JS_OBJECT(@constructor_class@, JS::NativeFunction);
+    JS_DECLARE_ALLOCATOR(@constructor_class@);
 public:
     explicit @constructor_class@(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
@@ -3618,6 +3622,8 @@ using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
 namespace Web::Bindings {
+
+JS_DEFINE_ALLOCATOR(@constructor_class@);
 
 @constructor_class@::@constructor_class@(JS::Realm& realm)
     : NativeFunction("@name@"sv, realm.intrinsics().function_prototype())
@@ -3958,6 +3964,7 @@ namespace Web::Bindings {
 
 class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
+    JS_DECLARE_ALLOCATOR(@prototype_class@);
 public:
     explicit @prototype_class@(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
@@ -4096,6 +4103,8 @@ using namespace Web::WebIDL;
 
 namespace Web::Bindings {
 
+JS_DEFINE_ALLOCATOR(@prototype_class@);
+
 @prototype_class@::@prototype_class@([[maybe_unused]] JS::Realm& realm))~~~");
     if (interface.name == "DOMException") {
         // https://webidl.spec.whatwg.org/#es-DOMException-specialness
@@ -4168,6 +4177,7 @@ namespace Web::Bindings {
 
 class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
+    JS_DECLARE_ALLOCATOR(@prototype_class@);
 public:
     explicit @prototype_class@(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
@@ -4240,6 +4250,8 @@ using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
 namespace Web::Bindings {
+
+JS_DEFINE_ALLOCATOR(@prototype_class@);
 
 @prototype_class@::@prototype_class@(JS::Realm& realm)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().iterator_prototype())

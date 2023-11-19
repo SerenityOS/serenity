@@ -21,6 +21,8 @@
 
 namespace Web::Fetch {
 
+JS_DEFINE_ALLOCATOR(Request);
+
 Request::Request(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Request> request)
     : PlatformObject(realm)
     , m_request(request)

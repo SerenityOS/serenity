@@ -27,6 +27,7 @@ class HTMLImageElement final
     , public Layout::ImageProvider
     , public DOM::Document::ViewportClient {
     WEB_PLATFORM_OBJECT(HTMLImageElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLImageElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLImageElement)
 
 public:

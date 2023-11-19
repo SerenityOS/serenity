@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(TimeRanges);
+
 TimeRanges::TimeRanges(JS::Realm& realm)
     : Base(realm)
 {

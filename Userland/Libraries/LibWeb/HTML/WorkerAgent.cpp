@@ -93,6 +93,8 @@ ErrorOr<NonnullRefPtr<Web::HTML::WebWorkerClient>> launch_web_worker_process(Rea
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(WorkerAgent);
+
 WorkerAgent::WorkerAgent(AK::URL url, WorkerOptions const& options)
     : m_worker_options(options)
     , m_url(move(url))

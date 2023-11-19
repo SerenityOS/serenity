@@ -16,6 +16,10 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSStyleDeclaration);
+JS_DEFINE_ALLOCATOR(PropertyOwningCSSStyleDeclaration);
+JS_DEFINE_ALLOCATOR(ElementInlineCSSStyleDeclaration);
+
 CSSStyleDeclaration::CSSStyleDeclaration(JS::Realm& realm)
     : PlatformObject(realm)
 {

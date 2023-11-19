@@ -29,6 +29,7 @@ namespace Web::Fetch::Infrastructure {
 // https://fetch.spec.whatwg.org/#concept-request
 class Request final : public JS::Cell {
     JS_CELL(Request, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Request);
 
 public:
     enum class CacheMode {

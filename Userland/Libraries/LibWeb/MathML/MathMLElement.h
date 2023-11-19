@@ -15,6 +15,7 @@ namespace Web::MathML {
 class MathMLElement : public DOM::Element
     , public HTML::GlobalEventHandlers {
     WEB_PLATFORM_OBJECT(MathMLElement, Element);
+    JS_DECLARE_ALLOCATOR(MathMLElement);
 
 public:
     virtual ~MathMLElement() override;

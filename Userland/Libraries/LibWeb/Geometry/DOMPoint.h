@@ -14,6 +14,7 @@ namespace Web::Geometry {
 // https://drafts.fxtf.org/geometry/#DOMPoint
 class DOMPoint final : public DOMPointReadOnly {
     WEB_PLATFORM_OBJECT(DOMPoint, DOMPointReadOnly);
+    JS_DECLARE_ALLOCATOR(DOMPoint);
 
 public:
     static JS::NonnullGCPtr<DOMPoint> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 1);

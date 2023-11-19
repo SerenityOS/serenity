@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class HTMLDialogElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLDialogElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLDialogElement);
 
 public:
     virtual ~HTMLDialogElement() override;

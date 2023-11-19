@@ -20,6 +20,7 @@ namespace Web::DOM {
 // https://dom.spec.whatwg.org/#interface-namednodemap
 class NamedNodeMap : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(NamedNodeMap, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(NamedNodeMap);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<NamedNodeMap> create(Element&);

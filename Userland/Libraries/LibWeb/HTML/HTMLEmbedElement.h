@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLEmbedElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLEmbedElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLEmbedElement);
 
 public:
     virtual ~HTMLEmbedElement() override;

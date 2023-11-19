@@ -16,6 +16,7 @@ namespace Web::HTML {
 
 class VideoTrackList final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(VideoTrackList, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(VideoTrackList);
 
 public:
     ErrorOr<void> add_track(Badge<HTMLMediaElement>, JS::NonnullGCPtr<VideoTrack>);

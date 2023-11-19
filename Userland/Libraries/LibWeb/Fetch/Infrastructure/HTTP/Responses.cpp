@@ -17,6 +17,12 @@
 
 namespace Web::Fetch::Infrastructure {
 
+JS_DEFINE_ALLOCATOR(Response);
+JS_DEFINE_ALLOCATOR(BasicFilteredResponse);
+JS_DEFINE_ALLOCATOR(CORSFilteredResponse);
+JS_DEFINE_ALLOCATOR(OpaqueFilteredResponse);
+JS_DEFINE_ALLOCATOR(OpaqueRedirectFilteredResponse);
+
 Response::Response(JS::NonnullGCPtr<HeaderList> header_list)
     : m_header_list(header_list)
 {

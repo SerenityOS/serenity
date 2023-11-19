@@ -20,6 +20,7 @@ struct DocumentTimelineOptions {
 // https://www.w3.org/TR/web-animations-1/#the-documenttimeline-interface
 class DocumentTimeline : public AnimationTimeline {
     WEB_PLATFORM_OBJECT(DocumentTimeline, AnimationTimeline);
+    JS_DECLARE_ALLOCATOR(DocumentTimeline);
 
 public:
     static JS::NonnullGCPtr<DocumentTimeline> create(JS::Realm&, DOM::Document&, HighResolutionTime::DOMHighResTimeStamp origin_time);

@@ -29,6 +29,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Navigation);
+
 static NavigationResult navigation_api_method_tracker_derived_result(JS::NonnullGCPtr<NavigationAPIMethodTracker> api_method_tracker);
 
 NavigationAPIMethodTracker::NavigationAPIMethodTracker(JS::NonnullGCPtr<Navigation> navigation,

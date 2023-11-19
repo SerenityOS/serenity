@@ -18,6 +18,7 @@ struct AlreadyConstructedCustomElementMarker {
 // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-definition
 class CustomElementDefinition : public JS::Cell {
     JS_CELL(CustomElementDefinition, JS::Cell);
+    JS_DECLARE_ALLOCATOR(CustomElementDefinition);
 
     using LifecycleCallbacksStorage = OrderedHashMap<FlyString, JS::Handle<WebIDL::CallbackType>>;
     using ConstructionStackStorage = Vector<Variant<JS::Handle<DOM::Element>, AlreadyConstructedCustomElementMarker>>;

@@ -28,6 +28,7 @@ struct BlobPropertyBag {
 
 class Blob : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Blob, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Blob);
 
 public:
     virtual ~Blob() override;

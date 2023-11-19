@@ -18,6 +18,7 @@ namespace Web::Bindings {
 
 class Intrinsics final : public JS::Cell {
     JS_CELL(Intrinsics, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Intrinsics);
 
 public:
     Intrinsics(JS::Realm& realm)

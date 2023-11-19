@@ -13,6 +13,7 @@ namespace Web::Selection {
 
 class Selection final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Selection, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Selection);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Selection> create(JS::NonnullGCPtr<JS::Realm>, JS::NonnullGCPtr<DOM::Document>);

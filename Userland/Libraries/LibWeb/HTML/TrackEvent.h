@@ -21,6 +21,7 @@ struct TrackEventInit : public DOM::EventInit {
 
 class TrackEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(TrackEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(TrackEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<TrackEvent> create(JS::Realm&, FlyString const& event_name, TrackEventInit = {});

@@ -11,6 +11,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGTitleElement);
+
 SVGTitleElement::SVGTitleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGElement(document, move(qualified_name))
 {

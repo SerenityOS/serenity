@@ -70,6 +70,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Window);
+
 // https://html.spec.whatwg.org/#run-the-animation-frame-callbacks
 void run_animation_frame_callbacks(DOM::Document& document, double)
 {

@@ -11,6 +11,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(MutationObserver);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<MutationObserver>> MutationObserver::construct_impl(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback)
 {
     return realm.heap().allocate<MutationObserver>(realm, realm, callback);

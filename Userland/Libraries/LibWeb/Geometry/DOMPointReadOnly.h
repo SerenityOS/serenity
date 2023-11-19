@@ -23,6 +23,7 @@ struct DOMPointInit {
 // https://drafts.fxtf.org/geometry/#dompointreadonly
 class DOMPointReadOnly : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMPointReadOnly, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMPointReadOnly);
 
 public:
     static JS::NonnullGCPtr<DOMPointReadOnly> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 1);

@@ -16,6 +16,7 @@ namespace Web::CSS {
 
 class CSSStyleDeclaration : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(CSSStyleDeclaration, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(CSSStyleDeclaration);
 
 public:
     virtual ~CSSStyleDeclaration() = default;
@@ -50,6 +51,8 @@ protected:
 
 class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
     WEB_PLATFORM_OBJECT(PropertyOwningCSSStyleDeclaration, CSSStyleDeclaration);
+    JS_DECLARE_ALLOCATOR(PropertyOwningCSSStyleDeclaration);
+
     friend class ElementInlineCSSStyleDeclaration;
 
 public:
@@ -93,6 +96,7 @@ private:
 
 class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDeclaration {
     WEB_PLATFORM_OBJECT(ElementInlineCSSStyleDeclaration, PropertyOwningCSSStyleDeclaration);
+    JS_DECLARE_ALLOCATOR(ElementInlineCSSStyleDeclaration);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element&, Vector<StyleProperty>, HashMap<FlyString, StyleProperty> custom_properties);

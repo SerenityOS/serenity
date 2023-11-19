@@ -14,6 +14,8 @@
 
 namespace Web::WebAssembly {
 
+JS_DEFINE_ALLOCATOR(Module);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Module>> Module::construct_impl(JS::Realm& realm, JS::Handle<JS::Object>& bytes)
 {
     auto& vm = realm.vm();

@@ -10,6 +10,8 @@
 
 namespace Web::Fetch::Infrastructure {
 
+JS_DEFINE_ALLOCATOR(ConnectionTimingInfo);
+
 ConnectionTimingInfo::ConnectionTimingInfo() = default;
 
 JS::NonnullGCPtr<ConnectionTimingInfo> ConnectionTimingInfo::create(JS::VM& vm)

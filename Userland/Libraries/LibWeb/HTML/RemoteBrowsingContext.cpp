@@ -8,6 +8,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(RemoteBrowsingContext);
+
 JS::NonnullGCPtr<RemoteBrowsingContext> RemoteBrowsingContext::create_a_new_remote_browsing_context(String handle)
 {
     auto browsing_context = Bindings::main_thread_vm().heap().allocate_without_realm<RemoteBrowsingContext>(handle);

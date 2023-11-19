@@ -13,6 +13,7 @@ namespace Web::Crypto {
 
 class SubtleCrypto final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(SubtleCrypto, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(SubtleCrypto);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<SubtleCrypto> create(JS::Realm&);

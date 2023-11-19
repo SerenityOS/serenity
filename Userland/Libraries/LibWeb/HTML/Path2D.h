@@ -20,6 +20,7 @@ class Path2D final
     , public CanvasPath {
 
     WEB_PLATFORM_OBJECT(Path2D, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Path2D);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Path2D>> construct_impl(JS::Realm&, Optional<Variant<JS::Handle<Path2D>, String>> const& path);

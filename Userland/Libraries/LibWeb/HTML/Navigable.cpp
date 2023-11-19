@@ -35,8 +35,11 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Navigable);
+
 class ResponseHolder : public JS::Cell {
     JS_CELL(ResponseHolder, JS::Cell);
+    JS_DECLARE_ALLOCATOR(ResponseHolder);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<ResponseHolder> create(JS::VM& vm)
@@ -55,6 +58,8 @@ public:
 private:
     JS::GCPtr<Fetch::Infrastructure::Response> m_response;
 };
+
+JS_DEFINE_ALLOCATOR(ResponseHolder);
 
 HashTable<Navigable*>& all_navigables()
 {

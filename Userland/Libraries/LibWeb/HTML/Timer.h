@@ -19,6 +19,7 @@ namespace Web::HTML {
 
 class Timer final : public JS::Cell {
     JS_CELL(Timer, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Timer);
 
 public:
     static JS::NonnullGCPtr<Timer> create(JS::Object&, i32 milliseconds, Function<void()> callback, i32 id);

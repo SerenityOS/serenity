@@ -42,6 +42,7 @@ namespace Web::HTML {
 
 class HTMLParser final : public JS::Cell {
     JS_CELL(HTMLParser, JS::Cell);
+    JS_DECLARE_ALLOCATOR(HTMLParser);
 
     friend class HTMLTokenizer;
 

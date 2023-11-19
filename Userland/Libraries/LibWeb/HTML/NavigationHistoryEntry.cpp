@@ -16,6 +16,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(NavigationHistoryEntry);
+
 JS::NonnullGCPtr<NavigationHistoryEntry> NavigationHistoryEntry::create(JS::Realm& realm, JS::NonnullGCPtr<SessionHistoryEntry> she)
 {
     return realm.heap().allocate<NavigationHistoryEntry>(realm, realm, she);

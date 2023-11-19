@@ -13,6 +13,7 @@ namespace Web::Streams {
 
 class TransformStreamDefaultController : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TransformStreamDefaultController, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(TransformStreamDefaultController);
 
 public:
     explicit TransformStreamDefaultController(JS::Realm&);

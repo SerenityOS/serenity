@@ -18,6 +18,7 @@ namespace Web::WebAssembly {
 
 class Module : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Module, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Module);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Module>> construct_impl(JS::Realm&, JS::Handle<JS::Object>& bytes);

@@ -13,6 +13,8 @@
 
 namespace Web::PerformanceTimeline {
 
+JS_DEFINE_ALLOCATOR(PerformanceObserverEntryList);
+
 PerformanceObserverEntryList::PerformanceObserverEntryList(JS::Realm& realm, Vector<JS::NonnullGCPtr<PerformanceTimeline::PerformanceEntry>>&& entry_list)
     : Bindings::PlatformObject(realm)
     , m_entry_list(move(entry_list))

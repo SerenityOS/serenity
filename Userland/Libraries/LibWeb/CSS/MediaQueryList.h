@@ -15,6 +15,7 @@ namespace Web::CSS {
 // 4.2. The MediaQueryList Interface, https://drafts.csswg.org/cssom-view/#the-mediaquerylist-interface
 class MediaQueryList final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(MediaQueryList, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(MediaQueryList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MediaQueryList> create(DOM::Document&, Vector<NonnullRefPtr<MediaQuery>>&&);

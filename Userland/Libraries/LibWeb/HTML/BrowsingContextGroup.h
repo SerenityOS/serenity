@@ -16,6 +16,7 @@ namespace Web::HTML {
 
 class BrowsingContextGroup final : public JS::Cell {
     JS_CELL(BrowsingContextGroup, JS::Cell);
+    JS_DECLARE_ALLOCATOR(BrowsingContextGroup);
 
 public:
     struct BrowsingContextGroupAndDocument {

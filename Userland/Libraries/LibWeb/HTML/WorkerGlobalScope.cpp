@@ -18,6 +18,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(WorkerGlobalScope);
+
 WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm, Web::Page& page)
     : DOM::EventTarget(realm)
     , m_page(page)

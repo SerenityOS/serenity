@@ -24,6 +24,7 @@ namespace Web::Fetch::Infrastructure {
 // https://fetch.spec.whatwg.org/#concept-response
 class Response : public JS::Cell {
     JS_CELL(Response, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Response);
 
 public:
     enum class CacheState {
@@ -223,6 +224,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-basic
 class BasicFilteredResponse final : public FilteredResponse {
     JS_CELL(OpaqueRedirectFilteredResponse, FilteredResponse);
+    JS_DECLARE_ALLOCATOR(BasicFilteredResponse);
 
 public:
     [[nodiscard]] static ErrorOr<JS::NonnullGCPtr<BasicFilteredResponse>> create(JS::VM&, JS::NonnullGCPtr<Response>);
@@ -241,6 +243,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-cors
 class CORSFilteredResponse final : public FilteredResponse {
     JS_CELL(CORSFilteredResponse, FilteredResponse);
+    JS_DECLARE_ALLOCATOR(CORSFilteredResponse);
 
 public:
     [[nodiscard]] static ErrorOr<JS::NonnullGCPtr<CORSFilteredResponse>> create(JS::VM&, JS::NonnullGCPtr<Response>);
@@ -259,6 +262,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-opaque
 class OpaqueFilteredResponse final : public FilteredResponse {
     JS_CELL(OpaqueFilteredResponse, FilteredResponse);
+    JS_DECLARE_ALLOCATOR(OpaqueFilteredResponse);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<OpaqueFilteredResponse> create(JS::VM&, JS::NonnullGCPtr<Response>);
@@ -285,6 +289,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-opaque-redirect
 class OpaqueRedirectFilteredResponse final : public FilteredResponse {
     JS_CELL(OpaqueRedirectFilteredResponse, FilteredResponse);
+    JS_DECLARE_ALLOCATOR(OpaqueRedirectFilteredResponse);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<OpaqueRedirectFilteredResponse> create(JS::VM&, JS::NonnullGCPtr<Response>);

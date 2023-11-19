@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class HTMLProgressElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLProgressElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLProgressElement);
 
 public:
     virtual ~HTMLProgressElement() override;

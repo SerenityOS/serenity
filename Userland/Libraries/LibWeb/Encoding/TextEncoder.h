@@ -24,6 +24,7 @@ struct TextEncoderEncodeIntoResult {
 // https://encoding.spec.whatwg.org/#textencoder
 class TextEncoder final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TextEncoder, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(TextEncoder);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<TextEncoder>> construct_impl(JS::Realm&);

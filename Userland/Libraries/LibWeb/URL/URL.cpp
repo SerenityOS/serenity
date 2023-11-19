@@ -16,6 +16,8 @@
 
 namespace Web::URL {
 
+JS_DEFINE_ALLOCATOR(URL);
+
 JS::NonnullGCPtr<URL> URL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 {
     return realm.heap().allocate<URL>(realm, realm, move(url), move(query));

@@ -14,6 +14,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(Event);
+
 JS::NonnullGCPtr<Event> Event::create(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
 {
     return realm.heap().allocate<Event>(realm, realm, event_name, event_init);

@@ -31,6 +31,7 @@ class Response final
     : public Bindings::PlatformObject
     , public BodyMixin {
     WEB_PLATFORM_OBJECT(Response, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Response);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Response> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>, Headers::Guard);

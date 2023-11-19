@@ -37,6 +37,7 @@ struct IntersectionObserverEntryInit {
 
 class IntersectionObserverEntry final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(IntersectionObserverEntry, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(IntersectionObserverEntry);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<IntersectionObserverEntry>> construct_impl(JS::Realm&, IntersectionObserverEntryInit const& options);

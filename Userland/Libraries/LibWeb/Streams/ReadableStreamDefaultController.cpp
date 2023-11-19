@@ -16,6 +16,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(ReadableStreamDefaultController);
+
 ReadableStreamDefaultController::ReadableStreamDefaultController(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {

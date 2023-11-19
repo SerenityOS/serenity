@@ -17,6 +17,8 @@
 
 namespace Web::Animations {
 
+JS_DEFINE_ALLOCATOR(Animation);
+
 // https://www.w3.org/TR/web-animations-1/#dom-animation-animation
 JS::NonnullGCPtr<Animation> Animation::create(JS::Realm& realm, JS::GCPtr<AnimationEffect> effect, JS::GCPtr<AnimationTimeline> timeline)
 {

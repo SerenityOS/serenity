@@ -15,6 +15,7 @@ namespace Web::DOM {
 
 class DOMImplementation final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMImplementation, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMImplementation);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<DOMImplementation> create(Document&);

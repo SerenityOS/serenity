@@ -13,6 +13,8 @@
 
 namespace Web::Streams {
 
+JS_DEFINE_ALLOCATOR(ByteLengthQueuingStrategy);
+
 // https://streams.spec.whatwg.org/#blqs-constructor
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ByteLengthQueuingStrategy>> ByteLengthQueuingStrategy::construct_impl(JS::Realm& realm, QueuingStrategyInit const& init)
 {

@@ -9,6 +9,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Script);
+
 Script::Script(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object)
     : m_base_url(move(base_url))
     , m_filename(move(filename))

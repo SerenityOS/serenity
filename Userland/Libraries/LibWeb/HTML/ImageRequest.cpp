@@ -19,6 +19,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(ImageRequest);
+
 JS::NonnullGCPtr<ImageRequest> ImageRequest::create(JS::Realm& realm, Page& page)
 {
     return realm.heap().allocate<ImageRequest>(realm, page);

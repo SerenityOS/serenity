@@ -24,6 +24,7 @@ protected:
 
 class JavaScriptModuleScript final : public ModuleScript {
     JS_CELL(JavaScriptModuleScript, ModuleScript);
+    JS_DECLARE_ALLOCATOR(JavaScriptModuleScript);
 
 public:
     virtual ~JavaScriptModuleScript() override;

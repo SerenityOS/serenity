@@ -11,6 +11,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(Comment);
+
 Comment::Comment(Document& document, String const& data)
     : CharacterData(document, NodeType::COMMENT_NODE, data)
 {

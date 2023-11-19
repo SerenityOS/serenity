@@ -17,6 +17,7 @@ struct FocusEventInit : public UIEventInit {
 
 class FocusEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(FocusEvent, UIEvent);
+    JS_DECLARE_ALLOCATOR(FocusEvent);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<FocusEvent>> construct_impl(JS::Realm&, FlyString const& event_name, FocusEventInit const& event_init);

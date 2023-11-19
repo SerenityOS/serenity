@@ -22,6 +22,7 @@ struct StaticRangeInit {
 
 class StaticRange final : public AbstractRange {
     WEB_PLATFORM_OBJECT(StaticRange, AbstractRange);
+    JS_DECLARE_ALLOCATOR(StaticRange);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<StaticRange>> construct_impl(JS::Realm&, StaticRangeInit& init);

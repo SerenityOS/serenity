@@ -22,6 +22,7 @@ namespace Web::DOM {
 // https://dom.spec.whatwg.org/#domtokenlist
 class DOMTokenList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMTokenList);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<DOMTokenList> create(Element& associated_element, FlyString associated_attribute);

@@ -11,6 +11,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(MediaError);
+
 MediaError::MediaError(JS::Realm& realm, Code code, String message)
     : Base(realm)
     , m_code(code)

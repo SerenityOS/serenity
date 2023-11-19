@@ -21,6 +21,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-2
 class DocumentState final : public JS::Cell {
     JS_CELL(DocumentState, JS::Cell);
+    JS_DECLARE_ALLOCATOR(DocumentState);
 
 public:
     struct NestedHistory {

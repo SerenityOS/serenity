@@ -12,6 +12,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(CanvasGradient);
+
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-createradialgradient
 WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasGradient>> CanvasGradient::create_radial(JS::Realm& realm, double x0, double y0, double r0, double x1, double y1, double r1)
 {

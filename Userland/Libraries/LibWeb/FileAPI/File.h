@@ -16,6 +16,7 @@ struct FilePropertyBag : BlobPropertyBag {
 
 class File : public Blob {
     WEB_PLATFORM_OBJECT(File, Blob);
+    JS_DECLARE_ALLOCATOR(File);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> create(JS::Realm&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});

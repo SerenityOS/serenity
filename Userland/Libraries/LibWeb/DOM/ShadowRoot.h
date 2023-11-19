@@ -13,6 +13,7 @@ namespace Web::DOM {
 
 class ShadowRoot final : public DocumentFragment {
     WEB_PLATFORM_OBJECT(ShadowRoot, DocumentFragment);
+    JS_DECLARE_ALLOCATOR(ShadowRoot);
 
 public:
     Bindings::ShadowRootMode mode() const { return m_mode; }

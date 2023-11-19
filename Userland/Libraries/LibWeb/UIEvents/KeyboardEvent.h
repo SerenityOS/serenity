@@ -34,6 +34,7 @@ enum class DOMKeyLocation {
 // https://www.w3.org/TR/uievents/#interface-keyboardevent
 class KeyboardEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(KeyboardEvent, UIEvent);
+    JS_DECLARE_ALLOCATOR(KeyboardEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<KeyboardEvent> create(JS::Realm&, FlyString const& event_name, KeyboardEventInit const& = {});

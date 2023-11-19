@@ -21,6 +21,7 @@ namespace Web::Fetch::Infrastructure {
 // https://fetch.spec.whatwg.org/#fetch-controller
 class FetchController : public JS::Cell {
     JS_CELL(FetchController, JS::Cell);
+    JS_DECLARE_ALLOCATOR(FetchController);
 
 public:
     enum class State {

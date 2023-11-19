@@ -15,6 +15,7 @@ namespace Web::Animations {
 // https://www.w3.org/TR/web-animations-1/#the-animation-interface
 class Animation : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(Animation, DOM::EventTarget);
+    JS_DECLARE_ALLOCATOR(Animation);
 
 public:
     static JS::NonnullGCPtr<Animation> create(JS::Realm&, JS::GCPtr<AnimationEffect>, JS::GCPtr<AnimationTimeline>);

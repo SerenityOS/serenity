@@ -9,13 +9,16 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/Vector.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {
 
 class AccessibilityTreeNode final : public JS::Cell {
-    JS_CELL(AccessibilityTreeNode, JS::Cell)
+    JS_CELL(AccessibilityTreeNode, JS::Cell);
+    JS_DECLARE_ALLOCATOR(AccessibilityTreeNode);
+
 public:
     static JS::NonnullGCPtr<AccessibilityTreeNode> create(Document*, DOM::Node const*);
     virtual ~AccessibilityTreeNode() override = default;

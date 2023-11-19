@@ -20,6 +20,7 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller
 class ReadableStreamDefaultController : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ReadableStreamDefaultController, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(ReadableStreamDefaultController);
 
 public:
     explicit ReadableStreamDefaultController(JS::Realm&);

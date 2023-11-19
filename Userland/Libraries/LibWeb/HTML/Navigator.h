@@ -24,6 +24,7 @@ class Navigator : public Bindings::PlatformObject
     , public NavigatorLanguageMixin
     , public NavigatorOnLineMixin {
     WEB_PLATFORM_OBJECT(Navigator, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(Navigator);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<Navigator> create(JS::Realm&);

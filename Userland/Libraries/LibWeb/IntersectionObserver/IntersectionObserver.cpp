@@ -14,6 +14,8 @@
 
 namespace Web::IntersectionObserver {
 
+JS_DEFINE_ALLOCATOR(IntersectionObserver);
+
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-intersectionobserver
 WebIDL::ExceptionOr<JS::NonnullGCPtr<IntersectionObserver>> IntersectionObserver::construct_impl(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback, IntersectionObserverInit const& options)
 {

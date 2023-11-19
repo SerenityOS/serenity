@@ -12,6 +12,7 @@ namespace Web::NavigationTiming {
 
 class PerformanceTiming final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(PerformanceTiming, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(PerformanceTiming);
 
 public:
     using AllowOwnPtr = TrueType;

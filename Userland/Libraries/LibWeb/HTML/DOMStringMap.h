@@ -15,6 +15,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/dom.html#domstringmap
 class DOMStringMap final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMStringMap, Bindings::LegacyPlatformObject);
+    JS_DECLARE_ALLOCATOR(DOMStringMap);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<DOMStringMap> create(DOM::Element&);

@@ -13,6 +13,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/workers.html#worker-locations
 class WorkerLocation : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(WorkerLocation, Bindings::PlatformObject);
+    JS_DECLARE_ALLOCATOR(WorkerLocation);
 
 public:
     virtual ~WorkerLocation() override;

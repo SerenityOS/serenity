@@ -18,6 +18,7 @@ struct NavigationCurrentEntryChangeEventInit : public DOM::EventInit {
 
 class NavigationCurrentEntryChangeEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(NavigationCurrentEntryChangeEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(NavigationCurrentEntryChangeEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<NavigationCurrentEntryChangeEvent> construct_impl(JS::Realm&, FlyString const& event_name, NavigationCurrentEntryChangeEventInit const&);

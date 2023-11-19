@@ -18,6 +18,7 @@ struct MediaQueryListEventInit : public DOM::EventInit {
 
 class MediaQueryListEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(MediaQueryListEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(MediaQueryListEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MediaQueryListEvent> construct_impl(JS::Realm&, FlyString const& event_name, MediaQueryListEventInit const& = {});

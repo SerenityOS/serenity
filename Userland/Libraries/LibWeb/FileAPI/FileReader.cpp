@@ -30,6 +30,8 @@
 
 namespace Web::FileAPI {
 
+JS_DEFINE_ALLOCATOR(FileReader);
+
 FileReader::~FileReader() = default;
 
 FileReader::FileReader(JS::Realm& realm)

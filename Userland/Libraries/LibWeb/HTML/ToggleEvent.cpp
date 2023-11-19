@@ -10,6 +10,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(ToggleEvent);
+
 JS::NonnullGCPtr<ToggleEvent> ToggleEvent::create(JS::Realm& realm, FlyString const& event_name, ToggleEventInit event_init)
 {
     return realm.heap().allocate<ToggleEvent>(realm, realm, event_name, move(event_init));

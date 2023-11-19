@@ -13,6 +13,7 @@ namespace Web::HTML {
 
 class HTMLOptionElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLOptionElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLOptionElement);
 
 public:
     virtual ~HTMLOptionElement() override;

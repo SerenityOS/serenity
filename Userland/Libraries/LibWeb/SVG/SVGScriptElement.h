@@ -13,6 +13,7 @@ namespace Web::SVG {
 // https://www.w3.org/TR/SVG/interact.html#InterfaceSVGScriptElement
 class SVGScriptElement : public SVGElement {
     WEB_PLATFORM_OBJECT(SVGScriptElement, SVGElement);
+    JS_DECLARE_ALLOCATOR(SVGScriptElement);
 
 public:
     void process_the_script_element();

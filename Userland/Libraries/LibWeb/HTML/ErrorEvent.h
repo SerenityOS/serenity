@@ -23,6 +23,7 @@ struct ErrorEventInit : public DOM::EventInit {
 // https://html.spec.whatwg.org/multipage/webappapis.html#errorevent
 class ErrorEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(ErrorEvent, DOM::Event);
+    JS_DECLARE_ALLOCATOR(ErrorEvent);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<ErrorEvent> create(JS::Realm&, FlyString const& event_name, ErrorEventInit const& = {});

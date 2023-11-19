@@ -15,6 +15,8 @@
 
 namespace Web::CSS {
 
+JS_DEFINE_ALLOCATOR(CSSStyleSheet);
+
 JS::NonnullGCPtr<CSSStyleSheet> CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
 {
     return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location));

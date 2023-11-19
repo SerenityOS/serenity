@@ -12,6 +12,8 @@
 
 namespace Web::UIEvents {
 
+JS_DEFINE_ALLOCATOR(WheelEvent);
+
 WheelEvent::WheelEvent(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& event_init, double page_x, double page_y, double offset_x, double offset_y, unsigned modifiers)
     : MouseEvent(realm, event_name, event_init, page_x, page_y, offset_x, offset_y, modifiers)
     , m_delta_x(event_init.delta_x)

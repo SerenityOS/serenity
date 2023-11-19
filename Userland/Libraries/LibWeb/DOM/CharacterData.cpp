@@ -14,6 +14,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(CharacterData);
+
 CharacterData::CharacterData(Document& document, NodeType type, String const& data)
     : Node(document, type)
     , m_data(data)

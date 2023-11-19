@@ -13,6 +13,7 @@ namespace Web::DOM {
 
 class HTMLFormControlsCollection : public HTMLCollection {
     WEB_PLATFORM_OBJECT(HTMLFormControlsCollection, HTMLCollection);
+    JS_DECLARE_ALLOCATOR(HTMLFormControlsCollection);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<HTMLFormControlsCollection> create(ParentNode& root, Scope, Function<bool(Element const&)> filter);

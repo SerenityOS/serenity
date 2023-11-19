@@ -13,6 +13,7 @@ namespace Web::SVG {
 
 class SVGCircleElement final : public SVGGeometryElement {
     WEB_PLATFORM_OBJECT(SVGCircleElement, SVGGeometryElement);
+    JS_DECLARE_ALLOCATOR(SVGCircleElement);
 
 public:
     virtual ~SVGCircleElement() override = default;

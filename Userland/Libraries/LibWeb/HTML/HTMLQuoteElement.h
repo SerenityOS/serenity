@@ -12,6 +12,7 @@ namespace Web::HTML {
 
 class HTMLQuoteElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLQuoteElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLQuoteElement);
 
 public:
     virtual ~HTMLQuoteElement() override;

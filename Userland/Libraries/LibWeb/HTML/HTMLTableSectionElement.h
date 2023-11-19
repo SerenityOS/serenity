@@ -14,6 +14,7 @@ namespace Web::HTML {
 
 class HTMLTableSectionElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLTableSectionElement, HTMLElement);
+    JS_DECLARE_ALLOCATOR(HTMLTableSectionElement);
 
 public:
     virtual ~HTMLTableSectionElement() override;

@@ -13,6 +13,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(AccessibilityTreeNode);
+
 JS::NonnullGCPtr<AccessibilityTreeNode> AccessibilityTreeNode::create(Document* document, DOM::Node const* value)
 {
     return document->heap().allocate<AccessibilityTreeNode>(document->realm(), value);

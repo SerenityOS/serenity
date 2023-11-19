@@ -18,6 +18,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(TraversableNavigable);
+
 TraversableNavigable::TraversableNavigable(Page& page)
     : m_page(page)
 {

@@ -19,6 +19,8 @@
 
 namespace Web::Clipboard {
 
+JS_DEFINE_ALLOCATOR(Clipboard);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Clipboard>> Clipboard::construct_impl(JS::Realm& realm)
 {
     return realm.heap().allocate<Clipboard>(realm, realm);

@@ -13,6 +13,8 @@
 
 namespace Web::SVG {
 
+JS_DEFINE_ALLOCATOR(SVGMaskElement);
+
 SVGMaskElement::SVGMaskElement(DOM::Document& document, DOM::QualifiedName tag_name)
     : SVGGraphicsElement(document, move(tag_name))
 {

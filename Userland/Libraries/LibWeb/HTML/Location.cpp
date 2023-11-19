@@ -22,6 +22,8 @@
 
 namespace Web::HTML {
 
+JS_DEFINE_ALLOCATOR(Location);
+
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface
 Location::Location(JS::Realm& realm)
     : PlatformObject(realm, MayInterfereWithIndexedPropertyAccess::Yes)

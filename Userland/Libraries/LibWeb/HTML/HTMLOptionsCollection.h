@@ -17,6 +17,7 @@ using HTMLElementOrElementIndex = Variant<JS::Handle<HTMLElement>, i32>;
 
 class HTMLOptionsCollection final : public DOM::HTMLCollection {
     WEB_PLATFORM_OBJECT(HTMLOptionsCollection, DOM::HTMLCollection);
+    JS_DECLARE_ALLOCATOR(HTMLOptionsCollection);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<HTMLOptionsCollection> create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);

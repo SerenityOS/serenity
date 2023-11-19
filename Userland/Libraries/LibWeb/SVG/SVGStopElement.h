@@ -15,6 +15,7 @@ namespace Web::SVG {
 
 class SVGStopElement final : public SVGElement {
     WEB_PLATFORM_OBJECT(SVGStopElement, SVGElement);
+    JS_DECLARE_ALLOCATOR(SVGStopElement);
 
 public:
     virtual ~SVGStopElement() override = default;

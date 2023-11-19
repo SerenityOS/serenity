@@ -13,6 +13,8 @@
 
 namespace Web::DOM {
 
+JS_DEFINE_ALLOCATOR(HTMLCollection);
+
 JS::NonnullGCPtr<HTMLCollection> HTMLCollection::create(ParentNode& root, Scope scope, Function<bool(Element const&)> filter)
 {
     return root.heap().allocate<HTMLCollection>(root.realm(), root, scope, move(filter));

@@ -15,6 +15,7 @@ class RemoteBrowsingContext final
     : public AbstractBrowsingContext
     , public Weakable<RemoteBrowsingContext> {
     JS_CELL(RemoteBrowsingContext, AbstractBrowsingContext);
+    JS_DECLARE_ALLOCATOR(RemoteBrowsingContext);
 
 public:
     static JS::NonnullGCPtr<RemoteBrowsingContext> create_a_new_remote_browsing_context(String handle);

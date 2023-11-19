@@ -16,6 +16,7 @@ class DocumentType final
     : public Node
     , public ChildNode<DocumentType> {
     WEB_PLATFORM_OBJECT(DocumentType, Node);
+    JS_DECLARE_ALLOCATOR(DocumentType);
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<DocumentType> create(Document&);

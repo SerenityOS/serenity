@@ -16,6 +16,7 @@ class DocumentFragment
     : public ParentNode
     , public NonElementParentNode<DocumentFragment> {
     WEB_PLATFORM_OBJECT(DocumentFragment, ParentNode);
+    JS_DECLARE_ALLOCATOR(DocumentFragment);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> construct_impl(JS::Realm& realm);

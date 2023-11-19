@@ -18,6 +18,7 @@ class Script
     : public JS::Cell
     , public JS::Script::HostDefined {
     JS_CELL(Script, JS::Cell);
+    JS_DECLARE_ALLOCATOR(Script);
 
 public:
     virtual ~Script() override;
