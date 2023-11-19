@@ -799,7 +799,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_and_or()
             auto rhs = TRY(parse_pipeline());
             if (!rhs)
                 return RefPtr<AST::Node> {};
-            node = make_ref_counted<AST::And>(
+            node = make_ref_counted<AST::Or>(
                 node->position(),
                 *node,
                 rhs.release_nonnull(),
