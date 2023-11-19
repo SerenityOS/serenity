@@ -17,33 +17,6 @@ JS_DEFINE_ALLOCATOR(HTMLSlotElement);
 HTMLSlotElement::HTMLSlotElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext
-    add_attribute_change_steps([this](auto const& local_name, auto const& old_value, auto const& value, auto const& namespace_) {
-        // 1. If element is a slot, localName is name, and namespace is null, then:
-        if (local_name == AttributeNames::name && !namespace_.has_value()) {
-            // 1. If value is oldValue, then return.
-            if (value == old_value)
-                return;
-
-            // 2. If value is null and oldValue is the empty string, then return.
-            if (!value.has_value() && old_value == String {})
-                return;
-
-            // 3. If value is the empty string and oldValue is null, then return.
-            if (value == String {} && !old_value.has_value())
-                return;
-
-            // 4. If value is null or the empty string, then set element’s name to the empty string.
-            if (!value.has_value())
-                set_slot_name({});
-            // 5. Otherwise, set element’s name to value.
-            else
-                set_slot_name(*value);
-
-            // 6. Run assign slottables for a tree with element’s root.
-            DOM::assign_slottables_for_a_tree(root());
-        }
-    });
 }
 
 HTMLSlotElement::~HTMLSlotElement() = default;
@@ -140,6 +113,37 @@ void HTMLSlotElement::assign(Vector<SlottableHandle> nodes)
 
     // 5. Run assign slottables for a tree for this's root.
     assign_slottables_for_a_tree(root());
+}
+
+// https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext
+void HTMLSlotElement::attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_)
+{
+    Base::attribute_change_steps(local_name, old_value, value, namespace_);
+
+    // 1. If element is a slot, localName is name, and namespace is null, then:
+    if (local_name == AttributeNames::name && !namespace_.has_value()) {
+        // 1. If value is oldValue, then return.
+        if (value == old_value)
+            return;
+
+        // 2. If value is null and oldValue is the empty string, then return.
+        if (!value.has_value() && old_value == String {})
+            return;
+
+        // 3. If value is the empty string and oldValue is null, then return.
+        if (value == String {} && !old_value.has_value())
+            return;
+
+        // 4. If value is null or the empty string, then set element’s name to the empty string.
+        if (!value.has_value())
+            set_slot_name({});
+        // 5. Otherwise, set element’s name to value.
+        else
+            set_slot_name(*value);
+
+        // 6. Run assign slottables for a tree with element’s root.
+        DOM::assign_slottables_for_a_tree(root());
+    }
 }
 
 }
