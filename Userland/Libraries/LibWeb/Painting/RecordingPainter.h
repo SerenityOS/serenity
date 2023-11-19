@@ -302,6 +302,14 @@ struct BlitCornerClipping {
     [[nodiscard]] Gfx::IntRect bounding_rect() const;
 };
 
+struct PaintBorders {
+    DevicePixelRect border_rect;
+    CornerRadii corner_radii;
+    BordersDataDevicePixels borders_data;
+
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return border_rect.to_type<int>(); }
+};
+
 using PaintingCommand = Variant<
     DrawGlyphRun,
     DrawText,
@@ -333,7 +341,8 @@ using PaintingCommand = Variant<
     DrawRect,
     DrawTriangleWave,
     SampleUnderCorners,
-    BlitCornerClipping>;
+    BlitCornerClipping,
+    PaintBorders>;
 
 class PaintingCommandExecutor {
 public:
@@ -370,6 +379,7 @@ public:
     virtual CommandResult draw_triangle_wave(Gfx::IntPoint const& p1, Gfx::IntPoint const& p2, Color const& color, int amplitude, int thickness) = 0;
     virtual CommandResult sample_under_corners(BorderRadiusCornerClipper&) = 0;
     virtual CommandResult blit_corner_clipping(BorderRadiusCornerClipper&) = 0;
+    virtual CommandResult paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data) = 0;
 
     virtual bool would_be_fully_clipped_by_painter(Gfx::IntRect) const = 0;
 
@@ -475,6 +485,8 @@ public:
     void fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
 
     void draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2, Color color, int amplitude, int thickness);
+
+    void paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data);
 
     void execute(PaintingCommandExecutor&);
 
