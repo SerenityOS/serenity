@@ -1811,7 +1811,7 @@ void Element::enqueue_an_element_on_the_appropriate_element_queue()
 void Element::enqueue_a_custom_element_upgrade_reaction(HTML::CustomElementDefinition& custom_element_definition)
 {
     // 1. Add a new upgrade reaction to element's custom element reaction queue, with custom element definition definition.
-    m_custom_element_reaction_queue.append(CustomElementUpgradeReaction { .custom_element_definition = custom_element_definition });
+    ensure_custom_element_reaction_queue().append(CustomElementUpgradeReaction { .custom_element_definition = custom_element_definition });
 
     // 2. Enqueue an element on the appropriate element queue given element.
     enqueue_an_element_on_the_appropriate_element_queue();
@@ -1846,7 +1846,7 @@ void Element::enqueue_a_custom_element_callback_reaction(FlyString const& callba
     }
 
     // 5. Add a new callback reaction to element's custom element reaction queue, with callback function callback and arguments args.
-    m_custom_element_reaction_queue.append(CustomElementCallbackReaction { .callback = callback_iterator->value, .arguments = move(arguments) });
+    ensure_custom_element_reaction_queue().append(CustomElementCallbackReaction { .callback = callback_iterator->value, .arguments = move(arguments) });
 
     // 6. Enqueue an element on the appropriate element queue given element.
     enqueue_an_element_on_the_appropriate_element_queue();
@@ -1929,7 +1929,7 @@ JS::ThrowCompletionOr<void> Element::upgrade_element(JS::NonnullGCPtr<HTML::Cust
         m_custom_element_definition = nullptr;
 
         // 2. Empty element's custom element reaction queue.
-        m_custom_element_reaction_queue.clear();
+        m_custom_element_reaction_queue = nullptr;
 
         // 3. Rethrow the exception (thus terminating this algorithm).
         return maybe_exception.release_error();
@@ -2269,6 +2269,13 @@ void Element::attribute_change_steps(FlyString const& local_name, Optional<Strin
         // 7. Run assign a slot for element.
         assign_a_slot(JS::NonnullGCPtr { *this });
     }
+}
+
+auto Element::ensure_custom_element_reaction_queue() -> CustomElementReactionQueue&
+{
+    if (!m_custom_element_reaction_queue)
+        m_custom_element_reaction_queue = make<CustomElementReactionQueue>();
+    return *m_custom_element_reaction_queue;
 }
 
 }

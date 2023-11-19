@@ -675,12 +675,14 @@ void invoke_custom_element_reactions(Vector<JS::Handle<DOM::Element>>& element_q
         auto element = element_queue.take_first();
 
         // 2. Let reactions be element's custom element reaction queue.
-        auto& reactions = element->custom_element_reaction_queue();
+        auto* reactions = element->custom_element_reaction_queue();
 
         // 3. Repeat until reactions is empty:
-        while (!reactions.is_empty()) {
+        if (!reactions)
+            continue;
+        while (!reactions->is_empty()) {
             // 1. Remove the first element of reactions, and let reaction be that element. Switch on reaction's type:
-            auto reaction = reactions.take_first();
+            auto reaction = reactions->take_first();
 
             auto maybe_exception = reaction.visit(
                 [&](DOM::CustomElementUpgradeReaction const& custom_element_upgrade_reaction) -> JS::ThrowCompletionOr<void> {
