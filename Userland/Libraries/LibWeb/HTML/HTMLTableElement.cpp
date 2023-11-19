@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/HTMLTableColElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Namespace.h>
 
@@ -98,6 +99,19 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
             apply_border_style(CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor);
         }
     });
+}
+
+void HTMLTableElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+{
+    Base::attribute_changed(name, value);
+    if (name == HTML::AttributeNames::cellpadding) {
+        if (value.has_value())
+            m_padding = max(0, parse_integer(value.value()).value_or(0));
+        else
+            m_padding = 1;
+
+        return;
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-caption
@@ -422,6 +436,11 @@ WebIDL::ExceptionOr<void> HTMLTableElement::delete_row(long index)
 unsigned int HTMLTableElement::border() const
 {
     return parse_border(deprecated_attribute(HTML::AttributeNames::border));
+}
+
+unsigned int HTMLTableElement::padding() const
+{
+    return m_padding;
 }
 
 }

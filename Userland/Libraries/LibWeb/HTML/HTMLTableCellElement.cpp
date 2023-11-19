@@ -85,7 +85,16 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
         }
     });
     auto const& table_element = table_containing_cell(*this);
+
+    if (auto padding = table_element.padding()) {
+        style.set_property(CSS::PropertyID::PaddingTop, CSS::LengthStyleValue::create(CSS::Length::make_px(padding)));
+        style.set_property(CSS::PropertyID::PaddingBottom, CSS::LengthStyleValue::create(CSS::Length::make_px(padding)));
+        style.set_property(CSS::PropertyID::PaddingLeft, CSS::LengthStyleValue::create(CSS::Length::make_px(padding)));
+        style.set_property(CSS::PropertyID::PaddingRight, CSS::LengthStyleValue::create(CSS::Length::make_px(padding)));
+    }
+
     auto border = table_element.border();
+
     if (!border)
         return;
     auto apply_border_style = [&](CSS::PropertyID style_property, CSS::PropertyID width_property, CSS::PropertyID color_property) {
