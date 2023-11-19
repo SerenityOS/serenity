@@ -181,6 +181,21 @@ i32 ViewImplementation::get_hovered_node_id()
     return client().get_hovered_node_id();
 }
 
+void ViewImplementation::set_dom_node_text(i32 node_id, String text)
+{
+    client().async_set_dom_node_text(node_id, move(text));
+}
+
+Optional<i32> ViewImplementation::set_dom_node_tag(i32 node_id, String name)
+{
+    return client().set_dom_node_tag(node_id, move(name));
+}
+
+void ViewImplementation::replace_dom_node_attribute(i32 node_id, String name, Vector<Attribute> replacement_attributes)
+{
+    client().async_replace_dom_node_attribute(node_id, move(name), move(replacement_attributes));
+}
+
 void ViewImplementation::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     client().async_debug_request(request, argument);

@@ -22,7 +22,11 @@
 #include <LibWeb/ARIA/RoleType.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/DOM/Attr.h>
+#include <LibWeb/DOM/CharacterData.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -37,6 +41,7 @@
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWebView/Attribute.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageClient.h>
 #include <WebContent/PageHost.h>
@@ -647,6 +652,51 @@ Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_h
             return hovered_node->unique_id();
     }
     return (i32)0;
+}
+
+void ConnectionFromClient::set_dom_node_text(i32 node_id, String const& text)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node || (!dom_node->is_text() && !dom_node->is_comment()))
+        return;
+
+    auto& character_data = static_cast<Web::DOM::CharacterData&>(*dom_node);
+    character_data.set_data(text);
+}
+
+Messages::WebContentServer::SetDomNodeTagResponse ConnectionFromClient::set_dom_node_tag(i32 node_id, String const& name)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node || !dom_node->is_element() || !dom_node->parent())
+        return OptionalNone {};
+
+    auto& element = static_cast<Web::DOM::Element&>(*dom_node);
+    auto new_element = Web::DOM::create_element(element.document(), name, element.namespace_uri(), element.prefix(), element.is_value()).release_value_but_fixme_should_propagate_errors();
+
+    element.for_each_attribute([&](auto const& attribute) {
+        new_element->set_attribute_value(attribute.local_name(), attribute.value().to_deprecated_string(), attribute.prefix(), attribute.namespace_uri());
+    });
+
+    while (auto* child_node = element.first_child()) {
+        MUST(element.remove_child(*child_node));
+        MUST(new_element->append_child(*child_node));
+    }
+
+    element.parent()->replace_child(*new_element, element).release_value_but_fixme_should_propagate_errors();
+    return new_element->unique_id();
+}
+
+void ConnectionFromClient::replace_dom_node_attribute(i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes)
+{
+    auto* dom_node = Web::DOM::Node::from_unique_id(node_id);
+    if (!dom_node || !dom_node->is_element())
+        return;
+
+    auto& element = static_cast<Web::DOM::Element&>(*dom_node);
+    element.remove_attribute(name);
+
+    for (auto const& attribute : replacement_attributes)
+        element.set_attribute(attribute.name, attribute.value).release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionFromClient::initialize_js_console(Badge<PageClient>, Web::DOM::Document& document)

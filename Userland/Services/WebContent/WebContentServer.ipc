@@ -6,6 +6,7 @@
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
+#include <LibWebView/Attribute.h>
 
 endpoint WebContentServer
 {
@@ -44,6 +45,10 @@ endpoint WebContentServer
     get_hovered_node_id() => (i32 node_id)
     js_console_input(DeprecatedString js_source) =|
     js_console_request_messages(i32 start_index) =|
+
+    set_dom_node_text(i32 node_id, String text) =|
+    set_dom_node_tag(i32 node_id, String name) => (Optional<i32> node_id)
+    replace_dom_node_attribute(i32 node_id, String name, Vector<WebView::Attribute> replacement_attributes) =|
 
     take_document_screenshot() => (Gfx::ShareableBitmap data)
 

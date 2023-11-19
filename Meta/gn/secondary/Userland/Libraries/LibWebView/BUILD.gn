@@ -116,6 +116,7 @@ shared_library("LibWebView") {
     "//Userland/Libraries/LibWeb",
   ]
   sources = [
+    "Attribute.cpp",
     "CookieJar.cpp",
     "Database.cpp",
     "History.cpp",

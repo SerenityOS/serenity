@@ -17,6 +17,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWebView/Forward.h>
 #include <WebContent/Forward.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentConsoleClient.h>
@@ -74,6 +75,11 @@ private:
     virtual Messages::WebContentServer::InspectDomNodeResponse inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element) override;
     virtual void inspect_accessibility_tree() override;
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
+
+    virtual void set_dom_node_text(i32 node_id, String const& text) override;
+    virtual Messages::WebContentServer::SetDomNodeTagResponse set_dom_node_tag(i32 node_id, String const& name) override;
+    virtual void replace_dom_node_attribute(i32 node_id, String const& name, Vector<WebView::Attribute> const& replacement_attributes) override;
+
     virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
     virtual Messages::WebContentServer::DumpPaintTreeResponse dump_paint_tree() override;
     virtual Messages::WebContentServer::DumpTextResponse dump_text() override;
