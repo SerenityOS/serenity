@@ -325,8 +325,10 @@ public:
     void enqueue_a_custom_element_upgrade_reaction(HTML::CustomElementDefinition& custom_element_definition);
     void enqueue_a_custom_element_callback_reaction(FlyString const& callback_name, JS::MarkedVector<JS::Value> arguments);
 
-    Vector<Variant<CustomElementUpgradeReaction, CustomElementCallbackReaction>>& custom_element_reaction_queue() { return m_custom_element_reaction_queue; }
-    Vector<Variant<CustomElementUpgradeReaction, CustomElementCallbackReaction>> const& custom_element_reaction_queue() const { return m_custom_element_reaction_queue; }
+    using CustomElementReactionQueue = Vector<Variant<CustomElementUpgradeReaction, CustomElementCallbackReaction>>;
+    CustomElementReactionQueue* custom_element_reaction_queue() { return m_custom_element_reaction_queue; }
+    CustomElementReactionQueue const* custom_element_reaction_queue() const { return m_custom_element_reaction_queue; }
+    CustomElementReactionQueue& ensure_custom_element_reaction_queue();
 
     JS::ThrowCompletionOr<void> upgrade_element(JS::NonnullGCPtr<HTML::CustomElementDefinition> custom_element_definition);
     void try_to_upgrade();
@@ -416,7 +418,7 @@ private:
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-reaction-queue
     // All elements have an associated custom element reaction queue, initially empty. Each item in the custom element reaction queue is of one of two types:
     // NOTE: See the structs at the top of this header.
-    Vector<Variant<CustomElementUpgradeReaction, CustomElementCallbackReaction>> m_custom_element_reaction_queue;
+    OwnPtr<CustomElementReactionQueue> m_custom_element_reaction_queue;
 
     // https://dom.spec.whatwg.org/#concept-element-custom-element-state
     CustomElementState m_custom_element_state { CustomElementState::Undefined };
