@@ -5,8 +5,11 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/CSS/Parser/ParsingContext.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -48,6 +51,10 @@ void HTMLTableRowElement::apply_presentational_hints(CSS::StyleProperties& style
         } else if (name == HTML::AttributeNames::background) {
             if (auto parsed_value = document().parse_url(value); parsed_value.is_valid())
                 style.set_property(CSS::PropertyID::BackgroundImage, CSS::ImageStyleValue::create(parsed_value));
+            return;
+        } else if (name == HTML::AttributeNames::valign) {
+            if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::VerticalAlign))
+                style.set_property(CSS::PropertyID::VerticalAlign, parsed_value.release_nonnull());
             return;
         }
     });
