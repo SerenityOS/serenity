@@ -23,7 +23,7 @@ void HTMLAreaElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAreaElementPrototype>(realm, "HTMLAreaElement"));
 }
 
-void HTMLAreaElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLAreaElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::href) {

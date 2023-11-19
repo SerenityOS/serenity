@@ -34,7 +34,7 @@ void SVGElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_dataset);
 }
 
-void SVGElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     Base::attribute_changed(name, value);
 

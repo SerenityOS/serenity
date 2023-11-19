@@ -47,7 +47,7 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
@@ -55,7 +55,7 @@ private:
     virtual void on_paused() override;
     virtual void on_seek(double, MediaSeekMode) override;
 
-    WebIDL::ExceptionOr<void> determine_element_poster_frame(Optional<StringView> const& poster);
+    WebIDL::ExceptionOr<void> determine_element_poster_frame(Optional<String> const& poster);
 
     JS::GCPtr<HTML::VideoTrack> m_video_track;
     VideoFrame m_current_frame;

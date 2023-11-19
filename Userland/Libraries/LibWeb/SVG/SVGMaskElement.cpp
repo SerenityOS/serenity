@@ -31,13 +31,13 @@ JS::GCPtr<Layout::Node> SVGMaskElement::create_layout_node(NonnullRefPtr<CSS::St
     return heap().allocate_without_realm<Layout::SVGGraphicsBox>(document(), *this, move(style));
 }
 
-void SVGMaskElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGMaskElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGraphicsElement::attribute_changed(name, value);
     if (name == AttributeNames::maskUnits) {
-        m_mask_units = AttributeParser::parse_units(value.value_or(""));
+        m_mask_units = AttributeParser::parse_units(value.value_or(String {}));
     } else if (name == AttributeNames::maskContentUnits) {
-        m_mask_content_units = AttributeParser::parse_units(value.value_or(""));
+        m_mask_content_units = AttributeParser::parse_units(value.value_or(String {}));
     }
 }
 

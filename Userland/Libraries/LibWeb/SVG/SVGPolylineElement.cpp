@@ -22,12 +22,12 @@ void SVGPolylineElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolylineElementPrototype>(realm, "SVGPolylineElement"));
 }
 
-void SVGPolylineElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGPolylineElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::points) {
-        m_points = AttributeParser::parse_points(value.value_or(""));
+        m_points = AttributeParser::parse_points(value.value_or(String {}));
         m_path.clear();
     }
 }

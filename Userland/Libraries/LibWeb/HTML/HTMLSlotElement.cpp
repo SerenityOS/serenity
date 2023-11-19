@@ -24,11 +24,11 @@ HTMLSlotElement::HTMLSlotElement(DOM::Document& document, DOM::QualifiedName qua
                 return;
 
             // 2. If value is null and oldValue is the empty string, then return.
-            if (!value.has_value() && old_value == DeprecatedString::empty())
+            if (!value.has_value() && old_value == String {})
                 return;
 
             // 3. If value is the empty string and oldValue is null, then return.
-            if (value == DeprecatedString::empty() && !old_value.has_value())
+            if (value == String {} && !old_value.has_value())
                 return;
 
             // 4. If value is null or the empty string, then set element’s name to the empty string.
@@ -36,7 +36,7 @@ HTMLSlotElement::HTMLSlotElement(DOM::Document& document, DOM::QualifiedName qua
                 set_slot_name({});
             // 5. Otherwise, set element’s name to value.
             else
-                set_slot_name(MUST(String::from_deprecated_string(*value)));
+                set_slot_name(*value);
 
             // 6. Run assign slottables for a tree with element’s root.
             DOM::assign_slottables_for_a_tree(root());

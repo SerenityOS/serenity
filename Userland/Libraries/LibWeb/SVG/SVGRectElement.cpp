@@ -24,27 +24,27 @@ void SVGRectElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGRectElementPrototype>(realm, "SVGRectElement"));
 }
 
-void SVGRectElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGRectElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::x) {
-        m_x = AttributeParser::parse_coordinate(value.value_or(""));
+        m_x = AttributeParser::parse_coordinate(value.value_or(String {}));
         m_path.clear();
     } else if (name == SVG::AttributeNames::y) {
-        m_y = AttributeParser::parse_coordinate(value.value_or(""));
+        m_y = AttributeParser::parse_coordinate(value.value_or(String {}));
         m_path.clear();
     } else if (name == SVG::AttributeNames::width) {
-        m_width = AttributeParser::parse_positive_length(value.value_or(""));
+        m_width = AttributeParser::parse_positive_length(value.value_or(String {}));
         m_path.clear();
     } else if (name == SVG::AttributeNames::height) {
-        m_height = AttributeParser::parse_positive_length(value.value_or(""));
+        m_height = AttributeParser::parse_positive_length(value.value_or(String {}));
         m_path.clear();
     } else if (name == SVG::AttributeNames::rx) {
-        m_radius_x = AttributeParser::parse_length(value.value_or(""));
+        m_radius_x = AttributeParser::parse_length(value.value_or(String {}));
         m_path.clear();
     } else if (name == SVG::AttributeNames::ry) {
-        m_radius_y = AttributeParser::parse_length(value.value_or(""));
+        m_radius_y = AttributeParser::parse_length(value.value_or(String {}));
         m_path.clear();
     }
 }

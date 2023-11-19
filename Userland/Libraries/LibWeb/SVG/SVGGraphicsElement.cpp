@@ -32,11 +32,11 @@ void SVGGraphicsElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGGraphicsElementPrototype>(realm, "SVGGraphicsElement"));
 }
 
-void SVGGraphicsElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGGraphicsElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGElement::attribute_changed(name, value);
     if (name == "transform"sv) {
-        auto transform_list = AttributeParser::parse_transform(value.value_or(""));
+        auto transform_list = AttributeParser::parse_transform(value.value_or(String {}));
         if (transform_list.has_value())
             m_transform = transform_from_transform_list(*transform_list);
     }

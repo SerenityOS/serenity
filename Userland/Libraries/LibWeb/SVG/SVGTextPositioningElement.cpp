@@ -28,18 +28,18 @@ void SVGTextPositioningElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextPositioningElementPrototype>(realm, "SVGTextPositioningElement"));
 }
 
-void SVGTextPositioningElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGTextPositioningElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGraphicsElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::x) {
-        m_x = AttributeParser::parse_coordinate(value.value_or("")).value_or(m_x);
+        m_x = AttributeParser::parse_coordinate(value.value_or(String {})).value_or(m_x);
     } else if (name == SVG::AttributeNames::y) {
-        m_y = AttributeParser::parse_coordinate(value.value_or("")).value_or(m_y);
+        m_y = AttributeParser::parse_coordinate(value.value_or(String {})).value_or(m_y);
     } else if (name == SVG::AttributeNames::dx) {
-        m_dx = AttributeParser::parse_coordinate(value.value_or("")).value_or(m_dx);
+        m_dx = AttributeParser::parse_coordinate(value.value_or(String {})).value_or(m_dx);
     } else if (name == SVG::AttributeNames::dy) {
-        m_dy = AttributeParser::parse_coordinate(value.value_or("")).value_or(m_dy);
+        m_dy = AttributeParser::parse_coordinate(value.value_or(String {})).value_or(m_dy);
     }
 }
 

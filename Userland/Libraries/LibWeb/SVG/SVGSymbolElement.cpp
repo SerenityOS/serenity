@@ -39,11 +39,11 @@ void SVGSymbolElement::apply_presentational_hints(CSS::StyleProperties& style) c
     }
 }
 
-void SVGSymbolElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGSymbolElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     Base::attribute_changed(name, value);
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox))
-        m_view_box = try_parse_view_box(value.value_or(""));
+        m_view_box = try_parse_view_box(value.value_or(String {}));
 }
 
 bool SVGSymbolElement::is_direct_child_of_use_shadow_tree() const

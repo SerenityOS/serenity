@@ -23,6 +23,7 @@
 #include <LibWeb/HTML/PotentialCORSRequest.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
@@ -77,7 +78,7 @@ bool HTMLLinkElement::has_loaded_icon() const
     return m_relationship & Relationship::Icon && resource() && resource()->is_loaded() && resource()->has_encoded_data();
 }
 
-void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     HTMLElement::attribute_changed(name, value);
 
@@ -85,11 +86,11 @@ void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<Deprecat
     if (name == HTML::AttributeNames::rel) {
         m_relationship = 0;
         // Keywords are always ASCII case-insensitive, and must be compared as such.
-        auto lowercased_value = value.value_or("").to_lowercase();
+        auto lowercased_value = MUST(Infra::to_ascii_lowercase(value.value_or(String {})));
         // To determine which link types apply to a link, a, area, or form element,
         // the element's rel attribute must be split on ASCII whitespace.
         // The resulting tokens are the keywords for the link types that apply to that element.
-        auto parts = lowercased_value.split_view(Infra::is_ascii_whitespace);
+        auto parts = lowercased_value.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
         for (auto& part : parts) {
             if (part == "stylesheet"sv)
                 m_relationship |= Relationship::Stylesheet;

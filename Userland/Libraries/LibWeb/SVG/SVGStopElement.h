@@ -19,7 +19,7 @@ class SVGStopElement final : public SVGElement {
 public:
     virtual ~SVGStopElement() override = default;
 
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     JS::NonnullGCPtr<SVGAnimatedNumber> offset() const;
 

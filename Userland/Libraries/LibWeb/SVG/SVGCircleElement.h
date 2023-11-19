@@ -17,7 +17,7 @@ class SVGCircleElement final : public SVGGeometryElement {
 public:
     virtual ~SVGCircleElement() override = default;
 
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     virtual Gfx::Path& get_path() override;
 

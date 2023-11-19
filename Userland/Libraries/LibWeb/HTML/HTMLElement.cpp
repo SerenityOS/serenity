@@ -224,7 +224,7 @@ bool HTMLElement::cannot_navigate() const
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
-void HTMLElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     Element::attribute_changed(name, value);
 
@@ -248,9 +248,9 @@ void HTMLElement::attribute_changed(FlyString const& name, Optional<DeprecatedSt
     // 1. If namespace is not null, or localName is not the name of an event handler content attribute on element, then return.
     // FIXME: Add the namespace part once we support attribute namespaces.
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                                                                                          \
-    if (name == HTML::AttributeNames::attribute_name) {                                                                                  \
-        element_event_handler_attribute_changed(event_name, value.map([](auto& v) { return MUST(String::from_deprecated_string(v)); })); \
+#define __ENUMERATE(attribute_name, event_name)                     \
+    if (name == HTML::AttributeNames::attribute_name) {             \
+        element_event_handler_attribute_changed(event_name, value); \
     }
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

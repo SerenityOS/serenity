@@ -93,12 +93,12 @@ void SVGPathElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPathElementPrototype>(realm, "SVGPathElement"));
 }
 
-void SVGPathElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGPathElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 
     if (name == "d") {
-        m_instructions = AttributeParser::parse_path_data(value.value_or(""));
+        m_instructions = AttributeParser::parse_path_data(value.value_or(String {}));
         m_path.clear();
     }
 }

@@ -55,26 +55,26 @@ void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) co
     });
 }
 
-void HTMLBodyElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLBodyElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name.equals_ignoring_ascii_case("link"sv)) {
         // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-3
-        auto color = parse_legacy_color_value(value.value_or(""));
+        auto color = parse_legacy_color_value(value.value_or(String {}).to_deprecated_string());
         if (color.has_value())
             document().set_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("alink"sv)) {
         // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-5
-        auto color = parse_legacy_color_value(value.value_or(""));
+        auto color = parse_legacy_color_value(value.value_or(String {}).to_deprecated_string());
         if (color.has_value())
             document().set_active_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("vlink"sv)) {
         // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-4
-        auto color = parse_legacy_color_value(value.value_or(""));
+        auto color = parse_legacy_color_value(value.value_or(String {}).to_deprecated_string());
         if (color.has_value())
             document().set_visited_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("background"sv)) {
-        m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value.value_or("")));
+        m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value.value_or(String {})));
         m_background_style_value->on_animate = [this] {
             if (layout_node()) {
                 layout_node()->set_needs_display();
@@ -83,9 +83,9 @@ void HTMLBodyElement::attribute_changed(FlyString const& name, Optional<Deprecat
     }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                                                                                          \
-    if (name == HTML::AttributeNames::attribute_name) {                                                                                  \
-        element_event_handler_attribute_changed(event_name, value.map([](auto& v) { return MUST(String::from_deprecated_string(v)); })); \
+#define __ENUMERATE(attribute_name, event_name)                     \
+    if (name == HTML::AttributeNames::attribute_name) {             \
+        element_event_handler_attribute_changed(event_name, value); \
     }
     ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

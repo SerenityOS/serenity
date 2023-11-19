@@ -81,11 +81,11 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
                 return;
 
             // 2. If value is null and oldValue is the empty string, then return.
-            if (!value.has_value() && old_value == DeprecatedString::empty())
+            if (!value.has_value() && old_value == String {})
                 return;
 
             // 3. If value is the empty string and oldValue is null, then return.
-            if (value == DeprecatedString::empty() && !old_value.has_value())
+            if (value == String {} && !old_value.has_value())
                 return;
 
             // 4. If value is null or the empty string, then set element’s name to the empty string.
@@ -93,7 +93,7 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
                 set_slottable_name({});
             // 5. Otherwise, set element’s name to value.
             else
-                set_slottable_name(MUST(String::from_deprecated_string(*value)));
+                set_slottable_name(*value);
 
             // 6. If element is assigned, then run assign slottables for element’s assigned slot.
             if (auto assigned_slot = assigned_slot_internal())
@@ -466,7 +466,7 @@ void Element::add_attribute_change_steps(AttributeChangeSteps steps)
     m_attribute_change_steps.append(move(steps));
 }
 
-void Element::run_attribute_change_steps(FlyString const& local_name, Optional<DeprecatedString> const& old_value, Optional<DeprecatedString> const& value, Optional<FlyString> const& namespace_)
+void Element::run_attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_)
 {
     for (auto const& attribute_change_steps : m_attribute_change_steps)
         attribute_change_steps(local_name, old_value, value, namespace_);
@@ -476,17 +476,17 @@ void Element::run_attribute_change_steps(FlyString const& local_name, Optional<D
     invalidate_style_after_attribute_change(local_name);
 }
 
-void Element::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void Element::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
-    auto value_or_empty = value.value_or("");
+    auto value_or_empty = value.value_or(String {});
 
     if (name == HTML::AttributeNames::id) {
         if (!value.has_value())
             m_id = {};
         else
-            m_id = MUST(FlyString::from_deprecated_fly_string(value_or_empty));
+            m_id = value_or_empty;
     } else if (name == HTML::AttributeNames::class_) {
-        auto new_classes = value_or_empty.split_view(Infra::is_ascii_whitespace);
+        auto new_classes = value_or_empty.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
         m_classes.clear();
         m_classes.ensure_capacity(new_classes.size());
         for (auto& new_class : new_classes) {

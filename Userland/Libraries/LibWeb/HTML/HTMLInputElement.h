@@ -114,7 +114,7 @@ public:
     virtual bool is_focusable() const override { return m_type != TypeAttributeState::Hidden; }
 
     // ^HTMLElement
-    virtual void attribute_changed(FlyString const&, Optional<DeprecatedString> const&) override;
+    virtual void attribute_changed(FlyString const&, Optional<String> const&) override;
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed

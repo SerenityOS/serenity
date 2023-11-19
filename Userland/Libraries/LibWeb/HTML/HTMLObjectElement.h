@@ -34,7 +34,7 @@ class HTMLObjectElement final
 public:
     virtual ~HTMLObjectElement() override;
 
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     String data() const;
     void set_data(String const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }

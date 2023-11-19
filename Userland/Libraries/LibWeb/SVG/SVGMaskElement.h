@@ -17,7 +17,7 @@ class SVGMaskElement final : public SVGGraphicsElement {
 public:
     virtual ~SVGMaskElement() override;
 
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
