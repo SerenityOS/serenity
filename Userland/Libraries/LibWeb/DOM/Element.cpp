@@ -71,38 +71,6 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     , m_qualified_name(move(qualified_name))
 {
     make_html_uppercased_qualified_name();
-
-    // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext①
-    add_attribute_change_steps([this](auto const& local_name, auto const& old_value, auto const& value, auto const& namespace_) {
-        // 1. If localName is slot and namespace is null, then:
-        if (local_name == HTML::AttributeNames::slot && !namespace_.has_value()) {
-            // 1. If value is oldValue, then return.
-            if (value == old_value)
-                return;
-
-            // 2. If value is null and oldValue is the empty string, then return.
-            if (!value.has_value() && old_value == String {})
-                return;
-
-            // 3. If value is the empty string and oldValue is null, then return.
-            if (value == String {} && !old_value.has_value())
-                return;
-
-            // 4. If value is null or the empty string, then set element’s name to the empty string.
-            if (!value.has_value() || value->is_empty())
-                set_slottable_name({});
-            // 5. Otherwise, set element’s name to value.
-            else
-                set_slottable_name(*value);
-
-            // 6. If element is assigned, then run assign slottables for element’s assigned slot.
-            if (auto assigned_slot = assigned_slot_internal())
-                assign_slottables(*assigned_slot);
-
-            // 7. Run assign a slot for element.
-            assign_a_slot(JS::NonnullGCPtr { *this });
-        }
-    });
 }
 
 Element::~Element() = default;
@@ -463,15 +431,9 @@ CSS::CSSStyleDeclaration const* Element::inline_style() const
     return m_inline_style.ptr();
 }
 
-void Element::add_attribute_change_steps(AttributeChangeSteps steps)
-{
-    m_attribute_change_steps.append(move(steps));
-}
-
 void Element::run_attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_)
 {
-    for (auto const& attribute_change_steps : m_attribute_change_steps)
-        attribute_change_steps(local_name, old_value, value, namespace_);
+    attribute_change_steps(local_name, old_value, value, namespace_);
 
     // AD-HOC: Run our own internal attribute change handler.
     attribute_changed(local_name, value);
@@ -2268,6 +2230,39 @@ Element::Directionality Element::directionality() const
     }
 
     VERIFY_NOT_REACHED();
+}
+
+// https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext①
+void Element::attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_)
+{
+    // 1. If localName is slot and namespace is null, then:
+    if (local_name == HTML::AttributeNames::slot && !namespace_.has_value()) {
+        // 1. If value is oldValue, then return.
+        if (value == old_value)
+            return;
+
+        // 2. If value is null and oldValue is the empty string, then return.
+        if (!value.has_value() && old_value == String {})
+            return;
+
+        // 3. If value is the empty string and oldValue is null, then return.
+        if (value == String {} && !old_value.has_value())
+            return;
+
+        // 4. If value is null or the empty string, then set element’s name to the empty string.
+        if (!value.has_value() || value->is_empty())
+            set_slottable_name({});
+        // 5. Otherwise, set element’s name to value.
+        else
+            set_slottable_name(*value);
+
+        // 6. If element is assigned, then run assign slottables for element’s assigned slot.
+        if (auto assigned_slot = assigned_slot_internal())
+            assign_slottables(*assigned_slot);
+
+        // 7. Run assign a slot for element.
+        assign_a_slot(JS::NonnullGCPtr { *this });
+    }
 }
 
 }
