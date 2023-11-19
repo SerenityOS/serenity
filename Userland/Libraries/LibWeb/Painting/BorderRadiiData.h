@@ -33,6 +33,15 @@ struct BorderRadiusData {
     }
 };
 
+using CornerRadius = Gfx::AntiAliasingPainter::CornerRadius;
+
+struct CornerRadii {
+    CornerRadius top_left;
+    CornerRadius top_right;
+    CornerRadius bottom_right;
+    CornerRadius bottom_left;
+};
+
 struct BorderRadiiData {
     BorderRadiusData top_left;
     BorderRadiusData top_right;
@@ -56,15 +65,16 @@ struct BorderRadiiData {
     {
         shrink(-top, -right, -bottom, -left);
     }
-};
 
-using CornerRadius = Gfx::AntiAliasingPainter::CornerRadius;
-
-struct CornerRadii {
-    CornerRadius top_left;
-    CornerRadius top_right;
-    CornerRadius bottom_right;
-    CornerRadius bottom_left;
+    inline CornerRadii as_corners(PaintContext& context) const
+    {
+        return CornerRadii {
+            top_left.as_corner(context),
+            top_right.as_corner(context),
+            bottom_right.as_corner(context),
+            bottom_left.as_corner(context)
+        };
+    }
 };
 
 }
