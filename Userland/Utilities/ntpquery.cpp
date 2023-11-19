@@ -29,6 +29,8 @@
 // The fractional part in the lower 32 bits stores fractional bits times 2 ** 32.
 using NtpTimestamp = uint64_t;
 
+using AK::convert_between_host_and_network_endian;
+
 struct [[gnu::packed]] NtpPacket {
     uint8_t li_vn_mode;
     uint8_t stratum;
@@ -161,7 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     sockaddr_in peer_address;
     memset(&peer_address, 0, sizeof(peer_address));
     peer_address.sin_family = AF_INET;
-    peer_address.sin_port = htons(123);
+    peer_address.sin_port = convert_between_host_and_network_endian<short>(123);
     peer_address.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
 
     NtpPacket packet;
@@ -242,8 +244,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     NtpTimestamp origin_timestamp = ntp_timestamp_from_timeval(local_transmit_time);
-    NtpTimestamp receive_timestamp = be64toh(packet.receive_timestamp);
-    NtpTimestamp transmit_timestamp = be64toh(packet.transmit_timestamp);
+    NtpTimestamp receive_timestamp = convert_between_host_and_network_endian(packet.receive_timestamp);
+    NtpTimestamp transmit_timestamp = convert_between_host_and_network_endian(packet.transmit_timestamp);
 #ifdef SO_TIMESTAMP
     NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(kernel_receive_time);
 
@@ -270,17 +272,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("Stratum: {}", packet.stratum);
         outln("Poll: {}", packet.stratum);
         outln("Precision: {}", packet.precision);
-        outln("Root delay: {:x}", ntohl(packet.root_delay));
-        outln("Root dispersion: {:x}", ntohl(packet.root_dispersion));
+        outln("Root delay: {:x}", convert_between_host_and_network_endian(packet.root_delay));
+        outln("Root dispersion: {:x}", convert_between_host_and_network_endian(packet.root_dispersion));
 
-        u32 ref_id = ntohl(packet.reference_id);
+        u32 ref_id = convert_between_host_and_network_endian(packet.reference_id);
         out("Reference ID: {:x}", ref_id);
         if (packet.stratum == 1) {
             out(" ('{:c}{:c}{:c}{:c}')", (ref_id & 0xff000000) >> 24, (ref_id & 0xff0000) >> 16, (ref_id & 0xff00) >> 8, ref_id & 0xff);
         }
         outln();
 
-        outln("Reference timestamp:   {:#016x} ({})", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
+        outln("Reference timestamp:   {:#016x} ({})", convert_between_host_and_network_endian(packet.reference_timestamp), format_ntp_timestamp(convert_between_host_and_network_endian(packet.reference_timestamp)).characters());
         outln("Origin timestamp:      {:#016x} ({})", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
         outln("Receive timestamp:     {:#016x} ({})", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
         outln("Transmit timestamp:    {:#016x} ({})", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
