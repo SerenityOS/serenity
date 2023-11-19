@@ -2899,9 +2899,14 @@ void Compiler::compile_continue_pending_unwind(Bytecode::Op::ContinuePendingUnwi
         Assembler::Operand::Register(GPR1),
         label_for(op.resume_target().block()));
 
-    // finish the pending return from the try block
-    store_vm_register(Bytecode::Register::return_value(), GPR0);
-    jump_to_exit();
+    if (auto const* finalizer = m_current_block->finalizer()) {
+        // The current block has its own finalizer, we have to jump there instead of returning.
+        m_assembler.jump(label_for(*finalizer));
+    } else {
+        // finish the pending return from the try block
+        store_vm_register(Bytecode::Register::return_value(), GPR0);
+        jump_to_exit();
+    }
 }
 
 static void cxx_create_lexical_environment(VM& vm)
