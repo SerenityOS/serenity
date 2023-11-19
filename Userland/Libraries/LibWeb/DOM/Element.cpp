@@ -2050,20 +2050,27 @@ void Element::set_computed_css_values(RefPtr<CSS::StyleProperties> style)
     m_computed_css_values = move(style);
 }
 
+auto Element::pseudo_element_custom_properties() const -> PseudoElementCustomProperties&
+{
+    if (!m_pseudo_element_custom_properties)
+        m_pseudo_element_custom_properties = make<PseudoElementCustomProperties>();
+    return *m_pseudo_element_custom_properties;
+}
+
 void Element::set_custom_properties(Optional<CSS::Selector::PseudoElement> pseudo_element, HashMap<FlyString, CSS::StyleProperty> custom_properties)
 {
     if (!pseudo_element.has_value()) {
         m_custom_properties = move(custom_properties);
         return;
     }
-    m_pseudo_element_custom_properties[to_underlying(pseudo_element.value())] = move(custom_properties);
+    pseudo_element_custom_properties()[to_underlying(pseudo_element.value())] = move(custom_properties);
 }
 
 HashMap<FlyString, CSS::StyleProperty> const& Element::custom_properties(Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     if (!pseudo_element.has_value())
         return m_custom_properties;
-    return m_pseudo_element_custom_properties[to_underlying(pseudo_element.value())];
+    return pseudo_element_custom_properties()[to_underlying(pseudo_element.value())];
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll
