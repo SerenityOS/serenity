@@ -19,6 +19,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(FunctionPrototype);
+
 FunctionPrototype::FunctionPrototype(Realm& realm)
     : FunctionObject(realm.intrinsics().object_prototype())
 {

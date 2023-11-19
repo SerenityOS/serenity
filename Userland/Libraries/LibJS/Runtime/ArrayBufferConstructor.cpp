@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ArrayBufferConstructor);
+
 ArrayBufferConstructor::ArrayBufferConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.ArrayBuffer.as_string(), realm.intrinsics().function_prototype())
 {

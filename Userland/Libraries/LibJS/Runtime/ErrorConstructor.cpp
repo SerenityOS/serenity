@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ErrorConstructor);
+
 ErrorConstructor::ErrorConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.Error.as_string(), realm.intrinsics().function_prototype())
 {
@@ -62,6 +64,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ErrorConstructor::construct(FunctionObje
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                    \
+    JS_DEFINE_ALLOCATOR(ConstructorName);                                                                                   \
     ConstructorName::ConstructorName(Realm& realm)                                                                          \
         : NativeFunction(realm.vm().names.ClassName.as_string(), realm.intrinsics().error_constructor())                    \
     {                                                                                                                       \

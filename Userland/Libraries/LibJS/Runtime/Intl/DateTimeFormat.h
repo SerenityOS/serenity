@@ -23,6 +23,7 @@ class DateTimeFormat final
     : public Object
     , public ::Locale::CalendarPattern {
     JS_OBJECT(DateTimeFormat, Object);
+    JS_DECLARE_ALLOCATOR(DateTimeFormat);
 
     using Patterns = ::Locale::CalendarPattern;
 

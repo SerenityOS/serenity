@@ -13,6 +13,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(PlainMonthDayConstructor);
+
 // 10.1 The Temporal.PlainMonthDay Constructor, https://tc39.es/proposal-temporal/#sec-temporal-plainmonthday-constructor
 PlainMonthDayConstructor::PlainMonthDayConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.PlainMonthDay.as_string(), realm.intrinsics().function_prototype())

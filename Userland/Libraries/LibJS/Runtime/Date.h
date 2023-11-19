@@ -14,6 +14,7 @@ namespace JS {
 
 class Date final : public Object {
     JS_OBJECT(Date, Object);
+    JS_DECLARE_ALLOCATOR(Date);
 
 public:
     static NonnullGCPtr<Date> create(Realm&, double date_value);

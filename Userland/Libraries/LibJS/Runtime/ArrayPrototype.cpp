@@ -27,6 +27,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ArrayPrototype);
+
 static HashTable<NonnullGCPtr<Object>> s_array_join_seen_objects;
 
 ArrayPrototype::ArrayPrototype(Realm& realm)

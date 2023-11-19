@@ -11,11 +11,13 @@
 #include <AK/StringView.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 
 namespace JS {
 
 class BigInt final : public Cell {
     JS_CELL(BigInt, Cell);
+    JS_DECLARE_ALLOCATOR(BigInt);
 
 public:
     [[nodiscard]] static NonnullGCPtr<BigInt> create(VM&, Crypto::SignedBigInteger);

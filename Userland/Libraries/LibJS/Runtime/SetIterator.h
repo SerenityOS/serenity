@@ -14,6 +14,7 @@ namespace JS {
 
 class SetIterator final : public Object {
     JS_OBJECT(SetIterator, Object);
+    JS_DECLARE_ALLOCATOR(SetIterator);
 
 public:
     static NonnullGCPtr<SetIterator> create(Realm&, Set& set, Object::PropertyKind iteration_kind);

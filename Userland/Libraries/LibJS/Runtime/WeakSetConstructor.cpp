@@ -13,6 +13,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(WeakSetConstructor);
+
 WeakSetConstructor::WeakSetConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.WeakSet.as_string(), realm.intrinsics().function_prototype())
 {

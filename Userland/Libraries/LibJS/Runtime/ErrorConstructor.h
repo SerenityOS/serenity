@@ -13,6 +13,7 @@ namespace JS {
 
 class ErrorConstructor final : public NativeFunction {
     JS_OBJECT(ErrorConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(ErrorConstructor);
 
 public:
     virtual void initialize(Realm&) override;
@@ -30,6 +31,7 @@ private:
 #define DECLARE_NATIVE_ERROR_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName)         \
     class ConstructorName final : public NativeFunction {                                               \
         JS_OBJECT(ConstructorName, NativeFunction);                                                     \
+        JS_DECLARE_ALLOCATOR(ConstructorName);                                                          \
                                                                                                         \
     public:                                                                                             \
         virtual void initialize(Realm&) override;                                                       \

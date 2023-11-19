@@ -13,6 +13,7 @@ namespace JS::Test262 {
 
 class GlobalObject final : public JS::GlobalObject {
     JS_OBJECT(GlobalObject, JS::GlobalObject);
+    JS_DECLARE_ALLOCATOR(GlobalObject);
 
 public:
     virtual void initialize(Realm&) override;

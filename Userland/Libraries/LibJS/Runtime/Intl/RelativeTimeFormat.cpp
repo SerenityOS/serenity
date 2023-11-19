@@ -15,6 +15,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(RelativeTimeFormat);
+
 // 17 RelativeTimeFormat Objects, https://tc39.es/ecma402/#relativetimeformat-objects
 RelativeTimeFormat::RelativeTimeFormat(Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

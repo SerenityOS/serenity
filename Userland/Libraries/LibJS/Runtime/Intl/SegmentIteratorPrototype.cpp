@@ -12,6 +12,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(SegmentIteratorPrototype);
+
 // 18.6.2 The %SegmentIteratorPrototype% Object, https://tc39.es/ecma402/#sec-%segmentiteratorprototype%-object
 SegmentIteratorPrototype::SegmentIteratorPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().iterator_prototype())

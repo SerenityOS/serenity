@@ -12,6 +12,7 @@ namespace JS {
 
 class MapConstructor final : public NativeFunction {
     JS_OBJECT(MapConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(MapConstructor);
 
 public:
     virtual void initialize(Realm&) override;

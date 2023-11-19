@@ -12,6 +12,7 @@ namespace JS::Temporal {
 
 class ZonedDateTimeConstructor final : public NativeFunction {
     JS_OBJECT(ZonedDateTimeConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(ZonedDateTimeConstructor);
 
 public:
     virtual void initialize(Realm&) override;

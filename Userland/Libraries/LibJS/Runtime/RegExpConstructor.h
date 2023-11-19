@@ -13,6 +13,7 @@ namespace JS {
 
 class RegExpConstructor final : public NativeFunction {
     JS_OBJECT(RegExpConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(RegExpConstructor);
 
 public:
     virtual void initialize(Realm&) override;

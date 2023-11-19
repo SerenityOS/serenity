@@ -13,6 +13,7 @@
 #include <AK/Weakable.h>
 #include <LibJS/Bytecode/Builtins.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Runtime/Intrinsics.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -23,6 +24,7 @@ class Realm final
     : public Cell
     , public Weakable<Realm> {
     JS_CELL(Realm, Cell);
+    JS_DECLARE_ALLOCATOR(Realm);
 
 public:
     struct HostDefined {

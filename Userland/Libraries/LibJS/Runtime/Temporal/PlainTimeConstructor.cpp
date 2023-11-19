@@ -12,6 +12,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(PlainTimeConstructor);
+
 // 4.1 The Temporal.PlainTime Constructor, https://tc39.es/proposal-temporal/#sec-temporal-plaintime-constructor
 PlainTimeConstructor::PlainTimeConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.PlainTime.as_string(), realm.intrinsics().function_prototype())

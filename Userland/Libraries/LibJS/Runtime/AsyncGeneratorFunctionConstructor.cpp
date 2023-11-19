@@ -12,6 +12,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AsyncGeneratorFunctionConstructor);
+
 AsyncGeneratorFunctionConstructor::AsyncGeneratorFunctionConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.AsyncGeneratorFunction.as_string(), realm.intrinsics().function_prototype())
 {

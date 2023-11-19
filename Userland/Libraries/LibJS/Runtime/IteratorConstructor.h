@@ -13,6 +13,7 @@ namespace JS {
 
 class IteratorConstructor : public NativeFunction {
     JS_OBJECT(IteratorConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(IteratorConstructor);
 
 public:
     virtual void initialize(Realm&) override;

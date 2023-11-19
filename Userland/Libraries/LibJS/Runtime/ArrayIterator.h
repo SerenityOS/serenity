@@ -12,6 +12,7 @@ namespace JS {
 
 class ArrayIterator final : public Object {
     JS_OBJECT(ArrayIterator, Object);
+    JS_DECLARE_ALLOCATOR(ArrayIterator);
 
 public:
     static NonnullGCPtr<ArrayIterator> create(Realm&, Value array, Object::PropertyKind iteration_kind);

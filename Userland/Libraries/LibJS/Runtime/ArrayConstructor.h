@@ -12,6 +12,7 @@ namespace JS {
 
 class ArrayConstructor final : public NativeFunction {
     JS_OBJECT(ArrayConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(ArrayConstructor);
 
 public:
     virtual void initialize(Realm&) override;

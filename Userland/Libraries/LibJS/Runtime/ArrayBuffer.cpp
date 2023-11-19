@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ArrayBuffer);
+
 ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> ArrayBuffer::create(Realm& realm, size_t byte_length)
 {
     auto buffer = ByteBuffer::create_zeroed(byte_length);

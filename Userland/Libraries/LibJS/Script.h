@@ -17,6 +17,7 @@ namespace JS {
 // 16.1.4 Script Records, https://tc39.es/ecma262/#sec-script-records
 class Script final : public Cell {
     JS_CELL(Script, Cell);
+    JS_DECLARE_ALLOCATOR(Script);
 
 public:
     struct HostDefined {

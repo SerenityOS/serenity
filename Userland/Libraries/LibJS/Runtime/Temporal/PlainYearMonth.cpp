@@ -17,6 +17,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(PlainYearMonth);
+
 // 9 Temporal.PlainYearMonth Objects, https://tc39.es/proposal-temporal/#sec-temporal-plainyearmonth-objects
 PlainYearMonth::PlainYearMonth(i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

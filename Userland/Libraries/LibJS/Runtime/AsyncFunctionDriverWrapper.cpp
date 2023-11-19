@@ -15,6 +15,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AsyncFunctionDriverWrapper);
+
 NonnullGCPtr<Promise> AsyncFunctionDriverWrapper::create(Realm& realm, GeneratorObject* generator_object)
 {
     auto top_level_promise = Promise::create(realm);

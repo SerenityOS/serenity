@@ -12,6 +12,7 @@ namespace JS {
 
 class ShadowRealmConstructor final : public NativeFunction {
     JS_OBJECT(ShadowRealmConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(ShadowRealmConstructor);
 
 public:
     virtual void initialize(Realm&) override;

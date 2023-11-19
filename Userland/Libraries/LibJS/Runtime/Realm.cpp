@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Realm);
+
 // 9.3.1 CreateRealm ( ), https://tc39.es/ecma262/#sec-createrealm
 ThrowCompletionOr<NonnullGCPtr<Realm>> Realm::create(VM& vm)
 {

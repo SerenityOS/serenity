@@ -19,6 +19,7 @@ namespace JS::Intl {
 
 class ListFormat final : public Object {
     JS_OBJECT(ListFormat, Object);
+    JS_DECLARE_ALLOCATOR(ListFormat);
 
 public:
     enum class Type {

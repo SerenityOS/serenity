@@ -58,6 +58,7 @@ struct ResolvedBinding {
 // 16.2.1.4 Abstract Module Records, https://tc39.es/ecma262/#sec-abstract-module-records
 class Module : public Cell {
     JS_CELL(Module, Cell);
+    JS_DECLARE_ALLOCATOR(Module);
 
 public:
     virtual ~Module() override;

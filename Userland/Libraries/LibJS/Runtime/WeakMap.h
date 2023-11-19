@@ -17,6 +17,7 @@ class WeakMap final
     : public Object
     , public WeakContainer {
     JS_OBJECT(WeakMap, Object);
+    JS_DECLARE_ALLOCATOR(WeakMap);
 
 public:
     static NonnullGCPtr<WeakMap> create(Realm&);

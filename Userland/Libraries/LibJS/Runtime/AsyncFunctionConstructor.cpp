@@ -12,6 +12,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AsyncFunctionConstructor);
+
 AsyncFunctionConstructor::AsyncFunctionConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.AsyncFunction.as_string(), realm.intrinsics().function_constructor())
 {

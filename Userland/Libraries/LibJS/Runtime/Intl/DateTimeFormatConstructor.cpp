@@ -17,6 +17,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(DateTimeFormatConstructor);
+
 // 11.1 The Intl.DateTimeFormat Constructor, https://tc39.es/ecma402/#sec-intl-datetimeformat-constructor
 DateTimeFormatConstructor::DateTimeFormatConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.DateTimeFormat.as_string(), realm.intrinsics().function_prototype())

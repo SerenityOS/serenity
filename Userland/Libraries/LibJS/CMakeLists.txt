@@ -34,6 +34,7 @@ set(SOURCES
     ParserError.cpp
     Print.cpp
     Runtime/AbstractOperations.cpp
+    Runtime/Accessor.cpp
     Runtime/AggregateError.cpp
     Runtime/AggregateErrorConstructor.cpp
     Runtime/AggregateErrorPrototype.cpp

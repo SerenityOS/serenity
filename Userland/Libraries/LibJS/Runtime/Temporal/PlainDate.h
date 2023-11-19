@@ -16,6 +16,7 @@ namespace JS::Temporal {
 
 class PlainDate final : public Object {
     JS_OBJECT(PlainDate, Object);
+    JS_DECLARE_ALLOCATOR(PlainDate);
 
 public:
     virtual ~PlainDate() override = default;

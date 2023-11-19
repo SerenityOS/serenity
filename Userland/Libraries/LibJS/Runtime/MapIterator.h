@@ -14,6 +14,7 @@ namespace JS {
 
 class MapIterator final : public Object {
     JS_OBJECT(MapIterator, Object);
+    JS_DECLARE_ALLOCATOR(MapIterator);
 
 public:
     static NonnullGCPtr<MapIterator> create(Realm&, Map& map, Object::PropertyKind iteration_kind);

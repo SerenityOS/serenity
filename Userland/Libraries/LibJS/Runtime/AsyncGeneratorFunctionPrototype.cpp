@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AsyncGeneratorFunctionPrototype);
+
 AsyncGeneratorFunctionPrototype::AsyncGeneratorFunctionPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().function_prototype())
 {

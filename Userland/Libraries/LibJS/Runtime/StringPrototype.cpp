@@ -34,6 +34,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(StringPrototype);
+
 static ThrowCompletionOr<String> utf8_string_from(VM& vm)
 {
     auto this_value = TRY(require_object_coercible(vm, vm.this_value()));

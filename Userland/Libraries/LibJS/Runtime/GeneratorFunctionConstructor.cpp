@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(GeneratorFunctionConstructor);
+
 GeneratorFunctionConstructor::GeneratorFunctionConstructor(Realm& realm)
     : NativeFunction(static_cast<Object&>(realm.intrinsics().function_constructor()))
 {

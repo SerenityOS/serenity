@@ -12,6 +12,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(Segmenter);
+
 // 18 Segmenter Objects, https://tc39.es/ecma402/#segmenter-objects
 Segmenter::Segmenter(Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

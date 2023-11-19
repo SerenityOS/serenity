@@ -23,6 +23,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(RegExpPrototype);
+
 RegExpPrototype::RegExpPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())
 {

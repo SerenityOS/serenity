@@ -12,6 +12,7 @@
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/IndexedProperties.h>
@@ -53,6 +54,7 @@ struct CacheablePropertyMetadata {
 
 class Object : public Cell {
     JS_CELL(Object, Cell);
+    JS_DECLARE_ALLOCATOR(Object);
 
 public:
     static NonnullGCPtr<Object> create(Realm&, Object* prototype);

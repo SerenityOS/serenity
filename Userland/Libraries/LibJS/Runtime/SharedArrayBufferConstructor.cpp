@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(SharedArrayBufferConstructor);
+
 SharedArrayBufferConstructor::SharedArrayBufferConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.SharedArrayBuffer.as_string(), realm.intrinsics().function_prototype())
 {

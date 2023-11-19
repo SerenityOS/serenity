@@ -11,6 +11,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(IteratorHelper);
+
 ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> IteratorHelper::create(Realm& realm, IteratorRecord underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)
 {
     return realm.heap().allocate<IteratorHelper>(realm, realm, realm.intrinsics().iterator_helper_prototype(), move(underlying_iterator), move(closure), move(abrupt_closure));

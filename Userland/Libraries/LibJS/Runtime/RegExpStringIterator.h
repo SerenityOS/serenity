@@ -14,6 +14,7 @@ namespace JS {
 
 class RegExpStringIterator final : public Object {
     JS_OBJECT(RegExpStringIterator, Object);
+    JS_DECLARE_ALLOCATOR(RegExpStringIterator);
 
 public:
     static NonnullGCPtr<RegExpStringIterator> create(Realm&, Object& regexp_object, Utf16String string, bool global, bool unicode);

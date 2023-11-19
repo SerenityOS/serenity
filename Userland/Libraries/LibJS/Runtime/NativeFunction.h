@@ -18,6 +18,7 @@ namespace JS {
 
 class NativeFunction : public FunctionObject {
     JS_OBJECT(NativeFunction, FunctionObject);
+    JS_DECLARE_ALLOCATOR(NativeFunction);
 
 public:
     static NonnullGCPtr<NativeFunction> create(Realm&, Function<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});

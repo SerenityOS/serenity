@@ -10,6 +10,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AggregateErrorPrototype);
+
 AggregateErrorPrototype::AggregateErrorPrototype(Realm& realm)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().error_prototype())
 {

@@ -14,6 +14,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(PlainDateConstructor);
+
 // 3.1 The Temporal.PlainDate Constructor, https://tc39.es/proposal-temporal/#sec-temporal-plaindate-constructor
 PlainDateConstructor::PlainDateConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.PlainDate.as_string(), realm.intrinsics().function_prototype())

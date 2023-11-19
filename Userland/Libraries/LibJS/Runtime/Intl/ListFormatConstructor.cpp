@@ -14,6 +14,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(ListFormatConstructor);
+
 // 13.1 The Intl.ListFormat Constructor, https://tc39.es/ecma402/#sec-intl-listformat-constructor
 ListFormatConstructor::ListFormatConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.ListFormat.as_string(), realm.intrinsics().function_prototype())

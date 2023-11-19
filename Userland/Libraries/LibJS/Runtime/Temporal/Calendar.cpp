@@ -27,6 +27,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(Calendar);
+
 // 12 Temporal.Calendar Objects, https://tc39.es/proposal-temporal/#sec-temporal-calendar-objects
 Calendar::Calendar(String identifier, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

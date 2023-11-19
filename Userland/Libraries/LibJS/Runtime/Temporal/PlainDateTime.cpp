@@ -23,6 +23,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(PlainDateTime);
+
 // 5 Temporal.PlainDateTime Objects, https://tc39.es/proposal-temporal/#sec-temporal-plaindatetime-objects
 PlainDateTime::PlainDateTime(i32 iso_year, u8 iso_month, u8 iso_day, u8 iso_hour, u8 iso_minute, u8 iso_second, u16 iso_millisecond, u16 iso_microsecond, u16 iso_nanosecond, Object& calendar, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

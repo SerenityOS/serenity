@@ -18,6 +18,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(SymbolPrototype);
+
 SymbolPrototype::SymbolPrototype(Realm& realm)
     : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {

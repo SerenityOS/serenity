@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(StringObject);
+
 // 10.4.3.4 StringCreate ( value, prototype ), https://tc39.es/ecma262/#sec-stringcreate
 NonnullGCPtr<StringObject> StringObject::create(Realm& realm, PrimitiveString& primitive_string, Object& prototype)
 {

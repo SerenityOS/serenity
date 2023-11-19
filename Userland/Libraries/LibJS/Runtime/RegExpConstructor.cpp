@@ -12,6 +12,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(RegExpConstructor);
+
 RegExpConstructor::RegExpConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.RegExp.as_string(), realm.intrinsics().function_prototype())
 {

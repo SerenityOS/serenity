@@ -13,6 +13,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(SyntheticModule);
+
 // 1.2.1 CreateSyntheticModule ( exportNames, evaluationSteps, realm, hostDefined ), https://tc39.es/proposal-json-modules/#sec-createsyntheticmodule
 SyntheticModule::SyntheticModule(Vector<DeprecatedFlyString> export_names, SyntheticModule::EvaluationFunction evaluation_steps, Realm& realm, StringView filename)
     : Module(realm, filename)

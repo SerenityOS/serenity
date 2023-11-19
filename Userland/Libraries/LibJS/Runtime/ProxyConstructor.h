@@ -13,6 +13,7 @@ namespace JS {
 
 class ProxyConstructor final : public NativeFunction {
     JS_OBJECT(ProxyConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(ProxyConstructor);
 
 public:
     virtual void initialize(Realm&) override;

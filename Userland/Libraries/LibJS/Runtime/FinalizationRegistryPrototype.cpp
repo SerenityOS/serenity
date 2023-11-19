@@ -10,6 +10,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(FinalizationRegistryPrototype);
+
 FinalizationRegistryPrototype::FinalizationRegistryPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())
 {

@@ -13,6 +13,7 @@ namespace JS::Temporal {
 
 class PlainMonthDayPrototype final : public PrototypeObject<PlainMonthDayPrototype, PlainMonthDay> {
     JS_PROTOTYPE_OBJECT(PlainMonthDayPrototype, PlainMonthDay, Temporal.PlainMonthDay);
+    JS_DECLARE_ALLOCATOR(PlainMonthDayPrototype);
 
 public:
     virtual void initialize(Realm&) override;

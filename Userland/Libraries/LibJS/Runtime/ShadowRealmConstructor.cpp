@@ -10,6 +10,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ShadowRealmConstructor);
+
 // 3.2 The ShadowRealm Constructor, https://tc39.es/proposal-shadowrealm/#sec-shadowrealm-constructor
 ShadowRealmConstructor::ShadowRealmConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.ShadowRealm.as_string(), realm.intrinsics().function_prototype())

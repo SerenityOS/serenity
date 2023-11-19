@@ -12,6 +12,7 @@ namespace JS {
 
 class AggregateErrorPrototype final : public Object {
     JS_OBJECT(AggregateErrorPrototype, Object);
+    JS_DECLARE_ALLOCATOR(AggregateErrorPrototype);
 
 public:
     virtual void initialize(Realm&) override;

@@ -9,6 +9,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(WeakRefPrototype);
+
 WeakRefPrototype::WeakRefPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())
 {

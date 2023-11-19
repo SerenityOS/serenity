@@ -15,6 +15,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(DisplayNamesConstructor);
+
 // 12.1 The Intl.DisplayNames Constructor, https://tc39.es/ecma402/#sec-intl-displaynames-constructor
 DisplayNamesConstructor::DisplayNamesConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.DisplayNames.as_string(), realm.intrinsics().function_prototype())

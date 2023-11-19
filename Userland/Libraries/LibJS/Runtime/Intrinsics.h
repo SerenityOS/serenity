@@ -13,6 +13,7 @@ namespace JS {
 
 class Intrinsics final : public Cell {
     JS_CELL(Intrinsics, Cell);
+    JS_DECLARE_ALLOCATOR(Intrinsics);
 
 public:
     static ThrowCompletionOr<NonnullGCPtr<Intrinsics>> create(Realm&);

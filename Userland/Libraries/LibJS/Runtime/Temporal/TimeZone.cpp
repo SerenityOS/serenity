@@ -22,6 +22,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(TimeZone);
+
 // 11 Temporal.TimeZone Objects, https://tc39.es/proposal-temporal/#sec-temporal-timezone-objects
 TimeZone::TimeZone(Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

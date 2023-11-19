@@ -12,6 +12,7 @@ namespace JS::Intl {
 
 class LocaleConstructor final : public NativeFunction {
     JS_OBJECT(LocaleConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(LocaleConstructor);
 
 public:
     virtual void initialize(Realm&) override;

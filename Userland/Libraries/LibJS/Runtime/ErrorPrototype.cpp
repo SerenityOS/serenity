@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(ErrorPrototype);
+
 ErrorPrototype::ErrorPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())
 {

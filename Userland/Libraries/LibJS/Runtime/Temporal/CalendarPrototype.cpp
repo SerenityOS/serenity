@@ -19,6 +19,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(CalendarPrototype);
+
 [[nodiscard]] static i32 iso_year(Object& temporal_object);
 [[nodiscard]] static u8 iso_month(Object& temporal_object);
 [[nodiscard]] static u8 iso_day(Object& temporal_object);

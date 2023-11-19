@@ -13,6 +13,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(LocalePrototype);
+
 // 14.3 Properties of the Intl.Locale Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-locale-prototype-object
 LocalePrototype::LocalePrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())

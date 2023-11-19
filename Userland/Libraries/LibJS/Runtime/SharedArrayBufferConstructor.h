@@ -12,6 +12,7 @@ namespace JS {
 
 class SharedArrayBufferConstructor final : public NativeFunction {
     JS_OBJECT(SharedArrayBufferConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(SharedArrayBufferConstructor);
 
 public:
     virtual void initialize(Realm&) override;

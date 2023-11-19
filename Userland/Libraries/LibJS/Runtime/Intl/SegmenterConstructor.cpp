@@ -15,6 +15,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(SegmenterConstructor);
+
 // 18.1 The Intl.Segmenter Constructor, https://tc39.es/ecma402/#sec-intl-segmenter-constructor
 SegmenterConstructor::SegmenterConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.Segmenter.as_string(), realm.intrinsics().function_prototype())

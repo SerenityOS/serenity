@@ -25,6 +25,7 @@ struct IteratorRecord {
 
 class Iterator : public Object {
     JS_OBJECT(Iterator, Object);
+    JS_DECLARE_ALLOCATOR(Iterator);
 
 public:
     static NonnullGCPtr<Iterator> create(Realm&, Object& prototype, IteratorRecord iterated);

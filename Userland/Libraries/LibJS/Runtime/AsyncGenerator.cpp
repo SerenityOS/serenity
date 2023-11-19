@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(AsyncGenerator);
+
 ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::CallFrame frame)
 {
     auto& vm = realm.vm();

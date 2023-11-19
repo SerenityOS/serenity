@@ -16,6 +16,7 @@ namespace JS {
 
 class IteratorHelper final : public GeneratorObject {
     JS_OBJECT(IteratorHelper, GeneratorObject);
+    JS_DECLARE_ALLOCATOR(IteratorHelper);
 
 public:
     using Closure = JS::SafeFunction<ThrowCompletionOr<Value>(VM&, IteratorHelper&)>;

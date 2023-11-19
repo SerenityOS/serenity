@@ -23,6 +23,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(Duration);
+
 // 7 Temporal.Duration Objects, https://tc39.es/proposal-temporal/#sec-temporal-duration-objects
 Duration::Duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)

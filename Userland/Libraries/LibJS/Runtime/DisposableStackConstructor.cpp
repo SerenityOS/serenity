@@ -10,6 +10,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(DisposableStackConstructor);
+
 DisposableStackConstructor::DisposableStackConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.DisposableStack.as_string(), realm.intrinsics().function_prototype())
 {

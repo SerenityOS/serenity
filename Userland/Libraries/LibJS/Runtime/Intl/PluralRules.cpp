@@ -11,6 +11,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(PluralRules);
+
 // 16 PluralRules Objects, https://tc39.es/ecma402/#pluralrules-objects
 PluralRules::PluralRules(Object& prototype)
     : NumberFormatBase(prototype)

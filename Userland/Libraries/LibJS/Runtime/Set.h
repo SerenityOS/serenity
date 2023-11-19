@@ -15,6 +15,7 @@ namespace JS {
 
 class Set : public Object {
     JS_OBJECT(Set, Object);
+    JS_DECLARE_ALLOCATOR(Set);
 
 public:
     static NonnullGCPtr<Set> create(Realm&);

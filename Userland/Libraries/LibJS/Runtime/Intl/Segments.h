@@ -14,6 +14,7 @@ namespace JS::Intl {
 
 class Segments final : public Object {
     JS_OBJECT(Segments, Object);
+    JS_DECLARE_ALLOCATOR(Segments);
 
 public:
     static NonnullGCPtr<Segments> create(Realm&, Segmenter&, Utf16String);

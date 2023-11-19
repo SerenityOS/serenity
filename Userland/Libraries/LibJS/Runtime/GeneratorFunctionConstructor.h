@@ -13,6 +13,7 @@ namespace JS {
 // 27.3.1 %GeneratorFunction%, https://tc39.es/ecma262/#sec-generatorfunction-constructor
 class GeneratorFunctionConstructor final : public NativeFunction {
     JS_OBJECT(GeneratorFunctionConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(GeneratorFunctionConstructor);
 
 public:
     virtual void initialize(Realm&) override;

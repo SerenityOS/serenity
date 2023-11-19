@@ -18,6 +18,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(FunctionConstructor);
+
 FunctionConstructor::FunctionConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.Function.as_string(), realm.intrinsics().function_prototype())
 {

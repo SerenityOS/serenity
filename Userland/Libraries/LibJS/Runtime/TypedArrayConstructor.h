@@ -12,6 +12,7 @@ namespace JS {
 
 class TypedArrayConstructor : public NativeFunction {
     JS_OBJECT(TypedArrayConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(TypedArrayConstructor);
 
 public:
     explicit TypedArrayConstructor(Realm&);

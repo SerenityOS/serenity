@@ -12,6 +12,7 @@ namespace JS {
 
 class StringConstructor final : public NativeFunction {
     JS_OBJECT(StringConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(StringConstructor);
 
 public:
     virtual void initialize(Realm&) override;

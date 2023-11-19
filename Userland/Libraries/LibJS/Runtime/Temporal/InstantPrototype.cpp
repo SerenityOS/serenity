@@ -18,6 +18,8 @@
 
 namespace JS::Temporal {
 
+JS_DEFINE_ALLOCATOR(InstantPrototype);
+
 // 8.3 Properties of the Temporal.Instant Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-instant-prototype-object
 InstantPrototype::InstantPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())

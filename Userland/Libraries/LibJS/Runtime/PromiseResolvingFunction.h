@@ -13,6 +13,7 @@ namespace JS {
 
 struct AlreadyResolved final : public Cell {
     JS_CELL(AlreadyResolved, Cell);
+    JS_DECLARE_ALLOCATOR(AlreadyResolved);
 
     bool value { false };
 
@@ -24,6 +25,7 @@ protected:
 
 class PromiseResolvingFunction final : public NativeFunction {
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
+    JS_DECLARE_ALLOCATOR(PromiseResolvingFunction);
 
 public:
     using FunctionType = Function<Value(VM&, Promise&, AlreadyResolved&)>;

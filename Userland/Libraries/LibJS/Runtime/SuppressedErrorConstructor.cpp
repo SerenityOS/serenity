@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(SuppressedErrorConstructor);
+
 SuppressedErrorConstructor::SuppressedErrorConstructor(Realm& realm)
     : NativeFunction(static_cast<Object&>(realm.intrinsics().error_constructor()))
 {

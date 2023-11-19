@@ -16,6 +16,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(LocaleConstructor);
+
 struct LocaleAndKeys {
     String locale;
     Optional<String> ca;

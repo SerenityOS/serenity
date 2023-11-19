@@ -38,7 +38,7 @@ public:
     template<typename T, typename... Args>
     NonnullGCPtr<T> allocate_without_realm(Args&&... args)
     {
-        auto* memory = allocate_cell(sizeof(T));
+        auto* memory = allocate_cell<T>();
         defer_gc();
         new (memory) T(forward<Args>(args)...);
         undefer_gc();
@@ -48,7 +48,7 @@ public:
     template<typename T, typename... Args>
     NonnullGCPtr<T> allocate(Realm& realm, Args&&... args)
     {
-        auto* memory = allocate_cell(sizeof(T));
+        auto* memory = allocate_cell<T>();
         defer_gc();
         new (memory) T(forward<Args>(args)...);
         undefer_gc();
@@ -91,7 +91,19 @@ private:
 
     static bool cell_must_survive_garbage_collection(Cell const&);
 
-    Cell* allocate_cell(size_t);
+    template<typename T>
+    Cell* allocate_cell()
+    {
+        will_allocate(sizeof(T));
+        if constexpr (requires { T::cell_allocator.allocate_cell(*this); }) {
+            if constexpr (IsSame<T, typename decltype(T::cell_allocator)::CellType>) {
+                return T::cell_allocator.allocate_cell(*this);
+            }
+        }
+        return allocator_for_size(sizeof(T)).allocate_cell(*this);
+    }
+
+    void will_allocate(size_t);
 
     void find_min_and_max_block_addresses(FlatPtr& min_address, FlatPtr& max_address);
     void gather_roots(HashMap<Cell*, HeapRoot>&);
@@ -101,7 +113,16 @@ private:
     void finalize_unmarked_cells();
     void sweep_dead_cells(bool print_report, Core::ElapsedTimer const&);
 
-    CellAllocator& allocator_for_size(size_t);
+    ALWAYS_INLINE CellAllocator& allocator_for_size(size_t cell_size)
+    {
+        // FIXME: Use binary search?
+        for (auto& allocator : m_allocators) {
+            if (allocator->cell_size() >= cell_size)
+                return *allocator;
+        }
+        dbgln("Cannot get CellAllocator for cell size {}, largest available is {}!", cell_size, m_allocators.last()->cell_size());
+        VERIFY_NOT_REACHED();
+    }
 
     template<typename Callback>
     void for_each_block(Callback callback)

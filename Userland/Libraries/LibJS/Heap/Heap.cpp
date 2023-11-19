@@ -70,17 +70,7 @@ Heap::~Heap()
     collect_garbage(CollectionType::CollectEverything);
 }
 
-ALWAYS_INLINE CellAllocator& Heap::allocator_for_size(size_t cell_size)
-{
-    for (auto& allocator : m_allocators) {
-        if (allocator->cell_size() >= cell_size)
-            return *allocator;
-    }
-    dbgln("Cannot get CellAllocator for cell size {}, largest available is {}!", cell_size, m_allocators.last()->cell_size());
-    VERIFY_NOT_REACHED();
-}
-
-Cell* Heap::allocate_cell(size_t size)
+void Heap::will_allocate(size_t size)
 {
     if (should_collect_on_every_allocation()) {
         m_allocated_bytes_since_last_gc = 0;
@@ -91,8 +81,6 @@ Cell* Heap::allocate_cell(size_t size)
     }
 
     m_allocated_bytes_since_last_gc += size;
-    auto& allocator = allocator_for_size(size);
-    return allocator.allocate_cell(*this);
 }
 
 static void add_possible_value(HashMap<FlatPtr, HeapRoot>& possible_pointers, FlatPtr data, HeapRoot origin, FlatPtr min_block_address, FlatPtr max_block_address)

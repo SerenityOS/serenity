@@ -15,6 +15,7 @@ namespace JS::Test262 {
 
 class $262Object final : public Object {
     JS_OBJECT($262Object, Object);
+    JS_DECLARE_ALLOCATOR($262Object);
 
 public:
     virtual void initialize(Realm&) override;

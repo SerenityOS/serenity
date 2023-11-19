@@ -11,6 +11,12 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/HeapBlock.h>
 
+#define JS_DECLARE_ALLOCATOR(ClassName) \
+    static JS::TypeIsolatingCellAllocator<ClassName> cell_allocator;
+
+#define JS_DEFINE_ALLOCATOR(ClassName) \
+    JS::TypeIsolatingCellAllocator<ClassName> ClassName::cell_allocator;
+
 namespace JS {
 
 class CellAllocator {
@@ -40,11 +46,19 @@ public:
     void block_did_become_usable(Badge<Heap>, HeapBlock&);
 
 private:
-    const size_t m_cell_size;
+    size_t const m_cell_size;
 
     using BlockList = IntrusiveList<&HeapBlock::m_list_node>;
     BlockList m_full_blocks;
     BlockList m_usable_blocks;
+};
+
+template<typename T>
+class TypeIsolatingCellAllocator {
+public:
+    using CellType = T;
+
+    CellAllocator allocator { sizeof(T) };
 };
 
 }

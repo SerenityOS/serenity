@@ -12,6 +12,7 @@ namespace JS {
 
 class AsyncFunctionPrototype final : public Object {
     JS_OBJECT(AsyncFunctionPrototype, Object);
+    JS_DECLARE_ALLOCATOR(AsyncFunctionPrototype);
 
 public:
     virtual void initialize(Realm&) override;

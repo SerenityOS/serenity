@@ -14,6 +14,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(CollatorConstructor);
+
 // 10.1.2 InitializeCollator ( collator, locales, options ), https://tc39.es/ecma402/#sec-initializecollator
 static ThrowCompletionOr<NonnullGCPtr<Collator>> initialize_collator(VM& vm, Collator& collator, Value locales_value, Value options_value)
 {

@@ -12,6 +12,7 @@ namespace JS::Intl {
 
 class DurationFormatConstructor final : public NativeFunction {
     JS_OBJECT(DurationFormatConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(DurationFormatConstructor);
 
 public:
     virtual void initialize(Realm&) override;

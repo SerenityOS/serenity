@@ -14,6 +14,7 @@ namespace JS {
 
 class Symbol final : public Cell {
     JS_CELL(Symbol, Cell);
+    JS_DECLARE_ALLOCATOR(Symbol);
 
 public:
     [[nodiscard]] static NonnullGCPtr<Symbol> create(VM&, Optional<String> description, bool is_global);

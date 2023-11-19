@@ -19,6 +19,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(PromiseConstructor);
+
 // 27.2.4.1.1 GetPromiseResolve ( promiseConstructor ), https://tc39.es/ecma262/#sec-getpromiseresolve
 static ThrowCompletionOr<Value> get_promise_resolve(VM& vm, Value constructor)
 {

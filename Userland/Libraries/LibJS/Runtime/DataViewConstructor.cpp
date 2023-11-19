@@ -14,6 +14,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(DataViewConstructor);
+
 DataViewConstructor::DataViewConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.DataView.as_string(), realm.intrinsics().function_prototype())
 {

@@ -13,6 +13,7 @@ namespace JS {
 
 class BoundFunction final : public FunctionObject {
     JS_OBJECT(BoundFunction, FunctionObject);
+    JS_DECLARE_ALLOCATOR(BoundFunction);
 
 public:
     static ThrowCompletionOr<NonnullGCPtr<BoundFunction>> create(Realm&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments);

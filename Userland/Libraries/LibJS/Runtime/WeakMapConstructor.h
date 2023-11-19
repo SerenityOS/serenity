@@ -12,6 +12,7 @@ namespace JS {
 
 class WeakMapConstructor final : public NativeFunction {
     JS_OBJECT(WeakMapConstructor, NativeFunction);
+    JS_DECLARE_ALLOCATOR(WeakMapConstructor);
 
 public:
     virtual void initialize(Realm&) override;

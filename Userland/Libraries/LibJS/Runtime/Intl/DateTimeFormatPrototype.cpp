@@ -14,6 +14,8 @@
 
 namespace JS::Intl {
 
+JS_DEFINE_ALLOCATOR(DateTimeFormatPrototype);
+
 // 11.3 Properties of the Intl.DateTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-datetimeformat-prototype-object
 DateTimeFormatPrototype::DateTimeFormatPrototype(Realm& realm)
     : PrototypeObject(realm.intrinsics().object_prototype())

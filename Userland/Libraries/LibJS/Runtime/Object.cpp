@@ -23,6 +23,8 @@
 
 namespace JS {
 
+JS_DEFINE_ALLOCATOR(Object);
+
 static HashMap<GCPtr<Object const>, HashMap<DeprecatedFlyString, Object::IntrinsicAccessor>> s_intrinsics;
 
 // 10.1.12 OrdinaryObjectCreate ( proto [ , additionalInternalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinaryobjectcreate

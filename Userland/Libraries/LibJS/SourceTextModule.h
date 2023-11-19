@@ -16,6 +16,7 @@ namespace JS {
 // 16.2.1.6 Source Text Module Records, https://tc39.es/ecma262/#sec-source-text-module-records
 class SourceTextModule final : public CyclicModule {
     JS_CELL(SourceTextModule, CyclicModule);
+    JS_DECLARE_ALLOCATOR(SourceTextModule);
 
 public:
     static Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> parse(StringView source_text, Realm&, StringView filename = {}, Script::HostDefined* host_defined = nullptr);

@@ -17,6 +17,7 @@ namespace JS {
 // 27.6.2 Properties of AsyncGenerator Instances, https://tc39.es/ecma262/#sec-properties-of-asyncgenerator-intances
 class AsyncGenerator final : public Object {
     JS_OBJECT(AsyncGenerator, Object);
+    JS_DECLARE_ALLOCATOR(AsyncGenerator);
 
 public:
     enum class State {

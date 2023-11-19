@@ -16,6 +16,7 @@ class WeakRef final
     : public Object
     , public WeakContainer {
     JS_OBJECT(WeakRef, Object);
+    JS_DECLARE_ALLOCATOR(WeakRef);
 
 public:
     static NonnullGCPtr<WeakRef> create(Realm&, Object&);
