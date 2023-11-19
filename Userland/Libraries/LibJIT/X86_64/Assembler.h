@@ -877,18 +877,34 @@ struct X86_64Assembler {
 
     void native_call(
         u64 callee,
-        Vector<Operand> const& preserved_registers = {},
-        Vector<Operand> const& stack_arguments = {})
+        Vector<Operand> const& arguments,
+        Vector<Operand> const& preserved_registers = {})
     {
         for (auto const& reg : preserved_registers.in_reverse())
             push(reg);
 
-        // Preserve 16-byte stack alignment for non-even amount of stack-passed arguments
-        auto needs_aligning = ((stack_arguments.size() + preserved_registers.size()) % 2) == 1;
+        size_t register_arguments;
+        size_t stack_arguments;
+        if (arguments.size() > REG_ARGS.size()) {
+            register_arguments = REG_ARGS.size();
+            stack_arguments = arguments.size() - REG_ARGS.size();
+        } else {
+            register_arguments = arguments.size();
+            stack_arguments = 0;
+        }
+
+        // Preserve 16-byte stack alignment for non-even amount of stack elements
+        auto needs_aligning = ((stack_arguments + preserved_registers.size()) & 1) == 1;
         if (needs_aligning)
-            push(Operand::Imm(0));
-        for (auto const& stack_argument : stack_arguments.in_reverse())
-            push(stack_argument);
+            sub(Operand::Register(Reg::RSP), Operand::Imm(sizeof(u64)));
+
+        for (size_t i = 0; i < register_arguments; i++)
+            mov(Operand::Register(REG_ARGS[i]), arguments[i]);
+
+        for (size_t i = 0; i < stack_arguments; i++) {
+            auto idx = arguments.size() - 1 - i;
+            push(arguments[idx]);
+        }
 
         // load callee into RAX
         mov(Operand::Register(Reg::RAX), Operand::Imm(callee));
@@ -897,8 +913,8 @@ struct X86_64Assembler {
         emit8(0xff);
         emit_modrm_slash(2, Operand::Register(Reg::RAX));
 
-        if (!stack_arguments.is_empty() || needs_aligning)
-            add(Operand::Register(Reg::RSP), Operand::Imm((stack_arguments.size() + (needs_aligning ? 1 : 0)) * sizeof(u64)));
+        if (stack_arguments != 0 || needs_aligning)
+            add(Operand::Register(Reg::RSP), Operand::Imm((stack_arguments + (needs_aligning ? 1 : 0)) * sizeof(u64)));
 
         for (auto const& reg : preserved_registers)
             pop(reg);
@@ -912,6 +928,8 @@ struct X86_64Assembler {
 
 private:
     Vector<u8>& m_output;
+
+    static constexpr Array<Reg, 6> REG_ARGS = { Reg::RDI, Reg::RSI, Reg::RDX, Reg::RCX, Reg::R8, Reg::R9 };
 
     union ModRM {
         static constexpr u8 Mem = 0b00;

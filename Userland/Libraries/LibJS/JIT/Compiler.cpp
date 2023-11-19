@@ -145,8 +145,10 @@ void Compiler::compile_get_local(Bytecode::Op::GetLocal const& op)
         Assembler::Condition::NotEqualTo,
         Assembler::Operand::Register(GPR1),
         not_empty);
-    m_assembler.mov(Assembler::Operand::Register(ARG1), Assembler::Operand::Imm(op.index()));
-    native_call((void*)cxx_throw_binding_not_initialized);
+    native_call((void*)cxx_throw_binding_not_initialized, {
+                                                              Assembler::Operand::Register(VM_POINTER),
+                                                              Assembler::Operand::Imm(op.index()),
+                                                          });
     check_exception();
     not_empty.link(m_assembler);
 
@@ -167,7 +169,10 @@ static Value cxx_typeof_local(VM& vm, Value value)
 void Compiler::compile_typeof_local(Bytecode::Op::TypeofLocal const& op)
 {
     load_vm_local(ARG1, op.index());
-    native_call((void*)cxx_typeof_local);
+    native_call((void*)cxx_typeof_local, {
+                                             Assembler::Operand::Register(VM_POINTER),
+                                             Assembler::Operand::Register(ARG1),
+                                         });
     store_accumulator(GPR0);
 }
 
@@ -209,7 +214,7 @@ void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
         m_assembler.jump(label_for(op.true_target()->block()));
     });
 
-    native_call((void*)cxx_to_boolean);
+    native_call((void*)cxx_to_boolean, { Assembler::Operand::Register(VM_POINTER), Assembler::Operand::Register(ARG1) });
 
     m_assembler.jump_if(
         Assembler::Operand::Register(RET),
@@ -482,7 +487,10 @@ void Compiler::compile_increment(Bytecode::Op::Increment const&)
     });
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_increment);
+    native_call((void*)cxx_increment, {
+                                          Assembler::Operand::Register(VM_POINTER),
+                                          Assembler::Operand::Register(ARG1),
+                                      });
     store_accumulator(RET);
     check_exception();
 
@@ -530,7 +538,10 @@ void Compiler::compile_decrement(Bytecode::Op::Decrement const&)
     });
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_decrement);
+    native_call((void*)cxx_decrement, {
+                                          Assembler::Operand::Register(VM_POINTER),
+                                          Assembler::Operand::Register(ARG1),
+                                      });
     store_accumulator(RET);
     check_exception();
 
@@ -575,7 +586,9 @@ static void cxx_enter_unwind_context(VM& vm)
 
 void Compiler::compile_enter_unwind_context(Bytecode::Op::EnterUnwindContext const& op)
 {
-    native_call((void*)cxx_enter_unwind_context);
+    native_call((void*)cxx_enter_unwind_context, {
+                                                     Assembler::Operand::Register(VM_POINTER),
+                                                 });
     m_assembler.jump(label_for(op.entry_point().block()));
 }
 
@@ -586,7 +599,9 @@ static void cxx_leave_unwind_context(VM& vm)
 
 void Compiler::compile_leave_unwind_context(Bytecode::Op::LeaveUnwindContext const&)
 {
-    native_call((void*)cxx_leave_unwind_context);
+    native_call((void*)cxx_leave_unwind_context, {
+                                                     Assembler::Operand::Register(VM_POINTER),
+                                                 });
 }
 
 void Compiler::compile_throw(Bytecode::Op::Throw const&)
@@ -603,7 +618,9 @@ static void cxx_catch(VM& vm)
 
 void Compiler::compile_catch(Bytecode::Op::Catch const&)
 {
-    native_call((void*)cxx_catch);
+    native_call((void*)cxx_catch, {
+                                      Assembler::Operand::Register(VM_POINTER),
+                                  });
 }
 
 static ThrowCompletionOr<Value> loosely_inequals(VM& vm, Value src1, Value src2)
@@ -839,7 +856,11 @@ void Compiler::compile_strict_equals(Bytecode::Op::StrictlyEquals const& op)
     m_assembler.jump(end);
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_strict_equals);
+    native_call((void*)cxx_strict_equals, {
+                                              Assembler::Operand::Register(VM_POINTER),
+                                              Assembler::Operand::Register(ARG1),
+                                              Assembler::Operand::Register(ARG2),
+                                          });
     store_accumulator(RET);
     check_exception();
 
@@ -885,7 +906,11 @@ void Compiler::compile_strict_inequals(Bytecode::Op::StrictlyInequals const& op)
     m_assembler.jump(end);
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_strict_inequals);
+    native_call((void*)cxx_strict_inequals, {
+                                                Assembler::Operand::Register(VM_POINTER),
+                                                Assembler::Operand::Register(ARG1),
+                                                Assembler::Operand::Register(ARG2),
+                                            });
     store_accumulator(RET);
     check_exception();
 
@@ -921,7 +946,11 @@ void Compiler::compile_loosely_equals(Bytecode::Op::LooselyEquals const& op)
     });
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_loosely_equals);
+    native_call((void*)cxx_loosely_equals, {
+                                               Assembler::Operand::Register(VM_POINTER),
+                                               Assembler::Operand::Register(ARG1),
+                                               Assembler::Operand::Register(ARG2),
+                                           });
     store_accumulator(RET);
     check_exception();
 
@@ -960,26 +989,33 @@ void Compiler::compile_loosely_inequals(Bytecode::Op::LooselyInequals const& op)
     });
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_loosely_inequals);
+    native_call((void*)cxx_loosely_inequals, {
+                                                 Assembler::Operand::Register(VM_POINTER),
+                                                 Assembler::Operand::Register(ARG1),
+                                                 Assembler::Operand::Register(ARG2),
+                                             });
     store_accumulator(RET);
     check_exception();
 
     end.link(m_assembler);
 }
 
-#    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                 \
-        static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                \
-        {                                                                               \
-            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                 \
-        }                                                                               \
-                                                                                        \
-        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op) \
-        {                                                                               \
-            load_vm_register(ARG1, op.lhs());                                           \
-            load_accumulator(ARG2);                                                     \
-            native_call((void*)cxx_##snake_case_name);                                  \
-            store_accumulator(RET);                                                     \
-            check_exception();                                                          \
+#    define DO_COMPILE_COMMON_BINARY_OP(TitleCaseName, snake_case_name)                                     \
+        static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                                    \
+        {                                                                                                   \
+            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                                     \
+        }                                                                                                   \
+                                                                                                            \
+        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op)                     \
+        {                                                                                                   \
+            load_vm_register(ARG1, op.lhs());                                                               \
+            native_call((void*)cxx_##snake_case_name, {                                                     \
+                                                          Assembler::Operand::Register(VM_POINTER),         \
+                                                          Assembler::Operand::Register(CACHED_ACCUMULATOR), \
+                                                          Assembler::Operand::Register(ARG2),               \
+                                                      });                                                   \
+            store_accumulator(RET);                                                                         \
+            check_exception();                                                                              \
         }
 
 JS_ENUMERATE_COMMON_BINARY_OPS_WITHOUT_FAST_PATH(DO_COMPILE_COMMON_BINARY_OP)
@@ -998,24 +1034,24 @@ void Compiler::compile_add(Bytecode::Op::Add const& op)
     compile_binary_op_fastpaths(
         ARG1, ARG2,
         [&](auto lhs, auto rhs, auto& slow_case) {
-        m_assembler.add32(
-            Assembler::Operand::Register(lhs),
-            Assembler::Operand::Register(rhs),
-            slow_case);
-        return lhs; },
+            m_assembler.add32(
+                Assembler::Operand::Register(lhs),
+                Assembler::Operand::Register(rhs),
+                slow_case);
+            return lhs;
+        },
         [&](auto lhs, auto rhs) {
             m_assembler.add(
                 Assembler::Operand::FloatRegister(lhs),
                 Assembler::Operand::FloatRegister(rhs));
-            return lhs; },
+            return lhs;
+        },
         [&](auto lhs, auto rhs) {
-            m_assembler.mov(
-                Assembler::Operand::Register(ARG1),
-                Assembler::Operand::Register(lhs));
-            m_assembler.mov(
-                Assembler::Operand::Register(ARG2),
-                Assembler::Operand::Register(rhs));
-            native_call((void*)cxx_add);
+            native_call((void*)cxx_add, {
+                                            Assembler::Operand::Register(VM_POINTER),
+                                            Assembler::Operand::Register(lhs),
+                                            Assembler::Operand::Register(rhs),
+                                        });
             return RET;
         });
 }
@@ -1050,7 +1086,11 @@ void Compiler::compile_sub(Bytecode::Op::Sub const& op)
             m_assembler.mov(
                 Assembler::Operand::Register(ARG2),
                 Assembler::Operand::Register(rhs));
-            native_call((void*)cxx_sub);
+            native_call((void*)cxx_sub, {
+                                            Assembler::Operand::Register(VM_POINTER),
+                                            Assembler::Operand::Register(lhs),
+                                            Assembler::Operand::Register(rhs),
+                                        });
             return RET;
         });
 }
@@ -1085,68 +1125,76 @@ void Compiler::compile_mul(Bytecode::Op::Mul const& op)
             m_assembler.mov(
                 Assembler::Operand::Register(ARG2),
                 Assembler::Operand::Register(rhs));
-            native_call((void*)cxx_mul);
+            native_call((void*)cxx_mul, {
+                                            Assembler::Operand::Register(VM_POINTER),
+                                            Assembler::Operand::Register(lhs),
+                                            Assembler::Operand::Register(rhs),
+                                        });
             return RET;
         });
 }
 
-#    define DO_COMPILE_COMPARISON_OP(TitleCaseName, snake_case_name, IntegerCondition, FloatCondition) \
-        static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                               \
-        {                                                                                              \
-            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                                \
-        }                                                                                              \
-                                                                                                       \
-        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op)                \
-        {                                                                                              \
-            load_vm_register(ARG1, op.lhs());                                                          \
-            load_accumulator(ARG2);                                                                    \
-                                                                                                       \
-            compiler_comparison_fastpaths(                                                             \
-                ARG1, ARG2,                                                                            \
-                [&](auto lhs, auto rhs) {                                                              \
-                    m_assembler.sign_extend_32_to_64_bits(lhs);                                        \
-                    m_assembler.sign_extend_32_to_64_bits(rhs);                                        \
-                                                                                                       \
-                    /* accumulator = SHIFTED_BOOLEAN_TAG | (arg1 condition arg2) */                    \
-                    m_assembler.mov(                                                                   \
-                        Assembler::Operand::Register(GPR0),                                            \
-                        Assembler::Operand::Imm(SHIFTED_BOOLEAN_TAG));                                 \
-                    m_assembler.cmp(                                                                   \
-                        Assembler::Operand::Register(lhs),                                             \
-                        Assembler::Operand::Register(rhs));                                            \
-                    m_assembler.set_if(                                                                \
-                        Assembler::Condition::IntegerCondition,                                        \
-                        Assembler::Operand::Register(GPR0)); /* sets only first byte */                \
-                    return GPR0;                                                                       \
-                },                                                                                     \
-                [&](auto lhs, auto rhs) {                                                              \
-                    Assembler::Label is_nan;                                                           \
-                    /* accumulator = SHIFTED_BOOLEAN_TAG | (arg1 condition arg2) */                    \
-                    m_assembler.mov(                                                                   \
-                        Assembler::Operand::Register(GPR0),                                            \
-                        Assembler::Operand::Imm(SHIFTED_BOOLEAN_TAG));                                 \
-                    m_assembler.cmp(                                                                   \
-                        Assembler::Operand::FloatRegister(lhs),                                        \
-                        Assembler::Operand::FloatRegister(rhs));                                       \
-                    m_assembler.jump_if(                                                               \
-                        Assembler::Condition::Unordered,                                               \
-                        is_nan);                                                                       \
-                    m_assembler.set_if(                                                                \
-                        Assembler::Condition::FloatCondition,                                          \
-                        Assembler::Operand::Register(GPR0)); /* sets only first byte */                \
-                    is_nan.link(m_assembler);                                                          \
-                    return GPR0;                                                                       \
-                },                                                                                     \
-                [&](auto lhs, auto rhs) {                                                              \
-                    m_assembler.mov(                                                                   \
-                        Assembler::Operand::Register(ARG1),                                            \
-                        Assembler::Operand::Register(lhs));                                            \
-                    m_assembler.mov(                                                                   \
-                        Assembler::Operand::Register(ARG2),                                            \
-                        Assembler::Operand::Register(rhs));                                            \
-                    native_call((void*)cxx_##snake_case_name);                                         \
-                    return RET;                                                                        \
-                });                                                                                    \
+#    define DO_COMPILE_COMPARISON_OP(TitleCaseName, snake_case_name, IntegerCondition, FloatCondition)      \
+        static Value cxx_##snake_case_name(VM& vm, Value lhs, Value rhs)                                    \
+        {                                                                                                   \
+            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, lhs, rhs));                                     \
+        }                                                                                                   \
+                                                                                                            \
+        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const& op)                     \
+        {                                                                                                   \
+            load_vm_register(ARG1, op.lhs());                                                               \
+            load_accumulator(ARG2);                                                                         \
+                                                                                                            \
+            compiler_comparison_fastpaths(                                                                  \
+                ARG1, ARG2,                                                                                 \
+                [&](auto lhs, auto rhs) {                                                                   \
+                    m_assembler.sign_extend_32_to_64_bits(lhs);                                             \
+                    m_assembler.sign_extend_32_to_64_bits(rhs);                                             \
+                                                                                                            \
+                    /* accumulator = SHIFTED_BOOLEAN_TAG | (arg1 condition arg2) */                         \
+                    m_assembler.mov(                                                                        \
+                        Assembler::Operand::Register(GPR0),                                                 \
+                        Assembler::Operand::Imm(SHIFTED_BOOLEAN_TAG));                                      \
+                    m_assembler.cmp(                                                                        \
+                        Assembler::Operand::Register(lhs),                                                  \
+                        Assembler::Operand::Register(rhs));                                                 \
+                    m_assembler.set_if(                                                                     \
+                        Assembler::Condition::IntegerCondition,                                             \
+                        Assembler::Operand::Register(GPR0)); /* sets only first byte */                     \
+                    return GPR0;                                                                            \
+                },                                                                                          \
+                [&](auto lhs, auto rhs) {                                                                   \
+                    Assembler::Label is_nan;                                                                \
+                    /* accumulator = SHIFTED_BOOLEAN_TAG | (arg1 condition arg2) */                         \
+                    m_assembler.mov(                                                                        \
+                        Assembler::Operand::Register(GPR0),                                                 \
+                        Assembler::Operand::Imm(SHIFTED_BOOLEAN_TAG));                                      \
+                    m_assembler.cmp(                                                                        \
+                        Assembler::Operand::FloatRegister(lhs),                                             \
+                        Assembler::Operand::FloatRegister(rhs));                                            \
+                    m_assembler.jump_if(                                                                    \
+                        Assembler::Condition::Unordered,                                                    \
+                        is_nan);                                                                            \
+                    m_assembler.set_if(                                                                     \
+                        Assembler::Condition::FloatCondition,                                               \
+                        Assembler::Operand::Register(GPR0)); /* sets only first byte */                     \
+                    is_nan.link(m_assembler);                                                               \
+                    return GPR0;                                                                            \
+                },                                                                                          \
+                [&](auto lhs, auto rhs) {                                                                   \
+                    m_assembler.mov(                                                                        \
+                        Assembler::Operand::Register(ARG1),                                                 \
+                        Assembler::Operand::Register(lhs));                                                 \
+                    m_assembler.mov(                                                                        \
+                        Assembler::Operand::Register(ARG2),                                                 \
+                        Assembler::Operand::Register(rhs));                                                 \
+                    native_call((void*)cxx_##snake_case_name, {                                             \
+                                                                  Assembler::Operand::Register(VM_POINTER), \
+                                                                  Assembler::Operand::Register(ARG1),       \
+                                                                  Assembler::Operand::Register(ARG2),       \
+                                                              });                                           \
+                    return RET;                                                                             \
+                });                                                                                         \
         }
 
 JS_ENUMERATE_COMPARISON_OPS(DO_COMPILE_COMPARISON_OP)
@@ -1175,7 +1223,11 @@ void Compiler::compile_bitwise_and(Bytecode::Op::BitwiseAnd const& op)
         m_assembler.jump(end);
     });
 
-    native_call((void*)cxx_bitwise_and);
+    native_call((void*)cxx_bitwise_and, {
+                                            Assembler::Operand::Register(VM_POINTER),
+                                            Assembler::Operand::Register(ARG1),
+                                            Assembler::Operand::Register(ARG2),
+                                        });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -1204,7 +1256,11 @@ void Compiler::compile_bitwise_or(Bytecode::Op::BitwiseOr const& op)
         m_assembler.jump(end);
     });
 
-    native_call((void*)cxx_bitwise_or);
+    native_call((void*)cxx_bitwise_or, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Register(ARG1),
+                                           Assembler::Operand::Register(ARG2),
+                                       });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -1239,7 +1295,11 @@ void Compiler::compile_bitwise_xor(Bytecode::Op::BitwiseXor const& op)
         m_assembler.jump(end);
     });
 
-    native_call((void*)cxx_bitwise_xor);
+    native_call((void*)cxx_bitwise_xor, {
+                                            Assembler::Operand::Register(VM_POINTER),
+                                            Assembler::Operand::Register(ARG1),
+                                            Assembler::Operand::Register(ARG2),
+                                        });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -1272,7 +1332,11 @@ void Compiler::compile_left_shift(Bytecode::Op::LeftShift const& op)
         m_assembler.jump(end);
     });
 
-    native_call((void*)cxx_left_shift);
+    native_call((void*)cxx_left_shift, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Register(ARG1),
+                                           Assembler::Operand::Register(ARG2),
+                                       });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -1305,7 +1369,11 @@ void Compiler::compile_right_shift(Bytecode::Op::RightShift const& op)
         m_assembler.jump(end);
     });
 
-    native_call((void*)cxx_right_shift);
+    native_call((void*)cxx_right_shift, {
+                                            Assembler::Operand::Register(VM_POINTER),
+                                            Assembler::Operand::Register(ARG1),
+                                            Assembler::Operand::Register(ARG2),
+                                        });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -1358,7 +1426,11 @@ void Compiler::compile_unsigned_right_shift(Bytecode::Op::UnsignedRightShift con
     });
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_unsigned_right_shift);
+    native_call((void*)cxx_unsigned_right_shift, {
+                                                     Assembler::Operand::Register(VM_POINTER),
+                                                     Assembler::Operand::Register(ARG1),
+                                                     Assembler::Operand::Register(ARG2),
+                                                 });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -1374,18 +1446,21 @@ static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
     return PrimitiveString::create(vm, value.typeof());
 }
 
-#    define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)               \
-        static Value cxx_##snake_case_name(VM& vm, Value value)                      \
-        {                                                                            \
-            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, value));                 \
-        }                                                                            \
-                                                                                     \
-        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const&) \
-        {                                                                            \
-            load_accumulator(ARG1);                                                  \
-            native_call((void*)cxx_##snake_case_name);                               \
-            store_accumulator(RET);                                                  \
-            check_exception();                                                       \
+#    define DO_COMPILE_COMMON_UNARY_OP(TitleCaseName, snake_case_name)                              \
+        static Value cxx_##snake_case_name(VM& vm, Value value)                                     \
+        {                                                                                           \
+            return TRY_OR_SET_EXCEPTION(snake_case_name(vm, value));                                \
+        }                                                                                           \
+                                                                                                    \
+        void Compiler::compile_##snake_case_name(Bytecode::Op::TitleCaseName const&)                \
+        {                                                                                           \
+            load_accumulator(ARG1);                                                                 \
+            native_call((void*)cxx_##snake_case_name, {                                             \
+                                                          Assembler::Operand::Register(VM_POINTER), \
+                                                          Assembler::Operand::Register(ARG1),       \
+                                                      });                                           \
+            store_accumulator(RET);                                                                 \
+            check_exception();                                                                      \
         }
 
 JS_ENUMERATE_COMMON_UNARY_OPS(DO_COMPILE_COMMON_UNARY_OP)
@@ -1415,7 +1490,10 @@ void Compiler::compile_new_string(Bytecode::Op::NewString const& op)
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
         Assembler::Operand::Imm(bit_cast<u64>(&string)));
-    native_call((void*)cxx_new_string);
+    native_call((void*)cxx_new_string, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Imm(bit_cast<u64>(&string)),
+                                       });
     store_accumulator(RET);
 }
 
@@ -1425,17 +1503,12 @@ void Compiler::compile_new_regexp(Bytecode::Op::NewRegExp const& op)
     auto const& pattern = m_bytecode_executable.string_table->get(op.source_index());
     auto const& flags = m_bytecode_executable.string_table->get(op.flags_index());
 
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&parsed_regex)));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&pattern)));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&flags)));
-
-    native_call((void*)Bytecode::new_regexp);
+    native_call((void*)Bytecode::new_regexp, {
+                                                 Assembler::Operand::Register(VM_POINTER),
+                                                 Assembler::Operand::Imm(bit_cast<u64>(&parsed_regex)),
+                                                 Assembler::Operand::Imm(bit_cast<u64>(&pattern)),
+                                                 Assembler::Operand::Imm(bit_cast<u64>(&flags)),
+                                             });
     store_accumulator(RET);
 }
 
@@ -1449,7 +1522,10 @@ void Compiler::compile_new_bigint(Bytecode::Op::NewBigInt const& op)
     m_assembler.mov(
         Assembler::Operand::Register(ARG1),
         Assembler::Operand::Imm(bit_cast<u64>(&op.bigint())));
-    native_call((void*)cxx_new_bigint);
+    native_call((void*)cxx_new_bigint, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Imm(bit_cast<u64>(&op.bigint())),
+                                       });
     store_accumulator(RET);
 }
 
@@ -1461,7 +1537,9 @@ static Value cxx_new_object(VM& vm)
 
 void Compiler::compile_new_object(Bytecode::Op::NewObject const&)
 {
-    native_call((void*)cxx_new_object);
+    native_call((void*)cxx_new_object, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                       });
     store_accumulator(RET);
 }
 
@@ -1478,13 +1556,11 @@ static Value cxx_new_array(VM& vm, size_t element_count, u32 first_register_inde
 
 void Compiler::compile_new_array(Bytecode::Op::NewArray const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(op.element_count()));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.element_count() ? op.start().index() : 0));
-    native_call((void*)cxx_new_array);
+    native_call((void*)cxx_new_array, {
+                                          Assembler::Operand::Register(VM_POINTER),
+                                          Assembler::Operand::Imm(op.element_count()),
+                                          Assembler::Operand::Imm(op.element_count() ? op.start().index() : 0),
+                                      });
     store_accumulator(RET);
 }
 
@@ -1500,28 +1576,22 @@ static Value cxx_new_primitive_array(VM& vm, Value* values, size_t element_count
 
 void Compiler::compile_new_primitive_array(Bytecode::Op::NewPrimitiveArray const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(op.values().data())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.values().size()));
-    native_call((void*)cxx_new_primitive_array);
+    native_call((void*)cxx_new_primitive_array, {
+                                                    Assembler::Operand::Register(VM_POINTER),
+                                                    Assembler::Operand::Imm(bit_cast<u64>(op.values().data())),
+                                                    Assembler::Operand::Imm(op.values().size()),
+                                                });
     store_accumulator(RET);
 }
 
 void Compiler::compile_new_function(Bytecode::Op::NewFunction const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.function_node())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.lhs_name())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.home_object())));
-    native_call((void*)Bytecode::new_function);
+    native_call((void*)Bytecode::new_function, {
+                                                   Assembler::Operand::Register(VM_POINTER),
+                                                   Assembler::Operand::Imm(bit_cast<u64>(&op.function_node())),
+                                                   Assembler::Operand::Imm(bit_cast<u64>(&op.lhs_name())),
+                                                   Assembler::Operand::Imm(bit_cast<u64>(&op.home_object())),
+                                               });
     store_accumulator(RET);
 }
 
@@ -1533,17 +1603,20 @@ static Value cxx_new_class(VM& vm, Value super_class, ClassExpression const& cla
 void Compiler::compile_new_class(Bytecode::Op::NewClass const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.class_expression())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.lhs_name())));
-    native_call((void*)cxx_new_class);
+    native_call((void*)cxx_new_class, {
+                                          Assembler::Operand::Register(VM_POINTER),
+                                          Assembler::Operand::Register(ARG1),
+                                          Assembler::Operand::Imm(bit_cast<u64>(&op.class_expression())),
+                                          Assembler::Operand::Imm(bit_cast<u64>(&op.lhs_name())),
+                                      });
     store_accumulator(RET);
 }
 
-static Value cxx_get_by_id(VM& vm, Value base, DeprecatedFlyString const& property, Bytecode::PropertyLookupCache& cache)
+static Value cxx_get_by_id(
+    VM& vm,
+    Value base,
+    DeprecatedFlyString const& property,
+    Bytecode::PropertyLookupCache& cache)
 {
     return TRY_OR_SET_EXCEPTION(Bytecode::get_by_id(vm, property, base, base, cache));
 }
@@ -1711,13 +1784,12 @@ void Compiler::compile_get_by_id(Bytecode::Op::GetById const& op)
     });
 
     slow_case.link(m_assembler);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&cache)));
-    native_call((void*)cxx_get_by_id);
+    native_call((void*)cxx_get_by_id, {
+                                          Assembler::Operand::Register(VM_POINTER),
+                                          Assembler::Operand::Register(ARG1),
+                                          Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                          Assembler::Operand::Imm(bit_cast<u64>(&cache)),
+                                      });
     store_accumulator(RET);
     check_exception();
 
@@ -1844,7 +1916,9 @@ void Compiler::compile_get_by_value(Bytecode::Op::GetByValue const& op)
     });
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_get_by_value);
+    native_call((void*)cxx_get_by_value, {
+                                             Assembler::Operand::Register(VM_POINTER),
+                                         });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -1858,12 +1932,6 @@ static Value cxx_get_global(VM& vm, DeprecatedFlyString const& identifier, Bytec
 void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
 {
     auto& cache = m_bytecode_executable.global_variable_caches[op.cache_index()];
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&cache)));
 
     Assembler::Label end {};
     Assembler::Label slow_case {};
@@ -1999,7 +2067,11 @@ void Compiler::compile_get_global(Bytecode::Op::GetGlobal const& op)
     m_assembler.jump(end);
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_get_global);
+    native_call((void*)cxx_get_global, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))),
+                                           Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.global_variable_caches[op.cache_index()])),
+                                       });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -2121,10 +2193,10 @@ void Compiler::compile_get_variable(Bytecode::Op::GetVariable const& op)
 
     // Slow case: Uncached access. Call C++ helper.
     slow_case.link(m_assembler);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
-    native_call((void*)cxx_get_variable);
+    native_call((void*)cxx_get_variable, {
+                                             Assembler::Operand::Register(VM_POINTER),
+                                             Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))),
+                                         });
     store_accumulator(RET);
     check_exception();
 
@@ -2146,19 +2218,13 @@ static Value cxx_get_callee_and_this_from_environment(VM& vm, DeprecatedFlyStrin
 
 void Compiler::compile_get_callee_and_this_from_environment(Bytecode::Op::GetCalleeAndThisFromEnvironment const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.callee().index()));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(op.this_().index()));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.environment_variable_caches[op.cache_index()])));
-    native_call((void*)cxx_get_callee_and_this_from_environment);
+    native_call((void*)cxx_get_callee_and_this_from_environment, {
+                                                                     Assembler::Operand::Register(ARG0),
+                                                                     Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier()))),
+                                                                     Assembler::Operand::Imm(op.callee().index()),
+                                                                     Assembler::Operand::Imm(op.this_().index()),
+                                                                     Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.environment_variable_caches[op.cache_index()])),
+                                                                 });
     check_exception();
 }
 
@@ -2174,7 +2240,10 @@ void Compiler::compile_to_numeric(Bytecode::Op::ToNumeric const&)
     load_accumulator(ARG1);
     jump_if_int32(ARG1, fast_case);
 
-    native_call((void*)cxx_to_numeric);
+    native_call((void*)cxx_to_numeric, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Register(ARG1),
+                                       });
     store_accumulator(RET);
     check_exception();
 
@@ -2210,7 +2279,9 @@ void Compiler::compile_resolve_this_binding(Bytecode::Op::ResolveThisBinding con
     auto end = m_assembler.jump();
 
     slow_case.link(m_assembler);
-    native_call((void*)cxx_resolve_this_binding);
+    native_call((void*)cxx_resolve_this_binding, {
+                                                     Assembler::Operand::Register(VM_POINTER),
+                                                 });
     store_accumulator(RET);
     check_exception();
 
@@ -2342,15 +2413,13 @@ void Compiler::compile_put_by_id(Bytecode::Op::PutById const& op)
     }
 
     slow_case.link(m_assembler);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
-    load_accumulator(ARG3);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm(to_underlying(op.kind())));
-
-    native_call((void*)cxx_put_by_id);
+    native_call((void*)cxx_put_by_id, {
+                                          Assembler::Operand::Register(ARG0),
+                                          Assembler::Operand::Register(ARG1),
+                                          Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                          Assembler::Operand::Register(CACHED_ACCUMULATOR),
+                                          Assembler::Operand::Imm(to_underlying(op.kind())),
+                                      });
     store_accumulator(RET);
     check_exception();
 
@@ -2478,11 +2547,13 @@ void Compiler::compile_put_by_value(Bytecode::Op::PutByValue const& op)
     });
 
     slow_case.link(m_assembler);
-    load_accumulator(ARG3);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm(to_underlying(op.kind())));
-    native_call((void*)cxx_put_by_value);
+    native_call((void*)cxx_put_by_value, {
+                                             Assembler::Operand::Register(VM_POINTER),
+                                             Assembler::Operand::Register(ARG1),
+                                             Assembler::Operand::Register(ARG2),
+                                             Assembler::Operand::Register(CACHED_ACCUMULATOR),
+                                             Assembler::Operand::Imm(to_underlying(op.kind())),
+                                         });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -2546,20 +2617,16 @@ void Compiler::compile_call(Bytecode::Op::Call const& op)
         compile_builtin(builtin, slow_case, end);
     }
     slow_case.link(m_assembler);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.first_argument().index()));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(op.argument_count()));
     load_vm_register(ARG4, op.this_value());
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG5),
-        Assembler::Operand::Imm(to_underlying(op.call_type())));
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.expression_string())));
-    native_call((void*)cxx_call, { Assembler::Operand::Register(GPR0) });
+    native_call((void*)cxx_call, {
+                                     Assembler::Operand::Register(VM_POINTER),
+                                     Assembler::Operand::Register(ARG1),
+                                     Assembler::Operand::Imm(op.first_argument().index()),
+                                     Assembler::Operand::Imm(op.argument_count()),
+                                     Assembler::Operand::Register(ARG4),
+                                     Assembler::Operand::Imm(to_underlying(op.call_type())),
+                                     Assembler::Operand::Imm(bit_cast<u64>(&op.expression_string())),
+                                 });
     store_accumulator(RET);
     check_exception();
     end.link(m_assembler);
@@ -2586,7 +2653,11 @@ static Value cxx_math_log(VM& vm, Value, Value value)
 
 void Compiler::compile_builtin_math_log(Assembler::Label&, Assembler::Label& end)
 {
-    native_call((void*)cxx_math_log);
+    native_call((void*)cxx_math_log, {
+                                         Assembler::Operand::Register(VM_POINTER),
+                                         Assembler::Operand::Register(ARG1),
+                                         Assembler::Operand::Register(ARG2),
+                                     });
     store_accumulator(RET);
     check_exception();
     m_assembler.jump(end);
@@ -2599,7 +2670,11 @@ static Value cxx_math_sqrt(VM& vm, Value, Value value)
 
 void Compiler::compile_builtin_math_sqrt(Assembler::Label&, Assembler::Label& end)
 {
-    native_call((void*)cxx_math_sqrt);
+    native_call((void*)cxx_math_sqrt, {
+                                          Assembler::Operand::Register(VM_POINTER),
+                                          Assembler::Operand::Register(ARG1),
+                                          Assembler::Operand::Register(ARG2),
+                                      });
     store_accumulator(RET);
     check_exception();
     m_assembler.jump(end);
@@ -2612,7 +2687,12 @@ static Value cxx_math_pow(VM& vm, Value, Value base, Value exponent)
 
 void Compiler::compile_builtin_math_pow(Assembler::Label&, Assembler::Label& end)
 {
-    native_call((void*)cxx_math_pow);
+    native_call((void*)cxx_math_pow, {
+                                         Assembler::Operand::Register(VM_POINTER),
+                                         Assembler::Operand::Register(ARG1),
+                                         Assembler::Operand::Register(ARG2),
+                                         Assembler::Operand::Register(ARG3),
+                                     });
     store_accumulator(RET);
     check_exception();
     m_assembler.jump(end);
@@ -2625,7 +2705,11 @@ static Value cxx_math_floor(VM& vm, Value, Value value)
 
 void Compiler::compile_builtin_math_floor(Assembler::Label&, Assembler::Label& end)
 {
-    native_call((void*)cxx_math_floor);
+    native_call((void*)cxx_math_floor, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Register(ARG1),
+                                           Assembler::Operand::Register(ARG2),
+                                       });
     store_accumulator(RET);
     check_exception();
     m_assembler.jump(end);
@@ -2638,7 +2722,11 @@ static Value cxx_math_ceil(VM& vm, Value, Value value)
 
 void Compiler::compile_builtin_math_ceil(Assembler::Label&, Assembler::Label& end)
 {
-    native_call((void*)cxx_math_ceil);
+    native_call((void*)cxx_math_ceil, {
+                                          Assembler::Operand::Register(VM_POINTER),
+                                          Assembler::Operand::Register(ARG1),
+                                          Assembler::Operand::Register(ARG2),
+                                      });
     store_accumulator(RET);
     check_exception();
     m_assembler.jump(end);
@@ -2651,7 +2739,11 @@ static Value cxx_math_round(VM& vm, Value, Value value)
 
 void Compiler::compile_builtin_math_round(Assembler::Label&, Assembler::Label& end)
 {
-    native_call((void*)cxx_math_round);
+    native_call((void*)cxx_math_round, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Register(ARG1),
+                                           Assembler::Operand::Register(ARG2),
+                                       });
     store_accumulator(RET);
     check_exception();
     m_assembler.jump(end);
@@ -2664,7 +2756,11 @@ static Value cxx_math_exp(VM& vm, Value, Value value)
 
 void Compiler::compile_builtin_math_exp(Assembler::Label&, Assembler::Label& end)
 {
-    native_call((void*)cxx_math_exp);
+    native_call((void*)cxx_math_exp, {
+                                         Assembler::Operand::Register(VM_POINTER),
+                                         Assembler::Operand::Register(ARG1),
+                                         Assembler::Operand::Register(ARG2),
+                                     });
     store_accumulator(RET);
     check_exception();
     m_assembler.jump(end);
@@ -2716,16 +2812,16 @@ static Value cxx_call_with_argument_array(VM& vm, Value arguments, Value callee,
 
 void Compiler::compile_call_with_argument_array(Bytecode::Op::CallWithArgumentArray const& op)
 {
-    load_accumulator(ARG1);
     load_vm_register(ARG2, op.callee());
     load_vm_register(ARG3, op.this_value());
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm(to_underlying(op.call_type())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG5),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.expression_string())));
-    native_call((void*)cxx_call_with_argument_array);
+    native_call((void*)cxx_call_with_argument_array, {
+                                                         Assembler::Operand::Register(VM_POINTER),
+                                                         Assembler::Operand::Register(CACHED_ACCUMULATOR),
+                                                         Assembler::Operand::Register(ARG2),
+                                                         Assembler::Operand::Register(ARG3),
+                                                         Assembler::Operand::Imm(to_underlying(op.call_type())),
+                                                         Assembler::Operand::Imm(bit_cast<u64>(&op.expression_string())),
+                                                     });
     store_accumulator(RET);
     check_exception();
 }
@@ -2737,10 +2833,10 @@ static Value cxx_typeof_variable(VM& vm, DeprecatedFlyString const& identifier)
 
 void Compiler::compile_typeof_variable(Bytecode::Op::TypeofVariable const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
-    native_call((void*)cxx_typeof_variable);
+    native_call((void*)cxx_typeof_variable, {
+                                                Assembler::Operand::Register(VM_POINTER),
+                                                Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))),
+                                            });
     store_accumulator(RET);
     check_exception();
 }
@@ -2759,22 +2855,15 @@ static Value cxx_create_variable(
 
 void Compiler::compile_create_variable(Bytecode::Op::CreateVariable const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(to_underlying(op.mode())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(static_cast<u64>(op.is_global())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm(static_cast<u64>(op.is_immutable())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG5),
-        Assembler::Operand::Imm(static_cast<u64>(op.is_strict())));
-    native_call((void*)cxx_create_variable);
+    native_call((void*)cxx_create_variable, {
+                                                Assembler::Operand::Register(VM_POINTER),
+                                                Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))),
+                                                Assembler::Operand::Imm(to_underlying(op.mode())),
+                                                Assembler::Operand::Imm(static_cast<u64>(op.is_global())),
+                                                Assembler::Operand::Imm(static_cast<u64>(op.is_immutable())),
+                                                Assembler::Operand::Imm(static_cast<u64>(op.is_strict())),
+
+                                            });
     check_exception();
 }
 
@@ -2917,13 +3006,13 @@ void Compiler::compile_set_variable(Bytecode::Op::SetVariable const& op)
     // Slow case: Uncached access. Call C++ helper.
     slow_case.link(m_assembler);
 
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(to_underlying(op.mode())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm(to_underlying(op.initialization_mode())));
-    native_call((void*)cxx_set_variable);
+    native_call((void*)cxx_set_variable, {
+                                             Assembler::Operand::Register(VM_POINTER),
+                                             Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))),
+                                             Assembler::Operand::Register(ARG2),
+                                             Assembler::Operand::Imm(to_underlying(op.mode())),
+                                             Assembler::Operand::Imm(to_underlying(op.initialization_mode())),
+                                         });
     check_exception();
 
     end.link(m_assembler);
@@ -2968,7 +3057,9 @@ static void cxx_create_lexical_environment(VM& vm)
 
 void Compiler::compile_create_lexical_environment(Bytecode::Op::CreateLexicalEnvironment const&)
 {
-    native_call((void*)cxx_create_lexical_environment);
+    native_call((void*)cxx_create_lexical_environment, {
+                                                           Assembler::Operand::Register(VM_POINTER),
+                                                       });
 }
 
 static void cxx_leave_lexical_environment(VM& vm)
@@ -2978,7 +3069,9 @@ static void cxx_leave_lexical_environment(VM& vm)
 
 void Compiler::compile_leave_lexical_environment(Bytecode::Op::LeaveLexicalEnvironment const&)
 {
-    native_call((void*)cxx_leave_lexical_environment);
+    native_call((void*)cxx_leave_lexical_environment, {
+                                                          Assembler::Operand::Register(VM_POINTER),
+                                                      });
 }
 
 static Value cxx_enter_object_environment(VM& vm, Value value)
@@ -2990,8 +3083,10 @@ static Value cxx_enter_object_environment(VM& vm, Value value)
 
 void Compiler::compile_enter_object_environment(Bytecode::Op::EnterObjectEnvironment const&)
 {
-    load_accumulator(ARG1);
-    native_call((void*)cxx_enter_object_environment);
+    native_call((void*)cxx_enter_object_environment, {
+                                                         Assembler::Operand::Register(VM_POINTER),
+                                                         Assembler::Operand::Register(CACHED_ACCUMULATOR),
+                                                     });
     check_exception();
 }
 
@@ -3004,8 +3099,11 @@ static Value cxx_concat_string(VM& vm, Value lhs, Value rhs)
 void Compiler::compile_concat_string(Bytecode::Op::ConcatString const& op)
 {
     load_vm_register(ARG1, op.lhs());
-    load_accumulator(ARG2);
-    native_call((void*)cxx_concat_string);
+    native_call((void*)cxx_concat_string, {
+                                              Assembler::Operand::Register(VM_POINTER),
+                                              Assembler::Operand::Register(ARG1),
+                                              Assembler::Operand::Register(CACHED_ACCUMULATOR),
+                                          });
     store_vm_register(op.lhs(), RET);
     check_exception();
 }
@@ -3020,10 +3118,10 @@ static void cxx_block_declaration_instantiation(VM& vm, ScopeNode const& scope_n
 
 void Compiler::compile_block_declaration_instantiation(Bytecode::Op::BlockDeclarationInstantiation const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.scope_node())));
-    native_call((void*)cxx_block_declaration_instantiation);
+    native_call((void*)cxx_block_declaration_instantiation, {
+                                                                Assembler::Operand::Register(VM_POINTER),
+                                                                Assembler::Operand::Imm(bit_cast<u64>(&op.scope_node())),
+                                                            });
 }
 
 static Value cxx_super_call_with_argument_array(VM& vm, Value argument_array, bool is_synthetic)
@@ -3034,10 +3132,11 @@ static Value cxx_super_call_with_argument_array(VM& vm, Value argument_array, bo
 void Compiler::compile_super_call_with_argument_array(Bytecode::Op::SuperCallWithArgumentArray const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(static_cast<u64>(op.is_synthetic())));
-    native_call((void*)cxx_super_call_with_argument_array);
+    native_call((void*)cxx_super_call_with_argument_array, {
+                                                               Assembler::Operand::Register(VM_POINTER),
+                                                               Assembler::Operand::Register(ARG1),
+                                                               Assembler::Operand::Imm(static_cast<u64>(op.is_synthetic())),
+                                                           });
     store_accumulator(RET);
     check_exception();
 }
@@ -3051,10 +3150,11 @@ static Value cxx_get_iterator(VM& vm, Value value, IteratorHint hint)
 void Compiler::compile_get_iterator(Bytecode::Op::GetIterator const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(to_underlying(op.hint())));
-    native_call((void*)cxx_get_iterator);
+    native_call((void*)cxx_get_iterator, {
+                                             Assembler::Operand::Register(VM_POINTER),
+                                             Assembler::Operand::Register(ARG1),
+                                             Assembler::Operand::Imm(to_underlying(op.hint())),
+                                         });
     store_accumulator(RET);
     check_exception();
 }
@@ -3069,7 +3169,10 @@ static Value cxx_iterator_next(VM& vm, Value iterator)
 void Compiler::compile_iterator_next(Bytecode::Op::IteratorNext const&)
 {
     load_accumulator(ARG1);
-    native_call((void*)cxx_iterator_next);
+    native_call((void*)cxx_iterator_next, {
+                                              Assembler::Operand::Register(VM_POINTER),
+                                              Assembler::Operand::Register(ARG1),
+                                          });
     store_accumulator(RET);
     check_exception();
 }
@@ -3083,7 +3186,10 @@ static Value cxx_iterator_result_done(VM& vm, Value iterator)
 void Compiler::compile_iterator_result_done(Bytecode::Op::IteratorResultDone const&)
 {
     load_accumulator(ARG1);
-    native_call((void*)cxx_iterator_result_done);
+    native_call((void*)cxx_iterator_result_done, {
+                                                     Assembler::Operand::Register(VM_POINTER),
+                                                     Assembler::Operand::Register(ARG1),
+                                                 });
     store_accumulator(RET);
     check_exception();
 }
@@ -3098,7 +3204,10 @@ static Value cxx_throw_if_not_object(VM& vm, Value value)
 void Compiler::compile_throw_if_not_object(Bytecode::Op::ThrowIfNotObject const&)
 {
     load_accumulator(ARG1);
-    native_call((void*)cxx_throw_if_not_object);
+    native_call((void*)cxx_throw_if_not_object, {
+                                                    Assembler::Operand::Register(VM_POINTER),
+                                                    Assembler::Operand::Register(ARG1),
+                                                });
     check_exception();
 }
 
@@ -3112,7 +3221,10 @@ static Value cxx_throw_if_nullish(VM& vm, Value value)
 void Compiler::compile_throw_if_nullish(Bytecode::Op::ThrowIfNullish const&)
 {
     load_accumulator(ARG1);
-    native_call((void*)cxx_throw_if_nullish);
+    native_call((void*)cxx_throw_if_nullish, {
+                                                 Assembler::Operand::Register(VM_POINTER),
+                                                 Assembler::Operand::Register(ARG1),
+                                             });
     check_exception();
 }
 
@@ -3125,7 +3237,10 @@ static Value cxx_iterator_result_value(VM& vm, Value iterator)
 void Compiler::compile_iterator_result_value(Bytecode::Op::IteratorResultValue const&)
 {
     load_accumulator(ARG1);
-    native_call((void*)cxx_iterator_result_value);
+    native_call((void*)cxx_iterator_result_value, {
+                                                      Assembler::Operand::Register(VM_POINTER),
+                                                      Assembler::Operand::Register(ARG1),
+                                                  });
     store_accumulator(RET);
     check_exception();
 }
@@ -3143,13 +3258,12 @@ static Value cxx_iterator_close(VM& vm, Value iterator, Completion::Type complet
 void Compiler::compile_iterator_close(Bytecode::Op::IteratorClose const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(to_underlying(op.completion_type())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.completion_value())));
-    native_call((void*)cxx_iterator_close);
+    native_call((void*)cxx_iterator_close, {
+                                               Assembler::Operand::Register(VM_POINTER),
+                                               Assembler::Operand::Register(ARG1),
+                                               Assembler::Operand::Imm(to_underlying(op.completion_type())),
+                                               Assembler::Operand::Imm(bit_cast<u64>(&op.completion_value())),
+                                           });
     check_exception();
 }
 
@@ -3161,7 +3275,10 @@ static Value iterator_to_array(VM& vm, Value iterator)
 void Compiler::compile_iterator_to_array(Bytecode::Op::IteratorToArray const&)
 {
     load_accumulator(ARG1);
-    native_call((void*)iterator_to_array);
+    native_call((void*)iterator_to_array, {
+                                              Assembler::Operand::Register(VM_POINTER),
+                                              Assembler::Operand::Register(ARG1),
+                                          });
     store_accumulator(RET);
     check_exception();
 }
@@ -3176,10 +3293,12 @@ void Compiler::compile_append(Bytecode::Op::Append const& op)
 {
     load_vm_register(ARG1, op.lhs());
     load_accumulator(ARG2);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(static_cast<u64>(op.is_spread())));
-    native_call((void*)cxx_append);
+    native_call((void*)cxx_append, {
+                                       Assembler::Operand::Register(VM_POINTER),
+                                       Assembler::Operand::Register(ARG1),
+                                       Assembler::Operand::Register(ARG2),
+                                       Assembler::Operand::Imm(static_cast<u64>(op.is_spread())),
+                                   });
     check_exception();
 }
 
@@ -3191,10 +3310,11 @@ static Value cxx_delete_by_id(VM& vm, Value base, Bytecode::IdentifierTableIndex
 void Compiler::compile_delete_by_id(Bytecode::Op::DeleteById const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.property().value()));
-    native_call((void*)cxx_delete_by_id);
+    native_call((void*)cxx_delete_by_id, {
+                                             Assembler::Operand::Register(VM_POINTER),
+                                             Assembler::Operand::Register(ARG1),
+                                             Assembler::Operand::Imm(op.property().value()),
+                                         });
     store_accumulator(RET);
     check_exception();
 }
@@ -3208,7 +3328,11 @@ void Compiler::compile_delete_by_value(Bytecode::Op::DeleteByValue const& op)
 {
     load_vm_register(ARG1, op.base());
     load_accumulator(ARG2);
-    native_call((void*)cxx_delete_by_value);
+    native_call((void*)cxx_delete_by_value, {
+                                                Assembler::Operand::Register(VM_POINTER),
+                                                Assembler::Operand::Register(ARG1),
+                                                Assembler::Operand::Register(ARG2),
+                                            });
     store_accumulator(RET);
     check_exception();
 }
@@ -3223,7 +3347,12 @@ void Compiler::compile_delete_by_value_with_this(Bytecode::Op::DeleteByValueWith
     load_vm_register(ARG1, op.base());
     load_accumulator(ARG2);
     load_vm_register(ARG3, op.this_value());
-    native_call((void*)cxx_delete_by_value_with_this);
+    native_call((void*)cxx_delete_by_value_with_this, {
+                                                          Assembler::Operand::Register(VM_POINTER),
+                                                          Assembler::Operand::Register(ARG1),
+                                                          Assembler::Operand::Register(ARG2),
+                                                          Assembler::Operand::Register(ARG3),
+                                                      });
     store_accumulator(RET);
     check_exception();
 }
@@ -3236,7 +3365,10 @@ static Value cxx_get_object_property_iterator(VM& vm, Value object)
 void Compiler::compile_get_object_property_iterator(Bytecode::Op::GetObjectPropertyIterator const&)
 {
     load_accumulator(ARG1);
-    native_call((void*)cxx_get_object_property_iterator);
+    native_call((void*)cxx_get_object_property_iterator, {
+                                                             Assembler::Operand::Register(VM_POINTER),
+                                                             Assembler::Operand::Register(ARG1),
+                                                         });
     store_accumulator(RET);
     check_exception();
 }
@@ -3250,10 +3382,11 @@ static Value cxx_get_private_by_id(VM& vm, Value base_value, DeprecatedFlyString
 void Compiler::compile_get_private_by_id(Bytecode::Op::GetPrivateById const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
-    native_call((void*)cxx_get_private_by_id);
+    native_call((void*)cxx_get_private_by_id, {
+                                                  Assembler::Operand::Register(VM_POINTER),
+                                                  Assembler::Operand::Register(ARG1),
+                                                  Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                              });
     store_accumulator(RET);
     check_exception();
 }
@@ -3272,7 +3405,9 @@ static Value cxx_resolve_super_base(VM& vm)
 
 void Compiler::compile_resolve_super_base(Bytecode::Op::ResolveSuperBase const&)
 {
-    native_call((void*)cxx_resolve_super_base);
+    native_call((void*)cxx_resolve_super_base, {
+                                                   Assembler::Operand::Register(VM_POINTER),
+                                               });
     store_accumulator(RET);
     check_exception();
 }
@@ -3284,15 +3419,15 @@ static Value cxx_get_by_id_with_this(VM& vm, DeprecatedFlyString const& property
 
 void Compiler::compile_get_by_id_with_this(Bytecode::Op::GetByIdWithThis const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
     load_accumulator(ARG2);
     load_vm_register(ARG3, op.this_value());
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG4),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])));
-    native_call((void*)cxx_get_by_id_with_this);
+    native_call((void*)cxx_get_by_id_with_this, {
+                                                    Assembler::Operand::Register(VM_POINTER),
+                                                    Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                                    Assembler::Operand::Register(ARG2),
+                                                    Assembler::Operand::Register(ARG3),
+                                                    Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])),
+                                                });
     store_accumulator(RET);
     check_exception();
 }
@@ -3309,7 +3444,12 @@ void Compiler::compile_get_by_value_with_this(Bytecode::Op::GetByValueWithThis c
     load_accumulator(ARG1);
     load_vm_register(ARG2, op.base());
     load_vm_register(ARG3, op.this_value());
-    native_call((void*)cxx_get_by_value_with_this);
+    native_call((void*)cxx_get_by_value_with_this, {
+                                                       Assembler::Operand::Register(VM_POINTER),
+                                                       Assembler::Operand::Register(ARG1),
+                                                       Assembler::Operand::Register(ARG2),
+                                                       Assembler::Operand::Register(ARG3),
+                                                   });
     store_accumulator(RET);
     check_exception();
 }
@@ -3323,11 +3463,13 @@ static Value cxx_delete_by_id_with_this(VM& vm, Value base_value, DeprecatedFlyS
 void Compiler::compile_delete_by_id_with_this(Bytecode::Op::DeleteByIdWithThis const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
     load_vm_register(ARG3, op.this_value());
-    native_call((void*)cxx_delete_by_id_with_this);
+    native_call((void*)cxx_delete_by_id_with_this, {
+                                                       Assembler::Operand::Register(VM_POINTER),
+                                                       Assembler::Operand::Register(ARG1),
+                                                       Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                                       Assembler::Operand::Register(ARG3),
+                                                   });
     store_accumulator(RET);
 }
 
@@ -3341,17 +3483,16 @@ void Compiler::compile_put_by_id_with_this(Bytecode::Op::PutByIdWithThis const& 
 {
     load_vm_register(ARG1, op.base());
     load_accumulator(ARG2);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
     load_vm_register(ARG4, op.this_value());
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG5),
-        Assembler::Operand::Imm(to_underlying(op.kind())));
-    m_assembler.mov(
-        Assembler::Operand::Register(GPR0),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])));
-    native_call((void*)cxx_put_by_id_with_this, { Assembler::Operand::Register(GPR0) });
+    native_call((void*)cxx_put_by_id_with_this, {
+                                                    Assembler::Operand::Register(VM_POINTER),
+                                                    Assembler::Operand::Register(ARG1),
+                                                    Assembler::Operand::Register(ARG2),
+                                                    Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                                    Assembler::Operand::Register(ARG4),
+                                                    Assembler::Operand::Imm(to_underlying(op.kind())),
+                                                    Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.property_lookup_caches[op.cache_index()])),
+                                                });
     check_exception();
 }
 
@@ -3367,10 +3508,12 @@ void Compiler::compile_put_private_by_id(Bytecode::Op::PutPrivateById const& op)
 {
     load_vm_register(ARG1, op.base());
     load_accumulator(ARG2);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
-    native_call((void*)cxx_put_private_by_id);
+    native_call((void*)cxx_put_private_by_id, {
+                                                  Assembler::Operand::Register(VM_POINTER),
+                                                  Assembler::Operand::Register(ARG1),
+                                                  Assembler::Operand::Register(ARG2),
+                                                  Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                              });
     store_accumulator(RET);
     check_exception();
 }
@@ -3384,7 +3527,11 @@ void Compiler::compile_import_call(Bytecode::Op::ImportCall const& op)
 {
     load_vm_register(ARG1, op.specifier());
     load_vm_register(ARG2, op.options());
-    native_call((void*)cxx_import_call);
+    native_call((void*)cxx_import_call, {
+                                            Assembler::Operand::Register(VM_POINTER),
+                                            Assembler::Operand::Register(ARG1),
+                                            Assembler::Operand::Register(ARG2),
+                                        });
     store_accumulator(RET);
     check_exception();
 }
@@ -3396,7 +3543,9 @@ static Value cxx_get_import_meta(VM& vm)
 
 void Compiler::compile_get_import_meta(Bytecode::Op::GetImportMeta const&)
 {
-    native_call((void*)cxx_get_import_meta);
+    native_call((void*)cxx_get_import_meta, {
+                                                Assembler::Operand::Register(VM_POINTER),
+                                            });
     store_accumulator(RET);
 }
 
@@ -3408,10 +3557,10 @@ static Value cxx_delete_variable(VM& vm, DeprecatedFlyString const& identifier)
 
 void Compiler::compile_delete_variable(Bytecode::Op::DeleteVariable const& op)
 {
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))));
-    native_call((void*)cxx_delete_variable);
+    native_call((void*)cxx_delete_variable, {
+                                                Assembler::Operand::Register(VM_POINTER),
+                                                Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.identifier().value()))),
+                                            });
     store_accumulator(RET);
     check_exception();
 }
@@ -3425,10 +3574,11 @@ static Value cxx_get_method(VM& vm, Value value, DeprecatedFlyString const& iden
 void Compiler::compile_get_method(Bytecode::Op::GetMethod const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
-    native_call((void*)cxx_get_method);
+    native_call((void*)cxx_get_method, {
+                                           Assembler::Operand::Register(VM_POINTER),
+                                           Assembler::Operand::Register(ARG1),
+                                           Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                       });
     store_accumulator(RET);
     check_exception();
 }
@@ -3440,7 +3590,9 @@ static Value cxx_get_new_target(VM& vm)
 
 void Compiler::compile_get_new_target(Bytecode::Op::GetNewTarget const&)
 {
-    native_call((void*)cxx_get_new_target);
+    native_call((void*)cxx_get_new_target, {
+                                               Assembler::Operand::Register(VM_POINTER),
+                                           });
     store_accumulator(RET);
 }
 
@@ -3458,27 +3610,31 @@ static Value cxx_has_private_id(VM& vm, Value object, DeprecatedFlyString const&
 void Compiler::compile_has_private_id(Bytecode::Op::HasPrivateId const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))));
-    native_call((void*)cxx_has_private_id);
+    native_call((void*)cxx_has_private_id, {
+                                               Assembler::Operand::Register(VM_POINTER),
+                                               Assembler::Operand::Register(ARG1),
+                                               Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_identifier(op.property()))),
+                                           });
     store_accumulator(RET);
     check_exception();
 }
 
-#    define COMPILE_NEW_BUILTIN_ERROR_OP(NewErrorName, new_error_name, ErrorName)                              \
-        static Value cxx_##new_error_name(VM& vm, DeprecatedString const& error_string)                        \
-        {                                                                                                      \
-            return ErrorName::create(*vm.current_realm(), error_string);                                       \
-        }                                                                                                      \
-                                                                                                               \
-        void Compiler::compile_##new_error_name(Bytecode::Op::NewErrorName const& op)                          \
-        {                                                                                                      \
-            m_assembler.mov(                                                                                   \
-                Assembler::Operand::Register(ARG1),                                                            \
-                Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_string(op.error_string())))); \
-            native_call((void*)cxx_##new_error_name);                                                          \
-            store_accumulator(RET);                                                                            \
+#    define COMPILE_NEW_BUILTIN_ERROR_OP(NewErrorName, new_error_name, ErrorName)                                                                      \
+        static Value cxx_##new_error_name(VM& vm, DeprecatedString const& error_string)                                                                \
+        {                                                                                                                                              \
+            return ErrorName::create(*vm.current_realm(), error_string);                                                                               \
+        }                                                                                                                                              \
+                                                                                                                                                       \
+        void Compiler::compile_##new_error_name(Bytecode::Op::NewErrorName const& op)                                                                  \
+        {                                                                                                                                              \
+            m_assembler.mov(                                                                                                                           \
+                Assembler::Operand::Register(ARG1),                                                                                                    \
+                Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_string(op.error_string()))));                                         \
+            native_call((void*)cxx_##new_error_name, {                                                                                                 \
+                                                         Assembler::Operand::Register(VM_POINTER),                                                     \
+                                                         Assembler::Operand::Imm(bit_cast<u64>(&m_bytecode_executable.get_string(op.error_string()))), \
+                                                     });                                                                                               \
+            store_accumulator(RET);                                                                                                                    \
         }
 JS_ENUMERATE_NEW_BUILTIN_ERROR_BYTECODE_OPS(COMPILE_NEW_BUILTIN_ERROR_OP)
 #    undef COMPILE_NEW_BUILTIN_ERROR_OP
@@ -3502,10 +3658,14 @@ void Compiler::compile_put_by_value_with_this(Bytecode::Op::PutByValueWithThis c
             Assembler::Operand::Imm(Value().encoded()));
     }
     load_vm_register(ARG4, op.this_value());
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG5),
-        Assembler::Operand::Imm(to_underlying(op.kind())));
-    native_call((void*)cxx_put_by_value_with_this);
+    native_call((void*)cxx_put_by_value_with_this, {
+                                                       Assembler::Operand::Register(VM_POINTER),
+                                                       Assembler::Operand::Register(ARG1),
+                                                       Assembler::Operand::Register(ARG2),
+                                                       Assembler::Operand::Register(ARG3),
+                                                       Assembler::Operand::Register(ARG4),
+                                                       Assembler::Operand::Imm(to_underlying(op.kind())),
+                                                   });
     store_accumulator(RET);
     check_exception();
 }
@@ -3526,9 +3686,6 @@ static Value cxx_copy_object_excluding_properties(VM& vm, Value from_object, u64
 void Compiler::compile_copy_object_excluding_properties(Bytecode::Op::CopyObjectExcludingProperties const& op)
 {
     load_vm_register(ARG1, op.from_object());
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(op.excluded_names_count()));
 
     // Build `Value arg3[op.excluded_names_count()] {...}` on the stack.
     auto stack_space = align_up_to(op.excluded_names_count() * sizeof(Value), 16);
@@ -3539,7 +3696,12 @@ void Compiler::compile_copy_object_excluding_properties(Bytecode::Op::CopyObject
         m_assembler.mov(Assembler::Operand::Mem64BaseAndOffset(ARG3, i * sizeof(Value)), Assembler::Operand::Register(GPR0));
     }
 
-    native_call((void*)cxx_copy_object_excluding_properties);
+    native_call((void*)cxx_copy_object_excluding_properties, {
+                                                                 Assembler::Operand::Register(VM_POINTER),
+                                                                 Assembler::Operand::Register(ARG1),
+                                                                 Assembler::Operand::Imm(op.excluded_names_count()),
+                                                                 Assembler::Operand::Register(ARG3),
+                                                             });
 
     // Restore the stack pointer / discard array.
     m_assembler.add(Assembler::Operand::Register(STACK_POINTER), Assembler::Operand::Imm(stack_space));
@@ -3561,13 +3723,12 @@ static Value cxx_async_iterator_close(VM& vm, Value iterator, Completion::Type c
 void Compiler::compile_async_iterator_close(Bytecode::Op::AsyncIteratorClose const& op)
 {
     load_accumulator(ARG1);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG2),
-        Assembler::Operand::Imm(to_underlying(op.completion_type())));
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(bit_cast<u64>(&op.completion_value())));
-    native_call((void*)cxx_async_iterator_close);
+    native_call((void*)cxx_async_iterator_close, {
+                                                     Assembler::Operand::Register(VM_POINTER),
+                                                     Assembler::Operand::Register(ARG1),
+                                                     Assembler::Operand::Imm(to_underlying(op.completion_type())),
+                                                     Assembler::Operand::Imm(bit_cast<u64>(&op.completion_value())),
+                                                 });
     check_exception();
 }
 
@@ -3583,22 +3744,17 @@ static Value cxx_continuation(VM& vm, Value value, Value continuation, Value is_
 void Compiler::compile_continuation(Optional<Bytecode::Label> continuation, bool is_await)
 {
     load_accumulator(ARG1);
-    if (continuation.has_value()) {
-        // FIXME: If we get a pointer, which is not accurately representable as a double
-        //        will cause this to explode
-        auto continuation_value = Value(static_cast<double>(bit_cast<u64>(&continuation->block())));
-        m_assembler.mov(
-            Assembler::Operand::Register(ARG2),
-            Assembler::Operand::Imm(continuation_value.encoded()));
-    } else {
-        m_assembler.mov(
-            Assembler::Operand::Register(ARG2),
-            Assembler::Operand::Imm(Value(0).encoded()));
-    }
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG3),
-        Assembler::Operand::Imm(Value(is_await).encoded()));
-    native_call((void*)cxx_continuation);
+    // FIXME: If we get a pointer, which is not accurately representable as a double
+    //        will cause this to explode
+    auto continuation_value = continuation.has_value()
+        ? Value(static_cast<double>(bit_cast<u64>(&continuation->block())))
+        : Value(0);
+    native_call((void*)cxx_continuation, {
+                                             Assembler::Operand::Register(VM_POINTER),
+                                             Assembler::Operand::Register(ARG1),
+                                             Assembler::Operand::Imm(continuation_value.encoded()),
+                                             Assembler::Operand::Imm(Value(is_await).encoded()),
+                                         });
     store_vm_register(Bytecode::Register::return_value(), RET);
 
     // FIXME: This should run the finalizer if it is a return
@@ -3620,11 +3776,11 @@ void Compiler::jump_to_exit()
     m_assembler.jump(m_exit_label);
 }
 
-void Compiler::native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments)
+void Compiler::native_call(void* function_address, Vector<Assembler::Operand> const& arguments)
 {
     // NOTE: We don't preserve caller-saved registers when making a native call.
     //       This means that they may have changed after we return from the call.
-    m_assembler.native_call(bit_cast<u64>(function_address), { Assembler::Operand::Register(ARG0) }, stack_arguments);
+    m_assembler.native_call(bit_cast<u64>(function_address), arguments, { Assembler::Operand::Register(VM_POINTER) });
 }
 
 OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_executable)
@@ -3643,6 +3799,10 @@ OwnPtr<NativeExecutable> Compiler::compile(Bytecode::Executable& bytecode_execut
     });
 
     compiler.m_assembler.enter();
+
+    compiler.m_assembler.mov(
+        Assembler::Operand::Register(VM_POINTER),
+        Assembler::Operand::Register(ARG0));
 
     compiler.m_assembler.mov(
         Assembler::Operand::Register(REGISTER_ARRAY_BASE),

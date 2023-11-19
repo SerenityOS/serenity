@@ -38,6 +38,7 @@ private:
     static constexpr auto FPR0 = Assembler::Reg::XMM0;
     static constexpr auto FPR1 = Assembler::Reg::XMM1;
     static constexpr auto RET = Assembler::Reg::RAX;
+    static constexpr auto VM_POINTER = ARG0;
     static constexpr auto STACK_POINTER = Assembler::Reg::RSP;
     static constexpr auto REGISTER_ARRAY_BASE = Assembler::Reg::RBX;
     static constexpr auto LOCALS_ARRAY_BASE = Assembler::Reg::R14;
@@ -179,7 +180,7 @@ private:
 
     void jump_to_exit();
 
-    void native_call(void* function_address, Vector<Assembler::Operand> const& stack_arguments = {});
+    void native_call(void* function_address, Vector<Assembler::Operand> const& arguments);
 
     void jump_if_int32(Assembler::Reg, Assembler::Label&);
 
