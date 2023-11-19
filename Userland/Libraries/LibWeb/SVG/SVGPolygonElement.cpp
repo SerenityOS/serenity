@@ -22,12 +22,12 @@ void SVGPolygonElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolygonElementPrototype>(realm, "SVGPolygonElement"));
 }
 
-void SVGPolygonElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGPolygonElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::points) {
-        m_points = AttributeParser::parse_points(value.value_or(""));
+        m_points = AttributeParser::parse_points(value.value_or(String {}));
         m_path.clear();
     }
 }

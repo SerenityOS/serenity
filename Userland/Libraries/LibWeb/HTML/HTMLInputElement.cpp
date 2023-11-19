@@ -627,7 +627,7 @@ void HTMLInputElement::did_lose_focus()
     });
 }
 
-void HTMLInputElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLInputElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::checked) {
@@ -643,7 +643,7 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<Depreca
                 set_checked(true, ChangeSource::Programmatic);
         }
     } else if (name == HTML::AttributeNames::type) {
-        m_type = parse_type_attribute(value.value_or(""));
+        m_type = parse_type_attribute(value.value_or(String {}));
     } else if (name == HTML::AttributeNames::value) {
         if (!value.has_value()) {
             if (!m_dirty_value) {
@@ -655,7 +655,7 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<Depreca
             }
         } else {
             if (!m_dirty_value) {
-                m_value = value_sanitization_algorithm(*value);
+                m_value = value_sanitization_algorithm(value->to_deprecated_string());
                 update_placeholder_visibility();
 
                 if (type_state() == TypeAttributeState::Color && m_color_well_element)
@@ -664,12 +664,9 @@ void HTMLInputElement::attribute_changed(FlyString const& name, Optional<Depreca
         }
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
-            m_placeholder_text_node->set_data(MUST(String::from_deprecated_string(value.value_or(""))));
+            m_placeholder_text_node->set_data(value.value_or(String {}));
     } else if (name == HTML::AttributeNames::readonly) {
-        if (value.has_value())
-            handle_readonly_attribute(MUST(String::from_deprecated_string(*value)));
-        else
-            handle_readonly_attribute({});
+        handle_readonly_attribute(value);
     }
 }
 

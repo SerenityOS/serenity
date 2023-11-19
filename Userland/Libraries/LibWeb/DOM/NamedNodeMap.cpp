@@ -269,7 +269,7 @@ void NamedNodeMap::replace_attribute(Attr& old_attribute, Attr& new_attribute, s
     old_attribute.set_owner_element(nullptr);
 
     // 4. Handle attribute changes for oldAttr with newAttr’s element, oldAttr’s value, and newAttr’s value.
-    old_attribute.handle_attribute_changes(*new_attribute.owner_element(), old_attribute.value().to_deprecated_string(), new_attribute.value().to_deprecated_string());
+    old_attribute.handle_attribute_changes(*new_attribute.owner_element(), old_attribute.value(), new_attribute.value());
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-append
@@ -282,7 +282,7 @@ void NamedNodeMap::append_attribute(Attr& attribute)
     attribute.set_owner_element(&associated_element());
 
     // 3. Handle attribute changes for attribute with element, null, and attribute’s value.
-    attribute.handle_attribute_changes(associated_element(), {}, attribute.value().to_deprecated_string());
+    attribute.handle_attribute_changes(associated_element(), {}, attribute.value());
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove
@@ -301,7 +301,7 @@ void NamedNodeMap::remove_attribute_at_index(size_t attribute_index)
     attribute->set_owner_element(nullptr);
 
     // 4. Handle attribute changes for attribute with element, attribute’s value, and null.
-    attribute->handle_attribute_changes(*element, attribute->value().to_deprecated_string(), {});
+    attribute->handle_attribute_changes(*element, attribute->value(), {});
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-name

@@ -95,16 +95,12 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
-void HTMLImageElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLImageElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     HTMLElement::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::crossorigin) {
-        if (!value.has_value()) {
-            m_cors_setting = CORSSettingAttribute::NoCORS;
-        } else {
-            m_cors_setting = cors_setting_attribute_from_keyword(String::from_deprecated_string(*value).release_value_but_fixme_should_propagate_errors());
-        }
+        m_cors_setting = cors_setting_attribute_from_keyword(value);
     }
 
     if (name.is_one_of(HTML::AttributeNames::src, HTML::AttributeNames::srcset)) {

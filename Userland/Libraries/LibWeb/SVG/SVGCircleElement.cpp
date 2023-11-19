@@ -22,18 +22,18 @@ void SVGCircleElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGCircleElementPrototype>(realm, "SVGCircleElement"));
 }
 
-void SVGCircleElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGCircleElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::cx) {
-        m_center_x = AttributeParser::parse_coordinate(value.value_or(""));
+        m_center_x = AttributeParser::parse_coordinate(value.value_or(String {}));
         m_path.clear();
     } else if (name == SVG::AttributeNames::cy) {
-        m_center_y = AttributeParser::parse_coordinate(value.value_or(""));
+        m_center_y = AttributeParser::parse_coordinate(value.value_or(String {}));
         m_path.clear();
     } else if (name == SVG::AttributeNames::r) {
-        m_radius = AttributeParser::parse_positive_length(value.value_or(""));
+        m_radius = AttributeParser::parse_positive_length(value.value_or(String {}));
         m_path.clear();
     }
 }

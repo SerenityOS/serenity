@@ -31,7 +31,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual void children_changed() override;
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     void queue_a_details_toggle_event_task(String old_state, String new_state);
 

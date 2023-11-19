@@ -88,18 +88,14 @@ void Attr::change_attribute(String value)
     m_value = move(value);
 
     // 3. Handle attribute changes for attribute with attribute’s element, oldValue, and value.
-    handle_attribute_changes(*owner_element(), old_value.to_deprecated_string(), m_value.to_deprecated_string());
+    handle_attribute_changes(*owner_element(), old_value, m_value);
 }
 
 // https://dom.spec.whatwg.org/#handle-attribute-changes
-void Attr::handle_attribute_changes(Element& element, Optional<DeprecatedString> old_value, Optional<DeprecatedString> new_value)
+void Attr::handle_attribute_changes(Element& element, Optional<String> const& old_value, Optional<String> const& new_value)
 {
-    DeprecatedString deprecated_namespace_uri;
-    if (namespace_uri().has_value())
-        deprecated_namespace_uri = namespace_uri().value().to_deprecated_fly_string();
-
     // 1. Queue a mutation record of "attributes" for element with attribute’s local name, attribute’s namespace, oldValue, « », « », null, and null.
-    element.queue_mutation_record(MutationType::attributes, local_name().to_deprecated_fly_string(), deprecated_namespace_uri, old_value, {}, {}, nullptr, nullptr);
+    element.queue_mutation_record(MutationType::attributes, local_name(), namespace_uri(), old_value, {}, {}, nullptr, nullptr);
 
     // 2. If element is custom, then enqueue a custom element callback reaction with element, callback name "attributeChangedCallback", and an argument list containing attribute’s local name, oldValue, newValue, and attribute’s namespace.
     if (element.is_custom()) {
@@ -107,8 +103,8 @@ void Attr::handle_attribute_changes(Element& element, Optional<DeprecatedString>
 
         JS::MarkedVector<JS::Value> arguments { vm.heap() };
         arguments.append(JS::PrimitiveString::create(vm, local_name()));
-        arguments.append(!old_value.has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, old_value.release_value()));
-        arguments.append(!new_value.has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, new_value.release_value()));
+        arguments.append(!old_value.has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, old_value.value()));
+        arguments.append(!new_value.has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, new_value.value()));
         arguments.append(!namespace_uri().has_value() ? JS::js_null() : JS::PrimitiveString::create(vm, namespace_uri().value()));
 
         element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::attributeChangedCallback, move(arguments));

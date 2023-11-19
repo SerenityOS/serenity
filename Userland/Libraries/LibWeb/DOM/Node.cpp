@@ -1533,7 +1533,7 @@ Painting::PaintableBox* Node::paintable_box()
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
-void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedString> attribute_name, Optional<DeprecatedString> attribute_namespace, Optional<DeprecatedString> old_value, Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling) const
+void Node::queue_mutation_record(FlyString const& type, Optional<FlyString> const& attribute_name, Optional<FlyString> const& attribute_namespace, Optional<String> const& old_value, Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling) const
 {
     // NOTE: We defer garbage collection until the end of the scope, since we can't safely use MutationObserver* as a hashmap key otherwise.
     // FIXME: This is a total hack.
@@ -1541,7 +1541,7 @@ void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedStrin
 
     // 1. Let interestedObservers be an empty map.
     // mutationObserver -> mappedOldValue
-    OrderedHashMap<MutationObserver*, Optional<DeprecatedString>> interested_observers;
+    OrderedHashMap<MutationObserver*, Optional<String>> interested_observers;
 
     // 2. Let nodes be the inclusive ancestors of target.
     // 3. For each node in nodes, and then for each registered of node’s registered observer list:
@@ -1559,7 +1559,7 @@ void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedStrin
             //    then:
             if (!(node != this && !options.subtree)
                 && !(type == MutationType::attributes && (!options.attributes.has_value() || !options.attributes.value()))
-                && !(type == MutationType::attributes && options.attribute_filter.has_value() && (attribute_namespace.has_value() || !options.attribute_filter->contains_slow(attribute_name.value_or("").view())))
+                && !(type == MutationType::attributes && options.attribute_filter.has_value() && (attribute_namespace.has_value() || !options.attribute_filter->contains_slow(attribute_name.value_or(String {}))))
                 && !(type == MutationType::characterData && (!options.character_data.has_value() || !options.character_data.value()))
                 && !(type == MutationType::childList && !options.child_list)) {
                 // 1. Let mo be registered’s observer.
@@ -1585,13 +1585,17 @@ void Node::queue_mutation_record(FlyString const& type, Optional<DeprecatedStrin
 
     // 4. For each observer → mappedOldValue of interestedObservers:
     for (auto& interested_observer : interested_observers) {
+        // FIXME: The MutationRecord constructor shuld take an Optional<FlyString> attribute name and namespace
+        Optional<String> string_attribute_name;
+        if (attribute_name.has_value())
+            string_attribute_name = attribute_name->to_string();
+        Optional<String> string_attribute_namespace;
+        if (attribute_namespace.has_value())
+            string_attribute_name = attribute_namespace->to_string();
+
         // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
         //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
-        auto maybe_attribute_name = attribute_name.map([](auto& name) { return MUST(String::from_deprecated_string(name)); });
-        auto maybe_attribute_namespace = attribute_namespace.map([](auto& ns) { return MUST(String::from_deprecated_string(ns)); });
-        auto maybe_interested_observer = interested_observer.value.map([](auto& value) { return MUST(String::from_deprecated_string(value)); });
-
-        auto record = MutationRecord::create(realm(), type, *this, added_nodes_list, removed_nodes_list, previous_sibling, next_sibling, maybe_attribute_name, maybe_attribute_namespace, /* mappedOldValue */ maybe_interested_observer);
+        auto record = MutationRecord::create(realm(), type, *this, added_nodes_list, removed_nodes_list, previous_sibling, next_sibling, string_attribute_name, string_attribute_namespace, /* mappedOldValue */ interested_observer.value);
 
         // 2. Enqueue record to observer’s record queue.
         interested_observer.key->enqueue_record({}, move(record));

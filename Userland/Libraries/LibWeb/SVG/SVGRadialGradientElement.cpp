@@ -21,29 +21,29 @@ void SVGRadialGradientElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGRadialGradientElementPrototype>(realm, "SVGRadialGradientElement"));
 }
 
-void SVGRadialGradientElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGRadialGradientElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGradientElement::attribute_changed(name, value);
 
     // FIXME: These are <length> or <coordinate> in the spec, but all examples seem to allow percentages
     // and unitless values.
     if (name == SVG::AttributeNames::cx) {
-        m_cx = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_cx = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     } else if (name == SVG::AttributeNames::cy) {
-        m_cy = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_cy = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     } else if (name == SVG::AttributeNames::fx) {
-        m_fx = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_fx = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     } else if (name == SVG::AttributeNames::fy) {
-        m_fy = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_fy = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     } else if (name == SVG::AttributeNames::fr) {
-        m_fr = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_fr = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     } else if (name == SVG::AttributeNames::r) {
-        m_r = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_r = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     }
 }

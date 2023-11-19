@@ -36,7 +36,7 @@ private:
     // ^DOM::Element
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
     virtual i32 default_tab_index_value() const override;
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes

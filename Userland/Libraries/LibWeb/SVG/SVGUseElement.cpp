@@ -45,18 +45,18 @@ void SVGUseElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_document_observer);
 }
 
-void SVGUseElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGUseElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     Base::attribute_changed(name, value);
 
     // https://svgwg.org/svg2-draft/struct.html#UseLayout
     if (name == SVG::AttributeNames::x) {
-        m_x = AttributeParser::parse_coordinate(value.value_or(""));
+        m_x = AttributeParser::parse_coordinate(value.value_or(String {}));
     } else if (name == SVG::AttributeNames::y) {
-        m_y = AttributeParser::parse_coordinate(value.value_or(""));
+        m_y = AttributeParser::parse_coordinate(value.value_or(String {}));
     } else if (name == SVG::AttributeNames::href) {
         // FIXME: Support the xlink:href attribute as a fallback
-        m_referenced_id = parse_id_from_href(value.value_or(""));
+        m_referenced_id = parse_id_from_href(value.value_or(String {}).to_deprecated_string());
 
         clone_element_tree_as_our_shadow_tree(referenced_element());
     }

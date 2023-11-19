@@ -24,22 +24,22 @@ void SVGLinearGradientElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLinearGradientElementPrototype>(realm, "SVGLinearGradientElement"));
 }
 
-void SVGLinearGradientElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGLinearGradientElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGradientElement::attribute_changed(name, value);
 
     // FIXME: Should allow for `<number-percentage> | <length>` for x1, x2, y1, y2
     if (name == SVG::AttributeNames::x1) {
-        m_x1 = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_x1 = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     } else if (name == SVG::AttributeNames::y1) {
-        m_y1 = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_y1 = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     } else if (name == SVG::AttributeNames::x2) {
-        m_x2 = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_x2 = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     } else if (name == SVG::AttributeNames::y2) {
-        m_y2 = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_y2 = AttributeParser::parse_number_percentage(value.value_or(String {}));
         m_paint_style = nullptr;
     }
 }

@@ -45,15 +45,12 @@ void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_preparation_time_document.ptr());
 }
 
-void HTMLScriptElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLScriptElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     Base::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::crossorigin) {
-        if (!value.has_value())
-            m_crossorigin = cors_setting_attribute_from_keyword({});
-        else
-            m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(*value).release_value_but_fixme_should_propagate_errors());
+        m_crossorigin = cors_setting_attribute_from_keyword(value);
     } else if (name == HTML::AttributeNames::referrerpolicy) {
         if (!value.has_value())
             m_referrer_policy.clear();

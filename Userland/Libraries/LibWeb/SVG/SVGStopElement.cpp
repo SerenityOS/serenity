@@ -19,11 +19,11 @@ SVGStopElement::SVGStopElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-void SVGStopElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGStopElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGElement::attribute_changed(name, value);
     if (name == SVG::AttributeNames::offset) {
-        m_offset = AttributeParser::parse_number_percentage(value.value_or(""));
+        m_offset = AttributeParser::parse_number_percentage(value.value_or(String {}));
     }
 }
 

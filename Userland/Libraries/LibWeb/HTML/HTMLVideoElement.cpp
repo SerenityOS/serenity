@@ -40,15 +40,12 @@ void HTMLVideoElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_fetch_controller);
 }
 
-void HTMLVideoElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLVideoElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     Base::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::poster) {
-        if (!value.has_value())
-            determine_element_poster_frame({}).release_value_but_fixme_should_propagate_errors();
-        else
-            determine_element_poster_frame(*value).release_value_but_fixme_should_propagate_errors();
+        determine_element_poster_frame(value).release_value_but_fixme_should_propagate_errors();
     }
 }
 
@@ -126,7 +123,7 @@ void HTMLVideoElement::on_seek(double position, MediaSeekMode seek_mode)
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#attr-video-poster
-WebIDL::ExceptionOr<void> HTMLVideoElement::determine_element_poster_frame(Optional<StringView> const& poster)
+WebIDL::ExceptionOr<void> HTMLVideoElement::determine_element_poster_frame(Optional<String> const& poster)
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();

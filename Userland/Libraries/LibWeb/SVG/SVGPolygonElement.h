@@ -16,7 +16,7 @@ class SVGPolygonElement final : public SVGGeometryElement {
 public:
     virtual ~SVGPolygonElement() override = default;
 
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     virtual Gfx::Path& get_path() override;
 

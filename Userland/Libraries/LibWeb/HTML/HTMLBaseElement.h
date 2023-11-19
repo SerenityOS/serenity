@@ -23,7 +23,7 @@ public:
 
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
 private:
     HTMLBaseElement(DOM::Document&, DOM::QualifiedName);

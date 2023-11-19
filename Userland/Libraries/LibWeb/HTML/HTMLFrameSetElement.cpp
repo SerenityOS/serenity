@@ -23,14 +23,14 @@ void HTMLFrameSetElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFrameSetElementPrototype>(realm, "HTMLFrameSetElement"));
 }
 
-void HTMLFrameSetElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLFrameSetElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     HTMLElement::attribute_changed(name, value);
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                                                                                          \
-    if (name == HTML::AttributeNames::attribute_name) {                                                                                  \
-        element_event_handler_attribute_changed(event_name, value.map([](auto& v) { return MUST(String::from_deprecated_string(v)); })); \
+#define __ENUMERATE(attribute_name, event_name)                     \
+    if (name == HTML::AttributeNames::attribute_name) {             \
+        element_event_handler_attribute_changed(event_name, value); \
     }
     ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

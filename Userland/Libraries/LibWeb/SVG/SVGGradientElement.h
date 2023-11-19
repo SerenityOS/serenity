@@ -40,7 +40,7 @@ class SVGGradientElement : public SVGElement {
 public:
     virtual ~SVGGradientElement() override = default;
 
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     virtual Optional<Gfx::PaintStyle const&> to_gfx_paint_style(SVGPaintContext const&) const = 0;
 

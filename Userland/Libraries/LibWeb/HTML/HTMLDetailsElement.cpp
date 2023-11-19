@@ -41,7 +41,7 @@ void HTMLDetailsElement::initialize(JS::Realm& realm)
     create_shadow_tree(realm).release_value_but_fixme_should_propagate_errors();
 }
 
-void HTMLDetailsElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void HTMLDetailsElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     Base::attribute_changed(name, value);
 

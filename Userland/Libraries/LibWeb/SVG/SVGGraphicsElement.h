@@ -24,7 +24,7 @@ class SVGGraphicsElement : public SVGElement {
 public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
-    virtual void attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     Optional<Gfx::Color> fill_color() const;
     Optional<FillRule> fill_rule() const;

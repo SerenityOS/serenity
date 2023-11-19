@@ -61,14 +61,14 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
     }
 }
 
-void SVGSVGElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)
+void SVGSVGElement::attribute_changed(FlyString const& name, Optional<String> const& value)
 {
     SVGGraphicsElement::attribute_changed(name, value);
 
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox))
-        m_view_box = try_parse_view_box(value.value_or(""));
+        m_view_box = try_parse_view_box(value.value_or(String {}));
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::preserveAspectRatio))
-        m_preserve_aspect_ratio = AttributeParser::parse_preserve_aspect_ratio(value.value_or(""));
+        m_preserve_aspect_ratio = AttributeParser::parse_preserve_aspect_ratio(value.value_or(String {}));
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::width) || name.equals_ignoring_ascii_case(SVG::AttributeNames::height))
         update_fallback_view_box_for_svg_as_image();
 }
