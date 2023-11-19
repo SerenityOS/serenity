@@ -46,9 +46,9 @@ void MutationObserver::initialize(JS::Realm& realm)
 void MutationObserver::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_callback.ptr());
+    visitor.visit(m_callback);
     for (auto& record : m_record_queue)
-        visitor.visit(record.ptr());
+        visitor.visit(record);
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-observe
@@ -167,7 +167,7 @@ RegisteredObserver::~RegisteredObserver() = default;
 void RegisteredObserver::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_observer.ptr());
+    visitor.visit(m_observer);
 }
 
 JS::NonnullGCPtr<TransientRegisteredObserver> TransientRegisteredObserver::create(MutationObserver& observer, MutationObserverInit const& options, RegisteredObserver& source)
@@ -186,7 +186,7 @@ TransientRegisteredObserver::~TransientRegisteredObserver() = default;
 void TransientRegisteredObserver::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_source.ptr());
+    visitor.visit(m_source);
 }
 
 }

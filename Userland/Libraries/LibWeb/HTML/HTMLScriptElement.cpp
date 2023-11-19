@@ -40,9 +40,9 @@ void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     if (auto* script = m_result.get_pointer<JS::NonnullGCPtr<Script>>())
-        visitor.visit(script->ptr());
-    visitor.visit(m_parser_document.ptr());
-    visitor.visit(m_preparation_time_document.ptr());
+        visitor.visit(*script);
+    visitor.visit(m_parser_document);
+    visitor.visit(m_preparation_time_document);
 }
 
 void HTMLScriptElement::attribute_changed(FlyString const& name, Optional<DeprecatedString> const& value)

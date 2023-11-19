@@ -34,9 +34,9 @@ void NamedNodeMap::initialize(JS::Realm& realm)
 void NamedNodeMap::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_element.ptr());
+    visitor.visit(m_element);
     for (auto& attribute : m_attributes)
-        visitor.visit(attribute.ptr());
+        visitor.visit(attribute);
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-indices%E2%91%A3

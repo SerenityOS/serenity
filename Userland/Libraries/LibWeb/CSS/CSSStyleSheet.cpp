@@ -46,7 +46,7 @@ void CSSStyleSheet::initialize(JS::Realm& realm)
 void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_style_sheet_list.ptr());
+    visitor.visit(m_style_sheet_list);
     visitor.visit(m_rules);
     visitor.visit(m_owner_css_rule);
     visitor.visit(m_default_namespace_rule);

@@ -31,9 +31,9 @@ void TreeWalker::initialize(JS::Realm& realm)
 void TreeWalker::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_filter.ptr());
-    visitor.visit(m_root.ptr());
-    visitor.visit(m_current.ptr());
+    visitor.visit(m_filter);
+    visitor.visit(m_root);
+    visitor.visit(m_current);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createtreewalker

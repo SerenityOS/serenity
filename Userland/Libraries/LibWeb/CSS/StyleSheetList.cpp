@@ -85,7 +85,7 @@ void StyleSheetList::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_document);
     for (auto sheet : m_sheets)
-        visitor.visit(sheet.ptr());
+        visitor.visit(sheet);
 }
 
 // https://www.w3.org/TR/cssom/#ref-for-dfn-supported-property-indices%E2%91%A1

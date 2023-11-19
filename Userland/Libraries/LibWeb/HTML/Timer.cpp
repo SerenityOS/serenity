@@ -30,7 +30,7 @@ Timer::Timer(JS::Object& window_or_worker_global_scope, i32 milliseconds, JS::No
 void Timer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window_or_worker_global_scope.ptr());
+    visitor.visit(m_window_or_worker_global_scope);
     visitor.visit(m_callback);
 }
 

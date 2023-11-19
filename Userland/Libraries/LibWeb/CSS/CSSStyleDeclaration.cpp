@@ -70,7 +70,7 @@ ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element&
 void ElementInlineCSSStyleDeclaration::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_element.ptr());
+    visitor.visit(m_element);
 }
 
 size_t PropertyOwningCSSStyleDeclaration::length() const

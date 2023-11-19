@@ -23,7 +23,7 @@ void DocumentFragment::initialize(JS::Realm& realm)
 void DocumentFragment::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_host.ptr());
+    visitor.visit(m_host);
 }
 
 void DocumentFragment::set_host(Web::DOM::Element* element)

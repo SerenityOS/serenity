@@ -36,8 +36,8 @@ void Performance::initialize(JS::Realm& realm)
 void Performance::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window.ptr());
-    visitor.visit(m_timing.ptr());
+    visitor.visit(m_window);
+    visitor.visit(m_timing);
 }
 
 JS::GCPtr<NavigationTiming::PerformanceTiming> Performance::timing()

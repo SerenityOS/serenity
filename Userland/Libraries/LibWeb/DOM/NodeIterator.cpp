@@ -36,12 +36,12 @@ void NodeIterator::finalize()
 void NodeIterator::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_filter.ptr());
-    visitor.visit(m_root.ptr());
-    visitor.visit(m_reference.node.ptr());
+    visitor.visit(m_filter);
+    visitor.visit(m_root);
+    visitor.visit(m_reference.node);
 
     if (m_traversal_pointer.has_value())
-        visitor.visit(m_traversal_pointer->node.ptr());
+        visitor.visit(m_traversal_pointer->node);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator

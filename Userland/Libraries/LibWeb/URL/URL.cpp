@@ -91,7 +91,7 @@ void URL::initialize(JS::Realm& realm)
 void URL::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_query.ptr());
+    visitor.visit(m_query);
 }
 
 // https://w3c.github.io/FileAPI/#dfn-createObjectURL

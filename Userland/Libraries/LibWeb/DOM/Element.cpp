@@ -120,11 +120,11 @@ void Element::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     SlottableMixin::visit_edges(visitor);
 
-    visitor.visit(m_attributes.ptr());
-    visitor.visit(m_inline_style.ptr());
-    visitor.visit(m_class_list.ptr());
-    visitor.visit(m_shadow_root.ptr());
-    visitor.visit(m_custom_element_definition.ptr());
+    visitor.visit(m_attributes);
+    visitor.visit(m_inline_style);
+    visitor.visit(m_class_list);
+    visitor.visit(m_shadow_root);
+    visitor.visit(m_custom_element_definition);
     for (auto& pseudo_element_layout_node : m_pseudo_element_nodes)
         visitor.visit(pseudo_element_layout_node);
     for (auto& registered_intersection_observers : m_registered_intersection_observers)

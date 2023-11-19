@@ -79,10 +79,10 @@ void DOMQuad::initialize(JS::Realm& realm)
 void DOMQuad::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_p1.ptr());
-    visitor.visit(m_p2.ptr());
-    visitor.visit(m_p3.ptr());
-    visitor.visit(m_p4.ptr());
+    visitor.visit(m_p1);
+    visitor.visit(m_p2);
+    visitor.visit(m_p3);
+    visitor.visit(m_p4);
 }
 
 }

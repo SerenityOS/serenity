@@ -26,7 +26,7 @@ WebGLRenderingContextBase::~WebGLRenderingContextBase() = default;
 void WebGLRenderingContextBase::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_canvas_element.ptr());
+    visitor.visit(m_canvas_element);
 }
 
 #define RETURN_WITH_WEBGL_ERROR_IF(condition, error)                         \

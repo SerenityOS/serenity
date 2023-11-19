@@ -33,7 +33,7 @@ void Screen::initialize(JS::Realm& realm)
 void Screen::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window.ptr());
+    visitor.visit(m_window);
 }
 
 Gfx::IntRect Screen::screen_rect() const

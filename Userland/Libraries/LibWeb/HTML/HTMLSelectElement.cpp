@@ -29,7 +29,7 @@ void HTMLSelectElement::initialize(JS::Realm& realm)
 void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_options.ptr());
+    visitor.visit(m_options);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-options

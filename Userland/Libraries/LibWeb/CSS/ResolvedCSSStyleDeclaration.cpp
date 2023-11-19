@@ -58,7 +58,7 @@ ResolvedCSSStyleDeclaration::ResolvedCSSStyleDeclaration(DOM::Element& element)
 void ResolvedCSSStyleDeclaration::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_element.ptr());
+    visitor.visit(m_element);
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-length

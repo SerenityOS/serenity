@@ -19,8 +19,8 @@ CSSRule::CSSRule(JS::Realm& realm)
 void CSSRule::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_parent_style_sheet.ptr());
-    visitor.visit(m_parent_rule.ptr());
+    visitor.visit(m_parent_style_sheet);
+    visitor.visit(m_parent_rule);
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssrule-csstext

@@ -30,8 +30,8 @@ void AbstractRange::initialize(JS::Realm& realm)
 void AbstractRange::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_start_container.ptr());
-    visitor.visit(m_end_container.ptr());
+    visitor.visit(m_start_container);
+    visitor.visit(m_end_container);
 }
 
 }

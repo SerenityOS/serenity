@@ -54,7 +54,7 @@ void HTMLElement::initialize(JS::Realm& realm)
 void HTMLElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_dataset.ptr());
+    visitor.visit(m_dataset);
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-dir

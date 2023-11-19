@@ -67,10 +67,10 @@ void EventTarget::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
 
     for (auto& event_listener : m_event_listener_list)
-        visitor.visit(event_listener.ptr());
+        visitor.visit(event_listener);
 
     for (auto& it : m_event_handler_map)
-        visitor.visit(it.value.ptr());
+        visitor.visit(it.value);
 }
 
 Vector<JS::Handle<DOMEventListener>> EventTarget::event_listener_list()

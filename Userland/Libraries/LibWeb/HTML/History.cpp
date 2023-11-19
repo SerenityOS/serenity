@@ -35,7 +35,7 @@ void History::initialize(JS::Realm& realm)
 void History::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_associated_document.ptr());
+    visitor.visit(m_associated_document);
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-pushstate

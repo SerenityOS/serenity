@@ -46,8 +46,8 @@ void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     WindowOrWorkerGlobalScopeMixin::visit_edges(visitor);
 
-    visitor.visit(m_location.ptr());
-    visitor.visit(m_navigator.ptr());
+    visitor.visit(m_location);
+    visitor.visit(m_navigator);
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#importing-scripts-and-libraries

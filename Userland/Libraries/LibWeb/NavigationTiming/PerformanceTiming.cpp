@@ -25,7 +25,7 @@ void PerformanceTiming::initialize(JS::Realm& realm)
 void PerformanceTiming::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window.ptr());
+    visitor.visit(m_window);
 }
 
 }

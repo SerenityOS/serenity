@@ -35,7 +35,7 @@ void MessagePort::initialize(JS::Realm& realm)
 void MessagePort::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_remote_port.ptr());
+    visitor.visit(m_remote_port);
 }
 
 void MessagePort::disentangle()

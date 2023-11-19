@@ -533,7 +533,7 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     m_script_or_module.visit(
         [](Empty) {},
         [&](auto& script_or_module) {
-            visitor.visit(script_or_module.ptr());
+            visitor.visit(script_or_module);
         });
 }
 

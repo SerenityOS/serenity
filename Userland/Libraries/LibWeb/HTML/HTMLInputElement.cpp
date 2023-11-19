@@ -62,7 +62,7 @@ void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_placeholder_element);
     visitor.visit(m_placeholder_text_node);
     visitor.visit(m_color_well_element);
-    visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group.ptr());
+    visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group);
     visitor.visit(m_selected_files);
 }
 

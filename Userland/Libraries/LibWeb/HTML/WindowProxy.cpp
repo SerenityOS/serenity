@@ -258,7 +258,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> WindowProxy::internal_own_pro
 void WindowProxy::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window.ptr());
+    visitor.visit(m_window);
 }
 
 void WindowProxy::set_window(JS::NonnullGCPtr<Window> window)

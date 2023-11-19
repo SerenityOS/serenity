@@ -30,7 +30,7 @@ LiveNodeList::~LiveNodeList() = default;
 void LiveNodeList::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_root.ptr());
+    visitor.visit(m_root);
 }
 
 JS::MarkedVector<Node*> LiveNodeList::collection() const

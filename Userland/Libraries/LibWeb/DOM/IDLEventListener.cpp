@@ -24,7 +24,7 @@ IDLEventListener::IDLEventListener(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::Ca
 void IDLEventListener::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_callback.ptr());
+    visitor.visit(m_callback);
 }
 
 }

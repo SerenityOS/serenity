@@ -34,7 +34,7 @@ void AbortController::initialize(JS::Realm& realm)
 void AbortController::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_signal.ptr());
+    visitor.visit(m_signal);
 }
 
 // https://dom.spec.whatwg.org/#dom-abortcontroller-abort
