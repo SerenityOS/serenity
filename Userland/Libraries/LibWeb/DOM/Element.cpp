@@ -125,8 +125,10 @@ void Element::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_class_list);
     visitor.visit(m_shadow_root);
     visitor.visit(m_custom_element_definition);
-    for (auto& pseudo_element_layout_node : m_pseudo_element_nodes)
-        visitor.visit(pseudo_element_layout_node);
+    if (m_pseudo_element_nodes) {
+        for (auto& pseudo_element_layout_node : *m_pseudo_element_nodes)
+            visitor.visit(pseudo_element_layout_node);
+    }
     for (auto& registered_intersection_observers : m_registered_intersection_observers)
         visitor.visit(registered_intersection_observers.observer);
 }
@@ -987,23 +989,33 @@ void Element::children_changed()
 
 void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement pseudo_element, JS::GCPtr<Layout::Node> pseudo_element_node)
 {
-    m_pseudo_element_nodes[to_underlying(pseudo_element)] = pseudo_element_node;
+    if (!m_pseudo_element_nodes) {
+        if (!pseudo_element_node)
+            return;
+        m_pseudo_element_nodes = make<PseudoElementLayoutNodes>();
+    }
+
+    (*m_pseudo_element_nodes)[to_underlying(pseudo_element)] = pseudo_element_node;
 }
 
 JS::GCPtr<Layout::Node> Element::get_pseudo_element_node(CSS::Selector::PseudoElement pseudo_element) const
 {
-    return m_pseudo_element_nodes[to_underlying(pseudo_element)];
+    if (!m_pseudo_element_nodes)
+        return nullptr;
+    return (*m_pseudo_element_nodes)[to_underlying(pseudo_element)];
 }
 
 void Element::clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>)
 {
-    m_pseudo_element_nodes.fill({});
+    m_pseudo_element_nodes = nullptr;
 }
 
 void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const
 {
-    for (size_t i = 0; i < m_pseudo_element_nodes.size(); ++i) {
-        auto& pseudo_element_node = m_pseudo_element_nodes[i];
+    if (!m_pseudo_element_nodes)
+        return;
+    for (size_t i = 0; i < m_pseudo_element_nodes->size(); ++i) {
+        auto& pseudo_element_node = (*m_pseudo_element_nodes)[i];
         if (!pseudo_element_node)
             continue;
         auto object = MUST(children_array.add_object());
