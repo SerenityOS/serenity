@@ -220,6 +220,15 @@ CommandResult PaintingCommandExecutorGPU::blit_corner_clipping(BorderRadiusCorne
     return CommandResult::Continue;
 }
 
+CommandResult PaintingCommandExecutorGPU::paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
+{
+    // FIXME
+    (void)border_rect;
+    (void)corner_radii;
+    (void)borders_data;
+    return CommandResult::Continue;
+}
+
 bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect) const
 {
     // FIXME

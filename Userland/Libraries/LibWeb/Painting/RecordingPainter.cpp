@@ -383,6 +383,11 @@ void RecordingPainter::draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2
         .thickness = thickness });
 }
 
+void RecordingPainter::paint_borders(DevicePixelRect const& border_rect, CornerRadii const& corner_radii, BordersDataDevicePixels const& borders_data)
+{
+    push_command(PaintBorders { border_rect, corner_radii, borders_data });
+}
+
 static Optional<Gfx::IntRect> command_bounding_rectangle(PaintingCommand const& command)
 {
     return command.visit(
@@ -512,6 +517,9 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
             },
             [&](BlitCornerClipping const& command) {
                 return executor.blit_corner_clipping(command.corner_clipper);
+            },
+            [&](PaintBorders const& command) {
+                return executor.paint_borders(command.border_rect, command.corner_radii, command.borders_data);
             });
 
         if (result == CommandResult::SkipStackingContext) {
