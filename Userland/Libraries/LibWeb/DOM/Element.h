@@ -429,7 +429,7 @@ private:
 
     // https://www.w3.org/TR/intersection-observer/#dom-element-registeredintersectionobservers-slot
     // Element objects have an internal [[RegisteredIntersectionObservers]] slot, which is initialized to an empty list.
-    Vector<IntersectionObserver::IntersectionObserverRegistration> m_registered_intersection_observers;
+    OwnPtr<Vector<IntersectionObserver::IntersectionObserverRegistration>> m_registered_intersection_observers;
 
     Array<CSSPixelPoint, 3> m_scroll_offset;
 };
