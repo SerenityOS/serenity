@@ -33,7 +33,7 @@ class HeapBlockBase {
     AK_MAKE_NONCOPYABLE(HeapBlockBase);
 
 public:
-    static constexpr auto block_size = 16 * KiB;
+    static constexpr auto block_size = 4 * KiB;
     static HeapBlockBase* from_cell(Cell const* cell)
     {
         return reinterpret_cast<HeapBlockBase*>(bit_cast<FlatPtr>(cell) & ~(HeapBlockBase::block_size - 1));
