@@ -567,14 +567,14 @@ WebIDL::ExceptionOr<String> ResolvedCSSStyleDeclaration::remove_property(Propert
     return WebIDL::NoModificationAllowedError::create(realm(), "Cannot remove properties from result of getComputedStyle()"_fly_string);
 }
 
-DeprecatedString ResolvedCSSStyleDeclaration::serialized() const
+String ResolvedCSSStyleDeclaration::serialized() const
 {
     // https://www.w3.org/TR/cssom/#dom-cssstyledeclaration-csstext
     // If the computed flag is set, then return the empty string.
 
     // NOTE: ResolvedCSSStyleDeclaration is something you would only get from window.getComputedStyle(),
     //       which returns what the spec calls "resolved style". The "computed flag" is always set here.
-    return DeprecatedString::empty();
+    return String {};
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-csstext

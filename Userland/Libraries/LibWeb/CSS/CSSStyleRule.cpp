@@ -55,7 +55,7 @@ String CSSStyleRule::serialized() const
     builder.append(" {"sv);
 
     // 2. Let decls be the result of performing serialize a CSS declaration block on the rule’s associated declarations, or null if there are no such declarations.
-    auto decls = declaration().length() > 0 ? declaration().serialized() : Optional<DeprecatedString>();
+    auto decls = declaration().length() > 0 ? declaration().serialized() : Optional<String>();
 
     // FIXME: 3. Let rules be the result of performing serialize a CSS rule on each rule in the rule’s cssRules list, or null if there are no such rules.
     Optional<String> rules;

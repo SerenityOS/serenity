@@ -187,7 +187,7 @@ void ElementInlineCSSStyleDeclaration::update_style_attribute()
     m_updating = true;
 
     // 5. Set an attribute value for owner node using "style" and the result of serializing declaration block.
-    MUST(m_element->set_attribute(HTML::AttributeNames::style, MUST(String::from_deprecated_string(serialized()))));
+    MUST(m_element->set_attribute(HTML::AttributeNames::style, serialized()));
 
     // 6. Unset declaration block’s updating flag.
     m_updating = false;
@@ -256,7 +256,7 @@ WebIDL::ExceptionOr<String> CSSStyleDeclaration::remove_property(StringView prop
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-csstext
-DeprecatedString CSSStyleDeclaration::css_text() const
+String CSSStyleDeclaration::css_text() const
 {
     // 1. If the computed flag is set, then return the empty string.
     // NOTE: See ResolvedCSSStyleDeclaration::serialized()
@@ -266,7 +266,7 @@ DeprecatedString CSSStyleDeclaration::css_text() const
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-declaration
-static DeprecatedString serialize_a_css_declaration(CSS::PropertyID property, DeprecatedString value, Important important)
+static String serialize_a_css_declaration(CSS::PropertyID property, StringView value, Important important)
 {
     StringBuilder builder;
 
@@ -288,14 +288,14 @@ static DeprecatedString serialize_a_css_declaration(CSS::PropertyID property, De
     builder.append(';');
 
     // 7. Return s.
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-declaration-block
-DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
+String PropertyOwningCSSStyleDeclaration::serialized() const
 {
     // 1. Let list be an empty array.
-    Vector<DeprecatedString> list;
+    Vector<String> list;
 
     // 2. Let already serialized be an empty array.
     HashTable<PropertyID> already_serialized;
@@ -322,7 +322,7 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
         // 6. Let serialized declaration be the result of invoking serialize a CSS declaration with property name property, value value,
         //    and the important flag set if declaration has its important flag set.
         // NOTE: We have to inline this here as the actual implementation does not accept custom properties.
-        DeprecatedString serialized_declaration = [&] {
+        String serialized_declaration = [&] {
             // https://www.w3.org/TR/cssom/#serialize-a-css-declaration
             StringBuilder builder;
 
@@ -344,7 +344,7 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
             builder.append(';');
 
             // 7. Return s.
-            return builder.to_deprecated_string();
+            return MUST(builder.to_string());
         }();
 
         // 7. Append serialized declaration to list.
@@ -368,7 +368,7 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
         // FIXME: 4. Shorthand loop: For each shorthand in shorthands, follow these substeps: ...
 
         // 5. Let value be the result of invoking serialize a CSS value of declaration.
-        auto value = declaration.value->to_string().to_deprecated_string();
+        auto value = declaration.value->to_string();
 
         // 6. Let serialized declaration be the result of invoking serialize a CSS declaration with property name property, value value,
         //    and the important flag set if declaration has its important flag set.
@@ -384,7 +384,7 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
     // 4. Return list joined with " " (U+0020).
     StringBuilder builder;
     builder.join(' ', list);
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 static CSS::PropertyID property_id_from_name(StringView name)
