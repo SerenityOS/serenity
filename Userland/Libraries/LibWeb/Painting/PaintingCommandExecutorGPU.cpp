@@ -152,9 +152,16 @@ CommandResult PaintingCommandExecutorGPU::draw_ellipse(Gfx::IntRect const&, Colo
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::fill_ellipse(Gfx::IntRect const&, Color const&, Gfx::AntiAliasingPainter::BlendMode)
+CommandResult PaintingCommandExecutorGPU::fill_ellipse(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::BlendMode)
 {
-    // FIXME
+    auto horizontal_radius = static_cast<float>(rect.width() / 2);
+    auto vertical_radius = static_cast<float>(rect.height() / 2);
+    painter().fill_rect_with_rounded_corners(
+        rect, color,
+        { horizontal_radius, vertical_radius },
+        { horizontal_radius, vertical_radius },
+        { horizontal_radius, vertical_radius },
+        { horizontal_radius, vertical_radius });
     return CommandResult::Continue;
 }
 
