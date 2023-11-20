@@ -319,13 +319,6 @@
     "all",
     "none"
   ],
-  "position": [
-    "left",
-    "right",
-    "top",
-    "bottom",
-    "center"
-  ],
   "positioning": [
     "absolute",
     "fixed",
