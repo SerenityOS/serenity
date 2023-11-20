@@ -167,18 +167,18 @@ WebIDL::ExceptionOr<JS::Value> Storage::named_item_value(FlyString const& name) 
     return JS::PrimitiveString::create(vm(), value.release_value());
 }
 
-WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> Storage::delete_value(DeprecatedString const& name)
+WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> Storage::delete_value(String const& name)
 {
     remove_item(name);
     return DidDeletionFail::NotRelevant;
 }
 
-WebIDL::ExceptionOr<void> Storage::set_value_of_named_property(DeprecatedString const& key, JS::Value unconverted_value)
+WebIDL::ExceptionOr<void> Storage::set_value_of_named_property(String const& key, JS::Value unconverted_value)
 {
     // NOTE: Since LegacyPlatformObject does not know the type of value, we must convert it ourselves.
     //       The type of `value` is `DOMString`.
     auto value = TRY(unconverted_value.to_string(vm()));
-    return set_item(String::from_deprecated_string(key).release_value(), value);
+    return set_item(key, value);
 }
 
 void Storage::dump() const

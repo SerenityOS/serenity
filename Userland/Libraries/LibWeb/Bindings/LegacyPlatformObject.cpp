@@ -123,11 +123,11 @@ WebIDL::ExceptionOr<void> LegacyPlatformObject::invoke_indexed_property_setter(J
 }
 
 // https://webidl.spec.whatwg.org/#invoke-named-setter
-WebIDL::ExceptionOr<void> LegacyPlatformObject::invoke_named_property_setter(DeprecatedString const& property_name, JS::Value value)
+WebIDL::ExceptionOr<void> LegacyPlatformObject::invoke_named_property_setter(String const& property_name, JS::Value value)
 {
     // 1. Let creating be true if P is not a supported property name, and false otherwise.
     Vector<String> supported_property_names = this->supported_property_names();
-    bool creating = !supported_property_names.contains_slow(MUST(String::from_deprecated_string(property_name)));
+    bool creating = !supported_property_names.contains_slow(property_name);
 
     // FIXME: We do not have this information at this point, so converting the value is left as an exercise to the inheritor of LegacyPlatformObject.
     // 2. Let operation be the operation used to declare the indexed property setter.
@@ -174,7 +174,7 @@ JS::ThrowCompletionOr<bool> LegacyPlatformObject::internal_set(JS::PropertyKey c
         // 2. If O implements an interface with a named property setter and Type(P) is String, then:
         if (has_named_property_setter() && property_name.is_string()) {
             // 1. Invoke the named property setter on O with P and V.
-            TRY(throw_dom_exception_if_needed(vm, [&] { return invoke_named_property_setter(property_name.as_string(), value); }));
+            TRY(throw_dom_exception_if_needed(vm, [&] { return invoke_named_property_setter(MUST(String::from_deprecated_string(property_name.as_string())), value); }));
 
             // 2. Return true.
             return true;
@@ -236,7 +236,7 @@ JS::ThrowCompletionOr<bool> LegacyPlatformObject::internal_define_own_property(J
                     return false;
 
                 // 2. Invoke the named property setter on O with P and Desc.[[Value]].
-                TRY(throw_dom_exception_if_needed(vm, [&] { return invoke_named_property_setter(property_name_as_string, property_descriptor.value.value()); }));
+                TRY(throw_dom_exception_if_needed(vm, [&] { return invoke_named_property_setter(MUST(String::from_deprecated_string(property_name_as_string)), property_descriptor.value.value()); }));
 
                 // 3. Return true.
                 return true;
@@ -291,7 +291,7 @@ JS::ThrowCompletionOr<bool> LegacyPlatformObject::internal_delete(JS::PropertyKe
         // 4. Otherwise, operation was defined with an identifier:
         //    1. Perform method steps of operation with O as this and « P » as the argument values.
         //    2. If operation was declared with a return type of boolean and the steps returned false, then return false.
-        auto did_deletion_fail = TRY(throw_dom_exception_if_needed(vm, [&] { return delete_value(property_name_string); }));
+        auto did_deletion_fail = TRY(throw_dom_exception_if_needed(vm, [&] { return delete_value(MUST(String::from_deprecated_string(property_name_string))); }));
         if (!named_property_deleter_has_identifier())
             VERIFY(did_deletion_fail != DidDeletionFail::NotRelevant);
 
@@ -339,7 +339,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> LegacyPlatformObject::interna
     if (supports_indexed_properties()) {
         for (u64 index = 0; index <= NumericLimits<u32>::max(); ++index) {
             if (is_supported_property_index(index))
-                keys.append(JS::PrimitiveString::create(vm, DeprecatedString::number(index)));
+                keys.append(JS::PrimitiveString::create(vm, MUST(String::number(index))));
             else
                 break;
         }

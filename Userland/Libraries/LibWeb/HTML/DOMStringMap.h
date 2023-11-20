@@ -24,10 +24,10 @@ public:
 
     DeprecatedString determine_value_of_named_property(DeprecatedString const&) const;
 
-    virtual WebIDL::ExceptionOr<void> set_value_of_new_named_property(DeprecatedString const&, JS::Value) override;
-    virtual WebIDL::ExceptionOr<void> set_value_of_existing_named_property(DeprecatedString const&, JS::Value) override;
+    virtual WebIDL::ExceptionOr<void> set_value_of_new_named_property(String const&, JS::Value) override;
+    virtual WebIDL::ExceptionOr<void> set_value_of_existing_named_property(String const&, JS::Value) override;
 
-    virtual WebIDL::ExceptionOr<DidDeletionFail> delete_value(DeprecatedString const&) override;
+    virtual WebIDL::ExceptionOr<DidDeletionFail> delete_value(String const&) override;
 
 private:
     explicit DOMStringMap(DOM::Element&);

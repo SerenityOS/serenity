@@ -42,12 +42,12 @@ public:
 
     // NOTE: These will crash if you make has_named_property_setter return true but do not override these methods.
     // NOTE: This is only used if named_property_setter_has_identifier returns false, otherwise set_value_of_named_property is used instead.
-    virtual WebIDL::ExceptionOr<void> set_value_of_new_named_property(DeprecatedString const&, JS::Value) { VERIFY_NOT_REACHED(); }
-    virtual WebIDL::ExceptionOr<void> set_value_of_existing_named_property(DeprecatedString const&, JS::Value) { VERIFY_NOT_REACHED(); }
+    virtual WebIDL::ExceptionOr<void> set_value_of_new_named_property(String const&, JS::Value) { VERIFY_NOT_REACHED(); }
+    virtual WebIDL::ExceptionOr<void> set_value_of_existing_named_property(String const&, JS::Value) { VERIFY_NOT_REACHED(); }
 
     // NOTE: These will crash if you make has_named_property_setter return true but do not override these methods.
     // NOTE: This is only used if you make named_property_setter_has_identifier return true, otherwise set_value_of_{new,existing}_named_property is used instead.
-    virtual WebIDL::ExceptionOr<void> set_value_of_named_property(DeprecatedString const&, JS::Value) { VERIFY_NOT_REACHED(); }
+    virtual WebIDL::ExceptionOr<void> set_value_of_named_property(String const&, JS::Value) { VERIFY_NOT_REACHED(); }
 
     // NOTE: These will crash if you make has_indexed_property_setter return true but do not override these methods.
     // NOTE: This is only used if indexed_property_setter_has_identifier returns false, otherwise set_value_of_indexed_property is used instead.
@@ -67,7 +67,7 @@ public:
     };
 
     // NOTE: This will crash if you make has_named_property_deleter return true but do not override this method.
-    virtual WebIDL::ExceptionOr<DidDeletionFail> delete_value(DeprecatedString const&) { VERIFY_NOT_REACHED(); }
+    virtual WebIDL::ExceptionOr<DidDeletionFail> delete_value(String const&) { VERIFY_NOT_REACHED(); }
 
 protected:
     explicit LegacyPlatformObject(JS::Realm& realm);
@@ -90,7 +90,7 @@ protected:
 
 private:
     WebIDL::ExceptionOr<void> invoke_indexed_property_setter(JS::PropertyKey const&, JS::Value);
-    WebIDL::ExceptionOr<void> invoke_named_property_setter(DeprecatedString const&, JS::Value);
+    WebIDL::ExceptionOr<void> invoke_named_property_setter(String const&, JS::Value);
 };
 
 }
