@@ -218,7 +218,8 @@ void Painter::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color con
 
 void Painter::fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius)
 {
-    auto vertices = rect_to_vertices(to_clip_space(transform().map(rect)));
+    auto transformed_rect = transform().map(rect);
+    auto vertices = rect_to_vertices(to_clip_space(transformed_rect));
 
     auto vbo = GL::create_buffer();
     GL::upload_to_buffer(vbo, vertices);
@@ -238,7 +239,7 @@ void Painter::fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color c
     GL::set_uniform(color_uniform, red, green, blue, alpha);
 
     auto rect_center_uniform = m_rounded_rectangle_program.get_uniform_location("uRectCenter");
-    GL::set_uniform(rect_center_uniform, rect.center().x(), rect.center().y());
+    GL::set_uniform(rect_center_uniform, transformed_rect.center().x(), transformed_rect.center().y());
     auto rect_corner_uniform = m_rounded_rectangle_program.get_uniform_location("uRectCorner");
     GL::set_uniform(rect_corner_uniform, rect.width() / 2, rect.height() / 2);
     auto top_left_corner_radius_uniform = m_rounded_rectangle_program.get_uniform_location("uTopLeftRadius");
@@ -448,7 +449,8 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
 
             auto glyph_position = point + Gfx::FloatPoint(font->glyph_left_bearing(code_point), 0);
             auto glyph_size = maybe_texture_rect->size().to_type<float>();
-            auto rect_in_clip_space = to_clip_space({ glyph_position, glyph_size });
+            auto glyph_rect = transform().map(Gfx::FloatRect { glyph_position, glyph_size });
+            auto rect_in_clip_space = to_clip_space(glyph_rect);
 
             // p0 --- p1
             // | \     |
@@ -533,7 +535,7 @@ void Painter::fill_rect_with_linear_gradient(Gfx::FloatRect const& rect, Readonl
         segment_rect_location.set_x(segment_rect_location.x() + stop_start.position * rect.width());
         auto segment_rect_width = (stop_end.position - stop_start.position) * rect.width();
         auto segment_rect_height = rect.height();
-        auto segment_rect = Gfx::FloatRect { segment_rect_location.x(), segment_rect_location.y(), segment_rect_width, segment_rect_height };
+        auto segment_rect = transform().map(Gfx::FloatRect { segment_rect_location.x(), segment_rect_location.y(), segment_rect_width, segment_rect_height });
 
         auto rect_in_clip_space = to_clip_space(segment_rect);
 
@@ -615,7 +617,7 @@ void Painter::restore()
 
 void Painter::set_clip_rect(Gfx::IntRect rect)
 {
-    GL::enable_scissor_test(rect);
+    GL::enable_scissor_test(transform().map(rect));
 }
 
 void Painter::clear_clip_rect()
