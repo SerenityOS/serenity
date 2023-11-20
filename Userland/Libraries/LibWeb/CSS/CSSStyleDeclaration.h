@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/CSS/StyleProperty.h>
@@ -36,10 +36,10 @@ public:
     String get_property_value(StringView property) const;
     StringView get_property_priority(StringView property) const;
 
-    DeprecatedString css_text() const;
+    String css_text() const;
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) = 0;
 
-    virtual DeprecatedString serialized() const = 0;
+    virtual String serialized() const = 0;
 
     virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyKey const& name) const override;
     virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value receiver, JS::CacheablePropertyMetadata*) const override;
@@ -74,7 +74,7 @@ public:
     Optional<StyleProperty> custom_property(FlyString const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
-    virtual DeprecatedString serialized() const final override;
+    virtual String serialized() const final override;
     virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;
 
 protected:
