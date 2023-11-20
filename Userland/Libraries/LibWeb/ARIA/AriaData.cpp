@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Jonah Shafran <jonahshafran@gmail.com>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,16 +10,9 @@
 
 namespace Web::ARIA {
 
-static DeprecatedString to_deprecated_string(Optional<String> const& value)
-{
-    if (!value.has_value())
-        return {};
-    return value->to_deprecated_string();
-}
-
 AriaData::AriaData(Web::ARIA::ARIAMixin const& source)
 {
-    m_aria_active_descendant = to_deprecated_string(source.aria_active_descendant());
+    m_aria_active_descendant = source.aria_active_descendant();
     m_aria_atomic = AriaData::parse_optional_true_false(source.aria_atomic());
     m_aria_auto_complete = AriaData::parse_aria_autocomplete(source.aria_auto_complete());
     m_aria_busy = AriaData::parse_true_false(source.aria_busy());
@@ -26,36 +20,36 @@ AriaData::AriaData(Web::ARIA::ARIAMixin const& source)
     m_aria_col_count = AriaData::parse_integer(source.aria_col_count());
     m_aria_col_index = AriaData::parse_integer(source.aria_col_index());
     m_aria_col_span = AriaData::parse_integer(source.aria_col_span());
-    m_aria_controls = source.parse_id_reference_list(to_deprecated_string(source.aria_controls()));
+    m_aria_controls = source.parse_id_reference_list(source.aria_controls());
     m_aria_current = AriaData::parse_aria_current(source.aria_current());
-    m_aria_described_by = source.parse_id_reference_list(to_deprecated_string(source.aria_described_by()));
-    m_aria_details = source.parse_id_reference(to_deprecated_string(source.aria_details()));
+    m_aria_described_by = source.parse_id_reference_list(source.aria_described_by());
+    m_aria_details = source.parse_id_reference(source.aria_details());
     m_aria_disabled = AriaData::parse_true_false(source.aria_disabled());
     m_aria_drop_effect = AriaData::parse_aria_drop_effect(source.aria_drop_effect());
-    m_aria_error_message = source.parse_id_reference(to_deprecated_string(source.aria_error_message()));
+    m_aria_error_message = source.parse_id_reference(source.aria_error_message());
     m_aria_expanded = AriaData::parse_true_false_undefined(source.aria_expanded());
-    m_aria_flow_to = source.parse_id_reference_list(to_deprecated_string(source.aria_flow_to()));
+    m_aria_flow_to = source.parse_id_reference_list(source.aria_flow_to());
     m_aria_grabbed = AriaData::parse_true_false_undefined(source.aria_grabbed());
     m_aria_has_popup = AriaData::parse_aria_has_popup(source.aria_has_popup());
     m_aria_hidden = AriaData::parse_true_false_undefined(source.aria_hidden());
     m_aria_invalid = AriaData::parse_aria_invalid(source.aria_invalid());
-    m_aria_key_shortcuts = to_deprecated_string(source.aria_key_shortcuts());
-    m_aria_label = to_deprecated_string(source.aria_label());
-    m_aria_labelled_by = source.parse_id_reference_list(to_deprecated_string(source.aria_labelled_by()));
+    m_aria_key_shortcuts = source.aria_key_shortcuts().value_or(String {});
+    m_aria_label = source.aria_label().value_or(String {});
+    m_aria_labelled_by = source.parse_id_reference_list(source.aria_labelled_by());
     m_aria_level = AriaData::parse_integer(source.aria_level());
     m_aria_live = AriaData::parse_aria_live(source.aria_live());
     m_aria_modal = AriaData::parse_true_false(source.aria_modal());
     m_aria_multi_line = AriaData::parse_true_false(source.aria_multi_line());
     m_aria_multi_selectable = AriaData::parse_true_false(source.aria_multi_selectable());
     m_aria_orientation = AriaData::parse_aria_orientation(source.aria_orientation());
-    m_aria_owns = source.parse_id_reference_list(to_deprecated_string(source.aria_owns()));
-    m_aria_placeholder = to_deprecated_string(source.aria_placeholder());
+    m_aria_owns = source.parse_id_reference_list(source.aria_owns());
+    m_aria_placeholder = source.aria_placeholder().value_or(String {});
     m_aria_pos_in_set = AriaData::parse_integer(source.aria_pos_in_set());
     m_aria_pressed = AriaData::parse_tristate(source.aria_pressed());
     m_aria_read_only = AriaData::parse_true_false(source.aria_read_only());
     m_aria_relevant = AriaData::parse_aria_relevant(source.aria_relevant());
     m_aria_required = AriaData::parse_true_false(source.aria_required());
-    m_aria_role_description = to_deprecated_string(source.aria_role_description());
+    m_aria_role_description = source.aria_role_description().value_or(String {});
     m_aria_row_count = AriaData::parse_integer(source.aria_row_count());
     m_aria_row_index = AriaData::parse_integer(source.aria_row_index());
     m_aria_row_span = AriaData::parse_integer(source.aria_row_span());
@@ -65,7 +59,7 @@ AriaData::AriaData(Web::ARIA::ARIAMixin const& source)
     m_aria_value_max = AriaData::parse_number(source.aria_value_max());
     m_aria_value_min = AriaData::parse_number(source.aria_value_min());
     m_aria_value_now = AriaData::parse_number(source.aria_value_now());
-    m_aria_value_text = to_deprecated_string(source.aria_value_text());
+    m_aria_value_text = source.aria_value_text().value_or(String {});
 }
 
 bool AriaData::parse_true_false(Optional<String> const& value)
@@ -115,7 +109,7 @@ Optional<f64> AriaData::parse_number(Optional<String> const& value)
     return value->bytes_as_string_view().to_double(TrimWhitespace::Yes);
 }
 
-Optional<DeprecatedString> AriaData::aria_active_descendant_or_default() const
+Optional<String> AriaData::aria_active_descendant_or_default() const
 {
     return m_aria_active_descendant;
 }
@@ -158,7 +152,7 @@ Optional<i32> AriaData::aria_col_span_or_default() const
     return m_aria_col_span;
 }
 
-Vector<DeprecatedString> AriaData::aria_controls_or_default() const
+Vector<String> AriaData::aria_controls_or_default() const
 {
     return m_aria_controls;
 }
@@ -168,12 +162,12 @@ AriaCurrent AriaData::aria_current_or_default() const
     return m_aria_current;
 }
 
-Vector<DeprecatedString> AriaData::aria_described_by_or_default() const
+Vector<String> AriaData::aria_described_by_or_default() const
 {
     return m_aria_described_by;
 }
 
-Optional<DeprecatedString> AriaData::aria_details_or_default() const
+Optional<String> AriaData::aria_details_or_default() const
 {
     return m_aria_details;
 }
@@ -188,7 +182,7 @@ Vector<AriaDropEffect> AriaData::aria_drop_effect_or_default() const
     return m_aria_drop_effect;
 }
 
-Optional<DeprecatedString> AriaData::aria_error_message_or_default() const
+Optional<String> AriaData::aria_error_message_or_default() const
 {
     return m_aria_error_message;
 }
@@ -198,7 +192,7 @@ Optional<bool> AriaData::aria_expanded_or_default() const
     return m_aria_expanded;
 }
 
-Vector<DeprecatedString> AriaData::aria_flow_to_or_default() const
+Vector<String> AriaData::aria_flow_to_or_default() const
 {
     return m_aria_flow_to;
 }
@@ -223,17 +217,17 @@ AriaInvalid AriaData::aria_invalid_or_default() const
     return m_aria_invalid;
 }
 
-DeprecatedString AriaData::aria_key_shortcuts_or_default() const
+String AriaData::aria_key_shortcuts_or_default() const
 {
     return m_aria_key_shortcuts;
 }
 
-DeprecatedString AriaData::aria_label_or_default() const
+String AriaData::aria_label_or_default() const
 {
     return m_aria_label;
 }
 
-Vector<DeprecatedString> AriaData::aria_labelled_by_or_default() const
+Vector<String> AriaData::aria_labelled_by_or_default() const
 {
     return m_aria_labelled_by;
 }
@@ -276,12 +270,12 @@ AriaOrientation AriaData::aria_orientation_or_default(AriaOrientation default_va
     return value.value();
 }
 
-Vector<DeprecatedString> AriaData::aria_owns_or_default() const
+Vector<String> AriaData::aria_owns_or_default() const
 {
     return m_aria_owns;
 }
 
-DeprecatedString AriaData::aria_placeholder_or_default() const
+String AriaData::aria_placeholder_or_default() const
 {
     return m_aria_placeholder;
 }
@@ -311,7 +305,7 @@ bool AriaData::aria_required_or_default() const
     return m_aria_required;
 }
 
-DeprecatedString AriaData::aria_role_description_or_default() const
+String AriaData::aria_role_description_or_default() const
 {
     return m_aria_role_description;
 }
@@ -367,7 +361,7 @@ Optional<f64> AriaData::aria_value_now_or_default() const
     return m_aria_value_now;
 }
 
-DeprecatedString AriaData::aria_value_text_or_default() const
+String AriaData::aria_value_text_or_default() const
 {
     return m_aria_value_text;
 }

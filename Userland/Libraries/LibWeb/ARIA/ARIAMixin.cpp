@@ -64,18 +64,26 @@ bool ARIAMixin::has_global_aria_attribute() const
         || aria_role_description().has_value();
 }
 
-Optional<DeprecatedString> ARIAMixin::parse_id_reference(DeprecatedString const& id_reference) const
+Optional<String> ARIAMixin::parse_id_reference(Optional<String> const& id_reference) const
 {
-    if (id_reference_exists(id_reference))
-        return id_reference;
+    if (!id_reference.has_value())
+        return {};
+
+    if (id_reference_exists(id_reference.value()))
+        return id_reference.value();
+
     return {};
 }
 
-Vector<DeprecatedString> ARIAMixin::parse_id_reference_list(DeprecatedString const& id_list) const
+Vector<String> ARIAMixin::parse_id_reference_list(Optional<String> const& id_list) const
 {
-    Vector<DeprecatedString> result;
-    auto id_references = id_list.split_view(Infra::is_ascii_whitespace);
-    for (auto const id_reference : id_references) {
+    Vector<String> result;
+    if (!id_list.has_value())
+        return result;
+
+    auto id_references = id_list->bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
+    for (auto const id_reference_view : id_references) {
+        auto id_reference = MUST(String::from_utf8(id_reference_view));
         if (id_reference_exists(id_reference))
             result.append(id_reference);
     }

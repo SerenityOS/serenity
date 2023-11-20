@@ -69,7 +69,7 @@ ErrorOr<String> tristate_to_string(Tristate);
 ErrorOr<String> optional_integer_to_string(Optional<i32>);
 ErrorOr<String> optional_bool_to_string(Optional<bool>);
 ErrorOr<String> optional_number_to_string(Optional<f64>);
-ErrorOr<String> id_reference_list_to_string(Vector<DeprecatedString> const&);
+ErrorOr<String> id_reference_list_to_string(Vector<String> const&);
 StringView state_or_property_to_string(StateAndProperties);
 
 }
