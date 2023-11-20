@@ -141,7 +141,7 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& d
     }
 
     if (!paths_to_copy.is_empty())
-        TRY(run_file_operation(FileOperation::Copy, paths_to_copy, target, window));
+        TRY(run_file_operation(FileOperation::Move, paths_to_copy, target, window));
 
     return has_accepted_drop;
 }
