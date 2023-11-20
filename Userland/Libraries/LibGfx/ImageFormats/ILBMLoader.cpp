@@ -8,6 +8,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
+#include <LibGfx/FourCC.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
 
 namespace Gfx {

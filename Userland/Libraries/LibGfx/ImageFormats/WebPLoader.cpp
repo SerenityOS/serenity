@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/MemoryStream.h>
 #include <AK/Vector.h>
+#include <LibGfx/FourCC.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibGfx/ImageFormats/WebPLoaderLossless.h>
 #include <LibGfx/ImageFormats/WebPLoaderLossy.h>
