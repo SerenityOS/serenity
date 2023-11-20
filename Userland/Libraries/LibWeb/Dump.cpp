@@ -146,7 +146,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     else
         tag_name = layout_node.dom_node()->node_name();
 
-    DeprecatedString identifier = "";
+    String identifier;
     if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
         auto& element = verify_cast<DOM::Element>(*layout_node.dom_node());
         StringBuilder builder;
@@ -159,7 +159,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             builder.append('.');
             builder.append(class_name);
         }
-        identifier = builder.to_deprecated_string();
+        identifier = MUST(builder.to_string());
     }
 
     StringView nonbox_color_on = ""sv;
@@ -211,7 +211,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             color_on,
             tag_name,
             color_off,
-            identifier.characters());
+            identifier);
 
         if (auto const* paintable_box = box.paintable_box()) {
             builder.appendff("at ({},{}) content-size {}x{}",
@@ -381,12 +381,12 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
     if (show_specified_style && layout_node.dom_node() && layout_node.dom_node()->is_element() && verify_cast<DOM::Element>(layout_node.dom_node())->computed_css_values()) {
         struct NameAndValue {
-            DeprecatedString name;
-            DeprecatedString value;
+            String name;
+            String value;
         };
         Vector<NameAndValue> properties;
         verify_cast<DOM::Element>(*layout_node.dom_node()).computed_css_values()->for_each_property([&](auto property_id, auto& value) {
-            properties.append({ CSS::string_from_property_id(property_id), value.to_string().to_deprecated_string() });
+            properties.append({ MUST(String::from_utf8(CSS::string_from_property_id(property_id))), value.to_string() });
         });
         quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });
 
