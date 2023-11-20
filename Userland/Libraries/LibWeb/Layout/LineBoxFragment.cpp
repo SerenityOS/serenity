@@ -31,7 +31,7 @@ StringView LineBoxFragment::text() const
 {
     if (!is<TextNode>(layout_node()))
         return {};
-    return verify_cast<TextNode>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
+    return verify_cast<TextNode>(layout_node()).text_for_rendering().bytes_as_string_view().substring_view(m_start, m_length);
 }
 
 CSSPixelRect const LineBoxFragment::absolute_rect() const

@@ -372,7 +372,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                     for (size_t i = 0; i < indent; ++i)
                         builder.append("  "sv);
                     auto& layout_text = static_cast<Layout::TextNode const&>(fragment.layout_node());
-                    auto fragment_text = layout_text.text_for_rendering().substring(fragment.start(), fragment.length());
+                    auto fragment_text = MUST(layout_text.text_for_rendering().substring_from_byte_offset(fragment.start(), fragment.length()));
                     builder.appendff("      \"{}\"\n", fragment_text);
                 }
             }
