@@ -424,20 +424,21 @@ Optional<ARIA::Role> HTMLElement::default_role() const
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#get-an-element's-target
-DeprecatedString HTMLElement::get_an_elements_target() const
+String HTMLElement::get_an_elements_target() const
 {
     // To get an element's target, given an a, area, or form element element, run these steps:
 
     // 1. If element has a target attribute, then return that attribute's value.
-    if (has_attribute(AttributeNames::target))
-        return deprecated_attribute(AttributeNames::target);
+    auto maybe_target = attribute(AttributeNames::target);
+    if (maybe_target.has_value())
+        return maybe_target.release_value();
 
     // FIXME: 2. If element's node document contains a base element with a
     // target attribute, then return the value of the target attribute of the
     // first such base element.
 
     // 3. Return the empty string.
-    return DeprecatedString::empty();
+    return String {};
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#get-an-element's-noopener

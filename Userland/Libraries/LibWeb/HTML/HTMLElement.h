@@ -63,7 +63,7 @@ public:
 
     virtual Optional<ARIA::Role> default_role() const override;
 
-    DeprecatedString get_an_elements_target() const;
+    String get_an_elements_target() const;
     TokenizedFeature::NoOpener get_an_elements_noopener(StringView target) const;
 
 protected:

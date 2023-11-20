@@ -17,36 +17,36 @@ class HTMLHyperlinkElementUtils {
 public:
     virtual ~HTMLHyperlinkElementUtils();
 
-    DeprecatedString origin() const;
+    String origin() const;
 
-    DeprecatedString href() const;
+    String href() const;
     WebIDL::ExceptionOr<void> set_href(String);
 
-    DeprecatedString protocol() const;
+    String protocol() const;
     void set_protocol(StringView);
 
-    DeprecatedString username() const;
+    String username() const;
     void set_username(StringView);
 
-    DeprecatedString password() const;
+    String password() const;
     void set_password(StringView);
 
-    DeprecatedString host() const;
+    String host() const;
     void set_host(StringView);
 
-    DeprecatedString hostname() const;
+    String hostname() const;
     void set_hostname(StringView);
 
-    DeprecatedString port() const;
+    String port() const;
     void set_port(StringView);
 
-    DeprecatedString pathname() const;
+    String pathname() const;
     void set_pathname(StringView);
 
-    DeprecatedString search() const;
+    String search() const;
     void set_search(StringView);
 
-    DeprecatedString hash() const;
+    String hash() const;
     void set_hash(StringView);
 
 protected:
@@ -55,13 +55,13 @@ protected:
     virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(String) = 0;
     virtual bool hyperlink_element_utils_is_html_anchor_element() const = 0;
     virtual bool hyperlink_element_utils_is_connected() const = 0;
-    virtual DeprecatedString hyperlink_element_utils_get_an_elements_target() const = 0;
+    virtual String hyperlink_element_utils_get_an_elements_target() const = 0;
     virtual TokenizedFeature::NoOpener hyperlink_element_utils_get_an_elements_noopener(StringView target) const = 0;
 
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) = 0;
 
     void set_the_url();
-    void follow_the_hyperlink(Optional<DeprecatedString> hyperlink_suffix);
+    void follow_the_hyperlink(Optional<String> hyperlink_suffix);
 
 private:
     void reinitialize_url() const;
