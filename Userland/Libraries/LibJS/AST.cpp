@@ -1930,6 +1930,11 @@ FunctionNode::FunctionNode(RefPtr<Identifier const> name, DeprecatedString sourc
 
 FunctionNode::~FunctionNode() = default;
 
+bool FunctionNode::has_cached_bytecode_executable() const
+{
+    return m_bytecode_executable;
+}
+
 RefPtr<Bytecode::Executable> FunctionNode::cached_bytecode_executable() const
 {
     return m_bytecode_executable;

@@ -700,6 +700,7 @@ public:
     bool is_arrow_function() const { return m_is_arrow_function; }
     FunctionKind kind() const { return m_kind; }
 
+    [[nodiscard]] bool has_cached_bytecode_executable() const;
     [[nodiscard]] RefPtr<Bytecode::Executable> cached_bytecode_executable() const;
     void set_cached_bytecode_executable(RefPtr<Bytecode::Executable> executable) const;
 

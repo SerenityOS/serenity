@@ -1187,8 +1187,15 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             return declaration_result.release_error();
     }
 
-    if (!m_bytecode_executable)
-        m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
+    if (!m_bytecode_executable) {
+        if (m_function_node && m_function_node->has_cached_bytecode_executable()) {
+            m_bytecode_executable = m_function_node->cached_bytecode_executable();
+        } else {
+            m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
+            if (m_function_node)
+                m_function_node->set_cached_bytecode_executable(*m_bytecode_executable);
+        }
+    }
 
     if (m_kind == FunctionKind::Async) {
         if (declaration_result.is_throw_completion()) {
