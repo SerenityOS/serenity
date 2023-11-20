@@ -34,8 +34,6 @@ using f128 = long double;
 #    endif
 #endif
 
-#ifdef AK_OS_SERENITY
-
 using size_t = __SIZE_TYPE__;
 using ssize_t = AK::Detail::MakeSigned<size_t>;
 
@@ -44,6 +42,8 @@ using ptrdiff_t = __PTRDIFF_TYPE__;
 using intptr_t = __INTPTR_TYPE__;
 using uintptr_t = __UINTPTR_TYPE__;
 
+// FIXME: POSIX API includes in kernel are a giant mess, they won't work without these definitions.
+#ifdef KERNEL
 using uint8_t = u8;
 using uint16_t = u16;
 using uint32_t = u32;
@@ -55,20 +55,6 @@ using int32_t = i32;
 using int64_t = i64;
 
 using pid_t = int;
-
-#else
-#    include <stddef.h>
-#    include <stdint.h>
-#    include <sys/types.h>
-
-#    ifdef __ptrdiff_t
-using __ptrdiff_t = __PTRDIFF_TYPE__;
-#    endif
-
-#    if defined(AK_OS_WINDOWS)
-using ssize_t = AK::Detail::MakeSigned<size_t>;
-using mode_t = unsigned short;
-#    endif
 #endif
 
 using FlatPtr = AK::Detail::Conditional<sizeof(void*) == 8, u64, u32>;

@@ -14,6 +14,7 @@
 #include <AK/Stream.h>
 #include <LibCore/Forward.h>
 #include <LibIPC/Forward.h>
+#include <sys/types.h>
 
 namespace Core {
 

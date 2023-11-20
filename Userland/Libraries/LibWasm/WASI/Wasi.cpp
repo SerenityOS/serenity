@@ -16,6 +16,7 @@
 #include <LibWasm/Wasi.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <stddef.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>

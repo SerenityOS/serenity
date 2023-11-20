@@ -9,6 +9,7 @@
 #include <AK/ByteString.h>
 #include <AK/StringView.h>
 #include <dirent.h>
+#include <sys/types.h>
 
 namespace Core {
 

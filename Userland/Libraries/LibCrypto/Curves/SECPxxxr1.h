@@ -197,7 +197,7 @@ public:
 
         // z is the hash
         StorageType z = 0u;
-        for (uint8_t byte : hash) {
+        for (auto byte : hash) {
             z <<= 8;
             z |= byte;
         }

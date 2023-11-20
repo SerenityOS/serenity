@@ -281,7 +281,7 @@ void Ed25519::multiply(u8* result_low, u8* result_high, u8 const* a, u8 const* b
     u32 temp = 0;
     for (u32 i = 0; i < n; i++) {
         for (u32 j = 0; j <= i; j++) {
-            temp += (uint16_t)a[j] * b[i - j];
+            temp += a[j] * b[i - j];
         }
 
         if (result_low != NULL) {
@@ -294,7 +294,7 @@ void Ed25519::multiply(u8* result_low, u8* result_high, u8 const* a, u8 const* b
     if (result_high != NULL) {
         for (u32 i = n; i < (2 * n); i++) {
             for (u32 j = i + 1 - n; j < n; j++) {
-                temp += (uint16_t)a[j] * b[i - j];
+                temp += a[j] * b[i - j];
             }
 
             result_high[i - n] = temp & 0xFF;
