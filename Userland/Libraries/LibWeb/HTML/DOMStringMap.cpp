@@ -119,24 +119,26 @@ DeprecatedString DOMStringMap::determine_value_of_named_property(DeprecatedStrin
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
-WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(DeprecatedString const& name, JS::Value unconverted_value)
+WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String const& name, JS::Value unconverted_value)
 {
     // NOTE: Since LegacyPlatformObject does not know the type of value, we must convert it ourselves.
     //       The type of `value` is `DOMString`.
     auto value = TRY(unconverted_value.to_string(vm()));
 
-    AK::StringBuilder builder;
+    StringBuilder builder;
 
     // 3. Insert the string data- at the front of name.
     // NOTE: This is done out of order because StringBuilder doesn't have prepend.
     builder.append("data-"sv);
 
-    for (size_t character_index = 0; character_index < name.length(); ++character_index) {
-        // 1. If name contains a U+002D HYPHEN-MINUS character (-) followed by an ASCII lower alpha, then throw a "SyntaxError" DOMException.
-        auto current_character = name[character_index];
+    auto name_view = name.bytes_as_string_view();
 
-        if (current_character == '-' && character_index + 1 < name.length()) {
-            auto next_character = name[character_index + 1];
+    for (size_t character_index = 0; character_index < name_view.length(); ++character_index) {
+        // 1. If name contains a U+002D HYPHEN-MINUS character (-) followed by an ASCII lower alpha, then throw a "SyntaxError" DOMException.
+        auto current_character = name_view[character_index];
+
+        if (current_character == '-' && character_index + 1 < name_view.length()) {
+            auto next_character = name_view[character_index + 1];
             if (is_ascii_lower_alpha(next_character))
                 return WebIDL::SyntaxError::create(realm(), "Name cannot contain a '-' followed by a lowercase character."_fly_string);
         }
@@ -162,21 +164,21 @@ WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(Deprecat
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
-WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(DeprecatedString const& name, JS::Value value)
+WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(String const& name, JS::Value value)
 {
     return set_value_of_new_named_property(name, value);
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-removeitem
-WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> DOMStringMap::delete_value(DeprecatedString const& name)
+WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> DOMStringMap::delete_value(String const& name)
 {
-    AK::StringBuilder builder;
+    StringBuilder builder;
 
     // 2. Insert the string data- at the front of name.
     // NOTE: This is done out of order because StringBuilder doesn't have prepend.
     builder.append("data-"sv);
 
-    for (auto character : name) {
+    for (auto character : name.bytes_as_string_view()) {
         // 1. For each ASCII upper alpha in name, insert a U+002D HYPHEN-MINUS character (-) before the character and replace the character with the same character converted to ASCII lowercase.
         if (is_ascii_upper_alpha(character)) {
             builder.append('-');
