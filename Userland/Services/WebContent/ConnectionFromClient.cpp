@@ -451,7 +451,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     }
 
     if (request == "spoof-user-agent") {
-        Web::ResourceLoader::the().set_user_agent(argument);
+        Web::ResourceLoader::the().set_user_agent(MUST(String::from_deprecated_string(argument)));
         return;
     }
 

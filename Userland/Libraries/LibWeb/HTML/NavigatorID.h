@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 
 namespace Web::HTML {
 
@@ -17,31 +17,31 @@ public:
     // implementers are strongly urged to include as little information in this API as possible.
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-appcodename
-    DeprecatedString app_code_name() const { return "Mozilla"sv; }
+    String app_code_name() const { return "Mozilla"_string; }
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-appcodename
-    DeprecatedString app_name() const { return "Netscape"sv; }
+    String app_name() const { return "Netscape"_string; }
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-appversion
-    DeprecatedString app_version() const;
+    String app_version() const;
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-platform
-    DeprecatedString platform() const;
+    String platform() const;
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-product
-    DeprecatedString product() const { return "Gecko"sv; }
+    String product() const { return "Gecko"_string; }
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-productsub
-    DeprecatedString product_sub() const { return "20030107"sv; } // Compatibility mode "Chrome"
+    String product_sub() const { return "20030107"_string; } // Compatibility mode "Chrome"
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-useragent
-    DeprecatedString user_agent() const;
+    String user_agent() const;
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-vendor
-    DeprecatedString vendor() const { return "Google Inc."sv; } // Compatibility mode "Chrome"
+    String vendor() const { return "Google Inc."_string; } // Compatibility mode "Chrome"
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-vendorsub
-    DeprecatedString vendor_sub() const { return ""sv; }
+    String vendor_sub() const { return String {}; }
 
     // NOTE: If the navigator compatibility mode is Gecko, then the user agent must also support the following partial interface:
     //       bool taint_enabled()

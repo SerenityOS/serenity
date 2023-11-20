@@ -123,11 +123,11 @@ public:
 
     int pending_loads() const { return m_pending_loads; }
 
-    DeprecatedString const& user_agent() const { return m_user_agent; }
-    void set_user_agent(DeprecatedString const& user_agent) { m_user_agent = user_agent; }
+    String const& user_agent() const { return m_user_agent; }
+    void set_user_agent(String user_agent) { m_user_agent = move(user_agent); }
 
-    DeprecatedString const& platform() const { return m_platform; }
-    void set_platform(DeprecatedString const& platform) { m_platform = platform; }
+    String const& platform() const { return m_platform; }
+    void set_platform(String platform) { m_platform = move(platform); }
 
     void clear_cache();
     void evict_from_cache(LoadRequest const&);
@@ -142,8 +142,8 @@ private:
 
     HashTable<NonnullRefPtr<ResourceLoaderConnectorRequest>> m_active_requests;
     NonnullRefPtr<ResourceLoaderConnector> m_connector;
-    DeprecatedString m_user_agent;
-    DeprecatedString m_platform;
+    String m_user_agent;
+    String m_platform;
     Optional<Page&> m_page {};
 };
 
