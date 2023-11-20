@@ -39,15 +39,13 @@ void Inode::sync_all()
     });
 
     for (auto& inode : inodes) {
-        VERIFY(inode->is_metadata_dirty());
         (void)inode->flush_metadata();
     }
 }
 
 void Inode::sync()
 {
-    if (is_metadata_dirty())
-        (void)flush_metadata();
+    (void)flush_metadata();
     auto result = fs().flush_writes();
     if (result.is_error()) {
         // TODO: Figure out how to propagate error to a higher function.
