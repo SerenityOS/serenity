@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
+#include <AK/String.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/PixelUnits.h>
 
@@ -40,7 +40,7 @@ public:
         return m_value;
     }
 
-    DeprecatedString to_deprecated_string() const;
+    String to_string() const;
 
     bool operator==(AvailableSize const& other) const = default;
     bool operator<(AvailableSize const& other) const { return m_value < other.m_value; }
@@ -92,7 +92,7 @@ public:
     AvailableSize width;
     AvailableSize height;
 
-    DeprecatedString to_deprecated_string() const;
+    String to_string() const;
 };
 
 }
@@ -101,7 +101,7 @@ template<>
 struct AK::Formatter<Web::Layout::AvailableSize> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::Layout::AvailableSize const& available_size)
     {
-        return Formatter<StringView>::format(builder, available_size.to_deprecated_string());
+        return Formatter<StringView>::format(builder, available_size.to_string());
     }
 };
 
@@ -109,6 +109,6 @@ template<>
 struct AK::Formatter<Web::Layout::AvailableSpace> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::Layout::AvailableSpace const& available_space)
     {
-        return Formatter<StringView>::format(builder, available_space.to_deprecated_string());
+        return Formatter<StringView>::format(builder, available_space.to_string());
     }
 };
