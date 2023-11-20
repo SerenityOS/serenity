@@ -238,7 +238,7 @@ public:
     i32 unique_id() const { return m_unique_id; }
     static Node* from_unique_id(i32);
 
-    WebIDL::ExceptionOr<DeprecatedString> serialize_fragment(DOMParsing::RequireWellFormed) const;
+    WebIDL::ExceptionOr<String> serialize_fragment(DOMParsing::RequireWellFormed) const;
 
     void replace_all(JS::GCPtr<Node>);
     void string_replace_all(DeprecatedString const&);

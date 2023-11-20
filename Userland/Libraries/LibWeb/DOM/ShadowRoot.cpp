@@ -40,7 +40,7 @@ EventTarget* ShadowRoot::get_parent(Event const& event)
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-WebIDL::ExceptionOr<DeprecatedString> ShadowRoot::inner_html() const
+WebIDL::ExceptionOr<String> ShadowRoot::inner_html() const
 {
     return serialize_fragment(DOMParsing::RequireWellFormed::Yes);
 }
