@@ -11,6 +11,7 @@
 
 #include <AK/Endian.h>
 #include <AK/Types.h>
+#include <LibGfx/FourCC.h>
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/otff#data-types
 namespace OpenType {
@@ -39,7 +40,7 @@ struct [[gnu::packed]] LongDateTime {
 };
 static_assert(AssertSize<LongDateTime, 8>());
 
-using Tag = BigEndian<u32>;
+using Tag = Gfx::FourCC;
 
 using Offset16 = BigEndian<u16>;
 // FIXME: Offset24

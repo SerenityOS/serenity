@@ -48,7 +48,6 @@ u16 be_u16(u8 const*);
 u32 be_u32(u8 const*);
 i16 be_i16(u8 const*);
 float be_fword(u8 const*);
-u32 tag_from_str(char const*);
 
 u16 be_u16(u8 const* ptr)
 {
@@ -70,11 +69,6 @@ float be_fword(u8 const* ptr)
     return (float)be_i16(ptr) / (float)(1 << 14);
 }
 
-u32 tag_from_str(char const* str)
-{
-    return be_u32((u8 const*)str);
-}
-
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_resource(Core::Resource const& resource, unsigned index)
 {
     auto font = TRY(try_load_from_externally_owned_memory(resource.data(), index));
@@ -87,7 +81,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     FixedMemoryStream stream { buffer };
 
     auto tag = TRY(stream.read_value<Tag>());
-    if (tag == tag_from_str("ttcf")) {
+    if (tag == Tag("ttcf")) {
         // It's a font collection
         TRY(stream.seek(0, SeekMode::SetPosition));
         auto ttc_header_v1 = TRY(stream.read_in_place<TTCHeaderV1>());
@@ -100,10 +94,10 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         auto offset = TRY(stream.read_value<BigEndian<u32>>());
         return try_load_from_offset(buffer, offset);
     }
-    if (tag == tag_from_str("OTTO"))
+    if (tag == Tag("OTTO"))
         return Error::from_string_literal("CFF fonts not supported yet");
 
-    if (tag != 0x00010000 && tag != tag_from_str("true"))
+    if (tag.to_u32() != 0x00010000 && tag != Tag("true"))
         return Error::from_string_literal("Not a valid font");
 
     return try_load_from_offset(buffer, 0);
@@ -145,35 +139,35 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         auto buffer_here = buffer.slice(table_record.offset, table_record.length);
 
         // Get the table offsets we need.
-        if (table_record.table_tag == tag_from_str("head")) {
+        if (table_record.table_tag == Tag("head")) {
             opt_head_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("name")) {
+        } else if (table_record.table_tag == Tag("name")) {
             opt_name_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("hhea")) {
+        } else if (table_record.table_tag == Tag("hhea")) {
             opt_hhea_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("maxp")) {
+        } else if (table_record.table_tag == Tag("maxp")) {
             opt_maxp_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("hmtx")) {
+        } else if (table_record.table_tag == Tag("hmtx")) {
             opt_hmtx_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("cmap")) {
+        } else if (table_record.table_tag == Tag("cmap")) {
             opt_cmap_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("loca")) {
+        } else if (table_record.table_tag == Tag("loca")) {
             opt_loca_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("glyf")) {
+        } else if (table_record.table_tag == Tag("glyf")) {
             opt_glyf_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("OS/2")) {
+        } else if (table_record.table_tag == Tag("OS/2")) {
             opt_os2_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("kern")) {
+        } else if (table_record.table_tag == Tag("kern")) {
             opt_kern_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("fpgm")) {
+        } else if (table_record.table_tag == Tag("fpgm")) {
             opt_fpgm_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("prep")) {
+        } else if (table_record.table_tag == Tag("prep")) {
             opt_prep_slice = buffer_here;
-        } else if (table_record.table_tag == tag_from_str("CBLC")) {
+        } else if (table_record.table_tag == Tag("CBLC")) {
             cblc = TRY(CBLC::from_slice(buffer_here));
-        } else if (table_record.table_tag == tag_from_str("CBDT")) {
+        } else if (table_record.table_tag == Tag("CBDT")) {
             cbdt = TRY(CBDT::from_slice(buffer_here));
-        } else if (table_record.table_tag == tag_from_str("GPOS")) {
+        } else if (table_record.table_tag == Tag("GPOS")) {
             gpos = TRY(GPOS::from_slice(buffer_here));
         }
     }

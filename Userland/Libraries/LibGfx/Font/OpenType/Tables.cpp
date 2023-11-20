@@ -16,16 +16,6 @@
 
 namespace OpenType {
 
-static u32 be_u32(u8 const* ptr)
-{
-    return (((u32)ptr[0]) << 24) | (((u32)ptr[1]) << 16) | (((u32)ptr[2]) << 8) | ((u32)ptr[3]);
-}
-
-static u32 tag_from_str(char const* str)
-{
-    return be_u32((u8 const*)str);
-}
-
 ErrorOr<Head> Head::from_slice(ReadonlyBytes slice)
 {
     if (slice.size() < sizeof(FontHeaderTable))
@@ -576,7 +566,7 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 
     Optional<Offset16> kern_feature_offset;
     for (auto const& feature_record : m_feature_records) {
-        if (feature_record.feature_tag == tag_from_str("kern")) {
+        if (feature_record.feature_tag == Tag("kern")) {
             kern_feature_offset = feature_record.feature_offset;
             break;
         }
