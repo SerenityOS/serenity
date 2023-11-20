@@ -30,24 +30,24 @@ AvailableSize AvailableSize::make_max_content()
     return AvailableSize { Type::MaxContent, CSSPixels::max() };
 }
 
-DeprecatedString AvailableSize::to_deprecated_string() const
+String AvailableSize::to_string() const
 {
     switch (m_type) {
     case Type::Definite:
-        return DeprecatedString::formatted("definite({})", m_value);
+        return MUST(String::formatted("definite({})", m_value));
     case Type::Indefinite:
-        return "indefinite";
+        return "indefinite"_string;
     case Type::MinContent:
-        return "min-content";
+        return "min-content"_string;
     case Type::MaxContent:
-        return "max-content";
+        return "max-content"_string;
     }
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString AvailableSpace::to_deprecated_string() const
+String AvailableSpace::to_string() const
 {
-    return DeprecatedString::formatted("{} x {}", width, height);
+    return MUST(String::formatted("{} x {}", width, height));
 }
 
 AvailableSize::AvailableSize(Type type, CSSPixels value)
