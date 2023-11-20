@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Time.h>
 #include <LibIPC/Forward.h>
 
@@ -25,18 +25,18 @@ enum class Source {
 };
 
 struct Cookie {
-    DeprecatedString creation_time_to_string() const;
-    DeprecatedString last_access_time_to_string() const;
-    DeprecatedString expiry_time_to_string() const;
+    String creation_time_to_string() const;
+    String last_access_time_to_string() const;
+    String expiry_time_to_string() const;
 
-    DeprecatedString name;
-    DeprecatedString value;
+    String name;
+    String value;
     SameSite same_site;
     UnixDateTime creation_time {};
     UnixDateTime last_access_time {};
     UnixDateTime expiry_time {};
-    DeprecatedString domain {};
-    DeprecatedString path {};
+    String domain {};
+    String path {};
     bool secure { false };
     bool http_only { false };
     bool host_only { false };

@@ -51,10 +51,10 @@ namespace WebContent {
 static JsonValue serialize_cookie(Web::Cookie::Cookie const& cookie)
 {
     JsonObject serialized_cookie;
-    serialized_cookie.set("name"sv, cookie.name);
-    serialized_cookie.set("value"sv, cookie.value);
-    serialized_cookie.set("path"sv, cookie.path);
-    serialized_cookie.set("domain"sv, cookie.domain);
+    serialized_cookie.set("name"sv, cookie.name.to_deprecated_string());
+    serialized_cookie.set("value"sv, cookie.value.to_deprecated_string());
+    serialized_cookie.set("path"sv, cookie.path.to_deprecated_string());
+    serialized_cookie.set("domain"sv, cookie.domain.to_deprecated_string());
     serialized_cookie.set("secure"sv, cookie.secure);
     serialized_cookie.set("httpOnly"sv, cookie.http_only);
     serialized_cookie.set("expiry"sv, cookie.expiry_time.seconds_since_epoch());
