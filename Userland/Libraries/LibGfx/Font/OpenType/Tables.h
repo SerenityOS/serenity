@@ -14,6 +14,7 @@
 #include <AK/Error.h>
 #include <AK/FixedArray.h>
 #include <AK/Forward.h>
+#include <AK/HashMap.h>
 #include <AK/Span.h>
 #include <AK/String.h>
 #include <AK/Variant.h>
@@ -206,6 +207,41 @@ public:
 
 private:
     ReadonlyBytes m_slice;
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/post
+// post: PostScript Table
+class Post {
+public:
+    static ErrorOr<Post> from_slice(ReadonlyBytes);
+
+    Optional<u32> glyph_id_for_postscript_name(StringView) const;
+
+private:
+    struct [[gnu::packed]] Header {
+        Version16Dot16 version;
+        Fixed italic_angle;
+        FWord underline_position;
+        FWord underline_thickness;
+        Uint32 is_fixed_pitch;
+        Uint32 min_mem_type42;
+        Uint32 max_mem_type42;
+        Uint32 min_mem_type1;
+        Uint32 max_mem_type1;
+    };
+    static_assert(AssertSize<Header, 32>());
+
+    explicit Post(Header const& header, ReadonlyBytes slice)
+        : m_header(header)
+        , m_slice(slice)
+    {
+    }
+
+    void load_glyph_names() const;
+
+    Header const& m_header;
+    ReadonlyBytes m_slice;
+    HashMap<StringView, u32> mutable m_glyph_ids;
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/prep

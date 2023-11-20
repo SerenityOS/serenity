@@ -123,6 +123,7 @@ private:
         Optional<OS2> os2,
         Optional<Kern>&& kern,
         Optional<Fpgm> fpgm,
+        Optional<Post> post,
         Optional<Prep> prep,
         Optional<CBLC> cblc,
         Optional<CBDT> cbdt,
@@ -138,6 +139,7 @@ private:
         , m_os2(move(os2))
         , m_kern(move(kern))
         , m_fpgm(move(fpgm))
+        , m_post(move(post))
         , m_prep(move(prep))
         , m_cblc(move(cblc))
         , m_cbdt(move(cbdt))
@@ -159,6 +161,7 @@ private:
     Optional<OS2> m_os2;
     Optional<Kern> m_kern;
     Optional<Fpgm> m_fpgm;
+    Optional<Post> m_post;
     Optional<Prep> m_prep;
     Optional<CBLC> m_cblc;
     Optional<CBDT> m_cbdt;
