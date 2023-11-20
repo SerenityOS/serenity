@@ -22,7 +22,7 @@ static bool type_name_is_enum(StringView type_name)
 {
     return !AK::first_is_one_of(type_name,
         "angle"sv, "color"sv, "custom-ident"sv, "easing-function"sv, "flex"sv, "frequency"sv, "image"sv,
-        "integer"sv, "length"sv, "number"sv, "paint"sv, "percentage"sv, "ratio"sv, "rect"sv,
+        "integer"sv, "length"sv, "number"sv, "paint"sv, "percentage"sv, "position"sv, "ratio"sv, "rect"sv,
         "resolution"sv, "string"sv, "time"sv, "url"sv);
 }
 
@@ -638,6 +638,8 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
                     property_generator.appendln("        case ValueType::Paint:");
                 } else if (type_name == "percentage") {
                     property_generator.appendln("        case ValueType::Percentage:");
+                } else if (type_name == "position") {
+                    property_generator.appendln("        case ValueType::Position:");
                 } else if (type_name == "ratio") {
                     property_generator.appendln("        case ValueType::Ratio:");
                 } else if (type_name == "rect") {
