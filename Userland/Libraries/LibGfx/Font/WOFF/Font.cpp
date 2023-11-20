@@ -36,7 +36,7 @@ static_assert(AssertSize<Header, 44>());
 
 // https://www.w3.org/TR/WOFF/#TableDirectory
 struct [[gnu::packed]] TableDirectoryEntry {
-    BigEndian<u32> tag;           // 4-byte sfnt table identifier.
+    OpenType::Tag tag;            // 4-byte sfnt table identifier.
     BigEndian<u32> offset;        // Offset to the data, from beginning of WOFF file.
     BigEndian<u32> comp_length;   // Length of the compressed data, excluding padding.
     BigEndian<u32> orig_length;   // Length of the uncompressed table, excluding padding.

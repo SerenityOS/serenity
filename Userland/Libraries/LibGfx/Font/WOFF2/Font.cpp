@@ -125,18 +125,9 @@ enum class TransformationVersion {
 
 struct TableDirectoryEntry {
     TransformationVersion transformation_version { TransformationVersion::Version0 };
-    DeprecatedString tag;
+    OpenType::Tag tag;
     u32 original_length { 0 };
     Optional<u32> transform_length;
-
-    u32 tag_to_u32() const
-    {
-        VERIFY(tag.length() == 4);
-        return (static_cast<u8>(tag[0]) << 24)
-            | (static_cast<u8>(tag[1]) << 16)
-            | (static_cast<u8>(tag[2]) << 8)
-            | static_cast<u8>(tag[3]);
-    }
 
     bool has_transformation() const
     {
@@ -145,70 +136,70 @@ struct TableDirectoryEntry {
 };
 
 // NOTE: Any tags less than 4 characters long are padded with spaces at the end.
-static constexpr Array<StringView, 63> known_tag_names = {
-    "cmap"sv,
-    "head"sv,
-    "hhea"sv,
-    "hmtx"sv,
-    "maxp"sv,
-    "name"sv,
-    "OS/2"sv,
-    "post"sv,
-    "cvt "sv,
-    "fpgm"sv,
-    "glyf"sv,
-    "loca"sv,
-    "prep"sv,
-    "CFF "sv,
-    "VORG"sv,
-    "EBDT"sv,
-    "EBLC"sv,
-    "gasp"sv,
-    "hdmx"sv,
-    "kern"sv,
-    "LTSH"sv,
-    "PCLT"sv,
-    "VDMX"sv,
-    "vhea"sv,
-    "vmtx"sv,
-    "BASE"sv,
-    "GDEF"sv,
-    "GPOS"sv,
-    "GSUB"sv,
-    "EBSC"sv,
-    "JSTF"sv,
-    "MATH"sv,
-    "CBDT"sv,
-    "CBLC"sv,
-    "COLR"sv,
-    "CPAL"sv,
-    "SVG "sv,
-    "sbix"sv,
-    "acnt"sv,
-    "avar"sv,
-    "bdat"sv,
-    "bloc"sv,
-    "bsln"sv,
-    "cvar"sv,
-    "fdsc"sv,
-    "feat"sv,
-    "fmtx"sv,
-    "fvar"sv,
-    "gvar"sv,
-    "hsty"sv,
-    "just"sv,
-    "lcar"sv,
-    "mort"sv,
-    "morx"sv,
-    "opbd"sv,
-    "prop"sv,
-    "trak"sv,
-    "Zapf"sv,
-    "Silf"sv,
-    "Glat"sv,
-    "Gloc"sv,
-    "Feat"sv,
-    "Sill"sv,
+static constexpr Array<OpenType::Tag, 63> known_tag_names = {
+    OpenType::Tag("cmap"),
+    OpenType::Tag("head"),
+    OpenType::Tag("hhea"),
+    OpenType::Tag("hmtx"),
+    OpenType::Tag("maxp"),
+    OpenType::Tag("name"),
+    OpenType::Tag("OS/2"),
+    OpenType::Tag("post"),
+    OpenType::Tag("cvt "),
+    OpenType::Tag("fpgm"),
+    OpenType::Tag("glyf"),
+    OpenType::Tag("loca"),
+    OpenType::Tag("prep"),
+    OpenType::Tag("CFF "),
+    OpenType::Tag("VORG"),
+    OpenType::Tag("EBDT"),
+    OpenType::Tag("EBLC"),
+    OpenType::Tag("gasp"),
+    OpenType::Tag("hdmx"),
+    OpenType::Tag("kern"),
+    OpenType::Tag("LTSH"),
+    OpenType::Tag("PCLT"),
+    OpenType::Tag("VDMX"),
+    OpenType::Tag("vhea"),
+    OpenType::Tag("vmtx"),
+    OpenType::Tag("BASE"),
+    OpenType::Tag("GDEF"),
+    OpenType::Tag("GPOS"),
+    OpenType::Tag("GSUB"),
+    OpenType::Tag("EBSC"),
+    OpenType::Tag("JSTF"),
+    OpenType::Tag("MATH"),
+    OpenType::Tag("CBDT"),
+    OpenType::Tag("CBLC"),
+    OpenType::Tag("COLR"),
+    OpenType::Tag("CPAL"),
+    OpenType::Tag("SVG "),
+    OpenType::Tag("sbix"),
+    OpenType::Tag("acnt"),
+    OpenType::Tag("avar"),
+    OpenType::Tag("bdat"),
+    OpenType::Tag("bloc"),
+    OpenType::Tag("bsln"),
+    OpenType::Tag("cvar"),
+    OpenType::Tag("fdsc"),
+    OpenType::Tag("feat"),
+    OpenType::Tag("fmtx"),
+    OpenType::Tag("fvar"),
+    OpenType::Tag("gvar"),
+    OpenType::Tag("hsty"),
+    OpenType::Tag("just"),
+    OpenType::Tag("lcar"),
+    OpenType::Tag("mort"),
+    OpenType::Tag("morx"),
+    OpenType::Tag("opbd"),
+    OpenType::Tag("prop"),
+    OpenType::Tag("trak"),
+    OpenType::Tag("Zapf"),
+    OpenType::Tag("Silf"),
+    OpenType::Tag("Glat"),
+    OpenType::Tag("Gloc"),
+    OpenType::Tag("Feat"),
+    OpenType::Tag("Sill"),
 };
 
 struct CoordinateTripletEncoding {
@@ -916,16 +907,13 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
         if (tag_number != 0x3F) {
             table_directory_entry.tag = known_tag_names[tag_number];
         } else {
-            u8 tag_buffer[5] {};
-            TRY(stream.read_until_filled(Bytes { tag_buffer, 4 }));
-            table_directory_entry.tag = StringView { tag_buffer, 4 };
+            table_directory_entry.tag = TRY(stream.read_value<OpenType::Tag>());
         }
 
-        VERIFY(table_directory_entry.tag.length() == 4);
         table_directory_entry.original_length = TRY(read_uint_base_128(stream));
 
         bool needs_to_read_transform_length = false;
-        if (table_directory_entry.tag.is_one_of("glyf"sv, "loca"sv))
+        if (table_directory_entry.tag == OpenType::Tag("glyf") || table_directory_entry.tag == OpenType::Tag("loca"))
             needs_to_read_transform_length = table_directory_entry.transformation_version == TransformationVersion::Version0;
         else
             needs_to_read_transform_length = table_directory_entry.transformation_version != TransformationVersion::Version0;
@@ -944,11 +932,11 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
     // FIXME: Read in collection header and entries.
 
     auto glyf_table = table_entries.find_if([](TableDirectoryEntry const& entry) {
-        return entry.tag == "glyf"sv;
+        return entry.tag == OpenType::Tag("glyf");
     });
 
     auto loca_table = table_entries.find_if([](TableDirectoryEntry const& entry) {
-        return entry.tag == "loca"sv;
+        return entry.tag == OpenType::Tag("loca");
     });
 
     // "In other words, both glyf and loca tables must either be present in their transformed format or with null transform applied to both tables."
@@ -991,17 +979,15 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
         size_t table_directory_offset = SFNT_HEADER_SIZE + table_entry_index * SFNT_TABLE_SIZE;
 
         if (table_entry.has_transformation()) {
-            if (table_entry.tag == "glyf"sv) {
+            if (table_entry.tag == OpenType::Tag("glyf")) {
                 auto table_stream = FixedMemoryStream(table_bytes);
                 glyf_and_loca_buffer = TRY(create_glyf_and_loca_tables_from_transformed_glyf_table(table_stream));
-
-                constexpr u32 GLYF_TAG = 0x676C7966;
 
                 if (font_buffer.size() < (font_buffer_offset + glyf_and_loca_buffer->glyf_table.size()))
                     TRY(font_buffer.try_resize(font_buffer_offset + glyf_and_loca_buffer->glyf_table.size()));
 
                 OpenType::TableRecord table_record {
-                    .table_tag = GLYF_TAG,
+                    .table_tag = table_entry.tag,
                     .checksum = 0, // FIXME: WOFF2 does not give us the original checksum.
                     .offset = font_buffer_offset,
                     .length = glyf_and_loca_buffer->glyf_table.size(),
@@ -1010,15 +996,14 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
 
                 font_buffer.overwrite(font_buffer_offset, glyf_and_loca_buffer->glyf_table.data(), glyf_and_loca_buffer->glyf_table.size());
                 font_buffer_offset += glyf_and_loca_buffer->glyf_table.size();
-            } else if (table_entry.tag == "loca"sv) {
+            } else if (table_entry.tag == OpenType::Tag("loca")) {
                 // FIXME: Handle loca table coming before glyf table in input?
                 VERIFY(glyf_and_loca_buffer.has_value());
                 if (font_buffer.size() < (font_buffer_offset + glyf_and_loca_buffer->loca_table.size()))
                     TRY(font_buffer.try_resize(font_buffer_offset + glyf_and_loca_buffer->loca_table.size()));
-                constexpr u32 LOCA_TAG = 0x6C6F6361;
 
                 OpenType::TableRecord table_record {
-                    .table_tag = LOCA_TAG,
+                    .table_tag = table_entry.tag,
                     .checksum = 0, // FIXME: WOFF2 does not give us the original checksum.
                     .offset = font_buffer_offset,
                     .length = glyf_and_loca_buffer->loca_table.size(),
@@ -1027,14 +1012,14 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Seekabl
 
                 font_buffer.overwrite(font_buffer_offset, glyf_and_loca_buffer->loca_table.data(), glyf_and_loca_buffer->loca_table.size());
                 font_buffer_offset += glyf_and_loca_buffer->loca_table.size();
-            } else if (table_entry.tag == "hmtx"sv) {
+            } else if (table_entry.tag == OpenType::Tag("hmtx")) {
                 return Error::from_string_literal("Decoding transformed hmtx table not yet supported");
             } else {
                 return Error::from_string_literal("Unknown transformation");
             }
         } else {
             OpenType::TableRecord table_record {
-                .table_tag = table_entry.tag_to_u32(),
+                .table_tag = table_entry.tag,
                 .checksum = 0, // FIXME: WOFF2 does not give us the original checksum.
                 .offset = font_buffer_offset,
                 .length = length_to_read,
