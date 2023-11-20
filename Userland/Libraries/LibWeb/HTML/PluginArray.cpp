@@ -34,7 +34,7 @@ void PluginArray::refresh() const
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewing-support:support-named-properties
-Vector<DeprecatedString> PluginArray::supported_property_names() const
+Vector<String> PluginArray::supported_property_names() const
 {
     // The PluginArray interface supports named properties. If the user agent's PDF viewer supported is true, then they are the PDF viewer plugin names. Otherwise, they are the empty list.
     auto const& window = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
@@ -43,12 +43,12 @@ Vector<DeprecatedString> PluginArray::supported_property_names() const
         return {};
 
     // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-plugin-names
-    static Vector<DeprecatedString> plugin_names = {
-        "PDF Viewer"sv,
-        "Chrome PDF Viewer"sv,
-        "Chromium PDF Viewer"sv,
-        "Microsoft Edge PDF Viewer"sv,
-        "WebKit built-in PDF"sv,
+    static Vector<String> const plugin_names = {
+        "PDF Viewer"_string,
+        "Chrome PDF Viewer"_string,
+        "Chromium PDF Viewer"_string,
+        "Microsoft Edge PDF Viewer"_string,
+        "WebKit built-in PDF"_string,
     };
 
     return plugin_names;

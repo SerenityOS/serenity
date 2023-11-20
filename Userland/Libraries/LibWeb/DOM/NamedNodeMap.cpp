@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::DOM {
@@ -48,16 +49,16 @@ bool NamedNodeMap::is_supported_property_index(u32 index) const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-names%E2%91%A0
-Vector<DeprecatedString> NamedNodeMap::supported_property_names() const
+Vector<String> NamedNodeMap::supported_property_names() const
 {
     // 1. Let names be the qualified names of the attributes in this NamedNodeMap object’s attribute list, with duplicates omitted, in order.
-    Vector<DeprecatedString> names;
+    Vector<String> names;
     names.ensure_capacity(m_attributes.size());
 
     for (auto const& attribute : m_attributes) {
-        auto const attribute_name = attribute->name().to_deprecated_fly_string();
+        auto const attribute_name = attribute->name();
         if (!names.contains_slow(attribute_name))
-            names.append(attribute_name);
+            names.append(attribute_name.to_string());
     }
 
     // 2. If this NamedNodeMap object’s element is in the HTML namespace and its node document is an HTML document, then for each name in names:
@@ -65,7 +66,7 @@ Vector<DeprecatedString> NamedNodeMap::supported_property_names() const
     if (associated_element().namespace_uri() == Namespace::HTML) {
         // 1. Let lowercaseName be name, in ASCII lowercase.
         // 2. If lowercaseName is not equal to name, remove name from names.
-        names.remove_all_matching([](auto const& name) { return name != name.to_lowercase(); });
+        names.remove_all_matching([](auto const& name) { return name != MUST(Infra::to_ascii_lowercase(name)); });
     }
 
     // 3. Return names.

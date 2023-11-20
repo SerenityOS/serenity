@@ -99,29 +99,28 @@ Element* HTMLCollection::named_item(FlyString const& name_) const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-names
-Vector<DeprecatedString> HTMLCollection::supported_property_names() const
+Vector<String> HTMLCollection::supported_property_names() const
 {
     // 1. Let result be an empty list.
-    Vector<DeprecatedString> result;
+    Vector<String> result;
 
     // 2. For each element represented by the collection, in tree order:
     auto elements = collect_matching_elements();
 
     for (auto& element : elements) {
         // 1. If element has an ID which is not in result, append element’s ID to result.
-        if (element->has_attribute(HTML::AttributeNames::id)) {
-            auto id = element->deprecated_attribute(HTML::AttributeNames::id);
-
-            if (!result.contains_slow(id))
-                result.append(id);
+        if (auto maybe_id = element->attribute(HTML::AttributeNames::id); maybe_id.has_value()) {
+            if (!result.contains_slow(maybe_id.value()))
+                result.append(maybe_id.release_value());
         }
 
         // 2. If element is in the HTML namespace and has a name attribute whose value is neither the empty string nor is in result, append element’s name attribute value to result.
-        if (element->namespace_uri() == Namespace::HTML && element->has_attribute(HTML::AttributeNames::name)) {
-            auto name = element->deprecated_attribute(HTML::AttributeNames::name);
-
-            if (!name.is_empty() && !result.contains_slow(name))
-                result.append(name);
+        if (element->namespace_uri() == Namespace::HTML) {
+            if (auto maybe_name = element->attribute(HTML::AttributeNames::name); maybe_name.has_value()) {
+                auto name = maybe_name.release_value();
+                if (!name.is_empty() && !result.contains_slow(name))
+                    result.append(move(name));
+            }
         }
     }
 

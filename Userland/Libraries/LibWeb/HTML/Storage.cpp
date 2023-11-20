@@ -149,13 +149,13 @@ void Storage::broadcast(StringView key, StringView old_value, StringView new_val
     // FIXME: Implement.
 }
 
-Vector<DeprecatedString> Storage::supported_property_names() const
+Vector<String> Storage::supported_property_names() const
 {
     // The supported property names on a Storage object storage are the result of running get the keys on storage's map.
-    Vector<DeprecatedString> names;
+    Vector<String> names;
     names.ensure_capacity(m_map.size());
     for (auto const& key : m_map.keys())
-        names.unchecked_append(key.to_deprecated_string());
+        names.unchecked_append(key);
     return names;
 }
 
