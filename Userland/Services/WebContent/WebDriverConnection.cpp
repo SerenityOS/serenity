@@ -1422,11 +1422,11 @@ Messages::WebDriverClient::GetSourceResponse WebDriverConnection::get_source()
 
     // 3. Let source be the result of invoking the fragment serializing algorithm on a fictional node whose only child is the document element providing true for the require well-formed flag. If this causes an exception to be thrown, let source be null.
     if (auto result = document->serialize_fragment(Web::DOMParsing::RequireWellFormed::Yes); !result.is_error())
-        source = result.release_value();
+        source = result.release_value().to_deprecated_string();
 
     // 4. Let source be the result of serializing to string the current browsing context active document, if source is null.
     if (!source.has_value())
-        source = MUST(document->serialize_fragment(Web::DOMParsing::RequireWellFormed::No));
+        source = MUST(document->serialize_fragment(Web::DOMParsing::RequireWellFormed::No)).to_deprecated_string();
 
     // 5. Return success with data source.
     return source.release_value();

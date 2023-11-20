@@ -1330,14 +1330,14 @@ void Node::string_replace_all(DeprecatedString const& string)
 }
 
 // https://w3c.github.io/DOM-Parsing/#dfn-fragment-serializing-algorithm
-WebIDL::ExceptionOr<DeprecatedString> Node::serialize_fragment(DOMParsing::RequireWellFormed require_well_formed) const
+WebIDL::ExceptionOr<String> Node::serialize_fragment(DOMParsing::RequireWellFormed require_well_formed) const
 {
     // 1. Let context document be the value of node's node document.
     auto const& context_document = document();
 
     // 2. If context document is an HTML document, return an HTML serialization of node.
     if (context_document.is_html_document())
-        return HTML::HTMLParser::serialize_html_fragment(*this).to_deprecated_string();
+        return HTML::HTMLParser::serialize_html_fragment(*this);
 
     // 3. Otherwise, context document is an XML document; return an XML serialization of node passing the flag require well-formed.
     return DOMParsing::serialize_node_to_xml_string(*this, require_well_formed);

@@ -721,8 +721,7 @@ WebIDL::ExceptionOr<void> Element::set_inner_html(StringView markup)
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
 WebIDL::ExceptionOr<String> Element::inner_html() const
 {
-    auto inner_html = TRY(serialize_fragment(DOMParsing::RequireWellFormed::Yes));
-    return MUST(String::from_deprecated_string(inner_html));
+    return serialize_fragment(DOMParsing::RequireWellFormed::Yes);
 }
 
 bool Element::is_focused() const
