@@ -181,11 +181,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
     // 18. Let target be the submitter element's formtarget attribute value, if the element is a submit button and has
     //     such an attribute. Otherwise, let it be the result of getting an element's target given submitter's form
     //     owner.
-    DeprecatedString target;
-    if (submitter->has_attribute(AttributeNames::formtarget))
-        target = submitter->deprecated_attribute(AttributeNames::formtarget);
-    else
-        target = get_an_elements_target();
+    auto target = submitter->attribute(AttributeNames::formtarget).value_or(get_an_elements_target());
 
     // 19. Let noopener be the result of getting an element's noopener with form and target.
     auto no_opener = get_an_elements_noopener(target);

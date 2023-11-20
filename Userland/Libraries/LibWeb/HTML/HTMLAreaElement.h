@@ -40,7 +40,7 @@ private:
     {
         queue_an_element_task(source, move(steps));
     }
-    virtual DeprecatedString hyperlink_element_utils_get_an_elements_target() const override
+    virtual String hyperlink_element_utils_get_an_elements_target() const override
     {
         return get_an_elements_target();
     }

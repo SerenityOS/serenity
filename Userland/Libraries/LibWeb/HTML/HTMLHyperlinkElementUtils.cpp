@@ -40,31 +40,31 @@ void HTMLHyperlinkElementUtils::set_the_url()
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-origin
-DeprecatedString HTMLHyperlinkElementUtils::origin() const
+String HTMLHyperlinkElementUtils::origin() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
 
     // 2. If this element's url is null, return the empty string.
     if (!m_url.has_value())
-        return DeprecatedString::empty();
+        return String {};
 
     // 3. Return the serialization of this element's url's origin.
-    return m_url->serialize_origin();
+    return MUST(String::from_deprecated_string(m_url->serialize_origin()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-protocol
-DeprecatedString HTMLHyperlinkElementUtils::protocol() const
+String HTMLHyperlinkElementUtils::protocol() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
 
     // 2. If this element's url is null, return ":".
     if (!m_url.has_value())
-        return ":"sv;
+        return ":"_string;
 
     // 3. Return this element's url's scheme, followed by ":".
-    return DeprecatedString::formatted("{}:", m_url->scheme());
+    return MUST(String::formatted("{}:", m_url->scheme()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-protocol
@@ -78,7 +78,7 @@ void HTMLHyperlinkElementUtils::set_protocol(StringView protocol)
         return;
 
     // 3. Basic URL parse the given value, followed by ":", with this element's url as url and scheme start state as state override.
-    auto result_url = URLParser::basic_parse(DeprecatedString::formatted("{}:", protocol), {}, m_url, URLParser::State::SchemeStart);
+    auto result_url = URLParser::basic_parse(MUST(String::formatted("{}:", protocol)), {}, m_url, URLParser::State::SchemeStart);
     if (result_url.is_valid())
         m_url = move(result_url);
 
@@ -87,17 +87,17 @@ void HTMLHyperlinkElementUtils::set_protocol(StringView protocol)
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-username
-DeprecatedString HTMLHyperlinkElementUtils::username() const
+String HTMLHyperlinkElementUtils::username() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
 
     // 2. If this element's url is null, return the empty string.
     if (!m_url.has_value())
-        return DeprecatedString::empty();
+        return String {};
 
     // 3. Return this element's url's username.
-    return m_url->username().release_value().to_deprecated_string();
+    return m_url->username().release_value();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-username
@@ -121,7 +121,7 @@ void HTMLHyperlinkElementUtils::set_username(StringView username)
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-password
-DeprecatedString HTMLHyperlinkElementUtils::password() const
+String HTMLHyperlinkElementUtils::password() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -131,10 +131,10 @@ DeprecatedString HTMLHyperlinkElementUtils::password() const
 
     // 3. If url is null, then return the empty string.
     if (!url.has_value())
-        return DeprecatedString::empty();
+        return String {};
 
     // 4. Return url's password.
-    return url->password().release_value().to_deprecated_string();
+    return url->password().release_value();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-password
@@ -158,24 +158,24 @@ void HTMLHyperlinkElementUtils::set_password(StringView password)
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-host
-DeprecatedString HTMLHyperlinkElementUtils::host() const
+String HTMLHyperlinkElementUtils::host() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
 
     // 2. Let url be this element's url.
-    auto& url = m_url;
+    auto const& url = m_url;
 
     // 3. If url or url's host is null, return the empty string.
     if (!url.has_value() || url->host().has<Empty>())
-        return DeprecatedString::empty();
+        return String {};
 
     // 4. If url's port is null, return url's host, serialized.
     if (!url->port().has_value())
-        return url->serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        return MUST(url->serialized_host());
 
     // 5. Return url's host, serialized, followed by ":" and url's port, serialized.
-    return DeprecatedString::formatted("{}:{}", url->serialized_host().release_value_but_fixme_should_propagate_errors(), url->port().value());
+    return MUST(String::formatted("{}:{}", MUST(url->serialized_host()), url->port().value()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-host
@@ -200,7 +200,7 @@ void HTMLHyperlinkElementUtils::set_host(StringView host)
     update_href();
 }
 
-DeprecatedString HTMLHyperlinkElementUtils::hostname() const
+String HTMLHyperlinkElementUtils::hostname() const
 {
     // 1. Reinitialize url.
     //
@@ -209,10 +209,10 @@ DeprecatedString HTMLHyperlinkElementUtils::hostname() const
 
     // 3. If url or url's host is null, return the empty string.
     if (url.host().has<Empty>())
-        return DeprecatedString::empty();
+        return String {};
 
     // 4. Return url's host, serialized.
-    return url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return MUST(url.serialized_host());
 }
 
 void HTMLHyperlinkElementUtils::set_hostname(StringView hostname)
@@ -237,7 +237,7 @@ void HTMLHyperlinkElementUtils::set_hostname(StringView hostname)
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-port
-DeprecatedString HTMLHyperlinkElementUtils::port() const
+String HTMLHyperlinkElementUtils::port() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -247,10 +247,10 @@ DeprecatedString HTMLHyperlinkElementUtils::port() const
 
     // 3. If url or url's port is null, return the empty string.
     if (!url.has_value() || !url->port().has_value())
-        return DeprecatedString::empty();
+        return String {};
 
     // 4. Return url's port, serialized.
-    return DeprecatedString::number(url->port().value());
+    return MUST(String::number(url->port().value()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-port
@@ -280,7 +280,7 @@ void HTMLHyperlinkElementUtils::set_port(StringView port)
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-pathname
-DeprecatedString HTMLHyperlinkElementUtils::pathname() const
+String HTMLHyperlinkElementUtils::pathname() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -289,12 +289,12 @@ DeprecatedString HTMLHyperlinkElementUtils::pathname() const
 
     // 3. If url is null, return the empty string.
     if (!m_url.has_value())
-        return DeprecatedString::empty();
+        return String {};
 
     // 4. If url's cannot-be-a-base-URL is true, then return url's path[0].
     // 5. If url's path is empty, then return the empty string.
     // 6. Return "/", followed by the strings in url's path (including empty strings), separated from each other by "/".
-    return m_url->serialize_path();
+    return MUST(String::from_deprecated_string(m_url->serialize_path()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-pathname
@@ -322,7 +322,7 @@ void HTMLHyperlinkElementUtils::set_pathname(StringView pathname)
     update_href();
 }
 
-DeprecatedString HTMLHyperlinkElementUtils::search() const
+String HTMLHyperlinkElementUtils::search() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -331,10 +331,10 @@ DeprecatedString HTMLHyperlinkElementUtils::search() const
 
     // 3. If url is null, or url's query is either null or the empty string, return the empty string.
     if (!m_url.has_value() || !m_url->query().has_value() || m_url->query()->is_empty())
-        return DeprecatedString::empty();
+        return String {};
 
     // 4. Return "?", followed by url's query.
-    return DeprecatedString::formatted("?{}", m_url->query());
+    return MUST(String::formatted("?{}", m_url->query()));
 }
 
 void HTMLHyperlinkElementUtils::set_search(StringView search)
@@ -370,7 +370,7 @@ void HTMLHyperlinkElementUtils::set_search(StringView search)
     update_href();
 }
 
-DeprecatedString HTMLHyperlinkElementUtils::hash() const
+String HTMLHyperlinkElementUtils::hash() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -379,10 +379,10 @@ DeprecatedString HTMLHyperlinkElementUtils::hash() const
 
     // 3. If url is null, or url's fragment is either null or the empty string, return the empty string.
     if (!m_url.has_value() || !m_url->fragment().has_value() || m_url->fragment()->is_empty())
-        return DeprecatedString::empty();
+        return String {};
 
     // 4. Return "#", followed by url's fragment.
-    return DeprecatedString::formatted("#{}", *m_url->fragment());
+    return MUST(String::formatted("#{}", *m_url->fragment()));
 }
 
 void HTMLHyperlinkElementUtils::set_hash(StringView hash)
@@ -419,25 +419,25 @@ void HTMLHyperlinkElementUtils::set_hash(StringView hash)
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-href
-DeprecatedString HTMLHyperlinkElementUtils::href() const
+String HTMLHyperlinkElementUtils::href() const
 {
     // 1. Reinitialize url.
     reinitialize_url();
 
     // 2. Let url be this element's url.
-    auto& url = m_url;
+    auto const& url = m_url;
 
     // 3. If url is null and this element has no href content attribute, return the empty string.
     auto href_content_attribute = hyperlink_element_utils_href();
     if (!url.has_value() && !href_content_attribute.has_value())
-        return DeprecatedString::empty();
+        return String {};
 
     // 4. Otherwise, if url is null, return this element's href content attribute's value.
     if (!url->is_valid())
-        return href_content_attribute->to_deprecated_string();
+        return href_content_attribute.release_value();
 
     // 5. Return url, serialized.
-    return url->serialize();
+    return MUST(String::from_deprecated_string(url->serialize()));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-href
@@ -470,7 +470,7 @@ bool HTMLHyperlinkElementUtils::cannot_navigate() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#following-hyperlinks-2
-void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> hyperlink_suffix)
+void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_suffix)
 {
     // 1. If subject cannot navigate, then return.
     if (cannot_navigate())
@@ -480,7 +480,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
     [[maybe_unused]] auto replace = false;
 
     // 3. Let targetAttributeValue be the empty string.
-    DeprecatedString target_attribute_value;
+    String target_attribute_value;
 
     // 4. If subject is an a or area element, then set targetAttributeValue to the result of getting an element's target given subject.
     target_attribute_value = hyperlink_element_utils_get_an_elements_target();
