@@ -77,6 +77,13 @@ public:
     void fill_rect_with_linear_gradient(Gfx::IntRect const&, ReadonlySpan<Gfx::ColorStop>, float angle, Optional<float> repeat_length = {});
     void fill_rect_with_linear_gradient(Gfx::FloatRect const&, ReadonlySpan<Gfx::ColorStop>, float angle, Optional<float> repeat_length = {});
 
+    struct CornerRadius {
+        float horizontal_radius;
+        float vertical_radius;
+    };
+    void fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius);
+    void fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius);
+
 private:
     Context& m_context;
 
@@ -92,6 +99,7 @@ private:
     Vector<State, 1> m_state_stack;
 
     Program m_rectangle_program;
+    Program m_rounded_rectangle_program;
     Program m_blit_program;
     Program m_linear_gradient_program;
 

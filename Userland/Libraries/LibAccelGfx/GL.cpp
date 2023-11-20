@@ -137,6 +137,12 @@ void delete_texture(Texture const& texture)
     verify_no_error();
 }
 
+void set_uniform(Uniform const& uniform, float value1, float value2)
+{
+    glUniform2f(uniform.id, value1, value2);
+    verify_no_error();
+}
+
 void set_uniform(Uniform const& uniform, float value1, float value2, float value3, float value4)
 {
     glUniform4f(uniform.id, value1, value2, value3, value4);

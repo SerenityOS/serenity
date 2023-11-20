@@ -111,9 +111,14 @@ CommandResult PaintingCommandExecutorGPU::paint_text_shadow(int, Gfx::IntRect co
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::fill_rect_with_rounded_corners(Gfx::IntRect const&, Color const&, Gfx::AntiAliasingPainter::CornerRadius const&, Gfx::AntiAliasingPainter::CornerRadius const&, Gfx::AntiAliasingPainter::CornerRadius const&, Gfx::AntiAliasingPainter::CornerRadius const&, Optional<Gfx::FloatPoint> const&)
+CommandResult PaintingCommandExecutorGPU::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, Gfx::AntiAliasingPainter::CornerRadius const& top_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& top_right_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_left_radius, Gfx::AntiAliasingPainter::CornerRadius const& bottom_right_radius, Optional<Gfx::FloatPoint> const&)
 {
-    // FIXME
+    painter().fill_rect_with_rounded_corners(
+        rect, color,
+        { static_cast<float>(top_left_radius.horizontal_radius), static_cast<float>(top_left_radius.vertical_radius) },
+        { static_cast<float>(top_right_radius.horizontal_radius), static_cast<float>(top_right_radius.vertical_radius) },
+        { static_cast<float>(bottom_left_radius.horizontal_radius), static_cast<float>(bottom_left_radius.vertical_radius) },
+        { static_cast<float>(bottom_right_radius.horizontal_radius), static_cast<float>(bottom_right_radius.vertical_radius) });
     return CommandResult::Continue;
 }
 
