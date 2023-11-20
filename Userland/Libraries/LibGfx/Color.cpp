@@ -18,14 +18,24 @@
 
 namespace Gfx {
 
+String Color::to_string() const
+{
+    return MUST(String::formatted("#{:02x}{:02x}{:02x}{:02x}", red(), green(), blue(), alpha()));
+}
+
+String Color::to_string_without_alpha() const
+{
+    return MUST(String::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue()));
+}
+
 DeprecatedString Color::to_deprecated_string() const
 {
-    return DeprecatedString::formatted("#{:02x}{:02x}{:02x}{:02x}", red(), green(), blue(), alpha());
+    return to_string().to_deprecated_string();
 }
 
 DeprecatedString Color::to_deprecated_string_without_alpha() const
 {
-    return DeprecatedString::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
+    return to_string_without_alpha().to_deprecated_string();
 }
 
 static Optional<Color> parse_rgb_color(StringView string)
