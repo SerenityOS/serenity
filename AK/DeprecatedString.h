@@ -303,6 +303,9 @@ public:
         }());
     }
 
+    [[nodiscard]] unsigned start_of_word(unsigned index) const;
+    [[nodiscard]] unsigned end_of_word(unsigned index) const;
+
 private:
     NonnullRefPtr<StringImpl const> m_impl;
 };

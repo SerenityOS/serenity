@@ -58,6 +58,7 @@ private:
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
 
     bool m_in_mouse_selection { false };
+    bool m_in_mouse_word_selection { false };
 
     WeakPtr<Layout::Node> m_mouse_event_tracking_layout_node;
 

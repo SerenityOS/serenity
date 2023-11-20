@@ -322,8 +322,10 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
     }
 
 after_node_use:
-    if (button == GUI::MouseButton::Primary)
+    if (button == GUI::MouseButton::Primary) {
         m_in_mouse_selection = false;
+        m_in_mouse_word_selection = false;
+    }
     return handled_event;
 }
 
@@ -510,16 +512,42 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
             if (!paint_root() || paint_root() != node->document().paintable_box())
                 return true;
         }
-        if (m_in_mouse_selection) {
+        if (m_in_mouse_selection || m_in_mouse_word_selection) {
             auto hit = paint_root()->hit_test(position, Painting::HitTestType::TextCursor);
             if (start_index.has_value() && hit.has_value() && hit->dom_node()) {
                 m_browsing_context->set_cursor_position(DOM::Position::create(realm, *hit->dom_node(), *start_index));
-                if (auto selection = document.get_selection()) {
-                    auto anchor_node = selection->anchor_node();
-                    if (anchor_node)
-                        (void)selection->set_base_and_extent(*anchor_node, selection->anchor_offset(), *hit->paintable->dom_node(), hit->index_in_node);
-                    else
-                        (void)selection->set_base_and_extent(*hit->paintable->dom_node(), hit->index_in_node, *hit->paintable->dom_node(), hit->index_in_node);
+                if (JS::GCPtr<Selection::Selection> selection = document.get_selection()) {
+                    JS::GCPtr<DOM::Node> anchor_dom_node = selection->anchor_node();
+                    unsigned anchor_offset = selection->anchor_offset();
+
+                    JS::GCPtr<DOM::Node> focus_dom_node = hit->paintable->dom_node();
+                    unsigned focus_offset = hit->index_in_node;
+
+                    if (m_in_mouse_word_selection && &anchor_dom_node->root() == &focus_dom_node->root()) {
+                        Layout::Node const& anchor_layout_node = *anchor_dom_node->layout_node();
+                        Layout::Node const& focus_layout_node = hit->paintable->layout_node();
+                        if (!anchor_layout_node.is_text_node() || !focus_layout_node.is_text_node()) {
+                            anchor_dom_node = nullptr;
+                        } else {
+                            AK::DeprecatedString const& anchor_text = verify_cast<Layout::TextNode>(anchor_layout_node).text_for_rendering();
+                            AK::DeprecatedString const& focus_text = verify_cast<Layout::TextNode>(focus_layout_node).text_for_rendering();
+
+                            DOM::RelativeBoundaryPointPosition position = position_of_boundary_point_relative_to_other_boundary_point(*anchor_dom_node, anchor_offset, *focus_dom_node, focus_offset);
+
+                            if (position == DOM::RelativeBoundaryPointPosition::Before) {
+                                anchor_offset = anchor_text.start_of_word(anchor_offset);
+                                focus_offset = focus_text.end_of_word(focus_offset);
+                            } else if (position == DOM::RelativeBoundaryPointPosition::After) {
+                                anchor_offset = anchor_text.end_of_word(anchor_offset);
+                                focus_offset = focus_text.start_of_word(focus_offset);
+                            } else {
+                                anchor_dom_node = nullptr;
+                            }
+                        }
+                    }
+
+                    if (anchor_dom_node)
+                        (void)selection->set_base_and_extent(*anchor_dom_node, anchor_offset, *focus_dom_node, focus_offset);
                 }
                 document.navigable()->set_needs_display();
             }
@@ -613,31 +641,15 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint scre
             auto& hit_dom_node = verify_cast<DOM::Text>(*hit_paintable->dom_node());
             auto const& text_for_rendering = verify_cast<Layout::TextNode>(hit_layout_node).text_for_rendering();
 
-            int first_word_break_before = [&] {
-                // Start from one before the index position to prevent selecting only spaces between words, caused by the addition below.
-                // This also helps us dealing with cases where index is equal to the string length.
-                for (int i = result->index_in_node - 1; i >= 0; --i) {
-                    if (is_ascii_space(text_for_rendering[i])) {
-                        // Don't include the space in the selection
-                        return i + 1;
-                    }
-                }
-                return 0;
-            }();
-
-            int first_word_break_after = [&] {
-                for (size_t i = result->index_in_node; i < text_for_rendering.length(); ++i) {
-                    if (is_ascii_space(text_for_rendering[i]))
-                        return i;
-                }
-                return text_for_rendering.length();
-            }();
+            unsigned anchor_offset = text_for_rendering.start_of_word(result->index_in_node);
+            unsigned focus_offset = text_for_rendering.end_of_word(result->index_in_node);
 
             auto& realm = node->document().realm();
-            m_browsing_context->set_cursor_position(DOM::Position::create(realm, hit_dom_node, first_word_break_after));
+            m_browsing_context->set_cursor_position(DOM::Position::create(realm, hit_dom_node, focus_offset));
             if (auto selection = node->document().get_selection()) {
-                (void)selection->set_base_and_extent(hit_dom_node, first_word_break_before, hit_dom_node, first_word_break_after);
+                (void)selection->set_base_and_extent(hit_dom_node, anchor_offset, hit_dom_node, focus_offset);
             }
+            m_in_mouse_word_selection = true;
         }
     }
 

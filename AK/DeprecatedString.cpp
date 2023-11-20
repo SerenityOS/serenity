@@ -5,6 +5,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
@@ -353,6 +354,28 @@ DeprecatedString DeprecatedString::reverse() const
         reversed_string.append(characters()[i]);
     }
     return reversed_string.to_deprecated_string();
+}
+
+unsigned DeprecatedString::start_of_word(unsigned index) const
+{
+    // Start from one before the index position to prevent selecting only spaces between words, caused by the addition below.
+    // This also helps us dealing with cases where index is equal to the string length.
+    for (int i = index - 1; i >= 0; --i) {
+        if (AK::is_ascii_space((*this)[i])) {
+            // Don't include the space in the selection
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+unsigned DeprecatedString::end_of_word(unsigned index) const
+{
+    for (size_t i = index; i < this->length(); ++i) {
+        if (AK::is_ascii_space((*this)[i]))
+            return i;
+    }
+    return this->length();
 }
 
 DeprecatedString escape_html_entities(StringView html)
