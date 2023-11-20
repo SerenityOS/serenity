@@ -124,12 +124,11 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
             //  1. If the field element has a value attribute specified, then let value be the value of that attribute; otherwise, let value be the string "on".
             auto value = checkbox_or_radio_element->value();
             if (value.is_empty())
-                value = "on";
+                value = "on"_string;
 
             // 2. Create an entry with name and value, and append it to entry list.
             auto checkbox_or_radio_element_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(checkbox_or_radio_element->name()));
-            auto checkbox_or_radio_element_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(value));
-            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(checkbox_or_radio_element_name), .value = move(checkbox_or_radio_element_value) }));
+            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(checkbox_or_radio_element_name), .value = move(value) }));
         }
         // 8. Otherwise, if the field element is an input element whose type attribute is in the File Upload state, then:
         else if (auto* file_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); file_element && file_element->type_state() == HTMLInputElement::TypeAttributeState::FileUpload) {
@@ -158,8 +157,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
         }
         // 10. Otherwise, create an entry with name and the value of the field element, and append it to entry list.
         else {
-            auto value_attribute = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(control_as_form_associated_element->value()));
-            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = move(value_attribute) }));
+            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = control_as_form_associated_element->value() }));
         }
 
         // FIXME: 11. If the element has a dirname attribute, and that attribute's value is not the empty string, then:

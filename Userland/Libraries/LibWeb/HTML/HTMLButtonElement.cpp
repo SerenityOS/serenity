@@ -60,11 +60,9 @@ bool HTMLButtonElement::is_submit_button() const
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:concept-fe-value
-DeprecatedString HTMLButtonElement::value() const
+String HTMLButtonElement::value() const
 {
-    if (!has_attribute(AttributeNames::value))
-        return DeprecatedString::empty();
-    return deprecated_attribute(AttributeNames::value);
+    return attribute(AttributeNames::value).value_or(String {});
 }
 
 bool HTMLButtonElement::has_activation_behavior() const
