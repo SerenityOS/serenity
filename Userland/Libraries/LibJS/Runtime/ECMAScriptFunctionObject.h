@@ -38,8 +38,42 @@ public:
         Global,
     };
 
-    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
-    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, DeprecatedFlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static NonnullGCPtr<ECMAScriptFunctionObject> create(
+        Realm&,
+        RefPtr<FunctionNode const>,
+        DeprecatedFlyString name,
+        DeprecatedString source_text,
+        Statement const& ecmascript_code,
+        Vector<FunctionParameter> parameters,
+        i32 m_function_length,
+        Vector<DeprecatedFlyString> local_variables_names,
+        Environment* parent_environment,
+        PrivateEnvironment* private_environment,
+        FunctionKind,
+        bool is_strict,
+        bool might_need_arguments_object = true,
+        bool contains_direct_call_to_eval = true,
+        bool is_arrow_function = false,
+        Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+
+    static NonnullGCPtr<ECMAScriptFunctionObject> create(
+        Realm&,
+        RefPtr<FunctionNode const>,
+        DeprecatedFlyString name,
+        Object& prototype,
+        DeprecatedString source_text,
+        Statement const& ecmascript_code,
+        Vector<FunctionParameter> parameters,
+        i32 m_function_length,
+        Vector<DeprecatedFlyString> local_variables_names,
+        Environment* parent_environment,
+        PrivateEnvironment* private_environment,
+        FunctionKind,
+        bool is_strict,
+        bool might_need_arguments_object = true,
+        bool contains_direct_call_to_eval = true,
+        bool is_arrow_function = false,
+        Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
 
     virtual void initialize(Realm&) override;
     virtual ~ECMAScriptFunctionObject() override = default;
@@ -101,7 +135,7 @@ protected:
     virtual Completion ordinary_call_evaluate_body();
 
 private:
-    ECMAScriptFunctionObject(DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
+    ECMAScriptFunctionObject(RefPtr<FunctionNode const>, DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
 
     virtual bool is_ecmascript_function_object() const override { return true; }
     virtual void visit_edges(Visitor&) override;
@@ -157,6 +191,8 @@ private:
     size_t m_function_environment_bindings_count { 0 };
     size_t m_var_environment_bindings_count { 0 };
     size_t m_lex_environment_bindings_count { 0 };
+
+    RefPtr<FunctionNode const> m_function_node;
 };
 
 template<>

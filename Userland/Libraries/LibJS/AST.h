@@ -682,6 +682,11 @@ struct FunctionParameter {
 
 class FunctionNode {
 public:
+    virtual ~FunctionNode();
+
+    void ref() const { ref_function_node(); }
+    bool unref() const { return unref_function_node(); }
+
     StringView name() const { return m_name ? m_name->string().view() : ""sv; }
     RefPtr<Identifier const> name_identifier() const { return m_name; }
     DeprecatedString const& source_text() const { return m_source_text; }
@@ -695,33 +700,24 @@ public:
     bool is_arrow_function() const { return m_is_arrow_function; }
     FunctionKind kind() const { return m_kind; }
 
+    [[nodiscard]] RefPtr<Bytecode::Executable> cached_bytecode_executable() const;
+    void set_cached_bytecode_executable(RefPtr<Bytecode::Executable> executable) const;
+
 protected:
-    FunctionNode(RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names)
-        : m_name(move(name))
-        , m_source_text(move(source_text))
-        , m_body(move(body))
-        , m_parameters(move(parameters))
-        , m_function_length(function_length)
-        , m_kind(kind)
-        , m_is_strict_mode(is_strict_mode)
-        , m_might_need_arguments_object(might_need_arguments_object)
-        , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
-        , m_is_arrow_function(is_arrow_function)
-        , m_local_variables_names(move(local_variables_names))
-    {
-        if (m_is_arrow_function)
-            VERIFY(!m_might_need_arguments_object);
-    }
+    FunctionNode(RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names);
 
     void dump(int indent, DeprecatedString const& class_name) const;
 
     RefPtr<Identifier const> m_name { nullptr };
 
+    virtual void ref_function_node() const = 0;
+    virtual bool unref_function_node() const = 0;
+
 private:
     DeprecatedString m_source_text;
     NonnullRefPtr<Statement const> m_body;
     Vector<FunctionParameter> const m_parameters;
-    const i32 m_function_length;
+    i32 const m_function_length;
     FunctionKind m_kind;
     bool m_is_strict_mode : 1 { false };
     bool m_might_need_arguments_object : 1 { false };
@@ -729,12 +725,17 @@ private:
     bool m_is_arrow_function : 1 { false };
 
     Vector<DeprecatedFlyString> m_local_variables_names;
+
+    mutable RefPtr<Bytecode::Executable> m_bytecode_executable;
 };
 
 class FunctionDeclaration final
     : public Declaration
     , public FunctionNode {
 public:
+    using RefCounted::ref;
+    using RefCounted::unref;
+
     static bool must_have_name() { return true; }
 
     FunctionDeclaration(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names)
@@ -753,6 +754,9 @@ public:
     void set_should_do_additional_annexB_steps() { m_is_hoisted = true; }
 
 private:
+    virtual void ref_function_node() const override { ref(); }
+    virtual bool unref_function_node() const override { return unref(); }
+
     bool m_is_hoisted { false };
 };
 
@@ -760,6 +764,9 @@ class FunctionExpression final
     : public Expression
     , public FunctionNode {
 public:
+    using RefCounted::ref;
+    using RefCounted::unref;
+
     static bool must_have_name() { return false; }
 
     FunctionExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, bool is_arrow_function = false)
@@ -778,6 +785,9 @@ public:
     Value instantiate_ordinary_function_expression(VM&, DeprecatedFlyString given_name) const;
 
 private:
+    virtual void ref_function_node() const override { ref(); }
+    virtual bool unref_function_node() const override { return unref(); }
+
     virtual bool is_function_expression() const override { return true; }
 };
 
