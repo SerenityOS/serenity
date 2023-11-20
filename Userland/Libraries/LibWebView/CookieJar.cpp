@@ -196,7 +196,7 @@ Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, Deprec
     auto cookie_list = get_matching_cookies(url, domain.value(), Web::Cookie::Source::Http, MatchingCookiesSpecMode::WebDriver);
 
     for (auto const& cookie : cookie_list) {
-        if (cookie.name == name)
+        if (cookie.name == name.view())
             return cookie;
     }
 
@@ -290,7 +290,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
     // 2. Create a new cookie with name cookie-name, value cookie-value. Set the creation-time and the last-access-time to the current date and time.
-    Web::Cookie::Cookie cookie { parsed_cookie.name, parsed_cookie.value, parsed_cookie.same_site_attribute };
+    Web::Cookie::Cookie cookie { MUST(String::from_deprecated_string(parsed_cookie.name)), MUST(String::from_deprecated_string(parsed_cookie.value)), parsed_cookie.same_site_attribute };
     cookie.creation_time = UnixDateTime::now();
     cookie.last_access_time = cookie.creation_time;
 
@@ -313,15 +313,15 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // 4. If the cookie-attribute-list contains an attribute with an attribute-name of "Domain":
     if (parsed_cookie.domain.has_value()) {
         // Let the domain-attribute be the attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Domain".
-        cookie.domain = parsed_cookie.domain.value();
+        cookie.domain = MUST(String::from_deprecated_string(parsed_cookie.domain.value()));
     }
 
     // 5. If the user agent is configured to reject "public suffixes" and the domain-attribute is a public suffix:
     if (is_public_suffix(cookie.domain)) {
         // If the domain-attribute is identical to the canonicalized request-host:
-        if (cookie.domain == canonicalized_domain) {
+        if (cookie.domain == canonicalized_domain.view()) {
             // Let the domain-attribute be the empty string.
-            cookie.domain = DeprecatedString::empty();
+            cookie.domain = String {};
         }
         // Otherwise:
         else {
@@ -333,7 +333,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // 6. If the domain-attribute is non-empty:
     if (!cookie.domain.is_empty()) {
         // If the canonicalized request-host does not domain-match the domain-attribute: Ignore the cookie entirely and abort these steps.
-        if (!domain_matches(canonicalized_domain, cookie.domain))
+        if (!domain_matches(canonicalized_domain, cookie.domain.to_deprecated_string()))
             return;
 
         // Set the cookie's host-only-flag to false. Set the cookie's domain to the domain-attribute.
@@ -341,15 +341,15 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     } else {
         // Set the cookie's host-only-flag to true. Set the cookie's domain to the canonicalized request-host.
         cookie.host_only = true;
-        cookie.domain = move(canonicalized_domain);
+        cookie.domain = MUST(String::from_deprecated_string(canonicalized_domain));
     }
 
     // 7. If the cookie-attribute-list contains an attribute with an attribute-name of "Path":
     if (parsed_cookie.path.has_value()) {
         // Set the cookie's path to attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Path".
-        cookie.path = parsed_cookie.path.value();
+        cookie.path = MUST(String::from_deprecated_string(parsed_cookie.path.value()));
     } else {
-        cookie.path = default_path(url);
+        cookie.path = MUST(String::from_deprecated_string(default_path(url)));
     }
 
     // 8. If the cookie-attribute-list contains an attribute with an attribute-name of "Secure", set the cookie's secure-only-flag to true.
@@ -403,13 +403,13 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Depr
     select_all_cookies_from_database([&](auto cookie) {
         // Either: The cookie's host-only-flag is true and the canonicalized request-host is identical to the cookie's domain.
         // Or: The cookie's host-only-flag is false and the canonicalized request-host domain-matches the cookie's domain.
-        bool is_host_only_and_has_identical_domain = cookie.host_only && (canonicalized_domain == cookie.domain);
-        bool is_not_host_only_and_domain_matches = !cookie.host_only && domain_matches(canonicalized_domain, cookie.domain);
+        bool is_host_only_and_has_identical_domain = cookie.host_only && (canonicalized_domain.view() == cookie.domain);
+        bool is_not_host_only_and_domain_matches = !cookie.host_only && domain_matches(canonicalized_domain, cookie.domain.to_deprecated_string());
         if (!is_host_only_and_has_identical_domain && !is_not_host_only_and_domain_matches)
             return;
 
         // The request-uri's path path-matches the cookie's path.
-        if (!path_matches(url.serialize_path(), cookie.path))
+        if (!path_matches(url.serialize_path(), cookie.path.to_deprecated_string()))
             return;
 
         // If the cookie's secure-only-flag is true, then the request-uri's scheme must denote a "secure" protocol.
@@ -429,13 +429,13 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Depr
         // 2.  The user agent SHOULD sort the cookie-list in the following order:
         //   - Cookies with longer paths are listed before cookies with shorter paths.
         //   - Among cookies that have equal-length path fields, cookies with earlier creation-times are listed before cookies with later creation-times.
-        auto cookie_path_length = cookie.path.length();
+        auto cookie_path_length = cookie.path.bytes().size();
         auto cookie_creation_time = cookie.creation_time;
 
         cookie_list.insert_before_matching(move(cookie), [cookie_path_length, cookie_creation_time](auto const& entry) {
-            if (cookie_path_length > entry.path.length()) {
+            if (cookie_path_length > entry.path.bytes().size()) {
                 return true;
-            } else if (cookie_path_length == entry.path.length()) {
+            } else if (cookie_path_length == entry.path.bytes().size()) {
                 if (cookie_creation_time < entry.creation_time)
                     return true;
             }
@@ -466,7 +466,7 @@ static ErrorOr<Web::Cookie::Cookie> parse_cookie(ReadonlySpan<SQL::Value> row)
         if (value.type() != SQL::SQLType::Text)
             return Error::from_string_view(name);
 
-        field = value.to_deprecated_string();
+        field = MUST(String::from_deprecated_string(value.to_deprecated_string()));
         return {};
     };
 
@@ -525,21 +525,21 @@ void CookieJar::insert_cookie_into_database(Web::Cookie::Cookie const& cookie)
         [&](PersistedStorage& storage) {
             storage.database.execute_statement(
                 storage.statements.insert_cookie, {}, [this]() { purge_expired_cookies(); }, {},
-                cookie.name,
-                cookie.value,
+                cookie.name.to_deprecated_string(),
+                cookie.value.to_deprecated_string(),
                 to_underlying(cookie.same_site),
                 cookie.creation_time.seconds_since_epoch(),
                 cookie.last_access_time.seconds_since_epoch(),
                 cookie.expiry_time.seconds_since_epoch(),
-                cookie.domain,
-                cookie.path,
+                cookie.domain.to_deprecated_string(),
+                cookie.path.to_deprecated_string(),
                 cookie.secure,
                 cookie.http_only,
                 cookie.host_only,
                 cookie.persistent);
         },
         [&](TransientStorage& storage) {
-            CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
+            CookieStorageKey key { cookie.name.to_deprecated_string(), cookie.domain.to_deprecated_string(), cookie.path.to_deprecated_string() };
             storage.set(key, cookie);
         });
 }
@@ -550,7 +550,7 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
         [&](PersistedStorage& storage) {
             storage.database.execute_statement(
                 storage.statements.update_cookie, {}, [this]() { purge_expired_cookies(); }, {},
-                cookie.value,
+                cookie.value.to_deprecated_string(),
                 to_underlying(cookie.same_site),
                 cookie.creation_time.seconds_since_epoch(),
                 cookie.last_access_time.seconds_since_epoch(),
@@ -559,12 +559,12 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
                 cookie.http_only,
                 cookie.host_only,
                 cookie.persistent,
-                cookie.name,
-                cookie.domain,
-                cookie.path);
+                cookie.name.to_deprecated_string(),
+                cookie.domain.to_deprecated_string(),
+                cookie.path.to_deprecated_string());
         },
         [&](TransientStorage& storage) {
-            CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
+            CookieStorageKey key { cookie.name.to_deprecated_string(), cookie.domain.to_deprecated_string(), cookie.path.to_deprecated_string() };
             storage.set(key, cookie);
         });
 }
@@ -601,12 +601,12 @@ void CookieJar::select_cookie_from_database(Web::Cookie::Cookie cookie, OnCookie
                         on_complete_without_results(move(wrapped_cookie->cookie));
                 },
                 {},
-                wrapped_cookie->cookie.name,
-                wrapped_cookie->cookie.domain,
-                wrapped_cookie->cookie.path);
+                wrapped_cookie->cookie.name.to_deprecated_string(),
+                wrapped_cookie->cookie.domain.to_deprecated_string(),
+                wrapped_cookie->cookie.path.to_deprecated_string());
         },
         [&](TransientStorage& storage) {
-            CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
+            CookieStorageKey key { cookie.name.to_deprecated_string(), cookie.domain.to_deprecated_string(), cookie.path.to_deprecated_string() };
 
             if (auto it = storage.find(key); it != storage.end())
                 on_result(cookie, it->value);
