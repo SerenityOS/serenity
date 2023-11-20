@@ -33,6 +33,7 @@ Optional<CSSNumericType::BaseType> CSSNumericType::base_type_from_value_type(Val
     case ValueType::Time:
         return BaseType::Time;
 
+    case ValueType::BackgroundPosition:
     case ValueType::Color:
     case ValueType::CustomIdent:
     case ValueType::EasingFunction:
