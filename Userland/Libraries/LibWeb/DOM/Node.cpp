@@ -693,7 +693,7 @@ void Node::remove(bool suppress_observers)
         for (auto& registered : *inclusive_ancestor->m_registered_observer_list) {
             if (registered->options().subtree) {
                 auto transient_observer = TransientRegisteredObserver::create(registered->observer(), registered->options(), registered);
-                m_registered_observer_list->append(move(transient_observer));
+                add_registered_observer(move(transient_observer));
             }
         }
     }
