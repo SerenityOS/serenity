@@ -494,6 +494,9 @@ InodeMetadata Ext2FSInode::metadata() const
 ErrorOr<void> Ext2FSInode::flush_metadata()
 {
     MutexLocker locker(m_inode_lock);
+    if (!is_metadata_dirty())
+        return {};
+
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::flush_metadata(): Flushing inode", identifier());
     TRY(fs().write_ext2_inode(index(), m_raw_inode));
     if (is_directory()) {
