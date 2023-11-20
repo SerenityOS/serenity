@@ -65,7 +65,7 @@ public:
     // https://www.w3.org/TR/html-aria/#el-button
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::button; }
 
-    virtual DeprecatedString value() const override;
+    virtual String value() const override;
 
     virtual bool has_activation_behavior() const override;
     virtual void activation_behavior(DOM::Event const&) override;

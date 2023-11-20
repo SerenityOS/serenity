@@ -66,7 +66,7 @@ public:
     DeprecatedString default_value() const { return deprecated_attribute(HTML::AttributeNames::value); }
     DeprecatedString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
 
-    virtual DeprecatedString value() const override;
+    virtual String value() const override;
     WebIDL::ExceptionOr<void> set_value(String const&);
 
     Optional<DeprecatedString> placeholder_value() const;
@@ -181,7 +181,7 @@ private:
     void handle_readonly_attribute(Optional<String> const& value);
 
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
-    DeprecatedString value_sanitization_algorithm(DeprecatedString) const;
+    String value_sanitization_algorithm(String const&) const;
 
     void update_placeholder_visibility();
     JS::GCPtr<DOM::Element> m_placeholder_element;
@@ -213,7 +213,7 @@ private:
     JS::GCPtr<FileAPI::FileList> m_selected_files;
 
     TypeAttributeState m_type { TypeAttributeState::Text };
-    DeprecatedString m_value;
+    String m_value;
 };
 
 }
