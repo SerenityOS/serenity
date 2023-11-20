@@ -645,7 +645,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         auto text = text_node.text_for_rendering();
 
         DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
-        Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
+        Utf8View view { text.code_points().substring_view(fragment.start(), fragment.length()) };
 
         auto& scaled_font = fragment.layout_node().scaled_font(context);
 

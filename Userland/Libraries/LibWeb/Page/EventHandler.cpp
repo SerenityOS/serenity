@@ -615,7 +615,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint scre
                 // Start from one before the index position to prevent selecting only spaces between words, caused by the addition below.
                 // This also helps us dealing with cases where index is equal to the string length.
                 for (int i = result->index_in_node - 1; i >= 0; --i) {
-                    if (is_ascii_space(text_for_rendering[i])) {
+                    if (is_ascii_space(text_for_rendering.bytes_as_string_view()[i])) {
                         // Don't include the space in the selection
                         return i + 1;
                     }
@@ -624,11 +624,11 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint scre
             }();
 
             int first_word_break_after = [&] {
-                for (size_t i = result->index_in_node; i < text_for_rendering.length(); ++i) {
-                    if (is_ascii_space(text_for_rendering[i]))
+                for (size_t i = result->index_in_node; i < text_for_rendering.bytes().size(); ++i) {
+                    if (is_ascii_space(text_for_rendering.bytes_as_string_view()[i]))
                         return i;
                 }
-                return text_for_rendering.length();
+                return text_for_rendering.bytes().size();
             }();
 
             auto& realm = node->document().realm();

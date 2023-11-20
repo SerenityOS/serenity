@@ -33,7 +33,7 @@ static bool is_all_whitespace(StringView string)
 }
 
 // https://w3c.github.io/mathml-core/#new-text-transform-values
-static DeprecatedString apply_math_auto_text_transform(DeprecatedString const& string)
+static String apply_math_auto_text_transform(String const& string)
 {
 
     // https://w3c.github.io/mathml-core/#italic-mappings
@@ -268,27 +268,27 @@ static DeprecatedString apply_math_auto_text_transform(DeprecatedString const& s
         }
     };
 
-    StringBuilder builder(string.length());
+    StringBuilder builder(string.bytes().size());
 
-    for (auto code_point : Utf8View(string))
+    for (auto code_point : string.code_points())
         builder.append_code_point(map_code_point_to_italic(code_point));
 
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
-static ErrorOr<DeprecatedString> apply_text_transform(DeprecatedString const& string, CSS::TextTransform text_transform)
+static ErrorOr<String> apply_text_transform(String const& string, CSS::TextTransform text_transform)
 {
     switch (text_transform) {
     case CSS::TextTransform::Uppercase:
-        return Unicode::to_unicode_uppercase_full(string);
+        return string.to_uppercase();
     case CSS::TextTransform::Lowercase:
-        return Unicode::to_unicode_lowercase_full(string);
+        return string.to_lowercase();
     case CSS::TextTransform::None:
         return string;
     case CSS::TextTransform::MathAuto:
         return apply_math_auto_text_transform(string);
     case CSS::TextTransform::Capitalize: {
-        return TRY(Unicode::to_unicode_titlecase_full(string, {}, Unicode::TrailingCodePointTransformation::PreserveExisting)).to_deprecated_string();
+        return string.to_titlecase({}, TrailingCodePointTransformation::PreserveExisting);
     }
     case CSS::TextTransform::FullSizeKana:
     case CSS::TextTransform::FullWidth:
@@ -304,7 +304,7 @@ void TextNode::invalidate_text_for_rendering()
     m_text_for_rendering = {};
 }
 
-DeprecatedString const& TextNode::text_for_rendering() const
+String const& TextNode::text_for_rendering() const
 {
     if (!m_text_for_rendering.has_value())
         const_cast<TextNode*>(this)->compute_text_for_rendering();
@@ -330,10 +330,12 @@ void TextNode::compute_text_for_rendering()
     if (dom_node().is_editable() && !dom_node().is_uninteresting_whitespace_node())
         collapse = false;
 
-    auto data = apply_text_transform(dom_node().data().to_deprecated_string(), computed_values().text_transform()).release_value_but_fixme_should_propagate_errors();
+    auto data = apply_text_transform(dom_node().data(), computed_values().text_transform()).release_value_but_fixme_should_propagate_errors();
+
+    auto data_view = data.bytes_as_string_view();
 
     if (dom_node().is_password_input()) {
-        m_text_for_rendering = DeprecatedString::repeated('*', data.length());
+        m_text_for_rendering = MUST(String::repeated('*', data_view.length()));
         return;
     }
 
@@ -343,9 +345,9 @@ void TextNode::compute_text_for_rendering()
     }
 
     // NOTE: A couple fast returns to avoid unnecessarily allocating a StringBuilder.
-    if (data.length() == 1) {
-        if (is_ascii_space(data[0])) {
-            static DeprecatedString s_single_space_string = " ";
+    if (data_view.length() == 1) {
+        if (is_ascii_space(data_view[0])) {
+            static String s_single_space_string = " "_string;
             m_text_for_rendering = s_single_space_string;
         } else {
             m_text_for_rendering = data;
@@ -354,7 +356,7 @@ void TextNode::compute_text_for_rendering()
     }
 
     bool contains_space = false;
-    for (auto& c : data) {
+    for (auto c : data_view) {
         if (is_ascii_space(c)) {
             contains_space = true;
             break;
@@ -365,26 +367,26 @@ void TextNode::compute_text_for_rendering()
         return;
     }
 
-    StringBuilder builder(data.length());
+    StringBuilder builder(data_view.length());
     size_t index = 0;
 
-    auto skip_over_whitespace = [&index, &data] {
-        while (index < data.length() && is_ascii_space(data[index]))
+    auto skip_over_whitespace = [&index, &data_view] {
+        while (index < data_view.length() && is_ascii_space(data_view[index]))
             ++index;
     };
 
-    while (index < data.length()) {
-        if (is_ascii_space(data[index])) {
+    while (index < data_view.length()) {
+        if (is_ascii_space(data_view[index])) {
             builder.append(' ');
             ++index;
             skip_over_whitespace();
         } else {
-            builder.append(data[index]);
+            builder.append(data_view[index]);
             ++index;
         }
     }
 
-    m_text_for_rendering = builder.to_deprecated_string();
+    m_text_for_rendering = MUST(builder.to_string());
 }
 
 TextNode::ChunkIterator::ChunkIterator(StringView text, bool wrap_lines, bool respect_linebreaks)
