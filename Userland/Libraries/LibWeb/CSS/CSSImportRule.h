@@ -44,7 +44,7 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual DeprecatedString serialized() const override;
+    virtual String serialized() const override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;

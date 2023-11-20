@@ -38,7 +38,7 @@ CSSStyleDeclaration* CSSFontFaceRule::style()
 }
 
 // https://www.w3.org/TR/cssom/#ref-for-cssfontfacerule
-DeprecatedString CSSFontFaceRule::serialized() const
+String CSSFontFaceRule::serialized() const
 {
     StringBuilder builder;
     // The result of concatenating the following:
@@ -137,7 +137,7 @@ DeprecatedString CSSFontFaceRule::serialized() const
     // 12. A single SPACE (U+0020), followed by the string "}", i.e., RIGHT CURLY BRACKET (U+007D).
     builder.append(" }"sv);
 
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 }

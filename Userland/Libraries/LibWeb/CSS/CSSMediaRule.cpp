@@ -48,7 +48,7 @@ void CSSMediaRule::set_condition_text(String const& text)
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-css-rule
-DeprecatedString CSSMediaRule::serialized() const
+String CSSMediaRule::serialized() const
 {
     // The result of concatenating the following:
     StringBuilder builder;
@@ -70,7 +70,7 @@ DeprecatedString CSSMediaRule::serialized() const
     // 5. A newline, followed by the string "}", i.e., RIGHT CURLY BRACKET (U+007D)
     builder.append("\n}"sv);
 
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 }

@@ -50,7 +50,7 @@ private:
 
     virtual void visit_edges(Visitor&) override;
     virtual void initialize(JS::Realm&) override;
-    virtual DeprecatedString serialized() const override;
+    virtual String serialized() const override;
 
     CSS::Percentage m_key;
     JS::NonnullGCPtr<CSSStyleDeclaration> m_declarations;

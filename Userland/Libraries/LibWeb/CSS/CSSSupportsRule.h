@@ -34,7 +34,7 @@ private:
     CSSSupportsRule(JS::Realm&, NonnullRefPtr<Supports>&&, CSSRuleList&);
 
     virtual void initialize(JS::Realm&) override;
-    virtual DeprecatedString serialized() const override;
+    virtual String serialized() const override;
 
     NonnullRefPtr<Supports> m_supports;
 };

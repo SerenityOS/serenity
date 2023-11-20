@@ -35,7 +35,7 @@ void CSSNamespaceRule::initialize(JS::Realm& realm)
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule
-DeprecatedString CSSNamespaceRule::serialized() const
+String CSSNamespaceRule::serialized() const
 {
     StringBuilder builder;
     // The literal string "@namespace", followed by a single SPACE (U+0020),
@@ -54,7 +54,7 @@ DeprecatedString CSSNamespaceRule::serialized() const
     // followed the character ";" (U+003B).
     builder.append(";"sv);
 
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 }

@@ -30,11 +30,11 @@ void CSSKeyframeRule::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSKeyframeRulePrototype>(realm, "CSSKeyframeRule"));
 }
 
-DeprecatedString CSSKeyframeRule::serialized() const
+String CSSKeyframeRule::serialized() const
 {
     StringBuilder builder;
     builder.appendff("{}% {{ {} }}", key().value(), style()->serialized());
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 }

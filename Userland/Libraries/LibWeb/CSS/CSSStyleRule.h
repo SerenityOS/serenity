@@ -38,7 +38,7 @@ private:
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
-    virtual DeprecatedString serialized() const override;
+    virtual String serialized() const override;
 
     Vector<NonnullRefPtr<Selector>> m_selectors;
     JS::NonnullGCPtr<CSSStyleDeclaration> m_declaration;
