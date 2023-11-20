@@ -114,6 +114,7 @@ public:
     void draw_glyph_or_emoji(IntPoint, Utf8CodePointIterator&, Font const&, Color);
     void draw_glyph(FloatPoint, u32, Color);
     void draw_glyph(FloatPoint, u32, Font const&, Color);
+    void draw_glyph_with_postscript_name(FloatPoint point, StringView name, Font const& font, Color color);
     void draw_glyph_or_emoji(FloatPoint, u32, Font const&, Color);
     void draw_glyph_or_emoji(FloatPoint, Utf8CodePointIterator&, Font const&, Color);
     void draw_circle_arc_intersecting(IntRect const&, IntPoint, int radius, Color, int thickness);
@@ -225,6 +226,7 @@ protected:
     Vector<State, 4> m_state_stack;
 
 private:
+    void draw_glyph_internal(FloatPoint point, GlyphRasterPosition const&, FloatPoint top_left, Glyph const& glyph, Color color);
     Vector<DirectionalRun> split_text_into_directional_runs(Utf8View const&, TextDirection initial_direction);
     bool text_contains_bidirectional_text(Utf8View const&, TextDirection);
     template<typename DrawGlyphFunction>

@@ -25,6 +25,7 @@ class ScaledFont final : public Gfx::Font {
 public:
     ScaledFont(NonnullRefPtr<VectorFont>, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI);
     u32 glyph_id_for_code_point(u32 code_point) const { return m_font->glyph_id_for_code_point(code_point); }
+    Optional<u32> glyph_id_for_postscript_name(StringView name) const { return m_font->glyph_id_for_postscript_name(name); }
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale, m_point_width, m_point_height); }
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, GlyphSubpixelOffset) const;
@@ -43,9 +44,13 @@ public:
     virtual u16 weight() const override { return m_font->weight(); }
     virtual Gfx::Glyph glyph(u32 code_point) const override;
     virtual float glyph_left_bearing(u32 code_point) const override;
+    Optional<float> glyph_left_bearing_for_postscript_name(StringView) const override;
     virtual Glyph glyph(u32 code_point, GlyphSubpixelOffset) const override;
+    Optional<Glyph> glyph_for_postscript_name(StringView, GlyphSubpixelOffset) const override;
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
+    virtual bool contains_glyph_for_postscript_name(StringView name) const override { return m_font->glyph_id_for_postscript_name(name).has_value(); }
     virtual float glyph_width(u32 code_point) const override;
+    virtual Optional<float> glyph_width_for_postscript_name(StringView) const override;
     virtual float glyph_or_emoji_width(Utf8CodePointIterator&) const override;
     virtual float glyph_or_emoji_width(Utf32CodePointIterator&) const override;
     virtual float glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const override;
@@ -75,6 +80,8 @@ public:
     virtual bool has_color_bitmaps() const override { return m_font->has_color_bitmaps(); }
 
 private:
+    Glyph glyph_for_id(u32 id, GlyphSubpixelOffset) const;
+
     NonnullRefPtr<VectorFont> m_font;
     float m_x_scale { 0.0f };
     float m_y_scale { 0.0f };

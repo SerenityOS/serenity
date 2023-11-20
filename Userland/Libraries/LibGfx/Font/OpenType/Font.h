@@ -62,6 +62,7 @@ public:
     virtual u32 glyph_count() const override;
     virtual u16 units_per_em() const override;
     virtual u32 glyph_id_for_code_point(u32 code_point) const override;
+    virtual Optional<u32> glyph_id_for_postscript_name(StringView) const override;
     virtual String family() const override;
     virtual String variant() const override;
     virtual u16 weight() const override;
