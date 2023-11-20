@@ -52,7 +52,7 @@ Gfx::Bitmap const* IconImpl::bitmap_for_size(int size) const
     if (it != m_bitmaps.end())
         return it->value.ptr();
 
-    int best_diff_so_far = INT32_MAX;
+    int best_diff_so_far = NumericLimits<i32>::max();
     Gfx::Bitmap const* best_fit = nullptr;
     for (auto& it : m_bitmaps) {
         int abs_diff = abs(it.key - size);

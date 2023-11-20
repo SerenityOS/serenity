@@ -117,7 +117,7 @@ private:
     }
 
     ReadonlyBytes m_slice;
-    u32 m_active_index { UINT32_MAX };
+    u32 m_active_index { NumericLimits<u32>::max() };
 };
 
 }

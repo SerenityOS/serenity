@@ -94,7 +94,7 @@ void UnsignedBigIntegerAlgorithms::subtract_without_allocation(
         // If temp < 0, we had an underflow
         borrow = (temp >= 0) ? 0 : 1;
         if (temp < 0) {
-            temp += (UINT32_MAX + 1);
+            temp += (NumericLimits<u32>::max() + 1);
         }
         output.m_words[i] = temp;
     }

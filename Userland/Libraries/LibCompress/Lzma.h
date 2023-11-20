@@ -56,7 +56,7 @@ struct [[gnu::packed]] LzmaHeader {
     u32 unchecked_dictionary_size;
     u64 encoded_uncompressed_size;
 
-    static constexpr u64 placeholder_for_unknown_uncompressed_size = UINT64_MAX;
+    static constexpr u64 placeholder_for_unknown_uncompressed_size = NumericLimits<u64>::max();
 };
 static_assert(sizeof(LzmaHeader) == 13);
 

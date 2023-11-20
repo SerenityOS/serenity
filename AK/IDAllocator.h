@@ -27,7 +27,7 @@ public:
 
     int allocate()
     {
-        VERIFY(m_allocated_ids.size() < (INT32_MAX - 2));
+        VERIFY(m_allocated_ids.size() < (NumericLimits<i32>::max() - 2));
         int id = 0;
         for (;;) {
             id = static_cast<int>(get_random_uniform(NumericLimits<int>::max()));

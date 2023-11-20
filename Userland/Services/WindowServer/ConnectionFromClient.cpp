@@ -477,8 +477,8 @@ Messages::WindowServer::SetWindowRectResponse ConnectionFromClient::set_window_r
         dbgln("ConnectionFromClient: Ignoring SetWindowRect request for fullscreen window");
         return nullptr;
     }
-    if (rect.width() > INT16_MAX || rect.height() > INT16_MAX) {
-        did_misbehave(ByteString::formatted("SetWindowRect: Bad window sizing(width={}, height={}), dimension exceeds INT16_MAX", rect.width(), rect.height()).characters());
+    if (rect.width() > NumericLimits<i16>::max() || rect.height() > NumericLimits<i16>::max()) {
+        did_misbehave(ByteString::formatted("SetWindowRect: Bad window sizing(width={}, height={}), dimension exceeds NumericLimits<i16>::max()", rect.width(), rect.height()).characters());
         return nullptr;
     }
 

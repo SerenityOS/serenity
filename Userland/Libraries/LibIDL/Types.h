@@ -243,7 +243,7 @@ private:
 
 static inline size_t get_shortest_function_length(Vector<Function&> const& overload_set)
 {
-    size_t shortest_length = SIZE_MAX;
+    size_t shortest_length = NumericLimits<size_t>::max();
     for (auto const& function : overload_set)
         shortest_length = min(function.shortest_length(), shortest_length);
     return shortest_length;

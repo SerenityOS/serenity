@@ -34,7 +34,7 @@ struct DuOption {
     TimeType time_type = TimeType::NotUsed;
     Vector<ByteString> excluded_patterns;
     u64 block_size = 1024;
-    size_t max_depth = SIZE_MAX;
+    size_t max_depth = NumericLimits<size_t>::max();
 };
 
 struct VisitedFile {

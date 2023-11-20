@@ -775,7 +775,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
     // This function returns a Number value with positive sign, greater than or equal to +0𝔽 but strictly less than 1𝔽,
     // chosen randomly or pseudo randomly with approximately uniform distribution over that range, using an
     // implementation-defined algorithm or strategy.
-    double r = (double)get_random<u32>() / (double)UINT32_MAX;
+    double r = (double)get_random<u32>() / (double)NumericLimits<u32>::max();
     return Value(r);
 }
 

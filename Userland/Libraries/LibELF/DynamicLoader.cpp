@@ -335,7 +335,7 @@ void DynamicLoader::do_lazy_relocations()
 
 void DynamicLoader::load_program_headers()
 {
-    FlatPtr ph_load_start = SIZE_MAX;
+    FlatPtr ph_load_start = NumericLimits<FlatPtr>::max();
     FlatPtr ph_load_end = 0;
 
     // We walk the program header list once to find the requested address ranges of the program.

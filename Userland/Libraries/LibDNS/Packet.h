@@ -46,13 +46,13 @@ public:
 
     u16 question_count() const
     {
-        VERIFY(m_questions.size() <= UINT16_MAX);
+        VERIFY(m_questions.size() <= NumericLimits<u16>::max());
         return m_questions.size();
     }
 
     u16 answer_count() const
     {
-        VERIFY(m_answers.size() <= UINT16_MAX);
+        VERIFY(m_answers.size() <= NumericLimits<u16>::max());
         return m_answers.size();
     }
 

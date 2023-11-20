@@ -57,8 +57,8 @@ TEST_CASE(test_unsigned_bigint_addition_initialization)
 
 TEST_CASE(test_unsigned_bigint_addition_borrow_with_zero)
 {
-    Crypto::UnsignedBigInteger num1({ UINT32_MAX - 3, UINT32_MAX });
-    Crypto::UnsignedBigInteger num2({ UINT32_MAX - 2, 0 });
+    Crypto::UnsignedBigInteger num1({ NumericLimits<u32>::max() - 3, NumericLimits<u32>::max() });
+    Crypto::UnsignedBigInteger num2({ NumericLimits<u32>::max() - 2, 0 });
     Vector<u32> expected_result { 4294967289, 0, 1 };
     EXPECT_EQ(num1.plus(num2).words(), expected_result);
 }
@@ -90,7 +90,7 @@ TEST_CASE(test_unsigned_bigint_basic_add_to_smaller_accumulator)
 
 TEST_CASE(test_unsigned_bigint_add_to_accumulator_with_multiple_carry_levels)
 {
-    Crypto::UnsignedBigInteger num1({ UINT32_MAX - 2, UINT32_MAX });
+    Crypto::UnsignedBigInteger num1({ NumericLimits<u32>::max() - 2, NumericLimits<u32>::max() });
     Crypto::UnsignedBigInteger num2(5);
     Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
     Vector<u32> expected_result { 2, 0, 1 };
@@ -107,7 +107,7 @@ TEST_CASE(test_unsigned_bigint_add_to_accumulator_with_leading_zero)
 
 TEST_CASE(test_unsigned_bigint_add_to_accumulator_with_carry_and_leading_zero)
 {
-    Crypto::UnsignedBigInteger num1({ UINT32_MAX, 0, 0, 0 });
+    Crypto::UnsignedBigInteger num1({ NumericLimits<u32>::max(), 0, 0, 0 });
     Crypto::UnsignedBigInteger num2({ 1, 0 });
     Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
     Vector<u32> expected_result { 0, 1, 0, 0 };
@@ -132,7 +132,7 @@ TEST_CASE(test_unsigned_bigint_simple_subtraction_invalid)
 
 TEST_CASE(test_unsigned_bigint_simple_subtraction_with_borrow)
 {
-    Crypto::UnsignedBigInteger num1(UINT32_MAX);
+    Crypto::UnsignedBigInteger num1(NumericLimits<u32>::max());
     Crypto::UnsignedBigInteger num2(1);
     Crypto::UnsignedBigInteger num3 = num1.plus(num2);
     Crypto::UnsignedBigInteger result = num3.minus(num2);
@@ -549,15 +549,15 @@ TEST_CASE(test_signed_bigint_fibo500)
 
 TEST_CASE(test_signed_addition_edgecase_borrow_with_zero)
 {
-    Crypto::SignedBigInteger num1 { Crypto::UnsignedBigInteger { { UINT32_MAX - 3, UINT32_MAX } }, false };
-    Crypto::SignedBigInteger num2 { Crypto::UnsignedBigInteger { UINT32_MAX - 2 }, false };
+    Crypto::SignedBigInteger num1 { Crypto::UnsignedBigInteger { { NumericLimits<u32>::max() - 3, NumericLimits<u32>::max() } }, false };
+    Crypto::SignedBigInteger num2 { Crypto::UnsignedBigInteger { NumericLimits<u32>::max() - 2 }, false };
     Vector<u32> expected_result { 4294967289, 0, 1 };
     EXPECT_EQ(num1.plus(num2).unsigned_value().words(), expected_result);
 }
 
 TEST_CASE(test_signed_addition_edgecase_addition_to_other_sign)
 {
-    Crypto::SignedBigInteger num1 = INT32_MAX;
+    Crypto::SignedBigInteger num1 = NumericLimits<i32>::max();
     Crypto::SignedBigInteger num2 = num1;
     num2.negate();
     EXPECT_EQ(num1.plus(num2), Crypto::SignedBigInteger { 0 });
@@ -589,7 +589,7 @@ TEST_CASE(test_signed_subtraction_both_negative)
 
 TEST_CASE(test_signed_subtraction_simple_subtraction_with_borrow)
 {
-    Crypto::SignedBigInteger num1(Crypto::UnsignedBigInteger { UINT32_MAX });
+    Crypto::SignedBigInteger num1(Crypto::UnsignedBigInteger { NumericLimits<u32>::max() });
     Crypto::SignedBigInteger num2(1);
     Crypto::SignedBigInteger num3 = num1.plus(num2);
     Crypto::SignedBigInteger result = num2.minus(num3);

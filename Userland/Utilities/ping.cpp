@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
 
             auto interval_in_seconds = interval_in_seconds_string.to_number<double>();
-            if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0 || interval_in_seconds.value() > UINT32_MAX)
+            if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0 || interval_in_seconds.value() > NumericLimits<u32>::max())
                 return false;
 
             auto whole_seconds = static_cast<time_t>(interval_in_seconds.value());
@@ -94,8 +94,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets.", nullptr, 't', "ttl");
     args_parser.parse(arguments);
 
-    if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
-        warnln("invalid count argument: '{}': out of range: 1 <= value <= {}", count.value(), UINT32_MAX);
+    if (count.has_value() && (count.value() < 1 || count.value() > NumericLimits<u32>::max())) {
+        warnln("invalid count argument: '{}': out of range: 1 <= value <= {}", count.value(), NumericLimits<u32>::max());
         return 1;
     }
 

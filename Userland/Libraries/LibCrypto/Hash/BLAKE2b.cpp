@@ -42,7 +42,7 @@ BLAKE2b::DigestType BLAKE2b::peek()
     increment_counter_by(m_internal_state.buffer_length);
 
     // Set this as the last block
-    m_internal_state.is_at_last_block = UINT64_MAX;
+    m_internal_state.is_at_last_block = NumericLimits<u64>::max();
 
     // Pad the buffer with zeros
     __builtin_memset(m_internal_state.buffer + m_internal_state.buffer_length, 0, BLAKE2bConstants::blockbytes - m_internal_state.buffer_length);

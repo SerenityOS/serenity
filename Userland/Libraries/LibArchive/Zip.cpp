@@ -13,7 +13,7 @@ namespace Archive {
 
 bool Zip::find_end_of_central_directory_offset(ReadonlyBytes buffer, size_t& offset)
 {
-    for (size_t backwards_offset = 0; backwards_offset <= UINT16_MAX; backwards_offset++) // the file may have a trailing comment of an arbitrary 16 bit length
+    for (size_t backwards_offset = 0; backwards_offset <= NumericLimits<u16>::max(); backwards_offset++) // the file may have a trailing comment of an arbitrary 16 bit length
     {
         if (buffer.size() < (sizeof(EndOfCentralDirectory) - sizeof(u8*)) + backwards_offset)
             return false;
@@ -136,8 +136,8 @@ static u16 minimum_version_needed(ZipCompressionMethod method)
 ErrorOr<void> ZipOutputStream::add_member(ZipMember const& member)
 {
     VERIFY(!m_finished);
-    VERIFY(member.name.bytes_as_string_view().length() <= UINT16_MAX);
-    VERIFY(member.compressed_data.size() <= UINT32_MAX);
+    VERIFY(member.name.bytes_as_string_view().length() <= NumericLimits<u16>::max());
+    VERIFY(member.compressed_data.size() <= NumericLimits<u32>::max());
     TRY(m_members.try_append(member));
 
     LocalFileHeader local_file_header {

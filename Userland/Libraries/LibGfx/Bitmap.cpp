@@ -56,7 +56,7 @@ static bool size_would_overflow(BitmapFormat format, IntSize size, int scale_fac
     if (size.width() < 0 || size.height() < 0)
         return true;
     // This check is a bit arbitrary, but should protect us from most shenanigans:
-    if (size.width() >= INT16_MAX || size.height() >= INT16_MAX || scale_factor < 1 || scale_factor > 4)
+    if (size.width() >= NumericLimits<i16>::max() || size.height() >= NumericLimits<i16>::max() || scale_factor < 1 || scale_factor > 4)
         return true;
     // In contrast, this check is absolutely necessary:
     size_t pitch = Bitmap::minimum_pitch(size.width() * scale_factor, format);

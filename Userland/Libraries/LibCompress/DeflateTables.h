@@ -104,7 +104,7 @@ static constexpr size_t code_lengths_code_lengths_order[] { 16, 17, 18, 0, 8, 7,
 
 static consteval Array<u16, 259> generate_length_to_symbol()
 {
-    Array<u16, 259> array = { UINT16_MAX, UINT16_MAX, UINT16_MAX }; // there are 256 valid lengths (3-258) + 3 invalid lengths (0-2)
+    Array<u16, 259> array = { NumericLimits<u16>::max(), NumericLimits<u16>::max(), NumericLimits<u16>::max() }; // there are 256 valid lengths (3-258) + 3 invalid lengths (0-2)
     size_t base_length = 0;
     for (size_t len = 3; len < 259; len++) {
         if (len == packed_length_symbols[base_length + 1].base_length)
@@ -129,7 +129,7 @@ static consteval Array<u16, 256> generate_distance_to_base_lo()
 static constexpr auto distance_to_base_lo = generate_distance_to_base_lo();
 static consteval Array<u16, 256> generate_distance_to_base_hi()
 {
-    Array<u16, 256> array = { UINT16_MAX, UINT16_MAX };
+    Array<u16, 256> array = { NumericLimits<u16>::max(), NumericLimits<u16>::max() };
     size_t base_distance = 16;
     for (size_t dist = 257; dist <= 32 * KiB; dist++) {
         if (dist == packed_distances[base_distance + 1].base_distance)

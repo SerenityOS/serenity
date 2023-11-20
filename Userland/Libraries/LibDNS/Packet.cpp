@@ -19,14 +19,14 @@ void Packet::add_question(Question const& question)
 {
     m_questions.empend(question);
 
-    VERIFY(m_questions.size() <= UINT16_MAX);
+    VERIFY(m_questions.size() <= NumericLimits<u16>::max());
 }
 
 void Packet::add_answer(Answer const& answer)
 {
     m_answers.empend(answer);
 
-    VERIFY(m_answers.size() <= UINT16_MAX);
+    VERIFY(m_answers.size() <= NumericLimits<u16>::max());
 }
 
 ErrorOr<ByteBuffer> Packet::to_byte_buffer() const

@@ -557,7 +557,7 @@ TEST_CASE(json_value_as_integer)
     EXPECT(negative_value.is_integer<i64>());
 
     // 64-bit only
-    JsonValue very_large_value { INT64_MAX };
+    JsonValue very_large_value { NumericLimits<i64>::max() };
     EXPECT(!very_large_value.is_integer<u8>());
     EXPECT(!very_large_value.is_integer<u16>());
     EXPECT(!very_large_value.is_integer<u32>());

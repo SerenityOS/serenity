@@ -249,7 +249,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, ByteString const&
 {
     Packet request;
     request.set_is_query();
-    request.set_id(get_random_uniform(UINT16_MAX));
+    request.set_id(get_random_uniform(NumericLimits<u16>::max()));
     Name name_in_question = name;
     if (should_randomize_case == ShouldRandomizeCase::Yes)
         name_in_question.randomize_case();

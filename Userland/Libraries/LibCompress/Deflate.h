@@ -129,7 +129,7 @@ public:
     static constexpr size_t max_huffman_distances = 32;
     static constexpr size_t min_match_length = 4;   // matches smaller than these are not worth the size of the back reference
     static constexpr size_t max_match_length = 258; // matches longer than these cannot be encoded using huffman codes
-    static constexpr u16 empty_slot = UINT16_MAX;
+    static constexpr u16 empty_slot = NumericLimits<u16>::max();
 
     struct CompressionConstants {
         size_t good_match_length;  // Once we find a match of at least this length (a good enough match) we reduce max_chain to lower processing time
@@ -185,7 +185,7 @@ private:
     };
     static u8 distance_to_base(u16 distance);
     template<size_t Size>
-    static void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& frequencies, size_t max_bit_length, u16 frequency_cap = UINT16_MAX);
+    static void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& frequencies, size_t max_bit_length, u16 frequency_cap = NumericLimits<u16>::max());
     size_t huffman_block_length(Array<u8, max_huffman_literals> const& literal_bit_lengths, Array<u8, max_huffman_distances> const& distance_bit_lengths);
     ErrorOr<void> write_huffman(CanonicalCode const& literal_code, Optional<CanonicalCode> const& distance_code);
     static size_t encode_huffman_lengths(Array<u8, max_huffman_literals + max_huffman_distances> const& lengths, size_t lengths_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths);

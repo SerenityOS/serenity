@@ -16,7 +16,7 @@
 
 struct Range {
     size_t m_from { 1 };
-    size_t m_to { SIZE_MAX };
+    size_t m_to { NumericLimits<size_t>::max() };
 
     [[nodiscard]] bool intersects(Range const& other) const
     {
@@ -73,7 +73,7 @@ static bool expand_list(ByteString& list, Vector<Range>& ranges)
                 return false;
             }
 
-            ranges.append({ index.value(), SIZE_MAX });
+            ranges.append({ index.value(), NumericLimits<size_t>::max() });
         } else {
             auto range = token.split('-', SplitBehavior::KeepEmpty);
             if (range.size() == 2) {
