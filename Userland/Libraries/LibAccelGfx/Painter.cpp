@@ -49,6 +49,43 @@ void main() {
 }
 )";
 
+char const* rect_with_rounded_corners_fragment_shader_source = R"(
+#version 330 core
+uniform vec2 uRectCenter;
+uniform vec2 uRectCorner;
+uniform vec2 uTopLeftRadius;
+uniform vec2 uTopRightRadius;
+uniform vec2 uBottomLeftRadius;
+uniform vec2 uBottomRightRadius;
+uniform vec4 uColor;
+out vec4 fragColor;
+
+bool isPointWithinEllipse(vec2 point, vec2 radius) {
+    vec2 normalizedPoint = point / radius;
+    return dot(normalizedPoint, normalizedPoint) <= 1.0;
+}
+
+void main() {
+    vec2 p = gl_FragCoord.xy - uRectCenter;
+    vec2 cornerRadius = vec2(0.0, 0.0);
+    if (p.x < 0.0 && p.y < 0.0) {
+        cornerRadius = uTopLeftRadius;
+    } else if (p.x > 0.0 && p.y < 0.0) {
+        cornerRadius = uTopRightRadius;
+    } else if (p.x < 0.0 && p.y > 0.0) {
+        cornerRadius = uBottomLeftRadius;
+    } else if (p.x > 0.0 && p.y > 0.0) {
+        cornerRadius = uBottomRightRadius;
+    }
+    vec2 q = abs(p) - (uRectCorner - cornerRadius);
+    if (q.x < 0 || q.y < 0 || isPointWithinEllipse(q, cornerRadius)) {
+        fragColor = uColor;
+    } else {
+        discard;
+    }
+}
+)";
+
 char const* solid_color_fragment_shader_source = R"(
 #version 330 core
 uniform vec4 uColor;
@@ -108,6 +145,7 @@ OwnPtr<Painter> Painter::create()
 Painter::Painter(Context& context)
     : m_context(context)
     , m_rectangle_program(Program::create(vertex_shader_source, solid_color_fragment_shader_source))
+    , m_rounded_rectangle_program(Program::create(vertex_shader_source, rect_with_rounded_corners_fragment_shader_source))
     , m_blit_program(Program::create(blit_vertex_shader_source, blit_fragment_shader_source))
     , m_linear_gradient_program(Program::create(linear_gradient_vertex_shader_source, linear_gradient_fragment_shader_source))
     , m_glyphs_texture(GL::create_texture())
@@ -166,6 +204,52 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
 
     GL::set_uniform(color_uniform, red, green, blue, alpha);
     GL::set_vertex_attribute(position_attribute, 0, 2);
+    GL::enable_blending();
+    GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
+
+    GL::delete_buffer(vbo);
+    GL::delete_vertex_array(vao);
+}
+
+void Painter::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius)
+{
+    fill_rect_with_rounded_corners(rect.to_type<float>(), color, top_left_radius, top_right_radius, bottom_left_radius, bottom_right_radius);
+}
+
+void Painter::fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius)
+{
+    auto vertices = rect_to_vertices(to_clip_space(transform().map(rect)));
+
+    auto vbo = GL::create_buffer();
+    GL::upload_to_buffer(vbo, vertices);
+
+    auto vao = GL::create_vertex_array();
+    GL::bind_vertex_array(vao);
+    GL::bind_buffer(vbo);
+
+    auto [red, green, blue, alpha] = gfx_color_to_opengl_color(color);
+
+    m_rounded_rectangle_program.use();
+
+    auto position_attribute = m_rounded_rectangle_program.get_attribute_location("aVertexPosition");
+    GL::set_vertex_attribute(position_attribute, 0, 2);
+
+    auto color_uniform = m_rounded_rectangle_program.get_uniform_location("uColor");
+    GL::set_uniform(color_uniform, red, green, blue, alpha);
+
+    auto rect_center_uniform = m_rounded_rectangle_program.get_uniform_location("uRectCenter");
+    GL::set_uniform(rect_center_uniform, rect.center().x(), rect.center().y());
+    auto rect_corner_uniform = m_rounded_rectangle_program.get_uniform_location("uRectCorner");
+    GL::set_uniform(rect_corner_uniform, rect.width() / 2, rect.height() / 2);
+    auto top_left_corner_radius_uniform = m_rounded_rectangle_program.get_uniform_location("uTopLeftRadius");
+    GL::set_uniform(top_left_corner_radius_uniform, top_left_radius.horizontal_radius, top_left_radius.vertical_radius);
+    auto top_right_corner_radius_uniform = m_rounded_rectangle_program.get_uniform_location("uTopRightRadius");
+    GL::set_uniform(top_right_corner_radius_uniform, top_right_radius.horizontal_radius, top_right_radius.vertical_radius);
+    auto bottom_left_corner_radius_uniform = m_rounded_rectangle_program.get_uniform_location("uBottomLeftRadius");
+    GL::set_uniform(bottom_left_corner_radius_uniform, bottom_left_radius.horizontal_radius, bottom_left_radius.vertical_radius);
+    auto bottom_right_corner_radius_uniform = m_rounded_rectangle_program.get_uniform_location("uBottomRightRadius");
+    GL::set_uniform(bottom_right_corner_radius_uniform, bottom_right_radius.horizontal_radius, bottom_right_radius.vertical_radius);
+
     GL::enable_blending();
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 

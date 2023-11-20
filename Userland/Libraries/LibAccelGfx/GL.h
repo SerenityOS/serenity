@@ -73,6 +73,7 @@ void bind_texture(Texture const&);
 void upload_texture_data(Texture const& texture, Gfx::Bitmap const& bitmap);
 void delete_texture(Texture const&);
 
+void set_uniform(Uniform const& uniform, float, float);
 void set_uniform(Uniform const& uniform, float, float, float, float);
 void set_vertex_attribute(VertexAttribute const& attribute, u32 offset, int number_of_components);
 
