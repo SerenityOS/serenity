@@ -2345,7 +2345,7 @@ RefPtr<StyleValue> Parser::parse_paint_value(TokenStream<ComponentValue>& tokens
 }
 
 // https://www.w3.org/TR/css-values-4/#position
-RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentValue>& tokens)
+RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentValue>& tokens, PositionParsingMode position_parsing_mode)
 {
     auto parse_position_edge = [](ComponentValue const& token) -> Optional<PositionEdge> {
         if (!token.is(Token::Type::Ident))
@@ -2542,9 +2542,83 @@ RefPtr<PositionStyleValue> Parser::parse_position_value(TokenStream<ComponentVal
         return nullptr;
     };
 
-    // Note: The alternatives must be attempted in this order since `alternative_2' can match a prefix of `alternative_3'
+    // The extra 3-value syntax that's allowed for background-position:
+    // [
+    //   [ [ left | right ] <length-percentage> ] &&
+    //   [ top | bottom ]
+    // |
+    //   [ left | right ] &&
+    //   [ [ top | bottom ] <length-percentage> ]
+    // ]
+    auto alternative_4_for_background_position = [&]() -> RefPtr<PositionStyleValue> {
+        auto transaction = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        Optional<PositionEdge> horizontal_edge;
+        Optional<LengthPercentage> horizontal_offset;
+        Optional<PositionEdge> vertical_edge;
+        Optional<LengthPercentage> vertical_offset;
+
+        auto parse_horizontal = [&] {
+            // [ left | right ] <length-percentage> ]
+            auto transaction = tokens.begin_transaction();
+            tokens.skip_whitespace();
+            auto edge = parse_position_edge(tokens.next_token());
+            if (!edge.has_value() || !is_horizontal(*edge, false))
+                return false;
+            horizontal_edge = move(edge);
+
+            tokens.skip_whitespace();
+            auto length_percentage = parse_length_percentage(tokens.next_token());
+            if (length_percentage.has_value())
+                horizontal_offset = move(length_percentage);
+
+            transaction.commit();
+            return true;
+        };
+
+        auto parse_vertical = [&] {
+            // [ top | bottom ] <length-percentage> ]
+            auto transaction = tokens.begin_transaction();
+            tokens.skip_whitespace();
+            auto edge = parse_position_edge(tokens.next_token());
+            if (!edge.has_value() || !is_vertical(*edge, false))
+                return false;
+            vertical_edge = move(edge);
+
+            tokens.skip_whitespace();
+            auto length_percentage = parse_length_percentage(tokens.next_token());
+            if (length_percentage.has_value())
+                vertical_offset = move(length_percentage);
+
+            transaction.commit();
+            return true;
+        };
+
+        if (parse_horizontal() && parse_vertical()) {
+            transaction.commit();
+            return PositionStyleValue::create(EdgeStyleValue::create(*horizontal_edge, *horizontal_offset), EdgeStyleValue::create(*vertical_edge, *vertical_offset));
+        }
+
+        horizontal_edge.clear();
+        horizontal_offset.clear();
+        vertical_edge.clear();
+        vertical_offset.clear();
+
+        if (parse_vertical() && parse_horizontal()) {
+            transaction.commit();
+            return PositionStyleValue::create(EdgeStyleValue::create(*horizontal_edge, *horizontal_offset), EdgeStyleValue::create(*vertical_edge, *vertical_offset));
+        }
+
+        return nullptr;
+    };
+
+    // Note: The alternatives must be attempted in this order since shorter alternatives can match a prefix of longer ones.
     if (auto position = alternative_3())
         return position.release_nonnull();
+    if (position_parsing_mode == PositionParsingMode::BackgroundPosition) {
+        if (auto position = alternative_4_for_background_position())
+            return position.release_nonnull();
+    }
     if (auto position = alternative_2())
         return position;
     if (auto position = alternative_1())
@@ -2778,24 +2852,20 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
         }
         case PropertyID::BackgroundPosition: {
             VERIFY(!background_position);
-            tokens.reconsume_current_input_token();
-            if (auto maybe_background_position = parse_single_background_position_value(tokens)) {
-                background_position = maybe_background_position.release_nonnull();
+            background_position = value.release_nonnull();
 
-                // Attempt to parse `/ <background-size>`
-                auto transaction = tokens.begin_transaction();
-                auto& maybe_slash = tokens.next_token();
-                if (maybe_slash.is_delim('/')) {
-                    if (auto maybe_background_size = parse_single_background_size_value(tokens)) {
-                        transaction.commit();
-                        background_size = maybe_background_size.release_nonnull();
-                        continue;
-                    }
-                    return nullptr;
+            // Attempt to parse `/ <background-size>`
+            auto transaction = tokens.begin_transaction();
+            auto& maybe_slash = tokens.next_token();
+            if (maybe_slash.is_delim('/')) {
+                if (auto maybe_background_size = parse_single_background_size_value(tokens)) {
+                    transaction.commit();
+                    background_size = maybe_background_size.release_nonnull();
+                    continue;
                 }
-                continue;
+                return nullptr;
             }
-            return nullptr;
+            continue;
         }
         case PropertyID::BackgroundRepeat: {
             VERIFY(!background_repeat);
@@ -2874,149 +2944,6 @@ static Optional<LengthPercentage> style_value_to_length_percentage(auto value)
     if (value->is_calculated())
         return LengthPercentage { value->as_calculated() };
     return {};
-}
-
-RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<ComponentValue>& tokens)
-{
-    // NOTE: This *looks* like it parses a <position>, but it doesn't. From the spec:
-    //      "Note: The background-position property also accepts a three-value syntax.
-    //       This has been disallowed generically because it creates parsing ambiguities
-    //       when combined with other length or percentage components in a property value."
-    //           - https://www.w3.org/TR/css-values-4/#typedef-position
-    //       So, we'll need a separate function to parse <position> later.
-
-    auto transaction = tokens.begin_transaction();
-
-    auto is_horizontal = [](ValueID identifier) -> bool {
-        switch (identifier) {
-        case ValueID::Left:
-        case ValueID::Right:
-            return true;
-        default:
-            return false;
-        }
-    };
-    auto is_vertical = [](ValueID identifier) -> bool {
-        switch (identifier) {
-        case ValueID::Top:
-        case ValueID::Bottom:
-            return true;
-        default:
-            return false;
-        }
-    };
-
-    struct EdgeOffset {
-        PositionEdge edge;
-        LengthPercentage offset;
-        bool edge_provided;
-        bool offset_provided;
-    };
-
-    Optional<EdgeOffset> horizontal;
-    Optional<EdgeOffset> vertical;
-    bool found_center = false;
-
-    auto const center_offset = Percentage { 50 };
-    auto const zero_offset = Length::make_px(0);
-
-    while (tokens.has_next_token()) {
-        // Check if we're done
-        auto seen_items = (horizontal.has_value() ? 1 : 0) + (vertical.has_value() ? 1 : 0) + (found_center ? 1 : 0);
-        if (seen_items == 2)
-            break;
-
-        auto maybe_value = parse_css_value_for_property(PropertyID::BackgroundPosition, tokens);
-        if (!maybe_value)
-            break;
-        auto value = maybe_value.release_nonnull();
-
-        if (auto offset = style_value_to_length_percentage(value); offset.has_value()) {
-            if (!horizontal.has_value()) {
-                horizontal = EdgeOffset { PositionEdge::Left, *offset, false, true };
-            } else if (!vertical.has_value()) {
-                vertical = EdgeOffset { PositionEdge::Top, *offset, false, true };
-            } else {
-                return nullptr;
-            }
-            continue;
-        }
-
-        auto try_parse_offset = [&](bool& offset_provided) -> LengthPercentage {
-            auto transaction = tokens.begin_transaction();
-            if (tokens.has_next_token()) {
-                auto maybe_value = parse_css_value_for_property(PropertyID::BackgroundPosition, tokens);
-                if (!maybe_value)
-                    return zero_offset;
-                auto offset = style_value_to_length_percentage(maybe_value.release_nonnull());
-                if (offset.has_value()) {
-                    offset_provided = true;
-                    transaction.commit();
-                    return *offset;
-                }
-            }
-            return zero_offset;
-        };
-
-        if (value->is_identifier()) {
-            auto identifier = value->to_identifier();
-            if (is_horizontal(identifier)) {
-                bool offset_provided = false;
-                auto offset = try_parse_offset(offset_provided);
-                horizontal = EdgeOffset { *value_id_to_position_edge(identifier), offset, true, offset_provided };
-            } else if (is_vertical(identifier)) {
-                bool offset_provided = false;
-                auto offset = try_parse_offset(offset_provided);
-                vertical = EdgeOffset { *value_id_to_position_edge(identifier), offset, true, offset_provided };
-            } else if (identifier == ValueID::Center) {
-                found_center = true;
-            } else {
-                return nullptr;
-            }
-            continue;
-        }
-
-        tokens.reconsume_current_input_token();
-        break;
-    }
-
-    if (found_center) {
-        if (horizontal.has_value() && vertical.has_value())
-            return nullptr;
-        if (!horizontal.has_value())
-            horizontal = EdgeOffset { PositionEdge::Left, center_offset, true, false };
-        if (!vertical.has_value())
-            vertical = EdgeOffset { PositionEdge::Top, center_offset, true, false };
-    }
-
-    if (!horizontal.has_value() && !vertical.has_value())
-        return nullptr;
-
-    // Unpack `<edge> <length>`:
-    // The loop above reads this pattern as a single EdgeOffset, when actually, it should be treated
-    // as `x y` if the edge is horizontal, and `y` (with the second token reconsumed) otherwise.
-    if (!vertical.has_value() && horizontal->edge_provided && horizontal->offset_provided) {
-        // Split into `x y`
-        vertical = EdgeOffset { PositionEdge::Top, horizontal->offset, false, true };
-        horizontal->offset = zero_offset;
-        horizontal->offset_provided = false;
-    } else if (!horizontal.has_value() && vertical->edge_provided && vertical->offset_provided) {
-        // `y`, reconsume
-        vertical->offset = zero_offset;
-        vertical->offset_provided = false;
-        tokens.reconsume_current_input_token();
-    }
-
-    // If only one value is specified, the second value is assumed to be center.
-    if (!horizontal.has_value())
-        horizontal = EdgeOffset { PositionEdge::Left, center_offset, false, false };
-    if (!vertical.has_value())
-        vertical = EdgeOffset { PositionEdge::Top, center_offset, false, false };
-
-    transaction.commit();
-    return PositionStyleValue::create(
-        EdgeStyleValue::create(horizontal->edge, horizontal->offset),
-        EdgeStyleValue::create(vertical->edge, vertical->offset));
 }
 
 RefPtr<StyleValue> Parser::parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>& tokens, PropertyID property)
@@ -5797,7 +5724,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundPosition:
-        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_position_value(tokens); }))
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_position_value(tokens, PositionParsingMode::BackgroundPosition); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundPositionX:
@@ -6126,6 +6053,11 @@ Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readon
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Position); property.has_value()) {
         if (auto maybe_position = parse_position_value(tokens))
+            return PropertyAndValue { *property, maybe_position };
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::BackgroundPosition); property.has_value()) {
+        if (auto maybe_position = parse_position_value(tokens, PositionParsingMode::BackgroundPosition))
             return PropertyAndValue { *property, maybe_position };
     }
 

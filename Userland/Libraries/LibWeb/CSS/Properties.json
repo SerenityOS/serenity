@@ -221,17 +221,8 @@
     "initial": "0% 0%",
     "max-values": 4,
     "valid-types": [
-      "length [-∞,∞]",
-      "percentage [-∞,∞]"
+      "background-position"
     ],
-    "valid-identifiers": [
-      "bottom",
-      "center",
-      "left",
-      "right",
-      "top"
-    ],
-    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ],

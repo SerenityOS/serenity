@@ -215,7 +215,11 @@ private:
     RefPtr<StyleValue> parse_string_value(ComponentValue const&);
     RefPtr<StyleValue> parse_image_value(ComponentValue const&);
     RefPtr<StyleValue> parse_paint_value(TokenStream<ComponentValue>&);
-    RefPtr<PositionStyleValue> parse_position_value(TokenStream<ComponentValue>&);
+    enum class PositionParsingMode {
+        Normal,
+        BackgroundPosition,
+    };
+    RefPtr<PositionStyleValue> parse_position_value(TokenStream<ComponentValue>&, PositionParsingMode = PositionParsingMode::Normal);
     template<typename ParseFunction>
     RefPtr<StyleValue> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
     RefPtr<StyleValue> parse_simple_comma_separated_value_list(PropertyID, Vector<ComponentValue> const&);
@@ -223,7 +227,6 @@ private:
     RefPtr<StyleValue> parse_filter_value_list_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_aspect_ratio_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_background_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_single_background_position_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>&, PropertyID);
     RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_single_background_size_value(TokenStream<ComponentValue>&);
