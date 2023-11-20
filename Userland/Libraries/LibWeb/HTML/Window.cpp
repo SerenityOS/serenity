@@ -1563,7 +1563,7 @@ OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> Window::document_tree_child_
 }
 
 // https://html.spec.whatwg.org/#named-access-on-the-window-object
-Vector<DeprecatedString> Window::supported_property_names()
+Vector<String> Window::supported_property_names()
 {
     // The Window object supports named properties.
     // The supported property names of a Window object window at any moment consist of the following,
@@ -1590,12 +1590,12 @@ Vector<DeprecatedString> Window::supported_property_names()
         return IterationDecision::Continue;
     });
 
-    // FIXME: Many copies here. Would be nice to be able to return Vector<String>
-    Vector<DeprecatedString> names;
+    Vector<String> names;
     names.ensure_capacity(property_names.size());
     for (auto const& name : property_names) {
-        names.append(name.to_deprecated_string());
+        names.append(name);
     }
+
     return names;
 }
 
