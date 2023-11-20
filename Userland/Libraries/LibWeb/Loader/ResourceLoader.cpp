@@ -59,8 +59,8 @@ ErrorOr<NonnullRefPtr<ResourceLoader>> ResourceLoader::try_create(NonnullRefPtr<
 
 ResourceLoader::ResourceLoader(NonnullRefPtr<ResourceLoaderConnector> connector)
     : m_connector(move(connector))
-    , m_user_agent(default_user_agent)
-    , m_platform(default_platform)
+    , m_user_agent(MUST(String::from_utf8(default_user_agent)))
+    , m_platform(MUST(String::from_utf8(default_platform)))
 {
 }
 
@@ -315,7 +315,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         auto proxy = ProxyMappings::the().proxy_for_url(url);
 
         HashMap<DeprecatedString, DeprecatedString> headers;
-        headers.set("User-Agent", m_user_agent);
+        headers.set("User-Agent", m_user_agent.to_deprecated_string());
         headers.set("Accept-Encoding", "gzip, deflate, br");
 
         for (auto& it : request.headers()) {
