@@ -42,7 +42,7 @@ void CSSSupportsRule::set_condition_text(String const& text)
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-css-rule
-DeprecatedString CSSSupportsRule::serialized() const
+String CSSSupportsRule::serialized() const
 {
     // Note: The spec doesn't cover this yet, so I'm roughly following the spec for the @media rule.
     // It should be pretty close!
@@ -61,7 +61,7 @@ DeprecatedString CSSSupportsRule::serialized() const
     }
     builder.append("\n}"sv);
 
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 }

@@ -56,7 +56,7 @@ void CSSImportRule::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule
-DeprecatedString CSSImportRule::serialized() const
+String CSSImportRule::serialized() const
 {
     StringBuilder builder;
     // The result of concatenating the following:
@@ -75,7 +75,7 @@ DeprecatedString CSSImportRule::serialized() const
     // 4. The string ";", i.e., SEMICOLON (U+003B).
     builder.append(';');
 
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 void CSSImportRule::resource_did_fail()

@@ -45,7 +45,7 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     virtual void initialize(JS::Realm&) override;
-    virtual DeprecatedString serialized() const override;
+    virtual String serialized() const override;
 
     FlyString m_name;
     Vector<JS::NonnullGCPtr<CSSKeyframeRule>> m_keyframes;

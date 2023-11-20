@@ -45,7 +45,7 @@ CSSStyleDeclaration* CSSStyleRule::style()
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule
-DeprecatedString CSSStyleRule::serialized() const
+String CSSStyleRule::serialized() const
 {
     StringBuilder builder;
 
@@ -58,12 +58,12 @@ DeprecatedString CSSStyleRule::serialized() const
     auto decls = declaration().length() > 0 ? declaration().serialized() : Optional<DeprecatedString>();
 
     // FIXME: 3. Let rules be the result of performing serialize a CSS rule on each rule in the rule’s cssRules list, or null if there are no such rules.
-    Optional<DeprecatedString> rules;
+    Optional<String> rules;
 
     // 4. If decls and rules are both null, append " }" to s (i.e. a single SPACE (U+0020) followed by RIGHT CURLY BRACKET (U+007D)) and return s.
     if (!decls.has_value() && !rules.has_value()) {
         builder.append(" }"sv);
-        return builder.to_deprecated_string();
+        return MUST(builder.to_string());
     }
 
     // 5. If rules is null:
@@ -75,7 +75,7 @@ DeprecatedString CSSStyleRule::serialized() const
         //    3. Append " }" to s (i.e. a single SPACE (U+0020) followed by RIGHT CURLY BRACKET (U+007D)).
         builder.append(" }"sv);
         //    4. Return s.
-        return builder.to_deprecated_string();
+        return MUST(builder.to_string());
     }
 
     // FIXME: 6. Otherwise:

@@ -30,17 +30,17 @@ void CSSKeyframesRule::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSKeyframesRulePrototype>(realm, "CSSKeyframesRule"));
 }
 
-DeprecatedString CSSKeyframesRule::serialized() const
+String CSSKeyframesRule::serialized() const
 {
     StringBuilder builder;
     builder.appendff("@keyframes \"{}\"", name());
     builder.append(" { "sv);
-    for (auto& keyframe : keyframes()) {
+    for (auto const& keyframe : keyframes()) {
         builder.append(keyframe->css_text());
         builder.append(' ');
     }
     builder.append('}');
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 }

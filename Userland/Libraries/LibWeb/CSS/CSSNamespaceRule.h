@@ -30,7 +30,7 @@ private:
 
     virtual void initialize(JS::Realm&) override;
 
-    virtual DeprecatedString serialized() const override;
+    virtual String serialized() const override;
     DeprecatedString m_namespace_uri;
     DeprecatedString m_prefix;
 };

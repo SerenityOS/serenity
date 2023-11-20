@@ -38,7 +38,7 @@ private:
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
-    virtual DeprecatedString serialized() const override;
+    virtual String serialized() const override;
 
     JS::NonnullGCPtr<MediaList> m_media;
 };
