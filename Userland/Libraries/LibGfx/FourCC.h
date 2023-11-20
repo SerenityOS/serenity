@@ -8,8 +8,10 @@
 
 namespace Gfx {
 
-struct FourCC {
-    constexpr FourCC(char const* name)
+struct [[gnu::packed]] FourCC {
+    FourCC() = default;
+
+    constexpr FourCC(char const name[4])
     {
         cc[0] = name[0];
         cc[1] = name[1];
@@ -19,6 +21,14 @@ struct FourCC {
 
     bool operator==(FourCC const&) const = default;
     bool operator!=(FourCC const&) const = default;
+
+    u32 to_u32() const
+    {
+        return (static_cast<u8>(cc[0]) << 24)
+            | (static_cast<u8>(cc[1]) << 16)
+            | (static_cast<u8>(cc[2]) << 8)
+            | static_cast<u8>(cc[3]);
+    }
 
     char cc[4];
 };
