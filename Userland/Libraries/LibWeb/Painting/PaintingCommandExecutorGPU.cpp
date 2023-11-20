@@ -75,15 +75,16 @@ CommandResult PaintingCommandExecutorGPU::set_font(Gfx::Font const&)
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::push_stacking_context(float, bool, Gfx::IntRect const&, Gfx::IntPoint, CSS::ImageRendering, StackingContextTransform, Optional<StackingContextMask>)
+CommandResult PaintingCommandExecutorGPU::push_stacking_context(float, bool, Gfx::IntRect const&, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform, Optional<StackingContextMask>)
 {
-    // FIXME
+    painter().save();
+    painter().translate(post_transform_translation.to_type<float>());
     return CommandResult::Continue;
 }
 
 CommandResult PaintingCommandExecutorGPU::pop_stacking_context()
 {
-    // FIXME
+    painter().restore();
     return CommandResult::Continue;
 }
 

@@ -39,6 +39,7 @@ public:
 
     [[nodiscard]] Gfx::AffineTransform const& transform() const { return state().transform; }
     void set_transform(Gfx::AffineTransform const& transform) { state().transform = transform; }
+    void translate(Gfx::FloatPoint translation) { state().transform.translate(translation); }
 
     void fill_rect(Gfx::FloatRect, Gfx::Color);
     void fill_rect(Gfx::IntRect, Gfx::Color);
