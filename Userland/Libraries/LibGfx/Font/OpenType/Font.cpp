@@ -704,6 +704,12 @@ u32 Font::glyph_id_for_code_point(u32 code_point) const
     return glyph_page(code_point / GlyphPage::glyphs_per_page).glyph_ids[code_point % GlyphPage::glyphs_per_page];
 }
 
+Optional<u32> Font::glyph_id_for_postscript_name(StringView) const
+{
+    // FIXME: Look at 'post' or 'CFF ' data if present.
+    return {};
+}
+
 Font::GlyphPage const& Font::glyph_page(size_t page_index) const
 {
     if (page_index == 0) {

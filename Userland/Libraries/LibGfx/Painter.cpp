@@ -1365,7 +1365,22 @@ FLATTEN void Painter::draw_glyph(FloatPoint point, u32 code_point, Font const& f
     auto top_left = point + FloatPoint(font.glyph_left_bearing(code_point), 0);
     auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(top_left);
     auto glyph = font.glyph(code_point, glyph_position.subpixel_offset);
+    draw_glyph_internal(point, glyph_position, top_left, glyph, color);
+}
 
+FLATTEN void Painter::draw_glyph_with_postscript_name(FloatPoint point, StringView name, Font const& font, Color color)
+{
+    auto left_bearing = font.glyph_left_bearing_for_postscript_name(name);
+    if (!left_bearing.has_value())
+        return;
+    auto top_left = point + FloatPoint(left_bearing.value(), 0);
+    auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(top_left);
+    auto glyph = font.glyph_for_postscript_name(name, glyph_position.subpixel_offset).value();
+    draw_glyph_internal(point, glyph_position, top_left, glyph, color);
+}
+
+FLATTEN void Painter::draw_glyph_internal(FloatPoint point, GlyphRasterPosition const& glyph_position, FloatPoint top_left, Glyph const& glyph, Color color)
+{
     if (glyph.is_glyph_bitmap()) {
         draw_bitmap(top_left.to_type<int>(), glyph.glyph_bitmap(), color);
     } else if (glyph.is_color_bitmap()) {
