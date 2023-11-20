@@ -2062,9 +2062,9 @@ void Element::scroll(HTML::ScrollToOptions const&)
     dbgln("FIXME: Implement Element::scroll(ScrollToOptions)");
 }
 
-bool Element::id_reference_exists(DeprecatedString const& id_reference) const
+bool Element::id_reference_exists(String const& id_reference) const
 {
-    return document().get_element_by_id(MUST(FlyString::from_deprecated_fly_string(id_reference)));
+    return document().get_element_by_id(id_reference);
 }
 
 void Element::register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserverRegistration registration)

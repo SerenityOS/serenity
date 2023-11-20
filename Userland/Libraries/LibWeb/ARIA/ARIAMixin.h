@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibWeb/ARIA/AriaData.h>
 #include <LibWeb/ARIA/Roles.h>
@@ -180,15 +180,15 @@ public:
     bool has_global_aria_attribute() const;
 
     // https://www.w3.org/TR/wai-aria-1.2/#valuetype_idref
-    Optional<DeprecatedString> parse_id_reference(DeprecatedString const&) const;
+    Optional<String> parse_id_reference(Optional<String> const&) const;
 
     // https://www.w3.org/TR/wai-aria-1.2/#valuetype_idref_list
-    Vector<DeprecatedString> parse_id_reference_list(DeprecatedString const&) const;
+    Vector<String> parse_id_reference_list(Optional<String> const&) const;
 
 protected:
     ARIAMixin() = default;
 
-    virtual bool id_reference_exists(DeprecatedString const&) const = 0;
+    virtual bool id_reference_exists(String const&) const = 0;
 };
 
 }

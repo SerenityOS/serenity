@@ -151,7 +151,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<AriaData>> build_data(ARIAMixin const& mixin) { return adopt_nonnull_own_or_enomem(new (nothrow) AriaData(mixin)); }
 
-    Optional<DeprecatedString> aria_active_descendant_or_default() const;
+    Optional<String> aria_active_descendant_or_default() const;
     bool aria_atomic_or_default(bool default_value = false) const;
     AriaAutocomplete aria_auto_complete_or_default() const;
     bool aria_busy_or_default() const;
@@ -159,36 +159,36 @@ public:
     Optional<i32> aria_col_count_or_default() const;
     Optional<i32> aria_col_index_or_default() const;
     Optional<i32> aria_col_span_or_default() const;
-    Vector<DeprecatedString> aria_controls_or_default() const;
+    Vector<String> aria_controls_or_default() const;
     AriaCurrent aria_current_or_default() const;
-    Vector<DeprecatedString> aria_described_by_or_default() const;
-    Optional<DeprecatedString> aria_details_or_default() const;
+    Vector<String> aria_described_by_or_default() const;
+    Optional<String> aria_details_or_default() const;
     bool aria_disabled_or_default() const;
     Vector<AriaDropEffect> aria_drop_effect_or_default() const;
-    Optional<DeprecatedString> aria_error_message_or_default() const;
+    Optional<String> aria_error_message_or_default() const;
     Optional<bool> aria_expanded_or_default() const;
-    Vector<DeprecatedString> aria_flow_to_or_default() const;
+    Vector<String> aria_flow_to_or_default() const;
     Optional<bool> aria_grabbed_or_default() const;
     AriaHasPopup aria_has_popup_or_default() const;
     Optional<bool> aria_hidden_or_default() const;
     AriaInvalid aria_invalid_or_default() const;
-    DeprecatedString aria_key_shortcuts_or_default() const;
-    DeprecatedString aria_label_or_default() const;
-    Vector<DeprecatedString> aria_labelled_by_or_default() const;
+    String aria_key_shortcuts_or_default() const;
+    String aria_label_or_default() const;
+    Vector<String> aria_labelled_by_or_default() const;
     Optional<i32> aria_level_or_default() const;
     AriaLive aria_live_or_default(AriaLive default_value = AriaLive::Off) const;
     bool aria_modal_or_default() const;
     bool aria_multi_line_or_default() const;
     bool aria_multi_selectable_or_default() const;
     AriaOrientation aria_orientation_or_default(AriaOrientation default_value = AriaOrientation::Undefined) const;
-    Vector<DeprecatedString> aria_owns_or_default() const;
-    DeprecatedString aria_placeholder_or_default() const;
+    Vector<String> aria_owns_or_default() const;
+    String aria_placeholder_or_default() const;
     Optional<i32> aria_pos_in_set_or_default() const;
     Tristate aria_pressed_or_default() const;
     bool aria_read_only_or_default() const;
     Vector<AriaRelevant> aria_relevant_or_default() const;
     bool aria_required_or_default() const;
-    DeprecatedString aria_role_description_or_default() const;
+    String aria_role_description_or_default() const;
     Optional<i32> aria_row_count_or_default() const;
     Optional<i32> aria_row_index_or_default() const;
     Optional<i32> aria_row_span_or_default() const;
@@ -198,7 +198,7 @@ public:
     Optional<f64> aria_value_max_or_default(Optional<f64> default_value = {}) const;
     Optional<f64> aria_value_min_or_default(Optional<f64> default_value = {}) const;
     Optional<f64> aria_value_now_or_default() const;
-    DeprecatedString aria_value_text_or_default() const;
+    String aria_value_text_or_default() const;
 
 private:
     explicit AriaData(ARIAMixin const&);
@@ -232,7 +232,7 @@ private:
     static AriaSort parse_aria_sort(Optional<String> const&);
     static Optional<bool> parse_optional_true_false(Optional<String> const&);
 
-    Optional<DeprecatedString> m_aria_active_descendant;
+    Optional<String> m_aria_active_descendant;
     Optional<bool> m_aria_atomic;
     AriaAutocomplete m_aria_auto_complete;
     bool m_aria_busy;
@@ -240,36 +240,36 @@ private:
     Optional<i32> m_aria_col_count;
     Optional<i32> m_aria_col_index;
     Optional<i32> m_aria_col_span;
-    Vector<DeprecatedString> m_aria_controls;
+    Vector<String> m_aria_controls;
     AriaCurrent m_aria_current;
-    Vector<DeprecatedString> m_aria_described_by;
-    Optional<DeprecatedString> m_aria_details;
+    Vector<String> m_aria_described_by;
+    Optional<String> m_aria_details;
     bool m_aria_disabled;
     Vector<AriaDropEffect> m_aria_drop_effect;
-    Optional<DeprecatedString> m_aria_error_message;
+    Optional<String> m_aria_error_message;
     Optional<bool> m_aria_expanded;
-    Vector<DeprecatedString> m_aria_flow_to;
+    Vector<String> m_aria_flow_to;
     Optional<bool> m_aria_grabbed;
     AriaHasPopup m_aria_has_popup;
     Optional<bool> m_aria_hidden;
     AriaInvalid m_aria_invalid;
-    DeprecatedString m_aria_key_shortcuts;
-    DeprecatedString m_aria_label;
-    Vector<DeprecatedString> m_aria_labelled_by;
+    String m_aria_key_shortcuts;
+    String m_aria_label;
+    Vector<String> m_aria_labelled_by;
     Optional<i32> m_aria_level;
     Optional<AriaLive> m_aria_live;
     bool m_aria_modal;
     bool m_aria_multi_line;
     bool m_aria_multi_selectable;
     Optional<AriaOrientation> m_aria_orientation;
-    Vector<DeprecatedString> m_aria_owns;
-    DeprecatedString m_aria_placeholder;
+    Vector<String> m_aria_owns;
+    String m_aria_placeholder;
     Optional<i32> m_aria_pos_in_set;
     Tristate m_aria_pressed;
     bool m_aria_read_only;
     Vector<AriaRelevant> m_aria_relevant;
     bool m_aria_required;
-    DeprecatedString m_aria_role_description;
+    String m_aria_role_description;
     Optional<i32> m_aria_row_count;
     Optional<i32> m_aria_row_index;
     Optional<i32> m_aria_row_span;
@@ -279,7 +279,7 @@ private:
     Optional<f64> m_aria_value_max;
     Optional<f64> m_aria_value_min;
     Optional<f64> m_aria_value_now;
-    DeprecatedString m_aria_value_text;
+    String m_aria_value_text;
 };
 
 }

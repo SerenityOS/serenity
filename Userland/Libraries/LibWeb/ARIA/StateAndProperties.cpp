@@ -13,8 +13,7 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
 {
     switch (state_or_property) {
     case StateAndProperties::AriaActiveDescendant: {
-        auto value = aria_data.aria_active_descendant_or_default();
-        return value.has_value() ? String::from_deprecated_string(value.value()) : String::from_utf8(""sv);
+        return aria_data.aria_active_descendant_or_default().value_or(String {});
     }
     case StateAndProperties::AriaAtomic: {
         bool value;
@@ -73,8 +72,7 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
     case StateAndProperties::AriaDescribedBy:
         return id_reference_list_to_string(aria_data.aria_described_by_or_default());
     case StateAndProperties::AriaDetails: {
-        auto value = aria_data.aria_details_or_default();
-        return value.has_value() ? String::from_deprecated_string(value.value()) : String::from_utf8(""sv);
+        return aria_data.aria_details_or_default().value_or(String {});
     }
     case StateAndProperties::AriaDisabled:
         return aria_data.aria_disabled_or_default() ? "true"_string : "false"_string;
@@ -113,8 +111,7 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
         return builder.to_string();
     }
     case StateAndProperties::AriaErrorMessage: {
-        auto value = aria_data.aria_error_message_or_default();
-        return value.has_value() ? String::from_deprecated_string(value.value()) : String {};
+        return aria_data.aria_error_message_or_default().value_or(String {});
     }
     case StateAndProperties::AriaExpanded:
         return ARIA::optional_bool_to_string(aria_data.aria_expanded_or_default());
@@ -159,9 +156,9 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
         VERIFY_NOT_REACHED();
     }
     case StateAndProperties::AriaKeyShortcuts:
-        return String::from_deprecated_string(aria_data.aria_key_shortcuts_or_default());
+        return aria_data.aria_key_shortcuts_or_default();
     case StateAndProperties::AriaLabel:
-        return String::from_deprecated_string(aria_data.aria_label_or_default());
+        return aria_data.aria_label_or_default();
     case StateAndProperties::AriaLabelledBy:
         return id_reference_list_to_string(aria_data.aria_labelled_by_or_default());
     case StateAndProperties::AriaLevel:
@@ -209,7 +206,7 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
     case StateAndProperties::AriaOwns:
         return id_reference_list_to_string(aria_data.aria_owns_or_default());
     case StateAndProperties::AriaPlaceholder:
-        return String::from_deprecated_string(aria_data.aria_placeholder_or_default());
+        return aria_data.aria_placeholder_or_default();
     case StateAndProperties::AriaPosInSet:
         return ARIA::optional_integer_to_string(aria_data.aria_pos_in_set_or_default());
     case StateAndProperties::AriaPressed:
@@ -250,7 +247,7 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
     case StateAndProperties::AriaRequired:
         return String::from_utf8(aria_data.aria_required_or_default() ? "true"sv : "false"sv);
     case StateAndProperties::AriaRoleDescription:
-        return String::from_deprecated_string(aria_data.aria_role_description_or_default());
+        return aria_data.aria_role_description_or_default();
     case StateAndProperties::AriaRowCount:
         return ARIA::optional_integer_to_string(aria_data.aria_row_count_or_default());
     case StateAndProperties::AriaRowIndex:
@@ -288,7 +285,7 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
     case StateAndProperties::AriaValueNow:
         return ARIA::optional_number_to_string(aria_data.aria_value_now_or_default());
     case StateAndProperties::AriaValueText:
-        return String::from_deprecated_string(aria_data.aria_value_text_or_default());
+        return aria_data.aria_value_text_or_default();
     }
     VERIFY_NOT_REACHED();
 }
@@ -330,7 +327,8 @@ ErrorOr<String> optional_number_to_string(Optional<f64> value)
         return "undefined"_string;
     return String::number(value.value());
 }
-ErrorOr<String> id_reference_list_to_string(Vector<DeprecatedString> const& value)
+
+ErrorOr<String> id_reference_list_to_string(Vector<String> const& value)
 {
     StringBuilder builder;
     for (auto const& id : value) {
