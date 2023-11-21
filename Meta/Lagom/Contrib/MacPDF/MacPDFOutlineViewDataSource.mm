@@ -60,7 +60,7 @@
 {
     if (_groupName)
         return _groupName;
-    return [NSString stringWithFormat:@"%s", _item->title.characters()]; // FIXME: encoding?
+    return [NSString stringWithUTF8String:_item->title.characters()];
 }
 @end
 
