@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/Time.h>
 #include <LibIPC/Forward.h>
 #include <LibWeb/Cookie/Cookie.h>
@@ -15,13 +15,13 @@
 namespace Web::Cookie {
 
 struct ParsedCookie {
-    DeprecatedString name;
-    DeprecatedString value;
+    String name;
+    String value;
     SameSite same_site_attribute { SameSite::Default };
     Optional<UnixDateTime> expiry_time_from_expires_attribute {};
     Optional<UnixDateTime> expiry_time_from_max_age_attribute {};
-    Optional<DeprecatedString> domain {};
-    Optional<DeprecatedString> path {};
+    Optional<String> domain {};
+    Optional<String> path {};
     bool secure_attribute_present { false };
     bool http_only_attribute_present { false };
 };

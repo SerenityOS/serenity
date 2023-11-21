@@ -12,6 +12,7 @@
 #include <AK/Vector.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
+#include <LibWeb/Infra/Strings.h>
 #include <ctype.h>
 
 namespace Web::Cookie {
@@ -75,7 +76,7 @@ Optional<ParsedCookie> parse_cookie(StringView cookie_string)
         return {};
 
     // 6. The cookie-name is the name string, and the cookie-value is the value string.
-    ParsedCookie parsed_cookie { name, value };
+    ParsedCookie parsed_cookie { MUST(String::from_utf8(name)), MUST(String::from_utf8(value)) };
 
     parse_attributes(parsed_cookie, unparsed_attributes);
     return parsed_cookie;
@@ -197,7 +198,7 @@ void on_domain_attribute(ParsedCookie& parsed_cookie, StringView attribute_value
     }
 
     // Convert the cookie-domain to lower case.
-    parsed_cookie.domain = DeprecatedString(cookie_domain).to_lowercase();
+    parsed_cookie.domain = MUST(Infra::to_ascii_lowercase(cookie_domain));
 }
 
 void on_path_attribute(ParsedCookie& parsed_cookie, StringView attribute_value)
@@ -210,7 +211,7 @@ void on_path_attribute(ParsedCookie& parsed_cookie, StringView attribute_value)
         return;
 
     // Let cookie-path be the attribute-value
-    parsed_cookie.path = attribute_value;
+    parsed_cookie.path = MUST(String::from_utf8(attribute_value));
 }
 
 void on_secure_attribute(ParsedCookie& parsed_cookie)
@@ -373,12 +374,12 @@ ErrorOr<void> IPC::encode(Encoder& encoder, Web::Cookie::ParsedCookie const& coo
 template<>
 ErrorOr<Web::Cookie::ParsedCookie> IPC::decode(Decoder& decoder)
 {
-    auto name = TRY(decoder.decode<DeprecatedString>());
-    auto value = TRY(decoder.decode<DeprecatedString>());
+    auto name = TRY(decoder.decode<String>());
+    auto value = TRY(decoder.decode<String>());
     auto expiry_time_from_expires_attribute = TRY(decoder.decode<Optional<UnixDateTime>>());
     auto expiry_time_from_max_age_attribute = TRY(decoder.decode<Optional<UnixDateTime>>());
-    auto domain = TRY(decoder.decode<Optional<DeprecatedString>>());
-    auto path = TRY(decoder.decode<Optional<DeprecatedString>>());
+    auto domain = TRY(decoder.decode<Optional<String>>());
+    auto path = TRY(decoder.decode<Optional<String>>());
     auto secure_attribute_present = TRY(decoder.decode<bool>());
     auto http_only_attribute_present = TRY(decoder.decode<bool>());
     auto same_site_attribute = TRY(decoder.decode<Web::Cookie::SameSite>());
