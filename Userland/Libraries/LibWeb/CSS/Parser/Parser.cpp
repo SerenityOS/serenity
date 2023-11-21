@@ -5431,26 +5431,26 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(PropertyID
     auto end_property = (property_id == PropertyID::GridColumn) ? PropertyID::GridColumnEnd : PropertyID::GridRowEnd;
 
     auto tokens = TokenStream { component_values };
-    auto current_token = tokens.next_token().token();
+    auto current_token = tokens.next_token();
 
     Vector<ComponentValue> track_start_placement_tokens;
     while (true) {
-        if (current_token.is(Token::Type::Delim) && current_token.delim() == "/"sv)
+        if (current_token.is_delim('/'))
             break;
         track_start_placement_tokens.append(current_token);
         if (!tokens.has_next_token())
             break;
-        current_token = tokens.next_token().token();
+        current_token = tokens.next_token();
     }
 
     Vector<ComponentValue> track_end_placement_tokens;
     if (tokens.has_next_token()) {
-        current_token = tokens.next_token().token();
+        current_token = tokens.next_token();
         while (true) {
             track_end_placement_tokens.append(current_token);
             if (!tokens.has_next_token())
                 break;
-            current_token = tokens.next_token().token();
+            current_token = tokens.next_token();
         }
     }
 
