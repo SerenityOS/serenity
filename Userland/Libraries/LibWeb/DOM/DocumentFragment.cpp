@@ -19,7 +19,7 @@ DocumentFragment::DocumentFragment(Document& document)
 void DocumentFragment::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentFragmentPrototype>(realm, "DocumentFragment"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentFragmentPrototype>(realm, "DocumentFragment"_fly_string));
 }
 
 void DocumentFragment::visit_edges(Cell::Visitor& visitor)

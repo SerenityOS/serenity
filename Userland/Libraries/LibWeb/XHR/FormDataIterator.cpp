@@ -16,7 +16,7 @@ template<>
 void Intrinsics::create_web_prototype_and_constructor<FormDataIteratorPrototype>(JS::Realm& realm)
 {
     auto prototype = heap().allocate<FormDataIteratorPrototype>(realm, realm);
-    m_prototypes.set("FormDataIterator"sv, prototype);
+    m_prototypes.set("FormDataIterator"_fly_string, prototype);
 }
 
 }
@@ -42,7 +42,7 @@ FormDataIterator::~FormDataIterator() = default;
 void FormDataIterator::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::FormDataIteratorPrototype>(realm, "FormDataIterator"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::FormDataIteratorPrototype>(realm, "FormDataIterator"_fly_string));
 }
 
 void FormDataIterator::visit_edges(Cell::Visitor& visitor)

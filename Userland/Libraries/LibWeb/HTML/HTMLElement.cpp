@@ -48,7 +48,7 @@ HTMLElement::~HTMLElement() = default;
 void HTMLElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"_fly_string));
 
     m_dataset = DOMStringMap::create(*this);
 }

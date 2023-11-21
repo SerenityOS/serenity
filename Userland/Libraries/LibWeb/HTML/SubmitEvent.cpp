@@ -32,7 +32,7 @@ SubmitEvent::~SubmitEvent() = default;
 void SubmitEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SubmitEventPrototype>(realm, "SubmitEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SubmitEventPrototype>(realm, "SubmitEvent"_fly_string));
 }
 
 void SubmitEvent::visit_edges(Cell::Visitor& visitor)

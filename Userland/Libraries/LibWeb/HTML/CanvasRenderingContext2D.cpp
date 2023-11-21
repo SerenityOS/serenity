@@ -45,7 +45,7 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
 void CanvasRenderingContext2D::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CanvasRenderingContext2DPrototype>(realm, "CanvasRenderingContext2D"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CanvasRenderingContext2DPrototype>(realm, "CanvasRenderingContext2D"_fly_string));
 }
 
 void CanvasRenderingContext2D::visit_edges(Cell::Visitor& visitor)

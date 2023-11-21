@@ -128,7 +128,7 @@ WritableStreamDefaultWriter::WritableStreamDefaultWriter(JS::Realm& realm)
 void WritableStreamDefaultWriter::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::WritableStreamDefaultWriterPrototype>(realm, "WritableStreamDefaultWriter"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WritableStreamDefaultWriterPrototype>(realm, "WritableStreamDefaultWriter"_fly_string));
 }
 
 void WritableStreamDefaultWriter::visit_edges(Cell::Visitor& visitor)

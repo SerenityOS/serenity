@@ -21,7 +21,7 @@ HTMLBaseElement::~HTMLBaseElement() = default;
 void HTMLBaseElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBaseElementPrototype>(realm, "HTMLBaseElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBaseElementPrototype>(realm, "HTMLBaseElement"_fly_string));
 }
 
 void HTMLBaseElement::inserted()

@@ -34,7 +34,7 @@ PerformanceObserver::~PerformanceObserver() = default;
 void PerformanceObserver::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformanceObserverPrototype>(realm, "PerformanceObserver"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformanceObserverPrototype>(realm, "PerformanceObserver"_fly_string));
 }
 
 void PerformanceObserver::visit_edges(Cell::Visitor& visitor)

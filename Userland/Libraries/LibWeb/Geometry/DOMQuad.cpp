@@ -75,7 +75,7 @@ JS::NonnullGCPtr<DOMRect> DOMQuad::get_bounds() const
 void DOMQuad::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMQuadPrototype>(realm, "DOMQuad"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMQuadPrototype>(realm, "DOMQuad"_fly_string));
 }
 
 void DOMQuad::visit_edges(Cell::Visitor& visitor)

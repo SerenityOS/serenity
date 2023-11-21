@@ -39,7 +39,7 @@ DOMRect::~DOMRect() = default;
 void DOMRect::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectPrototype>(realm, "DOMRect"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectPrototype>(realm, "DOMRect"_fly_string));
 }
 
 }

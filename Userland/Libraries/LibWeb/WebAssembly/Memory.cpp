@@ -44,7 +44,7 @@ Memory::Memory(JS::Realm& realm, Wasm::MemoryAddress address)
 void Memory::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MemoryPrototype>(realm, "WebAssembly.Memory"sv));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MemoryPrototype>(realm, "WebAssembly.Memory"_fly_string));
 }
 
 // https://webassembly.github.io/spec/js-api/#dom-memory-grow

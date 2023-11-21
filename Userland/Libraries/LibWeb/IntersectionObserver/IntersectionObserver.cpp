@@ -69,7 +69,7 @@ void IntersectionObserver::finalize()
 void IntersectionObserver::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::IntersectionObserverPrototype>(realm, "IntersectionObserver"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::IntersectionObserverPrototype>(realm, "IntersectionObserver"_fly_string));
 }
 
 void IntersectionObserver::visit_edges(JS::Cell::Visitor& visitor)

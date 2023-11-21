@@ -16,7 +16,7 @@ template<>
 void Intrinsics::create_web_prototype_and_constructor<URLSearchParamsIteratorPrototype>(JS::Realm& realm)
 {
     auto prototype = heap().allocate<URLSearchParamsIteratorPrototype>(realm, realm);
-    m_prototypes.set("URLSearchParamsIterator"sv, prototype);
+    m_prototypes.set("URLSearchParamsIterator"_fly_string, prototype);
 }
 
 }
@@ -42,7 +42,7 @@ URLSearchParamsIterator::~URLSearchParamsIterator() = default;
 void URLSearchParamsIterator::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>(realm, "URLSearchParamsIterator"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>(realm, "URLSearchParamsIterator"_fly_string));
 }
 
 void URLSearchParamsIterator::visit_edges(JS::Cell::Visitor& visitor)

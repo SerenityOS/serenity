@@ -21,7 +21,7 @@ SVGScriptElement::SVGScriptElement(DOM::Document& document, DOM::QualifiedName q
 void SVGScriptElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGScriptElementPrototype>(realm, "SVGScriptElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGScriptElementPrototype>(realm, "SVGScriptElement"_fly_string));
 }
 
 void SVGScriptElement::visit_edges(Cell::Visitor& visitor)

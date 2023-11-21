@@ -27,7 +27,7 @@ void CSSKeyframesRule::visit_edges(Visitor& visitor)
 void CSSKeyframesRule::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSKeyframesRulePrototype>(realm, "CSSKeyframesRule"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSKeyframesRulePrototype>(realm, "CSSKeyframesRule"_fly_string));
 }
 
 String CSSKeyframesRule::serialized() const

@@ -29,7 +29,7 @@ Selection::~Selection() = default;
 void Selection::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SelectionPrototype>(realm, "Selection"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SelectionPrototype>(realm, "Selection"_fly_string));
 }
 
 // https://w3c.github.io/selection-api/#dfn-empty

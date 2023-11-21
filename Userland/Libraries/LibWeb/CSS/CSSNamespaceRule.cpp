@@ -31,7 +31,7 @@ JS::NonnullGCPtr<CSSNamespaceRule> CSSNamespaceRule::create(JS::Realm& realm, Op
 void CSSNamespaceRule::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSNamespaceRulePrototype>(realm, "CSSNamespaceRule"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSNamespaceRulePrototype>(realm, "CSSNamespaceRule"_fly_string));
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule

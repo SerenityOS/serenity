@@ -42,7 +42,7 @@ HTMLLinkElement::~HTMLLinkElement() = default;
 void HTMLLinkElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLinkElementPrototype>(realm, "HTMLLinkElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLinkElementPrototype>(realm, "HTMLLinkElement"_fly_string));
 }
 
 void HTMLLinkElement::inserted()

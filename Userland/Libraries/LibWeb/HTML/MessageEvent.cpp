@@ -35,7 +35,7 @@ MessageEvent::~MessageEvent() = default;
 void MessageEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessageEventPrototype>(realm, "MessageEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessageEventPrototype>(realm, "MessageEvent"_fly_string));
 }
 
 void MessageEvent::visit_edges(Cell::Visitor& visitor)

@@ -19,7 +19,7 @@ SVGTextElement::SVGTextElement(DOM::Document& document, DOM::QualifiedName quali
 void SVGTextElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextElementPrototype>(realm, "SVGTextElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextElementPrototype>(realm, "SVGTextElement"_fly_string));
 }
 
 JS::GCPtr<Layout::Node> SVGTextElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

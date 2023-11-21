@@ -34,7 +34,7 @@ NavigationTransition::~NavigationTransition() = default;
 void NavigationTransition::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigationTransitionPrototype>(realm, "NavigationTransition"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigationTransitionPrototype>(realm, "NavigationTransition"_fly_string));
 }
 
 void NavigationTransition::visit_edges(JS::Cell::Visitor& visitor)

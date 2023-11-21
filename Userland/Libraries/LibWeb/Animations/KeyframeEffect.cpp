@@ -176,7 +176,7 @@ KeyframeEffect::KeyframeEffect(JS::Realm& realm)
 void KeyframeEffect::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::KeyframeEffectPrototype>(realm, "KeyframeEffect"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::KeyframeEffectPrototype>(realm, "KeyframeEffect"_fly_string));
 }
 
 void KeyframeEffect::visit_edges(Cell::Visitor& visitor)

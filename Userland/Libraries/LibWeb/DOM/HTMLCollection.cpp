@@ -33,7 +33,7 @@ HTMLCollection::~HTMLCollection() = default;
 void HTMLCollection::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLCollectionPrototype>(realm, "HTMLCollection"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLCollectionPrototype>(realm, "HTMLCollection"_fly_string));
 }
 
 void HTMLCollection::visit_edges(Cell::Visitor& visitor)

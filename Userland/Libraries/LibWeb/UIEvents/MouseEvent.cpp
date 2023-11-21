@@ -43,7 +43,7 @@ MouseEvent::~MouseEvent() = default;
 void MouseEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MouseEventPrototype>(realm, "MouseEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MouseEventPrototype>(realm, "MouseEvent"_fly_string));
 }
 
 // https://www.w3.org/TR/uievents/#dom-mouseevent-button

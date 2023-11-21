@@ -27,7 +27,7 @@ FileList::~FileList() = default;
 void FileList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::FileListPrototype>(realm, "FileList"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::FileListPrototype>(realm, "FileList"_fly_string));
 }
 
 // https://w3c.github.io/FileAPI/#dfn-item

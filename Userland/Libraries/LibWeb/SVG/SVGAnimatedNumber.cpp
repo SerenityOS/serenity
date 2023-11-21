@@ -28,7 +28,7 @@ SVGAnimatedNumber::~SVGAnimatedNumber() = default;
 void SVGAnimatedNumber::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGAnimatedNumberPrototype>(realm, "SVGAnimatedNumber"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGAnimatedNumberPrototype>(realm, "SVGAnimatedNumber"_fly_string));
 }
 
 }

@@ -21,7 +21,7 @@ HTMLOutputElement::~HTMLOutputElement() = default;
 void HTMLOutputElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOutputElementPrototype>(realm, "HTMLOutputElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOutputElementPrototype>(realm, "HTMLOutputElement"_fly_string));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#the-output-element:concept-form-reset-control

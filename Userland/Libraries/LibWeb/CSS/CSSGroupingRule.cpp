@@ -25,7 +25,7 @@ CSSGroupingRule::CSSGroupingRule(JS::Realm& realm, CSSRuleList& rules)
 void CSSGroupingRule::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSGroupingRulePrototype>(realm, "CSSGroupingRule"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSGroupingRulePrototype>(realm, "CSSGroupingRule"_fly_string));
 }
 
 void CSSGroupingRule::visit_edges(Cell::Visitor& visitor)

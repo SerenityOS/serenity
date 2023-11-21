@@ -34,7 +34,7 @@ NavigationHistoryEntry::~NavigationHistoryEntry() = default;
 void NavigationHistoryEntry::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigationHistoryEntryPrototype>(realm, "NavigationHistoryEntry"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigationHistoryEntryPrototype>(realm, "NavigationHistoryEntry"_fly_string));
 }
 
 void NavigationHistoryEntry::visit_edges(JS::Cell::Visitor& visitor)

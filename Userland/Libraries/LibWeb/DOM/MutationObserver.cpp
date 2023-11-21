@@ -42,7 +42,7 @@ MutationObserver::~MutationObserver()
 void MutationObserver::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MutationObserverPrototype>(realm, "MutationObserver"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MutationObserverPrototype>(realm, "MutationObserver"_fly_string));
 }
 
 void MutationObserver::visit_edges(Cell::Visitor& visitor)

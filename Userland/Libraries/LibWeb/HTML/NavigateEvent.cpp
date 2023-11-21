@@ -50,7 +50,7 @@ NavigateEvent::~NavigateEvent() = default;
 void NavigateEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigateEventPrototype>(realm, "NavigateEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigateEventPrototype>(realm, "NavigateEvent"_fly_string));
 }
 
 void NavigateEvent::visit_edges(JS::Cell::Visitor& visitor)

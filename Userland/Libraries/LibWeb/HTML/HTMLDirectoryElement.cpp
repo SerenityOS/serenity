@@ -21,7 +21,7 @@ HTMLDirectoryElement::~HTMLDirectoryElement() = default;
 void HTMLDirectoryElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDirectoryElementPrototype>(realm, "HTMLDirectoryElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDirectoryElementPrototype>(realm, "HTMLDirectoryElement"_fly_string));
 }
 
 }

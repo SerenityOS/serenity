@@ -21,7 +21,7 @@ HTMLLegendElement::~HTMLLegendElement() = default;
 void HTMLLegendElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLegendElementPrototype>(realm, "HTMLLegendElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLegendElementPrototype>(realm, "HTMLLegendElement"_fly_string));
 }
 
 }

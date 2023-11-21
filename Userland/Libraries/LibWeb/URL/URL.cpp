@@ -87,7 +87,7 @@ URL::~URL() = default;
 void URL::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLPrototype>(realm, "URL"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLPrototype>(realm, "URL"_fly_string));
 }
 
 void URL::visit_edges(Cell::Visitor& visitor)

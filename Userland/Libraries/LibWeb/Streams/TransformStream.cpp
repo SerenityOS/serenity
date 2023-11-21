@@ -84,7 +84,7 @@ TransformStream::~TransformStream() = default;
 void TransformStream::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::TransformStreamPrototype>(realm, "TransformStream"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TransformStreamPrototype>(realm, "TransformStream"_fly_string));
 }
 
 void TransformStream::visit_edges(Cell::Visitor& visitor)

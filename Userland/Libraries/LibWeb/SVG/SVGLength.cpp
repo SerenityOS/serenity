@@ -26,7 +26,7 @@ SVGLength::SVGLength(JS::Realm& realm, u8 unit_type, float value)
 void SVGLength::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLengthPrototype>(realm, "SVGLength"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLengthPrototype>(realm, "SVGLength"_fly_string));
 }
 
 SVGLength::~SVGLength() = default;

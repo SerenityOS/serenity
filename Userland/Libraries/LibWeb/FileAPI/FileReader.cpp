@@ -42,7 +42,7 @@ FileReader::FileReader(JS::Realm& realm)
 void FileReader::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::FileReaderPrototype>(realm, "FileReader"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::FileReaderPrototype>(realm, "FileReader"_fly_string));
 }
 
 void FileReader::visit_edges(JS::Cell::Visitor& visitor)

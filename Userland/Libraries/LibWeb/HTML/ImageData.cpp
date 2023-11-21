@@ -45,7 +45,7 @@ ImageData::~ImageData() = default;
 void ImageData::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ImageDataPrototype>(realm, "ImageData"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ImageDataPrototype>(realm, "ImageData"_fly_string));
 }
 
 void ImageData::visit_edges(Cell::Visitor& visitor)

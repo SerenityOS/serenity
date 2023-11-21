@@ -29,7 +29,7 @@ TrackEvent::TrackEvent(JS::Realm& realm, FlyString const& event_name, TrackEvent
 void TrackEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::TrackEventPrototype>(realm, "TrackEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TrackEventPrototype>(realm, "TrackEvent"_fly_string));
 }
 
 Variant<Empty, JS::Handle<VideoTrack>, JS::Handle<AudioTrack>> TrackEvent::track() const

@@ -21,7 +21,7 @@ TimeRanges::TimeRanges(JS::Realm& realm)
 void TimeRanges::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::TimeRangesPrototype>(realm, "TimeRanges"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TimeRangesPrototype>(realm, "TimeRanges"_fly_string));
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-timeranges-length

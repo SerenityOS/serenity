@@ -30,7 +30,7 @@ HTMLOptionsCollection::~HTMLOptionsCollection() = default;
 void HTMLOptionsCollection::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionsCollectionPrototype>(realm, "HTMLOptionsCollection"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionsCollectionPrototype>(realm, "HTMLOptionsCollection"_fly_string));
 }
 
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection-add

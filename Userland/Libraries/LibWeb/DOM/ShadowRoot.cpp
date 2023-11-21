@@ -24,7 +24,7 @@ ShadowRoot::ShadowRoot(Document& document, Element& host, Bindings::ShadowRootMo
 void ShadowRoot::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ShadowRootPrototype>(realm, "ShadowRoot"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ShadowRootPrototype>(realm, "ShadowRoot"_fly_string));
 }
 
 // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6

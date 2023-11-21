@@ -32,7 +32,7 @@ Performance::~Performance() = default;
 void Performance::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformancePrototype>(realm, "Performance"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformancePrototype>(realm, "Performance"_fly_string));
 }
 
 void Performance::visit_edges(Cell::Visitor& visitor)

@@ -31,7 +31,7 @@ DOMStringMap::~DOMStringMap() = default;
 void DOMStringMap::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMStringMapPrototype>(realm, "DOMStringMap"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMStringMapPrototype>(realm, "DOMStringMap"_fly_string));
 }
 
 void DOMStringMap::visit_edges(Cell::Visitor& visitor)

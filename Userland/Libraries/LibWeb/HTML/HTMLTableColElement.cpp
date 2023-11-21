@@ -21,7 +21,7 @@ HTMLTableColElement::~HTMLTableColElement() = default;
 void HTMLTableColElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableColElementPrototype>(realm, "HTMLTableColElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableColElementPrototype>(realm, "HTMLTableColElement"_fly_string));
 }
 
 }

@@ -20,7 +20,7 @@ NodeList::~NodeList() = default;
 void NodeList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeListPrototype>(realm, "NodeList"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeListPrototype>(realm, "NodeList"_fly_string));
 }
 
 WebIDL::ExceptionOr<JS::Value> NodeList::item_value(size_t index) const

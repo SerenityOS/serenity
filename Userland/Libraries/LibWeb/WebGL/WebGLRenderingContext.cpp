@@ -62,7 +62,7 @@ WebGLRenderingContext::~WebGLRenderingContext() = default;
 void WebGLRenderingContext::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebGLRenderingContextPrototype>(realm, "WebGLRenderingContext"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebGLRenderingContextPrototype>(realm, "WebGLRenderingContext"_fly_string));
 }
 
 }

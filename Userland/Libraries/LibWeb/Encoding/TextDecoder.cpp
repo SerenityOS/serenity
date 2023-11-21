@@ -41,7 +41,7 @@ TextDecoder::~TextDecoder() = default;
 void TextDecoder::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextDecoderPrototype>(realm, "TextDecoder"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextDecoderPrototype>(realm, "TextDecoder"_fly_string));
 }
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder-decode

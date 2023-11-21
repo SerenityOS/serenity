@@ -23,7 +23,7 @@ HTMLParagraphElement::~HTMLParagraphElement() = default;
 void HTMLParagraphElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLParagraphElementPrototype>(realm, "HTMLParagraphElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLParagraphElementPrototype>(realm, "HTMLParagraphElement"_fly_string));
 }
 
 // https://html.spec.whatwg.org/multipage/rendering.html#tables-2
