@@ -5102,14 +5102,14 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
     part_one_tokens.skip_whitespace();
     if (!part_one_tokens.has_next_token())
         return {};
-    auto current_token = part_one_tokens.next_token().token();
+    auto& current_token = part_one_tokens.next_token();
 
     auto repeat_count = 0;
-    if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() > 0)
-        repeat_count = current_token.number_value();
-    else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_ascii_case("auto-fill"sv))
+    if (current_token.is(Token::Type::Number) && current_token.token().number().is_integer() && current_token.token().number_value() > 0)
+        repeat_count = current_token.token().number_value();
+    else if (current_token.is_ident("auto-fill"sv))
         is_auto_fill = true;
-    else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_ascii_case("auto-fit"sv))
+    else if (current_token.is_ident("auto-fit"sv))
         is_auto_fit = true;
 
     // The second argument is a track list, which is repeated that number of times.
