@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,19 +58,6 @@ void HTMLIFrameElement::inserted()
         // 3. Process the iframe attributes for element, with initialInsertion set to true.
         process_the_iframe_attributes(true);
     }
-}
-
-// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#will-lazy-load-element-steps
-bool HTMLIFrameElement::will_lazy_load_element() const
-{
-    // 1. If scripting is disabled for element, then return false.
-    if (document().is_scripting_disabled())
-        return false;
-
-    // FIXME: 2. If element's lazy loading attribute is in the Lazy state, then return true.
-
-    // 3. Return false.
-    return false;
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes
@@ -186,6 +174,12 @@ i32 HTMLIFrameElement::default_tab_index_value() const
 {
     // See the base function for the spec comments.
     return 0;
+}
+
+void HTMLIFrameElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visit_lazy_loading_element(visitor);
 }
 
 }

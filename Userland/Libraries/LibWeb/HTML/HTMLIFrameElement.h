@@ -1,17 +1,23 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <LibWeb/HTML/LazyLoadingElement.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 
 namespace Web::HTML {
 
-class HTMLIFrameElement final : public NavigableContainer {
+class HTMLIFrameElement final
+    : public NavigableContainer
+    , public LazyLoadingElement<HTMLIFrameElement> {
+
     WEB_PLATFORM_OBJECT(HTMLIFrameElement, NavigableContainer);
+    LAZY_LOADING_ELEMENT(HTMLIFrameElement);
     JS_DECLARE_ALLOCATOR(HTMLIFrameElement);
 
 public:
@@ -19,15 +25,14 @@ public:
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#will-lazy-load-element-steps
-    bool will_lazy_load_element() const;
-
     void set_current_navigation_was_lazy_loaded(bool value) { m_current_navigation_was_lazy_loaded = value; }
 
     Optional<HighResolutionTime::DOMHighResTimeStamp> const& pending_resource_start_time() const { return m_pending_resource_start_time; }
     void set_pending_resource_start_time(Optional<HighResolutionTime::DOMHighResTimeStamp> time) { m_pending_resource_start_time = time; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
 private:
     HTMLIFrameElement(DOM::Document&, DOM::QualifiedName);
