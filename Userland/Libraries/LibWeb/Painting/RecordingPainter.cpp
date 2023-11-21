@@ -147,13 +147,12 @@ void RecordingPainter::draw_rect(Gfx::IntRect const& rect, Color color, bool rou
         .rough = rough });
 }
 
-void RecordingPainter::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, float opacity, Gfx::Painter::ScalingMode scaling_mode)
+void RecordingPainter::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
 {
     push_command(DrawScaledBitmap {
         .dst_rect = state().translation.map(dst_rect),
         .bitmap = bitmap,
         .src_rect = src_rect,
-        .opacity = opacity,
         .scaling_mode = scaling_mode,
     });
 }
@@ -435,7 +434,7 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
                 return executor.fill_rect(command.rect, command.color);
             },
             [&](DrawScaledBitmap const& command) {
-                return executor.draw_scaled_bitmap(command.dst_rect, command.bitmap, command.src_rect, command.opacity, command.scaling_mode);
+                return executor.draw_scaled_bitmap(command.dst_rect, command.bitmap, command.src_rect, command.scaling_mode);
             },
             [&](SetClipRect const& command) {
                 return executor.set_clip_rect(command.rect);
