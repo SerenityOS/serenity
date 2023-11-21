@@ -5345,42 +5345,32 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     //     <custom-ident> |
     //     [ <integer> && <custom-ident>? ] |
     //     [ span && [ <integer> || <custom-ident> ] ]
-    auto is_auto = [](Token token) -> bool {
-        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("auto"sv))
-            return true;
-        return false;
-    };
-    auto is_span = [](Token token) -> bool {
-        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("span"sv))
-            return true;
-        return false;
-    };
-    auto is_valid_integer = [](Token token) -> bool {
+    auto is_valid_integer = [](auto& token) -> bool {
         // An <integer> value of zero makes the declaration invalid.
-        if (token.is(Token::Type::Number) && token.number().is_integer() && token.number_value() != 0)
+        if (token.is(Token::Type::Number) && token.token().number().is_integer() && token.token().number_value() != 0)
             return true;
         return false;
     };
-    auto is_identifier = [](Token token) -> bool {
+    auto is_identifier = [](auto& token) -> bool {
         // The <custom-ident> additionally excludes the keywords span and auto.
-        if (token.is(Token::Type::Ident) && !token.ident().equals_ignoring_ascii_case("span"sv) && !token.ident().equals_ignoring_ascii_case("auto"sv))
+        if (token.is(Token::Type::Ident) && !token.token().ident().equals_ignoring_ascii_case("span"sv) && !token.token().ident().equals_ignoring_ascii_case("auto"sv))
             return true;
         return false;
     };
 
     auto tokens = TokenStream { component_values };
     tokens.skip_whitespace();
-    auto current_token = tokens.next_token().token();
+    auto current_token = tokens.next_token();
 
     if (!tokens.has_next_token()) {
-        if (is_auto(current_token))
+        if (current_token.is_ident("auto"sv))
             return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto());
-        if (is_span(current_token))
+        if (current_token.is_ident("span"sv))
             return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_span(1));
         if (is_valid_integer(current_token))
-            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(static_cast<int>(current_token.number_value()), {}));
+            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(static_cast<int>(current_token.token().number_value()), {}));
         if (is_identifier(current_token)) {
-            auto maybe_string = String::from_utf8(current_token.ident());
+            auto maybe_string = String::from_utf8(current_token.token().ident());
             if (!maybe_string.is_error())
                 return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line({}, maybe_string.value()));
         }
@@ -5391,9 +5381,9 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     auto span_or_position_value = 0;
     String identifier_value;
     while (true) {
-        if (is_auto(current_token))
+        if (current_token.is_ident("auto"sv))
             return nullptr;
-        if (is_span(current_token)) {
+        if (current_token.is_ident("span"sv)) {
             if (span_value == false)
                 span_value = true;
             else
@@ -5401,13 +5391,13 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         }
         if (is_valid_integer(current_token)) {
             if (span_or_position_value == 0)
-                span_or_position_value = static_cast<int>(current_token.number_value());
+                span_or_position_value = static_cast<int>(current_token.token().number_value());
             else
                 return nullptr;
         }
         if (is_identifier(current_token)) {
             if (identifier_value.is_empty()) {
-                auto maybe_string = String::from_utf8(current_token.ident());
+                auto maybe_string = String::from_utf8(current_token.token().ident());
                 if (maybe_string.is_error())
                     return nullptr;
                 identifier_value = maybe_string.release_value();
@@ -5417,7 +5407,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         }
         tokens.skip_whitespace();
         if (tokens.has_next_token())
-            current_token = tokens.next_token().token();
+            current_token = tokens.next_token();
         else
             break;
     }
