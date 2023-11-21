@@ -290,7 +290,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
     // 2. Create a new cookie with name cookie-name, value cookie-value. Set the creation-time and the last-access-time to the current date and time.
-    Web::Cookie::Cookie cookie { MUST(String::from_deprecated_string(parsed_cookie.name)), MUST(String::from_deprecated_string(parsed_cookie.value)), parsed_cookie.same_site_attribute };
+    Web::Cookie::Cookie cookie { parsed_cookie.name, parsed_cookie.value, parsed_cookie.same_site_attribute };
     cookie.creation_time = UnixDateTime::now();
     cookie.last_access_time = cookie.creation_time;
 
@@ -313,7 +313,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // 4. If the cookie-attribute-list contains an attribute with an attribute-name of "Domain":
     if (parsed_cookie.domain.has_value()) {
         // Let the domain-attribute be the attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Domain".
-        cookie.domain = MUST(String::from_deprecated_string(parsed_cookie.domain.value()));
+        cookie.domain = parsed_cookie.domain.value();
     }
 
     // 5. If the user agent is configured to reject "public suffixes" and the domain-attribute is a public suffix:
@@ -347,7 +347,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // 7. If the cookie-attribute-list contains an attribute with an attribute-name of "Path":
     if (parsed_cookie.path.has_value()) {
         // Set the cookie's path to attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Path".
-        cookie.path = MUST(String::from_deprecated_string(parsed_cookie.path.value()));
+        cookie.path = parsed_cookie.path.value();
     } else {
         cookie.path = MUST(String::from_deprecated_string(default_path(url)));
     }

@@ -1570,21 +1570,21 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
 
     // 7. Create a cookie in the cookie store associated with the active document’s address using cookie name name, cookie value value, and an attribute-value list of the following cookie concepts listed in the table for cookie conversion from data:
     Web::Cookie::ParsedCookie cookie {};
-    cookie.name = TRY(get_property(data, "name"sv));
-    cookie.value = TRY(get_property(data, "value"sv));
+    cookie.name = MUST(String::from_deprecated_string(TRY(get_property(data, "name"sv))));
+    cookie.value = MUST(String::from_deprecated_string(TRY(get_property(data, "value"sv))));
 
     // Cookie path
     //     The value if the entry exists, otherwise "/".
     if (data.has("path"sv))
-        cookie.path = TRY(get_property(data, "path"sv));
+        cookie.path = MUST(String::from_deprecated_string(TRY(get_property(data, "path"sv))));
     else
-        cookie.path = "/";
+        cookie.path = "/"_string;
 
     // Cookie domain
     //     The value if the entry exists, otherwise the current browsing context’s active document’s URL domain.
     // NOTE: The otherwise case is handled by the CookieJar
     if (data.has("domain"sv))
-        cookie.domain = TRY(get_property(data, "domain"sv));
+        cookie.domain = MUST(String::from_deprecated_string(TRY(get_property(data, "domain"sv))));
 
     // Cookie secure only
     //     The value if the entry exists, otherwise false.
