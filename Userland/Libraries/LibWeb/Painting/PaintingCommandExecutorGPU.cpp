@@ -263,10 +263,14 @@ CommandResult PaintingCommandExecutorGPU::paint_borders(DevicePixelRect const& b
         border_rect.height()
     };
 
-    painter().fill_rect(top_border_rect, borders_data.top.color);
-    painter().fill_rect(right_border_rect, borders_data.right.color);
-    painter().fill_rect(bottom_border_rect, borders_data.bottom.color);
-    painter().fill_rect(left_border_rect, borders_data.left.color);
+    if (borders_data.top.width > 0)
+        painter().fill_rect(top_border_rect, borders_data.top.color);
+    if (borders_data.right.width > 0)
+        painter().fill_rect(right_border_rect, borders_data.right.color);
+    if (borders_data.bottom.width > 0)
+        painter().fill_rect(bottom_border_rect, borders_data.bottom.color);
+    if (borders_data.left.width > 0)
+        painter().fill_rect(left_border_rect, borders_data.left.color);
 
     return CommandResult::Continue;
 }
