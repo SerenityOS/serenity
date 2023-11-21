@@ -382,8 +382,10 @@ void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> co
     for (auto const& [font, code_points] : unique_glyphs) {
         for (auto const& code_point : code_points) {
             auto glyph = font->glyph(code_point);
-            auto atlas_key = GlyphsTextureKey { font, code_point };
-            glyph_bitmaps.set(atlas_key, *glyph.bitmap());
+            if (glyph.bitmap()) {
+                auto atlas_key = GlyphsTextureKey { font, code_point };
+                glyph_bitmaps.set(atlas_key, *glyph.bitmap());
+            }
         }
     }
 
@@ -444,7 +446,9 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
             auto point = glyph.position;
 
             auto maybe_texture_rect = m_glyphs_texture_map.get(GlyphsTextureKey { font, code_point });
-            VERIFY(maybe_texture_rect.has_value());
+            if (!maybe_texture_rect.has_value()) {
+                continue;
+            }
 
             auto texture_rect = to_texture_space(maybe_texture_rect.value().to_type<float>(), m_glyphs_texture_size);
 
