@@ -176,7 +176,7 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<Compone
 
     auto const& peeked_token = tokens.peek_token();
     // `not <supports-in-parens>`
-    if (peeked_token.is(Token::Type::Ident) && peeked_token.token().ident().equals_ignoring_ascii_case("not"sv)) {
+    if (peeked_token.is_ident("not"sv)) {
         tokens.next_token();
         tokens.skip_whitespace();
         auto child = parse_supports_in_parens(tokens);
@@ -788,7 +788,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
         Optional<size_t> important_index;
         for (size_t i = declaration_values.size() - 1; i > 0; i--) {
             auto value = declaration_values[i];
-            if (value.is(Token::Type::Ident) && Infra::is_ascii_case_insensitive_match(value.token().ident(), "important"sv)) {
+            if (value.is_ident("important"sv)) {
                 important_index = i;
                 break;
             }
@@ -1578,7 +1578,7 @@ Optional<Dimension> Parser::parse_dimension(ComponentValue const& component_valu
 
 Optional<LengthOrCalculated> Parser::parse_source_size_value(ComponentValue const& component_value)
 {
-    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_ascii_case("auto"sv)) {
+    if (component_value.is_ident("auto"sv)) {
         return LengthOrCalculated { Length::make_auto() };
     }
 
@@ -1689,7 +1689,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
 
     // All options start with 'u'/'U'.
     auto const& u = tokens.next_token();
-    if (!(u.is(Token::Type::Ident) && u.token().ident().equals_ignoring_ascii_case("u"sv))) {
+    if (!u.is_ident("u"sv)) {
         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> does not start with 'u'");
         return {};
     }
@@ -3371,8 +3371,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
             continue;
         }
 
-        if (allow_inset_keyword == AllowInsetKeyword::Yes
-            && token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("inset"sv)) {
+        if (allow_inset_keyword == AllowInsetKeyword::Yes && token.is_ident("inset"sv)) {
             if (placement.has_value())
                 return nullptr;
             placement = ShadowPlacement::Inner;
@@ -3946,7 +3945,7 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
 
     while (tokens.has_next_token()) {
         auto& peek_token = tokens.peek_token();
-        if (peek_token.is(Token::Type::Ident) && value_id_from_string(peek_token.token().ident()) == ValueID::Normal) {
+        if (peek_token.is_ident("normal"sv)) {
             normal_count++;
             (void)tokens.next_token();
             continue;
@@ -4337,7 +4336,7 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
 
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
-        if (auto peek = tokens.peek_token(); peek.is(Token::Type::Ident) && peek.token().ident().equals_ignoring_ascii_case("none"sv)) {
+        if (auto peek = tokens.peek_token(); peek.is_ident("none"sv)) {
             (void)tokens.next_token();
             found_nones++;
             continue;
@@ -4779,7 +4778,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         tokens.skip_whitespace();
         auto const& part = tokens.next_token();
 
-        if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_ascii_case("none"sv)) {
+        if (part.is_ident("none"sv)) {
             if (!transformations.is_empty())
                 return nullptr;
             tokens.skip_whitespace();
@@ -5206,7 +5205,7 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
             return CSS::ExplicitGridTrack(GridSize(LengthPercentage(maybe_calculated.release_nonnull())));
         }
         return {};
-    } else if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("auto"sv)) {
+    } else if (token.is_ident("auto"sv)) {
         return CSS::ExplicitGridTrack(GridSize(Length::make_auto()));
     } else if (token.is_block()) {
         return {};

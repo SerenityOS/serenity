@@ -114,7 +114,7 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<ComponentValue>&
         return media_query;
 
     // `[ and <media-condition-without-or> ]?`
-    if (auto maybe_and = tokens.next_token(); maybe_and.is(Token::Type::Ident) && maybe_and.token().ident().equals_ignoring_ascii_case("and"sv)) {
+    if (auto maybe_and = tokens.next_token(); maybe_and.is_ident("and"sv)) {
         if (auto media_condition = parse_media_condition(tokens, MediaCondition::AllowOr::No)) {
             tokens.skip_whitespace();
             if (tokens.has_next_token())
@@ -143,7 +143,7 @@ OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<ComponentValue>
         tokens.skip_whitespace();
 
         auto& first_token = tokens.next_token();
-        if (first_token.is(Token::Type::Ident) && first_token.token().ident().equals_ignoring_ascii_case("not"sv)) {
+        if (first_token.is_ident("not"sv)) {
             if (auto child_condition = parse_media_condition(tokens, MediaCondition::AllowOr::Yes)) {
                 local_transaction.commit();
                 return MediaCondition::from_not(child_condition.release_nonnull());
@@ -158,7 +158,7 @@ OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<ComponentValue>
         tokens.skip_whitespace();
 
         auto& first = tokens.next_token();
-        if (first.is(Token::Type::Ident) && first.token().ident().equals_ignoring_ascii_case(combinator)) {
+        if (first.is_ident(combinator)) {
             tokens.skip_whitespace();
             if (auto media_in_parens = parse_media_in_parens(tokens)) {
                 local_transaction.commit();
