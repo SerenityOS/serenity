@@ -60,7 +60,12 @@
 {
     if (_groupName)
         return _groupName;
-    return [NSString stringWithUTF8String:_item->title.characters()];
+    NSString* title = [NSString stringWithUTF8String:_item->title.characters()];
+
+    // Newlines confuse NSOutlineView, at least in sidebar style (even with `usesSingleLineMode` set to YES on the cell view's text field).
+    title = [[title componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]] componentsJoinedByString:@" "];
+
+    return title;
 }
 @end
 
