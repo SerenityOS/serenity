@@ -497,7 +497,7 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
         return nullptr;
 
     auto& token = tokens.peek_token();
-    if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("at"sv)) {
+    if (token.is_ident("at"sv)) {
         (void)tokens.next_token();
         auto position = parse_position_value(tokens);
         if (!position)

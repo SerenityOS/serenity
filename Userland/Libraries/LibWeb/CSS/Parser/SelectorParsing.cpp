@@ -439,7 +439,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
 
             // Parse the `of <selector-list>` syntax
             auto const& maybe_of = tokens.next_token();
-            if (!(maybe_of.is(Token::Type::Ident) && maybe_of.token().ident().equals_ignoring_ascii_case("of"sv)))
+            if (!maybe_of.is_ident("of"sv))
                 return ParseError::SyntaxError;
 
             tokens.skip_whitespace();
@@ -678,18 +678,6 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         return {};
     };
 
-    auto is_n = [](ComponentValue const& value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("n"sv);
-    };
-    auto is_ndash = [](ComponentValue const& value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("n-"sv);
-    };
-    auto is_dashn = [](ComponentValue const& value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("-n"sv);
-    };
-    auto is_dashndash = [](ComponentValue const& value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("-n-"sv);
-    };
     auto is_sign = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Delim) && (value.token().delim() == '+' || value.token().delim() == '-');
     };
@@ -855,7 +843,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // -n
     // -n <signed-integer>
     // -n ['+' | '-'] <signless-integer>
-    if (is_dashn(first_value)) {
+    if (first_value.is_ident("-n"sv)) {
         values.skip_whitespace();
 
         // -n <signed-integer>
@@ -884,7 +872,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         return Selector::SimpleSelector::ANPlusBPattern { -1, 0 };
     }
     // -n- <signless-integer>
-    if (is_dashndash(first_value)) {
+    if (first_value.is_ident("-n-"sv)) {
         values.skip_whitespace();
         auto const& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
@@ -913,7 +901,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // '+'?† n
     // '+'?† n <signed-integer>
     // '+'?† n ['+' | '-'] <signless-integer>
-    if (is_n(first_after_plus)) {
+    if (first_after_plus.is_ident("n"sv)) {
         values.skip_whitespace();
 
         // '+'?† n <signed-integer>
@@ -943,7 +931,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     }
 
     // '+'?† n- <signless-integer>
-    if (is_ndash(first_after_plus)) {
+    if (first_after_plus.is_ident("n-"sv)) {
         values.skip_whitespace();
         auto const& second_value = values.next_token();
         if (is_signless_integer(second_value)) {
