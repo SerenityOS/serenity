@@ -230,6 +230,7 @@
 
         NSTextField* textField = [NSTextField labelWithString:@""];
         textField.lineBreakMode = NSLineBreakByTruncatingTail;
+        textField.allowsExpansionToolTips = YES;
 
         // https://stackoverflow.com/a/29725553/551986
         // "If your cell view is an NSTableCellView, that class also responds to -setObjectValue:. [...]
