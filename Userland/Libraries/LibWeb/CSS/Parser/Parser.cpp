@@ -2122,8 +2122,8 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
 
         // <top>, <right>, <bottom>, and <left> may either have a <length> value or 'auto'.
         // Negative lengths are permitted.
-        auto current_token = tokens.next_token().token();
-        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_ascii_case("auto"sv)) {
+        auto& current_token = tokens.next_token();
+        if (current_token.is_ident("auto"sv)) {
             params.append(Length::make_auto());
         } else {
             auto maybe_length = parse_length(current_token);
