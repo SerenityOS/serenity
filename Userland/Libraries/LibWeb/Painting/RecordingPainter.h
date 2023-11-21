@@ -203,7 +203,7 @@ struct DrawEllipse {
     [[nodiscard]] Gfx::IntRect bounding_rect() const { return rect; }
 };
 
-struct FillElipse {
+struct FillEllipse {
     Gfx::IntRect rect;
     Color color;
     Gfx::AntiAliasingPainter::BlendMode blend_mode;
@@ -332,7 +332,7 @@ using PaintingCommand = Variant<
     StrokePathUsingColor,
     StrokePathUsingPaintStyle,
     DrawEllipse,
-    FillElipse,
+    FillEllipse,
     DrawLine,
     DrawSignedDistanceField,
     PaintProgressbar,

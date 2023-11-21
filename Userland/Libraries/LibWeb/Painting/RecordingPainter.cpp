@@ -107,7 +107,7 @@ void RecordingPainter::draw_ellipse(Gfx::IntRect const& a_rect, Color color, int
 
 void RecordingPainter::fill_ellipse(Gfx::IntRect const& a_rect, Color color, Gfx::AntiAliasingPainter::BlendMode blend_mode)
 {
-    push_command(FillElipse {
+    push_command(FillEllipse {
         .rect = state().translation.map(a_rect),
         .color = color,
         .blend_mode = blend_mode,
@@ -488,7 +488,7 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
             [&](DrawEllipse const& command) {
                 return executor.draw_ellipse(command.rect, command.color, command.thickness);
             },
-            [&](FillElipse const& command) {
+            [&](FillEllipse const& command) {
                 return executor.fill_ellipse(command.rect, command.color, command.blend_mode);
             },
             [&](DrawLine const& command) {
