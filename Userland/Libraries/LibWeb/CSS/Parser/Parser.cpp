@@ -5030,14 +5030,13 @@ Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_
 
         return {};
     }
-    auto token = component_value.token();
-    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("auto"sv))
+    if (component_value.is_ident("auto"sv))
         return GridSize::make_auto();
-    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("max-content"sv))
+    if (component_value.is_ident("max-content"sv))
         return GridSize(GridSize::Type::MaxContent);
-    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("min-content"sv))
+    if (component_value.is_ident("min-content"sv))
         return GridSize(GridSize::Type::MinContent);
-    auto dimension = parse_dimension(token);
+    auto dimension = parse_dimension(component_value);
     if (!dimension.has_value())
         return {};
     if (dimension->is_length())
