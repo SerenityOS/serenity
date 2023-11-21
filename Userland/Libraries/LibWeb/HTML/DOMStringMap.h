@@ -22,7 +22,7 @@ public:
 
     virtual ~DOMStringMap() override;
 
-    DeprecatedString determine_value_of_named_property(DeprecatedString const&) const;
+    String determine_value_of_named_property(FlyString const&) const;
 
     virtual WebIDL::ExceptionOr<void> set_value_of_new_named_property(String const&, JS::Value) override;
     virtual WebIDL::ExceptionOr<void> set_value_of_existing_named_property(String const&, JS::Value) override;
@@ -52,8 +52,8 @@ private:
     virtual bool named_property_deleter_has_identifier() const override { return false; }
 
     struct NameValuePair {
-        DeprecatedString name;
-        DeprecatedString value;
+        FlyString name;
+        String value;
     };
 
     Vector<NameValuePair> get_name_value_pairs() const;

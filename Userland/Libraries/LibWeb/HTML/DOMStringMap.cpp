@@ -82,7 +82,7 @@ Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const
             builder.append(current_character);
         }
 
-        list.append({ builder.to_deprecated_string(), value });
+        list.append({ MUST(builder.to_string()), MUST(String::from_deprecated_string(value)) });
     });
 
     // 4. Return list.
@@ -97,18 +97,18 @@ Vector<String> DOMStringMap::supported_property_names() const
     Vector<String> names;
     auto name_value_pairs = get_name_value_pairs();
     for (auto& name_value_pair : name_value_pairs) {
-        names.append(MUST(String::from_deprecated_string(name_value_pair.name)));
+        names.append(name_value_pair.name.to_string());
     }
     return names;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-nameditem
-DeprecatedString DOMStringMap::determine_value_of_named_property(DeprecatedString const& name) const
+String DOMStringMap::determine_value_of_named_property(FlyString const& name) const
 {
     // To determine the value of a named property name for a DOMStringMap, return the value component of the name-value pair whose name component is name in the list returned from getting the
     // DOMStringMap's name-value pairs.
     auto name_value_pairs = get_name_value_pairs();
-    auto optional_value = name_value_pairs.first_matching([&name](NameValuePair& name_value_pair) {
+    auto optional_value = name_value_pairs.first_matching([&name](NameValuePair const& name_value_pair) {
         return name_value_pair.name == name;
     });
 
@@ -199,7 +199,7 @@ WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> DOMStringMa
 
 WebIDL::ExceptionOr<JS::Value> DOMStringMap::named_item_value(FlyString const& name) const
 {
-    return JS::PrimitiveString::create(vm(), determine_value_of_named_property(name.to_deprecated_fly_string()));
+    return JS::PrimitiveString::create(vm(), determine_value_of_named_property(name));
 }
 
 }
