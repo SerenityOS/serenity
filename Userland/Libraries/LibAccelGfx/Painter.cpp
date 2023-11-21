@@ -433,6 +433,7 @@ void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> co
 void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
 {
     Vector<GLfloat> vertices;
+    vertices.ensure_capacity(glyph_run.size() * 24);
 
     for (auto& glyph_or_emoji : glyph_run) {
         if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
@@ -469,18 +470,20 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
             auto s3 = texture_rect.bottom_right();
 
             auto add_triangle = [&](auto& p1, auto& p2, auto& p3, auto& s1, auto& s2, auto& s3) {
-                vertices.append(p1.x());
-                vertices.append(p1.y());
-                vertices.append(s1.x());
-                vertices.append(s1.y());
-                vertices.append(p2.x());
-                vertices.append(p2.y());
-                vertices.append(s2.x());
-                vertices.append(s2.y());
-                vertices.append(p3.x());
-                vertices.append(p3.y());
-                vertices.append(s3.x());
-                vertices.append(s3.y());
+                vertices.unchecked_append(p1.x());
+                vertices.unchecked_append(p1.y());
+                vertices.unchecked_append(s1.x());
+                vertices.unchecked_append(s1.y());
+
+                vertices.unchecked_append(p2.x());
+                vertices.unchecked_append(p2.y());
+                vertices.unchecked_append(s2.x());
+                vertices.unchecked_append(s2.y());
+
+                vertices.unchecked_append(p3.x());
+                vertices.unchecked_append(p3.y());
+                vertices.unchecked_append(s3.x());
+                vertices.unchecked_append(s3.y());
             };
 
             add_triangle(p0, p1, p3, s0, s1, s3);
