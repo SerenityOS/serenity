@@ -73,10 +73,22 @@ void HTMLIFrameElement::process_the_iframe_attributes(bool initial_insertion)
 
         // 2. If the will lazy load element steps given element return true, then:
         if (will_lazy_load_element()) {
-            // FIXME: 1. Set element's lazy load resumption steps to the rest of this algorithm starting with the step labeled navigate to the srcdoc resource.
-            // FIXME: 2. Set element's current navigation was lazy loaded boolean to true.
-            // FIXME: 3. Start intersection-observing a lazy loading element for element.
-            // FIXME: 4. Return.
+            // 1. Set element's lazy load resumption steps to the rest of this algorithm starting with the step labeled navigate to the srcdoc resource.
+            set_lazy_load_resumption_steps([this]() {
+                // 3. Navigate to the srcdoc resource: navigate an iframe or frame given element, about:srcdoc, the empty string, and the value of element's srcdoc attribute.
+                navigate_an_iframe_or_frame(AK::URL("about:srcdoc"sv), ReferrerPolicy::ReferrerPolicy::EmptyString, get_attribute(HTML::AttributeNames::srcdoc));
+
+                // FIXME: The resulting Document must be considered an iframe srcdoc document.
+            });
+
+            // 2. Set element's current navigation was lazy loaded boolean to true.
+            m_current_navigation_was_lazy_loaded = true;
+
+            // 3. Start intersection-observing a lazy loading element for element.
+            document().start_intersection_observing_a_lazy_loading_element(*this);
+
+            // 4. Return.
+            return;
         }
 
         // 3. Navigate to the srcdoc resource: navigate an iframe or frame given element, about:srcdoc, the empty string, and the value of element's srcdoc attribute.
@@ -112,9 +124,18 @@ void HTMLIFrameElement::process_the_iframe_attributes(bool initial_insertion)
 
     // 6. If the will lazy load element steps given element return true, then:
     if (will_lazy_load_element()) {
-        // FIXME: 1. Set element's lazy load resumption steps to the rest of this algorithm starting with the step labeled navigate.
-        // FIXME: 2. Set element's current navigation was lazy loaded boolean to true.
-        // FIXME: 3. Start intersection-observing a lazy loading element for element.
+        // 1. Set element's lazy load resumption steps to the rest of this algorithm starting with the step labeled navigate.
+        set_lazy_load_resumption_steps([this, url, referrer_policy]() {
+            // 7. Navigate: navigate an iframe or frame given element, url, and referrerPolicy.
+            navigate_an_iframe_or_frame(*url, referrer_policy);
+        });
+
+        // 2. Set element's current navigation was lazy loaded boolean to true.
+        m_current_navigation_was_lazy_loaded = true;
+
+        // 3. Start intersection-observing a lazy loading element for element.
+        document().start_intersection_observing_a_lazy_loading_element(*this);
+
         // 4. Return.
         return;
     }
