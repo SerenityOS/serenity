@@ -27,6 +27,7 @@
 #include <LibWeb/HTML/DocumentReadyState.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
+#include <LibWeb/HTML/LazyLoadingElement.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -519,7 +520,7 @@ public:
 
     void run_the_update_intersection_observations_steps(HighResolutionTime::DOMHighResTimeStamp time);
 
-    void start_intersection_observing_a_lazy_loading_element(Element& element);
+    void start_intersection_observing_a_lazy_loading_element(Element&);
 
     void shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML::HTMLMetaElement const> meta_element = nullptr);
 

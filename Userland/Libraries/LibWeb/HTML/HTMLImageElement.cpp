@@ -71,7 +71,7 @@ void HTMLImageElement::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_current_request);
     visitor.visit(m_pending_request);
-    visitor.visit(m_lazy_load_resumption_steps);
+    visit_lazy_loading_element(visitor);
 }
 
 void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const
@@ -163,11 +163,6 @@ RefPtr<Gfx::ImmutableBitmap> HTMLImageElement::current_image_bitmap(Gfx::IntSize
 void HTMLImageElement::set_visible_in_viewport(bool)
 {
     // FIXME: Loosen grip on image data when it's not visible, e.g via volatile memory.
-}
-
-void HTMLImageElement::set_lazy_load_resumption_steps(Function<void()> steps)
-{
-    m_lazy_load_resumption_steps = JS::create_heap_function(vm().heap(), move(steps));
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-width
@@ -528,7 +523,7 @@ after_step_7:
             m_pending_request = image_request;
 
         // 23. Let delay load event be true if the img's lazy loading attribute is in the Eager state, or if scripting is disabled for the img, and false otherwise.
-        auto delay_load_event = lazy_loading() == LazyLoading::Eager;
+        auto delay_load_event = lazy_loading_attribute() == LazyLoading::Eager;
 
         // When delay load event is true, fetching the image must delay the load event of the element's node document
         // until the task that is queued by the networking task source once the resource has been fetched (defined below) has been run.
@@ -558,7 +553,7 @@ after_step_7:
         // FIXME: 22. Set request's priority to the current state of the element's fetchpriority attribute.
 
         // 24. If the will lazy load element steps given the img return true, then:
-        if (will_lazy_load()) {
+        if (will_lazy_load_element()) {
             // 1. Set the img's lazy load resumption steps to the rest of this algorithm starting with the step labeled fetch the image.
             set_lazy_load_resumption_steps([this, request, image_request]() {
                 image_request->fetch_image(realm(), request);
@@ -1006,38 +1001,6 @@ void HTMLImageElement::animate()
 
     if (layout_node())
         layout_node()->set_needs_display();
-}
-
-// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes
-HTMLImageElement::LazyLoading HTMLImageElement::lazy_loading() const
-{
-    auto value = deprecated_attribute(HTML::AttributeNames::loading);
-    if (value.equals_ignoring_ascii_case("lazy"sv))
-        return LazyLoading::Lazy;
-    return LazyLoading::Eager;
-}
-
-// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#will-lazy-load-element-steps
-bool HTMLImageElement::will_lazy_load() const
-{
-    // 1. If scripting is disabled for element, then return false.
-    // Spec Note: This is an anti-tracking measure, because if a user agent supported lazy loading when scripting is
-    //            disabled, it would still be possible for a site to track a user's approximate scroll position throughout
-    //            a session, by strategically placing images in a page's markup such that a server can track how many
-    //            images are requested and when.
-    if (is_scripting_disabled())
-        return false;
-
-    // 2. If element's lazy loading attribute is in the Lazy state, then return true.
-    // 3. Return false.
-    return lazy_loading() == LazyLoading::Lazy;
-}
-
-JS::GCPtr<JS::HeapFunction<void()>> HTMLImageElement::take_lazy_load_resumption_steps(Badge<DOM::Document>)
-{
-    auto lazy_load_resumption_steps = m_lazy_load_resumption_steps;
-    m_lazy_load_resumption_steps = nullptr;
-    return lazy_load_resumption_steps;
 }
 
 }

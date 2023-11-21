@@ -20,6 +20,7 @@
 #include <LibWeb/DOM/Slottable.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
+#include <LibWeb/HTML/LazyLoadingElement.h>
 #include <LibWeb/HTML/ScrollOptions.h>
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/IntersectionObserver/IntersectionObserver.h>
@@ -371,6 +372,11 @@ public:
     Directionality directionality() const;
 
     Optional<FlyString> const& id() const { return m_id; }
+
+    virtual JS::GCPtr<JS::HeapFunction<void()>> take_lazy_load_resumption_steps(Badge<DOM::Document>)
+    {
+        return nullptr;
+    }
 
 protected:
     Element(Document&, DOM::QualifiedName);
