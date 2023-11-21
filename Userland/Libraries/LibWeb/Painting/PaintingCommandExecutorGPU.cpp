@@ -35,7 +35,7 @@ CommandResult PaintingCommandExecutorGPU::fill_rect(Gfx::IntRect const& rect, Co
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, float, Gfx::Painter::ScalingMode scaling_mode)
+CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
 {
     // FIXME: We should avoid using Gfx::Painter specific enums in painting commands
     AccelGfx::Painter::ScalingMode accel_scaling_mode;

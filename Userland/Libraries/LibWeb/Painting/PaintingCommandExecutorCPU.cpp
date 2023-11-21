@@ -57,10 +57,10 @@ CommandResult PaintingCommandExecutorCPU::fill_rect(Gfx::IntRect const& rect, Co
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorCPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, float opacity, Gfx::Painter::ScalingMode scaling_mode)
+CommandResult PaintingCommandExecutorCPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
 {
     auto& painter = this->painter();
-    painter.draw_scaled_bitmap(dst_rect, bitmap, src_rect, opacity, scaling_mode);
+    painter.draw_scaled_bitmap(dst_rect, bitmap, src_rect, 1, scaling_mode);
     return CommandResult::Continue;
 }
 

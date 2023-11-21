@@ -128,7 +128,7 @@ void ImageStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_r
 {
     if (auto const* b = bitmap(m_current_frame_index, dest_rect.size().to_type<int>()); b != nullptr) {
         auto scaling_mode = to_gfx_scaling_mode(image_rendering, b->rect(), dest_rect.to_type<int>());
-        context.painter().draw_scaled_bitmap(dest_rect.to_type<int>(), *b, b->rect(), 1.f, scaling_mode);
+        context.painter().draw_scaled_bitmap(dest_rect.to_type<int>(), *b, b->rect(), scaling_mode);
     }
 }
 
