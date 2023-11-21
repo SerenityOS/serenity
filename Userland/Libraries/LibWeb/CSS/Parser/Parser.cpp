@@ -295,7 +295,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
     }
 
     // `<supports-selector-fn>`
-    if (first_token.is_function() && first_token.function().name().equals_ignoring_ascii_case("selector"sv)) {
+    if (first_token.is_function("selector"sv)) {
         // FIXME: Parsing and then converting back to a string is weird.
         StringBuilder builder;
         for (auto const& item : first_token.function().values())
@@ -1163,7 +1163,7 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
         auto url_string = component_value.token().url();
         return convert_string_to_url(url_string);
     }
-    if (component_value.is_function() && component_value.function().name().equals_ignoring_ascii_case("url"sv)) {
+    if (component_value.is_function("url"sv)) {
         auto const& function_values = component_value.function().values();
         // FIXME: Handle url-modifiers. https://www.w3.org/TR/css-values-4/#url-modifiers
         for (size_t i = 0; i < function_values.size(); ++i) {
@@ -2093,14 +2093,11 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
 // https://www.w3.org/TR/CSS2/visufx.html#value-def-shape
 RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_value)
 {
-    if (!component_value.is_function())
-        return nullptr;
-    auto const& function = component_value.function();
-    if (!function.name().equals_ignoring_ascii_case("rect"sv))
+    if (!component_value.is_function("rect"sv))
         return nullptr;
 
     Vector<Length, 4> params;
-    auto tokens = TokenStream { function.values() };
+    auto tokens = TokenStream { component_value.function().values() };
 
     enum class CommaRequirement {
         Unknown,
@@ -4311,7 +4308,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
             continue;
         }
 
-        if (first.is_function() && first.function().name().equals_ignoring_ascii_case("local"sv)) {
+        if (first.is_function("local"sv)) {
             if (first.function().values().is_empty()) {
                 continue;
             }
