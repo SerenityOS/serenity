@@ -17,6 +17,7 @@
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/LazyLoadingElement.h>
 #include <LibWeb/HTML/SourceSet.h>
 #include <LibWeb/Layout/ImageProvider.h>
 
@@ -25,11 +26,13 @@ namespace Web::HTML {
 class HTMLImageElement final
     : public HTMLElement
     , public FormAssociatedElement
+    , public LazyLoadingElement<HTMLImageElement>
     , public Layout::ImageProvider
     , public DOM::Document::ViewportClient {
     WEB_PLATFORM_OBJECT(HTMLImageElement, HTMLElement);
     JS_DECLARE_ALLOCATOR(HTMLImageElement);
-    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLImageElement)
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLImageElement);
+    LAZY_LOADING_ELEMENT(HTMLImageElement);
 
 public:
     virtual ~HTMLImageElement() override;
@@ -77,12 +80,6 @@ public:
     ImageRequest const& current_request() const { return *m_current_request; }
 
     size_t current_frame_index() const { return m_current_frame_index; }
-    enum class LazyLoading {
-        Lazy,
-        Eager,
-    };
-    [[nodiscard]] LazyLoading lazy_loading() const;
-    [[nodiscard]] bool will_lazy_load() const;
 
     // https://html.spec.whatwg.org/multipage/images.html#upgrade-the-pending-request-to-the-current-request
     void upgrade_pending_request_to_current_request();
@@ -93,9 +90,6 @@ public:
     virtual Optional<CSSPixelFraction> intrinsic_aspect_ratio() const override;
     virtual RefPtr<Gfx::ImmutableBitmap> current_image_bitmap(Gfx::IntSize = {}) const override;
     virtual void set_visible_in_viewport(bool) override;
-
-    void set_lazy_load_resumption_steps(Function<void()>);
-    JS::GCPtr<JS::HeapFunction<void()>> take_lazy_load_resumption_steps(Badge<DOM::Document>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -138,10 +132,6 @@ private:
     JS::GCPtr<ImageRequest> m_pending_request;
 
     SourceSet m_source_set;
-
-    // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-load-resumption-steps
-    // Each img and iframe element has associated lazy load resumption steps, initially null.
-    JS::GCPtr<JS::HeapFunction<void()>> m_lazy_load_resumption_steps;
 
     CSSPixelSize m_last_seen_viewport_size;
 };

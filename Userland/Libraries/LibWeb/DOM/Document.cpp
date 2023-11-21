@@ -3310,6 +3310,8 @@ void Document::run_the_update_intersection_observations_steps(HighResolutionTime
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#start-intersection-observing-a-lazy-loading-element
 void Document::start_intersection_observing_a_lazy_loading_element(Element& element)
 {
+    VERIFY(element.is_lazy_loading());
+
     auto& realm = this->realm();
 
     // 1. Let doc be element's node document.
@@ -3333,7 +3335,8 @@ void Document::start_intersection_observing_a_lazy_loading_element(Element& elem
                 // 2. If entry.isIntersecting is true, then set resumptionSteps to entry.target's lazy load resumption steps.
                 if (entry.is_intersecting()) {
                     // 5. Set entry.target's lazy load resumption steps to null.
-                    resumption_steps = verify_cast<HTML::HTMLImageElement>(*entry.target()).take_lazy_load_resumption_steps({});
+                    VERIFY(entry.target()->is_lazy_loading());
+                    resumption_steps = entry.target()->take_lazy_load_resumption_steps({});
                 }
 
                 // 3. If resumptionSteps is null, then return.
