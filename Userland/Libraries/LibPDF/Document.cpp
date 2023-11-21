@@ -7,6 +7,7 @@
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Parser.h>
+#include <LibTextCodec/Decoder.h>
 
 namespace PDF {
 
@@ -36,32 +37,32 @@ DeprecatedString OutlineItem::to_deprecated_string(int indent) const
 
 PDFErrorOr<Optional<DeprecatedString>> InfoDict::title() const
 {
-    return get(CommonNames::Title);
+    return get_text(CommonNames::Title);
 }
 
 PDFErrorOr<Optional<DeprecatedString>> InfoDict::author() const
 {
-    return get(CommonNames::Author);
+    return get_text(CommonNames::Author);
 }
 
 PDFErrorOr<Optional<DeprecatedString>> InfoDict::subject() const
 {
-    return get(CommonNames::Subject);
+    return get_text(CommonNames::Subject);
 }
 
 PDFErrorOr<Optional<DeprecatedString>> InfoDict::keywords() const
 {
-    return get(CommonNames::Keywords);
+    return get_text(CommonNames::Keywords);
 }
 
 PDFErrorOr<Optional<DeprecatedString>> InfoDict::creator() const
 {
-    return get(CommonNames::Creator);
+    return get_text(CommonNames::Creator);
 }
 
 PDFErrorOr<Optional<DeprecatedString>> InfoDict::producer() const
 {
-    return get(CommonNames::Producer);
+    return get_text(CommonNames::Producer);
 }
 
 PDFErrorOr<Optional<DeprecatedString>> InfoDict::creation_date() const
@@ -72,6 +73,28 @@ PDFErrorOr<Optional<DeprecatedString>> InfoDict::creation_date() const
 PDFErrorOr<Optional<DeprecatedString>> InfoDict::modification_date() const
 {
     return get(CommonNames::ModDate);
+}
+
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::get_text(DeprecatedFlyString const& name) const
+{
+    return TRY(get(name)).map(Document::text_string_to_utf8);
+}
+
+DeprecatedString Document::text_string_to_utf8(DeprecatedString const& text_string)
+{
+    if (text_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
+        // The string is encoded in UTF16-BE
+        return TextCodec::decoder_for("utf-16be"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    }
+
+    if (text_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
+        // The string is encoded in UTF-8.
+        return text_string.substring(3);
+    }
+
+    // FIXME: Convert from PDFDocEncoding to UTF-8.
+
+    return text_string;
 }
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
@@ -544,7 +567,7 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
         outline_item->children = move(children);
     }
 
-    outline_item->title = TRY(outline_item_dict->get_string(this, CommonNames::Title))->string();
+    outline_item->title = text_string_to_utf8(TRY(outline_item_dict->get_string(this, CommonNames::Title))->string());
 
     if (outline_item_dict->contains(CommonNames::Count))
         outline_item->count = outline_item_dict->get_value(CommonNames::Count).get<int>();

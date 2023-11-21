@@ -9,7 +9,6 @@
 #include <LibPDF/Document.h>
 #include <LibPDF/Filter.h>
 #include <LibPDF/Parser.h>
-#include <LibTextCodec/Decoder.h>
 #include <ctype.h>
 
 namespace PDF {
@@ -261,17 +260,6 @@ PDFErrorOr<NonnullRefPtr<StringObject>> Parser::parse_string()
 
     if (m_document->security_handler() && m_enable_encryption)
         m_document->security_handler()->decrypt(string_object, m_current_reference_stack.last());
-
-    auto unencrypted_string = string_object->string();
-
-    if (unencrypted_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
-        // The string is encoded in UTF16-BE
-        string_object->set_string(TextCodec::decoder_for("utf-16be"sv)->to_utf8(unencrypted_string).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
-    } else if (unencrypted_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
-        // The string is encoded in UTF-8. This is the default anyways, but if these bytes
-        // are explicitly included, we have to trim them
-        string_object->set_string(unencrypted_string.substring(3));
-    }
 
     return string_object;
 }

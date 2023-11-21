@@ -39,7 +39,7 @@ struct Destination {
 struct OutlineItem final : public RefCounted<OutlineItem> {
     RefPtr<OutlineItem> parent;
     Vector<NonnullRefPtr<OutlineItem>> children;
-    DeprecatedString title;
+    DeprecatedString title; // Already converted to UTF-8.
     i32 count { 0 };
     Destination dest;
     Gfx::Color color { Color::NamedColor::Black }; // 'C' in the PDF spec
@@ -66,6 +66,8 @@ public:
     {
     }
 
+    // These all return strings that are already converted to UTF-8.
+
     PDFErrorOr<Optional<DeprecatedString>> title() const;
     PDFErrorOr<Optional<DeprecatedString>> author() const;
     PDFErrorOr<Optional<DeprecatedString>> subject() const;
@@ -89,6 +91,8 @@ private:
         return TRY(m_info_dict->get_string(m_document, name))->string();
     }
 
+    PDFErrorOr<Optional<DeprecatedString>> get_text(DeprecatedFlyString const& name) const;
+
     WeakPtr<Document> m_document;
     NonnullRefPtr<DictObject> m_info_dict;
 };
@@ -97,6 +101,9 @@ class Document final
     : public RefCounted<Document>
     , public Weakable<Document> {
 public:
+    // Converts a text string (PDF 1.7 spec, 3.8.1. "String Types") to UTF-8.
+    static DeprecatedString text_string_to_utf8(DeprecatedString const&);
+
     static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes);
 
     // If a security handler is present, it is the caller's responsibility to ensure
