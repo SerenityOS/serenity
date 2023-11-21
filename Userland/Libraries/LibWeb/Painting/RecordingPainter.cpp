@@ -420,7 +420,7 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
     while (next_command_index < m_painting_commands.size()) {
         auto& command = m_painting_commands[next_command_index++];
         auto bounding_rect = command_bounding_rectangle(command);
-        if (bounding_rect.has_value() && executor.would_be_fully_clipped_by_painter(*bounding_rect)) {
+        if (bounding_rect.has_value() && (bounding_rect->is_empty() || executor.would_be_fully_clipped_by_painter(*bounding_rect))) {
             continue;
         }
 
