@@ -22,7 +22,7 @@ HTMLFrameSetElement::~HTMLFrameSetElement() = default;
 void HTMLFrameSetElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFrameSetElementPrototype>(realm, "HTMLFrameSetElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFrameSetElementPrototype>(realm, "HTMLFrameSetElement"_fly_string));
 }
 
 void HTMLFrameSetElement::attribute_changed(FlyString const& name, Optional<String> const& value)

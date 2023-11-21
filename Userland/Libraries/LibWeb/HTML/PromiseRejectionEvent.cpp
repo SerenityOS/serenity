@@ -40,7 +40,7 @@ void PromiseRejectionEvent::visit_edges(Cell::Visitor& visitor)
 void PromiseRejectionEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::PromiseRejectionEventPrototype>(realm, "PromiseRejectionEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::PromiseRejectionEventPrototype>(realm, "PromiseRejectionEvent"_fly_string));
 }
 
 }

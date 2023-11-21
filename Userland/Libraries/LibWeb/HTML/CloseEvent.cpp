@@ -34,7 +34,7 @@ CloseEvent::~CloseEvent() = default;
 void CloseEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CloseEventPrototype>(realm, "CloseEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CloseEventPrototype>(realm, "CloseEvent"_fly_string));
 }
 
 }

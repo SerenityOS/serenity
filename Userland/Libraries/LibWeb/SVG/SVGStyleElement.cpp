@@ -20,7 +20,7 @@ SVGStyleElement::~SVGStyleElement() = default;
 void SVGStyleElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGStyleElementPrototype>(realm, "SVGStyleElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGStyleElementPrototype>(realm, "SVGStyleElement"_fly_string));
 }
 
 void SVGStyleElement::visit_edges(Cell::Visitor& visitor)

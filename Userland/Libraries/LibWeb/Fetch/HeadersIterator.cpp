@@ -16,7 +16,7 @@ template<>
 void Intrinsics::create_web_prototype_and_constructor<HeadersIteratorPrototype>(JS::Realm& realm)
 {
     auto prototype = heap().allocate<HeadersIteratorPrototype>(realm, realm);
-    m_prototypes.set("HeadersIterator"sv, prototype);
+    m_prototypes.set("HeadersIterator"_fly_string, prototype);
 }
 
 }
@@ -42,7 +42,7 @@ HeadersIterator::~HeadersIterator() = default;
 void HeadersIterator::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersIteratorPrototype>(realm, "HeadersIterator"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersIteratorPrototype>(realm, "HeadersIterator"_fly_string));
 }
 
 void HeadersIterator::visit_edges(JS::Cell::Visitor& visitor)

@@ -622,7 +622,7 @@ Animation::Animation(JS::Realm& realm)
 void Animation::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AnimationPrototype>(realm, "Animation"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::AnimationPrototype>(realm, "Animation"_fly_string));
 }
 
 void Animation::visit_edges(Cell::Visitor& visitor)

@@ -31,7 +31,7 @@ MessagePort::~MessagePort() = default;
 void MessagePort::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessagePortPrototype>(realm, "MessagePort"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessagePortPrototype>(realm, "MessagePort"_fly_string));
 }
 
 void MessagePort::visit_edges(Cell::Visitor& visitor)

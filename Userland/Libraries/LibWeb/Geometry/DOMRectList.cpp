@@ -33,7 +33,7 @@ DOMRectList::~DOMRectList() = default;
 void DOMRectList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectListPrototype>(realm, "DOMRectList"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectListPrototype>(realm, "DOMRectList"_fly_string));
 }
 
 // https://drafts.fxtf.org/geometry-1/#dom-domrectlist-length

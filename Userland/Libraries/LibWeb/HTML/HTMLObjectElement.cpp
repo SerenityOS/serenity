@@ -38,7 +38,7 @@ HTMLObjectElement::~HTMLObjectElement() = default;
 void HTMLObjectElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLObjectElementPrototype>(realm, "HTMLObjectElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLObjectElementPrototype>(realm, "HTMLObjectElement"_fly_string));
 }
 
 void HTMLObjectElement::visit_edges(Cell::Visitor& visitor)

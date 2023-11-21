@@ -113,7 +113,7 @@ JS::GCPtr<SVGGradientElement const> SVGGradientElement::linked_gradient() const
 void SVGGradientElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGGradientElementPrototype>(realm, "SVGGradientElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGGradientElementPrototype>(realm, "SVGGradientElement"_fly_string));
 }
 
 }

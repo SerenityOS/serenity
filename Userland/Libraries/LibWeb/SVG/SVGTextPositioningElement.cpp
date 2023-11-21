@@ -25,7 +25,7 @@ SVGTextPositioningElement::SVGTextPositioningElement(DOM::Document& document, DO
 void SVGTextPositioningElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextPositioningElementPrototype>(realm, "SVGTextPositioningElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextPositioningElementPrototype>(realm, "SVGTextPositioningElement"_fly_string));
 }
 
 void SVGTextPositioningElement::attribute_changed(FlyString const& name, Optional<String> const& value)

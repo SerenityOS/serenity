@@ -25,7 +25,7 @@ HTMLSelectElement::~HTMLSelectElement() = default;
 void HTMLSelectElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSelectElementPrototype>(realm, "HTMLSelectElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSelectElementPrototype>(realm, "HTMLSelectElement"_fly_string));
 }
 
 void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)

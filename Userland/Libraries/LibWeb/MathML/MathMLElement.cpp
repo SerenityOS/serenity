@@ -22,7 +22,7 @@ MathMLElement::MathMLElement(DOM::Document& document, DOM::QualifiedName qualifi
 void MathMLElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MathMLElementPrototype>(realm, "MathMLElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MathMLElementPrototype>(realm, "MathMLElement"_fly_string));
 
     m_dataset = HTML::DOMStringMap::create(*this);
 }

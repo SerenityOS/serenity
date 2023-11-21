@@ -25,7 +25,7 @@ CharacterData::CharacterData(Document& document, NodeType type, String const& da
 void CharacterData::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CharacterDataPrototype>(realm, "CharacterData"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CharacterDataPrototype>(realm, "CharacterData"_fly_string));
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-data

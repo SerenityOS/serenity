@@ -800,7 +800,7 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     auto& realm = this->realm();
     add_window_exposed_interfaces(*this);
 
-    Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
+    Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"_fly_string));
 
     Bindings::WindowGlobalMixin::initialize(realm, *this);
     WindowOrWorkerGlobalScopeMixin::initialize(realm);

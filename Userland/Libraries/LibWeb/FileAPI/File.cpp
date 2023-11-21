@@ -24,7 +24,7 @@ File::File(JS::Realm& realm, ByteBuffer byte_buffer, String file_name, String ty
 void File::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::FilePrototype>(realm, "File"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::FilePrototype>(realm, "File"_fly_string));
 }
 
 File::~File() = default;

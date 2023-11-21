@@ -31,7 +31,7 @@ NamedNodeMap::NamedNodeMap(Element& element)
 void NamedNodeMap::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NamedNodeMapPrototype>(realm, "NamedNodeMap"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NamedNodeMapPrototype>(realm, "NamedNodeMap"_fly_string));
 }
 
 void NamedNodeMap::visit_edges(Cell::Visitor& visitor)

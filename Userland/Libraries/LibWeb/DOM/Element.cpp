@@ -80,7 +80,7 @@ Element::~Element() = default;
 void Element::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ElementPrototype>(realm, "Element"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ElementPrototype>(realm, "Element"_fly_string));
 
     m_attributes = NamedNodeMap::create(*this);
 }

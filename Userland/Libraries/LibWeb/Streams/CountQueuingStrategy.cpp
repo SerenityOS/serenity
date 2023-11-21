@@ -41,7 +41,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> CountQueuingStrategy
 void CountQueuingStrategy::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CountQueuingStrategyPrototype>(realm, "CountQueuingStrategy"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CountQueuingStrategyPrototype>(realm, "CountQueuingStrategy"_fly_string));
 }
 
 }

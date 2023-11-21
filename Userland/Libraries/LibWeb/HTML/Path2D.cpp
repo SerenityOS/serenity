@@ -61,7 +61,7 @@ Path2D::~Path2D() = default;
 void Path2D::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::Path2DPrototype>(realm, "Path2D"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::Path2DPrototype>(realm, "Path2D"_fly_string));
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d-addpath

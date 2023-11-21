@@ -34,7 +34,7 @@ CustomEvent::~CustomEvent() = default;
 void CustomEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CustomEventPrototype>(realm, "CustomEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CustomEventPrototype>(realm, "CustomEvent"_fly_string));
 }
 
 void CustomEvent::visit_edges(JS::Cell::Visitor& visitor)

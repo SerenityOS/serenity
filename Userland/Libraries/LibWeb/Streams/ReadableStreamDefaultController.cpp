@@ -129,7 +129,7 @@ WebIDL::ExceptionOr<void> ReadableStreamDefaultController::release_steps()
 void ReadableStreamDefaultController::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamDefaultControllerPrototype>(realm, "ReadableStreamDefaultController"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamDefaultControllerPrototype>(realm, "ReadableStreamDefaultController"_fly_string));
 }
 
 void ReadableStreamDefaultController::visit_edges(Cell::Visitor& visitor)

@@ -29,7 +29,7 @@ Screen::Screen(HTML::Window& window)
 void Screen::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ScreenPrototype>(realm, "Screen"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ScreenPrototype>(realm, "Screen"_fly_string));
 }
 
 void Screen::visit_edges(Cell::Visitor& visitor)

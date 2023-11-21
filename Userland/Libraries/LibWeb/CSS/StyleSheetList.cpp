@@ -79,7 +79,7 @@ StyleSheetList::StyleSheetList(DOM::Document& document)
 void StyleSheetList::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::StyleSheetListPrototype>(realm, "StyleSheetList"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::StyleSheetListPrototype>(realm, "StyleSheetList"_fly_string));
 }
 
 void StyleSheetList::visit_edges(Cell::Visitor& visitor)

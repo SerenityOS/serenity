@@ -27,7 +27,7 @@ AbortSignal::AbortSignal(JS::Realm& realm)
 void AbortSignal::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AbortSignalPrototype>(realm, "AbortSignal"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::AbortSignalPrototype>(realm, "AbortSignal"_fly_string));
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add

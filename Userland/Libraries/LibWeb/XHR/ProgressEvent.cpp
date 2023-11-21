@@ -34,7 +34,7 @@ ProgressEvent::~ProgressEvent() = default;
 void ProgressEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ProgressEventPrototype>(realm, "ProgressEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ProgressEventPrototype>(realm, "ProgressEvent"_fly_string));
 }
 
 }

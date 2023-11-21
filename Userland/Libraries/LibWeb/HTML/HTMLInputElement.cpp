@@ -45,7 +45,7 @@ HTMLInputElement::~HTMLInputElement() = default;
 void HTMLInputElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLInputElementPrototype>(realm, "HTMLInputElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLInputElementPrototype>(realm, "HTMLInputElement"_fly_string));
 }
 
 void HTMLInputElement::visit_edges(Cell::Visitor& visitor)

@@ -32,7 +32,7 @@ HTMLVideoElement::~HTMLVideoElement() = default;
 void HTMLVideoElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLVideoElementPrototype>(realm, "HTMLVideoElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLVideoElementPrototype>(realm, "HTMLVideoElement"_fly_string));
 }
 
 void HTMLVideoElement::visit_edges(Cell::Visitor& visitor)

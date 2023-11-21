@@ -32,7 +32,7 @@ CustomElementRegistry::~CustomElementRegistry() = default;
 void CustomElementRegistry::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CustomElementRegistryPrototype>(realm, "CustomElementRegistry"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CustomElementRegistryPrototype>(realm, "CustomElementRegistry"_fly_string));
 }
 
 // https://webidl.spec.whatwg.org/#es-callback-function

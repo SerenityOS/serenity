@@ -24,7 +24,7 @@ XMLDocument::XMLDocument(JS::Realm& realm, AK::URL const& url)
 void XMLDocument::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLDocumentPrototype>(realm, "XMLDocument"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLDocumentPrototype>(realm, "XMLDocument"_fly_string));
 }
 
 }

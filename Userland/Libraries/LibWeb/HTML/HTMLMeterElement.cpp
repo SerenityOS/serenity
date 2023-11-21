@@ -21,7 +21,7 @@ HTMLMeterElement::~HTMLMeterElement() = default;
 void HTMLMeterElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMeterElementPrototype>(realm, "HTMLMeterElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMeterElementPrototype>(realm, "HTMLMeterElement"_fly_string));
 }
 
 }

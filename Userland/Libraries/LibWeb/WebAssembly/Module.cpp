@@ -34,7 +34,7 @@ Module::Module(JS::Realm& realm, size_t index)
 void Module::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::ModulePrototype>(realm, "WebAssembly.Module"sv));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ModulePrototype>(realm, "WebAssembly.Module"_fly_string));
 }
 
 Wasm::Module const& Module::module() const

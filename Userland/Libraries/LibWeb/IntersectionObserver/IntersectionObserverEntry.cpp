@@ -42,7 +42,7 @@ IntersectionObserverEntry::~IntersectionObserverEntry() = default;
 void IntersectionObserverEntry::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::IntersectionObserverEntryPrototype>(realm, "IntersectionObserverEntry"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::IntersectionObserverEntryPrototype>(realm, "IntersectionObserverEntry"_fly_string));
 }
 
 void IntersectionObserverEntry::visit_edges(JS::Cell::Visitor& visitor)

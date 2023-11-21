@@ -28,7 +28,7 @@ IdleDeadline::IdleDeadline(JS::Realm& realm, bool did_timeout)
 void IdleDeadline::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::IdleDeadlinePrototype>(realm, "IdleDeadline"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::IdleDeadlinePrototype>(realm, "IdleDeadline"_fly_string));
 }
 
 IdleDeadline::~IdleDeadline() = default;

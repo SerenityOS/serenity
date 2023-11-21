@@ -32,7 +32,7 @@ NavigationCurrentEntryChangeEvent::~NavigationCurrentEntryChangeEvent() = defaul
 void NavigationCurrentEntryChangeEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigationCurrentEntryChangeEventPrototype>(realm, "NavigationCurrentEntryChangeEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigationCurrentEntryChangeEventPrototype>(realm, "NavigationCurrentEntryChangeEvent"_fly_string));
 }
 
 void NavigationCurrentEntryChangeEvent::visit_edges(JS::Cell::Visitor& visitor)

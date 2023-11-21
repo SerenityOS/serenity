@@ -22,7 +22,7 @@ HTMLLabelElement::~HTMLLabelElement() = default;
 void HTMLLabelElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLabelElementPrototype>(realm, "HTMLLabelElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLabelElementPrototype>(realm, "HTMLLabelElement"_fly_string));
 }
 
 JS::GCPtr<Layout::Node> HTMLLabelElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

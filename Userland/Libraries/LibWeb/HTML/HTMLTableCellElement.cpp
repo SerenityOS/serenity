@@ -31,7 +31,7 @@ HTMLTableCellElement::~HTMLTableCellElement() = default;
 void HTMLTableCellElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableCellElementPrototype>(realm, "HTMLTableCellElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableCellElementPrototype>(realm, "HTMLTableCellElement"_fly_string));
 }
 
 static const HTML::HTMLTableElement& table_containing_cell(const HTML::HTMLTableCellElement& node)

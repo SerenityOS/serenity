@@ -35,7 +35,7 @@ DOMRectReadOnly::~DOMRectReadOnly() = default;
 void DOMRectReadOnly::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectReadOnlyPrototype>(realm, "DOMRectReadOnly"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectReadOnlyPrototype>(realm, "DOMRectReadOnly"_fly_string));
 }
 
 }

@@ -38,7 +38,7 @@ void HTMLDetailsElement::visit_edges(Cell::Visitor& visitor)
 void HTMLDetailsElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDetailsElementPrototype>(realm, "HTMLDetailsElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDetailsElementPrototype>(realm, "HTMLDetailsElement"_fly_string));
 
     create_shadow_tree(realm).release_value_but_fixme_should_propagate_errors();
 }

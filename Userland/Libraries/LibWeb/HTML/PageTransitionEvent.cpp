@@ -32,7 +32,7 @@ PageTransitionEvent::~PageTransitionEvent() = default;
 void PageTransitionEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::PageTransitionEventPrototype>(realm, "PageTransitionEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::PageTransitionEventPrototype>(realm, "PageTransitionEvent"_fly_string));
 }
 
 }

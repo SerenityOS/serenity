@@ -145,7 +145,7 @@ Blob::~Blob() = default;
 void Blob::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::BlobPrototype>(realm, "Blob"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::BlobPrototype>(realm, "Blob"_fly_string));
 }
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob

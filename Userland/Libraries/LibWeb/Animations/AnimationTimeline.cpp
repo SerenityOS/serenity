@@ -60,7 +60,7 @@ AnimationTimeline::~AnimationTimeline()
 void AnimationTimeline::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::AnimationTimelinePrototype>(realm, "AnimationTimeline"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::AnimationTimelinePrototype>(realm, "AnimationTimeline"_fly_string));
 }
 
 void AnimationTimeline::visit_edges(Cell::Visitor& visitor)

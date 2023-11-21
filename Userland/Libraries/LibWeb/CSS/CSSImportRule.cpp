@@ -45,7 +45,7 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
 void CSSImportRule::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSImportRulePrototype>(realm, "CSSImportRule"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSImportRulePrototype>(realm, "CSSImportRule"_fly_string));
 }
 
 void CSSImportRule::visit_edges(Cell::Visitor& visitor)

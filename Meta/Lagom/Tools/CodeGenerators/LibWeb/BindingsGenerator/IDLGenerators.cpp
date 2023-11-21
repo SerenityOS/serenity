@@ -2597,7 +2597,7 @@ void @named_properties_class@::initialize(JS::Realm& realm)
     } else {
         generator.append(R"~~~(
 
-    set_prototype(&ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"));
+    set_prototype(&ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"_fly_string));
 )~~~");
     }
 
@@ -2743,12 +2743,12 @@ void @class_name@::initialize(JS::Realm& realm)
 )~~~");
     } else if (is_global_interface && interface.supports_named_properties()) {
         generator.append(R"~~~(
-    set_prototype(&ensure_web_prototype<@prototype_name@>(realm, "@name@"));
+    set_prototype(&ensure_web_prototype<@prototype_name@>(realm, "@name@"_fly_string));
 )~~~");
     } else {
         generator.append(R"~~~(
 
-    set_prototype(&ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"));
+    set_prototype(&ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"_fly_string));
 
 )~~~");
     }
@@ -3877,7 +3877,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
 
             // 2. Set prototype to the interface prototype object for interface in targetRealm.
             VERIFY(target_realm);
-            prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*target_realm, "@name@"sv);
+            prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*target_realm, "@name@"_fly_string);
         }
 
         // 7. Set instance.[[Prototype]] to prototype.
@@ -3903,7 +3903,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
 
         // 2. Set prototype to the interface prototype object of realm whose interface is the same as the interface of the active function object.
         VERIFY(function_realm);
-        prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*function_realm, "@name@"sv);
+        prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*function_realm, "@name@"_fly_string);
     }
 
     VERIFY(prototype.is_object());
@@ -3937,7 +3937,7 @@ void @constructor_class@::initialize(JS::Realm& realm)
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
     Base::initialize(realm);
-    define_direct_property(vm.names.prototype, &ensure_web_prototype<@prototype_class@>(realm, "@namespaced_name@"), 0);
+    define_direct_property(vm.names.prototype, &ensure_web_prototype<@prototype_class@>(realm, "@namespaced_name@"_fly_string), 0);
     define_direct_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
 
 )~~~");
@@ -4179,7 +4179,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
             generator.set("namespaced_name", interface.namespaced_name);
             generator.append(R"~~~(
     define_direct_property(vm().well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm(), "@namespaced_name@"_string), JS::Attribute::Configurable);
-    set_prototype(&ensure_web_prototype<@prototype_class@>(realm, "@named_properties_class@"));
+    set_prototype(&ensure_web_prototype<@prototype_class@>(realm, "@named_properties_class@"_fly_string));
 )~~~");
         }
         generator.append(R"~~~(

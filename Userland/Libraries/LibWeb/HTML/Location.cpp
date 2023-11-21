@@ -42,7 +42,7 @@ void Location::visit_edges(Cell::Visitor& visitor)
 void Location::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::LocationPrototype>(realm, "Location"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::LocationPrototype>(realm, "Location"_fly_string));
 
     // FIXME: Implement steps 2.-4.
 

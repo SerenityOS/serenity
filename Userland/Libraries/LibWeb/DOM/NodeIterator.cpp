@@ -26,7 +26,7 @@ NodeIterator::~NodeIterator() = default;
 void NodeIterator::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeIteratorPrototype>(realm, "NodeIterator"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeIteratorPrototype>(realm, "NodeIterator"_fly_string));
 }
 
 void NodeIterator::finalize()

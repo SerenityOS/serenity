@@ -39,7 +39,7 @@ JS::GCPtr<Layout::Node> HTMLTextAreaElement::create_layout_node(NonnullRefPtr<CS
 void HTMLTextAreaElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTextAreaElementPrototype>(realm, "HTMLTextAreaElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTextAreaElementPrototype>(realm, "HTMLTextAreaElement"_fly_string));
 }
 
 void HTMLTextAreaElement::visit_edges(Cell::Visitor& visitor)

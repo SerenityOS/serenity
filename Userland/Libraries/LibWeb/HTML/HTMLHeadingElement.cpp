@@ -23,7 +23,7 @@ HTMLHeadingElement::~HTMLHeadingElement() = default;
 void HTMLHeadingElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLHeadingElementPrototype>(realm, "HTMLHeadingElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLHeadingElementPrototype>(realm, "HTMLHeadingElement"_fly_string));
 }
 
 // https://html.spec.whatwg.org/multipage/rendering.html#tables-2

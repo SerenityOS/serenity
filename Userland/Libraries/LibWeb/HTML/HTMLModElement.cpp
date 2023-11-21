@@ -22,7 +22,7 @@ HTMLModElement::~HTMLModElement() = default;
 void HTMLModElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLModElementPrototype>(realm, "HTMLModElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLModElementPrototype>(realm, "HTMLModElement"_fly_string));
 }
 
 Optional<ARIA::Role> HTMLModElement::default_role() const

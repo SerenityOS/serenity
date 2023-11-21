@@ -35,7 +35,7 @@ HTMLTableRowElement::~HTMLTableRowElement() = default;
 void HTMLTableRowElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableRowElementPrototype>(realm, "HTMLTableRowElement"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableRowElementPrototype>(realm, "HTMLTableRowElement"_fly_string));
 }
 
 void HTMLTableRowElement::apply_presentational_hints(CSS::StyleProperties& style) const

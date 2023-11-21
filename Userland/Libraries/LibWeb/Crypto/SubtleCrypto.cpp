@@ -32,7 +32,7 @@ SubtleCrypto::~SubtleCrypto() = default;
 void SubtleCrypto::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::SubtleCryptoPrototype>(realm, "SubtleCrypto"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SubtleCryptoPrototype>(realm, "SubtleCrypto"_fly_string));
 }
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest

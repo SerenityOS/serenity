@@ -28,7 +28,7 @@ TextEncoder::~TextEncoder() = default;
 void TextEncoder::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextEncoderPrototype>(realm, "TextEncoder"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::TextEncoderPrototype>(realm, "TextEncoder"_fly_string));
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encode

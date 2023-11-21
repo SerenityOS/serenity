@@ -29,7 +29,7 @@ MediaQueryListEvent::~MediaQueryListEvent() = default;
 void MediaQueryListEvent::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListEventPrototype>(realm, "MediaQueryListEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListEventPrototype>(realm, "MediaQueryListEvent"_fly_string));
 }
 
 }
