@@ -5520,18 +5520,17 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(PropertyID
 RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
 {
     auto tokens = TokenStream { component_values };
-    Token current_token;
 
     auto parse_placement_tokens = [&](Vector<ComponentValue>& placement_tokens, bool check_for_delimiter = true) -> void {
-        current_token = tokens.next_token().token();
+        auto current_token = tokens.next_token();
         while (true) {
-            if (check_for_delimiter && current_token.is(Token::Type::Delim) && current_token.delim() == "/"sv)
+            if (check_for_delimiter && current_token.is_delim('/'))
                 break;
             placement_tokens.append(current_token);
             tokens.skip_whitespace();
             if (!tokens.has_next_token())
                 break;
-            current_token = tokens.next_token().token();
+            current_token = tokens.next_token();
         }
     };
 
