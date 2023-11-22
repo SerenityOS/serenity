@@ -164,10 +164,10 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
 
     if (s_use_gpu_painter) {
 #ifdef HAS_ACCELERATED_GRAPHICS
-        m_accelerated_painter->set_target_bitmap(target);
+        m_accelerated_painter->set_target_canvas(AccelGfx::Canvas::create(target.size()));
         Web::Painting::PaintingCommandExecutorGPU painting_command_executor(*m_accelerated_painter);
         recording_painter.execute(painting_command_executor);
-        m_accelerated_painter->flush();
+        m_accelerated_painter->flush(target);
 #endif
     } else {
         Web::Painting::PaintingCommandExecutorCPU painting_command_executor(target);

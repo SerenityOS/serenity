@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
+#include <LibAccelGfx/Canvas.h>
 #include <LibAccelGfx/Context.h>
 #include <LibAccelGfx/Forward.h>
 #include <LibAccelGfx/GL.h>
@@ -72,8 +73,8 @@ public:
     void set_clip_rect(Gfx::IntRect);
     void clear_clip_rect();
 
-    void set_target_bitmap(Gfx::Bitmap&);
-    void flush();
+    void set_target_canvas(NonnullRefPtr<Canvas>);
+    void flush(Gfx::Bitmap&);
 
     void fill_rect_with_linear_gradient(Gfx::IntRect const&, ReadonlySpan<Gfx::ColorStop>, float angle, Optional<float> repeat_length = {});
     void fill_rect_with_linear_gradient(Gfx::FloatRect const&, ReadonlySpan<Gfx::ColorStop>, float angle, Optional<float> repeat_length = {});
@@ -95,9 +96,13 @@ private:
     [[nodiscard]] State& state() { return m_state_stack.last(); }
     [[nodiscard]] State const& state() const { return m_state_stack.last(); }
 
+    void bind_target_canvas();
+
     [[nodiscard]] Gfx::FloatRect to_clip_space(Gfx::FloatRect const& screen_rect) const;
 
     Vector<State, 1> m_state_stack;
+
+    RefPtr<Canvas> m_target_canvas;
 
     Program m_rectangle_program;
     Program m_rounded_rectangle_program;
@@ -107,9 +112,6 @@ private:
     HashMap<GlyphsTextureKey, Gfx::IntRect> m_glyphs_texture_map;
     Gfx::IntSize m_glyphs_texture_size;
     GL::Texture m_glyphs_texture;
-
-    Optional<Gfx::Bitmap&> m_target_bitmap;
-    Optional<GL::Framebuffer> m_target_framebuffer;
 };
 
 }
