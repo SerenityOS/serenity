@@ -8,6 +8,7 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <LibCore/EventReceiver.h>
+#include <LibVideo/CodecID.h>
 #include <LibVideo/DecoderError.h>
 #include <LibVideo/Sample.h>
 #include <LibVideo/Track.h>
@@ -27,6 +28,8 @@ public:
         VERIFY(sample->is_video_sample());
         return sample.release_nonnull<VideoSample>();
     }
+
+    virtual DecoderErrorOr<CodecID> get_codec_id_for_track(Track track) = 0;
 
     // Returns the timestamp of the keyframe that was seeked to.
     // The value is `Optional` to allow the demuxer to decide not to seek so that it can keep its position
