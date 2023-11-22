@@ -114,7 +114,7 @@ inline JS::Completion clean_up_on_return(HTML::EnvironmentSettingsObject& stored
     return JS::Value { rejected_promise->promise() };
 }
 
-JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, DeprecatedString const& operation_name, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args)
+JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, String const& operation_name, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args)
 {
     // 1. Let completion be an uninitialized variable.
     JS::Completion completion;
@@ -147,7 +147,7 @@ JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, Deprec
     // 10. If ! IsCallable(O) is false, then:
     if (!object->is_function()) {
         // 1. Let getResult be Get(O, opName).
-        auto get_result = object->get(operation_name);
+        auto get_result = object->get(operation_name.to_deprecated_string());
 
         // 2. If getResult is an abrupt completion, set completion to getResult and jump to the step labeled return.
         if (get_result.is_throw_completion()) {
