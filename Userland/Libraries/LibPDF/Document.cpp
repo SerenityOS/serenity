@@ -92,9 +92,7 @@ DeprecatedString Document::text_string_to_utf8(DeprecatedString const& text_stri
         return text_string.substring(3);
     }
 
-    // FIXME: Convert from PDFDocEncoding to UTF-8.
-
-    return text_string;
+    return TextCodec::decoder_for("PDFDocEncoding"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
