@@ -71,6 +71,32 @@ DecoderErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(
     return &m_track_statuses.get(track).release_value();
 }
 
+CodecID MatroskaDemuxer::get_codec_id_for_string(DeprecatedFlyString const& codec_id)
+{
+    dbgln_if(MATROSKA_DEBUG, "Codec ID: {}", codec_id);
+    if (codec_id == "V_VP8")
+        return CodecID::VP8;
+    if (codec_id == "V_VP9")
+        return CodecID::VP9;
+    if (codec_id == "V_MPEG1")
+        return CodecID::MPEG1;
+    if (codec_id == "V_MPEG2")
+        return CodecID::H262;
+    if (codec_id == "V_MPEG4/ISO/AVC")
+        return CodecID::H264;
+    if (codec_id == "V_MPEGH/ISO/HEVC")
+        return CodecID::H265;
+    if (codec_id == "V_AV1")
+        return CodecID::AV1;
+    if (codec_id == "V_THEORA")
+        return CodecID::Theora;
+    if (codec_id == "A_VORBIS")
+        return CodecID::Vorbis;
+    if (codec_id == "A_OPUS")
+        return CodecID::Opus;
+    return CodecID::Unknown;
+}
+
 DecoderErrorOr<Optional<Duration>> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, Duration timestamp, Optional<Duration> earliest_available_sample)
 {
     // Removing the track status will cause us to start from the beginning.
@@ -117,6 +143,12 @@ DecoderErrorOr<Duration> MatroskaDemuxer::duration()
 {
     auto duration = TRY(m_reader.segment_information()).duration();
     return duration.value_or(Duration::zero());
+}
+
+DecoderErrorOr<CodecID> MatroskaDemuxer::get_codec_id_for_track(Track track)
+{
+    auto codec_id = TRY(m_reader.track_for_track_number(track.identifier())).codec_id();
+    return get_codec_id_for_string(codec_id);
 }
 
 }

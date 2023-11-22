@@ -52,9 +52,19 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOw
 
     dbgln_if(PLAYBACK_MANAGER_DEBUG, "Selecting video track number {}", track.identifier());
 
-    auto decoder = DECODER_TRY_ALLOC(try_make<VP9::Decoder>());
+    auto codec_id = TRY(demuxer->get_codec_id_for_track(track));
+    OwnPtr<VideoDecoder> decoder;
+    switch (codec_id) {
+    case CodecID::VP9:
+        decoder = DECODER_TRY_ALLOC(try_make<VP9::Decoder>());
+        break;
+
+    default:
+        return DecoderError::format(DecoderErrorCategory::Invalid, "Unsupported codec: {}", codec_id);
+    }
+    auto decoder_non_null = decoder.release_nonnull();
     auto frame_queue = DECODER_TRY_ALLOC(VideoFrameQueue::create());
-    auto playback_manager = DECODER_TRY_ALLOC(try_make<PlaybackManager>(demuxer, track, move(decoder), move(frame_queue)));
+    auto playback_manager = DECODER_TRY_ALLOC(try_make<PlaybackManager>(demuxer, track, move(decoder_non_null), move(frame_queue)));
 
     playback_manager->m_state_update_timer = DECODER_TRY_ALLOC(Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); }));
 

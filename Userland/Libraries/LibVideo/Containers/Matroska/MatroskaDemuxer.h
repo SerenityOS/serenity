@@ -33,6 +33,8 @@ public:
 
     DecoderErrorOr<Duration> duration() override;
 
+    DecoderErrorOr<CodecID> get_codec_id_for_track(Track track) override;
+
 protected:
     DecoderErrorOr<NonnullOwnPtr<Sample>> get_next_sample_for_track(Track track) override;
 
@@ -44,6 +46,7 @@ private:
     };
 
     DecoderErrorOr<TrackStatus*> get_track_status(Track track);
+    CodecID get_codec_id_for_string(DeprecatedFlyString const& codec_id);
 
     Reader m_reader;
 
