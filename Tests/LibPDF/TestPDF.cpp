@@ -44,6 +44,21 @@ TEST_CASE(empty_file_issue_10702)
     EXPECT(document.is_error());
 }
 
+TEST_CASE(encodig)
+{
+    auto file = MUST(Core::MappedFile::map("encoding.pdf"sv));
+    auto document = MUST(PDF::Document::create(file->bytes()));
+    MUST(document->initialize());
+    EXPECT_EQ(document->get_page_count(), 1U);
+
+    auto info_dict = MUST(document->info_dict()).value();
+    EXPECT_EQ(MUST(info_dict.author()).value(), "Nico Weber");
+    EXPECT_EQ(MUST(info_dict.producer()).value(), (char const*)u8"Manüally Created");
+
+    // FIXME: Make this pass.
+    // EXPECT_EQ(MUST(info_dict.title()).value(), (char const*)u8"Êñ©•ding test");
+}
+
 TEST_CASE(truncated_pdf_header_issue_10717)
 {
     AK::DeprecatedString string { "%PDF-2.11%" };
