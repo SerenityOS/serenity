@@ -530,6 +530,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
     m_reader.consume_whitespace();
 
     while (!m_reader.done()) {
+        parse_comment();
         auto ch = m_reader.peek();
         if (is_operator_char_start(ch)) {
             auto operator_start = m_reader.offset();
