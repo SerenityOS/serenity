@@ -425,9 +425,9 @@ PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
     HashMap<DeprecatedFlyString, Value> map;
 
     while (!m_reader.done()) {
+        parse_comment();
         if (m_reader.matches(">>"))
             break;
-        parse_comment();
         auto name = TRY(parse_name())->name();
         auto value = TRY(parse_value());
         map.set(name, value);
