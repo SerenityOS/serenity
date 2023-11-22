@@ -23,51 +23,11 @@ String highlight_source(URL const& url, StringView source)
     <meta name="color-scheme" content="dark light">)~~~"sv);
 
     builder.appendff("<title>View Source - {}</title>", url);
-
+    builder.appendff("<style type=\"text/css\">{}</style>", HTML_HIGHLIGHTER_STYLE);
     builder.append(R"~~~(
-    <style type="text/css">
-        html {
-            font-size: 10pt;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            /* FIXME: We should be able to remove the HTML style when "color-scheme" is supported */
-            html {
-                background-color: rgb(30, 30, 30);
-                color: white;
-            }
-            .comment {
-                color: lightgreen;
-            }
-            .tag {
-                color: orangered;
-            }
-            .attribute-name {
-                color: orange;
-            }
-            .attribute-value {
-                color: deepskyblue;
-            }
-        }
-
-        @media (prefers-color-scheme: light) {
-            .comment {
-                color: green;
-            }
-            .tag {
-                color: red;
-            }
-            .attribute-name {
-                color: darkorange;
-            }
-            .attribute-value {
-                color: blue;
-            }
-        }
-    </style>
 </head>
 <body>
-<pre>
+<pre class="html">
 )~~~"sv);
 
     size_t previous_position = 0;
