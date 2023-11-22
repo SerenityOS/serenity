@@ -19,11 +19,11 @@ namespace Web::WebIDL {
 
 ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source);
 
-JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, DeprecatedString const& operation_name, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args);
+JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, String const& operation_name, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args);
 
 // https://webidl.spec.whatwg.org/#call-a-user-objects-operation
 template<typename... Args>
-JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, DeprecatedString const& operation_name, Optional<JS::Value> this_argument, Args&&... args)
+JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, String const& operation_name, Optional<JS::Value> this_argument, Args&&... args)
 {
     auto& function_object = callback.callback;
 
