@@ -53,17 +53,17 @@ IntersectionObserver::IntersectionObserver(JS::Realm& realm, JS::GCPtr<WebIDL::C
     , m_thresholds(move(thresholds))
 {
     intersection_root().visit([this](auto& node) {
-        node->document().register_intersection_observer({}, *this);
+        m_document = node->document();
     });
+    m_document->register_intersection_observer({}, *this);
 }
 
 IntersectionObserver::~IntersectionObserver() = default;
 
 void IntersectionObserver::finalize()
 {
-    intersection_root().visit([this](auto& node) {
-        node->document().unregister_intersection_observer({}, *this);
-    });
+    if (m_document)
+        m_document->unregister_intersection_observer({}, *this);
 }
 
 void IntersectionObserver::initialize(JS::Realm& realm)
