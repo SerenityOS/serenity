@@ -8,7 +8,6 @@
 
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
-#include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Forward.h>
 
@@ -22,7 +21,6 @@ public:
     void run();
 
 private:
-    NonnullRefPtr<JS::VM> m_worker_vm;
     RefPtr<Web::HTML::WorkerDebugConsoleClient> m_console;
     Web::Page& m_page;
 

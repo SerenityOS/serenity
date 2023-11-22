@@ -18,13 +18,10 @@
 namespace WebWorker {
 
 DedicatedWorkerHost::DedicatedWorkerHost(Web::Page& page, AK::URL url, String type)
-    : m_worker_vm(JS::VM::create(make<Web::Bindings::WebEngineCustomData>()).release_value_but_fixme_should_propagate_errors())
-    , m_page(page)
+    : m_page(page)
     , m_url(move(url))
     , m_type(move(type))
 {
-    // FIXME: We need to attach all the HostDefined hooks from MainThreadVM onto this VM in order to load
-    //        module scripts in Workers.
 }
 
 DedicatedWorkerHost::~DedicatedWorkerHost() = default;
@@ -37,14 +34,14 @@ void DedicatedWorkerHost::run()
 
     // 7. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
     auto realm_execution_context = Web::Bindings::create_a_new_javascript_realm(
-        *m_worker_vm,
+        Web::Bindings::main_thread_vm(),
         [this](JS::Realm& realm) -> JS::Object* {
             //      7a. For the global object, if is shared is true, create a new SharedWorkerGlobalScope object.
             //      7b. Otherwise, create a new DedicatedWorkerGlobalScope object.
             // FIXME: Proper support for both SharedWorkerGlobalScope and DedicatedWorkerGlobalScope
             if (is_shared)
                 TODO();
-            return m_worker_vm->heap().allocate_without_realm<Web::HTML::WorkerGlobalScope>(realm, m_page);
+            return Web::Bindings::main_thread_vm().heap().allocate_without_realm<Web::HTML::WorkerGlobalScope>(realm, m_page);
         },
         nullptr);
 
@@ -55,7 +52,6 @@ void DedicatedWorkerHost::run()
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
     auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(move(realm_execution_context));
-    inner_settings->responsible_event_loop().set_vm(*m_worker_vm);
 
     auto& console_object = *inner_settings->realm().intrinsics().console_object();
     m_console = adopt_ref(*new Web::HTML::WorkerDebugConsoleClient(console_object.console()));
