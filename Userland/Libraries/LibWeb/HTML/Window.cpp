@@ -345,11 +345,14 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         tokenized_features.remove("noreferrer"sv);
     }
 
-    // FIXME: 8. Let referrerPolicy be the empty string.
+    // 8. Let referrerPolicy be the empty string.
+    auto referrer_policy = ReferrerPolicy::ReferrerPolicy::EmptyString;
 
-    // 9. If noreferrer is true, then set noopener to true.
-    if (no_referrer == TokenizedFeature::NoReferrer::Yes)
+    // 9. If noreferrer is true, then set noopener to true and set referrerPolicy to "no-referrer".
+    if (no_referrer == TokenizedFeature::NoReferrer::Yes) {
         no_opener = TokenizedFeature::NoOpener::Yes;
+        referrer_policy = ReferrerPolicy::ReferrerPolicy::NoReferrer;
+    }
 
     // 10. Let targetNavigable and windowType be the result of applying the rules for choosing a navigable given target, sourceDocument's node navigable, and noopener.
     VERIFY(source_document.navigable());
@@ -370,45 +373,50 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         // 3. Let urlRecord be the URL record about:blank.
         auto url_record = AK::URL("about:blank"sv);
 
-        // 4. If url is not the empty string, then parse url relative to the entry settings object, and set urlRecord to the resulting URL record, if any. If the parse a URL algorithm failed, then throw a "SyntaxError" DOMException.
+        // 4. If url is not the empty string, then set urlRecord to the result of encoding-parsing a URL given url, relative to the entry settings object.
         if (!url.is_empty()) {
             url_record = entry_settings_object().parse_url(url);
+            // 5. If urlRecord is failure, then throw a "SyntaxError" DOMException.
             if (!url_record.is_valid())
                 return WebIDL::SyntaxError::create(realm(), "URL is not valid"_fly_string);
         }
 
-        // FIXME: 5. If urlRecord matches about:blank, then perform the URL and history update steps given target browsing context's active document and urlRecord.
+        // 6. If urlRecord matches about:blank, then perform the URL and history update steps given targetNavigable's active document and urlRecord.
+        if (url_matches_about_blank(url_record)) {
+            perform_url_and_history_update_steps(*target_navigable->active_document(), url_record);
+        }
 
-        // 6. Otherwise, navigate targetNavigable to urlRecord using sourceDocument, with referrerPolicy set to referrerPolicy and exceptionsEnabled set to true.
-        TRY(target_navigable->navigate({ .url = url_record, .source_document = source_document }));
+        // 7. Otherwise, navigate targetNavigable to urlRecord using sourceDocument, with referrerPolicy set to referrerPolicy and exceptionsEnabled set to true.
+        else {
+            TRY(target_navigable->navigate({ .url = url_record, .source_document = source_document, .exceptions_enabled = true, .referrer_policy = referrer_policy }));
+        }
     }
 
     // 13. Otherwise:
     else {
         // 1. If url is not the empty string, then:
         if (!url.is_empty()) {
-            // 1. Let urlRecord be the URL record about:blank.
-            auto url_record = AK::URL("about:blank"sv);
+            // 1. Let urlRecord be the result of encoding-parsing a URL url, relative to the entry settings object.
+            auto url_record = entry_settings_object().parse_url(url);
 
-            // 2. Parse url relative to the entry settings object, and set urlRecord to the resulting URL record, if any. If the parse a URL algorithm failed, then throw a "SyntaxError" DOMException.
-            url_record = entry_settings_object().parse_url(url);
+            // 2. If urlRecord is failure, then throw a "SyntaxError" DOMException.
             if (!url_record.is_valid())
                 return WebIDL::SyntaxError::create(realm(), "URL is not valid"_fly_string);
 
             // 3. Navigate targetNavigable to urlRecord using sourceDocument, with referrerPolicy set to referrerPolicy and exceptionsEnabled set to true.
-            TRY(target_navigable->navigate({ .url = url_record, .source_document = source_document }));
+            TRY(target_navigable->navigate({ .url = url_record, .source_document = source_document, .exceptions_enabled = true, .referrer_policy = referrer_policy }));
         }
 
-        // 2. If noopener is false, then set target browsing context's opener browsing context to source browsing context.
+        // 2. If noopener is false, then set targetNavigable's active browsing context's opener browsing context to sourceDocument's browsing context.
         if (no_opener == TokenizedFeature::NoOpener::No)
             target_navigable->active_browsing_context()->set_opener_browsing_context(source_document.browsing_context());
     }
 
-    // 13. If noopener is true or windowType is "new with no opener", then return null.
+    // 14. If noopener is true or windowType is "new with no opener", then return null.
     if (no_opener == TokenizedFeature::NoOpener::Yes || window_type == Navigable::WindowType::NewWithNoOpener)
         return nullptr;
 
-    // 14. Return targetNavigable's active WindowProxy.s
+    // 15. Return targetNavigable's active WindowProxy.
     return target_navigable->active_window_proxy();
 }
 
