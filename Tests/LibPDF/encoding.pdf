@@ -1,0 +1,48 @@
+%PDF-1.7
+%ÂµÂ¶
+
+1 0 obj
+<</Type/Catalog/Pages 2 0 R>>
+endobj
+
+2 0 obj
+<</Type/Pages/Kids[3 0 R]/Count 1>>
+endobj
+
+3 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 525 250]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>
+endobj
+
+4 0 obj
+<</Length 171>>
+stream
+BT
+/F1 24 Tf
+30 TL
+40 220 Td
+(The last line should say `abcd` three times,) '
+(prefixed with nothing, `þÿ`, and `ï»¿`:) '
+T* [ (abcd) -800 (þÿabcd) -800 (ï»¿abcd) ] TJ
+ET
+
+endstream
+endobj
+
+5 0 obj
+<</Type/Font/Subtype/Type1/Name/F1/BaseFont/Helvetica/Encoding/MacRomanEncoding>>
+endobj
+
+xref
+0 6
+0000000000 65536 f 
+0000000016 00000 n 
+0000000062 00000 n 
+0000000114 00000 n 
+0000000227 00000 n 
+0000000448 00000 n 
+
+trailer
+<</Size 6/Root 1 0 R>>
+startxref
+546
+%%EOF
