@@ -56,13 +56,13 @@ SECTIONS
         *(.init_array)
         end_ctors = .;
 
-        *(.rodata*)
+        *(.srodata* .rodata*)
     } :data
 
     .data ALIGN(4K) :
     {
         start_of_kernel_data = .;
-        *(.data*)
+        *(.sdata* .data*)
         end_of_kernel_data = .;
     } :data
 
@@ -76,7 +76,7 @@ SECTIONS
     .bss ALIGN(4K) (NOLOAD) :
     {
         start_of_bss = .;
-        *(.bss)
+        *(.sbss* .bss*)
         end_of_bss = .;
 
         . = ALIGN(4K);
