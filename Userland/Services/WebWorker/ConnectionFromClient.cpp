@@ -12,7 +12,9 @@ namespace WebWorker {
 
 void ConnectionFromClient::die()
 {
-    // FIXME: Do something here (shutdown process/script gracefully?)
+    // FIXME: When handling multiple workers in the same process,
+    //     this logic needs to be smarter (only when all workers are dead, etc).
+    Core::EventLoop::current().quit(0);
 }
 
 void ConnectionFromClient::request_file(Web::FileRequest request)
