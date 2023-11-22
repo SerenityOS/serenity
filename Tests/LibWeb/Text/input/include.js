@@ -1,5 +1,11 @@
 var __outputElement = null;
 
+if (globalThis.internals === undefined) {
+    internals = {
+        signalTextTestIsDone: function () {},
+    };
+}
+
 function println(s) {
     __outputElement.appendChild(document.createTextNode(s + "\n"));
 }
