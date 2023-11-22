@@ -9,6 +9,7 @@ endforeach()
 set(TEST_FILES
     colorspaces.pdf
     complex.pdf
+    encoding.pdf
     encryption_nocopy.pdf
     linearized.pdf
     non-linearized.pdf
