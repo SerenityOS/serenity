@@ -17,14 +17,18 @@
 
 namespace WebWorker {
 
-DedicatedWorkerHost::DedicatedWorkerHost(Web::Page& page, AK::URL url, String type)
+DedicatedWorkerHost::DedicatedWorkerHost(Web::Page& page, AK::URL url, String type, int outside_port)
     : m_page(page)
     , m_url(move(url))
     , m_type(move(type))
+    , m_outside_port(outside_port)
 {
 }
 
-DedicatedWorkerHost::~DedicatedWorkerHost() = default;
+DedicatedWorkerHost::~DedicatedWorkerHost()
+{
+    ::close(m_outside_port);
+}
 
 // https://html.spec.whatwg.org/multipage/workers.html#run-a-worker
 // FIXME: Extract out into a helper for both shared and dedicated workers
@@ -128,7 +132,7 @@ void DedicatedWorkerHost::run()
     };
     auto perform_fetch = Web::HTML::create_perform_the_fetch_hook(inner_settings->heap(), move(perform_fetch_function));
 
-    auto on_complete_function = [inner_settings, worker_global_scope](JS::GCPtr<Web::HTML::Script> script) {
+    auto on_complete_function = [inner_settings, worker_global_scope, outside_port = m_outside_port](JS::GCPtr<Web::HTML::Script> script) {
         auto& realm = inner_settings->realm();
         // 1. If script is null or if script's error to rethrow is non-null, then:
         if (!script || !script->error_to_rethrow().is_null()) {
@@ -147,6 +151,8 @@ void DedicatedWorkerHost::run()
         // FIXME: 3. Let inside port be a new MessagePort object in inside settings's Realm.
         // FIXME: 4. Associate inside port with worker global scope.
         // FIXME: 5. Entangle outside port and inside port.
+        // This is a hack, move to a real MessagePort object per above FIXMEs.
+        worker_global_scope->set_outside_port(MUST(Core::BufferedLocalSocket::create(MUST(Core::LocalSocket::adopt_fd(outside_port)))));
 
         // 6. Create a new WorkerLocation object and associate it with worker global scope.
         worker_global_scope->set_location(realm.heap().allocate<Web::HTML::WorkerLocation>(realm, *worker_global_scope));

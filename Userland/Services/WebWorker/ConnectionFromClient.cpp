@@ -52,9 +52,9 @@ Web::Page const& ConnectionFromClient::page() const
     return m_page_host->page();
 }
 
-void ConnectionFromClient::start_dedicated_worker(AK::URL const& url, String const& type, String const&, String const&, IPC::File const&)
+void ConnectionFromClient::start_dedicated_worker(AK::URL const& url, String const& type, String const&, String const&, IPC::File const& implicit_port)
 {
-    m_worker_host = make_ref_counted<DedicatedWorkerHost>(page(), url, type);
+    m_worker_host = make_ref_counted<DedicatedWorkerHost>(page(), url, type, implicit_port.take_fd());
 
     m_worker_host->run();
 }

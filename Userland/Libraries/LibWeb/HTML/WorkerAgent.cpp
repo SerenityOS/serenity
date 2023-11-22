@@ -109,7 +109,8 @@ WorkerAgent::WorkerAgent(AK::URL url, WorkerOptions const& options)
 
     int fds[2] = {};
     MUST(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fds));
-    m_message_port_fd = fds[0];
+
+    m_socket = MUST(Core::BufferedLocalSocket::create(MUST(Core::LocalSocket::adopt_fd(fds[0]))));
 
     m_worker_ipc->async_start_dedicated_worker(m_url, options.type, options.credentials, options.name, fds[1]);
 }

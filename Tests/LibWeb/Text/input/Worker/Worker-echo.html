@@ -1,0 +1,18 @@
+<script src="../include.js"></script>
+<script>
+    asyncTest((done) => {
+        let work = new Worker("worker.js");
+        let count = 0;
+        work.onmessage = (evt) => {
+            println("Got message from worker: " + JSON.stringify(evt.data));
+            count++;
+            work.postMessage({"msg": "marco"});
+            if (count === 2) {
+                println("DONE");
+                work.onmessage = null;
+                work.terminate();
+                done();
+            }
+        };
+    });
+</script>
