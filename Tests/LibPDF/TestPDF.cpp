@@ -54,15 +54,12 @@ TEST_CASE(encodig)
     auto info_dict = MUST(document->info_dict()).value();
     EXPECT_EQ(MUST(info_dict.author()).value(), "Nico Weber");
     EXPECT_EQ(MUST(info_dict.producer()).value(), (char const*)u8"Manüally Created");
-
-    // FIXME: Make this pass.
-    // EXPECT_EQ(MUST(info_dict.title()).value(), (char const*)u8"Êñ©•ding test");
+    EXPECT_EQ(MUST(info_dict.title()).value(), (char const*)u8"Êñ©•ding test");
 
     auto outline_dict = document->outline();
     EXPECT_EQ(outline_dict->count, 3u);
     EXPECT_EQ(outline_dict->children[0]->title, (char const*)u8"Titlè 1");
-    // FIXME: Make this pass:
-    // EXPECT_EQ(outline_dict->children[1]->title, (char const*)u8"Titlè 2");
+    EXPECT_EQ(outline_dict->children[1]->title, (char const*)u8"Titlè 2");
     EXPECT_EQ(outline_dict->children[2]->title, (char const*)u8"Titlè 3");
 }
 
