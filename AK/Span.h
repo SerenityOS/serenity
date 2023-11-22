@@ -322,6 +322,20 @@ using ReadonlySpan = Span<T const>;
 using ReadonlyBytes = ReadonlySpan<u8>;
 using Bytes = Span<u8>;
 
+template<typename T>
+requires(IsTrivial<T>)
+ReadonlyBytes to_readonly_bytes(Span<T> span)
+{
+    return ReadonlyBytes { static_cast<void*>(span.data()), span.size() * sizeof(T) };
+}
+
+template<typename T>
+requires(IsTrivial<T> && !IsConst<T>)
+Bytes to_bytes(Span<T> span)
+{
+    return Bytes { static_cast<void*>(span.data()), span.size() * sizeof(T) };
+}
+
 }
 
 #if USING_AK_GLOBALLY
@@ -329,4 +343,6 @@ using AK::Bytes;
 using AK::ReadonlyBytes;
 using AK::ReadonlySpan;
 using AK::Span;
+using AK::to_bytes;
+using AK::to_readonly_bytes;
 #endif
