@@ -41,7 +41,7 @@ public:
 
     WebIDL::ExceptionOr<void> terminate();
 
-    void post_message(JS::Value message, JS::Value transfer);
+    WebIDL::ExceptionOr<void> post_message(JS::Value message, JS::Value transfer);
 
     virtual ~Worker() = default;
 
@@ -66,6 +66,13 @@ private:
 
     JS::GCPtr<DOM::Document> m_document;
     JS::GCPtr<MessagePort> m_outside_port;
+    // FIXME: Move tihs state into the message port (and actually use it :) )
+    enum class PortState : u8 {
+        Header,
+        Data,
+        Error,
+    } m_outside_port_state { PortState::Header };
+    size_t m_outside_port_incoming_message_size { 0 };
 
     JS::GCPtr<WorkerAgent> m_agent;
 

@@ -18,6 +18,11 @@ interface WorkerGlobalScope : EventTarget {
     attribute EventHandler ononline;
     attribute EventHandler onrejectionhandled;
     attribute EventHandler onunhandledrejection;
+
+    // FIXME: This belongs on the subclasses of WorkerGlobalScope
+    undefined postMessage(any message, any transfer);
+    attribute EventHandler onmessage;
+    attribute EventHandler onmessageerror;
 };
 
 WorkerGlobalScope includes WindowOrWorkerGlobalScope;

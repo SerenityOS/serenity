@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
+#include <LibCore/Socket.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
@@ -16,13 +17,16 @@
 #include <LibWeb/HTML/WorkerNavigator.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
-#define ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(E)       \
-    E(onerror, HTML::EventNames::error)                       \
-    E(onlanguagechange, HTML::EventNames::languagechange)     \
-    E(ononline, HTML::EventNames::online)                     \
-    E(onoffline, HTML::EventNames::offline)                   \
-    E(onrejectionhandled, HTML::EventNames::rejectionhandled) \
-    E(onunhandledrejection, HTML::EventNames::unhandledrejection)
+// FIXME: message/messageerror belong on subclasses only
+#define ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(E)           \
+    E(onerror, HTML::EventNames::error)                           \
+    E(onlanguagechange, HTML::EventNames::languagechange)         \
+    E(ononline, HTML::EventNames::online)                         \
+    E(onoffline, HTML::EventNames::offline)                       \
+    E(onrejectionhandled, HTML::EventNames::rejectionhandled)     \
+    E(onunhandledrejection, HTML::EventNames::unhandledrejection) \
+    E(onmessage, HTML::EventNames::message)                       \
+    E(onmessageerror, HTML::EventNames::messageerror)
 
 namespace Web::HTML {
 
@@ -69,6 +73,8 @@ public:
     ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
+    WebIDL::ExceptionOr<void> post_message(JS::Value message, JS::Value transfer);
+
     // Non-IDL public methods
 
     AK::URL const& url() const { return m_url.value(); }
@@ -77,6 +83,8 @@ public:
     // Spec note: While the WorkerLocation object is created after the WorkerGlobalScope object,
     //            this is not problematic as it cannot be observed from script.
     void set_location(JS::NonnullGCPtr<WorkerLocation> loc) { m_location = move(loc); }
+
+    void set_outside_port(NonnullOwnPtr<Core::BufferedLocalSocket> port);
 
     void initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>);
 
@@ -90,6 +98,14 @@ private:
 
     JS::GCPtr<WorkerLocation> m_location;
     JS::GCPtr<WorkerNavigator> m_navigator;
+
+    OwnPtr<Core::BufferedLocalSocket> m_outside_port;
+    enum class PortState : u8 {
+        Header,
+        Data,
+        Error,
+    } m_outside_port_state { PortState::Header };
+    size_t m_outside_port_incoming_message_size { 0 };
 
     // FIXME: Add all these internal slots
 

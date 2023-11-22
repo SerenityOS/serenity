@@ -15,7 +15,7 @@ namespace WebWorker {
 
 class DedicatedWorkerHost : public RefCounted<DedicatedWorkerHost> {
 public:
-    explicit DedicatedWorkerHost(Web::Page&, AK::URL url, String type);
+    explicit DedicatedWorkerHost(Web::Page&, AK::URL url, String type, int outside_port);
     ~DedicatedWorkerHost();
 
     void run();
@@ -26,6 +26,8 @@ private:
 
     AK::URL m_url;
     String m_type;
+
+    int m_outside_port { -1 };
 };
 
 }

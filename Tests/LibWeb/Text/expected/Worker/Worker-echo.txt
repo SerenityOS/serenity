@@ -1,0 +1,3 @@
+Got message from worker: "loaded"
+Got message from worker: {"msg":"marco"}
+DONE

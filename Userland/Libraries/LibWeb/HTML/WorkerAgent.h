@@ -6,11 +6,10 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
+#include <LibCore/Socket.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/MessagePort.h>
-#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/WorkerEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Worker/WebWorkerClient.h>
@@ -31,12 +30,14 @@ struct WorkerAgent : JS::Cell {
 
     RefPtr<Web::HTML::WebWorkerClient> m_worker_ipc;
 
+    Core::BufferedLocalSocket& socket() const { return *m_socket; }
+
 private:
     WorkerOptions m_worker_options;
     AK::URL m_url;
 
-    // TODO: associate with MessagePorts?
-    int m_message_port_fd;
+    // FIXME: associate with MessagePorts
+    OwnPtr<Core::BufferedLocalSocket> m_socket;
 };
 
 }

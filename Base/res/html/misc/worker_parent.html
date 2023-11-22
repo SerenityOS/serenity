@@ -21,7 +21,7 @@
                     .getElementById("btn_hello")
                     .addEventListener("click", function() {
                         console.log("Sending Message");
-                        work.postMessage("Hey buddy!");
+                        work.postMessage({ "msg": "Hey buddy!" });
                     });
             });
         </script>

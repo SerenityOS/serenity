@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Worker.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -109,6 +110,54 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
     // Note: This spawns a new process to act as the 'agent' for the worker.
     m_agent = heap().allocate_without_realm<WorkerAgent>(url, options);
+
+    auto& socket = m_agent->socket();
+    // FIXME: Hide this logic in MessagePort
+    socket.set_notifications_enabled(true);
+    socket.on_ready_to_read = [this] {
+        auto& socket = this->m_agent->socket();
+        auto& vm = this->vm();
+        auto& realm = this->realm();
+
+        auto num_bytes_ready = MUST(socket.pending_bytes());
+        switch (m_outside_port_state) {
+        case PortState::Header: {
+            if (num_bytes_ready < 8)
+                break;
+            auto const magic = MUST(socket.read_value<u32>());
+            if (magic != 0xDEADBEEF) {
+                m_outside_port_state = PortState::Error;
+                break;
+            }
+            m_outside_port_incoming_message_size = MUST(socket.read_value<u32>());
+            num_bytes_ready -= 8;
+            m_outside_port_state = PortState::Data;
+        }
+            [[fallthrough]];
+        case PortState::Data: {
+            if (num_bytes_ready < m_outside_port_incoming_message_size)
+                break;
+            SerializationRecord rec; // FIXME: Keep in class scope
+            rec.resize(m_outside_port_incoming_message_size / sizeof(u32));
+
+            MUST(socket.read_until_filled(to_bytes(rec.span())));
+
+            TemporaryExecutionContext cxt(relevant_settings_object(*this));
+            VERIFY(&realm == vm.current_realm());
+            MessageEventInit event_init {};
+            event_init.data = MUST(structured_deserialize(vm, rec, realm, {}));
+            // FIXME: Fill in the rest of the info from MessagePort
+
+            this->dispatch_event(MessageEvent::create(realm, EventNames::message, event_init));
+
+            m_outside_port_state = PortState::Header;
+            break;
+        }
+        case PortState::Error:
+            VERIFY_NOT_REACHED();
+            break;
+        }
+    };
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate
@@ -120,16 +169,29 @@ WebIDL::ExceptionOr<void> Worker::terminate()
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
-void Worker::post_message(JS::Value message, JS::Value)
+WebIDL::ExceptionOr<void> Worker::post_message(JS::Value message, JS::Value)
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Post Message: {}", message.to_string_without_side_effects());
 
-    // 1. Let targetPort be the port with which this is entangled, if any; otherwise let it be null.
-    auto& target_port = m_outside_port;
+    // FIXME: 1. Let targetPort be the port with which this is entangled, if any; otherwise let it be null.
+    // FIXME: 2. Let options be «[ "transfer" → transfer ]».
+    // FIXME: 3. Run the message port post message steps providing this, targetPort, message and options.
 
-    // 2. Let options be «[ "transfer" → transfer ]».
-    // 3. Run the message port post message steps providing this, targetPort, message and options.
-    target_port->post_message(message);
+    auto& realm = this->realm();
+    auto& vm = this->vm();
+
+    // FIXME: Use the with-transfer variant, which should(?) prepend the magic + size at the front
+    auto data = TRY(structured_serialize(vm, message));
+
+    Array<u32, 2> header = { 0xDEADBEEF, static_cast<u32>(data.size() * sizeof(u32)) };
+
+    if (auto const err = m_agent->socket().write_until_depleted(to_readonly_bytes(header.span())); err.is_error())
+        return WebIDL::DataCloneError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("{}", err.error())));
+
+    if (auto const err = m_agent->socket().write_until_depleted(to_readonly_bytes(data.span())); err.is_error())
+        return WebIDL::DataCloneError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("{}", err.error())));
+
+    return {};
 }
 
 #undef __ENUMERATE
