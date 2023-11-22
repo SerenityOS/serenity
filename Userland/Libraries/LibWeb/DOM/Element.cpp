@@ -2086,7 +2086,8 @@ void Element::register_intersection_observer(Badge<IntersectionObserver::Interse
 
 void Element::unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, JS::NonnullGCPtr<IntersectionObserver::IntersectionObserver> observer)
 {
-    VERIFY(m_registered_intersection_observers);
+    if (!m_registered_intersection_observers)
+        return;
     m_registered_intersection_observers->remove_first_matching([&observer](IntersectionObserver::IntersectionObserverRegistration const& entry) {
         return entry.observer == observer;
     });
