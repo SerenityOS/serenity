@@ -32,11 +32,11 @@ static ColorComponents gfx_color_to_opengl_color(Gfx::Color color)
 
 Gfx::FloatRect Painter::to_clip_space(Gfx::FloatRect const& screen_rect) const
 {
-    float x = 2.0f * screen_rect.x() / m_target_bitmap->width() - 1.0f;
-    float y = -1.0f + 2.0f * screen_rect.y() / m_target_bitmap->height();
+    float x = 2.0f * screen_rect.x() / m_target_canvas->size().width() - 1.0f;
+    float y = -1.0f + 2.0f * screen_rect.y() / m_target_canvas->size().height();
 
-    float width = 2.0f * screen_rect.width() / m_target_bitmap->width();
-    float height = 2.0f * screen_rect.height() / m_target_bitmap->height();
+    float width = 2.0f * screen_rect.width() / m_target_canvas->size().width();
+    float height = 2.0f * screen_rect.height() / m_target_canvas->size().height();
 
     return { x, y, width, height };
 }
@@ -155,7 +155,6 @@ Painter::Painter(Context& context)
 
 Painter::~Painter()
 {
-    flush();
 }
 
 void Painter::clear(Gfx::Color color)
@@ -184,6 +183,8 @@ static Array<GLfloat, 8> rect_to_vertices(Gfx::FloatRect const& rect)
 
 void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
 {
+    bind_target_canvas();
+
     // Draw a filled rect (with `color`) using OpenGL after mapping it through the current transform.
 
     auto vertices = rect_to_vertices(to_clip_space(transform().map(rect)));
@@ -218,6 +219,8 @@ void Painter::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color con
 
 void Painter::fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius)
 {
+    bind_target_canvas();
+
     auto transformed_rect = transform().map(rect);
     auto vertices = rect_to_vertices(to_clip_space(transformed_rect));
 
@@ -265,6 +268,8 @@ void Painter::draw_line(Gfx::IntPoint a, Gfx::IntPoint b, float thickness, Gfx::
 
 void Painter::draw_line(Gfx::FloatPoint a, Gfx::FloatPoint b, float thickness, Color color)
 {
+    bind_target_canvas();
+
     auto midpoint = (a + b) / 2.0f;
     auto length = a.distance_from(b);
     auto angle = AK::atan2(b.y() - a.y(), b.x() - a.x());
@@ -328,6 +333,8 @@ static GL::ScalingMode to_gl_scaling_mode(Painter::ScalingMode scaling_mode)
 
 void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode)
 {
+    bind_target_canvas();
+
     m_blit_program.use();
 
     // FIXME: We should reuse textures across repaints if possible.
@@ -434,6 +441,8 @@ void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> co
 
 void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
 {
+    bind_target_canvas();
+
     Vector<GLfloat> vertices;
     vertices.ensure_capacity(glyph_run.size() * 24);
 
@@ -527,6 +536,8 @@ void Painter::fill_rect_with_linear_gradient(Gfx::IntRect const& rect, ReadonlyS
 
 void Painter::fill_rect_with_linear_gradient(Gfx::FloatRect const& rect, ReadonlySpan<Gfx::ColorStop> stops, float angle, Optional<float> repeat_length)
 {
+    bind_target_canvas();
+
     // FIXME: Implement support for angle and repeat_length
     (void)angle;
     (void)repeat_length;
@@ -632,24 +643,23 @@ void Painter::clear_clip_rect()
     GL::disable_scissor_test();
 }
 
-void Painter::set_target_bitmap(Gfx::Bitmap& bitmap)
+void Painter::bind_target_canvas()
 {
-    if (m_target_framebuffer.has_value()) {
-        GL::delete_framebuffer(*m_target_framebuffer);
-        m_target_framebuffer = {};
-    }
-
-    m_target_framebuffer = GL::create_framebuffer(bitmap.size());
-    GL::bind_framebuffer(*m_target_framebuffer);
-    GL::set_viewport({ 0, 0, bitmap.width(), bitmap.height() });
-    m_target_bitmap = bitmap;
+    m_target_canvas->bind();
+    GL::set_viewport({ 0, 0, m_target_canvas->size().width(), m_target_canvas->size().height() });
 }
 
-void Painter::flush()
+void Painter::set_target_canvas(NonnullRefPtr<Canvas> canvas)
 {
-    VERIFY(m_target_bitmap.has_value());
-    GL::bind_framebuffer(*m_target_framebuffer);
-    GL::read_pixels({ 0, 0, m_target_bitmap->width(), m_target_bitmap->height() }, *m_target_bitmap);
+    m_target_canvas = canvas;
+    canvas->bind();
+    GL::set_viewport({ 0, 0, canvas->size().width(), canvas->size().height() });
+}
+
+void Painter::flush(Gfx::Bitmap& bitmap)
+{
+    m_target_canvas->bind();
+    GL::read_pixels({ 0, 0, bitmap.width(), bitmap.height() }, bitmap);
 }
 
 }
