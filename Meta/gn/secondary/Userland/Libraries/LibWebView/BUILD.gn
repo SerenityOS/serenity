@@ -120,6 +120,7 @@ shared_library("LibWebView") {
     "CookieJar.cpp",
     "Database.cpp",
     "History.cpp",
+    "InspectorClient.cpp",
     "PropertyTableModel.cpp",
     "RequestServerAdapter.cpp",
     "SearchEngine.cpp",

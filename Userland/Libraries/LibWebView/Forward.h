@@ -14,6 +14,7 @@ class ConsoleClient;
 class CookieJar;
 class Database;
 class History;
+class InspectorClient;
 class OutOfProcessWebView;
 class ViewImplementation;
 class WebContentClient;
