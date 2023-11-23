@@ -19,6 +19,7 @@
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/WebIDL/Buffers.h>
 
 namespace Web::FileAPI {
 
@@ -99,8 +100,8 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
                 return bytes.try_append(s.bytes());
             },
             // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
-            [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
-                auto data_buffer = TRY(WebIDL::get_buffer_source_copy(*buffer_source.cell()));
+            [&](JS::Handle<WebIDL::BufferSource> const& buffer_source) -> ErrorOr<void> {
+                auto data_buffer = TRY(WebIDL::get_buffer_source_copy(*buffer_source->raw_object()));
                 return bytes.try_append(data_buffer.bytes());
             },
             // 3. If element is a Blob, append the bytes it represents to bytes.

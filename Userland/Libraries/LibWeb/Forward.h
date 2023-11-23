@@ -677,6 +677,8 @@ class WebGLRenderingContextBase;
 }
 
 namespace Web::WebIDL {
+class ArrayBufferView;
+class BufferSource;
 class CallbackType;
 class DOMException;
 

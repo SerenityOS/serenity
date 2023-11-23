@@ -10,6 +10,7 @@
 #include <LibGfx/Matrix4x4.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/WebIDL/Buffers.h>
 
 namespace Web::Geometry {
 
@@ -56,8 +57,8 @@ public:
     virtual ~DOMMatrixReadOnly() override;
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> from_matrix(JS::VM&, DOMMatrixInit& other);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> from_float32_array(JS::VM&, JS::Handle<JS::Object> const& array32);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> from_float64_array(JS::VM&, JS::Handle<JS::Object> const& array64);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> from_float32_array(JS::VM&, JS::Handle<WebIDL::BufferSource> const& array32);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> from_float64_array(JS::VM&, JS::Handle<WebIDL::BufferSource> const& array64);
 
     // https://drafts.fxtf.org/geometry/#dommatrix-attributes
     double m11() const { return m_matrix.elements()[0][0]; }

@@ -15,7 +15,7 @@
 
 namespace Web::FileAPI {
 
-using BlobPart = Variant<JS::Handle<JS::Object>, JS::Handle<Blob>, String>;
+using BlobPart = Variant<JS::Handle<WebIDL::BufferSource>, JS::Handle<Blob>, String>;
 
 struct BlobPropertyBag {
     String type = String {};

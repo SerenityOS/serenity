@@ -24,6 +24,7 @@
 #include <LibWeb/WebAssembly/Module.h>
 #include <LibWeb/WebAssembly/Table.h>
 #include <LibWeb/WebAssembly/WebAssembly.h>
+#include <LibWeb/WebIDL/Buffers.h>
 
 namespace Web::WebAssembly {
 
@@ -53,13 +54,13 @@ void visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://webassembly.github.io/spec/js-api/#dom-webassembly-validate
-bool validate(JS::VM& vm, JS::Handle<JS::Object>& bytes)
+bool validate(JS::VM& vm, JS::Handle<WebIDL::BufferSource>& bytes)
 {
     // 1. Let stableBytes be a copy of the bytes held by the buffer bytes.
     // Note: There's no need to copy the bytes here as the buffer data cannot change while we're compiling the module.
 
     // 2. Compile stableBytes as a WebAssembly module and store the results as module.
-    auto maybe_module = Detail::parse_module(vm, bytes.cell());
+    auto maybe_module = Detail::parse_module(vm, bytes->raw_object());
 
     // 3. If module is error, return false.
     if (maybe_module.is_error())
@@ -77,12 +78,12 @@ bool validate(JS::VM& vm, JS::Handle<JS::Object>& bytes)
 }
 
 // https://webassembly.github.io/spec/js-api/#dom-webassembly-compile
-WebIDL::ExceptionOr<JS::Value> compile(JS::VM& vm, JS::Handle<JS::Object>& bytes)
+WebIDL::ExceptionOr<JS::Value> compile(JS::VM& vm, JS::Handle<WebIDL::BufferSource>& bytes)
 {
     auto& realm = *vm.current_realm();
 
     // FIXME: This shouldn't block!
-    auto module = Detail::parse_module(vm, bytes.cell());
+    auto module = Detail::parse_module(vm, bytes->raw_object());
     auto promise = JS::Promise::create(realm);
 
     if (module.is_error()) {
@@ -96,7 +97,7 @@ WebIDL::ExceptionOr<JS::Value> compile(JS::VM& vm, JS::Handle<JS::Object>& bytes
 }
 
 // https://webassembly.github.io/spec/js-api/#dom-webassembly-instantiate
-WebIDL::ExceptionOr<JS::Value> instantiate(JS::VM& vm, JS::Handle<JS::Object>& bytes, Optional<JS::Handle<JS::Object>>& import_object)
+WebIDL::ExceptionOr<JS::Value> instantiate(JS::VM& vm, JS::Handle<WebIDL::BufferSource>& bytes, Optional<JS::Handle<JS::Object>>& import_object)
 {
     // FIXME: Implement the importObject parameter.
     (void)import_object;
@@ -104,7 +105,7 @@ WebIDL::ExceptionOr<JS::Value> instantiate(JS::VM& vm, JS::Handle<JS::Object>& b
     auto& realm = *vm.current_realm();
 
     // FIXME: This shouldn't block!
-    auto module = Detail::parse_module(vm, bytes.cell());
+    auto module = Detail::parse_module(vm, bytes->raw_object());
     auto promise = JS::Promise::create(realm);
 
     if (module.is_error()) {

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
+#include <LibWeb/WebIDL/Buffers.h>
 
 namespace Web::Geometry {
 
@@ -25,8 +26,8 @@ public:
     virtual ~DOMMatrix() override;
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> from_matrix(JS::VM&, DOMMatrixInit other = {});
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> from_float32_array(JS::VM&, JS::Handle<JS::Object> const& array32);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> from_float64_array(JS::VM&, JS::Handle<JS::Object> const& array64);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> from_float32_array(JS::VM&, JS::Handle<WebIDL::BufferSource> const& array32);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> from_float64_array(JS::VM&, JS::Handle<WebIDL::BufferSource> const& array64);
 
     void set_m11(double value);
     void set_m12(double value);

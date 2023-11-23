@@ -11,16 +11,17 @@
 #include <LibWeb/Bindings/ModulePrototype.h>
 #include <LibWeb/WebAssembly/Module.h>
 #include <LibWeb/WebAssembly/WebAssembly.h>
+#include <LibWeb/WebIDL/Buffers.h>
 
 namespace Web::WebAssembly {
 
 JS_DEFINE_ALLOCATOR(Module);
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Module>> Module::construct_impl(JS::Realm& realm, JS::Handle<JS::Object>& bytes)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Module>> Module::construct_impl(JS::Realm& realm, JS::Handle<WebIDL::BufferSource>& bytes)
 {
     auto& vm = realm.vm();
 
-    auto index = TRY(Detail::parse_module(vm, bytes.cell()));
+    auto index = TRY(Detail::parse_module(vm, bytes->raw_object()));
     return vm.heap().allocate<Module>(realm, realm, index);
 }
 

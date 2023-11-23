@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebSockets/WebSocket.h>
@@ -230,7 +231,7 @@ WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> 
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-send
-WebIDL::ExceptionOr<void> WebSocket::send(Variant<JS::Handle<JS::Object>, JS::Handle<FileAPI::Blob>, String> const& data)
+WebIDL::ExceptionOr<void> WebSocket::send(Variant<JS::Handle<WebIDL::BufferSource>, JS::Handle<FileAPI::Blob>, String> const& data)
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)
@@ -242,10 +243,10 @@ WebIDL::ExceptionOr<void> WebSocket::send(Variant<JS::Handle<JS::Object>, JS::Ha
                     m_websocket->send(string);
                     return {};
                 },
-                [this](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
+                [this](JS::Handle<WebIDL::BufferSource> const& buffer_source) -> ErrorOr<void> {
                     // FIXME: While the spec doesn't say to do this, it's not observable except from potentially throwing OOM.
                     //        Can we avoid this copy?
-                    auto data_buffer = TRY(WebIDL::get_buffer_source_copy(*buffer_source.cell()));
+                    auto data_buffer = TRY(WebIDL::get_buffer_source_copy(*buffer_source->raw_object()));
                     m_websocket->send(data_buffer, false);
                     return {};
                 },

@@ -10,6 +10,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Crypto {
@@ -35,14 +36,14 @@ void SubtleCrypto::initialize(JS::Realm& realm)
 }
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
-JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
+JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::Handle<WebIDL::BufferSource> const& data)
 {
     auto& realm = this->realm();
 
     // 1. Let algorithm be the algorithm parameter passed to the digest() method.
 
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
-    auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data.cell());
+    auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data->raw_object());
     if (data_buffer_or_error.is_error()) {
         auto error = WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer"_fly_string);
         auto promise = JS::Promise::create(realm);

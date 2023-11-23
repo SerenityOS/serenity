@@ -50,10 +50,9 @@ JS::NonnullGCPtr<JS::Uint8Array> TextEncoder::encode(String const& input) const
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encodeinto
-TextEncoderEncodeIntoResult TextEncoder::encode_into(String const& source, JS::Handle<JS::Object> const& destination) const
+TextEncoderEncodeIntoResult TextEncoder::encode_into(String const& source, JS::Handle<WebIDL::BufferSource> const& destination) const
 {
-    auto& destination_array = static_cast<JS::Uint8Array&>(*destination);
-    auto data = destination_array.data();
+    auto& data = destination->viewed_array_buffer()->buffer();
 
     // 1. Let read be 0.
     unsigned long long read = 0;
