@@ -177,6 +177,20 @@ public:
     void fill(Color);
 
     [[nodiscard]] bool has_alpha_channel() const { return m_format == BitmapFormat::BGRA8888 || m_format == BitmapFormat::RGBA8888; }
+    void add_alpha_channel()
+    {
+        switch (m_format) {
+        case BitmapFormat::BGRx8888:
+            m_format = BitmapFormat::BGRA8888;
+            break;
+        case BitmapFormat::RGBA8888:
+        case BitmapFormat::BGRA8888:
+            // Nothing to do.
+            break;
+        case BitmapFormat::Invalid:
+            VERIFY_NOT_REACHED();
+        }
+    }
     [[nodiscard]] BitmapFormat format() const { return m_format; }
 
     // Call only for BGRx8888 and BGRA8888 bitmaps.
