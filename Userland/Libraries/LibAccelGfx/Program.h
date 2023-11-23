@@ -15,13 +15,19 @@ class Program {
     AK_MAKE_NONCOPYABLE(Program);
 
 public:
-    static Program create(char const* vertex_shader_source, char const* fragment_shader_source);
+    enum class Name {
+        RectangleProgram,
+        RoundedRectangleProgram,
+        BlitProgram,
+        LinearGradientProgram,
+        ProgramCount,
+    };
+
+    static Program create(Name name, char const* vertex_shader_source, char const* fragment_shader_source);
 
     void use();
     GL::VertexAttribute get_attribute_location(char const* name);
     GL::Uniform get_uniform_location(char const* name);
-
-    ~Program();
 
 private:
     Program(GL::Program program)

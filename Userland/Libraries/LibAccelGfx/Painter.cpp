@@ -144,10 +144,10 @@ OwnPtr<Painter> Painter::create()
 
 Painter::Painter(Context& context)
     : m_context(context)
-    , m_rectangle_program(Program::create(vertex_shader_source, solid_color_fragment_shader_source))
-    , m_rounded_rectangle_program(Program::create(vertex_shader_source, rect_with_rounded_corners_fragment_shader_source))
-    , m_blit_program(Program::create(blit_vertex_shader_source, blit_fragment_shader_source))
-    , m_linear_gradient_program(Program::create(linear_gradient_vertex_shader_source, linear_gradient_fragment_shader_source))
+    , m_rectangle_program(Program::create(Program::Name::RectangleProgram, vertex_shader_source, solid_color_fragment_shader_source))
+    , m_rounded_rectangle_program(Program::create(Program::Name::RoundedRectangleProgram, vertex_shader_source, rect_with_rounded_corners_fragment_shader_source))
+    , m_blit_program(Program::create(Program::Name::BlitProgram, blit_vertex_shader_source, blit_fragment_shader_source))
+    , m_linear_gradient_program(Program::create(Program::Name::LinearGradientProgram, linear_gradient_vertex_shader_source, linear_gradient_fragment_shader_source))
     , m_glyphs_texture(GL::create_texture())
 {
     m_state_stack.empend(State());
