@@ -5,13 +5,15 @@
  */
 
 #include <Kernel/Arch/DebugOutput.h>
+#include <Kernel/Arch/riscv64/SBI.h>
 #include <Kernel/Library/Assertions.h>
 
 namespace Kernel {
 
-void debug_output(char)
+void debug_output(char c)
 {
-    TODO_RISCV64();
+    // FIXME: add extension probing support to SBI.cpp to check which debug console extensions are available
+    (void)SBI::Legacy::console_putchar(c);
 }
 
 }
