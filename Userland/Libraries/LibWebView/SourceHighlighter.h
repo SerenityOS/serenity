@@ -41,6 +41,9 @@ constexpr inline StringView HTML_HIGHLIGHTER_STYLE = R"~~~(
         .attribute-value {
             color: deepskyblue;
         }
+        .internal {
+            color: darkgrey;
+        }
     }
 
     @media (prefers-color-scheme: light) {
@@ -55,6 +58,9 @@ constexpr inline StringView HTML_HIGHLIGHTER_STYLE = R"~~~(
         }
         .attribute-value {
             color: blue;
+        }
+        .internal {
+            color: dimgray;
         }
     }
 )~~~"sv;
