@@ -38,6 +38,7 @@ void Worker::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_document);
     visitor.visit(m_outside_port);
+    visitor.visit(m_agent);
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
