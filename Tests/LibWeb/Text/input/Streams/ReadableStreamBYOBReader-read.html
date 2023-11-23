@@ -1,6 +1,6 @@
 <script src="../include.js"></script>
 <script>
- asyncTest(async done => {
+ async function testByobRead(type) {
     const array = ['This is some data to be read! 🦬'];
     let blob = new Blob(array);
 
@@ -11,15 +11,14 @@
     let bytesReceived = 0;
     let offset = 0;
 
-    println(`About to read! ${reader}`);
+    println(`About to read into ${type.prototype.constructor.name} with ${reader}`);
 
     while (true) {
-      let result = await reader.read(new Uint8Array(buffer, offset, buffer.byteLength - offset));
+      let result = await reader.read(new type(buffer, offset, buffer.byteLength - offset));
 
       if (result.done) {
         println(`Total bytes: ${bytesReceived}`);
         println(`'${new TextDecoder().decode(result.value.buffer.slice(0, bytesReceived))}'`);
-        done();
         return;
       }
 
@@ -27,5 +26,11 @@
       offset += result.value.byteLength;
       bytesReceived += result.value.byteLength;
     }
+  }
+
+  asyncTest(async done => {
+    await testByobRead(Uint8Array);
+    await testByobRead(DataView);
+    done();
   });
 </script>
