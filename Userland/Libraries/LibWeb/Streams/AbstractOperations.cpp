@@ -34,6 +34,7 @@
 #include <LibWeb/Streams/WritableStreamDefaultController.h>
 #include <LibWeb/Streams/WritableStreamDefaultWriter.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -659,14 +660,10 @@ JS::Value readable_byte_stream_controller_convert_pull_into_descriptor(JS::Realm
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-pull-into
-void readable_byte_stream_controller_pull_into(ReadableByteStreamController& controller, JS::Value view_value, ReadIntoRequest& read_into_request)
+void readable_byte_stream_controller_pull_into(ReadableByteStreamController& controller, WebIDL::ArrayBufferView& view, ReadIntoRequest& read_into_request)
 {
     auto& vm = controller.vm();
     auto& realm = controller.realm();
-
-    // FIXME: Support DataView
-    auto& view_object = view_value.as_object();
-    auto const& view = verify_cast<JS::TypedArrayBase>(view_object);
 
     // 1. Let stream be controller.[[stream]].
     auto stream = controller.stream();
@@ -678,32 +675,34 @@ void readable_byte_stream_controller_pull_into(ReadableByteStreamController& con
     JS::NativeFunction* ctor = realm.intrinsics().data_view_constructor();
 
     // 4. If view has a [[TypedArrayName]] internal slot (i.e., it is not a DataView),
-    if (!is<JS::DataView>(view_object)) {
+    if (view.bufferable_object().has<JS::NonnullGCPtr<JS::TypedArrayBase>>()) {
+        auto const& typed_array = view.bufferable_object().get<JS::NonnullGCPtr<JS::TypedArrayBase>>();
+
         // 1. Set elementSize to the element size specified in the typed array constructors table for view.[[TypedArrayName]].
-        element_size = view.element_size();
+        element_size = typed_array->element_size();
 
         // 2. Set ctor to the constructor specified in the typed array constructors table for view.[[TypedArrayName]].
-        if (is<JS::Int16Array>(view_object))
+        if (is<JS::Int16Array>(*typed_array))
             ctor = realm.intrinsics().int16_array_constructor();
-        else if (is<JS::Int32Array>(view_object))
+        else if (is<JS::Int32Array>(*typed_array))
             ctor = realm.intrinsics().int32_array_constructor();
-        else if (is<JS::Int8Array>(view_object))
+        else if (is<JS::Int8Array>(*typed_array))
             ctor = realm.intrinsics().int8_array_constructor();
-        else if (is<JS::Uint8Array>(view_object))
+        else if (is<JS::Uint8Array>(*typed_array))
             ctor = realm.intrinsics().uint8_array_constructor();
-        else if (is<JS::Uint16Array>(view_object))
+        else if (is<JS::Uint16Array>(*typed_array))
             ctor = realm.intrinsics().uint16_array_constructor();
-        else if (is<JS::Uint32Array>(view_object))
+        else if (is<JS::Uint32Array>(*typed_array))
             ctor = realm.intrinsics().uint32_array_constructor();
-        else if (is<JS::Uint8ClampedArray>(view_object))
+        else if (is<JS::Uint8ClampedArray>(*typed_array))
             ctor = realm.intrinsics().uint8_clamped_array_constructor();
-        else if (is<JS::BigInt64Array>(view_object))
+        else if (is<JS::BigInt64Array>(*typed_array))
             ctor = realm.intrinsics().big_int64_array_constructor();
-        else if (is<JS::BigUint64Array>(view_object))
+        else if (is<JS::BigUint64Array>(*typed_array))
             ctor = realm.intrinsics().big_uint64_array_constructor();
-        else if (is<JS::Float32Array>(view_object))
+        else if (is<JS::Float32Array>(*typed_array))
             ctor = realm.intrinsics().float32_array_constructor();
-        else if (is<JS::Float64Array>(view_object))
+        else if (is<JS::Float64Array>(*typed_array))
             ctor = realm.intrinsics().float64_array_constructor();
         else
             VERIFY_NOT_REACHED();
@@ -812,7 +811,7 @@ void readable_byte_stream_controller_pull_into(ReadableByteStreamController& con
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-byob-reader-read
-void readable_stream_byob_reader_read(ReadableStreamBYOBReader& reader, JS::Value view, ReadIntoRequest& read_into_request)
+void readable_stream_byob_reader_read(ReadableStreamBYOBReader& reader, WebIDL::ArrayBufferView& view, ReadIntoRequest& read_into_request)
 {
     // 1. Let stream be reader.[[stream]].
     auto stream = reader.stream();

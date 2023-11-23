@@ -11,6 +11,7 @@
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamBYOBReader.h>
+#include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Streams {
@@ -103,29 +104,26 @@ private:
 };
 
 // https://streams.spec.whatwg.org/#byob-reader-read
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamBYOBReader::read(JS::Value view_value)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamBYOBReader::read(JS::Handle<WebIDL::ArrayBufferView>& view)
 {
     auto& realm = this->realm();
 
-    // FIXME: Support DataViews
-    auto& view = verify_cast<JS::TypedArrayBase>(view_value.as_object());
-
     // 1. If view.[[ByteLength]] is 0, return a promise rejected with a TypeError exception.
-    if (view.byte_length() == 0) {
+    if (view->byte_length() == 0) {
         auto exception = JS::TypeError::create(realm, "Cannot read in an empty buffer"sv);
         auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
         return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
     }
 
     // 2. If view.[[ViewedArrayBuffer]].[[ArrayBufferByteLength]] is 0, return a promise rejected with a TypeError exception.
-    if (view.viewed_array_buffer()->byte_length() == 0) {
+    if (view->viewed_array_buffer()->byte_length() == 0) {
         auto exception = JS::TypeError::create(realm, "Cannot read in an empty buffer"sv);
         auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
         return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
     }
 
     // 3. If ! IsDetachedBuffer(view.[[ViewedArrayBuffer]]) is true, return a promise rejected with a TypeError exception.
-    if (view.viewed_array_buffer()->is_detached()) {
+    if (view->viewed_array_buffer()->is_detached()) {
         auto exception = JS::TypeError::create(realm, "Cannot read in a detached buffer"sv);
         auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
         return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
@@ -151,7 +149,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamBYOBReader::rea
     auto read_into_request = heap().allocate_without_realm<BYOBReaderReadIntoRequest>(realm, promise_capability);
 
     // 7. Perform ! ReadableStreamBYOBReaderRead(this, view, readIntoRequest).
-    readable_stream_byob_reader_read(*this, view_value, *read_into_request);
+    readable_stream_byob_reader_read(*this, *view, *read_into_request);
 
     // 8. Return promise.
     return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };

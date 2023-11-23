@@ -7,8 +7,7 @@
 interface ReadableStreamBYOBReader {
     constructor(ReadableStream stream);
 
-    // FIXME: This should accept an ArrayBufferView
-    Promise<ReadableStreamReadResult> read(any view);
+    Promise<ReadableStreamReadResult> read(ArrayBufferView view);
 
     undefined releaseLock();
 };
