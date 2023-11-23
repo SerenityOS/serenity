@@ -142,6 +142,16 @@ OwnPtr<Painter> Painter::create()
     return make<Painter>(context);
 }
 
+OwnPtr<Painter> Painter::create_with_glyphs_texture_from_painter(Painter const& painter)
+{
+    auto& context = Context::the();
+    auto glyphs_texture_painter = make<Painter>(context);
+    glyphs_texture_painter->m_glyphs_texture = painter.m_glyphs_texture;
+    glyphs_texture_painter->m_glyphs_texture_size = painter.m_glyphs_texture_size;
+    glyphs_texture_painter->m_glyphs_texture_map = painter.m_glyphs_texture_map;
+    return glyphs_texture_painter;
+}
+
 Painter::Painter(Context& context)
     : m_context(context)
     , m_rectangle_program(Program::create(Program::Name::RectangleProgram, vertex_shader_source, solid_color_fragment_shader_source))
@@ -333,54 +343,11 @@ static GL::ScalingMode to_gl_scaling_mode(Painter::ScalingMode scaling_mode)
 
 void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode)
 {
-    bind_target_canvas();
-
-    m_blit_program.use();
-
     // FIXME: We should reuse textures across repaints if possible.
     auto texture = GL::create_texture();
     GL::upload_texture_data(texture, bitmap);
-
-    auto scaling_mode_gl = to_gl_scaling_mode(scaling_mode);
-    GL::set_texture_scale_mode(scaling_mode_gl);
-
-    auto dst_rect_in_clip_space = to_clip_space(transform().map(dst_rect));
-    auto src_rect_in_texture_space = to_texture_space(src_rect, bitmap.size());
-
-    Vector<GLfloat> vertices;
-    vertices.ensure_capacity(16);
-
-    auto add_vertex = [&](auto const& p, auto const& s) {
-        vertices.append(p.x());
-        vertices.append(p.y());
-        vertices.append(s.x());
-        vertices.append(s.y());
-    };
-
-    add_vertex(dst_rect_in_clip_space.top_left(), src_rect_in_texture_space.top_left());
-    add_vertex(dst_rect_in_clip_space.bottom_left(), src_rect_in_texture_space.bottom_left());
-    add_vertex(dst_rect_in_clip_space.bottom_right(), src_rect_in_texture_space.bottom_right());
-    add_vertex(dst_rect_in_clip_space.top_right(), src_rect_in_texture_space.top_right());
-
-    auto vbo = GL::create_buffer();
-    GL::upload_to_buffer(vbo, vertices);
-
-    auto vao = GL::create_vertex_array();
-    GL::bind_vertex_array(vao);
-    GL::bind_buffer(vbo);
-
-    auto vertex_position_attribute = m_blit_program.get_attribute_location("aVertexPosition");
-    GL::set_vertex_attribute(vertex_position_attribute, 0, 4);
-
-    auto color_uniform = m_blit_program.get_uniform_location("uColor");
-    GL::set_uniform(color_uniform, 1, 1, 1, 1);
-
-    GL::enable_blending();
-    GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
-
+    blit_scaled_texture(dst_rect, texture, src_rect, scaling_mode);
     GL::delete_texture(texture);
-    GL::delete_buffer(vbo);
-    GL::delete_vertex_array(vao);
 }
 
 void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
@@ -660,6 +627,67 @@ void Painter::flush(Gfx::Bitmap& bitmap)
 {
     m_target_canvas->bind();
     GL::read_pixels({ 0, 0, bitmap.width(), bitmap.height() }, bitmap);
+}
+
+void Painter::blit_canvas(Gfx::IntRect const& dst_rect, Canvas const& canvas, float opacity)
+{
+    blit_canvas(dst_rect.to_type<float>(), canvas, opacity);
+}
+
+void Painter::blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const& canvas, float opacity)
+{
+    auto texture = GL::Texture(canvas.framebuffer().texture);
+    blit_scaled_texture(dst_rect, texture, { { 0, 0 }, canvas.size() }, Painter::ScalingMode::NearestNeighbor, opacity);
+}
+
+void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const& texture, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode, float opacity)
+{
+    bind_target_canvas();
+
+    m_blit_program.use();
+
+    auto dst_rect_in_clip_space = to_clip_space(transform().map(dst_rect));
+    auto src_rect_in_texture_space = to_texture_space(src_rect, *texture.size);
+
+    Vector<GLfloat> vertices;
+    vertices.ensure_capacity(16);
+
+    auto add_vertex = [&](auto const& p, auto const& s) {
+        vertices.append(p.x());
+        vertices.append(p.y());
+        vertices.append(s.x());
+        vertices.append(s.y());
+    };
+
+    add_vertex(dst_rect_in_clip_space.top_left(), src_rect_in_texture_space.top_left());
+    add_vertex(dst_rect_in_clip_space.bottom_left(), src_rect_in_texture_space.bottom_left());
+    add_vertex(dst_rect_in_clip_space.bottom_right(), src_rect_in_texture_space.bottom_right());
+    add_vertex(dst_rect_in_clip_space.top_right(), src_rect_in_texture_space.top_right());
+
+    auto vbo = GL::create_buffer();
+    GL::upload_to_buffer(vbo, vertices);
+
+    auto vao = GL::create_vertex_array();
+    GL::bind_vertex_array(vao);
+    GL::bind_buffer(vbo);
+
+    auto vertex_position_attribute = m_blit_program.get_attribute_location("aVertexPosition");
+    GL::set_vertex_attribute(vertex_position_attribute, 0, 4);
+
+    auto color_uniform = m_blit_program.get_uniform_location("uColor");
+    GL::set_uniform(color_uniform, 1, 1, 1, opacity);
+
+    GL::bind_texture(texture);
+
+    auto scaling_mode_gl = to_gl_scaling_mode(scaling_mode);
+    GL::set_texture_scale_mode(scaling_mode_gl);
+
+    GL::enable_blending();
+
+    GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
+
+    GL::delete_buffer(vbo);
+    GL::delete_vertex_array(vao);
 }
 
 }

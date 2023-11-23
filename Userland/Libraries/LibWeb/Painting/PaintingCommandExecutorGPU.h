@@ -51,13 +51,23 @@ public:
     virtual bool needs_prepare_glyphs_texture() const override { return true; }
     void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const&) override;
 
-    PaintingCommandExecutorGPU(AccelGfx::Painter& painter);
+    PaintingCommandExecutorGPU(Gfx::Bitmap& bitmap);
     ~PaintingCommandExecutorGPU() override;
 
 private:
-    AccelGfx::Painter& painter() { return m_painter; }
+    Gfx::Bitmap& m_target_bitmap;
 
-    AccelGfx::Painter& m_painter;
+    struct StackingContext {
+        RefPtr<AccelGfx::Canvas> canvas;
+        OwnPtr<AccelGfx::Painter> painter;
+        float opacity;
+        Gfx::IntRect destination;
+    };
+
+    [[nodiscard]] AccelGfx::Painter const& painter() const { return *stacking_contexts.last().painter; }
+    [[nodiscard]] AccelGfx::Painter& painter() { return *stacking_contexts.last().painter; }
+
+    Vector<StackingContext> stacking_contexts;
 };
 
 }

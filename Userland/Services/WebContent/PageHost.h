@@ -141,10 +141,6 @@ private:
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
     RefPtr<WebDriverConnection> m_webdriver;
-
-#ifdef HAS_ACCELERATED_GRAPHICS
-    OwnPtr<AccelGfx::Painter> m_accelerated_painter;
-#endif
 };
 
 }

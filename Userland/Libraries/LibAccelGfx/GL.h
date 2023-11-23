@@ -15,6 +15,7 @@
 #    include <GL/gl.h>
 #endif
 #include <LibGfx/Forward.h>
+#include <LibGfx/Rect.h>
 
 namespace AccelGfx::GL {
 
@@ -41,6 +42,7 @@ struct Uniform {
 
 struct Texture {
     GLuint id;
+    Optional<Gfx::IntSize> size;
 };
 
 struct Buffer {
@@ -53,7 +55,7 @@ struct VertexArray {
 
 struct Framebuffer {
     GLuint fbo_id;
-    GLuint texture_id;
+    GL::Texture texture;
 };
 
 void set_viewport(Gfx::IntRect);
@@ -70,7 +72,7 @@ void delete_program(Program const&);
 
 Texture create_texture();
 void bind_texture(Texture const&);
-void upload_texture_data(Texture const& texture, Gfx::Bitmap const& bitmap);
+void upload_texture_data(Texture& texture, Gfx::Bitmap const& bitmap);
 void delete_texture(Texture const&);
 
 void set_uniform(Uniform const& uniform, float, float);

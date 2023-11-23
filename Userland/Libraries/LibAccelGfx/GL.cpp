@@ -114,7 +114,7 @@ Texture create_texture()
     GLuint texture;
     glGenTextures(1, &texture);
     verify_no_error();
-    return { texture };
+    return { texture, {} };
 }
 
 void bind_texture(Texture const& texture)
@@ -123,11 +123,12 @@ void bind_texture(Texture const& texture)
     verify_no_error();
 }
 
-void upload_texture_data(Texture const& texture, Gfx::Bitmap const& bitmap)
+void upload_texture_data(Texture& texture, Gfx::Bitmap const& bitmap)
 {
     VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRx8888 || bitmap.format() == Gfx::BitmapFormat::BGRA8888);
     bind_texture(texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmap.width(), bitmap.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, bitmap.scanline(0));
+    texture.size = bitmap.size();
     verify_no_error();
 }
 
@@ -231,7 +232,7 @@ Framebuffer create_framebuffer(Gfx::IntSize size)
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.width(), size.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width(), size.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
@@ -244,7 +245,7 @@ Framebuffer create_framebuffer(Gfx::IntSize size)
 
     verify_no_error();
 
-    return { fbo, texture };
+    return { fbo, Texture { texture, size } };
 }
 
 void bind_framebuffer(Framebuffer const& framebuffer)
@@ -257,7 +258,7 @@ void delete_framebuffer(Framebuffer const& framebuffer)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.fbo_id);
     glDeleteFramebuffers(1, &framebuffer.fbo_id);
-    glDeleteTextures(1, &framebuffer.texture_id);
+    delete_texture(framebuffer.texture);
     verify_no_error();
 }
 
