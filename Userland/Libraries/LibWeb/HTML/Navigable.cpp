@@ -301,7 +301,8 @@ void Navigable::set_ongoing_navigation(Variant<Empty, Traversal, String> ongoing
     m_ongoing_navigation = ongoing_navigation;
 }
 
-Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, TokenizedFeature::NoOpener, ActivateTab)
+// https://html.spec.whatwg.org/multipage/document-sequences.html#the-rules-for-choosing-a-navigable
+Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab)
 {
     // 1. Let chosen be null.
     JS::GCPtr<Navigable> chosen = nullptr;
@@ -310,12 +311,13 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
     auto window_type = WindowType::ExistingOrNone;
 
     // 3. Let sandboxingFlagSet be current's active document's active sandboxing flag set.
-    [[maybe_unused]] auto sandboxing_flag_set = active_document()->active_sandboxing_flag_set();
+    auto sandboxing_flag_set = active_document()->active_sandboxing_flag_set();
 
     // 4. If name is the empty string or an ASCII case-insensitive match for "_self", then set chosen to currentNavigable.
     if (name.is_empty() || Infra::is_ascii_case_insensitive_match(name, "_self"sv)) {
         chosen = this;
     }
+
     // 5. Otherwise, if name is an ASCII case-insensitive match for "_parent",
     //    set chosen to currentNavigable's parent, if any, and currentNavigable otherwise.
     else if (Infra::is_ascii_case_insensitive_match(name, "_parent"sv)) {
@@ -324,12 +326,14 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
         else
             chosen = this;
     }
+
     // 6. Otherwise, if name is an ASCII case-insensitive match for "_top",
     //    set chosen to currentNavigable's traversable navigable.
     else if (Infra::is_ascii_case_insensitive_match(name, "_top"sv)) {
         chosen = traversable_navigable();
     }
-    //  7. Otherwise, if name is not an ASCII case-insensitive match for "_blank",
+
+    //  FIXME: 7. Otherwise, if name is not an ASCII case-insensitive match for "_blank",
     //     there exists a navigable whose target name is the same as name, currentNavigable's
     //     active browsing context is familiar with that navigable's active browsing context,
     //     and the user agent determines that the two browsing contexts are related enough that
@@ -337,14 +341,90 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
     //     matching navigables, the user agent should pick one in some arbitrary consistent manner,
     //     such as the most recently opened, most recently focused, or more closely related, and set
     //     chosen to it.
-    else if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv)) {
-        TODO();
-    }
-    // Otherwise, a new top-level traversable is being requested, and what happens depends on the
+
+    // 8. Otherwise, a new top-level traversable is being requested, and what happens depends on the
     // user agent's configuration and abilities — it is determined by the rules given for the first
     // applicable option from the following list:
     else {
-        TODO();
+        // --> If current's active window does not have transient activation and the user agent has been configured to
+        //     not show popups (i.e., the user agent has a "popup blocker" enabled)
+        if (!active_window()->has_transient_activation() && traversable_navigable()->page()->should_block_pop_ups()) {
+            // FIXME: The user agent may inform the user that a popup has been blocked.
+            dbgln("Pop-up blocked!");
+        }
+
+        // --> If sandboxingFlagSet has the sandboxed auxiliary navigation browsing context flag set
+        else if (has_flag(sandboxing_flag_set, SandboxingFlagSet::SandboxedAuxiliaryNavigation)) {
+            // FIXME: The user agent may report to a developer console that a popup has been blocked.
+            dbgln("Pop-up blocked!");
+        }
+
+        // --> If the user agent has been configured such that in this instance it will create a new top-level traversable
+        else if (true) { // FIXME: When is this the case?
+            // 1. Set windowType to "new and unrestricted".
+            window_type = WindowType::NewAndUnrestricted;
+
+            // 2. Let currentDocument be currentNavigable's active document.
+            auto current_document = active_document();
+
+            // 3. If currentDocument's cross-origin opener policy's value is "same-origin" or "same-origin-plus-COEP",
+            //    and currentDocument's origin is not same origin with currentDocument's relevant settings object's top-level origin, then:
+            if ((current_document->cross_origin_opener_policy().value == CrossOriginOpenerPolicyValue::SameOrigin || current_document->cross_origin_opener_policy().value == CrossOriginOpenerPolicyValue::SameOriginPlusCOEP)
+                && !current_document->origin().is_same_origin(relevant_settings_object(*current_document).top_level_origin)) {
+
+                // 1. Set noopener to true.
+                no_opener = TokenizedFeature::NoOpener::Yes;
+
+                // 2. Set name to "_blank".
+                name = "_blank"sv;
+
+                // 3. Set windowType to "new with no opener".
+                window_type = WindowType::NewWithNoOpener;
+            }
+            // NOTE: In the presence of a cross-origin opener policy,
+            //       nested documents that are cross-origin with their top-level browsing context's active document always set noopener to true.
+
+            // 4. Let chosen be null.
+            chosen = nullptr;
+
+            // 5. Let targetName be the empty string.
+            String target_name;
+
+            // 6. If name is not an ASCII case-insensitive match for "_blank", then set targetName to name.
+            if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv))
+                target_name = MUST(String::from_utf8(name));
+
+            // 7. If noopener is true, then set chosen to the result of creating a new top-level traversable given null and targetName.
+            if (no_opener == TokenizedFeature::NoOpener::Yes) {
+                // FIXME: This should do something similar to RemoteBrowsingContext -- but RemoteTraversableNavigable instead
+                TODO();
+            }
+
+            // 8. Otherwise:
+            else {
+                // 1. Set chosen to the result of creating a new top-level traversable given currentNavigable's active browsing context and targetName.
+                // FIXME: Make this method return WebIDL::ExceptionOr<ChosenNavigable>
+                chosen = TraversableNavigable::create_a_new_top_level_traversable(*traversable_navigable()->page(), active_browsing_context(), target_name).release_value_but_fixme_should_propagate_errors();
+
+                // FIXME: 2. If sandboxingFlagSet's sandboxed navigation browsing context flag is set,
+                //    then set chosen's active browsing context's one permitted sandboxed navigator to currentNavigable's active browsing context.
+            }
+
+            // FIXME: 5. If sandboxingFlagSet's sandbox propagates to auxiliary browsing contexts flag is set,
+            //    then all the flags that are set in sandboxingFlagSet must be set in chosen's active browsing context's popup sandboxing flag set.
+            // Our BrowsingContexts do not have SandboxingFlagSets yet, only documents do
+        }
+
+        // --> If the user agent has been configured such that in this instance t will reuse current
+        else if (false) { // FIXME: When is this the case?
+            // Set chosen to current.
+            chosen = *this;
+        }
+
+        // --> If the user agent has been configured such that in this instance it will not find a browsing context
+        else if (false) { // FIXME: When is this the case?
+            // Do nothing.
+        }
     }
 
     return { chosen.ptr(), window_type };
