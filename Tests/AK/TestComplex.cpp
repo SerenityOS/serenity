@@ -42,3 +42,29 @@ TEST_CASE(Complex)
     EXPECT_APPROXIMATE(cexp(Complex<double>(0., 1.) * M_PI).real(), -1.);
 #endif
 }
+
+TEST_CASE(real_operators_regression)
+{
+    {
+        auto c = Complex(0., 0.);
+        c += 1;
+        EXPECT_EQ(c.real(), 1);
+    }
+    {
+        auto c = Complex(0., 0.);
+        c -= 1;
+        EXPECT_EQ(c.real(), -1);
+    }
+    {
+        auto c1 = Complex(1., 1.);
+        auto c2 = 1 - c1;
+        EXPECT_EQ(c2.real(), 0);
+        EXPECT_EQ(c2.imag(), -1);
+    }
+    {
+        auto c1 = Complex(1., 1.);
+        auto c2 = 1 / c1;
+        EXPECT_EQ(c2.real(), 0.5);
+        EXPECT_EQ(c2.imag(), -0.5);
+    }
+}
