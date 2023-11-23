@@ -482,6 +482,7 @@ class Performance;
 }
 
 namespace Web::Internals {
+class Inspector;
 class Internals;
 }
 

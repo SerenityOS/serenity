@@ -86,4 +86,6 @@ endpoint WebContentServer
     toggle_media_controls_state() =|
 
     set_user_style(String source) =|
+
+    enable_inspector_prototype() =|
 }

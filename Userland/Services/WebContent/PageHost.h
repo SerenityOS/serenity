@@ -121,6 +121,8 @@ private:
     virtual void page_did_finish_text_test() override;
     virtual void page_did_change_theme_color(Gfx::Color color) override;
     virtual void page_did_insert_clipboard_entry(String data, String presentation_style, String mime_type) override;
+    virtual void inspector_did_load() override;
+    virtual void inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element) override;
 
     explicit PageHost(ConnectionFromClient&);
 

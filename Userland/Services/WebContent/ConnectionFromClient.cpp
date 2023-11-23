@@ -929,4 +929,9 @@ void ConnectionFromClient::inspect_accessibility_tree()
     }
 }
 
+void ConnectionFromClient::enable_inspector_prototype()
+{
+    Web::HTML::Window::set_inspector_object_exposed(true);
+}
+
 }

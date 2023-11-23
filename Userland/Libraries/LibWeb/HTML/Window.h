@@ -196,6 +196,7 @@ public:
     HighResolutionTime::DOMHighResTimeStamp get_last_activation_timestamp() const { return m_last_activation_timestamp; }
     void set_last_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_activation_timestamp = timestamp; }
 
+    static void set_inspector_object_exposed(bool);
     static void set_internals_object_exposed(bool);
 
     [[nodiscard]] OrderedHashMap<String, JS::NonnullGCPtr<Navigable>> document_tree_child_navigable_target_name_property_set();

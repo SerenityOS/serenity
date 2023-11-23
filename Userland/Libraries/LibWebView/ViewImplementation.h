@@ -106,6 +106,8 @@ public:
     // native GUI widgets as possible.
     void use_native_user_style_sheet();
 
+    void enable_inspector_prototype();
+
     Function<void(Gfx::IntSize)> on_did_layout;
     Function<void()> on_ready_to_paint;
     Function<String(Web::HTML::ActivateTab)> on_new_tab;
@@ -161,6 +163,8 @@ public:
     Function<void()> on_text_test_finish;
     Function<void(Gfx::Color)> on_theme_color_change;
     Function<void(String const&, String const&, String const&)> on_insert_clipboard_entry;
+    Function<void()> on_inspector_loaded;
+    Function<void(i32, Optional<Web::CSS::Selector::PseudoElement> const&)> on_inspector_selected_dom_node;
 
     virtual Gfx::IntRect viewport_rect() const = 0;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const = 0;
