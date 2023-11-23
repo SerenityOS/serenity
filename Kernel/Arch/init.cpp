@@ -216,6 +216,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     multiboot_modules_count = 0;
     // FIXME: Read the /chosen/bootargs property.
     kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
+#elif ARCH(RISCV64)
+    kernel_cmdline = "serial_debug"sv;
 #endif
 
     setup_serial_debug();
