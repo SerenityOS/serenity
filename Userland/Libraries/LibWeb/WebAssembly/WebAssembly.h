@@ -20,10 +20,10 @@ namespace Web::WebAssembly {
 
 void visit_edges(JS::Cell::Visitor&);
 
-bool validate(JS::VM&, JS::Handle<JS::Object>& bytes);
-WebIDL::ExceptionOr<JS::Value> compile(JS::VM&, JS::Handle<JS::Object>& bytes);
+bool validate(JS::VM&, JS::Handle<WebIDL::BufferSource>& bytes);
+WebIDL::ExceptionOr<JS::Value> compile(JS::VM&, JS::Handle<WebIDL::BufferSource>& bytes);
 
-WebIDL::ExceptionOr<JS::Value> instantiate(JS::VM&, JS::Handle<JS::Object>& bytes, Optional<JS::Handle<JS::Object>>& import_object);
+WebIDL::ExceptionOr<JS::Value> instantiate(JS::VM&, JS::Handle<WebIDL::BufferSource>& bytes, Optional<JS::Handle<JS::Object>>& import_object);
 WebIDL::ExceptionOr<JS::Value> instantiate(JS::VM&, Module const& module_object, Optional<JS::Handle<JS::Object>>& import_object);
 
 namespace Detail {

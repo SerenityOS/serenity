@@ -12,6 +12,7 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/WebIDL/Buffers.h>
 
 namespace Web::Encoding {
 
@@ -32,7 +33,7 @@ public:
     virtual ~TextEncoder() override;
 
     JS::NonnullGCPtr<JS::Uint8Array> encode(String const& input) const;
-    TextEncoderEncodeIntoResult encode_into(String const& source, JS::Handle<JS::Object> const& destination) const;
+    TextEncoderEncodeIntoResult encode_into(String const& source, JS::Handle<WebIDL::BufferSource> const& destination) const;
 
     static FlyString const& encoding();
 

@@ -21,7 +21,7 @@ class Module : public Bindings::PlatformObject {
     JS_DECLARE_ALLOCATOR(Module);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Module>> construct_impl(JS::Realm&, JS::Handle<JS::Object>& bytes);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Module>> construct_impl(JS::Realm&, JS::Handle<WebIDL::BufferSource>& bytes);
 
     size_t index() const { return m_index; }
     Wasm::Module const& module() const;

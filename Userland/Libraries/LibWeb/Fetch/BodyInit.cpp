@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/FormControlInfrastructure.h>
 #include <LibWeb/URL/URLSearchParams.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/XHR/FormData.h>
 
@@ -68,7 +69,6 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
     Optional<ByteBuffer> type {};
 
     // 10. Switch on object.
-    // FIXME: Still need to support BufferSource
     TRY(object.visit(
         [&](JS::Handle<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<void> {
             // Set source to object.
@@ -85,9 +85,9 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
             source = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(bytes));
             return {};
         },
-        [&](JS::Handle<JS::Object> const& buffer_source) -> WebIDL::ExceptionOr<void> {
+        [&](JS::Handle<WebIDL::BufferSource> const& buffer_source) -> WebIDL::ExceptionOr<void> {
             // Set source to a copy of the bytes held by object.
-            source = TRY_OR_THROW_OOM(vm, WebIDL::get_buffer_source_copy(*buffer_source.cell()));
+            source = TRY_OR_THROW_OOM(vm, WebIDL::get_buffer_source_copy(*buffer_source->raw_object()));
             return {};
         },
         [&](JS::Handle<XHR::FormData> const& form_data) -> WebIDL::ExceptionOr<void> {
