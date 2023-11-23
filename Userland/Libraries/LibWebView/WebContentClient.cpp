@@ -402,4 +402,16 @@ void WebContentClient::did_insert_clipboard_entry(String const& data, String con
         m_view.on_insert_clipboard_entry(data, presentation_style, mime_type);
 }
 
+void WebContentClient::inspector_did_load()
+{
+    if (m_view.on_inspector_loaded)
+        m_view.on_inspector_loaded();
+}
+
+void WebContentClient::inspector_did_select_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element)
+{
+    if (m_view.on_inspector_selected_dom_node)
+        m_view.on_inspector_selected_dom_node(node_id, pseudo_element);
+}
+
 }

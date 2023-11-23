@@ -383,4 +383,9 @@ void ViewImplementation::use_native_user_style_sheet()
     set_user_style_sheet(MUST(String::from_utf8(native_stylesheet_source)));
 }
 
+void ViewImplementation::enable_inspector_prototype()
+{
+    client().async_enable_inspector_prototype();
+}
+
 }

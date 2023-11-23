@@ -1,0 +1,6 @@
+[Exposed=Nobody] interface Inspector {
+
+    undefined inspectorLoaded();
+    undefined inspectDOMNode(long nodeID, optional long pseudoElement);
+
+};

@@ -106,6 +106,8 @@ private:
 
     virtual void set_user_style(String const&) override;
 
+    virtual void enable_inspector_prototype() override;
+
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;

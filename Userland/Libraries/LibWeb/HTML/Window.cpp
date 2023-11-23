@@ -60,6 +60,7 @@
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/Base64.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Internals/Inspector.h>
 #include <LibWeb/Internals/Internals.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/Page.h>
@@ -781,7 +782,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> Window::byte_length_
     return JS::NonnullGCPtr { *m_byte_length_queuing_strategy_size_function };
 }
 
+static bool s_inspector_object_exposed = false;
 static bool s_internals_object_exposed = false;
+
+void Window::set_inspector_object_exposed(bool exposed)
+{
+    s_inspector_object_exposed = exposed;
+}
 
 void Window::set_internals_object_exposed(bool exposed)
 {
@@ -798,6 +805,8 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     Bindings::WindowGlobalMixin::initialize(realm, *this);
     WindowOrWorkerGlobalScopeMixin::initialize(realm);
 
+    if (s_inspector_object_exposed)
+        define_direct_property("inspector", heap().allocate<Internals::Inspector>(realm, realm), JS::default_attributes);
     if (s_internals_object_exposed)
         define_direct_property("internals", heap().allocate<Internals::Internals>(realm, realm), JS::default_attributes);
 
