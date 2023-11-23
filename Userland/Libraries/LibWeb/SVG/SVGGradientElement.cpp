@@ -96,7 +96,7 @@ JS::GCPtr<SVGGradientElement const> SVGGradientElement::linked_gradient() const
 
     auto link = has_attribute(AttributeNames::href) ? deprecated_get_attribute(AttributeNames::href) : deprecated_get_attribute("xlink:href"sv);
     if (auto href = link; !href.is_empty()) {
-        auto url = document().parse_url(href);
+        auto url = document().encoding_parse_url(href);
         auto id = url.fragment();
         if (!id.has_value() || id->is_empty())
             return {};

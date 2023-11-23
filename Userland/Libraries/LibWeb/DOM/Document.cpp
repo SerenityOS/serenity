@@ -100,6 +100,7 @@
 #include <LibWeb/UIEvents/FocusEvent.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
+#include <LibWeb/URL/URL.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -906,11 +907,22 @@ AK::URL Document::base_url() const
     return base_element->frozen_base_url();
 }
 
-// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
-AK::URL Document::parse_url(StringView url) const
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-a-url
+AK::URL Document::encoding_parse_url(StringView url) const
 {
-    // FIXME: Pass in document's character encoding.
-    return base_url().complete_url(url);
+    // 1. Let encoding be UTF-8.
+    // 2. If environment is a Document object, then set encoding to environment's character encoding.
+    // 3. Otherwise, if environment's relevant global object is a Window object, set encoding to
+    //    environment's relevant global object's associated Document's character encoding.
+    // FIXME: Currently, the URL parser assumes we are only working with UTF-8. Implement
+    //        these spec steps once it's able to support different encodings.
+
+    // 4. Let baseURL be environment's base URL, if environment is a Document object; otherwise
+    //    environment's API base URL.
+    auto base_url = this->base_url();
+
+    // 5. Return the result of applying the URL parser to url, with baseURL and encoding.
+    return URL::parse(url, base_url);
 }
 
 void Document::set_needs_layout()
@@ -3478,13 +3490,12 @@ void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML
     }
 
     parse:
-        // 11. Parse: Parse urlString relative to document. If that fails, return. Otherwise, set urlRecord to the
-        //     resulting URL record.
-        auto maybe_url_record = parse_url(url_string);
-        if (!maybe_url_record.is_valid())
-            return;
+        // 11. Parse: Set urlRecord to the result of encoding-parsing a URL given urlString, relative to document.
+        url_record = encoding_parse_url(url_string);
 
-        url_record = maybe_url_record;
+        // 12. If urlRecord is failure, then return.
+        if (!url_record.is_valid())
+            return;
     }
 
     // 12. Set document's will declaratively refresh to true.

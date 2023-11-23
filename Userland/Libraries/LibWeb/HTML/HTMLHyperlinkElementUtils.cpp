@@ -27,6 +27,8 @@ void HTMLHyperlinkElementUtils::reinitialize_url() const
 // https://html.spec.whatwg.org/multipage/links.html#concept-hyperlink-url-set
 void HTMLHyperlinkElementUtils::set_the_url()
 {
+    // FIXME: Modernize these spec steps.
+
     // 1. If this element's href content attribute is absent, set this element's url to null.
     auto href_content_attribute = hyperlink_element_utils_href();
     if (!href_content_attribute.has_value()) {
@@ -36,7 +38,7 @@ void HTMLHyperlinkElementUtils::set_the_url()
 
     // 2. Otherwise, parse this element's href content attribute value relative to this element's node document.
     //    If parsing is successful, set this element's url to the result; otherwise, set this element's url to null.
-    m_url = hyperlink_element_utils_document().parse_url(*href_content_attribute);
+    m_url = hyperlink_element_utils_document().encoding_parse_url(*href_content_attribute);
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-origin
@@ -497,7 +499,8 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
         return;
 
     // 8. Parse a URL given subject's href attribute, relative to subject's node document.
-    auto url = hyperlink_element_utils_document().parse_url(href());
+    // FIXME: Modernize step to use https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-and-serializing-a-url
+    auto url = hyperlink_element_utils_document().encoding_parse_url(href());
 
     // 9. If that is successful, let url be the resulting URL string.
     //    Otherwise, if parsing the URL failed, then return.

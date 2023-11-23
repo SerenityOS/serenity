@@ -44,6 +44,8 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& script_url, WorkerOptions const options, DOM::Document& document)
 {
+    // FIXME: Modernize these spec steps.
+
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 
     // Returns a new Worker object. scriptURL will be fetched and executed in the background,
@@ -61,7 +63,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
     auto& outside_settings = document.relevant_settings_object();
 
     // 3. Parse the scriptURL argument relative to outside settings.
-    auto url = document.parse_url(script_url.to_deprecated_string());
+    auto url = document.encoding_parse_url(script_url.to_deprecated_string());
 
     // 4. If this fails, throw a "SyntaxError" DOMException.
     if (!url.is_valid()) {

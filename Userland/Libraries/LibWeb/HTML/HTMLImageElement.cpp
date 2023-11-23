@@ -366,7 +366,8 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
         // 1. Parse selected source, relative to the element's node document.
         //    If that is not successful, then abort this inner set of steps.
         //    Otherwise, let urlString be the resulting URL string.
-        auto url_string = document().parse_url(selected_source.value().to_deprecated_string());
+        // FIXME: Modernize step to use https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-and-serializing-a-url
+        auto url_string = document().encoding_parse_url(selected_source.value().to_deprecated_string());
         if (!url_string.is_valid())
             goto after_step_7;
 
@@ -465,7 +466,8 @@ after_step_7:
         }
 
         // 12. Parse selected source, relative to the element's node document, and let urlString be the resulting URL string.
-        auto url_string = document().parse_url(selected_source.value().url.to_deprecated_string());
+        // FIXME: Modernize step to use https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-and-serializing-a-url
+        auto url_string = document().encoding_parse_url(selected_source.value().url.to_deprecated_string());
         // If that is not successful, then:
         if (!url_string.is_valid()) {
             // 1. Abort the image request for the current request and the pending request.
@@ -691,7 +693,8 @@ void HTMLImageElement::react_to_changes_in_the_environment()
 
     // 6. ⌛ Parse selected source, relative to the element's node document,
     //       and let urlString be the resulting URL string. If that is not successful, then return.
-    auto url_string = document().parse_url(selected_source.value());
+    // FIXME: Modernize step to use https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-and-serializing-a-url
+    auto url_string = document().encoding_parse_url(selected_source.value());
     if (!url_string.is_valid())
         return;
 

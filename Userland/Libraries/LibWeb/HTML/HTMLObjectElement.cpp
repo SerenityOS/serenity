@@ -72,7 +72,7 @@ void HTMLObjectElement::attribute_changed(FlyString const& name, Optional<String
 String HTMLObjectElement::data() const
 {
     auto data = deprecated_attribute(HTML::AttributeNames::data);
-    return MUST(document().parse_url(data).to_string());
+    return MUST(document().encoding_parse_url(data).to_string());
 }
 
 JS::GCPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -128,16 +128,16 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
         if (auto data = deprecated_attribute(HTML::AttributeNames::data); !data.is_empty()) {
             // 1. If the type attribute is present and its value is not a type that the user agent supports, and is not a type that the user agent can find a plugin for, then the user agent may jump to the step below labeled fallback without fetching the content to examine its real type.
 
-            // 2. Parse a URL given the data attribute, relative to the element's node document.
-            auto url = document().parse_url(data);
+            // 2. Let url be the result of encoding-parsing a URL given the data attribute's value, relative to the element's node document.
+            auto url = document().encoding_parse_url(data);
 
-            // 3. If that failed, fire an event named error at the element, then jump to the step below labeled fallback.
+            // 3. If url is failure, then fire an event named error at the element and jump to the step below labeled fallback.
             if (!url.is_valid()) {
                 dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
                 return run_object_representation_fallback_steps();
             }
 
-            // 4. Let request be a new request whose URL is the resulting URL record, client is the element's node document's relevant settings object, destination is "object", credentials mode is "include", mode is "navigate", and whose use-URL-credentials flag is set.
+            // 4. Let request be a new request whose URL is url, client is the element's node document's relevant settings object, destination is "object", credentials mode is "include", mode is "navigate", initiator type is "object", and whose use-URL-credentials flag is set.
             auto request = LoadRequest::create_for_url_on_page(url, document().page());
 
             // 5. Fetch request, with processResponseEndOfBody given response res set to finalize and report timing with res, the element's node document's relevant global object, and "object".
@@ -315,7 +315,7 @@ void HTMLObjectElement::load_image()
 {
     // NOTE: This currently reloads the image instead of reusing the resource we've already downloaded.
     auto data = deprecated_attribute(HTML::AttributeNames::data);
-    auto url = document().parse_url(data);
+    auto url = document().encoding_parse_url(data);
     m_image_request = HTML::SharedImageRequest::get_or_create(realm(), *document().page(), url);
     m_image_request->add_callbacks(
         [this] {

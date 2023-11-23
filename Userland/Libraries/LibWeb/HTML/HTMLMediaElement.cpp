@@ -585,10 +585,14 @@ public:
             return {};
         }
 
+        // 3. ⌛ If candidate has a media attribute whose value does not match the environment, then end the synchronous
+        //    section, and jump down to the failed with elements step below.
+        // FIXME: This spec step was missing from our implementation. Include it and modernize the spec steps below.
+
         // 3. ⌛ Let urlString and urlRecord be the resulting URL string and the resulting URL record, respectively, that
         //    would have resulted from parsing the URL specified by candidate's src attribute's value relative to the
         //    candidate's node document when the src attribute was last changed.
-        auto url_record = m_candidate->document().parse_url(candiate_src);
+        auto url_record = m_candidate->document().encoding_parse_url(candiate_src);
         auto url_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url_record.to_deprecated_string()));
 
         // 4. ⌛ If urlString was not obtained successfully, then end the synchronous section, and jump down to the failed
@@ -831,11 +835,11 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
             return {};
         }
 
-        // 2. ⌛ Let urlString and urlRecord be the resulting URL string and the resulting URL record, respectively, that would have resulted from parsing
-        //    the URL specified by the src attribute's value relative to the media element's node document when the src attribute was last changed.
-        auto url_record = document().parse_url(source);
+        // 2. ⌛ Let urlRecord be the result of encoding-parsing a URL given the src attribute's value, relative to the media element's node document
+        //    when the src attribute was last changed.
+        auto url_record = document().encoding_parse_url(source);
 
-        // 3. ⌛ If urlString was obtained successfully, set the currentSrc attribute to urlString.
+        // 3. ⌛ If urlRecord is not failure, then set the currentSrc attribute to the result of applying the URL serializer to urlRecord.
         if (url_record.is_valid())
             m_current_src = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url_record.to_deprecated_string()));
 

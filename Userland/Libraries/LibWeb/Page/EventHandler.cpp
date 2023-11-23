@@ -282,7 +282,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                 if (JS::GCPtr<HTML::HTMLAnchorElement const> link = node->enclosing_link_element()) {
                     JS::NonnullGCPtr<DOM::Document> document = *m_browsing_context->active_document();
                     auto href = link->href();
-                    auto url = document->parse_url(href);
+                    auto url = document->encoding_parse_url(href);
                     dbgln("Web::EventHandler: Clicking on a link to {}", url);
                     if (button == GUI::MouseButton::Middle) {
                         if (auto* page = m_browsing_context->page())
@@ -294,14 +294,14 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                 } else if (button == GUI::MouseButton::Secondary) {
                     if (is<HTML::HTMLImageElement>(*node)) {
                         auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
-                        auto image_url = image_element.document().parse_url(image_element.src());
+                        auto image_url = image_element.document().encoding_parse_url(image_element.src());
                         if (auto* page = m_browsing_context->page())
                             page->client().page_did_request_image_context_menu(m_browsing_context->to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
                     } else if (is<HTML::HTMLMediaElement>(*node)) {
                         auto& media_element = verify_cast<HTML::HTMLMediaElement>(*node);
 
                         Page::MediaContextMenu menu {
-                            .media_url = media_element.document().parse_url(media_element.current_src()),
+                            .media_url = media_element.document().encoding_parse_url(media_element.current_src()),
                             .is_video = is<HTML::HTMLVideoElement>(*node),
                             .is_playing = media_element.potentially_playing(),
                             .is_muted = media_element.muted(),
@@ -537,7 +537,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
                 page->client().page_did_leave_tooltip_area();
             }
             if (is_hovering_link)
-                page->client().page_did_hover_link(document.parse_url(hovered_link_element->href()));
+                page->client().page_did_hover_link(document.encoding_parse_url(hovered_link_element->href()));
             else
                 page->client().page_did_unhover_link();
         }

@@ -62,14 +62,14 @@ void HTMLLinkElement::inserted()
     if (m_relationship & Relationship::Preload) {
         // FIXME: Respect the "as" attribute.
         LoadRequest request;
-        request.set_url(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
+        request.set_url(document().encoding_parse_url(deprecated_attribute(HTML::AttributeNames::href)));
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
     } else if (m_relationship & Relationship::DNSPrefetch) {
-        ResourceLoader::the().prefetch_dns(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
+        ResourceLoader::the().prefetch_dns(document().encoding_parse_url(deprecated_attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Preconnect) {
-        ResourceLoader::the().preconnect(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
+        ResourceLoader::the().preconnect(document().encoding_parse_url(deprecated_attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Icon) {
-        auto favicon_url = document().parse_url(href());
+        auto favicon_url = document().encoding_parse_url(href());
         auto favicon_request = LoadRequest::create_for_url_on_page(favicon_url, document().page());
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, favicon_request));
     }
@@ -485,7 +485,7 @@ WebIDL::ExceptionOr<void> HTMLLinkElement::load_fallback_favicon_if_needed(JS::N
     //    synchronous flag is set, credentials mode is "include", and whose use-URL-credentials flag is set.
     // NOTE: Fetch requests no longer have a synchronous flag, see https://github.com/whatwg/fetch/pull/1165
     auto request = Fetch::Infrastructure::Request::create(vm);
-    request->set_url(document->parse_url("/favicon.ico"sv));
+    request->set_url(document->encoding_parse_url("/favicon.ico"sv));
     request->set_client(&document->relevant_settings_object());
     request->set_destination(Fetch::Infrastructure::Request::Destination::Image);
     request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::Include);

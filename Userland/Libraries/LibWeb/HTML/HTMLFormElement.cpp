@@ -164,9 +164,10 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
     if (action.is_empty())
         action = form_document->url_string();
 
-    // 14. Parse a URL given action, relative to the submitter element's node document. If this fails, return.
-    // 15. Let parsed action be the resulting URL record.
-    auto parsed_action = document().parse_url(action);
+    // 14. Let parsed action be the result of encoding-parsing a URL given action, relative to submitter's node document.
+    auto parsed_action = document().encoding_parse_url(action);
+
+    // 15. If parsed action is failure, then return.
     if (!parsed_action.is_valid()) {
         dbgln("Failed to submit form: Invalid URL: {}", action);
         return {};

@@ -49,7 +49,7 @@ void HTMLTableRowElement::apply_presentational_hints(CSS::StyleProperties& style
                 style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()));
             return;
         } else if (name == HTML::AttributeNames::background) {
-            if (auto parsed_value = document().parse_url(value); parsed_value.is_valid())
+            if (auto parsed_value = document().encoding_parse_url(value); parsed_value.is_valid())
                 style.set_property(CSS::PropertyID::BackgroundImage, CSS::ImageStyleValue::create(parsed_value));
             return;
         } else if (name == HTML::AttributeNames::valign) {
