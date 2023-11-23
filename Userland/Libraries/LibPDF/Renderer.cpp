@@ -986,6 +986,7 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
         if (smask_bitmap->size() != image_bitmap->size())
             smask_bitmap = TRY(smask_bitmap->scaled_to_size(image_bitmap->size()));
 
+        image_bitmap->add_alpha_channel();
         for (int j = 0; j < image_bitmap->height(); ++j) {
             for (int i = 0; i < image_bitmap->width(); ++i) {
                 auto image_color = image_bitmap->get_pixel(i, j);
