@@ -8,13 +8,22 @@
 
 namespace Web::Painting {
 
-PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(AccelGfx::Painter& painter)
-    : m_painter(painter)
+PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(Gfx::Bitmap& bitmap)
+    : m_target_bitmap(bitmap)
 {
+    auto painter = AccelGfx::Painter::create();
+    auto canvas = AccelGfx::Canvas::create(bitmap.size());
+    painter->set_target_canvas(canvas);
+    stacking_contexts.append({ .canvas = canvas,
+        .painter = move(painter),
+        .opacity = 1.0f,
+        .destination = {} });
 }
 
 PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
 {
+    VERIFY(stacking_contexts.size() == 1);
+    painter().flush(m_target_bitmap);
 }
 
 CommandResult PaintingCommandExecutorGPU::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
@@ -75,16 +84,32 @@ CommandResult PaintingCommandExecutorGPU::set_font(Gfx::Font const&)
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::push_stacking_context(float, bool, Gfx::IntRect const&, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform, Optional<StackingContextMask>)
+CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform, Optional<StackingContextMask>)
 {
-    painter().save();
-    painter().translate(post_transform_translation.to_type<float>());
+    if (opacity < 1) {
+        auto painter = AccelGfx::Painter::create_with_glyphs_texture_from_painter(this->painter());
+        auto canvas = AccelGfx::Canvas::create(source_paintable_rect.size());
+        painter->set_target_canvas(canvas);
+        painter->translate(-source_paintable_rect.location().to_type<float>());
+        stacking_contexts.append({ .canvas = canvas,
+            .painter = move(painter),
+            .opacity = opacity,
+            .destination = source_paintable_rect });
+    } else {
+        painter().save();
+        painter().translate(post_transform_translation.to_type<float>());
+    }
     return CommandResult::Continue;
 }
 
 CommandResult PaintingCommandExecutorGPU::pop_stacking_context()
 {
-    painter().restore();
+    if (stacking_contexts.last().opacity < 1) {
+        auto stacking_context = stacking_contexts.take_last();
+        painter().blit_canvas(stacking_context.destination, *stacking_context.canvas, stacking_context.opacity);
+    } else {
+        painter().restore();
+    }
     return CommandResult::Continue;
 }
 
@@ -283,7 +308,7 @@ bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect)
 
 void PaintingCommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
 {
-    m_painter.prepare_glyph_texture(unique_glyphs);
+    painter().prepare_glyph_texture(unique_glyphs);
 }
 
 }
