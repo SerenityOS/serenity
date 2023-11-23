@@ -33,7 +33,6 @@ public:
     u32 sample_rate() const { return m_sample_rate; }
     u16 num_channels() const { return m_num_channels; }
     PcmSampleFormat sample_format() const { return m_sample_format; }
-    Core::File& file() const { return *m_file; }
 
     ErrorOr<void> set_file(StringView path);
     void set_num_channels(int num_channels) { m_num_channels = num_channels; }
@@ -42,7 +41,7 @@ public:
 
 private:
     ErrorOr<void> write_header();
-    OwnPtr<Core::File> m_file;
+    OwnPtr<Core::OutputBufferedFile> m_file;
     bool m_finalized { false };
 
     u32 m_sample_rate;
