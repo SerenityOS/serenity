@@ -925,6 +925,20 @@ AK::URL Document::encoding_parse_url(StringView url) const
     return URL::parse(url, base_url);
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-and-serializing-a-url
+Optional<DeprecatedString> Document::encoding_parse_and_serialize_url(StringView url) const
+{
+    // 1. Let url be the result of encoding-parsing a URL given url, relative to environment.
+    auto parsed_url = encoding_parse_url(url);
+
+    // 2. If url is failure, then return failure.
+    if (!parsed_url.is_valid())
+        return {};
+
+    // 3. Return the result of applying the URL serializer to url.
+    return parsed_url.serialize();
+}
+
 void Document::set_needs_layout()
 {
     if (m_needs_layout)

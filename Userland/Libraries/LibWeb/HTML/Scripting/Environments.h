@@ -84,6 +84,7 @@ struct EnvironmentSettingsObject
     virtual CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() = 0;
 
     AK::URL encoding_parse_url(StringView);
+    Optional<DeprecatedString> encoding_parse_and_serialize_url(StringView);
 
     JS::Realm& realm();
     JS::Object& global_object();

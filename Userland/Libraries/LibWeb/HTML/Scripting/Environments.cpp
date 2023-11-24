@@ -178,6 +178,20 @@ AK::URL EnvironmentSettingsObject::encoding_parse_url(StringView url)
     return URL::parse(url, base_url);
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-and-serializing-a-url
+Optional<DeprecatedString> EnvironmentSettingsObject::encoding_parse_and_serialize_url(StringView url)
+{
+    // 1. Let url be the result of encoding-parsing a URL given url, relative to environment.
+    auto parsed_url = encoding_parse_url(url);
+
+    // 2. If url is failure, then return failure.
+    if (!parsed_url.is_valid())
+        return {};
+
+    // 3. Return the result of applying the URL serializer to url.
+    return parsed_url.serialize();
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#clean-up-after-running-a-callback
 void EnvironmentSettingsObject::clean_up_after_running_callback()
 {
