@@ -28,9 +28,8 @@ label {
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
 input:not([type=submit], input[type=button], input[type=reset], input[type=color], input[type=checkbox], input[type=radio]), textarea {
     border: 1px solid ButtonBorder;
-    min-width: 80px;
     min-height: 16px;
-    width: 120px;
+    width: attr(size ch, 20ch);
     cursor: text;
     overflow: hidden;
 }

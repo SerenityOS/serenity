@@ -18,6 +18,7 @@
 #include <LibWeb/HTML/HTMLDivElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
@@ -1156,6 +1157,24 @@ i32 HTMLInputElement::default_tab_index_value() const
 {
     // See the base function for the spec comments.
     return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
+unsigned HTMLInputElement::size() const
+{
+    // The size IDL attribute is limited to only positive numbers and has a default value of 20.
+    auto maybe_size_string = get_attribute(HTML::AttributeNames::size);
+    if (maybe_size_string.has_value()) {
+        auto maybe_size = parse_non_negative_integer(maybe_size_string.value());
+        if (maybe_size.has_value())
+            return maybe_size.value();
+    }
+    return 20;
+}
+
+WebIDL::ExceptionOr<void> HTMLInputElement::set_size(unsigned value)
+{
+    return set_attribute(HTML::AttributeNames::size, MUST(String::number(value)));
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-valueasnumber
