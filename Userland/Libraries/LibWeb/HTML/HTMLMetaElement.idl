@@ -9,7 +9,7 @@ interface HTMLMetaElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString name;
     [CEReactions, Reflect=http-equiv] attribute DOMString httpEquiv;
     [CEReactions, Reflect] attribute DOMString content;
-    // FIXME: [CEReactions] attribute DOMString media;
+    [CEReactions, Reflect] attribute DOMString media;
 
     // Obsolete
     [CEReactions, Reflect] attribute DOMString scheme;
