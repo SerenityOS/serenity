@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -285,6 +286,33 @@ void NavigableContainer::destroy_the_child_navigable()
         // 1. Apply pending history changes to traversable.
         traversable->update_for_navigable_creation_or_destruction();
     });
+}
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#potentially-delays-the-load-event
+bool NavigableContainer::currently_delays_the_load_event() const
+{
+    if (!m_potentially_delays_the_load_event)
+        return false;
+
+    // If an element type potentially delays the load event, then for each element element of that type,
+    // the user agent must delay the load event of element's node document if element's content navigable is non-null
+    // and any of the following are true:
+    if (!m_content_navigable)
+        return false;
+
+    // - element's content navigable's active document is not ready for post-load tasks;
+    if (!m_content_navigable->active_document()->ready_for_post_load_tasks())
+        return true;
+
+    // - element's content navigable's is delaying load events is true; or
+    if (m_content_navigable->is_delaying_load_events())
+        return true;
+
+    // - anything is delaying the load event of element's content navigable's active document.
+    if (m_content_navigable->active_document()->anything_is_delaying_the_load_event())
+        return true;
+
+    return false;
 }
 
 }

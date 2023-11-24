@@ -46,6 +46,11 @@ public:
 
     void destroy_the_child_navigable();
 
+    // All elements that extend NavigableContainer "potentially delay the load event".
+    // (embed, frame, iframe, and object)
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#potentially-delays-the-load-event
+    bool currently_delays_the_load_event() const;
+
 protected:
     NavigableContainer(DOM::Document&, DOM::QualifiedName);
 
@@ -62,8 +67,11 @@ protected:
     // https://html.spec.whatwg.org/multipage/document-sequences.html#content-navigable
     JS::GCPtr<Navigable> m_content_navigable { nullptr };
 
+    void set_potentially_delays_the_load_event(bool value) { m_potentially_delays_the_load_event = value; }
+
 private:
     virtual bool is_navigable_container() const override { return true; }
+    bool m_potentially_delays_the_load_event { true };
 };
 
 }
