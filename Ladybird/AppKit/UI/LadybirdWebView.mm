@@ -1099,7 +1099,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
 - (void)scrollWheel:(NSEvent*)event
 {
     auto [position, screen_position, button, modifiers] = Ladybird::ns_event_to_mouse_event(event, self, GUI::MouseButton::Middle);
-    CGFloat delta_x = [event scrollingDeltaX];
+    CGFloat delta_x = -[event scrollingDeltaX];
     CGFloat delta_y = -[event scrollingDeltaY];
     if (![event hasPreciseScrollingDeltas]) {
         delta_x *= [self scrollView].horizontalLineScroll;
