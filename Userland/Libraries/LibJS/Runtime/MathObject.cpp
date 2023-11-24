@@ -32,7 +32,7 @@ void MathObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.abs, abs, 1, attr, Bytecode::Builtin::MathAbs);
     define_native_function(realm, vm.names.random, random, 0, attr);
     define_native_function(realm, vm.names.sqrt, sqrt, 1, attr, Bytecode::Builtin::MathSqrt);
-    define_native_function(realm, vm.names.floor, floor, 1, attr);
+    define_native_function(realm, vm.names.floor, floor, 1, attr, Bytecode::Builtin::MathFloor);
     define_native_function(realm, vm.names.ceil, ceil, 1, attr);
     define_native_function(realm, vm.names.round, round, 1, attr);
     define_native_function(realm, vm.names.max, max, 2, attr);
@@ -456,10 +456,10 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
 }
 
 // 21.3.2.16 Math.floor ( x ), https://tc39.es/ecma262/#sec-math.floor
-JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
+ThrowCompletionOr<Value> MathObject::floor_impl(VM& vm, Value x)
 {
     // 1. Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(vm));
+    auto number = TRY(x.to_number(vm));
 
     // 2. If n is not finite or n is either +0𝔽 or -0𝔽, return n.
     if (!number.is_finite_number() || number.as_double() == 0)
@@ -469,6 +469,12 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
     // 4. If n is an integral Number, return n.
     // 5. Return the greatest (closest to +∞) integral Number value that is not greater than n.
     return Value(::floor(number.as_double()));
+}
+
+// 21.3.2.16 Math.floor ( x ), https://tc39.es/ecma262/#sec-math.floor
+JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
+{
+    return floor_impl(vm, vm.argument(0));
 }
 
 // 21.3.2.17 Math.fround ( x ), https://tc39.es/ecma262/#sec-math.fround
