@@ -41,7 +41,7 @@ void MathObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.sin, sin, 1, attr);
     define_native_function(realm, vm.names.cos, cos, 1, attr);
     define_native_function(realm, vm.names.tan, tan, 1, attr);
-    define_native_function(realm, vm.names.pow, pow, 2, attr);
+    define_native_function(realm, vm.names.pow, pow, 2, attr, Bytecode::Builtin::MathPow);
     define_native_function(realm, vm.names.exp, exp, 1, attr);
     define_native_function(realm, vm.names.expm1, expm1, 1, attr);
     define_native_function(realm, vm.names.sign, sign, 1, attr);
@@ -729,16 +729,22 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 }
 
 // 21.3.2.26 Math.pow ( base, exponent ), https://tc39.es/ecma262/#sec-math.pow
-JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
+ThrowCompletionOr<Value> MathObject::pow_impl(VM& vm, Value base, Value exponent)
 {
     // Set base to ? ToNumber(base).
-    auto base = TRY(vm.argument(0).to_number(vm));
+    base = TRY(base.to_number(vm));
 
     // 2. Set exponent to ? ToNumber(exponent).
-    auto exponent = TRY(vm.argument(1).to_number(vm));
+    exponent = TRY(exponent.to_number(vm));
 
     // 3. Return Number::exponentiate(base, exponent).
     return JS::exp(vm, base, exponent);
+}
+
+// 21.3.2.26 Math.pow ( base, exponent ), https://tc39.es/ecma262/#sec-math.pow
+JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
+{
+    return pow_impl(vm, vm.argument(0), vm.argument(1));
 }
 
 // 21.3.2.27 Math.random ( ), https://tc39.es/ecma262/#sec-math.random
