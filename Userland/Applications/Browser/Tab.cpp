@@ -580,10 +580,6 @@ Tab::Tab(BrowserWindow& window)
             m_dom_inspector_widget->set_dom_json(dom_tree);
     };
 
-    view().on_received_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing, auto& aria_properties_state) {
-        m_dom_inspector_widget->set_dom_node_properties_json({ node_id }, specified, computed, custom_properties, node_box_sizing, aria_properties_state);
-    };
-
     view().on_received_accessibility_tree = [this](auto& accessibility_tree) {
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->set_accessibility_json(accessibility_tree);
