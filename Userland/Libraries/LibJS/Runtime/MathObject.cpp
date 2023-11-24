@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
@@ -31,7 +31,7 @@ void MathObject::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.abs, abs, 1, attr, Bytecode::Builtin::MathAbs);
     define_native_function(realm, vm.names.random, random, 0, attr);
-    define_native_function(realm, vm.names.sqrt, sqrt, 1, attr);
+    define_native_function(realm, vm.names.sqrt, sqrt, 1, attr, Bytecode::Builtin::MathSqrt);
     define_native_function(realm, vm.names.floor, floor, 1, attr);
     define_native_function(realm, vm.names.ceil, ceil, 1, attr);
     define_native_function(realm, vm.names.round, round, 1, attr);
@@ -821,10 +821,10 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
 }
 
 // 21.3.2.32 Math.sqrt ( x ), https://tc39.es/ecma262/#sec-math.sqrt
-JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
+ThrowCompletionOr<Value> MathObject::sqrt_impl(VM& vm, Value x)
 {
     // Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(vm));
+    auto number = TRY(x.to_number(vm));
 
     // 2. If n is one of NaN, +0𝔽, -0𝔽, or +∞𝔽, return n.
     if (number.is_nan() || number.as_double() == 0 || number.is_positive_infinity())
@@ -836,6 +836,12 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
 
     // 4. Return an implementation-approximated Number value representing the result of the square root of ℝ(n).
     return Value(::sqrt(number.as_double()));
+}
+
+// 21.3.2.32 Math.sqrt ( x ), https://tc39.es/ecma262/#sec-math.sqrt
+JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
+{
+    return sqrt_impl(vm, vm.argument(0));
 }
 
 // 21.3.2.33 Math.tan ( x ), https://tc39.es/ecma262/#sec-math.tan

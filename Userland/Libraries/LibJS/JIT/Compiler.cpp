@@ -2637,6 +2637,19 @@ void Compiler::compile_builtin_math_log(Assembler::Label&, Assembler::Label& end
     m_assembler.jump(end);
 }
 
+static Value cxx_math_sqrt(VM& vm, Value, Value value)
+{
+    return TRY_OR_SET_EXCEPTION(MathObject::sqrt_impl(vm, value));
+}
+
+void Compiler::compile_builtin_math_sqrt(Assembler::Label&, Assembler::Label& end)
+{
+    native_call((void*)cxx_math_sqrt);
+    store_accumulator(RET);
+    check_exception();
+    m_assembler.jump(end);
+}
+
 void Compiler::compile_builtin_math_abs(Assembler::Label& slow_case, Assembler::Label& end)
 {
     branch_if_int32(ARG2, [&] {

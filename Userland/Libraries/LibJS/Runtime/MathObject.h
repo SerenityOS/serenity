@@ -19,6 +19,7 @@ public:
     virtual ~MathObject() override = default;
 
     static ThrowCompletionOr<Value> log_impl(VM&, Value);
+    static ThrowCompletionOr<Value> sqrt_impl(VM&, Value);
 
 private:
     explicit MathObject(Realm&);
