@@ -141,7 +141,6 @@ public:
     Function<void()> on_request_dismiss_dialog;
     Function<void(const AK::URL&, DeprecatedString const&)> on_received_source;
     Function<void(DeprecatedString const&)> on_received_dom_tree;
-    Function<void(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing, DeprecatedString const& aria_properties_state)> on_received_dom_node_properties;
     Function<void(DeprecatedString const&)> on_received_accessibility_tree;
     Function<void(i32 message_id)> on_received_console_message;
     Function<void(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)> on_received_console_messages;
