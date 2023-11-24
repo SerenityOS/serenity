@@ -198,11 +198,6 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
         print_buffer(outbuf);
     }
 
-    if (!compute_master_secret_from_pre_master_secret(bytes)) {
-        dbgln("oh noes we could not derive a master key :(");
-        return;
-    }
-
     builder.append_u24(outbuf.size() + 2);
     builder.append((u16)outbuf.size());
     builder.append(outbuf);
@@ -243,11 +238,6 @@ void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
         dbgln("dh_random: {}", dh_random.to_base_deprecated(16));
         dbgln("dh_Yc: {:hex-dump}", (ReadonlyBytes)dh_Yc_bytes);
         dbgln("premaster key: {:hex-dump}", (ReadonlyBytes)m_context.premaster_key);
-    }
-
-    if (!compute_master_secret_from_pre_master_secret(48)) {
-        dbgln("oh noes we could not derive a master key :(");
-        return;
     }
 
     builder.append_u24(dh_key_size + 2);
@@ -295,11 +285,6 @@ void TLSv12::build_ecdhe_rsa_pre_master_secret(PacketBuilder& builder)
         dbgln("client private key: {:hex-dump}", (ReadonlyBytes)private_key);
         dbgln("client public key:  {:hex-dump}", (ReadonlyBytes)public_key);
         dbgln("premaster key:      {:hex-dump}", (ReadonlyBytes)m_context.premaster_key);
-    }
-
-    if (!compute_master_secret_from_pre_master_secret(48)) {
-        dbgln("oh noes we could not derive a master key :(");
-        return;
     }
 
     builder.append_u24(public_key.size() + 1);
@@ -413,6 +398,10 @@ ByteBuffer TLSv12::build_client_key_exchange()
     auto packet = builder.build();
 
     update_packet(packet);
+
+    if (!compute_master_secret_from_pre_master_secret(48)) {
+        dbgln("oh noes we could not derive a master key :(");
+    }
 
     return packet;
 }
