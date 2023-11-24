@@ -138,17 +138,15 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_window->reload_action().setEnabled(!m_history.is_empty());
 
         if (m_inspector_widget)
-            m_inspector_widget->clear_dom_json();
+            m_inspector_widget->reset();
 
         if (m_console_widget)
             m_console_widget->reset();
     };
 
     view().on_load_finish = [this](auto&) {
-        if (m_inspector_widget != nullptr && m_inspector_widget->isVisible()) {
-            view().inspect_dom_tree();
-            view().inspect_accessibility_tree();
-        }
+        if (m_inspector_widget != nullptr && m_inspector_widget->isVisible())
+            m_inspector_widget->inspect();
     };
 
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
@@ -278,16 +276,6 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     view().on_fullscreen_window = [this]() {
         m_window->showFullScreen();
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
-    };
-
-    view().on_received_dom_tree = [this](auto& dom_tree) {
-        if (m_inspector_widget)
-            m_inspector_widget->set_dom_json(dom_tree);
-    };
-
-    view().on_received_accessibility_tree = [this](auto& accessibility_tree) {
-        if (m_inspector_widget)
-            m_inspector_widget->set_accessibility_json(accessibility_tree);
     };
 
     view().on_insert_clipboard_entry = [](auto const& data, auto const&, auto const& mime_type) {
@@ -705,34 +693,17 @@ void Tab::recreate_toolbar_icons()
 
 void Tab::show_inspector_window(InspectorTarget inspector_target)
 {
-    bool inspector_previously_loaded = m_inspector_widget != nullptr;
-
-    if (!m_inspector_widget) {
-        m_inspector_widget = new Ladybird::InspectorWidget;
-        m_inspector_widget->setWindowTitle("Inspector");
-        m_inspector_widget->resize(640, 480);
-        m_inspector_widget->on_close = [this] {
-            view().clear_inspected_dom_node();
-        };
-
-        m_inspector_widget->on_dom_node_inspected = [&](auto id, auto pseudo_element) {
-            return view().inspect_dom_node(id, pseudo_element);
-        };
-    }
-
-    if (!inspector_previously_loaded || !m_inspector_widget->dom_loaded()) {
-        view().inspect_dom_tree();
-        view().inspect_accessibility_tree();
-    }
+    if (!m_inspector_widget)
+        m_inspector_widget = new Ladybird::InspectorWidget(view());
 
     m_inspector_widget->show();
+    m_inspector_widget->activateWindow();
+    m_inspector_widget->raise();
 
-    if (inspector_target == InspectorTarget::HoveredElement) {
-        auto hovered_node = view().get_hovered_node_id();
-        m_inspector_widget->set_selection({ hovered_node });
-    } else {
+    if (inspector_target == InspectorTarget::HoveredElement)
+        m_inspector_widget->select_hovered_node();
+    else
         m_inspector_widget->select_default_node();
-    }
 }
 
 void Tab::show_console_window()
