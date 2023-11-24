@@ -64,6 +64,7 @@ public:
     void set_closing(bool value) { m_closing = value; }
 
     void set_delaying_load_events(bool value);
+    bool is_delaying_load_events() const { return m_delaying_the_load_event.has_value(); }
 
     JS::GCPtr<SessionHistoryEntry> active_session_history_entry() const { return m_active_session_history_entry; }
     void set_active_session_history_entry(JS::GCPtr<SessionHistoryEntry> entry) { m_active_session_history_entry = entry; }

@@ -219,7 +219,7 @@ void XMLDocumentBuilder::document_end()
 
     // Spin the event loop until there is nothing that delays the load event in the Document.
     HTML::main_thread_event_loop().spin_until([&] {
-        return m_document->number_of_things_delaying_the_load_event() == 0;
+        return !m_document->anything_is_delaying_the_load_event();
     });
 
     // Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
