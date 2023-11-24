@@ -181,6 +181,7 @@ struct Options {
     OPTION_WITH_DEFAULTS(Function<void(AlertDescription)>, alert_handler, [](auto) {})
     OPTION_WITH_DEFAULTS(Function<void()>, finish_callback, [] {})
     OPTION_WITH_DEFAULTS(Function<Vector<Certificate>()>, certificate_provider, [] { return Vector<Certificate> {}; })
+    OPTION_WITH_DEFAULTS(bool, enable_extended_master_secret, true)
 
 #undef OPTION_WITH_DEFAULTS
 };
@@ -232,6 +233,7 @@ struct Context {
     struct {
         // Server Name Indicator
         DeprecatedString SNI; // I hate your existence
+        bool extended_master_secret { false };
     } extensions;
 
     u8 request_client_certificate { 0 };

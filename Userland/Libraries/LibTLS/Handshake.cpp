@@ -75,6 +75,7 @@ ByteBuffer TLSv12::build_hello()
     auto elliptic_curves_length = 2 * m_context.options.elliptic_curves.size();
     auto supported_ec_point_formats_length = m_context.options.supported_ec_point_formats.size();
     bool supports_elliptic_curves = elliptic_curves_length && supported_ec_point_formats_length;
+    bool enable_extended_master_secret = m_context.options.enable_extended_master_secret;
 
     // signature_algorithms: 2b extension ID, 2b extension length, 2b vector length, 2xN signatures and hashes
     extension_length += 2 + 2 + 2 + 2 * m_context.options.supported_signature_algorithms.size();
@@ -85,6 +86,9 @@ ByteBuffer TLSv12::build_hello()
     // Only send elliptic_curves and ec_point_formats extensions if both are supported
     if (supports_elliptic_curves)
         extension_length += 6 + elliptic_curves_length + 5 + supported_ec_point_formats_length;
+
+    if (enable_extended_master_secret)
+        extension_length += 4;
 
     builder.append((u16)extension_length);
 
@@ -128,6 +132,12 @@ ByteBuffer TLSv12::build_hello()
         builder.append((u8)supported_ec_point_formats_length);
         for (auto& format : m_context.options.supported_ec_point_formats)
             builder.append((u8)format);
+    }
+
+    if (enable_extended_master_secret) {
+        // extended_master_secret extension
+        builder.append((u16)ExtensionType::EXTENDED_MASTER_SECRET);
+        builder.append((u16)0);
     }
 
     if (alpn_length) {
