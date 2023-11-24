@@ -17,6 +17,9 @@ class HTMLTableColElement final : public HTMLElement {
 public:
     virtual ~HTMLTableColElement() override;
 
+    unsigned span() const;
+    WebIDL::ExceptionOr<void> set_span(unsigned);
+
 private:
     HTMLTableColElement(DOM::Document&, DOM::QualifiedName);
 

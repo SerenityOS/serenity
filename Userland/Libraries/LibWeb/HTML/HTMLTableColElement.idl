@@ -6,7 +6,7 @@ interface HTMLTableColElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    // FIXME: [CEReactions] attribute unsigned long span;
+    [CEReactions] attribute unsigned long span;
 
     // Obsolete
     [CEReactions, Reflect] attribute DOMString align;

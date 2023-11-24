@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/HTMLTableColElement.h>
+#include <LibWeb/HTML/Numbers.h>
 
 namespace Web::HTML {
 
@@ -22,6 +23,24 @@ void HTMLTableColElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableColElementPrototype>(realm, "HTMLTableColElement"_fly_string));
+}
+
+// https://html.spec.whatwg.org/multipage/tables.html#dom-colgroup-span
+unsigned int HTMLTableColElement::span() const
+{
+    // The span IDL attribute must reflect the content attribute of the same name. It is clamped to the range [1, 1000], and its default value is 1.
+    auto maybe_span_string = get_attribute(HTML::AttributeNames::span);
+    if (maybe_span_string.has_value()) {
+        auto maybe_span = parse_non_negative_integer(maybe_span_string.value());
+        if (maybe_span.has_value())
+            return clamp(maybe_span.value(), 1, 1000);
+    }
+    return 1;
+}
+
+WebIDL::ExceptionOr<void> HTMLTableColElement::set_span(unsigned int value)
+{
+    return set_attribute(HTML::AttributeNames::span, MUST(String::number(value)));
 }
 
 }
