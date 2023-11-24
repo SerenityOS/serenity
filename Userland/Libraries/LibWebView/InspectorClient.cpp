@@ -322,6 +322,16 @@ void InspectorClient::maybe_load_inspector()
         let initialTabButton = document.getElementById("dom-tree-button");
         selectTab(initialTabButton, "dom-tree");
 
+        const scrollToElement = (element) => {
+            // Include an offset to prevent the element being placed behind the fixed `tab-controls` header.
+            const offset = 45;
+
+            let position = element.getBoundingClientRect().top;
+            position += window.pageYOffset - offset;
+
+            window.scrollTo(0, position);
+        }
+
         inspector.inspectDOMNodeID = nodeID => {
             let domNodes = document.querySelectorAll(`[data-id="${nodeID}"]`);
             if (domNodes.length !== 1) {
@@ -335,7 +345,7 @@ void InspectorClient::maybe_load_inspector()
             }
 
             inspectDOMNode(domNodes[0]);
-            selectedDOMNode.scrollIntoView({ block: "start", inline: "start" });
+            scrollToElement(selectedDOMNode);
         };
 
         inspector.clearInspectedDOMNode = () => {
