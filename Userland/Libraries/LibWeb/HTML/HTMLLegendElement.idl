@@ -5,7 +5,7 @@
 interface HTMLLegendElement : HTMLElement {
     [HTMLConstructor] constructor();
 
-    // FIXME: readonly attribute HTMLFormElement? form;
+    readonly attribute HTMLFormElement? form;
 
     // Obsolete
     [CEReactions, Reflect] attribute DOMString align;
