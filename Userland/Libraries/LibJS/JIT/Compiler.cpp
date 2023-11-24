@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
+#include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
@@ -2621,6 +2622,19 @@ void Compiler::compile_builtin(Bytecode::Builtin builtin, Assembler::Label& slow
     case Bytecode::Builtin::__Count:
         VERIFY_NOT_REACHED();
     }
+}
+
+static Value cxx_math_log(VM& vm, Value, Value value)
+{
+    return TRY_OR_SET_EXCEPTION(MathObject::log_impl(vm, value));
+}
+
+void Compiler::compile_builtin_math_log(Assembler::Label&, Assembler::Label& end)
+{
+    native_call((void*)cxx_math_log);
+    store_accumulator(RET);
+    check_exception();
+    m_assembler.jump(end);
 }
 
 void Compiler::compile_builtin_math_abs(Assembler::Label& slow_case, Assembler::Label& end)
