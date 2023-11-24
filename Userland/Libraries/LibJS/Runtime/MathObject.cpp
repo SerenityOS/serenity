@@ -58,7 +58,7 @@ void MathObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.fround, fround, 1, attr);
     define_native_function(realm, vm.names.hypot, hypot, 2, attr);
     define_native_function(realm, vm.names.imul, imul, 2, attr);
-    define_native_function(realm, vm.names.log, log, 1, attr);
+    define_native_function(realm, vm.names.log, log, 1, attr, Bytecode::Builtin::MathLog);
     define_native_function(realm, vm.names.log2, log2, 1, attr);
     define_native_function(realm, vm.names.log10, log10, 1, attr);
     define_native_function(realm, vm.names.sinh, sinh, 1, attr);
@@ -555,10 +555,10 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
 }
 
 // 21.3.2.20 Math.log ( x ), https://tc39.es/ecma262/#sec-math.log
-JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
+ThrowCompletionOr<Value> MathObject::log_impl(VM& vm, Value x)
 {
     // 1. Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(vm));
+    auto number = TRY(x.to_number(vm));
 
     // 2. If n is NaN or n is +∞𝔽, return n.
     if (number.is_nan() || number.is_positive_infinity())
@@ -578,6 +578,12 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
 
     // 6. Return an implementation-approximated Number value representing the result of the natural logarithm of ℝ(n).
     return Value(::log(number.as_double()));
+}
+
+// 21.3.2.20 Math.log ( x ), https://tc39.es/ecma262/#sec-math.log
+JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
+{
+    return log_impl(vm, vm.argument(0));
 }
 
 // 21.3.2.21 Math.log1p ( x ), https://tc39.es/ecma262/#sec-math.log1p

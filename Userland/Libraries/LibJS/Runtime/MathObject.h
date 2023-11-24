@@ -18,6 +18,8 @@ public:
     virtual void initialize(Realm&) override;
     virtual ~MathObject() override = default;
 
+    static ThrowCompletionOr<Value> log_impl(VM&, Value);
+
 private:
     explicit MathObject(Realm&);
 
