@@ -3,6 +3,7 @@ source_set("WebIDL") {
   deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
   sources = [
     "AbstractOperations.cpp",
+    "Buffers.cpp",
     "CallbackType.cpp",
     "DOMException.cpp",
     "OverloadResolution.cpp",

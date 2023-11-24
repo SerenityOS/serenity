@@ -126,6 +126,8 @@ config("compiler_defaults") {
     ]
   }
 
+  cflags += [ "-Wno-invalid-offsetof" ]
+
   if (use_lld) {
     ldflags += [ "-fuse-ld=lld" ]
   }
