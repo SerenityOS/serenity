@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/ImmutableBitmap.h>
 #include <LibJS/Heap/HeapFunction.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
@@ -38,7 +39,8 @@ public:
     DeprecatedString alt() const { return deprecated_attribute(HTML::AttributeNames::alt); }
     DeprecatedString src() const { return deprecated_attribute(HTML::AttributeNames::src); }
 
-    RefPtr<Gfx::Bitmap const> bitmap() const;
+    RefPtr<Gfx::ImmutableBitmap> immutable_bitmap() const;
+    RefPtr<Gfx::Bitmap const> bitmap() const { return immutable_bitmap()->bitmap(); }
 
     unsigned width() const;
     WebIDL::ExceptionOr<void> set_width(unsigned);
@@ -89,7 +91,7 @@ public:
     virtual Optional<CSSPixels> intrinsic_width() const override;
     virtual Optional<CSSPixels> intrinsic_height() const override;
     virtual Optional<CSSPixelFraction> intrinsic_aspect_ratio() const override;
-    virtual RefPtr<Gfx::Bitmap const> current_image_bitmap(Gfx::IntSize = {}) const override;
+    virtual RefPtr<Gfx::ImmutableBitmap> current_image_bitmap(Gfx::IntSize = {}) const override;
     virtual void set_visible_in_viewport(bool) override;
 
     void set_lazy_load_resumption_steps(Function<void()>);

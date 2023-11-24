@@ -175,7 +175,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
                 (int)scaled_bitmap_height
             };
 
-            context.painter().draw_scaled_bitmap(draw_rect.intersected(image_int_rect), *bitmap, bitmap_rect.intersected(bitmap_intersect), scaling_mode);
+            context.painter().draw_scaled_immutable_bitmap(draw_rect.intersected(image_int_rect), *bitmap, bitmap_rect.intersected(bitmap_intersect), scaling_mode);
         }
     }
 }

@@ -15,6 +15,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Gradients.h>
 #include <LibGfx/GrayscaleBitmap.h>
+#include <LibGfx/ImmutableBitmap.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
@@ -70,6 +71,15 @@ struct FillRect {
 struct DrawScaledBitmap {
     Gfx::IntRect dst_rect;
     NonnullRefPtr<Gfx::Bitmap> bitmap;
+    Gfx::IntRect src_rect;
+    Gfx::Painter::ScalingMode scaling_mode;
+
+    [[nodiscard]] Gfx::IntRect bounding_rect() const { return dst_rect; }
+};
+
+struct DrawScaledImmutableBitmap {
+    Gfx::IntRect dst_rect;
+    NonnullRefPtr<Gfx::ImmutableBitmap> bitmap;
     Gfx::IntRect src_rect;
     Gfx::Painter::ScalingMode scaling_mode;
 
@@ -314,6 +324,7 @@ using PaintingCommand = Variant<
     DrawText,
     FillRect,
     DrawScaledBitmap,
+    DrawScaledImmutableBitmap,
     SetClipRect,
     ClearClipRect,
     SetFont,
@@ -351,6 +362,7 @@ public:
     virtual CommandResult draw_text(Gfx::IntRect const&, String const&, Gfx::TextAlignment alignment, Color const&, Gfx::TextElision, Gfx::TextWrapping, Optional<NonnullRefPtr<Gfx::Font>> const&) = 0;
     virtual CommandResult fill_rect(Gfx::IntRect const&, Color const&) = 0;
     virtual CommandResult draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode) = 0;
+    virtual CommandResult draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode) = 0;
     virtual CommandResult set_clip_rect(Gfx::IntRect const& rect) = 0;
     virtual CommandResult clear_clip_rect() = 0;
     virtual CommandResult set_font(Gfx::Font const& font) = 0;
@@ -435,6 +447,7 @@ public:
     void draw_rect(Gfx::IntRect const& rect, Color color, bool rough = false);
 
     void draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor);
+    void draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor);
 
     void draw_line(Gfx::IntPoint from, Gfx::IntPoint to, Color color, int thickness = 1, Gfx::Painter::LineStyle style = Gfx::Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
 

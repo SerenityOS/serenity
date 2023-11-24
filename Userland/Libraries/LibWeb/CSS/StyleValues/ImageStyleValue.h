@@ -56,7 +56,7 @@ private:
     JS::GCPtr<HTML::SharedImageRequest> m_image_request;
 
     void animate();
-    Gfx::Bitmap const* bitmap(size_t frame_index, Gfx::IntSize = {}) const;
+    Gfx::ImmutableBitmap const* bitmap(size_t frame_index, Gfx::IntSize = {}) const;
 
     AK::URL m_url;
     WeakPtr<DOM::Document> m_document;

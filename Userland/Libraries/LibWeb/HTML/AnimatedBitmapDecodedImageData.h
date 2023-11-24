@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGfx/ImmutableBitmap.h>
 #include <LibWeb/HTML/DecodedImageData.h>
 
 namespace Web::HTML {
@@ -13,14 +14,14 @@ namespace Web::HTML {
 class AnimatedBitmapDecodedImageData final : public DecodedImageData {
 public:
     struct Frame {
-        RefPtr<Gfx::Bitmap const> bitmap;
+        RefPtr<Gfx::ImmutableBitmap> bitmap;
         int duration { 0 };
     };
 
     static ErrorOr<NonnullRefPtr<AnimatedBitmapDecodedImageData>> create(Vector<Frame>&&, size_t loop_count, bool animated);
     virtual ~AnimatedBitmapDecodedImageData() override;
 
-    virtual RefPtr<Gfx::Bitmap const> bitmap(size_t frame_index, Gfx::IntSize = {}) const override;
+    virtual RefPtr<Gfx::ImmutableBitmap> bitmap(size_t frame_index, Gfx::IntSize = {}) const override;
     virtual int frame_duration(size_t frame_index) const override;
 
     virtual size_t frame_count() const override { return m_frames.size(); }

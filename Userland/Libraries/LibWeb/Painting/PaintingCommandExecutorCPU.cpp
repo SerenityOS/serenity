@@ -64,6 +64,13 @@ CommandResult PaintingCommandExecutorCPU::draw_scaled_bitmap(Gfx::IntRect const&
     return CommandResult::Continue;
 }
 
+CommandResult PaintingCommandExecutorCPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+{
+    auto& painter = this->painter();
+    painter.draw_scaled_bitmap(dst_rect, immutable_bitmap.bitmap(), src_rect, 1, scaling_mode);
+    return CommandResult::Continue;
+}
+
 CommandResult PaintingCommandExecutorCPU::set_clip_rect(Gfx::IntRect const& rect)
 {
     auto& painter = this->painter();

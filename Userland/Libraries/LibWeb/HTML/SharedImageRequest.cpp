@@ -159,7 +159,7 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
         Vector<AnimatedBitmapDecodedImageData::Frame> frames;
         for (auto& frame : result.value().frames) {
             frames.append(AnimatedBitmapDecodedImageData::Frame {
-                .bitmap = frame.bitmap,
+                .bitmap = Gfx::ImmutableBitmap::create(*frame.bitmap),
                 .duration = static_cast<int>(frame.duration),
             });
         }

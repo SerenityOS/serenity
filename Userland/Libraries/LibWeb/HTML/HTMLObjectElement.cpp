@@ -382,7 +382,7 @@ Optional<CSSPixelFraction> HTMLObjectElement::intrinsic_aspect_ratio() const
     return {};
 }
 
-RefPtr<Gfx::Bitmap const> HTMLObjectElement::current_image_bitmap(Gfx::IntSize size) const
+RefPtr<Gfx::ImmutableBitmap> HTMLObjectElement::current_image_bitmap(Gfx::IntSize size) const
 {
     if (auto image_data = this->image_data())
         return image_data->bitmap(0, size);

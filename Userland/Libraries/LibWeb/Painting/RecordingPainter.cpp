@@ -157,6 +157,16 @@ void RecordingPainter::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bit
     });
 }
 
+void RecordingPainter::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+{
+    push_command(DrawScaledImmutableBitmap {
+        .dst_rect = state().translation.map(dst_rect),
+        .bitmap = bitmap,
+        .src_rect = src_rect,
+        .scaling_mode = scaling_mode,
+    });
+}
+
 void RecordingPainter::draw_line(Gfx::IntPoint from, Gfx::IntPoint to, Color color, int thickness, Gfx::Painter::LineStyle style, Color alternate_color)
 {
     push_command(DrawLine {
@@ -435,6 +445,9 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
             },
             [&](DrawScaledBitmap const& command) {
                 return executor.draw_scaled_bitmap(command.dst_rect, command.bitmap, command.src_rect, command.scaling_mode);
+            },
+            [&](DrawScaledImmutableBitmap const& command) {
+                return executor.draw_scaled_immutable_bitmap(command.dst_rect, command.bitmap, command.src_rect, command.scaling_mode);
             },
             [&](SetClipRect const& command) {
                 return executor.set_clip_rect(command.rect);

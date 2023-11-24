@@ -18,7 +18,7 @@ class DecodedImageData : public RefCounted<DecodedImageData> {
 public:
     virtual ~DecodedImageData();
 
-    virtual RefPtr<Gfx::Bitmap const> bitmap(size_t frame_index, Gfx::IntSize = {}) const = 0;
+    virtual RefPtr<Gfx::ImmutableBitmap> bitmap(size_t frame_index, Gfx::IntSize = {}) const = 0;
     virtual int frame_duration(size_t frame_index) const = 0;
 
     virtual size_t frame_count() const = 0;

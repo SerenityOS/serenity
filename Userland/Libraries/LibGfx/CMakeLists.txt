@@ -60,6 +60,7 @@ set(SOURCES
     ImageFormats/WebPLoader.cpp
     ImageFormats/WebPLoaderLossless.cpp
     ImageFormats/WebPLoaderLossy.cpp
+    ImmutableBitmap.cpp
     Painter.cpp
     Palette.cpp
     Path.cpp
