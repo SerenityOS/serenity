@@ -159,7 +159,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     [self openInspector:sender];
 
     auto* inspector = (Inspector*)[self.inspector_controller window];
-    [inspector inspectHoveredElement];
+    [inspector selectHoveredElement];
 }
 
 #pragma mark - Private methods

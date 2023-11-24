@@ -127,7 +127,6 @@ executable("ladybird_executable") {
       "AppKit/UI/Tab.mm",
       "AppKit/UI/TabController.mm",
       "AppKit/Utilities/Conversions.mm",
-      "AppKit/Utilities/NSString+Ladybird.mm",
       "AppKit/main.mm",
     ]
 
