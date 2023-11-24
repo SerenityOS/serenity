@@ -126,12 +126,25 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
         return false;
     }
 
-    pseudorandom_function(
-        m_context.master_key,
-        m_context.premaster_key,
-        (u8 const*)"master secret", 13,
-        ReadonlyBytes { m_context.local_random, sizeof(m_context.local_random) },
-        ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) });
+    if (m_context.extensions.extended_master_secret) {
+        Crypto::Hash::Manager handshake_hash_copy = m_context.handshake_hash.copy();
+        auto digest = handshake_hash_copy.digest();
+        auto session_hash = ReadonlyBytes { digest.immutable_data(), handshake_hash_copy.digest_size() };
+
+        pseudorandom_function(
+            m_context.master_key,
+            m_context.premaster_key,
+            (u8 const*)"extended master secret", 22,
+            session_hash,
+            {});
+    } else {
+        pseudorandom_function(
+            m_context.master_key,
+            m_context.premaster_key,
+            (u8 const*)"master secret", 13,
+            ReadonlyBytes { m_context.local_random, sizeof(m_context.local_random) },
+            ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) });
+    }
 
     m_context.premaster_key.clear();
     if constexpr (TLS_DEBUG) {

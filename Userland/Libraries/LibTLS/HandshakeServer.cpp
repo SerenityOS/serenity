@@ -189,6 +189,9 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
             // uncompressed points. Therefore, this extension can be safely ignored as it should always inform us
             // that the server supports uncompressed points.
             res += extension_length;
+        } else if (extension_type == ExtensionType::EXTENDED_MASTER_SECRET) {
+            m_context.extensions.extended_master_secret = true;
+            res += extension_length;
         } else {
             dbgln("Encountered unknown extension {} with length {}", enum_to_string(extension_type), extension_length);
             res += extension_length;
