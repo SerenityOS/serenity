@@ -23,6 +23,7 @@ public:
     static ThrowCompletionOr<Value> pow_impl(VM&, Value base, Value exponent);
     static ThrowCompletionOr<Value> floor_impl(VM&, Value);
     static ThrowCompletionOr<Value> ceil_impl(VM&, Value);
+    static ThrowCompletionOr<Value> round_impl(VM&, Value);
 
 private:
     explicit MathObject(Realm&);

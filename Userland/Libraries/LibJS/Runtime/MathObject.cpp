@@ -34,7 +34,7 @@ void MathObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.sqrt, sqrt, 1, attr, Bytecode::Builtin::MathSqrt);
     define_native_function(realm, vm.names.floor, floor, 1, attr, Bytecode::Builtin::MathFloor);
     define_native_function(realm, vm.names.ceil, ceil, 1, attr, Bytecode::Builtin::MathCeil);
-    define_native_function(realm, vm.names.round, round, 1, attr);
+    define_native_function(realm, vm.names.round, round, 1, attr, Bytecode::Builtin::MathRound);
     define_native_function(realm, vm.names.max, max, 2, attr);
     define_native_function(realm, vm.names.min, min, 2, attr);
     define_native_function(realm, vm.names.trunc, trunc, 1, attr);
@@ -770,10 +770,10 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
 }
 
 // 21.3.2.28 Math.round ( x ), https://tc39.es/ecma262/#sec-math.round
-JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
+ThrowCompletionOr<Value> MathObject::round_impl(VM& vm, Value x)
 {
     // 1. Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(vm));
+    auto number = TRY(x.to_number(vm));
 
     // 2. If n is not finite or n is an integral Number, return n.
     if (!number.is_finite_number() || number.as_double() == ::trunc(number.as_double()))
@@ -786,6 +786,12 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
     if (integer - 0.5 > number.as_double())
         integer--;
     return Value(integer);
+}
+
+// 21.3.2.28 Math.round ( x ), https://tc39.es/ecma262/#sec-math.round
+JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
+{
+    return round_impl(vm, vm.argument(0));
 }
 
 // 21.3.2.29 Math.sign ( x ), https://tc39.es/ecma262/#sec-math.sign
