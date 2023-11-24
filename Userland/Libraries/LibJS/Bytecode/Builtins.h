@@ -16,6 +16,7 @@ namespace JS::Bytecode {
     O(MathAbs, math_abs, Math, abs, 1)       \
     O(MathLog, math_log, Math, log, 1)       \
     O(MathPow, math_pow, Math, pow, 2)       \
+    O(MathCeil, math_ceil, Math, ceil, 1)    \
     O(MathFloor, math_floor, Math, floor, 1) \
     O(MathSqrt, math_sqrt, Math, sqrt, 1)
 
