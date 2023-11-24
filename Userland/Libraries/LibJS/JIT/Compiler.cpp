@@ -2676,6 +2676,19 @@ void Compiler::compile_builtin_math_floor(Assembler::Label&, Assembler::Label& e
     m_assembler.jump(end);
 }
 
+static Value cxx_math_ceil(VM& vm, Value, Value value)
+{
+    return TRY_OR_SET_EXCEPTION(MathObject::ceil_impl(vm, value));
+}
+
+void Compiler::compile_builtin_math_ceil(Assembler::Label&, Assembler::Label& end)
+{
+    native_call((void*)cxx_math_ceil);
+    store_accumulator(RET);
+    check_exception();
+    m_assembler.jump(end);
+}
+
 void Compiler::compile_builtin_math_abs(Assembler::Label& slow_case, Assembler::Label& end)
 {
     branch_if_int32(ARG2, [&] {

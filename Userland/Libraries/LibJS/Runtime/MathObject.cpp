@@ -33,7 +33,7 @@ void MathObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.random, random, 0, attr);
     define_native_function(realm, vm.names.sqrt, sqrt, 1, attr, Bytecode::Builtin::MathSqrt);
     define_native_function(realm, vm.names.floor, floor, 1, attr, Bytecode::Builtin::MathFloor);
-    define_native_function(realm, vm.names.ceil, ceil, 1, attr);
+    define_native_function(realm, vm.names.ceil, ceil, 1, attr, Bytecode::Builtin::MathCeil);
     define_native_function(realm, vm.names.round, round, 1, attr);
     define_native_function(realm, vm.names.max, max, 2, attr);
     define_native_function(realm, vm.names.min, min, 2, attr);
@@ -346,10 +346,10 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
 }
 
 // 21.3.2.10 Math.ceil ( x ), https://tc39.es/ecma262/#sec-math.ceil
-JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
+ThrowCompletionOr<Value> MathObject::ceil_impl(VM& vm, Value x)
 {
     // 1. Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(vm));
+    auto number = TRY(x.to_number(vm));
 
     // 2. If n is not finite or n is either +0𝔽 or -0𝔽, return n.
     if (!number.is_finite_number() || number.as_double() == 0)
@@ -362,6 +362,12 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
     // 4. If n is an integral Number, return n.
     // 5. Return the smallest (closest to -∞) integral Number value that is not less than n.
     return Value(::ceil(number.as_double()));
+}
+
+// 21.3.2.10 Math.ceil ( x ), https://tc39.es/ecma262/#sec-math.ceil
+JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
+{
+    return ceil_impl(vm, vm.argument(0));
 }
 
 // 21.3.2.11 Math.clz32 ( x ), https://tc39.es/ecma262/#sec-math.clz32
