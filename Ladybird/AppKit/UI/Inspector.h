@@ -16,7 +16,10 @@
 - (instancetype)init:(Tab*)tab;
 
 - (void)inspect;
-- (void)inspectHoveredElement;
 - (void)reset;
+
+- (void)selectHoveredElement;
+
+@property (nonatomic, strong) LadybirdWebView* web_view;
 
 @end

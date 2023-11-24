@@ -44,8 +44,6 @@
     self.window = [[Inspector alloc] init:self.tab];
     [self.window setDelegate:self];
     [self.window makeKeyAndOrderFront:sender];
-
-    [[self inspector] inspect];
 }
 
 #pragma mark - NSWindowDelegate
@@ -53,6 +51,18 @@
 - (void)windowWillClose:(NSNotification*)notification
 {
     [self.tab onInspectorClosed];
+}
+
+- (void)windowDidResize:(NSNotification*)notification
+{
+    if (![[self window] inLiveResize]) {
+        [[[self inspector] web_view] handleResize];
+    }
+}
+
+- (void)windowDidChangeBackingProperties:(NSNotification*)notification
+{
+    [[[self inspector] web_view] handleDevicePixelRatioChange];
 }
 
 @end

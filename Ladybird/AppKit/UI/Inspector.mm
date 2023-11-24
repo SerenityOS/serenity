@@ -5,24 +5,22 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
 #include <AK/Traits.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWebView/InspectorClient.h>
 #include <LibWebView/ViewImplementation.h>
 
 #import <UI/Inspector.h>
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <Utilities/Conversions.h>
-#import <Utilities/NSString+Ladybird.h>
 
 #if !__has_feature(objc_arc)
 #    error "This project requires ARC"
 #endif
 
-static constexpr CGFloat const WINDOW_WIDTH = 600;
-static constexpr CGFloat const WINDOW_HEIGHT = 800;
+static constexpr CGFloat const WINDOW_WIDTH = 875;
+static constexpr CGFloat const WINDOW_HEIGHT = 825;
 
 static NSString* const CSS_PROPERTY_COLUMN = @"Property";
 static NSString* const CSS_VALUE_COLUMN = @"Value";
@@ -35,28 +33,12 @@ struct AK::Traits<NSDictionary*> : public DefaultTraits<NSDictionary*> {
     }
 };
 
-struct Selection {
-    bool operator==(Selection const& other) const = default;
-
-    i32 dom_node_id { 0 };
-    Optional<Web::CSS::Selector::PseudoElement> pseudo_element {};
-};
-
-@interface Inspector () <NSOutlineViewDataSource, NSOutlineViewDelegate, NSTableViewDataSource>
+@interface Inspector () <NSTableViewDataSource>
 {
-    BOOL m_dom_tree_loaded;
-
-    Selection m_selection;
-    Optional<i32> m_pending_selection;
-
-    HashMap<NSDictionary*, NSDictionary*> m_dom_node_to_parent_map;
-    HashMap<i32, NSDictionary*> m_node_id_to_dom_node_map;
+    OwnPtr<WebView::InspectorClient> m_inspector_client;
 }
 
 @property (nonatomic, strong) Tab* tab;
-
-@property (nonatomic, strong) NSOutlineView* dom_tree_outline_view;
-@property (nonatomic, strong) NSDictionary* dom_tree;
 
 @property (nonatomic, strong) NSTableView* computed_style_table_view;
 @property (nonatomic, strong) NSDictionary* computed_style;
@@ -93,44 +75,32 @@ struct Selection {
     if (self) {
         self.tab = tab;
 
-        auto* split_view = [[NSSplitView alloc] initWithFrame:[self frame]];
-        [split_view setDividerStyle:NSSplitViewDividerStylePaneSplitter];
+        self.web_view = [[LadybirdWebView alloc] init:nil];
+        [self.web_view setPostsBoundsChangedNotifications:YES];
 
-        auto* top_tab_view = [[NSTabView alloc] init];
-        [split_view addSubview:top_tab_view];
+        m_inspector_client = make<WebView::InspectorClient>([[tab web_view] view], [[self web_view] view]);
 
-        auto* bottom_tab_view = [[NSTabView alloc] init];
-        [split_view addSubview:bottom_tab_view];
-
-        [self initializeDOMTreeTab:top_tab_view];
-        [self initializeCSSTables:bottom_tab_view];
-        [self reset];
-
-        auto& web_view = [[self.tab web_view] view];
         __weak Inspector* weak_self = self;
 
-        web_view.on_received_dom_tree = [weak_self](auto const& dom_tree) {
+        m_inspector_client->on_dom_node_properties_received = [weak_self](auto properties) {
             Inspector* strong_self = weak_self;
             if (strong_self == nil) {
                 return;
             }
 
-            strong_self.dom_tree = Ladybird::deserialize_json_to_dictionary(dom_tree);
-
-            if (strong_self.dom_tree) {
-                [strong_self.dom_tree_outline_view reloadItem:nil reloadChildren:YES];
-                [strong_self.dom_tree_outline_view sizeToFit];
-
-                [strong_self prepareDOMNodeMaps:strong_self.dom_tree parentNode:nil];
-                strong_self->m_dom_tree_loaded = YES;
-
-                if (strong_self->m_pending_selection.has_value()) {
-                    [strong_self inspectDOMNodeID:strong_self->m_pending_selection.release_value()];
-                }
-            } else {
-                strong_self.dom_tree = @{};
-            }
+            [strong_self onDOMNodePropertiesReceived:move(properties)];
         };
+
+        auto* split_view = [[NSSplitView alloc] initWithFrame:[self frame]];
+        [split_view setDividerStyle:NSSplitViewDividerStylePaneSplitter];
+
+        [self initializeInspectorView:split_view];
+
+        auto* bottom_tab_view = [[NSTabView alloc] init];
+        [split_view addSubview:bottom_tab_view];
+
+        [self initializeCSSTables:bottom_tab_view];
+        [self reset];
 
         [self setContentView:split_view];
         [self setTitle:@"Inspector"];
@@ -146,7 +116,6 @@ struct Selection {
 - (void)dealloc
 {
     auto& web_view = [[self.tab web_view] view];
-    web_view.on_received_dom_tree = nullptr;
     web_view.clear_inspected_dom_node();
 }
 
@@ -154,36 +123,12 @@ struct Selection {
 
 - (void)inspect
 {
-    auto& web_view = [[self.tab web_view] view];
-    web_view.inspect_dom_tree();
-}
-
-- (void)inspectHoveredElement
-{
-    auto& web_view = [[self.tab web_view] view];
-    auto node_id = web_view.get_hovered_node_id();
-
-    if (!m_dom_tree_loaded) {
-        m_pending_selection = node_id;
-        return;
-    }
-
-    [self inspectDOMNodeID:node_id];
+    m_inspector_client->inspect();
 }
 
 - (void)reset
 {
-    m_dom_tree_loaded = NO;
-
-    m_selection = {};
-    m_pending_selection = {};
-
-    m_dom_node_to_parent_map = {};
-    m_node_id_to_dom_node_map = {};
-
-    self.dom_tree = @{};
-    [self.dom_tree_outline_view reloadItem:nil reloadChildren:YES];
-    [self.dom_tree_outline_view sizeToFit];
+    m_inspector_client->reset();
 
     self.computed_style = @{};
     self.computed_style_keys = @[];
@@ -198,30 +143,24 @@ struct Selection {
     [self.variables_table_view reloadData];
 }
 
+- (void)selectHoveredElement
+{
+    m_inspector_client->select_hovered_node();
+}
+
 #pragma mark - Private methods
 
-- (void)initializeDOMTreeTab:(NSTabView*)tab_view
+- (void)initializeInspectorView:(NSSplitView*)split_view
 {
-    auto* tab = [[NSTabViewItem alloc] initWithIdentifier:@"DOM Tree"];
-    [tab setLabel:@"DOM"];
-
     auto* scroll_view = [[NSScrollView alloc] init];
     [scroll_view setHasVerticalScroller:YES];
     [scroll_view setHasHorizontalScroller:YES];
     [scroll_view setLineScroll:24];
-    [tab setView:scroll_view];
 
-    self.dom_tree_outline_view = [[NSOutlineView alloc] initWithFrame:[tab_view frame]];
-    [self.dom_tree_outline_view setDoubleAction:@selector(onTreeDoubleClick:)];
-    [self.dom_tree_outline_view setDataSource:self];
-    [self.dom_tree_outline_view setDelegate:self];
-    [self.dom_tree_outline_view setHeaderView:nil];
-    [scroll_view setDocumentView:self.dom_tree_outline_view];
+    [scroll_view setContentView:self.web_view];
+    [scroll_view setDocumentView:[[NSView alloc] init]];
 
-    auto* column = [[NSTableColumn alloc] initWithIdentifier:@"DOM Tree"];
-    [self.dom_tree_outline_view addTableColumn:column];
-
-    [tab_view addTabViewItem:tab];
+    [split_view addSubview:scroll_view];
 }
 
 - (NSTableView*)createCSSTable:(NSTabView*)tab_view identifier:(NSString*)identifier
@@ -260,67 +199,8 @@ struct Selection {
     self.variables_table_view = [self createCSSTable:tab_view identifier:@"Variables"];
 }
 
-- (void)onTreeDoubleClick:(id)sender
+- (void)onDOMNodePropertiesReceived:(ErrorOr<WebView::ViewImplementation::DOMNodeProperties>)properties
 {
-    NSOutlineView* outline_view = sender;
-    id item = [outline_view itemAtRow:[outline_view clickedRow]];
-
-    if ([outline_view isItemExpanded:item]) {
-        [outline_view collapseItem:item];
-    } else {
-        [outline_view expandItem:item];
-    }
-}
-
-- (void)prepareDOMNodeMaps:(NSDictionary*)dom_node
-                parentNode:(NSDictionary*)parent_node
-{
-    m_dom_node_to_parent_map.set(dom_node, parent_node);
-
-    if (id dom_node_id = [dom_node objectForKey:@"id"]) {
-        m_node_id_to_dom_node_map.set([dom_node_id intValue], dom_node);
-    }
-
-    for (NSDictionary* child in [dom_node objectForKey:@"children"]) {
-        [self prepareDOMNodeMaps:child parentNode:dom_node];
-    }
-}
-
-- (void)inspectDOMNodeID:(i32)node_id
-{
-    auto dom_node = m_node_id_to_dom_node_map.get(node_id);
-    if (!dom_node.has_value()) {
-        return;
-    }
-
-    [self expandDOMNode:*dom_node];
-
-    if (auto row = [self.dom_tree_outline_view rowForItem:*dom_node]; row != -1) {
-        auto index = [NSIndexSet indexSetWithIndex:row];
-        [self.dom_tree_outline_view selectRowIndexes:index byExtendingSelection:NO];
-    }
-
-    [self setSelection: { node_id }];
-}
-
-- (void)expandDOMNode:(NSDictionary*)dom_node
-{
-    // We can't expand an item unless its parent is also already expanded, so walk up the tree to
-    // expand all ancestors.
-    if (auto parent_node = m_dom_node_to_parent_map.get(dom_node); parent_node.has_value()) {
-        [self expandDOMNode:*parent_node];
-    }
-
-    [self.dom_tree_outline_view expandItem:dom_node];
-}
-
-- (void)setSelection:(Selection)selection
-{
-    if (selection == m_selection)
-        return;
-
-    m_selection = move(selection);
-
     auto deserialize_json = [](auto const& json) {
         auto* dictionary = Ladybird::deserialize_json_to_dictionary(json);
         if (!dictionary) {
@@ -329,9 +209,6 @@ struct Selection {
 
         return dictionary;
     };
-
-    auto& web_view = [[self.tab web_view] view];
-    auto properties = web_view.inspect_dom_node(m_selection.dom_node_id, m_selection.pseudo_element);
 
     if (!properties.is_error()) {
         self.computed_style = deserialize_json(properties.value().computed_style_json);
@@ -351,129 +228,6 @@ struct Selection {
 
     self.variables_keys = [[self.variables allKeys] sortedArrayUsingSelector:@selector(compare:)];
     [self.variables_table_view reloadData];
-}
-
-#pragma mark - NSOutlineViewDataSource
-
-- (id)outlineView:(NSOutlineView*)view
-            child:(NSInteger)index
-           ofItem:(id)item
-{
-    if (item == nil) {
-        item = self.dom_tree;
-    }
-
-    NSArray* children = [item objectForKey:@"children"];
-    return [children objectAtIndex:index];
-}
-
-- (NSInteger)outlineView:(NSOutlineView*)view
-    numberOfChildrenOfItem:(id)item
-{
-    if (item == nil) {
-        item = self.dom_tree;
-    }
-
-    NSArray* children = [item objectForKey:@"children"];
-    return static_cast<NSInteger>(children.count);
-}
-
-- (BOOL)outlineView:(NSOutlineView*)view
-    isItemExpandable:(id)item
-{
-    NSArray* children = [item objectForKey:@"children"];
-    return children.count != 0;
-}
-
-- (NSView*)outlineView:(NSOutlineView*)outline_view
-    viewForTableColumn:(NSTableColumn*)table_column
-                  item:(id)item
-{
-    auto* font = [NSFont monospacedSystemFontOfSize:12.0 weight:NSFontWeightRegular];
-    auto* bold_font = [NSFont monospacedSystemFontOfSize:12.0 weight:NSFontWeightBold];
-
-    auto attributed_text = [&](NSString* text, NSColor* color = nil, BOOL bold = false) {
-        auto* attributes = [[NSMutableDictionary alloc] initWithDictionary:@{
-            NSFontAttributeName : bold ? bold_font : font,
-        }];
-
-        if (color != nil) {
-            [attributes setObject:color forKey:NSForegroundColorAttributeName];
-        }
-
-        return [[NSMutableAttributedString alloc] initWithString:text attributes:attributes];
-    };
-
-    NSString* type = [item objectForKey:@"type"];
-    NSMutableAttributedString* text = nil;
-
-    if ([type isEqualToString:@"text"]) {
-        text = attributed_text([[item objectForKey:@"text"] stringByCollapsingConsecutiveWhitespace]);
-    } else if ([type isEqualToString:@"comment"]) {
-        auto* comment = [NSString stringWithFormat:@"<!--%@-->", [item objectForKey:@"data"]];
-        text = attributed_text(comment, [NSColor systemGreenColor]);
-    } else if ([type isEqualToString:@"shadow-root"]) {
-        auto* shadow = [NSString stringWithFormat:@"%@ (%@)", [item objectForKey:@"name"], [item objectForKey:@"mode"]];
-        text = attributed_text(shadow, [NSColor systemGrayColor]);
-    } else if ([type isEqualToString:@"element"]) {
-        text = attributed_text(@"<");
-
-        auto* element = attributed_text(
-            [[item objectForKey:@"name"] lowercaseString],
-            [NSColor systemPinkColor],
-            YES);
-        [text appendAttributedString:element];
-
-        NSDictionary* attributes = [item objectForKey:@"attributes"];
-
-        [attributes enumerateKeysAndObjectsUsingBlock:^(id name, id value, BOOL*) {
-            [text appendAttributedString:attributed_text(@" ")];
-
-            name = attributed_text(name, [NSColor systemOrangeColor]);
-            [text appendAttributedString:name];
-
-            [text appendAttributedString:attributed_text(@"=")];
-
-            value = [NSString stringWithFormat:@"\"%@\"", [value stringByCollapsingConsecutiveWhitespace]];
-            value = attributed_text(value, [NSColor systemCyanColor]);
-            [text appendAttributedString:value];
-        }];
-
-        [text appendAttributedString:attributed_text(@">")];
-    } else {
-        text = attributed_text([item objectForKey:@"name"], [NSColor systemGrayColor]);
-    }
-
-    auto* view = [NSTextField labelWithAttributedString:text];
-    view.identifier = [NSString stringWithFormat:@"%@", [item objectForKey:@"id"]];
-
-    return view;
-}
-
-#pragma mark - NSOutlineViewDelegate
-
-- (BOOL)outlineView:(NSOutlineView*)outline_view
-    shouldEditTableColumn:(NSTableColumn*)table_column
-                     item:(id)item
-{
-    return NO;
-}
-
-- (BOOL)outlineView:(NSOutlineView*)outline_view
-    shouldSelectItem:(id)item
-{
-    i32 dom_node_id { 0 };
-    Optional<Web::CSS::Selector::PseudoElement> pseudo_element;
-
-    if (id element = [item objectForKey:@"pseudo-element"]) {
-        dom_node_id = [[item objectForKey:@"parent-id"] intValue];
-        pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>([element intValue]);
-    } else {
-        dom_node_id = [[item objectForKey:@"id"] intValue];
-    }
-
-    [self setSelection: { dom_node_id, move(pseudo_element) }];
-    return YES;
 }
 
 #pragma mark - NSTableViewDataSource
