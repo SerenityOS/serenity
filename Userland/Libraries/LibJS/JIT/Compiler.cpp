@@ -2689,6 +2689,19 @@ void Compiler::compile_builtin_math_ceil(Assembler::Label&, Assembler::Label& en
     m_assembler.jump(end);
 }
 
+static Value cxx_math_round(VM& vm, Value, Value value)
+{
+    return TRY_OR_SET_EXCEPTION(MathObject::round_impl(vm, value));
+}
+
+void Compiler::compile_builtin_math_round(Assembler::Label&, Assembler::Label& end)
+{
+    native_call((void*)cxx_math_round);
+    store_accumulator(RET);
+    check_exception();
+    m_assembler.jump(end);
+}
+
 void Compiler::compile_builtin_math_abs(Assembler::Label& slow_case, Assembler::Label& end)
 {
     branch_if_int32(ARG2, [&] {

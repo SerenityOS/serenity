@@ -18,6 +18,7 @@ namespace JS::Bytecode {
     O(MathPow, math_pow, Math, pow, 2)       \
     O(MathCeil, math_ceil, Math, ceil, 1)    \
     O(MathFloor, math_floor, Math, floor, 1) \
+    O(MathRound, math_round, Math, round, 1) \
     O(MathSqrt, math_sqrt, Math, sqrt, 1)
 
 enum class Builtin {
