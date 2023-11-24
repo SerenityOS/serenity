@@ -7,7 +7,7 @@ interface HTMLTextAreaElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     [CEReactions, Reflect] attribute DOMString autocomplete;
-    // FIXME: [CEReactions] attribute unsigned long cols;
+    [CEReactions] attribute unsigned long cols;
     [CEReactions, Reflect=dirname] attribute DOMString dirName;
     [CEReactions, Reflect] attribute boolean disabled;
     readonly attribute HTMLFormElement? form;
@@ -17,7 +17,7 @@ interface HTMLTextAreaElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString placeholder;
     [CEReactions, Reflect=readonly] attribute boolean readOnly;
     [CEReactions, Reflect] attribute boolean required;
-    // FIXME: [CEReactions] attribute unsigned long rows;
+    [CEReactions] attribute unsigned long rows;
     [CEReactions, Reflect] attribute DOMString wrap;
 
     readonly attribute DOMString type;

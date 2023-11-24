@@ -14,6 +14,7 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
@@ -93,6 +94,42 @@ void HTMLTextAreaElement::form_associated_element_was_inserted()
 void HTMLTextAreaElement::form_associated_element_was_removed(DOM::Node*)
 {
     set_shadow_root(nullptr);
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-cols
+unsigned HTMLTextAreaElement::cols() const
+{
+    // The cols and rows attributes are limited to only positive numbers with fallback. The cols IDL attribute's default value is 20.
+    auto maybe_cols_string = get_attribute(HTML::AttributeNames::cols);
+    if (maybe_cols_string.has_value()) {
+        auto maybe_cols = parse_non_negative_integer(maybe_cols_string.value());
+        if (maybe_cols.has_value())
+            return maybe_cols.value();
+    }
+    return 20;
+}
+
+WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_cols(unsigned value)
+{
+    return set_attribute(HTML::AttributeNames::cols, MUST(String::number(value)));
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-rows
+unsigned HTMLTextAreaElement::rows() const
+{
+    // The cols and rows attributes are limited to only positive numbers with fallback. The rows IDL attribute's default value is 2.
+    auto maybe_rows_string = get_attribute(HTML::AttributeNames::rows);
+    if (maybe_rows_string.has_value()) {
+        auto maybe_rows = parse_non_negative_integer(maybe_rows_string.value());
+        if (maybe_rows.has_value())
+            return maybe_rows.value();
+    }
+    return 2;
+}
+
+WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_rows(unsigned value)
+{
+    return set_attribute(HTML::AttributeNames::rows, MUST(String::number(value)));
 }
 
 void HTMLTextAreaElement::create_shadow_tree_if_needed()
