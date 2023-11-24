@@ -56,6 +56,7 @@ public:
     Optional<Paintable> paintable();
 
     Function<void()> on_zoom_level_changed;
+    Function<void(Gfx::IntPoint)> on_scroll;
 
 private:
     WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme);

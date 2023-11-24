@@ -279,7 +279,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         [self.observer onFaviconChange:bitmap];
     };
 
-    m_web_view_bridge->on_scroll_to_point = [self](auto position) {
+    m_web_view_bridge->on_scroll = [self](auto position) {
         auto content_rect = [self frame];
         auto document_rect = [[self documentView] frame];
         auto ns_position = Ladybird::gfx_point_to_ns_point(position);
