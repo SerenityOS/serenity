@@ -101,8 +101,9 @@ SVGDecodedImageData::SVGDecodedImageData(NonnullOwnPtr<Page> page, NonnullOwnPtr
 
 SVGDecodedImageData::~SVGDecodedImageData() = default;
 
-void SVGDecodedImageData::render(Gfx::IntSize size) const
+RefPtr<Gfx::Bitmap> SVGDecodedImageData::render(Gfx::IntSize size) const
 {
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors();
     VERIFY(m_document->navigable());
     m_document->navigable()->set_viewport_rect({ 0, 0, size.width(), size.height() });
     m_document->update_layout();
@@ -112,21 +113,22 @@ void SVGDecodedImageData::render(Gfx::IntSize size) const
 
     m_document->paintable()->paint_all_phases(context);
 
-    Painting::PaintingCommandExecutorCPU executor { *m_bitmap };
+    Painting::PaintingCommandExecutorCPU executor { *bitmap };
     recording_painter.execute(executor);
+
+    return bitmap;
 }
 
-RefPtr<Gfx::Bitmap const> SVGDecodedImageData::bitmap(size_t, Gfx::IntSize size) const
+RefPtr<Gfx::ImmutableBitmap> SVGDecodedImageData::bitmap(size_t, Gfx::IntSize size) const
 {
     if (size.is_empty())
         return nullptr;
 
-    if (m_bitmap && m_bitmap->size() == size)
-        return m_bitmap;
+    if (m_immutable_bitmap && m_immutable_bitmap->size() == size)
+        return m_immutable_bitmap;
 
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size).release_value_but_fixme_should_propagate_errors();
-    render(size);
-    return m_bitmap;
+    m_immutable_bitmap = Gfx::ImmutableBitmap::create(*render(size));
+    return m_immutable_bitmap;
 }
 
 Optional<CSSPixels> SVGDecodedImageData::intrinsic_width() const

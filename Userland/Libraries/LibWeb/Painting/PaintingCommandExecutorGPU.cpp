@@ -44,25 +44,30 @@ CommandResult PaintingCommandExecutorGPU::fill_rect(Gfx::IntRect const& rect, Co
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+static AccelGfx::Painter::ScalingMode to_accelgfx_scaling_mode(Gfx::Painter::ScalingMode scaling_mode)
 {
-    // FIXME: We should avoid using Gfx::Painter specific enums in painting commands
-    AccelGfx::Painter::ScalingMode accel_scaling_mode;
     switch (scaling_mode) {
     case Gfx::Painter::ScalingMode::NearestNeighbor:
     case Gfx::Painter::ScalingMode::BoxSampling:
     case Gfx::Painter::ScalingMode::SmoothPixels:
     case Gfx::Painter::ScalingMode::None:
-        accel_scaling_mode = AccelGfx::Painter::ScalingMode::NearestNeighbor;
-        break;
+        return AccelGfx::Painter::ScalingMode::NearestNeighbor;
     case Gfx::Painter::ScalingMode::BilinearBlend:
-        accel_scaling_mode = AccelGfx::Painter::ScalingMode::Bilinear;
-        break;
+        return AccelGfx::Painter::ScalingMode::Bilinear;
     default:
         VERIFY_NOT_REACHED();
     }
+}
 
-    painter().draw_scaled_bitmap(dst_rect, bitmap, src_rect, accel_scaling_mode);
+CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+{
+    painter().draw_scaled_bitmap(dst_rect, bitmap, src_rect, to_accelgfx_scaling_mode(scaling_mode));
+    return CommandResult::Continue;
+}
+
+CommandResult PaintingCommandExecutorGPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
+{
+    painter().draw_scaled_bitmap(dst_rect, immutable_bitmap.bitmap(), src_rect, to_accelgfx_scaling_mode(scaling_mode));
     return CommandResult::Continue;
 }
 

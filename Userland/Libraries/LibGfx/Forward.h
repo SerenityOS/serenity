@@ -9,6 +9,7 @@
 namespace Gfx {
 
 class Bitmap;
+class ImmutableBitmap;
 class CharacterBitmap;
 class Color;
 

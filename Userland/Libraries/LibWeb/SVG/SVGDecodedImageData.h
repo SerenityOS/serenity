@@ -16,7 +16,7 @@ public:
     static ErrorOr<NonnullRefPtr<SVGDecodedImageData>> create(Page&, AK::URL const&, ByteBuffer encoded_svg);
     virtual ~SVGDecodedImageData() override;
 
-    virtual RefPtr<Gfx::Bitmap const> bitmap(size_t frame_index, Gfx::IntSize) const override;
+    virtual RefPtr<Gfx::ImmutableBitmap> bitmap(size_t frame_index, Gfx::IntSize) const override;
 
     virtual Optional<CSSPixels> intrinsic_width() const override;
     virtual Optional<CSSPixels> intrinsic_height() const override;
@@ -34,8 +34,8 @@ private:
     class SVGPageClient;
     SVGDecodedImageData(NonnullOwnPtr<Page>, NonnullOwnPtr<SVGPageClient>, JS::Handle<DOM::Document>, JS::Handle<SVG::SVGSVGElement>);
 
-    void render(Gfx::IntSize) const;
-    mutable RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap> render(Gfx::IntSize) const;
+    mutable RefPtr<Gfx::ImmutableBitmap> m_immutable_bitmap;
 
     NonnullOwnPtr<Page> m_page;
     NonnullOwnPtr<SVGPageClient> m_page_client;

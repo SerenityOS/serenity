@@ -120,7 +120,7 @@ JS::GCPtr<Layout::Node> HTMLImageElement::create_layout_node(NonnullRefPtr<CSS::
     return heap().allocate_without_realm<Layout::ImageBox>(document(), *this, move(style), *this);
 }
 
-RefPtr<Gfx::Bitmap const> HTMLImageElement::bitmap() const
+RefPtr<Gfx::ImmutableBitmap> HTMLImageElement::immutable_bitmap() const
 {
     return current_image_bitmap();
 }
@@ -146,7 +146,7 @@ Optional<CSSPixelFraction> HTMLImageElement::intrinsic_aspect_ratio() const
     return {};
 }
 
-RefPtr<Gfx::Bitmap const> HTMLImageElement::current_image_bitmap(Gfx::IntSize size) const
+RefPtr<Gfx::ImmutableBitmap> HTMLImageElement::current_image_bitmap(Gfx::IntSize size) const
 {
     if (auto data = m_current_request->image_data())
         return data->bitmap(m_current_frame_index, size);
