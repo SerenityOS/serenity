@@ -655,11 +655,11 @@ if (BUILD_LAGOM)
             LibTimeZone
             LibUnicode
             LibVideo
-            LibWebView
             LibXML
         )
         if (ENABLE_LAGOM_LIBWEB)
             list(APPEND TEST_DIRECTORIES LibWeb)
+            list(APPEND TEST_DIRECTORIES LibWebView)
         endif()
 
         foreach (dir IN LISTS TEST_DIRECTORIES)
