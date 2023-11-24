@@ -185,7 +185,7 @@ PDFErrorOr<ReadonlySpan<float>> SampledFunction::evaluate(ReadonlySpan<float> xs
         return Error { Error::Type::RenderingUnsupported, "Sample function with bits per sample != 8 not yet implemented" };
 
     auto interpolate = [](float x, float x_min, float x_max, float y_min, float y_max) {
-        return y_min + (x - x_min) * (y_max - y_min) / (x_max - x_min);
+        return mix(y_min, y_max, (x - x_min) / (x_max - x_min));
     };
 
     for (size_t i = 0; i < m_domain.size(); ++i) {
