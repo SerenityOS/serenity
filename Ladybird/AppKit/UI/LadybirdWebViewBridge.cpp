@@ -38,7 +38,7 @@ WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pix
     create_client(WebView::EnableCallgrindProfiling::No);
 
     on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
-        auto position = to_widget_position(m_viewport_rect.location());
+        auto position = m_viewport_rect.location();
         position.set_x(position.x() + x_delta);
         position.set_y(position.y() + y_delta);
 
@@ -62,6 +62,11 @@ WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pix
 
         if (on_scroll_to_point)
             on_scroll_to_point(position);
+    };
+
+    on_scroll_to_point = [this](auto position) {
+        if (on_scroll)
+            on_scroll(to_widget_position(position));
     };
 }
 

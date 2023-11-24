@@ -257,7 +257,8 @@ void PageHost::page_did_request_scroll(i32 x_delta, i32 y_delta)
 
 void PageHost::page_did_request_scroll_to(Web::CSSPixelPoint scroll_position)
 {
-    m_client.async_did_request_scroll_to({ scroll_position.x().to_int(), scroll_position.y().to_int() });
+    auto device_scroll_position = page().css_to_device_point(scroll_position);
+    m_client.async_did_request_scroll_to(device_scroll_position.to_type<int>());
 }
 
 void PageHost::page_did_request_scroll_into_view(Web::CSSPixelRect const& rect)

@@ -1669,8 +1669,7 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& target, Bindings:
 
             // AD-HOC:
             auto* page = document.navigable()->traversable_navigable()->page();
-            auto scale = page->client().device_pixels_per_css_pixel();
-            page->client().page_did_request_scroll_to({ position.left() * scale, position.top() * scale });
+            page->client().page_did_request_scroll_to(position.location());
         }
         // If scrolling box is associated with an element
         else {
