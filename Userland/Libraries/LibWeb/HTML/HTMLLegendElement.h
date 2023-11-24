@@ -17,6 +17,8 @@ class HTMLLegendElement final : public HTMLElement {
 public:
     virtual ~HTMLLegendElement() override;
 
+    HTMLFormElement* form();
+
 private:
     HTMLLegendElement(DOM::Document&, DOM::QualifiedName);
 
