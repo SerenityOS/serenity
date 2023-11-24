@@ -15,7 +15,6 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWebView/ModelIndex.h>
 #include <LibWebView/PropertyTableModel.h>
-#include <LibWebView/TreeModel.h>
 #include <QAbstractItemModel>
 
 namespace Ladybird {
@@ -104,7 +103,6 @@ private:
     ModelType m_model;
 };
 
-using TreeModel = ModelAdapter<WebView::TreeModel>;
 using PropertyTableModel = ModelAdapter<WebView::PropertyTableModel>;
 
 }

@@ -10,7 +10,6 @@ set(SOURCES
     RequestServerAdapter.cpp
     SearchEngine.cpp
     SourceHighlighter.cpp
-    TreeModel.cpp
     URL.cpp
     UserAgent.cpp
     ViewImplementation.cpp
