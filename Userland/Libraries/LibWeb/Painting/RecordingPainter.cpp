@@ -425,6 +425,17 @@ void RecordingPainter::execute(PaintingCommandExecutor& executor)
         executor.prepare_glyph_texture(unique_glyphs);
     }
 
+    if (executor.needs_update_immutable_bitmap_texture_cache()) {
+        HashMap<u32, Gfx::ImmutableBitmap const*> immutable_bitmaps;
+        for (auto const& command : m_painting_commands) {
+            if (command.has<DrawScaledImmutableBitmap>()) {
+                auto const& immutable_bitmap = command.get<DrawScaledImmutableBitmap>().bitmap;
+                immutable_bitmaps.set(immutable_bitmap->id(), immutable_bitmap.ptr());
+            }
+        }
+        executor.update_immutable_bitmap_texture_cache(immutable_bitmaps);
+    }
+
     size_t next_command_index = 0;
     while (next_command_index < m_painting_commands.size()) {
         auto& command = m_painting_commands[next_command_index++];

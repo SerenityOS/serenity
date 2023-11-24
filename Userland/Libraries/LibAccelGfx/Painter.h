@@ -57,6 +57,9 @@ public:
     void draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap const&, Gfx::FloatRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const&, Gfx::IntRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
 
+    void draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
+    void draw_scaled_immutable_bitmap(Gfx::FloatRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::FloatRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
+
     void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs);
 
     struct GlyphsTextureKey {
@@ -89,6 +92,8 @@ public:
 
     void blit_canvas(Gfx::IntRect const& dst_rect, Canvas const&, float opacity = 1.0f);
     void blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const&, float opacity = 1.0f);
+
+    void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&);
 
 private:
     Context& m_context;

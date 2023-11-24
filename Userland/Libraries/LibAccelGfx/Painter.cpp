@@ -9,6 +9,7 @@
 #include <LibAccelGfx/GL.h>
 #include <LibAccelGfx/Painter.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/ImmutableBitmap.h>
 #include <LibGfx/Painter.h>
 
 namespace AccelGfx {
@@ -135,6 +136,8 @@ void main() {
     FragColor = vec4(vColor);
 }
 )";
+
+HashMap<u32, GL::Texture> s_immutable_bitmap_texture_cache;
 
 OwnPtr<Painter> Painter::create()
 {
@@ -317,6 +320,18 @@ void Painter::draw_line(Gfx::FloatPoint a, Gfx::FloatPoint b, float thickness, C
 void Painter::draw_scaled_bitmap(Gfx::IntRect const& dest_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, ScalingMode scaling_mode)
 {
     draw_scaled_bitmap(dest_rect.to_type<float>(), bitmap, src_rect.to_type<float>(), scaling_mode);
+}
+
+void Painter::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, ScalingMode scaling_mode)
+{
+    draw_scaled_immutable_bitmap(dst_rect.to_type<float>(), immutable_bitmap, src_rect.to_type<float>(), scaling_mode);
+}
+
+void Painter::draw_scaled_immutable_bitmap(Gfx::FloatRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode)
+{
+    auto texture = s_immutable_bitmap_texture_cache.get(immutable_bitmap.id());
+    VERIFY(texture.has_value());
+    blit_scaled_texture(dst_rect, texture.value(), src_rect, scaling_mode);
 }
 
 static Gfx::FloatRect to_texture_space(Gfx::FloatRect rect, Gfx::IntSize image_size)
@@ -688,6 +703,25 @@ void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture co
 
     GL::delete_buffer(vbo);
     GL::delete_vertex_array(vao);
+}
+
+void Painter::update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>& immutable_bitmaps)
+{
+    for (auto immutable_bitmap_id : s_immutable_bitmap_texture_cache.keys()) {
+        if (!immutable_bitmaps.contains(immutable_bitmap_id)) {
+            auto texture = s_immutable_bitmap_texture_cache.get(immutable_bitmap_id).value();
+            GL::delete_texture(texture);
+            s_immutable_bitmap_texture_cache.remove(immutable_bitmap_id);
+        }
+    }
+
+    for (auto const& [id, immutable_bitmap] : immutable_bitmaps) {
+        if (s_immutable_bitmap_texture_cache.contains(id))
+            continue;
+        auto texture = GL::create_texture();
+        GL::upload_texture_data(texture, immutable_bitmap->bitmap());
+        s_immutable_bitmap_texture_cache.set(id, texture);
+    }
 }
 
 }

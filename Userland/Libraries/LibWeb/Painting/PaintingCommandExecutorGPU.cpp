@@ -67,7 +67,7 @@ CommandResult PaintingCommandExecutorGPU::draw_scaled_bitmap(Gfx::IntRect const&
 
 CommandResult PaintingCommandExecutorGPU::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& immutable_bitmap, Gfx::IntRect const& src_rect, Gfx::Painter::ScalingMode scaling_mode)
 {
-    painter().draw_scaled_bitmap(dst_rect, immutable_bitmap.bitmap(), src_rect, to_accelgfx_scaling_mode(scaling_mode));
+    painter().draw_scaled_immutable_bitmap(dst_rect, immutable_bitmap, src_rect, to_accelgfx_scaling_mode(scaling_mode));
     return CommandResult::Continue;
 }
 
@@ -314,6 +314,11 @@ bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect)
 void PaintingCommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
 {
     painter().prepare_glyph_texture(unique_glyphs);
+}
+
+void PaintingCommandExecutorGPU::update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>& immutable_bitmaps)
+{
+    painter().update_immutable_bitmap_texture_cache(immutable_bitmaps);
 }
 
 }
