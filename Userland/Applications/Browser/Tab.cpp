@@ -232,7 +232,7 @@ Tab::Tab(BrowserWindow& window)
         update_bookmark_button(url.to_deprecated_string());
 
         if (m_dom_inspector_widget)
-            m_dom_inspector_widget->clear_dom_json();
+            m_dom_inspector_widget->reset();
 
         if (m_console_widget)
             m_console_widget->reset();
@@ -244,10 +244,8 @@ Tab::Tab(BrowserWindow& window)
 
         update_status();
 
-        if (m_dom_inspector_widget) {
-            m_web_content_view->inspect_dom_tree();
-            m_web_content_view->inspect_accessibility_tree();
-        }
+        if (m_dom_inspector_widget)
+            m_dom_inspector_widget->inspect();
     };
 
     view().on_navigate_back = [this]() {
@@ -575,16 +573,6 @@ Tab::Tab(BrowserWindow& window)
         view_source(url, source);
     };
 
-    view().on_received_dom_tree = [this](auto& dom_tree) {
-        if (m_dom_inspector_widget)
-            m_dom_inspector_widget->set_dom_json(dom_tree);
-    };
-
-    view().on_received_accessibility_tree = [this](auto& accessibility_tree) {
-        if (m_dom_inspector_widget)
-            m_dom_inspector_widget->set_accessibility_json(accessibility_tree);
-    };
-
     auto focus_location_box_action = GUI::Action::create(
         "Focus location box", { Mod_Ctrl, Key_L }, Key_F6, [this](auto&) {
             m_location_box->set_focus(true);
@@ -882,16 +870,12 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
         window->on_close = [&]() {
             m_web_content_view->clear_inspected_dom_node();
         };
-        m_dom_inspector_widget = window->set_main_widget<InspectorWidget>();
-        m_dom_inspector_widget->set_web_view(*m_web_content_view);
-        m_web_content_view->inspect_dom_tree();
-        m_web_content_view->inspect_accessibility_tree();
+
+        m_dom_inspector_widget = window->set_main_widget<InspectorWidget>(*m_web_content_view);
     }
 
     if (inspector_target == InspectorTarget::HoveredElement) {
-        // FIXME: Handle pseudo-elements
-        auto hovered_node = m_web_content_view->get_hovered_node_id();
-        m_dom_inspector_widget->set_selection({ hovered_node });
+        m_dom_inspector_widget->select_hovered_node();
     } else {
         VERIFY(inspector_target == InspectorTarget::Document);
         m_dom_inspector_widget->select_default_node();
