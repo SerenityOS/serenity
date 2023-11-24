@@ -14,12 +14,15 @@ shared_library("LibAccelGfx") {
     ]
   }
   sources = [
-    "Canvas.cpp",
     "Canvas.h",
     "Context.cpp",
     "Context.h",
     "Forward.h",
+    "GL.cpp",
+    "GL.h",
     "Painter.cpp",
     "Painter.h",
+    "Program.cpp",
+    "Program.h",
   ]
 }

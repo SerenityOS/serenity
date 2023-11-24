@@ -99,7 +99,10 @@ config("compiler_defaults") {
     "-Wall",
     "-Wextra",
   ]
-  cflags += [ "-Wno-unused-parameter" ]
+  cflags += [
+    "-Wno-unused-parameter",
+    "-Wno-invalid-offsetof",
+  ]
   if (is_clang) {
     cflags += [
       "-Wdelete-non-virtual-dtor",
