@@ -146,19 +146,19 @@ void CSSStyleSheet::set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList* 
     m_style_sheet_list = list;
 }
 
-Optional<StringView> CSSStyleSheet::default_namespace() const
+Optional<FlyString> CSSStyleSheet::default_namespace() const
 {
     if (m_default_namespace_rule)
-        return m_default_namespace_rule->namespace_uri().view();
+        return MUST(FlyString::from_deprecated_fly_string(m_default_namespace_rule->namespace_uri()));
 
     return {};
 }
 
-Optional<StringView> CSSStyleSheet::namespace_uri(StringView namespace_prefix) const
+Optional<FlyString> CSSStyleSheet::namespace_uri(StringView namespace_prefix) const
 {
     return m_namespace_rules.get(namespace_prefix)
         .map([](JS::GCPtr<CSSNamespaceRule> namespace_) {
-            return namespace_->namespace_uri().view();
+            return MUST(FlyString::from_deprecated_fly_string(namespace_->namespace_uri()));
         });
 }
 
