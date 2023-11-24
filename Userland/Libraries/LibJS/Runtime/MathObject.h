@@ -20,6 +20,7 @@ public:
 
     static ThrowCompletionOr<Value> log_impl(VM&, Value);
     static ThrowCompletionOr<Value> sqrt_impl(VM&, Value);
+    static ThrowCompletionOr<Value> pow_impl(VM&, Value base, Value exponent);
 
 private:
     explicit MathObject(Realm&);

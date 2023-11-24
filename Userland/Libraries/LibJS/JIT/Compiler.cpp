@@ -2650,6 +2650,19 @@ void Compiler::compile_builtin_math_sqrt(Assembler::Label&, Assembler::Label& en
     m_assembler.jump(end);
 }
 
+static Value cxx_math_pow(VM& vm, Value, Value base, Value exponent)
+{
+    return TRY_OR_SET_EXCEPTION(MathObject::pow_impl(vm, base, exponent));
+}
+
+void Compiler::compile_builtin_math_pow(Assembler::Label&, Assembler::Label& end)
+{
+    native_call((void*)cxx_math_pow);
+    store_accumulator(RET);
+    check_exception();
+    m_assembler.jump(end);
+}
+
 void Compiler::compile_builtin_math_abs(Assembler::Label& slow_case, Assembler::Label& end)
 {
     branch_if_int32(ARG2, [&] {
