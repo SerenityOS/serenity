@@ -365,7 +365,7 @@ public:
 
     [[nodiscard]] JS::GCPtr<HTML::Location> location();
 
-    size_t number_of_things_delaying_the_load_event() const { return m_number_of_things_delaying_the_load_event; }
+    bool anything_is_delaying_the_load_event() const;
     void increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>);
     void decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>);
 

@@ -2384,6 +2384,16 @@ void Document::decrement_number_of_things_delaying_the_load_event(Badge<Document
         page->client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
 }
 
+bool Document::anything_is_delaying_the_load_event() const
+{
+    if (m_number_of_things_delaying_the_load_event > 0)
+        return true;
+
+    // FIXME: Track down all the things that are supposed to delay the load event.
+
+    return false;
+}
+
 void Document::invalidate_stacking_context_tree()
 {
     if (auto* paintable_box = this->paintable_box())
