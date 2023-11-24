@@ -69,7 +69,7 @@ void HTMLIFrameElement::process_the_iframe_attributes(bool initial_insertion)
     // 1. If element's srcdoc attribute is specified, then:
     if (has_attribute(HTML::AttributeNames::srcdoc)) {
         // 1. Set element's current navigation was lazy loaded boolean to false.
-        m_current_navigation_was_lazy_loaded = false;
+        set_current_navigation_was_lazy_loaded(false);
 
         // 2. If the will lazy load element steps given element return true, then:
         if (will_lazy_load_element()) {
@@ -82,7 +82,7 @@ void HTMLIFrameElement::process_the_iframe_attributes(bool initial_insertion)
             });
 
             // 2. Set element's current navigation was lazy loaded boolean to true.
-            m_current_navigation_was_lazy_loaded = true;
+            set_current_navigation_was_lazy_loaded(true);
 
             // 3. Start intersection-observing a lazy loading element for element.
             document().start_intersection_observing_a_lazy_loading_element(*this);
@@ -120,7 +120,7 @@ void HTMLIFrameElement::process_the_iframe_attributes(bool initial_insertion)
     auto referrer_policy = ReferrerPolicy::ReferrerPolicy::EmptyString;
 
     // 5. Set element's current navigation was lazy loaded boolean to false.
-    m_current_navigation_was_lazy_loaded = false;
+    set_current_navigation_was_lazy_loaded(false);
 
     // 6. If the will lazy load element steps given element return true, then:
     if (will_lazy_load_element()) {
@@ -131,7 +131,7 @@ void HTMLIFrameElement::process_the_iframe_attributes(bool initial_insertion)
         });
 
         // 2. Set element's current navigation was lazy loaded boolean to true.
-        m_current_navigation_was_lazy_loaded = true;
+        set_current_navigation_was_lazy_loaded(true);
 
         // 3. Start intersection-observing a lazy loading element for element.
         document().start_intersection_observing_a_lazy_loading_element(*this);
@@ -201,6 +201,15 @@ void HTMLIFrameElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visit_lazy_loading_element(visitor);
+}
+
+void HTMLIFrameElement::set_current_navigation_was_lazy_loaded(bool value)
+{
+    m_current_navigation_was_lazy_loaded = value;
+
+    // An iframe element whose current navigation was lazy loaded boolean is false potentially delays the load event.
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:potentially-delays-the-load-event
+    set_potentially_delays_the_load_event(!value);
 }
 
 }
