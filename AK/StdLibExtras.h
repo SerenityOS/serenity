@@ -16,7 +16,7 @@
 
 #include <AK/Assertions.h>
 
-#define OFFSET_OF(class, member) (reinterpret_cast<ptrdiff_t>(&reinterpret_cast<class*>(0x1000)->member) - 0x1000)
+#define OFFSET_OF(class, member) __builtin_offsetof(class, member)
 
 namespace AK {
 
