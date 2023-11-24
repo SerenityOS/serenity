@@ -396,6 +396,9 @@ public:
 
     virtual bool needs_prepare_glyphs_texture() const { return false; }
     virtual void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs) = 0;
+
+    virtual bool needs_update_immutable_bitmap_texture_cache() const = 0;
+    virtual void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) = 0;
 };
 
 class RecordingPainter {
