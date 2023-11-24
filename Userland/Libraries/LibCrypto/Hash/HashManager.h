@@ -215,6 +215,15 @@ public:
         return m_kind == kind;
     }
 
+    inline Manager copy() const
+    {
+        Manager result;
+        result.m_algorithm = m_algorithm;
+        result.m_kind = m_kind;
+        result.m_pre_init_buffer = m_pre_init_buffer;
+        return result;
+    }
+
 private:
     using AlgorithmVariant = Variant<Empty, BLAKE2b, MD5, SHA1, SHA256, SHA384, SHA512>;
     AlgorithmVariant m_algorithm {};
