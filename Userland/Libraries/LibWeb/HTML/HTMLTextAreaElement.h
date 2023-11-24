@@ -69,6 +69,12 @@ public:
     // https://www.w3.org/TR/html-aria/#el-textarea
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::textbox; }
 
+    unsigned cols() const;
+    WebIDL::ExceptionOr<void> set_cols(unsigned value);
+
+    unsigned rows() const;
+    WebIDL::ExceptionOr<void> set_rows(unsigned value);
+
 private:
     HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);
 
