@@ -42,7 +42,7 @@ void MathObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.cos, cos, 1, attr);
     define_native_function(realm, vm.names.tan, tan, 1, attr);
     define_native_function(realm, vm.names.pow, pow, 2, attr, Bytecode::Builtin::MathPow);
-    define_native_function(realm, vm.names.exp, exp, 1, attr);
+    define_native_function(realm, vm.names.exp, exp, 1, attr, Bytecode::Builtin::MathExp);
     define_native_function(realm, vm.names.expm1, expm1, 1, attr);
     define_native_function(realm, vm.names.sign, sign, 1, attr);
     define_native_function(realm, vm.names.clz32, clz32, 1, attr);
@@ -422,10 +422,10 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
 }
 
 // 21.3.2.14 Math.exp ( x ), https://tc39.es/ecma262/#sec-math.exp
-JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
+ThrowCompletionOr<Value> MathObject::exp_impl(VM& vm, Value x)
 {
     // 1. Let n be ? ToNumber(x).
-    auto number = TRY(vm.argument(0).to_number(vm));
+    auto number = TRY(x.to_number(vm));
 
     // 2. If n is either NaN or +∞𝔽, return n.
     if (number.is_nan() || number.is_positive_infinity())
@@ -441,6 +441,12 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
 
     // 5. Return an implementation-approximated Number value representing the result of the exponential function of ℝ(n).
     return Value(::exp(number.as_double()));
+}
+
+// 21.3.2.14 Math.exp ( x ), https://tc39.es/ecma262/#sec-math.exp
+JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
+{
+    return exp_impl(vm, vm.argument(0));
 }
 
 // 21.3.2.15 Math.expm1 ( x ), https://tc39.es/ecma262/#sec-math.expm1
