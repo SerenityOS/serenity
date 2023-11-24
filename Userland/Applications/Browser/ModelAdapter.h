@@ -18,7 +18,6 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWebView/ModelIndex.h>
 #include <LibWebView/PropertyTableModel.h>
-#include <LibWebView/TreeModel.h>
 
 namespace Browser {
 
@@ -110,74 +109,6 @@ protected:
     }
 
     ModelType m_model;
-};
-
-using TreeModel = ModelAdapter<WebView::TreeModel>;
-
-class DOMTreeModel : public TreeModel {
-public:
-    static ErrorOr<NonnullRefPtr<DOMTreeModel>> create(GUI::TreeView const& tree_view, StringView model)
-    {
-        auto json_model = TRY(parse_json_model(model));
-
-        // FIXME: Get these from the outside somehow instead of hard-coding paths here.
-        auto document_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"sv));
-        auto element_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"sv));
-        auto text_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"sv));
-
-        return adopt_ref(*new DOMTreeModel(tree_view, move(json_model), move(document_icon), move(element_icon), move(text_icon)));
-    }
-
-    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
-    {
-        auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-        auto node_name = node.get_deprecated_string("name"sv).value_or({});
-        auto type = node.get_deprecated_string("type"sv).value_or("unknown");
-
-        // FIXME: This FIXME can go away when the icons are provided from the outside (see constructor).
-        if (role == GUI::ModelRole::ForegroundColor) {
-            // FIXME: Allow models to return a foreground color *role*. Then we won't need to have a GUI::TreeView& member anymore.
-            if (type == "comment"sv || type == "shadow-root"sv)
-                return m_tree_view.palette().syntax_comment();
-            if (type == "pseudo-element"sv)
-                return m_tree_view.palette().syntax_type();
-            if (!node.get_bool("visible"sv).value_or(true))
-                return m_tree_view.palette().syntax_comment();
-            return {};
-        }
-
-        // FIXME: This FIXME can go away when the icons are provided from the outside (see constructor).
-        if (role == GUI::ModelRole::Icon) {
-            if (type == "document")
-                return m_document_icon;
-            if (type == "element")
-                return m_element_icon;
-            // FIXME: More node type icons?
-            return m_text_icon;
-        }
-
-        return TreeModel::data(index, role);
-    }
-
-private:
-    DOMTreeModel(
-        GUI::TreeView const& tree_view,
-        JsonValue tree,
-        NonnullRefPtr<Gfx::Bitmap> document_icon,
-        NonnullRefPtr<Gfx::Bitmap> element_icon,
-        NonnullRefPtr<Gfx::Bitmap> text_icon)
-        : TreeModel(TreeModel::Type::DOMTree, move(tree))
-        , m_tree_view(tree_view)
-    {
-        m_document_icon.set_bitmap_for_size(16, move(document_icon));
-        m_element_icon.set_bitmap_for_size(16, move(element_icon));
-        m_text_icon.set_bitmap_for_size(16, move(text_icon));
-    }
-
-    GUI::TreeView const& m_tree_view;
-    GUI::Icon m_document_icon;
-    GUI::Icon m_element_icon;
-    GUI::Icon m_text_icon;
 };
 
 class PropertyTableModel : public ModelAdapter<WebView::PropertyTableModel> {
