@@ -705,10 +705,10 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         if (!value.token().number().is_integer())
             return false;
         auto dimension_unit = value.token().dimension_unit();
-        if (!dimension_unit.starts_with("n-"sv, CaseSensitivity::CaseInsensitive))
+        if (!dimension_unit.starts_with_bytes("n-"sv, CaseSensitivity::CaseInsensitive))
             return false;
-        for (size_t i = 2; i < dimension_unit.length(); ++i) {
-            if (!is_ascii_digit(dimension_unit[i]))
+        for (size_t i = 2; i < dimension_unit.bytes_as_string_view().length(); ++i) {
+            if (!is_ascii_digit(dimension_unit.bytes_as_string_view()[i]))
                 return false;
         }
         return true;
@@ -822,7 +822,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     if (is_ndashdigit_dimension(first_value)) {
         auto const& dimension = first_value.token();
         int a = dimension.dimension_value_int();
-        auto maybe_b = dimension.dimension_unit().substring_view(1).to_int();
+        auto maybe_b = dimension.dimension_unit().bytes_as_string_view().substring_view(1).to_int();
         if (maybe_b.has_value()) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { a, maybe_b.value() };

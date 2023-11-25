@@ -65,10 +65,10 @@ public:
         return m_value;
     }
 
-    StringView function() const
+    FlyString const& function() const
     {
         VERIFY(m_type == Type::Function);
-        return m_value.bytes_as_string_view();
+        return m_value;
     }
 
     u32 delim() const
@@ -77,22 +77,22 @@ public:
         return *Utf8View(m_value.bytes_as_string_view()).begin();
     }
 
-    StringView string() const
+    FlyString const& string() const
     {
         VERIFY(m_type == Type::String);
-        return m_value.bytes_as_string_view();
+        return m_value;
     }
 
-    StringView url() const
+    FlyString const& url() const
     {
         VERIFY(m_type == Type::Url);
-        return m_value.bytes_as_string_view();
+        return m_value;
     }
 
-    StringView at_keyword() const
+    FlyString const& at_keyword() const
     {
         VERIFY(m_type == Type::AtKeyword);
-        return m_value.bytes_as_string_view();
+        return m_value;
     }
 
     HashType hash_type() const
@@ -100,10 +100,10 @@ public:
         VERIFY(m_type == Type::Hash);
         return m_hash_type;
     }
-    StringView hash_value() const
+    FlyString const& hash_value() const
     {
         VERIFY(m_type == Type::Hash);
-        return m_value.bytes_as_string_view();
+        return m_value;
     }
 
     Number const& number() const
@@ -122,10 +122,10 @@ public:
         return m_number_value.integer_value();
     }
 
-    StringView dimension_unit() const
+    FlyString const& dimension_unit() const
     {
         VERIFY(m_type == Type::Dimension);
-        return m_value.bytes_as_string_view();
+        return m_value;
     }
     double dimension_value() const
     {
