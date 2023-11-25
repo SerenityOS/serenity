@@ -32,6 +32,13 @@ public:
         Number,
     };
 
+    enum class Kind {
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    ClassName,
+        JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+    };
+
     using IntrinsicConstructor = NonnullGCPtr<TypedArrayConstructor> (Intrinsics::*)();
 
     u32 array_length() const { return m_array_length; }
@@ -48,6 +55,7 @@ public:
 
     virtual size_t element_size() const = 0;
     virtual DeprecatedFlyString const& element_name() const = 0;
+    virtual Kind kind() const = 0;
 
     // 25.1.2.6 IsUnclampedIntegerElementType ( type ), https://tc39.es/ecma262/#sec-isunclampedintegerelementtype
     virtual bool is_unclamped_integer_element_type() const = 0;
@@ -472,6 +480,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         static ThrowCompletionOr<NonnullGCPtr<ClassName>> create(Realm&, u32 length);                             \
         static NonnullGCPtr<ClassName> create(Realm&, u32 length, ArrayBuffer& buffer);                           \
         virtual DeprecatedFlyString const& element_name() const override;                                         \
+        virtual Kind kind() const override { return Kind::ClassName; }                                            \
                                                                                                                   \
     protected:                                                                                                    \
         ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                                      \

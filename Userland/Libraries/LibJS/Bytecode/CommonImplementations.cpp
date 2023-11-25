@@ -15,6 +15,8 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/RegExpObject.h>
+#include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/ValueInlines.h>
 
 namespace JS::Bytecode {
 
@@ -306,10 +308,13 @@ Value new_function(VM& vm, FunctionExpression const& function_node, Optional<Ide
 ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_key_value, Value value, Op::PropertyKind kind)
 {
     // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
-    if (base.is_object() && property_key_value.is_int32() && property_key_value.as_i32() >= 0) {
+    if ((kind == Op::PropertyKind::KeyValue || kind == Op::PropertyKind::DirectKeyValue)
+        && base.is_object() && property_key_value.is_int32() && property_key_value.as_i32() >= 0) {
         auto& object = base.as_object();
         auto* storage = object.indexed_properties().storage();
         auto index = static_cast<u32>(property_key_value.as_i32());
+
+        // For "non-typed arrays":
         if (storage
             && storage->is_simple_storage()
             && !object.may_interfere_with_indexed_property_access()
@@ -319,6 +324,20 @@ ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_key_valu
                 storage->put(index, value);
                 return {};
             }
+        }
+
+        // For typed arrays:
+        if (object.is_typed_array()) {
+            auto& typed_array = static_cast<TypedArrayBase&>(object);
+            auto canonical_index = CanonicalIndex { CanonicalIndex::Type::Index, index };
+            switch (typed_array.kind()) {
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    case TypedArrayBase::Kind::ClassName:                                           \
+        return integer_indexed_element_set<Type>(typed_array, canonical_index, value);
+                JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+            }
+            return {};
         }
     }
 
