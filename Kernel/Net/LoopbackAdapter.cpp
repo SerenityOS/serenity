@@ -21,7 +21,10 @@ LoopbackAdapter::LoopbackAdapter(StringView interface_name)
 {
     VERIFY(!s_loopback_initialized);
     s_loopback_initialized = true;
-    set_mtu(65536);
+    // The networking subsystem currently assumes all adapters are Ethernet adapters, including the LoopbackAdapter,
+    // so all packets are pre-pended with an Ethernet Frame header. Since the MTU must not include any overhead added
+    // by the data-link (Ethernet in this case) or physical layers, we need to subtract it from the MTU.
+    set_mtu(65536 - sizeof(EthernetFrameHeader));
     set_mac_address({ 19, 85, 2, 9, 0x55, 0xaa });
 }
 
