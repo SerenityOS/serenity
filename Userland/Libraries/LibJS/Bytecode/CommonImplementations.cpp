@@ -71,13 +71,29 @@ ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_k
     auto object = TRY(base_object_for_get(vm, base_value));
 
     // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
-    if (property_key_value.is_int32()
-        && property_key_value.as_i32() >= 0
-        && !object->may_interfere_with_indexed_property_access()
-        && object->indexed_properties().has_index(property_key_value.as_i32())) {
-        auto value = object->indexed_properties().get(property_key_value.as_i32())->value;
-        if (!value.is_accessor())
-            return value;
+    if (property_key_value.is_int32() && property_key_value.as_i32() >= 0) {
+        auto index = static_cast<u32>(property_key_value.as_i32());
+
+        // For "non-typed arrays":
+        if (!object->may_interfere_with_indexed_property_access()
+            && object->indexed_properties().has_index(index)) {
+            auto value = object->indexed_properties().get(index)->value;
+            if (!value.is_accessor())
+                return value;
+        }
+
+        // For typed arrays:
+        if (object->is_typed_array()) {
+            auto& typed_array = static_cast<TypedArrayBase&>(*object);
+            auto canonical_index = CanonicalIndex { CanonicalIndex::Type::Index, index };
+            switch (typed_array.kind()) {
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    case TypedArrayBase::Kind::ClassName:                                           \
+        return integer_indexed_element_get<Type>(typed_array, canonical_index);
+                JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+            }
+        }
     }
 
     auto property_key = TRY(property_key_value.to_property_key(vm));
