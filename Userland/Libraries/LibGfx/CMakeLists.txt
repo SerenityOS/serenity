@@ -37,7 +37,7 @@ set(SOURCES
     ImageFormats/BMPLoader.cpp
     ImageFormats/BMPWriter.cpp
     ImageFormats/BooleanDecoder.cpp
-    ImageFormats/TIFFLoader.cpp
+    ImageFormats/CCITTDecoder.cpp
     ImageFormats/DDSLoader.cpp
     ImageFormats/GIFLoader.cpp
     ImageFormats/ICOLoader.cpp
@@ -57,6 +57,7 @@ set(SOURCES
     ImageFormats/QOILoader.cpp
     ImageFormats/QOIWriter.cpp
     ImageFormats/TGALoader.cpp
+    ImageFormats/TIFFLoader.cpp
     ImageFormats/TinyVGLoader.cpp
     ImageFormats/WebPLoader.cpp
     ImageFormats/WebPLoaderLossless.cpp
