@@ -78,6 +78,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(headers)                    \
     __ENUMERATE_HTML_ATTRIBUTE(height)                     \
     __ENUMERATE_HTML_ATTRIBUTE(hidden)                     \
+    __ENUMERATE_HTML_ATTRIBUTE(high)                       \
     __ENUMERATE_HTML_ATTRIBUTE(href)                       \
     __ENUMERATE_HTML_ATTRIBUTE(hreflang)                   \
     __ENUMERATE_HTML_ATTRIBUTE(hspace)                     \
@@ -98,6 +99,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(loading)                    \
     __ENUMERATE_HTML_ATTRIBUTE(longdesc)                   \
     __ENUMERATE_HTML_ATTRIBUTE(loop)                       \
+    __ENUMERATE_HTML_ATTRIBUTE(low)                        \
     __ENUMERATE_HTML_ATTRIBUTE(marginheight)               \
     __ENUMERATE_HTML_ATTRIBUTE(marginwidth)                \
     __ENUMERATE_HTML_ATTRIBUTE(max)                        \
@@ -195,6 +197,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(onwebkittransitionend)      \
     __ENUMERATE_HTML_ATTRIBUTE(onwheel)                    \
     __ENUMERATE_HTML_ATTRIBUTE(open)                       \
+    __ENUMERATE_HTML_ATTRIBUTE(optimum)                    \
     __ENUMERATE_HTML_ATTRIBUTE(pattern)                    \
     __ENUMERATE_HTML_ATTRIBUTE(ping)                       \
     __ENUMERATE_HTML_ATTRIBUTE(placeholder)                \

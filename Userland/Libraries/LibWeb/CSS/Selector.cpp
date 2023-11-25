@@ -373,6 +373,14 @@ Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
         return Selector::PseudoElement::FirstLine;
     } else if (name.equals_ignoring_ascii_case("marker"sv)) {
         return Selector::PseudoElement::Marker;
+    } else if (name.equals_ignoring_ascii_case("-webkit-meter-bar"sv)) {
+        return Selector::PseudoElement::MeterBar;
+    } else if (name.equals_ignoring_ascii_case("-webkit-meter-even-less-good-value"sv)) {
+        return Selector::PseudoElement::MeterEvenLessGoodValue;
+    } else if (name.equals_ignoring_ascii_case("-webkit-meter-optimum-value"sv)) {
+        return Selector::PseudoElement::MeterOptimumValue;
+    } else if (name.equals_ignoring_ascii_case("-webkit-meter-suboptimum-value"sv)) {
+        return Selector::PseudoElement::MeterSuboptimumValue;
     } else if (name.equals_ignoring_ascii_case("-webkit-progress-bar"sv)) {
         return Selector::PseudoElement::ProgressBar;
     } else if (name.equals_ignoring_ascii_case("-webkit-progress-value"sv)) {

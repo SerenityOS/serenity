@@ -5,11 +5,11 @@
 interface HTMLMeterElement : HTMLElement {
     [HTMLConstructor] constructor();
 
-    // FIXME: [CEReactions] attribute double value;
-    // FIXME: [CEReactions] attribute double min;
-    // FIXME: [CEReactions] attribute double max;
-    // FIXME: [CEReactions] attribute double low;
-    // FIXME: [CEReactions] attribute double high;
-    // FIXME: [CEReactions] attribute double optimum;
+    [CEReactions] attribute double value;
+    [CEReactions] attribute double min;
+    [CEReactions] attribute double max;
+    [CEReactions] attribute double low;
+    [CEReactions] attribute double high;
+    [CEReactions] attribute double optimum;
     // FIXME: readonly attribute NodeList labels;
 };
