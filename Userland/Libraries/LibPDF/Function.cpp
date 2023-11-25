@@ -30,6 +30,16 @@ private:
 
     float sample(Vector<int> const& coordinates, size_t r) const
     {
+        // "For a function with multidimensional input (more than one input variable),
+        //  the sample values in the first dimension vary fastest,
+        //  and the values in the last dimension vary slowest.
+        //  For example, for a function f(a, b, c), where a, b, and c vary from 0 to 9 in steps of 1,
+        //  the sample values would appear in this order:
+        //  f(0,0,0), f(1,0,0), ..., f(9,0,0),
+        //  f(0,1,0), f(1,1,0), ..., f(9,1,0),
+        //  f(0,2,0), f(1, 2, 0), ..., f(9, 9, 0),
+        //  f(0, 0, 1), f(1, 0, 1), and so on."
+        // Implied is that functions with multiple outputs store all outputs next to each other.
         size_t stride = 1;
         size_t offset = 0;
         for (size_t i = 0; i < coordinates.size(); ++i) {
