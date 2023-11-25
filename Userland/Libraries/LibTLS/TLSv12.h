@@ -88,6 +88,12 @@ enum ClientVerificationStaus {
 // 4 bytes of fixed IV, 8 random (nonce) bytes, 4 bytes for counter
 // GCM specifically asks us to transmit only the nonce, the counter is zero
 // and the fixed IV is derived from the premaster key.
+//
+// The cipher suite list below is ordered based on the recommendations from Mozilla.
+// When changing the supported cipher suites, please consult the webpage below for
+// the preferred order.
+//
+// https://wiki.mozilla.org/Security/Server_Side_TLS
 #define ENUMERATE_CIPHERS(C)                                                                                                                                      \
     C(true, CipherSuite::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, KeyExchangeAlgorithm::ECDHE_ECDSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true) \
     C(true, CipherSuite::TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, KeyExchangeAlgorithm::ECDHE_RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)     \
