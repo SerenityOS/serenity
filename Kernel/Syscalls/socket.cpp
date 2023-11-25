@@ -65,8 +65,14 @@ ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> addres
 ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
-    if (backlog < 0)
-        backlog = 0;
+    // As per POSIX, the behavior of listen() with a backlog value of 0 is implementation defined:
+    // "A backlog argument of 0 may allow the socket to accept connections, in which case the length of the listen queue may be set to an implementation-defined minimum value."
+    // Since creating a socket that can't accept any connections seems relatively useless, and as other platforms (Linux, FreeBSD, etc) chose to support accepting connections
+    // with this backlog value, support it as well by normalizing it to 1.
+    // Also, as per POSIX, the behaviour of a negative backlog value is equivalent to a backlog value of 0:
+    // "If listen() is called with a backlog argument value that is less than 0, the function behaves as if it had been called with a backlog argument value of 0."
+    if (backlog <= 0)
+        backlog = 1;
     auto description = TRY(open_file_description(sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
