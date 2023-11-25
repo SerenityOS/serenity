@@ -27,9 +27,9 @@ public:
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    DeprecatedString const& type() const
+    String const& type() const
     {
-        static DeprecatedString textarea = "textarea";
+        static String const textarea = "textarea"_string;
         return textarea;
     }
 
@@ -84,7 +84,7 @@ private:
     JS::GCPtr<DOM::Text> m_text_node;
 
     bool m_dirty { false };
-    DeprecatedString m_raw_value;
+    String m_raw_value;
 };
 
 }
