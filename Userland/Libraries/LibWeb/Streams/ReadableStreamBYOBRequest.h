@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,11 +22,11 @@ class ReadableStreamBYOBRequest : public Bindings::PlatformObject {
 public:
     virtual ~ReadableStreamBYOBRequest() override = default;
 
-    JS::GCPtr<JS::TypedArrayBase> view();
+    JS::GCPtr<WebIDL::ArrayBufferView> view();
 
     void set_controller(JS::GCPtr<ReadableByteStreamController> value) { m_controller = value; }
 
-    void set_view(JS::GCPtr<JS::TypedArrayBase> value) { m_view = value; }
+    void set_view(JS::GCPtr<WebIDL::ArrayBufferView> value) { m_view = value; }
 
 private:
     explicit ReadableStreamBYOBRequest(JS::Realm&);
@@ -38,7 +39,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreambyobrequest-view
     // A typed array representing the destination region to which the controller can write generated data, or null after the BYOB request has been invalidated.
-    JS::GCPtr<JS::TypedArrayBase> m_view;
+    JS::GCPtr<WebIDL::ArrayBufferView> m_view;
 };
 
 }

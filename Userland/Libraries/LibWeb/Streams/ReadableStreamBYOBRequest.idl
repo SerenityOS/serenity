@@ -1,8 +1,7 @@
 // https://streams.spec.whatwg.org/#readablestreambyobrequest
 [Exposed=*]
 interface ReadableStreamBYOBRequest {
-    // FIXME: This should be an ArrayBufferView
-    readonly attribute any view;
+    readonly attribute ArrayBufferView? view;
 
     // FIXME: undefined respond([EnforceRange] unsigned long long bytesWritten);
     // FIXME: undefined respondWithNewView(ArrayBufferView view);
