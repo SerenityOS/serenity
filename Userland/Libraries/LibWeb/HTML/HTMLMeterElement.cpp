@@ -1,11 +1,15 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLMeterElement.h>
+#include <LibWeb/HTML/Numbers.h>
 
 namespace Web::HTML {
 
@@ -22,6 +26,221 @@ void HTMLMeterElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMeterElementPrototype>(realm, "HTMLMeterElement"));
+}
+
+void HTMLMeterElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_meter_value_element);
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-meter-actual
+double HTMLMeterElement::value() const
+{
+    // If the value attribute is specified and a value could be parsed out of it, then that value is the candidate actual value. Otherwise, the candidate actual value is zero.
+    double candidate_value = 0.0;
+    auto maybe_value_string = get_attribute(HTML::AttributeNames::value);
+    if (maybe_value_string.has_value()) {
+        auto maybe_value = parse_floating_point_number(maybe_value_string.value());
+        if (maybe_value.has_value())
+            candidate_value = maybe_value.value();
+    }
+
+    // If the candidate actual value is less than the minimum value, then the actual value is the minimum value.
+    // Otherwise, if the candidate actual value is greater than the maximum value, then the actual value is the maximum value.
+    // Otherwise, the actual value is the candidate actual value.
+    return clamp(candidate_value, min(), max());
+}
+
+WebIDL::ExceptionOr<void> HTMLMeterElement::set_value(double value)
+{
+    TRY(set_attribute(HTML::AttributeNames::value, MUST(String::number(value))));
+    update_meter_value_element();
+    document().invalidate_layout();
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-meter-minimum
+double HTMLMeterElement::min() const
+{
+    // If the min attribute is specified and a value could be parsed out of it, then the minimum value is that value. Otherwise, the minimum value is zero.
+    auto maybe_min_string = get_attribute(HTML::AttributeNames::min);
+    if (maybe_min_string.has_value()) {
+        auto maybe_min = parse_floating_point_number(maybe_min_string.value());
+        if (maybe_min.has_value())
+            return maybe_min.value();
+    }
+    return 0;
+}
+
+WebIDL::ExceptionOr<void> HTMLMeterElement::set_min(double value)
+{
+    TRY(set_attribute(HTML::AttributeNames::min, MUST(String::number(value))));
+    update_meter_value_element();
+    document().invalidate_layout();
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-meter-maximum
+double HTMLMeterElement::max() const
+{
+    // If the max attribute is specified and a value could be parsed out of it, then the candidate maximum value is that value. Otherwise, the candidate maximum value is 1.0.
+    double candidate_max = 1.0;
+    auto maybe_max_string = get_attribute(HTML::AttributeNames::max);
+    if (maybe_max_string.has_value()) {
+        auto maybe_max = parse_floating_point_number(maybe_max_string.value());
+        if (maybe_max.has_value())
+            candidate_max = maybe_max.value();
+    }
+
+    // If the candidate maximum value is greater than or equal to the minimum value, then the maximum value is the candidate maximum value. Otherwise, the maximum value is the same as the minimum value.
+    return AK::max(candidate_max, min());
+}
+
+WebIDL::ExceptionOr<void> HTMLMeterElement::set_max(double value)
+{
+    TRY(set_attribute(HTML::AttributeNames::max, MUST(String::number(value))));
+    update_meter_value_element();
+    document().invalidate_layout();
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-meter-low
+double HTMLMeterElement::low() const
+{
+    // If the low attribute is specified and a value could be parsed out of it, then the candidate low boundary is that value. Otherwise, the candidate low boundary is the same as the minimum value.
+    double candidate_low = min();
+    auto maybe_low_string = get_attribute(HTML::AttributeNames::low);
+    if (maybe_low_string.has_value()) {
+        auto maybe_low = parse_floating_point_number(maybe_low_string.value());
+        if (maybe_low.has_value())
+            candidate_low = maybe_low.value();
+    }
+
+    // If the candidate low boundary is less than the minimum value, then the low boundary is the minimum value.
+    // Otherwise, if the candidate low boundary is greater than the maximum value, then the low boundary is the maximum value.
+    // Otherwise, the low boundary is the candidate low boundary.
+    return clamp(candidate_low, min(), max());
+}
+
+WebIDL::ExceptionOr<void> HTMLMeterElement::set_low(double value)
+{
+    TRY(set_attribute(HTML::AttributeNames::low, MUST(String::number(value))));
+    update_meter_value_element();
+    document().invalidate_layout();
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-meter-high
+double HTMLMeterElement::high() const
+{
+    // If the high attribute is specified and a value could be parsed out of it, then the candidate high boundary is that value. Otherwise, the candidate high boundary is the same as the maximum value.
+    double candidate_high = max();
+    auto maybe_high_string = get_attribute(HTML::AttributeNames::high);
+    if (maybe_high_string.has_value()) {
+        auto maybe_high = parse_floating_point_number(maybe_high_string.value());
+        if (maybe_high.has_value())
+            candidate_high = maybe_high.value();
+    }
+
+    // If the candidate high boundary is less than the low boundary, then the high boundary is the low boundary.
+    // Otherwise, if the candidate high boundary is greater than the maximum value, then the high boundary is the maximum value.
+    // Otherwise, the high boundary is the candidate high boundary.
+    return clamp(candidate_high, low(), max());
+}
+
+WebIDL::ExceptionOr<void> HTMLMeterElement::set_high(double value)
+{
+    TRY(set_attribute(HTML::AttributeNames::high, MUST(String::number(value))));
+    update_meter_value_element();
+    document().invalidate_layout();
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-meter-optimum
+double HTMLMeterElement::optimum() const
+{
+    // If the optimum attribute is specified and a value could be parsed out of it, then the candidate optimum point is that value. Otherwise, the candidate optimum point is the midpoint between the minimum value and the maximum value.
+    double candidate_optimum = (max() + min()) / 2;
+    auto maybe_optimum_string = get_attribute(HTML::AttributeNames::optimum);
+    if (maybe_optimum_string.has_value()) {
+        auto maybe_optimum = parse_floating_point_number(maybe_optimum_string.value());
+        if (maybe_optimum.has_value())
+            candidate_optimum = maybe_optimum.value();
+    }
+
+    // If the candidate optimum point is less than the minimum value, then the optimum point is the minimum value.
+    // Otherwise, if the candidate optimum point is greater than the maximum value, then the optimum point is the maximum value.
+    // Otherwise, the optimum point is the candidate optimum point.
+    return clamp(candidate_optimum, min(), max());
+}
+
+WebIDL::ExceptionOr<void> HTMLMeterElement::set_optimum(double value)
+{
+    TRY(set_attribute(HTML::AttributeNames::optimum, MUST(String::number(value))));
+    update_meter_value_element();
+    document().invalidate_layout();
+    return {};
+}
+
+void HTMLMeterElement::inserted()
+{
+    create_shadow_tree_if_needed();
+}
+
+void HTMLMeterElement::create_shadow_tree_if_needed()
+{
+    if (shadow_root_internal())
+        return;
+
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
+    set_shadow_root(shadow_root);
+
+    auto meter_bar_element = heap().allocate<MeterBarElement>(realm(), document());
+    MUST(shadow_root->append_child(*meter_bar_element));
+
+    m_meter_value_element = heap().allocate<MeterValueElement>(realm(), document());
+    MUST(meter_bar_element->append_child(*m_meter_value_element));
+    update_meter_value_element();
+}
+
+void HTMLMeterElement::update_meter_value_element()
+{
+    if (!m_meter_value_element)
+        return;
+
+    // UA requirements for regions of the gauge:
+    double value = this->value();
+    double min = this->min();
+    double max = this->max();
+    double low = this->low();
+    double high = this->high();
+    double optimum = this->optimum();
+
+    // If the optimum point is equal to the low boundary or the high boundary, or anywhere in between them, then the region between the low and high boundaries of the gauge must be treated as the optimum region, and the low and high parts, if any, must be treated as suboptimal.
+    if (optimum >= low && optimum <= high) {
+        if (value >= low && value <= high)
+            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterOptimumValue);
+        else
+            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
+    }
+    // Otherwise, if the optimum point is less than the low boundary, then the region between the minimum value and the low boundary must be treated as the optimum region, the region from the low boundary up to the high boundary must be treated as a suboptimal region, and the remaining region must be treated as an even less good region.
+    else if (optimum < low) {
+        if (value >= low && value <= high)
+            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
+        else
+            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterEvenLessGoodValue);
+    }
+    // Finally, if the optimum point is higher than the high boundary, then the situation is reversed; the region between the high boundary and the maximum value must be treated as the optimum region, the region from the high boundary down to the low boundary must be treated as a suboptimal region, and the remaining region must be treated as an even less good region.
+    else {
+        if (value >= low && value <= high)
+            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterSuboptimumValue);
+        else
+            m_meter_value_element->set_pseudo_element(CSS::Selector::PseudoElement::MeterEvenLessGoodValue);
+    }
+
+    double position = (value - min) / (max - min) * 100;
+    MUST(m_meter_value_element->set_attribute(HTML::AttributeNames::style, MUST(String::formatted("width: {}%;", position))));
 }
 
 }

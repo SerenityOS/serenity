@@ -559,6 +559,18 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::PseudoElement::Marker:
                     pseudo_element_description = "marker";
                     break;
+                case CSS::Selector::PseudoElement::MeterBar:
+                    pseudo_element_description = "-webkit-meter-bar";
+                    break;
+                case CSS::Selector::PseudoElement::MeterEvenLessGoodValue:
+                    pseudo_element_description = "-webkit-meter-even-less-good-value";
+                    break;
+                case CSS::Selector::PseudoElement::MeterOptimumValue:
+                    pseudo_element_description = "-webkit-meter-optimum-value";
+                    break;
+                case CSS::Selector::PseudoElement::MeterSuboptimumValue:
+                    pseudo_element_description = "-webkit-meter-suboptimum-value";
+                    break;
                 case CSS::Selector::PseudoElement::ProgressBar:
                     pseudo_element_description = "-webkit-progress-bar";
                     break;

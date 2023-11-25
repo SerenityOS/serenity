@@ -27,6 +27,10 @@ public:
         FirstLine,
         FirstLetter,
         Marker,
+        MeterBar,
+        MeterEvenLessGoodValue,
+        MeterOptimumValue,
+        MeterSuboptimumValue,
         ProgressValue,
         ProgressBar,
         Placeholder,
@@ -217,6 +221,14 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "first-letter"sv;
     case Selector::PseudoElement::Marker:
         return "marker"sv;
+    case Selector::PseudoElement::MeterBar:
+        return "-webkit-meter-bar"sv;
+    case Selector::PseudoElement::MeterEvenLessGoodValue:
+        return "-webkit-meter-even-less-good-value"sv;
+    case Selector::PseudoElement::MeterOptimumValue:
+        return "-webkit-meter-optimum-value"sv;
+    case Selector::PseudoElement::MeterSuboptimumValue:
+        return "-webkit-meter-suboptimum-value"sv;
     case Selector::PseudoElement::ProgressBar:
         return "-webkit-progress-bar"sv;
     case Selector::PseudoElement::ProgressValue:
