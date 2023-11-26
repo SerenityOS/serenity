@@ -306,10 +306,10 @@ CommandResult PaintingCommandExecutorGPU::paint_borders(DevicePixelRect const& b
     return CommandResult::Continue;
 }
 
-bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect) const
+bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect rect) const
 {
-    // FIXME
-    return false;
+    auto translation = painter().transform().translation().to_type<int>();
+    return !painter().clip_rect().intersects(rect.translated(translation));
 }
 
 void PaintingCommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
