@@ -550,11 +550,13 @@ void Painter::restore()
 
 void Painter::set_clip_rect(Gfx::IntRect rect)
 {
+    state().clip_rect = transform().map(rect);
     GL::enable_scissor_test(transform().map(rect));
 }
 
 void Painter::clear_clip_rect()
 {
+    state().clip_rect = { { 0, 0 }, m_target_canvas->size() };
     GL::disable_scissor_test();
 }
 
@@ -569,6 +571,7 @@ void Painter::set_target_canvas(NonnullRefPtr<Canvas> canvas)
     m_target_canvas = canvas;
     canvas->bind();
     GL::set_viewport({ 0, 0, canvas->size().width(), canvas->size().height() });
+    state().clip_rect = { { 0, 0 }, m_target_canvas->size() };
 }
 
 void Painter::flush(Gfx::Bitmap& bitmap)

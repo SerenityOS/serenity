@@ -43,6 +43,8 @@ public:
     void set_transform(Gfx::AffineTransform const& transform) { state().transform = transform; }
     void translate(Gfx::FloatPoint translation) { state().transform.translate(translation); }
 
+    Gfx::IntRect const& clip_rect() const { return state().clip_rect; }
+
     void fill_rect(Gfx::FloatRect, Gfx::Color);
     void fill_rect(Gfx::IntRect, Gfx::Color);
 
@@ -88,6 +90,7 @@ private:
 
     struct State {
         Gfx::AffineTransform transform;
+        Gfx::IntRect clip_rect;
     };
 
     [[nodiscard]] State& state() { return m_state_stack.last(); }
