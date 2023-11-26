@@ -176,72 +176,46 @@ void Compiler::compile_jump(Bytecode::Op::Jump const& op)
     m_assembler.jump(label_for(op.true_target()->block()));
 }
 
-static bool cxx_to_boolean(VM&, Value value)
+static u64 cxx_to_boolean(VM&, Value value)
 {
-    return value.to_boolean_slow_case();
-}
-
-void Compiler::compile_to_boolean(Assembler::Reg dst, Assembler::Reg src)
-{
-    // dst = src;
-    m_assembler.mov(
-        Assembler::Operand::Register(dst),
-        Assembler::Operand::Register(src));
-
-    // dst >>= 48;
-    m_assembler.shift_right(
-        Assembler::Operand::Register(dst),
-        Assembler::Operand::Imm(48));
-
-    // if (dst != BOOLEAN_TAG) goto slow_case;
-    Assembler::Label slow_case {};
-    m_assembler.jump_if(
-        Assembler::Operand::Register(dst),
-        Assembler::Condition::NotEqualTo,
-        Assembler::Operand::Imm(BOOLEAN_TAG),
-        slow_case);
-
-    // Fast path for JS::Value booleans.
-
-    // dst = src;
-    m_assembler.mov(
-        Assembler::Operand::Register(dst),
-        Assembler::Operand::Register(src));
-
-    // goto end;
-    auto end = m_assembler.jump();
-
-    // slow_case: // call C++ helper
-    slow_case.link(m_assembler);
-    m_assembler.mov(
-        Assembler::Operand::Register(ARG1),
-        Assembler::Operand::Register(src));
-    native_call((void*)cxx_to_boolean);
-    m_assembler.mov(
-        Assembler::Operand::Register(dst),
-        Assembler::Operand::Register(RET));
-
-    // end:
-    end.link(m_assembler);
-
-    // dst &= 1;
-    m_assembler.bitwise_and(
-        Assembler::Operand::Register(dst),
-        Assembler::Operand::Imm(1));
+    return value.to_boolean();
 }
 
 void Compiler::compile_jump_conditional(Bytecode::Op::JumpConditional const& op)
 {
-    load_accumulator(GPR1);
+    load_accumulator(ARG1);
 
-    compile_to_boolean(GPR0, GPR1);
+    branch_if_boolean(ARG1, [&] {
+        m_assembler.bitwise_and(
+            Assembler::Operand::Register(ARG1),
+            Assembler::Operand::Imm(1));
+        m_assembler.jump_if(
+            Assembler::Operand::Register(ARG1),
+            Assembler::Condition::EqualTo,
+            Assembler::Operand::Imm(0),
+            label_for(op.false_target()->block()));
+        m_assembler.jump(label_for(op.true_target()->block()));
+    });
+
+    branch_if_int32(ARG1, [&] {
+        m_assembler.mov32(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Operand::Register(ARG1));
+        m_assembler.jump_if(
+            Assembler::Operand::Register(GPR0),
+            Assembler::Condition::EqualTo,
+            Assembler::Operand::Imm(0),
+            label_for(op.false_target()->block()));
+        m_assembler.jump(label_for(op.true_target()->block()));
+    });
+
+    native_call((void*)cxx_to_boolean);
 
     m_assembler.jump_if(
-        Assembler::Operand::Register(GPR0),
+        Assembler::Operand::Register(RET),
         Assembler::Condition::EqualTo,
         Assembler::Operand::Imm(0),
         label_for(op.false_target()->block()));
-
     m_assembler.jump(label_for(op.true_target()->block()));
 }
 
