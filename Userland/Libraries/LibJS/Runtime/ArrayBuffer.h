@@ -108,11 +108,11 @@ public:
         Unordered
     };
     template<typename type>
-    ThrowCompletionOr<Value> get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
+    Value get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename type>
-    ThrowCompletionOr<void> set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
+    void set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename T>
-    ThrowCompletionOr<Value> get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true);
+    Value get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true);
 
 private:
     ArrayBuffer(ByteBuffer buffer, Object& prototype);
@@ -208,7 +208,7 @@ static Value raw_bytes_to_numeric(VM& vm, Bytes raw_value, bool is_little_endian
 
 // Implementation for 25.1.2.10 GetValueFromBuffer, used in TypedArray<T>::get_value_from_buffer(), https://tc39.es/ecma262/#sec-getvaluefrombuffer
 template<typename T>
-ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
+Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
     auto& vm = this->vm();
     // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
@@ -319,7 +319,7 @@ static void numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endian, Byt
 
 // 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
 template<typename T>
-ThrowCompletionOr<void> ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
+void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
     auto& vm = this->vm();
 
@@ -361,12 +361,11 @@ ThrowCompletionOr<void> ArrayBuffer::set_value(size_t byte_index, Value value, [
     }
 
     // 10. Return unused.
-    return {};
 }
 
 // 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer
 template<typename T>
-ThrowCompletionOr<Value> ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian)
+Value ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian)
 {
     auto& vm = this->vm();
 

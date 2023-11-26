@@ -381,7 +381,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 
     // 7. Let elementType be TypedArrayElementType(typedArray).
     // 8. Perform SetValueInBuffer(buffer, indexedPosition, elementType, v, true, SeqCst).
-    MUST_OR_THROW_OOM(typed_array->set_value_in_buffer(indexed_position, value_to_set, ArrayBuffer::Order::SeqCst, true));
+    typed_array->set_value_in_buffer(indexed_position, value_to_set, ArrayBuffer::Order::SeqCst, true);
 
     // 9. Return v.
     return value_to_set;
