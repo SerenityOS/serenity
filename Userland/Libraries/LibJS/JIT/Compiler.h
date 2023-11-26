@@ -168,7 +168,6 @@ private:
     void load_accumulator(Assembler::Reg);
     void store_accumulator(Assembler::Reg);
 
-    void compile_to_boolean(Assembler::Reg dst, Assembler::Reg src);
     void compile_continuation(Optional<Bytecode::Label>, bool is_await);
 
     template<typename Codegen>
@@ -191,6 +190,12 @@ private:
     void branch_if_int32(Assembler::Reg reg, Codegen codegen)
     {
         branch_if_type(reg, INT32_TAG, codegen);
+    }
+
+    template<typename Codegen>
+    void branch_if_boolean(Assembler::Reg reg, Codegen codegen)
+    {
+        branch_if_type(reg, BOOLEAN_TAG, codegen);
     }
 
     template<typename Codegen>
