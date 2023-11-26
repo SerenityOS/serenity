@@ -499,9 +499,21 @@ PDFErrorOr<Color> ICCBasedColorSpace::color(ReadonlySpan<Value> arguments) const
         s_srgb_profile = TRY(Gfx::ICC::sRGB());
 
     Vector<u8> bytes;
-    for (auto const& arg : arguments) {
+    for (size_t i = 0; i < arguments.size(); ++i) {
+        auto const& arg = arguments[i];
         VERIFY(arg.has_number());
-        bytes.append(static_cast<u8>(arg.to_float() * 255.0f));
+        float number = arg.to_float();
+
+        if (m_profile->data_color_space() == Gfx::ICC::ColorSpace::CIELAB) {
+            // CIELAB channels go from 0..100 and -128..127 instead of from 0..1.
+            // FIXME: We should probably have an API on Gfx::ICC::Profile that takes floats instead of bytes and that does this internally instead.
+            if (i == 0)
+                number /= 100.0f;
+            else
+                number = (number + 128.0f) / 255.0f;
+        }
+
+        bytes.append(static_cast<u8>(number * 255.0f));
     }
 
     auto pcs = TRY(m_profile->to_pcs(bytes));
