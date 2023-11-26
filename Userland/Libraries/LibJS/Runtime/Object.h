@@ -184,7 +184,6 @@ public:
 
     virtual bool is_dom_node() const { return false; }
     virtual bool is_function() const { return false; }
-    virtual bool is_typed_array() const { return false; }
     virtual bool is_string_object() const { return false; }
     virtual bool is_global_object() const { return false; }
     virtual bool is_proxy_object() const { return false; }
@@ -225,6 +224,9 @@ public:
 
     static FlatPtr has_magical_length_property_offset() { return OFFSET_OF(Object, m_has_magical_length_property); }
 
+    [[nodiscard]] bool is_typed_array() const { return m_is_typed_array; }
+    void set_is_typed_array() { m_is_typed_array = true; }
+
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
@@ -243,6 +245,8 @@ protected:
     bool m_has_parameter_map { false };
 
     bool m_has_magical_length_property { false };
+
+    bool m_is_typed_array { false };
 
 private:
     void set_shape(Shape& shape) { m_shape = &shape; }

@@ -75,6 +75,7 @@ protected:
         , m_kind(kind)
         , m_intrinsic_constructor(intrinsic_constructor)
     {
+        set_is_typed_array();
     }
 
     u32 m_array_length { 0 };
@@ -463,9 +464,6 @@ protected:
         m_array_length = array_length;
         m_byte_length = m_viewed_array_buffer->byte_length();
     }
-
-private:
-    virtual bool is_typed_array() const final { return true; }
 };
 
 ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM&, FunctionObject& constructor, MarkedVector<Value> arguments);
