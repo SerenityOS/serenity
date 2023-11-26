@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibAccelGfx/GlyphAtlas.h>
 #include <LibWeb/Painting/PaintingCommandExecutorGPU.h>
 
 namespace Web::Painting {
@@ -92,7 +93,7 @@ CommandResult PaintingCommandExecutorGPU::set_font(Gfx::Font const&)
 CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform, Optional<StackingContextMask>)
 {
     if (opacity < 1) {
-        auto painter = AccelGfx::Painter::create_with_glyphs_texture_from_painter(this->painter());
+        auto painter = AccelGfx::Painter::create();
         auto canvas = AccelGfx::Canvas::create(source_paintable_rect.size());
         painter->set_target_canvas(canvas);
         painter->translate(-source_paintable_rect.location().to_type<float>());
@@ -313,7 +314,7 @@ bool PaintingCommandExecutorGPU::would_be_fully_clipped_by_painter(Gfx::IntRect)
 
 void PaintingCommandExecutorGPU::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
 {
-    painter().prepare_glyph_texture(unique_glyphs);
+    AccelGfx::GlyphAtlas::the().update(unique_glyphs);
 }
 
 void PaintingCommandExecutorGPU::update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>& immutable_bitmaps)

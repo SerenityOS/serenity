@@ -14,6 +14,7 @@
 #include <LibAccelGfx/Context.h>
 #include <LibAccelGfx/Forward.h>
 #include <LibAccelGfx/GL.h>
+#include <LibAccelGfx/GlyphAtlas.h>
 #include <LibAccelGfx/Program.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Font/Font.h>
@@ -29,7 +30,6 @@ class Painter {
 
 public:
     static OwnPtr<Painter> create();
-    static OwnPtr<Painter> create_with_glyphs_texture_from_painter(Painter const& painter);
 
     Painter(Context&);
     ~Painter();
@@ -59,18 +59,6 @@ public:
 
     void draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::IntRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_scaled_immutable_bitmap(Gfx::FloatRect const& dst_rect, Gfx::ImmutableBitmap const&, Gfx::FloatRect const& src_rect, ScalingMode = ScalingMode::NearestNeighbor);
-
-    void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs);
-
-    struct GlyphsTextureKey {
-        Gfx::Font const* font;
-        u32 code_point;
-
-        bool operator==(GlyphsTextureKey const& other) const
-        {
-            return font == other.font && code_point == other.code_point;
-        }
-    };
 
     void draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color);
 
@@ -118,22 +106,6 @@ private:
     Program m_rounded_rectangle_program;
     Program m_blit_program;
     Program m_linear_gradient_program;
-
-    HashMap<GlyphsTextureKey, Gfx::IntRect> m_glyphs_texture_map;
-    Gfx::IntSize m_glyphs_texture_size;
-    GL::Texture m_glyphs_texture;
-};
-
-}
-
-namespace AK {
-
-template<>
-struct Traits<AccelGfx::Painter::GlyphsTextureKey> : public DefaultTraits<AccelGfx::Painter::GlyphsTextureKey> {
-    static unsigned hash(AccelGfx::Painter::GlyphsTextureKey const& key)
-    {
-        return pair_int_hash(ptr_hash(key.font), key.code_point);
-    }
 };
 
 }

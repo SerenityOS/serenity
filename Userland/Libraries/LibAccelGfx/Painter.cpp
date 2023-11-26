@@ -5,10 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/QuickSort.h>
 #include <LibAccelGfx/GL.h>
 #include <LibAccelGfx/Painter.h>
-#include <LibGfx/Color.h>
 #include <LibGfx/ImmutableBitmap.h>
 #include <LibGfx/Painter.h>
 
@@ -145,23 +143,12 @@ OwnPtr<Painter> Painter::create()
     return make<Painter>(context);
 }
 
-OwnPtr<Painter> Painter::create_with_glyphs_texture_from_painter(Painter const& painter)
-{
-    auto& context = Context::the();
-    auto glyphs_texture_painter = make<Painter>(context);
-    glyphs_texture_painter->m_glyphs_texture = painter.m_glyphs_texture;
-    glyphs_texture_painter->m_glyphs_texture_size = painter.m_glyphs_texture_size;
-    glyphs_texture_painter->m_glyphs_texture_map = painter.m_glyphs_texture_map;
-    return glyphs_texture_painter;
-}
-
 Painter::Painter(Context& context)
     : m_context(context)
     , m_rectangle_program(Program::create(Program::Name::RectangleProgram, vertex_shader_source, solid_color_fragment_shader_source))
     , m_rounded_rectangle_program(Program::create(Program::Name::RoundedRectangleProgram, vertex_shader_source, rect_with_rounded_corners_fragment_shader_source))
     , m_blit_program(Program::create(Program::Name::BlitProgram, blit_vertex_shader_source, blit_fragment_shader_source))
     , m_linear_gradient_program(Program::create(Program::Name::LinearGradientProgram, linear_gradient_vertex_shader_source, linear_gradient_fragment_shader_source))
-    , m_glyphs_texture(GL::create_texture())
 {
     m_state_stack.empend(State());
 }
@@ -365,62 +352,6 @@ void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap con
     GL::delete_texture(texture);
 }
 
-void Painter::prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
-{
-    HashMap<GlyphsTextureKey, NonnullRefPtr<Gfx::Bitmap>> glyph_bitmaps;
-    for (auto const& [font, code_points] : unique_glyphs) {
-        for (auto const& code_point : code_points) {
-            auto glyph = font->glyph(code_point);
-            if (glyph.bitmap()) {
-                auto atlas_key = GlyphsTextureKey { font, code_point };
-                glyph_bitmaps.set(atlas_key, *glyph.bitmap());
-            }
-        }
-    }
-
-    if (glyph_bitmaps.is_empty())
-        return;
-
-    Vector<GlyphsTextureKey> glyphs_sorted_by_height;
-    glyphs_sorted_by_height.ensure_capacity(glyph_bitmaps.size());
-    for (auto const& [atlas_key, bitmap] : glyph_bitmaps) {
-        glyphs_sorted_by_height.append(atlas_key);
-    }
-    quick_sort(glyphs_sorted_by_height, [&](auto const& a, auto const& b) {
-        auto const& bitmap_a = *glyph_bitmaps.get(a);
-        auto const& bitmap_b = *glyph_bitmaps.get(b);
-        return bitmap_a->height() > bitmap_b->height();
-    });
-
-    int current_x = 0;
-    int current_y = 0;
-    int row_height = 0;
-    int texture_width = 512;
-    int padding = 1;
-    for (auto const& glyphs_texture_key : glyphs_sorted_by_height) {
-        auto const& bitmap = *glyph_bitmaps.get(glyphs_texture_key);
-        if (current_x + bitmap->width() > texture_width) {
-            current_x = 0;
-            current_y += row_height + padding;
-            row_height = 0;
-        }
-        m_glyphs_texture_map.set(glyphs_texture_key, { current_x, current_y, bitmap->width(), bitmap->height() });
-        current_x += bitmap->width() + padding;
-        row_height = max(row_height, bitmap->height());
-    }
-
-    auto glyphs_texture_bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { texture_width, current_y + row_height }));
-    auto glyphs_texure_painter = Gfx::Painter(*glyphs_texture_bitmap);
-    for (auto const& [glyphs_texture_key, glyph_bitmap] : glyph_bitmaps) {
-        auto rect = m_glyphs_texture_map.get(glyphs_texture_key).value();
-        glyphs_texure_painter.blit({ rect.x(), rect.y() }, glyph_bitmap, glyph_bitmap->rect());
-    }
-
-    m_glyphs_texture_size = glyphs_texture_bitmap->size();
-
-    GL::upload_texture_data(m_glyphs_texture, *glyphs_texture_bitmap);
-}
-
 void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Color const& color)
 {
     bind_target_canvas();
@@ -428,20 +359,22 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
     Vector<GLfloat> vertices;
     vertices.ensure_capacity(glyph_run.size() * 24);
 
-    for (auto& glyph_or_emoji : glyph_run) {
+    auto const& glyph_atlas = GlyphAtlas::the();
+
+    for (auto const& glyph_or_emoji : glyph_run) {
         if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
-            auto& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
+            auto const& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
 
             auto const* font = glyph.font;
             auto code_point = glyph.code_point;
             auto point = glyph.position;
 
-            auto maybe_texture_rect = m_glyphs_texture_map.get(GlyphsTextureKey { font, code_point });
+            auto maybe_texture_rect = glyph_atlas.get_glyph_rect(font, code_point);
             if (!maybe_texture_rect.has_value()) {
                 continue;
             }
 
-            auto texture_rect = to_texture_space(maybe_texture_rect.value().to_type<float>(), m_glyphs_texture_size);
+            auto texture_rect = to_texture_space(maybe_texture_rect.value().to_type<float>(), *glyph_atlas.texture().size);
 
             auto glyph_position = point + Gfx::FloatPoint(font->glyph_left_bearing(code_point), 0);
             auto glyph_size = maybe_texture_rect->size().to_type<float>();
@@ -497,7 +430,7 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
 
     m_blit_program.use();
 
-    GL::bind_texture(m_glyphs_texture);
+    GL::bind_texture(glyph_atlas.texture());
     GL::set_texture_scale_mode(GL::ScalingMode::Nearest);
 
     auto position_attribute = m_blit_program.get_attribute_location("aVertexPosition");
