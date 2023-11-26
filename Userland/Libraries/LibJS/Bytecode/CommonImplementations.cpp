@@ -20,6 +20,42 @@
 
 namespace JS::Bytecode {
 
+// NOTE: This function assumes that the index is valid within the TypedArray,
+//       and that the TypedArray is not detached.
+template<typename T>
+inline Value fast_integer_indexed_element_get(TypedArrayBase& typed_array, u32 index)
+{
+    Checked<u32> offset_into_array_buffer = index;
+    offset_into_array_buffer *= sizeof(T);
+    offset_into_array_buffer += typed_array.byte_offset();
+
+    if (offset_into_array_buffer.has_overflow()) [[unlikely]] {
+        return js_undefined();
+    }
+
+    auto const& array_buffer = *typed_array.viewed_array_buffer();
+    auto const* slot = reinterpret_cast<T const*>(array_buffer.buffer().offset_pointer(offset_into_array_buffer.value()));
+    return Value { *slot };
+}
+
+// NOTE: This function assumes that the index is valid within the TypedArray,
+//       and that the TypedArray is not detached.
+template<typename T>
+inline void fast_integer_indexed_element_set(TypedArrayBase& typed_array, u32 index, T value)
+{
+    Checked<u32> offset_into_array_buffer = index;
+    offset_into_array_buffer *= sizeof(T);
+    offset_into_array_buffer += typed_array.byte_offset();
+
+    if (offset_into_array_buffer.has_overflow()) [[unlikely]] {
+        return;
+    }
+
+    auto& array_buffer = *typed_array.viewed_array_buffer();
+    auto* slot = reinterpret_cast<T*>(array_buffer.buffer().offset_pointer(offset_into_array_buffer.value()));
+    *slot = value;
+}
+
 ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(VM& vm, Value base_value)
 {
     if (base_value.is_object())
@@ -68,23 +104,43 @@ ThrowCompletionOr<Value> get_by_id(VM& vm, DeprecatedFlyString const& property, 
 
 ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_key_value)
 {
-    auto object = TRY(base_object_for_get(vm, base_value));
-
     // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
-    if (property_key_value.is_int32() && property_key_value.as_i32() >= 0) {
+    if (base_value.is_object() && property_key_value.is_int32() && property_key_value.as_i32() >= 0) {
+        auto& object = base_value.as_object();
         auto index = static_cast<u32>(property_key_value.as_i32());
 
         // For "non-typed arrays":
-        if (!object->may_interfere_with_indexed_property_access()
-            && object->indexed_properties().has_index(index)) {
-            auto value = object->indexed_properties().get(index)->value;
+        if (!object.may_interfere_with_indexed_property_access()
+            && object.indexed_properties().has_index(index)) {
+            auto value = object.indexed_properties().get(index)->value;
             if (!value.is_accessor())
                 return value;
         }
 
         // For typed arrays:
-        if (object->is_typed_array()) {
-            auto& typed_array = static_cast<TypedArrayBase&>(*object);
+        if (object.is_typed_array()) {
+            auto& typed_array = static_cast<TypedArrayBase&>(object);
+
+            if (!typed_array.viewed_array_buffer()->is_detached() && index < typed_array.array_length()) {
+                switch (typed_array.kind()) {
+                case TypedArrayBase::Kind::Uint8Array:
+                    return fast_integer_indexed_element_get<u8>(typed_array, index);
+                case TypedArrayBase::Kind::Uint16Array:
+                    return fast_integer_indexed_element_get<u16>(typed_array, index);
+                case TypedArrayBase::Kind::Uint32Array:
+                    return fast_integer_indexed_element_get<u32>(typed_array, index);
+                case TypedArrayBase::Kind::Int8Array:
+                    return fast_integer_indexed_element_get<i8>(typed_array, index);
+                case TypedArrayBase::Kind::Int16Array:
+                    return fast_integer_indexed_element_get<i16>(typed_array, index);
+                case TypedArrayBase::Kind::Int32Array:
+                    return fast_integer_indexed_element_get<i32>(typed_array, index);
+                default:
+                    // FIXME: Support more TypedArray kinds.
+                    break;
+                }
+            }
+
             auto canonical_index = CanonicalIndex { CanonicalIndex::Type::Index, index };
             switch (typed_array.kind()) {
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
@@ -95,6 +151,8 @@ ThrowCompletionOr<Value> get_by_value(VM& vm, Value base_value, Value property_k
             }
         }
     }
+
+    auto object = TRY(base_object_for_get(vm, base_value));
 
     auto property_key = TRY(property_key_value.to_property_key(vm));
 
@@ -345,6 +403,31 @@ ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Value property_key_valu
         // For typed arrays:
         if (object.is_typed_array()) {
             auto& typed_array = static_cast<TypedArrayBase&>(object);
+            if (!typed_array.viewed_array_buffer()->is_detached() && index < typed_array.array_length() && value.is_int32()) {
+                switch (typed_array.kind()) {
+                case TypedArrayBase::Kind::Uint8Array:
+                    fast_integer_indexed_element_set<u8>(typed_array, index, static_cast<u8>(value.as_i32()));
+                    return {};
+                case TypedArrayBase::Kind::Uint16Array:
+                    fast_integer_indexed_element_set<u16>(typed_array, index, static_cast<u16>(value.as_i32()));
+                    return {};
+                case TypedArrayBase::Kind::Uint32Array:
+                    fast_integer_indexed_element_set<u32>(typed_array, index, static_cast<u32>(value.as_i32()));
+                    return {};
+                case TypedArrayBase::Kind::Int8Array:
+                    fast_integer_indexed_element_set<i8>(typed_array, index, static_cast<i8>(value.as_i32()));
+                    return {};
+                case TypedArrayBase::Kind::Int16Array:
+                    fast_integer_indexed_element_set<i16>(typed_array, index, static_cast<i16>(value.as_i32()));
+                    return {};
+                case TypedArrayBase::Kind::Int32Array:
+                    fast_integer_indexed_element_set<i32>(typed_array, index, value.as_i32());
+                    return {};
+                default:
+                    // FIXME: Support more TypedArray kinds.
+                    break;
+                }
+            }
             auto canonical_index = CanonicalIndex { CanonicalIndex::Type::Index, index };
             switch (typed_array.kind()) {
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
