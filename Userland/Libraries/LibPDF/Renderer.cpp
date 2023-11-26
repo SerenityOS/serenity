@@ -433,8 +433,11 @@ RENDERER_HANDLER(text_set_leading)
 PDFErrorOr<NonnullRefPtr<PDFFont>> Renderer::get_font(FontCacheKey const& key)
 {
     auto it = m_font_cache.find(key);
-    if (it != m_font_cache.end())
+    if (it != m_font_cache.end()) {
+        // Update the potentially-stale size set in text_set_matrix_and_line_matrix().
+        it->value->set_font_size(key.font_size);
         return it->value;
+    }
 
     auto font = TRY(PDFFont::create(m_document, key.font_dictionary, key.font_size));
     m_font_cache.set(key, font);
