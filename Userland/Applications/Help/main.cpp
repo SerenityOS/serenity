@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = GUI::Window::construct();
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Help");
-    window->resize(570, 500);
+    window->resize(800, 500);
 
     auto main_widget = TRY(MainWidget::try_create());
     window->set_main_widget(main_widget);
