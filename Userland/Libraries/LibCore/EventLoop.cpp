@@ -54,6 +54,8 @@ bool EventLoop::is_running()
 
 EventLoop& EventLoop::current()
 {
+    if (event_loop_stack().is_empty())
+        dbgln("No EventLoop is present, unable to return current one!");
     return event_loop_stack().last();
 }
 
