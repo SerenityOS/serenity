@@ -20,19 +20,24 @@ GlyphAtlas& GlyphAtlas::the()
 
 void GlyphAtlas::update(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_glyphs)
 {
+    auto need_to_rebuild_texture = false;
     HashMap<GlyphsTextureKey, NonnullRefPtr<Gfx::Bitmap>> glyph_bitmaps;
     for (auto const& [font, code_points] : unique_glyphs) {
         for (auto const& code_point : code_points) {
             auto glyph = font->glyph(code_point);
+            auto atlas_key = GlyphsTextureKey { font, code_point };
+            if (!m_glyphs_texture_map.contains(atlas_key))
+                need_to_rebuild_texture = true;
             if (glyph.bitmap()) {
-                auto atlas_key = GlyphsTextureKey { font, code_point };
                 glyph_bitmaps.set(atlas_key, *glyph.bitmap());
             }
         }
     }
 
-    if (glyph_bitmaps.is_empty())
+    if (!need_to_rebuild_texture || glyph_bitmaps.is_empty())
         return;
+
+    m_glyphs_texture_map.clear();
 
     Vector<GlyphsTextureKey> glyphs_sorted_by_height;
     glyphs_sorted_by_height.ensure_capacity(glyph_bitmaps.size());
