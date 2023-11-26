@@ -444,7 +444,8 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                                                                                                                             \
     ClassName::ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer)                                          \
         : TypedArray(prototype,                                                                                             \
-            bit_cast<TypedArrayBase::IntrinsicConstructor>(&Intrinsics::snake_name##_constructor), length, array_buffer)    \
+            bit_cast<TypedArrayBase::IntrinsicConstructor>(&Intrinsics::snake_name##_constructor),                          \
+            length, array_buffer, Kind::ClassName)                                                                          \
     {                                                                                                                       \
         if constexpr (#ClassName##sv.is_one_of("BigInt64Array", "BigUint64Array"))                                          \
             m_content_type = ContentType::BigInt;                                                                           \

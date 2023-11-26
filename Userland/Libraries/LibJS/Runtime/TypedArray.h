@@ -53,9 +53,10 @@ public:
     void set_byte_offset(u32 offset) { m_byte_offset = offset; }
     void set_viewed_array_buffer(ArrayBuffer* array_buffer) { m_viewed_array_buffer = array_buffer; }
 
+    [[nodiscard]] Kind kind() const { return m_kind; }
+
     virtual size_t element_size() const = 0;
     virtual DeprecatedFlyString const& element_name() const = 0;
-    virtual Kind kind() const = 0;
 
     // 25.1.2.6 IsUnclampedIntegerElementType ( type ), https://tc39.es/ecma262/#sec-isunclampedintegerelementtype
     virtual bool is_unclamped_integer_element_type() const = 0;
@@ -69,8 +70,9 @@ public:
     virtual Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) = 0;
 
 protected:
-    TypedArrayBase(Object& prototype, IntrinsicConstructor intrinsic_constructor)
+    TypedArrayBase(Object& prototype, IntrinsicConstructor intrinsic_constructor, Kind kind)
         : Object(ConstructWithPrototypeTag::Tag, prototype, MayInterfereWithIndexedPropertyAccess::Yes)
+        , m_kind(kind)
         , m_intrinsic_constructor(intrinsic_constructor)
     {
     }
@@ -79,6 +81,7 @@ protected:
     u32 m_byte_length { 0 };
     u32 m_byte_offset { 0 };
     ContentType m_content_type { ContentType::Number };
+    Kind m_kind {};
     GCPtr<ArrayBuffer> m_viewed_array_buffer;
     IntrinsicConstructor m_intrinsic_constructor { nullptr };
 
@@ -450,8 +453,8 @@ public:
     Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) override { return viewed_array_buffer()->template get_modify_set_value<T>(byte_index, value, move(operation), is_little_endian); }
 
 protected:
-    TypedArray(Object& prototype, IntrinsicConstructor intrinsic_constructor, u32 array_length, ArrayBuffer& array_buffer)
-        : TypedArrayBase(prototype, intrinsic_constructor)
+    TypedArray(Object& prototype, IntrinsicConstructor intrinsic_constructor, u32 array_length, ArrayBuffer& array_buffer, Kind kind)
+        : TypedArrayBase(prototype, intrinsic_constructor, kind)
     {
         VERIFY(!Checked<u32>::multiplication_would_overflow(array_length, sizeof(UnderlyingBufferDataType)));
         m_viewed_array_buffer = &array_buffer;
@@ -480,7 +483,6 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         static ThrowCompletionOr<NonnullGCPtr<ClassName>> create(Realm&, u32 length);                             \
         static NonnullGCPtr<ClassName> create(Realm&, u32 length, ArrayBuffer& buffer);                           \
         virtual DeprecatedFlyString const& element_name() const override;                                         \
-        virtual Kind kind() const override { return Kind::ClassName; }                                            \
                                                                                                                   \
     protected:                                                                                                    \
         ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                                      \
