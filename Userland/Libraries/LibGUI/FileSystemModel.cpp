@@ -19,6 +19,7 @@
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
+#include <LibImageDecoderClient/Client.h>
 #include <LibThreading/BackgroundAction.h>
 #include <LibThreading/MutexProtected.h>
 #include <grp.h>
@@ -697,11 +698,34 @@ struct ThumbnailCache {
 };
 
 static Threading::MutexProtected<ThumbnailCache> s_thumbnail_cache {};
+static Threading::MutexProtected<RefPtr<ImageDecoderClient::Client>> s_image_decoder_client {};
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 {
-    Gfx::IntSize thumbnail_size { 32, 32 };
-    auto bitmap = TRY(Gfx::Bitmap::load_from_file(path, 1, thumbnail_size));
+    Core::EventLoop event_loop;
+    Gfx::IntSize const thumbnail_size { 32, 32 };
+
+    auto file = TRY(Core::MappedFile::map(path));
+    auto decoded_image = TRY(s_image_decoder_client.with_locked([=, &file](auto& maybe_client) -> ErrorOr<Optional<ImageDecoderClient::DecodedImage>> {
+        if (!maybe_client) {
+            maybe_client = TRY(ImageDecoderClient::Client::try_create());
+            maybe_client->on_death = []() {
+                s_image_decoder_client.with_locked([](auto& client) {
+                    client = nullptr;
+                });
+            };
+        }
+
+        auto mime_type = Core::guess_mime_type_based_on_filename(path);
+        auto decoded_image = maybe_client->decode_image(file->bytes(), thumbnail_size, mime_type);
+        if (!decoded_image.has_value())
+            return Error::from_string_literal("Unable to decode the image.");
+
+        return decoded_image;
+    }));
+
+    auto bitmap = decoded_image.value().frames[0].bitmap;
+
     auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, thumbnail_size));
 
     double scale = min(thumbnail_size.width() / (double)bitmap->width(), thumbnail_size.height() / (double)bitmap->height());
