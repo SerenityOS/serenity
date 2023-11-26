@@ -30,7 +30,7 @@ CatDog has multiple states:
 
 - *Sleeping* if the mouse cursor hasn’t moved in some time
 - *Alert* if woken by the mouse cursor or speaking after being idle
-- *Dressed as an Artist* if Pixel Paint or [Font Editor](help://man/1/Applications/FontEditor) are open
+- *Dressed as an Artist* if [Pixel Paint](help://man/1/Applications/PixelPaint) or [Font Editor](help://man/1/Applications/FontEditor) are open
 - *Dressed as an Inspector* if [Profiler](help://man/1/Applications/Profiler) or System Monitor are open
 
 To exit, right-click on CatDog and select `Quit` or, if active, press `Alt+F4`.

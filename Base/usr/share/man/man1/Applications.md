@@ -34,6 +34,7 @@ Note that many applications can be disabled at SerenityOS build time if desired.
 - [Mail](help://man/1/Applications/Mail)
 - [Maps](help://man/1/Applications/Maps)
 - [Mouse Settings](help://man/1/Applications/MouseSettings)
+- [Pixel Paint](help://man/1/Applications/PixelPaint)
 - [Presenter](help://man/1/Applications/Presenter)
 - [Profiler](help://man/1/Applications/Profiler)
 - [SQL Studio](help://man/1/Applications/SQLStudio)
