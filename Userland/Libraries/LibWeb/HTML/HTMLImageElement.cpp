@@ -125,6 +125,13 @@ RefPtr<Gfx::ImmutableBitmap> HTMLImageElement::immutable_bitmap() const
     return current_image_bitmap();
 }
 
+RefPtr<Gfx::Bitmap const> HTMLImageElement::bitmap() const
+{
+    if (auto immutable_bitmap = this->immutable_bitmap())
+        return immutable_bitmap->bitmap();
+    return {};
+}
+
 Optional<CSSPixels> HTMLImageElement::intrinsic_width() const
 {
     if (auto image_data = m_current_request->image_data())
