@@ -17,7 +17,6 @@ set(SOURCES
     ConsoleWidget.cpp
     CookiesModel.cpp
     DownloadWidget.cpp
-    ElementSizePreviewWidget.cpp
     History/HistoryModel.cpp
     History/HistoryWidget.cpp
     IconBag.cpp
