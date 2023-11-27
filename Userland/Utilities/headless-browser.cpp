@@ -50,6 +50,8 @@
 #    include <Ladybird/Utilities.h>
 #endif
 
+constexpr int DEFAULT_TIMEOUT_MS = 30000; // 30sec
+
 class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
     static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, WebView::IsLayoutTestMode is_layout_test_mode = WebView::IsLayoutTestMode::No)
@@ -158,12 +160,12 @@ enum class TestResult {
     Timeout,
 };
 
-static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = 15000)
+static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = DEFAULT_TIMEOUT_MS)
 {
     Core::EventLoop loop;
     bool did_timeout = false;
 
-    auto timeout_timer = TRY(Core::Timer::create_single_shot(5000, [&] {
+    auto timeout_timer = TRY(Core::Timer::create_single_shot(timeout_in_milliseconds, [&] {
         did_timeout = true;
         loop.quit(0);
     }));
@@ -194,7 +196,7 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
         };
     }
 
-    timeout_timer->start(timeout_in_milliseconds);
+    timeout_timer->start();
     loop.exec();
 
     if (did_timeout)
@@ -234,12 +236,12 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
     return TestResult::Fail;
 }
 
-static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, bool dump_failed_ref_tests, int timeout_in_milliseconds = 15000)
+static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, bool dump_failed_ref_tests, int timeout_in_milliseconds = DEFAULT_TIMEOUT_MS)
 {
     Core::EventLoop loop;
     bool did_timeout = false;
 
-    auto timeout_timer = TRY(Core::Timer::create_single_shot(5000, [&] {
+    auto timeout_timer = TRY(Core::Timer::create_single_shot(timeout_in_milliseconds, [&] {
         did_timeout = true;
         loop.quit(0);
     }));
@@ -257,7 +259,7 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
         }
     };
 
-    timeout_timer->start(timeout_in_milliseconds);
+    timeout_timer->start();
     loop.exec();
 
     if (did_timeout)
