@@ -48,11 +48,6 @@ u32 to_unicode_lowercase(u32 code_point);
 u32 to_unicode_uppercase(u32 code_point);
 u32 to_unicode_titlecase(u32 code_point);
 
-ErrorOr<DeprecatedString> to_unicode_lowercase_full(StringView, Optional<StringView> const& locale = {});
-ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView, Optional<StringView> const& locale = {});
-ErrorOr<String> to_unicode_titlecase_full(StringView, Optional<StringView> const& locale = {}, TrailingCodePointTransformation trailing_code_point_transformation = TrailingCodePointTransformation::Lowercase);
-ErrorOr<String> to_unicode_casefold_full(StringView);
-
 template<typename ViewType>
 bool equals_ignoring_case(ViewType, ViewType);
 

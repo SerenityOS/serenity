@@ -41,34 +41,6 @@ u32 __attribute__((weak)) to_unicode_titlecase(u32 code_point)
     return to_ascii_uppercase(code_point);
 }
 
-ErrorOr<DeprecatedString> to_unicode_lowercase_full(StringView string, Optional<StringView> const& locale)
-{
-    StringBuilder builder;
-    TRY(Detail::build_lowercase_string(Utf8View { string }, builder, locale));
-    return builder.to_deprecated_string();
-}
-
-ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView string, Optional<StringView> const& locale)
-{
-    StringBuilder builder;
-    TRY(Detail::build_uppercase_string(Utf8View { string }, builder, locale));
-    return builder.to_deprecated_string();
-}
-
-ErrorOr<String> to_unicode_titlecase_full(StringView string, Optional<StringView> const& locale, TrailingCodePointTransformation trailing_code_point_transformation)
-{
-    StringBuilder builder;
-    TRY(Detail::build_titlecase_string(Utf8View { string }, builder, locale, trailing_code_point_transformation));
-    return builder.to_string();
-}
-
-ErrorOr<String> to_unicode_casefold_full(StringView string)
-{
-    StringBuilder builder;
-    TRY(Detail::build_casefold_string(Utf8View { string }, builder));
-    return builder.to_string();
-}
-
 template<typename ViewType>
 class CasefoldStringComparator {
 public:
