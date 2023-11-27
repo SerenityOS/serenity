@@ -19,7 +19,6 @@ enum class Property : u8;
 enum class Script : u8;
 enum class SentenceBreakProperty : u8;
 enum class WordBreakProperty : u8;
-enum class TrailingCodePointTransformation : u8;
 
 struct CodePointDecomposition;
 struct CurrencyCode;
