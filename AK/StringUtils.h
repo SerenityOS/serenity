@@ -54,6 +54,13 @@ enum class SplitBehavior : unsigned {
 };
 AK_ENUM_BITWISE_OPERATORS(SplitBehavior);
 
+enum class TrailingCodePointTransformation : u8 {
+    // Default behaviour; Puts the first typographic letter unit of each word, if lowercase, in titlecase; the other characters in lowercase.
+    Lowercase,
+    // Puts the first typographic letter unit of each word, if lowercase, in titlecase; other characters are unaffected. (https://drafts.csswg.org/css-text/#valdef-text-transform-capitalize)
+    PreserveExisting,
+};
+
 struct MaskSpan {
     size_t start;
     size_t length;
@@ -117,6 +124,7 @@ size_t count(StringView, char needle);
 using AK::CaseSensitivity;
 using AK::ReplaceMode;
 using AK::SplitBehavior;
+using AK::TrailingCodePointTransformation;
 using AK::TrimMode;
 using AK::TrimWhitespace;
 #endif

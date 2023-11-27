@@ -34,13 +34,6 @@ struct BlockName {
     StringView display_name;
 };
 
-enum class TrailingCodePointTransformation : u8 {
-    // Default behaviour; Puts the first typographic letter unit of each word, if lowercase, in titlecase; the other characters in lowercase.
-    Lowercase,
-    // Puts the first typographic letter unit of each word, if lowercase, in titlecase; other characters are unaffected. (https://drafts.csswg.org/css-text/#valdef-text-transform-capitalize)
-    PreserveExisting,
-};
-
 Optional<DeprecatedString> code_point_display_name(u32 code_point);
 Optional<StringView> code_point_block_display_name(u32 code_point);
 Optional<StringView> code_point_abbreviation(u32 code_point);

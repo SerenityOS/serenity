@@ -17,6 +17,8 @@ template<size_t inline_capacity>
 class ByteBuffer;
 }
 
+enum class TrailingCodePointTransformation : u8;
+
 class BigEndianInputBitStream;
 class BigEndianOutputBitStream;
 class Bitmap;
@@ -198,6 +200,7 @@ using AK::String;
 using AK::StringBuilder;
 using AK::StringImpl;
 using AK::StringView;
+using AK::TrailingCodePointTransformation;
 using AK::Traits;
 using AK::UnixDateTime;
 using AK::URL;

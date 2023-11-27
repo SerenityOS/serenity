@@ -28,10 +28,10 @@ ErrorOr<String> String::to_uppercase(Optional<StringView> const& locale) const
     return builder.to_string();
 }
 
-ErrorOr<String> String::to_titlecase(Optional<StringView> const& locale) const
+ErrorOr<String> String::to_titlecase(Optional<StringView> const& locale, TrailingCodePointTransformation trailing_code_point_transformation) const
 {
     StringBuilder builder;
-    TRY(Unicode::Detail::build_titlecase_string(code_points(), builder, locale, Unicode::TrailingCodePointTransformation::Lowercase));
+    TRY(Unicode::Detail::build_titlecase_string(code_points(), builder, locale, trailing_code_point_transformation));
     return builder.to_string();
 }
 

@@ -95,7 +95,7 @@ public:
     // Creates a new String by case-transforming this String. Using these methods require linking LibUnicode into your application.
     ErrorOr<String> to_lowercase(Optional<StringView> const& locale = {}) const;
     ErrorOr<String> to_uppercase(Optional<StringView> const& locale = {}) const;
-    ErrorOr<String> to_titlecase(Optional<StringView> const& locale = {}) const;
+    ErrorOr<String> to_titlecase(Optional<StringView> const& locale = {}, TrailingCodePointTransformation trailing_code_point_transformation = TrailingCodePointTransformation::Lowercase) const;
     ErrorOr<String> to_casefold() const;
 
     // Compare this String against another string with caseless matching. Using this method requires linking LibUnicode into your application.
