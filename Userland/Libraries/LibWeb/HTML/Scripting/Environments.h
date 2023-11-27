@@ -85,6 +85,7 @@ struct EnvironmentSettingsObject
 
     AK::URL encoding_parse_url(StringView);
     Optional<DeprecatedString> encoding_parse_and_serialize_url(StringView);
+    AK::URL parse_url(StringView);
 
     JS::Realm& realm();
     JS::Object& global_object();

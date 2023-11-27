@@ -939,6 +939,16 @@ Optional<DeprecatedString> Document::encoding_parse_and_serialize_url(StringView
     return parsed_url.serialize();
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
+AK::URL Document::parse_url(StringView url) const
+{
+    // 1. Let baseURL be environment's base URL, if environment is a Document object; otherwise environment's API base URL.
+    auto base_url = this->base_url();
+
+    // 2. Return the result of applying the URL parser to url, with baseURL.
+    return URL::parse(url, base_url);
+}
+
 void Document::set_needs_layout()
 {
     if (m_needs_layout)

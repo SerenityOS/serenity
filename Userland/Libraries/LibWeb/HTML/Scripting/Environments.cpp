@@ -192,6 +192,16 @@ Optional<DeprecatedString> EnvironmentSettingsObject::encoding_parse_and_seriali
     return parsed_url.serialize();
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
+AK::URL EnvironmentSettingsObject::parse_url(StringView url)
+{
+    // 1. Let baseURL be environment's base URL, if environment is a Document object; otherwise environment's API base URL.
+    auto base_url = api_base_url();
+
+    // 2. Return the result of applying the URL parser to url, with baseURL.
+    return URL::parse(url, base_url);
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#clean-up-after-running-a-callback
 void EnvironmentSettingsObject::clean_up_after_running_callback()
 {

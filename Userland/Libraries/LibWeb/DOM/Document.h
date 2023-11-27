@@ -122,6 +122,7 @@ public:
 
     AK::URL encoding_parse_url(StringView) const;
     Optional<DeprecatedString> encoding_parse_and_serialize_url(StringView) const;
+    AK::URL parse_url(StringView) const;
 
     CSS::StyleComputer& style_computer() { return *m_style_computer; }
     const CSS::StyleComputer& style_computer() const { return *m_style_computer; }
