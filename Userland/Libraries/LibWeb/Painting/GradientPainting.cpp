@@ -148,17 +148,17 @@ RadialGradientData resolve_radial_gradient_data(Layout::NodeWithStyleAndBoxModel
 
 void paint_linear_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, LinearGradientData const& data)
 {
-    context.painter().fill_rect_with_linear_gradient(gradient_rect.to_type<int>(), data);
+    context.recording_painter().fill_rect_with_linear_gradient(gradient_rect.to_type<int>(), data);
 }
 
 void paint_conic_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, ConicGradientData const& data, DevicePixelPoint position)
 {
-    context.painter().fill_rect_with_conic_gradient(gradient_rect.to_type<int>(), data, position.to_type<int>());
+    context.recording_painter().fill_rect_with_conic_gradient(gradient_rect.to_type<int>(), data, position.to_type<int>());
 }
 
 void paint_radial_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, RadialGradientData const& data, DevicePixelPoint center, DevicePixelSize size)
 {
-    context.painter().fill_rect_with_radial_gradient(gradient_rect.to_type<int>(), data, center.to_type<int>(), size.to_type<int>());
+    context.recording_painter().fill_rect_with_radial_gradient(gradient_rect.to_type<int>(), data, center.to_type<int>(), size.to_type<int>());
 }
 
 }

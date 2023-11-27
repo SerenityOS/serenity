@@ -300,7 +300,7 @@ void StackingContext::paint(PaintContext& context) const
     if (opacity == 0.0f)
         return;
 
-    RecordingPainterStateSaver saver(context.painter());
+    RecordingPainterStateSaver saver(context.recording_painter());
 
     auto to_device_pixels_scale = float(context.device_pixels_per_css_pixel());
     RecordingPainter::PushStackingContextParams push_stacking_context_params {
@@ -325,9 +325,9 @@ void StackingContext::paint(PaintContext& context) const
         };
     }
 
-    context.painter().push_stacking_context(push_stacking_context_params);
+    context.recording_painter().push_stacking_context(push_stacking_context_params);
     paint_internal(context);
-    context.painter().pop_stacking_context();
+    context.recording_painter().pop_stacking_context();
 }
 
 Gfx::FloatPoint StackingContext::compute_transform_origin() const

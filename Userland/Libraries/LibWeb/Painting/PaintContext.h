@@ -20,7 +20,7 @@ class PaintContext {
 public:
     PaintContext(Painting::RecordingPainter& painter, Palette const& palette, double device_pixels_per_css_pixel);
 
-    Painting::RecordingPainter& painter() const { return m_painter; }
+    Painting::RecordingPainter& recording_painter() const { return m_recording_painter; }
     Palette const& palette() const { return m_palette; }
 
     bool should_show_line_box_borders() const { return m_should_show_line_box_borders; }
@@ -72,7 +72,7 @@ public:
     void translate_scroll_offset_by(CSSPixelPoint offset) { m_scroll_offset.translate_by(offset); }
 
 private:
-    Painting::RecordingPainter& m_painter;
+    Painting::RecordingPainter& m_recording_painter;
     Palette m_palette;
     double m_device_pixels_per_css_pixel { 0 };
     DevicePixelRect m_device_viewport_rect;
