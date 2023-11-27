@@ -691,7 +691,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     if (result_or_error.value.is_error())
         return result_or_error.value.release_error();
 
-    auto& result = result_or_error.frame->registers[0];
+    auto& result = result_or_error.frame->registers()[0];
     if (!result.is_empty())
         eval_result = result;
 

@@ -704,7 +704,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     if (value_and_frame.value.is_error())
                         return value_and_frame.value.release_error();
                     // Resulting value is in the accumulator.
-                    argument_value = value_and_frame.frame->registers.at(0);
+                    argument_value = value_and_frame.frame->registers()[0];
                 } else {
                     argument_value = js_undefined();
                 }
@@ -1225,11 +1225,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
     if (m_kind == FunctionKind::AsyncGenerator) {
-        auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
+        auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy(), result_and_frame.frame.release_nonnull()));
         return { Completion::Type::Return, async_generator_object, {} };
     }
 
-    auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
+    auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy(), result_and_frame.frame.release_nonnull()));
 
     // NOTE: Async functions are entirely transformed to generator functions, and wrapped in a custom driver that returns a promise
     //       See AwaitExpression::generate_bytecode() for the transformation.
