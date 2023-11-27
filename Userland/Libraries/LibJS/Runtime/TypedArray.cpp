@@ -322,7 +322,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM& vm, FunctionObject& co
     if (!arguments.is_empty())
         first_argument = arguments[0];
     // 1. Let newTypedArray be ? Construct(constructor, argumentList).
-    auto new_typed_array = TRY(construct(vm, constructor, move(arguments)));
+    auto new_typed_array = TRY(construct(vm, constructor, arguments.span()));
 
     // 2. Perform ? ValidateTypedArray(newTypedArray).
     if (!new_typed_array->is_typed_array())

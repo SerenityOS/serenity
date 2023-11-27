@@ -361,7 +361,7 @@ void ECMAScriptFunctionObject::initialize(Realm& realm)
 }
 
 // 10.2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist
-ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
+ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argument, ReadonlySpan<Value> arguments_list)
 {
     auto& vm = this->vm();
 
@@ -373,7 +373,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     callee_context.local_variables.resize(m_local_variables_names.size());
 
     // Non-standard
-    callee_context.arguments.extend(move(arguments_list));
+    callee_context.arguments.append(arguments_list.data(), arguments_list.size());
     callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
     // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
@@ -420,7 +420,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 }
 
 // 10.2.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_construct(ReadonlySpan<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -443,7 +443,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
     callee_context.local_variables.resize(m_local_variables_names.size());
 
     // Non-standard
-    callee_context.arguments.extend(move(arguments_list));
+    callee_context.arguments.append(arguments_list.data(), arguments_list.size());
     callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
     // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).

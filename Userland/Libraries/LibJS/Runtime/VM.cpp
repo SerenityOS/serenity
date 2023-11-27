@@ -78,8 +78,8 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
         promise_rejection_tracker(promise, operation);
     };
 
-    host_call_job_callback = [this](JobCallback& job_callback, Value this_value, MarkedVector<Value> arguments) {
-        return call_job_callback(*this, job_callback, this_value, move(arguments));
+    host_call_job_callback = [this](JobCallback& job_callback, Value this_value, ReadonlySpan<Value> arguments) {
+        return call_job_callback(*this, job_callback, this_value, arguments);
     };
 
     host_enqueue_finalization_registry_cleanup_job = [this](FinalizationRegistry& finalization_registry) {

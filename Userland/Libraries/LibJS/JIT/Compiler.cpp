@@ -2507,12 +2507,8 @@ static Value cxx_call(VM& vm, Value callee, u32 first_argument_index, u32 argume
 {
     TRY_OR_SET_EXCEPTION(throw_if_needed_for_call(vm.bytecode_interpreter(), callee, call_type, expression_string));
 
-    MarkedVector<Value> argument_values(vm.heap());
-    argument_values.ensure_capacity(argument_count);
-    for (u32 i = 0; i < argument_count; ++i) {
-        argument_values.unchecked_append(vm.bytecode_interpreter().reg(Bytecode::Register { first_argument_index + i }));
-    }
-    return TRY_OR_SET_EXCEPTION(perform_call(vm.bytecode_interpreter(), this_value, call_type, callee, move(argument_values)));
+    auto argument_values = vm.bytecode_interpreter().registers().slice(first_argument_index, argument_count);
+    return TRY_OR_SET_EXCEPTION(perform_call(vm.bytecode_interpreter(), this_value, call_type, callee, argument_values));
 }
 
 Assembler::Reg Compiler::argument_register(u32 index)

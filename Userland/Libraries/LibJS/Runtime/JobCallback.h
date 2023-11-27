@@ -23,6 +23,6 @@ struct JobCallback {
 };
 
 JobCallback make_job_callback(FunctionObject& callback);
-ThrowCompletionOr<Value> call_job_callback(VM&, JobCallback&, Value this_value, MarkedVector<Value> arguments_list);
+ThrowCompletionOr<Value> call_job_callback(VM&, JobCallback&, Value this_value, ReadonlySpan<Value> arguments_list);
 
 }

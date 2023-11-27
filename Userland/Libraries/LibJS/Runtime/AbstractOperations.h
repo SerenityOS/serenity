@@ -28,9 +28,9 @@ NonnullGCPtr<Environment> get_this_environment(VM&);
 bool can_be_held_weakly(Value);
 Object* get_super_constructor(VM&);
 ThrowCompletionOr<Value> require_object_coercible(VM&, Value);
-ThrowCompletionOr<Value> call_impl(VM&, Value function, Value this_value, Optional<MarkedVector<Value>> = {});
-ThrowCompletionOr<Value> call_impl(VM&, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> = {});
-ThrowCompletionOr<NonnullGCPtr<Object>> construct_impl(VM&, FunctionObject&, Optional<MarkedVector<Value>> = {}, FunctionObject* new_target = nullptr);
+ThrowCompletionOr<Value> call_impl(VM&, Value function, Value this_value, ReadonlySpan<Value> arguments = {});
+ThrowCompletionOr<Value> call_impl(VM&, FunctionObject& function, Value this_value, ReadonlySpan<Value> arguments = {});
+ThrowCompletionOr<NonnullGCPtr<Object>> construct_impl(VM&, FunctionObject&, ReadonlySpan<Value> arguments = {}, FunctionObject* new_target = nullptr);
 ThrowCompletionOr<size_t> length_of_array_like(VM&, Object const&);
 ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(VM&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
 ThrowCompletionOr<FunctionObject*> species_constructor(VM&, Object const&, FunctionObject& default_constructor);
@@ -75,45 +75,45 @@ ThrowCompletionOr<Value> perform_eval(VM&, Value, CallerMode, EvalMode);
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict);
 
 // 7.3.14 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
-ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, Value function, Value this_value, MarkedVector<Value> arguments_list)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, Value function, Value this_value, ReadonlySpan<Value> arguments_list)
 {
-    return call_impl(vm, function, this_value, move(arguments_list));
+    return call_impl(vm, function, this_value, arguments_list);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, Value function, Value this_value, Span<Value> arguments_list)
 {
-    return call_impl(vm, function, this_value, move(arguments_list));
+    return call_impl(vm, function, this_value, static_cast<ReadonlySpan<Value>>(arguments_list));
 }
 
 template<typename... Args>
 ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, Value function, Value this_value, Args&&... args)
 {
-    if constexpr (sizeof...(Args) > 0) {
-        MarkedVector<Value> arguments_list { vm.heap() };
-        (..., arguments_list.append(forward<Args>(args)));
-        return call_impl(vm, function, this_value, move(arguments_list));
+    constexpr auto argument_count = sizeof...(Args);
+    if constexpr (argument_count > 0) {
+        AK::Array<Value, argument_count> arguments { forward<Args>(args)... };
+        return call_impl(vm, function, this_value, static_cast<ReadonlySpan<Value>>(arguments.span()));
     }
 
     return call_impl(vm, function, this_value);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Value this_value, MarkedVector<Value> arguments_list)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Value this_value, ReadonlySpan<Value> arguments_list)
 {
-    return call_impl(vm, function, this_value, move(arguments_list));
+    return call_impl(vm, function, this_value, arguments_list);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Value this_value, Span<Value> arguments_list)
 {
-    return call_impl(vm, function, this_value, move(arguments_list));
+    return call_impl(vm, function, this_value, static_cast<ReadonlySpan<Value>>(arguments_list));
 }
 
 template<typename... Args>
 ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Value this_value, Args&&... args)
 {
-    if constexpr (sizeof...(Args) > 0) {
-        MarkedVector<Value> arguments_list { vm.heap() };
-        (..., arguments_list.append(forward<Args>(args)));
-        return call_impl(vm, function, this_value, move(arguments_list));
+    constexpr auto argument_count = sizeof...(Args);
+    if constexpr (argument_count > 0) {
+        AK::Array<Value, argument_count> arguments { forward<Args>(args)... };
+        return call_impl(vm, function, this_value, static_cast<ReadonlySpan<Value>>(arguments.span()));
     }
 
     return call_impl(vm, function, this_value);
@@ -123,23 +123,23 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(VM& vm, FunctionObject& function, Va
 template<typename... Args>
 ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> construct(VM& vm, FunctionObject& function, Args&&... args)
 {
-    if constexpr (sizeof...(Args) > 0) {
-        MarkedVector<Value> arguments_list { vm.heap() };
-        (..., arguments_list.append(forward<Args>(args)));
-        return construct_impl(vm, function, move(arguments_list));
+    constexpr auto argument_count = sizeof...(Args);
+    if constexpr (argument_count > 0) {
+        AK::Array<Value, argument_count> arguments { forward<Args>(args)... };
+        return construct_impl(vm, function, static_cast<ReadonlySpan<Value>>(arguments.span()));
     }
 
     return construct_impl(vm, function);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> construct(VM& vm, FunctionObject& function, MarkedVector<Value> arguments_list, FunctionObject* new_target = nullptr)
+ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> construct(VM& vm, FunctionObject& function, ReadonlySpan<Value> arguments_list, FunctionObject* new_target = nullptr)
 {
-    return construct_impl(vm, function, move(arguments_list), new_target);
+    return construct_impl(vm, function, arguments_list, new_target);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> construct(VM& vm, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target = nullptr)
+ALWAYS_INLINE ThrowCompletionOr<NonnullGCPtr<Object>> construct(VM& vm, FunctionObject& function, Span<Value> arguments_list, FunctionObject* new_target = nullptr)
 {
-    return construct_impl(vm, function, move(arguments_list), new_target);
+    return construct_impl(vm, function, static_cast<ReadonlySpan<Value>>(arguments_list), new_target);
 }
 
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor

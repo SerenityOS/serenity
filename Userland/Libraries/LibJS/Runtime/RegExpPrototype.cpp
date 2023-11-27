@@ -777,7 +777,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             }
 
             // iii. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
-            auto replace_result = TRY(call(vm, replace_value.as_function(), js_undefined(), move(replacer_args)));
+            auto replace_result = TRY(call(vm, replace_value.as_function(), js_undefined(), replacer_args.span()));
 
             // iv. Let replacement be ? ToString(replValue).
             replacement = TRY(replace_result.to_string(vm));

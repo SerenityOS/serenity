@@ -20,7 +20,7 @@ public:
 
     virtual ~WrappedFunction() = default;
 
-    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
+    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, ReadonlySpan<Value> arguments_list) override;
 
     // FIXME: Remove this (and stop inventing random internal slots that shouldn't exist, jeez)
     virtual DeprecatedFlyString const& name() const override { return m_wrapped_target_function->name(); }
@@ -40,7 +40,7 @@ private:
     NonnullGCPtr<Realm> m_realm;                            // [[Realm]]
 };
 
-ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const&, Value this_argument, MarkedVector<Value> const& arguments_list);
+ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const&, Value this_argument, ReadonlySpan<Value> arguments_list);
 void prepare_for_wrapped_function_call(WrappedFunction const&, ExecutionContext& callee_context);
 
 }

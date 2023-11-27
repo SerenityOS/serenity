@@ -26,6 +26,7 @@ class Array : public Object {
 public:
     static ThrowCompletionOr<NonnullGCPtr<Array>> create(Realm&, u64 length, Object* prototype = nullptr);
     static NonnullGCPtr<Array> create_from(Realm&, Vector<Value> const&);
+    static NonnullGCPtr<Array> create_from(Realm&, ReadonlySpan<Value> const&);
 
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T>
