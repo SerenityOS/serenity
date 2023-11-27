@@ -869,31 +869,33 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     // 33. Let lexDeclarations be the LexicallyScopedDeclarations of code.
     // 34. For each element d of lexDeclarations, do
     // NOTE: Due to the use of MUST in the callback, an exception should not result from `for_each_lexically_scoped_declaration`.
-    MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
-        // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
-        //       an exception should not result from `for_each_bound_name`.
+    if (scope_body->has_lexical_declarations()) {
+        MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+            // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
+            //       an exception should not result from `for_each_bound_name`.
 
-        // a. NOTE: A lexically declared name cannot be the same as a function/generator declaration, formal parameter, or a var name. Lexically declared names are only instantiated here but not initialized.
+            // a. NOTE: A lexically declared name cannot be the same as a function/generator declaration, formal parameter, or a var name. Lexically declared names are only instantiated here but not initialized.
 
-        // b. For each element dn of the BoundNames of d, do
-        MUST(declaration.for_each_bound_identifier([&](auto const& id) {
-            if (id.is_local()) {
-                // NOTE: Local variables are supported only in bytecode interpreter
-                return;
-            }
+            // b. For each element dn of the BoundNames of d, do
+            MUST(declaration.for_each_bound_identifier([&](auto const& id) {
+                if (id.is_local()) {
+                    // NOTE: Local variables are supported only in bytecode interpreter
+                    return;
+                }
 
-            // i. If IsConstantDeclaration of d is true, then
-            if (declaration.is_constant_declaration()) {
-                // 1. Perform ! lexEnv.CreateImmutableBinding(dn, true).
-                MUST(lex_environment->create_immutable_binding(vm, id.string(), true));
-            }
-            // ii. Else,
-            else {
-                // 1. Perform ! lexEnv.CreateMutableBinding(dn, false).
-                MUST(lex_environment->create_mutable_binding(vm, id.string(), false));
-            }
+                // i. If IsConstantDeclaration of d is true, then
+                if (declaration.is_constant_declaration()) {
+                    // 1. Perform ! lexEnv.CreateImmutableBinding(dn, true).
+                    MUST(lex_environment->create_immutable_binding(vm, id.string(), true));
+                }
+                // ii. Else,
+                else {
+                    // 1. Perform ! lexEnv.CreateMutableBinding(dn, false).
+                    MUST(lex_environment->create_mutable_binding(vm, id.string(), false));
+                }
+            }));
         }));
-    }));
+    }
 
     // 35. Let privateEnv be the PrivateEnvironment of calleeContext.
     auto private_environment = callee_context.private_environment;
