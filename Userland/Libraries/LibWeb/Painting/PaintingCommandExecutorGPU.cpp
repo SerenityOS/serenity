@@ -90,8 +90,13 @@ CommandResult PaintingCommandExecutorGPU::set_font(Gfx::Font const&)
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform, Optional<StackingContextMask>)
+CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform, Optional<StackingContextMask>)
 {
+    painter().save();
+    if (is_fixed_position) {
+        auto const& translation = painter().transform().translation();
+        painter().translate(-translation);
+    }
     if (opacity < 1) {
         auto painter = AccelGfx::Painter::create();
         auto canvas = AccelGfx::Canvas::create(source_paintable_rect.size());
@@ -102,7 +107,6 @@ CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, b
             .opacity = opacity,
             .destination = source_paintable_rect });
     } else {
-        painter().save();
         painter().translate(post_transform_translation.to_type<float>());
     }
     return CommandResult::Continue;
@@ -113,9 +117,8 @@ CommandResult PaintingCommandExecutorGPU::pop_stacking_context()
     if (stacking_contexts.last().opacity < 1) {
         auto stacking_context = stacking_contexts.take_last();
         painter().blit_canvas(stacking_context.destination, *stacking_context.canvas, stacking_context.opacity);
-    } else {
-        painter().restore();
     }
+    painter().restore();
     return CommandResult::Continue;
 }
 
