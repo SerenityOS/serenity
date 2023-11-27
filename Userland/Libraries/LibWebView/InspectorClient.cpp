@@ -48,6 +48,10 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
     m_inspector_web_view.use_native_user_style_sheet();
 
     m_inspector_web_view.on_inspector_loaded = [this]() {
+        if (on_dom_node_properties_received) {
+            m_inspector_web_view.run_javascript("document.getElementById(\"inspector-bottom\").style.display = \"none\";"sv);
+        }
+
         m_inspector_loaded = true;
 
         if (m_pending_selection.has_value())
@@ -59,8 +63,34 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
     m_inspector_web_view.on_inspector_selected_dom_node = [this](auto node_id, auto const& pseudo_element) {
         auto inspected_node_properties = m_content_web_view.inspect_dom_node(node_id, pseudo_element);
 
-        if (on_dom_node_properties_received)
+        if (on_dom_node_properties_received) {
             on_dom_node_properties_received(move(inspected_node_properties));
+            return;
+        }
+
+        StringBuilder builder;
+
+        // FIXME: Support box model metrics and ARIA properties.
+        auto generate_property_script = [&](auto const& computed_style, auto const& resolved_style, auto const& custom_properties) {
+            builder.append("inspector.createPropertyTables(\""sv);
+            builder.append_escaped_for_json(computed_style);
+            builder.append("\", \""sv);
+            builder.append_escaped_for_json(resolved_style);
+            builder.append("\", \""sv);
+            builder.append_escaped_for_json(custom_properties);
+            builder.append("\");"sv);
+        };
+
+        if (inspected_node_properties.is_error()) {
+            generate_property_script("{}"sv, "{}"sv, "{}"sv);
+        } else {
+            generate_property_script(
+                inspected_node_properties.value().computed_style_json,
+                inspected_node_properties.value().resolved_style_json,
+                inspected_node_properties.value().custom_properties_json);
+        }
+
+        m_inspector_web_view.run_javascript(builder.string_view());
     };
 
     inspect();
@@ -145,10 +175,18 @@ void InspectorClient::maybe_load_inspector()
             margin: 0;
         }
 
+        .split-view {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .split-view-container {
+            overflow: scroll;
+        }
+
         .tab-controls-container {
             position: absolute;
             width: 100%;
-            top: 0;
 
             padding: 4px;
 
@@ -269,34 +307,106 @@ void InspectorClient::maybe_load_inspector()
                 padding: 0;
             }
         }
+
+        .property-table {
+            width: 100%;
+
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        .property-table th {
+            position: sticky;
+            top: 0px;
+        }
+
+        .property-table th,
+        .property-table td {
+            padding: 4px;
+            text-align: left;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .property-table th {
+                background-color: rgb(57, 57, 57);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .property-table th {
+                background-color: rgb(229, 229, 229);
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="tab-controls-container">
-        <div class="tab-controls">
-            <button id="dom-tree-button" onclick="selectTopTab(this, 'dom-tree')">DOM Tree</button>
-            <button id="accessibility-tree-button" onclick="selectTopTab(this, 'accessibility-tree')">Accessibility Tree</button>
-        </div>
-    </div>
+    <div class="split-view">
+        <div id="inspector-top" class="split-view-container" style="height: 60%">
+            <div class="tab-controls-container">
+                <div class="tab-controls">
+                    <button id="dom-tree-button" onclick="selectTopTab(this, 'dom-tree')">DOM Tree</button>
+                    <button id="accessibility-tree-button" onclick="selectTopTab(this, 'accessibility-tree')">Accessibility Tree</button>
+                </div>
+            </div>
 
-    <div id="dom-tree" class="tab-content html">
+            <div id="dom-tree" class="tab-content html">
 )~~~"sv);
 
     generate_dom_tree(builder);
 
     builder.append(R"~~~(
-    </div>
-    <div id="accessibility-tree" class="tab-content">
+            </div>
+            <div id="accessibility-tree" class="tab-content">
 )~~~"sv);
 
     generate_accessibility_tree(builder);
 
     builder.append(R"~~~(
+            </div>
+        </div>
+        <div id="inspector-bottom" class="split-view-container" style="height: 40%">
+            <div class="tab-controls-container">
+                <div class="tab-controls">
+                    <button id="computed-style-button" onclick="selectBottomTab(this, 'computed-style')">Computed Style</button>
+                    <button id="resolved-style-button" onclick="selectBottomTab(this, 'resolved-style')">Resolved Style</button>
+                    <button id="custom-properties-button" onclick="selectBottomTab(this, 'custom-properties')">Custom Properties</button>
+                </div>
+            </div>
+)~~~"sv);
+
+    auto generate_property_table = [&](auto name) {
+        builder.appendff(R"~~~(
+            <div id="{0}" class="tab-content">
+                <table class="property-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="{0}-table">
+                    </tbody>
+                </table>
+            </div>
+)~~~",
+            name);
+    };
+
+    generate_property_table("computed-style"sv);
+    generate_property_table("resolved-style"sv);
+    generate_property_table("custom-properties"sv);
+
+    builder.append(R"~~~(
+        </div>
     </div>
 
     <script type="text/javascript">
         let selectedTopTab = null;
         let selectedTopTabButton = null;
+
+        let selectedBottomTab = null;
+        let selectedBottomTabButton = null;
+
         let selectedDOMNode = null;
 
         const selectTab = (tabButton, tabID, selectedTab, selectedTabButton) => {
@@ -321,8 +431,16 @@ void InspectorClient::maybe_load_inspector()
             selectedTopTabButton = tabButton;
         };
 
+        const selectBottomTab = (tabButton, tabID) => {
+            selectedBottomTab = selectTab(tabButton, tabID, selectedBottomTab, selectedBottomTabButton);
+            selectedBottomTabButton = tabButton;
+        };
+
         let initialTopTabButton = document.getElementById("dom-tree-button");
         selectTopTab(initialTopTabButton, "dom-tree");
+
+        let initialBottomTabButton = document.getElementById("computed-style-button");
+        selectBottomTab(initialBottomTabButton, "computed-style");
 
         const scrollToElement = (element) => {
             // Include an offset to prevent the element being placed behind the fixed `tab-controls` header.
@@ -357,6 +475,30 @@ void InspectorClient::maybe_load_inspector()
             }
         };
 
+        inspector.createPropertyTables = (computedStyle, resolvedStyle, customProperties) => {
+            const createPropertyTable = (tableID, properties) => {
+                let oldTable = document.getElementById(tableID);
+
+                let newTable = document.createElement("tbody");
+                newTable.setAttribute("id", tableID);
+
+                Object.keys(properties).sort().forEach(name => {
+                    let row = newTable.insertRow();
+
+                    let nameColumn = row.insertCell();
+                    nameColumn.innerText = name;
+
+                    let valueColumn = row.insertCell();
+                    valueColumn.innerText = properties[name];
+                });
+
+                oldTable.parentNode.replaceChild(newTable, oldTable)
+            };
+
+            createPropertyTable("computed-style-table", JSON.parse(computedStyle));
+            createPropertyTable("resolved-style-table", JSON.parse(resolvedStyle));
+            createPropertyTable("custom-properties-table", JSON.parse(customProperties));
+        };
 
         const inspectDOMNode = domNode => {
             if (selectedDOMNode === domNode) {
