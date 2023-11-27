@@ -1,9 +1,30 @@
+action("generate_tiff_sources") {
+  script = "//Userland/Libraries/LibGfx/TIFFGenerator.py"
+
+  args = [
+    "-o",
+    rebase_path("$target_gen_dir/ImageFormats", root_build_dir),
+  ]
+
+  outputs = [
+    "$target_gen_dir/ImageFormats/TIFFMetadata.h",
+    "$target_gen_dir/ImageFormats/TIFFTagHandler.cpp",
+  ]
+
+  # FIXME: install header into $prefix/include/LibGfx/ImageFormats on serenity
+}
+
+config("tiff_headers") {
+  include_dirs = [ "$target_gen_dir/.." ]
+}
+
 shared_library("LibGfx") {
   output_name = "gfx"
   include_dirs = [
     "//Userland/Libraries",
     "//Userland",
   ]
+  public_configs = [ ":tiff_headers" ]
   sources = [
     "AffineTransform.cpp",
     "AntiAliasingPainter.cpp",
@@ -61,11 +82,11 @@ shared_library("LibGfx") {
     "ImageFormats/QOIWriter.cpp",
     "ImageFormats/TGALoader.cpp",
     "ImageFormats/TIFFLoader.cpp",
-    "ImageFormats/TIFFTagHandler.cpp",
     "ImageFormats/TinyVGLoader.cpp",
     "ImageFormats/WebPLoader.cpp",
     "ImageFormats/WebPLoaderLossless.cpp",
     "ImageFormats/WebPLoaderLossy.cpp",
+    "ImmutableBitmap.cpp",
     "Painter.cpp",
     "Palette.cpp",
     "Path.cpp",
@@ -81,7 +102,11 @@ shared_library("LibGfx") {
     "VectorGraphic.cpp",
     "WindowTheme.cpp",
   ]
+
+  sources += get_target_outputs(":generate_tiff_sources")
+
   deps = [
+    ":generate_tiff_sources",
     "//AK",
     "//Userland/Libraries/LibCompress",
     "//Userland/Libraries/LibCore",

@@ -20,6 +20,7 @@ shared_library("LibAccelGfx") {
     "Forward.h",
     "GL.cpp",
     "GL.h",
+    "GlyphAtlas.cpp",
     "Painter.cpp",
     "Painter.h",
     "Program.cpp",
