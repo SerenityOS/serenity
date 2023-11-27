@@ -12,7 +12,6 @@
 #include <AK/WeakPtr.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/Value.h>
@@ -24,9 +23,10 @@ using ScriptOrModule = Variant<Empty, NonnullGCPtr<Script>, NonnullGCPtr<Module>
 
 // 9.4 Execution Contexts, https://tc39.es/ecma262/#sec-execution-contexts
 struct ExecutionContext {
-    explicit ExecutionContext(Heap& heap);
+    static NonnullOwnPtr<ExecutionContext> create(Heap&);
+    [[nodiscard]] NonnullOwnPtr<ExecutionContext> copy() const;
 
-    [[nodiscard]] ExecutionContext copy() const;
+    ~ExecutionContext();
 
     void visit_edges(Cell::Visitor&);
 
@@ -35,9 +35,15 @@ struct ExecutionContext {
     static FlatPtr variable_environment_offset() { return OFFSET_OF(ExecutionContext, variable_environment); }
 
 private:
-    explicit ExecutionContext(MarkedVector<Value> existing_arguments, MarkedVector<Value> existing_local_variables);
+    ExecutionContext(Heap&);
+
+    IntrusiveListNode<ExecutionContext> m_list_node;
 
 public:
+    Heap& m_heap;
+
+    using List = IntrusiveList<&ExecutionContext::m_list_node>;
+
     GCPtr<FunctionObject> function;                // [[Function]]
     GCPtr<Realm> realm;                            // [[Realm]]
     ScriptOrModule script_or_module;               // [[ScriptOrModule]]
@@ -51,8 +57,6 @@ public:
     Optional<Bytecode::InstructionStreamIterator> instruction_stream_iterator;
     GCPtr<PrimitiveString> function_name;
     Value this_value;
-    MarkedVector<Value> arguments;
-    MarkedVector<Value> local_variables;
     bool is_strict_mode { false };
 
     GCPtr<Bytecode::Executable> executable;
@@ -60,6 +64,21 @@ public:
     // https://html.spec.whatwg.org/multipage/webappapis.html#skip-when-determining-incumbent-counter
     // FIXME: Move this out of LibJS (e.g. by using the CustomData concept), as it's used exclusively by LibWeb.
     size_t skip_when_determining_incumbent_counter { 0 };
+
+    Value argument(size_t index) const
+    {
+        if (index >= arguments.size()) [[unlikely]]
+            return js_undefined();
+        return arguments[index];
+    }
+
+    Value& local(size_t index)
+    {
+        return locals[index];
+    }
+
+    Vector<Value> arguments;
+    Vector<Value> locals;
 };
 
 struct StackTraceElement {

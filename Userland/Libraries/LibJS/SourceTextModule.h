@@ -41,13 +41,13 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    NonnullRefPtr<Program> m_ecmascript_code;      // [[ECMAScriptCode]]
-    ExecutionContext m_execution_context;          // [[Context]]
-    GCPtr<Object> m_import_meta;                   // [[ImportMeta]]
-    Vector<ImportEntry> m_import_entries;          // [[ImportEntries]]
-    Vector<ExportEntry> m_local_export_entries;    // [[LocalExportEntries]]
-    Vector<ExportEntry> m_indirect_export_entries; // [[IndirectExportEntries]]
-    Vector<ExportEntry> m_star_export_entries;     // [[StarExportEntries]]
+    NonnullRefPtr<Program> m_ecmascript_code;            // [[ECMAScriptCode]]
+    NonnullOwnPtr<ExecutionContext> m_execution_context; // [[Context]]
+    GCPtr<Object> m_import_meta;                         // [[ImportMeta]]
+    Vector<ImportEntry> m_import_entries;                // [[ImportEntries]]
+    Vector<ExportEntry> m_local_export_entries;          // [[LocalExportEntries]]
+    Vector<ExportEntry> m_indirect_export_entries;       // [[IndirectExportEntries]]
+    Vector<ExportEntry> m_star_export_entries;           // [[StarExportEntries]]
 
     RefPtr<ExportStatement const> m_default_export; // Note: Not from the spec
 };

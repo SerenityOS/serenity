@@ -16,7 +16,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(GeneratorObject);
 
-ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> GeneratorObject::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::CallFrame frame)
+ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> GeneratorObject::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, NonnullOwnPtr<ExecutionContext> execution_context, Bytecode::CallFrame frame)
 {
     auto& vm = realm.vm();
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
@@ -37,7 +37,7 @@ ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> GeneratorObject::create(Realm& 
     return object;
 }
 
-GeneratorObject::GeneratorObject(Realm&, Object& prototype, ExecutionContext context, Optional<StringView> generator_brand)
+GeneratorObject::GeneratorObject(Realm&, Object& prototype, NonnullOwnPtr<ExecutionContext> context, Optional<StringView> generator_brand)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_execution_context(move(context))
     , m_generator_brand(move(generator_brand))
@@ -49,7 +49,6 @@ void GeneratorObject::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_generating_function);
     visitor.visit(m_previous_value);
-    m_execution_context.visit_edges(visitor);
     if (m_frame.has_value())
         m_frame->visit_edges(visitor);
 }
@@ -166,7 +165,7 @@ ThrowCompletionOr<Value> GeneratorObject::resume(VM& vm, Value value, Optional<S
     // 8. Push genContext onto the execution context stack; genContext is now the running execution context.
     // NOTE: This is done out of order as to not permanently disable the generator if push_execution_context throws,
     //       as `resume` will immediately throw when [[GeneratorState]] is "executing", never allowing the state to change.
-    TRY(vm.push_execution_context(generator_context, {}));
+    TRY(vm.push_execution_context(*generator_context, {}));
 
     // 7. Set generator.[[GeneratorState]] to executing.
     m_generator_state = GeneratorState::Executing;
@@ -228,7 +227,7 @@ ThrowCompletionOr<Value> GeneratorObject::resume_abrupt(JS::VM& vm, JS::Completi
     // 9. Push genContext onto the execution context stack; genContext is now the running execution context.
     // NOTE: This is done out of order as to not permanently disable the generator if push_execution_context throws,
     //       as `resume_abrupt` will immediately throw when [[GeneratorState]] is "executing", never allowing the state to change.
-    TRY(vm.push_execution_context(generator_context, {}));
+    TRY(vm.push_execution_context(*generator_context, {}));
 
     // 8. Set generator.[[GeneratorState]] to executing.
     m_generator_state = GeneratorState::Executing;

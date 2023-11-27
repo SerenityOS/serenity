@@ -175,7 +175,7 @@ JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, Deprec
     // 12. Let callResult be Call(X, thisArg, esArgs).
     VERIFY(actual_function_object);
     auto& vm = object->vm();
-    auto call_result = JS::call(vm, verify_cast<JS::FunctionObject>(*actual_function_object), this_argument.value(), move(args));
+    auto call_result = JS::call(vm, verify_cast<JS::FunctionObject>(*actual_function_object), this_argument.value(), args.span());
 
     // 13. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
     if (call_result.is_throw_completion()) {
@@ -233,7 +233,7 @@ JS::Completion invoke_callback(WebIDL::CallbackType& callback, Optional<JS::Valu
 
     // 11. Let callResult be Call(F, thisArg, esArgs).
     auto& vm = function_object->vm();
-    auto call_result = JS::call(vm, verify_cast<JS::FunctionObject>(*function_object), this_argument.value(), move(args));
+    auto call_result = JS::call(vm, verify_cast<JS::FunctionObject>(*function_object), this_argument.value(), args.span());
 
     // 12. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
     if (call_result.is_throw_completion()) {
@@ -280,7 +280,7 @@ JS::Completion construct(WebIDL::CallbackType& callback, JS::MarkedVector<JS::Va
 
     // 10. Let callResult be Completion(Construct(F, esArgs)).
     auto& vm = function_object->vm();
-    auto call_result = JS::construct(vm, verify_cast<JS::FunctionObject>(*function_object), move(args));
+    auto call_result = JS::construct(vm, verify_cast<JS::FunctionObject>(*function_object), args.span());
 
     // 11. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
     if (call_result.is_throw_completion()) {

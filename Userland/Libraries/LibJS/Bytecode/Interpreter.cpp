@@ -65,36 +65,36 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
     auto& global_environment = script_record.realm().global_environment();
 
     // 2. Let scriptContext be a new ECMAScript code execution context.
-    ExecutionContext script_context(vm.heap());
+    auto script_context = ExecutionContext::create(vm.heap());
 
     // 3. Set the Function of scriptContext to null.
     // NOTE: This was done during execution context construction.
 
     // 4. Set the Realm of scriptContext to scriptRecord.[[Realm]].
-    script_context.realm = &script_record.realm();
+    script_context->realm = &script_record.realm();
 
     // 5. Set the ScriptOrModule of scriptContext to scriptRecord.
-    script_context.script_or_module = NonnullGCPtr<Script>(script_record);
+    script_context->script_or_module = NonnullGCPtr<Script>(script_record);
 
     // 6. Set the VariableEnvironment of scriptContext to globalEnv.
-    script_context.variable_environment = &global_environment;
+    script_context->variable_environment = &global_environment;
 
     // 7. Set the LexicalEnvironment of scriptContext to globalEnv.
-    script_context.lexical_environment = &global_environment;
+    script_context->lexical_environment = &global_environment;
 
     // Non-standard: Override the lexical environment if requested.
     if (lexical_environment_override)
-        script_context.lexical_environment = lexical_environment_override;
+        script_context->lexical_environment = lexical_environment_override;
 
     // 8. Set the PrivateEnvironment of scriptContext to null.
 
     // NOTE: This isn't in the spec, but we require it.
-    script_context.is_strict_mode = script_record.parse_node().is_strict_mode();
+    script_context->is_strict_mode = script_record.parse_node().is_strict_mode();
 
     // FIXME: 9. Suspend the currently running execution context.
 
     // 10. Push scriptContext onto the execution context stack; scriptContext is now the running execution context.
-    TRY(vm.push_execution_context(script_context, {}));
+    TRY(vm.push_execution_context(*script_context, {}));
 
     // 11. Let script be scriptRecord.[[ECMAScriptCode]].
     auto& script = script_record.parse_node();
@@ -183,7 +183,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
 
 void Interpreter::run_bytecode()
 {
-    auto* locals = vm().running_execution_context().local_variables.data();
+    auto* locals = vm().running_execution_context().locals.data();
     auto* registers = this->registers().data();
     auto& accumulator = this->accumulator();
     for (;;) {
@@ -1269,7 +1269,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 ThrowCompletionOr<void> TypeofLocal::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto const& value = vm.running_execution_context().local_variables[m_index];
+    auto const& value = vm.running_execution_context().local(m_index);
     interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
     return {};
 }

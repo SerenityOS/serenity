@@ -16,7 +16,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(AsyncGenerator);
 
-ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::CallFrame frame)
+ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, NonnullOwnPtr<ExecutionContext> execution_context, Bytecode::CallFrame frame)
 {
     auto& vm = realm.vm();
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
@@ -29,7 +29,7 @@ ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& re
     return object;
 }
 
-AsyncGenerator::AsyncGenerator(Realm&, Object& prototype, ExecutionContext context)
+AsyncGenerator::AsyncGenerator(Realm&, Object& prototype, NonnullOwnPtr<ExecutionContext> context)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_async_generator_context(move(context))
 {
@@ -43,7 +43,6 @@ void AsyncGenerator::visit_edges(Cell::Visitor& visitor)
             visitor.visit(*request.completion.value());
         visitor.visit(request.capability);
     }
-    m_async_generator_context.visit_edges(visitor);
     visitor.visit(m_generating_function);
     visitor.visit(m_previous_value);
     if (m_frame.has_value())
@@ -328,7 +327,7 @@ ThrowCompletionOr<void> AsyncGenerator::resume(VM& vm, Completion completion)
     m_async_generator_state = State::Executing;
 
     // 6. Push genContext onto the execution context stack; genContext is now the running execution context.
-    TRY(vm.push_execution_context(generator_context, {}));
+    TRY(vm.push_execution_context(*generator_context, {}));
 
     // 7. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended
     //    it. Let result be the Completion Record returned by the resumed computation.

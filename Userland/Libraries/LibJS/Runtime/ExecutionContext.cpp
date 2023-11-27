@@ -7,38 +7,44 @@
  */
 
 #include <LibJS/Bytecode/Executable.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionObject.h>
 
 namespace JS {
 
+NonnullOwnPtr<ExecutionContext> ExecutionContext::create(Heap& heap)
+{
+    return adopt_own(*new ExecutionContext(heap));
+}
+
 ExecutionContext::ExecutionContext(Heap& heap)
-    : arguments(heap)
-    , local_variables(heap)
+    : m_heap(heap)
 {
+    m_heap.did_create_execution_context({}, *this);
 }
 
-ExecutionContext::ExecutionContext(MarkedVector<Value> existing_arguments, MarkedVector<Value> existing_local_variables)
-    : arguments(move(existing_arguments))
-    , local_variables(move(existing_local_variables))
+ExecutionContext::~ExecutionContext()
 {
+    m_heap.did_destroy_execution_context({}, *this);
 }
 
-ExecutionContext ExecutionContext::copy() const
+NonnullOwnPtr<ExecutionContext> ExecutionContext::copy() const
 {
-    ExecutionContext copy { arguments, local_variables };
-
-    copy.function = function;
-    copy.realm = realm;
-    copy.script_or_module = script_or_module;
-    copy.lexical_environment = lexical_environment;
-    copy.variable_environment = variable_environment;
-    copy.private_environment = private_environment;
-    copy.instruction_stream_iterator = instruction_stream_iterator;
-    copy.function_name = function_name;
-    copy.this_value = this_value;
-    copy.is_strict_mode = is_strict_mode;
-
+    auto copy = create(m_heap);
+    copy->function = function;
+    copy->realm = realm;
+    copy->script_or_module = script_or_module;
+    copy->lexical_environment = lexical_environment;
+    copy->variable_environment = variable_environment;
+    copy->private_environment = private_environment;
+    copy->instruction_stream_iterator = instruction_stream_iterator;
+    copy->function_name = function_name;
+    copy->this_value = this_value;
+    copy->is_strict_mode = is_strict_mode;
+    copy->executable = executable;
+    copy->arguments = arguments;
+    copy->locals = locals;
     return copy;
 }
 
@@ -51,9 +57,14 @@ void ExecutionContext::visit_edges(Cell::Visitor& visitor)
     visitor.visit(private_environment);
     visitor.visit(context_owner);
     visitor.visit(this_value);
+    visitor.visit(executable);
     if (instruction_stream_iterator.has_value())
         visitor.visit(const_cast<Bytecode::Executable*>(instruction_stream_iterator.value().executable()));
     visitor.visit(function_name);
+    for (auto argument : arguments)
+        visitor.visit(argument);
+    for (auto local : locals)
+        visitor.visit(local);
     script_or_module.visit(
         [](Empty) {},
         [&](auto& script_or_module) {

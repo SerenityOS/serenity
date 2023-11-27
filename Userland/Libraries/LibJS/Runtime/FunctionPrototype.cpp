@@ -98,8 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 
     Vector<Value> arguments;
     if (vm.argument_count() > 1) {
-        arguments = vm.running_execution_context().arguments;
-        arguments.remove(0);
+        arguments.append(vm.running_execution_context().arguments.span().slice(1).data(), vm.argument_count() - 1);
     }
 
     // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).

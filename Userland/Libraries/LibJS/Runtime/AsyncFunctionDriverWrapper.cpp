@@ -45,7 +45,8 @@ ThrowCompletionOr<void> AsyncFunctionDriverWrapper::await(JS::Value value)
     auto& realm = *vm.current_realm();
 
     // 1. Let asyncContext be the running execution context.
-    m_suspended_execution_context = vm.running_execution_context().copy();
+    if (!m_suspended_execution_context)
+        m_suspended_execution_context = vm.running_execution_context().copy();
 
     // 2. Let promise be ? PromiseResolve(%Promise%, value).
     auto* promise_object = TRY(promise_resolve(vm, realm.intrinsics().promise_constructor(), value));
@@ -61,7 +62,7 @@ ThrowCompletionOr<void> AsyncFunctionDriverWrapper::await(JS::Value value)
         // FIXME: b. Suspend prevContext.
 
         // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-        TRY(vm.push_execution_context(m_suspended_execution_context.value(), {}));
+        TRY(vm.push_execution_context(*m_suspended_execution_context, {}));
 
         // d. Resume the suspended evaluation of asyncContext using NormalCompletion(v) as the result of the operation that
         //    suspended it.
@@ -89,7 +90,7 @@ ThrowCompletionOr<void> AsyncFunctionDriverWrapper::await(JS::Value value)
         // FIXME: b. Suspend prevContext.
 
         // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-        TRY(vm.push_execution_context(m_suspended_execution_context.value(), {}));
+        TRY(vm.push_execution_context(*m_suspended_execution_context, {}));
 
         // d. Resume the suspended evaluation of asyncContext using ThrowCompletion(reason) as the result of the operation that
         //    suspended it.
@@ -191,8 +192,6 @@ void AsyncFunctionDriverWrapper::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_top_level_promise);
     if (m_current_promise)
         visitor.visit(m_current_promise);
-    if (m_suspended_execution_context.has_value())
-        m_suspended_execution_context->visit_edges(visitor);
 }
 
 }

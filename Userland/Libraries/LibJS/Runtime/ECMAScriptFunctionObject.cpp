@@ -370,20 +370,20 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     // 1. Let callerContext be the running execution context.
     // NOTE: No-op, kept by the VM in its execution context stack.
 
-    ExecutionContext callee_context(heap());
+    auto callee_context = ExecutionContext::create(heap());
 
-    callee_context.local_variables.resize(m_local_variables_names.size());
+    callee_context->locals.resize(m_local_variables_names.size());
 
     // Non-standard
-    callee_context.arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->arguments.append(arguments_list.data(), arguments_list.size());
+    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
     // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
-    TRY(prepare_for_ordinary_call(callee_context, nullptr));
+    TRY(prepare_for_ordinary_call(*callee_context, nullptr));
 
     // 3. Assert: calleeContext is now the running execution context.
-    VERIFY(&vm.running_execution_context() == &callee_context);
+    VERIFY(&vm.running_execution_context() == callee_context);
 
     // 4. If F.[[IsClassConstructor]] is true, then
     if (m_is_class_constructor) {
@@ -399,7 +399,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     }
 
     // 5. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-    ordinary_call_bind_this(callee_context, this_argument);
+    ordinary_call_bind_this(*callee_context, this_argument);
 
     // 6. Let result be Completion(OrdinaryCallEvaluateBody(F, argumentsList)).
     auto result = ordinary_call_evaluate_body();
@@ -440,25 +440,25 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
         this_argument = TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype, ConstructWithPrototypeTag::Tag));
     }
 
-    ExecutionContext callee_context(heap());
+    auto callee_context = ExecutionContext::create(heap());
 
-    callee_context.local_variables.resize(m_local_variables_names.size());
+    callee_context->locals.resize(m_local_variables_names.size());
 
     // Non-standard
-    callee_context.arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->arguments.append(arguments_list.data(), arguments_list.size());
+    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
     // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
-    TRY(prepare_for_ordinary_call(callee_context, &new_target));
+    TRY(prepare_for_ordinary_call(*callee_context, &new_target));
 
     // 5. Assert: calleeContext is now the running execution context.
-    VERIFY(&vm.running_execution_context() == &callee_context);
+    VERIFY(&vm.running_execution_context() == callee_context);
 
     // 6. If kind is base, then
     if (kind == ConstructorKind::Base) {
         // a. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
-        ordinary_call_bind_this(callee_context, this_argument);
+        ordinary_call_bind_this(*callee_context, this_argument);
 
         // b. Let initializeResult be Completion(InitializeInstanceElements(thisArgument, F)).
         auto initialize_result = this_argument->initialize_instance_elements(*this);
@@ -474,7 +474,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
     }
 
     // 7. Let constructorEnv be the LexicalEnvironment of calleeContext.
-    auto constructor_env = callee_context.lexical_environment;
+    auto constructor_env = callee_context->lexical_environment;
 
     // 8. Let result be Completion(OrdinaryCallEvaluateBody(F, argumentsList)).
     auto result = ordinary_call_evaluate_body();
@@ -681,7 +681,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     // 26. Else,
     //     a. Perform ? IteratorBindingInitialization of formals with arguments iteratorRecord and env.
     // NOTE: The spec makes an iterator here to do IteratorBindingInitialization but we just do it manually
-    auto& execution_context_arguments = vm.running_execution_context().arguments;
+    auto execution_context_arguments = vm.running_execution_context().arguments;
 
     size_t default_parameter_index = 0;
     for (size_t i = 0; i < m_formal_parameters.size(); ++i) {
@@ -713,7 +713,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
                 if constexpr (IsSame<NonnullRefPtr<Identifier const> const&, decltype(param)>) {
                     if (param->is_local()) {
-                        callee_context.local_variables[param->local_variable_index()] = argument_value;
+                        callee_context.locals[param->local_variable_index()] = argument_value;
                         return {};
                     }
                     Reference reference = TRY(vm.resolve_binding(param->string(), used_environment));
@@ -749,7 +749,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 //       i. If instantiatedVarNames does not contain n, then
                 //       1. Append n to instantiatedVarNames.
                 if (id.is_local()) {
-                    callee_context.local_variables[id.local_variable_index()] = js_undefined();
+                    callee_context.locals[id.local_variable_index()] = js_undefined();
                 } else {
                     // 2. Perform ! env.CreateMutableBinding(n, false).
                     // 3. Perform ! env.InitializeBinding(n, undefined).
@@ -804,7 +804,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 else {
                     // a. Let initialValue be ! env.GetBindingValue(n, false).
                     if (id.is_local()) {
-                        initial_value = callee_context.local_variables[id.local_variable_index()];
+                        initial_value = callee_context.locals[id.local_variable_index()];
                     } else {
                         initial_value = MUST(environment->get_binding_value(vm, id.string(), false));
                     }
@@ -813,7 +813,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 // 5. Perform ! varEnv.InitializeBinding(n, initialValue).
                 if (id.is_local()) {
                     // NOTE: Local variables are supported only in bytecode interpreter
-                    callee_context.local_variables[id.local_variable_index()] = initial_value;
+                    callee_context.locals[id.local_variable_index()] = initial_value;
                 } else {
                     MUST(var_environment->initialize_binding(vm, id.string(), initial_value, Environment::InitializeBindingHint::Normal));
                 }
@@ -906,7 +906,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
         // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
         if (declaration.name_identifier()->is_local()) {
-            callee_context.local_variables[declaration.name_identifier()->local_variable_index()] = function;
+            callee_context.locals[declaration.name_identifier()->local_variable_index()] = function;
         } else {
             MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
         }
@@ -1056,7 +1056,7 @@ void async_function_start(VM& vm, PromiseCapability const& promise_capability, T
     // 3. NOTE: Copying the execution state is required for AsyncBlockStart to resume its execution. It is ill-defined to resume a currently executing context.
 
     // 4. Perform AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext).
-    async_block_start(vm, async_function_body, promise_capability, async_context);
+    async_block_start(vm, async_function_body, promise_capability, *async_context);
 
     // 5. Return unused.
 }

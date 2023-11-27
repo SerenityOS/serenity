@@ -638,31 +638,31 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     // FIXME: We don't have this concept yet.
 
     // 20. Let evalContext be a new ECMAScript code execution context.
-    ExecutionContext eval_context(vm.heap());
+    auto eval_context = ExecutionContext::create(vm.heap());
 
     // 21. Set evalContext's Function to null.
     // NOTE: This was done in the construction of eval_context.
 
     // 22. Set evalContext's Realm to evalRealm.
-    eval_context.realm = &eval_realm;
+    eval_context->realm = &eval_realm;
 
     // 23. Set evalContext's ScriptOrModule to runningContext's ScriptOrModule.
-    eval_context.script_or_module = running_context.script_or_module;
+    eval_context->script_or_module = running_context.script_or_module;
 
     // 24. Set evalContext's VariableEnvironment to varEnv.
-    eval_context.variable_environment = variable_environment;
+    eval_context->variable_environment = variable_environment;
 
     // 25. Set evalContext's LexicalEnvironment to lexEnv.
-    eval_context.lexical_environment = lexical_environment;
+    eval_context->lexical_environment = lexical_environment;
 
     // 26. Set evalContext's PrivateEnvironment to privateEnv.
-    eval_context.private_environment = private_environment;
+    eval_context->private_environment = private_environment;
 
     // NOTE: This isn't in the spec, but we require it.
-    eval_context.is_strict_mode = strict_eval;
+    eval_context->is_strict_mode = strict_eval;
 
     // 27. Push evalContext onto the execution context stack; evalContext is now the running execution context.
-    TRY(vm.push_execution_context(eval_context, {}));
+    TRY(vm.push_execution_context(*eval_context, {}));
 
     // NOTE: We use a ScopeGuard to automatically pop the execution context when any of the `TRY`s below return a throw completion.
     ScopeGuard pop_guard = [&] {
@@ -1025,7 +1025,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
 }
 
 // 10.4.4.6 CreateUnmappedArgumentsObject ( argumentsList ), https://tc39.es/ecma262/#sec-createunmappedargumentsobject
-Object* create_unmapped_arguments_object(VM& vm, Span<Value> arguments)
+Object* create_unmapped_arguments_object(VM& vm, ReadonlySpan<Value> arguments)
 {
     auto& realm = *vm.current_realm();
 
@@ -1065,7 +1065,7 @@ Object* create_unmapped_arguments_object(VM& vm, Span<Value> arguments)
 }
 
 // 10.4.4.7 CreateMappedArgumentsObject ( func, formals, argumentsList, env ), https://tc39.es/ecma262/#sec-createmappedargumentsobject
-Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<FunctionParameter> const& formals, Span<Value> arguments, Environment& environment)
+Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<FunctionParameter> const& formals, ReadonlySpan<Value> arguments, Environment& environment)
 {
     auto& realm = *vm.current_realm();
 

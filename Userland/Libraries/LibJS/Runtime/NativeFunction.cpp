@@ -121,11 +121,11 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Read
     // NOTE: We don't support this concept yet.
 
     // 3. Let calleeContext be a new execution context.
-    ExecutionContext callee_context(heap());
+    auto callee_context = ExecutionContext::create(heap());
 
     // 4. Set the Function of calleeContext to F.
-    callee_context.function = this;
-    callee_context.function_name = m_name_string;
+    callee_context->function = this;
+    callee_context->function_name = m_name_string;
 
     // 5. Let calleeRealm be F.[[Realm]].
     auto callee_realm = m_realm;
@@ -139,29 +139,29 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Read
     VERIFY(callee_realm);
 
     // 6. Set the Realm of calleeContext to calleeRealm.
-    callee_context.realm = callee_realm;
+    callee_context->realm = callee_realm;
 
     // 7. Set the ScriptOrModule of calleeContext to null.
     // Note: This is already the default value.
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
-    callee_context.this_value = this_argument;
-    callee_context.arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->this_value = this_argument;
+    callee_context->arguments.append(arguments_list.data(), arguments_list.size());
+    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
-    callee_context.lexical_environment = caller_context.lexical_environment;
-    callee_context.variable_environment = caller_context.variable_environment;
+    callee_context->lexical_environment = caller_context.lexical_environment;
+    callee_context->variable_environment = caller_context.variable_environment;
     // Note: Keeping the private environment is probably only needed because of async methods in classes
     //       calling async_block_start which goes through a NativeFunction here.
-    callee_context.private_environment = caller_context.private_environment;
+    callee_context->private_environment = caller_context.private_environment;
 
     // NOTE: This is a LibJS specific hack for NativeFunction to inherit the strictness of its caller.
-    callee_context.is_strict_mode = vm.in_strict_mode();
+    callee_context->is_strict_mode = vm.in_strict_mode();
 
     // </8.> --------------------------------------------------------------------------
 
     // 9. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
-    TRY(vm.push_execution_context(callee_context, {}));
+    TRY(vm.push_execution_context(*callee_context, {}));
 
     // 10. Let result be the Completion Record that is the result of evaluating F in a manner that conforms to the specification of F. thisArgument is the this value, argumentsList provides the named parameters, and the NewTarget value is undefined.
     auto result = call();
@@ -185,11 +185,11 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Reado
     // NOTE: We don't support this concept yet.
 
     // 3. Let calleeContext be a new execution context.
-    ExecutionContext callee_context(heap());
+    auto callee_context = ExecutionContext::create(heap());
 
     // 4. Set the Function of calleeContext to F.
-    callee_context.function = this;
-    callee_context.function_name = m_name_string;
+    callee_context->function = this;
+    callee_context->function_name = m_name_string;
 
     // 5. Let calleeRealm be F.[[Realm]].
     auto callee_realm = m_realm;
@@ -203,25 +203,25 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Reado
     VERIFY(callee_realm);
 
     // 6. Set the Realm of calleeContext to calleeRealm.
-    callee_context.realm = callee_realm;
+    callee_context->realm = callee_realm;
 
     // 7. Set the ScriptOrModule of calleeContext to null.
     // Note: This is already the default value.
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
-    callee_context.arguments.append(arguments_list.data(), arguments_list.size());
-    callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
+    callee_context->arguments.append(arguments_list.data(), arguments_list.size());
+    callee_context->instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
-    callee_context.lexical_environment = caller_context.lexical_environment;
-    callee_context.variable_environment = caller_context.variable_environment;
+    callee_context->lexical_environment = caller_context.lexical_environment;
+    callee_context->variable_environment = caller_context.variable_environment;
 
     // NOTE: This is a LibJS specific hack for NativeFunction to inherit the strictness of its caller.
-    callee_context.is_strict_mode = vm.in_strict_mode();
+    callee_context->is_strict_mode = vm.in_strict_mode();
 
     // </8.> --------------------------------------------------------------------------
 
     // 9. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
-    TRY(vm.push_execution_context(callee_context, {}));
+    TRY(vm.push_execution_context(*callee_context, {}));
 
     // 10. Let result be the Completion Record that is the result of evaluating F in a manner that conforms to the specification of F. The this value is uninitialized, argumentsList provides the named parameters, and newTarget provides the NewTarget value.
     auto result = construct(new_target);

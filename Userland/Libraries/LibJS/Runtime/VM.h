@@ -150,8 +150,7 @@ public:
     {
         if (m_execution_context_stack.is_empty())
             return {};
-        auto& arguments = running_execution_context().arguments;
-        return index < arguments.size() ? arguments[index] : js_undefined();
+        return running_execution_context().argument(index);
     }
 
     Value this_value() const

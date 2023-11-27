@@ -39,8 +39,8 @@ ThrowCompletionOr<void> initialize_bound_name(VM&, DeprecatedFlyString const&, V
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 bool validate_and_apply_property_descriptor(Object*, PropertyKey const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 ThrowCompletionOr<Object*> get_prototype_from_constructor(VM&, FunctionObject const& constructor, NonnullGCPtr<Object> (Intrinsics::*intrinsic_default_prototype)());
-Object* create_unmapped_arguments_object(VM&, Span<Value> arguments);
-Object* create_mapped_arguments_object(VM&, FunctionObject&, Vector<FunctionParameter> const&, Span<Value> arguments, Environment&);
+Object* create_unmapped_arguments_object(VM&, ReadonlySpan<Value> arguments);
+Object* create_mapped_arguments_object(VM&, FunctionObject&, Vector<FunctionParameter> const&, ReadonlySpan<Value> arguments, Environment&);
 
 struct DisposableResource {
     Value resource_value;

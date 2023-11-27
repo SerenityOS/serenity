@@ -108,7 +108,7 @@ SourceTextModule::SourceTextModule(Realm& realm, StringView filename, Script::Ho
     RefPtr<ExportStatement const> default_export)
     : CyclicModule(realm, filename, has_top_level_await, move(requested_modules), host_defined)
     , m_ecmascript_code(move(body))
-    , m_execution_context(realm.heap())
+    , m_execution_context(ExecutionContext::create(realm.heap()))
     , m_import_entries(move(import_entries))
     , m_local_export_entries(move(local_export_entries))
     , m_indirect_export_entries(move(indirect_export_entries))
@@ -410,16 +410,16 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // Note: This must be true because we use a reference.
 
     // 11. Set the Realm of moduleContext to module.[[Realm]].
-    m_execution_context.realm = &realm();
+    m_execution_context->realm = &realm();
 
     // 12. Set the ScriptOrModule of moduleContext to module.
-    m_execution_context.script_or_module = NonnullGCPtr<Module>(*this);
+    m_execution_context->script_or_module = NonnullGCPtr<Module>(*this);
 
     // 13. Set the VariableEnvironment of moduleContext to module.[[Environment]].
-    m_execution_context.variable_environment = environment;
+    m_execution_context->variable_environment = environment;
 
     // 14. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
-    m_execution_context.lexical_environment = environment;
+    m_execution_context->lexical_environment = environment;
 
     // 15. Set the PrivateEnvironment of moduleContext to null.
 
@@ -427,7 +427,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // Note: We're already working on that one.
 
     // 17. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
-    TRY(vm.push_execution_context(m_execution_context, {}));
+    TRY(vm.push_execution_context(*m_execution_context, {}));
 
     // 18. Let code be module.[[ECMAScriptCode]].
 
@@ -662,27 +662,27 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] SourceTextModule::execute_module({}, PromiseCapability @ {})", filename(), capability.ptr());
 
     // 1. Let moduleContext be a new ECMAScript code execution context.
-    ExecutionContext module_context { vm.heap() };
+    auto module_context = ExecutionContext::create(vm.heap());
 
     // Note: This is not in the spec but we require it.
-    module_context.is_strict_mode = true;
+    module_context->is_strict_mode = true;
 
     // 2. Set the Function of moduleContext to null.
 
     // 3. Set the Realm of moduleContext to module.[[Realm]].
-    module_context.realm = &realm();
+    module_context->realm = &realm();
 
     // 4. Set the ScriptOrModule of moduleContext to module.
-    module_context.script_or_module = NonnullGCPtr<Module>(*this);
+    module_context->script_or_module = NonnullGCPtr<Module>(*this);
 
     // 5. Assert: module has been linked and declarations in its module environment have been instantiated.
     VERIFY(m_status != ModuleStatus::Unlinked && m_status != ModuleStatus::Linking && environment());
 
     // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
-    module_context.variable_environment = environment();
+    module_context->variable_environment = environment();
 
     // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
-    module_context.lexical_environment = environment();
+    module_context->lexical_environment = environment();
 
     // 8. Suspend the currently running execution context.
     // FIXME: We don't have suspend yet
@@ -692,7 +692,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         // a. Assert: capability is not present.
         VERIFY(capability == nullptr);
         // b. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
-        TRY(vm.push_execution_context(module_context, {}));
+        TRY(vm.push_execution_context(*module_context, {}));
 
         // c. Let result be the result of evaluating module.[[ECMAScriptCode]].
         Completion result;
@@ -713,7 +713,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         }
 
         // d. Let env be moduleContext's LexicalEnvironment.
-        auto env = module_context.lexical_environment;
+        auto env = module_context->lexical_environment;
         VERIFY(is<DeclarativeEnvironment>(*env));
 
         // e. Set result to DisposeResources(env, result).
@@ -737,7 +737,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         VERIFY(capability != nullptr);
 
         // b. Perform AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleContext).
-        async_block_start<NonnullRefPtr<Statement const>>(vm, m_ecmascript_code, *capability, module_context);
+        async_block_start<NonnullRefPtr<Statement const>>(vm, m_ecmascript_code, *capability, *module_context);
     }
 
     // 11. Return unused.

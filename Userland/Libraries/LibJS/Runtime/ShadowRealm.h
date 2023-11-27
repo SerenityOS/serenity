@@ -22,17 +22,17 @@ public:
 
     [[nodiscard]] Realm const& shadow_realm() const { return m_shadow_realm; }
     [[nodiscard]] Realm& shadow_realm() { return m_shadow_realm; }
-    [[nodiscard]] ExecutionContext const& execution_context() const { return m_execution_context; }
-    [[nodiscard]] ExecutionContext& execution_context() { return m_execution_context; }
+    [[nodiscard]] ExecutionContext const& execution_context() const { return *m_execution_context; }
+    [[nodiscard]] ExecutionContext& execution_context() { return *m_execution_context; }
 
 private:
-    ShadowRealm(Realm&, ExecutionContext, Object& prototype);
+    ShadowRealm(Realm&, NonnullOwnPtr<ExecutionContext>, Object& prototype);
 
     virtual void visit_edges(Visitor&) override;
 
     // 3.5 Properties of ShadowRealm Instances, https://tc39.es/proposal-shadowrealm/#sec-properties-of-shadowrealm-instances
-    NonnullGCPtr<Realm> m_shadow_realm;   // [[ShadowRealm]]
-    ExecutionContext m_execution_context; // [[ExecutionContext]]
+    NonnullGCPtr<Realm> m_shadow_realm;                  // [[ShadowRealm]]
+    NonnullOwnPtr<ExecutionContext> m_execution_context; // [[ExecutionContext]]
 };
 
 ThrowCompletionOr<void> copy_name_and_length(VM&, FunctionObject& function, FunctionObject& target, Optional<StringView> prefix = {}, Optional<unsigned> arg_count = {});

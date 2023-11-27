@@ -343,6 +343,12 @@ public:
         return *extract_pointer<Cell>();
     }
 
+    Cell& as_cell() const
+    {
+        VERIFY(is_cell());
+        return *extract_pointer<Cell>();
+    }
+
     Accessor& as_accessor()
     {
         VERIFY(is_accessor());

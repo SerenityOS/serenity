@@ -193,7 +193,7 @@ JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM& vm, Wasm::Module const&
                             for (auto& entry : arguments)
                                 argument_values.append(to_js_value(vm, entry));
 
-                            auto result = TRY(JS::call(vm, function, JS::js_undefined(), move(argument_values)));
+                            auto result = TRY(JS::call(vm, function, JS::js_undefined(), argument_values.span()));
                             if (type.results().is_empty())
                                 return Wasm::Result { Vector<Wasm::Value> {} };
 

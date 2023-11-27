@@ -189,7 +189,7 @@ ErrorOr<void> initialize_main_thread_vm()
     };
 
     // 8.1.5.4.1 HostCallJobCallback(callback, V, argumentsList), https://html.spec.whatwg.org/multipage/webappapis.html#hostcalljobcallback
-    s_main_thread_vm->host_call_job_callback = [](JS::JobCallback& callback, JS::Value this_value, JS::MarkedVector<JS::Value> arguments_list) {
+    s_main_thread_vm->host_call_job_callback = [](JS::JobCallback& callback, JS::Value this_value, ReadonlySpan<JS::Value> arguments_list) {
         auto& callback_host_defined = verify_cast<WebEngineCustomJobCallbackData>(*callback.custom_data);
 
         // 1. Let incumbent settings be callback.[[HostDefined]].[[IncumbentSettings]]. (NOTE: Not necessary)
@@ -203,7 +203,7 @@ ErrorOr<void> initialize_main_thread_vm()
             s_main_thread_vm->push_execution_context(*callback_host_defined.active_script_context);
 
         // 5. Let result be Call(callback.[[Callback]], V, argumentsList).
-        auto result = JS::call(*s_main_thread_vm, *callback.callback.cell(), this_value, move(arguments_list));
+        auto result = JS::call(*s_main_thread_vm, *callback.callback.cell(), this_value, arguments_list);
 
         // 6. If script execution context is not null, then pop script execution context from the JavaScript execution context stack.
         if (callback_host_defined.active_script_context) {
@@ -267,7 +267,7 @@ ErrorOr<void> initialize_main_thread_vm()
         // NOTE: This keeps job_settings alive by keeping realm alive, which is holding onto job_settings.
         HTML::queue_a_microtask(script ? script->settings_object().responsible_document().ptr() : nullptr, [job_settings, job = move(job), script_or_module = move(script_or_module)] {
             // The dummy execution context has to be kept up here to keep it alive for the duration of the function.
-            Optional<JS::ExecutionContext> dummy_execution_context;
+            OwnPtr<JS::ExecutionContext> dummy_execution_context;
 
             if (job_settings) {
                 // 1. If job settings is not null, then check if we can run script with job settings. If this returns "do not run" then return.
@@ -289,9 +289,9 @@ ErrorOr<void> initialize_main_thread_vm()
                 // FIXME: We need to setup a dummy execution context in case a JS::NativeFunction is called when processing the job.
                 //        This is because JS::NativeFunction::call excepts something to be on the execution context stack to be able to get the caller context to initialize the environment.
                 //        Do note that the JS spec gives _no_ guarantee that the execution context stack has something on it if HostEnqueuePromiseJob was called with a null realm: https://tc39.es/ecma262/#job-preparedtoevaluatecode
-                dummy_execution_context = JS::ExecutionContext { s_main_thread_vm->heap() };
+                dummy_execution_context = JS::ExecutionContext::create(s_main_thread_vm->heap());
                 dummy_execution_context->script_or_module = script_or_module;
-                s_main_thread_vm->push_execution_context(dummy_execution_context.value());
+                s_main_thread_vm->push_execution_context(*dummy_execution_context);
             }
 
             // 3. Let result be job().
@@ -331,7 +331,7 @@ ErrorOr<void> initialize_main_thread_vm()
         // 4. If active script is not null, set script execution context to a new JavaScript execution context, with its Function field set to null,
         //    its Realm field set to active script's settings object's Realm, and its ScriptOrModule set to active script's record.
         if (script) {
-            script_execution_context = adopt_own(*new JS::ExecutionContext(s_main_thread_vm->heap()));
+            script_execution_context = JS::ExecutionContext::create(s_main_thread_vm->heap());
             script_execution_context->function = nullptr;
             script_execution_context->realm = &script->settings_object().realm();
             if (is<HTML::ClassicScript>(script)) {

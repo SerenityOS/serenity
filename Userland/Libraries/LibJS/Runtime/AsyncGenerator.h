@@ -28,7 +28,7 @@ public:
         Completed,
     };
 
-    static ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> create(Realm&, Value, ECMAScriptFunctionObject*, ExecutionContext, Bytecode::CallFrame);
+    static ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> create(Realm&, Value, ECMAScriptFunctionObject*, NonnullOwnPtr<ExecutionContext>, Bytecode::CallFrame);
 
     virtual ~AsyncGenerator() override = default;
 
@@ -44,7 +44,7 @@ public:
     Optional<String> const& generator_brand() const { return m_generator_brand; }
 
 private:
-    AsyncGenerator(Realm&, Object& prototype, ExecutionContext);
+    AsyncGenerator(Realm&, Object& prototype, NonnullOwnPtr<ExecutionContext>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -53,10 +53,10 @@ private:
 
     // At the time of constructing an AsyncGenerator, we still need to point to an
     // execution context on the stack, but later need to 'adopt' it.
-    State m_async_generator_state { State::SuspendedStart }; // [[AsyncGeneratorState]]
-    ExecutionContext m_async_generator_context;              // [[AsyncGeneratorContext]]
-    Vector<AsyncGeneratorRequest> m_async_generator_queue;   // [[AsyncGeneratorQueue]]
-    Optional<String> m_generator_brand;                      // [[GeneratorBrand]]
+    State m_async_generator_state { State::SuspendedStart };   // [[AsyncGeneratorState]]
+    NonnullOwnPtr<ExecutionContext> m_async_generator_context; // [[AsyncGeneratorContext]]
+    Vector<AsyncGeneratorRequest> m_async_generator_queue;     // [[AsyncGeneratorQueue]]
+    Optional<String> m_generator_brand;                        // [[GeneratorBrand]]
 
     GCPtr<ECMAScriptFunctionObject> m_generating_function;
     Value m_previous_value;

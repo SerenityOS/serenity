@@ -450,6 +450,9 @@ void Heap::mark_live_cells(HashMap<Cell*, HeapRoot> const& roots)
 
     MarkingVisitor visitor(*this, roots);
 
+    for (auto& execution_context : m_execution_contexts)
+        execution_context.visit_edges(visitor);
+
     vm().bytecode_interpreter().visit_edges(visitor);
 
     visitor.mark_all_live_cells();

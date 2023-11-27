@@ -46,7 +46,7 @@ void NativeExecutable::run(VM& vm, size_t entry_point) const
     typedef void (*JITCode)(VM&, Value* registers, Value* locals, FlatPtr entry_point_address, ExecutionContext&);
     ((JITCode)m_code)(vm,
         vm.bytecode_interpreter().registers().data(),
-        vm.running_execution_context().local_variables.data(),
+        vm.running_execution_context().locals.data(),
         entry_point_address,
         vm.running_execution_context());
 }
