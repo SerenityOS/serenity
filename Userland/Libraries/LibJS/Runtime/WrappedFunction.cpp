@@ -54,7 +54,7 @@ void WrappedFunction::visit_edges(Visitor& visitor)
 }
 
 // 2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects-call-thisargument-argumentslist
-ThrowCompletionOr<Value> WrappedFunction::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
+ThrowCompletionOr<Value> WrappedFunction::internal_call(Value this_argument, ReadonlySpan<Value> arguments_list)
 {
     auto& vm = this->vm();
 
@@ -82,7 +82,7 @@ ThrowCompletionOr<Value> WrappedFunction::internal_call(Value this_argument, Mar
 }
 
 // 2.2 OrdinaryWrappedFunctionCall ( F: a wrapped function exotic object, thisArgument: an ECMAScript language value, argumentsList: a List of ECMAScript language values, ), https://tc39.es/proposal-shadowrealm/#sec-ordinary-wrapped-function-call
-ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& function, Value this_argument, MarkedVector<Value> const& arguments_list)
+ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& function, Value this_argument, ReadonlySpan<Value> arguments_list)
 {
     auto& vm = function.vm();
 
@@ -118,7 +118,7 @@ ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const& f
     auto wrapped_this_argument = TRY(get_wrapped_value(vm, *target_realm, this_argument));
 
     // 9. Let result be the Completion Record of Call(target, wrappedThisArgument, wrappedArgs).
-    auto result = call(vm, &target, wrapped_this_argument, move(wrapped_args));
+    auto result = call(vm, &target, wrapped_this_argument, wrapped_args.span());
 
     // 10. If result.[[Type]] is normal or result.[[Type]] is return, then
     if (!result.is_throw_completion()) {

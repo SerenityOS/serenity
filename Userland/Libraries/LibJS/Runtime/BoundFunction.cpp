@@ -45,7 +45,7 @@ BoundFunction::BoundFunction(Realm& realm, FunctionObject& bound_target_function
 }
 
 // 10.4.1.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-bound-function-exotic-objects-call-thisargument-argumentslist
-ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value this_argument, MarkedVector<Value> arguments_list)
+ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value this_argument, ReadonlySpan<Value> arguments_list)
 {
     auto& vm = this->vm();
 
@@ -59,16 +59,17 @@ ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value thi
     auto& bound_args = m_bound_arguments;
 
     // 4. Let args be the list-concatenation of boundArgs and argumentsList.
-    auto args = MarkedVector<Value> { heap() };
+    Vector<Value> args;
+    args.ensure_capacity(bound_args.size() + arguments_list.size());
     args.extend(bound_args);
-    args.extend(move(arguments_list));
+    args.append(arguments_list.data(), arguments_list.size());
 
     // 5. Return ? Call(target, boundThis, args).
-    return call(vm, &target, bound_this, move(args));
+    return call(vm, &target, bound_this, args.span());
 }
 
 // 10.4.1.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-bound-function-exotic-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<NonnullGCPtr<Object>> BoundFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> BoundFunction::internal_construct(ReadonlySpan<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -84,7 +85,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> BoundFunction::internal_construct(Marked
     // 4. Let args be the list-concatenation of boundArgs and argumentsList.
     auto args = MarkedVector<Value> { heap() };
     args.extend(bound_args);
-    args.extend(move(arguments_list));
+    args.append(arguments_list.data(), arguments_list.size());
 
     // 5. If SameValue(F, newTarget) is true, set newTarget to target.
     auto* final_new_target = &new_target;
@@ -92,7 +93,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> BoundFunction::internal_construct(Marked
         final_new_target = &target;
 
     // 6. Return ? Construct(target, args, newTarget).
-    return construct(vm, target, move(args), final_new_target);
+    return construct(vm, target, args.span(), final_new_target);
 }
 
 void BoundFunction::visit_edges(Visitor& visitor)

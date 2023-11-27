@@ -774,7 +774,7 @@ ThrowCompletionOr<MarkedVector<Value>> ProxyObject::internal_own_property_keys()
 }
 
 // 10.5.12 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist
-ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
+ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, ReadonlySpan<Value> arguments_list)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -797,7 +797,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_call(Value this_argument, MarkedV
     // 6. If trap is undefined, then
     if (!trap) {
         // a. Return ? Call(target, thisArgument, argumentsList).
-        return call(vm, m_target, this_argument, move(arguments_list));
+        return call(vm, m_target, this_argument, arguments_list);
     }
 
     // 7. Let argArray be CreateArrayFromList(argumentsList).
@@ -818,7 +818,7 @@ bool ProxyObject::has_constructor() const
 }
 
 // 10.5.13 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
-ThrowCompletionOr<NonnullGCPtr<Object>> ProxyObject::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> ProxyObject::internal_construct(ReadonlySpan<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -842,7 +842,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ProxyObject::internal_construct(MarkedVe
     // 7. If trap is undefined, then
     if (!trap) {
         // a. Return ? Construct(target, argumentsList, newTarget).
-        return construct(vm, static_cast<FunctionObject&>(*m_target), move(arguments_list), &new_target);
+        return construct(vm, static_cast<FunctionObject&>(*m_target), arguments_list, &new_target);
     }
 
     // 8. Let argArray be CreateArrayFromList(argumentsList).

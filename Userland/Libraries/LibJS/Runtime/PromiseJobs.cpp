@@ -52,9 +52,7 @@ static ThrowCompletionOr<Value> run_reaction_job(VM& vm, PromiseReaction& reacti
     // e. Else, let handlerResult be Completion(HostCallJobCallback(handler, undefined, « argument »)).
     else {
         dbgln_if(PROMISE_DEBUG, "run_reaction_job: Calling handler callback {} @ {} with argument {}", handler.value().callback.cell()->class_name(), handler.value().callback.cell(), argument);
-        MarkedVector<Value> arguments(vm.heap());
-        arguments.append(argument);
-        handler_result = vm.host_call_job_callback(handler.value(), js_undefined(), move(arguments));
+        handler_result = vm.host_call_job_callback(handler.value(), js_undefined(), ReadonlySpan<Value> { &argument, 1 });
     }
 
     // f. If promiseCapability is undefined, then
@@ -128,10 +126,10 @@ static ThrowCompletionOr<Value> run_resolve_thenable_job(VM& vm, Promise& promis
 
     // b. Let thenCallResult be Completion(HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »)).
     dbgln_if(PROMISE_DEBUG, "run_resolve_thenable_job: Calling then job callback for thenable {}", &thenable);
-    MarkedVector<Value> arguments(vm.heap());
-    arguments.append(Value(resolve_function));
-    arguments.append(Value(reject_function));
-    auto then_call_result = vm.host_call_job_callback(then, thenable, move(arguments));
+    AK::Array<Value, 2> arguments;
+    arguments[0] = Value(resolve_function);
+    arguments[1] = Value(reject_function);
+    auto then_call_result = vm.host_call_job_callback(then, thenable, arguments.span());
 
     // c. If thenCallResult is an abrupt completion, then
     if (then_call_result.is_error()) {

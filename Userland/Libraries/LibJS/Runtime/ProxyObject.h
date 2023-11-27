@@ -43,8 +43,8 @@ public:
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver, CacheablePropertyMetadata*) override;
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
     virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const override;
-    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
-    virtual ThrowCompletionOr<NonnullGCPtr<Object>> internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target) override;
+    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, ReadonlySpan<Value> arguments_list) override;
+    virtual ThrowCompletionOr<NonnullGCPtr<Object>> internal_construct(ReadonlySpan<Value> arguments_list, FunctionObject& new_target) override;
 
 private:
     ProxyObject(Object& target, Object& handler, Object& prototype);

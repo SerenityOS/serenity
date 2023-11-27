@@ -47,46 +47,40 @@ ThrowCompletionOr<Value> require_object_coercible(VM& vm, Value value)
 }
 
 // 7.3.14 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
-ThrowCompletionOr<Value> call_impl(VM& vm, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+ThrowCompletionOr<Value> call_impl(VM& vm, Value function, Value this_value, ReadonlySpan<Value> arguments_list)
 {
     // 1. If argumentsList is not present, set argumentsList to a new empty List.
-    if (!arguments_list.has_value())
-        arguments_list = MarkedVector<Value> { vm.heap() };
 
     // 2. If IsCallable(F) is false, throw a TypeError exception.
     if (!function.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function.to_string_without_side_effects());
 
     // 3. Return ? F.[[Call]](V, argumentsList).
-    return function.as_function().internal_call(this_value, move(*arguments_list));
+    return function.as_function().internal_call(this_value, arguments_list);
 }
 
-ThrowCompletionOr<Value> call_impl(VM& vm, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+ThrowCompletionOr<Value> call_impl(VM&, FunctionObject& function, Value this_value, ReadonlySpan<Value> arguments_list)
 {
     // 1. If argumentsList is not present, set argumentsList to a new empty List.
-    if (!arguments_list.has_value())
-        arguments_list = MarkedVector<Value> { vm.heap() };
 
     // 2. If IsCallable(F) is false, throw a TypeError exception.
     // Note: Called with a FunctionObject ref
 
     // 3. Return ? F.[[Call]](V, argumentsList).
-    return function.internal_call(this_value, move(*arguments_list));
+    return function.internal_call(this_value, arguments_list);
 }
 
 // 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
-ThrowCompletionOr<NonnullGCPtr<Object>> construct_impl(VM& vm, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> construct_impl(VM&, FunctionObject& function, ReadonlySpan<Value> arguments_list, FunctionObject* new_target)
 {
     // 1. If newTarget is not present, set newTarget to F.
     if (!new_target)
         new_target = &function;
 
     // 2. If argumentsList is not present, set argumentsList to a new empty List.
-    if (!arguments_list.has_value())
-        arguments_list = MarkedVector<Value> { vm.heap() };
 
     // 3. Return ? F.[[Construct]](argumentsList, newTarget).
-    return function.internal_construct(move(*arguments_list), *new_target);
+    return function.internal_construct(arguments_list, *new_target);
 }
 
 // 7.3.19 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike

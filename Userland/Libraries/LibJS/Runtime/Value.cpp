@@ -2505,7 +2505,10 @@ ThrowCompletionOr<Value> Value::invoke_internal(VM& vm, PropertyKey const& prope
     auto function = TRY(get(vm, property_key));
 
     // 3. Return ? Call(func, V, argumentsList).
-    return call(vm, function, *this, move(arguments));
+    ReadonlySpan<Value> argument_list;
+    if (arguments.has_value())
+        argument_list = arguments.value().span();
+    return call(vm, function, *this, argument_list);
 }
 
 }

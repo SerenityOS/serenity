@@ -44,8 +44,8 @@ public:
     virtual void initialize(Realm&) override;
     virtual ~ECMAScriptFunctionObject() override = default;
 
-    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
-    virtual ThrowCompletionOr<NonnullGCPtr<Object>> internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target) override;
+    virtual ThrowCompletionOr<Value> internal_call(Value this_argument, ReadonlySpan<Value> arguments_list) override;
+    virtual ThrowCompletionOr<NonnullGCPtr<Object>> internal_construct(ReadonlySpan<Value> arguments_list, FunctionObject& new_target) override;
 
     void make_method(Object& home_object);
 

@@ -96,7 +96,7 @@ NativeFunction::NativeFunction(DeprecatedFlyString name, Object& prototype)
 // these good candidates for a bit of code duplication :^)
 
 // 10.3.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-built-in-function-objects-call-thisargument-argumentslist
-ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
+ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, ReadonlySpan<Value> arguments_list)
 {
     auto& vm = this->vm();
 
@@ -132,7 +132,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     callee_context.this_value = this_argument;
-    callee_context.arguments.extend(move(arguments_list));
+    callee_context.arguments.append(arguments_list.data(), arguments_list.size());
     callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
     callee_context.lexical_environment = caller_context.lexical_environment;
@@ -160,7 +160,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
 }
 
 // 10.3.2 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-built-in-function-objects-construct-argumentslist-newtarget
-ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target)
+ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(ReadonlySpan<Value> arguments_list, FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
@@ -195,7 +195,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Marke
     // Note: This is already the default value.
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
-    callee_context.arguments.extend(move(arguments_list));
+    callee_context.arguments.append(arguments_list.data(), arguments_list.size());
     callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
     callee_context.lexical_environment = caller_context.lexical_environment;

@@ -17,7 +17,7 @@ ThrowCompletionOr<Value> get_by_id(VM&, DeprecatedFlyString const& property, Val
 ThrowCompletionOr<Value> get_by_value(VM&, Value base_value, Value property_key_value);
 ThrowCompletionOr<Value> get_global(Bytecode::Interpreter&, DeprecatedFlyString const& identifier, GlobalVariableCache&);
 ThrowCompletionOr<void> put_by_property_key(VM&, Value base, Value this_value, Value value, PropertyKey name, Op::PropertyKind kind, PropertyLookupCache* = nullptr);
-ThrowCompletionOr<Value> perform_call(Interpreter&, Value this_value, Op::CallType, Value callee, MarkedVector<Value> argument_values);
+ThrowCompletionOr<Value> perform_call(Interpreter&, Value this_value, Op::CallType, Value callee, ReadonlySpan<Value> argument_values);
 ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter&, Value callee, Op::CallType, Optional<StringTableIndex> const& expression_string);
 ThrowCompletionOr<Value> typeof_variable(VM&, DeprecatedFlyString const&);
 ThrowCompletionOr<void> set_variable(VM&, DeprecatedFlyString const&, Value, Op::EnvironmentMode, Op::SetVariable::InitializationMode, EnvironmentVariableCache&);

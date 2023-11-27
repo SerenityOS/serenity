@@ -279,7 +279,7 @@ ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value
     return {};
 }
 
-ThrowCompletionOr<Value> perform_call(Interpreter& interpreter, Value this_value, Op::CallType call_type, Value callee, MarkedVector<Value> argument_values)
+ThrowCompletionOr<Value> perform_call(Interpreter& interpreter, Value this_value, Op::CallType call_type, Value callee, ReadonlySpan<Value> argument_values)
 {
     auto& vm = interpreter.vm();
     auto& function = callee.as_function();
@@ -288,11 +288,11 @@ ThrowCompletionOr<Value> perform_call(Interpreter& interpreter, Value this_value
         if (callee == interpreter.realm().intrinsics().eval_function())
             return_value = TRY(perform_eval(vm, !argument_values.is_empty() ? argument_values[0].value_or(JS::js_undefined()) : js_undefined(), vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
         else
-            return_value = TRY(JS::call(vm, function, this_value, move(argument_values)));
+            return_value = TRY(JS::call(vm, function, this_value, argument_values));
     } else if (call_type == Op::CallType::Call)
-        return_value = TRY(JS::call(vm, function, this_value, move(argument_values)));
+        return_value = TRY(JS::call(vm, function, this_value, argument_values));
     else
-        return_value = TRY(construct(vm, function, move(argument_values)));
+        return_value = TRY(construct(vm, function, argument_values));
 
     return return_value;
 }
@@ -633,7 +633,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> super_call_with_argument_array(VM& vm, V
         return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, "Super constructor");
 
     // 6. Let result be ? Construct(func, argList, newTarget).
-    auto result = TRY(construct(vm, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
+    auto result = TRY(construct(vm, static_cast<FunctionObject&>(*func), arg_list.span(), &new_target.as_function()));
 
     // 7. Let thisER be GetThisEnvironment().
     auto& this_environment = verify_cast<FunctionEnvironment>(*get_this_environment(vm));

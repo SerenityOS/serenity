@@ -40,7 +40,7 @@ void FunctionPrototype::initialize(Realm& realm)
     define_direct_property(vm.names.name, PrimitiveString::create(vm, String {}), Attribute::Configurable);
 }
 
-ThrowCompletionOr<Value> FunctionPrototype::internal_call(Value, MarkedVector<Value>)
+ThrowCompletionOr<Value> FunctionPrototype::internal_call(Value, ReadonlySpan<Value>)
 {
     // The Function prototype object:
     // - accepts any arguments and returns undefined when invoked.
@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     // FIXME: 5. Perform PrepareForTailCall().
 
     // 6. Return ? Call(func, thisArg, argList).
-    return TRY(JS::call(vm, function, this_arg, move(arguments)));
+    return TRY(JS::call(vm, function, this_arg, arguments.span()));
 }
 
 // 20.2.3.2 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.bind
@@ -130,14 +130,10 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
     // FIXME: 3. Perform PrepareForTailCall().
 
     auto this_arg = vm.argument(0);
-    MarkedVector<Value> arguments(vm.heap());
-    if (vm.argument_count() > 1) {
-        for (size_t i = 1; i < vm.argument_count(); ++i)
-            arguments.append(vm.argument(i));
-    }
+    auto args = vm.argument_count() > 1 ? vm.running_execution_context().arguments.span().slice(1) : ReadonlySpan<Value> {};
 
     // 4. Return ? Call(func, thisArg, args).
-    return TRY(JS::call(vm, function, this_arg, move(arguments)));
+    return TRY(JS::call(vm, function, this_arg, args));
 }
 
 // 20.2.3.5 Function.prototype.toString ( ), https://tc39.es/ecma262/#sec-function.prototype.tostring
