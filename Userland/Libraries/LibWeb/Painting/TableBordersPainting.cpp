@@ -284,12 +284,12 @@ static void paint_collected_edges(PaintContext& context, Vector<BorderEdgePainti
             : border_edge_painting_info.rect.bottom_left();
 
         if (border_style == CSS::LineStyle::Dotted) {
-            context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, width.value(), Gfx::Painter::LineStyle::Dotted);
+            context.recording_painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, width.value(), Gfx::Painter::LineStyle::Dotted);
         } else if (border_style == CSS::LineStyle::Dashed) {
-            context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, width.value(), Gfx::Painter::LineStyle::Dashed);
+            context.recording_painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, width.value(), Gfx::Painter::LineStyle::Dashed);
         } else {
             // FIXME: Support the remaining line styles instead of rendering them as solid.
-            context.painter().fill_rect(Gfx::IntRect(border_edge_painting_info.rect.location(), border_edge_painting_info.rect.size()), color);
+            context.recording_painter().fill_rect(Gfx::IntRect(border_edge_painting_info.rect.location(), border_edge_painting_info.rect.size()), color);
         }
     }
 }
@@ -351,7 +351,7 @@ static void paint_separate_cell_borders(PaintableBox const& cell_box, HashMap<Ce
         .left = cell_box.box_model().border.left == 0 ? CSS::BorderData() : cell_box.computed_values().border_left(),
     };
     auto cell_rect = cell_coordinates_to_device_rect.get({ cell_box.table_cell_coordinates()->row_index, cell_box.table_cell_coordinates()->column_index }).value();
-    context.painter().paint_borders(cell_rect, cell_box.normalized_border_radii_data().as_corners(context), borders_data.to_device_pixels(context));
+    context.recording_painter().paint_borders(cell_rect, cell_box.normalized_border_radii_data().as_corners(context), borders_data.to_device_pixels(context));
 }
 
 void paint_table_borders(PaintContext& context, PaintableBox const& table_paintable)
@@ -436,7 +436,7 @@ void paint_table_borders(PaintContext& context, PaintableBox const& table_painta
                 .bottom = cell_box.box_model().border.bottom == 0 ? CSS::BorderData() : cell_box.computed_values().border_bottom(),
                 .left = cell_box.box_model().border.left == 0 ? CSS::BorderData() : cell_box.computed_values().border_left(),
             };
-            context.painter().paint_borders(context.rounded_device_rect(cell_box.absolute_border_box_rect()), cell_box.normalized_border_radii_data().as_corners(context), borders_data.to_device_pixels(context));
+            context.recording_painter().paint_borders(context.rounded_device_rect(cell_box.absolute_border_box_rect()), cell_box.normalized_border_radii_data().as_corners(context), borders_data.to_device_pixels(context));
         }
     }
 }

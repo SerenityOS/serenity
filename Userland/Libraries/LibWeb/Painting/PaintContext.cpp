@@ -9,8 +9,8 @@
 
 namespace Web {
 
-PaintContext::PaintContext(Painting::RecordingPainter& painter, Palette const& palette, double device_pixels_per_css_pixel)
-    : m_painter(painter)
+PaintContext::PaintContext(Painting::RecordingPainter& recording_painter, Palette const& palette, double device_pixels_per_css_pixel)
+    : m_recording_painter(recording_painter)
     , m_palette(palette)
     , m_device_pixels_per_css_pixel(device_pixels_per_css_pixel)
 {

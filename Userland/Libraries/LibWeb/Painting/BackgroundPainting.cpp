@@ -21,7 +21,7 @@ namespace Web::Painting {
 // https://www.w3.org/TR/css-backgrounds-3/#backgrounds
 void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, CSSPixelRect const& border_rect, Color background_color, CSS::ImageRendering image_rendering, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiiData const& border_radii)
 {
-    auto& painter = context.painter();
+    auto& painter = context.recording_painter();
 
     struct BackgroundBox {
         CSSPixelRect rect;
@@ -76,7 +76,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
     }
 
-    context.painter().fill_rect_with_rounded_corners(
+    context.recording_painter().fill_rect_with_rounded_corners(
         context.rounded_device_rect(color_box.rect).to_type<int>(),
         background_color,
         color_box.radii.top_left.as_corner(context),

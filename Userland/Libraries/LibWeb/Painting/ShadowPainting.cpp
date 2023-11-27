@@ -551,7 +551,7 @@ void paint_box_shadow(PaintContext& context,
         }
 
         auto params = PaintOuterBoxShadowParams {
-            .painter = context.painter(),
+            .painter = context.recording_painter(),
             .content_rect = bordered_content_rect,
             .border_radii = border_radii,
             .box_shadow_data = box_shadow_data,
@@ -564,16 +564,16 @@ void paint_box_shadow(PaintContext& context,
             .offset_y = offset_y,
             .blur_radius = blur_radius,
             .spread_distance = spread_distance,
-            .device_content_rect = context.painter().state().translation.map(device_content_rect.to_type<int>()).to_type<DevicePixels>(),
+            .device_content_rect = context.recording_painter().state().translation.map(device_content_rect.to_type<int>()).to_type<DevicePixels>(),
         };
 
         if (box_shadow_data.placement == ShadowPlacement::Inner) {
             params.border_radii.shrink(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
             ScopedCornerRadiusClip corner_clipper { context, device_content_rect, params.border_radii, CornerClip::Outside };
-            context.painter().paint_inner_box_shadow_params(params);
+            context.recording_painter().paint_inner_box_shadow_params(params);
         } else {
             ScopedCornerRadiusClip corner_clipper { context, device_content_rect, border_radii, CornerClip::Inside };
-            context.painter().paint_outer_box_shadow_params(params);
+            context.recording_painter().paint_outer_box_shadow_params(params);
         }
     }
 }
@@ -613,7 +613,7 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
             draw_rect.y() + offset_y - margin
         };
 
-        context.painter().paint_text_shadow(blur_radius, bounding_rect, text_rect, text, font, layer.color, fragment_baseline, draw_location);
+        context.recording_painter().paint_text_shadow(blur_radius, bounding_rect, text_rect, text, font, layer.color, fragment_baseline, draw_location);
     }
 }
 

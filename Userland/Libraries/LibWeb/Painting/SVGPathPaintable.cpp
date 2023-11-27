@@ -65,7 +65,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto svg_element_rect = svg_element->paintable_box()->absolute_rect();
 
     // FIXME: This should not be trucated to an int.
-    RecordingPainterStateSaver save_painter { context.painter() };
+    RecordingPainterStateSaver save_painter { context.recording_painter() };
 
     auto offset = context.floored_device_point(svg_element_rect.location()).to_type<int>().to_type<float>();
     auto maybe_view_box = geometry_element.view_box();
@@ -101,7 +101,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto fill_opacity = geometry_element.fill_opacity().value_or(1);
     auto winding_rule = to_gfx_winding_rule(geometry_element.fill_rule().value_or(SVG::FillRule::Nonzero));
     if (auto paint_style = geometry_element.fill_paint_style(paint_context); paint_style.has_value()) {
-        context.painter().fill_path({
+        context.recording_painter().fill_path({
             .path = closed_path(),
             .paint_style = *paint_style,
             .winding_rule = winding_rule,
@@ -109,7 +109,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
             .translation = offset,
         });
     } else if (auto fill_color = geometry_element.fill_color(); fill_color.has_value()) {
-        context.painter().fill_path({
+        context.recording_painter().fill_path({
             .path = closed_path(),
             .color = fill_color->with_opacity(fill_opacity),
             .winding_rule = winding_rule,
@@ -123,7 +123,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     float stroke_thickness = geometry_element.stroke_width().value_or(1) * viewbox_scale;
 
     if (auto paint_style = geometry_element.stroke_paint_style(paint_context); paint_style.has_value()) {
-        context.painter().stroke_path({
+        context.recording_painter().stroke_path({
             .path = path,
             .paint_style = *paint_style,
             .thickness = stroke_thickness,
@@ -131,7 +131,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
             .translation = offset,
         });
     } else if (auto stroke_color = geometry_element.stroke_color(); stroke_color.has_value()) {
-        context.painter().stroke_path({
+        context.recording_painter().stroke_path({
             .path = path,
             .color = stroke_color->with_opacity(stroke_opacity),
             .thickness = stroke_thickness,

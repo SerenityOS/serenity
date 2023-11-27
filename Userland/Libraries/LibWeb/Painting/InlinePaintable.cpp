@@ -31,7 +31,7 @@ Layout::InlineNode const& InlinePaintable::layout_node() const
 
 void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 {
-    auto& painter = context.painter();
+    auto& painter = context.recording_painter();
 
     if (phase == PaintPhase::Background) {
         auto top_left_border_radius = computed_values().border_top_left_radius();
@@ -134,9 +134,9 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 
                 border_radii_data.inflate(outline_data->top.width + outline_offset_y, outline_data->right.width + outline_offset_x, outline_data->bottom.width + outline_offset_y, outline_data->left.width + outline_offset_x);
                 borders_rect.inflate(outline_data->top.width + outline_offset_y, outline_data->right.width + outline_offset_x, outline_data->bottom.width + outline_offset_y, outline_data->left.width + outline_offset_x);
-                context.painter().paint_borders(context.rounded_device_rect(borders_rect), border_radii_data.as_corners(context), outline_data->to_device_pixels(context));
+                context.recording_painter().paint_borders(context.rounded_device_rect(borders_rect), border_radii_data.as_corners(context), outline_data->to_device_pixels(context));
             } else {
-                context.painter().paint_borders(context.rounded_device_rect(borders_rect), border_radii_data.as_corners(context), borders_data.to_device_pixels(context));
+                context.recording_painter().paint_borders(context.rounded_device_rect(borders_rect), border_radii_data.as_corners(context), borders_data.to_device_pixels(context));
             }
 
             return IterationDecision::Continue;

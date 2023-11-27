@@ -134,20 +134,20 @@ void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
     float smoothness = 1.0f / (max(checkbox_rect.width(), checkbox_rect.height()) / 2);
     if (checkbox.checked() && !checkbox.indeterminate()) {
         auto background_color = enabled ? input_colors.accent : input_colors.mid_gray;
-        context.painter().fill_rect_with_rounded_corners(checkbox_rect, modify_color(background_color), checkbox_radius);
+        context.recording_painter().fill_rect_with_rounded_corners(checkbox_rect, modify_color(background_color), checkbox_radius);
         auto tick_color = increase_contrast(input_colors.base, background_color);
         if (!enabled)
             tick_color = shade(tick_color, 0.5f);
-        context.painter().draw_signed_distance_field(checkbox_rect, tick_color, check_mark_sdf(), smoothness);
+        context.recording_painter().draw_signed_distance_field(checkbox_rect, tick_color, check_mark_sdf(), smoothness);
     } else {
         auto background_color = input_colors.background_color(enabled);
         auto border_thickness = max(1, checkbox_rect.width() / 10);
-        context.painter().fill_rect_with_rounded_corners(checkbox_rect, modify_color(input_colors.border_color(enabled)), checkbox_radius);
-        context.painter().fill_rect_with_rounded_corners(checkbox_rect.shrunken(border_thickness, border_thickness, border_thickness, border_thickness),
+        context.recording_painter().fill_rect_with_rounded_corners(checkbox_rect, modify_color(input_colors.border_color(enabled)), checkbox_radius);
+        context.recording_painter().fill_rect_with_rounded_corners(checkbox_rect.shrunken(border_thickness, border_thickness, border_thickness, border_thickness),
             background_color, max(0, checkbox_radius - border_thickness));
         if (checkbox.indeterminate()) {
             auto dash_color = increase_contrast(input_colors.dark_gray, background_color);
-            context.painter().draw_signed_distance_field(checkbox_rect,
+            context.recording_painter().draw_signed_distance_field(checkbox_rect,
                 modify_color(enabled ? dash_color : shade(dash_color, 0.3f)), check_indeterminate_sdf(), smoothness);
         }
     }

@@ -48,23 +48,23 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
         if (!hosted_paint_tree)
             return;
 
-        context.painter().save();
+        context.recording_painter().save();
         auto old_viewport_rect = context.device_viewport_rect();
 
-        context.painter().add_clip_rect(clip_rect.to_type<int>());
+        context.recording_painter().add_clip_rect(clip_rect.to_type<int>());
 
         auto absolute_device_rect = context.enclosing_device_rect(absolute_rect);
-        context.painter().translate(absolute_device_rect.x().value(), absolute_device_rect.y().value());
+        context.recording_painter().translate(absolute_device_rect.x().value(), absolute_device_rect.y().value());
 
         context.set_device_viewport_rect({ {}, context.enclosing_device_size(layout_box().dom_node().content_navigable()->size()) });
         const_cast<ViewportPaintable*>(hosted_paint_tree)->paint_all_phases(context);
 
         context.set_device_viewport_rect(old_viewport_rect);
-        context.painter().restore();
+        context.recording_painter().restore();
 
         if constexpr (HIGHLIGHT_FOCUSED_FRAME_DEBUG) {
             if (layout_box().dom_node().nested_browsing_context()->is_focused_context()) {
-                context.painter().draw_rect(clip_rect.to_type<int>(), Color::Cyan);
+                context.recording_painter().draw_rect(clip_rect.to_type<int>(), Color::Cyan);
             }
         }
     }

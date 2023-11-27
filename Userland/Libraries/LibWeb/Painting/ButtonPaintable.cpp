@@ -59,7 +59,7 @@ void ButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
         }
 
         // Paint button text clipped to button rect
-        auto& painter = context.painter();
+        auto& painter = context.recording_painter();
         painter.save();
         painter.add_clip_rect(button_rect.to_type<int>());
         painter.draw_text(

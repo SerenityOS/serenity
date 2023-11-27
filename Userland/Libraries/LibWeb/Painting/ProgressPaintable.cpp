@@ -34,7 +34,7 @@ void ProgressPaintable::paint(PaintContext& context, PaintPhase phase) const
         auto min_frame_thickness = context.rounded_device_pixels(3);
         auto frame_thickness = min(min(progress_rect.width(), progress_rect.height()) / 6, min_frame_thickness);
 
-        context.painter().paint_progressbar(
+        context.recording_painter().paint_progressbar(
             progress_rect.to_type<int>(),
             progress_rect.shrunken(frame_thickness, frame_thickness).to_type<int>(),
             context.palette(),
