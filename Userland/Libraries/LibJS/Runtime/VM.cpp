@@ -749,9 +749,9 @@ void VM::dump_backtrace() const
         auto& frame = m_execution_context_stack[i];
         if (frame->instruction_stream_iterator.has_value() && frame->instruction_stream_iterator->source_code()) {
             auto source_range = frame->instruction_stream_iterator->source_range().realize();
-            dbgln("-> {} @ {}:{},{}", frame->function_name, source_range.filename(), source_range.start.line, source_range.start.column);
+            dbgln("-> {} @ {}:{},{}", frame->function_name ? frame->function_name->utf8_string() : ""_string, source_range.filename(), source_range.start.line, source_range.start.column);
         } else {
-            dbgln("-> {}", frame->function_name);
+            dbgln("-> {}", frame->function_name ? frame->function_name->utf8_string() : ""_string);
         }
     }
 }

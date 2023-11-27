@@ -17,6 +17,20 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(NativeFunction);
 
+void NativeFunction::initialize(Realm& realm)
+{
+    Base::initialize(realm);
+    m_name_string = PrimitiveString::create(vm(), m_name);
+}
+
+void NativeFunction::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_native_function);
+    visitor.visit(m_realm);
+    visitor.visit(m_name_string);
+}
+
 // 10.3.3 CreateBuiltinFunction ( behaviour, length, name, additionalInternalSlotsList [ , realm [ , prototype [ , prefix ] ] ] ), https://tc39.es/ecma262/#sec-createbuiltinfunction
 // NOTE: This doesn't consider additionalInternalSlotsList, which is rarely used, and can either be implemented using only the `function` lambda, or needs a NativeFunction subclass.
 NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& allocating_realm, Function<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> realm, Optional<Object*> prototype, Optional<StringView> const& prefix)
@@ -111,7 +125,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Read
 
     // 4. Set the Function of calleeContext to F.
     callee_context.function = this;
-    callee_context.function_name = m_name;
+    callee_context.function_name = m_name_string;
 
     // 5. Let calleeRealm be F.[[Realm]].
     auto callee_realm = m_realm;
@@ -175,7 +189,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Reado
 
     // 4. Set the Function of calleeContext to F.
     callee_context.function = this;
-    callee_context.function_name = m_name;
+    callee_context.function_name = m_name_string;
 
     // 5. Let calleeRealm be F.[[Realm]].
     auto callee_realm = m_realm;
