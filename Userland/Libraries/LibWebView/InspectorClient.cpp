@@ -139,11 +139,14 @@ void InspectorClient::maybe_load_inspector()
 
     builder.append(R"~~~(
         body {
+            font-family: system-ui, sans-serif;
+            font-size: 10pt;
+
             margin: 0;
         }
 
         .tab-controls-container {
-            position: fixed;
+            position: absolute;
             width: 100%;
             top: 0;
 
@@ -164,7 +167,6 @@ void InspectorClient::maybe_load_inspector()
         .tab-controls button {
             font-size: 12px;
             font-weight: 600;
-            font-family: system-ui, sans-serif;
 
             float: left;
             border: none;
@@ -182,16 +184,14 @@ void InspectorClient::maybe_load_inspector()
             border-radius: 0 0.5rem 0.5rem 0;
         }
 
-        .tab-content-container {
-            margin-top: 30px;
-        }
-
         .tab-content {
+            height: 100%;
+
             display: none;
             border-radius: 0.5rem;
 
             margin-top: 30px;
-            padding: 6px 12px 6px 12px;
+            padding: 8px;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -274,38 +274,36 @@ void InspectorClient::maybe_load_inspector()
 <body>
     <div class="tab-controls-container">
         <div class="tab-controls">
-            <button id="dom-tree-button" onclick="selectTab(this, 'dom-tree')">DOM Tree</button>
-            <button id="accessibility-tree-button" onclick="selectTab(this, 'accessibility-tree')">Accessibility Tree</button>
+            <button id="dom-tree-button" onclick="selectTopTab(this, 'dom-tree')">DOM Tree</button>
+            <button id="accessibility-tree-button" onclick="selectTopTab(this, 'accessibility-tree')">Accessibility Tree</button>
         </div>
     </div>
 
-    <div class="tab-content-container">
-        <div id="dom-tree" class="tab-content html">
+    <div id="dom-tree" class="tab-content html">
 )~~~"sv);
 
     generate_dom_tree(builder);
 
     builder.append(R"~~~(
-        </div>
-        <div id="accessibility-tree" class="tab-content">
+    </div>
+    <div id="accessibility-tree" class="tab-content">
 )~~~"sv);
 
     generate_accessibility_tree(builder);
 
     builder.append(R"~~~(
-        </div>
     </div>
 
     <script type="text/javascript">
-        let selectedTab = null;
-        let selectedTabButton = null;
+        let selectedTopTab = null;
+        let selectedTopTabButton = null;
         let selectedDOMNode = null;
 
-        const selectTab = (tabButton, tabID) => {
+        const selectTab = (tabButton, tabID, selectedTab, selectedTabButton) => {
             let tab = document.getElementById(tabID);
 
             if (selectedTab === tab) {
-                return;
+                return selectedTab;
             }
             if (selectedTab !== null) {
                 selectedTab.style.display = "none";
@@ -313,14 +311,18 @@ void InspectorClient::maybe_load_inspector()
             }
 
             tab.style.display = "block";
-            selectedTab = tab;
-
             tabButton.classList.add("active");
-            selectedTabButton = tabButton;
+
+            return tab;
         };
 
-        let initialTabButton = document.getElementById("dom-tree-button");
-        selectTab(initialTabButton, "dom-tree");
+        const selectTopTab = (tabButton, tabID) => {
+            selectedTopTab = selectTab(tabButton, tabID, selectedTopTab, selectedTopTabButton);
+            selectedTopTabButton = tabButton;
+        };
+
+        let initialTopTabButton = document.getElementById("dom-tree-button");
+        selectTopTab(initialTopTabButton, "dom-tree");
 
         const scrollToElement = (element) => {
             // Include an offset to prevent the element being placed behind the fixed `tab-controls` header.
