@@ -196,8 +196,11 @@ public:
         }
 
         // z is the hash
-        AK::FixedMemoryStream hash_stream { hash };
-        StorageType z = TRY(hash_stream.read_value<BigEndian<StorageType>>());
+        StorageType z = 0u;
+        for (uint8_t byte : hash) {
+            z <<= 8;
+            z |= byte;
+        }
 
         AK::FixedMemoryStream pubkey_stream { pubkey };
         JacobianPoint pubkey_point = TRY(read_uncompressed_point(pubkey_stream));
