@@ -15,6 +15,8 @@
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 
 namespace JS::JIT {
@@ -46,7 +48,10 @@ struct SourceRecord {
     u32 source_end_offset {};
 };
 
-class Executable final : public RefCounted<Executable> {
+class Executable final : public Cell {
+    JS_CELL(Executable, Cell);
+    JS_DECLARE_ALLOCATOR(Executable);
+
 public:
     Executable(
         NonnullOwnPtr<IdentifierTable>,
@@ -60,7 +65,7 @@ public:
         Vector<NonnullOwnPtr<BasicBlock>>,
         bool is_strict_mode);
 
-    ~Executable();
+    virtual ~Executable() override;
 
     DeprecatedFlyString name;
     Vector<PropertyLookupCache> property_lookup_caches;

@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionObject.h>
 
@@ -50,6 +51,8 @@ void ExecutionContext::visit_edges(Cell::Visitor& visitor)
     visitor.visit(private_environment);
     visitor.visit(context_owner);
     visitor.visit(this_value);
+    if (instruction_stream_iterator.has_value())
+        visitor.visit(const_cast<Bytecode::Executable*>(instruction_stream_iterator.value().executable()));
     script_or_module.visit(
         [](Empty) {},
         [&](auto& script_or_module) {

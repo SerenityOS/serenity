@@ -105,7 +105,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
 
     // 13. If result.[[Type]] is normal, then
     if (result.type() == Completion::Type::Normal) {
-        auto executable_result = JS::Bytecode::Generator::generate(script);
+        auto executable_result = JS::Bytecode::Generator::generate(vm, script);
 
         if (executable_result.is_error()) {
             if (auto error_string = executable_result.error().to_string(); error_string.is_error())
@@ -451,9 +451,9 @@ void Interpreter::enter_object_environment(Object& object)
     vm().running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
 }
 
-ThrowCompletionOr<NonnullRefPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
+ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
 {
-    auto executable_result = Bytecode::Generator::generate(node, kind);
+    auto executable_result = Bytecode::Generator::generate(vm, node, kind);
     if (executable_result.is_error())
         return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 

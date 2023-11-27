@@ -11,6 +11,7 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS::Bytecode {
 
@@ -21,7 +22,7 @@ Generator::Generator()
 {
 }
 
-CodeGenerationErrorOr<NonnullRefPtr<Executable>> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
+CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind)
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());
@@ -57,7 +58,7 @@ CodeGenerationErrorOr<NonnullRefPtr<Executable>> Generator::generate(ASTNode con
     else if (is<FunctionExpression>(node))
         is_strict_mode = static_cast<FunctionExpression const&>(node).is_strict_mode();
 
-    auto executable = adopt_ref(*new Executable(
+    auto executable = vm.heap().allocate_without_realm<Executable>(
         move(generator.m_identifier_table),
         move(generator.m_string_table),
         move(generator.m_regex_table),
@@ -67,7 +68,7 @@ CodeGenerationErrorOr<NonnullRefPtr<Executable>> Generator::generate(ASTNode con
         generator.m_next_environment_variable_cache,
         generator.m_next_register,
         move(generator.m_root_basic_blocks),
-        is_strict_mode));
+        is_strict_mode);
 
     return executable;
 }

@@ -55,7 +55,7 @@ public:
     MarkedVector<Value> local_variables;
     bool is_strict_mode { false };
 
-    RefPtr<Bytecode::Executable> executable;
+    GCPtr<Bytecode::Executable> executable;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#skip-when-determining-incumbent-counter
     // FIXME: Move this out of LibJS (e.g. by using the CustomData concept), as it's used exclusively by LibWeb.

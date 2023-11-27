@@ -30,7 +30,7 @@ public:
         Function,
         Block,
     };
-    static CodeGenerationErrorOr<NonnullRefPtr<Executable>> generate(ASTNode const&, FunctionKind = FunctionKind::Normal);
+    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> generate(VM&, ASTNode const&, FunctionKind = FunctionKind::Normal);
 
     Register allocate_register();
 

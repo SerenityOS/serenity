@@ -679,7 +679,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
 
     // 29. If result.[[Type]] is normal, then
     //     a. Set result to the result of evaluating body.
-    auto executable_result = Bytecode::Generator::generate(program);
+    auto executable_result = Bytecode::Generator::generate(vm, program);
     if (executable_result.is_error())
         return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 
