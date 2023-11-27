@@ -90,8 +90,9 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 
     m_preview_textbox = find_descendant_of_type_named<GUI::TextBox>("preview_textbox");
     m_preview_textbox->on_change = [this] {
-        auto maybe_preview = [](StringView text) -> ErrorOr<String> {
-            return TRY(String::formatted("{}\n{}", text, TRY(Unicode::to_unicode_uppercase_full(text))));
+        auto maybe_preview = [](DeprecatedString const& deprecated_text) -> ErrorOr<String> {
+            auto text = TRY(String::from_deprecated_string(deprecated_text));
+            return TRY(String::formatted("{}\n{}", text, TRY(text.to_uppercase())));
         }(m_preview_textbox->text());
         if (maybe_preview.is_error())
             return show_error(maybe_preview.release_error(), "Formatting preview text failed"sv);
