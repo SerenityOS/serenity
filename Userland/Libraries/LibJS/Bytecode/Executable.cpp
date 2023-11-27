@@ -13,6 +13,8 @@
 
 namespace JS::Bytecode {
 
+JS_DEFINE_ALLOCATOR(Executable);
+
 Executable::Executable(
     NonnullOwnPtr<IdentifierTable> identifier_table,
     NonnullOwnPtr<StringTable> string_table,

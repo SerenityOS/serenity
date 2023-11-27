@@ -112,8 +112,8 @@ private:
     ThrowCompletionOr<void> function_declaration_instantiation();
 
     DeprecatedFlyString m_name;
-    RefPtr<Bytecode::Executable> m_bytecode_executable;
-    Vector<NonnullRefPtr<Bytecode::Executable>> m_default_parameter_bytecode_executables;
+    GCPtr<Bytecode::Executable> m_bytecode_executable;
+    Vector<NonnullGCPtr<Bytecode::Executable>> m_default_parameter_bytecode_executables;
     i32 m_function_length { 0 };
     Vector<DeprecatedFlyString> m_local_variables_names;
 

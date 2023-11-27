@@ -155,11 +155,11 @@ public:
     {
     }
 
-    Bytecode::Executable const* bytecode_executable() const { return m_bytecode_executable; }
-    void set_bytecode_executable(Bytecode::Executable const* bytecode_executable) { m_bytecode_executable = bytecode_executable; }
+    Bytecode::Executable* bytecode_executable() const { return m_bytecode_executable; }
+    void set_bytecode_executable(Bytecode::Executable* bytecode_executable) { m_bytecode_executable = make_handle(bytecode_executable); }
 
 private:
-    RefPtr<Bytecode::Executable> m_bytecode_executable;
+    Handle<Bytecode::Executable> m_bytecode_executable;
 };
 
 // 14.13 Labelled Statements, https://tc39.es/ecma262/#sec-labelled-statements
@@ -685,7 +685,7 @@ struct FunctionParameter {
     Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>> binding;
     RefPtr<Expression const> default_value;
     bool is_rest { false };
-    RefPtr<Bytecode::Executable> bytecode_executable {};
+    Handle<Bytecode::Executable> bytecode_executable {};
 };
 
 class FunctionNode {
