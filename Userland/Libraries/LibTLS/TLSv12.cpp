@@ -208,7 +208,7 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
 
     for (auto& cert : certificates) {
         if (!cert.is_valid()) {
-            dbgln("Certificate for {} by {} is invalid, things may or may not work!", cert.subject.common_name(), cert.issuer.common_name());
+            dbgln("Certificate for {} is invalid, things may or may not work!", cert.subject.to_string());
         }
         // FIXME: Figure out what we should do when our root certs are invalid.
 
