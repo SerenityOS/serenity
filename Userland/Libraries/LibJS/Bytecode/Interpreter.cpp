@@ -40,6 +40,18 @@ namespace JS::Bytecode {
 
 bool g_dump_bytecode = false;
 
+NonnullOwnPtr<CallFrame> CallFrame::create(size_t register_count)
+{
+    size_t allocation_size = sizeof(CallFrame) + sizeof(Value) * register_count;
+    auto* memory = malloc(allocation_size);
+    VERIFY(memory);
+    auto call_frame = adopt_own(*new (memory) CallFrame);
+    call_frame->register_count = register_count;
+    for (auto i = 0u; i < register_count; ++i)
+        new (&call_frame->register_values[i]) Value();
+    return call_frame;
+}
+
 Interpreter::Interpreter(VM& vm)
     : m_vm(vm)
 {
@@ -125,7 +137,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
             if (result_or_error.value.is_error())
                 result = result_or_error.value.release_error();
             else
-                result = result_or_error.frame->registers[0];
+                result = result_or_error.frame->registers()[0];
         }
     }
 
@@ -354,9 +366,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
     TemporaryChange restore_current_block { m_current_block, entry_point ?: executable.basic_blocks.first() };
 
     if (in_frame)
-        push_call_frame(in_frame, executable.number_of_registers);
+        push_call_frame(in_frame);
     else
-        push_call_frame(make<CallFrame>(), executable.number_of_registers);
+        push_call_frame(CallFrame::create(executable.number_of_registers));
 
     vm().execution_context_stack().last()->executable = &executable;
 
@@ -400,7 +412,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable& executa
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
     if (!m_call_frames.is_empty())
-        call_frame().registers[0] = return_value;
+        call_frame().registers()[0] = return_value;
 
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.
@@ -471,18 +483,17 @@ Realm& Interpreter::realm()
     return *m_vm.current_realm();
 }
 
-void Interpreter::push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*> frame, size_t register_count)
+void Interpreter::push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*> frame)
 {
     m_call_frames.append(move(frame));
-    this->call_frame().registers.resize(register_count);
-    m_current_call_frame = this->call_frame().registers;
+    m_current_call_frame = this->call_frame().registers();
     reg(Register::return_value()) = {};
 }
 
 Variant<NonnullOwnPtr<CallFrame>, CallFrame*> Interpreter::pop_call_frame()
 {
     auto frame = m_call_frames.take_last();
-    m_current_call_frame = m_call_frames.is_empty() ? Span<Value> {} : this->call_frame().registers;
+    m_current_call_frame = m_call_frames.is_empty() ? Span<Value> {} : this->call_frame().registers();
     return frame;
 }
 

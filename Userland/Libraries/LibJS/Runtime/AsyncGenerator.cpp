@@ -16,7 +16,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(AsyncGenerator);
 
-ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, NonnullOwnPtr<ExecutionContext> execution_context, Bytecode::CallFrame frame)
+ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> AsyncGenerator::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, NonnullOwnPtr<ExecutionContext> execution_context, NonnullOwnPtr<Bytecode::CallFrame> frame)
 {
     auto& vm = realm.vm();
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
@@ -45,7 +45,7 @@ void AsyncGenerator::visit_edges(Cell::Visitor& visitor)
     }
     visitor.visit(m_generating_function);
     visitor.visit(m_previous_value);
-    if (m_frame.has_value())
+    if (m_frame)
         m_frame->visit_edges(visitor);
     visitor.visit(m_current_promise);
 }
@@ -192,18 +192,18 @@ void AsyncGenerator::execute(VM& vm, Completion completion)
         VERIFY(!m_generating_function->bytecode_executable()->basic_blocks.find_if([next_block](auto& block) { return block == next_block; }).is_end());
 
         Bytecode::CallFrame* frame = nullptr;
-        if (m_frame.has_value())
-            frame = &m_frame.value();
+        if (m_frame)
+            frame = m_frame.ptr();
 
         if (frame)
-            frame->registers[0] = completion_object;
+            frame->registers()[0] = completion_object;
         else
             bytecode_interpreter.accumulator() = completion_object;
 
         auto next_result = bytecode_interpreter.run_and_return_frame(*m_generating_function->bytecode_executable(), next_block, frame);
 
-        if (!m_frame.has_value())
-            m_frame = move(*next_result.frame);
+        if (!m_frame)
+            m_frame = move(next_result.frame);
 
         auto result_value = move(next_result.value);
         if (!result_value.is_throw_completion()) {

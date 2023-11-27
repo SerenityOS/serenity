@@ -20,9 +20,13 @@ namespace JS::Bytecode {
 class InstructionStreamIterator;
 
 struct CallFrame {
+    static NonnullOwnPtr<CallFrame> create(size_t register_count);
+
+    void operator delete(void* ptr) { free(ptr); }
+
     void visit_edges(Cell::Visitor& visitor)
     {
-        for (auto const& value : registers)
+        for (auto const& value : registers())
             visitor.visit(value);
         for (auto const& environment : saved_lexical_environments)
             visitor.visit(environment);
@@ -30,10 +34,16 @@ struct CallFrame {
             visitor.visit(context.lexical_environment);
         }
     }
-    Vector<Value> registers;
+
     Vector<GCPtr<Environment>> saved_lexical_environments;
     Vector<UnwindInfo> unwind_contexts;
     Vector<BasicBlock const*> previously_scheduled_jumps;
+
+    Span<Value> registers() { return { register_values, register_count }; }
+    ReadonlySpan<Value> registers() const { return { register_values, register_count }; }
+
+    size_t register_count { 0 };
+    Value register_values[];
 };
 
 class Interpreter {
@@ -101,7 +111,7 @@ private:
         return const_cast<Interpreter*>(this)->call_frame();
     }
 
-    void push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*>, size_t register_count);
+    void push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*>);
     [[nodiscard]] Variant<NonnullOwnPtr<CallFrame>, CallFrame*> pop_call_frame();
 
     VM& m_vm;

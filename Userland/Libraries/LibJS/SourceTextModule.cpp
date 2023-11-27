@@ -708,7 +708,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
                 result = value_and_frame.value.release_error();
             } else {
                 // Resulting value is in the accumulator.
-                result = value_and_frame.frame->registers.at(0).value_or(js_undefined());
+                result = value_and_frame.frame->registers()[0].value_or(js_undefined());
             }
         }
 

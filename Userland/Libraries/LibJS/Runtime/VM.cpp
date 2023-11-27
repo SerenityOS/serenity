@@ -285,7 +285,7 @@ ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
     auto result_or_error = bytecode_interpreter().run_and_return_frame(*executable, nullptr);
     if (result_or_error.value.is_error())
         return result_or_error.value.release_error();
-    return result_or_error.frame->registers[0];
+    return result_or_error.frame->registers()[0];
 }
 
 // 13.15.5.3 Runtime Semantics: PropertyDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-propertydestructuringassignmentevaluation
