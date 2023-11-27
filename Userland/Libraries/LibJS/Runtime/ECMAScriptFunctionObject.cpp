@@ -914,7 +914,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     if (is<DeclarativeEnvironment>(*lex_environment))
         static_cast<DeclarativeEnvironment*>(lex_environment.ptr())->shrink_to_fit();
-    if (is<DeclarativeEnvironment>(*var_environment))
+    if (lex_environment != var_environment && is<DeclarativeEnvironment>(*var_environment))
         static_cast<DeclarativeEnvironment*>(var_environment.ptr())->shrink_to_fit();
 
     // 37. Return unused.
