@@ -22,7 +22,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(ShadowRealm);
 
-ShadowRealm::ShadowRealm(Realm& shadow_realm, ExecutionContext execution_context, Object& prototype)
+ShadowRealm::ShadowRealm(Realm& shadow_realm, NonnullOwnPtr<ExecutionContext> execution_context, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_shadow_realm(shadow_realm)
     , m_execution_context(move(execution_context))
@@ -143,28 +143,28 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
     // NOTE: We don't support this concept yet.
 
     // 9. Let evalContext be a new ECMAScript code execution context.
-    auto eval_context = ExecutionContext { vm.heap() };
+    auto eval_context = ExecutionContext::create(vm.heap());
 
     // 10. Set evalContext's Function to null.
-    eval_context.function = nullptr;
+    eval_context->function = nullptr;
 
     // 11. Set evalContext's Realm to evalRealm.
-    eval_context.realm = &eval_realm;
+    eval_context->realm = &eval_realm;
 
     // 12. Set evalContext's ScriptOrModule to null.
     // Note: This is already the default value.
 
     // 13. Set evalContext's VariableEnvironment to varEnv.
-    eval_context.variable_environment = variable_environment;
+    eval_context->variable_environment = variable_environment;
 
     // 14. Set evalContext's LexicalEnvironment to lexEnv.
-    eval_context.lexical_environment = lexical_environment;
+    eval_context->lexical_environment = lexical_environment;
 
     // Non-standard
-    eval_context.is_strict_mode = strict_eval;
+    eval_context->is_strict_mode = strict_eval;
 
     // 15. Push evalContext onto the execution context stack; evalContext is now the running execution context.
-    TRY(vm.push_execution_context(eval_context, {}));
+    TRY(vm.push_execution_context(*eval_context, {}));
 
     // 16. Let result be Completion(EvalDeclarationInstantiation(body, varEnv, lexEnv, null, strictEval)).
     auto eval_result = eval_declaration_instantiation(vm, program, variable_environment, lexical_environment, nullptr, strict_eval);

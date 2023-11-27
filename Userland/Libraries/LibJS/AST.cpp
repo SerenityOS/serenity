@@ -1666,7 +1666,7 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
 
             // iii. Perform ! env.InitializeBinding(fn, fo). NOTE: This step is replaced in section B.3.2.6.
             if (function_declaration.name_identifier()->is_local()) {
-                vm.running_execution_context().local_variables[function_declaration.name_identifier()->local_variable_index()] = function;
+                vm.running_execution_context().local(function_declaration.name_identifier()->local_variable_index()) = function;
             } else {
                 VERIFY(is<DeclarativeEnvironment>(*environment));
                 static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, vm, function_declaration.name(), function);

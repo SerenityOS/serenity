@@ -199,31 +199,6 @@ void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
     for (auto string : m_single_ascii_character_strings)
         roots.set(string, HeapRoot { .type = HeapRoot::Type::VM });
 
-    auto gather_roots_from_execution_context_stack = [&roots](Vector<ExecutionContext*> const& stack) {
-        for (auto& execution_context : stack) {
-            if (execution_context->this_value.is_cell())
-                roots.set(&execution_context->this_value.as_cell(), { .type = HeapRoot::Type::VM });
-            for (auto& argument : execution_context->arguments) {
-                if (argument.is_cell())
-                    roots.set(&argument.as_cell(), HeapRoot { .type = HeapRoot::Type::VM });
-            }
-            roots.set(execution_context->lexical_environment, HeapRoot { .type = HeapRoot::Type::VM });
-            roots.set(execution_context->variable_environment, HeapRoot { .type = HeapRoot::Type::VM });
-            roots.set(execution_context->private_environment, HeapRoot { .type = HeapRoot::Type::VM });
-            if (auto context_owner = execution_context->context_owner)
-                roots.set(context_owner, HeapRoot { .type = HeapRoot::Type::VM });
-            execution_context->script_or_module.visit(
-                [](Empty) {},
-                [&](auto& script_or_module) {
-                    roots.set(script_or_module.ptr(), HeapRoot { .type = HeapRoot::Type::VM });
-                });
-        }
-    };
-
-    gather_roots_from_execution_context_stack(m_execution_context_stack);
-    for (auto& saved_stack : m_saved_execution_context_stacks)
-        gather_roots_from_execution_context_stack(saved_stack);
-
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     roots.set(m_well_known_symbols.snake_name, HeapRoot { .type = HeapRoot::Type::VM });
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS

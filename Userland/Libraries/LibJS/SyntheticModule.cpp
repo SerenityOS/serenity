@@ -79,25 +79,25 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
     // FIXME: We don't have suspend yet.
 
     // 2. Let moduleContext be a new ECMAScript code execution context.
-    ExecutionContext module_context { vm.heap() };
+    auto module_context = ExecutionContext::create(vm.heap());
 
     // 3. Set the Function of moduleContext to null.
     // Note: This is the default value.
 
     // 4. Set the Realm of moduleContext to module.[[Realm]].
-    module_context.realm = &realm();
+    module_context->realm = &realm();
 
     // 5. Set the ScriptOrModule of moduleContext to module.
-    module_context.script_or_module = NonnullGCPtr<Module>(*this);
+    module_context->script_or_module = NonnullGCPtr<Module>(*this);
 
     // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
-    module_context.variable_environment = environment();
+    module_context->variable_environment = environment();
 
     // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
-    module_context.lexical_environment = environment();
+    module_context->lexical_environment = environment();
 
     // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
-    TRY(vm.push_execution_context(module_context, {}));
+    TRY(vm.push_execution_context(*module_context, {}));
 
     // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
     auto result = m_evaluation_steps(*this);

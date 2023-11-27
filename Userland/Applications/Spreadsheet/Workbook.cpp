@@ -23,7 +23,7 @@ Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_wi
     : m_sheets(move(sheets))
     , m_vm(JS::VM::create().release_value_but_fixme_should_propagate_errors())
     , m_root_execution_context(JS::create_simple_execution_context<JS::GlobalObject>(m_vm))
-    , m_main_execution_context(m_vm->heap())
+    , m_main_execution_context(JS::ExecutionContext::create(m_vm->heap()))
     , m_parent_window(parent_window)
 {
     auto& realm = *m_root_execution_context->realm;
@@ -31,13 +31,13 @@ Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_wi
     m_workbook_object = vm.heap().allocate<WorkbookObject>(realm, realm, *this);
     realm.global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
 
-    m_main_execution_context.this_value = &realm.global_object();
-    m_main_execution_context.function_name = "(global execution context)"sv;
-    m_main_execution_context.lexical_environment = &realm.global_environment();
-    m_main_execution_context.variable_environment = &realm.global_environment();
-    m_main_execution_context.realm = &realm;
-    m_main_execution_context.is_strict_mode = true;
-    m_vm->push_execution_context(m_main_execution_context);
+    m_main_execution_context->this_value = &realm.global_object();
+    m_main_execution_context->function_name = JS::PrimitiveString::create(vm, "(global execution context)"sv);
+    m_main_execution_context->lexical_environment = &realm.global_environment();
+    m_main_execution_context->variable_environment = &realm.global_environment();
+    m_main_execution_context->realm = &realm;
+    m_main_execution_context->is_strict_mode = true;
+    m_vm->push_execution_context(*m_main_execution_context);
     m_vm->enable_default_host_import_module_dynamically_hook();
 }
 

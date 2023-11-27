@@ -268,7 +268,9 @@ ThrowCompletionOr<NonnullGCPtr<Object>> FunctionConstructor::construct(FunctionO
     auto* constructor = vm.active_function_object();
 
     // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
-    auto& args = vm.running_execution_context().arguments;
+    MarkedVector<Value> args(heap());
+    for (auto argument : vm.running_execution_context().arguments)
+        args.append(argument);
 
     // 3. Return ? CreateDynamicFunction(C, NewTarget, normal, args).
     return *TRY(create_dynamic_function(vm, *constructor, &new_target, FunctionKind::Normal, args));
