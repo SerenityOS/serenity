@@ -985,7 +985,8 @@ ErrorOr<DeprecatedString> Streamer::read_string()
     auto string_length = TRY(read_variable_size_integer());
     if (remaining() < string_length)
         return Error::from_string_literal("String length extends past the end of the stream");
-    auto string_value = DeprecatedString(data_as_chars(), string_length);
+    auto string_data = data_as_chars();
+    auto string_value = DeprecatedString(string_data, strnlen(string_data, string_length));
     TRY(read_raw_octets(string_length));
     return string_value;
 }
