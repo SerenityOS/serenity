@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +16,7 @@
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
+#include <ctype.h>
 
 TEST_CASE(construct_empty)
 {
@@ -243,65 +245,439 @@ TEST_CASE(reverse)
     test_reverse("ab😀cd"sv, "dc😀ba"sv);
 }
 
-TEST_CASE(to_lowercase)
+TEST_CASE(to_lowercase_unconditional_special_casing)
 {
-    {
-        auto string = "Aa"_string;
-        auto result = MUST(string.to_lowercase());
-        EXPECT_EQ(result, "aa"sv);
-    }
-    {
-        auto string = "Ωω"_string;
-        auto result = MUST(string.to_lowercase());
-        EXPECT_EQ(result, "ωω"sv);
-    }
-    {
-        auto string = "İi̇"_string;
-        auto result = MUST(string.to_lowercase());
-        EXPECT_EQ(result, "i̇i̇"sv);
-    }
+    // LATIN SMALL LETTER SHARP S
+    auto result = MUST("\u00DF"_string.to_lowercase());
+    EXPECT_EQ(result, "\u00DF");
+
+    // LATIN CAPITAL LETTER I WITH DOT ABOVE
+    result = MUST("\u0130"_string.to_lowercase());
+    EXPECT_EQ(result, "\u0069\u0307");
+
+    // LATIN SMALL LIGATURE FF
+    result = MUST("\uFB00"_string.to_lowercase());
+    EXPECT_EQ(result, "\uFB00");
+
+    // LATIN SMALL LIGATURE FI
+    result = MUST("\uFB01"_string.to_lowercase());
+    EXPECT_EQ(result, "\uFB01");
+
+    // LATIN SMALL LIGATURE FL
+    result = MUST("\uFB02"_string.to_lowercase());
+    EXPECT_EQ(result, "\uFB02");
+
+    // LATIN SMALL LIGATURE FFI
+    result = MUST("\uFB03"_string.to_lowercase());
+    EXPECT_EQ(result, "\uFB03");
+
+    // LATIN SMALL LIGATURE FFL
+    result = MUST("\uFB04"_string.to_lowercase());
+    EXPECT_EQ(result, "\uFB04");
+
+    // LATIN SMALL LIGATURE LONG S T
+    result = MUST("\uFB05"_string.to_lowercase());
+    EXPECT_EQ(result, "\uFB05");
+
+    // LATIN SMALL LIGATURE ST
+    result = MUST("\uFB06"_string.to_lowercase());
+    EXPECT_EQ(result, "\uFB06");
+
+    // GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FB7"_string.to_lowercase());
+    EXPECT_EQ(result, "\u1FB7");
+
+    // GREEK SMALL LETTER ETA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FC7"_string.to_lowercase());
+    EXPECT_EQ(result, "\u1FC7");
+
+    // GREEK SMALL LETTER OMEGA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FF7"_string.to_lowercase());
+    EXPECT_EQ(result, "\u1FF7");
 }
 
-TEST_CASE(to_uppercase)
+TEST_CASE(to_lowercase_special_casing_sigma)
 {
-    {
-        auto string = "Aa"_string;
-        auto result = MUST(string.to_uppercase());
-        EXPECT_EQ(result, "AA"sv);
-    }
-    {
-        auto string = "Ωω"_string;
-        auto result = MUST(string.to_uppercase());
-        EXPECT_EQ(result, "ΩΩ"sv);
-    }
-    {
-        auto string = "ŉ"_string;
-        auto result = MUST(string.to_uppercase());
-        EXPECT_EQ(result, "ʼN"sv);
-    }
+    auto result = MUST("ABCI"_string.to_lowercase());
+    EXPECT_EQ(result, "abci");
+
+    // Sigma preceded by A
+    result = MUST("A\u03A3"_string.to_lowercase());
+    EXPECT_EQ(result, "a\u03C2");
+
+    // Sigma preceded by FEMININE ORDINAL INDICATOR
+    result = MUST("\u00AA\u03A3"_string.to_lowercase());
+    EXPECT_EQ(result, "\u00AA\u03C2");
+
+    // Sigma preceded by ROMAN NUMERAL ONE
+    result = MUST("\u2160\u03A3"_string.to_lowercase());
+    EXPECT_EQ(result, "\u2170\u03C2");
+
+    // Sigma preceded by COMBINING GREEK YPOGEGRAMMENI
+    result = MUST("\u0345\u03A3"_string.to_lowercase());
+    EXPECT_EQ(result, "\u0345\u03C3");
+
+    // Sigma preceded by A and FULL STOP
+    result = MUST("A.\u03A3"_string.to_lowercase());
+    EXPECT_EQ(result, "a.\u03C2");
+
+    // Sigma preceded by A and MONGOLIAN VOWEL SEPARATOR
+    result = MUST("A\u180E\u03A3"_string.to_lowercase());
+    EXPECT_EQ(result, "a\u180E\u03C2");
+
+    // Sigma preceded by A and MONGOLIAN VOWEL SEPARATOR, followed by B
+    result = MUST("A\u180E\u03A3B"_string.to_lowercase());
+    EXPECT_EQ(result, "a\u180E\u03C3b");
+
+    // Sigma followed by A
+    result = MUST("\u03A3A"_string.to_lowercase());
+    EXPECT_EQ(result, "\u03C3a");
+
+    // Sigma preceded by A, followed by MONGOLIAN VOWEL SEPARATOR
+    result = MUST("A\u03A3\u180E"_string.to_lowercase());
+    EXPECT_EQ(result, "a\u03C2\u180E");
+
+    // Sigma preceded by A, followed by MONGOLIAN VOWEL SEPARATOR and B
+    result = MUST("A\u03A3\u180EB"_string.to_lowercase());
+    EXPECT_EQ(result, "a\u03C3\u180Eb");
+
+    // Sigma preceded by A and MONGOLIAN VOWEL SEPARATOR, followed by MONGOLIAN VOWEL SEPARATOR
+    result = MUST("A\u180E\u03A3\u180E"_string.to_lowercase());
+    EXPECT_EQ(result, "a\u180E\u03C2\u180E");
+
+    // Sigma preceded by A and MONGOLIAN VOWEL SEPARATOR, followed by MONGOLIAN VOWEL SEPARATOR and B
+    result = MUST("A\u180E\u03A3\u180EB"_string.to_lowercase());
+    EXPECT_EQ(result, "a\u180E\u03C3\u180Eb");
+}
+
+TEST_CASE(to_lowercase_special_casing_i)
+{
+    // LATIN CAPITAL LETTER I
+    auto result = MUST("I"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    result = MUST("I"_string.to_lowercase("az"sv));
+    EXPECT_EQ(result, "\u0131"sv);
+
+    result = MUST("I"_string.to_lowercase("tr"sv));
+    EXPECT_EQ(result, "\u0131"sv);
+
+    // LATIN CAPITAL LETTER I WITH DOT ABOVE
+    result = MUST("\u0130"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "\u0069\u0307"sv);
+
+    result = MUST("\u0130"_string.to_lowercase("az"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    result = MUST("\u0130"_string.to_lowercase("tr"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    // LATIN CAPITAL LETTER I followed by COMBINING DOT ABOVE
+    result = MUST("I\u0307"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "i\u0307"sv);
+
+    result = MUST("I\u0307"_string.to_lowercase("az"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    result = MUST("I\u0307"_string.to_lowercase("tr"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    // LATIN CAPITAL LETTER I followed by combining class 0 and COMBINING DOT ABOVE
+    result = MUST("IA\u0307"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "ia\u0307"sv);
+
+    result = MUST("IA\u0307"_string.to_lowercase("az"sv));
+    EXPECT_EQ(result, "\u0131a\u0307"sv);
+
+    result = MUST("IA\u0307"_string.to_lowercase("tr"sv));
+    EXPECT_EQ(result, "\u0131a\u0307"sv);
+}
+
+TEST_CASE(to_lowercase_special_casing_more_above)
+{
+    // LATIN CAPITAL LETTER I
+    auto result = MUST("I"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    result = MUST("I"_string.to_lowercase("lt"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    // LATIN CAPITAL LETTER J
+    result = MUST("J"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "j"sv);
+
+    result = MUST("J"_string.to_lowercase("lt"sv));
+    EXPECT_EQ(result, "j"sv);
+
+    // LATIN CAPITAL LETTER I WITH OGONEK
+    result = MUST("\u012e"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "\u012f"sv);
+
+    result = MUST("\u012e"_string.to_lowercase("lt"sv));
+    EXPECT_EQ(result, "\u012f"sv);
+
+    // LATIN CAPITAL LETTER I followed by COMBINING GRAVE ACCENT
+    result = MUST("I\u0300"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "i\u0300"sv);
+
+    result = MUST("I\u0300"_string.to_lowercase("lt"sv));
+    EXPECT_EQ(result, "i\u0307\u0300"sv);
+
+    // LATIN CAPITAL LETTER J followed by COMBINING GRAVE ACCENT
+    result = MUST("J\u0300"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "j\u0300"sv);
+
+    result = MUST("J\u0300"_string.to_lowercase("lt"sv));
+    EXPECT_EQ(result, "j\u0307\u0300"sv);
+
+    // LATIN CAPITAL LETTER I WITH OGONEK followed by COMBINING GRAVE ACCENT
+    result = MUST("\u012e\u0300"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "\u012f\u0300"sv);
+
+    result = MUST("\u012e\u0300"_string.to_lowercase("lt"sv));
+    EXPECT_EQ(result, "\u012f\u0307\u0300"sv);
+}
+
+TEST_CASE(to_lowercase_special_casing_not_before_dot)
+{
+    // LATIN CAPITAL LETTER I
+    auto result = MUST("I"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    result = MUST("I"_string.to_lowercase("az"sv));
+    EXPECT_EQ(result, "\u0131"sv);
+
+    result = MUST("I"_string.to_lowercase("tr"sv));
+    EXPECT_EQ(result, "\u0131"sv);
+
+    // LATIN CAPITAL LETTER I followed by COMBINING DOT ABOVE
+    result = MUST("I\u0307"_string.to_lowercase("en"sv));
+    EXPECT_EQ(result, "i\u0307"sv);
+
+    result = MUST("I\u0307"_string.to_lowercase("az"sv));
+    EXPECT_EQ(result, "i"sv);
+
+    result = MUST("I\u0307"_string.to_lowercase("tr"sv));
+    EXPECT_EQ(result, "i"sv);
+}
+
+TEST_CASE(to_uppercase_unconditional_special_casing)
+{
+    // LATIN SMALL LETTER SHARP S
+    auto result = MUST("\u00DF"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0053\u0053");
+
+    // LATIN CAPITAL LETTER I WITH DOT ABOVE
+    result = MUST("\u0130"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0130");
+
+    // LATIN SMALL LIGATURE FF
+    result = MUST("\uFB00"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0046\u0046");
+
+    // LATIN SMALL LIGATURE FI
+    result = MUST("\uFB01"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0046\u0049");
+
+    // LATIN SMALL LIGATURE FL
+    result = MUST("\uFB02"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0046\u004C");
+
+    // LATIN SMALL LIGATURE FFI
+    result = MUST("\uFB03"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0046\u0046\u0049");
+
+    // LATIN SMALL LIGATURE FFL
+    result = MUST("\uFB04"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0046\u0046\u004C");
+
+    // LATIN SMALL LIGATURE LONG S T
+    result = MUST("\uFB05"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0053\u0054");
+
+    // LATIN SMALL LIGATURE ST
+    result = MUST("\uFB06"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0053\u0054");
+
+    // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS
+    result = MUST("\u0390"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0399\u0308\u0301");
+
+    // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS
+    result = MUST("\u03B0"_string.to_uppercase());
+    EXPECT_EQ(result, "\u03A5\u0308\u0301");
+
+    // GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FB7"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0391\u0342\u0399");
+
+    // GREEK SMALL LETTER ETA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FC7"_string.to_uppercase());
+    EXPECT_EQ(result, "\u0397\u0342\u0399");
+
+    // GREEK SMALL LETTER OMEGA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FF7"_string.to_uppercase());
+    EXPECT_EQ(result, "\u03A9\u0342\u0399");
+}
+
+TEST_CASE(to_uppercase_special_casing_soft_dotted)
+{
+    // LATIN SMALL LETTER I
+    auto result = MUST("i"_string.to_uppercase("en"sv));
+    EXPECT_EQ(result, "I"sv);
+
+    result = MUST("i"_string.to_uppercase("lt"sv));
+    EXPECT_EQ(result, "I"sv);
+
+    // LATIN SMALL LETTER J
+    result = MUST("j"_string.to_uppercase("en"sv));
+    EXPECT_EQ(result, "J"sv);
+
+    result = MUST("j"_string.to_uppercase("lt"sv));
+    EXPECT_EQ(result, "J"sv);
+
+    // LATIN SMALL LETTER I followed by COMBINING DOT ABOVE
+    result = MUST("i\u0307"_string.to_uppercase("en"sv));
+    EXPECT_EQ(result, "I\u0307"sv);
+
+    result = MUST("i\u0307"_string.to_uppercase("lt"sv));
+    EXPECT_EQ(result, "I"sv);
+
+    // LATIN SMALL LETTER J followed by COMBINING DOT ABOVE
+    result = MUST("j\u0307"_string.to_uppercase("en"sv));
+    EXPECT_EQ(result, "J\u0307"sv);
+
+    result = MUST("j\u0307"_string.to_uppercase("lt"sv));
+    EXPECT_EQ(result, "J"sv);
 }
 
 TEST_CASE(to_titlecase)
 {
-    {
-        auto string = "foo bar baz"_string;
-        auto result = MUST(string.to_titlecase());
-        EXPECT_EQ(result, "Foo Bar Baz"sv);
+    EXPECT_EQ(MUST(""_string.to_titlecase()), ""sv);
+    EXPECT_EQ(MUST(" "_string.to_titlecase()), " "sv);
+    EXPECT_EQ(MUST(" - "_string.to_titlecase()), " - "sv);
+
+    EXPECT_EQ(MUST("a"_string.to_titlecase()), "A"sv);
+    EXPECT_EQ(MUST("A"_string.to_titlecase()), "A"sv);
+    EXPECT_EQ(MUST(" a"_string.to_titlecase()), " A"sv);
+    EXPECT_EQ(MUST("a "_string.to_titlecase()), "A "sv);
+
+    EXPECT_EQ(MUST("ab"_string.to_titlecase()), "Ab"sv);
+    EXPECT_EQ(MUST("Ab"_string.to_titlecase()), "Ab"sv);
+    EXPECT_EQ(MUST("aB"_string.to_titlecase()), "Ab"sv);
+    EXPECT_EQ(MUST("AB"_string.to_titlecase()), "Ab"sv);
+    EXPECT_EQ(MUST(" ab"_string.to_titlecase()), " Ab"sv);
+    EXPECT_EQ(MUST("ab "_string.to_titlecase()), "Ab "sv);
+
+    EXPECT_EQ(MUST("foo bar baz"_string.to_titlecase()), "Foo Bar Baz"sv);
+    EXPECT_EQ(MUST("foo \n \r bar \t baz"_string.to_titlecase()), "Foo \n \r Bar \t Baz"sv);
+    EXPECT_EQ(MUST("f\"oo\" b'ar'"_string.to_titlecase()), "F\"Oo\" B'ar'"sv);
+    EXPECT_EQ(MUST("123dollars"_string.to_titlecase()), "123Dollars"sv);
+}
+
+TEST_CASE(to_casefold)
+{
+    for (u8 code_point = 0; code_point < 0x80; ++code_point) {
+        auto ascii = tolower(code_point);
+        auto unicode = MUST(MUST(String::from_utf8({ reinterpret_cast<char const*>(&code_point), 1 })).to_casefold());
+
+        EXPECT_EQ(unicode.bytes_as_string_view().length(), 1u);
+        EXPECT_EQ(unicode.bytes_as_string_view()[0], ascii);
     }
-    {
-        auto string = "foo \n \r bar \t baz"_string;
-        auto result = MUST(string.to_titlecase());
-        EXPECT_EQ(result, "Foo \n \r Bar \t Baz"sv);
-    }
-    {
-        auto string = "f\"oo\" b'ar'"_string;
-        auto result = MUST(string.to_titlecase());
-        EXPECT_EQ(result, "F\"Oo\" B'ar'"sv);
-    }
-    {
-        auto string = "123dollars"_string;
-        auto result = MUST(string.to_titlecase());
-        EXPECT_EQ(result, "123Dollars"sv);
+
+    // LATIN SMALL LETTER SHARP S
+    auto result = MUST("\u00DF"_string.to_casefold());
+    EXPECT_EQ(result, "\u0073\u0073"sv);
+
+    // GREEK SMALL LETTER ALPHA WITH YPOGEGRAMMENI
+    result = MUST("\u1FB3"_string.to_casefold());
+    EXPECT_EQ(result, "\u03B1\u03B9"sv);
+
+    // GREEK SMALL LETTER ALPHA WITH PERISPOMENI
+    result = MUST("\u1FB6"_string.to_casefold());
+    EXPECT_EQ(result, "\u03B1\u0342"sv);
+
+    // GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FB7"_string.to_casefold());
+    EXPECT_EQ(result, "\u03B1\u0342\u03B9"sv);
+}
+
+TEST_CASE(to_titlecase_unconditional_special_casing)
+{
+    // LATIN SMALL LETTER SHARP S
+    auto result = MUST("\u00DF"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0053\u0073"sv);
+
+    // LATIN CAPITAL LETTER I WITH DOT ABOVE
+    result = MUST("\u0130"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0130"sv);
+
+    // LATIN SMALL LIGATURE FF
+    result = MUST("\uFB00"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0046\u0066"sv);
+
+    // LATIN SMALL LIGATURE FI
+    result = MUST("\uFB01"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0046\u0069"sv);
+
+    // LATIN SMALL LIGATURE FL
+    result = MUST("\uFB02"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0046\u006C"sv);
+
+    // LATIN SMALL LIGATURE FFI
+    result = MUST("\uFB03"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0046\u0066\u0069"sv);
+
+    // LATIN SMALL LIGATURE FFL
+    result = MUST("\uFB04"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0046\u0066\u006C"sv);
+
+    // LATIN SMALL LIGATURE LONG S T
+    result = MUST("\uFB05"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0053\u0074"sv);
+
+    // LATIN SMALL LIGATURE ST
+    result = MUST("\uFB06"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0053\u0074"sv);
+
+    // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS
+    result = MUST("\u0390"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0399\u0308\u0301"sv);
+
+    // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS
+    result = MUST("\u03B0"_string.to_titlecase());
+    EXPECT_EQ(result, "\u03A5\u0308\u0301"sv);
+
+    // GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FB7"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0391\u0342\u0345"sv);
+
+    // GREEK SMALL LETTER ETA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FC7"_string.to_titlecase());
+    EXPECT_EQ(result, "\u0397\u0342\u0345"sv);
+
+    // GREEK SMALL LETTER OMEGA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST("\u1FF7"_string.to_titlecase());
+    EXPECT_EQ(result, "\u03A9\u0342\u0345"sv);
+}
+
+TEST_CASE(to_titlecase_special_casing_i)
+{
+    // LATIN SMALL LETTER I
+    auto result = MUST("i"_string.to_titlecase("en"sv));
+    EXPECT_EQ(result, "I"sv);
+
+    result = MUST("i"_string.to_titlecase("az"sv));
+    EXPECT_EQ(result, "\u0130"sv);
+
+    result = MUST("i"_string.to_titlecase("tr"sv));
+    EXPECT_EQ(result, "\u0130"sv);
+}
+
+BENCHMARK_CASE(casefold)
+{
+    for (size_t i = 0; i < 50'000; ++i) {
+        __test_to_casefold();
     }
 }
 
