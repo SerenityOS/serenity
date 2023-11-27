@@ -681,7 +681,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     // 26. Else,
     //     a. Perform ? IteratorBindingInitialization of formals with arguments iteratorRecord and env.
     // NOTE: The spec makes an iterator here to do IteratorBindingInitialization but we just do it manually
-    auto execution_context_arguments = vm.running_execution_context().arguments;
+    auto const& execution_context_arguments = vm.running_execution_context().arguments;
 
     size_t default_parameter_index = 0;
     for (size_t i = 0; i < m_formal_parameters.size(); ++i) {
