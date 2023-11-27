@@ -48,10 +48,6 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
     m_inspector_web_view.use_native_user_style_sheet();
 
     m_inspector_web_view.on_inspector_loaded = [this]() {
-        if (on_dom_node_properties_received) {
-            m_inspector_web_view.run_javascript("document.getElementById(\"inspector-bottom\").style.display = \"none\";"sv);
-        }
-
         m_inspector_loaded = true;
 
         if (m_pending_selection.has_value())
@@ -62,11 +58,6 @@ InspectorClient::InspectorClient(ViewImplementation& content_web_view, ViewImple
 
     m_inspector_web_view.on_inspector_selected_dom_node = [this](auto node_id, auto const& pseudo_element) {
         auto inspected_node_properties = m_content_web_view.inspect_dom_node(node_id, pseudo_element);
-
-        if (on_dom_node_properties_received) {
-            on_dom_node_properties_received(move(inspected_node_properties));
-            return;
-        }
 
         StringBuilder builder;
 
