@@ -5,6 +5,7 @@
  */
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/CharacterTypes.h>
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
@@ -24,8 +25,8 @@ void bcopy(void const* src, void* dest, size_t n)
 
 static char foldcase(char ch)
 {
-    if (isalpha(ch))
-        return tolower(ch);
+    if (is_ascii_alpha(ch))
+        return to_ascii_lowercase(ch);
     return ch;
 }
 

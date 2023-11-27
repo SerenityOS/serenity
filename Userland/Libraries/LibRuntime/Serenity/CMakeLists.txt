@@ -1,4 +1,6 @@
 set(LIBRUNTIME_SOURCES
+    LibC/string.cpp
+    LibC/strings.cpp
     Mutex.cpp
     System.cpp
 )

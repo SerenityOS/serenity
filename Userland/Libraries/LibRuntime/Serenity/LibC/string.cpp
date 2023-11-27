@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Format.h>
 #include <AK/MemMem.h>
 #include <AK/Memory.h>
@@ -405,7 +406,7 @@ char* strcasestr(char const* haystack, char const* needle)
             do {
                 if ((hch = *haystack++) == 0)
                     return nullptr;
-            } while (toupper(hch) != toupper(nch));
+            } while (to_ascii_uppercase(hch) != to_ascii_uppercase(nch));
         } while (strncasecmp(haystack, needle, len) != 0);
         --haystack;
     }

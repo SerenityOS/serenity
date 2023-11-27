@@ -49,8 +49,6 @@ set(LIBC_SOURCES
     stat.cpp
     stdio.cpp
     stdlib.cpp
-    string.cpp
-    strings.cpp
     stubs.cpp
     sys/auxv.cpp
     sys/file.cpp
@@ -128,7 +126,7 @@ set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fpu
 
 # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set_source_files_properties(string.cpp wchar.cpp PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
+    set_source_files_properties(../LibRuntime/Serenity/LibC/string.cpp wchar.cpp PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 endif()
 
 set_source_files_properties(ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
