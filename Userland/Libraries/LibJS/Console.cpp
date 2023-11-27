@@ -142,9 +142,9 @@ ThrowCompletionOr<Value> Console::trace()
     // NOTE: -2 to skip the console.trace() execution context
     for (ssize_t i = execution_context_stack.size() - 2; i >= 0; --i) {
         auto const& function_name = execution_context_stack[i]->function_name;
-        trace.stack.append(function_name.is_empty()
+        trace.stack.append((!function_name || function_name->is_empty())
                 ? "<anonymous>"_string
-                : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(function_name)));
+                : function_name->utf8_string());
     }
 
     // 2. Optionally, let formattedData be the result of Formatter(data), and incorporate formattedData as a label for trace.

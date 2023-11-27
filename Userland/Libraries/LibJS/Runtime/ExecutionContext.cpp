@@ -53,6 +53,7 @@ void ExecutionContext::visit_edges(Cell::Visitor& visitor)
     visitor.visit(this_value);
     if (instruction_stream_iterator.has_value())
         visitor.visit(const_cast<Bytecode::Executable*>(instruction_stream_iterator.value().executable()));
+    visitor.visit(function_name);
     script_or_module.visit(
         [](Empty) {},
         [&](auto& script_or_module) {

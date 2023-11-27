@@ -48,16 +48,14 @@ protected:
     NativeFunction(DeprecatedFlyString name, JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>>, Object& prototype);
     explicit NativeFunction(Object& prototype);
 
-    virtual void visit_edges(Cell::Visitor& visitor) override
-    {
-        Base::visit_edges(visitor);
-        visitor.visit(m_native_function);
-    }
+    virtual void initialize(Realm&) override;
+    virtual void visit_edges(Cell::Visitor& visitor) override;
 
 private:
     virtual bool is_native_function() const final { return true; }
 
     DeprecatedFlyString m_name;
+    GCPtr<PrimitiveString> m_name_string;
     Optional<DeprecatedFlyString> m_initial_name; // [[InitialName]]
     JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>> m_native_function;
     GCPtr<Realm> m_realm;

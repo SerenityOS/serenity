@@ -333,8 +333,10 @@ void ECMAScriptFunctionObject::initialize(Realm& realm)
     //       which must give the properties in chronological order which in this case is the order they
     //       are defined in the spec.
 
+    m_name_string = PrimitiveString::create(vm, m_name);
+
     MUST(define_property_or_throw(vm.names.length, { .value = Value(m_function_length), .writable = false, .enumerable = false, .configurable = true }));
-    MUST(define_property_or_throw(vm.names.name, { .value = PrimitiveString::create(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true }));
+    MUST(define_property_or_throw(vm.names.name, { .value = m_name_string, .writable = false, .enumerable = false, .configurable = true }));
 
     if (!m_is_arrow_function) {
         Object* prototype = nullptr;
@@ -936,7 +938,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
 
     // 3. Set the Function of calleeContext to F.
     callee_context.function = this;
-    callee_context.function_name = m_name;
+    callee_context.function_name = m_name_string;
 
     // 4. Let calleeRealm be F.[[Realm]].
     auto callee_realm = m_realm;
@@ -1243,6 +1245,7 @@ void ECMAScriptFunctionObject::set_name(DeprecatedFlyString const& name)
     VERIFY(!name.is_null());
     auto& vm = this->vm();
     m_name = name;
-    MUST(define_property_or_throw(vm.names.name, { .value = PrimitiveString::create(vm, m_name), .writable = false, .enumerable = false, .configurable = true }));
+    m_name_string = PrimitiveString::create(vm, m_name);
+    MUST(define_property_or_throw(vm.names.name, { .value = m_name_string, .writable = false, .enumerable = false, .configurable = true }));
 }
 }

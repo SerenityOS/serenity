@@ -49,7 +49,7 @@ public:
     GCPtr<Cell> context_owner;
 
     Optional<Bytecode::InstructionStreamIterator> instruction_stream_iterator;
-    DeprecatedFlyString function_name;
+    GCPtr<PrimitiveString> function_name;
     Value this_value;
     MarkedVector<Value> arguments;
     MarkedVector<Value> local_variables;
