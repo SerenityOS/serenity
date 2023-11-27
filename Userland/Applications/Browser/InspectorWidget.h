@@ -8,11 +8,8 @@
 
 #pragma once
 
-#include "ElementSizePreviewWidget.h"
-#include <AK/StringView.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/Layout/BoxModelMetrics.h>
 #include <LibWebView/Forward.h>
 
 namespace Browser {
@@ -33,24 +30,8 @@ public:
 private:
     explicit InspectorWidget(WebView::OutOfProcessWebView& content_view);
 
-    void load_style_json(StringView computed_values_json, StringView resolved_values_json, StringView custom_properties_json);
-    void clear_style_json();
-
-    void update_node_box_model(StringView node_box_sizing_json);
-    void clear_node_box_model();
-
-    void update_aria_properties_state_model(StringView aria_properties_state_json);
-
     RefPtr<WebView::OutOfProcessWebView> m_inspector_view;
     OwnPtr<WebView::InspectorClient> m_inspector_client;
-
-    RefPtr<GUI::TableView> m_computed_style_table_view;
-    RefPtr<GUI::TableView> m_resolved_style_table_view;
-    RefPtr<GUI::TableView> m_custom_properties_table_view;
-    RefPtr<GUI::TableView> m_aria_properties_state_view;
-    RefPtr<ElementSizePreviewWidget> m_element_size_view;
-
-    Web::Layout::BoxModelMetrics m_node_box_sizing;
 };
 
 }

@@ -864,7 +864,7 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
     if (!m_dom_inspector_widget) {
         auto window = GUI::Window::construct(&this->window());
         window->set_window_mode(GUI::WindowMode::Modeless);
-        window->resize(325, 500);
+        window->resize(750, 500);
         window->set_title("Inspector");
         window->set_icon(g_icon_bag.inspector_object);
         window->on_close = [&]() {
