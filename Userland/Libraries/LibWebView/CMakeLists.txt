@@ -6,7 +6,6 @@ set(SOURCES
     Database.cpp
     History.cpp
     InspectorClient.cpp
-    PropertyTableModel.cpp
     RequestServerAdapter.cpp
     SearchEngine.cpp
     SourceHighlighter.cpp
