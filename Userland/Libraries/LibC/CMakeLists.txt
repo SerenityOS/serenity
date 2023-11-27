@@ -101,19 +101,13 @@ file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(ASM_SOURCES "arch/aarch64/setjmp.S")
     set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/aarch64/entry.S ../LibELF/Arch/aarch64/plt_trampoline.S ../LibELF/Arch/aarch64/tls.S)
-    set(CRTI_SOURCE "arch/aarch64/crti.S")
-    set(CRTN_SOURCE "arch/aarch64/crtn.S")
 elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(LIBC_SOURCES ${LIBC_SOURCES} "arch/x86_64/memset.cpp")
-    set(ASM_SOURCES "arch/x86_64/setjmp.S" "arch/x86_64/memset.S")
+    set(LIBC_SOURCES ${LIBC_SOURCES} "../LibRuntime/Serenity/LibC/Arch/x86_64/memset.cpp")
+    set(ASM_SOURCES "arch/x86_64/setjmp.S" "../LibRuntime/Serenity/LibC/Arch/x86_64/memset.S")
     set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/x86_64/entry.S ../LibELF/Arch/x86_64/plt_trampoline.S)
-    set(CRTI_SOURCE "arch/x86_64/crti.S")
-    set(CRTN_SOURCE "arch/x86_64/crtn.S")
 elseif ("${SERENITY_ARCH}" STREQUAL "riscv64")
     set(ASM_SOURCES "arch/riscv64/setjmp.S")
     set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/riscv64/entry.S ../LibELF/Arch/riscv64/plt_trampoline.S)
-    set(CRTI_SOURCE "arch/riscv64/crti.S")
-    set(CRTN_SOURCE "arch/riscv64/crtn.S")
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
@@ -121,43 +115,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
 # Note: We link all these against NoCoverage so that we don't break ports by requiring coverage symbols
 # in runtime/startup objects.
 # Since all native serenity applications use dynamic libraries, prevent coverage on libc.a as well
-
-add_library(crt0 STATIC crt0.cpp)
-add_dependencies(crt0 install_libc_headers)
-target_link_libraries(crt0 PRIVATE NoCoverage)
-add_custom_command(
-    TARGET crt0
-    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
-)
-add_library(crt0_shared STATIC crt0_shared.cpp)
-add_dependencies(crt0_shared install_libc_headers)
-target_link_libraries(crt0_shared PRIVATE NoCoverage)
-add_custom_command(
-    TARGET crt0_shared
-    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
-)
-
-add_library(crti STATIC ${CRTI_SOURCE})
-target_link_libraries(crti PRIVATE NoCoverage)
-add_custom_command(
-    TARGET crti
-    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
-)
-
-add_library(crtn STATIC ${CRTN_SOURCE})
-target_link_libraries(crtn PRIVATE NoCoverage)
-add_custom_command(
-    TARGET crtn
-    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
-)
-
 set_source_files_properties (ssp_nonshared.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 add_library(ssp_nonshared STATIC ssp_nonshared.cpp)
 add_dependencies(ssp_nonshared install_libc_headers)
 target_link_libraries(ssp_nonshared PRIVATE NoCoverage)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp_nonshared.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
 
-set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
+set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES} ${LIBRUNTIME_SOURCES})
 
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
 set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")

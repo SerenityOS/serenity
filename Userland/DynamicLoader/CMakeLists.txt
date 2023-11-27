@@ -11,9 +11,7 @@ set(ARCH_FOLDER "${SERENITY_ARCH}")
 
 file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/${ARCH_FOLDER}/*.S")
 set(ELF_SOURCES ${ELF_SOURCES} "../Libraries/LibELF/Arch/${ARCH_FOLDER}/entry.S" "../Libraries/LibELF/Arch/${ARCH_FOLDER}/plt_trampoline.S")
-if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(LIBC_SOURCES3 ${LIBC_SOURCES3} "../Libraries/LibC/arch/x86_64/memset.cpp")
-elseif ("${SERENITY_ARCH}" STREQUAL "aarch64")
+if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(ELF_SOURCES ${ELF_SOURCES} "../Libraries/LibELF/Arch/aarch64/tls.S")
 endif()
 
@@ -28,7 +26,7 @@ list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".*/LibC/(pthread|semaphore)\\.cpp")
 
 add_definitions(-D_DYNAMIC_LOADER)
 
-set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
+set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBRUNTIME_SOURCES} ${LIBSYSTEM_SOURCES})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpie -DNO_TLS")
 

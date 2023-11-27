@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Types.h>
-#include <assert.h>
-#include <stdio.h>
+#include <AK/Platform.h>
 #include <stdlib.h>
 #include <sys/internals.h>
 #include <unistd.h>
