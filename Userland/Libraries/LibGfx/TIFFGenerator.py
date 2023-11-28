@@ -9,7 +9,7 @@ import re
 from enum import Enum
 from collections import namedtuple
 from pathlib import Path
-from typing import List, Type
+from typing import List, Optional, Type
 
 
 class TIFFType(Enum):
@@ -73,7 +73,7 @@ LICENSE = R"""/*
  */"""
 
 
-def export_enum_to_cpp(e: Type[Enum], special_name: str | None = None) -> str:
+def export_enum_to_cpp(e: Type[Enum], special_name: Optional[str] = None) -> str:
     output = f'enum class {special_name if special_name else e.__name__} {{\n'
 
     for entry in e:
@@ -94,13 +94,11 @@ def tiff_type_to_cpp(t: TIFFType, without_promotion: bool = False) -> str:
     # Note that the Value<> type doesn't include u16 for this reason
     if not without_promotion:
         t = promote_type(t)
-    match t:
-        case TIFFType.UnsignedShort:
-            return 'u16'
-        case TIFFType.UnsignedLong:
-            return 'u32'
-        case _:
-            raise RuntimeError(f'Type "{t}" not recognized, please update tiff_type_to_read_only_cpp()')
+    if t == TIFFType.UnsignedShort:
+        return 'u16'
+    if t == TIFFType.UnsignedLong:
+        return 'u32'
+    raise RuntimeError(f'Type "{t}" not recognized, please update tiff_type_to_read_only_cpp()')
 
 
 def export_promoter() -> str:
