@@ -39,6 +39,26 @@ TEST_CASE(move_assignment)
     EXPECT_EQ(string1, "friends!"sv);
 }
 
+TEST_CASE(copy_assignment)
+{
+    auto test = [](auto string1, auto string2) {
+        string1 = string2;
+        EXPECT_EQ(string1, string2);
+    };
+
+    test(String {}, String {});
+    test(String {}, "abc"_string);
+    test(String {}, "long string"_string);
+
+    test("abc"_string, String {});
+    test("abc"_string, "abc"_string);
+    test("abc"_string, "long string"_string);
+
+    test("long string"_string, String {});
+    test("long string"_string, "abc"_string);
+    test("long string"_string, "long string"_string);
+}
+
 TEST_CASE(short_strings)
 {
 #ifdef AK_ARCH_64_BIT
