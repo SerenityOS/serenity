@@ -549,8 +549,8 @@ if (BUILD_LAGOM)
             add_serenity_subdirectory(Meta/Lagom/Contrib/MacPDF)
         endif()
 
-        find_package(SDL2)
-        if(SDL2_FOUND)
+        find_package(SDL2 QUIET)
+        if (SDL2_FOUND)
             add_serenity_subdirectory(Meta/Lagom/Contrib/VideoPlayerSDL)
         endif()
 
