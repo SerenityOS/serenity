@@ -215,10 +215,15 @@ String& String::operator=(String&& other)
 String& String::operator=(String const& other)
 {
     if (&other != this) {
+        if (!is_short_string())
+            m_data->unref();
+
         m_data = other.m_data;
+
         if (!is_short_string())
             m_data->ref();
     }
+
     return *this;
 }
 
