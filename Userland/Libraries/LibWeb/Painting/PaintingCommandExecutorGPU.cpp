@@ -90,24 +90,32 @@ CommandResult PaintingCommandExecutorGPU::set_font(Gfx::Font const&)
     return CommandResult::Continue;
 }
 
-CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform, Optional<StackingContextMask>)
+CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform transform, Optional<StackingContextMask>)
 {
     painter().save();
     if (is_fixed_position) {
         auto const& translation = painter().transform().translation();
         painter().translate(-translation);
     }
+
+    auto affine_transform = Gfx::extract_2d_affine_transform(transform.matrix);
+
     if (opacity < 1) {
         auto painter = AccelGfx::Painter::create();
         auto canvas = AccelGfx::Canvas::create(source_paintable_rect.size());
         painter->set_target_canvas(canvas);
         painter->translate(-source_paintable_rect.location().to_type<float>());
+
+        auto source_rect = source_paintable_rect.to_type<float>().translated(-transform.origin);
+        auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform.origin);
+        auto destination_rect = transformed_destination_rect.to_rounded<int>();
+
         stacking_contexts.append({ .canvas = canvas,
             .painter = move(painter),
             .opacity = opacity,
-            .destination = source_paintable_rect });
+            .destination = destination_rect });
     } else {
-        painter().translate(post_transform_translation.to_type<float>());
+        painter().translate(affine_transform.translation() + post_transform_translation.to_type<float>());
     }
     return CommandResult::Continue;
 }
