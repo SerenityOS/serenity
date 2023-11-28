@@ -339,6 +339,16 @@ public:
 
     ALWAYS_INLINE Optional() = default;
 
+    template<SameAs<OptionalNone> V>
+    Optional(V) { }
+
+    template<SameAs<OptionalNone> V>
+    Optional& operator=(V)
+    {
+        clear();
+        return *this;
+    }
+
     template<typename U = T>
     ALWAYS_INLINE Optional(U& value)
     requires(CanBePlacedInOptional<U&>)
@@ -409,6 +419,7 @@ public:
 
     // Note: Disallows assignment from a temporary as this does not do any lifetime extension.
     template<typename U>
+    requires(!IsSame<OptionalNone, RemoveCVReference<U>>)
     ALWAYS_INLINE Optional& operator=(U&& value)
     requires(CanBePlacedInOptional<U> && IsLvalueReference<U>)
     {
