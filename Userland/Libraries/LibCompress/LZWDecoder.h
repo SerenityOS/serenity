@@ -12,6 +12,7 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
+#include <AK/MemoryStream.h>
 #include <AK/Vector.h>
 
 namespace Compress {
@@ -31,6 +32,34 @@ public:
 
     {
         init_code_table();
+    }
+
+    static ErrorOr<ByteBuffer> decode_all(ReadonlyBytes bytes, u8 initial_code_size, i32 offset_for_size_change = 0)
+    {
+        auto memory_stream = make<FixedMemoryStream>(bytes);
+        auto lzw_stream = make<InputStream>(MaybeOwned<Stream>(move(memory_stream)));
+        Compress::LZWDecoder lzw_decoder { MaybeOwned<InputStream> { move(lzw_stream) }, initial_code_size, offset_for_size_change };
+
+        ByteBuffer decoded;
+
+        u16 const clear_code = lzw_decoder.add_control_code();
+        u16 const end_of_data_code = lzw_decoder.add_control_code();
+
+        while (true) {
+            auto const code = TRY(lzw_decoder.next_code());
+
+            if (code == clear_code) {
+                lzw_decoder.reset();
+                continue;
+            }
+
+            if (code == end_of_data_code)
+                break;
+
+            TRY(decoded.try_append(lzw_decoder.get_output()));
+        }
+
+        return decoded;
     }
 
     u16 add_control_code()
