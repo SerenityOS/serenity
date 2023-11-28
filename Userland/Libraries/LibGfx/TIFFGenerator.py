@@ -53,7 +53,7 @@ Tag = namedtuple(
 known_tags: List[Tag] = [
     Tag('256', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageWidth"),
     Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageHeight"),
-    Tag('258', [TIFFType.UnsignedShort], [3], None, "BitPerSample"),
+    Tag('258', [TIFFType.UnsignedShort], [3], None, "BitsPerSample"),
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression),
     Tag('273', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [], None, "StripOffsets"),
     Tag('278', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "RowsPerStrip"),
