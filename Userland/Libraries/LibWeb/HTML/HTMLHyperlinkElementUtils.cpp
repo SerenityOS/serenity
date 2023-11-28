@@ -498,31 +498,27 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
     if (!target_navigable)
         return;
 
-    // 8. Parse a URL given subject's href attribute, relative to subject's node document.
-    // FIXME: Modernize step to use https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-and-serializing-a-url
-    auto url = hyperlink_element_utils_document().encoding_parse_url(href());
+    // 8. Let urlString be the result of encoding-parsing-and-serializing a URL given subject's href attribute value, relative to subject's node document.
+    auto url_string = hyperlink_element_utils_document().encoding_parse_and_serialize_url(href());
 
-    // 9. If that is successful, let url be the resulting URL string.
-    //    Otherwise, if parsing the URL failed, then return.
-    if (!url.is_valid())
+    // 9. If urlString is failure, then return.
+    if (!url_string.has_value())
         return;
 
-    // 10. If that is successful, let URL be the resulting URL string.
-    auto url_string = url.to_deprecated_string();
-
-    // 12. If hyperlinkSuffix is non-null, then append it to URL.
+    // 10. If hyperlinkSuffix is non-null, then append it to urlString.
     if (hyperlink_suffix.has_value()) {
         StringBuilder url_builder;
-        url_builder.append(url_string);
+        url_builder.append(*url_string);
         url_builder.append(*hyperlink_suffix);
 
         url_string = url_builder.to_deprecated_string();
     }
 
+    // FIXME: 11. Let referrerPolicy be the current state of subject's referrerpolicy content attribute.
     // FIXME: 12. If subject's link types includes the noreferrer keyword, then set referrerPolicy to "no-referrer".
 
     // 13. Navigate targetNavigable to url using subject's node document, with referrerPolicy set to referrerPolicy.
-    MUST(target_navigable->navigate({ .url = url, .source_document = hyperlink_element_utils_document() }));
+    MUST(target_navigable->navigate({ .url = *url_string, .source_document = hyperlink_element_utils_document() }));
 }
 
 }
