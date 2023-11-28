@@ -304,6 +304,16 @@ void Navigable::set_ongoing_navigation(Variant<Empty, Traversal, String> ongoing
 // https://html.spec.whatwg.org/multipage/document-sequences.html#the-rules-for-choosing-a-navigable
 Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab)
 {
+    // NOTE: Implementation for step 7 here.
+    JS::GCPtr<Navigable> same_name_navigable = nullptr;
+    if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv)) {
+        for (auto& n : all_navigables()) {
+            if (n->target_name() == name) {
+                same_name_navigable = n;
+            }
+        }
+    }
+
     // 1. Let chosen be null.
     JS::GCPtr<Navigable> chosen = nullptr;
 
@@ -333,7 +343,7 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
         chosen = traversable_navigable();
     }
 
-    //  FIXME: 7. Otherwise, if name is not an ASCII case-insensitive match for "_blank",
+    //  7. Otherwise, if name is not an ASCII case-insensitive match for "_blank",
     //     there exists a navigable whose target name is the same as name, currentNavigable's
     //     active browsing context is familiar with that navigable's active browsing context,
     //     and the user agent determines that the two browsing contexts are related enough that
@@ -341,6 +351,11 @@ Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, Tokeni
     //     matching navigables, the user agent should pick one in some arbitrary consistent manner,
     //     such as the most recently opened, most recently focused, or more closely related, and set
     //     chosen to it.
+    else if (same_name_navigable != nullptr && (active_browsing_context()->is_familiar_with(*same_name_navigable->active_browsing_context()))) {
+        // FIXME: Handle multiple name-match case
+        // FIXME: When are these contexts 'not related enough' ?
+        chosen = same_name_navigable;
+    }
 
     // 8. Otherwise, a new top-level traversable is being requested, and what happens depends on the
     // user agent's configuration and abilities — it is determined by the rules given for the first

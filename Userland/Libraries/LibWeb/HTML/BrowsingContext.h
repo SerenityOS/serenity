@@ -55,6 +55,7 @@ public:
     JS::GCPtr<BrowsingContext> next_sibling() const;
 
     bool is_ancestor_of(BrowsingContext const&) const;
+    bool is_familiar_with(BrowsingContext const&) const;
 
     template<typename Callback>
     IterationDecision for_each_in_inclusive_subtree(Callback callback) const
