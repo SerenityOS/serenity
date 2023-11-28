@@ -115,40 +115,19 @@ private:
             TRY(loop_over_pixels([this]() { return read_value<u8>(); }));
             break;
         case Compression::LZW: {
-            Vector<u8> result_buffer {};
-            Optional<Compress::LZWDecoder<BigEndianInputBitStream>> decoder {};
-
-            u16 clear_code {};
-            u16 end_of_information_code {};
+            ByteBuffer decoded_bytes {};
+            u32 read_head {};
 
             auto initializer = [&](u32 bytes) -> ErrorOr<void> {
-                auto strip_stream = make<FixedMemoryStream>(TRY(m_stream->read_in_place<u8 const>(bytes)));
-                auto lzw_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(move(strip_stream)));
-                decoder = Compress::LZWDecoder { MaybeOwned<BigEndianInputBitStream> { move(lzw_stream) }, 8, -1 };
-
-                clear_code = decoder->add_control_code();
-                end_of_information_code = decoder->add_control_code();
-
+                decoded_bytes = TRY(Compress::LZWDecoder<BigEndianInputBitStream>::decode_all(TRY(m_stream->read_in_place<u8 const>(bytes)), 8, -1));
+                read_head = 0;
                 return {};
             };
 
             auto read_lzw_byte = [&]() -> ErrorOr<u8> {
-                while (true) {
-                    if (!result_buffer.is_empty())
-                        return result_buffer.take_first();
-
-                    auto const code = TRY(decoder->next_code());
-
-                    if (code == clear_code) {
-                        decoder->reset();
-                        continue;
-                    }
-
-                    if (code == end_of_information_code)
-                        return Error::from_string_literal("TIFFImageDecoderPlugin: Reached end of LZW stream");
-
-                    result_buffer = decoder->get_output();
-                }
+                if (read_head < decoded_bytes.size())
+                    return decoded_bytes[read_head++];
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Reached end of LZW stream");
             };
 
             TRY(loop_over_pixels([read_lzw_byte = move(read_lzw_byte)]() { return read_lzw_byte(); }, move(initializer)));
