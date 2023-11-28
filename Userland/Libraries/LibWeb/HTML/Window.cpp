@@ -376,7 +376,8 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
 
         // 4. If url is not the empty string, then set urlRecord to the result of encoding-parsing a URL given url, relative to the entry settings object.
         if (!url.is_empty()) {
-            url_record = entry_settings_object().parse_url(url);
+            url_record = entry_settings_object().encoding_parse_url(url);
+
             // 5. If urlRecord is failure, then throw a "SyntaxError" DOMException.
             if (!url_record.is_valid())
                 return WebIDL::SyntaxError::create(realm(), "URL is not valid"_fly_string);
@@ -398,7 +399,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         // 1. If url is not the empty string, then:
         if (!url.is_empty()) {
             // 1. Let urlRecord be the result of encoding-parsing a URL url, relative to the entry settings object.
-            auto url_record = entry_settings_object().parse_url(url);
+            auto url_record = entry_settings_object().encoding_parse_url(url);
 
             // 2. If urlRecord is failure, then throw a "SyntaxError" DOMException.
             if (!url_record.is_valid())

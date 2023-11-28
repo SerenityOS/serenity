@@ -83,7 +83,7 @@ struct EnvironmentSettingsObject
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-cross-origin-isolated-capability
     virtual CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() = 0;
 
-    AK::URL parse_url(StringView);
+    AK::URL encoding_parse_url(StringView);
 
     JS::Realm& realm();
     JS::Object& global_object();

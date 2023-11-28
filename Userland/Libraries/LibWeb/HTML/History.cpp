@@ -170,18 +170,14 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
 
     // 6. If url is not null or the empty string, then:
     if (url.has_value() && !url->is_empty()) {
+        // 1. Set newURL to the result of encoding-parsing a URL given url, relative to the relevant settings object of history.
+        new_url = relevant_settings_object(*this).encoding_parse_url(url->to_deprecated_string());
 
-        // 1. Parse url, relative to the relevant settings object of history.
-        auto parsed_url = relevant_settings_object(*this).parse_url(url->to_deprecated_string());
-
-        // 2. If that fails, then throw a "SecurityError" DOMException.
-        if (!parsed_url.is_valid())
+        // 2. If newURL is failure, then throw a "SecurityError" DOMException.
+        if (!new_url.is_valid())
             return WebIDL::SecurityError::create(realm(), "Cannot pushState or replaceState to incompatible URL"_fly_string);
 
-        // 3. Set newURL to the resulting URL record.
-        new_url = parsed_url;
-
-        // 4. If document cannot have its URL rewritten to newURL, then throw a "SecurityError" DOMException.
+        // 3. If document cannot have its URL rewritten to newURL, then throw a "SecurityError" DOMException.
         if (!can_have_its_url_rewritten(document, new_url))
             return WebIDL::SecurityError::create(realm(), "Cannot pushState or replaceState to incompatible URL"_fly_string);
     }

@@ -385,13 +385,15 @@ WebIDL::ExceptionOr<void> Location::replace(String const& url)
     if (!relevant_document())
         return {};
 
-    // 2. Parse url relative to the entry settings object. If that failed, throw a "SyntaxError" DOMException.
-    auto replace_url = entry_settings_object().parse_url(url);
-    if (!replace_url.is_valid())
+    // 2. Let urlRecord be the result of encoding-parsing a URL given url, relative to the entry settings object.
+    auto url_record = entry_settings_object().encoding_parse_url(url);
+
+    // 3. If urlRecord is failure, then throw a "SyntaxError" DOMException.
+    if (!url_record.is_valid())
         return WebIDL::SyntaxError::create(realm(), MUST(String::formatted("Invalid URL '{}'", url)));
 
-    // 3. Location-object navigate this to the resulting URL record given "replace".
-    TRY(navigate(replace_url, HistoryHandlingBehavior::Replace));
+    // 4. Location-object navigate this to urlRecord given "replace".
+    TRY(navigate(url_record, HistoryHandlingBehavior::Replace));
 
     return {};
 }
@@ -409,7 +411,7 @@ WebIDL::ExceptionOr<void> Location::assign(String const& url)
         return WebIDL::SecurityError::create(realm(), "Location's relevant document is not same origin-domain with the entry settings object's origin"_fly_string);
 
     // 3. Parse url relative to the entry settings object. If that failed, throw a "SyntaxError" DOMException.
-    auto assign_url = entry_settings_object().parse_url(url);
+    auto assign_url = entry_settings_object().encoding_parse_url(url);
     if (!assign_url.is_valid())
         return WebIDL::SyntaxError::create(realm(), MUST(String::formatted("Invalid URL '{}'", url)));
 

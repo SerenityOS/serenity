@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/SecureContexts/AbstractOperations.h>
+#include <LibWeb/URL/URL.h>
 
 namespace Web::HTML {
 
@@ -159,20 +160,22 @@ void EnvironmentSettingsObject::prepare_to_run_callback()
         context->skip_when_determining_incumbent_counter++;
 }
 
-// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
-AK::URL EnvironmentSettingsObject::parse_url(StringView url)
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#encoding-parsing-and-serializing-a-url
+AK::URL EnvironmentSettingsObject::encoding_parse_url(StringView url)
 {
-    // 1. Let encoding be document's character encoding, if document was given, and environment settings object's API URL character encoding otherwise.
-    // FIXME: Pass in environment settings object's API URL character encoding.
+    // 1. Let encoding be UTF-8.
+    // 2. If environment is a Document object, then set encoding to environment's character encoding.
+    // 3. Otherwise, if environment's relevant global object is a Window object, set encoding to
+    //    environment's relevant global object's associated Document's character encoding.
+    // FIXME: Currently, the URL parser assumes we are only working with UTF-8. Implement
+    //        these spec steps once it's able to support different encodings.
 
-    // 2. Let baseURL be document's base URL, if document was given, and environment settings object's API base URL otherwise.
+    // 4. Let baseURL be environment's base URL, if environment is a Document object; otherwise
+    //    environment's API base URL.
     auto base_url = api_base_url();
 
-    // 3. Let urlRecord be the result of applying the URL parser to url, with baseURL and encoding.
-    // 4. If urlRecord is failure, then return failure.
-    // 5. Let urlString be the result of applying the URL serializer to urlRecord.
-    // 6. Return urlString as the resulting URL string and urlRecord as the resulting URL record.
-    return base_url.complete_url(url);
+    // 5. Return the result of applying the URL parser to url, with baseURL and encoding.
+    return URL::parse(url, base_url);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#clean-up-after-running-a-callback
