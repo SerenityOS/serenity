@@ -184,62 +184,41 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
         if (image->lzw_min_code_size > 8)
             return Error::from_string_literal("LZW minimum code size is greater than 8");
 
-        FixedMemoryStream stream { image->lzw_encoded_bytes, FixedMemoryStream::Mode::ReadOnly };
-        auto bit_stream = make<LittleEndianInputBitStream>(MaybeOwned<Stream>(stream));
-
-        Compress::LZWDecoder decoder(MaybeOwned<LittleEndianInputBitStream> { move(bit_stream) }, image->lzw_min_code_size);
-
-        // Add GIF-specific control codes
-        int const clear_code = decoder.add_control_code();
-        int const end_of_information_code = decoder.add_control_code();
+        auto decoded_stream = TRY(Compress::LZWDecoder<LittleEndianInputBitStream>::decode_all(image->lzw_encoded_bytes, image->lzw_min_code_size));
 
         auto const& color_map = image->use_global_color_map ? context.logical_screen.color_map : image->color_map;
 
         int pixel_index = 0;
         int row = 0;
         int interlace_pass = 0;
-        while (true) {
-            ErrorOr<u16> code = decoder.next_code();
-            if (code.is_error()) {
-                dbgln_if(GIF_DEBUG, "Unexpectedly reached end of gif frame data");
-                return code.release_error();
+
+        if (!image->width)
+            continue;
+
+        for (auto const& color : decoded_stream.bytes()) {
+            auto c = color_map[color];
+
+            int x = pixel_index % image->width + image->x;
+            int y = row + image->y;
+
+            if (context.frame_buffer->rect().contains(x, y) && (!image->transparent || color != image->transparency_index)) {
+                context.frame_buffer->set_pixel(x, y, c);
             }
 
-            if (code.value() == clear_code) {
-                decoder.reset();
-                continue;
-            }
-            if (code.value() == end_of_information_code)
-                break;
-            if (!image->width)
-                continue;
-
-            auto colors = decoder.get_output();
-            for (auto const& color : colors) {
-                auto c = color_map[color];
-
-                int x = pixel_index % image->width + image->x;
-                int y = row + image->y;
-
-                if (context.frame_buffer->rect().contains(x, y) && (!image->transparent || color != image->transparency_index)) {
-                    context.frame_buffer->set_pixel(x, y, c);
-                }
-
-                ++pixel_index;
-                if (pixel_index % image->width == 0) {
-                    if (image->interlaced) {
-                        if (interlace_pass < 4) {
-                            if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image->height) {
-                                ++interlace_pass;
-                                if (interlace_pass < 4)
-                                    row = INTERLACE_ROW_OFFSETS[interlace_pass];
-                            } else {
-                                row += INTERLACE_ROW_STRIDES[interlace_pass];
-                            }
+            ++pixel_index;
+            if (pixel_index % image->width == 0) {
+                if (image->interlaced) {
+                    if (interlace_pass < 4) {
+                        if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image->height) {
+                            ++interlace_pass;
+                            if (interlace_pass < 4)
+                                row = INTERLACE_ROW_OFFSETS[interlace_pass];
+                        } else {
+                            row += INTERLACE_ROW_STRIDES[interlace_pass];
                         }
-                    } else {
-                        ++row;
                     }
+                } else {
+                    ++row;
                 }
             }
         }
