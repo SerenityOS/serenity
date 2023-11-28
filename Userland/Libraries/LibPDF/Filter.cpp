@@ -198,29 +198,7 @@ PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer
 
 PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component, int early_change)
 {
-    auto memory_stream = make<FixedMemoryStream>(bytes);
-    auto lzw_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(move(memory_stream)));
-    Compress::LZWDecoder lzw_decoder { MaybeOwned<BigEndianInputBitStream> { move(lzw_stream) }, 8, -early_change };
-
-    ByteBuffer decoded;
-
-    u16 const clear_code = lzw_decoder.add_control_code();
-    u16 const end_of_data_code = lzw_decoder.add_control_code();
-
-    while (true) {
-        auto const code = TRY(lzw_decoder.next_code());
-
-        if (code == clear_code) {
-            lzw_decoder.reset();
-            continue;
-        }
-
-        if (code == end_of_data_code)
-            break;
-
-        TRY(decoded.try_append(lzw_decoder.get_output()));
-    }
-
+    auto decoded = TRY(Compress::LZWDecoder<BigEndianInputBitStream>::decode_all(bytes, 8, -early_change));
     return handle_lzw_and_flate_parameters(move(decoded), predictor, columns, colors, bits_per_component);
 }
 
