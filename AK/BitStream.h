@@ -215,15 +215,8 @@ public:
     template<Unsigned T = u64>
     ErrorOr<T> peek_bits(size_t count)
     {
-        while (count > m_bit_count) {
-            if (TRY(refill_buffer_from_stream()))
-                continue;
-
-            if (m_unsatisfiable_read_behavior == UnsatisfiableReadBehavior::Reject)
-                return Error::from_string_literal("Reached end-of-stream without collecting the required number of bits");
-
-            break;
-        }
+        if (count > m_bit_count)
+            TRY(refill_buffer_from_stream(count));
 
         return m_bit_buffer & lsb_mask<T>(min(count, m_bit_count));
     }
@@ -254,21 +247,29 @@ public:
     }
 
 private:
-    ErrorOr<bool> refill_buffer_from_stream()
+    ErrorOr<void> refill_buffer_from_stream(size_t requested_bit_count)
     {
-        if (m_stream->is_eof())
-            return false;
+        while (requested_bit_count > m_bit_count) [[likely]] {
+            if (m_stream->is_eof()) [[unlikely]] {
+                if (m_unsatisfiable_read_behavior == UnsatisfiableReadBehavior::FillWithZero) {
+                    m_bit_count = requested_bit_count;
+                    return {};
+                }
 
-        size_t bits_to_read = bit_buffer_size - m_bit_count;
-        size_t bytes_to_read = bits_to_read / bits_per_byte;
+                return Error::from_string_literal("Reached end-of-stream without collecting the required number of bits");
+            }
 
-        BufferType buffer = 0;
-        auto bytes = TRY(m_stream->read_some({ &buffer, bytes_to_read }));
+            size_t bits_to_read = bit_buffer_size - m_bit_count;
+            size_t bytes_to_read = bits_to_read / bits_per_byte;
 
-        m_bit_buffer |= (buffer << m_bit_count);
-        m_bit_count += bytes.size() * bits_per_byte;
+            BufferType buffer = 0;
+            auto bytes = TRY(m_stream->read_some({ &buffer, bytes_to_read }));
 
-        return true;
+            m_bit_buffer |= (buffer << m_bit_count);
+            m_bit_count += bytes.size() * bits_per_byte;
+        }
+
+        return {};
     }
 
     UnsatisfiableReadBehavior m_unsatisfiable_read_behavior;
