@@ -166,6 +166,7 @@ CommandResult PaintingCommandExecutorCPU::push_stacking_context(
         //       with execution of commands outside of this stacking context.
         // FIXME: Change the get_region_bitmap() API to return ErrorOr<Optional<Bitmap>> and exit the execution of commands here
         //        if we run out of memory.
+        painter().restore();
         return CommandResult::SkipStackingContext;
     }
 
