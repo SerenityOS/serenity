@@ -289,7 +289,6 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_container);
     visitor.visit(m_cursor_position);
     visitor.visit(m_window_proxy);
-    visitor.visit(m_opener_browsing_context);
     visitor.visit(m_group);
     visitor.visit(m_parent);
     visitor.visit(m_first_child);
