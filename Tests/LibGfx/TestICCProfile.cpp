@@ -12,6 +12,7 @@
 #include <LibGfx/ICC/WellKnownProfiles.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibGfx/ImageFormats/TIFFLoader.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibTest/TestCase.h>
 
@@ -74,6 +75,17 @@ TEST_CASE(webp_extended_lossy)
 
     auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes.value()));
     EXPECT(icc_profile->is_v2());
+}
+
+TEST_CASE(tiff)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/icc.tiff"sv)));
+    auto tiff = MUST(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
+    auto icc_bytes = MUST(tiff->icc_data());
+    EXPECT(icc_bytes.has_value());
+
+    auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes.value()));
+    EXPECT(icc_profile->is_v4());
 }
 
 TEST_CASE(serialize_icc)
