@@ -50,6 +50,7 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
     auto page_client = make<SVGPageClient>(host_page);
     auto page = make<Page>(*page_client);
     page_client->m_svg_page = page.ptr();
+    page->set_top_level_traversable(MUST(Web::HTML::TraversableNavigable::create_a_fresh_top_level_traversable(*page, AK::URL("about:blank"))));
     JS::NonnullGCPtr<HTML::Navigable> navigable = page->top_level_traversable();
     auto response = Fetch::Infrastructure::Response::create(navigable->vm());
     response->url_list().append(url);

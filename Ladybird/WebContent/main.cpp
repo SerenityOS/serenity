@@ -30,7 +30,7 @@
 #include <LibWebView/RequestServerAdapter.h>
 #include <LibWebView/WebSocketClientAdapter.h>
 #include <WebContent/ConnectionFromClient.h>
-#include <WebContent/PageHost.h>
+#include <WebContent/PageClient.h>
 #include <WebContent/WebDriverConnection.h>
 
 #if defined(HAVE_QT)
@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (use_gpu_painting) {
-        WebContent::PageHost::set_use_gpu_painter();
+        WebContent::PageClient::set_use_gpu_painter();
     }
 
 #if defined(HAVE_QT)

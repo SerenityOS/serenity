@@ -26,7 +26,6 @@ namespace Web {
 Page::Page(PageClient& client)
     : m_client(client)
 {
-    m_top_level_traversable = JS::make_handle(HTML::TraversableNavigable::create_a_fresh_top_level_traversable(*this, AK::URL("about:blank")).release_value_but_fixme_should_propagate_errors());
 }
 
 Page::~Page() = default;
@@ -159,6 +158,13 @@ bool Page::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 bool Page::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 {
     return focused_context().event_handler().handle_keyup(key, modifiers, code_point);
+}
+
+void Page::set_top_level_traversable(JS::NonnullGCPtr<HTML::TraversableNavigable> navigable)
+{
+    VERIFY(!m_top_level_traversable); // Replacement is not allowed!
+    VERIFY(navigable->page() == this);
+    m_top_level_traversable = navigable;
 }
 
 bool Page::top_level_traversable_is_initialized() const

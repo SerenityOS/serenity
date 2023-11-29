@@ -16,6 +16,7 @@ set(SOURCES
     ConnectionFromClient.cpp
     ConsoleGlobalEnvironmentExtensions.cpp
     ImageCodecPluginSerenity.cpp
+    PageClient.cpp
     PageHost.cpp
     WebContentConsoleClient.cpp
     WebDriverConnection.cpp
