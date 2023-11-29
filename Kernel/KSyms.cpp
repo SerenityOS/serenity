@@ -110,7 +110,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
     g_kernel_symbols_available = true;
 }
 
-NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksyms, PrintToScreen print_to_screen)
+NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksyms, PrintToScreen print_to_screen)
 {
 #define PRINT_LINE(fmtstr, ...)                    \
     do {                                           \
@@ -128,30 +128,79 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
         FlatPtr address;
         KernelSymbol const* symbol { nullptr };
     };
+
+    struct FrameRecord {
+        FlatPtr previous_frame_pointer;
+        FlatPtr return_address;
+    };
+
+    auto safe_memcpy_frame_record_from_stack = [](FlatPtr current_frame_pointer) -> ErrorOr<FrameRecord> {
+#if ARCH(X86_64) || ARCH(AARCH64)
+        // x86_64/aarch64 frame record layout:
+        // rbp/fp+8: return address
+        // rbp/fp+0: previous base/frame pointer
+
+        FlatPtr previous_frame_pointer_and_return_address[2];
+        void* fault_at;
+        if (!safe_memcpy(previous_frame_pointer_and_return_address, bit_cast<FlatPtr*>(current_frame_pointer), sizeof(previous_frame_pointer_and_return_address), fault_at))
+            return EFAULT;
+
+        return FrameRecord {
+            .previous_frame_pointer = previous_frame_pointer_and_return_address[0],
+            .return_address = previous_frame_pointer_and_return_address[1],
+        };
+#elif ARCH(RISCV64)
+        // riscv64 frame record layout:
+        // fp-8: return address
+        // fp-16: previous frame pointer
+
+        FlatPtr previous_frame_pointer_and_return_address[2];
+        void* fault_at;
+        if (!safe_memcpy(previous_frame_pointer_and_return_address, bit_cast<FlatPtr*>(current_frame_pointer) - 2, sizeof(previous_frame_pointer_and_return_address), fault_at))
+            return EFAULT;
+
+        return FrameRecord {
+            .previous_frame_pointer = previous_frame_pointer_and_return_address[0],
+            .return_address = previous_frame_pointer_and_return_address[1],
+        };
+#else
+#    error Unknown architecture
+#endif
+    };
+
     constexpr size_t max_recognized_symbol_count = 256;
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     size_t recognized_symbol_count = 0;
     if (use_ksyms) {
-        FlatPtr copied_stack_ptr[2];
-        for (FlatPtr* stack_ptr = (FlatPtr*)base_pointer; stack_ptr && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (FlatPtr*)copied_stack_ptr[0]) {
-            if ((FlatPtr)stack_ptr < kernel_mapping_base)
+        FlatPtr current_frame_pointer = frame_pointer;
+
+        while (current_frame_pointer != 0 && recognized_symbol_count < max_recognized_symbol_count) {
+            if (current_frame_pointer < kernel_mapping_base)
                 break;
 
-            void* fault_at;
-            if (!safe_memcpy(copied_stack_ptr, stack_ptr, sizeof(copied_stack_ptr), fault_at))
+            auto frame_record_or_error = safe_memcpy_frame_record_from_stack(current_frame_pointer);
+            if (frame_record_or_error.is_error())
                 break;
-            FlatPtr retaddr = copied_stack_ptr[1];
-            recognized_symbols[recognized_symbol_count++] = { retaddr, symbolicate_kernel_address(retaddr) };
+
+            auto frame_record = frame_record_or_error.release_value();
+
+            recognized_symbols[recognized_symbol_count++] = { frame_record.return_address, symbolicate_kernel_address(frame_record.return_address) };
+            current_frame_pointer = frame_record.previous_frame_pointer;
         }
     } else {
-        void* fault_at;
-        FlatPtr copied_stack_ptr[2];
-        FlatPtr* stack_ptr = (FlatPtr*)base_pointer;
-        while (stack_ptr && safe_memcpy(copied_stack_ptr, stack_ptr, sizeof(copied_stack_ptr), fault_at)) {
-            FlatPtr retaddr = copied_stack_ptr[1];
-            PRINT_LINE("{:p} (next: {:p})", retaddr, stack_ptr ? (FlatPtr*)copied_stack_ptr[0] : 0);
-            stack_ptr = (FlatPtr*)copied_stack_ptr[0];
+        FlatPtr current_frame_pointer = frame_pointer;
+
+        while (current_frame_pointer != 0) {
+            auto frame_record_or_error = safe_memcpy_frame_record_from_stack(current_frame_pointer);
+            if (frame_record_or_error.is_error())
+                break;
+
+            auto frame_record = frame_record_or_error.release_value();
+
+            PRINT_LINE("{:p} (next: {:p})", frame_record.return_address, frame_record.previous_frame_pointer);
+            current_frame_pointer = frame_record.previous_frame_pointer;
         }
+
         return;
     }
     VERIFY(recognized_symbol_count <= max_recognized_symbol_count);
