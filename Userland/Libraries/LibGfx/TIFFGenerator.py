@@ -144,7 +144,8 @@ def retrieve_biggest_type(types: List[TIFFType]) -> TIFFType:
 
 
 def pascal_case_to_snake_case(name: str) -> str:
-    return re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
 
 
 def generate_getter(tag: Tag) -> str:
