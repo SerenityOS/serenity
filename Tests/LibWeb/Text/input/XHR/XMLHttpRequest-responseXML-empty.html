@@ -1,4 +1,4 @@
-<script src="include.js"></script>
+<script src="../include.js"></script>
 <script>
     asyncTest((done) => {
         const xhr = new XMLHttpRequest();
@@ -6,7 +6,7 @@
         xhr.open("GET", "data:text/xml,", true);
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                let xml = xhr.response;
+                let xml = xhr.responseXML;
                 println("PASS"); // Didn't crash :^)
                 done();
             }
