@@ -55,6 +55,11 @@ public:
         return { *m_metadata.image_width(), *m_metadata.image_height() };
     }
 
+    Metadata const& metadata() const
+    {
+        return m_metadata;
+    }
+
     State state() const
     {
         return m_state;
@@ -487,6 +492,12 @@ ErrorOr<ImageFrameDescriptor> TIFFImageDecoderPlugin::frame(size_t index, Option
 
     return ImageFrameDescriptor { m_context->bitmap(), 0 };
 }
+
+ErrorOr<Optional<ReadonlyBytes>> TIFFImageDecoderPlugin::icc_data()
+{
+    return m_context->metadata().icc_profile().map([](auto const& buffer) -> ReadonlyBytes { return buffer.bytes(); });
+}
+
 }
 
 template<typename T>
