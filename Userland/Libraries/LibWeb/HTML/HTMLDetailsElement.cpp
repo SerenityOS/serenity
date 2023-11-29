@@ -39,8 +39,17 @@ void HTMLDetailsElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDetailsElementPrototype>(realm, "HTMLDetailsElement"_fly_string));
+}
 
-    create_shadow_tree(realm).release_value_but_fixme_should_propagate_errors();
+void HTMLDetailsElement::inserted()
+{
+    create_shadow_tree_if_needed().release_value_but_fixme_should_propagate_errors();
+    update_shadow_tree_slots();
+}
+
+void HTMLDetailsElement::removed_from(DOM::Node*)
+{
+    set_shadow_root(nullptr);
 }
 
 void HTMLDetailsElement::attribute_changed(FlyString const& name, Optional<String> const& value)
@@ -107,8 +116,13 @@ void HTMLDetailsElement::queue_a_details_toggle_event_task(String old_state, Str
 }
 
 // https://html.spec.whatwg.org/#the-details-and-summary-elements
-WebIDL::ExceptionOr<void> HTMLDetailsElement::create_shadow_tree(JS::Realm& realm)
+WebIDL::ExceptionOr<void> HTMLDetailsElement::create_shadow_tree_if_needed()
 {
+    if (shadow_root_internal())
+        return {};
+
+    auto& realm = this->realm();
+
     // The element is also expected to have an internal shadow tree with two slots.
     auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm, document(), *this, Bindings::ShadowRootMode::Closed);
     shadow_root->set_slot_assignment(Bindings::SlotAssignmentMode::Manual);
@@ -130,6 +144,9 @@ WebIDL::ExceptionOr<void> HTMLDetailsElement::create_shadow_tree(JS::Realm& real
 
 void HTMLDetailsElement::update_shadow_tree_slots()
 {
+    if (!shadow_root_internal())
+        return;
+
     Vector<HTMLSlotElement::SlottableHandle> summary_assignment;
     Vector<HTMLSlotElement::SlottableHandle> descendants_assignment;
 
@@ -159,6 +176,9 @@ void HTMLDetailsElement::update_shadow_tree_slots()
 // https://html.spec.whatwg.org/#the-details-and-summary-elements:the-details-element-6
 void HTMLDetailsElement::update_shadow_tree_style()
 {
+    if (!shadow_root_internal())
+        return;
+
     if (has_attribute(HTML::AttributeNames::open)) {
         MUST(m_descendants_slot->set_attribute(HTML::AttributeNames::style, R"~~~(
             display: block;

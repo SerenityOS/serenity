@@ -62,6 +62,7 @@ public:
     virtual void reset_algorithm() override;
 
     virtual void form_associated_element_was_inserted() override;
+    virtual void form_associated_element_was_removed(DOM::Node*) override;
 
     virtual void children_changed() override;
 
