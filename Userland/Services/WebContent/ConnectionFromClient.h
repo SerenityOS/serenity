@@ -33,8 +33,8 @@ public:
 
     virtual void die() override;
 
-    void initialize_js_console(Badge<PageHost>, Web::DOM::Document& document);
-    void destroy_js_console(Badge<PageHost>, Web::DOM::Document& document);
+    void initialize_js_console(Badge<PageClient>, Web::DOM::Document& document);
+    void destroy_js_console(Badge<PageClient>, Web::DOM::Document& document);
 
     void request_file(Web::FileRequest);
 
@@ -46,8 +46,8 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    Web::Page& page();
-    Web::Page const& page() const;
+    PageClient& page(u64 index = 0);
+    PageClient const& page(u64 index = 0) const;
 
     virtual Messages::WebContentServer::GetWindowHandleResponse get_window_handle() override;
     virtual void set_window_handle(String const& handle) override;

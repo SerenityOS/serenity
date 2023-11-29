@@ -46,6 +46,8 @@ public:
     PageClient& client() { return m_client; }
     PageClient const& client() const { return m_client; }
 
+    void set_top_level_traversable(JS::NonnullGCPtr<HTML::TraversableNavigable>);
+
     // FIXME: This is a hack.
     bool top_level_traversable_is_initialized() const;
 
