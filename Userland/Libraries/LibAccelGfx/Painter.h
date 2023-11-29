@@ -29,7 +29,7 @@ class Painter {
     AK_MAKE_NONMOVABLE(Painter);
 
 public:
-    static OwnPtr<Painter> create();
+    static NonnullOwnPtr<Painter> create();
 
     Painter(Context&);
     ~Painter();

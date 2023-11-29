@@ -137,7 +137,7 @@ void main() {
 
 HashMap<u32, GL::Texture> s_immutable_bitmap_texture_cache;
 
-OwnPtr<Painter> Painter::create()
+NonnullOwnPtr<Painter> Painter::create()
 {
     auto& context = Context::the();
     return make<Painter>(context);
