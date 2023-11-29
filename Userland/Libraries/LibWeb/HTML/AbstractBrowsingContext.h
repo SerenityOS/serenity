@@ -34,6 +34,8 @@ public:
     virtual void set_window_handle(String handle) = 0;
 
 protected:
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+
     String m_name;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#is-popup

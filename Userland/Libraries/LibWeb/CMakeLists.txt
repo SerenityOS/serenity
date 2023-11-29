@@ -226,6 +226,7 @@ set(SOURCES
     Geometry/DOMRect.cpp
     Geometry/DOMRectList.cpp
     Geometry/DOMRectReadOnly.cpp
+    HTML/AbstractBrowsingContext.cpp
     HTML/AnimatedBitmapDecodedImageData.cpp
     HTML/AttributeNames.cpp
     HTML/AudioTrack.cpp
