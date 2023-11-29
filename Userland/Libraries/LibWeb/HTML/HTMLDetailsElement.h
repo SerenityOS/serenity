@@ -31,12 +31,14 @@ private:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
+    virtual void inserted() override;
+    virtual void removed_from(DOM::Node*) override;
     virtual void children_changed() override;
     virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
 
     void queue_a_details_toggle_event_task(String old_state, String new_state);
 
-    WebIDL::ExceptionOr<void> create_shadow_tree(JS::Realm&);
+    WebIDL::ExceptionOr<void> create_shadow_tree_if_needed();
     void update_shadow_tree_slots();
     void update_shadow_tree_style();
 

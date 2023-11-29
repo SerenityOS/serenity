@@ -1003,6 +1003,11 @@ void HTMLInputElement::form_associated_element_was_inserted()
     create_shadow_tree_if_needed();
 }
 
+void HTMLInputElement::form_associated_element_was_removed(DOM::Node*)
+{
+    set_shadow_root(nullptr);
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#radio-button-group
 static bool is_in_same_radio_button_group(HTML::HTMLInputElement const& a, HTML::HTMLInputElement const& b)
 {

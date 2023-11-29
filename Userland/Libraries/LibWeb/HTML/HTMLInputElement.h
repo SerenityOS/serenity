@@ -139,6 +139,7 @@ public:
     virtual void reset_algorithm() override;
 
     virtual void form_associated_element_was_inserted() override;
+    virtual void form_associated_element_was_removed(DOM::Node*) override;
 
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
