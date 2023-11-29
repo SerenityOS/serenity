@@ -106,6 +106,7 @@ CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, b
         auto canvas = AccelGfx::Canvas::create(source_paintable_rect.size());
         painter->set_target_canvas(canvas);
         painter->translate(-source_paintable_rect.location().to_type<float>());
+        painter->clear(Color::Transparent);
 
         auto source_rect = source_paintable_rect.to_type<float>().translated(-transform.origin);
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform.origin);
