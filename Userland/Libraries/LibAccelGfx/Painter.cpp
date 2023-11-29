@@ -537,6 +537,10 @@ void Painter::fill_rect_with_linear_gradient(Gfx::FloatRect const& rect, Readonl
 
     GL::enable_blending(GL::BlendFactor::One, GL::BlendFactor::OneMinusSrcAlpha);
     GL::draw_arrays(GL::DrawPrimitive::Triangles, vertices.size() / 2);
+
+    GL::delete_buffer(vbo_vertices);
+    GL::delete_buffer(vbo_colors);
+    GL::delete_vertex_array(vao);
 }
 
 void Painter::save()
