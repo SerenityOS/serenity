@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/MaybeOwned.h>
 #include <LibAccelGfx/Painter.h>
 #include <LibWeb/Painting/RecordingPainter.h>
 
@@ -63,15 +64,16 @@ private:
 
     struct StackingContext {
         RefPtr<AccelGfx::Canvas> canvas;
-        OwnPtr<AccelGfx::Painter> painter;
+        MaybeOwned<AccelGfx::Painter> painter;
         float opacity;
         Gfx::IntRect destination;
+        int stacking_context_depth { 0 };
     };
 
-    [[nodiscard]] AccelGfx::Painter const& painter() const { return *stacking_contexts.last().painter; }
-    [[nodiscard]] AccelGfx::Painter& painter() { return *stacking_contexts.last().painter; }
+    [[nodiscard]] AccelGfx::Painter const& painter() const { return *m_stacking_contexts.last().painter; }
+    [[nodiscard]] AccelGfx::Painter& painter() { return *m_stacking_contexts.last().painter; }
 
-    Vector<StackingContext> stacking_contexts;
+    Vector<StackingContext> m_stacking_contexts;
 };
 
 }
