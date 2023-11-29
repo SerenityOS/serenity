@@ -346,8 +346,13 @@ private:
 
         switch (type) {
         case Type::Byte:
-        case Type::Undefined:
-            return read_every_values.template operator()<u8>();
+        case Type::Undefined: {
+            Vector<Value, 1> result;
+            auto buffer = TRY(ByteBuffer::create_uninitialized(count));
+            TRY(m_stream->read_until_filled(buffer));
+            result.append(move(buffer));
+            return result;
+        }
         case Type::ASCII:
         case Type::UTF8: {
             Vector<Value, 1> result;
@@ -397,6 +402,9 @@ private:
         if constexpr (TIFF_DEBUG) {
             if (tiff_value.size() == 1) {
                 tiff_value[0].visit(
+                    [&](ByteBuffer& value) {
+                        dbgln("Read tag({}), type({}): size {}", tag, to_underlying(type), value.size());
+                    },
                     [&](auto const& value) {
                         dbgln("Read tag({}), type({}): {}", tag, to_underlying(type), value);
                     });
@@ -404,6 +412,9 @@ private:
                 dbg("Read tag({}), type({}): [", tag, to_underlying(type));
                 for (u32 i = 0; i < tiff_value.size(); ++i) {
                     tiff_value[i].visit(
+                        [&](ByteBuffer&) {
+                            VERIFY_NOT_REACHED();
+                        },
                         [&](auto const& value) {
                             dbg("{}", value);
                         });

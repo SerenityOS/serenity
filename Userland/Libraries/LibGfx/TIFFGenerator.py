@@ -103,11 +103,22 @@ def tiff_type_to_cpp(t: TIFFType, without_promotion: bool = False) -> str:
     # Note that the Value<> type doesn't include u16 for this reason
     if not without_promotion:
         t = promote_type(t)
+    if t == TIFFType.Undefined:
+        return 'ByteBuffer'
     if t == TIFFType.UnsignedShort:
         return 'u16'
     if t == TIFFType.UnsignedLong:
         return 'u32'
     raise RuntimeError(f'Type "{t}" not recognized, please update tiff_type_to_read_only_cpp()')
+
+
+def is_container(t: TIFFType) -> bool:
+    """
+        Some TIFF types are defined on the unit scale but are intended to be used within a collection.
+        An example of that are ASCII strings defined as N * byte. Let's intercept that and generate
+        a nice API instead of Vector<u8>.
+    """
+    return t in [TIFFType.Byte, TIFFType.Undefined]
 
 
 def export_promoter() -> str:
@@ -137,7 +148,8 @@ def pascal_case_to_snake_case(name: str) -> str:
 
 
 def generate_getter(tag: Tag) -> str:
-    variant_inner_type = tiff_type_to_cpp(retrieve_biggest_type(tag.types))
+    biggest_type = retrieve_biggest_type(tag.types)
+    variant_inner_type = tiff_type_to_cpp(biggest_type)
 
     extracted_value_template = f"(*possible_value)[{{}}].get<{variant_inner_type}>()"
 
@@ -146,8 +158,10 @@ def generate_getter(tag: Tag) -> str:
         tag_final_type = f"TIFF::{tag.associated_enum.__name__}"
         extracted_value_template = f"static_cast<{tag_final_type}>({extracted_value_template})"
 
-    if len(tag.counts) == 1 and tag.counts[0] == 1:
+    if len(tag.counts) == 1 and tag.counts[0] == 1 or is_container(biggest_type):
         return_type = tag_final_type
+        if is_container(biggest_type):
+            return_type += ' const&'
         unpacked_if_needed = f"return {extracted_value_template.format(0)};"
     else:
         if len(tag.counts) == 1:
@@ -231,7 +245,7 @@ struct Rational {{
 {export_promoter()}
 
 // Note that u16 is not include on purpose
-using Value = Variant<u8, String, u32, Rational<u32>, i32, Rational<i32>>;
+using Value = Variant<ByteBuffer, String, u32, Rational<u32>, i32, Rational<i32>>;
 
 {export_tag_related_enums(known_tags)}
 
