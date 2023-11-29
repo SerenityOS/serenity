@@ -59,7 +59,13 @@ struct Framebuffer {
 };
 
 void set_viewport(Gfx::IntRect);
-void enable_blending();
+
+enum class BlendFactor {
+    One,
+    OneMinusSrcAlpha,
+    SrcAlpha,
+};
+void enable_blending(BlendFactor source, BlendFactor destination);
 
 void read_pixels(Gfx::IntRect, Gfx::Bitmap&);
 

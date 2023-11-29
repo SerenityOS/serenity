@@ -205,7 +205,7 @@ void Painter::fill_rect(Gfx::FloatRect rect, Gfx::Color color)
 
     GL::set_uniform(color_uniform, red, green, blue, alpha);
     GL::set_vertex_attribute(position_attribute, 0, 2);
-    GL::enable_blending();
+    GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha);
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 
     GL::delete_buffer(vbo);
@@ -254,7 +254,7 @@ void Painter::fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color c
     auto bottom_right_corner_radius_uniform = m_rounded_rectangle_program.get_uniform_location("uBottomRightRadius");
     GL::set_uniform(bottom_right_corner_radius_uniform, bottom_right_radius.horizontal_radius, bottom_right_radius.vertical_radius);
 
-    GL::enable_blending();
+    GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha);
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 
     GL::delete_buffer(vbo);
@@ -297,7 +297,7 @@ void Painter::draw_line(Gfx::FloatPoint a, Gfx::FloatPoint b, float thickness, C
 
     GL::set_uniform(color_uniform, red, green, blue, alpha);
     GL::set_vertex_attribute(position_attribute, 0, 2);
-    GL::enable_blending();
+    GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha);
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 
     GL::delete_buffer(vbo);
@@ -438,6 +438,7 @@ void Painter::draw_glyph_run(Vector<Gfx::DrawGlyphOrEmoji> const& glyph_run, Col
 
     GL::set_uniform(color_uniform, red, green, blue, alpha);
     GL::set_vertex_attribute(position_attribute, 0, 4);
+    GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha);
     GL::draw_arrays(GL::DrawPrimitive::Triangles, vertices.size() / 4);
 
     GL::delete_buffer(vbo);
@@ -491,23 +492,23 @@ void Painter::fill_rect_with_linear_gradient(Gfx::FloatRect const& rect, Readonl
         auto add_triangle = [&](auto& p1, auto& p2, auto& p3, auto& c1, auto& c2, auto& c3) {
             vertices.append(p1.x());
             vertices.append(p1.y());
-            colors.append(c1.red);
-            colors.append(c1.green);
-            colors.append(c1.blue);
+            colors.append(c1.red * c1.alpha);
+            colors.append(c1.green * c1.alpha);
+            colors.append(c1.blue * c1.alpha);
             colors.append(c1.alpha);
 
             vertices.append(p2.x());
             vertices.append(p2.y());
-            colors.append(c2.red);
-            colors.append(c2.green);
-            colors.append(c2.blue);
+            colors.append(c2.red * c2.alpha);
+            colors.append(c2.green * c2.alpha);
+            colors.append(c2.blue * c2.alpha);
             colors.append(c2.alpha);
 
             vertices.append(p3.x());
             vertices.append(p3.y());
-            colors.append(c3.red);
-            colors.append(c3.green);
-            colors.append(c3.blue);
+            colors.append(c3.red * c3.alpha);
+            colors.append(c3.green * c3.alpha);
+            colors.append(c3.blue * c3.alpha);
             colors.append(c3.alpha);
         };
 
@@ -534,6 +535,7 @@ void Painter::fill_rect_with_linear_gradient(Gfx::FloatRect const& rect, Readonl
     GL::bind_buffer(vbo_colors);
     GL::set_vertex_attribute(color_attribute, 0, 4);
 
+    GL::enable_blending(GL::BlendFactor::One, GL::BlendFactor::OneMinusSrcAlpha);
     GL::draw_arrays(GL::DrawPrimitive::Triangles, vertices.size() / 2);
 }
 
@@ -633,7 +635,7 @@ void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture co
     auto scaling_mode_gl = to_gl_scaling_mode(scaling_mode);
     GL::set_texture_scale_mode(scaling_mode_gl);
 
-    GL::enable_blending();
+    GL::enable_blending(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha);
 
     GL::draw_arrays(GL::DrawPrimitive::TriangleFan, 4);
 

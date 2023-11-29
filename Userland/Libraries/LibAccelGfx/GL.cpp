@@ -23,10 +23,23 @@ void set_viewport(Gfx::IntRect rect)
     verify_no_error();
 }
 
-void enable_blending()
+static GLenum to_gl_enum(BlendFactor factor)
+{
+    switch (factor) {
+    case BlendFactor::SrcAlpha:
+        return GL_SRC_ALPHA;
+    case BlendFactor::One:
+        return GL_ONE;
+    case BlendFactor::OneMinusSrcAlpha:
+        return GL_ONE_MINUS_SRC_ALPHA;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+void enable_blending(BlendFactor source, BlendFactor destination)
 {
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(to_gl_enum(source), to_gl_enum(destination));
     verify_no_error();
 }
 
