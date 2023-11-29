@@ -385,10 +385,12 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_parser);
     visitor.visit(m_lazy_load_intersection_observer);
     visitor.visit(m_visual_viewport);
-
+    visitor.visit(m_latest_entry);
     visitor.visit(m_default_timeline);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
+        visitor.visit(script);
+    for (auto& script : m_scripts_to_execute_in_order_as_soon_as_possible)
         visitor.visit(script);
     for (auto& script : m_scripts_to_execute_as_soon_as_possible)
         visitor.visit(script);
@@ -406,6 +408,9 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto& observer : m_intersection_observers)
         visitor.visit(observer);
+
+    for (auto& image : m_shared_image_requests)
+        visitor.visit(image.value);
 
     for (auto& timeline : m_associated_animation_timelines)
         visitor.visit(timeline);
