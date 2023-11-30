@@ -41,6 +41,8 @@
 
 #define ElfW(type) Elf64_##type
 
+#define ELFSIZE 64
+
 typedef uint8_t Elf_Byte;
 
 typedef uint32_t Elf32_Addr; /* Unsigned program address */
