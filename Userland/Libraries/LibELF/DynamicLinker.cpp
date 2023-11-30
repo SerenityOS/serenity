@@ -244,7 +244,7 @@ static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
     for (auto& it : s_global_objects) {
         auto& object = it.value;
         auto info = dl_phdr_info {
-            .dlpi_addr = (ElfW(Addr))object->base_address().as_ptr(),
+            .dlpi_addr = (Elf_Addr)object->base_address().as_ptr(),
             .dlpi_name = object->filepath().characters(),
             .dlpi_phdr = object->program_headers(),
             .dlpi_phnum = object->program_header_count()

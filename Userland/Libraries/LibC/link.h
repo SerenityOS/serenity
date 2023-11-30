@@ -13,10 +13,10 @@
 __BEGIN_DECLS
 
 struct dl_phdr_info {
-    ElfW(Addr) dlpi_addr;
+    Elf_Addr dlpi_addr;
     char const* dlpi_name;
-    const ElfW(Phdr) * dlpi_phdr;
-    ElfW(Half) dlpi_phnum;
+    Elf_Phdr const* dlpi_phdr;
+    Elf_Half dlpi_phnum;
 };
 
 int dl_iterate_phdr(int (*callback)(struct dl_phdr_info* info, size_t size, void* data), void* data);

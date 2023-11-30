@@ -18,7 +18,7 @@
 
 namespace ELF {
 
-bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool verbose)
+bool validate_elf_header(Elf_Ehdr const& elf_header, size_t file_size, bool verbose)
 {
     if (!IS_ELF(elf_header)) {
         if (verbose)
@@ -80,9 +80,9 @@ bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (sizeof(ElfW(Ehdr)) != elf_header.e_ehsize) {
+    if (sizeof(Elf_Ehdr) != elf_header.e_ehsize) {
         if (verbose)
-            dbgln("File has incorrect ELF header size..? ({}), expected ({})!", elf_header.e_ehsize, sizeof(ElfW(Ehdr)));
+            dbgln("File has incorrect ELF header size..? ({}), expected ({})!", elf_header.e_ehsize, sizeof(Elf_Ehdr));
         return false;
     }
 
@@ -134,15 +134,15 @@ bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool ve
         }
     }
 
-    if (0 != elf_header.e_phnum && sizeof(ElfW(Phdr)) != elf_header.e_phentsize) {
+    if (0 != elf_header.e_phnum && sizeof(Elf_Phdr) != elf_header.e_phentsize) {
         if (verbose)
-            dbgln("File has incorrect program header size..? ({}), expected ({}).", elf_header.e_phentsize, sizeof(ElfW(Phdr)));
+            dbgln("File has incorrect program header size..? ({}), expected ({}).", elf_header.e_phentsize, sizeof(Elf_Phdr));
         return false;
     }
 
-    if (sizeof(ElfW(Shdr)) != elf_header.e_shentsize) {
+    if (sizeof(Elf_Shdr) != elf_header.e_shentsize) {
         if (verbose)
-            dbgln("File has incorrect section header size..? ({}), expected ({}).", elf_header.e_shentsize, sizeof(ElfW(Shdr)));
+            dbgln("File has incorrect section header size..? ({}), expected ({}).", elf_header.e_shentsize, sizeof(Elf_Shdr));
         return false;
     }
 
@@ -199,7 +199,7 @@ bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool ve
     return true;
 }
 
-ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file_size, ReadonlyBytes buffer, StringBuilder* interpreter_path_builder, Optional<size_t>* requested_stack_size, bool verbose)
+ErrorOr<bool> validate_program_headers(Elf_Ehdr const& elf_header, size_t file_size, ReadonlyBytes buffer, StringBuilder* interpreter_path_builder, Optional<size_t>* requested_stack_size, bool verbose)
 {
     Checked<size_t> total_size_of_program_headers = elf_header.e_phnum;
     total_size_of_program_headers *= elf_header.e_phentsize;
@@ -226,7 +226,7 @@ ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file
     }
 
     size_t num_program_headers = elf_header.e_phnum;
-    auto program_header_begin = (const ElfW(Phdr)*)buffer.offset(elf_header.e_phoff);
+    auto program_header_begin = (Elf_Phdr const*)buffer.offset(elf_header.e_phoff);
 
     for (size_t header_index = 0; header_index < num_program_headers; ++header_index) {
         auto& program_header = program_header_begin[header_index];

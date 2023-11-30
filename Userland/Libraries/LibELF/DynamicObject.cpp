@@ -21,7 +21,7 @@ DynamicObject::DynamicObject(DeprecatedString const& filepath, VirtualAddress ba
     , m_base_address(base_address)
     , m_dynamic_address(dynamic_section_address)
 {
-    auto* header = (ElfW(Ehdr)*)base_address.as_ptr();
+    auto* header = (Elf_Ehdr*)base_address.as_ptr();
     auto* const phdrs = program_headers();
 
     // Calculate the base address using the PT_LOAD element with the lowest `p_vaddr` (which is the first element)
@@ -200,7 +200,7 @@ void DynamicObject::parse()
         // TODO: FIXME, this shouldn't be hardcoded
         // The reason we need this here is that for some reason, when there only PLT relocations, the compiler
         // doesn't insert a 'PLTRELSZ' entry to the dynamic section
-        m_size_of_relocation_entry = sizeof(ElfW(Rel));
+        m_size_of_relocation_entry = sizeof(Elf_Rel);
     }
 
     // Whether or not RELASZ (stored in m_size_of_relocation_table) only refers to non-PLT entries is not clearly specified.
@@ -226,21 +226,21 @@ DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned 
 {
     VERIFY(index < entry_count());
     unsigned offset_in_section = index * entry_size();
-    auto relocation_address = (ElfW(Rela)*)address().offset(offset_in_section).as_ptr();
+    auto relocation_address = (Elf_Rela*)address().offset(offset_in_section).as_ptr();
     return Relocation(m_dynamic, *relocation_address, offset_in_section, m_addend_used);
 }
 
 DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
 {
     VERIFY(offset <= (m_section_size_bytes - m_entry_size));
-    auto relocation_address = (ElfW(Rela)*)address().offset(offset).as_ptr();
+    auto relocation_address = (Elf_Rela*)address().offset(offset).as_ptr();
     return Relocation(m_dynamic, *relocation_address, offset, m_addend_used);
 }
 
 DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
 {
     auto symbol_section = Section(*this, m_symbol_table_offset, (m_symbol_count * m_size_of_symbol_table_entry), m_size_of_symbol_table_entry, "DT_SYMTAB"sv);
-    auto symbol_entry = (ElfW(Sym)*)symbol_section.address().offset(index * symbol_section.entry_size()).as_ptr();
+    auto symbol_entry = (Elf_Sym*)symbol_section.address().offset(index * symbol_section.entry_size()).as_ptr();
     return Symbol(*this, index, *symbol_entry);
 }
 
@@ -279,16 +279,16 @@ DynamicObject::Section DynamicObject::relr_relocation_section() const
     return Section(*this, m_relr_relocation_table_offset, m_size_of_relr_relocation_table, m_size_of_relr_relocations_entry, "DT_RELR"sv);
 }
 
-ElfW(Half) DynamicObject::program_header_count() const
+Elf_Half DynamicObject::program_header_count() const
 {
-    auto* header = (const ElfW(Ehdr)*)m_base_address.as_ptr();
+    auto* header = (Elf_Ehdr const*)m_base_address.as_ptr();
     return header->e_phnum;
 }
 
-const ElfW(Phdr) * DynamicObject::program_headers() const
+Elf_Phdr const* DynamicObject::program_headers() const
 {
-    auto* header = (const ElfW(Ehdr)*)m_base_address.as_ptr();
-    return (const ElfW(Phdr)*)(m_base_address.as_ptr() + header->e_phoff);
+    auto* header = (Elf_Ehdr const*)m_base_address.as_ptr();
+    return (Elf_Phdr const*)(m_base_address.as_ptr() + header->e_phoff);
 }
 
 auto DynamicObject::HashSection::lookup_sysv_symbol(StringView name, u32 hash_value) const -> Optional<Symbol>
@@ -323,12 +323,12 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(StringView name, u32 hash_val
 
     u32 const* hash_table_begin = (u32*)address().as_ptr();
 
-    const size_t num_buckets = hash_table_begin[0];
-    const size_t num_omitted_symbols = hash_table_begin[1];
-    const u32 num_maskwords = hash_table_begin[2];
+    size_t const num_buckets = hash_table_begin[0];
+    size_t const num_omitted_symbols = hash_table_begin[1];
+    u32 const num_maskwords = hash_table_begin[2];
     // This works because num_maskwords is required to be a power of 2
-    const u32 num_maskwords_bitmask = num_maskwords - 1;
-    const u32 shift2 = hash_table_begin[3];
+    u32 const num_maskwords_bitmask = num_maskwords - 1;
+    u32 const shift2 = hash_table_begin[3];
 
     BloomWord const* bloom_words = (BloomWord const*)&hash_table_begin[4];
     u32 const* const buckets = (u32 const*)&bloom_words[num_maskwords];
@@ -336,7 +336,7 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(StringView name, u32 hash_val
 
     BloomWord hash1 = hash_value;
     BloomWord hash2 = hash1 >> shift2;
-    const BloomWord bitmask = ((BloomWord)1 << (hash1 % bloom_word_size)) | ((BloomWord)1 << (hash2 % bloom_word_size));
+    BloomWord const bitmask = ((BloomWord)1 << (hash1 % bloom_word_size)) | ((BloomWord)1 << (hash2 % bloom_word_size));
 
     if ((bloom_words[(hash1 / bloom_word_size) & num_maskwords_bitmask] & bitmask) != bitmask)
         return {};
@@ -361,13 +361,13 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(StringView name, u32 hash_val
     return {};
 }
 
-StringView DynamicObject::symbol_string_table_string(ElfW(Word) index) const
+StringView DynamicObject::symbol_string_table_string(Elf_Word index) const
 {
     auto const* symbol_string_table_ptr = reinterpret_cast<char const*>(base_address().offset(m_string_table_offset + index).as_ptr());
     return StringView { symbol_string_table_ptr, strlen(symbol_string_table_ptr) };
 }
 
-char const* DynamicObject::raw_symbol_string_table_string(ElfW(Word) index) const
+char const* DynamicObject::raw_symbol_string_table_string(Elf_Word index) const
 {
     return (char const*)base_address().offset(m_string_table_offset + index).as_ptr();
 }
@@ -384,7 +384,7 @@ DynamicObject::FinalizationFunction DynamicObject::fini_section_function() const
     return (FinalizationFunction)fini_section().address().as_ptr();
 }
 
-char const* DynamicObject::name_for_dtag(ElfW(Sword) d_tag)
+char const* DynamicObject::name_for_dtag(Elf_Sword d_tag)
 {
     switch (d_tag) {
     case DT_NULL:

@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static char const* object_program_header_type_to_string(ElfW(Word) type)
+static char const* object_program_header_type_to_string(Elf_Word type)
 {
     switch (type) {
     case PT_NULL:
@@ -66,7 +66,7 @@ static char const* object_program_header_type_to_string(ElfW(Word) type)
     }
 }
 
-static char const* object_section_header_type_to_string(ElfW(Word) type)
+static char const* object_section_header_type_to_string(Elf_Word type)
 {
     switch (type) {
     case SHT_NULL:
@@ -138,7 +138,7 @@ static char const* object_section_header_type_to_string(ElfW(Word) type)
     }
 }
 
-static char const* object_symbol_type_to_string(ElfW(Word) type)
+static char const* object_symbol_type_to_string(Elf_Word type)
 {
     switch (type) {
     case STT_NOTYPE:
@@ -164,7 +164,7 @@ static char const* object_symbol_type_to_string(ElfW(Word) type)
     }
 }
 
-static char const* object_symbol_binding_to_string(ElfW(Word) type)
+static char const* object_symbol_binding_to_string(Elf_Word type)
 {
     switch (type) {
     case STB_LOCAL:
@@ -184,7 +184,7 @@ static char const* object_symbol_binding_to_string(ElfW(Word) type)
     }
 }
 
-static char const* object_relocation_type_to_string(ElfW(Half) machine, ElfW(Word) type)
+static char const* object_relocation_type_to_string(Elf_Half machine, Elf_Word type)
 {
 #define ENUMERATE_RELOCATION(name) \
     case name:                     \
@@ -280,14 +280,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     StringBuilder interpreter_path_builder;
-    auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_image_data.data(), elf_image_data.size(), elf_image_data, &interpreter_path_builder);
+    auto result_or_error = ELF::validate_program_headers(*(Elf_Ehdr const*)elf_image_data.data(), elf_image_data.size(), elf_image_data, &interpreter_path_builder);
     if (result_or_error.is_error() || !result_or_error.value()) {
         warnln("Invalid ELF headers");
         return -1;
     }
     auto interpreter_path = interpreter_path_builder.string_view();
 
-    auto& header = *reinterpret_cast<const ElfW(Ehdr)*>(elf_image_data.data());
+    auto& header = *reinterpret_cast<Elf_Ehdr const*>(elf_image_data.data());
 
     RefPtr<ELF::DynamicObject> object = nullptr;
 

@@ -55,7 +55,7 @@ Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(i
 
     VERIFY(stat.st_size >= 0);
     auto size = static_cast<size_t>(stat.st_size);
-    if (size < sizeof(ElfW(Ehdr)))
+    if (size < sizeof(Elf_Ehdr))
         return DlErrorMessage { DeprecatedString::formatted("File {} has invalid ELF header", filepath) };
 
     DeprecatedString file_mmap_name = DeprecatedString::formatted("ELF_DYN: {}", filepath);
@@ -132,7 +132,7 @@ bool DynamicLoader::validate()
     if (!image().is_valid())
         return false;
 
-    auto* elf_header = (ElfW(Ehdr)*)m_file_data;
+    auto* elf_header = (Elf_Ehdr*)m_file_data;
     if (!validate_elf_header(*elf_header, m_file_size))
         return false;
     auto result_or_error = validate_program_headers(*elf_header, m_file_size, { m_file_data, m_file_size });

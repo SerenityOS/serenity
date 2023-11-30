@@ -761,6 +761,7 @@ struct elf_args {
 #    define Elf_Sym Elf32_Sym
 #    define Elf_Rel Elf32_Rel
 #    define Elf_RelA Elf32_Rela
+#    define Elf_Rela Elf32_Rela
 #    define Elf_Relr Elf32_Relr
 #    define Elf_Dyn Elf32_Dyn
 #    define Elf_Half Elf32_Half
@@ -789,6 +790,7 @@ struct elf_args {
 #    define Elf_Sym Elf64_Sym
 #    define Elf_Rel Elf64_Rel
 #    define Elf_RelA Elf64_Rela
+#    define Elf_Rela Elf64_Rela
 #    define Elf_Relr Elf64_Relr
 #    define Elf_Dyn Elf64_Dyn
 #    define Elf_Half Elf64_Half
