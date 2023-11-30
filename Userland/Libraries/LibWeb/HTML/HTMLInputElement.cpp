@@ -371,11 +371,13 @@ String HTMLInputElement::value() const
 
 WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
 {
+    auto& realm = this->realm();
+
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
     if (type_state() == TypeAttributeState::FileUpload) {
         // On setting, if the new value is the empty string, empty the list of selected files; otherwise, throw an "InvalidStateError" DOMException.
         if (!value.is_empty())
-            return WebIDL::InvalidStateError::create(realm(), "Setting value of input type file to non-empty string"_fly_string);
+            return WebIDL::InvalidStateError::create(realm, "Setting value of input type file to non-empty string"_fly_string);
         m_selected_files = nullptr;
         return {};
     }
@@ -401,6 +403,9 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
     if (m_text_node && (m_value != old_value)) {
         m_text_node->set_data(m_value);
         update_placeholder_visibility();
+
+        if (auto* browsing_context = document().browsing_context())
+            browsing_context->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
     }
 
     return {};
