@@ -25,22 +25,19 @@ public:
     void clear_selection();
 
 private:
-    void maybe_load_inspector();
-    void generate_dom_tree(StringBuilder&);
-    void generate_accessibility_tree(StringBuilder&);
+    void load_inspector();
+    String generate_dom_tree(JsonObject const&);
+    String generate_accessibility_tree(JsonObject const&);
 
     void select_node(i32 node_id);
 
     ViewImplementation& m_content_web_view;
     ViewImplementation& m_inspector_web_view;
 
-    Optional<JsonValue> m_dom_tree;
-    Optional<JsonValue> m_accessibility_tree;
-
     Optional<i32> m_body_node_id;
     Optional<i32> m_pending_selection;
 
-    bool m_inspector_loaded { false };
+    bool m_dom_tree_loaded { false };
 };
 
 }
