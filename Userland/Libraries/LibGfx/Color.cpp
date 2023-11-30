@@ -267,11 +267,55 @@ Optional<Color> Color::from_string(StringView string)
     if (string.is_empty())
         return {};
 
-    if (string.equals_ignoring_ascii_case("transparent"sv))
-        return Color::from_argb(0x00000000);
+    if (string[0] == '#') {
+        auto hex_nibble_to_u8 = [](char nibble) -> Optional<u8> {
+            if (!isxdigit(nibble))
+                return {};
+            if (nibble >= '0' && nibble <= '9')
+                return nibble - '0';
+            return 10 + (tolower(nibble) - 'a');
+        };
 
-    if (auto const color = from_named_css_color_string(string); color.has_value())
-        return color;
+        if (string.length() == 4) {
+            Optional<u8> r = hex_nibble_to_u8(string[1]);
+            Optional<u8> g = hex_nibble_to_u8(string[2]);
+            Optional<u8> b = hex_nibble_to_u8(string[3]);
+            if (!r.has_value() || !g.has_value() || !b.has_value())
+                return {};
+            return Color(r.value() * 17, g.value() * 17, b.value() * 17);
+        }
+
+        if (string.length() == 5) {
+            Optional<u8> r = hex_nibble_to_u8(string[1]);
+            Optional<u8> g = hex_nibble_to_u8(string[2]);
+            Optional<u8> b = hex_nibble_to_u8(string[3]);
+            Optional<u8> a = hex_nibble_to_u8(string[4]);
+            if (!r.has_value() || !g.has_value() || !b.has_value() || !a.has_value())
+                return {};
+            return Color(r.value() * 17, g.value() * 17, b.value() * 17, a.value() * 17);
+        }
+
+        if (string.length() != 7 && string.length() != 9)
+            return {};
+
+        auto to_hex = [&](char c1, char c2) -> Optional<u8> {
+            auto nib1 = hex_nibble_to_u8(c1);
+            auto nib2 = hex_nibble_to_u8(c2);
+            if (!nib1.has_value() || !nib2.has_value())
+                return {};
+            return nib1.value() << 4 | nib2.value();
+        };
+
+        Optional<u8> r = to_hex(string[1], string[2]);
+        Optional<u8> g = to_hex(string[3], string[4]);
+        Optional<u8> b = to_hex(string[5], string[6]);
+        Optional<u8> a = string.length() == 9 ? to_hex(string[7], string[8]) : Optional<u8>(255);
+
+        if (!r.has_value() || !g.has_value() || !b.has_value() || !a.has_value())
+            return {};
+
+        return Color(r.value(), g.value(), b.value(), a.value());
+    }
 
     if (string.starts_with("rgb("sv, CaseSensitivity::CaseInsensitive) && string.ends_with(')'))
         return parse_rgb_color(string);
@@ -279,56 +323,13 @@ Optional<Color> Color::from_string(StringView string)
     if (string.starts_with("rgba("sv, CaseSensitivity::CaseInsensitive) && string.ends_with(')'))
         return parse_rgba_color(string);
 
-    if (string[0] != '#')
-        return {};
+    if (string.equals_ignoring_ascii_case("transparent"sv))
+        return Color::from_argb(0x00000000);
 
-    auto hex_nibble_to_u8 = [](char nibble) -> Optional<u8> {
-        if (!isxdigit(nibble))
-            return {};
-        if (nibble >= '0' && nibble <= '9')
-            return nibble - '0';
-        return 10 + (tolower(nibble) - 'a');
-    };
+    if (auto const color = from_named_css_color_string(string); color.has_value())
+        return color;
 
-    if (string.length() == 4) {
-        Optional<u8> r = hex_nibble_to_u8(string[1]);
-        Optional<u8> g = hex_nibble_to_u8(string[2]);
-        Optional<u8> b = hex_nibble_to_u8(string[3]);
-        if (!r.has_value() || !g.has_value() || !b.has_value())
-            return {};
-        return Color(r.value() * 17, g.value() * 17, b.value() * 17);
-    }
-
-    if (string.length() == 5) {
-        Optional<u8> r = hex_nibble_to_u8(string[1]);
-        Optional<u8> g = hex_nibble_to_u8(string[2]);
-        Optional<u8> b = hex_nibble_to_u8(string[3]);
-        Optional<u8> a = hex_nibble_to_u8(string[4]);
-        if (!r.has_value() || !g.has_value() || !b.has_value() || !a.has_value())
-            return {};
-        return Color(r.value() * 17, g.value() * 17, b.value() * 17, a.value() * 17);
-    }
-
-    if (string.length() != 7 && string.length() != 9)
-        return {};
-
-    auto to_hex = [&](char c1, char c2) -> Optional<u8> {
-        auto nib1 = hex_nibble_to_u8(c1);
-        auto nib2 = hex_nibble_to_u8(c2);
-        if (!nib1.has_value() || !nib2.has_value())
-            return {};
-        return nib1.value() << 4 | nib2.value();
-    };
-
-    Optional<u8> r = to_hex(string[1], string[2]);
-    Optional<u8> g = to_hex(string[3], string[4]);
-    Optional<u8> b = to_hex(string[5], string[6]);
-    Optional<u8> a = string.length() == 9 ? to_hex(string[7], string[8]) : Optional<u8>(255);
-
-    if (!r.has_value() || !g.has_value() || !b.has_value() || !a.has_value())
-        return {};
-
-    return Color(r.value(), g.value(), b.value(), a.value());
+    return {};
 }
 
 Vector<Color> Color::shades(u32 steps, float max) const
