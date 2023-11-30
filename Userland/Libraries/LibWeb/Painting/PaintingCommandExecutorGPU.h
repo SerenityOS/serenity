@@ -67,6 +67,7 @@ private:
         MaybeOwned<AccelGfx::Painter> painter;
         float opacity;
         Gfx::IntRect destination;
+        Gfx::AffineTransform transform;
         int stacking_context_depth { 0 };
     };
 

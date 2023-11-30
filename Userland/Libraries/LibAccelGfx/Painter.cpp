@@ -586,24 +586,44 @@ void Painter::flush(Gfx::Bitmap& bitmap)
     GL::read_pixels({ 0, 0, bitmap.width(), bitmap.height() }, bitmap);
 }
 
-void Painter::blit_canvas(Gfx::IntRect const& dst_rect, Canvas const& canvas, float opacity)
+void Painter::blit_canvas(Gfx::IntRect const& dst_rect, Canvas const& canvas, float opacity, Optional<Gfx::AffineTransform> affine_transform)
 {
-    blit_canvas(dst_rect.to_type<float>(), canvas, opacity);
+    blit_canvas(dst_rect.to_type<float>(), canvas, opacity, move(affine_transform));
 }
 
-void Painter::blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const& canvas, float opacity)
+void Painter::blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const& canvas, float opacity, Optional<Gfx::AffineTransform> affine_transform)
 {
     auto texture = GL::Texture(canvas.framebuffer().texture);
-    blit_scaled_texture(dst_rect, texture, { { 0, 0 }, canvas.size() }, Painter::ScalingMode::NearestNeighbor, opacity);
+    blit_scaled_texture(dst_rect, texture, { { 0, 0 }, canvas.size() }, Painter::ScalingMode::NearestNeighbor, opacity, move(affine_transform));
 }
 
-void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const& texture, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode, float opacity)
+void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const& texture, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode, float opacity, Optional<Gfx::AffineTransform> affine_transform)
 {
     bind_target_canvas();
 
     m_blit_program.use();
 
-    auto dst_rect_in_clip_space = to_clip_space(transform().map(dst_rect));
+    auto dst_rect_rotated = dst_rect;
+    Array<Gfx::FloatPoint, 4> dst_rect_vertices = {
+        dst_rect_rotated.top_left(),
+        dst_rect_rotated.bottom_left(),
+        dst_rect_rotated.bottom_right(),
+        dst_rect_rotated.top_right(),
+    };
+
+    if (affine_transform.has_value()) {
+        for (auto& point : dst_rect_vertices)
+            point = affine_transform->map(point);
+    }
+
+    auto const viewport_width = static_cast<float>(m_target_canvas->size().width());
+    auto const viewport_height = static_cast<float>(m_target_canvas->size().height());
+    for (auto& point : dst_rect_vertices) {
+        point = transform().map(point);
+        point.set_x(2.0f * point.x() / viewport_width - 1.0f);
+        point.set_y(-1.0f + 2.0f * point.y() / viewport_height);
+    }
+
     auto src_rect_in_texture_space = to_texture_space(src_rect, *texture.size);
 
     Vector<GLfloat> vertices;
@@ -616,10 +636,10 @@ void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture co
         vertices.append(s.y());
     };
 
-    add_vertex(dst_rect_in_clip_space.top_left(), src_rect_in_texture_space.top_left());
-    add_vertex(dst_rect_in_clip_space.bottom_left(), src_rect_in_texture_space.bottom_left());
-    add_vertex(dst_rect_in_clip_space.bottom_right(), src_rect_in_texture_space.bottom_right());
-    add_vertex(dst_rect_in_clip_space.top_right(), src_rect_in_texture_space.top_right());
+    add_vertex(dst_rect_vertices[0], src_rect_in_texture_space.top_left());
+    add_vertex(dst_rect_vertices[1], src_rect_in_texture_space.bottom_left());
+    add_vertex(dst_rect_vertices[2], src_rect_in_texture_space.bottom_right());
+    add_vertex(dst_rect_vertices[3], src_rect_in_texture_space.top_right());
 
     auto vbo = GL::create_buffer();
     GL::upload_to_buffer(vbo, vertices);
