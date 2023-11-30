@@ -12,7 +12,8 @@ namespace Web::MimeSniff {
 
 enum class SniffingContext {
     None,
-    Browsing
+    Browsing,
+    Image
 };
 
 struct SniffingConfiguration {
@@ -40,6 +41,7 @@ private:
     ErrorOr<void> supplied_mime_type_detection_algorithm(StringView scheme, Optional<MimeType> supplied_type);
     ErrorOr<void> mime_type_sniffing_algorithm();
     ErrorOr<void> context_specific_sniffing_algorithm(SniffingContext sniffing_context);
+    ErrorOr<void> rules_for_sniffing_images_specifically();
 
     // https://mimesniff.spec.whatwg.org/#supplied-mime-type
     // A supplied MIME type, the MIME type determined by the supplied MIME type detection algorithm.
