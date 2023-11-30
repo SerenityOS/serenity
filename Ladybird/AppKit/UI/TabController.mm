@@ -34,6 +34,24 @@ enum class IsHistoryNavigation {
     No,
 };
 
+@interface LocationSearchField : NSSearchField
+
+- (BOOL)becomeFirstResponder;
+
+@end
+
+@implementation LocationSearchField
+
+- (BOOL)becomeFirstResponder
+{
+    BOOL result = [super becomeFirstResponder];
+    if (result)
+        [self performSelector:@selector(selectText:) withObject:self afterDelay:0];
+    return result;
+}
+
+@end
+
 @interface TabController () <NSToolbarDelegate, NSSearchFieldDelegate>
 {
     DeprecatedString m_title;
@@ -257,7 +275,7 @@ enum class IsHistoryNavigation {
                 attributes:highlight_attributes];
     }
 
-    auto* location_search_field = (NSSearchField*)[self.location_toolbar_item view];
+    auto* location_search_field = (LocationSearchField*)[self.location_toolbar_item view];
     [location_search_field setAttributedStringValue:attributed_url];
 }
 
@@ -450,7 +468,7 @@ enum class IsHistoryNavigation {
 - (NSToolbarItem*)location_toolbar_item
 {
     if (!_location_toolbar_item) {
-        auto* location_search_field = [[NSSearchField alloc] init];
+        auto* location_search_field = [[LocationSearchField alloc] init];
         [location_search_field setPlaceholderString:@"Enter web address"];
         [location_search_field setTextColor:[NSColor textColor]];
         [location_search_field setDelegate:self];
@@ -651,7 +669,7 @@ enum class IsHistoryNavigation {
 
 - (void)controlTextDidEndEditing:(NSNotification*)notification
 {
-    auto* location_search_field = (NSSearchField*)[self.location_toolbar_item view];
+    auto* location_search_field = (LocationSearchField*)[self.location_toolbar_item view];
 
     auto url_string = Ladybird::ns_string_to_string([location_search_field stringValue]);
     [self setLocationFieldText:url_string];
