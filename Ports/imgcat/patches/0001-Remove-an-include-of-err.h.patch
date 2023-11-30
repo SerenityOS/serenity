@@ -10,7 +10,7 @@ imgcat compiles just fine even when removing it.
  1 file changed, 1 deletion(-)
 
 diff --git a/src/imgcat.c b/src/imgcat.c
-index 26a73d7..89fc05d 100644
+index 26a73d7f359cc9ce30b2ba02a2b1f46617afada5..89fc05d19ae85786d115fee8eb16869e02b51513 100644
 --- a/src/imgcat.c
 +++ b/src/imgcat.c
 @@ -22,7 +22,6 @@
