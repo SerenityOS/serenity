@@ -769,6 +769,10 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         media_element.handle_keydown({}, key).release_value_but_fixme_should_propagate_errors();
     }
 
+    bool continue_ = fire_keyboard_event(UIEvents::EventNames::keydown, m_browsing_context, key, modifiers, code_point);
+    if (!continue_)
+        return false;
+
     if (m_browsing_context->cursor_position() && m_browsing_context->cursor_position()->node()->is_editable()) {
         auto& node = verify_cast<DOM::Text>(*m_browsing_context->cursor_position()->node());
 
@@ -823,10 +827,6 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         // NOTE: Because modifier keys should be ignored, we need to return true.
         return true;
     }
-
-    bool continue_ = fire_keyboard_event(UIEvents::EventNames::keydown, m_browsing_context, key, modifiers, code_point);
-    if (!continue_)
-        return false;
 
     // FIXME: Work out and implement the difference between this and keydown.
     return fire_keyboard_event(UIEvents::EventNames::keypress, m_browsing_context, key, modifiers, code_point);
