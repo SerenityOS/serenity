@@ -8,6 +8,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/Resource.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWebView/InspectorClient.h>
 #include <LibWebView/SourceHighlighter.h>
@@ -155,6 +156,10 @@ void InspectorClient::load_inspector()
 {
     StringBuilder builder;
 
+    // FIXME: Teach LibWeb how to load resource:// URIs instead of needing to read these files here.
+    auto inspector_css = MUST(Core::Resource::load_from_uri("resource://html/inspector/inspector.css"sv));
+    auto inspector_js = MUST(Core::Resource::load_from_uri("resource://html/inspector/inspector.js"sv));
+
     builder.append(R"~~~(
 <!DOCTYPE html>
 <html>
@@ -164,177 +169,9 @@ void InspectorClient::load_inspector()
 )~~~"sv);
 
     builder.append(HTML_HIGHLIGHTER_STYLE);
+    builder.append(inspector_css->data());
 
     builder.append(R"~~~(
-        body {
-            font-family: system-ui, sans-serif;
-            font-size: 10pt;
-
-            margin: 0;
-        }
-
-        .split-view {
-            width: 100vw;
-            height: 100vh;
-        }
-
-        .split-view-container {
-            overflow: scroll;
-        }
-
-        .tab-controls-container {
-            position: absolute;
-            width: 100%;
-
-            padding: 4px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            z-index: 100;
-        }
-
-        .tab-controls {
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .tab-controls button {
-            font-size: 12px;
-            font-weight: 600;
-
-            float: left;
-            border: none;
-            outline: none;
-            cursor: pointer;
-
-            padding: 4px 8px;
-        }
-
-        .tab-controls :first-child {
-            border-radius: 0.5rem 0 0 0.5rem;
-        }
-
-        .tab-controls :last-child {
-            border-radius: 0 0.5rem 0.5rem 0;
-        }
-
-        .tab-content {
-            height: 100%;
-
-            display: none;
-            border-radius: 0.5rem;
-
-            margin-top: 30px;
-            padding: 8px;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            html {
-                background-color: rgb(23, 23, 23);
-            }
-
-            .tab-controls-container {
-                background-color: rgb(57, 57, 57);
-            }
-
-            .tab-controls button {
-                color: white;
-                background-color: rgb(43, 42, 50);
-            }
-
-            .tab-controls button.active {
-                background-color: rgb(22 100 219);
-            }
-
-            .tab-controls button + button {
-                border-left: 1px solid rgb(96, 96, 96);
-            }
-        }
-
-        @media (prefers-color-scheme: light) {
-            .tab-controls-container {
-                background-color: rgb(229, 229, 229);
-            }
-
-            .tab-controls button {
-                color: black;
-                background-color: white;
-            }
-
-            .tab-controls button.active {
-                color: white;
-                background-color: rgb(28, 138, 255);
-            }
-
-            .tab-controls button + button {
-                border-left: 1px solid rgb(242, 242, 242);
-            }
-        }
-
-        details > :not(:first-child) {
-            display: list-item;
-            list-style: none inside;
-            margin-left: 1em;
-        }
-
-        .hoverable {
-            display: block;
-            padding: 1px;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .hoverable:hover {
-                background-color: #31383e;
-            }
-
-            .selected {
-                border: 1px dashed cyan;
-                padding: 0;
-            }
-        }
-
-        @media (prefers-color-scheme: light) {
-            .hoverable:hover {
-                background-color: rgb(236, 236, 236);
-            }
-
-            .selected {
-                border: 1px dashed blue;
-                padding: 0;
-            }
-        }
-
-        .property-table {
-            width: 100%;
-
-            table-layout: fixed;
-            border-collapse: collapse;
-        }
-
-        .property-table th {
-            position: sticky;
-            top: 0px;
-        }
-
-        .property-table th,
-        .property-table td {
-            padding: 4px;
-            text-align: left;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .property-table th {
-                background-color: rgb(57, 57, 57);
-            }
-        }
-
-        @media (prefers-color-scheme: light) {
-            .property-table th {
-                background-color: rgb(229, 229, 229);
-            }
-        }
     </style>
 </head>
 <body>
@@ -386,140 +223,11 @@ void InspectorClient::load_inspector()
     </div>
 
     <script type="text/javascript">
-        let selectedTopTab = null;
-        let selectedTopTabButton = null;
+)~~~"sv);
 
-        let selectedBottomTab = null;
-        let selectedBottomTabButton = null;
+    builder.append(inspector_js->data());
 
-        let selectedDOMNode = null;
-
-        const selectTab = (tabButton, tabID, selectedTab, selectedTabButton) => {
-            let tab = document.getElementById(tabID);
-
-            if (selectedTab === tab) {
-                return selectedTab;
-            }
-            if (selectedTab !== null) {
-                selectedTab.style.display = "none";
-                selectedTabButton.classList.remove("active");
-            }
-
-            tab.style.display = "block";
-            tabButton.classList.add("active");
-
-            return tab;
-        };
-
-        const selectTopTab = (tabButton, tabID) => {
-            selectedTopTab = selectTab(tabButton, tabID, selectedTopTab, selectedTopTabButton);
-            selectedTopTabButton = tabButton;
-        };
-
-        const selectBottomTab = (tabButton, tabID) => {
-            selectedBottomTab = selectTab(tabButton, tabID, selectedBottomTab, selectedBottomTabButton);
-            selectedBottomTabButton = tabButton;
-        };
-
-        let initialTopTabButton = document.getElementById("dom-tree-button");
-        selectTopTab(initialTopTabButton, "dom-tree");
-
-        let initialBottomTabButton = document.getElementById("computed-style-button");
-        selectBottomTab(initialBottomTabButton, "computed-style");
-
-        const scrollToElement = (element) => {
-            // Include an offset to prevent the element being placed behind the fixed `tab-controls` header.
-            const offset = 45;
-
-            let position = element.getBoundingClientRect().top;
-            position += window.pageYOffset - offset;
-
-            window.scrollTo(0, position);
-        }
-
-        inspector.loadDOMTree = tree => {
-            let domTree = document.getElementById("dom-tree");
-            domTree.innerHTML = atob(tree);
-
-            let domNodes = domTree.getElementsByClassName("hoverable");
-
-            for (let domNode of domNodes) {
-                domNode.addEventListener("click", event => {
-                    inspectDOMNode(domNode);
-                    event.preventDefault();
-                });
-            }
-        };
-
-        inspector.loadAccessibilityTree = tree => {
-            let accessibilityTree = document.getElementById("accessibility-tree");
-            accessibilityTree.innerHTML = atob(tree);
-        };
-
-        inspector.inspectDOMNodeID = nodeID => {
-            let domNodes = document.querySelectorAll(`[data-id="${nodeID}"]`);
-            if (domNodes.length !== 1) {
-                return;
-            }
-
-            for (let domNode = domNodes[0]; domNode; domNode = domNode.parentNode) {
-                if (domNode.tagName === "DETAILS") {
-                    domNode.setAttribute("open", "");
-                }
-            }
-
-            inspectDOMNode(domNodes[0]);
-            scrollToElement(selectedDOMNode);
-        };
-
-        inspector.clearInspectedDOMNode = () => {
-            if (selectedDOMNode !== null) {
-                selectedDOMNode.classList.remove("selected");
-                selectedDOMNode = null;
-            }
-        };
-
-        inspector.createPropertyTables = (computedStyle, resolvedStyle, customProperties) => {
-            const createPropertyTable = (tableID, properties) => {
-                let oldTable = document.getElementById(tableID);
-
-                let newTable = document.createElement("tbody");
-                newTable.setAttribute("id", tableID);
-
-                Object.keys(properties).sort().forEach(name => {
-                    let row = newTable.insertRow();
-
-                    let nameColumn = row.insertCell();
-                    nameColumn.innerText = name;
-
-                    let valueColumn = row.insertCell();
-                    valueColumn.innerText = properties[name];
-                });
-
-                oldTable.parentNode.replaceChild(newTable, oldTable)
-            };
-
-            createPropertyTable("computed-style-table", JSON.parse(computedStyle));
-            createPropertyTable("resolved-style-table", JSON.parse(resolvedStyle));
-            createPropertyTable("custom-properties-table", JSON.parse(customProperties));
-        };
-
-        const inspectDOMNode = domNode => {
-            if (selectedDOMNode === domNode) {
-                return;
-            }
-
-            inspector.clearInspectedDOMNode();
-
-            domNode.classList.add("selected");
-            selectedDOMNode = domNode;
-
-            inspector.inspectDOMNode(domNode.dataset.id, domNode.dataset.pseudoElement);
-        };
-
-        document.addEventListener("DOMContentLoaded", () => {
-            inspector.inspectorLoaded();
-        });
+    builder.append(R"~~~(
     </script>
 </body>
 </html>
