@@ -8,10 +8,10 @@ Subject: [PATCH] Add build system support for SerenityOS
  1 file changed, 6 insertions(+)
 
 diff --git a/configure b/configure
-index 7c08c18358becf49779c876b0f3d17329df053c6..3177605054876b387cd2b93463025ee3203991e7 100755
+index 133f4e3235125222083bf77368ea714b7cc0b703..004e2d5893a4834d4cc209ce4c0f91978b89422f 100755
 --- a/configure
 +++ b/configure
-@@ -496,6 +496,8 @@ elif check_define __NetBSD__; then
+@@ -365,6 +365,8 @@ elif check_define __NetBSD__; then
    targetos=netbsd
  elif check_define __APPLE__; then
    targetos=darwin
@@ -20,7 +20,7 @@ index 7c08c18358becf49779c876b0f3d17329df053c6..3177605054876b387cd2b93463025ee3
  else
    # This is a fatal error, but don't report it yet, because we
    # might be going to just print the --help text, or it might
-@@ -509,6 +511,7 @@ mingw32="no"
+@@ -378,6 +380,7 @@ mingw32="no"
  bsd="no"
  linux="no"
  solaris="no"
@@ -28,9 +28,9 @@ index 7c08c18358becf49779c876b0f3d17329df053c6..3177605054876b387cd2b93463025ee3
  case $targetos in
  windows)
    mingw32="yes"
-@@ -565,6 +568,9 @@ linux)
+@@ -413,6 +416,9 @@ haiku)
+ linux)
    linux="yes"
-   vhost_user=${default_feature:-yes}
  ;;
 +serenity)
 +  serenity="yes"
