@@ -1,0 +1,15 @@
+<input id=input type=text>
+<script src="include.js"></script>
+<script>
+    asyncTest((done) => {
+        let input = document.getElementById("input");
+
+        input.addEventListener("change", () => {
+            println(input.value);
+            done();
+        });
+
+        internals.sendText(input, "wfh :^)");
+        internals.commitText();
+    })
+</script>
