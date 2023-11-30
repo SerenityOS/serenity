@@ -53,7 +53,7 @@ inspector.loadDOMTree = tree => {
     let domTree = document.getElementById("dom-tree");
     domTree.innerHTML = atob(tree);
 
-    let domNodes = domTree.getElementsByClassName("hoverable");
+    let domNodes = domTree.querySelectorAll(".hoverable");
 
     for (let domNode of domNodes) {
         domNode.addEventListener("click", event => {
