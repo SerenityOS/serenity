@@ -18,7 +18,8 @@ PaintingCommandExecutorGPU::PaintingCommandExecutorGPU(Gfx::Bitmap& bitmap)
     m_stacking_contexts.append({ .canvas = canvas,
         .painter = move(painter),
         .opacity = 1.0f,
-        .destination = {} });
+        .destination = {},
+        .transform = {} });
 }
 
 PaintingCommandExecutorGPU::~PaintingCommandExecutorGPU()
@@ -99,29 +100,34 @@ CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, b
         painter().translate(-translation);
     }
 
-    auto affine_transform = Gfx::extract_2d_affine_transform(transform.matrix);
+    auto stacking_context_transform = Gfx::extract_2d_affine_transform(transform.matrix);
 
-    if (opacity < 1) {
+    Gfx::AffineTransform inverse_origin_translation;
+    inverse_origin_translation.translate(-transform.origin);
+    Gfx::AffineTransform origin_translation;
+    origin_translation.translate(transform.origin);
+
+    Gfx::AffineTransform final_transform = origin_translation;
+    final_transform.multiply(stacking_context_transform);
+    final_transform.multiply(inverse_origin_translation);
+    if (opacity < 1 || !stacking_context_transform.is_identity_or_translation()) {
         auto painter = AccelGfx::Painter::create();
         auto canvas = AccelGfx::Canvas::create(source_paintable_rect.size());
         painter->set_target_canvas(canvas);
         painter->translate(-source_paintable_rect.location().to_type<float>());
         painter->clear(Color::Transparent);
-
-        auto source_rect = source_paintable_rect.to_type<float>().translated(-transform.origin);
-        auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform.origin);
-        auto destination_rect = transformed_destination_rect.to_rounded<int>();
-
         m_stacking_contexts.append({ .canvas = canvas,
             .painter = move(painter),
             .opacity = opacity,
-            .destination = destination_rect });
+            .destination = source_paintable_rect,
+            .transform = final_transform });
     } else {
-        painter().translate(affine_transform.translation() + post_transform_translation.to_type<float>());
+        painter().translate(stacking_context_transform.translation() + post_transform_translation.to_type<float>());
         m_stacking_contexts.append({ .canvas = {},
             .painter = MaybeOwned(painter()),
             .opacity = opacity,
-            .destination = {} });
+            .destination = {},
+            .transform = final_transform });
     }
     return CommandResult::Continue;
 }
@@ -131,7 +137,7 @@ CommandResult PaintingCommandExecutorGPU::pop_stacking_context()
     auto stacking_context = m_stacking_contexts.take_last();
     VERIFY(stacking_context.stacking_context_depth == 0);
     if (stacking_context.painter.is_owned()) {
-        painter().blit_canvas(stacking_context.destination, *stacking_context.canvas, stacking_context.opacity);
+        painter().blit_canvas(stacking_context.destination, *stacking_context.canvas, stacking_context.opacity, stacking_context.transform);
     }
     painter().restore();
     m_stacking_contexts.last().stacking_context_depth--;

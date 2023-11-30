@@ -80,8 +80,8 @@ public:
     void fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius);
     void fill_rect_with_rounded_corners(Gfx::FloatRect const& rect, Color const& color, CornerRadius const& top_left_radius, CornerRadius const& top_right_radius, CornerRadius const& bottom_left_radius, CornerRadius const& bottom_right_radius);
 
-    void blit_canvas(Gfx::IntRect const& dst_rect, Canvas const&, float opacity = 1.0f);
-    void blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const&, float opacity = 1.0f);
+    void blit_canvas(Gfx::IntRect const& dst_rect, Canvas const&, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
+    void blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const&, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
 
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&);
 
@@ -96,7 +96,7 @@ private:
     [[nodiscard]] State& state() { return m_state_stack.last(); }
     [[nodiscard]] State const& state() const { return m_state_stack.last(); }
 
-    void blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const&, Gfx::FloatRect const& src_rect, ScalingMode, float opacity = 1.0f);
+    void blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const&, Gfx::FloatRect const& src_rect, ScalingMode, float opacity = 1.0f, Optional<Gfx::AffineTransform> affine_transform = {});
     void bind_target_canvas();
 
     [[nodiscard]] Gfx::FloatRect to_clip_space(Gfx::FloatRect const& screen_rect) const;
