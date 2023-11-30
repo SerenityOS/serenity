@@ -57,6 +57,11 @@ public:
         m_builtins[to_underlying(builtin)] = value;
     }
 
+    Value get_builtin_value(Bytecode::Builtin builtin)
+    {
+        return m_builtins[to_underlying(builtin)];
+    }
+
     static FlatPtr global_environment_offset() { return OFFSET_OF(Realm, m_global_environment); }
     static FlatPtr builtins_offset() { return OFFSET_OF(Realm, m_builtins); }
 

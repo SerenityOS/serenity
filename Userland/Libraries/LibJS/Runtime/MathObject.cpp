@@ -80,10 +80,8 @@ void MathObject::initialize(Realm& realm)
 }
 
 // 21.3.2.1 Math.abs ( x ), https://tc39.es/ecma262/#sec-math.abs
-JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
+ThrowCompletionOr<Value> MathObject::abs_impl(VM& vm, Value x)
 {
-    auto x = vm.argument(0);
-
     // OPTIMIZATION: Fast path for Int32 values.
     if (x.is_int32())
         return Value(AK::abs(x.as_i32()));
@@ -106,6 +104,12 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
     // 5. If n < -0𝔽, return -n.
     // 6. Return n.
     return Value(number.as_double() < 0 ? -number.as_double() : number.as_double());
+}
+
+// 21.3.2.1 Math.abs ( x ), https://tc39.es/ecma262/#sec-math.abs
+JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
+{
+    return abs_impl(vm, vm.argument(0));
 }
 
 // 21.3.2.2 Math.acos ( x ), https://tc39.es/ecma262/#sec-math.acos

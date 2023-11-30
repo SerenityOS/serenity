@@ -27,6 +27,7 @@
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Iterator.h>
+#include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/Realm.h>
@@ -970,12 +971,44 @@ ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter&) cons
     __builtin_unreachable();
 }
 
+static ThrowCompletionOr<Value> dispatch_builtin_call(Bytecode::Interpreter& interpreter, Bytecode::Builtin builtin, Register first_argument)
+{
+    switch (builtin) {
+    case Builtin::MathAbs:
+        return TRY(MathObject::abs_impl(interpreter.vm(), interpreter.reg(first_argument)));
+    case Builtin::MathLog:
+        return TRY(MathObject::log_impl(interpreter.vm(), interpreter.reg(first_argument)));
+    case Builtin::MathPow: {
+        auto exponent = interpreter.reg(Register { first_argument.index() + 1 });
+        return TRY(MathObject::pow_impl(interpreter.vm(), interpreter.reg(first_argument), exponent));
+    }
+    case Builtin::MathExp:
+        return TRY(MathObject::exp_impl(interpreter.vm(), interpreter.reg(first_argument)));
+    case Builtin::MathCeil:
+        return TRY(MathObject::ceil_impl(interpreter.vm(), interpreter.reg(first_argument)));
+    case Builtin::MathFloor:
+        return TRY(MathObject::floor_impl(interpreter.vm(), interpreter.reg(first_argument)));
+    case Builtin::MathRound:
+        return TRY(MathObject::round_impl(interpreter.vm(), interpreter.reg(first_argument)));
+    case Builtin::MathSqrt:
+        return TRY(MathObject::sqrt_impl(interpreter.vm(), interpreter.reg(first_argument)));
+    case Bytecode::Builtin::__Count:
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY_NOT_REACHED();
+}
+
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
     auto callee = interpreter.reg(m_callee);
 
     TRY(throw_if_needed_for_call(interpreter, callee, call_type(), expression_string()));
+
+    if (m_builtin.has_value() && m_argument_count == Bytecode::builtin_argument_count(m_builtin.value()) && interpreter.realm().get_builtin_value(m_builtin.value()) == callee) {
+        interpreter.accumulator() = TRY(dispatch_builtin_call(interpreter, m_builtin.value(), m_first_argument));
+        return {};
+    }
 
     MarkedVector<Value> argument_values(vm.heap());
     argument_values.ensure_capacity(m_argument_count);

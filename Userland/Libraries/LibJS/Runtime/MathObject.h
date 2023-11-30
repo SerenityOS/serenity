@@ -25,6 +25,7 @@ public:
     static ThrowCompletionOr<Value> ceil_impl(VM&, Value);
     static ThrowCompletionOr<Value> round_impl(VM&, Value);
     static ThrowCompletionOr<Value> exp_impl(VM&, Value);
+    static ThrowCompletionOr<Value> abs_impl(VM&, Value);
 
 private:
     explicit MathObject(Realm&);
