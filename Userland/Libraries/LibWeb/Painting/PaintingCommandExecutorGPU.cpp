@@ -93,6 +93,9 @@ CommandResult PaintingCommandExecutorGPU::set_font(Gfx::Font const&)
 
 CommandResult PaintingCommandExecutorGPU::push_stacking_context(float opacity, bool is_fixed_position, Gfx::IntRect const& source_paintable_rect, Gfx::IntPoint post_transform_translation, CSS::ImageRendering, StackingContextTransform transform, Optional<StackingContextMask>)
 {
+    if (source_paintable_rect.is_empty())
+        return CommandResult::SkipStackingContext;
+
     m_stacking_contexts.last().stacking_context_depth++;
     painter().save();
     if (is_fixed_position) {
