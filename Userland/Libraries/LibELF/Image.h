@@ -44,7 +44,7 @@ public:
 
     class Symbol {
     public:
-        Symbol(Image const& image, unsigned index, const ElfW(Sym) & sym)
+        Symbol(Image const& image, unsigned index, Elf_Sym const& sym)
             : m_image(image)
             , m_sym(sym)
             , m_index(index)
@@ -72,7 +72,7 @@ public:
 
     private:
         Image const& m_image;
-        const ElfW(Sym) & m_sym;
+        Elf_Sym const& m_sym;
         unsigned const m_index;
     };
 
@@ -98,11 +98,11 @@ public:
         bool is_writable() const { return flags() & PF_W; }
         bool is_executable() const { return flags() & PF_X; }
         char const* raw_data() const { return m_image.raw_data(m_program_header.p_offset); }
-        ElfW(Phdr) raw_header() const { return m_program_header; }
+        Elf_Phdr raw_header() const { return m_program_header; }
 
     private:
         Image const& m_image;
-        const ElfW(Phdr) & m_program_header;
+        Elf_Phdr const& m_program_header;
         unsigned m_program_header_index { 0 };
     };
 
@@ -133,7 +133,7 @@ public:
     protected:
         friend class RelocationSection;
         Image const& m_image;
-        const ElfW(Shdr) & m_section_header;
+        Elf_Shdr const& m_section_header;
         unsigned m_section_index;
     };
 
@@ -152,7 +152,7 @@ public:
 
     class Relocation {
     public:
-        Relocation(Image const& image, const ElfW(Rel) & rel)
+        Relocation(Image const& image, Elf_Rel const& rel)
             : m_image(image)
             , m_rel(rel)
         {
@@ -173,7 +173,7 @@ public:
 
     private:
         Image const& m_image;
-        const ElfW(Rel) & m_rel;
+        Elf_Rel const& m_rel;
     };
 
     unsigned symbol_count() const;
@@ -214,8 +214,8 @@ public:
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
     size_t size() const { return m_size; }
 
-    static Optional<StringView> object_file_type_to_string(ElfW(Half) type);
-    static Optional<StringView> object_machine_type_to_string(ElfW(Half) type);
+    static Optional<StringView> object_file_type_to_string(Elf_Half type);
+    static Optional<StringView> object_machine_type_to_string(Elf_Half type);
     static Optional<StringView> object_abi_type_to_string(Elf_Byte type);
 
     bool has_symbols() const { return symbol_count(); }
@@ -227,9 +227,9 @@ public:
 
 private:
     char const* raw_data(unsigned offset) const;
-    const ElfW(Ehdr) & header() const;
-    const ElfW(Shdr) & section_header(unsigned) const;
-    const ElfW(Phdr) & program_header_internal(unsigned) const;
+    Elf_Ehdr const& header() const;
+    Elf_Shdr const& section_header(unsigned) const;
+    Elf_Phdr const& program_header_internal(unsigned) const;
     StringView table_string(unsigned offset) const;
     StringView section_header_table_string(unsigned offset) const;
     StringView section_index_to_string(unsigned index) const;

@@ -129,12 +129,12 @@ static ErrorOr<Optional<String>> elf_details(StringView description, StringView 
         return OptionalNone {};
 
     StringBuilder interpreter_path_builder;
-    auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_data.data(), elf_data.size(), elf_data, &interpreter_path_builder);
+    auto result_or_error = ELF::validate_program_headers(*(Elf_Ehdr const*)elf_data.data(), elf_data.size(), elf_data, &interpreter_path_builder);
     if (result_or_error.is_error() || !result_or_error.value())
         return OptionalNone {};
     auto interpreter_path = interpreter_path_builder.string_view();
 
-    auto& header = *reinterpret_cast<const ElfW(Ehdr)*>(elf_data.data());
+    auto& header = *reinterpret_cast<Elf_Ehdr const*>(elf_data.data());
 
     auto bitness = header.e_ident[EI_CLASS] == ELFCLASS64 ? "64" : "32";
     auto byteorder = header.e_ident[EI_DATA] == ELFDATA2LSB ? "LSB" : "MSB";

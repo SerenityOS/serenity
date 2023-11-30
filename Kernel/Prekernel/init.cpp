@@ -99,11 +99,11 @@ extern "C" [[noreturn]] void init()
 
     u8* kernel_image = (u8*)(FlatPtr)kernel_module->start;
     // copy the ELF header and program headers because we might end up overwriting them
-    ElfW(Ehdr) kernel_elf_header = *(ElfW(Ehdr)*)kernel_image;
-    ElfW(Phdr) kernel_program_headers[16];
+    Elf_Ehdr kernel_elf_header = *(Elf_Ehdr*)kernel_image;
+    Elf_Phdr kernel_program_headers[16];
     if (kernel_elf_header.e_phnum > array_size(kernel_program_headers))
         halt();
-    __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(ElfW(Phdr)) * kernel_elf_header.e_phnum);
+    __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(Elf_Phdr) * kernel_elf_header.e_phnum);
 
     FlatPtr kernel_physical_base = 0x200000;
     FlatPtr default_kernel_load_base = KERNEL_MAPPING_BASE + 0x200000;

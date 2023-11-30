@@ -115,7 +115,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Pro
 
 ErrorOr<void> Coredump::write_elf_header()
 {
-    ElfW(Ehdr) elf_file_header;
+    Elf_Ehdr elf_file_header;
     elf_file_header.e_ident[EI_MAG0] = 0x7f;
     elf_file_header.e_ident[EI_MAG1] = 'E';
     elf_file_header.e_ident[EI_MAG2] = 'L';
@@ -147,24 +147,24 @@ ErrorOr<void> Coredump::write_elf_header()
 #endif
     elf_file_header.e_version = 1;
     elf_file_header.e_entry = 0;
-    elf_file_header.e_phoff = sizeof(ElfW(Ehdr));
+    elf_file_header.e_phoff = sizeof(Elf_Ehdr);
     elf_file_header.e_shoff = 0;
     elf_file_header.e_flags = 0;
-    elf_file_header.e_ehsize = sizeof(ElfW(Ehdr));
-    elf_file_header.e_shentsize = sizeof(ElfW(Shdr));
-    elf_file_header.e_phentsize = sizeof(ElfW(Phdr));
+    elf_file_header.e_ehsize = sizeof(Elf_Ehdr);
+    elf_file_header.e_shentsize = sizeof(Elf_Shdr);
+    elf_file_header.e_phentsize = sizeof(Elf_Phdr);
     elf_file_header.e_phnum = m_num_program_headers;
     elf_file_header.e_shnum = 0;
     elf_file_header.e_shstrndx = SHN_UNDEF;
 
-    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(ElfW(Ehdr))));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(Elf_Ehdr)));
 
     return {};
 }
 
 ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
 {
-    size_t offset = sizeof(ElfW(Ehdr)) + m_num_program_headers * sizeof(ElfW(Phdr));
+    size_t offset = sizeof(Elf_Ehdr) + m_num_program_headers * sizeof(Elf_Phdr);
     for (auto& region : m_regions) {
 #if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
         if (region.looks_like_userspace_heap_region())
@@ -174,7 +174,7 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
         if (region.access() == Memory::Region::Access::None)
             continue;
 
-        ElfW(Phdr) phdr {};
+        Elf_Phdr phdr {};
 
         phdr.p_type = PT_LOAD;
         phdr.p_offset = offset;
@@ -193,10 +193,10 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
 
         offset += phdr.p_filesz;
 
-        [[maybe_unused]] auto rc = m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(ElfW(Phdr)));
+        [[maybe_unused]] auto rc = m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(Elf_Phdr));
     }
 
-    ElfW(Phdr) notes_pheader {};
+    Elf_Phdr notes_pheader {};
     notes_pheader.p_type = PT_NOTE;
     notes_pheader.p_offset = offset;
     notes_pheader.p_vaddr = 0;
@@ -206,7 +206,7 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
     notes_pheader.p_align = 0;
     notes_pheader.p_flags = 0;
 
-    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(ElfW(Phdr))));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(Elf_Phdr)));
 
     return {};
 }

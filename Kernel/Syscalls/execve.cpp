@@ -205,7 +205,7 @@ static ErrorOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& p
     return range;
 }
 
-static ErrorOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header, OpenFileDescription& main_program_description, OpenFileDescription* interpreter_description)
+static ErrorOr<FlatPtr> get_load_offset(Elf_Ehdr const& main_program_header, OpenFileDescription& main_program_description, OpenFileDescription* interpreter_description)
 {
     constexpr FlatPtr load_range_start = 0x08000000;
     constexpr FlatPtr load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
@@ -421,7 +421,7 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
 
 ErrorOr<LoadResult>
 Process::load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription> main_program_description,
-    RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header, Optional<size_t> minimum_stack_size)
+    RefPtr<OpenFileDescription> interpreter_description, Elf_Ehdr const& main_program_header, Optional<size_t> minimum_stack_size)
 {
     auto load_offset = TRY(get_load_offset(main_program_header, main_program_description, interpreter_description));
 
@@ -463,7 +463,7 @@ void Process::clear_signal_handlers_for_exec()
 }
 
 ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment,
-    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header, Optional<size_t> minimum_stack_size)
+    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, Elf_Ehdr const& main_program_header, Optional<size_t> minimum_stack_size)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
@@ -800,7 +800,7 @@ static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_exec
     return ENOEXEC;
 }
 
-ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size)
+ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, Elf_Ehdr const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size)
 {
     // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
     StringBuilder interpreter_path_builder;
@@ -822,17 +822,17 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
 
         // Validate the program interpreter as a valid elf binary.
         // If your program interpreter is a #! file or something, it's time to stop playing games :)
-        if (interp_metadata.size < (int)sizeof(ElfW(Ehdr)))
+        if (interp_metadata.size < (int)sizeof(Elf_Ehdr))
             return ENOEXEC;
 
         char first_page[PAGE_SIZE] = {};
         auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
         auto nread = TRY(interpreter_description->read(first_page_buffer, sizeof(first_page)));
 
-        if (nread < sizeof(ElfW(Ehdr)))
+        if (nread < sizeof(Elf_Ehdr))
             return ENOEXEC;
 
-        auto* elf_header = (ElfW(Ehdr)*)first_page;
+        auto* elf_header = (Elf_Ehdr*)first_page;
         if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_path);
             return ENOEXEC;
@@ -914,9 +914,9 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
 
     // #2) ELF32 for i386
 
-    if (nread < sizeof(ElfW(Ehdr)))
+    if (nread < sizeof(Elf_Ehdr))
         return ENOEXEC;
-    auto const* main_program_header = (ElfW(Ehdr)*)first_page;
+    auto const* main_program_header = (Elf_Ehdr*)first_page;
 
     if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
         dbgln("exec({}): File has invalid ELF header", path);

@@ -98,7 +98,7 @@ private:
 
     class ProgramHeaderRegion {
     public:
-        void set_program_header(const ElfW(Phdr) & header) { m_program_header = header; }
+        void set_program_header(Elf_Phdr const& header) { m_program_header = header; }
 
         // Information from ELF Program header
         u32 type() const { return m_program_header.p_type; }
@@ -117,7 +117,7 @@ private:
         bool is_relro() const { return type() == PT_GNU_RELRO; }
 
     private:
-        ElfW(Phdr) m_program_header; // Explicitly a copy of the PHDR in the image
+        Elf_Phdr m_program_header; // Explicitly a copy of the PHDR in the image
     };
 
     // Stage 1

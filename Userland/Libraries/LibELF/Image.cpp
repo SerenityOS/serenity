@@ -121,7 +121,7 @@ unsigned Image::program_header_count() const
 
 bool Image::parse()
 {
-    if (m_size < sizeof(ElfW(Ehdr)) || !validate_elf_header(header(), m_size, m_verbose_logging)) {
+    if (m_size < sizeof(Elf_Ehdr) || !validate_elf_header(header(), m_size, m_verbose_logging)) {
         if (m_verbose_logging)
             dbgln("ELF::Image::parse(): ELF Header not valid");
         m_valid = false;
@@ -198,31 +198,31 @@ char const* Image::raw_data(unsigned offset) const
     return reinterpret_cast<char const*>(m_buffer) + offset;
 }
 
-const ElfW(Ehdr) & Image::header() const
+Elf_Ehdr const& Image::header() const
 {
-    VERIFY(m_size >= sizeof(ElfW(Ehdr)));
-    return *reinterpret_cast<const ElfW(Ehdr)*>(raw_data(0));
+    VERIFY(m_size >= sizeof(Elf_Ehdr));
+    return *reinterpret_cast<Elf_Ehdr const*>(raw_data(0));
 }
 
-const ElfW(Phdr) & Image::program_header_internal(unsigned index) const
+Elf_Phdr const& Image::program_header_internal(unsigned index) const
 {
     VERIFY(m_valid);
     VERIFY(index < header().e_phnum);
-    return *reinterpret_cast<const ElfW(Phdr)*>(raw_data(header().e_phoff + (index * sizeof(ElfW(Phdr)))));
+    return *reinterpret_cast<Elf_Phdr const*>(raw_data(header().e_phoff + (index * sizeof(Elf_Phdr))));
 }
 
-const ElfW(Shdr) & Image::section_header(unsigned index) const
+Elf_Shdr const& Image::section_header(unsigned index) const
 {
     VERIFY(m_valid);
     VERIFY(index < header().e_shnum);
-    return *reinterpret_cast<const ElfW(Shdr)*>(raw_data(header().e_shoff + (index * header().e_shentsize)));
+    return *reinterpret_cast<Elf_Shdr const*>(raw_data(header().e_shoff + (index * header().e_shentsize)));
 }
 
 Image::Symbol Image::symbol(unsigned index) const
 {
     VERIFY(m_valid);
     VERIFY(index < symbol_count());
-    auto* raw_syms = reinterpret_cast<const ElfW(Sym)*>(raw_data(section(m_symbol_table_section_index).offset()));
+    auto* raw_syms = reinterpret_cast<Elf_Sym const*>(raw_data(section(m_symbol_table_section_index).offset()));
     return Symbol(*this, index, raw_syms[index]);
 }
 
@@ -243,7 +243,7 @@ Image::ProgramHeader Image::program_header(unsigned index) const
 Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 {
     VERIFY(index < relocation_count());
-    auto* rels = reinterpret_cast<const ElfW(Rel)*>(m_image.raw_data(offset()));
+    auto* rels = reinterpret_cast<Elf_Rel const*>(m_image.raw_data(offset()));
     return Relocation(m_image, rels[index]);
 }
 
@@ -272,7 +272,7 @@ Optional<Image::Section> Image::lookup_section(StringView name) const
     return {};
 }
 
-Optional<StringView> Image::object_file_type_to_string(ElfW(Half) type)
+Optional<StringView> Image::object_file_type_to_string(Elf_Half type)
 {
     switch (type) {
     case ET_NONE:
@@ -290,7 +290,7 @@ Optional<StringView> Image::object_file_type_to_string(ElfW(Half) type)
     }
 }
 
-Optional<StringView> Image::object_machine_type_to_string(ElfW(Half) type)
+Optional<StringView> Image::object_machine_type_to_string(Elf_Half type)
 {
     switch (type) {
     case ET_NONE:

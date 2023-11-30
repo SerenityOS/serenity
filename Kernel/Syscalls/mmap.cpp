@@ -56,7 +56,7 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     auto const& inode_vm = static_cast<Memory::InodeVMObject const&>(region.vmobject());
     auto const& inode = inode_vm.inode();
 
-    ElfW(Ehdr) header;
+    Elf_Ehdr header;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&header);
     auto result = inode.read_bytes(0, sizeof(header), buffer, nullptr);
     if (result.is_error() || result.value() != sizeof(header))
