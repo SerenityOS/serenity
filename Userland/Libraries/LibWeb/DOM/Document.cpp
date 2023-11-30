@@ -2389,7 +2389,12 @@ bool Document::anything_is_delaying_the_load_event() const
     if (m_number_of_things_delaying_the_load_event > 0)
         return true;
 
-    // FIXME: Track down all the things that are supposed to delay the load event.
+    for (auto& navigable : descendant_navigables()) {
+        if (navigable->container()->currently_delays_the_load_event())
+            return true;
+    }
+
+    // FIXME: Track down anything else that is supposed to delay the load event.
 
     return false;
 }
@@ -2593,6 +2598,11 @@ Vector<JS::Handle<HTML::Navigable>> Document::descendant_navigables()
 
     // 4. Return navigables.
     return navigables;
+}
+
+Vector<JS::Handle<HTML::Navigable>> const Document::descendant_navigables() const
+{
+    return const_cast<Document&>(*this).descendant_navigables();
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#inclusive-descendant-navigables
