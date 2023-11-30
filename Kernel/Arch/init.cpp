@@ -267,9 +267,9 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     }
     dmesgln("Starting SerenityOS...");
 
+#if ARCH(X86_64)
     MM.unmap_prekernel();
 
-#if ARCH(X86_64)
     // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
     VERIFY(+start_of_safemem_text != +end_of_safemem_text);
     VERIFY(+start_of_safemem_atomic_text != +end_of_safemem_atomic_text);
